@@ -1,6 +1,4 @@
-#[allow(dead_code)]
-#[path = "common/mod.rs"]
-mod common;
+use crate::common;
 use common::*;
 use deployment_control_plane::{
     fs::{ArtifactEntry, ArtifactManifest, FixtureRoots},

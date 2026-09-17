@@ -6,9 +6,18 @@ use crate::{
     Error,
 };
 use journal::Event;
+type PrecheckedImage = (
+    SealedArtifact,
+    Vec<(String, Option<FileImage>)>,
+    ServiceImage,
+);
 
 impl Executor {
     /// Guard is borrowed, never consumed or released. Train retains it through acceptance.
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "Reviewed API keeps distinct guard, queue, authority catalog, unit, policy, trusted time and caller bindings explicit"
+    )]
     pub fn apply(
         &mut self,
         guard: &MutationGuard,
@@ -95,11 +104,7 @@ impl Executor {
         id: &str,
         policy: &Signed<Policy>,
         now: u64,
-    ) -> Result<(
-        SealedArtifact,
-        Vec<(String, Option<FileImage>)>,
-        ServiceImage,
-    )> {
+    ) -> Result<PrecheckedImage> {
         guard.binds(&self.root)?;
         q.revalidate(c, id, policy, now)?;
         let status = q.daemon_status(id)?;

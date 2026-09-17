@@ -94,3 +94,7 @@ fn peer_scope_and_connection_quota_are_enforced_by_real_transport() {
     std::thread::sleep(Duration::from_millis(100));
     assert_eq!(send(&mut connect(&d), &status())["error"], "ACTOR_SCOPE");
 }
+
+#[path = "common/mod.rs"]
+#[allow(dead_code)]
+mod common;

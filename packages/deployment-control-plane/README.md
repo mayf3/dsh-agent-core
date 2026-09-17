@@ -457,3 +457,81 @@ mutex, socket owner/group and canonical executable dependency. This code generat
 no keys, acceptance evidence, activation files, root directory or launchd job.
 Unknown real upstream issuers remain a production blocker; fixture keys establish
 only nonproduction behavior. Native Executor profile limitations remain unchanged.
+
+## Task 4 inert bootstrap preparation and loader closure
+
+`agent-deploy-prepare` is a **non-root, offline** entry. `prepare INPUT_JSON
+NEW_EMPTY_DIR` reads a bounded typed recipe (`source_revision`, per-file
+`source_files` SHA-256 map, `controller` local input, `runtime` destination-to-input
+map, and six `platform_tools` hashes). It writes only an empty private directory,
+with flat read-only payloads, `manifest.json` and a disabled LaunchDaemon plist.
+Use a kernel-selected private temp directory: home/workspace ancestor ACLs may
+correctly refuse the package directory. `verify BUNDLE MANIFEST_DIGEST SOURCE_DIGEST
+CHECKOUT` checks every declared byte, exact file inventory, disabled plist,
+prospective profile/identity/layout, source hashes and both Mach-O closures. The
+reviewer's expected digests must be pinned independently; a generated digest is
+not build provenance. Source checkout reads remain nonprivileged, with a pinned
+checkout descriptor and no-link descendant traversal.
+
+The package deliberately contains no activation receipt, signing key, sudoers
+rule, enabled profile or root installer. Its exact prospective runtime profile
+has external per-Goal acceptance and distinct proposed issuer roles. Public keys,
+service identities and custody receipts remain null because real integrations
+have not been supplied. `integrity_verified` means offline package integrity;
+`bootstrap_ready` remains false with the complete explicit blocker set. This
+candidate-only schema cannot turn filled-in/self-signed JSON into authority.
+The Task 3 protected mailbox APIs exist; authenticated bridges to actual external
+producer/build/review/authority/verifier services remain unimplemented pending
+their real integration contracts. Do not promote fixture issuers.
+
+The generated manifest lists numeric identities 502:20 for the caller, proposed
+socket GID602, runtime/W1 505:601 and W2 0:0; group creation, membership and collision
+recheck are future Owner-authorized operations. It fixes root ownership, ACL-none,
+0700 state, permanent 0600 daemon/production/publication locks, socket parent
+0750/root:602 and socket0660. `/var` must retain the canonical `/private/var` alias;
+no relaxation of `/var/run` group writability is introduced. Exact protected
+preimages, current groups/plists/OS and initial app slots require fresh bootstrap
+readback. State/journals/receipts survive rollback; legacy paths are never silently
+reactivated.
+
+`NativeEnrollment` now additionally requires `loader_files` (absolute protected
+path + SHA-256 for Node and each transitive non-system dylib) and
+`launchctl_sha256` / `plutil_sha256`. The native Executor verifies every closure file through root
+owned, no-link descriptors before service operations. Mach-O parsing checks
+finite command/file/aggregate bounds, x86_64 runtime architecture, complete graph
+reachability and the absence of rpath, loader environment and nonprotected paths.
+The existing 64 MiB app artifact and 64 KiB socket limits are unchanged. Bootstrap
+loader bounds are separate: 64 files, 128 MiB per file and 512 MiB total, covering
+the observed 67 MiB libnode. Apple's canonical `/usr/lib` and system-framework
+loads are an explicit sealed-OS/shared-cache trust boundary, requiring later
+protected OS readback. The fixed Apple launchctl/plutil hash checks allow only their
+observed restricted/compressed flags; this does not relax artifact/loader metadata.
+
+The current installed Node closure fails this gate because it reaches Homebrew
+and rpath paths. A local 22-file transformed x86_64 candidate is retained with
+input/output digests, load-edge mappings and local ad-hoc signature checks. It
+has never been executed or installed. Those transformations, original ABI/version,
+trusted build approval and final runtime validation remain review/bootstrap gates.
+All W2 execution uses the same checked Node closure. Routine units cannot replace
+Node, harness, plists, controller, trust, config/routing or directory metadata.
+
+The four inspected repo installer/routing/transaction/lifecycle entries refuse
+when the fixed readable protected
+`/usr/local/libexec/agent-deployd/enrolled-dsh-runtime` marker is present, or when
+its prospective parent/lookup is unsafe. True pre-bootstrap absence retains the
+legacy behavior. Routing's local modules load only after that guard. Source
+fixtures relocate literal paths in copied scripts; there is no production path
+override. Installed copies, external wrappers, sudoers, launchd/cron managers and
+live write/signal/domain permissions were not changed. The package inventories
+known surfaces and leaves exhaustive retirement/denial unresolved. Parent service
+lifecycle denial must distinguish caller-controlled uid502 agent children.
+`gui/502/com.svc-workflow` remains ineligible; auth-service remains unenrolled.
+
+The native precheck parses the exact hash-checked plist bytes through fixed
+`/usr/bin/plutil` stdin with a cleared environment, 1 MiB input/output limits,
+a two-second deadline and owned kill/reap on failure. It checks exact service
+ProgramArguments and rejects `NODE_OPTIONS`, `NODE_PATH`, `DYLD_*`, `LD_*`,
+`__XPC_DYLD_*`, external Node REPL, OpenSSL and ICU loader configuration. Ordinary
+service configuration remains intact and no values are logged. Plutil's bytes
+are pinned as a sixth Apple platform tool. This is a read-only parser, not a
+candidate hook or arbitrary root command.

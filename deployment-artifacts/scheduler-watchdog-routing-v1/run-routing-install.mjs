@@ -13,9 +13,9 @@
  *
  * Fail-closed: any gate mismatch exits non-zero with the exact violated gate; nothing is applied.
  */
-
+try { const p = lstatSync('/usr/local/libexec/agent-deployd'); if (!p.isDirectory() || p.uid !== 0 || (p.mode & 0o7777) !== 0o755) throw new Error(); lstatSync('/usr/local/libexec/agent-deployd/enrolled-dsh-runtime'); throw new Error() } catch (e) { if (e.code !== "ENOENT") throw new Error("Enrolled/unsafe target: use agent-deployctl") }
 import { createHash } from 'node:crypto'
-import { chmodSync, chownSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, chownSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -65,9 +65,9 @@ function releaseGlobalDeployLock() {
   GLOBAL_LOCK_ACQUIRED_BY_ME = false
 }
 
-import { installSchedulerRoutingManifest } from '../../packages/production-runtime/src/scheduler/deployment-routing.js'
-import { validateRoutingManifest, resolveNotificationRoute, ROUTE_CLASSES } from '../../packages/scheduler/src/watchdog/routing.js'
-import { JobStore } from '../../packages/scheduler/src/store.js'
+const { installSchedulerRoutingManifest } = await import('../../packages/production-runtime/src/scheduler/deployment-routing.js')
+const { validateRoutingManifest, resolveNotificationRoute, ROUTE_CLASSES } = await import('../../packages/scheduler/src/watchdog/routing.js')
+const { JobStore } = await import('../../packages/scheduler/src/store.js')
 
 const DESIGNATED_CHAT_ID = 'oc_f2a6606689691fd7f0a7c7078a0bf2e9'
 const CANDIDATE_PATH = '/usr/local/libexec/agent-core/config/scheduler-routing-candidate.json'

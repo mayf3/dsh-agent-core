@@ -94,10 +94,10 @@ impl Executor {
                 sealed: root.child("sealed")?,
             },
             journals: root.child("transactions")?,
-            service: ServiceDriver::Native(native::NativeService {
+            service: ServiceDriver::Native(Box::new(native::NativeService {
                 root: service_root,
                 enrollment,
-            }),
+            })),
             root,
             active: None,
         })
@@ -144,3 +144,7 @@ pub(crate) struct VerifiedFinalization(pub(crate) TransactionReceipt);
 #[cfg(test)]
 #[path = "../../test/transaction_finalization.rs"]
 mod finalization_tests;
+
+#[cfg(test)]
+#[path = "../../test/transaction_fixture.rs"]
+mod test_fixture;

@@ -1,9 +1,6 @@
-#[allow(dead_code)]
-#[path = "common/mod.rs"]
-mod common;
-#[path = "transaction_fixture.rs"]
-mod fixture;
+use super::test_fixture as fixture;
 use super::{journal::Journal, Executor};
+use crate::common;
 use crate::{model::*, trust::digest};
 use common::*;
 use std::{fs, process::Command};

@@ -2,9 +2,7 @@ use std::{path::PathBuf, process::Command};
 fn binary() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/debug/agent-deployd")
 }
-#[path = "mod.rs"]
-#[allow(dead_code)]
-mod common;
+use crate::common;
 use serde_json::{json, Value};
 use std::{
     fs,

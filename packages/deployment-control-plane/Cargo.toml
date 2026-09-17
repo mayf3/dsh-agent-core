@@ -38,3 +38,11 @@ path = "test/socket.rs"
 [[test]]
 name = "train"
 path = "test/train.rs"
+
+[[test]]
+name = "bootstrap"
+path = "test/adoption/bootstrap.rs"
+
+[[test]]
+name = "e2e"
+path = "test/adoption/e2e.rs"

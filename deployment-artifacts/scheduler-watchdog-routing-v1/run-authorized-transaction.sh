@@ -41,7 +41,7 @@
 #   ./run-authorized-transaction.sh --selftest
 # =============================================================================
 set -euo pipefail
-
+if [ -e /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L /usr/local/libexec/agent-deployd/enrolled-dsh-runtime ] || [ -L "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] || { [ -d "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)" ] && [ "$(/usr/bin/stat -f '%u:%Lp' "$(/usr/bin/dirname /usr/local/libexec/agent-deployd/enrolled-dsh-runtime)")" != '0:755' ]; }; then echo "Enrolled/unsafe target: use agent-deployctl" >&2; exit 1; fi
 # Reviewed-product baseline: default is the independently reviewed head.
 # The Owner may EXPLICITLY advance it via PRODUCT_REVIEWED_BASELINE=<sha> in
 # the sudo env — that act is the blessing of the current main coordinate

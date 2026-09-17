@@ -17,7 +17,7 @@ pub struct ServiceImage {
 }
 pub(crate) enum ServiceDriver {
     Fixture(FixtureService),
-    Native(super::native::NativeService),
+    Native(Box<super::native::NativeService>),
 }
 pub(crate) struct FixtureService {
     child: Option<Child>,

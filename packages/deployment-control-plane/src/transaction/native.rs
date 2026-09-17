@@ -165,6 +165,8 @@ impl NativeService {
     }
     fn dependencies(&self) -> Result<()> {
         self.enrollment.validate()?;
+        crate::bootstrap::loader::installed(&self.enrollment.loader_files)?;
+        crate::bootstrap::verify_platform_launchctl(&self.enrollment.launchctl_sha256)?;
         let dir = Dir::open(
             std::path::Path::new("/usr/local/libexec/agent-core/node-runtime/bin"),
             0,
@@ -182,10 +184,16 @@ impl NativeService {
         let dir = Dir::open(std::path::Path::new("/Library/LaunchDaemons"), 0)?;
         for e in &self.enrollment.services {
             let name = e.kind.plist().rsplit('/').next().unwrap();
+            let bytes = snapshot(&dir.open_file(name, libc::O_RDONLY, 0)?, 0, 1024 * 1024)?.bytes;
+            require(sha(&bytes) == e.plist_sha256, "SERVICE_DEPENDENCY_DRIFT")?;
+            let plist =
+                crate::bootstrap::verify_service_plist(&bytes, &self.enrollment.plutil_sha256)?;
             require(
-                sha(&snapshot(&dir.open_file(name, libc::O_RDONLY, 0)?, 0, 1024 * 1024)?.bytes)
-                    == e.plist_sha256,
-                "SERVICE_DEPENDENCY_DRIFT",
+                plist.get("ProgramArguments")
+                    == Some(&serde_json::json!(e
+                        .kind
+                        .argv(&self.enrollment.runtime_root))),
+                "SERVICE_ARGV",
             )?;
         }
         Ok(())

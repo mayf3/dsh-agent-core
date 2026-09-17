@@ -241,7 +241,7 @@ impl Executor {
             q.latch_executor_failure(&digest(&(id, error.code(), "finalize-incomplete"))?)?;
             self.active = Some(j);
         }
-        Ok(result?)
+        result
     }
 }
 impl Executor {

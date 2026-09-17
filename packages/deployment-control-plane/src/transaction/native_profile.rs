@@ -67,10 +67,21 @@ pub struct NativeEnrollment {
     pub initial_files: Vec<EnrolledFile>,
     pub runtime_root: String,
     pub node_sha256: String,
+    pub loader_files: Vec<crate::bootstrap::LoaderFile>,
+    pub launchctl_sha256: String,
+    pub plutil_sha256: String,
     pub services: Vec<ServiceEnrollment>,
 }
 impl NativeEnrollment {
     pub(crate) fn validate(&self) -> Result<()> {
+        require(
+            self.loader_files
+                .iter()
+                .any(|f| f.path == NODE && f.sha256 == self.node_sha256),
+            "LOADER_CLOSURE_MISSING",
+        )?;
+        crate::trust::valid_digest(&self.launchctl_sha256)?;
+        crate::trust::valid_digest(&self.plutil_sha256)?;
         require(
             !self.initial_files.is_empty() && self.initial_files.len() <= 4096,
             "PROFILE_NOT_ALLOWED",
