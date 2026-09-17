@@ -33,8 +33,10 @@ therefore loses the recovery operation and classifies an old handle as
 `restart_lost`. The outer Feishu failure path finally renders the error message
 as a string and drops most structured recovery fields.
 
-The current incident having been manually recovered does not change these
-source observations and is not evidence of automatic convergence.
+The session reports that the current Agent was recovered, but this investigation
+has no sanitized exact handle/generation recovery receipt. It therefore records
+no operational recovery conclusion and does not use that report as evidence of
+automatic convergence or replay counts.
 
 ## 1. DEVELOPMENT_PREFLIGHT
 
