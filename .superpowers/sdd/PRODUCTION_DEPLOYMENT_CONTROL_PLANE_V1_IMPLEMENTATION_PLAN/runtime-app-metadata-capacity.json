@@ -1,0 +1,16 @@
+{
+  "time_utc": "2026-09-17T14:24:08.659190+00:00",
+  "scope": "metadata only; no file content or production writes",
+  "root": "/usr/local/libexec/agent-core/app",
+  "entries_seen": 1406,
+  "regular_files": 1130,
+  "directories": 254,
+  "symlinks": 22,
+  "other": 0,
+  "total_regular_bytes": 43574106,
+  "max_regular_bytes": 17662909,
+  "largest_directory_children": 68,
+  "limit": 50000,
+  "truncated": false,
+  "metadata_errors": 0
+}

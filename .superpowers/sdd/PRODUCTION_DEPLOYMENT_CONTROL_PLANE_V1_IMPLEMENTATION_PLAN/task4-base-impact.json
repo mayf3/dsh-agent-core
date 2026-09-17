@@ -1,0 +1,13 @@
+{
+  "observed_at": "2026-09-17T15:34:07.759973+00:00",
+  "method": "git fetch origin main; exact diff name-status and new accepted Spec read",
+  "implementation_base": "bb5327f622a0333f1e11d945319e024a3731f05a",
+  "current_base": "3c7b169a864c1e45df8b5c67333a9478138a22ee",
+  "candidate_task4_base": "28c09f73897b98ba3da520d43128f49eb101a0b0",
+  "changed_paths": [
+    "docs/reports/SCHEDULER_SELF_HEALING_FROM_FEISHU_V1_AUTHORING.md",
+    "docs/specs/README.md",
+    "docs/specs/SCHEDULER_SELF_HEALING_FROM_FEISHU_V1.md"
+  ],
+  "assessment": "Docs-only accepted scheduler/self_ops authority. Governs scheduler/broker, preserves separate DCP production gate. No DCP governing Spec, implementation, source adapters, structure or vendored governance change. No candidate mutation or merge performed. Recheck before integration if requested."
+}

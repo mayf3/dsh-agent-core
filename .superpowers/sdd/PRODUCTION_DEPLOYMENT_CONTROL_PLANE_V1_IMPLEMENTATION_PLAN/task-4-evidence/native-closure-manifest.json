@@ -1,0 +1,485 @@
+{
+  "purpose": "inert transformed candidate only; no execution or activation",
+  "records": [
+    {
+      "source": "/usr/local/Cellar/ada-url/3.4.3/lib/libada.3.4.3.dylib",
+      "input_sha256": "d3faa0a41ea6992d7263e68d9fcfb6727ec7f0e07b3173f71671c72e4f70b054",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libada.3.4.3.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-00",
+      "output_sha256": "5de38080556d6a766b0d6c608df55b2b37d164b1da7ec05aaacc73e1f9ede626",
+      "size": 572944,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libc++.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib",
+      "input_sha256": "096b4cea8c3dc6e4819d22f81b9202c35124314e3869b5b05dea9cc52f3683f9",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlicommon.1.2.0.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-01",
+      "output_sha256": "b69c104f102c90fff24d00d94500cdde6df903848081c5a005622574d0b4a230",
+      "size": 155776,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib",
+      "input_sha256": "a92e14a88f4db7a9eeb1dc194887ed13fda9bf54e0bd62571a41e8ed9916ab59",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlidec.1.2.0.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "@rpath/libbrotlicommon.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib"
+      },
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-02",
+      "output_sha256": "56a4139c3c21ccf27d6b73ffabc8928802bbbbb01902deb7a2814df2b88cd914",
+      "size": 67568,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlicommon.1.2.0.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib",
+      "input_sha256": "fe46b17c2051e6479ea4bb6a657accea66d4e834d7e4060e2a5a04c27b17c3bc",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlienc.1.2.0.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "@rpath/libbrotlicommon.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlicommon.1.2.0.dylib"
+      },
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-03",
+      "output_sha256": "be9dbdfb63afd9cb187b74329aec32ef06872fbce0f653815dcd51ba60968550",
+      "size": 661200,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlicommon.1.2.0.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib",
+      "input_sha256": "370ded8342a0ba104710a63c93719f2f1eb338be914e04fd3f7ea0232d49686a",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libcares.2.19.5.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-04",
+      "output_sha256": "9bac38771f613aea44049b561fc9fada399077c585c66976c9475f23c0fee0e0",
+      "size": 207696,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libresolv.9.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib",
+      "input_sha256": "66c7cac9182066116c2719d6bf7a3bf5e9fa6f9dc03997cb8baa9f6d0a308b1a",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libhdr_histogram.6.2.3.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-05",
+      "output_sha256": "16f0f4a867de77945fa4b861d96150bce7d061c607f5972e89d09f6ac12a056e",
+      "size": 51184,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libz.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib",
+      "input_sha256": "fe184981d5f388a2f68c39f11755d5e9929864c019cb4e0ce16919ca2b0526a2",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicudata.78.3.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-06",
+      "output_sha256": "62b14e8d139f0125c940b959be8c0ac74942b545b60a016bbda20a3f230f00b5",
+      "size": 33389184,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib",
+      "input_sha256": "7e7869a84fd6fefab8e8caf8d0c82c8eaadba55781eb4dad2f1e18c3e889a4ec",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicui18n.78.3.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "@loader_path/libicuuc.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib",
+        "@loader_path/libicudata.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib"
+      },
+      "rpaths": [],
+      "blob": "image-07",
+      "output_sha256": "c836ad9776ae6a0eb606d00cc5b7a5bc39f6ccc4caa2d4eff3e8c92fe4d29214",
+      "size": 3137504,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicudata.78.3.dylib",
+        "/usr/lib/libSystem.B.dylib",
+        "/usr/lib/libc++.1.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib",
+      "input_sha256": "9cc8afb91f44ce0702a5d0f506eae0c4033452abf1da345e388a6de7de340943",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "@loader_path/libicudata.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicudata.78.3.dylib"
+      },
+      "rpaths": [],
+      "blob": "image-08",
+      "output_sha256": "d9fe5d5bc0a7b36ba905c95b534d6ca9164d9dbae5aa0fc735c4edcd1d00f9cc",
+      "size": 1845072,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicudata.78.3.dylib",
+        "/usr/lib/libSystem.B.dylib",
+        "/usr/lib/libc++.1.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib",
+      "input_sha256": "eab3a43e872c8e68c3409df6a2aecae6d3b45b16876064ee450c6f5126253960",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp2.14.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-09",
+      "output_sha256": "a72992df40f18861ea26f8dd5786890d0d7c3a9afcccfd736d4e6417d211ea9b",
+      "size": 181520,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/libnghttp3/1.15.0/lib/libnghttp3.9.6.1.dylib",
+      "input_sha256": "153cc6a15fc8d992d53be17300a0a4870d617767b69600c8c3ad82ec30377789",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp3.9.6.1.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-10",
+      "output_sha256": "f9080e2d47e169d4c251df5790806883226886dc2956ad1c2da3b27e7138ded1",
+      "size": 184352,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/libngtcp2/1.20.0/lib/libngtcp2.16.dylib",
+      "input_sha256": "663f107a554ce74ba97f99eca681c65d6465320a491d343895fb6bda909fa449",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libngtcp2.16.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-11",
+      "output_sha256": "a72134157930a52baac319bc6af7c818b8f8c619834c101510974643b0948f30",
+      "size": 326784,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib",
+      "input_sha256": "2d7990da2c4a200da0e200ec74823421306a5e92d6d2639fbbbefa5e626e6bad",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-12",
+      "output_sha256": "a86d94dd706a91366744d844938685f57c594f9688e6b53b35c79f5f63fe5297",
+      "size": 174528,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib",
+      "input_sha256": "85bbd6d0436c761cf34670fd6967ef5042b2d7d52f3367f735460685e8d8a98d",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libllhttp.9.3.1.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-13",
+      "output_sha256": "1bf33fb2407869116222d93b1927400aa5911eef974f8501c60ab1ab5312a8df",
+      "size": 74880,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib",
+      "input_sha256": "90154eb8c8fca401cbf87add153d01730b77d6a35f3cc042c0cc305401434710",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-14",
+      "output_sha256": "6fe7f9959091843dc7dd8b3af353d3e9dd007c09dd689651c899303245d1ba7e",
+      "size": 5261328,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/openssl@3/3.6.2/lib/libssl.3.dylib",
+      "input_sha256": "9b8bf1a4237e6420a161ee4e2a60cab5a7cfa7449c1eec54b61ad985a617d723",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libssl.3.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib": "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib"
+      },
+      "rpaths": [],
+      "blob": "image-15",
+      "output_sha256": "1b27b34956e99784b18608194bbc0ac8a4d42a83a3c5d9447d798c828995e5ed",
+      "size": 908192,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/simdjson/4.3.0/lib/libsimdjson.30.0.0.dylib",
+      "input_sha256": "224555925098595c30cc282ae47aa6e9b44008a5cabcdad3e0a8c71cf516b4cf",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libsimdjson.30.0.0.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [],
+      "blob": "image-16",
+      "output_sha256": "3af9dad09400dda38f73b4955fb81b22feef0e3ac54ac81878a7c123cf496043",
+      "size": 178064,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libc++.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/sqlite/3.53.1/lib/libsqlite3.3.53.1.dylib",
+      "input_sha256": "bd51258f74ee3282aff5336c25a63ee703a7d2406d5559234fbc10b8dd5e93ab",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libsqlite3.3.53.1.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [
+        "/usr/local/Cellar/sqlite/3.53.1/lib"
+      ],
+      "blob": "image-17",
+      "output_sha256": "6b304b8b130ccadcae7627aa18b3d86e691f34f2c5ea6b4a37fcad6e63fe99cd",
+      "size": 1274080,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libz.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib",
+      "input_sha256": "d3f79d3c403ed483e36ec7d843fca1a541aa5ebd727e1ff5ab8c4a564a3b33ee",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libuvwasi.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "/usr/local/opt/libuv/lib/libuv.1.dylib": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib"
+      },
+      "rpaths": [],
+      "blob": "image-18",
+      "output_sha256": "40597b1a18e3b1b4068668750693520732bc06899d0e4f1e856d64f7012e880f",
+      "size": 71264,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib",
+      "input_sha256": "209a5500b51f11b57ec013fe8d1375bd51f9de94e4fbade0975063e49c5f445c",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libzstd.1.5.7.dylib",
+      "arch": "x86_64",
+      "edges": {},
+      "rpaths": [
+        "@loader_path/../lib"
+      ],
+      "blob": "image-19",
+      "output_sha256": "5b95154bcdf8e9b598e6e480b36b2f3ee037f0e5f9eb829a0044992574bc8bcb",
+      "size": 754128,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "input_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "arch": "x86_64",
+      "edges": {
+        "@rpath/libnode.141.dylib": "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib",
+        "/usr/local/opt/llhttp/lib/libllhttp.9.3.dylib": "/usr/local/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib",
+        "/usr/local/opt/libuv/lib/libuv.1.dylib": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib",
+        "/usr/local/opt/ada-url/lib/libada.3.dylib": "/usr/local/Cellar/ada-url/3.4.3/lib/libada.3.4.3.dylib",
+        "/usr/local/opt/simdjson/lib/libsimdjson.30.dylib": "/usr/local/Cellar/simdjson/4.3.0/lib/libsimdjson.30.0.0.dylib",
+        "/usr/local/opt/brotli/lib/libbrotlidec.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib",
+        "/usr/local/opt/brotli/lib/libbrotlienc.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib",
+        "/usr/local/opt/c-ares/lib/libcares.2.dylib": "/usr/local/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib",
+        "/usr/local/opt/hdrhistogram_c/lib/libhdr_histogram.6.dylib": "/usr/local/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib",
+        "/usr/local/opt/libnghttp2/lib/libnghttp2.14.dylib": "/usr/local/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib",
+        "/usr/local/opt/libnghttp3/lib/libnghttp3.9.dylib": "/usr/local/Cellar/libnghttp3/1.15.0/lib/libnghttp3.9.6.1.dylib",
+        "/usr/local/opt/libngtcp2/lib/libngtcp2.16.dylib": "/usr/local/Cellar/libngtcp2/1.20.0/lib/libngtcp2.16.dylib",
+        "/usr/local/opt/sqlite/lib/libsqlite3.dylib": "/usr/local/Cellar/sqlite/3.53.1/lib/libsqlite3.3.53.1.dylib",
+        "/usr/local/opt/uvwasi/lib/libuvwasi.dylib": "/usr/local/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib",
+        "/usr/local/opt/zstd/lib/libzstd.1.dylib": "/usr/local/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib",
+        "/usr/local/opt/openssl@3/lib/libcrypto.3.dylib": "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib",
+        "/usr/local/opt/openssl@3/lib/libssl.3.dylib": "/usr/local/Cellar/openssl@3/3.6.2/lib/libssl.3.dylib",
+        "/usr/local/opt/icu4c@78/lib/libicui18n.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib",
+        "/usr/local/opt/icu4c@78/lib/libicuuc.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib"
+      },
+      "rpaths": [
+        "@loader_path",
+        "@loader_path/../lib"
+      ],
+      "blob": "image-20",
+      "output_sha256": "2b6222cbadb3c746f061a35ad4923d7a912aa8a3151fda011fa05e3d5b942c86",
+      "size": 52176,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib",
+        "/usr/lib/libz.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libllhttp.9.3.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libada.3.4.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libsimdjson.30.0.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlidec.1.2.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlienc.1.2.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libcares.2.19.5.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libhdr_histogram.6.2.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp2.14.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp3.9.6.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libngtcp2.16.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libsqlite3.3.53.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libuvwasi.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libzstd.1.5.7.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libssl.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicui18n.78.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib",
+        "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+        "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+        "/usr/lib/libc++.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    },
+    {
+      "source": "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib",
+      "input_sha256": "19e1d979cf93722bdaac4f7a0dca58b42f48d9bc4eacd3ba536b2ea2d0c3d13e",
+      "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib",
+      "arch": "x86_64",
+      "edges": {
+        "/usr/local/opt/llhttp/lib/libllhttp.9.3.dylib": "/usr/local/Cellar/llhttp/9.3.1/lib/libllhttp.9.3.1.dylib",
+        "/usr/local/opt/libuv/lib/libuv.1.dylib": "/usr/local/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib",
+        "/usr/local/opt/ada-url/lib/libada.3.dylib": "/usr/local/Cellar/ada-url/3.4.3/lib/libada.3.4.3.dylib",
+        "/usr/local/opt/simdjson/lib/libsimdjson.30.dylib": "/usr/local/Cellar/simdjson/4.3.0/lib/libsimdjson.30.0.0.dylib",
+        "/usr/local/opt/brotli/lib/libbrotlidec.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlidec.1.2.0.dylib",
+        "/usr/local/opt/brotli/lib/libbrotlienc.1.dylib": "/usr/local/Cellar/brotli/1.2.0/lib/libbrotlienc.1.2.0.dylib",
+        "/usr/local/opt/c-ares/lib/libcares.2.dylib": "/usr/local/Cellar/c-ares/1.34.6/lib/libcares.2.19.5.dylib",
+        "/usr/local/opt/hdrhistogram_c/lib/libhdr_histogram.6.dylib": "/usr/local/Cellar/hdrhistogram_c/0.11.9/lib/libhdr_histogram.6.2.3.dylib",
+        "/usr/local/opt/libnghttp2/lib/libnghttp2.14.dylib": "/usr/local/Cellar/libnghttp2/1.69.0/lib/libnghttp2.14.dylib",
+        "/usr/local/opt/libnghttp3/lib/libnghttp3.9.dylib": "/usr/local/Cellar/libnghttp3/1.15.0/lib/libnghttp3.9.6.1.dylib",
+        "/usr/local/opt/libngtcp2/lib/libngtcp2.16.dylib": "/usr/local/Cellar/libngtcp2/1.20.0/lib/libngtcp2.16.dylib",
+        "/usr/local/opt/sqlite/lib/libsqlite3.dylib": "/usr/local/Cellar/sqlite/3.53.1/lib/libsqlite3.3.53.1.dylib",
+        "/usr/local/opt/uvwasi/lib/libuvwasi.dylib": "/usr/local/Cellar/uvwasi/0.0.23/lib/libuvwasi.dylib",
+        "/usr/local/opt/zstd/lib/libzstd.1.dylib": "/usr/local/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib",
+        "/usr/local/opt/openssl@3/lib/libcrypto.3.dylib": "/usr/local/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib",
+        "/usr/local/opt/openssl@3/lib/libssl.3.dylib": "/usr/local/Cellar/openssl@3/3.6.2/lib/libssl.3.dylib",
+        "/usr/local/opt/icu4c@78/lib/libicui18n.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicui18n.78.3.dylib",
+        "/usr/local/opt/icu4c@78/lib/libicuuc.78.dylib": "/usr/local/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib"
+      },
+      "rpaths": [],
+      "blob": "image-21",
+      "output_sha256": "9a7dbd4d31b8b6179c3d3e5ed18c442b4fd4d11d91955c0fed164be4437ff917",
+      "size": 67737296,
+      "signing": "local ad-hoc structural signature; NOT accepted build/review authority",
+      "post_loads": [
+        "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+        "/usr/lib/libz.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libllhttp.9.3.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libada.3.4.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libsimdjson.30.0.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlidec.1.2.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlienc.1.2.0.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libcares.2.19.5.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libhdr_histogram.6.2.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp2.14.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp3.9.6.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libngtcp2.16.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libsqlite3.3.53.1.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libuvwasi.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libzstd.1.5.7.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libssl.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicui18n.78.3.dylib",
+        "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib",
+        "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+        "/usr/lib/libc++.1.dylib",
+        "/usr/lib/libSystem.B.dylib"
+      ],
+      "post_rpaths": []
+    }
+  ]
+}

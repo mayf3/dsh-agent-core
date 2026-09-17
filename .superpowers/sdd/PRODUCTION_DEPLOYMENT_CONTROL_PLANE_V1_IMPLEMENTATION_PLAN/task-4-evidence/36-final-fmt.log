@@ -1,0 +1,3 @@
+HEAD=3f59cf3aa4c11ae2dbec107e1284487b45bac099
+UTC_START=2026-09-17T16:07:06.995978+00:00
+COMMAND=['cargo', 'fmt', '--manifest-path', 'packages/deployment-control-plane/Cargo.toml', '--', '--check']

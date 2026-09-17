@@ -1,0 +1,76 @@
+[
+  {
+    "command": [
+      "/bin/bash",
+      "-n",
+      "scripts/trusted-cp-deploy-install.sh"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/bin/bash",
+      "-n",
+      "deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/usr/local/bin/node",
+      "--check",
+      "scripts/production-runtime-launchd.mjs"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "/usr/local/bin/node",
+      "--check",
+      "deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--manifest-path",
+      "packages/deployment-control-plane/Cargo.toml",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "python3",
+      ".agents/tools/verify_governance.py",
+      "--target",
+      "."
+    ],
+    "exit_code": 0,
+    "stdout": "vendored governance bytes match governance.lock.json\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

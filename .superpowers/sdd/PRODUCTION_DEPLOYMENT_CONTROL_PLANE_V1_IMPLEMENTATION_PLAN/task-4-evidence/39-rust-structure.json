@@ -1,0 +1,61 @@
+{
+  "base": "28c09f73897b98ba3da520d43128f49eb101a0b0",
+  "head": "3f59cf3aa4c11ae2dbec107e1284487b45bac099",
+  "rust_files": 74,
+  "max_lines": 479,
+  "largest_files": [
+    [
+      "packages/deployment-control-plane/test/transaction_faults.rs",
+      479
+    ],
+    [
+      "packages/deployment-control-plane/test/train.rs",
+      401
+    ],
+    [
+      "packages/deployment-control-plane/test/common/service_repair.rs",
+      380
+    ],
+    [
+      "packages/deployment-control-plane/test/filesystem.rs",
+      346
+    ],
+    [
+      "packages/deployment-control-plane/src/queue/admission.rs",
+      345
+    ],
+    [
+      "packages/deployment-control-plane/src/transaction/native.rs",
+      341
+    ],
+    [
+      "packages/deployment-control-plane/test/queue_repairs.rs",
+      338
+    ],
+    [
+      "packages/deployment-control-plane/src/service/train.rs",
+      332
+    ]
+  ],
+  "max_immediate_tracked_children": 20,
+  "max_module_directory_depth": 2,
+  "test_root_children": 20,
+  "grandfathered_adapters": {
+    "scripts/trusted-cp-deploy-install.sh": {
+      "base_lines": 591,
+      "head_lines": 591
+    },
+    "scripts/production-runtime-launchd.mjs": {
+      "base_lines": 287,
+      "head_lines": 287
+    },
+    "deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs": {
+      "base_lines": 233,
+      "head_lines": 233
+    },
+    "deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh": {
+      "base_lines": 435,
+      "head_lines": 435
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "comparison": "exact nonblank/non-comment executable lines; only DCP guard excluded",
+  "base": "28c09f73897b98ba3da520d43128f49eb101a0b0",
+  "base_lines": 591,
+  "head_lines": 498,
+  "executable_lines_equal": true,
+  "executable_sha256": "ca28391f4a8fda1e79f2d4ed7df120beca0388d8738739fe0c1ea30c011ccc77",
+  "moved_comment_blocks": 15,
+  "heredocs_present": false
+}

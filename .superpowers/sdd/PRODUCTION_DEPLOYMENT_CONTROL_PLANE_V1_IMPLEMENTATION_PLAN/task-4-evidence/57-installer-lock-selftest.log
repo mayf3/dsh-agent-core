@@ -1,0 +1,7 @@
+SELFTEST_OK standalone success: stamp removed + installer-owned mutex released
+SELFTEST_OK standalone ordinary failure: lock remains fail-closed (explicit disposition, no auto-delete)
+SELFTEST_OK standalone ordinary failure: holder release works
+SELFTEST_OK parent-owned/inherited: child verified the holder and left the parent lock intact
+SELFTEST_LOCK=PASS
+
+EXIT_CODE=0

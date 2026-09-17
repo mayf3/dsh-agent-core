@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-9fc9d958bf89601d)
+
+running 2 tests
+test ambiguous_marker_lookup_never_enters_legacy_logic ... ok
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+

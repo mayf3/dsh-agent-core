@@ -1,0 +1,35 @@
+{
+  "time_utc": "2026-09-17T14:27:15.219237+00:00",
+  "scope": "read-only local Directory Services check; prospective group only, no creation/membership change",
+  "prospective_name": "_agentdeploy",
+  "prospective_gid": 602,
+  "queries": [
+    {
+      "label": "candidate_gid",
+      "argv": [
+        "/usr/bin/dscl",
+        ".",
+        "-search",
+        "/Groups",
+        "PrimaryGroupID",
+        "602"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "candidate_name",
+      "argv": [
+        "/usr/bin/dscl",
+        ".",
+        "-read",
+        "/Groups/_agentdeploy",
+        "PrimaryGroupID"
+      ],
+      "exit_code": 56,
+      "stdout": "",
+      "stderr": "<dscl_cmd> DS Error: -14136 (eDSRecordNotFound)"
+    }
+  ]
+}

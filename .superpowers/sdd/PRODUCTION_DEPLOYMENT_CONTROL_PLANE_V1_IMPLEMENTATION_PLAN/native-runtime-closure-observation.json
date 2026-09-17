@@ -1,0 +1,169 @@
+{
+  "time_utc": "2026-09-17T14:47:29.980669+00:00",
+  "scope": "nonprivileged metadata and hashes only; no configuration values printed; not complete closure or protected preimage proof",
+  "authsvc_directory_service": {
+    "exit_code": 0,
+    "selected_fields": "PrimaryGroupID: 601\nUniqueID: 505"
+  },
+  "paths": [
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "nlink": 14,
+      "regular": false,
+      "directory": true,
+      "symlink": false,
+      "size": 448,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "drwxr-xr-x  14 root  wheel  448 Aug 28 07:34 /usr/local/libexec/agent-core/node-runtime"
+        ]
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "nlink": 5,
+      "regular": false,
+      "directory": true,
+      "symlink": false,
+      "size": 160,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "drwxr-xr-x  5 root  wheel  160 Aug 28 07:34 /usr/local/libexec/agent-core/node-runtime/bin"
+        ]
+      }
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o555",
+      "flags": 0,
+      "nlink": 1,
+      "regular": true,
+      "directory": false,
+      "symlink": false,
+      "size": 52160,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "-r-xr-xr-x  1 root  wheel  52160 Aug 28 07:34 /usr/local/libexec/agent-core/node-runtime/bin/node"
+        ]
+      },
+      "sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "nlink": 1,
+      "regular": true,
+      "directory": false,
+      "symlink": false,
+      "size": 27215,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "-rwxr-xr-x  1 root  wheel  27215 Sep 16 19:32 /usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs"
+        ]
+      },
+      "sha256": "f84f974953954898aef49e4f4ed8f63639ad8109dcb3b75b97b09d4146990d6a"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "flags": 0,
+      "nlink": 1,
+      "regular": true,
+      "directory": false,
+      "symlink": false,
+      "size": 3120,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "-rw-r--r--  1 root  wheel  3120 Sep 17 15:07 /Library/LaunchDaemons/ai.agent-core.runtime.plist"
+        ]
+      },
+      "sha256": "dc715fd8b73c6debfd35dd54c61fd55f38ff0e3f0f8937ebdc7cfa4afde3c3d9"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "flags": 0,
+      "nlink": 1,
+      "regular": true,
+      "directory": false,
+      "symlink": false,
+      "size": 2305,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "-rw-r--r--  1 root  wheel  2305 Sep 17 15:07 /Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist"
+        ]
+      },
+      "sha256": "7901ef3eee2a5736b49a456c28ac1f8a349666792e55f66edb986fcc6756ff9b"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "flags": 0,
+      "nlink": 1,
+      "regular": true,
+      "directory": false,
+      "symlink": false,
+      "size": 1974,
+      "xattr_names": {
+        "exit_code": 0,
+        "names": []
+      },
+      "acl_metadata": {
+        "exit_code": 0,
+        "lines": [
+          "-rw-r--r--  1 root  wheel  1974 Sep 17 15:07 /Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist"
+        ]
+      },
+      "sha256": "8c8e5107ef66cdcf6b0aa8c0f39a7eabe350bb4c7f6d99b826c5021b8bb48e49"
+    }
+  ]
+}

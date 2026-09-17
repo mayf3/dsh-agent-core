@@ -1,0 +1,10 @@
+{
+  "path": "/usr/bin/plutil",
+  "uid": 0,
+  "gid": 0,
+  "mode": "0o755",
+  "flags": 524320,
+  "size": 661952,
+  "sha256": "3d4086a77e9bc2eb3eab7dc707ff844a8949b78c80daa2ffaa2e643e022c1c2f",
+  "purpose": "fixed read-only parser pin; no tool invocation as root"
+}
