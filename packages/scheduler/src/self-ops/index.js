@@ -3,7 +3,13 @@
 import { createHash } from 'node:crypto'
 
 import { isUnresolvedUnknown, rebuildFences } from '../occurrence-model.js'
-import { computeNextRunAtMsV2, deriveJobStateSummary, previousNaturalSlotMs } from '../eligibility.js'
+import {
+  computeNextRunAtMsV2,
+  deriveJobStateSummary,
+  isTerminalRecord,
+  latestTerminalOccurrence,
+  previousNaturalSlotMs,
+} from '../eligibility.js'
 import { classifyReconciliationEvidence } from '../watchdog/reconciliation.js'
 import { filterHealthForPrincipal } from '../watchdog/health.js'
 
@@ -293,12 +299,18 @@ export function createSelfOpsAccess({
    * run?" — the answer is always the durable accounting (occurrence, slot
    * accounting event, or an honest NOT_PROVEN with the proven/missing stage
    * bounds), never a bare runs count.
+   *
+   * C-SH-003 (SCHEDULER_SELF_HEALING_FROM_FEISHU_V1) adds the revision/retry
+   * axis, the global/local health split and the recovery-eligibility verdict
+   * on top of the frozen slot fields — all additive, all derived from the
+   * ledger plus the durable evidence channel, never from live inference.
    */
   async function jobDisposition(callerAgentId, { jobId, slot: requestedSlot }) {
     const doc = await store.loadDoc({ force: true })
     const job = doc.jobs.find((candidate) => candidate.id === jobId)
     if (!job || job.agentId !== callerAgentId) return opaqueDenied()
     const now = clock()
+    const events = await store.readRunEvents({ limit: 500 })
     const latestSlot = previousNaturalSlotMs(job.schedule, job.id, now)
     // An explicit slot queries a PREVIOUS elapsed slot (e.g. after nextRun
     // advanced past it); the default is the latest elapsed slot.
@@ -316,6 +328,24 @@ export function createSelfOpsAccess({
       ? (Number.isFinite(job.state?.nextRunAtMs) ? job.state.nextRunAtMs : computeNextRunAtMsV2({ job, occurrences: mine, nowMs: now }))
       : undefined
 
+    // C-SH-001 stale-retry verdict: live from the ledger, else the durable
+    // retry_superseded_by_revision evidence for the historical window.
+    const latestTerminal = latestTerminalOccurrence(doc.occurrences, jobId)
+    const staleLive = latestTerminal?.state === 'failed'
+      && latestTerminal.scheduleRevision !== job.scheduleRevision
+      ? { occurrenceId: latestTerminal.occurrenceId, runId: latestTerminal.runId, scheduleRevision: latestTerminal.scheduleRevision, live: true }
+      : null
+    const staleEvent = events.filter((event) => event.action === 'retry_superseded_by_revision' && event.jobId === jobId).at(-1)
+    const staleEvidence = staleEvent
+      ? { occurrenceId: staleEvent.retryOfOccurrenceId, scheduleRevision: staleEvent.predecessorScheduleRevision, live: false }
+      : null
+    const staleSource = staleLive ?? staleEvidence
+    const staleSafeAction = staleSource
+      ? `none — the failed predecessor ${staleSource.occurrenceId} belongs to schedule revision `
+        + `${staleSource.scheduleRevision}; its auto-retry expired with the revision change `
+        + '(STALE_RETRY_AFTER_SCHEDULE_REVISION); no mutation is required and the current revision\'s natural schedule continues'
+      : null
+
     let disposition
     if (expectedSlot === null) {
       disposition = {
@@ -325,6 +355,8 @@ export function createSelfOpsAccess({
         invocationStatus: 'none',
         durableReason: 'the schedule has no elapsed slot yet',
         recommendedSafeAction: 'none — the first eligible slot is still in the future',
+        lastProvenStage: 'SCHEDULE_CALCULATION',
+        firstMissingStage: 'NONE',
       }
     } else if (slotOccurrence != null) {
       disposition = {
@@ -335,13 +367,20 @@ export function createSelfOpsAccess({
         durableReason: `accounted by occurrence ${slotOccurrence.occurrenceId} (${slotOccurrence.state})`,
         ...(isUnresolvedUnknown(slotOccurrence)
           ? { recommendedSafeAction: 'run is an unresolved unknown — use self_ops.status and reconcile_turn for the exact run' }
-          : { recommendedSafeAction: 'none — the slot is accounted by its occurrence' }),
+          : { recommendedSafeAction: staleSafeAction ?? 'none — the slot is accounted by its occurrence' }),
+        lastProvenStage: isTerminalRecord(slotOccurrence) ? 'EXECUTION_OUTCOME_RECORDED' : 'ADMISSION_RESERVATION',
+        firstMissingStage: isTerminalRecord(slotOccurrence) ? 'NONE' : 'EXECUTION_OUTCOME',
       }
     } else {
-      const events = await store.readRunEvents({ limit: 500 })
       const record = events.filter((event) => event.action === 'slot_accounting'
         && event.jobId === jobId && event.slot === expectedSlot).at(-1)
       if (record !== undefined) {
+        // ADMISSION_INTERRUPTED receipts naming the cross-revision retry
+        // predecessor ARE the historical poison window (C-SH-001): surface
+        // the named family instead of the generic interruption.
+        const poisonReceipt = record.classification === 'ADMISSION_INTERRUPTED'
+          && /invalid retry predecessor/.test(record.reason ?? '')
+        const familyClassification = poisonReceipt ? 'STALE_RETRY_AFTER_SCHEDULE_REVISION' : null
         disposition = {
           slotClassification: record.classification,
           admissionStatus: record.classification === 'ADMISSION_REJECTED' || record.classification === 'ADMISSION_INTERRUPTED'
@@ -351,11 +390,18 @@ export function createSelfOpsAccess({
           invocationStatus: record.occurrenceId ? 'see occurrence' : 'not_invoked',
           durableReason: record.reason,
           ...(record.recoveryClassification ? { recoveryClassification: record.recoveryClassification } : {}),
-          recommendedSafeAction: record.classification === 'SKIPPED_POLICY'
-            ? 'policy skip — no action; the next eligible slot proceeds normally'
-            : record.classification === 'MISSED_BEFORE_OCCURRENCE'
-              ? 'no replay without an explicit Owner catch-up policy (NO_FORCED_CATCHUP); verify engine liveness via the W1 watchdog'
-              : 'resolve the recorded reason; the next tick re-evaluates the slot naturally',
+          recommendedSafeAction: poisonReceipt
+            ? (staleSafeAction ?? 'the stale cross-revision retry has expired; the next tick proceeds naturally')
+            : record.classification === 'SKIPPED_POLICY'
+              ? 'policy skip — no action; the next eligible slot proceeds normally'
+              : record.classification === 'MISSED_BEFORE_OCCURRENCE'
+                ? 'no replay without an explicit Owner catch-up policy (NO_FORCED_CATCHUP); verify engine liveness via the W1 watchdog'
+                : 'resolve the recorded reason; the next tick re-evaluates the slot naturally',
+          lastProvenStage: 'DUE_SLOT_DETECTION',
+          firstMissingStage: record.classification === 'SKIPPED_POLICY' ? 'NONE' : 'ADMISSION',
+        }
+        if (familyClassification) {
+          disposition = { ...disposition, classification: familyClassification }
         }
       } else {
         // Evidence gap (pre-accounting legacy or rotated evidence): honest
@@ -368,14 +414,52 @@ export function createSelfOpsAccess({
           admissionStatus: 'unknown',
           occurrenceId: 'NONE',
           invocationStatus: 'unknown',
-          durableReason: 'no durable accounting record for this slot in the retained evidence window',
-          rootCause: 'NOT_PROVEN',
-          lastProvenStage: 'SCHEDULE_CALCULATION',
+          durableReason: staleLive
+            ? `no durable accounting record for this slot; the job's latest terminal run ${staleLive.occurrenceId} `
+              + `failed under schedule revision ${staleLive.scheduleRevision} and its auto-retry candidate was `
+              + 'rejected by the store revision invariant, aborting ticks in this window'
+            : 'no durable accounting record for this slot in the retained evidence window',
+          rootCause: staleLive ? 'STALE_RETRY_AFTER_SCHEDULE_REVISION' : 'NOT_PROVEN',
+          lastProvenStage: staleLive ? 'PREDECESSOR_TERMINAL_OUTCOME' : 'SCHEDULE_CALCULATION',
           firstMissingStage: engineAliveInWindow ? 'DUE_SLOT_DETECTION' : 'TICK_OBSERVED',
-          recommendedSafeAction: 'check the W1 watchdog alert history for this window; if a fence exists use the trusted reconcile path',
+          recommendedSafeAction: staleSafeAction
+            ?? 'check the W1 watchdog alert history for this window; if a fence exists use the trusted reconcile path',
         }
       }
     }
+
+    // C-SH-003 recovery eligibility (R1–R5): fenced unknowns route to the
+    // trusted reconcile path; the stale family is self-healed (no mutation
+    // exists to perform); anything else needs no action or a human.
+    let recoveryEligibility = 'NONE_REQUIRED'
+    let jobLocalHealth = 'healthy'
+    if (fenceStatus) {
+      jobLocalHealth = 'quarantined_unknown'
+      const unknowns = mine.filter(isUnresolvedUnknown).sort((a, b) => a.admittedAt - b.admittedAt)
+      const reconcilable = unknowns.some((record) => classifyRouter(
+        resolveCallerCorrelation({
+          occurrenceId: record.occurrenceId,
+          runId: record.runId,
+          requestId: requestIdFor(record),
+        }),
+        record,
+        callerAgentId,
+      ).disposition === 'terminated_without_outcome')
+      recoveryEligibility = reconcilable ? 'SELF_RECONCILE_AVAILABLE' : 'HUMAN_REQUIRED'
+    } else if (staleLive) {
+      // Only a LIVE stale verdict (the stale predecessor is still the latest
+      // terminal) describes the present; evidence-only stale is history and
+      // keeps the classification without claiming an action.
+      jobLocalHealth = 'stale_retry_isolated'
+      recoveryEligibility = 'SELF_HEALED_NO_MUTATION_REQUIRED'
+    }
+    const blockadeWindowStart = now - 10 * 60_000
+    const leaseLost = events.some((event) => event.action === 'engine_lease_lost'
+      && Number.isFinite(event.ts) && event.ts >= blockadeWindowStart && event.ts <= now)
+    const tickBlocked = events.some((event) => event.action === 'global_tick_blocked'
+      && Number.isFinite(event.ts) && event.ts >= blockadeWindowStart && event.ts <= now)
+    const globalSchedulerHealth = leaseLost ? 'unavailable' : tickBlocked ? 'degraded' : 'healthy'
+
     return {
       jobId,
       expectedSlot,
@@ -383,6 +467,19 @@ export function createSelfOpsAccess({
       ...disposition,
       fenceStatus,
       nextRun: nextRun === undefined ? null : nextRun,
+      // C-SH-003 additive diagnosis fields.
+      scheduleRevision: job.scheduleRevision,
+      retryState: {
+        autoRetry: job.retry?.auto === true,
+        retryPredecessor: staleSource?.occurrenceId ?? null,
+        retryPredecessorRevision: staleSource?.scheduleRevision ?? null,
+        currentScheduleRevision: job.scheduleRevision,
+        staleRetryExpired: staleSource !== null,
+      },
+      ...(staleSource ? { classification: 'STALE_RETRY_AFTER_SCHEDULE_REVISION' } : {}),
+      globalSchedulerHealth,
+      jobLocalHealth,
+      recoveryEligibility,
     }
   }
 
