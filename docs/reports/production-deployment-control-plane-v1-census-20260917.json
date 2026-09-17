@@ -1,0 +1,234 @@
+{
+  "observed_at": "2026-09-17T01:46:11.418622+00:00",
+  "method": "unprivileged filesystem metadata and source hash, selected launchctl read-only fields; no sudo; no credentials or process environments collected",
+  "base_head": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2",
+  "sources": [
+    {
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1/scripts/trusted-cp-deploy-install.sh",
+      "sha256": "ce8fea9ca7ce1618d933f26e63f7c95e0e9dfb0167a6903bbf39f3bae5fde915",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs",
+      "sha256": "8ff1d255fe4c39e5a70c0a91dc2b529d1331bbdfe37e53b6818fcc7e92cf1e60",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1/deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh",
+      "sha256": "b8c9093ac23880a2f89517b8666ee293a55f4815828b4f313ae6b05a00b6d767",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-runbook-d602b59.sh",
+      "sha256": "0fcaa155908749b1b7d280f8a036f52651fd25c13692836c5cd1c2fd05393ca5",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o700"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-freeze-sudo.sh",
+      "sha256": "b1f5c85bb7e38dec6ffb445469197323a408c8555252b3cdc9bf6fc509704608",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/agent-core-session-trace-v2-restored-v1-r2/agent_core_session_trace_v2_root_transaction.py",
+      "sha256": "72dacfe1990c5de0dab9d7d28f21da990ccf115e3c4877272b5baf94dd09878d",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/deployment-artifacts/hr-dispatch-delivery-v1/DEPLOY_HR_DISPATCH_DELIVERY_V1.sh",
+      "sha256": "95438facd87b814919ea49b6a46e5ad10281c77322388d4a397ee0026911cf94",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o644"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/project/svc-workflow/scripts/release.sh",
+      "sha256": "3f68ebfa590ff1fc812f5819ed33f7275492b983e2608ee5bbcbd5836ca2cab6",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755"
+    }
+  ],
+  "services": [
+    {
+      "target": "system/ai.agent-core.runtime",
+      "exit": 0,
+      "fields": [
+        "path = /Library/LaunchDaemons/ai.agent-core.runtime.plist",
+        "state = running",
+        "program = /usr/local/libexec/agent-core/node-runtime/bin/node",
+        "username = authsvc",
+        "group = authsvc",
+        "pid = 298",
+        "last exit code = (never exited)",
+        "state = active",
+        "state = active"
+      ]
+    },
+    {
+      "target": "system/ai.agent-core.scheduler-watchdog-w1",
+      "exit": 0,
+      "fields": [
+        "path = /Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+        "state = not running",
+        "program = /usr/local/libexec/agent-core/node-runtime/bin/node",
+        "username = authsvc",
+        "last exit code = 1",
+        "state = active",
+        "state = active"
+      ]
+    },
+    {
+      "target": "system/ai.agent-core.scheduler-watchdog-w2",
+      "exit": 0,
+      "fields": [
+        "path = /Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+        "state = not running",
+        "program = /usr/local/libexec/agent-core/node-runtime/bin/node",
+        "last exit code = 0",
+        "state = active",
+        "state = active"
+      ]
+    },
+    {
+      "target": "system/com.auth-service",
+      "exit": 0,
+      "fields": [
+        "path = /Library/LaunchDaemons/com.auth-service.plist",
+        "state = running",
+        "program = /usr/local/bin/node",
+        "username = authsvc",
+        "group = authsvc",
+        "pid = 586",
+        "last exit code = (never exited)",
+        "state = active",
+        "state = active"
+      ]
+    },
+    {
+      "target": "gui/502/com.svc-workflow",
+      "exit": 0,
+      "fields": [
+        "path = /Users/yanfenma/Library/LaunchAgents/com.svc-workflow.plist",
+        "state = running",
+        "program = /Users/yanfenma/.local/services/svc-workflow/svc-workflow",
+        "pid = 52488",
+        "last exit code = 0",
+        "state = active",
+        "state = active"
+      ]
+    },
+    {
+      "target": "gui/502/ai.agent-core.runtime",
+      "exit": 0,
+      "fields": [
+        "path = /Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist",
+        "state = running",
+        "program = /Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh",
+        "pid = 5201",
+        "last exit code = 0",
+        "state = active",
+        "state = active"
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "path": "/var/db/agent-core/production-transaction.lock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/db/agent-core/deployments/transaction.lock",
+      "error": "PermissionError"
+    },
+    {
+      "path": "/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/run/agent-core-production-mutation.lock",
+      "uid": 0,
+      "gid": 1,
+      "mode": "0o600",
+      "symlink": false
+    },
+    {
+      "path": "/usr/local/sbin/agent-deployctl",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/var/run/agent-deployd.sock",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "symlink": false
+    },
+    {
+      "path": "/Users/yanfenma/.local/services/svc-workflow/svc-workflow",
+      "uid": 502,
+      "gid": 20,
+      "mode": "0o755",
+      "symlink": false
+    }
+  ],
+  "runtime_metadata": [
+    {
+      "label": "ai.agent-core.runtime",
+      "user": "authsvc",
+      "group": "authsvc",
+      "DSH_AGENT_CHILD_UID": "502",
+      "DSH_AGENT_CHILD_GID": "20",
+      "SCHEDULER_INCIDENT_OWNER_UID": "505",
+      "SCHEDULER_INCIDENT_OWNER_GID": "20",
+      "SCHEDULER_ROUTING_OWNER_UID": "0",
+      "SCHEDULER_ROUTING_READER_GID": "601",
+      "AGENT_CORE_DEPLOYED_SHA": "81d5ab9aaffb8fc16cfc6450bde569ca6eb67124"
+    },
+    {
+      "label": "ai.agent-core.scheduler-watchdog-w1",
+      "user": "authsvc",
+      "group": null,
+      "DSH_AGENT_CHILD_UID": null,
+      "DSH_AGENT_CHILD_GID": null,
+      "SCHEDULER_INCIDENT_OWNER_UID": "505",
+      "SCHEDULER_INCIDENT_OWNER_GID": "20",
+      "SCHEDULER_ROUTING_OWNER_UID": "0",
+      "SCHEDULER_ROUTING_READER_GID": "20",
+      "AGENT_CORE_DEPLOYED_SHA": "81d5ab9aaffb8fc16cfc6450bde569ca6eb67124"
+    },
+    {
+      "label": "ai.agent-core.scheduler-watchdog-w2",
+      "user": "root",
+      "group": null,
+      "DSH_AGENT_CHILD_UID": null,
+      "DSH_AGENT_CHILD_GID": null,
+      "SCHEDULER_INCIDENT_OWNER_UID": "505",
+      "SCHEDULER_INCIDENT_OWNER_GID": "20",
+      "SCHEDULER_ROUTING_OWNER_UID": "0",
+      "SCHEDULER_ROUTING_READER_GID": "20",
+      "AGENT_CORE_DEPLOYED_SHA": "81d5ab9aaffb8fc16cfc6450bde569ca6eb67124"
+    }
+  ]
+}
