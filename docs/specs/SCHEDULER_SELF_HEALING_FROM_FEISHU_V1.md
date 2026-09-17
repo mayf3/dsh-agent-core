@@ -1,11 +1,23 @@
 ---
 spec_id: SCHEDULER_SELF_HEALING_FROM_FEISHU_V1
 title: Scheduler Self-Healing from Feishu — cross-revision retry expiry, tick failure isolation, job_disposition v2
-status: proposed
+status: accepted
+spec_kind: implementation
+authority_level: governing_spec
 proposed_date: 2026-09-17
-owner: mayf3
+accepted_date: 2026-09-17
+accepted_by: mayf3
+accepted_reviewed_head: 3b65db3ac5d48e1cb7671c0a7ca85b066d557a01
+independent_review_result: PASS
 implementation_authority: contracts
 production_apply_authority: none
+scope:
+  - packages/scheduler — retry minter stale-revision policy, tick admission-failure classification, self_ops job_disposition diagnosis surface
+  - packages/broker — self_ops manifest passthrough (no schema change)
+governed_by: []
+external_authorities: []
+owners:
+  - mayf3
 governs:
   - packages/scheduler/src/eligibility.js
   - packages/scheduler/src/scheduler.js
@@ -17,13 +29,22 @@ related_specs:
     - SCHEDULER_TIMEOUT_OUTCOME_V3        # C-009 retry policy tightening (refuse stale), C-026 admission refusal surface
     - SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1  # slot-accounting receipts extended (evidence only)
   preserves:
-    - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3   # self_ops authority/receipt/idempotency untouched; frozen schemas untouched
+    - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3   # frozen schemas/authority/receipt/idempotency untouched; this Spec is the FIRST normative authority for the self_ops.job_disposition surface (§3) — regularizes the pre-existing live operation (review note N1)
     - AGENT_SELF_SERVICE_OPERATIONS_CONTROL_PLANE_V1
 supersedes: []
 superseded_by: null
 ---
 
 # SCHEDULER_SELF_HEALING_FROM_FEISHU_V1
+
+**ACCEPTED for implementation, tests, independent review and non-production
+verification.** Owner accepted reviewed candidate `3b65db3` (byte-identical
+normative content of implementation candidate head `e0ad1e3`) via the docs-only
+acceptance lane on 2026-09-17. The lifecycle merge activates
+`implementation_authority: contracts`; production deployment/mutation and
+re-enabling `retry.auto` in production remain forbidden until the separately
+gated deployment phase (PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1) plus postdeploy
+verification PASS.
 
 ## §0 第一条真实 counterexample（production evidence, NOT 猜测）
 
@@ -161,3 +182,15 @@ fence 语义与 `GLOBAL_SCHEDULER_FENCE=FORBIDDEN`；termination-only settlement
 `status|reconcile_turn` 面、CTA authority matrix、reconcile 幂等公式；Feishu 路由与 CTR-ROUTE-001；
 migration/store fail-loud authority 规则。One-shot（`at`）在 revision bump 后不再有未来 slot 属既有
 natural 语义，本 Spec 不改。
+
+## §8 Lifecycle gate block
+
+```text
+OPEN_OWNER_DECISIONS = NONE_FOR_IMPLEMENTATION
+NORMATIVE_TBD = NONE
+UNRESOLVED_AUTHORITY_CONFLICT = NONE
+PARTIAL_SUPERSESSION = NONE
+```
+
+由 independent exact-head review（candidate `3b65db3`）certified；证言与 N1-N8 处置记录见
+`docs/reports/SCHEDULER_SELF_HEALING_FROM_FEISHU_V1_AUTHORING.md`。

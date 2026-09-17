@@ -65,6 +65,12 @@ runtime change, credential change, or real HR dispatch.
 | `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3` | accepted 2026-09-13; supersedes V2 and incorporates its three accepted Amendments | contracts | preserves unified `scheduler` and adds exact trusted-caller `self_ops(status\|reconcile_turn)` termination-only repair; production apply authority remains none |
 | `AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2` | superseded by V3; historical Amendments retained | historical | complete prior self-service Scheduler authority incorporated by V3 |
 
+## Scheduler self-healing authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `SCHEDULER_SELF_HEALING_FROM_FEISHU_V1` | accepted 2026-09-17; reviewed head `3b65db3…`, Owner mayf3 | contracts; production apply none (separately gated) | first normative authority for the `self_ops.job_disposition` surface (§3); stale cross-revision auto-retry expiry with durable `retry_superseded_by_revision` disposition; tick admission-failure classification JOB_LOCAL vs GLOBAL_FATAL with fail-closed preservation; recovery matrix R1-R5 on existing formal surfaces |
+
 ## Governance transition
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
