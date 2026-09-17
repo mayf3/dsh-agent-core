@@ -209,6 +209,21 @@ fn complete_acceptance(s: &Scenario) {
         .unwrap()
             == 1
     });
+    let refusals: Vec<String> = db.prepare("SELECT record FROM receipts WHERE unit=? AND kind='recovery-refusal' AND json_extract(record,'$.stage') LIKE 'record-%'")
+        .unwrap().query_map([&s.b], |r| r.get(0)).unwrap()
+        .collect::<Result<_, _>>().unwrap();
+    assert_eq!(
+        refusals.len(),
+        1,
+        "repeated ticks retain one durable refusal"
+    );
+    let refusal: Value = serde_json::from_str(&refusals[0]).unwrap();
+    assert_eq!(refusal["unit_id"], s.b);
+    assert_eq!(refusal["status_revision"], s.recovery.status_revision);
+    assert_eq!(refusal["target_runtime"], "runtime");
+    assert_eq!(refusal["expected_target_generation"], 1);
+    assert_eq!(refusal["scope"], "unit-local");
+    assert_eq!(refusal["operation"], "mutation-recovery");
     s.unchanged();
 }
 
@@ -232,6 +247,33 @@ fn r02_mismatched_unit_recovery_does_not_starve_current_acceptance() {
     s.recovery.service_readback_digest = "0".repeat(64);
     s.publish();
     complete_acceptance(&s);
+}
+
+#[test]
+fn r02_cross_unit_record_is_rejected_without_starving_acceptance() {
+    let mut s = scenario();
+    s.recovery.unit_id = s.a.clone();
+    s.publish();
+    complete_acceptance(&s);
+}
+
+#[test]
+fn r02_missing_protected_recovery_namespace_still_blocks_acceptance() {
+    let s = scenario();
+    let roots = FixtureRoots::open(s.daemon.temp.path()).unwrap();
+    let mut guard = None;
+    wait(|| {
+        guard = roots.lock().ok();
+        guard.is_some()
+    });
+    fs::rename(
+        s.daemon.temp.path().join("intake/recovery"),
+        s.daemon.temp.path().join("intake/recovery-held"),
+    )
+    .unwrap();
+    s.request_acceptance();
+    drop(guard);
+    assert_no_acceptance(&s);
 }
 
 #[test]

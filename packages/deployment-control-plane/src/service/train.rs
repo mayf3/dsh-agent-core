@@ -7,7 +7,7 @@ use crate::{
     fs::FixtureRoots,
     model::*,
     queue::Queue,
-    transaction::Executor,
+    transaction::{Executor, RecoveryFailure},
     trust::{digest, signing_bytes, verify_signed},
     Error, Result,
 };
@@ -136,27 +136,52 @@ impl Train {
                 continue;
             };
             let guard = executor.lock()?;
-            // Missing/invalid remediation cannot skip the failed intent or clear STOP.
+            // Only an identified unit-local refusal may leave this unit blocked
+            // while another installed unit uses its ordinary pinned read-only gate.
             let binding = match executor.recovery_binding(&guard, q, id) {
                 Ok(b) => b,
-                Err(_) => continue,
+                Err(RecoveryFailure::UnitLocal(e)) => {
+                    q.daemon_recovery_refused(&status, "physical-binding", e.code())?;
+                    continue;
+                }
+                Err(RecoveryFailure::Global(e)) => return Err(e),
             };
             let request = digest(&binding)?;
             intake.publish("recovery-requests", &request, &binding)?;
             match intake.recovery(id, status.revision) {
-                Ok(evidence) => {
+                Ok(Some(evidence)) => {
+                    // The mailbox slot chooses the unit, never the record's claim.
+                    if evidence.payload.unit_id != *id
+                        || evidence.payload.status_revision != status.revision
+                    {
+                        q.daemon_recovery_refused(
+                            &status,
+                            "record-validation",
+                            "RECOVERY_BINDING",
+                        )?;
+                        continue;
+                    }
                     let policy = intake.policy(&status.unit.deployment_profile)?;
-                    executor.consume_recovery(
+                    match executor.consume_recovery(
                         &guard,
                         q,
                         &intake.config.catalog,
                         &evidence,
                         &policy,
                         now()?,
-                    )?;
+                    ) {
+                        Ok(()) => (),
+                        Err(RecoveryFailure::UnitLocal(e)) => {
+                            q.daemon_recovery_refused(&status, "record-validation", e.code())?;
+                        }
+                        Err(RecoveryFailure::Global(e)) => return Err(e),
+                    }
                 }
-                Err(e) if e.code() == "ABSENT" => (),
-                Err(e) => return Err(e),
+                Ok(None) => (),
+                Err(RecoveryFailure::UnitLocal(e)) => {
+                    q.daemon_recovery_refused(&status, "record-decode", e.code())?;
+                }
+                Err(RecoveryFailure::Global(e)) => return Err(e),
             }
         }
         Ok(())

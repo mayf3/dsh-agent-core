@@ -2,23 +2,44 @@
 use super::*;
 use crate::{error::require, trust::digest, Error};
 use journal::Event;
+
+/// Scope comes from the failing operation, never a caller-supplied safety label.
+#[derive(Debug)]
+pub(crate) enum RecoveryFailure {
+    UnitLocal(Error),
+    Global(Error),
+}
+impl From<Error> for RecoveryFailure {
+    fn from(error: Error) -> Self {
+        Self::Global(error)
+    }
+}
+impl RecoveryFailure {
+    pub(crate) fn record(error: Error) -> Self {
+        Self::at_stage(error, &["INVALID_RECORD", "NESTING_LIMIT", "SIZE_LIMIT"])
+    }
+    fn at_stage(error: Error, definite_refusals: &[&str]) -> Self {
+        if definite_refusals.contains(&error.code()) {
+            Self::UnitLocal(error)
+        } else {
+            Self::Global(error)
+        }
+    }
+}
+type RecoveryResult<T> = std::result::Result<T, RecoveryFailure>;
 impl Executor {
     pub(crate) fn recovery_binding(
         &mut self,
         guard: &MutationGuard,
         q: &Queue,
         id: &str,
-    ) -> Result<RecoveryEvidence> {
+    ) -> RecoveryResult<RecoveryEvidence> {
         guard.binds(&self.root)?;
         require(self.active.is_none(), "TRANSACTION_ACTIVE")?;
         let status = q.daemon_status(id)?;
         require(
             matches!(status.state, State::Blocked | State::RolledBack),
             "UNKNOWN_OUTCOME",
-        )?;
-        require(
-            status.preflight_attempts < 3 && status.mutating_attempts < 2,
-            "RETRY_BUDGET_EXHAUSTED",
         )?;
         let service = self.service.image()?;
         let mut last = None;
@@ -30,11 +51,20 @@ impl Executor {
                 last = Some(journal);
             }
         }
+        // Global journal safety is checked even when this unit exhausted its budget.
+        require(
+            status.preflight_attempts < 3 && status.mutating_attempts < 2,
+            "RETRY_BUDGET_EXHAUSTED",
+        )
+        .map_err(RecoveryFailure::UnitLocal)?;
         let proposal = q.daemon_evidence(id)?;
-        let artifact = self.artifacts.import(
-            &proposal.build.payload.artifact_sha256,
-            &proposal.build.payload.manifest_digest,
-        )?;
+        let artifact = self
+            .artifacts
+            .import(
+                &proposal.build.payload.artifact_sha256,
+                &proposal.build.payload.manifest_digest,
+            )
+            .map_err(|e| RecoveryFailure::at_stage(e, &["ABSENT", "INCOMPLETE_INTAKE"]))?;
         self.validate_slots(&artifact.manifest)?;
         self.verify_live_baseline(q, &status.unit.target_runtime)?;
         let paths = if let Some(slots) = &self.slots {
@@ -74,7 +104,7 @@ impl Executor {
             ))?;
             let restored = match journal.events.last() {
                 Some(Event::RolledBack { service }) => service,
-                _ => return Err(Error::new("RECOVERY_BINDING")),
+                _ => return Err(Error::new("RECOVERY_BINDING").into()),
             };
             self.service.prove(restored)?;
             if let Event::Preflight { before, .. } = &journal.events[0] {
@@ -134,24 +164,49 @@ impl Executor {
         e: &Signed<RecoveryEvidence>,
         policy: &Signed<Policy>,
         now: u64,
-    ) -> Result<()> {
+    ) -> RecoveryResult<()> {
         let expected = self.recovery_binding(guard, q, &e.payload.unit_id)?;
         let mut supplied = e.payload.clone();
         supplied.remediation_digest = String::new();
         supplied.issued_at = 0;
-        require(supplied == expected, "RECOVERY_BINDING")?;
+        require(supplied == expected, "RECOVERY_BINDING").map_err(RecoveryFailure::UnitLocal)?;
         crate::trust::verify_signed(
             e,
             c,
             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
-        )?;
+        )
+        .map_err(|e| {
+            RecoveryFailure::at_stage(
+                e,
+                &[
+                    "UNKNOWN_ISSUER",
+                    "ISSUER_ROLE",
+                    "ISSUER_SCOPE",
+                    "INVALID_SIGNATURE",
+                ],
+            )
+        })?;
         q.observe_policy(
             c,
             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
             policy,
             now,
         )?;
-        q.retry(c, e, now)?;
+        q.retry(c, e, now).map_err(|e| {
+            RecoveryFailure::at_stage(
+                e,
+                &[
+                    "RECOVERY_EXPIRED",
+                    "REVISION_CAS",
+                    "INVALID_DIGEST",
+                    "RETRY_BUDGET_EXHAUSTED",
+                    "REVOKED",
+                    "PREIMAGE_MISMATCH",
+                    "DEPENDENCY_NOT_SATISFIED",
+                    "PROFILE_NOT_ALLOWED",
+                ],
+            )
+        })?;
         Ok(())
     }
 }

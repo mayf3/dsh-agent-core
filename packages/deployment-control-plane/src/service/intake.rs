@@ -148,9 +148,21 @@ impl Intake {
         self.publish("admitted", hash, &p)?;
         Ok(p)
     }
-    pub fn recovery(&self, id: &str, revision: u64) -> Result<Signed<RecoveryEvidence>> {
+    pub fn recovery(
+        &self,
+        id: &str,
+        revision: u64,
+    ) -> std::result::Result<Option<Signed<RecoveryEvidence>>, crate::transaction::RecoveryFailure>
+    {
         valid_digest(id)?;
-        read(&self.area("recovery")?, &format!("{id}-{revision}.json"))
+        // Losing the protected namespace is global uncertainty. Only absence of
+        // this exact unit/revision file means no remediation has been supplied.
+        let area = self.area("recovery")?;
+        match read(&area, &format!("{id}-{revision}.json")) {
+            Ok(record) => Ok(Some(record)),
+            Err(error) if error.code() == "ABSENT" => Ok(None),
+            Err(error) => Err(crate::transaction::RecoveryFailure::record(error)),
+        }
     }
     pub fn policy(&self, profile: &str) -> Result<Signed<Policy>> {
         valid_id(profile)?;
