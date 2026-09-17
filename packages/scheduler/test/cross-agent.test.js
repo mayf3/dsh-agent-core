@@ -257,18 +257,12 @@ test('CROSS-AGENT-5 unknown target fails closed at admission: no Router entry, n
   assert.equal(created.ok, true, 'definition-time validation is schema-only; roster authority applies at admission')
   const jobId = created.result.jobId
 
-  // C-SH-002: the roster failure is a job-local typed refusal — pre-start
-  // fail-closed (no Router entry, no admission) while the tick survives.
   await runDue(ctx, 5 * 60_000)
-  const receipts = ctx.runsLog().filter((event) => event.action === 'slot_accounting' && event.jobId === jobId)
-  assert.equal(ctx.chainCalls.length, 0, 'the route chain is never reached for an unknown target')
-  assert.equal((await occurrences(ctx)).length, 0, 'no admission is persisted for an unknown target')
-  assert.ok(receipts.some((event) => event.classification === 'ADMISSION_REJECTED'
-    && /agent_not_runnable/.test(event.reason)), 'the roster refusal is receipted with its exact reason')
-
   await runDue(ctx, 0)
-  assert.equal((await occurrences(ctx)).length, 0,
-    'the job is not silently executed: every admission attempt fails closed')
+  assert.equal(ctx.chainCalls.length, 0, 'the route chain is never reached for an unknown target')
+  assert.equal((await occurrences(ctx)).length, 0, 'every admission attempt stays fail-closed: no admission persisted')
+  assert.ok(ctx.runsLog().some((event) => event.action === 'slot_accounting' && event.jobId === jobId
+    && event.classification === 'ADMISSION_REJECTED' && /agent_not_runnable/.test(event.reason)), 'refusal receipted')
   assert.equal((await jobs(ctx))[0].id, jobId)
   assert.equal((await jobs(ctx))[0].enabled, true)
 })

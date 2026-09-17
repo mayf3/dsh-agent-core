@@ -26,11 +26,11 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { Scheduler, classifyAdmissionFailure } from '../src/scheduler.js'
-import { JobStore } from '../src/store.js'
-import { createRecordingDelivery } from '../src/seams.js'
-import { applyTransition, buildOccurrenceRecord, deriveOccurrenceId, rebuildFences } from '../src/occurrence-model.js'
-import { createSelfOpsAccess } from '../src/self-ops/index.js'
+import { Scheduler, classifyAdmissionFailure } from '../../src/scheduler.js'
+import { JobStore } from '../../src/store.js'
+import { createRecordingDelivery } from '../../src/seams.js'
+import { applyTransition, buildOccurrenceRecord, deriveOccurrenceId, rebuildFences } from '../../src/occurrence-model.js'
+import { createSelfOpsAccess } from '../../src/self-ops/index.js'
 
 const sleep = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms))
 

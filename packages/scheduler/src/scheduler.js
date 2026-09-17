@@ -1,5 +1,6 @@
 import { normalizeJob, toPublicJob } from './job-model.js'
-import { applyTransition, deriveOccurrenceId, rebuildFences } from './occurrence-model.js'
+import { applyTransition, rebuildFences } from './occurrence-model.js'
+import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession } from './admission-isolation.js'
 import {
   DEFAULT_AT_CATCHUP_GRACE_MS,
   deriveJobStateSummary,
@@ -49,33 +50,8 @@ const defaultLog = {
   error: (...args) => process.stderr.write(`[scheduler] ERROR ${args.join(' ')}\n`),
 }
 
-/**
- * C-SH-002 admission-failure classification. `job_local` = the failure is
- * attributable to THIS candidate's own coordinates or agent (structured
- * collision, payload conflict, or the cross-revision retry-predecessor
- * rejection naming exactly this candidate's derived identity); everything
- * else — unclassifiable, store I/O, lock/authority integrity — is
- * `global` and keeps the fail-closed tick propagation.
- */
-export function classifyAdmissionFailure(error, candidate) {
-  if (error?.code === 'OCCURRENCE_STRUCTURED_COLLISION' || error?.code === 'OCCURRENCE_PAYLOAD_CONFLICT') {
-    const attemptedJobId = error?.attempted?.jobId ?? error?.existing?.jobId
-    if (attemptedJobId === undefined || attemptedJobId === candidate.job.id) return 'job_local'
-    return 'global'
-  }
-  const causeMessage = error?.cause?.message ?? error?.message ?? ''
-  const match = /invalid retry predecessor for (occ:[0-9a-f]+)/.exec(causeMessage)
-  if (match && candidate.kind === 'retry') {
-    const derived = deriveOccurrenceId({
-      jobId: candidate.job.id,
-      scheduleRevision: candidate.job.scheduleRevision,
-      kind: 'retry',
-      retryOfOccurrenceId: candidate.retryOfOccurrenceId,
-    })
-    if (match[1] === derived || match[1] === candidate.retryOfOccurrenceId) return 'job_local'
-  }
-  return 'global'
-}
+// C-SH-002 admission-failure classification lives in ./admission-isolation.js.
+export { AGENT_TURN_SAFETY_TIMEOUT_MS, TIMEOUT_ERROR_TEXT, classifyAdmissionFailure }
 
 /**
  * Scheduler V2. Job definitions produce durable logical occurrences; every
@@ -119,9 +95,13 @@ export class Scheduler {
     this._slotCursor = createSlotAccountingCursor()
     this._engineSessionId = `${process.pid}:${Date.now().toString(36)}`
     this._leaseLossRecorded = false
-    // Stale-retry receipts: once per engine session per superseded state —
-    // the detection loop re-derives the same candidate every tick.
-    this._staleRetryNoted = new Set()
+    // Stale-retry receipts + admission-failure isolation (C-SH-001/C-SH-002).
+    this._admissionIsolation = createAdmissionIsolation({
+      store: this.store,
+      engineSessionId: this._engineSessionId,
+      nowMs: this.nowMs,
+      recordSlot: (job, slot, classification, reason) => this._recordSlot(job, slot, classification, reason),
+    })
   }
 
   async load() {
@@ -281,21 +261,7 @@ export class Scheduler {
           continue
         }
         if (retry?.staleRevision) {
-          // Durable policy receipt: the pending retry belongs to a
-          // superseded schedule revision (minting it would failLoud the
-          // store); the natural schedule below still owns this job's slots.
-          // Marked only on a successful append so a transient run-log IO
-          // failure is retried on the next tick (same as _recordSlot).
-          const notedKey = `${job.id}:${retry.predecessorScheduleRevision}->${job.scheduleRevision}`
-          if (!this._staleRetryNoted.has(notedKey)) {
-            const receipt = await this.store.appendRunEvent({
-              ts: now, action: 'retry_superseded_by_revision', jobId: job.id,
-              retryOfOccurrenceId: retry.retryOfOccurrenceId,
-              predecessorScheduleRevision: retry.predecessorScheduleRevision,
-              jobScheduleRevision: job.scheduleRevision,
-            })
-            if (receipt?.ok) this._staleRetryNoted.add(notedKey)
-          }
+          await recordStaleSupersession(this.store, this._admissionIsolation.staleRetryNoted, job, retry, now)
         }
         const natural = naturalCandidate({
           job,
@@ -319,25 +285,11 @@ export class Scheduler {
       try {
         reserved = await this._reserve(candidate, (reason) => { rejectionReason = reason })
       } catch (error) {
-        await this._recordSlot(candidate.job, slot, 'ADMISSION_INTERRUPTED', String(error?.message ?? error).slice(0, 300))
-        if (classifyAdmissionFailure(error, candidate) !== 'job_local') {
-          // GLOBAL_FATAL (C-SH-002): the failure is not attributable to this
-          // candidate's own coordinates/agent — store or authority integrity
-          // cannot be scoped to one job. Fail-closed propagation stays: the
-          // not-yet-attempted candidates are receipted as skipped, the
-          // blockade is durably receipted, and the error still propagates.
-          await this._recordGlobalTickBlocked(error)
-          for (const pending of candidates.slice(candidates.indexOf(candidate) + 1)) {
-            await this._recordSlot(
-              pending.job, pending.nominalScheduledAt ?? pending.catchUpOfNominalAt,
-              'SKIPPED_POLICY', 'tick aborted by an admission failure (fail-closed propagation)',
-            )
-          }
-          throw error
-        }
-        // JOB_LOCAL (C-SH-002): the failure is scoped to this candidate —
-        // ONE_BAD_JOB != GLOBAL_TICK_FAILURE. The receipt above stands in for
-        // the admission; every remaining candidate keeps its own merits.
+        const pending = candidates.slice(candidates.indexOf(candidate) + 1)
+        const verdict = await this._admissionIsolation.handleFailure(error, candidate, slot, pending)
+        if (verdict === 'global_fatal') throw error // GLOBAL_FATAL (C-SH-002): fail-closed stays
+        // JOB_LOCAL (C-SH-002): scoped to this candidate — the receipt stands in
+        // for the admission; every remaining candidate keeps its own merits.
         continue
       }
       if (!reserved) {
@@ -367,23 +319,6 @@ export class Scheduler {
       classification, reason, ...extra,
     })
     if (ok) this._slotCursor.mark(job.id, slot)
-  }
-
-  /**
-   * C-SH-002 global-tick-blockade receipt (the Goal's GLOBAL_RUNTIME_BLOCKED
-   * marker; deduped per engine session).
-   */
-  async _recordGlobalTickBlocked(error) {
-    if (this._globalBlockadeRecorded) return
-    this._globalBlockadeRecorded = true
-    try {
-      await this.store.appendRunEvent({
-        ts: this.nowMs(),
-        action: 'global_tick_blocked',
-        reason: String(error?.message ?? error).slice(0, 300),
-        engineSessionId: this._engineSessionId,
-      })
-    } catch { /* evidence is best-effort; the fail-closed decision stands */ }
   }
 
   /** SKIPPED_POLICY receipt: the engine observed the slot and chose not to run it. */
