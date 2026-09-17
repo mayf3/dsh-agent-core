@@ -1,5 +1,8 @@
 use super::*;
 pub(super) fn is_current(tx: &Transaction<'_>, dep: &Dependency) -> Result<bool> {
+    if super::executor_finalization::pending(tx, &dep.unit_id)? {
+        return Ok(false);
+    }
     let s = read_status(tx, &dep.unit_id)?;
     let found: Option<String> = tx
         .query_row(
@@ -21,6 +24,9 @@ pub(super) fn satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
         .collect::<std::result::Result<Vec<_>, _>>()?;
     for raw in records {
         let dep: Dependency = parse(raw)?;
+        if super::executor_finalization::pending(tx, &dep.unit_id)? {
+            return Ok(false);
+        }
         let s = read_status(tx, &dep.unit_id)?;
         if s.state != State::Applied {
             return Ok(false);

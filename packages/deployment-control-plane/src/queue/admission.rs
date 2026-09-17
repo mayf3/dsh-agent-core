@@ -52,7 +52,7 @@ impl Queue {
             };
             let attachment = digest(&(unit_id.as_str(),&proposal.goals,&proposal.build,&proposal.reviews))?;
             let existing_attachment: Option<String>=tx.query_row("SELECT digest FROM attachments WHERE digest=?",[&attachment],|r|r.get(0)).optional()?;
-            require(existing_attachment.is_some() || matches!(read_status(tx,&unit_id)?.state,State::Queued|State::Applied),"ATTACHMENT_DEFERRED")?;
+            require(existing_attachment.is_some() || matches!(super::executor_finalization::projected_status(tx,&unit_id)?.state,State::Queued|State::Applied),"ATTACHMENT_DEFERRED")?;
             tx.execute("INSERT OR IGNORE INTO attachments VALUES (?,?,?)", (&attachment,&unit_id,json(proposal)?))?;
             for g in &proposal.goals {
                 let old: Option<String> = tx.query_row("SELECT record FROM coverage WHERE unit=? AND goal=?", (&unit_id,&g.payload.goal_id), |r| r.get(0)).optional()?;
@@ -60,7 +60,7 @@ impl Queue {
                 else { tx.execute("INSERT INTO coverage VALUES (?,?,?,?)", (&unit_id,&g.payload.goal_id,&attachment,json(g)?))?; }
             }
             tx.execute("INSERT OR IGNORE INTO actors VALUES (?,?)", (&unit_id,&actor.id))?;
-            let status = read_status(tx,&unit_id)?;
+            let status = super::executor_finalization::projected_status(tx,&unit_id)?;
             let state=status.state;
             let result = Submission { unit_id: unit_id.clone(), attachment_digest: attachment,
                 install_required: installation_pending(state),
@@ -325,7 +325,7 @@ fn recover_request(
     require(old == hash, "REQUEST_CONFLICT")?;
     let mut result: Submission = parse(raw)?;
     authorize(tx, actor, &result.unit_id)?;
-    let status = read_status(tx, &result.unit_id)?;
+    let status = super::executor_finalization::projected_status(tx, &result.unit_id)?;
     result.state = status.state;
     result.status_revision = status.revision;
     result.install_required = installation_pending(status.state);

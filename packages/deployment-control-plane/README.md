@@ -307,3 +307,42 @@ facet coverage; an unsupported required facet prevents enabling that profile.
 Task 3 still owns socket/credentials, trusted clock/caller selection, the Train,
 bounded accepted Goal verifier dispatch, bootstrap activation/trust validation,
 protected SQLite open, and user-facing receipt redaction.
+
+### Task 2 repair: retained executions and finalization eligibility
+
+A retained journal directory is `<unit>-<mutation-attempt>-<preflight-ordinal>`.
+The preflight ordinal comes from the existing Queue budget; it does not consume a
+mutation attempt or allocate another intent. Receipt lookup matches the complete
+immutable transaction receipt, and can also read the previous `<unit>-<attempt>`
+name. Old journals are never removed to permit retry. The 4096-slot admission cap
+and journal writer/reader now compose: at most three install plus two rollback
+records per slot, with 256 reserved service/phase records (20,736 total). Journal
+enumeration uses that same cap; ordinary directories remain capped at 8192 and
+journal-directory creation rejects before exceeding that parent cap.
+
+Executor finalization has a per-unit durable `executor_pending` fence. It is
+recorded before the preflight journal, and is cleared only after this ordering:
+Goal proof/readback → Queue FINALIZING → immutable transaction receipt → internal
+Queue APPLIED/outbox commit → flushed `Finalized` journal → eligibility commit.
+`finalize` returns success only after eligibility commits. While fenced:
+
+- actor `status` and idempotent `submit` project FINALIZING rather than APPLIED;
+- new late attachments, late verification and live dependency capability reject;
+- outbox delivery and closure acknowledgement exclude that unit;
+- a pending internal APPLIED commit holds the mutation lane.
+
+`daemon_status`, `daemon_installed_receipt`, `daemon_current_installation` and
+immutable receipt/journal reads remain raw forensic/physical readbacks. Task 3
+must not treat those internal values as externally actionable success. Use the
+actor projection, dependency checks and outbox eligibility instead. Safely
+finalized unrelated units retain their durable PASS outbox even when another
+unit is unknown. No receipt or Goal closure is rewritten or duplicated.
+
+Startup, under the guard, can clear the fence for the exact hash-checked terminal
+`Finalized` record only after re-flushing that record/directory and binding its
+complete receipt to the durable APPLIED attempt and immutable Queue receipt.
+This reconciles eligibility without install, service action or Goal replay; it
+does not silently clear an existing host mutation-quarantine latch.
+A terminal rollback/Queue gap is explicitly quarantined; incomplete/corrupt
+finalization retains the unit fence and host mutation quarantine. Test-only
+EIO-at-fsync and truncated-record injection are not hardware-failure evidence.

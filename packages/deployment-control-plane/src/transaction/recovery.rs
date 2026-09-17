@@ -98,6 +98,8 @@ impl Executor {
                 restoring_attempt: restoring.mutating_attempts,
             }))?;
         }
+        #[cfg(test)]
+        fault::point("restoration-projection");
         let evidence = j.append(Event::RolledBack { service: restored })?;
         self.transition(q, id, State::RolledBack, &evidence)
     }
@@ -117,6 +119,15 @@ impl Executor {
                 }
             };
             if j.terminal() {
+                let (id, _) = j.identity()?;
+                if matches!(j.events.last(), Some(Event::Finalized)) {
+                    q.complete_executor_finalization(j.finalized_proof()?)?;
+                }
+                if q.daemon_status(id)?.state == State::Recovering {
+                    // The journal/Queue commit gap is not evidence of current service identity.
+                    q.latch_executor_failure(&digest(&(id, "terminal-queue-gap"))?)?;
+                    self.transition(q, id, State::Quarantined, &digest(&j.events)?)?;
+                }
                 continue;
             }
             let (id, _) = j.identity()?;
@@ -135,6 +146,8 @@ impl Executor {
                         .iter()
                         .all(|(p, image)| self.target.read(p).ok().as_ref() == Some(image));
                     if unchanged && self.service.image().ok().as_ref() == Some(service) {
+                        #[cfg(test)]
+                        fault::point("restoration-projection");
                         let evidence = j.append(Event::RolledBack {
                             service: service.clone(),
                         })?;
@@ -204,11 +217,18 @@ impl Executor {
             self.service.prove(image)?;
             self.transition(q, id, State::Finalizing, &digest(&receipt)?)?;
             let hash = q.record_transaction(&receipt)?;
+            #[cfg(test)]
+            fault::point("transaction-receipt");
             self.transition(q, id, State::Applied, &hash)?;
             j.append(Event::Finalized)?;
+            q.complete_executor_finalization(j.finalized_proof()?)?;
+            #[cfg(test)]
+            fault::point("closure-eligible");
             Ok(hash)
         })();
-        if result.is_err() {
+        if let Err(error) = &result {
+            // Even a complete record after failed fsync has an uncertain durable disposition.
+            q.latch_executor_failure(&digest(&(id, error.code(), "finalize-incomplete"))?)?;
             self.active = Some(j);
         }
         Ok(result?)

@@ -2,8 +2,8 @@
 
 ## Status and coordinates
 
-Bounded implementation candidate complete, awaiting the controller's independent
-Task 2 affected-contract review. It is not whole-profile completion,
+Bounded implementation candidate with frozen Task 2 review repairs, awaiting the
+controller's scoped independent re-audit. It is not whole-profile completion,
 BOOTSTRAP_READY, privileged-bootstrap permission, or production conformance.
 
 - Target: `mayf3/dsh-agent-core`.
@@ -211,3 +211,124 @@ full-disk/hardware fault or production daemon crash was injected. Native launchd
 privileged root process census accessibility, current disabled-map shape, real
 installed service identity/artifact/canary and legacy-bypass denial remain
 unexecuted live gates. These fixtures establish bounded source evidence only.
+
+## Frozen Task 2 review repair appendix
+
+Repair starting Head: `8b19bc5f2a5dac98af4fa78a78775e77b62d9d57`.
+The independent `task-2-review.md` freezes exactly T2-B01/T2-B02/T2-B03. This pass
+reuses the same accepted authority, isolated checkout and non-production mandate.
+No unsupported profile facet, Spec, external checkout or production state changed.
+The controller owns the one independent scoped re-audit after this repair commit.
+
+### T2-B01: retained preflight execution identity
+
+The actual edge-1 child crash reproduced `TRANSACTION_EXISTS` after recovery to
+BLOCKED and valid signed same-intent retry (`35-repair-red.log`). Journal directory
+identity now includes the Queue's preflight ordinal separately from the intended
+mutation attempt. Retry retained the first journal bytes, used preflight 2 /
+mutation 1, returned a receipt for attempt 1, and retained the same immutable
+intent. Receipt-bound baseline lookup finds the exact full receipt, supports the
+previous directory spelling, and rejects ambiguity. No historical evidence is
+deleted, overwritten or moved into a new caller intent. See
+`36-preflight-retry-green.log` and final suite.
+
+### T2-B02: composable journal resource bounds
+
+The real 4096-slot apply reproduced the reader's SIZE_LIMIT before any repair
+(`35-repair-red.log`). Admission now uses a shared MAX_SLOTS constant; journal
+append and bounded directory read both use `5 * 4096 + 256 = 20736`. The five
+slot records are SlotIntent/Prepared/Installed/RollbackIntent/Restored. The fixed
+three-service group has at most twelve launchctl actions across full apply plus
+rollback (three records each); phase/readback/finalization and failure records
+fit within the additional 256. Success uses fewer records. Every append enforces
+the same reader bound, including subsequent quarantine records. The ordinary
+8192 directory cap is unchanged, with journal-directory creation refusing before
+its parent exceeds that cap. Existing manifest/aggregate/preimage byte limits
+remain in force; no resource cap was removed.
+
+The maximum-size actual fixture installed 4096 files, reloaded **12,298** records,
+rolled all 4096 slots back, and reloaded **20,494** lifecycle records. It checked
+all restored bytes and the final Queue disposition. This is an actual journal
+roundtrip, not only arithmetic (`37-journal-bounds-green.log`, 279.08 seconds for
+the two-test run). The fixture child lifetime remains two seconds for crashing
+workers and 300 seconds for ordinary owned fixtures, so a maximum journal reload
+does not accidentally expire its unrelated service fixture.
+
+### T2-B03: lifecycle faults and finalization commit gap
+
+The expanded child fixtures execute every observed rollback/finalize/restoration
+journal edge and the adjacent Queue RollingBack/RolledBack, Finalizing,
+transaction-receipt, APPLIED, restoration-projection and closure-eligibility
+commits. They reacquire the real OS lock, retain exact journal records, inspect
+full target FileImage metadata/bytes, retain physical binding and mutation budgets,
+and never replay. Restored-A binding is checked against the actual fixture kernel
+process recorded at restoration; its original transaction receipt stays pinned.
+
+The tests exposed a real APPLIED-before-Finalized closure gap
+(`38-lifecycle-fault-red.log`). An initial global outbox gate hid an unrelated A
+closure; the focused counterexample is preserved in `40-closure-isolation-red.log`.
+The final repair uses a **per-unit executor finalization fence**. The exact ordering
+and Task 3 API obligations are in the README repair section. Queue APPLIED and its
+immutable receipt/outbox may persist internally, but actor status/idempotent
+submission remain FINALIZING and closure delivery/ACK, late acceptance and live
+capability dependencies remain ineligible until exact Finalized proof is durable.
+The mutation lane also remains occupied. Safely finalized unrelated A's existing
+PASS outbox stays available while B is quarantined. Startup may reconcile only the
+complete hash-checked Finalized receipt, flush its terminal record/directory, bind
+its exact durable Queue receipt/attempt, and clear eligibility without replay.
+A rollback journal/Queue commit gap remains explicitly Quarantined. Eligibility
+reconciliation does not silently clear an existing host mutation-quarantine latch.
+
+`42-finalization-projections-red.log` preserves the public APPLIED projection
+counterexample; `43-finalization-projections-green.log` covers its repair. The
+expanded projection test also rejects premature closure ACK and holds an unrelated
+queued unit until the finalization fence is resolved. `44-repair-final-suite.log`
+retains a test-fixture PRODUCER_CAS failure from reusing a registered Goal with
+changed dependency evidence. The fixture now registers a distinct independent
+Goal; `45-projection-fixture-green.log` passes. No production check was weakened.
+
+Failed-fsync injection returns EIO at the write_new fsync call boundary after real
+bytes/metadata were written. Partial-record injection physically truncates and
+flushes that private record before returning an error. Both hooks compile only
+under cfg(test), refuse root, and preserve the actual uncertain/truncated files.
+They cover all 13 apply records and all observed lifecycle records; reopen either
+proves a safe no-effect/terminal disposition or preserves quarantine, never replay.
+This is explicit syscall-error/partial-state simulation, not physical ENOSPC,
+hardware power-loss or SQLite fsync-failure proof. An owned /bin/sleep action uses
+the actual bounded runner: timeout kills/reaps the exact kernel child, records
+its unsuccessful outcome, propagates OPERATION_TIMEOUT through apply, quarantines
+the transaction, and remains non-replayable on recovery.
+
+### Repair verification and API delta
+
+No public function signature or second model/Queue was added. Private Queue
+executor fencing/proof methods and a small eligibility table implement the
+cross-store commit boundary. Public projection/gating changes are specified above;
+raw daemon and immutable audit reads remain available. Historical transaction,
+Goal and restoration receipts stay immutable. Existing restored-A late acceptance,
+dependency freshness and one-time outbox closure regressions remain affected gates.
+
+Final full command:
+
+```text
+cargo test --locked --manifest-path packages/deployment-control-plane/Cargo.toml \
+  --lib --test authority --test queue --test filesystem --test transactions -- --nocapture
+```
+
+Final command exit **0**: **72 passed, 0 failed** (library 14, authority 12,
+filesystem 12, queue 25, transactions 9), no compiler warnings. Exact complete raw
+output: `46-repair-final-suite.log`. This includes the 4096-slot roundtrip,
+25 additional lifecycle crash boundaries, 58 labeled sync/partial-record cases,
+and all 37 affected Task 1 tests plus existing restored-generation/dependency/
+closure cases. Four parent helper entries return without worker coordinates;
+their real child invocations are individually retained in the raw output.
+
+`cargo fmt --check`, staged source `git diff --check` and governance integrity pass.
+Manual Rust structure passes: max **482** physical lines, **16** immediate
+children and depth **2** (`repair-rust-structure.json`). Raw logs preserve Cargo's
+original blank EOF lines. Formatting and governance command outputs are
+`repair-fmt.log` / `repair-governance.log`. All earlier failing logs remain raw
+evidence; no initial failure output was replaced with a later PASS.
+No production launchctl, sudo, bootstrap, installation, service signal or other
+checkout mutation was executed. The original exact unsupported facets and native
+live-proof limitations above are unchanged; this repair is not BOOTSTRAP_READY.

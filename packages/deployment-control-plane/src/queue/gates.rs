@@ -39,6 +39,10 @@ pub(super) fn validate_unit(
         )
         .optional()?;
     if status.state == State::Applied {
+        require(
+            !super::executor_finalization::pending(tx, id)?,
+            "FINALIZATION_PENDING",
+        )?;
         let quarantine: u64 =
             tx.query_row("SELECT value FROM meta WHERE key='quarantine'", [], |r| {
                 r.get(0)

@@ -1,5 +1,6 @@
 mod admission;
 mod dependencies;
+mod executor_finalization;
 mod gates;
 mod lifecycle;
 mod producer;
@@ -49,7 +50,7 @@ impl Queue {
     pub fn status(&self, actor: &Actor, id: &str) -> Result<UnitStatus> {
         self.transaction(|tx| {
             authorize(tx, actor, id)?;
-            read_status(tx, id)
+            executor_finalization::projected_status(tx, id)
         })
     }
     /// Daemon-only read. Transport must use actor-scoped status instead.

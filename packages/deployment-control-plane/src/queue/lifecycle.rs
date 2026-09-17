@@ -245,7 +245,8 @@ fn select_ready(tx: &Transaction<'_>) -> Result<Option<UnitStatus>> {
         })?;
     let paused: u64 = tx.query_row("SELECT count(*) FROM pauses", [], |r| r.get(0))?;
     let inflight: u64 = tx.query_row("SELECT count(*) FROM units WHERE state IN ('\"Precheck\"','\"Applying\"','\"Restarting\"','\"Verifying\"','\"Finalizing\"','\"RollingBack\"','\"Recovering\"')", [], |r|r.get(0))?;
-    if quarantine > 0 || inflight > 0 {
+    let pending: u64 = tx.query_row("SELECT count(*) FROM executor_pending p JOIN units u ON u.id=p.unit WHERE u.state='\"Applied\"'", [], |r| r.get(0))?;
+    if quarantine > 0 || inflight > 0 || pending > 0 {
         return Ok(None);
     }
     let mut stmt =

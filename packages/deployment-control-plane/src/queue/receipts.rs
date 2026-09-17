@@ -89,6 +89,7 @@ impl Queue {
             require(r.attachment_digest==attachment && r.attempt==s.mutating_attempts,"GOAL_ATTEMPT_MISMATCH")?;
             valid_id(&r.service_generation)?;
             if s.state == State::Applied {
+                require(!super::executor_finalization::pending(tx, &r.unit_id)?,"FINALIZATION_PENDING")?;
                 let quarantine:u64=tx.query_row("SELECT value FROM meta WHERE key='quarantine'",[],|row|row.get(0))?;
                 require(quarantine==0,"UNKNOWN_OUTCOME")?;
                 let physical = super::physical::current(tx, &s.unit.target_runtime)?.ok_or(Error::new("INSTALLED_GENERATION_CHANGED"))?;
@@ -139,7 +140,7 @@ impl Queue {
     }
     pub fn outbox(&self, actor: &Actor) -> Result<Vec<OutboxEntry>> {
         self.transaction(|tx| {
-            let mut stmt = tx.prepare("SELECT o.id,o.goal,o.producer,o.expected_revision,o.receipt FROM outbox o JOIN actors a ON a.unit=o.unit WHERE a.actor=? AND o.delivered=0 ORDER BY o.id")?;
+            let mut stmt = tx.prepare("SELECT o.id,o.goal,o.producer,o.expected_revision,o.receipt FROM outbox o JOIN actors a ON a.unit=o.unit WHERE a.actor=? AND o.delivered=0 AND NOT EXISTS (SELECT 1 FROM executor_pending p WHERE p.unit=o.unit) ORDER BY o.id")?;
             let rows = stmt.query_map([&actor.id], |r|Ok(OutboxEntry {id:r.get(0)?,goal_id:r.get(1)?,producer_id:r.get(2)?,expected_producer_revision:r.get(3)?,receipt_digest:r.get(4)?}))?
                 .collect::<std::result::Result<Vec<_>,_>>()?;
             Ok(rows)
@@ -152,6 +153,8 @@ impl Queue {
     ) -> Result<()> {
         self.transaction(|tx| {
             let a = &ack.payload;
+            let pending: u64 = tx.query_row("SELECT count(*) FROM outbox o JOIN executor_pending p ON p.unit=o.unit WHERE o.id=?", [&a.outbox_id], |r| r.get(0))?;
+            require(pending == 0, "FINALIZATION_PENDING")?;
             let (goal, producer, rev, receipt): (String, String, u64, String) = tx
                 .query_row(
                     "SELECT goal,producer,expected_revision,receipt FROM outbox WHERE id=?",

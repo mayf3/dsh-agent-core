@@ -91,6 +91,8 @@ pub(crate) fn write_new(
         "UNSAFE_MODE",
     )?;
     validate(&file, uid, false)?;
+    #[cfg(test)]
+    crate::transaction::fault::before_sync(&file, name)?;
     file.sync_all()?;
     dir.file.sync_all()?;
     Ok(file)

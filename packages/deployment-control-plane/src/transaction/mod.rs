@@ -97,6 +97,8 @@ impl Executor {
     fn transition(&self, q: &Queue, id: &str, next: State, evidence: &str) -> Result<()> {
         let s = q.daemon_status(id)?;
         q.transition(id, s.revision, next, evidence)?;
+        #[cfg(test)]
+        fault::point(&format!("queue-{next:?}"));
         Ok(())
     }
 }
@@ -115,3 +117,19 @@ pub(crate) struct RestorationProof {
 }
 
 pub(crate) struct VerifiedRestoration(pub(crate) RestoredInstallation);
+
+#[cfg(test)]
+#[path = "../../test/transaction_repair.rs"]
+mod repair;
+
+#[cfg(test)]
+pub(crate) mod fault;
+#[cfg(test)]
+#[path = "../../test/transaction_faults.rs"]
+mod faults;
+
+pub(crate) struct VerifiedFinalization(pub(crate) TransactionReceipt);
+
+#[cfg(test)]
+#[path = "../../test/transaction_finalization.rs"]
+mod finalization_tests;
