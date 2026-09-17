@@ -1,0 +1,56 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.94s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 6 tests
+test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_EXPIRED
+FAILED
+test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_EXPIRED
+ok
+test recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance ... BLOCKED ABSENT
+BLOCKED INVALID_RECORD
+FAILED
+test recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_BINDING
+FAILED
+test recovery_isolation::r02_rejection_store_failure_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_EXPIRED
+ok
+test recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance ... BLOCKED ABSENT
+FAILED
+
+failures:
+
+---- recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance stdout ----
+
+thread 'recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance' (73732662) panicked at test/common/train.rs:18:9:
+timed out
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance stdout ----
+
+thread 'recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance' (73733328) panicked at test/common/train.rs:18:9:
+timed out
+
+---- recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance stdout ----
+
+thread 'recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance' (73733874) panicked at test/common/train.rs:18:9:
+timed out
+
+---- recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance stdout ----
+
+thread 'recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance' (73734346) panicked at test/common/recovery_isolation.rs:282:9:
+global unknown must not reach verifier
+
+
+failures:
+    recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance
+    recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance
+    recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance
+    recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 25 filtered out; finished in 54.40s
+
+error: test failed, to rerun pass `--test train`

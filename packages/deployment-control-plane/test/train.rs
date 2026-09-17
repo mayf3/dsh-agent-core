@@ -402,3 +402,6 @@ mod repair;
 
 #[path = "common/remediation.rs"]
 mod remediation_tests;
+
+#[path = "common/recovery_isolation.rs"]
+mod recovery_isolation;

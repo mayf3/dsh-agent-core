@@ -1,0 +1,27 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.46s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 2 tests
+test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_EXPIRED
+FAILED
+test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED RECOVERY_EXPIRED
+ok
+
+failures:
+
+---- recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance stdout ----
+
+thread 'recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance' (73726072) panicked at test/common/train.rs:18:9:
+timed out
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 25 filtered out; finished in 18.92s
+
+error: test failed, to rerun pass `--test train`
