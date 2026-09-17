@@ -24,149 +24,18 @@
  */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 
 import { Scheduler } from '../src/scheduler.js'
 import { JobStore } from '../src/store.js'
-import { createSelfServiceSchedulerAccess } from '../src/self-service.js'
 import { createRecordingDelivery } from '../src/seams.js'
-import { createRouterInvoker } from '../../scheduler-router/src/index.js'
-import { AgentDefinition } from '../../agent-definition/src/definition.js'
 
-const SOURCE = 'agt_admin'
-const PLAIN = 'agt_plain'
-const TARGET = 'agt_target'
-const DISABLED = 'agt_disabled'
-const GHOST = 'agt_ghost'
+import { SOURCE, PLAIN, TARGET, DISABLED, GHOST, trusted, writeRosterFile, rig, runDue, createArgs, occurrences, jobs } from './self-service/harness.js'
 
 /** The frozen scheduler -> Router seam request contract (occurrence.js invokeWithDeadline). */
 const SEAM_REQUEST_KEYS = [
   'agentId', 'deliveryTarget', 'lightContext', 'message', 'model', 'occurrenceId',
   'onStart', 'payloadHash', 'requestId', 'runId', 'sessionId', 'signal', 'timeoutMs',
 ].sort()
-
-function trusted(agentId) {
-  return {
-    agentId,
-    callerAgentId: agentId,
-    processGeneration: 7,
-    turnExecutionId: `turn:${agentId}:7:1`,
-    channelNamespace: 'feishu',
-    channelConversationId: 'thread:must-not-be-parsed',
-    feishuChatId: `oc_${agentId}`,
-    feishuMessageId: 'om_1',
-  }
-}
-
-function writeRosterFile(t) {
-  const dir = mkdtempSync(join(tmpdir(), 'cross-agent-scheduler-'))
-  t.after(() => rmSync(dir, { recursive: true, force: true }))
-  const configFile = join(dir, 'agents.json')
-  writeFileSync(configFile, JSON.stringify({
-    version: 1,
-    defaultAgentId: TARGET,
-    agents: [
-      { id: SOURCE, name: 'admin source' },
-      { id: PLAIN, name: 'plain agent without manage:any' },
-      { id: TARGET, name: 'cross-agent target' },
-      { id: DISABLED, name: 'retired-from-routing agent', disabled: true },
-    ],
-  }))
-  return dir
-}
-
-/**
- * Full real-path rig. The fake clock is aligned to the real wall clock so
- * the self-service layer's Date.now()-based `at` normalization and the
- * engine's clock stay on one timeline; due-ness is produced by advancing
- * the clock minutes past the mutation instant (well inside the at
- * catch-up grace and far beyond any realistic test runtime).
- */
-async function rig(t, { adminAgents = new Set([SOURCE]), auditAgents = new Set([SOURCE]), routerBehavior, immediateDeadline = false } = {}) {
-  const dir = writeRosterFile(t)
-  const definition = new AgentDefinition({ configFile: join(dir, 'agents.json') })
-  const clock = { value: Date.now() }
-  const store = new JobStore(join(dir, 'jobs.json'), {
-    runLogPath: join(dir, 'runs.jsonl'),
-    clock: () => clock.value,
-  })
-  const chainCalls = []
-  const router = {
-    runTurnWithRouteChain: async (agentId, args) => {
-      chainCalls.push({ agentId, sessionId: args.sessionId, callerCorrelation: args.opts?.callerCorrelation })
-      if (routerBehavior) return routerBehavior(agentId, args, chainCalls)
-      return { reply: `done:${agentId}` }
-    },
-  }
-  const bridge = createRouterInvoker(router, { definition, admissions: new Map() })
-  const seamRequests = []
-  const invoker = (request) => {
-    seamRequests.push(request)
-    return bridge(request)
-  }
-  invoker.assertRunnable = bridge.assertRunnable
-  invoker.calls = bridge.calls
-  const scheduler = new Scheduler({
-    store,
-    invoker,
-    deliver: createRecordingDelivery(),
-    concurrency: 2,
-    nowMs: () => clock.value,
-    ...(immediateDeadline
-      ? { deadlineSetTimeout: (fn) => { queueMicrotask(fn); return 1 }, deadlineClearTimeout: () => {} }
-      : {}),
-  })
-  const grantCalls = []
-  const access = createSelfServiceSchedulerAccess({
-    store,
-    assertGrant: async (agentId, scope, resource) => {
-      grantCalls.push({ agentId, scope, resource })
-      // Independent exact wire proofs (CTR-AUTH-002): admin never satisfies
-      // the audit row and audit never satisfies the admin row.
-      return (scope === 'scheduler.admin' && adminAgents.has(agentId))
-        || (scope === 'scheduler.audit' && auditAgents.has(agentId))
-    },
-  })
-  const call = (action, args, context = trusted(SOURCE)) => access.handlers.scheduler[action](args, context)
-  const runsLog = () => existsSync(join(dir, 'runs.jsonl'))
-    ? readFileSync(join(dir, 'runs.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line))
-    : []
-  // The engine lease is a precondition for ANY admission (scheduler.js
-  // _tickOnce refuses to run without it) — start exactly like the other
-  // engine suites, with the timer and catch-up disabled.
-  await scheduler.start({ autoStart: false, catchup: false })
-  return { dir, clock, store, definition, invoker, seamRequests, scheduler, call, chainCalls, grantCalls, runsLog }
-}
-
-async function runDue(ctx, advanceMs, { concurrent = false } = {}) {
-  ctx.clock.value += advanceMs
-  if (concurrent) await Promise.all([ctx.scheduler.tick(), ctx.scheduler.tick()])
-  else await ctx.scheduler.tick()
-  await ctx.scheduler.whenIdle()
-}
-
-const createArgs = (overrides = {}) => ({
-  name: 'cross-agent job',
-  // SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.1: create REQUIRES a stable
-  // logical key; deriving it from the override set keeps distinct desired
-  // jobs distinct and makes exact replays idempotent.
-  logical_key: `cross-agent:${JSON.stringify(overrides ?? {})}`,
-  schedule_kind: 'at',
-  at: '1m',
-  message: 'cross-agent scheduled hello',
-  delivery_mode: 'none',
-  ...overrides,
-})
-
-async function occurrences(ctx) {
-  return (await ctx.store.loadDoc({ force: true })).occurrences
-}
-
-async function jobs(ctx) {
-  return (await ctx.store.loadDoc({ force: true })).jobs
-}
 
 test('CROSS-AGENT-1 admin-authorized source -> enabled target: exactly one Run executes as the target Agent', async (t) => {
   const ctx = await rig(t)

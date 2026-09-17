@@ -162,15 +162,14 @@ export function retryCandidate({ job, occurrences, nowMs }) {
   const terminal = latestTerminalOccurrence(occurrences, job.id)
   if (!terminal || terminal.state !== 'failed') return null
   const chain = retryChainLength(occurrences, terminal)
-  if (job.schedule.kind === 'at' && chain >= ONE_SHOT_RETRY_BACKOFF_MS.length) {
-    return { exhausted: true, chain, terminal }
-  }
+  // C-SH-001 (STALE_RETRY_AFTER_SCHEDULE_REVISION, precedence over exhaustion):
+  // a retry record must share its predecessor's scheduleRevision (store
+  // occurrence-authority invariant) — minting it would failLoud the store and
+  // kill every subsequent tick. The revision-mismatch verdict comes FIRST so a
+  // superseded predecessor earns its durable stale disposition even when the
+  // retry chain is also exhausted; exhausted=true keeps every existing
+  // non-mintable path closed either way.
   if (terminal.scheduleRevision !== job.scheduleRevision) {
-    // C-SH-001 (STALE_RETRY_AFTER_SCHEDULE_REVISION): a retry record must
-    // share its predecessor's scheduleRevision (store occurrence-authority
-    // invariant) — minting it would failLoud the store and kill every
-    // subsequent tick, so it is never proposed; the natural schedule resumes.
-    // exhausted=true keeps every existing non-mintable path closed.
     return {
       exhausted: true,
       staleRevision: true,

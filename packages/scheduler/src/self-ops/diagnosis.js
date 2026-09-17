@@ -68,7 +68,11 @@ export function createJobDisposition({ store, resolveCallerCorrelation, clock })
     const job = doc.jobs.find((candidate) => candidate.id === jobId)
     if (!job || job.agentId !== callerAgentId) return opaqueDenied()
     const now = clock()
-    const events = await store.readRunEvents({ limit: 500 })
+    // C-SH-003: full retained-window scan (limit: null) — a bounded-by-
+    // rotation, filtered scan so >500 later unrelated events can never bury
+    // retry_superseded_by_revision / global_tick_blocked evidence (no count-
+    // based false negatives for classification or health).
+    const events = await store.readRunEvents({ limit: null })
     const latestSlot = previousNaturalSlotMs(job.schedule, job.id, now)
     // An explicit slot queries a PREVIOUS elapsed slot (e.g. after nextRun
     // advanced past it); the default is the latest elapsed slot.

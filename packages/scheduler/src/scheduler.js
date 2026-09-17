@@ -257,7 +257,11 @@ export class Scheduler {
         }
         const retry = retryCandidate({ job, occurrences: this.doc.occurrences, nowMs: now })
         if (retry && !retry.exhausted) {
-          if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId })
+          if (retry.due) {
+            // retryEligibleAtMs is the retry candidate's durable receipt
+            // coordinate (C-SH-002): it has no nominal slot of its own.
+            candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId, retryEligibleAtMs: retry.eligibleAtMs })
+          }
           continue
         }
         if (retry?.staleRevision) {
@@ -293,7 +297,7 @@ export class Scheduler {
         continue
       }
       if (!reserved) {
-        await this._recordSlot(candidate.job, slot, 'ADMISSION_REJECTED', rejectionReason ?? 'reserve refused without a reason')
+        await this._admissionIsolation.recordRefusal(candidate, slot, rejectionReason ?? 'reserve refused without a reason')
         continue
       }
       if (reserved.deduped) continue
