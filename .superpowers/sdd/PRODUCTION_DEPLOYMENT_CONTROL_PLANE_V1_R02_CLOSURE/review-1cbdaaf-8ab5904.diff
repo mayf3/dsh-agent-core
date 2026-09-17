@@ -1,0 +1,937 @@
+# Review package: 1cbdaaff03fffa02bfa0394c7a7a9e9ed47ba696..8ab5904fc0b79ba2e565469f1127312bb36c4e58
+
+## Commits
+8ab5904 fix(deploy): isolate unit recovery refusal from read-only acceptance
+4ab507d test(deploy): reproduce R02 unit isolation and global recovery gates
+
+## Files changed
+ .../brief.md                                       |  48 +++
+ .../evidence/01-baseline-bins.log                  |   1 +
+ .../evidence/02-regression-red.log                 |  27 ++
+ .../evidence/03-expanded-red.log                   |  56 ++++
+ .../deployment-control-plane/src/queue/service.rs  |  40 +++
+ .../deployment-control-plane/src/service/intake.rs |  16 +-
+ .../deployment-control-plane/src/service/train.rs  |  41 ++-
+ .../src/transaction/mod.rs                         |   1 +
+ .../src/transaction/remediation.rs                 |  83 ++++-
+ .../test/common/recovery_isolation.rs              | 338 +++++++++++++++++++++
+ packages/deployment-control-plane/test/train.rs    |   3 +
+ 11 files changed, 630 insertions(+), 24 deletions(-)
+
+## Diff
+diff --git a/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/brief.md b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/brief.md
+new file mode 100644
+index 0000000..6da2e6e
+--- /dev/null
++++ b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/brief.md
+@@ -0,0 +1,48 @@
++# R02 narrow successor lane
++
++Goal: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE.
++Parent: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1. This is a new Owner-mandated lane,
++not a second repair wave or rewrite of the parent run.
++
++Authority: accepted PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1, reviewed3986553;
++accepted lifecycle/basebb5327f; current delivery1cbdaaff03fffa02bfa0394c7a7a9e9ed47ba696.
++Original executable277a5e8832938e6b2232d11949aedfb92cd0e318.
++Owner's current request authorizes only R02 test-first repair, affected/full checks,
++fresh scoped independent review, and a separate bootstrap prerequisite assessment.
++No production/runtime connection, root/sudo/bootstrap/install/enablement, issuer
++integration, future multi-resource repair or accepted-Spec edits are authorized.
++
++DEVELOPMENT_PREFLIGHT: REUSE / IMPLEMENTATION / BRIEF / CONTROLLED.
++IMPLEMENTATION_AUTHORITY=contracts; AUTHORITY_ACCEPTED_IN_BASE=YES;
++EXECUTION_MANDATE=VALID; MUTATION_AUTHORIZATION=VALID; ISOLATED_WRITE_SURFACE=YES;
++SPEC_GAP_DEPENDENCY=NONE; EVIDENCE_REVIEWABILITY=PASS; OWNER_DECISION_REQUIRED=NO;
++IMPLEMENTATION_ALLOWED=YES; MERGE_READY=NO; OPERATION_ALLOWED=NO.
++Candidate/Base/current Base all1cbdaaff03fffa02bfa0394c7a7a9e9ed47ba696 at start;
++worktree /Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl;
++new branch codex/production-deployment-control-plane-v1-r02-closure. Parent branch
++remains pinned. Existing isolated surface and build cache reused without baseline
++full-suite repetition; exact prior source has recorded168-pass baseline.
++
++Observation/root-cause hypothesis: service/train.rs tick propagates recover_failed
++record refusals before daemon_next_verification. Expired B proof therefore starves
++current healthy Applied A's accepted read-only verification. Binding's prior
++blanket Err-continue also fails to distinguish global journal/authority failure.
++Relevant Contracts: CTR010/011 restrictions, CTR014/015 per-Goal verification,
++CTR007/009/012/013 and020 affected identity/mutex/state/evidence boundaries.
++
++Runbook: nonroot owned kernel-private0700 fixture trees and existing sandbox
++daemon/socket only; no live8790 or launchd. First add precise A-Applied/B-Blocked
++regression and global-unsafe negative tests. Record RED before production edits.
++Implement stage-scoped definite unit refusal, durable bounded per-unit disposition,
++retaining normal pinned verification, STOP/budgets and conservative unknown failure.
++Run affected tests, then freeze source and execute serial locked all-target suite,
++fmt, strict Clippy and release. Check governance/structure delta and Spec identity.
++Fresh reviewer sees only R02 and directly affected surfaces plus retained evidence;
++any changed global gates get explicit affected review. No blanket error swallowing.
++
++DONE_WHEN: R02/global-negative/isolation/full/fmt/Clippy/release and fresh independent
++R02 review PASS, no new ship blocker. Evaluate bootstrap separately against actual
++Spec/implementation; actual issuer contracts remain independent dependency.
++EXPANSION_TRIGGER: concrete new authority gap or security regression beyond this
++mandate. No optional hardening or 32-row debt. Preserve all raw failures and parent
++run files byte-for-byte. No credentials or actual private key material.
+diff --git a/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/01-baseline-bins.log b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/01-baseline-bins.log
+new file mode 100644
+index 0000000..07e7517
+--- /dev/null
++++ b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/01-baseline-bins.log
+@@ -0,0 +1 @@
++    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+diff --git a/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/02-regression-red.log b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/02-regression-red.log
+new file mode 100644
+index 0000000..6137d42
+--- /dev/null
++++ b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/02-regression-red.log
+@@ -0,0 +1,27 @@
++   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
++    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.46s
++     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
++
++running 2 tests
++test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_EXPIRED
++FAILED
++test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_EXPIRED
++ok
++
++failures:
++
++---- recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance stdout ----
++
++thread 'recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance' (73726072) panicked at test/common/train.rs:18:9:
++timed out
++note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
++
++
++failures:
++    recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance
++
++test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 25 filtered out; finished in 18.92s
++
++error: test failed, to rerun pass `--test train`
+diff --git a/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/03-expanded-red.log b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/03-expanded-red.log
+new file mode 100644
+index 0000000..6c54db1
+--- /dev/null
++++ b/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_R02_CLOSURE/evidence/03-expanded-red.log
+@@ -0,0 +1,56 @@
++   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
++    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.94s
++     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
++
++running 6 tests
++test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_EXPIRED
++FAILED
++test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_EXPIRED
++ok
++test recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance ... BLOCKED ABSENT
++BLOCKED INVALID_RECORD
++FAILED
++test recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_BINDING
++FAILED
++test recovery_isolation::r02_rejection_store_failure_still_blocks_current_acceptance ... BLOCKED ABSENT
++BLOCKED RECOVERY_EXPIRED
++ok
++test recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance ... BLOCKED ABSENT
++FAILED
++
++failures:
++
++---- recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance stdout ----
++
++thread 'recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance' (73732662) panicked at test/common/train.rs:18:9:
++timed out
++note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
++
++---- recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance stdout ----
++
++thread 'recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance' (73733328) panicked at test/common/train.rs:18:9:
++timed out
++
++---- recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance stdout ----
++
++thread 'recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance' (73733874) panicked at test/common/train.rs:18:9:
++timed out
++
++---- recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance stdout ----
++
++thread 'recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance' (73734346) panicked at test/common/recovery_isolation.rs:282:9:
++global unknown must not reach verifier
++
++
++failures:
++    recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance
++    recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance
++    recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance
++    recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance
++
++test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 25 filtered out; finished in 54.40s
++
++error: test failed, to rerun pass `--test train`
+diff --git a/packages/deployment-control-plane/src/queue/service.rs b/packages/deployment-control-plane/src/queue/service.rs
+index 3748748..e3352bb 100644
+--- a/packages/deployment-control-plane/src/queue/service.rs
++++ b/packages/deployment-control-plane/src/queue/service.rs
+@@ -1,12 +1,52 @@
+ use super::*;
+ impl Queue {
++    /// A refusal is bounded by unit/revision/stage/reason; repeated ticks do not
++    /// grow the receipt ledger or change state, STOP, attempts or recovery authority.
++    pub(crate) fn daemon_recovery_refused(
++        &self,
++        status: &UnitStatus,
++        stage: &str,
++        reason: &str,
++    ) -> Result<()> {
++        self.transaction(|tx| {
++            let current = read_status(tx, &status.unit.deployment_unit_id)?;
++            require(current.revision == status.revision, "REVISION_CAS")?;
++            require(
++                matches!(current.state, State::Blocked | State::RolledBack),
++                "UNKNOWN_OUTCOME",
++            )?;
++            let record = serde_json::json!({
++                "unit_id": current.unit.deployment_unit_id,
++                "status_revision": current.revision,
++                "target_runtime": current.unit.target_runtime,
++                "deployment_profile": current.unit.deployment_profile,
++                "intent": current.unit.deployment_intent_id,
++                "expected_target_generation": current.unit.expected_target_generation,
++                "preflight_attempts": current.preflight_attempts,
++                "mutating_attempts": current.mutating_attempts,
++                "operation": "mutation-recovery", "scope": "unit-local",
++                "stage": stage, "reason": reason,
++            });
++            let hash = crate::trust::digest(&record)?;
++            tx.execute(
++                "INSERT OR IGNORE INTO receipts VALUES (?,?,?,?)",
++                (
++                    &hash,
++                    &current.unit.deployment_unit_id,
++                    "recovery-refusal",
++                    json(&record)?,
++                ),
++            )?;
++            Ok(())
++        })
++    }
+     pub(crate) fn daemon_recovery_candidates(&self) -> Result<Vec<UnitStatus>> {
+         self.transaction(|tx| {
+             let mut statement=tx.prepare("SELECT id FROM units WHERE state IN ('\"Blocked\"','\"RolledBack\"') ORDER BY seq,id LIMIT 32")?;
+             let ids=statement.query_map([],|r|r.get::<_,String>(0))?.collect::<std::result::Result<Vec<_>,_>>()?;
+             ids.iter().map(|id|read_status(tx,id)).collect()
+         })
+     }
+     pub(crate) fn daemon_failure_cause(&self, id: &str) -> Result<String> {
+         self.transaction(|tx| {
+             let status=read_status(tx,id)?;
+diff --git a/packages/deployment-control-plane/src/service/intake.rs b/packages/deployment-control-plane/src/service/intake.rs
+index 52f4982..ba20aea 100644
+--- a/packages/deployment-control-plane/src/service/intake.rs
++++ b/packages/deployment-control-plane/src/service/intake.rs
+@@ -141,23 +141,35 @@ impl Intake {
+         let cache = self.root.child("admitted")?;
+         let p: Proposal = match read(&cache, &name) {
+             Ok(p) => p,
+             Err(e) if e.code() == "ABSENT" => read(&self.area("proposals")?, &name)?,
+             Err(e) => return Err(e),
+         };
+         require(digest(&p)? == hash, "INTAKE_DIGEST")?;
+         self.publish("admitted", hash, &p)?;
+         Ok(p)
+     }
+-    pub fn recovery(&self, id: &str, revision: u64) -> Result<Signed<RecoveryEvidence>> {
++    pub fn recovery(
++        &self,
++        id: &str,
++        revision: u64,
++    ) -> std::result::Result<Option<Signed<RecoveryEvidence>>, crate::transaction::RecoveryFailure>
++    {
+         valid_digest(id)?;
+-        read(&self.area("recovery")?, &format!("{id}-{revision}.json"))
++        // Losing the protected namespace is global uncertainty. Only absence of
++        // this exact unit/revision file means no remediation has been supplied.
++        let area = self.area("recovery")?;
++        match read(&area, &format!("{id}-{revision}.json")) {
++            Ok(record) => Ok(Some(record)),
++            Err(error) if error.code() == "ABSENT" => Ok(None),
++            Err(error) => Err(crate::transaction::RecoveryFailure::record(error)),
++        }
+     }
+     pub fn policy(&self, profile: &str) -> Result<Signed<Policy>> {
+         valid_id(profile)?;
+         read(&self.area("policies")?, &format!("{profile}.json"))
+     }
+     pub fn poll(&self, q: &Queue) -> Result<()> {
+         for producer in &self.config.producers {
+             q.register_producer(&self.config.catalog, producer)?;
+             // At most 16 snapshots per poll; a gap leaves census incomplete.
+             for _ in 0..16 {
+diff --git a/packages/deployment-control-plane/src/service/train.rs b/packages/deployment-control-plane/src/service/train.rs
+index aa0783e..406d1b2 100644
+--- a/packages/deployment-control-plane/src/service/train.rs
++++ b/packages/deployment-control-plane/src/service/train.rs
+@@ -1,20 +1,20 @@
+ use super::{
+     intake::{Intake, VerifierBinding},
+     server::now,
+ };
+ use crate::{
+     error::require,
+     fs::FixtureRoots,
+     model::*,
+     queue::Queue,
+-    transaction::Executor,
++    transaction::{Executor, RecoveryFailure},
+     trust::{digest, signing_bytes, verify_signed},
+     Error, Result,
+ };
+ use ed25519_dalek::{Signer, SigningKey};
+ use serde::Serialize;
+ use std::{
+     collections::BTreeMap,
+     path::Path,
+     time::{Duration, Instant},
+ };
+@@ -129,41 +129,66 @@ impl Train {
+         drop(guard);
+         intake.deliver(q)
+     }
+     fn recover_failed(&mut self, intake: &Intake, q: &Queue) -> Result<()> {
+         for status in q.daemon_recovery_candidates()? {
+             let id = &status.unit.deployment_unit_id;
+             let Some(executor) = self.executors.get_mut(&status.unit.deployment_profile) else {
+                 continue;
+             };
+             let guard = executor.lock()?;
+-            // Missing/invalid remediation cannot skip the failed intent or clear STOP.
++            // Only an identified unit-local refusal may leave this unit blocked
++            // while another installed unit uses its ordinary pinned read-only gate.
+             let binding = match executor.recovery_binding(&guard, q, id) {
+                 Ok(b) => b,
+-                Err(_) => continue,
++                Err(RecoveryFailure::UnitLocal(e)) => {
++                    q.daemon_recovery_refused(&status, "physical-binding", e.code())?;
++                    continue;
++                }
++                Err(RecoveryFailure::Global(e)) => return Err(e),
+             };
+             let request = digest(&binding)?;
+             intake.publish("recovery-requests", &request, &binding)?;
+             match intake.recovery(id, status.revision) {
+-                Ok(evidence) => {
++                Ok(Some(evidence)) => {
++                    // The mailbox slot chooses the unit, never the record's claim.
++                    if evidence.payload.unit_id != *id
++                        || evidence.payload.status_revision != status.revision
++                    {
++                        q.daemon_recovery_refused(
++                            &status,
++                            "record-validation",
++                            "RECOVERY_BINDING",
++                        )?;
++                        continue;
++                    }
+                     let policy = intake.policy(&status.unit.deployment_profile)?;
+-                    executor.consume_recovery(
++                    match executor.consume_recovery(
+                         &guard,
+                         q,
+                         &intake.config.catalog,
+                         &evidence,
+                         &policy,
+                         now()?,
+-                    )?;
++                    ) {
++                        Ok(()) => (),
++                        Err(RecoveryFailure::UnitLocal(e)) => {
++                            q.daemon_recovery_refused(&status, "record-validation", e.code())?;
++                        }
++                        Err(RecoveryFailure::Global(e)) => return Err(e),
++                    }
++                }
++                Ok(None) => (),
++                Err(RecoveryFailure::UnitLocal(e)) => {
++                    q.daemon_recovery_refused(&status, "record-decode", e.code())?;
+                 }
+-                Err(e) if e.code() == "ABSENT" => (),
+-                Err(e) => return Err(e),
++                Err(RecoveryFailure::Global(e)) => return Err(e),
+             }
+         }
+         Ok(())
+     }
+     fn verify_late(&mut self, intake: &Intake, q: &Queue, id: &str) -> Result<()> {
+         let s = q.daemon_status(id)?;
+         let executor = self
+             .executors
+             .get_mut(&s.unit.deployment_profile)
+             .ok_or(Error::new("PROFILE_NOT_ALLOWED"))?;
+diff --git a/packages/deployment-control-plane/src/transaction/mod.rs b/packages/deployment-control-plane/src/transaction/mod.rs
+index 250a856..1be71e6 100644
+--- a/packages/deployment-control-plane/src/transaction/mod.rs
++++ b/packages/deployment-control-plane/src/transaction/mod.rs
+@@ -1,18 +1,19 @@
+ mod apply;
+ mod health;
+ mod journal;
+ mod native;
+ mod native_profile;
+ mod process;
+ mod recovery;
+ mod remediation;
++pub(crate) use remediation::RecoveryFailure;
+ mod service;
+ mod slots;
+ use crate::{
+     fs::{secure::Dir, ArtifactStore, FixtureRoots, MutationGuard, TargetRoot},
+     model::*,
+     queue::Queue,
+     Result,
+ };
+ use journal::Journal;
+ pub use native_profile::{
+diff --git a/packages/deployment-control-plane/src/transaction/remediation.rs b/packages/deployment-control-plane/src/transaction/remediation.rs
+index 44c2a54..fbb1b3e 100644
+--- a/packages/deployment-control-plane/src/transaction/remediation.rs
++++ b/packages/deployment-control-plane/src/transaction/remediation.rs
+@@ -1,47 +1,77 @@
+ //! Only current physical readback under the permanent mutex can support recovery intake.
+ use super::*;
+ use crate::{error::require, trust::digest, Error};
+ use journal::Event;
++
++/// Scope comes from the failing operation, never a caller-supplied safety label.
++#[derive(Debug)]
++pub(crate) enum RecoveryFailure {
++    UnitLocal(Error),
++    Global(Error),
++}
++impl From<Error> for RecoveryFailure {
++    fn from(error: Error) -> Self {
++        Self::Global(error)
++    }
++}
++impl RecoveryFailure {
++    pub(crate) fn record(error: Error) -> Self {
++        Self::at_stage(error, &["INVALID_RECORD", "NESTING_LIMIT", "SIZE_LIMIT"])
++    }
++    fn at_stage(error: Error, definite_refusals: &[&str]) -> Self {
++        if definite_refusals.contains(&error.code()) {
++            Self::UnitLocal(error)
++        } else {
++            Self::Global(error)
++        }
++    }
++}
++type RecoveryResult<T> = std::result::Result<T, RecoveryFailure>;
+ impl Executor {
+     pub(crate) fn recovery_binding(
+         &mut self,
+         guard: &MutationGuard,
+         q: &Queue,
+         id: &str,
+-    ) -> Result<RecoveryEvidence> {
++    ) -> RecoveryResult<RecoveryEvidence> {
+         guard.binds(&self.root)?;
+         require(self.active.is_none(), "TRANSACTION_ACTIVE")?;
+         let status = q.daemon_status(id)?;
+         require(
+             matches!(status.state, State::Blocked | State::RolledBack),
+             "UNKNOWN_OUTCOME",
+         )?;
+-        require(
+-            status.preflight_attempts < 3 && status.mutating_attempts < 2,
+-            "RETRY_BUDGET_EXHAUSTED",
+-        )?;
+         let service = self.service.image()?;
+         let mut last = None;
+         let (preflight, attempt) = q.daemon_execution(id)?;
+         for name in self.journals.names()? {
+             let journal = Journal::load(&self.journals, &name)?;
+             require(journal.terminal(), "RECOVERY_REQUIRED")?;
+             if name == format!("{id}-{attempt}-{preflight}") {
+                 last = Some(journal);
+             }
+         }
++        // Global journal safety is checked even when this unit exhausted its budget.
++        require(
++            status.preflight_attempts < 3 && status.mutating_attempts < 2,
++            "RETRY_BUDGET_EXHAUSTED",
++        )
++        .map_err(RecoveryFailure::UnitLocal)?;
+         let proposal = q.daemon_evidence(id)?;
+-        let artifact = self.artifacts.import(
+-            &proposal.build.payload.artifact_sha256,
+-            &proposal.build.payload.manifest_digest,
+-        )?;
++        let artifact = self
++            .artifacts
++            .import(
++                &proposal.build.payload.artifact_sha256,
++                &proposal.build.payload.manifest_digest,
++            )
++            .map_err(|e| RecoveryFailure::at_stage(e, &["ABSENT", "INCOMPLETE_INTAKE"]))?;
+         self.validate_slots(&artifact.manifest)?;
+         self.verify_live_baseline(q, &status.unit.target_runtime)?;
+         let paths = if let Some(slots) = &self.slots {
+             slots.iter().map(|s| s.path.clone()).collect::<Vec<_>>()
+         } else {
+             artifact
+                 .manifest
+                 .entries
+                 .iter()
+                 .map(|e| e.path.clone())
+@@ -67,21 +97,21 @@ impl Executor {
+             });
+             require(reason.is_some() || no_effect, "RECOVERY_CAUSE_REQUIRED")?;
+             cause = digest(&(
+                 cause,
+                 attempt,
+                 preflight,
+                 reason.unwrap_or("startup-no-effect"),
+             ))?;
+             let restored = match journal.events.last() {
+                 Some(Event::RolledBack { service }) => service,
+-                _ => return Err(Error::new("RECOVERY_BINDING")),
++                _ => return Err(Error::new("RECOVERY_BINDING").into()),
+             };
+             self.service.prove(restored)?;
+             if let Event::Preflight { before, .. } = &journal.events[0] {
+                 for (path, expected) in before {
+                     let actual = self.target.read(path)?;
+                     require(
+                         match (expected, actual) {
+                             (None, None) => true,
+                             (Some(a), Some(b)) => a.content_matches(&b),
+                             _ => false,
+@@ -127,31 +157,56 @@ impl Executor {
+         })
+     }
+     pub(crate) fn consume_recovery(
+         &mut self,
+         guard: &MutationGuard,
+         q: &Queue,
+         c: &Catalog,
+         e: &Signed<RecoveryEvidence>,
+         policy: &Signed<Policy>,
+         now: u64,
+-    ) -> Result<()> {
++    ) -> RecoveryResult<()> {
+         let expected = self.recovery_binding(guard, q, &e.payload.unit_id)?;
+         let mut supplied = e.payload.clone();
+         supplied.remediation_digest = String::new();
+         supplied.issued_at = 0;
+-        require(supplied == expected, "RECOVERY_BINDING")?;
++        require(supplied == expected, "RECOVERY_BINDING").map_err(RecoveryFailure::UnitLocal)?;
+         crate::trust::verify_signed(
+             e,
+             c,
+             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
+-        )?;
++        )
++        .map_err(|e| {
++            RecoveryFailure::at_stage(
++                e,
++                &[
++                    "UNKNOWN_ISSUER",
++                    "ISSUER_ROLE",
++                    "ISSUER_SCOPE",
++                    "INVALID_SIGNATURE",
++                ],
++            )
++        })?;
+         q.observe_policy(
+             c,
+             &q.daemon_status(&e.payload.unit_id)?.unit.deployment_profile,
+             policy,
+             now,
+         )?;
+-        q.retry(c, e, now)?;
++        q.retry(c, e, now).map_err(|e| {
++            RecoveryFailure::at_stage(
++                e,
++                &[
++                    "RECOVERY_EXPIRED",
++                    "REVISION_CAS",
++                    "INVALID_DIGEST",
++                    "RETRY_BUDGET_EXHAUSTED",
++                    "REVOKED",
++                    "PREIMAGE_MISMATCH",
++                    "DEPENDENCY_NOT_SATISFIED",
++                    "PROFILE_NOT_ALLOWED",
++                ],
++            )
++        })?;
+         Ok(())
+     }
+ }
+diff --git a/packages/deployment-control-plane/test/common/recovery_isolation.rs b/packages/deployment-control-plane/test/common/recovery_isolation.rs
+new file mode 100644
+index 0000000..94941c4
+--- /dev/null
++++ b/packages/deployment-control-plane/test/common/recovery_isolation.rs
+@@ -0,0 +1,338 @@
++use super::*;
++use deployment_control_plane::fs::{ArtifactEntry, ArtifactManifest, FixtureRoots};
++use sha2::{Digest, Sha256};
++use std::time::{Duration, Instant};
++
++struct Scenario {
++    daemon: Daemon,
++    a: String,
++    b: String,
++    recovery: RecoveryEvidence,
++    installed: CurrentInstallation,
++}
++fn scenario() -> Scenario {
++    let d = start_with(|c| c["verifiers"]["verify-1"]["deadline_ms"] = json!(2000));
++    let (hash, mut p) = ready(&d, 1);
++    let a = submit(&d, &hash, "A")["result"]["unit_id"]
++        .as_str()
++        .unwrap()
++        .to_owned();
++    wait(|| unit_status(&d, &a)["result"]["state"] == "Applied");
++    let q = Queue::open(d.temp.path().join("queue.db")).unwrap();
++    let installed = q.daemon_current_installation("runtime").unwrap().unwrap();
++    assert_eq!(installed.unit_id, a);
++    assert_eq!(
++        fs::read(d.temp.path().join("target/main.js")).unwrap(),
++        b"new code"
++    );
++    let previous = p.goals[0].clone();
++    let manifest = ArtifactManifest {
++        version: 1,
++        entries: vec![ArtifactEntry {
++            path: "main.js".into(),
++            blob: "payload".into(),
++            sha256: hex::encode(Sha256::digest(b"later code")),
++            size: 10,
++            executable: false,
++        }],
++    };
++    let raw = serde_json::to_vec(&manifest).unwrap();
++    let artifact = hex::encode(Sha256::digest(&raw));
++    p.request_id = "B".into();
++    p.goals[0].payload.goal_id = "goal-1".into();
++    p.goals[0].payload.coverage.goal_id = "goal-1".into();
++    p.goals[0].payload.artifact_sha256 = artifact.clone();
++    p.goals[0] = signed("producer", p.goals[0].payload.clone());
++    p.build.payload.artifact_sha256 = artifact.clone();
++    p.build.payload.manifest_digest = digest(&manifest).unwrap();
++    p.build.payload.goal_coverage = vec![p.goals[0].payload.coverage.clone()];
++    p.build = signed("builder", p.build.payload);
++    p.reviews[0].payload.artifact_sha256 = artifact.clone();
++    p.reviews[0].payload.manifest_digest = digest(&manifest).unwrap();
++    p.reviews[0] = signed("reviewer", p.reviews[0].payload.clone());
++    p.desired.payload.revision = 2;
++    p.desired.payload.expected_target_generation = 1;
++    p.desired.payload.artifact_sha256 = artifact.clone();
++    p.desired = signed("authority", p.desired.payload);
++    let snapshot = signed(
++        "producer",
++        ProducerSnapshot {
++            producer_id: "producer".into(),
++            revision: 2,
++            previous_revision: 1,
++            records: vec![previous, p.goals[0].clone()],
++            watermark: 2,
++        },
++    );
++    fs::write(
++        d.temp.path().join("intake/snapshots/producer-2.json"),
++        serde_json::to_vec(&snapshot).unwrap(),
++    )
++    .unwrap();
++    let hash = digest(&p).unwrap();
++    fs::write(
++        d.temp.path().join(format!("intake/proposals/{hash}.json")),
++        serde_json::to_vec(&p).unwrap(),
++    )
++    .unwrap();
++    let answer = submit(&d, &hash, "B");
++    assert!(answer.get("error").is_none(), "{answer}");
++    let b = answer["result"]["unit_id"].as_str().unwrap().to_owned();
++    wait(|| unit_status(&d, &b)["result"]["state"] == "Blocked");
++    let stage = d.temp.path().join("staging").join(artifact);
++    fs::create_dir(&stage).unwrap();
++    fs::write(stage.join("manifest.json"), raw).unwrap();
++    fs::write(stage.join("payload"), b"later code").unwrap();
++    let mut recovery = None;
++    wait(|| {
++        for file in fs::read_dir(d.temp.path().join("recovery-requests")).unwrap() {
++            let path = file.unwrap().path();
++            if path.extension().is_some_and(|e| e == "json") {
++                let r: RecoveryEvidence = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
++                if r.unit_id == b {
++                    recovery = Some(r);
++                    return true;
++                }
++            }
++        }
++        false
++    });
++    let mut recovery = recovery.unwrap();
++    recovery.issued_at = 1; // Valid signature and exact physical binding; deliberately expired.
++    recovery.remediation_digest = "e".repeat(64);
++    let s = Scenario {
++        daemon: d,
++        a,
++        b,
++        recovery,
++        installed,
++    };
++    s.publish();
++    s
++}
++impl Scenario {
++    fn publish(&self) {
++        let file = self.daemon.temp.path().join(format!(
++            "intake/recovery/{}-{}.json",
++            self.b, self.recovery.status_revision
++        ));
++        let tmp = file.with_extension("tmp");
++        fs::write(
++            &tmp,
++            serde_json::to_vec(&signed("recovery", self.recovery.clone())).unwrap(),
++        )
++        .unwrap();
++        fs::rename(tmp, file).unwrap();
++    }
++    fn request_acceptance(&self) {
++        let response = send(
++            &mut connect(&self.daemon),
++            &json!({"version":1,"request_id":"late-A","operation":{"op":"retry-verification","unit_id":self.a}}),
++        );
++        assert!(response.get("error").is_none(), "{response}");
++    }
++    fn late_request(&self) -> Option<Value> {
++        fs::read_dir(self.daemon.temp.path().join("requests"))
++            .unwrap()
++            .filter_map(|e| {
++                let path = e.unwrap().path();
++                if path.extension().is_none_or(|e| e != "json") {
++                    return None;
++                }
++                let v: Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
++                (v["expected"]["unit_id"] == self.a && v["expected"]["revision"] == 2).then_some(v)
++            })
++            .next()
++    }
++    fn unchanged(&self) {
++        let q = Queue::open(self.daemon.temp.path().join("queue.db")).unwrap();
++        let b = q.daemon_status(&self.b).unwrap();
++        assert_eq!(b.state, State::Blocked);
++        assert_eq!((b.preflight_attempts, b.mutating_attempts), (1, 0));
++        assert_eq!(b.revision, self.recovery.status_revision);
++        assert_eq!(q.daemon_status(&self.a).unwrap().mutating_attempts, 1);
++        assert_eq!(
++            q.daemon_current_installation("runtime").unwrap().unwrap(),
++            self.installed
++        );
++        assert_eq!(
++            fs::read(self.daemon.temp.path().join("target/main.js")).unwrap(),
++            b"new code"
++        );
++        let db = rusqlite::Connection::open(self.daemon.temp.path().join("queue.db")).unwrap();
++        assert_eq!(
++            db.query_row("SELECT count(*) FROM pauses WHERE unit=?", [&self.b], |r| r
++                .get::<_, u64>(0))
++                .unwrap(),
++            1
++        );
++        assert_eq!(
++            db.query_row("SELECT count(*) FROM executor_pending", [], |r| r
++                .get::<_, u64>(0))
++                .unwrap(),
++            0
++        );
++    }
++}
++
++#[test]
++fn r02_expired_unit_recovery_does_not_starve_current_acceptance() {
++    let s = scenario();
++    complete_acceptance(&s);
++}
++
++fn complete_acceptance(s: &Scenario) {
++    s.unchanged();
++    s.request_acceptance();
++    let mut request = None;
++    wait(|| {
++        request = s.late_request();
++        request.is_some()
++    });
++    let request = request.unwrap();
++    let mut receipt: GoalReceipt = serde_json::from_value(request["expected"].clone()).unwrap();
++    receipt.outcome = GoalOutcome::Pass;
++    receipt.evidence_digest = "f".repeat(64);
++    fs::write(
++        s.daemon.temp.path().join(format!(
++            "intake/results/{}.json",
++            request["id"].as_str().unwrap()
++        )),
++        serde_json::to_vec(&signed("verifier", receipt)).unwrap(),
++    )
++    .unwrap();
++    let db = rusqlite::Connection::open(s.daemon.temp.path().join("queue.db")).unwrap();
++    wait(|| {
++        db.query_row("SELECT count(*) FROM outbox WHERE unit=?", [&s.a], |r| {
++            r.get::<_, u64>(0)
++        })
++        .unwrap()
++            == 1
++    });
++    let refusals: Vec<String> = db.prepare("SELECT record FROM receipts WHERE unit=? AND kind='recovery-refusal' AND json_extract(record,'$.stage') LIKE 'record-%'")
++        .unwrap().query_map([&s.b], |r| r.get(0)).unwrap()
++        .collect::<Result<_, _>>().unwrap();
++    assert_eq!(
++        refusals.len(),
++        1,
++        "repeated ticks retain one durable refusal"
++    );
++    let refusal: Value = serde_json::from_str(&refusals[0]).unwrap();
++    assert_eq!(refusal["unit_id"], s.b);
++    assert_eq!(refusal["status_revision"], s.recovery.status_revision);
++    assert_eq!(refusal["target_runtime"], "runtime");
++    assert_eq!(refusal["expected_target_generation"], 1);
++    assert_eq!(refusal["scope"], "unit-local");
++    assert_eq!(refusal["operation"], "mutation-recovery");
++    s.unchanged();
++}
++
++#[test]
++fn r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance() {
++    let s = scenario();
++    fs::write(
++        s.daemon.temp.path().join(format!(
++            "intake/recovery/{}-{}.json",
++            s.b, s.recovery.status_revision
++        )),
++        b"{}",
++    )
++    .unwrap();
++    complete_acceptance(&s);
++}
++
++#[test]
++fn r02_mismatched_unit_recovery_does_not_starve_current_acceptance() {
++    let mut s = scenario();
++    s.recovery.service_readback_digest = "0".repeat(64);
++    s.publish();
++    complete_acceptance(&s);
++}
++
++#[test]
++fn r02_cross_unit_record_is_rejected_without_starving_acceptance() {
++    let mut s = scenario();
++    s.recovery.unit_id = s.a.clone();
++    s.publish();
++    complete_acceptance(&s);
++}
++
++#[test]
++fn r02_missing_protected_recovery_namespace_still_blocks_acceptance() {
++    let s = scenario();
++    let roots = FixtureRoots::open(s.daemon.temp.path()).unwrap();
++    let mut guard = None;
++    wait(|| {
++        guard = roots.lock().ok();
++        guard.is_some()
++    });
++    fs::rename(
++        s.daemon.temp.path().join("intake/recovery"),
++        s.daemon.temp.path().join("intake/recovery-held"),
++    )
++    .unwrap();
++    s.request_acceptance();
++    drop(guard);
++    assert_no_acceptance(&s);
++}
++
++#[test]
++fn r02_global_quarantine_still_blocks_current_acceptance() {
++    let s = scenario();
++    let roots = FixtureRoots::open(s.daemon.temp.path()).unwrap();
++    let mut guard = None;
++    wait(|| {
++        guard = roots.lock().ok();
++        guard.is_some()
++    });
++    let db = rusqlite::Connection::open(s.daemon.temp.path().join("queue.db")).unwrap();
++    db.execute("UPDATE meta SET value=1 WHERE key='quarantine'", [])
++        .unwrap();
++    s.request_acceptance();
++    drop(guard);
++    assert_no_acceptance(&s);
++}
++
++#[test]
++fn r02_unknown_shared_transaction_still_blocks_current_acceptance() {
++    let s = scenario();
++    let roots = FixtureRoots::open(s.daemon.temp.path()).unwrap();
++    let mut guard = None;
++    wait(|| {
++        guard = roots.lock().ok();
++        guard.is_some()
++    });
++    // An unbound partial transaction in the protected journal is global uncertainty.
++    fs::create_dir(s.daemon.temp.path().join("transactions/unbound-r02")).unwrap();
++    s.request_acceptance();
++    drop(guard);
++    assert_no_acceptance(&s);
++}
++
++#[test]
++fn r02_rejection_store_failure_still_blocks_current_acceptance() {
++    let s = scenario();
++    let db = rusqlite::Connection::open(s.daemon.temp.path().join("queue.db")).unwrap();
++    db.execute_batch("CREATE TRIGGER reject_receipt_storage BEFORE INSERT ON receipts BEGIN SELECT RAISE(ABORT,'injected storage failure'); END;").unwrap();
++    s.request_acceptance();
++    assert_no_acceptance(&s);
++}
++
++fn assert_no_acceptance(s: &Scenario) {
++    let deadline = Instant::now() + Duration::from_millis(700);
++    while Instant::now() < deadline {
++        assert!(
++            s.late_request().is_none(),
++            "global unknown must not reach verifier"
++        );
++        std::thread::sleep(Duration::from_millis(25));
++    }
++    let db = rusqlite::Connection::open(s.daemon.temp.path().join("queue.db")).unwrap();
++    assert_eq!(
++        db.query_row("SELECT count(*) FROM outbox WHERE unit=?", [&s.a], |r| r
++            .get::<_, u64>(0))
++            .unwrap(),
++        0
++    );
++    s.unchanged();
++}
+diff --git a/packages/deployment-control-plane/test/train.rs b/packages/deployment-control-plane/test/train.rs
+index be1febf..56c8db0 100644
+--- a/packages/deployment-control-plane/test/train.rs
++++ b/packages/deployment-control-plane/test/train.rs
+@@ -395,10 +395,13 @@ fn simultaneous_targets_use_one_host_mutex_and_distinct_private_targets() {
+ }
+ 
+ #[path = "service_cases.rs"]
+ mod service_cases;
+ 
+ #[path = "common/service_repair.rs"]
+ mod repair;
+ 
+ #[path = "common/remediation.rs"]
+ mod remediation_tests;
++
++#[path = "common/recovery_isolation.rs"]
++mod recovery_isolation;

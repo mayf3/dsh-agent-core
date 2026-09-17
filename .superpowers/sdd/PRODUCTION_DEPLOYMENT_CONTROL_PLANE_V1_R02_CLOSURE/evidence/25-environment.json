@@ -1,0 +1,11 @@
+{
+  "observed_at": "2026-09-17T22:57:13.542895+00:00",
+  "euid": 502,
+  "egid": 20,
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+  "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+  "source": "8ab5904fc0b79ba2e565469f1127312bb36c4e58",
+  "parent_branch": "1cbdaaff03fffa02bfa0394c7a7a9e9ed47ba696"
+}

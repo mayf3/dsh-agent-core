@@ -1,0 +1,14 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 3 tests
+test remediation_tests::protected_recovery_mailbox_resumes_known_rollback ... BLOCKED INVALID_RECORD
+ok
+test remediation_tests::protected_recovery_mailbox_resumes_preflight_without_daemon_restart ... BLOCKED UNSAFE_MODE
+ok
+test remediation_tests::recovery_mailbox_cannot_reset_exhausted_mutating_budget ... BLOCKED INVALID_RECORD
+BLOCKED INVALID_RECORD
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 30 filtered out; finished in 7.51s
+

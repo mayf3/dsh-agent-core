@@ -1,0 +1,23 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.55s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 6 tests
+test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
+ok
+test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED UNKNOWN_OUTCOME
+ok
+test recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance ... BLOCKED ABSENT
+ok
+test recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance ... BLOCKED ABSENT
+ok
+test recovery_isolation::r02_rejection_store_failure_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED STORE_FAILURE
+ok
+test recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance ... BLOCKED ABSENT
+BLOCKED CORRUPT_JOURNAL
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 20.37s
+

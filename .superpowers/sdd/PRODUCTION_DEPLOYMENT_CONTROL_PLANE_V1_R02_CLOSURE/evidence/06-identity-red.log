@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.72s
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-ef99b318a486a8b0)
+
+running 1 test
+test recovery_isolation::r02_cross_unit_record_is_rejected_without_starving_acceptance ... BLOCKED ABSENT
+BLOCKED UNKNOWN_OUTCOME
+FAILED
+
+failures:
+
+---- recovery_isolation::r02_cross_unit_record_is_rejected_without_starving_acceptance stdout ----
+
+thread 'recovery_isolation::r02_cross_unit_record_is_rejected_without_starving_acceptance' (73743010) panicked at test/common/train.rs:18:9:
+timed out
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    recovery_isolation::r02_cross_unit_record_is_rejected_without_starving_acceptance
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 32 filtered out; finished in 15.24s
+
+error: test failed, to rerun pass `--test train`
