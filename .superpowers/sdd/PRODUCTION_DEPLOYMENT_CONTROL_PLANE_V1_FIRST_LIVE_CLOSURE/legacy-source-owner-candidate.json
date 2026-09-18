@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "repository": "mayf3/personal-cognition-audit",
+  "base": "e4cc0fe94e767cb6e15186970af752b8e2e6d757",
+  "candidate": "defcf3bdf0421c78ebe89ed2f3e5f7f6e14f0a5c",
+  "path": "/Users/yanfenma/workspace/worktrees/pca-dcp-entry-retirement/docs/auth-pilot/candidates/DCP_DSH_ENTRY_RETIREMENT_V1.md",
+  "sha256": "6625d93e6599e8cdf200f98c1046d6be324bb210a935bb099f65d73c64fa348f",
+  "status": "PROPOSED_CONTROLLED_OPERATION",
+  "installed_retirement_performed": false,
+  "scope": "complete fixed executor retirement with explicit future Owner temporary supply/probe vehicle hold; standing entitlement preserved"
+}

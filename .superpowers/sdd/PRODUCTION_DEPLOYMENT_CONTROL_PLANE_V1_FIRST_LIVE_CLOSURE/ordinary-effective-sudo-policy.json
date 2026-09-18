@@ -1,0 +1,24 @@
+{
+  "direct_target_effects": [
+    "install Broker targets.js and index.js",
+    "launchctl kickstart -k system/ai.agent-core.runtime"
+  ],
+  "direct_target_writer_operation": "deploy-lw-broker-closure",
+  "disposition": "Concrete existing canonical noninteractive privileged entry must be retired or separately closed before dsh activation; it has NOT been executed or changed.",
+  "executor": {
+    "mode": "0o755",
+    "path": "/usr/local/libexec/lw-pilot-executor",
+    "sha256": "89019a37e49bb5152ed4c92a84781bb683f785cfa74228da61519c859cce4a1d",
+    "size": 11694,
+    "uid": 0
+  },
+  "exit_code": 0,
+  "observed_at": "2026-09-18T06:30:19.625443+00:00",
+  "operation": "sudo -n -l (read-only effective policy listing; no privileged target command invoked)",
+  "root_execution_reaches_caller_owned_inputs": [
+    "/usr/local/bin/node",
+    "/Users/yanfenma/workspace/project/production-auth-service-2cf27a64b17b36592b14634ac1f791f84a10d359"
+  ],
+  "stderr": "",
+  "stdout": "Matching Defaults entries for yanfenma on MacBook-Pro:\n    env_reset, env_keep+=BLOCKSIZE, env_keep+=\"COLORFGBG COLORTERM\", env_keep+=__CF_USER_TEXT_ENCODING, env_keep+=\"CHARSET LANG LANGUAGE LC_ALL LC_COLLATE LC_CTYPE\", env_keep+=\"LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME\", env_keep+=\"LINES COLUMNS\", env_keep+=LSCOLORS, env_keep+=SSH_AUTH_SOCK, env_keep+=TZ, env_keep+=\"DISPLAY XAUTHORIZATION XAUTHORITY\", env_keep+=\"EDITOR VISUAL\", env_keep+=\"HOME MAIL\", lecture_file=/etc/sudo_lecture, !log_allowed\n\nUser yanfenma may run the following commands on MacBook-Pro:\n    (ALL) ALL\n    (root) NOPASSWD: /usr/local/libexec/lw-pilot-executor\n"
+}

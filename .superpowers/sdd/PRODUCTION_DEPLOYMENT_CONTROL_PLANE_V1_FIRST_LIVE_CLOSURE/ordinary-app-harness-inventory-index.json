@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "source": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/ordinary-census/ordinary-app-harness-inventory.json",
+  "sha256": "6dbcc8c0c4ed27be76ee621bef3259eb8516527bb9526d880b612e3ce5e248dc",
+  "bytes": 38680939,
+  "authority": "ordinary read-only non-atomic candidate inventory; not protected ACL or lifecycle proof",
+  "application_regular_files": 1131,
+  "harness_regular_files": 70766,
+  "resolved_internal_links": 5640,
+  "production_mutation": false
+}
