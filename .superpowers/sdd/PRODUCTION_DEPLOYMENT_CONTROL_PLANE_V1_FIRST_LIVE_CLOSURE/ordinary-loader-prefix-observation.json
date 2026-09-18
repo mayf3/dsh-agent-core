@@ -1,0 +1,54 @@
+{
+  "timestamp": "2026-09-18T05:27:23.060557+00:00",
+  "scope": "ordinary selected loader metadata only; not complete transitive loader/root trust proof",
+  "rows": [
+    {
+      "path": "/usr/local/libexec/agent-core/harness",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "type": "directory",
+      "flags": 0
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/node_modules",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "type": "directory",
+      "flags": 0
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "type": "directory",
+      "flags": 0
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/node_modules/@deepseek-ai",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "type": "directory",
+      "flags": 0
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "type": "directory",
+      "flags": 0
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o555",
+      "type": "file",
+      "flags": 0
+    }
+  ]
+}
