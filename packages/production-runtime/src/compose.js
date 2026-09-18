@@ -58,6 +58,7 @@ import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflo
 import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { createExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -392,6 +393,18 @@ export async function composeProductionRuntime(options = {}) {
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
   agentSessionRuntime.mount(ctx)
+
+  // AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 (accepted): the read-only
+  // execution-history provider — two LOCAL tools (self + audit scopes) over
+  // one query core; svc reads use the caller's own credential seam; the
+  // runtime-evidence log receives WPA-1 archive-failure markers.
+  const executionHistoryRuntime = createExecutionHistoryRuntime({
+    layout,
+    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
+    authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    log,
+  })
+  executionHistoryRuntime.mount(ctx)
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
