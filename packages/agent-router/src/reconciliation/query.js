@@ -1,18 +1,71 @@
 /**
  * @agent-core/agent-router/src/reconciliation/query.js — the non-consuming
  * query surface of the Router reconciliation store
- * (AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-018).
+ * (AGENT_PROCESS_LIFECYCLE_HARDENING_V3 C-018/C-019/C-026).
  *
  * These methods compose onto TurnReconciliationStore.prototype (store.js).
  * All reads are non-consuming, repeatable and idempotent — a read never
  * deletes a record, never advances state and never changes the result of a
  * later read. Handle identity classification (restart_lost / evicted /
- * never_existed) resolves against the issuance metadata of the CURRENT
- * runtime epoch; this Spec promises no disk persistence across
- * control-plane restarts.
+ * never_existed) resolves against current and durably observed runtime
+ * epochs; V3 records remain queryable across control-plane restarts.
  */
 
+import { correlationEntryByteSize } from './capacity.js'
+
+const RECOVERY_PROJECTION_KEYS = Object.freeze([
+  'failureStage', 'fencedBy', 'reconciliationHandle', 'processGeneration', 'terminationEvidence',
+  'missingEvidence', 'attemptedActions', 'nextSafeAction', 'replyDelivery',
+  'partialDelivery', 'requestAdmission',
+])
+
+export function outerFailureProjection(error, failureStage, recovery = {}) {
+  const projection = {
+    failureStage,
+    fencedBy: null,
+    reconciliationHandle: null,
+    processGeneration: null,
+    terminationEvidence: null,
+    missingEvidence: [],
+    attemptedActions: [],
+    nextSafeAction: 'none',
+    replyDelivery: 'not_attempted',
+    partialDelivery: 'none',
+    requestAdmission: failureStage === 'admission' ? 'not_admitted' : 'accepted',
+  }
+  for (const key of RECOVERY_PROJECTION_KEYS) {
+    if (error?.[key] !== undefined) projection[key] = error[key]
+    if (recovery?.[key] !== undefined) projection[key] = recovery[key]
+  }
+  return projection
+}
+
 export const queryMethods = {
+  recordQueryState(record) {
+    if (record.state === 'settled') return 'settled'
+    return ['recovery_claimed', 'shutdown_requested', 'exit_observed', 'blocked'].includes(record.recoveryState)
+      ? 'recovering'
+      : 'pending'
+  },
+
+  recoveryDiagnostic(handle, { failureStage = 'admission', requestAdmission = 'not_admitted' } = {}) {
+    const classified = this.classifyHandle(handle)
+    const record = classified.record
+    return {
+      failureStage,
+      fencedBy: record?.fenceState === 'active' ? handle : null,
+      reconciliationHandle: record?.handle ?? null,
+      processGeneration: record?.processGeneration ?? null,
+      terminationEvidence: record?.terminationEvidence ?? null,
+      missingEvidence: [...(record?.missingEvidence ?? [])],
+      attemptedActions: (record?.attemptedActions ?? []).map(entry => ({ ...entry })),
+      nextSafeAction: record?.nextSafeAction ?? 'await_late_evidence',
+      replyDelivery: 'not_attempted',
+      partialDelivery: 'none',
+      requestAdmission,
+    }
+  },
+
   settledSnapshot(record) {
     return {
       handle: record.handle,
@@ -25,7 +78,7 @@ export const queryMethods = {
       eventWatermarkSeq: record.eventWatermarkSeq,
       promptRequestId: record.promptRequestId,
       messageId: record.messageId,
-      state: record.state,
+      state: this.recordQueryState(record),
       initialOutcome: record.initialOutcome,
       initialSource: record.initialSource,
       outcome: record.outcome,
@@ -36,7 +89,19 @@ export const queryMethods = {
       cancelRequested: record.cancelRequested === true,
       cancelRequestedAtWallMs: record.cancelRequestedAtWallMs ?? null,
       settledAtWallMs: record.settledAtWallMs,
+      updatedAt: record.updatedAt,
       deadlineAtWallMs: record.deadlineAtWallMs,
+      hardDeadlineAt: record.hardDeadlineAt ?? record.deadlineAtWallMs,
+      recoveryState: record.recoveryState ?? null,
+      missingEvidence: [...(record.missingEvidence ?? [])],
+      reapClaim: record.reapClaim === null || record.reapClaim === undefined ? null : { ...record.reapClaim },
+      attemptedActions: (record.attemptedActions ?? []).map(entry => ({ ...entry })),
+      shutdownRequestedAt: record.shutdownRequestedAt ?? null,
+      exitObservedAt: record.exitObservedAt ?? null,
+      settlementResult: record.settlementResult ?? null,
+      failureReason: record.failureReason ?? null,
+      nextSafeAction: record.nextSafeAction ?? 'none',
+      fenceState: record.fenceState ?? 'none',
       finalAssistantOutput: record.finalAssistantOutput === null ? null : { ...record.finalAssistantOutput },
       audit: record.audit.map(entry => ({ ...entry })),
       ...(record.auditDroppedCount === undefined ? {} : { auditDroppedCount: record.auditDroppedCount }),
@@ -49,7 +114,11 @@ export const queryMethods = {
     const match = handle.match(/^turn:([^:]+):a(\d+):g(\d+):s(\d+)$/)
     if (match === null) return { state: 'never_existed' }
     const [, epoch, discriminator, generationRaw, seqRaw] = match
-    if (epoch !== this.runtimeEpoch) return { state: 'restart_lost' }
+    const durableRecord = this.records.get(handle)
+    if (durableRecord !== undefined) {
+      return { state: this.recordQueryState(durableRecord), agentId: durableRecord.agentId, record: durableRecord }
+    }
+    if (!this.runtimeEpochs.has(epoch)) return { state: 'restart_lost' }
     const discriminatorNumber = Number(discriminator)
     const generation = Number(generationRaw)
     const seq = Number(seqRaw)
@@ -77,17 +146,17 @@ export const queryMethods = {
     }
     const record = this.records.get(handle)
     if (record === undefined) return { state: 'evicted', agentId }
-    return { state: record.state, agentId, record }
+    return { state: this.recordQueryState(record), agentId, record }
   },
 
   /**
    * Non-consuming record query (C-018):
-   *   {state:'pending'|'settled', snapshot} | {state:'evicted'|'restart_lost'|'never_existed'}
+   *   {state:'pending'|'recovering'|'settled', snapshot} | {state:'evicted'|'restart_lost'|'never_existed'}
    */
   getTurnReconciliation(handle) {
     const classified = this.classifyHandle(handle)
     if (classified.record === undefined) return { state: classified.state }
-    return { state: classified.record.state, snapshot: this.settledSnapshot(classified.record) }
+    return { state: classified.state, snapshot: this.settledSnapshot(classified.record) }
   },
 
   /**
@@ -128,9 +197,19 @@ export const queryMethods = {
       }
       return handle
     }
-    this.assertCorrelationCapacity()
-    this.correlationIndex.set(key, handle)
-    return handle
+    const bytes = correlationEntryByteSize(key, handle)
+    const authorityBefore = this.snapshotAuthority()
+    try {
+      this.assertCorrelationCapacity(bytes, handle)
+      this.correlationIndex.set(key, handle)
+      this.correlationBytes += bytes
+      this.globalBytes += bytes
+      this.persistDurable()
+      return handle
+    } catch (error) {
+      this.restoreAuthority(authorityBefore)
+      throw error
+    }
   },
 
   /**
@@ -143,7 +222,7 @@ export const queryMethods = {
     if (handle === undefined) return { state: 'never_existed' }
     const classified = this.classifyHandle(handle)
     if (classified.record === undefined) return { state: classified.state }
-    return { state: classified.record.state, handle, snapshot: this.settledSnapshot(classified.record) }
+    return { state: classified.state, handle, snapshot: this.settledSnapshot(classified.record) }
   },
 
   /** At-most-once reconciliation notification subscriber (§13.2). */

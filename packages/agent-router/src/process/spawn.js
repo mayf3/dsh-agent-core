@@ -1,7 +1,7 @@
 /**
  * @agent-core/agent-router/src/process/spawn.js — child spawn, ownership
  * binding and the child exit settlement order of the per-agent DSH process
- * client (AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-003, C-009, C-017
+ * client (AGENT_PROCESS_LIFECYCLE_HARDENING_V3 C-003, C-009, C-017
  * precedence, C-020).
  *
  * `spawnMethods` compose onto AgentProcess.prototype (agent-process.js).
@@ -129,6 +129,10 @@ export const spawnMethods = {
       this.auditBounded({ kind: 'stale_callback', detail: `late exit after EXITED (code=${code}, signal=${signal}) — bounded audit only` })
       return
     }
+    if (this.registryCleanupBlocked === true) {
+      this.auditBounded({ kind: 'stale_callback', detail: 'duplicate child exit while exact registry cleanup is blocked' })
+      return
+    }
     // 1. atomically mark exact child exit evidence
     this.exit = { code, signal }
     if (this.state === 'SPAWNING' || this.state === 'INITIALIZING' || this.state === 'READY') {
@@ -164,21 +168,43 @@ export const spawnMethods = {
           outcomeEvidence: failed ? 'exact_turn_end_failure' : 'exact_turn_end_success',
           terminationEvidence: 'child_real_exit',
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+          exitObserved: true,
         })
       } else {
         this.store.settleLate(execution.handle, {
           lateOutcome: 'terminated_without_outcome',
           terminationEvidence: 'child_real_exit',
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+          exitObserved: true,
         })
       }
-      this.releaseFence(execution.handle)
       this.finishExecution(execution)
     }
     // 6. authoritative reconciliation records are visible (in-memory store)
     // 7. local matcher/output copies released (finishExecution above)
     // 8. CAS exact REAP entry -> EMPTY
-    this.registryIntegration?.casEmpty?.(this)
+    const registryCleaned = this.registryIntegration?.casEmpty?.(this) !== false
+    if (!registryCleaned) {
+      this.registryCleanupBlocked = true
+      for (const execution of exitExecutions) {
+        this.store.markRegistryCleanupBlocked?.(execution.handle)
+      }
+      return
+    }
+    for (const execution of exitExecutions) {
+      if (this.store.getTurnReconciliation(execution.handle).state === 'settled') {
+        this.store.recordRecoveryAction?.(execution.handle, {
+          action: 'registry_cleanup', result: 'succeeded', reasonCode: 'exact_reap_empty',
+        })
+      }
+    }
+    // Fence cleanup follows authoritative settlement visibility AND exact
+    // registry cleanup. A shutdown request or signal alone never reopens.
+    for (const execution of exitExecutions) {
+      if (execution.settled || this.store.getTurnReconciliation(execution.handle).state === 'settled') {
+        this.releaseFence(execution.handle)
+      }
+    }
     // 9. EXITED
     this.transition('EXITED')
     // exitPromise resolves LAST — never before settlement/reconciliation.

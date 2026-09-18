@@ -58,6 +58,24 @@ test('STDIN_SYNC_THROW_ZERO_BYTE: proven zero-byte -> not_admitted; broken strea
   assert.equal(fx.counts().replayAdmissions, 0)
 })
 
+test('V3 durable write-intent failure sends zero prompt bytes and is never classified as a stdin zero-byte rejection', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  const writesBefore = prompts(fx).length
+  fx.store.markPromptWriteAttempted = () => { throw new Error('durable intent unavailable') }
+
+  const observed = await rejectsWith(fx.proc.turn('main', 'must stay local'), error => {
+    assert.notEqual(error.status, 'not_admitted')
+    assert.notEqual(error.proven, 'zero_byte')
+  })
+
+  assert.equal(prompts(fx).length, writesBefore)
+  assert.notEqual(
+    fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot.outcome,
+    'not_admitted',
+  )
+})
+
 test('STDIN_ASYNC_WRITE_ERROR: admission unknown -> outcome_unknown visible pre-exit, then terminated_without_outcome', async () => {
   const fx = makeFx()
   await fx.readyNow()
