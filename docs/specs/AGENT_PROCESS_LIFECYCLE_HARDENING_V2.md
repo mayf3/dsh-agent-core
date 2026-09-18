@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -16,7 +16,7 @@ governed_by:
 external_authorities: []
 supersedes:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-superseded_by: null
+superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
 owners:
   - mayf3
 date: 2026-08-21
