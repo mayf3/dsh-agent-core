@@ -305,24 +305,15 @@ pub(crate) fn finish(
     docs.insert("afterStore".into(), store);
     docs.insert("afterIncidentState".into(), incident);
     let raw_run_readback = io::get(Some(&job))?;
-    let raw_run_events = io::runtime_document("runs.jsonl", p.runtime_uid, p.runtime_gid)?;
-    let raw_body = strict_json(&raw_run_readback)?;
-    let runs = raw_body["runs"]
-        .as_array()
-        .ok_or(Error::new("WATCHDOG_RUN_READBACK"))?;
-    require(runs.len() == 1, "WATCHDOG_CANARY_PENDING")?;
-    require(runs[0]["job_id"] == job, "WATCHDOG_RUN_IDENTITY")?;
-    if runs[0]["outcome"] == "outcome_unknown" {
-        let evidence = json!({"grant_digest":digest(g)?,"raw_run_readback":raw_run_readback,"observed_at_ms":now_ms()?});
-        save(&area, "unknown.json", &evidence)?;
-        q.latch_executor_failure(&digest(&evidence)?)?;
-        return Err(Error::new("UNKNOWN_CANARY"));
-    }
-    require(
-        runs[0]["outcome"] == "succeeded",
-        "WATCHDOG_CANARY_NOT_SUCCEEDED",
+    let (run, raw_run_events) = run::observe(
+        &area,
+        q,
+        &digest(g)?,
+        &job,
+        &raw_run_readback,
+        now_ms()?,
+        || io::runtime_document("runs.jsonl", p.runtime_uid, p.runtime_gid),
     )?;
-    let run = super::run_readback::derive(&raw_run_readback, &raw_run_events, &job)?;
     super::canary_plan::run_within_plan(&plan, &run)?;
     docs.insert("runReadback".into(), canonical_bytes(&run)?);
     let semantic = semantic(&docs, &g.payload.release.source_sha, &job)?;
@@ -484,3 +475,6 @@ impl VerifiedCanary {
 #[cfg(test)]
 #[path = "../../test/adoption/verification/capture.rs"]
 mod tests;
+
+#[path = "native_run.rs"]
+mod run;
