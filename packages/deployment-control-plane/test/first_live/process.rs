@@ -133,3 +133,24 @@ fn stdout_and_stderr_share_the_frozen_one_mib_budget() {
     );
     assert!(matches!(result, Err(e) if e.code() == "FIRST_LIVE_CHILD_LIMIT"));
 }
+
+#[test]
+fn caller_node_can_only_enter_the_two_retired_constant_stubs() {
+    for args in [
+        vec!["-e".into(), "process.exit()".into()],
+        vec!["/tmp/arbitrary.mjs".into()],
+        vec![],
+        vec![
+            "/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs".into(),
+            "extra".into(),
+        ],
+    ] {
+        assert!(validate_arguments(Tool::RetiredNode, &args).is_err());
+    }
+    for path in ["/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs","/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"] {
+        validate_arguments(Tool::RetiredNode,&[path.into()]).unwrap();
+    }
+    validate_identity(Tool::RetiredNode, Some((502, 20, &[20]))).unwrap();
+    assert!(validate_identity(Tool::RetiredNode, None).is_err());
+    assert!(validate_identity(Tool::RetiredNode, Some((505, 601, &[601]))).is_err());
+}
