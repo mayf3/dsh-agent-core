@@ -16,6 +16,7 @@ pub(super) fn archive(area: &Dir, p: &Prepared, service: &[u8]) -> Result<()> {
 }
 pub(super) fn keys(root: &Dir, area: &Dir, stage: &Dir, expires: u64) -> Result<()> {
     absent(area, "retired-issuer-keys")?;
+    deadline(expires)?;
     root.rename("issuer-keys", area, "retired-issuer-keys")?;
     checkpoint("retired-keys", expires)?;
     absent(root, "issuer-keys")?;

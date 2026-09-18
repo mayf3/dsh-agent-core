@@ -101,7 +101,8 @@ impl Mode<'_> {
             Self::Fixture(roots) => preactivation::fixture::validate_pristine(roots, guard),
         }
     }
-    fn generate(&self, stage: &Dir) -> Result<Catalog> {
+    fn generate(&self, stage: &Dir, expires: u64) -> Result<Catalog> {
+        deadline(expires)?;
         match self {
             Self::Native(_) => custody::initialize_standing_stage(stage),
             #[cfg(test)]
@@ -242,7 +243,7 @@ fn perform(
     )?;
     checkpoint("intent", expires)?;
     let staged = area.mkdir("generated")?;
-    let fresh = mode.generate(&staged)?;
+    let fresh = mode.generate(&staged, expires)?;
     checkpoint("generated", expires)?;
     // Existing exact roles/scopes/profiles remain authoritative, only key values change.
     service.catalog.revision = preactivation::CATALOG_REVISION.into();
