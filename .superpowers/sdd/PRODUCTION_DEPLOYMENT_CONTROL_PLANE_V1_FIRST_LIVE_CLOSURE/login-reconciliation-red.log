@@ -1,0 +1,36 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.42s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 6 tests
+
+thread 'bootstrap::login_reconciliation::tests::grant_scope_identity_binding_and_one_hour_bound_are_exact' (75209401) panicked at src/bootstrap/../../test/login_reconciliation/main.rs:27:269:
+0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test bootstrap::login_reconciliation::tests::grant_scope_identity_binding_and_one_hour_bound_are_exact ... FAILED
+test bootstrap::login_reconciliation::tests::malformed_grant_unknown_fields_cannot_be_ignored ... ok
+
+thread 'bootstrap::login_reconciliation::tests::failed_timeout_or_unknown_poststate_stays_consumed' (75209400) panicked at src/bootstrap/../../test/login_reconciliation/main.rs:22:177:
+assertion failed: t.path().join("login-reconciliation-intent.json").exists()
+test bootstrap::login_reconciliation::tests::precondition_failure_produces_no_login_intent_or_spawn ... ok
+test bootstrap::login_reconciliation::tests::failed_timeout_or_unknown_poststate_stays_consumed ... FAILED
+
+thread 'bootstrap::login_reconciliation::tests::any_existing_budget_record_blocks_before_spawn' (75209398) panicked at src/bootstrap/../../test/login_reconciliation/main.rs:19:195:
+assertion failed: execute(&d, &mut e).is_err()
+
+thread 'bootstrap::login_reconciliation::tests::exactly_once_success_retains_original_history' (75209399) panicked at src/bootstrap/../../test/login_reconciliation/main.rs:16:30:
+assertion failed: t.path().join("login-reconciliation-intent.json").exists()
+test bootstrap::login_reconciliation::tests::any_existing_budget_record_blocks_before_spawn ... FAILED
+test bootstrap::login_reconciliation::tests::exactly_once_success_retains_original_history ... FAILED
+
+failures:
+
+failures:
+    bootstrap::login_reconciliation::tests::any_existing_budget_record_blocks_before_spawn
+    bootstrap::login_reconciliation::tests::exactly_once_success_retains_original_history
+    bootstrap::login_reconciliation::tests::failed_timeout_or_unknown_poststate_stays_consumed
+    bootstrap::login_reconciliation::tests::grant_scope_identity_binding_and_one_hour_bound_are_exact
+
+test result: FAILED. 2 passed; 4 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--lib`
