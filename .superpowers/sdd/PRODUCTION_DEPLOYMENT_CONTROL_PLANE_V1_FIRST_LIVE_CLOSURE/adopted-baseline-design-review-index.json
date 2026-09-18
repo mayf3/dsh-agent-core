@@ -1,0 +1,11 @@
+{
+  "reviewer": "dcp_first_live_binding_review",
+  "design_commit": "f88fb71ea79e8795260056758f333e93447460e6",
+  "implementation_base": "e8f863fdb5d3b95dc45cd202acee5c1c69124551",
+  "reviewed_at_unix": 1789708772,
+  "no_package_source_delta": true,
+  "sha256": {
+    "adopted-baseline-design.md": "50575fe39ef19258f230f24d26c7f1449352fd34fb1c6ed5ab84931b0e28e020",
+    "adopted-baseline-design-review.md": "f7976137459a35981ce60f3a8b4bc3eae5da45ab32e2fd0d84318e12b94c4ef3"
+  }
+}
