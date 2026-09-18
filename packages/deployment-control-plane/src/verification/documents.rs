@@ -178,5 +178,5 @@ impl<'de> Visitor<'de> for StrictValue {
     }
 }
 #[cfg(test)]
-#[path = "../../test/verification/documents.rs"]
+#[path = "../../test/adoption/verification/documents.rs"]
 mod tests;

@@ -191,5 +191,5 @@ pub(super) fn fresh(uid: u32, gid: u32, incident_gid: u32) -> Result<(Vec<u8>, V
     Ok((health, store, incidents))
 }
 #[cfg(test)]
-#[path = "../../test/verification/native_io.rs"]
+#[path = "../../test/adoption/verification/native_io.rs"]
 mod tests;
