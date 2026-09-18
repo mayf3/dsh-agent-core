@@ -42,7 +42,7 @@ APP="$TRUSTED_ROOT/app"
 CANONICAL_STORE="/Users/authsvc/.agent-core/scheduler/jobs.json"
 CANONICAL_RUNS="/Users/authsvc/.agent-core/scheduler/runs.jsonl"
 LOCK_ROOT="/usr/local/var/agent-core/production-mutation-locks"
-STATE_ROOT="/usr/local/var/agent-core/scheduler-self-healing-v7"
+STATE_ROOT="/usr/local/var/agent-core/scheduler-self-healing-v7-apponly"
 RB_TMP="/private/tmp/scheduler-self-healing-deploy-v7-receipt"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 
@@ -73,6 +73,11 @@ build_app_next() { # $1=live_app  $2=staging  $3=out_dir
   rm -rf "$out/packages/scheduler"
   cp -R "$stg/packages/scheduler" "$out/packages/scheduler"
   cp "$stg/package.json" "$out/package.json"
+  # cp -R/cp create root-owned files under sudo; the deployed generation must
+  # keep the live ownership (runtime runs as authsvc)
+  if [ "$(id -u)" = "0" ]; then
+    chown -R authsvc:authsvc "$out/packages/scheduler" "$out/package.json"
+  fi
   # scope enforcement is carried ENTIRELY by G9 (built manifest ==
   # frozen TARGET_APP_MANIFEST): every non-scheduler byte is pinned to
   # the live generation and every scheduler byte to 41f354d. A
@@ -176,12 +181,13 @@ production_main() {
   chmod 700 "$STATE_ROOT"
   mkdir -p "$RB_TMP" || { echo "FATAL: cannot create $RB_TMP" >&2; exit 1; }
   local AUTH_MARKER="$STATE_ROOT/receipts/deploy-v7.auth"
-  if [ -e "$AUTH_MARKER" ]; then
+  # atomic exactly-once acquisition: noclobber '>' fails when the marker
+  # already exists, closing the check-then-create race under double execution
+  if ! ( set -o noclobber; printf 'packet=FREEZE_V7\ntarget=%s\nauthorized_by=mayf3\ncreated=%s\n' \
+        "$FROZEN_MAIN_SHA" "$(date -u +%FT%TZ)" > "$AUTH_MARKER" ) 2>/dev/null; then
     echo "ERROR: authorization already consumed ($AUTH_MARKER) — EXACTLY_ONCE" >&2
     exit 1
   fi
-  printf 'packet=FREEZE_V7\ntarget=%s\nauthorized_by=mayf3\ncreated=%s\n' "$FROZEN_MAIN_SHA" "$(date -u +%FT%TZ)" > "$AUTH_MARKER" \
-    || { echo "FATAL: cannot write exactly-once marker" >&2; exit 1; }
   chmod 600 "$AUTH_MARKER"
   say "G0 authorization reserved (consumed on any exit; new packet = new authorization)"
   local rollback_done=0 app_rb=""
@@ -303,7 +309,7 @@ KEYS
   # BUILD + VERIFY sealed generation
   setup_pm_guard
   local next="$TRUSTED_ROOT/app.next-v7-$TS"
-  build_app_next "$APP" "$STAGING" "$next" || fail "G9 build/scope-creep guard (see SCOPE_CREEP above)"
+  build_app_next "$APP" "$STAGING" "$next" || fail "G9 app.next build failed"
   local built_man="$(manifest_of "$next")"
   [ "$built_man" = "$FROZEN_TARGET_APP_MANIFEST_SHA" ] || fail "G9 built app.next manifest != frozen target ($built_man)"
   local sched_sha="$(file_sha "$next/packages/scheduler/src/scheduler.js")"
@@ -332,6 +338,7 @@ KEYS
   if ! swap_out="$(swap_generations "$APP" "$next" "$app_rb")"; then
     # partial mv state possible: restore from the rollback generation directly
     [ -d "$app_rb" ] && { rm -rf "$APP" 2>/dev/null || true; mv "$app_rb" "$APP"; launchctl kickstart -k system/ai.agent-core.runtime || true; }
+    [ -d "$APP" ] || { echo "FATAL: swap failed and restore failed — pre-V7 generation preserved at $app_rb; manual recovery required" >&2; exit 1; }
     fail "APPLY swap failed (restored pre-V7 generation)"
   fi
   say "APPLY swapped: old generation preserved at $app_rb"

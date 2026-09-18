@@ -46,7 +46,8 @@ NO per-file overwriting inside live app/.
 
 ## Gates before the swap (all fail-closed)
 
-exactly-once marker (deploy-v7.auth) · staging manifest == ee8e9d23… · live app manifest ==
+exactly-once marker (deploy-v7.auth under scheduler-self-healing-v7-apponly/ — r5 namespace, see
+ledger below) · staging manifest == ee8e9d23… · live app manifest ==
 66ebc369… (drift=STOP) · production-deploy/routing-tx/jobs.json.lock ABSENT · engine lease
 positively HELD by the live runtime (V6 correction kept) · runtime health (process + 8790/health
 + W2 heartbeat/log) · HR b115cb96 retry.auto==false (revision+updatedAtMs frozen to receipt) ·
@@ -85,11 +86,12 @@ SPAWN_HELPER_PRE_SHA=a9fdfe66a2494557c80d9e8e8f210b2cdbbfab29a2b3fea2eeaa2101971
 
 ```text
 RUNBOOK=deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh
-RUNBOOK_SHA256(V7)=73a5b2d4d0a2e4eaffacc682cf3d56e14115294cee8f586a4ec2f77547d2611a (archived byte-identical copy in this directory;
-r2: fail() now exits (all pre-swap gates fail-closed), do_build call-name fixed, conflicting-
-process gate + staging key pins restored, engine-lease identity check restored, routing pre==post
-check fixed, RB_TMP mkdir + robust restore for partial-mv states, final pm_guard enforced,
-G7b in-flight re-check adjacent to the swap; re-verified: FIXTURE=PASS)
+RUNBOOK_SHA256(V7)=cb0f12b203bc8caddcbc7b595537f8a764082e519009d9a4557f5f83c8283f40 (archived byte-identical copy in this directory;
+r2/r3/r4 history: fail() now exits (all pre-swap gates fail-closed), do_build call-name fixed,
+conflicting-process gate + staging key pins restored, engine-lease identity check restored,
+routing pre==post check fixed, RB_TMP mkdir + robust restore for partial-mv states, final
+pm_guard enforced, G7b in-flight re-check adjacent to the swap, G6c two-space parse fixed;
+re-verified: FIXTURE=PASS)
 ROOT COMMAND (single line):
   sudo bash /Users/yanfenma/workspace/project/dsh-agent-core-selfheal-impl/deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh 2>&1 | tee /private/tmp/scheduler-self-healing-deploy-v7.log
 ```
@@ -111,3 +113,36 @@ SAFETY_REVIEW=see V7-REVIEW-SAFETY.md
    scheduler byte to 41f354d).
 3. The non-target PRE-hash capture moved to immediately before the swap (smaller churn window).
 4. G9 fail message renamed (stale SCOPE_CREEP reference).
+
+## r4→r5 execution-blocker fixes (attempt NOT consumed; final review target)
+
+1. G0 marker namespace renamed: scheduler-self-healing-v7 → **scheduler-self-healing-v7-apponly**.
+   The parallel installer lineage's deploy-v7 consumed
+   /usr/local/var/agent-core/scheduler-self-healing-v7/receipts/deploy-v7.auth at 2026-09-18
+   05:44:26Z — the shared namespace would have made THIS packet's G0 refuse as already-consumed.
+2. Marker acquisition is now atomic (noclobber '>' create-or-fail) — closes the
+   check-then-create TOCTOU under accidental double execution.
+3. build_app_next chowns the replaced scheduler subtree + root package.json to authsvc:authsvc
+   when running as root (cp -R/cp create root-owned files; the live generation is authsvc-owned
+   and the runtime runs as authsvc). Guarded by id -u so the non-root fixture path is unchanged.
+4. G9 fail message actually renamed (r4 claimed it; the r4 bytes still carried the stale
+   SCOPE_CREEP reference — doc/byte drift, fixed).
+5. Swap-failure restore path now verifies app actually exists before reporting "restored" (a
+   failed restore exits FATAL with the rollback generation named, instead of a false message).
+
+## Deployment attempt ledger (2026-09-18)
+
+```text
+INSTALLER V7  05:44:26Z  CONSUMED-FAILED  journal() "$2" unbound under set -u at
+                         P1_prebuild_start; aborted after G12, prebuild/apply never started;
+                         ZERO MUTATION; marker scheduler-self-healing-v7/receipts/deploy-v7.auth
+                         CONSUMED
+INSTALLER V8  10:09:19Z  CONSUMED-FAILED  P1_prebuild_FAIL (timeout or rc!=0, 5s); ZERO
+                         MUTATION; marker scheduler-self-healing-v8/receipts/deploy-v8.auth
+                         CONSUMED
+THIS PACKET (app-only V7)  UNCONSUMED — single remaining authorization target; namespace
+                         scheduler-self-healing-v7-apponly; no installer, no pnpm/corepack/network
+Live preimage re-verified 2026-09-18 (post-V8-failure): manifest_of(app) ==
+                         66ebc369987bebbfd44549c6d0c8cfc32700decae9b4755ec63913e3a58b6721; runtime
+                         pid 67556 alive on the preimage generation; 8790/health ok
+```
