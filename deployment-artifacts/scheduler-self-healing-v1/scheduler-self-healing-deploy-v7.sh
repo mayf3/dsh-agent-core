@@ -73,23 +73,11 @@ build_app_next() { # $1=live_app  $2=staging  $3=out_dir
   rm -rf "$out/packages/scheduler"
   cp -R "$stg/packages/scheduler" "$out/packages/scheduler"
   cp "$stg/package.json" "$out/package.json"
-  # scope-creep guard: outside packages/scheduler + root package.json, staging
-  # app-closure bytes must equal the live generation (no hidden scope growth).
-  local rel want have
-  while IFS= read -r rel; do
-    case "$rel" in
-      ./package.json | ./packages/scheduler/*) continue ;;
-      ./packages/*/*/src/* | ./packages/*/*/package.json | ./scripts/* | ./bundle-*/package.json | ./bundle-*/cordis.patch.yml | ./profile-*/package.json | ./profile-*/cordis.patch.yml) ;;
-      *) continue ;;
-    esac
-    want="$(file_sha "$stg/$rel")"
-    have="$(file_sha "$out/$rel")"
-    if [ "$want" != "$have" ]; then
-      echo "SCOPE_CREEP: $rel differs live-vs-target outside the scheduler scope" >&2
-      return 1
-    fi
-  done < <(cd "$stg" && find . -type f -print0 | sort -z | xargs -0 shasum -a 256)
-  return 0
+  # scope enforcement is carried ENTIRELY by G9 (built manifest ==
+  # frozen TARGET_APP_MANIFEST): every non-scheduler byte is pinned to
+  # the live generation and every scheduler byte to 41f354d. A
+  # staging-vs-live file loop is unsatisfiable here (staging is a full
+  # checkout, live is the narrow closure) and was removed after review.
 }
 
 verify_app_next() { # $1=next_dir  -> manifest printed; caller compares
@@ -270,14 +258,6 @@ production_main() {
   printf '%s\n' "$hr" > "$STATE_ROOT/hr-job-before.json"
   say "G5 HR mitigation confirmed (revision+updatedAtMs frozen for the bounded re-enable)"
 
-  # G6 non-target surface PRE hashes (acceptance evidence; post compared at end)
-  local pre_harness="$(manifest_of "$TRUSTED_ROOT/harness")"
-  local pre_node="$(manifest_of "$TRUSTED_ROOT/node-runtime")"
-  local pre_home="$(manifest_of "$TRUSTED_ROOT/home")"
-  local pre_config="$(manifest_of "$TRUSTED_ROOT/config")"
-  local pre_helper="$(file_sha /usr/local/libexec/dsh-agent-spawn-helper)"
-  local pre_routing="$(file_sha /Users/authsvc/.agent-core/scheduler/routing.json)"
-  say "G6 non-target PRE hashes captured (harness/node-runtime/home/config/helper/routing)"
 
   # G6b no conflicting production mutation process (restored from v6)
   if pgrep -fl "trusted-cp-deploy-install|run-authorized-transaction|run-routing-install" >/dev/null 2>&1; then
@@ -288,7 +268,7 @@ production_main() {
   local line want rel got
   while IFS= read -r line; do
     want="${line%% *}"
-    rel="${line#*  }"
+    rel="${line##*  }"
     got="$(file_sha "$STAGING/$rel")"
     [ "$got" = "$want" ] || fail "G6c staging key hash mismatch $rel"
   done <<'KEYS'
@@ -338,6 +318,14 @@ KEYS
   inflight="$(jq '[.occurrences[] | select(.state == "admitted" or .state == "running")] | length' "$CANONICAL_STORE" 2>/dev/null || echo 999)"
   [ "$inflight" = "0" ] || fail "G7b in-flight occurrence appeared during build — re-run this packet when idle"
   say "G7b in-flight re-check clean"
+  # G6 non-target surface PRE hashes (acceptance evidence; post compared at end)
+  local pre_harness="$(manifest_of "$TRUSTED_ROOT/harness")"
+  local pre_node="$(manifest_of "$TRUSTED_ROOT/node-runtime")"
+  local pre_home="$(manifest_of "$TRUSTED_ROOT/home")"
+  local pre_config="$(manifest_of "$TRUSTED_ROOT/config")"
+  local pre_helper="$(file_sha /usr/local/libexec/dsh-agent-spawn-helper)"
+  local pre_routing="$(file_sha /Users/authsvc/.agent-core/scheduler/routing.json)"
+  say "G6 non-target PRE hashes captured (harness/node-runtime/home/config/helper/routing)"
 
   # APPLY (atomic renames, same parent dir)
   app_rb="$APP.rollback-v7-$TS"
