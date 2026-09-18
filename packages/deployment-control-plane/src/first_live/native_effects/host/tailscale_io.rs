@@ -105,11 +105,17 @@ fn socket_identity(parent: &crate::fs::secure::Dir) -> Result<(u64, u64)> {
     )?;
     Ok((st.st_dev as u64, st.st_ino))
 }
-fn peer(stream: &UnixStream, expected: u32) -> Result<()> {
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Peer {
+    uid: u32,
+    gid: u32,
+    pid: u32,
+}
+fn peer(stream: &UnixStream) -> Result<Peer> {
     let (mut uid, mut gid) = (u32::MAX, u32::MAX);
     let fd = stream.as_raw_fd();
     require(
-        unsafe { libc::getpeereid(fd, &mut uid, &mut gid) } == 0 && uid == 0 && gid == 0,
+        unsafe { libc::getpeereid(fd, &mut uid, &mut gid) } == 0,
         "TAILSCALE_PEER",
     )?;
     let mut pid = 0i32;
@@ -118,10 +124,29 @@ fn peer(stream: &UnixStream, expected: u32) -> Result<()> {
     require(
         unsafe { libc::getsockopt(fd, 0, 2, (&mut pid as *mut i32).cast(), &mut len) } == 0
             && len as usize == std::mem::size_of_val(&pid)
-            && pid > 0
-            && pid as u32 == expected,
+            && pid > 0,
         "TAILSCALE_PEER",
-    )
+    )?;
+    Ok(Peer {
+        uid,
+        gid,
+        pid: pid as u32,
+    })
+}
+fn authenticated_exchange(
+    stream: &mut UnixStream,
+    expected: Peer,
+    deadline: Instant,
+    mut check_generation: impl FnMut() -> Result<()>,
+) -> Result<Vec<u8>> {
+    require(peer(stream)? == expected, "TAILSCALE_PEER")?;
+    check_generation()?;
+    let raw = exchange(stream, deadline)?;
+    // The authenticated FD has never been replaced or reconnected. Darwin's
+    // LOCAL_PEERPID returns ENOTCONN after a valid peer FIN; identity continuity
+    // is instead checked against the same socket inode and kernel generation.
+    check_generation()?;
+    Ok(raw)
 }
 pub(super) fn read(ctx: &super::Context<'_>, identity: &super::Identity) -> Result<String> {
     ctx.check()?;
@@ -203,18 +228,23 @@ pub(super) fn read(ctx: &super::Context<'_>, identity: &super::Identity) -> Resu
             "TAILSCALE_CONNECT_UNAVAILABLE",
         )?;
     }
-    peer(&stream, identity.pid)?;
-    require(
-        super::super::reader::identity(identity.pid)? == *identity,
-        "TAILSCALE_GENERATION",
-    )?;
-    let raw = exchange(&mut stream, deadline)?;
-    peer(&stream, identity.pid)?;
-    require(
-        socket_identity(&parent)? == before
-            && socket_identity(&plan.open_preflight(p.configuration.socket_gid, &ids)?)? == before
-            && super::super::reader::identity(identity.pid)? == *identity,
-        "TAILSCALE_GENERATION",
+    let raw = authenticated_exchange(
+        &mut stream,
+        Peer {
+            uid: 0,
+            gid: 0,
+            pid: identity.pid,
+        },
+        deadline,
+        || {
+            require(
+                socket_identity(&parent)? == before
+                    && socket_identity(&plan.open_preflight(p.configuration.socket_gid, &ids)?)?
+                        == before
+                    && super::super::reader::identity(identity.pid)? == *identity,
+                "TAILSCALE_GENERATION",
+            )
+        },
     )?;
     ctx.check()?;
     super::status::parse(&raw)
