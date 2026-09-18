@@ -16,7 +16,7 @@ use crate::{
     queue::Queue,
     registry::Registry,
     service::Intake,
-    trust::{canonical_bytes, digest, valid_digest, valid_id},
+    trust::{canonical_bytes, digest, valid_id},
     Error, Result,
 };
 use serde::{Deserialize, Serialize};
@@ -82,25 +82,23 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
         .get(&enrollment.deployment_profile)
         .ok_or(Error::new("PROFILE_NOT_ALLOWED"))?;
     require(profile.enabled, "PROFILE_NOT_ALLOWED")?;
-    let policy: SupervisorPolicy = read(root, "issuer-policy.json")?;
+    let policy: super::owner_policy::OwnerPolicy = read(root, "issuer-policy.json")?;
+    policy.validate()?;
     require(
-        policy.version == 1 && policy.policy_epoch > 0,
-        "ISSUER_POLICY",
-    )?;
-    valid_digest(&policy.codex_sha256)?;
-    require(
-        policy.source.accepted_contract_sha256 == enrollment.authority.source.sha256
-            && !policy.revoked_sources.iter().any(|s| s == source_sha),
-        "AUTHORITY_MISMATCH",
+        !policy.revoked_sources().iter().any(|s| s == source_sha),
+        "REVOKED",
     )?;
     // Intake already authenticated this exact enrollment under the protected
     // activation proof. Bind its retained faces/loader identity into every build.
     let native_enrollment: crate::transaction::NativeEnrollment = read(root, "activation.json")?;
     let enrollment_digest = digest(&native_enrollment)?;
+    policy.validate_registry(&registry, catalog, &native_enrollment)?;
+    let selected = policy.select(&record.enrollment, profile, &native_enrollment)?;
+    let prerequisites = registry.resolved_dependencies(goal)?;
     let dependency_closure = source::bound_dependencies(
-        &policy.source.dependency_closure,
+        &selected.dependency_closure,
         &enrollment_digest,
-        &policy.review_helper_sha256,
+        policy.helper(),
     )?;
     let actor = intake.actor(502, 20)?;
     let binding = IssueBinding {
@@ -115,7 +113,11 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
             record.revision
         },
         profile_digest: digest(profile)?,
-        source_policy_digest: digest(&(&policy.source, &enrollment_digest))?,
+        source_policy_digest: policy.issue_digest(
+            &record.enrollment,
+            selected,
+            &enrollment_digest,
+        )?,
     };
     if let Some(draft) = issuance::pending(root, &binding)? {
         issuance::verify_draft_artifact(root, &draft)?;
@@ -142,16 +144,11 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
     let db = root.open_file("queue.db", libc::O_RDONLY, 0)?;
     validate(&db, 0, false)?;
     let queue = Queue::open(root_path.join("queue.db"))?;
-    let prerequisites = enrollment
-        .prior_dependencies
-        .iter()
-        .map(|p| p.goal_id.clone())
-        .collect::<Vec<_>>();
     let dependencies = queue.issuer_dependencies(&prerequisites)?;
-    let observed = github::observe(&policy.source, source_sha)?;
-    let built = source::build_regular_files(&policy.source.slots, &observed.files)?;
+    let observed = github::observe(selected, source_sha)?;
+    let built = source::build_regular_files(&selected.slots, &observed.files)?;
     require(
-        !policy.revoked_artifacts.contains(&built.artifact_digest),
+        !policy.revoked_artifacts().contains(&built.artifact_digest),
         "REVOKED",
     )?;
     issuance::admit_target(
@@ -168,7 +165,7 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
         profile: profile.clone(),
         manifest: built.manifest.clone(),
         accepted_contract: ReviewSourceFile {
-            path: policy.source.accepted_contract_path.clone(),
+            path: selected.accepted_contract_path.clone(),
             content: String::from_utf8(observed.contract)
                 .map_err(|_| Error::new("REVIEW_BINARY_SOURCE"))?,
         },
@@ -215,14 +212,11 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
     let jobs = root.child("issuer-jobs")?;
     let job_id = digest(&job)?;
     immutable(&jobs, &format!("{job_id}.json"), &packet_bytes)?;
-    let reviewed = NativeReviewRunner::new(
-        policy.codex_sha256.clone(),
-        policy.review_helper_sha256.clone(),
-    )?
-    .run(
-        &job,
-        &root_path.join("issuer-jobs").join(format!("{job_id}.json")),
-    )?;
+    let reviewed = NativeReviewRunner::new(policy.codex().to_owned(), policy.helper().to_owned())?
+        .run(
+            &job,
+            &root_path.join("issuer-jobs").join(format!("{job_id}.json")),
+        )?;
     let authority = load(&keys, "local-authority", Role::Authority, catalog)?;
     let builder = load(&keys, "local-builder", Role::Builder, catalog)?;
     let reviewer = load(&keys, "local-reviewer", Role::Reviewer, catalog)?;

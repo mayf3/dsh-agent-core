@@ -1,4 +1,5 @@
 use super::*;
+use crate::issuer::coordinator::SupervisorPolicy;
 use crate::{
     common,
     fs::FixtureRoots,
@@ -278,5 +279,55 @@ fn backwards_clock_cannot_return_a_future_lease() {
             .unwrap_err()
             .code(),
         "CLOCK_ROLLBACK"
+    );
+}
+
+#[test]
+fn finite_v2_source_map_renews_current_owner_lease() {
+    let (tmp, roots, c, config) = setup();
+    let first = current_at(&roots.root, &c, "fixture", 1000).unwrap();
+    let mut value = serde_json::to_value(&config).unwrap();
+    let source = value.as_object_mut().unwrap().remove("source").unwrap();
+    value["version"] = 2.into();
+    value["policy_epoch"] = 10.into();
+    value["sources_by_goal"] = serde_json::json!({"watchdog-child": {
+        "enrollment_digest": "a".repeat(64), "source": source
+    }});
+    fs::write(
+        tmp.path().join("issuer-policy.json"),
+        canonical_bytes(&value).unwrap(),
+    )
+    .unwrap();
+    let second =
+        current_at(&roots.root, &c, "fixture", 1001).expect("bounded v2 Owner source selection");
+    assert!(second.payload.epoch > first.payload.epoch);
+    assert_eq!(
+        current_at(&roots.root, &c, "fixture", 1002).unwrap(),
+        second
+    );
+    value["sources_by_goal"]["watchdog-child"]["enrollment_digest"] = "b".repeat(64).into();
+    fs::write(
+        tmp.path().join("issuer-policy.json"),
+        canonical_bytes(&value).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        current_at(&roots.root, &c, "fixture", 1003)
+            .unwrap_err()
+            .code(),
+        "POLICY_EQUIVOCATION"
+    );
+    value["policy_epoch"] = 11.into();
+    fs::write(
+        tmp.path().join("issuer-policy.json"),
+        canonical_bytes(&value).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        current_at(&roots.root, &c, "fixture", 1004)
+            .unwrap()
+            .payload
+            .epoch
+            > second.payload.epoch
     );
 }
