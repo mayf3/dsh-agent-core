@@ -117,3 +117,16 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
     },
   }
 }
+
+/**
+ * One-line composition entry (compose.js is a registered no-growth file):
+ * builds the runtime from the broker env contract and mounts the provider.
+ */
+export function mountExecutionHistoryRuntime(ctx, { layout, broker, log }) {
+  createExecutionHistoryRuntime({
+    layout,
+    credentialsFile: broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
+    authServiceOrigin: broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    log,
+  }).mount(ctx)
+}
