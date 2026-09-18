@@ -1,5 +1,16 @@
 # FREEZE V7B — ONE-FILE APP-ONLY SEALED GENERATION FOLLOW-UP (2026-09-18)
 
+> **TERMINAL 2026-09-18 ~23:00 (Owner): V7B_STATUS=STALE_PREIMAGE — NOT EXECUTED, AUTHORIZATION WITHDRAWN.**
+> The live generation moved twice after this freeze (20:44 auto-recovery-cfc2729-g2 → 11fae98c/pid 47575;
+> by 23:00 → 6447676c/pid 59762), so the frozen preimage c41a9045 no longer matches. V7B packet bytes
+> remain on the branch as an unused reference; marker scheduler-self-healing-v7b-apponly was NEVER
+> created (zero consumption). A unified-deploy Goal requested a production write freeze; this lane is
+> WAITING_FOR_UNIFIED_DEPLOY_FREEZE_RELEASE with the full NO_* discipline. Post-release plan (Owner):
+> ① fresh read authoritative live generation ② fresh census whether the broker/self-ops job_disposition
+> gap persists (as of 23:00 it does: live broker self-ops still 5c5ebc86/0 hits, scheduler bytes still
+> e3e8dce0 = self-healing live) ③ if still missing, re-freeze minimal scope against the ACTUAL live
+> baseline ④ independent review + Owner execution gate. NO V7C to be authored until then.
+
 Closes the single spec-governed gap found by V7 postdeploy acceptance (see
 POSTDEPLOY_ACCEPTANCE_V7.md): the live app's broker self-ops manifest predates
 the accepted SCHEDULER_SELF_HEALING_FROM_FEISHU_V1 §3 surface. V7B ships
