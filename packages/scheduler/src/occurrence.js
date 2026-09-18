@@ -69,6 +69,7 @@ export async function reserveOccurrence(candidate, onRejection = () => {}) {
 
     if (candidate.kind === 'retry') {
       const retry = retryCandidate({ job, occurrences: latest.occurrences, nowMs: admittedAt })
+      if (retry?.staleRevision) return refuse('retry_stale_schedule_revision')
       if (!retry || retry.exhausted || !retry.due
         || retry.retryOfOccurrenceId !== candidate.retryOfOccurrenceId) return refuse('retry_not_eligible')
     } else {
@@ -95,7 +96,14 @@ export async function reserveOccurrence(candidate, onRejection = () => {}) {
         ? Math.floor(job.payload.timeoutSeconds * 1000)
         : AGENT_TURN_SAFETY_TIMEOUT_MS,
     })
-    this.invoker.assertRunnable(job.agentId)
+    // C-026 verifies agentId runnable inside the lock; an unrunnable agent is
+    // a per-job refusal (receipted as ADMISSION_REJECTED), never a tick-aborting
+    // throw — ONE_BAD_JOB != GLOBAL_TICK_FAILURE (C-SH-002).
+    try {
+      this.invoker.assertRunnable(job.agentId)
+    } catch (error) {
+      return refuse(`agent_not_runnable: ${String(error?.message ?? error).slice(0, 200)}`)
+    }
     latest.occurrences.push(record)
     return { value: { record, deduped: false } }
   })
