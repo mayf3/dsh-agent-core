@@ -280,10 +280,10 @@ fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
         )?;
     }
     if matches!(tool, Tool::RetiredNode) {
-        require(args.len()==1 && [
-            "/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs",
-            "/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs",
-        ].contains(&args[0].as_str()),"FIRST_LIVE_RETIRED_NODE_ARGUMENTS")?;
+        require(
+            args == ["/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs"],
+            "FIRST_LIVE_RETIRED_NODE_ARGUMENTS",
+        )?;
     }
     Ok(())
 }
