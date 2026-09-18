@@ -1,0 +1,14 @@
+{
+  "observed_at_utc": "2026-09-18T05:50:19.954560+00:00",
+  "read_only_ordinary": true,
+  "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js",
+  "exists": true,
+  "sha256": "d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee",
+  "uid": 505,
+  "gid": 601,
+  "inode": 84640720,
+  "runtime_pid_observation": {
+    "exit": 0,
+    "public_process_fields": "67556   505 Fri Sep 18 13:29:27 2026     /usr/local/libexec/agent-core/node-runtime/bin/node"
+  }
+}

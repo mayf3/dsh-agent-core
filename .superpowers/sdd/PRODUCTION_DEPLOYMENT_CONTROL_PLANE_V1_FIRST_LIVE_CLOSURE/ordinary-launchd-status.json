@@ -1,0 +1,41 @@
+{
+  "observed_at_utc": "2026-09-18T05:50:01.405445+00:00",
+  "privileged": false,
+  "read_only": true,
+  "no_endpoint_requests": true,
+  "services": {
+    "ai.agent-deployd": {
+      "exit": 113,
+      "fields": {},
+      "absent": true
+    },
+    "ai.agent-core.runtime": {
+      "exit": 0,
+      "fields": {
+        "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+        "type": "jetsam",
+        "state": "active",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "username": "authsvc",
+        "group": "authsvc",
+        "runs": "14",
+        "pid": "67556"
+      },
+      "absent": false
+    },
+    "ai.agent-core.scheduler-w1": {
+      "exit": 113,
+      "fields": {},
+      "absent": true
+    },
+    "ai.agent-core.scheduler-w2": {
+      "exit": 113,
+      "fields": {},
+      "absent": true
+    }
+  },
+  "controller_disable_override": {
+    "exit": 0,
+    "matched_lines": []
+  }
+}

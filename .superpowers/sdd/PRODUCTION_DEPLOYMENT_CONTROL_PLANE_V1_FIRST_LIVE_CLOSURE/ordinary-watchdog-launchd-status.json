@@ -1,0 +1,28 @@
+{
+  "observed_at_utc": "2026-09-18T05:50:48.169166+00:00",
+  "read_only_ordinary": true,
+  "correct_labels_from": "src/transaction/native_profile.rs",
+  "services": {
+    "ai.agent-core.scheduler-watchdog-w1": {
+      "exit": 0,
+      "fields": {
+        "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+        "state": "not running",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "username": "authsvc",
+        "runs": "272",
+        "last exit code": "0"
+      }
+    },
+    "ai.agent-core.scheduler-watchdog-w2": {
+      "exit": 0,
+      "fields": {
+        "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+        "state": "not running",
+        "program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "runs": "93",
+        "last exit code": "0"
+      }
+    }
+  }
+}
