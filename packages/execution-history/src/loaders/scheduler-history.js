@@ -36,6 +36,8 @@ export function loadSchedulerHistory({ historyDir, maxFileBytes, monthLimit = 24
   const eventsRead = readJsonlFile(join(historyDir, 'events.jsonl'), { maxFileBytes })
   if (eventsRead.absent) {
     statuses.push({ status: 'ABSENT', reason: 'history events.jsonl absent' })
+  } else if (eventsRead.readFailed !== undefined) {
+    statuses.push({ status: 'DEGRADED', reason: `history events.jsonl unreadable: ${eventsRead.readFailed}`, truncated: true })
   } else {
     files.push({ file: join(historyDir, 'events.jsonl'), size: eventsRead.size, mtimeMs: eventsRead.mtimeMs })
     statuses.push({ status: 'OK', badLines: eventsRead.badLines, truncated: eventsRead.truncated })

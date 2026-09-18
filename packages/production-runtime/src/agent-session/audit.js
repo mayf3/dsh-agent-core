@@ -85,35 +85,42 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
   }
   const { archiveFile, posFile } = auditArchivePaths(auditFile)
 
-  function readArchivedUpTo() {
+  // Monotonic live-generation counter (process-local): keys the checkpoint so
+  // a stale offset from a previous generation (restart mid-rotation, failed
+  // reset) can never slice into the current one — the §6.2 区间错位 guard.
+  let liveGeneration = 0
+
+  function readCheckpoint() {
     try {
       const parsed = JSON.parse(readFileSync(posFile, 'utf8'))
-      return Number.isInteger(parsed?.archivedUpToBytes) && parsed.archivedUpToBytes >= 0
+      const bytes = Number.isInteger(parsed?.archivedUpToBytes) && parsed.archivedUpToBytes >= 0
         ? parsed.archivedUpToBytes
         : 0
+      return parsed?.gen === liveGeneration ? bytes : 0
     } catch {
       return 0
     }
   }
 
-  function writeArchivedUpTo(bytes) {
+  function writeCheckpoint(bytes) {
     const tmp = `${posFile}.tmp`
-    writeFileSync(tmp, `${JSON.stringify({ archivedUpToBytes: bytes })}\n`)
+    writeFileSync(tmp, `${JSON.stringify({ gen: liveGeneration, archivedUpToBytes: bytes })}\n`)
     renameSync(tmp, posFile)
   }
 
   /**
    * WPA-1: append the live generation's not-yet-archived byte interval
    * [archivedUpToBytes, size) to the archive, fsync, then checkpoint. Throws
-   * on failure — the caller decides (rotation continues; loss is reported).
-   * A crash between append and checkpoint can duplicate the interval in the
-   * archive; history-query readers dedupe by whole-line content (accepted
-   * approximation, see the Spec §6.3).
+   * on failure (error.bytesAttempted carries the attempted interval size) —
+   * the caller decides (rotation continues; loss is reported). A crash
+   * between append and checkpoint can duplicate the interval in the archive;
+   * history-query readers dedupe by whole-line content (Spec §6.3).
    */
   function archiveLiveGeneration(size) {
-    const start = readArchivedUpTo()
+    const start = readCheckpoint()
     if (start >= size) return
-    const chunk = Buffer.allocUnsafe(size - start)
+    const bytesAttempted = size - start
+    const chunk = Buffer.allocUnsafe(bytesAttempted)
     const fd = openSync(auditFile, 'r')
     let off = 0
     try {
@@ -125,7 +132,11 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
     } finally {
       closeSync(fd)
     }
-    if (off !== chunk.length) throw new Error(`short archive read (${off}/${chunk.length})`)
+    if (off !== chunk.length) {
+      const error = new Error(`short archive read (${off}/${chunk.length})`)
+      error.bytesAttempted = bytesAttempted
+      throw error
+    }
     const archiveFd = openSync(archiveFile, 'a')
     try {
       let written = 0
@@ -136,7 +147,7 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
     } finally {
       closeSync(archiveFd)
     }
-    writeArchivedUpTo(size)
+    writeCheckpoint(size)
   }
 
   function rotateIfNeeded(rowBytes) {
@@ -148,15 +159,23 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
       archiveLiveGeneration(statSync(auditFile).size)
     } catch (error) {
       try {
-        onArchiveFailure?.({ reason: 'ASM_ARCHIVE_APPEND_FAILED', detail: String(error?.message ?? error) })
+        onArchiveFailure?.({ reason: 'ASM_ARCHIVE_APPEND_FAILED', bytesAttempted: error?.bytesAttempted ?? null, detail: String(error?.message ?? error) })
       } catch { /* the observation hook must never break rotation */ }
     }
     try {
       renameSync(auditFile, `${auditFile}.1`)
-      // The new live generation starts at byte 0; a stale checkpoint from the
-      // rotated generation must never slice into it (also covers the
-      // archive-failed-then-renamed path above).
-      writeArchivedUpTo(0)
+      // The new live generation starts at byte 0. Advance the in-memory
+      // generation FIRST: even if the checkpoint write fails below, the stale
+      // on-disk offset (old gen) is detected as 0 by readCheckpoint and can
+      // never slice into the new generation.
+      liveGeneration += 1
+      try {
+        writeCheckpoint(0)
+      } catch (resetError) {
+        try {
+          onArchiveFailure?.({ reason: 'ASM_ARCHIVE_CHECKPOINT_RESET_FAILED', detail: String(resetError?.message ?? resetError) })
+        } catch { /* observation hook must never break rotation */ }
+      }
     } catch {
       // A stuck rotation must not crash the capability; the append below
       // reports 'append_failed' and the onAuditFailure signal stays visible.

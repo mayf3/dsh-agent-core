@@ -29,8 +29,8 @@ test('T1 attempts ledger: multi-generation attempts stay separate and project in
     const ledgerPath = join(fixture.paths.workflowExecutionDir, 'attempts.jsonl')
     const gen2 = attemptIdFormula(VISIT_ID, 2)
     writeFileSync(ledgerPath, readFileSync(ledgerPath, 'utf8') + [
-      JSON.stringify({ kind: 'attempt_planned', attemptId: gen2, nodeVisitId: VISIT_ID, dispatchIntentId: '44444444-4444-4444-8444-444444444444', workflowInstanceId: WF_ID, ownerPrincipalId: '55555555-5555-4555-8555-555555555555', generation: 2, ts: 1758100001000 }),
-      JSON.stringify({ kind: 'stale_superseded', nodeVisitId: VISIT_ID, observedWorkflowStateVersion: 7, ts: 1758100001100 }),
+      JSON.stringify({ kind: 'attempt_planned', attemptId: gen2, nodeVisitId: VISIT_ID, dispatchIntentId: '44444444-4444-4444-8444-444444444444', workflowInstanceId: WF_ID, ownerPrincipalId: '55555555-5555-4555-8555-555555555555', generation: 2, atMs: 1758100001000 }),
+      JSON.stringify({ kind: 'stale_superseded', nodeVisitId: VISIT_ID, observedWorkflowStateVersion: 7, atMs: 1758100001100 }),
     ].join('\n') + '\n')
     const loaded = loadAttemptsLedger({ workflowExecutionDir: fixture.paths.workflowExecutionDir })
     assert.equal(loaded.status.status, 'OK')
@@ -39,6 +39,13 @@ test('T1 attempts ledger: multi-generation attempts stay separate and project in
     assert.ok(visit, 'visit projected')
     assert.equal(visit.generation, 2)
     assert.equal(visit.attemptId, gen2)
+    // T1 core invariant: the stale re-entry preserves the ENTIRE gen-1
+    // evidence — its run_delivered receipt (the R3/R1 join anchor) survives.
+    assert.equal(visit.generations.length, 2, 'both generations retained')
+    const gen1 = visit.generations.find((g) => g.generation === 1)
+    assert.ok(gen1?.events.some((e) => e.kind === 'attempt_run_delivered'), 'gen-1 run_delivered preserved')
+    assert.ok(visit.events.some((e) => e.kind === 'attempt_run_delivered' && e.nativeRefs.messageId === 'om_wf_dispatch_1'), 'flat event list keeps the gen-1 receipt')
+    assert.ok(visit.events.some((e) => e.kind === 'attempt_stale_superseded'), 'gen-2 superseded evidence retained')
     // R2: both derivation paths agree for gen 1 and gen 2.
     assert.equal(attemptIdFormula(VISIT_ID, 1), ATTEMPT_ID)
     assert.notEqual(attemptIdFormula(VISIT_ID, 2), ATTEMPT_ID)

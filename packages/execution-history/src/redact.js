@@ -58,7 +58,7 @@ export function projectForViewer({ sessionAgentId, viewerAgentId, audit, journal
   if (owned) {
     return {
       ownership: 'owned',
-      messages: journal.messages.map((m) => ({ ...m, content: m.brief ?? null, brief: undefined })),
+      messages: journal.messages.map((m) => ({ ...m, content: m.text ?? m.brief ?? null })),
       toolCalls: journal.toolCalls,
       turns: journal.turns,
       spliced: journal.spliced,

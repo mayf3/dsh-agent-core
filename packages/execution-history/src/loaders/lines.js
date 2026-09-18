@@ -8,7 +8,7 @@
  * the source TRUNCATED (visible in the result, never silently dropped).
  */
 
-import { closeSync, existsSync, fstatSync, openSync, readSync, statSync } from 'node:fs'
+import { closeSync, existsSync, openSync, readSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 
 export const DEFAULT_MAX_FILE_BYTES = 64 * 1024 * 1024
@@ -33,24 +33,36 @@ export function readJsonlFile(filePath, {
   if (!existsSync(filePath)) {
     return { absent: true, lines: [], parsed: [], badLines: 0, truncated: false, size: 0, mtimeMs: 0 }
   }
-  const st = statSync(filePath)
-  if (!st.isFile()) throw new Error(`not a regular file: ${filePath}`)
+  // §2 fail-soft per source: an unreadable file (EACCES, vanished between
+  // existsSync and open, I/O error) degrades that source — it never fails
+  // the query.
+  let st
+  try {
+    st = statSync(filePath)
+    if (!st.isFile()) throw new Error(`not a regular file: ${filePath}`)
+  } catch (error) {
+    return { absent: false, readFailed: String(error?.message ?? error), lines: [], parsed: [], badLines: 0, truncated: false, size: 0, mtimeMs: 0 }
+  }
   const size = Number(st.size)
   const scanEnd = Math.min(size, fromByte + maxFileBytes)
   const truncated = scanEnd < size
-  const fd = openSync(filePath, 'r')
   let text = ''
   try {
-    const buffer = Buffer.allocUnsafe(scanEnd - fromByte)
-    let off = 0
-    while (off < buffer.length) {
-      const n = readSync(fd, buffer, off, buffer.length - off, fromByte + off)
-      if (n === 0) break
-      off += n
+    const fd = openSync(filePath, 'r')
+    try {
+      const buffer = Buffer.allocUnsafe(Math.max(0, scanEnd - fromByte))
+      let off = 0
+      while (off < buffer.length) {
+        const n = readSync(fd, buffer, off, buffer.length - off, fromByte + off)
+        if (n === 0) break
+        off += n
+      }
+      text = buffer.subarray(0, off).toString('utf8')
+    } finally {
+      closeSync(fd)
     }
-    text = buffer.subarray(0, off).toString('utf8')
-  } finally {
-    closeSync(fd)
+  } catch (error) {
+    return { absent: false, readFailed: String(error?.message ?? error), lines: [], parsed: [], badLines: 0, truncated: true, size, mtimeMs: Number(st.mtimeMs) }
   }
   const lines = []
   const parsed = []
@@ -59,9 +71,9 @@ export function readJsonlFile(filePath, {
   let recordCount = 0
   let sawTruncation = truncated
   const rawLines = text.split('\n')
-  // The final element after split is '' for a complete file, or a partial
-  // line when truncated mid-line — a partial tail is never emitted.
-  const complete = text.endsWith('\n') ? rawLines.length - 1 : rawLines.length - 1
+  // A trailing '\n' makes the last split element ''; without it the last
+  // element is a PARTIAL line (torn write / byte-cap cut) and is never parsed.
+  const complete = rawLines.length - 1
   for (let i = 0; i < complete; i += 1) {
     const line = rawLines[i]
     const startByte = cursor

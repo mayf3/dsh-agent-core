@@ -72,8 +72,9 @@ const EVENT_TYPE_RE = /^[a-z]+[a-z0-9]*([/.][a-z0-9-]+)*$/
  */
 export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRecords = 10_000, maxRecordBytes = 1024 * 1024 }) {
   let st
-  try { st = statSync(file) } catch (error) { return { absent: true, events: [], skipped: 0, truncated: false, size: 0 } }
+  try { st = statSync(file) } catch (error) { return { absent: true, events: [], skipped: 0, truncated: false, size: 0, mtimeMs: 0 } }
   const size = Number(st.size)
+  const mtimeMs = Number(st.mtimeMs)
   const scanBytes = Math.min(size, maxFileBytes)
   let truncated = scanBytes < size
   const fd = openSync(file, 'r')
@@ -110,7 +111,7 @@ export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRe
       data: row.data ?? {},
     })
   }
-  return { absent: false, events, skipped, truncated, size, header: rawLines.length > 0 ? tryHeader(rawLines[0]) : null }
+  return { absent: false, events, skipped, truncated, size, mtimeMs, header: rawLines.length > 0 ? tryHeader(rawLines[0]) : null }
 }
 
 function tryHeader(line) {
@@ -136,9 +137,10 @@ export function toolCallCoordinates(name, args) {
 
 /**
  * Project the journal into the coordinate model used by correlate/report.
- * Content text is kept as briefs (bounded); full text flows only through the
- * owned-session view which re-reads via caps — this projection is the
- * correlation backbone.
+ * Full message/tool-result text is RETAINED here within the load caps
+ * (§4.3 owned sessions get full content up to the turn_inspect-magnitude
+ * caps); the FOREIGN reduction to briefs/coordinates happens only in
+ * redact.projectForViewer — never in this loader.
  */
 export function projectJournal(events, { briefMaxChars = 400 } = {}) {
   const messages = []
@@ -147,11 +149,13 @@ export function projectJournal(events, { briefMaxChars = 400 } = {}) {
   const spliced = []
   const workflowCoordinates = []
   let currentTurn = null
+  const textOf = (value) => {
+    if (typeof value === 'string') return value
+    if (Array.isArray(value)) return value.map((block) => (typeof block?.text === 'string' ? block.text : '')).join('')
+    return ''
+  }
   const brief = (value) => {
-    const text = typeof value === 'string' ? value
-      : Array.isArray(value) ? value.map((block) => (typeof block?.text === 'string' ? block.text : '')).join('')
-      : ''
-    const compact = text.replace(/\s+/g, ' ').trim()
+    const compact = textOf(value).replace(/\s+/g, ' ').trim()
     return compact.length > briefMaxChars ? `${compact.slice(0, briefMaxChars)}…` : compact
   }
   for (const ev of events) {
@@ -164,12 +168,14 @@ export function projectJournal(events, { briefMaxChars = 400 } = {}) {
         seq: ev.seq ?? ev.lineNo, role: 'user', timeMs: ev.timeMs,
         messageId: typeof ev.data?.messageId === 'string' ? ev.data.messageId : undefined,
         source: ev.data?.source && typeof ev.data.source === 'object' ? ev.data.source : undefined,
+        text: textOf(ev.data?.content),
         brief: brief(ev.data?.content),
       })
       continue
     }
     if (ev.type === 'assistant/message') {
-      messages.push({ seq: ev.seq ?? ev.lineNo, role: 'assistant', timeMs: ev.timeMs, brief: brief(ev.data?.message?.content) })
+      const text = textOf(ev.data?.message?.content)
+      messages.push({ seq: ev.seq ?? ev.lineNo, role: 'assistant', timeMs: ev.timeMs, text, brief: brief(text) })
       continue
     }
     if (ev.type === 'turn/start') {
@@ -195,12 +201,14 @@ export function projectJournal(events, { briefMaxChars = 400 } = {}) {
     if (ev.type === 'tool/result') {
       const blocks = Array.isArray(ev.data?.message?.content) ? ev.data.message.content : []
       const resultBlock = blocks.find((b) => b?.type === 'tool-result')
+      const resultText = textOf(resultBlock?.content ?? resultBlock?.text)
       toolCalls.push({
         seq: ev.seq ?? ev.lineNo, turn: ev.data?.turn, kind: 'result',
         callId: resultBlock?.toolCallId ?? ev.data?.message?.source?.callId,
         isError: resultBlock?.isError,
         timeMs: ev.timeMs,
-        resultBrief: brief(resultBlock?.content ?? resultBlock?.text),
+        resultText,
+        resultBrief: brief(resultText),
         coordinates: extractResultCoordinates(resultBlock),
       })
       const coords = extractResultCoordinates(resultBlock)

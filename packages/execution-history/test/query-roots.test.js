@@ -6,6 +6,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { join } from 'node:path'
 
 import { queryExecutionTrace } from '../src/index.js'
 import { buildFixtureRoot, destroyFixtureRoot, fakeSvcRequest, WF_ID, WF_ID_2, OCC_ID, JOB_ID, MESSAGE_ID, REQUEST_ID, ATTEMPT_ID } from './fixtures.js'
@@ -186,5 +187,67 @@ test('view=report renders human-readable report with five dimensions and gaps', 
     assert.match(report, /时间轴/)
     assert.match(report, /缺口与降级/)
     assert.match(report, new RegExp(ATTEMPT_ID.slice(0, 10)))
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('T3 assistance case classifies LEGAL_WAIT — human wait is never an execution failure', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const outcome = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: WF_ID }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: fakeSvcRequest({ assistanceOnly: true }),
+    })
+    assert.equal(outcome.ok, true)
+    const dims = outcome.result.summary.fiveDimensions
+    assert.equal(dims.businessProgress.verdict, 'LEGAL_WAIT', 'assistance open → LEGAL_WAIT')
+    assert.notEqual(dims.agentExecution.verdict, 'FAILED', 'human wait must not surface as agent failure')
+    const text = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: WF_ID, view: 'report' }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: fakeSvcRequest({ assistanceOnly: true }),
+    })
+    assert.match(text.result.report, /合法等待/)
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('T5 an unreadable source (EACCES) degrades the query — never a hard failure with raw OS codes', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const { chmodSync } = await import('node:fs')
+    const ledgerPath = join(fixture.paths.workflowExecutionDir, 'attempts.jsonl')
+    chmodSync(ledgerPath, 0o000)
+    try {
+      const outcome = await queryExecutionTrace({
+        root: 'workflow_instance', args: { workflowInstanceId: WF_ID }, viewer: SELF_A,
+        paths: fixture.paths, svcRequest: fakeSvcRequest(),
+      })
+      assert.equal(outcome.ok, true, 'query survives an unreadable source')
+      const attempts = outcome.result.readBoundary.sources.find((s) => s.name === 'attempts_ledger')
+      assert.equal(attempts?.status, 'DEGRADED', 'attempts source visibly degraded')
+      assert.ok(outcome.result.gaps.some((g) => g.stage === 'dispatch_attempts' || g.stage === 'attempts_ledger' || (g.code === 'SOURCE_DEGRADED')))
+    } finally {
+      chmodSync(ledgerPath, 0o644)
+    }
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('§4.3 owned session full content: owner sees full text within caps; audit viewer of foreign sessions never does', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const owned = await queryExecutionTrace({
+      root: 'agent_session', args: { agentId: 'agt_a', sessionId: 'main' }, viewer: SELF_A, paths: fixture.paths,
+    })
+    assert.equal(owned.ok, true)
+    const view = owned.result.timeline.find((e) => e.source === 'session_journal').data
+    const long = view.messages.find((m) => typeof m.content === 'string' && m.content.startsWith('LLLL'))
+    assert.ok(long, 'long message present')
+    assert.equal(long.content.length, 2000, 'owned content is FULL (privilege widening per §4.3), not the 400-char brief')
+
+    const audit = await queryExecutionTrace({
+      root: 'agent_session', args: { agentId: 'agt_a', sessionId: 'main' }, viewer: { agentId: 'agt_hr', audit: true }, paths: fixture.paths,
+    })
+    assert.equal(audit.ok, true)
+    const foreign = audit.result.timeline.find((e) => e.source === 'session_journal').data
+    assert.equal(foreign.ownership, 'foreign_reduced_to_coordinates')
+    assert.ok(foreign.messages.every((m) => m.content === 'redacted_not_owned'), 'foreign content redacted even for audit scope')
   } finally { destroyFixtureRoot(fixture) }
 })

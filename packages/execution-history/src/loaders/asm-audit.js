@@ -51,6 +51,10 @@ export function loadAsmAudit({ auditFile, maxFileBytes }) {
   for (const gen of generations) {
     const read = readJsonlFile(gen.file, { maxFileBytes })
     if (read.absent) { statuses.push({ status: 'ABSENT', reason: `${gen.label} absent` }); continue }
+    if (read.readFailed !== undefined) {
+      statuses.push({ status: 'DEGRADED', reason: `${gen.label} unreadable: ${read.readFailed}`, truncated: true })
+      continue
+    }
     files.push({ file: gen.file, size: read.size, mtimeMs: read.mtimeMs, label: gen.label })
     statuses.push({ status: 'OK', badLines: read.badLines, truncated: read.truncated })
     for (let i = 0; i < read.lines.length; i += 1) {
@@ -62,5 +66,5 @@ export function loadAsmAudit({ auditFile, maxFileBytes }) {
     }
   }
   records.sort((a, b) => (a.atMs ?? 0) - (b.atMs ?? 0))
-  return { status: mergeStatus(statuses), records, files, rowsRead }
+  return { status: mergeStatus(statuses), records, files, rowsRead, archivePresent: files.some((f) => f.label === 'archive') }
 }

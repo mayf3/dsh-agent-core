@@ -28,6 +28,9 @@ export function loadRuntimeEvidence({ evidenceLog, maxFileBytes }) {
   if (read.absent) {
     return { status: { status: 'ABSENT', reason: 'runtime evidence absent' }, records: [], files: [], rowsRead: 0 }
   }
+  if (read.readFailed !== undefined) {
+    return { status: { status: 'DEGRADED', reason: `runtime evidence unreadable: ${read.readFailed}`, truncated: true }, records: [], files: [], rowsRead: 0 }
+  }
   const records = []
   for (let i = 0; i < read.lines.length; i += 1) {
     records.push(toRecord(read.parsed[i], read.lines[i]))

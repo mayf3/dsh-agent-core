@@ -29,7 +29,15 @@ export async function buildMessageRoot(ctx, args) {
     if (obs !== null) observations.push(obs)
   }
   if (asmHits.length === 0) {
-    gaps.push(gap('CORRELATION_GAP', 'asm_audit', { reason: `no send-audit row matches ${needleKind}=${needle} (outside live/.1/archive window, pre-WPA-1 rotation loss, or not a send coordinate)` }))
+    const auditSource = ctx.source('asm_audit')
+    const preV1 = auditSource.archivePresent === false
+    gaps.push({
+      code: preV1 ? 'RETENTION_LOSS_PRE_V1' : 'CORRELATION_GAP',
+      stage: 'asm_audit',
+      reason: preV1
+        ? `no send-audit row matches ${needleKind}=${needle} and no WPA-1 archive exists — rows rotated before the archive amendment are permanently unprovable`
+        : `no send-audit row matches ${needleKind}=${needle} (outside live/.1/archive window, or not a send coordinate)`,
+    })
   }
 
   // 2) Attempts ledger (workflow dispatch side).
