@@ -334,8 +334,7 @@ export async function composeProductionRuntime(options = {}) {
   const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
-    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
-    authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE, authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
