@@ -113,7 +113,6 @@ pub fn request(goal_id: &str, source_sha: &str) -> Result<serde_json::Value> {
         unsafe { libc::getpeereid(stream.as_raw_fd(), &mut uid, &mut gid) } == 0 && uid == 0,
         "PEER_IDENTITY",
     )?;
-    stream.set_read_timeout(Some(Duration::from_secs(900)))?;
     stream.set_write_timeout(Some(Duration::from_secs(2)))?;
     protocol::write_frame(
         &mut stream,
@@ -122,8 +121,35 @@ pub fn request(goal_id: &str, source_sha: &str) -> Result<serde_json::Value> {
             source_sha: source_sha.into(),
         },
     )?;
-    Ok(serde_json::from_slice(&protocol::read_frame(
-        &mut stream,
+    read_prepared_reply(&mut stream)
+}
+
+fn read_prepared_reply(stream: &mut UnixStream) -> Result<serde_json::Value> {
+    Ok(serde_json::from_slice(&protocol::read_frame_with_budget(
+        stream,
         4096,
+        Duration::from_secs(900),
     )?)?)
+}
+#[cfg(test)]
+mod client_deadline_tests {
+    use super::*;
+    #[test]
+    fn real_delayed_independent_review_reply_survives_inbound_one_second_budget() {
+        let (mut client, mut server) = UnixStream::pair().unwrap();
+        let child = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(1200));
+            protocol::write_frame(
+                &mut server,
+                &serde_json::json!({"proposal_digest":"a".repeat(64)}),
+            )
+        });
+        let result = read_prepared_reply(&mut client);
+        let sent = child.join().unwrap();
+        assert!(sent.is_ok());
+        assert_eq!(
+            result.unwrap(),
+            serde_json::json!({"proposal_digest":"a".repeat(64)})
+        );
+    }
 }
