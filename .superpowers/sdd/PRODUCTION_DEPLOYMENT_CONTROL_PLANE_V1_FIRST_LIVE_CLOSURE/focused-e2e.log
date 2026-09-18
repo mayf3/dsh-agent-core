@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.90s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure ... FAILED
+
+failures:
+
+---- registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure stdout ----
+
+thread 'registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure' (74931637) panicked at src/registry/../../test/registry/adapter.rs:244:14:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNKNOWN_CANARY" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 95 filtered out; finished in 0.31s
+
+error: test failed, to rerun pass `--lib`

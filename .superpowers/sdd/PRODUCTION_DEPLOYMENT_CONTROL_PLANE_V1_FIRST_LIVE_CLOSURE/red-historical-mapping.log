@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+     Running test/registry/main.rs (packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 1 test
+test dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency ... FAILED
+
+failures:
+
+---- dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency stdout ----
+
+thread 'dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency' (74940944) panicked at test/registry/dependencies.rs:176:50:
+called `Result::unwrap_err()` on an `Ok` value: DeploymentRecord { enrollment: Signed { issuer: "authority", payload: Enrollment { goal_id: "broker-child", business_goal_id: "original-business-goal", origin_uri: "codex://threads/original-task", owner: "mayf3", producer_id: "producer", repo: "repo", target_runtime: "runtime", deployment_profile: "fixture", scope: DeploymentOnly, scope_description: "Broker one-file deployment obligation", acceptance_revision: "accept-1", verification_profile: "verify-1", standing_authority_revision: "authority-1", authority: AuthorityBinding { revision: "authority-1", semantic_head: "1111111111111111111111111111111111111111", lifecycle_head: "2222222222222222222222222222222222222222", source: EvidenceReference { uri: "repo://spec", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, acceptance: EvidenceReference { uri: "repo://owner-acceptance", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, contracts: [ContractBinding { id: "ACC-001", source: EvidenceReference { uri: "repo://contract", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }] }, original_request: EvidenceReference { uri: "repo://original-request", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, historical_source: Some(HistoricalSource { implementation_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_sha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", review: EvidenceReference { uri: "repo://historical-review", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }), frozen_source_sha: None, prior_dependencies: [PriorDependency { goal_id: "original-business-goal", provenance: EvidenceReference { uri: "repo://original-dependency", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, deployment_child: Some(DeploymentChild { goal_id: "watchdog-child", enrollment_digest: "d078d02f068a3a48c5e1308d51ac2336045480a633d945d29e104d53416b103a" }) }] }, signature: "36cc15ca41d376bdef37298b152be5854cd1bf64a176df16f869090c906bdf53e951f2ddcb30dc793eeff88c7db5fcfd2369067b90337d21f89a5e574e8eca00" }, state: Ready, revision: 1, business_goal_complete: false, ready: Some(Signed { issuer: "producer", payload: ReadyRecord { producer_id: "producer", goal_id: "broker-child", revision: 1, repo: "repo", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", authority_revisions: ["authority-1"], artifact_sha256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", coverage: GoalCoverage { goal_id: "broker-child", acceptance_revision: "accept-1", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_face_sha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", verification_profile: "verify-1" }, dependencies: [Dependency { unit_id: "old-unit", receipt_digest: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", capability: "ready", required_goals: ["watchdog-child"], semantics: HistoricalReceipt }] }, signature: "2d31911f84f0f7dccb119697049ac66b7a2585dcfeb21bcee705617032a07d076de8d0603bd0af9c70875a5d2d89ec8cbadd695ccd781d825c2c1e0e32c82706" }), proposal_digest: Some("4a6073e0d8ea21623c3302abcada566cba19d8a219de4fb0e6c28a653e01a0eb"), closure: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.11s
+
+error: test failed, to rerun pass `--test registry`

@@ -1,0 +1,887 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.54s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 97 tests
+test bootstrap::genesis_install::tests::numeric_identity_census_rejects_name_id_and_ambiguous_caller_collisions ... ok
+test bootstrap::genesis_install::tests::generated_configuration_resolves_each_accepted_verification_profile ... ok
+test bootstrap::genesis_install::tests::native_entry_refuses_nonroot_before_reading_inputs ... ok
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test bootstrap::genesis_install::tests::rejects_noncomponent_attempt_before_any_journal ... ok
+test bootstrap::genesis_install::tests::rejects_wrong_owner_expiry_host_and_pin_before_effect ... ok
+test issuer::coordinator::tests::native_issuer_refuses_unprivileged_callers ... ok
+test issuer::coordinator::tests::no_caller_pass_or_signer_can_be_deserialized ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test bootstrap::socket::tests::equivalent_private_descriptor_binding_rejects_replacement_mode_and_acl ... ok
+test bootstrap::genesis_install_census::tests::census_compressed_size_limit_is_logical_size ... ok
+test bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects ... ok
+test bootstrap::genesis_install_census::tests::census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner ... ok
+test bootstrap::genesis_install::tests::rollback_only_removes_exact_recorded_new_nonsecret_files ... ok
+test issuer::issuance::tests::partial_protected_publication_resumes_exact_prefix_without_accepting_mismatch ... ok
+test issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding ... ok
+test issuer::owner_policy::tests::exact_goal_selection_cannot_fallback_or_change_slots_contract_or_enrollment ... ok
+test issuer::owner_policy::tests::old_owner_canonical_bytes_and_lease_source_binding_are_unchanged ... ok
+test issuer::owner_policy::tests::source_map_rejects_duplicate_unknown_mixed_and_unbounded_shapes ... ok
+test issuer::custody::tests::fixture_keys_are_unique_role_bound_private_and_not_reinitializable ... ok
+test bootstrap::genesis_install::tests::incomplete_intent_is_quarantined_and_never_replayed ... ok
+test issuer::custody::tests::wrong_catalog_key_and_readable_secret_fail_closed ... ok
+test bootstrap::genesis_install::tests::package_io::package_loader_reads_exact_bytes_and_rejects_unlisted_files ... ok
+test issuer::issuance::tests::retained_partial_and_failed_outputs_count_before_any_new_write ... ok
+test issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft ... ok
+test issuer::policy::tests::backwards_clock_cannot_return_a_future_lease ... ok
+test issuer::policy::tests::native_policy_entry_refuses_fixture_identity_before_effects ... ok
+test issuer::review::tests::accepted_response_carries_exact_review_and_raw_evidence_digest ... ok
+test issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... ok
+test issuer::review::tests::input_mutation_coordinate_substitution_and_ambiguous_paths_are_rejected ... ok
+test issuer::review::tests::packet_profile_manifest_and_required_scopes_cannot_be_substituted ... ok
+test issuer::review::tests::policy::child_configuration_excludes_inherited_environment_and_execution_tools ... ok
+test issuer::review::tests::policy::local_codex_help_starts_under_same_execution_restriction ... ignored, read-only local CLI compatibility probe; not native readiness
+test bootstrap::genesis_install_census::tests::census_compressed_include_graph_and_fail_closed_parser ... ok
+test issuer::review::tests::policy::local_codex_model_transport_smoke_is_not_attestation ... ignored, explicitly authorized model transport smoke; never an attestation
+test issuer::review::tests::policy::native_entry_refuses_nonroot_before_reading_inputs_or_credentials ... ok
+test issuer::review::tests::process::captures_only_child_stdout_and_delivers_all_stdin ... ok
+test bootstrap::genesis_install::tests::fixture_executes_durable_typed_steps_without_native_calls ... ok
+test issuer::review::tests::policy::seatbelt_allows_initial_executable_but_denies_candidate_execution ... ok
+test issuer::review::tests::process::failed_child_cannot_supply_a_pass ... ok
+test issuer::review::tests::rejects_caller_pass_without_frozen_job_binding ... ok
+test issuer::review::tests::process::output_on_either_pipe_is_bounded ... ok
+test issuer::review::tests::policy::protected_input_rejects_symlinks_writable_mode_and_changed_bytes ... ok
+test issuer::review::tests::rejects_nonpass_findings_unknown_fields_and_ambiguous_output ... ok
+test issuer::review::tests::rejects_identity_aliases_missing_authors_duplicate_scope_and_malformed_coordinates ... ok
+test issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution ... ok
+test issuer::source::tests::canonical_lineage_requires_exact_merge_base_and_complete_tree ... ok
+test issuer::source::tests::deterministic_artifact_uses_observed_bytes_and_complete_slots ... ok
+test issuer::review::tests::process::timeout_is_bounded_even_when_child_never_reads_large_stdin ... ok
+test queue::issuance::tests::desired_issuance_reuses_exact_intent_and_cannot_invent_dependency_pass ... ok
+test issuer::policy::tests::semantic_config_change_without_owner_revision_is_equivocation ... ok
+test issuer::policy::tests::cache_signed_by_wrong_issuer_or_with_wrong_source_binding_is_rejected ... ok
+test registry::durability::idempotent_ack_waits_for_committed_record_and_parent_flush ... ok
+test issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease ... ok
+test transaction::crashes::crash_worker ... ok
+test issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... ok
+test service::mailbox_tests::visible_rename_with_failed_directory_flush_is_reflushed_on_retry ... ok
+test bootstrap::genesis_install::tests::package_io::package_loader_rejects_symbolic_hardlinks_and_writable_payloads ... ok
+test service::mailbox_tests::existing_mailbox_record_must_retry_its_failed_directory_flush ... ok
+test transaction::faults::lifecycle_worker ... ok
+test issuer::policy::tests::cache_and_lock_metadata_and_unknown_temporary_fail_closed ... ok
+test transaction::faults::owned_timeout_worker ... ok
+test issuer::policy::tests::restart_and_expiry_renewal_keep_monotonic_issuance_epochs ... ok
+test issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... ok
+test registry::adapter_tests::pending_local_registry_is_polled_without_a_caller_mailbox ... ok
+test issuer::policy::tests::profile_switches_use_global_monotonic_epochs_without_old_profile_replay ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test issuer::policy::tests::owner_revision_is_independent_and_revocation_cannot_be_hidden ... ok
+test issuer::issuance::tests::restart_after_each_publication_boundary_renews_without_losing_exact_evidence ... ok
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test transaction::crashes::fully_observed_prewrite_crash_settles_without_replay ... test result: okok
+. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.31s
+
+test transaction::faults::owned_timeout_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.76s
+
+test transaction::faults::owned_action_timeout_reaches_transaction_quarantine_and_no_replay ... ok
+test transaction::final_repair_tests::no_mutation_fsync_worker_preserves_recovery_fence ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 1.04s
+
+test transaction::final_repair_tests::manifest_cannot_expand_protected_mapping ... ok
+test transaction::health::tests::bounded_reader_accepts_health_and_rejects_known_failure ... ok
+test transaction::health::tests::dribbling_peer_cannot_extend_total_deadline ... ok
+test transaction::process::tests::kernel_exit_watch_is_birth_bound_and_receives_actual_exit ... ok
+test transaction::process::tests::real_timeout_kills_and_reaps_the_exact_owned_child ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::final_repair_tests::no_mutation_fsync_worker_preserves_recovery_fence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.34s
+
+test transaction::final_repair_tests::exact_slots_retain_private_mode_and_complete_unchanged_face ... ok
+test transaction::final_repair_tests::no_mutation_failed_flush_never_reports_safe_blocked ... ok
+test transaction::final_repair_tests::known_final_health_timeout_restores ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.28s
+
+test transaction::final_repair_tests::known_final_health_failure_restores_without_closure ... ok
+
+running 1 test
+
+running 1 test
+test transaction::final_repair_tests::final_prewrite_expiry_releases_active_with_durable_blocked ... ok
+test registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::finalization_tests::internal_applied_is_not_public_success_or_dependency_until_finalized ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok
+running 1 test
+. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.36s
+
+
+running 1 test
+
+running 1 test
+test transaction::repair::preflight_crash_retains_evidence_and_allows_same_intent_retry ... ok
+
+running 1 test
+
+running 1 test
+test transaction::repair::two_preflight_crashes_preserve_history_and_allow_third_legal_preflight ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.47s
+
+test transaction::repair::prior_rolled_back_mutation_cannot_quarantine_current_no_effect_preflight ... ok
+test transaction::final_repair_tests::exact_mapping_rejects_metadata_drift_and_allows_explicit_absent_addition ... ok
+test transaction::final_repair_tests::metadata_executable_and_absent_sibling_reject_before_write ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.26s
+
+test registry::adapter_tests::local_poll_and_delivery_close_after_real_executor_finalization_and_retry ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.20s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.22s
+
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.23s
+
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.26s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.21s
+
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.24s
+
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.29s
+
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.27s
+
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.49s
+
+test transaction::crashes::actual_directory_write_denial_at_each_edge_blocks_unreceipted_mutation ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.25s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.22s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.19s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.21s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.20s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.22s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.21s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.20s
+
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.61s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.15s
+
+
+running 1 test
+test transaction::crashes::real_process_exit_at_every_apply_journal_edge_never_replays ... ok
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.20s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.18s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.18s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.22s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.30s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.47s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.42s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.45s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.42s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.39s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.45s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.46s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.47s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.52s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.57s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.49s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.58s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.47s
+
+
+running 1 test
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.38s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.41s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.80s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.54s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... test transaction::faults::every_rollback_finalize_and_projection_boundary_is_crash_fenced ... ok
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.65s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.71s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.74s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.67s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.74s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.73s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.63s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.71s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.75s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.78s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.77s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.79s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.75s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.77s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.77s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.84s
+
+
+running 1 test
+test transaction::faults::lifecycle_worker ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.82s
+
+test transaction::faults::failed_sync_and_partial_records_are_retained_and_never_replayed ... ok
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal has been running for over 60 seconds
+test transaction::repair::maximum_admitted_slots_roundtrip_success_and_rollback_journal ... ok
+
+test result: ok. 95 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 266.81s
+
+     Running unittests src/bin/agent-deploy-bootstrap.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_bootstrap-52f3ec928986e988)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-issuer.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_issuer-90e78bf9b57d6c3f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-prepare.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_prepare-8840734468385c5d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployctl.rs (packages/deployment-control-plane/target/debug/deps/agent_deployctl-9de1eb1fa774123f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployd.rs (packages/deployment-control-plane/target/debug/deps/agent_deployd-6bef577873b561d1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running test/authority.rs (packages/deployment-control-plane/target/debug/deps/authority-de0bf7c1dea05463)
+
+running 17 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test caller_fields_cannot_inject_paths_or_commands ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test forged_or_changed_signed_payload_is_rejected ... ok
+test key_role_and_scope_are_enforced ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test freshness::producer_revision_overflow_rejects_without_panicking ... ok
+test freshness::authority_registry_epoch_is_monotonic_across_profile_scopes ... ok
+test freshness::superseded_signed_policy_remains_reviewable_by_digest ... ok
+test freshness::overlapping_enabled_roots_cannot_have_independent_release_owners ... ok
+test authenticated_policy_epoch_cannot_roll_back_or_equivocate ... ok
+test freshness::canonical_unit_id_is_derived_from_descriptor_not_request_id ... ok
+test freshness::source_inclusion_requires_signed_exact_face_not_release_ancestry ... ok
+test freshness::observed_revocation_epoch_survives_rejected_admission_and_reopen ... ok
+test admission_rejects_untrusted_release_bindings_without_inserting ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-aae2efec8abdfa65)
+
+running 13 tests
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::hostile_tmpdir_worker ... ok
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+test resolved_tests::resolved_fixture_is_ready_to_authorize_but_cannot_activate ... ok
+test resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse ... ok
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... ok
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-aa89c3d70b82609c)
+
+running 8 tests
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test original_nonroot_lock_selftest_remains_available_before_enrollment ... ok
+test enrolled_legacy_sources_refuse_before_any_effect ... ok
+test unreadable_or_caller_owned_parent_denies_but_true_absence_preserves_legacy ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.71s
+
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-8f03a6117b2d14c2)
+
+running 17 tests
+test lock_type_is_owned_not_a_string ... ok
+test private::hostile_tmpdir_worker ... ok
+test multiprocess_lock_worker ... ok
+test private::root_refusal_precedes_effect_without_root_execution ... ok
+test private::outside_kernel_temp_is_rejected_before_creation ... ok
+test private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test fixture_rejects_writable_or_acl_root ... ok
+test private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test fixture_retains_directory_and_rejects_symlink_root ... ok
+test target_reads_reject_xattrs_and_preserve_external_symlink_sentinel ... ok
+test killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent ... ok
+test payload_replacement_during_hash_cannot_change_sealed_bytes ... ok
+test every_nested_target_ancestor_is_descriptor_checked ... ok
+test real_bundle_seals_and_rehashes_exact_opened_bytes ... ok
+test sealed_cas_remains_available_after_untrusted_staging_disappears ... ok
+test rejects_real_acl_hardlink_fifo_and_writable_payload ... ok
+test bundle_rejects_escape_collision_extra_missing_and_oversize ... ok
+
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+
+     Running test/genesis/plan.rs (packages/deployment-control-plane/target/debug/deps/genesis-f1c3a4e0d7126131)
+
+running 10 tests
+test freezes_disabled_future_operations_without_claiming_protected_state ... ok
+test rejects_unpinned_review_schema_bytes ... ok
+test review_contents_are_pinned_without_becoming_an_execution_grant ... ok
+test rejects_independent_pin_drift ... ok
+test rejects_path_substitution_and_parent_components ... ok
+test rejects_tampered_missing_and_extra_artifacts ... ok
+test rejects_incomplete_reordered_and_unknown_steps ... ok
+test rejects_malformed_refs_and_self_reported_readiness ... ok
+test rejects_activation_self_signed_owner_and_fixture_keys ... ok
+test rejects_shared_privileged_review_or_caller_identities ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-d0546310f49f6ec9)
+
+running 30 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test producer_cas_snapshot_watermark_and_pagination_are_persistent ... ok
+test receipts::transport_request_rate_limit_is_persisted_even_when_units_collapse ... ok
+test receipts::queue_quota_rejects_new_work_and_wrong_revision_cannot_move_state ... ok
+test missing_dependencies_and_reverted_coverage_never_admit ... ok
+test receipts::signed_recovery_proof_is_retained_as_an_immutable_receipt ... ok
+test receipts::unknown_goal_blocks_finalize_and_has_no_automatic_verification_retry ... ok
+test concurrent_duplicates_survive_reopen_and_actor_idempotency_conflicts ... ok
+test repairs::b01_supersession_preserves_all_late_goal_and_actor_links ... ok
+test repairs::b03_committed_ack_survives_expired_revoked_policy_and_reports_finalized_state ... ok
+test late_goal_attaches_immutable_coverage_without_install_and_outbox_is_scoped ... ok
+test receipts::outbox_closure_is_signed_idempotent_and_never_reinstalls ... ok
+test receipts::two_mutating_attempts_survive_new_request_and_same_artifact_revision_cannot_reset_budget ... ok
+test receipts::late_goal_uses_accepted_verifier_and_receipt_is_generation_bound ... ok
+test repairs::b02_current_attempt_needs_its_own_transaction_and_goal_readback_receipts ... ok
+test repairs::b06_every_attachment_review_is_exposed_and_currently_revalidated ... ok
+test repairs::b05_revoked_recovery_and_cancel_cannot_clear_stop ... ok
+test a_b_a_allocates_daemon_intents_from_trusted_desired_state ... ok
+test retries_are_bounded_and_unknown_cannot_be_reset_by_request_or_claim ... ok
+test scheduling::interrupted_mutation_is_quarantined_across_reopen_and_cannot_claim_safe_retry ... ok
+test repairs::provenance::b05_safe_correction_resumes_automatically_only_after_fresh_precheck ... ok
+test repairs::provenance::b06_transaction_receipt_binds_the_full_effective_attachment_set ... ok
+test repairs::b04_replaced_runtime_cannot_satisfy_live_installation_dependency ... ok
+test scheduling::supersession_inherits_fifo_and_rejects_cycles_without_partial_writes ... ok
+test scheduling::dependency_requires_exact_capability_receipt_and_goal_pass ... ok
+test scheduling::fifo_and_continue_independent_obey_persisted_failure_disposition ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running test/registry/main.rs (packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 26 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test enrollment::tampered_wrong_role_and_wrong_scope_enrollments_are_rejected ... ok
+test security::deployment_child_cannot_alias_its_original_business_goal ... ok
+test enrollment::a_prior_owner_freeze_is_not_relaxed_by_canonical_ancestry_or_review ... ok
+test dependencies::missing_or_altered_child_cannot_enter_registry ... ok
+test enrollment::enrollment_is_pending_immutable_and_survives_restart ... ok
+test dependencies::legacy_dependency_signatures_and_ledger_bytes_roundtrip_unchanged ... ok
+test security::historical_review_does_not_bypass_current_review_or_prior_dependency ... ok
+test dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency ... ok
+test enrollment::business_authority_is_distinct_from_deployment_standing_authority ... ok
+test security::protected_lock_cannot_be_writable_or_a_symlink ... ok
+test enrollment::ready_requires_exact_authenticated_proposal_and_cas ... ok
+test security::another_writer_cannot_reuse_stale_goal_revision ... ok
+test dependencies::exact_child_mapping_preserves_parent_and_activates_only_child_dependency ... ok
+test security::interrupted_exact_prefix_recovers_without_overwriting_another_operation ... ok
+test security::signed_history_replay_or_gap_cannot_reset_monotonic_revision ... ok
+test security::ledger_tamper_symlink_hardlink_and_writable_metadata_are_rejected ... ok
+test closure::trusted_verifier_with_wrong_profile_assignment_cannot_close ... ok
+test closure::forged_mismatched_and_waiting_receipts_never_close ... ok
+test security::snapshot_restart_is_monotonic_cumulative_and_queue_replay_safe ... ok
+test dependencies::child_identity_scope_digest_duplicates_and_cycles_fail_closed ... ok
+test closure::finalized_pass_closes_only_deployment_and_replays_after_restart ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.19s
+
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-a8638e66ab23789c)
+
+running 9 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test production_entry_refuses_unprivileged_and_path_overrides ... ok
+test real_socket_rejects_identity_paths_unknown_fields_and_deep_frames ... ok
+test peer_scope_and_connection_quota_are_enforced_by_real_transport ... ok
+test partial_disconnect_is_bounded_and_does_not_starve_status ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.06s
+
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-28b27b17770a28c5)
+
+running 33 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+BLOCKED MUTEX_BUSY
+test authenticated_producer_watermark_and_forged_build_cannot_be_bypassed ... ok
+test durable_disconnected_ack_reopens_after_intake_disappears ... ok
+BLOCKED UNSAFE_MODE
+test killed_daemon_during_verification_reopens_unknown_without_replay ... ok
+BLOCKED INVALID_RECORD
+BLOCKED INVALID_RECORD
+test absent_verifier_finalizes_waiting_without_local_success_and_late_pass_closes_once ... ok
+test repair::admitted_temporary_records_resume_after_real_daemon_restart_and_concurrent_submit ... ok
+BLOCKED INVALID_RECORD
+BLOCKED ABSENT
+test repair::partial_temporary_mismatch_is_preserved_and_active_publisher_is_not_repaired ... ok
+test remediation_tests::recovery_mailbox_cannot_reset_exhausted_mutating_budget ... ok
+test remediation_tests::protected_recovery_mailbox_resumes_preflight_without_daemon_restart ... ok
+BLOCKED ABSENT
+BLOCKED SERVICE_GENERATION_DRIFT
+BLOCKED ABSENT
+test repair::legacy_verification_marker_migrates_and_survives_a_durable_error_disposition ... ok
+BLOCKED ABSENT
+BLOCKED ABSENT
+BLOCKED ABSENT
+BLOCKED ABSENT
+BLOCKED ABSENT
+BLOCKED ABSENT
+test repair::closure_temporary_records_resume_after_real_daemon_restart_without_reinstall ... ok
+BLOCKED STORE_FAILURE
+BLOCKED UNKNOWN_OUTCOME
+BLOCKED MUTEX_BUSY
+BLOCKED ABSENT
+BLOCKED CORRUPT_JOURNAL
+test recovery_isolation::r02_mismatched_unit_recovery_does_not_starve_current_acceptance ... ok
+test recovery_isolation::r02_expired_unit_recovery_does_not_starve_current_acceptance ... ok
+test recovery_isolation::r02_incomplete_unit_recovery_metadata_does_not_starve_current_acceptance ... ok
+test remediation_tests::protected_recovery_mailbox_resumes_known_rollback ... ok
+test recovery_isolation::r02_cross_unit_record_is_rejected_without_starving_acceptance ... ok
+test recovery_isolation::r02_rejection_store_failure_still_blocks_current_acceptance ... ok
+test recovery_isolation::r02_global_quarantine_still_blocks_current_acceptance ... ok
+test recovery_isolation::r02_missing_protected_recovery_namespace_still_blocks_acceptance ... ok
+test recovery_isolation::r02_unknown_shared_transaction_still_blocks_current_acceptance ... ok
+BLOCKED PRIVATE_KEY_MODE
+BLOCKED MUTEX_BUSY
+BLOCKED CLOSURE_BINDING
+test service_cases::late_coverage_reuses_exact_original_attachment_and_never_reinstalls ... ok
+test service_cases::signed_closure_ack_cannot_close_different_goal_and_redelivery_does_not_install ... ok
+test repair::transient_mutex_contention_retains_acknowledged_verification_until_readback ... ok
+BLOCKED UNKNOWN_CANARY
+test service_cases::typed_native_verifier_uses_accepted_key_and_public_receipt_discovery ... ok
+test repair::newer_late_coverage_survives_completion_of_an_older_verification_claim ... ok
+test unknown_external_canary_is_never_reissued_or_overwritten ... ok
+test service_cases::late_multi_goal_proposal_cannot_replace_waiting_goals_original_attachment ... ok
+test three_goals_share_one_install_two_close_one_fails_and_mutex_covers_acceptance ... ok
+test simultaneous_targets_use_one_host_mutex_and_distinct_private_targets ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.08s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-f366065d401b8987)
+
+running 14 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test launchd_periodic_parser_does_not_confuse_nested_pid_with_generation ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test a_different_fixture_mutex_cannot_authorize_apply ... ok
+test partial_install_disk_failure_restores_exact_preimage_without_unrelated_writes ... ok
+test rebooted_executor_never_replays_unfinished_verification ... ok
+test unrelated_post_apply_drift_quarantines_and_preserves_bytes ... ok
+test finalize_joins_goal_receipt_to_attempt_and_process ... ok
+test apply_keeps_guard_and_correlates_process_attempt_and_full_evidence ... ok
+test rollback_deletes_only_exact_transaction_created_absent_slot ... ok
+test restored_generation::restored_a_uses_fresh_process_for_late_verification_without_reclosing_original_goal ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.34s
+
+   Doc-tests deployment_control_plane
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

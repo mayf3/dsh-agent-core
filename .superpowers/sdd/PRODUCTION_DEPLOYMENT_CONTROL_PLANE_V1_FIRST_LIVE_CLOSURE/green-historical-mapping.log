@@ -1,0 +1,9 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.88s
+     Running test/registry/main.rs (packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 1 test
+test dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.08s
+

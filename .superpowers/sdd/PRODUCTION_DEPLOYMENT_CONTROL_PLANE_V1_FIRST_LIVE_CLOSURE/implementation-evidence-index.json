@@ -1,0 +1,28 @@
+{
+  "source_commit": "730d4a0539cc758eb8c0440e9ceddbefde4c017d",
+  "files": {
+    "implementation-brief.md": "ca2b4819bb07221b1f074566351351b78cc043f79c1a06719bc816d16cde1008",
+    "dependency-wiring-design.md": "a0aca30f3579ab53474c05d407bd384f47bc765f06ab503d58790a737f2457e6",
+    "watchdog-dependency-review.md": "b54577f1d18ee20182e21477b2336275c0b696dfe23ec4b15d5042aa5e4cc775",
+    "implementation-report.md": "4f30228a42ee1fa216ff1dcdde8511c08450d00f404bdb22192d3941155ed78b",
+    "validation.json": "38085b2b0035b644bdd7192f69caa24b23415ad225569297b75217ef5c99d234",
+    "structure.json": "a1be7c847d79b7d0040b2812f3a9d016782d83b03db6c0f7b25fb5ac1c590f14",
+    "clippy.log": "5e745ad3ef66224c08bf12302c75e892558fc8b38ee1e27b71040fe1eead955b",
+    "fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "focused-e2e-corrected.log": "e21bf922f8d927c25a5a6bf59f92cd465d859835ca855cbe5cbaf1cf6307fbdd",
+    "focused-e2e.log": "74876b4b77b35652e18b982347f4f858c2538b91a1bac7822e13ec19d66ab431",
+    "focused-issuer.log": "1d2e5ff5f53eaa1cb5c4f26502a2b21de03bdc66f9872fe1a890135fd31addaa",
+    "focused-registry.log": "aa967470b8aae97bf98c3883f2f3ba6ae3927377194643add5c97e2c6f468f30",
+    "full-final.log": "ebd97c1d47ef32dcbb3abe8acda645ece9cc5189e7667a7a7f5f4687edd8407a",
+    "full-test.log": "9cecf634f5970ac6ea5d6cdb792dacd893c3e681883e872e47cc70c518936f68",
+    "green-historical-mapping.log": "78fa86bfdf971f4652595e59d60c0c47abc930ae601a67802a56fabb04c7b612",
+    "green-issuer.log": "a31dddf557c2eeab0c35c94f1292a048c76e989eb007635dbe613004166c29fe",
+    "green-registry.log": "2d85b286f1a33acdfb0fb038cd8c70da7ddbf1d1626984b18e955113c6e88ac1",
+    "red-custody-binding.log": "fbc3fcd9c972557a81ca829849b54d5881b147f7423ff8b112b96ae72439700c",
+    "red-draft.log": "a2c0370222dc921cc4d12965fe0b315fb8e767baf4575adea17ab5d4e8c7676f",
+    "red-historical-mapping.log": "751dd928091be627978b44d48288953c38a7a71fdfb238bd80da2a438cbe7f87",
+    "red-mapping.log": "87aeaf06a6ed3e8f7110e84e612ba68e3492e767157866c917720d55b62bfc9b",
+    "red-policy.log": "2e1be73690bd5f3a39c53c36f3941c26748aa32f382e781ab942ba6248642ded",
+    "release.log": "cb603c824b839b105799a7066dc62ce249fd544224b4c42a0e46c5ddec8ba22f"
+  }
+}

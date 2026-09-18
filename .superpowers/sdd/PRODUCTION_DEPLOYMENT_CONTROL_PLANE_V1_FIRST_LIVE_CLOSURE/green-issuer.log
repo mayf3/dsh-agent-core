@@ -1,0 +1,150 @@
+warning: unused import: `valid_digest`
+  --> src/issuer/policy.rs:12:34
+   |
+12 |         canonical_bytes, digest, valid_digest, valid_id, validate_policy, verify_signed, Signable,
+   |                                  ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+warning: `deployment-control-plane` (lib) generated 1 warning (run `cargo fix --lib -p deployment-control-plane` to apply 1 suggestion)
+warning: `deployment-control-plane` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.05s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 42 tests
+test issuer::coordinator::tests::native_issuer_refuses_unprivileged_callers ... ok
+test issuer::coordinator::tests::no_caller_pass_or_signer_can_be_deserialized ... ok
+test issuer::owner_policy::tests::old_owner_canonical_bytes_and_lease_source_binding_are_unchanged ... ok
+test issuer::owner_policy::tests::source_map_rejects_duplicate_unknown_mixed_and_unbounded_shapes ... ok
+test issuer::owner_policy::tests::exact_goal_selection_cannot_fallback_or_change_slots_contract_or_enrollment ... ok
+test issuer::issuance::tests::partial_protected_publication_resumes_exact_prefix_without_accepting_mismatch ... ok
+test issuer::policy::tests::native_policy_entry_refuses_fixture_identity_before_effects ... ok
+test issuer::policy::tests::backwards_clock_cannot_return_a_future_lease ... ok
+test issuer::issuance::tests::retained_partial_and_failed_outputs_count_before_any_new_write ... ok
+test issuer::custody::tests::wrong_catalog_key_and_readable_secret_fail_closed ... ok
+test issuer::custody::tests::fixture_keys_are_unique_role_bound_private_and_not_reinitializable ... ok
+test issuer::review::tests::accepted_response_carries_exact_review_and_raw_evidence_digest ... ok
+test issuer::review::tests::input_mutation_coordinate_substitution_and_ambiguous_paths_are_rejected ... ok
+test issuer::review::tests::packet_profile_manifest_and_required_scopes_cannot_be_substituted ... ok
+test issuer::review::tests::policy::child_configuration_excludes_inherited_environment_and_execution_tools ... ok
+test issuer::review::tests::policy::local_codex_help_starts_under_same_execution_restriction ... ignored, read-only local CLI compatibility probe; not native readiness
+test issuer::review::tests::policy::local_codex_model_transport_smoke_is_not_attestation ... ignored, explicitly authorized model transport smoke; never an attestation
+test issuer::review::tests::policy::native_entry_refuses_nonroot_before_reading_inputs_or_credentials ... ok
+test issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease ... ok
+test issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft ... ok
+test issuer::review::tests::process::failed_child_cannot_supply_a_pass ... ok
+test issuer::review::tests::process::captures_only_child_stdout_and_delivers_all_stdin ... ok
+test issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... ok
+test issuer::review::tests::policy::seatbelt_allows_initial_executable_but_denies_candidate_execution ... ok
+test issuer::review::tests::rejects_caller_pass_without_frozen_job_binding ... ok
+test issuer::review::tests::process::output_on_either_pipe_is_bounded ... ok
+test issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution ... ok
+test issuer::source::tests::canonical_lineage_requires_exact_merge_base_and_complete_tree ... ok
+test issuer::review::tests::rejects_identity_aliases_missing_authors_duplicate_scope_and_malformed_coordinates ... ok
+test issuer::review::tests::rejects_nonpass_findings_unknown_fields_and_ambiguous_output ... ok
+test issuer::source::tests::deterministic_artifact_uses_observed_bytes_and_complete_slots ... ok
+test issuer::review::tests::process::timeout_is_bounded_even_when_child_never_reads_large_stdin ... ok
+test issuer::review::tests::policy::protected_input_rejects_symlinks_writable_mode_and_changed_bytes ... ok
+test issuer::policy::tests::semantic_config_change_without_owner_revision_is_equivocation ... ok
+test issuer::policy::tests::cache_signed_by_wrong_issuer_or_with_wrong_source_binding_is_rejected ... ok
+test issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... ok
+test issuer::policy::tests::cache_and_lock_metadata_and_unknown_temporary_fail_closed ... ok
+test issuer::policy::tests::restart_and_expiry_renewal_keep_monotonic_issuance_epochs ... ok
+test issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... ok
+test issuer::policy::tests::profile_switches_use_global_monotonic_epochs_without_old_profile_replay ... ok
+test issuer::policy::tests::owner_revision_is_independent_and_revocation_cannot_be_hidden ... ok
+test issuer::issuance::tests::restart_after_each_publication_boundary_renews_without_losing_exact_evidence ... ok
+
+test result: ok. 40 passed; 0 failed; 2 ignored; 0 measured; 53 filtered out; finished in 1.14s
+
+     Running unittests src/bin/agent-deploy-bootstrap.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_bootstrap-52f3ec928986e988)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-issuer.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_issuer-90e78bf9b57d6c3f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-prepare.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_prepare-8840734468385c5d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployctl.rs (packages/deployment-control-plane/target/debug/deps/agent_deployctl-9de1eb1fa774123f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployd.rs (packages/deployment-control-plane/target/debug/deps/agent_deployd-6bef577873b561d1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running test/authority.rs (packages/deployment-control-plane/target/debug/deps/authority-de0bf7c1dea05463)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-aae2efec8abdfa65)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-aa89c3d70b82609c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-8f03a6117b2d14c2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running test/genesis/plan.rs (packages/deployment-control-plane/target/debug/deps/genesis-f1c3a4e0d7126131)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-d0546310f49f6ec9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 30 filtered out; finished in 0.00s
+
+     Running test/registry/main.rs (packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.00s
+
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-a8638e66ab23789c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-28b27b17770a28c5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.00s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-f366065d401b8987)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+
