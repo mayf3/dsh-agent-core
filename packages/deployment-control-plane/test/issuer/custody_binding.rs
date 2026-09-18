@@ -61,3 +61,47 @@ fn issuer_templates_bind_observed_custody_and_reject_prefilled_or_widened_claims
         assert!(proof.bind_issuers(&bad).is_err());
     }
 }
+
+#[test]
+fn issuer_template_rejected_before_entropy_or_host_effects() {
+    let c = Case::new();
+    let template: Vec<_> = c
+        .old
+        .keys
+        .iter()
+        .map(|(id, k)| crate::bootstrap::IssuerRequirement {
+            proposed_key_id: id.clone(),
+            role: k.role,
+            scope: k.scopes.clone(),
+            public_key: None,
+            service_identity: Some(id.clone()),
+            custody_receipt: None,
+            source_binding: "fixture public source".into(),
+        })
+        .collect();
+    validate_issuer_template(&template, &c.old).unwrap();
+    for variant in 0..7 {
+        let mut bad = template.clone();
+        match variant {
+            0 => {
+                bad.pop();
+            }
+            1 => bad[0].public_key = Some("a".repeat(64)),
+            2 => bad[0].custody_receipt = Some("b".repeat(64)),
+            3 => bad[0].scope.push("other".into()),
+            4 => bad[0].service_identity = bad[1].service_identity.clone(),
+            5 => bad[0].source_binding.clear(),
+            _ => bad[0] = bad[1].clone(),
+        }
+        assert!(
+            validate_issuer_template(&bad, &c.old).is_err(),
+            "variant {variant}"
+        );
+    }
+    assert!(!c
+        .roots
+        .root
+        .names()
+        .unwrap()
+        .contains(&"custody-transition".to_string()));
+}

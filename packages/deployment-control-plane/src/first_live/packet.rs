@@ -34,7 +34,6 @@ pub(super) struct Packet {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Previous {
-    pub login_receipt_sha256: String,
     pub installation_receipt_sha256: String,
     pub service_sha256: String,
     pub issuer_policy_sha256: String,
@@ -66,6 +65,8 @@ pub(super) struct BoundPacket<'a> {
     pub canary_plan_raw: String,
     pub configuration: Configuration,
     pub native_enrollment: NativeEnrollment,
+    pub issuer_bindings: Vec<IssuerRequirement>,
+    pub transition_service_sha256: String,
 }
 impl std::ops::Deref for BoundPacket<'_> {
     type Target = Packet;
@@ -73,18 +74,37 @@ impl std::ops::Deref for BoundPacket<'_> {
         self.plan
     }
 }
+pub(super) struct BindingContext<'a> {
+    pub root: &'a crate::fs::secure::Dir,
+    pub area: &'a crate::fs::secure::Dir,
+    pub grant: &'a super::gate::Grant,
+    pub guard: &'a crate::fs::MutationGuard,
+}
 impl<'a> BoundPacket<'a> {
     pub(super) fn new(
         plan: &'a Packet,
         life: &super::lifecycle::VerifiedLifecycle,
-        area: &crate::fs::secure::Dir,
-        expires: u64,
+        custody: &crate::issuer::custody_transition::Proof,
+        login: &super::native_effects::login::VerifiedLogin,
+        context: BindingContext<'_>,
     ) -> crate::Result<Self> {
+        login.validate(
+            context.root,
+            context.area,
+            plan,
+            context.grant,
+            context.guard,
+            custody,
+        )?;
+        let mut configuration = plan.configuration.bind(life)?;
+        configuration.catalog = custody.bind_catalog(&configuration.catalog)?;
         let mut result = Self {
             plan,
             canary_plan_raw: String::new(),
-            configuration: plan.configuration.bind(life)?,
+            configuration,
             native_enrollment: plan.native_enrollment.bind(life)?,
+            issuer_bindings: custody.bind_issuers(&plan.issuer_bindings)?,
+            transition_service_sha256: custody.service_sha256().into(),
         };
         crate::bootstrap::validate_native_binding(
             &result.configuration,
@@ -92,8 +112,16 @@ impl<'a> BoundPacket<'a> {
             &plan.host,
             true,
         )?;
-        result.canary_plan_raw =
-            super::canary_timing::freeze(area, &plan.canary_plan, life, expires)?;
+        result.canary_plan_raw = super::canary_timing::freeze(
+            context.area,
+            &plan.canary_plan,
+            life,
+            context.grant.expires_at,
+        )?;
         Ok(result)
     }
 }
+
+#[cfg(test)]
+#[path = "../../test/first_live/packet_binding.rs"]
+mod tests;

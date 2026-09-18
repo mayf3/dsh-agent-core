@@ -19,6 +19,10 @@ use std::collections::BTreeMap;
 pub(super) const WATCHDOG: &str = "DCP_DSH_WATCHDOG_ACCEPTANCE_V1";
 pub(super) const BROKER: &str = "WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DELIVERY_V2";
 pub(super) fn validate(p: &Packet) -> Result<()> {
+    crate::issuer::custody_transition::validate_issuer_template(
+        &p.issuer_bindings,
+        &p.configuration.catalog,
+    )?;
     p.canary_plan.validate()?;
     super::retirement::validate_set(&p.lifecycle.legacy_sha256)?;
     require(
@@ -118,7 +122,7 @@ pub(super) fn publish_configuration(root: &Dir, history: &Dir, p: &BoundPacket<'
         root,
         history,
         "service.json",
-        &p.previous.service_sha256,
+        &p.transition_service_sha256,
         &p.configuration,
     )?;
     files::publish(root, "activation.json", &p.native_enrollment)

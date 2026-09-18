@@ -41,35 +41,10 @@ impl Proof {
         &self,
         template: &[crate::bootstrap::IssuerRequirement],
     ) -> Result<Vec<crate::bootstrap::IssuerRequirement>> {
-        require(
-            template.len() == custody::ROLES.len(),
-            "CUSTODY_ISSUER_TEMPLATE",
-        )?;
-        let mut ids = std::collections::BTreeSet::new();
-        let mut identities = std::collections::BTreeSet::new();
+        validate_issuer_template(template, &self.catalog)?;
         let mut result = Vec::new();
         for input in template {
-            let key = self
-                .catalog
-                .keys
-                .get(&input.proposed_key_id)
-                .ok_or(Error::new("CUSTODY_ISSUER_TEMPLATE"))?;
-            let identity = input
-                .service_identity
-                .as_deref()
-                .ok_or(Error::new("CUSTODY_ISSUER_TEMPLATE"))?;
-            crate::trust::valid_id(identity)?;
-            require(
-                input.role == key.role
-                    && input.scope == key.scopes
-                    && input.public_key.is_none()
-                    && input.custody_receipt.is_none()
-                    && ids.insert(&input.proposed_key_id)
-                    && identities.insert(identity)
-                    && !input.source_binding.is_empty()
-                    && input.source_binding.len() <= 2048,
-                "CUSTODY_ISSUER_TEMPLATE",
-            )?;
+            let key = &self.catalog.keys[&input.proposed_key_id];
             let mut binding = input.clone();
             binding.public_key = Some(key.public_key.clone());
             binding.custody_receipt = Some(self.completion_sha256.clone());
@@ -86,6 +61,42 @@ impl Proof {
     pub(crate) fn completion_sha256(&self) -> &str {
         &self.completion_sha256
     }
+}
+
+/// Validate proof-free issuer templates before any host or custody effects.
+pub(crate) fn validate_issuer_template(
+    template: &[crate::bootstrap::IssuerRequirement],
+    catalog: &Catalog,
+) -> Result<()> {
+    require(
+        template.len() == custody::ROLES.len(),
+        "CUSTODY_ISSUER_TEMPLATE",
+    )?;
+    let mut ids = std::collections::BTreeSet::new();
+    let mut identities = std::collections::BTreeSet::new();
+    for input in template {
+        let key = catalog
+            .keys
+            .get(&input.proposed_key_id)
+            .ok_or(Error::new("CUSTODY_ISSUER_TEMPLATE"))?;
+        let identity = input
+            .service_identity
+            .as_deref()
+            .ok_or(Error::new("CUSTODY_ISSUER_TEMPLATE"))?;
+        crate::trust::valid_id(identity)?;
+        require(
+            input.role == key.role
+                && input.scope == key.scopes
+                && input.public_key.is_none()
+                && input.custody_receipt.is_none()
+                && ids.insert(&input.proposed_key_id)
+                && identities.insert(identity)
+                && !input.source_binding.is_empty()
+                && input.source_binding.len() <= 2048,
+            "CUSTODY_ISSUER_TEMPLATE",
+        )?;
+    }
+    Ok(())
 }
 
 enum Mode<'a> {
