@@ -21,6 +21,9 @@ class Mapping(unittest.TestCase):
         self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,codex],commands)
         self.assertIn(['/bin/ls','-ldeO',codex],commands)
         self.assertIn(['/bin/cat',p.CODE+'/agent-deployd'],commands)
+        postimage=p.PACKET+'/original-agent-deployd'
+        self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,postimage],commands)
+        self.assertIn(['/bin/ls','-ldeO',postimage],commands)
 
     def test_native_fixed_filenames_and_all_real_payloads(self):
         x=p.inputs(packet())
