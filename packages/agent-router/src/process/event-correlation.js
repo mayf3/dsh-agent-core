@@ -254,8 +254,10 @@ export const eventCorrelationMethods = {
 
   markExecutionUnknown(execution, source) {
     if (execution.settled || execution.unknownMarked) return
-    const hardDeadlineAt = Date.now() + Math.max(0, execution.turnDeadlineMono - monotonicNowMs())
-    this.store.markOutcomeUnknown(execution.handle, { source, deadlineAtWallMs: hardDeadlineAt })
+    this.store.markOutcomeUnknown(execution.handle, {
+      source,
+      deadlineAtWallMs: execution.hardDeadlineAt,
+    })
     execution.unknownMarked = true
     execution.unknownSource = source
     execution.phase = 'outcome_unknown'

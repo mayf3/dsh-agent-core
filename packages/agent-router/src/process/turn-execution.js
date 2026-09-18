@@ -18,13 +18,14 @@ import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
 export class TurnExecution {
-  constructor({ handle, sessionId, mode, watermarkSeq, startMono, deadlines, bindingContext }) {
+  constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
     this.handle = handle
     this.sessionId = sessionId
     this.mode = mode // 'turn' | 'deliver'
     this.watermarkSeq = watermarkSeq
     this.lastFedSeq = watermarkSeq
     this.startMono = startMono
+    this.hardDeadlineAt = hardDeadlineAt
     this.deadlines = deadlines
     this.bindingContext = bindingContext
     this.phase = 'queued'
@@ -226,12 +227,15 @@ export const turnExecutionMethods = {
       reject(envelopeCarrier('not_admitted', null, cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED', cause?.message ?? String(cause)))
       return
     }
+    const startMono = monotonicNowMs()
+    const hardDeadlineAt = Date.now() + this.deadlines.turnTimeoutMs
     const execution = new TurnExecution({
       handle,
       sessionId,
       mode,
       watermarkSeq: this.eventSeq,
-      startMono: monotonicNowMs(),
+      startMono,
+      hardDeadlineAt,
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
@@ -240,7 +244,7 @@ export const turnExecutionMethods = {
       this.store.markAdmitted(handle, {
         eventWatermarkSeq: execution.watermarkSeq,
         promptRequestId: execution.promptRequestId,
-        deadlineAtWallMs: Date.now() + this.deadlines.turnTimeoutMs,
+        deadlineAtWallMs: execution.hardDeadlineAt,
       })
     } catch (cause) {
       try {
@@ -364,7 +368,7 @@ export const turnExecutionMethods = {
         `turn for session ${execution.sessionId} (agent ${this.agentId}) passed its ${source === 'turn_deadline_exceeded' ? 'turn deadline' : 'caller wait bound'} without termination proof — outcome_unknown`,
         {
           source,
-          deadlineAtWallMs: Date.now(),
+          deadlineAtWallMs: execution.hardDeadlineAt,
           evidence: execution.evidenceSnapshot(),
         }))
       execution.terminalReject = undefined
