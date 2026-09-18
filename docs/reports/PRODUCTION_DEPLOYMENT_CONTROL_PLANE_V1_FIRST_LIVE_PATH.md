@@ -2,7 +2,7 @@
 
 更新：2026-09-18。父 Goal 仍是 PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1，沿用 Owner 已接受 Spec3986553。本页维护当前状态；旧观察、失败和审查记录保留在 `.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/`，不重写历史。
 
-**禁用安装已完成。首个真实自动部署尚未完成。Owner 已授权 p2 exact package/plan，但最终执行前核验发现生产字节、Runtime 代际及包外 root preflight 活动与冻结前态不一致，因此在进入 package launcher 前安全停止。** 本次没有请求管理员认证、没有消耗 package attempt，也没有执行本 Goal 的生产 mutation。该 exact 授权不得对漂移后的状态重放。
+**禁用安装已完成。首个真实自动部署尚未完成。旧 p2 exact package/plan 在 launcher 前因前态漂移安全停止；当前字节已经重新盘点并冻结为 p3，且独立整包复核 PASS。** p3 仍需新的 exact Owner 授权；包外 root preflight PID 43760 必须先退出并重新观察。此前没有请求管理员认证、没有消耗 package attempt，也没有执行本 Goal 的生产 mutation。p2 授权不得重放。
 
 ## 2026-09-18 exact 操作安全停止
 
@@ -15,6 +15,14 @@
 实际回读：controller 仍为 Disabled=true、RunAtLoad=false、KeepAlive=false 且未加载；Runtime PID 59762 健康，部署 SHA 仍读为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`；W1/W2 均处于一次性任务的空闲态且 last exit 0；Tailscale PID 836 持续运行，仍使用 `/usr/local/bin/tailscaled`。Watchdog 真实验收、部署义务关闭和 outbox 完成均未执行。production lock 目录为空，operator journal 不存在。
 
 安全停止证据为 `first-live-preparation/preexec-safe-stop-20260918T133752Z/observation.json`（SHA256 `b0b5b13291ec97d06f1de10925552f960a2fe38c4f512365307b503f155a7d91`）和同目录 `final-readback.json`（SHA256 `b696572d22876b8ba020897a7c1ae399b7d8769b65d5d39e10f0e73cc08e7c20`）。
+
+## 安全停止后的重新绑定
+
+两次普通完整盘点确认 app content 为 `57a14f9c07ab036cc241191654de9eb96a884dd809aae579ce10adcce5e427df`、workflow.js 为 `ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e`，并绑定完整目录、metadata、22项 loader 文件、真实目标源码和现有 disabled controller。外层受审源码为 `dca968be66c7e917ad9e0f64edeb02ce560fd0ba`；109项联合测试、26项定向回归与独立负例均通过。当前 workflow 字节没有可证明的 source authority，仅作为精确 preimage；这不会把它提升为目标或可信来源。
+
+新包路径为 `first-live-dsh-20260918-01-p3`，manifest/package SHA256 `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`。唯一选定计划为 `first-live-dsh-20260918-01-p3.plan-v2.json`，SHA256 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd`；初版 p3 plan `971cd26d…` 已被明确替代。p3 的48文件、metadata、canonical JSON、8项受审源码 Git bytes、pure compose、允许命令、目标 `59472b6`/`6f116d94…`、controller 绑定和 claim 前拒绝夹具均独立通过；整包复核报告 SHA256 `7f8098c96e55916954e31fd4504f4dad24818d17b0be5996150a54da707cb898`，记录 SHA256 `d642b8b33bbd912b34bd55c4d2df68d2ba3f655185b036ba4e1cf13fee3b7fa0`，`NEW_PACKAGE_SHIP_BLOCKERS=NONE`。
+
+这次复核没有改变实时入口结论：PID 43760 仍为 PPID 1 的 root `sudo ./deploy-auto-recovery-cfc2729-g2.sh --preflight`，无子进程，已记录 `PRODUCTION_MUTATION_PERFORMED=NO`。必须只终止该残留 preflight、确认所有竞争写入者消失并重新观察绑定，才能进入 p3；不能关闭整个终端进程组，也不能用新 operation/attempt 绕过。
 
 ## 首个真实交付
 
@@ -45,15 +53,15 @@ Watchdog 实际冻结来源为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`，所�
 | 安全托管及一次登录 | 上述边界闭合后生成六个新角色材料，保留原 state1，追加同 payload 的 PENDING state2，并为原空 snapshot1重新签名保持CAS0→1→2；旧钥只验证精确历史；再进行一次独立 reviewer 登录 | REUSE设计、迁移与登录组件已独立通过；最终 native92f4ace 主流程及终验已独立通过；实际包已通过包级复核。不是重做genesis或清空历史 |
 | 真实 Watchdog 前置 | 同一mutex下完成维护/权限拒绝/回读；真实独立issuer构建评审；接管已有基线，实际canary及逐项验收 | 必要原生顺序和验证已实现并受审；真实 canary 与依赖 PASS 只在未来授权操作产生 |
 | 首个 Broker 自动部署 | 条件成立才启用controller；普通producer提交真实候选；自动Train安装、健康/代际/语义验收、回执回写 | 普通Broker wrapper35c784d独立复审通过，真实594 manifest已离线绑定；startup/enable的EN-01/02已于fdc6564独立复审通过；固定只读终验92f4ace独立通过；原 exact 授权已因执行前生产前态漂移安全停止，当前未执行 |
-| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | package `4a83c4c36828f593fdc4419ae6eef8470fb7f918b5334b360b8b451690edcc1a`、plan `fffde6f6bd4da74e3058acfa0ae24b7062db087a6507c471656fecb96c4fe4cf` 曾冻结并独立复核 PASS，且已获 exact 授权；执行前因生产前态漂移安全停止，不能在当前状态重放。旧 package/plan 继续保持废弃 |
+| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | p3 package `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`、唯一 selected plan-v2 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd` 已冻结并独立复核 PASS；等待新的 exact Owner 授权与 PID 43760 消失后的入口重观察。p2 与初版 p3 plan 均不可执行 |
 
 ## 本轮收敛与权限
 
 最终原生源码 `92f4ace4152e8ac734ce005f8b344ca41ad2fea2` 已完成完整测试641 PASS、4 ignored、0 failure，fmt/clippy/release均通过；原始716个PASS计数包含75个嵌套子测试输出，不重复计数。四个实际release二进制与源树、日志已冻结在 `first-live-preparation/92f4ace-build/`。OP-02当前代际/最新真实PASS/签名Closed CAS/已投递outbox只读终验及旧HOST_IMPLEMENTATION_INCOMPLETE scaffold移除已独立通过；并未调用真实生产终验。
 
-外层初审冻结OS-01 socket目录缺失接线与OS-02 Python缓存可执行未受审字节两项，已完成同轮修复：独占创建固定新目录并绑定同一inode/OS父目录；Owner/Broker双入口均直接编译已验哈希源码，隔离缓存和本地模块遮蔽。V7 后另一个已授权 Goal 将生产 app 更新到 G2 sealed content `e1edd673bb422ee4d5a58d8ccfb9b5d0cb4577ff79978d118813ffaf63f84af9`；本 Goal 未执行该 mutation，但已将清单与受影响绑定更新到实际当前基线。外层最终源码 `87962bd29d4262a228927869cc9c57850620485e` 的109项联合测试与5个负例通过，源码/数据聚合评审 SHA256 `499618bdb8549e3b5f18f2599d8b886e137b1d047f3eeb5867afd8fc11350dc6`。G2 自身 process generation 仍未验证、真实 Feishu E2E 仍 PENDING，不在本 Goal 中冒充完成。
+外层初审冻结OS-01 socket目录缺失接线与OS-02 Python缓存可执行未受审字节两项，已完成同轮修复：独占创建固定新目录并绑定同一inode/OS父目录；Owner/Broker双入口均直接编译已验哈希源码，隔离缓存和本地模块遮蔽。V7 后另一个已授权 Goal 将生产 app 更新到 G2 sealed content；本 Goal 未执行该 mutation。安全停止后又发生 workflow preimage 漂移，因此已用外层最终源码 `dca968be66c7e917ad9e0f64edeb02ce560fd0ba` 将清单与受影响绑定更新到实际当前基线；109项联合测试、定向回归和源码/数据复核均通过。G2 自身 process generation 仍未验证、真实 Feishu E2E 仍 PENDING，不在本 Goal 中冒充完成。
 
-第一次组包由包级复核发现 manifest 顶层遗漏 `controller_sha256`，WP-01 确定性复现后淘汰旧包。修复后的 p2 包对 Packet、manifest 与 agent-deployd 文件摘要做三方等值绑定；48文件清单、权限、操作器本地校验、原生严格 Packet shape 和拒绝 effect 的 execute fixture 均通过。整包独立复核报告 SHA256 `172f3d50e39bbc490684b720e3a87cc149b8f69b8e239e99666f461eae5467f5`，记录 SHA256 `968797abf99b00772b45105a5afe2d67a193931bceac7389d53f6dece5b3f56f`；`NEW_SHIP_BLOCKERS=NONE`，结论仅为可以提交 exact Owner 授权，不是运行成功。
+第一次组包由包级复核发现 manifest 顶层遗漏 `controller_sha256`，WP-01 确定性复现后淘汰旧包。修复后的 p2 包曾通过整包复核，但生产前态漂移后在 launcher 前停止，授权不得重放。重新绑定的 p3 对 Packet、manifest 与 agent-deployd 文件摘要继续执行三方等值绑定；本地校验与独立整包复核均 PASS，结论仅为可以提交新的 exact Owner 授权，不是运行成功。
 
 native checkpoint b18cf29 的599 PASS、4 ignored与2753ab3的328通过/1失败/3忽略均保留为历史；后续PASS不覆盖当时结果。
 
