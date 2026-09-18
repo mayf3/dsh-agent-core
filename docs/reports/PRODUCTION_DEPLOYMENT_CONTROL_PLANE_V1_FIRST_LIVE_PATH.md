@@ -2,7 +2,19 @@
 
 更新：2026-09-18。父 Goal 仍是 PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1，沿用 Owner 已接受 Spec3986553。本页维护当前状态；旧观察、失败和审查记录保留在 `.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/`，不重写历史。
 
-**禁用安装已完成。首个真实自动部署尚未完成；当前 exact package 与 plan 已冻结并通过独立包级复核，现在只等待 Owner 对该 exact 操作包的一次生产授权。** 不需要 Owner 补 issuer/registry 资料。新增建钥、登录、停启、入口退役、controller 启用和首个 Broker 部署均尚未执行。
+**禁用安装已完成。首个真实自动部署尚未完成。Owner 已授权 p2 exact package/plan，但最终执行前核验发现生产字节、Runtime 代际及包外 root preflight 活动与冻结前态不一致，因此在进入 package launcher 前安全停止。** 本次没有请求管理员认证、没有消耗 package attempt，也没有执行本 Goal 的生产 mutation。该 exact 授权不得对漂移后的状态重放。
+
+## 2026-09-18 exact 操作安全停止
+
+授权绑定 operation `first-live-dsh-20260918-01`、package SHA256 `4a83c4c36828f593fdc4419ae6eef8470fb7f918b5334b360b8b451690edcc1a`、plan SHA256 `fffde6f6bd4da74e3058acfa0ae24b7062db087a6507c471656fecb96c4fe4cf`、attempt limit 1。package 和 plan 自身摘要匹配，但执行前环境不再匹配其冻结前态：
+
+- app content 从冻结的 `e1edd673bb422ee4d5a58d8ccfb9b5d0cb4577ff79978d118813ffaf63f84af9` 变为 `57a14f9c07ab036cc241191654de9eb96a884dd809aae579ce10adcce5e427df`；唯一变化文件为 `packages/broker/src/capabilities/workflow.js`，当前 SHA256 `ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e`，既不等于包的 preimage `d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee`，也不等于授权 target `6f116d94b58a739216d2af2b25dfd51b32268aba26dcea281f16199f70ff93b2`；
+- 观察到包外 root 进程 PID 43760，命令 `sudo ./deploy-auto-recovery-cfc2729-g2.sh --preflight`，PPID 1；本 Goal 未终止、清理或接管该进程；
+- Runtime PID 在核验窗口内从 47575 变为 59762，说明服务代际仍被外部执行线改变。
+
+实际回读：controller 仍为 Disabled=true、RunAtLoad=false、KeepAlive=false 且未加载；Runtime PID 59762 健康，部署 SHA 仍读为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`；W1/W2 均处于一次性任务的空闲态且 last exit 0；Tailscale PID 836 持续运行，仍使用 `/usr/local/bin/tailscaled`。Watchdog 真实验收、部署义务关闭和 outbox 完成均未执行。production lock 目录为空，operator journal 不存在。
+
+安全停止证据为 `first-live-preparation/preexec-safe-stop-20260918T133752Z/observation.json`（SHA256 `b0b5b13291ec97d06f1de10925552f960a2fe38c4f512365307b503f155a7d91`）和同目录 `final-readback.json`（SHA256 `b696572d22876b8ba020897a7c1ae399b7d8769b65d5d39e10f0e73cc08e7c20`）。
 
 ## 首个真实交付
 
@@ -32,8 +44,8 @@ Watchdog 实际冻结来源为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`，所�
 | 证明当前无遗留 root 写入者 | 有限固定 OS/服务角色；完整 PID 枚举并覆盖 real/effective/saved UID0；实际启动角色、出生代际、闭包与重复回读，未知即停 | 有限条件策略和原生源码32767f0已独立通过；14个 XPC 动态域需要未来受保护前置，不能用普通读取失败或基线 PID 充当通过 |
 | 安全托管及一次登录 | 上述边界闭合后生成六个新角色材料，保留原 state1，追加同 payload 的 PENDING state2，并为原空 snapshot1重新签名保持CAS0→1→2；旧钥只验证精确历史；再进行一次独立 reviewer 登录 | REUSE设计、迁移与登录组件已独立通过；最终 native92f4ace 主流程及终验已独立通过；实际包已通过包级复核。不是重做genesis或清空历史 |
 | 真实 Watchdog 前置 | 同一mutex下完成维护/权限拒绝/回读；真实独立issuer构建评审；接管已有基线，实际canary及逐项验收 | 必要原生顺序和验证已实现并受审；真实 canary 与依赖 PASS 只在未来授权操作产生 |
-| 首个 Broker 自动部署 | 条件成立才启用controller；普通producer提交真实候选；自动Train安装、健康/代际/语义验收、回执回写 | 普通Broker wrapper35c784d独立复审通过，真实594 manifest已离线绑定；startup/enable的EN-01/02已于fdc6564独立复审通过；固定只读终验92f4ace独立通过；等待 exact package 的 Owner 授权后执行 |
-| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | package `4a83c4c36828f593fdc4419ae6eef8470fb7f918b5334b360b8b451690edcc1a`、plan `fffde6f6bd4da74e3058acfa0ae24b7062db087a6507c471656fecb96c4fe4cf` 已冻结并独立复核 PASS；旧 package/plan 已明确废弃，不得授权 |
+| 首个 Broker 自动部署 | 条件成立才启用controller；普通producer提交真实候选；自动Train安装、健康/代际/语义验收、回执回写 | 普通Broker wrapper35c784d独立复审通过，真实594 manifest已离线绑定；startup/enable的EN-01/02已于fdc6564独立复审通过；固定只读终验92f4ace独立通过；原 exact 授权已因执行前生产前态漂移安全停止，当前未执行 |
+| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | package `4a83c4c36828f593fdc4419ae6eef8470fb7f918b5334b360b8b451690edcc1a`、plan `fffde6f6bd4da74e3058acfa0ae24b7062db087a6507c471656fecb96c4fe4cf` 曾冻结并独立复核 PASS，且已获 exact 授权；执行前因生产前态漂移安全停止，不能在当前状态重放。旧 package/plan 继续保持废弃 |
 
 ## 本轮收敛与权限
 
