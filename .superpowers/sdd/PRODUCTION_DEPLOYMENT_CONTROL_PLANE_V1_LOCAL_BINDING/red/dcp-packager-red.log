@@ -1,0 +1,23 @@
+FF
+======================================================================
+FAIL: test_canonical_matches_rust_sorted_utf8_encoding (test_prepare_genesis.PackageTests.test_canonical_matches_rust_sorted_utf8_encoding)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/tools/test_prepare_genesis.py", line 16, in test_canonical_matches_rust_sorted_utf8_encoding
+    self.assertEqual(PACK.canonical({"z": 1, "a": "车", "b": False}), b'{"a":"\xe8\xbd\xa6","b":false,"z":1}')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'' != b'{"a":"\xe8\xbd\xa6","b":false,"z":1}'
+
+======================================================================
+FAIL: test_exact_git_source_accepts_docs_only_movement_but_rejects_dirty_code (test_prepare_genesis.PackageTests.test_exact_git_source_accepts_docs_only_movement_but_rejects_dirty_code)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane/tools/test_prepare_genesis.py", line 65, in test_exact_git_source_accepts_docs_only_movement_but_rejects_dirty_code
+    with self.assertRaisesRegex(ValueError, "DIRTY_CODE"):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.144s
+
+FAILED (failures=2)

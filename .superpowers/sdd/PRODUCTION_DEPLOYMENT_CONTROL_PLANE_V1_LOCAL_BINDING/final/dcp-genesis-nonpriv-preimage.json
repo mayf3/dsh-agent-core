@@ -1,0 +1,15 @@
+{
+  "reviewer_uid": "ABSENT",
+  "reviewer_name": "ABSENT",
+  "reviewer_gid": "ABSENT",
+  "caller_group_gid": "ABSENT",
+  "reviewer_group_name": "ABSENT",
+  "caller_group_name": "ABSENT",
+  "/usr/local/libexec/agent-deployd": "ABSENT",
+  "/private/var/db/agent-deployd": "ABSENT",
+  "/private/var/db/agent-deploy-bootstrap": "ABSENT",
+  "/private/var/db/agent-deploy-review": "ABSENT",
+  "/private/var/db/agent-deploy-review-workspace": "ABSENT",
+  "/Library/LaunchDaemons/ai.agent-deployd.plist": "ABSENT",
+  "scope": "nonprivileged name/metadata check only; root census and fresh readback remain execution gates"
+}

@@ -1,0 +1,141 @@
+{
+  "scope": "nonprivileged metadata census; no launchd/runtime request",
+  "files": [
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w1.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core.scheduler-watchdog-w2.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.adobe.acc.installer.v2.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.auth-service.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.docker.socket.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.docker.vmnetd.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.OneDriveStandaloneUpdaterDaemon.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.OneDriveUpdaterDaemon.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.autoupdate.helper.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.microsoft.office.licensingV2.helper.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.gateway.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.host-exec-runner.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.openclaw.workflow-dispatcher.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o600",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.tailscale.tailscaled.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    },
+    {
+      "path": "/Library/LaunchDaemons/com.west2online.ClashXPro.ProxyConfigHelper.plist",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o644",
+      "regular": true,
+      "links": 1
+    }
+  ]
+}

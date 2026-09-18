@@ -1,0 +1,36 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `std::os::unix::fs::MetadataExt`
+ --> src/issuer/issuance.rs:6:5
+  |
+6 | use std::os::unix::fs::MetadataExt;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `verify_draft_artifact` is never used
+  --> src/issuer/issuance.rs:99:15
+   |
+99 | pub(crate) fn verify_draft_artifact(root: &Dir, draft: &Draft) -> Result<()> {
+   |               ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib test) generated 2 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.86s
+     Running unittests src/lib.rs (/tmp/dcp-registry-build/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+thread 'issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it' (74205935) panicked at src/issuer/../../test/issuer/policy.rs:44:52:
+called `Result::unwrap()` on an `Err` value: Error { code: "POLICY_EQUIVOCATION" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... FAILED
+
+failures:
+
+failures:
+    issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 78 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `--lib`

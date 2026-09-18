@@ -1,0 +1,129 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: enum `InstallStep` is never used
+  --> src/bootstrap/genesis_install.rs:37:17
+   |
+37 | pub(crate) enum InstallStep {
+   |                 ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated constant `ALL` is never used
+  --> src/bootstrap/genesis_install.rs:42:22
+   |
+41 | impl InstallStep {
+   | ---------------- associated constant in this implementation
+42 |     pub(crate) const ALL: &'static [Self] = &[Self::CreateIdentities, Self::CreateDirectories,
+   |                      ^^^
+
+warning: trait `InstallEffects` is never used
+  --> src/bootstrap/genesis_install.rs:46:18
+   |
+46 | pub(crate) trait InstallEffects {
+   |                  ^^^^^^^^^^^^^^
+
+warning: function `execute_steps` is never used
+  --> src/bootstrap/genesis_install.rs:64:15
+   |
+64 | pub(crate) fn execute_steps(journal: &Dir, effects: &mut impl InstallEffects,
+   |               ^^^^^^^^^^^^^
+
+warning: function `append` is never used
+  --> src/bootstrap/genesis_install.rs:86:15
+   |
+86 | pub(crate) fn append(dir: &Dir, name: &str, value: &impl Serialize) -> Result<()> {
+   |               ^^^^^^
+
+warning: function `remove_owned_file` is never used
+  --> src/bootstrap/genesis_install.rs:91:15
+   |
+91 | pub(crate) fn remove_owned_file(dir: &Dir, name: &str, hash: &str) -> Result<()> {
+   |               ^^^^^^^^^^^^^^^^^
+
+warning: function `protected_record` is never used
+  --> src/bootstrap/genesis_install_io.rs:62:15
+   |
+62 | pub(crate) fn protected_record<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
+   |               ^^^^^^^^^^^^^^^^
+
+warning: function `hash_protected` is never used
+  --> src/bootstrap/genesis_install_io.rs:70:15
+   |
+70 | pub(crate) fn hash_protected(path: &str, limit: u64) -> Result<String> {
+   |               ^^^^^^^^^^^^^^
+
+warning: constant `DSCL` is never used
+ --> src/bootstrap/genesis_install_census.rs:6:18
+  |
+6 | pub(super) const DSCL: &str = "/usr/bin/dscl";
+  |                  ^^^^
+
+warning: constant `GROUP` is never used
+ --> src/bootstrap/genesis_install_census.rs:7:18
+  |
+7 | pub(super) const GROUP: &str = "/usr/sbin/dseditgroup";
+  |                  ^^^^^
+
+warning: function `tool` is never used
+ --> src/bootstrap/genesis_install_census.rs:9:15
+  |
+9 | pub(super) fn tool(policy: &GenesisInstallPolicy, path: &str) -> Result<()> {
+  |               ^^^^
+
+warning: function `command` is never used
+  --> src/bootstrap/genesis_install_census.rs:23:15
+   |
+23 | pub(super) fn command(policy: &GenesisInstallPolicy, path: &str, args: &[&str]) -> Result<String> {
+   |               ^^^^^^^
+
+warning: function `identity_census` is never used
+  --> src/bootstrap/genesis_install_census.rs:47:15
+   |
+47 | pub(super) fn identity_census(policy: &GenesisInstallPolicy) -> Result<String> {
+   |               ^^^^^^^^^^^^^^^
+
+warning: function `validate_identities` is never used
+  --> src/bootstrap/genesis_install_census.rs:52:15
+   |
+52 | pub(crate) fn validate_identities(users: &str, groups: &str) -> Result<String> {
+   |               ^^^^^^^^^^^^^^^^^^^
+
+warning: function `sudoers_census` is never used
+  --> src/bootstrap/genesis_install_census.rs:70:15
+   |
+70 | pub(super) fn sudoers_census() -> Result<BTreeMap<String, String>> {
+   |               ^^^^^^^^^^^^^^
+
+warning: function `sudoers` is never used
+  --> src/bootstrap/genesis_install_census.rs:75:4
+   |
+75 | fn sudoers(path: &str, found: &mut BTreeMap<String, String>) -> Result<()> {
+   |    ^^^^^^^
+
+warning: function `service_census` is never used
+   --> src/bootstrap/genesis_install_census.rs:102:15
+    |
+102 | pub(super) fn service_census() -> Result<BTreeMap<String, String>> {
+    |               ^^^^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 17 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.54s
+     Running test/registry/main.rs (target/debug/deps/registry-4011283d80892583)
+
+running 1 test
+test security::deployment_child_cannot_alias_its_original_business_goal ... FAILED
+
+failures:
+
+---- security::deployment_child_cannot_alias_its_original_business_goal stdout ----
+
+thread 'security::deployment_child_cannot_alias_its_original_business_goal' (74176721) panicked at test/registry/security.rs:15:56:
+called `Result::unwrap_err()` on an `Ok` value: DeploymentRecord { enrollment: Signed { issuer: "authority", payload: Enrollment { goal_id: "goal", business_goal_id: "goal", origin_uri: "codex://threads/original-task", owner: "mayf3", producer_id: "producer", repo: "repo", target_runtime: "runtime", deployment_profile: "fixture", scope: DeploymentOnly, scope_description: "Broker one-file deployment obligation", acceptance_revision: "accept-1", verification_profile: "verify-1", standing_authority_revision: "authority-1", authority: AuthorityBinding { revision: "authority-1", semantic_head: "1111111111111111111111111111111111111111", lifecycle_head: "2222222222222222222222222222222222222222", source: EvidenceReference { uri: "repo://spec", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, acceptance: EvidenceReference { uri: "repo://owner-acceptance", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, contracts: [ContractBinding { id: "ACC-001", source: EvidenceReference { uri: "repo://contract", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }] }, original_request: EvidenceReference { uri: "repo://original-request", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, historical_source: Some(HistoricalSource { implementation_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_sha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", review: EvidenceReference { uri: "repo://historical-review", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }), prior_dependencies: [] }, signature: "a459a61824537c8157f41cd2ebe29dbe1a8a2671d0e8ce0affd14adf8dd3d3314111a249bd4bf773bdd86346bf10f15a76c7d48d58eab2a435642b174c797103" }, state: Pending, revision: 0, business_goal_complete: false, ready: None, proposal_digest: None, closure: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    security::deployment_child_cannot_alias_its_original_business_goal
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `--test registry`

@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.47s
+     Running test/registry/main.rs (target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 1 test
+test enrollment::a_prior_owner_freeze_is_not_relaxed_by_canonical_ancestry_or_review ... FAILED
+
+failures:
+
+---- enrollment::a_prior_owner_freeze_is_not_relaxed_by_canonical_ancestry_or_review stdout ----
+
+thread 'enrollment::a_prior_owner_freeze_is_not_relaxed_by_canonical_ancestry_or_review' (74193449) panicked at test/registry/enrollment.rs:11:84:
+called `Result::unwrap_err()` on an `Ok` value: DeploymentRecord { enrollment: Signed { issuer: "authority", payload: Enrollment { goal_id: "goal", business_goal_id: "original-business-goal", origin_uri: "codex://threads/original-task", owner: "mayf3", producer_id: "producer", repo: "repo", target_runtime: "runtime", deployment_profile: "fixture", scope: DeploymentOnly, scope_description: "Broker one-file deployment obligation", acceptance_revision: "accept-1", verification_profile: "verify-1", standing_authority_revision: "authority-1", authority: AuthorityBinding { revision: "authority-1", semantic_head: "1111111111111111111111111111111111111111", lifecycle_head: "2222222222222222222222222222222222222222", source: EvidenceReference { uri: "repo://spec", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, acceptance: EvidenceReference { uri: "repo://owner-acceptance", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, contracts: [ContractBinding { id: "ACC-001", source: EvidenceReference { uri: "repo://contract", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }] }, original_request: EvidenceReference { uri: "repo://original-request", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, historical_source: Some(HistoricalSource { implementation_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_sha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", review: EvidenceReference { uri: "repo://historical-review", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }), frozen_source_sha: Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"), prior_dependencies: [] }, signature: "a405a9a01795f5f4bc17c014d592bc2c4aaa95846f0be7ae36991a120ce784da7630e353557fcf62268e5a8fdc91ef017d6d05294934ecc62d10c8fb2b0dd50b" }, state: Ready, revision: 1, business_goal_complete: false, ready: Some(Signed { issuer: "producer", payload: ReadyRecord { producer_id: "producer", goal_id: "goal", revision: 1, repo: "repo", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", authority_revisions: ["authority-1"], artifact_sha256: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", coverage: GoalCoverage { goal_id: "goal", acceptance_revision: "accept-1", source_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_face_sha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", verification_profile: "verify-1" }, dependencies: [] }, signature: "b86c03812bd8828f82c289b68058690e87929e05235d209a5e5d5950bbcfd7562bff01e262deb271fe7c246cb0fb74f2f930c4af26ea459da638dde76b5c4203" }), proposal_digest: Some("e5258b8ffd669da7f913b9a8b354edb6e40d34a10a59156ec3113bdb9410ad1e"), closure: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    enrollment::a_prior_owner_freeze_is_not_relaxed_by_canonical_ancestry_or_review
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.19s
+
+error: test failed, to rerun pass `--test registry`

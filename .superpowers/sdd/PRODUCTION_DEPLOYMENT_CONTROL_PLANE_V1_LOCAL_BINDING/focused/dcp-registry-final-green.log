@@ -1,0 +1,68 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: enum `InstallStep` is never used
+  --> src/bootstrap/genesis_install.rs:37:17
+   |
+37 | pub(crate) enum InstallStep {
+   |                 ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated constant `ALL` is never used
+  --> src/bootstrap/genesis_install.rs:42:22
+   |
+41 | impl InstallStep {
+   | ---------------- associated constant in this implementation
+42 |     pub(crate) const ALL: &'static [Self] = &[Self::CreateIdentities, Self::CreateDirectories,
+   |                      ^^^
+
+warning: trait `InstallEffects` is never used
+  --> src/bootstrap/genesis_install.rs:46:18
+   |
+46 | pub(crate) trait InstallEffects {
+   |                  ^^^^^^^^^^^^^^
+
+warning: function `execute_steps` is never used
+  --> src/bootstrap/genesis_install.rs:64:15
+   |
+64 | pub(crate) fn execute_steps(journal: &Dir, effects: &mut impl InstallEffects,
+   |               ^^^^^^^^^^^^^
+
+warning: function `append` is never used
+  --> src/bootstrap/genesis_install.rs:86:15
+   |
+86 | pub(crate) fn append(dir: &Dir, name: &str, value: &impl Serialize) -> Result<()> {
+   |               ^^^^^^
+
+warning: function `remove_owned_file` is never used
+  --> src/bootstrap/genesis_install.rs:91:15
+   |
+91 | pub(crate) fn remove_owned_file(dir: &Dir, name: &str, hash: &str) -> Result<()> {
+   |               ^^^^^^^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 6 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.51s
+     Running test/registry/main.rs (/tmp/dcp-registry-build/debug/deps/registry-4011283d80892583)
+
+running 19 tests
+test common::private::hostile_tmpdir_worker ... ok
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test enrollment::tampered_wrong_role_and_wrong_scope_enrollments_are_rejected ... ok
+test security::protected_lock_cannot_be_writable_or_a_symlink ... ok
+test security::historical_review_does_not_bypass_current_review_or_prior_dependency ... ok
+test enrollment::enrollment_is_pending_immutable_and_survives_restart ... ok
+test enrollment::business_authority_is_distinct_from_deployment_standing_authority ... ok
+test enrollment::ready_requires_exact_authenticated_proposal_and_cas ... ok
+test security::another_writer_cannot_reuse_stale_goal_revision ... ok
+test security::signed_history_replay_or_gap_cannot_reset_monotonic_revision ... ok
+test security::interrupted_exact_prefix_recovers_without_overwriting_another_operation ... ok
+test security::ledger_tamper_symlink_hardlink_and_writable_metadata_are_rejected ... ok
+test closure::trusted_verifier_with_wrong_profile_assignment_cannot_close ... ok
+test closure::forged_mismatched_and_waiting_receipts_never_close ... ok
+test security::snapshot_restart_is_monotonic_cumulative_and_queue_replay_safe ... ok
+test closure::finalized_pass_closes_only_deployment_and_replays_after_restart ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.89s
+

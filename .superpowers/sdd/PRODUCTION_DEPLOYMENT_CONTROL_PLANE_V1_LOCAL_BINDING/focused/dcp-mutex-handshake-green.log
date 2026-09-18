@@ -1,0 +1,9 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.57s
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-8f03a6117b2d14c2)
+
+running 1 test
+test killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 16 filtered out; finished in 0.06s
+

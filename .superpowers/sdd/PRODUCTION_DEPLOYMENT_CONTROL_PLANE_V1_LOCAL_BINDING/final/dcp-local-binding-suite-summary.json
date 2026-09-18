@@ -1,0 +1,114 @@
+[
+  {
+    "binary": "unittests src/lib.rs",
+    "status": "ok",
+    "passed": 84,
+    "failed": 0,
+    "ignored": 2
+  },
+  {
+    "binary": "unittests src/bin/agent-deploy-bootstrap.rs",
+    "status": "ok",
+    "passed": 0,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "unittests src/bin/agent-deploy-issuer.rs",
+    "status": "ok",
+    "passed": 0,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "unittests src/bin/agent-deploy-prepare.rs",
+    "status": "ok",
+    "passed": 0,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "unittests src/bin/agent-deployctl.rs",
+    "status": "ok",
+    "passed": 0,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "unittests src/bin/agent-deployd.rs",
+    "status": "ok",
+    "passed": 0,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/authority.rs",
+    "status": "ok",
+    "passed": 17,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/adoption/bootstrap.rs",
+    "status": "ok",
+    "passed": 13,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/adoption/e2e.rs",
+    "status": "ok",
+    "passed": 8,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/filesystem.rs",
+    "status": "ok",
+    "passed": 17,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/genesis/plan.rs",
+    "status": "ok",
+    "passed": 10,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/queue.rs",
+    "status": "ok",
+    "passed": 30,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/registry/main.rs",
+    "status": "ok",
+    "passed": 21,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/socket.rs",
+    "status": "ok",
+    "passed": 9,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/train.rs",
+    "status": "ok",
+    "passed": 33,
+    "failed": 0,
+    "ignored": 0
+  },
+  {
+    "binary": "test/transactions.rs",
+    "status": "ok",
+    "passed": 14,
+    "failed": 0,
+    "ignored": 0
+  }
+]

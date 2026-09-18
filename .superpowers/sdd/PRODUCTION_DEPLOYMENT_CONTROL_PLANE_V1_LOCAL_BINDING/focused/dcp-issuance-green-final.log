@@ -1,0 +1,13 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.87s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 5 tests
+test issuer::issuance::tests::partial_protected_publication_resumes_exact_prefix_without_accepting_mismatch ... ok
+test issuer::issuance::tests::retained_partial_and_failed_outputs_count_before_any_new_write ... ok
+test issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... ok
+test issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... ok
+test issuer::issuance::tests::restart_after_each_publication_boundary_renews_without_losing_exact_evidence ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.71s
+

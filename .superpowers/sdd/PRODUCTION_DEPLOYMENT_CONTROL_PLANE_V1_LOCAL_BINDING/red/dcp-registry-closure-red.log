@@ -1,0 +1,102 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: function `load` is never used
+  --> src/issuer/custody.rs:45:15
+   |
+45 | pub(crate) fn load(dir: &Dir, issuer: &str, role: Role, catalog: &Catalog) -> Result<SigningKey> {
+   |               ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sign` is never used
+  --> src/issuer/custody.rs:60:15
+   |
+60 | pub(crate) fn sign<T: Signable>(issuer: &str, key: &SigningKey, payload: T) -> Result<Signed<T>> {
+   |               ^^^^
+
+warning: function `source_sha` is never used
+  --> src/issuer/source.rs:16:15
+   |
+16 | pub(crate) fn source_sha(s: &str) -> Result<()> {
+   |               ^^^^^^^^^^
+
+warning: function `validate_lineage` is never used
+  --> src/issuer/source.rs:19:15
+   |
+19 | pub(crate) fn validate_lineage(source: &str, compare: &Value) -> Result<()> {
+   |               ^^^^^^^^^^^^^^^^
+
+warning: function `parse_tree` is never used
+  --> src/issuer/source.rs:25:15
+   |
+25 | pub(crate) fn parse_tree(expected: &str, value: &Value) -> Result<BTreeMap<String, String>> {
+   |               ^^^^^^^^^^
+
+warning: function `validate_job` is never used
+  --> src/issuer/review.rs:55:4
+   |
+55 | fn validate_job(_job: &ReviewJob) -> Result<()> { Ok(()) }
+   |    ^^^^^^^^^^^^
+
+warning: function `verify_packet` is never used
+  --> src/issuer/review.rs:56:4
+   |
+56 | fn verify_packet(_job: &ReviewJob, bytes: &[u8]) -> Result<ReviewPacket> {
+   |    ^^^^^^^^^^^^^
+
+warning: function `parse_result` is never used
+  --> src/issuer/review.rs:59:4
+   |
+59 | fn parse_result(job: &ReviewJob, _bytes: &[u8]) -> Result<VerifiedReview> {
+   |    ^^^^^^^^^^^^
+
+warning: associated function `open_native` is never used
+  --> src/registry/mod.rs:23:19
+   |
+17 | impl Registry {
+   | ------------- associated function in this implementation
+...
+23 |     pub(crate) fn open_native(catalog: &Catalog) -> Result<Self> {
+   |                   ^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 9 warnings
+warning: unused import: `model::*`
+ --> test/registry/enrollment.rs:2:32
+  |
+2 | use deployment_control_plane::{model::*, registry::*, trust::*};
+  |                                ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (test "registry") generated 1 warning (run `cargo fix --test "registry" -p deployment-control-plane` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.11s
+     Running test/registry/main.rs (/tmp/dcp-registry-build/debug/deps/registry-52903b9e0578a54a)
+
+running 2 tests
+test closure::forged_mismatched_and_waiting_receipts_never_close ... FAILED
+test closure::finalized_pass_closes_only_deployment_and_replays_after_restart ... FAILED
+
+failures:
+
+---- closure::forged_mismatched_and_waiting_receipts_never_close stdout ----
+
+thread 'closure::forged_mismatched_and_waiting_receipts_never_close' (74093561) panicked at test/registry/closure.rs:54:5:
+assertion `left == right` failed
+  left: "REGISTRY_UNIMPLEMENTED"
+ right: "ISSUER_ROLE"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- closure::finalized_pass_closes_only_deployment_and_replays_after_restart stdout ----
+
+thread 'closure::finalized_pass_closes_only_deployment_and_replays_after_restart' (74093560) panicked at test/registry/closure.rs:21:5:
+assertion `left == right` failed
+  left: "REGISTRY_UNIMPLEMENTED"
+ right: "SAFE_FINALIZATION_REQUIRED"
+
+
+failures:
+    closure::finalized_pass_closes_only_deployment_and_replays_after_restart
+    closure::forged_mismatched_and_waiting_receipts_never_close
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.24s
+
+error: test failed, to rerun pass `--test registry`

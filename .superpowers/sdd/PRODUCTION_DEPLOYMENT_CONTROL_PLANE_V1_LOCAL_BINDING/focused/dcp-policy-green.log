@@ -1,0 +1,40 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `self`
+ --> src/issuer/coordinator.rs:1:23
+  |
+1 | use super::{custody::{self, load, sign, ROOT}, github::{self, SourcePolicy}, review::{NativeReviewRunner, ReviewJob, ReviewPacket, Re...
+  |                       ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `std::os::unix::fs::MetadataExt`
+ --> src/issuer/issuance.rs:6:5
+  |
+6 | use std::os::unix::fs::MetadataExt;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `verify_draft_artifact` is never used
+  --> src/issuer/issuance.rs:99:15
+   |
+99 | pub(crate) fn verify_draft_artifact(root: &Dir, draft: &Draft) -> Result<()> {
+   |               ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib test) generated 3 warnings (run `cargo fix --lib -p deployment-control-plane --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.00s
+     Running unittests src/lib.rs (/tmp/dcp-registry-build/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 9 tests
+test issuer::policy::tests::native_policy_entry_refuses_fixture_identity_before_effects ... ok
+test issuer::policy::tests::backwards_clock_cannot_return_a_future_lease ... ok
+test issuer::policy::tests::semantic_config_change_without_owner_revision_is_equivocation ... ok
+test issuer::policy::tests::cache_signed_by_wrong_issuer_or_with_wrong_source_binding_is_rejected ... ok
+test issuer::policy::tests::restart_and_expiry_renewal_keep_monotonic_issuance_epochs ... ok
+test issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... ok
+test issuer::policy::tests::profile_switches_use_global_monotonic_epochs_without_old_profile_replay ... ok
+test issuer::policy::tests::owner_revision_is_independent_and_revocation_cannot_be_hidden ... ok
+test issuer::policy::tests::cache_and_lock_metadata_and_unknown_temporary_fail_closed ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 73 filtered out; finished in 0.63s
+

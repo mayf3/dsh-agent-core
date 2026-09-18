@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.28s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... FAILED
+
+failures:
+
+---- issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact stdout ----
+
+thread 'issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact' (74270689) panicked at src/issuer/../../test/issuer/issuance.rs:198:93:
+called `Result::unwrap_err()` on an `Ok` value: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 85 filtered out; finished in 0.17s
+
+error: test failed, to rerun pass `--lib`

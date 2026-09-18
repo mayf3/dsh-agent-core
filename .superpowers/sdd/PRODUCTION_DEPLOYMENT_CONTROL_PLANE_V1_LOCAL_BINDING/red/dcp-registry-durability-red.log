@@ -1,0 +1,74 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `intake::Intake`
+ --> src/service/mod.rs:8:16
+  |
+8 | pub(crate) use intake::Intake;
+  |                ^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `registry::*`
+ --> src/registry/../../test/registry/durability.rs:1:24
+  |
+1 | use crate::{common::*, registry::*, Error, Result};
+  |                        ^^^^^^^^^^^
+
+warning: unused import: `model::*`
+ --> src/registry/../../test/registry/fixture.rs:2:32
+  |
+2 | use deployment_control_plane::{model::*, registry::*};
+  |                                ^^^^^^^^
+
+warning: methods `issuer_desired` and `issuer_dependencies` are never used
+  --> src/queue/issuance.rs:4:19
+   |
+ 3 | impl Queue {
+   | ---------- methods in this implementation
+ 4 |     pub(crate) fn issuer_desired(&self, profile: &Profile, artifact: &str) -> Result<DesiredState> {
+   |                   ^^^^^^^^^^^^^^
+...
+20 |     pub(crate) fn issuer_dependencies(&self, goals: &[String]) -> Result<Vec<Dependency>> {
+   |                   ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated functions `open_native` and `open_local_root` are never used
+  --> src/registry/mod.rs:23:19
+   |
+17 | impl Registry {
+   | ------------- associated functions in this implementation
+...
+23 |     pub(crate) fn open_native(catalog: &Catalog) -> Result<Self> {
+   |                   ^^^^^^^^^^^
+...
+28 |     pub(crate) fn open_local_root(root: &Dir, catalog: &Catalog) -> Result<Self> {
+   |                   ^^^^^^^^^^^^^^^
+
+warning: function `before_history_sync` is never used
+ --> src/registry/../../test/registry/durability.rs:6:15
+  |
+6 | pub(super) fn before_history_sync() -> Result<()> {
+  |               ^^^^^^^^^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib test) generated 6 warnings (run `cargo fix --lib -p deployment-control-plane --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.03s
+     Running unittests src/lib.rs (/tmp/dcp-registry-build/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test registry::durability::idempotent_ack_waits_for_committed_record_and_parent_flush ... FAILED
+
+failures:
+
+---- registry::durability::idempotent_ack_waits_for_committed_record_and_parent_flush stdout ----
+
+thread 'registry::durability::idempotent_ack_waits_for_committed_record_and_parent_flush' (74141761) panicked at src/registry/../../test/registry/durability.rs:20:29:
+called `Result::unwrap_err()` on an `Ok` value: DeploymentRecord { enrollment: Signed { issuer: "authority", payload: Enrollment { goal_id: "goal", business_goal_id: "original-business-goal", origin_uri: "codex://threads/original-task", owner: "mayf3", producer_id: "producer", repo: "repo", target_runtime: "runtime", deployment_profile: "fixture", scope: DeploymentOnly, scope_description: "Broker one-file deployment obligation", acceptance_revision: "accept-1", verification_profile: "verify-1", standing_authority_revision: "authority-1", authority: AuthorityBinding { revision: "authority-1", semantic_head: "1111111111111111111111111111111111111111", lifecycle_head: "2222222222222222222222222222222222222222", source: EvidenceReference { uri: "repo://spec", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, acceptance: EvidenceReference { uri: "repo://owner-acceptance", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, contracts: [ContractBinding { id: "ACC-001", source: EvidenceReference { uri: "repo://contract", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }] }, original_request: EvidenceReference { uri: "repo://original-request", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }, historical_source: Some(HistoricalSource { implementation_sha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", release_sha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", review: EvidenceReference { uri: "repo://historical-review", sha256: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" } }), prior_dependencies: [] }, signature: "7a7c164ba54bc22df9443363326b6abccec3c03d8630490a163b79aec959bc3c0f0f5463848e396c8fb7efe3e05e4499b1d6f4c30686f621358ce4fa99dd4c0b" }, state: Pending, revision: 0, business_goal_complete: false, ready: None, proposal_digest: None, closure: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    registry::durability::idempotent_ack_waits_for_committed_record_and_parent_flush
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 50 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `--lib`

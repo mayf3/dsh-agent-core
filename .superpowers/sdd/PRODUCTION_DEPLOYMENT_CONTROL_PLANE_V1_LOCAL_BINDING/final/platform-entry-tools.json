@@ -1,0 +1,10 @@
+{
+  "scope": "read-only host byte observation; protected OS fresh checks remain an execution gate",
+  "sha256": {
+    "/usr/bin/install": "66a36cfae72df019e1dc8649331f956fc93d3d096226b535a4e5931535d024cc",
+    "/usr/bin/shasum": "0812595f981a26f813d98dc380af14d4af427626c9339eda29eb849ae13de1e3",
+    "/usr/bin/dscl": "7870543dca5d253c509d2cb6c16893e53b688537b33f81d47d533d8693eb67f4",
+    "/usr/sbin/dseditgroup": "68369dbdf779d4c5653e67ff98e7eb469c3f25ef22eb0b6a10ff2e8a923c8339",
+    "/usr/bin/curl": "b636262803922ee1dd0fbf614818473ffa53c811e44fd3278c2270d3af4759d3"
+  }
+}

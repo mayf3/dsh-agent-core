@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.11s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution ... FAILED
+
+failures:
+
+---- issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution stdout ----
+
+thread 'issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution' (74263580) panicked at src/issuer/../../test/issuer/source.rs:53:5:
+assertion failed: closure.contains(&"b".repeat(64))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    issuer::source::tests::build_closure_binds_actual_enrollment_and_issuer_without_opaque_substitution
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 84 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

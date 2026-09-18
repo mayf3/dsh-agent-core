@@ -1,0 +1,22 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.42s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... FAILED
+
+failures:
+
+---- issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review stdout ----
+
+thread 'issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review' (74245041) panicked at src/issuer/../../test/issuer/issuance.rs:171:31:
+called `Result::unwrap()` on an `Err` value: Error { code: "IMMUTABLE_DELIVERY" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `--lib`

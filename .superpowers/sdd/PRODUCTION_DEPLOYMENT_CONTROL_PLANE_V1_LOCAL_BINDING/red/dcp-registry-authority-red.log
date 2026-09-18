@@ -1,0 +1,88 @@
+warning: function `load` is never used
+  --> src/issuer/custody.rs:45:15
+   |
+45 | pub(crate) fn load(dir: &Dir, issuer: &str, role: Role, catalog: &Catalog) -> Result<SigningKey> {
+   |               ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `sign` is never used
+  --> src/issuer/custody.rs:60:15
+   |
+60 | pub(crate) fn sign<T: Signable>(issuer: &str, key: &SigningKey, payload: T) -> Result<Signed<T>> {
+   |               ^^^^
+
+warning: constant `MAX_INPUT_BYTES` is never used
+  --> src/issuer/review.rs:10:7
+   |
+10 | const MAX_INPUT_BYTES: usize = 4 * 1024 * 1024;
+   |       ^^^^^^^^^^^^^^^
+
+warning: constant `MAX_OUTPUT_BYTES` is never used
+  --> src/issuer/review.rs:11:7
+   |
+11 | const MAX_OUTPUT_BYTES: usize = 64 * 1024;
+   |       ^^^^^^^^^^^^^^^^
+
+warning: function `validate_job` is never used
+  --> src/issuer/review.rs:59:4
+   |
+59 | fn validate_job(job: &ReviewJob) -> Result<()> {
+   |    ^^^^^^^^^^^^
+
+warning: function `verify_packet` is never used
+  --> src/issuer/review.rs:75:4
+   |
+75 | fn verify_packet(job: &ReviewJob, bytes: &[u8]) -> Result<ReviewPacket> {
+   |    ^^^^^^^^^^^^^
+
+warning: struct `ReviewResponse` is never constructed
+  --> src/issuer/review.rs:92:8
+   |
+92 | struct ReviewResponse {
+   |        ^^^^^^^^^^^^^^
+
+warning: function `parse_result` is never used
+   --> src/issuer/review.rs:102:4
+    |
+102 | fn parse_result(job: &ReviewJob, bytes: &[u8]) -> Result<VerifiedReview> {
+    |    ^^^^^^^^^^^^
+
+warning: function `capture` is never used
+ --> src/issuer/review/process.rs:4:15
+  |
+4 | pub(super) fn capture(_command: Command, _input: &[u8], _timeout: Duration, _limit: usize) -> Result<Vec<u8>> {
+  |               ^^^^^^^
+
+warning: associated function `open_native` is never used
+  --> src/registry/mod.rs:23:19
+   |
+17 | impl Registry {
+   | ------------- associated function in this implementation
+...
+23 |     pub(crate) fn open_native(catalog: &Catalog) -> Result<Self> {
+   |                   ^^^^^^^^^^^
+
+warning: `deployment-control-plane` (lib) generated 10 warnings
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running test/registry/main.rs (/tmp/dcp-registry-build/debug/deps/registry-52903b9e0578a54a)
+
+running 1 test
+test enrollment::business_authority_is_distinct_from_deployment_standing_authority ... FAILED
+
+failures:
+
+---- enrollment::business_authority_is_distinct_from_deployment_standing_authority stdout ----
+
+thread 'enrollment::business_authority_is_distinct_from_deployment_standing_authority' (74122656) panicked at test/registry/enrollment.rs:65:47:
+called `Result::unwrap()` on an `Err` value: Error { code: "ENROLLMENT_BINDING" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    enrollment::business_authority_is_distinct_from_deployment_standing_authority
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--test registry`

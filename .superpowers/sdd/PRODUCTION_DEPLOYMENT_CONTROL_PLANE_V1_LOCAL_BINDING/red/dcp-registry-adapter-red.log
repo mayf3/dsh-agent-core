@@ -1,0 +1,60 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: unused import: `self`
+ --> src/issuer/coordinator.rs:1:23
+  |
+1 | use super::{custody::{self, load, sign, ROOT}, github::{self, SourcePolicy}, review::{NativeReviewRunner, ReviewJob, ReviewPacket, Re...
+  |                       ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `model::*`
+ --> src/registry/../../test/registry/fixture.rs:2:32
+  |
+2 | use deployment_control_plane::{model::*, registry::*};
+  |                                ^^^^^^^^
+
+warning: unused imports: `model::*` and `trust::*`
+ --> src/registry/../../test/registry/adapter.rs:1:61
+  |
+1 | use crate::{common::*, fs::{file::write_new, FixtureRoots}, model::*, queue::Queue,
+  |                                                             ^^^^^^^^
+2 |     registry::*, service::{Caller, Configuration, Intake}, transaction::Executor, trust::*};
+  |                                                                                   ^^^^^^^^
+
+warning: function `open` is never used
+ --> src/registry/../../test/registry/fixture.rs:4:8
+  |
+4 | pub fn open(path: &std::path::Path, c: &Catalog) -> Registry {
+  |        ^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `deployment-control-plane` (lib test) generated 4 warnings (run `cargo fix --lib -p deployment-control-plane --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.94s
+     Running unittests src/lib.rs (/tmp/dcp-registry-build/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+test registry::adapter_tests::pending_local_registry_is_polled_without_a_caller_mailbox ... FAILED
+test registry::adapter_tests::local_poll_and_delivery_close_after_real_executor_finalization_and_retry ... FAILED
+
+failures:
+
+---- registry::adapter_tests::pending_local_registry_is_polled_without_a_caller_mailbox stdout ----
+
+thread 'registry::adapter_tests::pending_local_registry_is_polled_without_a_caller_mailbox' (74154422) panicked at src/registry/../../test/registry/adapter.rs:48:25:
+called `Result::unwrap()` on an `Err` value: Error { code: "ABSENT" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- registry::adapter_tests::local_poll_and_delivery_close_after_real_executor_finalization_and_retry stdout ----
+
+thread 'registry::adapter_tests::local_poll_and_delivery_close_after_real_executor_finalization_and_retry' (74154421) panicked at src/registry/../../test/registry/adapter.rs:68:25:
+called `Result::unwrap()` on an `Err` value: Error { code: "ABSENT" }
+
+
+failures:
+    registry::adapter_tests::local_poll_and_delivery_close_after_real_executor_finalization_and_retry
+    registry::adapter_tests::pending_local_registry_is_polled_without_a_caller_mailbox
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 54 filtered out; finished in 0.18s
+
+error: test failed, to rerun pass `--lib`
