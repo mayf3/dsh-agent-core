@@ -22,13 +22,14 @@ class Transport(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.base = Path(self.tmp.name).resolve()
         self.package = self.base/'package'; self.package.mkdir(mode=0o700)
-        self.journal = self.base/'.agent-deploy-first-live-operator'/'first-live-dsh-20260918-01'
+        self.journal = self.base/'.agent-deploy-first-live-operator'/'first-live-dsh-20260918-01-p4-successor'
         self.raw = b'fixture script never executed'
         scripts = ['first_live_os.py','first_live_io.py','first_live_operator.py',
                    'broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py']
         for name in scripts:
             (self.package/name).write_bytes(self.raw); (self.package/name).chmod(0o400)
         self.manifest = {'version':1,'operation_id':'first-live-dsh-20260918-01',
+            'execution_id':'first-live-dsh-20260918-01-p4-successor','predecessor':transport.PREDECESSOR,
             'source_sha':'a'*40,'source_tree':'b'*40,
             'operator_files':{n:digest(self.raw) for n in scripts},'files':{},'tool_files':{},
             'root_argv_allowlist':[['/bin/cat','/fixed/public'],
@@ -94,6 +95,23 @@ class Transport(unittest.TestCase):
             with self.assertRaises(RuntimeError):self.io.call(['/bin/cat','/fixed/public'])
             self.assertEqual(run.call_count,1)
         self.assertTrue(any('unknown' in p.name for p in self.journal.iterdir()))
+
+    def test_successor_binding_rejects_omission_or_falsification_and_uses_distinct_fixed_journal(self):
+        for mutation in ('omit-execution','false-execution','omit-predecessor','false-predecessor'):
+            changed=json.loads(json.dumps(self.manifest))
+            if mutation=='omit-execution':changed.pop('execution_id')
+            elif mutation=='false-execution':changed['execution_id']='first-live-dsh-20260918-01'
+            elif mutation=='omit-predecessor':changed.pop('predecessor')
+            else:changed['predecessor']['retry_forbidden']=False
+            with self.subTest(mutation=mutation),self.assertRaisesRegex(RuntimeError,'SUCCESSOR_BINDING'):
+                transport.OperatorIO(changed,self.package,self.journal)
+        p3=self.journal.parent/'first-live-dsh-20260918-01'
+        self.journal.parent.mkdir(mode=0o700);p3.mkdir();(p3/'claim.json').write_text('p3 immutable fixture')
+        self.io.claim()
+        self.assertEqual((p3/'claim.json').read_text(),'p3 immutable fixture')
+        claim=json.loads((self.journal/'claim.json').read_text())
+        self.assertEqual(claim['execution_id'],'first-live-dsh-20260918-01-p4-successor')
+        self.assertEqual(claim['predecessor'],transport.PREDECESSOR)
 
     def test_root_call_uses_noninteractive_sudo_and_logs_only_public_hashes(self):
         self.io.claim()
@@ -285,7 +303,7 @@ class Transport(unittest.TestCase):
         self.assertFalse(self.journal.parent.exists());self.io.claim()
         self.assertEqual(stat.S_IMODE(self.journal.parent.stat().st_mode),0o700)
         self.assertTrue((self.journal/'claim.json').exists())
-        wrong=self.base/'arbitrary'/'first-live-dsh-20260918-01'
+        wrong=self.base/'arbitrary'/'first-live-dsh-20260918-01-p4-successor'
         with self.assertRaises(RuntimeError):transport.OperatorIO(self.manifest,self.package,wrong).claim()
 
     def test_per_call_rechecks_scripts_but_does_not_rehash_unused_payload(self):

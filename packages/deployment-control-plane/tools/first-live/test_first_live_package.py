@@ -10,6 +10,18 @@ def packet():
 
 
 class Mapping(unittest.TestCase):
+    def test_fixed_successor_identity_and_predecessor_binding(self):
+        self.assertEqual(p.EXECUTION_ID,'first-live-dsh-20260918-01-p4-successor')
+        self.assertEqual(p.PREDECESSOR['operation_id'],p.OPERATION)
+        self.assertEqual(p.PREDECESSOR['package_sha256'],'ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18')
+        self.assertEqual(p.PREDECESSOR['plan_sha256'],'600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd')
+        self.assertEqual(p.PREDECESSOR['stop_class'],'OUTPUT_BOUND')
+        self.assertIs(p.PREDECESSOR['consumed'],True)
+        self.assertIs(p.PREDECESSOR['retry_forbidden'],True)
+        self.assertIs(p.PREDECESSOR['production_mutation_performed'],False)
+        self.assertIs(p.PREDECESSOR['fresh_production_revalidation_required'],True)
+        self.assertIs(p.PREDECESSOR['new_owner_authorization_required'],True)
+
     def test_fixed_codex_stream_spec_has_exact_size_and_no_subprocess_read_command(self):
         x=packet();x['previous']={k:'a'*64 for k in ['installation_receipt_sha256','service_sha256',
             'trust_sha256','issuer_policy_sha256','registry_sha256']}

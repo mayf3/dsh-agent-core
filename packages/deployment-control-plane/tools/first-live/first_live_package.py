@@ -6,6 +6,25 @@ import re
 from first_live_io import require
 
 OPERATION='first-live-dsh-20260918-01'
+EXECUTION_ID='first-live-dsh-20260918-01-p4-successor'
+PREDECESSOR={
+ 'operation_id':OPERATION,
+ 'package_sha256':'ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18',
+ 'plan_sha256':'600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd',
+ 'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_SAFE_STOP_PROTECTED_PREFIX_NO_PRODUCTION_WRITE',
+ 'consumed':True,
+ 'retry_forbidden':True,
+ 'stop_class':'OUTPUT_BOUND',
+ 'production_mutation_performed':False,
+ 'privileged_copy_or_enable_performed':False,
+ 'readback_sha256':'7df095003c7a1bec1d387d23fdea04d973c4e6704f993d022bf32683fccef903',
+ 'journal_index_sha256':'9202f20cd78ad0b92e954b961f3414e0b6a58c5f9d300d1612caf1cae95856d3',
+ 'remediation_source_sha':'28be2f2025976fcba8a094485c94d2842cae440d',
+ 'remediation_review_report_sha256':'23a5d6e130804aedcc293a01ef491b67a0bc302dd6ae39205051ddbd06b292ba',
+ 'remediation_review_record_sha256':'f34ab5706c847c7493e2d75a671c6cc4234f2f31dccc0c336e1d31144e9c838f',
+ 'fresh_production_revalidation_required':True,
+ 'new_owner_authorization_required':True,
+}
 PACKET='/private/var/db/agent-deploy-first-live'
 ROOT='/private/var/db/agent-deployd'
 CODE='/usr/local/libexec/agent-deployd'

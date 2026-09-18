@@ -17,6 +17,7 @@ import sys
 import tempfile
 import time
 from first_live_io import read_local, require
+from first_live_package import EXECUTION_ID, OPERATION, PREDECESSOR
 
 STAT_FORMAT = '%u|%g|%p|%l|%f|%z|%m|%c|%i|%B|%d|%HT'
 LIMIT = 128 * 1024 * 1024
@@ -76,9 +77,10 @@ class OperatorIO:
         self.started=time.monotonic();self.last_tick=self.started
         self.initial_wall=time.time();self.last_now=self.initial_wall
         self.env={'PATH':'/usr/bin:/bin:/usr/sbin:/sbin','HOME':self.home,'LANG':'C','LC_ALL':'C'}
-        require(self.package.is_absolute() and self.journal==Path(self.home)/'.agent-deploy-first-live-operator'/'first-live-dsh-20260918-01','ABSOLUTE_PATH_REQUIRED')
+        require(self.package.is_absolute() and self.journal==Path(self.home)/'.agent-deploy-first-live-operator'/EXECUTION_ID,'ABSOLUTE_PATH_REQUIRED')
         m=self.manifest
-        require(m.get('version')==1 and m.get('operation_id')=='first-live-dsh-20260918-01','MANIFEST_BINDING')
+        require(m.get('version')==1 and m.get('operation_id')==OPERATION,'MANIFEST_BINDING')
+        require(m.get('execution_id')==EXECUTION_ID and m.get('predecessor')==PREDECESSOR,'SUCCESSOR_BINDING')
         exact_digest(m['source_sha'],40);exact_digest(m['source_tree'],40)
         for key in ('operator_files','files','tool_files'):
             require(type(m[key]) is dict,'MANIFEST_MAP')
@@ -197,6 +199,7 @@ class OperatorIO:
         finally:os.close(parent)
         self.journal_identity=(os.fstat(self.journal_fd).st_dev,os.fstat(self.journal_fd).st_ino)
         self.record('claim.json',{'operation_id':self.manifest['operation_id'],
+            'execution_id':self.manifest['execution_id'],'predecessor':self.manifest['predecessor'],
             'manifest_digest':sha(canonical(self.manifest)),'observed_at':self.now(),'retry_forbidden':True})
 
     def record(self,name,publicvalue):
