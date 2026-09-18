@@ -15,7 +15,7 @@ use std::{
     time::{Duration, Instant},
 };
 #[derive(Clone, Copy)]
-pub(super) enum Tool {
+pub(crate) enum Tool {
     Launchctl,
     Sudo,
     SudoAudit,
@@ -38,12 +38,12 @@ impl Tool {
     }
 }
 #[derive(Serialize)]
-pub(super) struct Output {
+pub(crate) struct Output {
     pub code: Option<i32>,
     pub stdout: String,
     pub stderr: String,
 }
-pub(super) fn pinned(tool: Tool, expected: &str) -> Result<()> {
+pub(crate) fn pinned(tool: Tool, expected: &str) -> Result<()> {
     let path = Path::new(tool.path());
     let dir = Dir::open(path.parent().unwrap(), 0)?;
     let mut file = dir.open_file(
@@ -74,7 +74,7 @@ pub(super) fn pinned(tool: Tool, expected: &str) -> Result<()> {
     };
     require(sha(&bytes) == expected, "FIRST_LIVE_TOOL_DRIFT")
 }
-pub(super) fn run(
+pub(crate) fn run(
     tool: Tool,
     pin: &str,
     args: &[String],

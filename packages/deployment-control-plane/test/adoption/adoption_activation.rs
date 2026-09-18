@@ -91,7 +91,15 @@ fn separate_exact_activation_requires_current_pass_and_genuine_private_canary_pr
             1000,
         );
         if case == "pass" {
-            result.unwrap();
+            let standing = result.unwrap();
+            q.verify_first_live_startup("first-adoption", &standing)
+                .unwrap();
+            assert!(q
+                .verify_first_live_startup("other-operation", &standing)
+                .is_err());
+            assert!(q
+                .verify_first_live_startup("first-adoption", &"a".repeat(64))
+                .is_err());
             q.require_configured_activation(Some("first-adoption"))
                 .unwrap();
         } else {

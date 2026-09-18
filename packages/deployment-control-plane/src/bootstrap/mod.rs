@@ -47,3 +47,5 @@ pub(crate) use login_reconciliation::observation as reviewer_login;
 pub(crate) use genesis_install_census::sudoers_census as first_live_sudoers_census;
 
 pub(crate) use binding::{validate_physical_binding, ConfigBindingInput, NativeBindingInput};
+
+pub(crate) use bundle::PLIST as DISABLED_CONTROLLER_PLIST;
