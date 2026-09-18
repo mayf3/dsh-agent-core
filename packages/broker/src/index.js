@@ -67,6 +67,7 @@ import { manifests as agentDirectoryManifests } from './capabilities/agent-direc
 import {
   manifests as workflowHumanPrincipalProjectionManifests,
 } from './capabilities/workflow-human-principal-projection.js'
+import { manifests as executionHistoryManifests } from './capabilities/execution-history.js'
 import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
@@ -105,6 +106,7 @@ export const DEFAULT_MANIFESTS = [
   ...agentPrincipalResolutionManifests,
   ...agentDirectoryManifests,
   ...workflowHumanPrincipalProjectionManifests,
+  ...executionHistoryManifests,
   ...lifeWorkbenchManifests,
 ]
 
@@ -318,6 +320,9 @@ export function apply(ctx, config = {}) {
         // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
         // Human projection provider; workflow.admin remains caller-bound.
         ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
+        // AGENT_CORE_EXECUTION_HISTORY_QUERY_V1: read-only execution-history
+        // provider (self + audit tools; one query core).
+        ...(ctx.get('executionHistoryAccess')?.handlers ?? {}),
       }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
