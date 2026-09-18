@@ -1,0 +1,163 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-operator/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.53s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 143 tests
+test first_live::ancestor_tests::ancestor_plan_is_exact_finite_root_owned_set_with_observed_platform_flags ... ok
+test first_live::canary_tests::cleanup_requires_mechanical_success_not_unknown_or_text_pass ... ok
+test first_live::canary_timing::tests::actual_plan_is_fixed_once_before_review_with_sufficient_lifetime ... ok
+test first_live::canary_timing::tests::real_clock_plan_publication_is_exclusive_and_later_substitution_fails_digest ... ok
+test first_live::inventory::link_graph::tests::absent_scope_or_endpoint_becoming_present_always_fails ... ok
+test first_live::inventory::link_graph::tests::actual_observed_harness_graph ... ignored, requires exact external ordinary input directory; pure graph only
+test first_live::inventory::link_graph::tests::arbitrary_fifth_edge_wrong_tree_escape_and_loop_fail ... ok
+test first_live::inventory::link_graph::tests::exact_negative_records_are_derived_only_after_full_graph_validation ... ok
+test first_live::inventory::link_graph::tests::four_exact_absent_optional_edges_preserve_existing_graph ... ok
+test first_live::inventory::link_graph::tests::manifest_bytes_kind_and_existing_ancestor_drift_fail ... ok
+test first_live::inventory::link_graph::tests::optional_edge_literal_source_and_cardinality_drift_fail ... ok
+test first_live::inventory_tests::closed_harness_pair_requires_all_aliases_and_preserves_ordinary_single_link_gate ... ok
+test first_live::inventory_tests::closed_relative_links_resolve_within_exact_inventory ... ok
+test first_live::inventory_tests::directory_protection_does_not_mutate_regular_preimage_before_new_inode_copy ... ok
+test first_live::inventory_tests::full_link_graph_rejects_escape_dangling_cycles_and_nondirectory_ancestors ... ok
+test first_live::inventory_tests::inventory_never_admits_escape_extra_payload_or_writable_postimage ... ok
+test first_live::inventory_tests::observed_setid_bit_cannot_hide_behind_permission_mask ... ok
+test first_live::inventory_tests::real_relative_symlink_census_preserves_literal_target ... ok
+test first_live::inventory_tests::root_owner_write_modes_remain_compatible_with_enrolled_slots ... ok
+test first_live::inventory_tests::unlisted_entry_and_replaced_inode_are_rejected ... ok
+test first_live::journal_tests::completed_step_is_not_replayed_or_overwritten ... ok
+test first_live::journal_tests::consumed_intent_never_replays_even_when_effect_failed ... ok
+test first_live::legacy_locks::tests::changed_holder_or_extra_entry_prevents_any_release ... ok
+test first_live::legacy_locks::tests::crash_worker ... ok
+test first_live::legacy_locks::tests::crashes_never_allow_reacquisition_or_erase_partial_evidence ... ok
+test first_live::legacy_locks::tests::drop_and_missing_retirement_keep_owned_ephemeral_evidence ... ok
+test first_live::legacy_locks::tests::foreign_second_directory_stops_after_first_claim_without_cleanup ... ok
+test first_live::legacy_locks::tests::foreign_symlink_is_not_followed_or_deleted ... ok
+test first_live::legacy_locks::tests::fourth_guard_or_parent_mismatch_refuses_before_creation ... ok
+test first_live::legacy_locks::tests::holder_cannot_match_fixed_old_parent_inheritance_pattern ... ok
+test first_live::legacy_locks::tests::mismatched_retirement_cannot_release_owned_locks ... ok
+test first_live::legacy_locks::tests::occupied_or_replaced_permanent_is_never_modified ... ok
+test first_live::legacy_locks::tests::present_permanent_is_bound_and_never_repaired ... ok
+test first_live::legacy_locks::tests::production_entry_refuses_nonroot_before_real_path_access ... ok
+test first_live::legacy_locks::tests::real_legacy_mkdir_and_flock_are_excluded_until_owned_release ... ok
+test first_live::legacy_locks::tests::release_crashes_preserve_intent_and_never_authorize_replay ... ok
+test first_live::legacy_locks::tests::replaced_directory_or_new_fourth_guard_refuses_release ... ok
+test first_live::lifecycle_tests::lifecycle_receipt_requires_actual_all_effects_in_order ... ok
+test first_live::lifecycle_tests::unexpected_privilege_never_constructs_verified_lifecycle ... ok
+test first_live::materialize_tests::exact_old_signed_registry_bytes_are_preserved_before_enrollment ... ok
+test first_live::native_effects::availability::tests::known_stop_and_complete_closure_never_allow_a_second_start ... ok
+test first_live::native_effects::availability::tests::malformed_observation_is_not_a_known_effect_result ... ok
+test first_live::native_effects::availability::tests::missing_result_and_missing_created_probe_cleanup_remain_unknown ... ok
+test first_live::native_effects::commands::tests::effective_privilege_requires_exact_reviewed_stdout_and_normal_success ... ok
+test first_live::native_effects::commands::tests::exact_refusal_never_accepts_generic_failure_or_extra_output ... ok
+test first_live::native_effects::denial::tests::absent_process_never_counts_as_signal_denial ... ok
+test first_live::native_effects::denial::tests::actual_ancestor_permission_denial_leaves_no_probe ... ok
+test first_live::native_effects::denial::tests::actual_observation_is_durable_before_later_identity_gate_or_cleanup ... ok
+test first_live::native_effects::denial::tests::bounded_wait_kills_and_reaps_owned_child ... ok
+test first_live::native_effects::denial::tests::exact_running_w2_root_and_runtime_identities_reach_signal_probe ... ok
+test first_live::native_effects::denial::tests::foreign_or_changed_probe_never_deleted ... ok
+test first_live::native_effects::denial::tests::held_readonly_parent_probes_exact_leaf_even_when_parent_cannot_be_opened ... ok
+test first_live::native_effects::denial::tests::held_socket_parent_requires_real_create_denial_and_fresh_recheck ... ok
+test first_live::native_effects::denial::tests::held_socket_parent_unexpected_permission_fails_and_cleans_only_owned_probe ... ok
+test first_live::native_effects::denial::tests::missing_file_is_inconclusive_not_denied ... ok
+test first_live::native_effects::denial::tests::parent_identity_drift_is_not_permission_denial ... ok
+test first_live::native_effects::denial::tests::production_context_refuses_nonroot_without_real_file_access ... ok
+test first_live::native_effects::denial::tests::real_readonly_file_proves_write_denial_without_changing_bytes ... ok
+test first_live::native_effects::denial::tests::reaper_does_not_signal_a_process_owned_by_another_parent ... ok
+test first_live::native_effects::denial::tests::same_uid_signal_zero_is_not_permission_denial ... ok
+test first_live::native_effects::denial::tests::signal_policy_never_accepts_caller_or_unbounded_pid ... ok
+test first_live::native_effects::denial::tests::socket_foreign_probe_is_retained_and_never_counts_as_denial ... ok
+test first_live::native_effects::denial::tests::socket_physical_drift_after_actual_denial_cannot_be_pass ... ok
+test first_live::native_effects::denial::tests::socket_recheck_failure_precedes_probe_intent ... ok
+test first_live::native_effects::denial::tests::stale_context_refuses_before_intent_and_any_probe ... ok
+test first_live::native_effects::denial::tests::unexpected_created_empty_inode_is_recorded_then_exactly_cleaned ... ok
+test first_live::native_effects::denial::tests::writable_file_is_failed_denial_with_zero_writes ... ok
+test first_live::native_effects::domain_probe::tests::absent_label_or_unreadable_input_is_not_domain_denial ... ok
+test first_live::native_effects::domain_probe::tests::ambiguous_loaded_label_cannot_authorize_bootout_or_delete ... ok
+test first_live::native_effects::domain_probe::tests::consumed_successful_probe_attempt_cannot_bootstrap_again ... ok
+test first_live::native_effects::domain_probe::tests::existing_foreign_file_or_prior_attempt_cannot_be_reused ... ok
+test first_live::native_effects::domain_probe::tests::failed_owned_cleanup_cannot_remove_file_or_become_pass ... ok
+test first_live::native_effects::domain_probe::tests::fixed_plist_is_valid_and_contains_only_the_inert_contract ... ok
+test first_live::native_effects::domain_probe::tests::missing_bootstrap_exit_status_is_unknown_before_any_recovery ... ok
+test first_live::native_effects::domain_probe::tests::post_probe_inode_replacement_is_retained ... ok
+test first_live::native_effects::domain_probe::tests::readable_exact_probe_explicit_denial_and_absence_close_with_owned_cleanup ... ok
+test first_live::native_effects::domain_probe::tests::unexpected_exact_loaded_probe_is_cleaned_but_remains_failed ... ok
+test first_live::native_effects::domain_probe::tests::unknown_bootstrap_leaves_public_file_and_never_attempts_cleanup ... ok
+test first_live::native_effects::domain_probe::tests::unreadable_probe_never_reaches_bootstrap ... ok
+test first_live::native_effects::inode::tests::closed_pair_uses_exactly_two_names_for_one_new_inode ... ok
+test first_live::native_effects::inode::tests::corrupt_archive_or_expired_recovery_preserves_current_postimage ... ok
+test first_live::native_effects::inode::tests::disk_budget_overflow_and_insufficient_space_fail_closed ... ok
+test first_live::native_effects::inode::tests::expired_grant_stops_before_archiving_or_replacing ... ok
+test first_live::native_effects::inode::tests::extra_alias_symlink_and_metadata_drift_refuse_target_mutation ... ok
+test first_live::native_effects::inode::tests::inode_crash_worker ... ok
+test first_live::native_effects::inode::tests::old_shared_mapping_cannot_change_new_trusted_file ... ok
+test first_live::native_effects::inode::tests::old_writable_fd_cannot_change_new_trusted_file ... ok
+test first_live::native_effects::inode::tests::real_pair_crash_windows_never_replay_or_invent_completion ... 
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+ok
+test first_live::native_effects::inode::tests::recovery_crash_retains_unknown_and_cannot_be_replayed ... 
+running 1 test
+
+running 1 test
+ok
+test first_live::native_effects::inode::tests::rollback_does_not_overwrite_unrelated_current_inode ... ok
+test first_live::native_effects::inode::tests::rollback_uses_sealed_bytes_and_another_new_inode ... ok
+test first_live::native_effects::inode::tests::trusted_owner_write_modes_are_allowed_but_other_writers_are_rejected ... ok
+test first_live::native_effects::inode::tests::wrong_digest_is_rejected_before_any_replacement ... ok
+test first_live::native_effects::launchd::tests::disabled_controller_requires_fresh_unambiguous_disabled_and_unloaded_state ... ok
+test first_live::native_effects::launchd::tests::loaded_domain_denial_never_accepts_missing_service_generic_io_or_success ... ok
+test first_live::native_effects::leaves::tests::unchanged_hash_does_not_hide_replaced_or_missing_leaf ... ok
+test first_live::native_effects::node::tests::node_recovery_bytes_are_separate_sealed_binary_not_unbounded_json_array ... ok
+test first_live::native_effects::preflight::tests::genesis_intake_subdirectories_are_exact_empty_containers_not_prior_work ... ok
+test first_live::native_effects::preflight::tests::installation_receipt_comes_from_original_steps_and_bindings_must_be_absent ... ok
+test first_live::native_effects::preflight::tests::login_file_presence_or_failed_state_never_authorizes_first_live ... ok
+test first_live::native_effects::preflight::tests::login_requires_actual_exact_successful_public_receipt ... ok
+test first_live::native_effects::preflight::tests::original_registry_rejects_extra_history_or_unmatched_bytes ... ok
+test first_live::native_effects::service::tests::maintenance_requires_exact_complete_original_loaded_group ... ok
+test first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link ... ok
+test first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths ... ok
+test first_live::path_tests::retirement_present_set_never_substitutes_absent_or_unknown_path ... ok
+test first_live::path_tests::scoped_name_roundtrip_remains_nofollow_and_single_link ... ok
+test first_live::process::tests::caller_node_can_only_enter_the_one_installed_retired_constant_stub ... ok
+test first_live::process::tests::closed_pipe_residual_does_not_allow_success ... ok
+test first_live::process::tests::direct_timeout_returns_unknown_within_bounded_cleanup ... ok
+test first_live::process::tests::finite_nonzero_exit_preserves_both_diagnostic_streams ... ok
+test first_live::process::tests::inherited_pipe_does_not_hide_residual_or_wait_beyond_deadline ... ok
+test first_live::process::tests::ordinary_sudo_can_only_list_current_caller_policy ... ok
+test first_live::process::tests::output_limit_and_invalid_utf8_cannot_be_accepted ... ok
+test first_live::process::tests::plutil_is_only_caller_readback_of_the_public_inert_probe ... ok
+test first_live::process::tests::production_runner_rejects_nonroot_before_touching_fixed_tools ... ok
+test first_live::process::tests::real_timeout_leaves_consumed_unknown_journal_and_no_success_record ... ok
+test first_live::process::tests::scripts_and_unprivileged_probes_cannot_run_as_root_or_cross_identities ... ok
+test first_live::process::tests::signal_termination_is_unknown_not_observed_exit_code ... ok
+test first_live::process::tests::stdout_and_stderr_share_the_frozen_one_mib_budget ... ok
+test first_live::process::tests::sudo_audit_is_root_read_only_for_two_numeric_identities ... ok
+test first_live::queue_tests::first_empty_queue_is_real_and_cannot_be_initialized_twice ... ok
+test first_live::queue_tests::queue_initialization_requires_no_database_or_sidecar ... ok
+test first_live::sudo::tests::copied_or_generic_setuid_file_cannot_use_fixed_entry_exception ... ok
+test first_live::sudo::tests::errors_extra_rules_wrong_host_and_partial_outputs_never_prove_denial ... ok
+test first_live::sudo::tests::exact_documented_successful_no_command_listing_required ... ok
+test first_live::sudo::tests::exact_frozen_apple_tuple_only ... ok
+test first_live::sudo::tests::policy_audit_cannot_be_invoked_from_submitter_identity ... ok
+test first_live::template::tests::active_native_image_keeps_full_shape_gate_before_any_native_io ... ok
+test first_live::template::tests::executed_lifecycle_binds_only_derived_fields_preserving_exact_inputs ... ok
+test first_live::template::tests::failed_lifecycle_cannot_publish_the_proof_needed_by_bind ... ok
+test first_live::template::tests::invalid_native_profile_still_fails_after_real_fixture_lifecycle ... ok
+test first_live::template::tests::maintenance_rejects_invalid_native_shape_before_lifecycle_effects ... ok
+test first_live::template::tests::maintenance_rejects_unbound_platform_closure_service_or_runtime_inputs ... ok
+test first_live::template::tests::maintenance_retains_exact_fixed_argv_and_all_dependency_bindings ... ok
+test first_live::template::tests::omitted_legacy_startup_bytes_and_argv_stay_legacy ... ok
+test first_live::template::tests::templates_reject_prefilled_derived_fields_even_valid_historical_digests ... ok
+test first_live::template::tests::templates_reject_unknown_root_and_nested_fields ... ok
+test first_live::tests::another_owner_scope_is_not_first_live_permission ... ok
+test first_live::tests::public_first_live_entry_refuses_nonroot_before_any_effect ... ok
+test first_live::tests::rejects_expired_future_and_overlong_external_permission ... ok
+test first_live::tests::requires_exact_owner_operation_binary_packet_and_review ... ok
+test first_live::tests::valid_exact_permission_is_accepted ... ok
+
+test result: ok. 142 passed; 0 failed; 1 ignored; 0 measured; 189 filtered out; finished in 6.33s
+

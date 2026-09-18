@@ -20,3 +20,7 @@ mod common;
 
 pub mod registry;
 mod verification;
+
+mod first_live;
+
+pub use first_live::run_first_live;

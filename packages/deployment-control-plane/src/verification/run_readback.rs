@@ -2,7 +2,7 @@
 use super::documents::strict_json;
 use crate::{error::require, Error, Result};
 use serde_json::{json, Value};
-pub(super) fn derive(raw: &[u8], events: &[u8], job: &str) -> Result<Value> {
+pub(crate) fn derive(raw: &[u8], events: &[u8], job: &str) -> Result<Value> {
     let mut body = strict_json(raw)?;
     require(body["next_cursor"].is_null(), "WATCHDOG_RUN_PAGINATION")?;
     let rows = body["runs"]
@@ -35,7 +35,7 @@ pub(super) fn derive(raw: &[u8], events: &[u8], job: &str) -> Result<Value> {
     }
     Ok(json!({"runs":rows,"events":matching}))
 }
-pub(super) fn instant(text: &str) -> Result<u64> {
+pub(crate) fn instant(text: &str) -> Result<u64> {
     // History's public time contract is the canonical Date.toISOString form.
     let b = text.as_bytes();
     require(

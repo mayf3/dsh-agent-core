@@ -1,0 +1,11 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-operator/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.75s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 3 tests
+test first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link ... ok
+test first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths ... ok
+test first_live::path_tests::scoped_name_roundtrip_remains_nofollow_and_single_link ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 328 filtered out; finished in 0.04s
+

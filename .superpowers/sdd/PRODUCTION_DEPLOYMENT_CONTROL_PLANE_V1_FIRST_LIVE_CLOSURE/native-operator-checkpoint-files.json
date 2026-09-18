@@ -1,0 +1,317 @@
+[
+  {
+    "path": "packages/deployment-control-plane/src/bin/agent-deployd.rs",
+    "sha256": "c80677a20e102cb20f15fa03ea0b79b97316aad5c796b7b39d5dbdc4598c5d26",
+    "lines": 20
+  },
+  {
+    "path": "packages/deployment-control-plane/src/bootstrap/binding.rs",
+    "sha256": "3bfa9a49cee15ff7e78b0e869c850c47ad4c7fb336ffe6ee34b765fd611cc923",
+    "lines": 269
+  },
+  {
+    "path": "packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs",
+    "sha256": "c64c61d07a4c56fb18abb2b726452635d4a38b39c0a9d6a44ec2235c80d4c240",
+    "lines": 355
+  },
+  {
+    "path": "packages/deployment-control-plane/src/bootstrap/mod.rs",
+    "sha256": "6f03040fafebc0804960bc8de51238582755214f45beb214abf4b9115b9d6ba2",
+    "lines": 48
+  },
+  {
+    "path": "packages/deployment-control-plane/src/bootstrap/socket.rs",
+    "sha256": "dea3acdda326ece433e0d32398f896477e047f2fafdecbbc5bad1bdafc77fb13",
+    "lines": 260
+  },
+  {
+    "path": "packages/deployment-control-plane/src/fs/secure.rs",
+    "sha256": "70e3a429e430716b9f698f8623f9e9abb19bc1f86a72684a5a59c16d459729df",
+    "lines": 273
+  },
+  {
+    "path": "packages/deployment-control-plane/src/issuer/mod.rs",
+    "sha256": "7f8fc1dde172c74309ac6f5d9520a227a9edb3452f9862d24351db35c5112c91",
+    "lines": 11
+  },
+  {
+    "path": "packages/deployment-control-plane/src/lib.rs",
+    "sha256": "10f4b7484ce4fa0ab54fa2f22b4938890a8720a3bdf679ae26290c423a77d4b7",
+    "lines": 26
+  },
+  {
+    "path": "packages/deployment-control-plane/src/queue/mod.rs",
+    "sha256": "bc5f699bb86707d5d3b80c119bc9eade814bdeff7dbaf4d9e40932bc61f44ea1",
+    "lines": 125
+  },
+  {
+    "path": "packages/deployment-control-plane/src/service/adoption.rs",
+    "sha256": "011b7ebb9c07875ce65ea57d57669c52b11385cfe564c9b579fe2f1e977f3648",
+    "lines": 276
+  },
+  {
+    "path": "packages/deployment-control-plane/src/service/intake.rs",
+    "sha256": "a2e4005f8dca8423ace4ed223a3d614ae692d191f1c19ab9e8174d04f3d9625b",
+    "lines": 274
+  },
+  {
+    "path": "packages/deployment-control-plane/src/service/mailbox.rs",
+    "sha256": "1a209142aaef800f04ac11778332f1d1e6b3cc1208df2baa2d03bada5ca9c125",
+    "lines": 124
+  },
+  {
+    "path": "packages/deployment-control-plane/src/service/mod.rs",
+    "sha256": "4354ed29a5d4bcfa50995bd07aef01206e518616b4a668a0043e5bad971db334",
+    "lines": 21
+  },
+  {
+    "path": "packages/deployment-control-plane/src/service/server.rs",
+    "sha256": "f67bec6b3d0d647dedfaffa7651325cba82db0d36bd3aae3016e5b8b7fe30209",
+    "lines": 318
+  },
+  {
+    "path": "packages/deployment-control-plane/src/transaction/mod.rs",
+    "sha256": "84a172dfec575e161eb964bc5ca06f8209a3dafa3d98a3a7eb76f787cc9a39b2",
+    "lines": 223
+  },
+  {
+    "path": "packages/deployment-control-plane/src/verification/canary_plan.rs",
+    "sha256": "834711b4ac5624aa5b24fb9fba20a505d5e78452b65a82c2e47caa22a685c8b8",
+    "lines": 138
+  },
+  {
+    "path": "packages/deployment-control-plane/src/verification/mod.rs",
+    "sha256": "00ac6881206f4195446375faab5cad59d4a878956b32dafc3b5de1eda5b3821d",
+    "lines": 6
+  },
+  {
+    "path": "packages/deployment-control-plane/src/verification/native_io.rs",
+    "sha256": "d7d3d3060afbb603705996830bd3018995b35b39222da4f1b283f133adb7ec66",
+    "lines": 195
+  },
+  {
+    "path": "packages/deployment-control-plane/src/verification/run_readback.rs",
+    "sha256": "587764a0374c6931949ff72bddd882db2d405fa646979df39f4fdd9cea132a0f",
+    "lines": 132
+  },
+  {
+    "path": "packages/deployment-control-plane/src/verification/watchdog.rs",
+    "sha256": "4f1577c5ada947d5fac767c6a6cfd9bb1712cd35aebdce31f373929e8aabab74",
+    "lines": 236
+  },
+  {
+    "path": "packages/deployment-control-plane/test/common/socket_ancestor.rs",
+    "sha256": "786a98eb12539c3f5fb907068fae4b30c35b6066a752dc799cc3859d00046f43",
+    "lines": 86
+  },
+  {
+    "path": "packages/deployment-control-plane/src/bin/agent-deploy-legacy-retired.rs",
+    "sha256": "511dba2ea5d4a9edb4c72bf669b915ec1fc3a13717fb6dc898dd39b796b22d97",
+    "lines": 5
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/canary.rs",
+    "sha256": "b69e27474949db43051156ceb09ea5821b5a89f73d49d2252bf6423ebf607d75",
+    "lines": 306
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/canary_timing.rs",
+    "sha256": "f0928149e00622cb992130ae43f4739f8ba3bc135eaaad4c233e5e9b44d7681e",
+    "lines": 84
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/compose.rs",
+    "sha256": "aade98e72158c81e59b65693c32d8151847f905088090912d92a60efaaea8567",
+    "lines": 125
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/files.rs",
+    "sha256": "009ac57d7fab413e40f44c92a7690a23692993e9e67205b3ee80889fb5d6bb7f",
+    "lines": 71
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/gate.rs",
+    "sha256": "4160508c149b162bcb8e6236671e12a0255be5bc468b71a1a3b7c56e98d11911",
+    "lines": 56
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/initial_queue.rs",
+    "sha256": "831d884e423c62f82a4b8c93fceaa4b22c6e145e162ee0b7001c1ee3320c1186",
+    "lines": 18
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/inventory.rs",
+    "sha256": "e8a76a7963797ab5a74ad58c98010856d3e8272a37c4f8bf45007761a5ab9f38",
+    "lines": 358
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/inventory_path.rs",
+    "sha256": "a055bfe94b589e324a7ca65b713febf77b11e2ab0a7b23fcc26250839dee1bfe",
+    "lines": 58
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/journal.rs",
+    "sha256": "3a179082e96de1f91a27e281abd2ddef2c663974268f273cd7817f756873d0f2",
+    "lines": 80
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/lifecycle.rs",
+    "sha256": "6328b780a617f7dfcfe63073360affceba3f01295476a73aefe111e11144a956",
+    "lines": 70
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/materialize.rs",
+    "sha256": "337aa74db62c2a1a54a07e6018483dc2e3eba07b8c57dd6b511121f89a574687",
+    "lines": 345
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/mod.rs",
+    "sha256": "6c994cd44445fb95a59cf9881b25e3c7a00de1703eac0b25131b04f4caa0fec4",
+    "lines": 69
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/availability.rs",
+    "sha256": "0f7dedcf5033d1c1ddde4fa536529345ab922e83aa0046e246176ca9875c7a86",
+    "lines": 99
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/commands.rs",
+    "sha256": "23a2e808cce5ac30d06c78539056ce216530f9a0a6bae566f08e00de291b581f",
+    "lines": 134
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/driver.rs",
+    "sha256": "9036fc17d12b518b69835e2d15f48323dbc4f6cff6c23aa9dcf86e667c354068",
+    "lines": 453
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/launchd.rs",
+    "sha256": "a8ccd0fff5966ef50df68e9c00602cc02d80fc10fe0e56c09bf809da7f78d6d3",
+    "lines": 57
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/leaves.rs",
+    "sha256": "0916377d1f7f15f59b15fec94378f5030721e8aba1dc51e14d5c3300a9b96e4c",
+    "lines": 67
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/mod.rs",
+    "sha256": "47b59f6be4a641133f017c80f53c81dee627768a731db66e7848987fb26bc108",
+    "lines": 95
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/node.rs",
+    "sha256": "513a28977733f63d8e2269f0388331ae1d241a393cd4e78ef9fcafb204d94189",
+    "lines": 177
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/preflight.rs",
+    "sha256": "0fdd4d4ada14d95463cf081990ba7bd385ba88ac296bfec79dba98291ed3e5b5",
+    "lines": 236
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_effects/service.rs",
+    "sha256": "edf505338e41c25749594108beaf608913d0bc66907f200d1eda51f2801393c4",
+    "lines": 125
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/native_tree.rs",
+    "sha256": "7b36d7b35798af1f73800f8f73e796db6fe41a8cc9f1917423f501f947aee083",
+    "lines": 115
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/packet.rs",
+    "sha256": "87bcac4fba3ff12304ec202c2182e8df4a480044569ff057ec9dbebeb0232c61",
+    "lines": 99
+  },
+  {
+    "path": "packages/deployment-control-plane/src/first_live/retirement.rs",
+    "sha256": "c6e6e1b7ead16f60eef82106dae4bd040796a2c4681ac89983780da646ab1991",
+    "lines": 159
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/ancestors.rs",
+    "sha256": "85991a278b01320be7bcd11c0636f7b3c7f701c9d238255559037bf90ffa3ab7",
+    "lines": 30
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/canary.rs",
+    "sha256": "2ffecf757e6668cb365cbcbbec81a399de8e1cb6e66eb7682dcc6c92b3c729be",
+    "lines": 12
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/canary_timing.rs",
+    "sha256": "29c141ac201c27139db8b5ac4eaf74e1fce1ea69fc4bbc3a6280977e02f7b2b1",
+    "lines": 91
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/gate.rs",
+    "sha256": "a318ccc249048a4f575cb84a7b1b9c1ad7f0ce443ceb996aaaea71af89bd018b",
+    "lines": 65
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/inventory.rs",
+    "sha256": "2be943339a771f8654e6b95f558d29cf13662809f650aaf0a41183e7feb91156",
+    "lines": 225
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/journal.rs",
+    "sha256": "ad6305318a9eb711476a012f61c6cb9a29d38dbe91c9abd4d783d5f2c4f1e5fa",
+    "lines": 31
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/lifecycle.rs",
+    "sha256": "b343d182f1930e76f3ccbbead319f19c581954b50bfd371715e908d87838e53d",
+    "lines": 85
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/materialize.rs",
+    "sha256": "6c560d5c155d18bad82ba1e0076470f8771238cec94fa7a9695fe3e42611cc86",
+    "lines": 28
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/availability.rs",
+    "sha256": "bca994263a3277517d40a1481365ec2403bc488419dacbfa362da49df52938ab",
+    "lines": 53
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/commands.rs",
+    "sha256": "5b1d1cbe672195cd57e62bf5e0a8956125d592fa7c87d6d36cc4560b35303247",
+    "lines": 30
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/launchd.rs",
+    "sha256": "eacb9155637760cc7134c386e36f40206e62965d25393f3f4a6008b4d76fefbb",
+    "lines": 50
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/leaves.rs",
+    "sha256": "b8ea43af35d36de4e41093a43c3d5a995024ad3ae3d141ca131559960ddffa4e",
+    "lines": 17
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/node.rs",
+    "sha256": "11cb34b0c9e85b8344d1e54e83187922a5035e7662521fe67bd530df4e4bdc9f",
+    "lines": 27
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/preflight.rs",
+    "sha256": "a46e9e0bd533d18ac770ceafd1be22965198446bb8f2afaa21e7e37546391234",
+    "lines": 98
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/native_effects/service.rs",
+    "sha256": "daeb86cc001c5e4aabb7c22c0cb5481f893b0397584e5033473fd8767b9381c2",
+    "lines": 33
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/paths.rs",
+    "sha256": "d653a3836c58f6585464e9e1ba06b3ef2d9c591c759c08e7547c048538e54c3a",
+    "lines": 111
+  },
+  {
+    "path": "packages/deployment-control-plane/test/first_live/queue.rs",
+    "sha256": "b5ce5d81c1be7087edb3c2fb9a6a44bda5ec3d2e54812cdeed83b50a6af52345",
+    "lines": 34
+  }
+]

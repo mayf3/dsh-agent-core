@@ -1,0 +1,32 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-operator/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.95s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 3 tests
+test first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link ... FAILED
+test first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths ... FAILED
+test first_live::path_tests::scoped_name_roundtrip_remains_nofollow_and_single_link ... ok
+
+failures:
+
+---- first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link stdout ----
+
+thread 'first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link' (75604601) panicked at src/first_live/../../test/first_live/paths.rs:60:5:
+assertion failed: super::retirement::absent_sources(&r.root, &entries).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths stdout ----
+
+thread 'first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths' (75604602) panicked at src/first_live/../../test/first_live/paths.rs:47:5:
+assertion `left == right` failed
+  left: 5
+ right: 3
+
+
+failures:
+    first_live::path_tests::exact_absent_retirement_parent_cannot_appear_as_file_directory_or_link
+    first_live::path_tests::retirement_closes_root_bridge_first_and_only_three_present_paths
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 327 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`

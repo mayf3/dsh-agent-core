@@ -19,8 +19,63 @@ pub fn validate_native_binding(
     observed_host: &str,
     active: bool,
 ) -> Result<()> {
-    valid_digest(observed_host)?;
     enrollment.validate()?;
+    validate_physical_binding(
+        ConfigBindingInput {
+            catalog: &config.catalog,
+            callers: &config.callers,
+            producers: &config.producers,
+            verifiers: &config.verifiers,
+            socket_gid: config.socket_gid,
+        },
+        NativeBindingInput {
+            host: &enrollment.host,
+            caller_uids: &enrollment.caller_uids,
+            profile_id: &enrollment.profile_id,
+            profile_revision: &enrollment.profile_revision,
+            profile_digest: &enrollment.profile_digest,
+            services: &enrollment.services,
+            required_facets: &enrollment.required_facets,
+        },
+        observed_host,
+        active,
+    )?;
+    let identities = config
+        .callers
+        .iter()
+        .map(|c| c.uid)
+        .chain(enrollment.services.iter().map(|s| s.uid))
+        .collect();
+    config
+        .socket_ancestor
+        .as_ref()
+        .ok_or(crate::Error::new("SOCKET_ANCESTOR_REQUIRED"))?
+        .validate(observed_host, &identities)?;
+    valid_digest(&enrollment.lifecycle_denial_digest)
+}
+pub(crate) struct ConfigBindingInput<'a> {
+    pub catalog: &'a Catalog,
+    pub callers: &'a Vec<crate::service::Caller>,
+    pub producers: &'a Vec<String>,
+    pub verifiers: &'a std::collections::BTreeMap<String, crate::service::VerifierBinding>,
+    pub socket_gid: u32,
+}
+pub(crate) struct NativeBindingInput<'a> {
+    pub host: &'a String,
+    pub caller_uids: &'a Vec<u32>,
+    pub profile_id: &'a String,
+    pub profile_revision: &'a String,
+    pub profile_digest: &'a String,
+    pub services: &'a Vec<crate::transaction::ServiceEnrollment>,
+    pub required_facets: &'a Vec<String>,
+}
+pub(crate) fn validate_physical_binding(
+    config: ConfigBindingInput<'_>,
+    enrollment: NativeBindingInput<'_>,
+    observed_host: &str,
+    active: bool,
+) -> Result<()> {
+    valid_digest(observed_host)?;
     require(
         config.catalog.profiles.len() == 1,
         "PHYSICAL_TARGET_OVERLAP",
@@ -28,16 +83,16 @@ pub fn validate_native_binding(
     let profile = config
         .catalog
         .profiles
-        .get(&enrollment.profile_id)
+        .get(enrollment.profile_id)
         .ok_or(crate::Error::new("PROFILE_NOT_ALLOWED"))?;
     require(
         profile.enabled == active
-            && profile_digest(profile)? == enrollment.profile_digest
-            && profile.revision == enrollment.profile_revision,
+            && profile_digest(profile)? == *enrollment.profile_digest
+            && profile.revision == *enrollment.profile_revision,
         "PROFILE_NOT_ALLOWED",
     )?;
     require(
-        profile.host == observed_host && enrollment.host == observed_host,
+        profile.host == observed_host && enrollment.host.as_str() == observed_host,
         "HOST_BINDING",
     )?;
     require(
@@ -72,7 +127,7 @@ pub fn validate_native_binding(
             && config.producers.len() <= 256,
         "CONFIG_LIMIT",
     )?;
-    for caller in &config.callers {
+    for caller in config.callers {
         require(
             caller.gid != 1
                 && caller.profiles == [enrollment.profile_id.clone()]
@@ -84,7 +139,7 @@ pub fn validate_native_binding(
             "CALLER_BINDING",
         )?;
     }
-    for producer in &config.producers {
+    for producer in config.producers {
         require(
             config
                 .catalog
@@ -107,7 +162,7 @@ pub fn validate_native_binding(
             .ok_or(crate::Error::new("VERIFIER_SCOPE"))?;
         require(
             config.catalog.keys.get(issuer).is_some_and(|k| {
-                k.role == Role::Verifier && k.scopes.contains(&enrollment.profile_id)
+                k.role == Role::Verifier && k.scopes.contains(enrollment.profile_id)
             }),
             "VERIFIER_SCOPE",
         )?;
@@ -134,7 +189,7 @@ pub fn validate_native_binding(
             && !callers.contains(&0),
         "CALLER_BINDING",
     )?;
-    for service in &enrollment.services {
+    for service in enrollment.services {
         require(!callers.contains(&service.uid), "CALLER_SERVICE_OVERLAP")?;
         require(
             match service.kind {
@@ -146,18 +201,8 @@ pub fn validate_native_binding(
             "SERVICE_IDENTITY",
         )?;
     }
-    let identities = callers
-        .into_iter()
-        .chain(enrollment.services.iter().map(|s| s.uid))
-        .collect();
-    config
-        .socket_ancestor
-        .as_ref()
-        .ok_or(crate::Error::new("SOCKET_ANCESTOR_REQUIRED"))?
-        .validate(observed_host, &identities)?;
-    valid_digest(&enrollment.lifecycle_denial_digest)?;
     require(
-        enrollment.required_facets == ["app-slots", "node-closure", "service-plists"],
+        *enrollment.required_facets == ["app-slots", "node-closure", "service-plists"],
         "UNSUPPORTED_REQUIRED_FACET",
     )?;
     Ok(())

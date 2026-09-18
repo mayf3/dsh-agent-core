@@ -33,7 +33,7 @@ fn remaining(end: Instant) -> Result<Duration> {
         .filter(|v| !v.is_zero())
         .ok_or(Error::new("WATCHDOG_READ_TIMEOUT"))
 }
-pub(super) fn get(job: Option<&str>) -> Result<Vec<u8>> {
+pub(crate) fn get(job: Option<&str>) -> Result<Vec<u8>> {
     let root = Dir::open(Path::new(CONTROL), 0)?.child("credentials")?;
     let raw = document(&root, "scheduler-audit.token", 0, 0o600)?;
     let token = std::str::from_utf8(&raw)
@@ -115,7 +115,7 @@ fn decode_response(raw: &[u8]) -> Result<Vec<u8>> {
     super::documents::strict_json(body)?;
     Ok(body.to_vec())
 }
-pub(super) fn runtime_document(name: &str, uid: u32, gid: u32) -> Result<Vec<u8>> {
+pub(crate) fn runtime_document(name: &str, uid: u32, gid: u32) -> Result<Vec<u8>> {
     require(
         matches!(name, "jobs.json" | "runs.jsonl"),
         "WATCHDOG_DOCUMENT",

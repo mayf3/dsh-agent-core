@@ -43,12 +43,12 @@ pub struct Configuration {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Activation {
-    epoch: u64,
-    configuration_digest: String,
-    enrollment_digest: String,
-    owner_acceptance_digest: String,
-    issuer_bindings_digest: String,
+pub(crate) struct Activation {
+    pub(crate) epoch: u64,
+    pub(crate) configuration_digest: String,
+    pub(crate) enrollment_digest: String,
+    pub(crate) owner_acceptance_digest: String,
+    pub(crate) issuer_bindings_digest: String,
 }
 impl Signable for Activation {
     const DOMAIN: &'static str = "DaemonActivation";

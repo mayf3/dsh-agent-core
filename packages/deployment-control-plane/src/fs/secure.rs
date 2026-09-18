@@ -20,7 +20,7 @@ pub(crate) fn component(name: &str) -> Result<()> {
             && name != ".."
             && name
                 .bytes()
-                .all(|c| c.is_ascii_alphanumeric() || b"._-".contains(&c)),
+                .all(|c| c.is_ascii_alphanumeric() || b"._-@".contains(&c)),
         "UNSAFE_PATH",
     )
 }

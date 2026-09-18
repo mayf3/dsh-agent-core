@@ -42,3 +42,7 @@ pub use genesis_install_io::load_genesis_package;
 
 mod login_reconciliation;
 pub use login_reconciliation::login_reconciliation;
+
+pub(crate) use genesis_install_census::sudoers_census as first_live_sudoers_census;
+
+pub(crate) use binding::{validate_physical_binding, ConfigBindingInput, NativeBindingInput};

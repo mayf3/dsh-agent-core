@@ -17,7 +17,7 @@ use std::{
 
 /// One permanent protected lock serializes all cooperating publishers, including
 /// socket workers. A temporary record is reconciled only while this lock is owned.
-pub(super) fn initialize(root: &Dir) -> Result<()> {
+pub(crate) fn initialize(root: &Dir) -> Result<()> {
     // Called only during singleton-owned startup, before any socket/Train workers.
     // The permanent inode exists durably before concurrent publishers can open it.
     let file = root.open_file("publication.lock", libc::O_RDWR | libc::O_CREAT, 0o600)?;

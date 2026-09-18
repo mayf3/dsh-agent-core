@@ -47,7 +47,7 @@ fn raw(area: &Dir, name: &str) -> Result<Vec<u8>> {
     )?;
     Ok(snapshot(&f, area.uid, 4 * 1024 * 1024)?.bytes)
 }
-pub(super) fn planned(area: &Dir, expected: &str, source: &str) -> Result<Value> {
+pub(crate) fn planned(area: &Dir, expected: &str, source: &str) -> Result<Value> {
     let bytes = raw(area, "canary-plan.json")?;
     require(sha(&bytes) == expected, "WATCHDOG_CANARY_PLAN")?;
     let v = strict_json(&bytes)?;
@@ -64,7 +64,7 @@ pub(super) fn planned(area: &Dir, expected: &str, source: &str) -> Result<Value>
     )?;
     Ok(v)
 }
-pub(super) fn created(area: &Dir, expected: &str, plan: &Value) -> Result<String> {
+pub(crate) fn created(area: &Dir, expected: &str, plan: &Value) -> Result<String> {
     let c: Created = serde_json::from_value(strict_json(&raw(area, "canary-created.json")?)?)?;
     let bytes = raw(area, "canary-creator-readback.json")?;
     require(
@@ -119,7 +119,7 @@ pub(super) fn created(area: &Dir, expected: &str, plan: &Value) -> Result<String
     )?;
     Ok(c.job)
 }
-pub(super) fn run_within_plan(plan: &Value, run: &Value) -> Result<()> {
+pub(crate) fn run_within_plan(plan: &Value, run: &Value) -> Result<()> {
     let at = instant(
         plan["at"]
             .as_str()
