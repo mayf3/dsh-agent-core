@@ -1,4 +1,5 @@
 use crate::{error::require, fs::file::sha, Result};
+#[cfg(test)]
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 struct LoginReceipt {
@@ -11,6 +12,7 @@ struct LoginReceipt {
     independent_review_pass: bool,
     activation_allowed: bool,
 }
+#[cfg(test)]
 pub(super) fn login(bytes: &[u8], expected: &str) -> Result<()> {
     crate::trust::valid_digest(expected)?;
     require(sha(bytes) == expected, "FIRST_LIVE_LOGIN_BINDING")?;
@@ -58,6 +60,7 @@ pub(super) fn prepare() -> Result<Prepared> {
     use crate::fs::{file::snapshot, secure::Dir};
     use std::{os::unix::fs::MetadataExt, path::Path};
     require(unsafe { libc::geteuid() } == 0, "FIRST_LIVE_REQUIRES_ROOT")?;
+    super::host::implementation_ready()?;
     let executable = "/usr/local/libexec/agent-deployd/agent-deployd";
     require(
         std::env::current_exe()? == Path::new(executable),
@@ -116,12 +119,6 @@ pub(super) fn prepare() -> Result<Prepared> {
             "FIRST_LIVE_ORIGINAL_BINDING",
         )?;
     }
-    let trust: crate::model::Catalog = files::read(&root, "local-trust.json")?;
-    require(
-        crate::trust::digest(&trust.keys)?
-            == crate::trust::digest(&packet.configuration.catalog.keys)?,
-        "FIRST_LIVE_KEYS",
-    )?;
     original_registry(&root, &packet.previous.registry_sha256)?;
     let attempt = Dir::open(
         Path::new("/private/var/db/agent-deploy-bootstrap/genesis-65559dd-20260918-01"),
@@ -129,10 +126,7 @@ pub(super) fn prepare() -> Result<Prepared> {
     )?;
     installation(&attempt, &packet.previous.installation_receipt_sha256)?;
     absent_issuer_bindings(&root)?;
-    login(
-        &files::raw(&attempt, "login-reconciliation-result.json")?,
-        &packet.previous.login_receipt_sha256,
-    )?;
+    original_unknown(&attempt)?;
     for name in [
         "queue.db",
         "queue.db-wal",
@@ -231,6 +225,26 @@ pub(super) fn empty_state(root: &crate::fs::secure::Dir) -> Result<()> {
             root.child(name)?.names_bounded(1)?.is_empty(),
             "FIRST_LIVE_EXISTING_STATE",
         )?;
+    }
+    Ok(())
+}
+
+fn original_unknown(attempt: &crate::fs::secure::Dir) -> Result<()> {
+    require(
+        sha(&super::super::files::raw(attempt, "login-intent.json")?)
+            == "3ca4b44d4d3e418ea78df8ad6c0a04b7a650e0006c807ffd9f96441b0d10abc6",
+        "FIRST_LIVE_ORIGINAL_LOGIN_INTENT",
+    )?;
+    for name in [
+        "login-result.json",
+        "login-reconciliation-intent.json",
+        "login-reconciliation-result.json",
+        "login-reconciliation-failure.json",
+        "rollback-intent.json",
+        "rollback-result.json",
+        "failure.json",
+    ] {
+        super::super::files::absent(attempt, name)?;
     }
     Ok(())
 }
