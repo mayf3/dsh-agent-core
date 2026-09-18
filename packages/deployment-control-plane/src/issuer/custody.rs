@@ -31,6 +31,22 @@ pub fn initialize_native() -> Result<Catalog> {
 }
 
 fn initialize(root: &Dir, fixture: bool) -> Result<Catalog> {
+    initialize_revision(root, fixture, "local-genesis-v1")
+}
+
+// Private bootstrap building block. The caller must supply a new protected
+// staging directory only after the held first-live operation proves host closure.
+// This creates no active catalog, replaces no existing key, and enables nothing.
+pub(super) fn initialize_standing_stage(stage: &Dir) -> Result<Catalog> {
+    initialize_revision(stage, false, "local-first-standing-v1")
+}
+
+#[cfg(test)]
+pub(super) fn initialize_standing_fixture(stage: &Dir) -> Result<Catalog> {
+    initialize_revision(stage, true, "local-first-standing-v1")
+}
+
+fn initialize_revision(root: &Dir, fixture: bool, revision: &str) -> Result<Catalog> {
     let uid = unsafe { libc::geteuid() };
     require(
         if fixture {
@@ -47,7 +63,7 @@ fn initialize(root: &Dir, fixture: bool) -> Result<Catalog> {
     let keys = root.mkdir("issuer-keys")?;
     require(keys.names()?.is_empty(), "CUSTODY_ALREADY_EXISTS")?;
     let mut catalog = Catalog {
-        revision: "local-genesis-v1".into(),
+        revision: revision.into(),
         keys: BTreeMap::new(),
         profiles: BTreeMap::new(),
     };
