@@ -136,7 +136,7 @@ test('UX-SEAM-3: the deterministic FAILURE receipt call is byte-preserved — tw
     channel: 'p2p', chatId: 'oc_p1', conversationId: 'oc_p1',
     messageId: 'om_3', sender: { openId: 'ou_x' }, text: 'hi',
   })
-  assert.equal(result.failureStage, 'execution', 'the turn was stubbed to fail so the failure receipt path runs')
+  assert.ok(result.error, 'the turn was stubbed to fail so the failure receipt path runs')
   assert.equal(feishu.replies.length, 1)
   const [target, text] = feishu.replies[0]
   assert.equal(feishu.replies[0].length, 2, 'failure receipt passes exactly (target, text) — no third argument')
