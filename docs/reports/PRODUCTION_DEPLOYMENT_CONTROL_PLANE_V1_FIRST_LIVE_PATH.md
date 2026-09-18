@@ -20,7 +20,7 @@
 
 接管实际已有的 Watchdog 基线 → 真实当前代际验收和 canary → 放行 Broker 的真实待部署字节 → 自动安装、回读及更新后验收 → 原部署义务回执/CAS关闭。业务 Goal 是否完成仍由原业务权威判断。
 
-Watchdog 实际冻结来源为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`，所选 incident-lifecycle.js 与已安装字节相同，故基线采用零业务重装。Broker 选择 `59472b631129d1ea3ca1202cbcbbc0799b083114`，workflow.js 候选 SHA256 `6f116d94b58a739216d2af2b25dfd51b32268aba26dcea281f16199f70ff93b2`；最新普通回读仍为 `d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee`，确有待部署事项。执行前若其他受权流程已装同一字节，则在维护前停止并按真实状态做接管验收准备；本次固定提交包不会为证明部署而重复安装。
+Watchdog 实际冻结来源为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`，所选 incident-lifecycle.js 与已安装字节相同，故基线采用零业务重装。Broker 选择 `59472b631129d1ea3ca1202cbcbbc0799b083114`，workflow.js 候选 SHA256 `6f116d94b58a739216d2af2b25dfd51b32268aba26dcea281f16199f70ff93b2`；安全停止后的双重普通回读稳定为 `ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e`，且该 preimage 未匹配到仓库提交，因此只作为精确当前字节，不获得 source authority。目标字节仍未安装。
 
 注意：零业务重装不等于整个接管维护零停机。撤销旧写权限及替换 Node/loader 闭包需要按最终包对既有 dsh Runtime/W1/W2 做精确维护停启；其后 Watchdog 基线验收不再额外安装相同业务文件。计划中另外一次 Tailscale 同版本保护路径切换会影响其网络连接。两者都须在最终 Owner 包明确授权和恢复边界。
 
