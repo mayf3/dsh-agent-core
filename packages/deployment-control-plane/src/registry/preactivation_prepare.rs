@@ -132,6 +132,8 @@ fn pristine(root: &Dir) -> Result<()> {
         "daemon-activation.json",
         "issuer-bindings.json",
         "adoption-authorizations",
+        "policy-cache.json",
+        "policy-cache.tmp",
     ] {
         absent(root, name)?;
     }
@@ -141,6 +143,7 @@ fn pristine(root: &Dir) -> Result<()> {
         "staging",
         "sealed",
         "targets",
+        "adoptions",
         "admitted",
         "requests",
         "closure",
