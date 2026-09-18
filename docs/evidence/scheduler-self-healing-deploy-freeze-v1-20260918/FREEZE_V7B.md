@@ -75,6 +75,13 @@ ANY exit consumes the authorization (including G1-G9 pre-swap failures = zero mu
 ## Reviews
 
 ```text
-MECHANICAL_REVIEW=see V7B-REVIEW-MECHANICAL.md
-SAFETY_REVIEW=see V7B-REVIEW-SAFETY.md
+MECHANICAL_REVIEW=PASS / BLOCKERS=NONE — executed-verification on the v7b bytes (d66c4825…):
+  full v7→v7b delta inventory zero-regression, FIXTURE rerun, G6b decoy sim both directions,
+  marker noclobber sim, independent manifest recomputation (live c41a9045 / target f261066d /
+  source b302810c), invariants live-verified, no false-fail/no fail-open. See V7B-REVIEW-MECHANICAL.md
+SAFETY_REVIEW=PASS / BLOCKERS=NONE — blast radius confined; one-file diff = pure manifest
+  extension (1 hunk, zero imports, gateway old-op wiring unchanged); ten post-swap failure paths
+  all auto-rollback w/ forensics; occurrence predicate = exactly the restart-fragile set; routing
+  now genuinely covered via config/ tree; reviewer's own /tmp rebuild reproduced both manifests.
+  See V7B-REVIEW-SAFETY.md
 ```
