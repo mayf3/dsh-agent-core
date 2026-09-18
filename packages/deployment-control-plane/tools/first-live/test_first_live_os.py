@@ -54,6 +54,23 @@ class Transport(unittest.TestCase):
     def invoke(self, **kwargs):
         return mock.patch.object(self.io,'_invoke',**kwargs)
 
+    def codex_fixture(self,size):
+        source=self.base/'codex'
+        with source.open('wb') as stream:stream.truncate(size)
+        source.chmod(0o555);meta=source.stat()
+        expected=hashlib.sha256()
+        for _ in range(size//(1024*1024)):expected.update(b'\0'*(1024*1024))
+        expected.update(b'\0'*(size%(1024*1024)))
+        return source,dict(uid=meta.st_uid,gid=meta.st_gid,mode='0555',nlink=1,
+            flags=getattr(meta,'st_flags',0),size=size,sha256=expected.hexdigest())
+
+    def codex_metadata(self,source):
+        meta=source.stat()
+        return dict(uid=meta.st_uid,gid=meta.st_gid,mode=stat.S_IMODE(meta.st_mode),nlink=meta.st_nlink,
+            flags=getattr(meta,'st_flags',0),size=meta.st_size,mtime=int(meta.st_mtime),
+            ctime=int(meta.st_ctime),inode=meta.st_ino,birthtime=int(getattr(meta,'st_birthtime',meta.st_ctime)),
+            device=meta.st_dev,type='Regular File')
+
     def test_claim_is_exclusive_and_records_are_append_only(self):
         self.io.local_validate(); self.io.claim(); self.io.phase('prefix')
         self.io.record('public.json',{'state':'PENDING'})
@@ -201,6 +218,48 @@ class Transport(unittest.TestCase):
             self.assertEqual(run.call_count,1)
         text=''.join(p.read_text() for p in self.journal.iterdir())
         self.assertNotIn('unexpected',text)
+
+    def test_fixed_codex_streams_file_larger_than_output_bound_without_subprocess_or_contents(self):
+        size=transport.LIMIT+1;source,spec=self.codex_fixture(size)
+        self.io.claim()
+        with mock.patch.object(transport,'CODEX',str(source),create=True),mock.patch.object(
+                self.io,'metadata',side_effect=lambda path:self.codex_metadata(source)) as metadata,mock.patch.object(
+                self.io,'_invoke',side_effect=AssertionError('subprocess forbidden')) as run:
+            self.assertIsNone(self.io.stream_hash_fixed_codex(str(source),spec))
+        self.assertEqual(run.call_count,0)
+        self.assertEqual(metadata.call_count,2)
+        records=[json.loads(p.read_text()) for p in self.journal.iterdir() if p.name.endswith('-result.json')]
+        self.assertEqual(records[-1]['contents_retained'],False)
+        self.assertEqual(records[-1]['size'],size)
+
+    def test_fixed_codex_large_digest_mismatch_fails_closed(self):
+        source,spec=self.codex_fixture(transport.LIMIT+1);spec['sha256']='a'*64
+        self.io.claim()
+        with mock.patch.object(transport,'CODEX',str(source),create=True),mock.patch.object(
+                self.io,'metadata',side_effect=lambda path:self.codex_metadata(source)),mock.patch.object(
+                self.io,'_invoke',side_effect=AssertionError('subprocess forbidden')):
+            with self.assertRaisesRegex(RuntimeError,'PROTECTED_DIGEST'):
+                self.io.stream_hash_fixed_codex(str(source),spec)
+        self.assertTrue(self.io.stopped)
+        self.assertTrue(any(p.name.endswith('-unknown.json') for p in self.journal.iterdir()))
+
+    def test_fixed_codex_same_open_fd_metadata_drift_fails_closed(self):
+        source,spec=self.codex_fixture(transport.LIMIT+1)
+        self.io.claim();real_read=os.read;changed=False;target=(source.stat().st_dev,source.stat().st_ino)
+        def read_and_change(fd,size):
+            nonlocal changed
+            chunk=real_read(fd,size)
+            meta=os.fstat(fd)
+            if chunk and not changed and (meta.st_dev,meta.st_ino)==target:
+                source.chmod(0o500);changed=True
+            return chunk
+        with mock.patch.object(transport,'CODEX',str(source),create=True),mock.patch.object(
+                transport.os,'read',side_effect=read_and_change),mock.patch.object(
+                self.io,'metadata',side_effect=lambda path:self.codex_metadata(source)),mock.patch.object(
+                self.io,'_invoke',side_effect=AssertionError('subprocess forbidden')):
+            with self.assertRaisesRegex(RuntimeError,'PROTECTED_(FD|PATH)_DRIFT'):
+                self.io.stream_hash_fixed_codex(str(source),spec)
+        self.assertTrue(changed);self.assertTrue(self.io.stopped)
 
     def test_noncanonical_manifest_symlink_and_wrong_owner_identity_refuse(self):
         self.save_manifest();(self.package/'manifest.json').chmod(0o600);(self.package/'manifest.json').write_text(json.dumps(self.manifest,indent=2))

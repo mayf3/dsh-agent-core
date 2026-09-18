@@ -56,6 +56,7 @@ def file_spec(hash_value=None,mode='0600',gid=0):
 def prefix_files(packet):
     p=packet['previous']
     out={CODE+'/'+name:file_spec(h,'0444' if name.endswith('.json') else '0555') for name,h in OLD_CODE.items()}
+    out[CODE+'/codex']['size']=220584000
     out[PLIST]=file_spec(OLD_PLIST,'0644')
     for path,key in [(ATTEMPT+'/steps/installation.json','installation_receipt_sha256'),
                      (ROOT+'/service.json','service_sha256'),(ROOT+'/local-trust.json','trust_sha256'),
@@ -98,13 +99,14 @@ def copies(packet,ctl_hash):
 def commands(packet,ctl_hash):
     """Exact public reads and finite fixed writes; no caller paths, keys or auth."""
     mapping=copies(packet,ctl_hash)
-    read_paths=set(prefix_files(packet))|set(record_path(n) for n in RECORDS)
+    protected_paths=set(prefix_files(packet))|set(record_path(n) for n in RECORDS)
+    read_paths=protected_paths-{CODE+'/codex'}
     write_paths={dest:(mode,gid) for dest,mode,gid in mapping.values()}
     write_paths.update({PACKET+'/packet.json':('0400',0),PACKET+'/owner-grant.json':('0600',0),
         HANDOFF:('0440',20),PACKET+'/original-agent-deployd':('0400',0),
         PACKET+'/original-agent-deploy-issuer':('0400',0)})
     read_paths |= set(write_paths)
-    metadata_paths=read_paths|set(absent_paths())|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
+    metadata_paths=protected_paths|set(absent_paths())|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
         ROOT+'/first-live-operation',SOCKET+'/control.sock',SOCKET+'/issuer.sock','/usr/bin/sudo'}
     argv=[]
     for path in sorted(metadata_paths):

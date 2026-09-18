@@ -24,6 +24,7 @@ TOOLS = {'/bin/cat','/bin/chmod','/bin/launchctl','/bin/ls','/bin/mkdir',
          '/usr/bin/install','/usr/bin/python3','/usr/bin/shasum','/usr/bin/stat','/usr/bin/sudo'}
 HANDOFF = '/private/var/run/agent-deployd/broker-first-delivery.json'
 NATIVE = '/usr/local/libexec/agent-deployd/agent-deployd'
+CODEX = '/usr/local/libexec/agent-deployd/codex'
 SOCKET_DIRECTORY_INSTALL = ['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']
 
 
@@ -272,6 +273,63 @@ class OperatorIO:
             self.stopped=True
             self.record(name+'-unknown.json',{'state':'STOP_RECONCILE','error_type':type(error).__name__,'retry_forbidden':True})
             raise RuntimeError(str(error)) from error
+
+    def stream_hash_fixed_codex(self,path,spec):
+        self._ready()
+        require(path==CODEX and set(spec)=={'uid','gid','mode','nlink','flags','size','sha256'},
+                'FIXED_CODEX_SPEC')
+        exact_digest(spec['sha256'])
+        require(type(spec['size']) is int and spec['size']>LIMIT,'FIXED_CODEX_SIZE')
+        self.sequence+=1;name=f'{self.sequence:04d}-{self.current_phase}'
+        self.record(name+'-intent.json',{'path':path,'operation':'stream-sha256','observed_at':self.now()})
+        parent_path=Path(path).parent;parent=None
+        try:
+            protected_before=self.metadata(path)
+            require(protected_before['type']=='Regular File','PROTECTED_TYPE')
+            for key in ('uid','gid','nlink','flags','size'):
+                require(protected_before[key]==spec[key],'PROTECTED_METADATA:'+key)
+            require(protected_before['mode']==int(spec['mode'],8),'PROTECTED_MODE')
+            parent=directory(parent_path)
+            parent_before=tuple_of(os.fstat(parent))
+            fd=os.open(Path(path).name,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=parent)
+            try:
+                before=os.fstat(fd)
+                require(stat.S_ISREG(before.st_mode),'PROTECTED_TYPE')
+                actual={'uid':before.st_uid,'gid':before.st_gid,'mode':stat.S_IMODE(before.st_mode),
+                    'nlink':before.st_nlink,'flags':getattr(before,'st_flags',0),'size':before.st_size}
+                expected={**spec,'mode':int(spec['mode'],8)};expected.pop('sha256')
+                require(actual==expected,'PROTECTED_METADATA')
+                require((before.st_dev,before.st_ino)==
+                        (protected_before['device'],protected_before['inode']),'PROTECTED_OPEN_DRIFT')
+                opened=tuple_of(before);hashed=hashlib.sha256();size=0
+                while True:
+                    chunk=os.read(fd,1024*1024)
+                    if not chunk:break
+                    hashed.update(chunk);size+=len(chunk)
+                    require(size<=spec['size'],'PROTECTED_SIZE')
+                require(size==spec['size'],'PROTECTED_SIZE')
+                require(hashed.hexdigest()==spec['sha256'],'PROTECTED_DIGEST')
+                require(tuple_of(os.fstat(fd))==opened,'PROTECTED_FD_DRIFT')
+                require(tuple_of(os.stat(Path(path).name,dir_fd=parent,follow_symlinks=False))==opened,
+                        'PROTECTED_PATH_DRIFT')
+                require(tuple_of(os.fstat(parent))==parent_before,'PROTECTED_PARENT_DRIFT')
+                rebound=directory(parent_path)
+                try:
+                    require(tuple_of(os.fstat(rebound))==parent_before,'PROTECTED_PARENT_DRIFT')
+                    require(tuple_of(os.stat(Path(path).name,dir_fd=rebound,follow_symlinks=False))==opened,
+                            'PROTECTED_PATH_DRIFT')
+                finally:os.close(rebound)
+            finally:os.close(fd)
+            require(self.metadata(path)==protected_before,'PROTECTED_CHANGED_DURING_READ')
+            self.record(name+'-result.json',{'sha256':hashed.hexdigest(),'size':size,
+                'contents_retained':False})
+        except BaseException as error:
+            self.stopped=True
+            self.record(name+'-unknown.json',{'state':'STOP_RECONCILE','error_type':type(error).__name__,
+                'retry_forbidden':True})
+            raise RuntimeError(str(error)) from error
+        finally:
+            if parent is not None:os.close(parent)
 
     def call(self,argv,root=True,visible=False,stdin=None,expected_digest=None,missing=False):
         require(type(argv) is list and all(type(x) is str for x in argv),'ARGV_SCHEMA')
