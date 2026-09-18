@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 scope:
   - AgentProcess lifecycle and readiness
   - RPC deadlines and child-exit cleanup
@@ -16,7 +16,8 @@ governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V2
 external_authorities: []
-supersedes: []
+supersedes:
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 superseded_by: null
 owners:
   - mayf3
