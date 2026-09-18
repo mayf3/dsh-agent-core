@@ -14,7 +14,7 @@ import re
 import subprocess
 
 A = Path('/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1')
-P = Path(__file__).resolve().parents[2] / '.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE'
+P = Path(__file__).resolve().parents[4] / '.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE'
 STATIC = A / 'first-live-preparation/static-inputs-v4'
 OPERATION = 'first-live-dsh-20260918-01'
 WD = 'DCP_DSH_WATCHDOG_ACCEPTANCE_V1'
