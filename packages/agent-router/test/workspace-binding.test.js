@@ -325,7 +325,8 @@ test('AC4: persisted session cwd A vs resolved workspace B -> SESSION_WORKSPACE_
   assert.equal(switched.workspace, 'ws-explicit-B')
 
   const result = await router.route(groupIngress('oc_AAAA', 'now resolves B'))
-  assert.equal(result.failureStage, 'execution', 'turn rejected through the closed outer diagnostic')
+  assert.ok(result.error instanceof Error, 'turn rejected')
+  assert.equal(result.error.code, 'SESSION_WORKSPACE_MISMATCH', 'structured rejection code')
 
   // cwd unchanged: the session stays frozen at A.
   assert.equal(spawned[0].sessionCwds.get(conversationMainSessionId('oc_AAAA')), frozenA)
@@ -374,7 +375,7 @@ test('AC5: process restart -> sessions resume their persisted cwds; wrong resolu
   // session is structurally rejected (R3) — the resume path never re-guesses.
   await rig.router.switchAgent('feishu:oc_AAAA', AGENT.id, { workspace: 'ws-wrong' })
   const bad = await rig.router.route(groupIngress('oc_AAAA', 'a3'))
-  assert.equal(bad.failureStage, 'execution')
+  assert.equal(bad.error?.code, 'SESSION_WORKSPACE_MISMATCH')
   assert.equal(proc2.sessionCwds.get(conversationMainSessionId('oc_AAAA')), cwdA, 'persisted cwd still intact')
 })
 

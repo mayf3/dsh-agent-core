@@ -31,6 +31,15 @@ function classifyFailureStage(error, turnStarted) {
   if (PROVEN_NO_ADMISSION_ROUTE_FAILURES.has(error?.routeChain?.failureClass)) return 'admission'
   return 'execution'
 }
+
+function isRecoveryFenceResult(error) {
+  return error?.status === 'outcome_unknown'
+    || error?.envelope === 'outcome_unknown'
+    || error?.code === 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN'
+    || error?.code === 'AGENT_PROCESS_TURN_FENCED'
+    || error?.code === 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED'
+    || typeof error?.fencedBy === 'string'
+}
 /**
  * Create the ingress/delivery surface bound to one router mount.
  * @param {object} deps
@@ -184,24 +193,24 @@ export function createIngressDelivery({
           const receiptText = replyDelivery === 'unknown'
             ? '[agent-core] 答案已生成，但投递结果未知，可能已送达；可能部分送达，已确认块回执不可用。'
             : '[agent-core] 答案已生成，但回复投递失败；可能部分送达，已确认块回执不可用。'
+          let failureReceipt = { status: 'not_attempted' }
           try {
             await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), receiptText)
-          } catch { /* best effort diagnostic receipt */ }
+            failureReceipt = { status: 'delivered' }
+          } catch {
+            failureReceipt = { status: 'failed' }
+          }
           log.error(`reply delivery failed for ${binding.activeAgentId}: ${error?.code ?? 'unclassified'}`)
           if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
-          const recovery = typeof executionResult.reconciliationHandle === 'string'
-            ? reconciliationStore.recoveryDiagnostic?.(executionResult.reconciliationHandle, {
-                failureStage: 'reply_delivery', requestAdmission: 'accepted',
-              }) ?? {}
-            : {}
-          return outerFailureProjection(error, 'reply_delivery', {
-            ...recovery,
-            reconciliationHandle: executionResult.reconciliationHandle ?? null,
-            terminationEvidence: executionResult.evidence?.terminationEvidence ?? null,
+          return {
+            error,
+            failureStage: 'reply_delivery',
+            executionResult,
             replyDelivery,
             partialDelivery: 'possible',
-            requestAdmission: 'accepted',
-          })
+            confirmedChunkReceipts: 'unavailable',
+            failureReceipt,
+          }
         }
       }
       // CTR-I2-015 observer external-delivery lifecycle point (structural
@@ -221,14 +230,17 @@ export function createIngressDelivery({
         // receipt path — CANARY-C expects exactly one failure delivery).
         if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
       }
-      const recoveryHandle = error?.fencedBy ?? error?.reconciliationHandle
-      const recovery = typeof recoveryHandle === 'string'
-        ? reconciliationStore.recoveryDiagnostic?.(recoveryHandle, {
-            failureStage,
-            requestAdmission: failureStage === 'admission' ? 'not_admitted' : 'accepted',
-          }) ?? {}
-        : {}
-      return outerFailureProjection(error, failureStage, recovery)
+      if (isRecoveryFenceResult(error)) {
+        const recoveryHandle = error?.fencedBy ?? error?.reconciliationHandle
+        const recovery = typeof recoveryHandle === 'string'
+          ? reconciliationStore.recoveryDiagnostic?.(recoveryHandle, {
+              failureStage,
+              requestAdmission: failureStage === 'admission' ? 'not_admitted' : 'accepted',
+            }) ?? {}
+          : {}
+        return outerFailureProjection(error, failureStage, recovery)
+      }
+      return { error, failureStage }
     }
   }
 
