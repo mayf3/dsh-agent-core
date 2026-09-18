@@ -2,7 +2,15 @@
 
 更新：2026-09-18。父 Goal 仍是 PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1，沿用 Owner 已接受 Spec3986553。本页维护当前状态；旧观察、失败和审查记录保留在 `.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/`，不重写历史。
 
-**禁用安装已完成。首个真实自动部署尚未完成。旧 p2 exact package/plan 在 launcher 前因前态漂移安全停止；当前字节已经重新盘点并冻结为 p3，且独立整包复核 PASS。** p3 仍需新的 exact Owner 授权；包外 root preflight PID 43760 必须先退出并重新观察。此前没有请求管理员认证、没有消耗 package attempt，也没有执行本 Goal 的生产 mutation。p2 授权不得重放。
+**禁用安装已完成。首个真实自动部署尚未完成。旧 p2 在 launcher 前因前态漂移安全停止；p3 获得 exact Owner 授权并领取唯一 attempt 后，在只读 protected-prefix 阶段因 `OUTPUT_BOUND` 安全停止。** p3 没有进入 protected-copy、native enable、Watchdog 或 Broker 阶段，没有执行生产写入；该 attempt 已消耗且禁止重放。
+
+## 2026-09-18 p3 实际 attempt 安全停止
+
+Owner 授权绑定 package `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`、selected plan-v2 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd`、attempt limit 1。入口前 PID 43760 已按精确身份终止；双重普通回读确认无竞争部署进程，app content `57a14f9c…`、metadata `31a8e402…`、Broker/Watchdog 字节和 Runtime PID 59762 均匹配冻结前态。
+
+launcher 创建 attempt journal 并完成管理员认证后，在 `protected-prefix` 第86个只读 intent `/bin/cat /usr/local/libexec/agent-deployd/codex` 停止。该现有受保护文件为220,584,000字节，SHA256 `b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3`，哈希与 p3 完全匹配；操作器每个输出流的固定上限为134,217,728字节。因此根因是受审包的输入尺寸与传输上限不相容，不是生产字节漂移。
+
+journal 共有86个 intent，全部为认证或只读 stat/ls/cat，写入 intent 为零；不存在 `phase-protected-copy.json` 或 native enable phase，`operator-error.json` 明确为 `STOP_RECONCILE`、`retry_forbidden=true`、`automatic_rollback=false`。controller 仍 disabled/unloaded；Runtime PID59762运行且 last exit0；W1/W2空闲且 last exit0；Tailscale PID836仍运行原 `/usr/local/bin/tailscaled`。Broker 仍为 preimage `ecddc1b7…`，Watchdog真实验收、部署义务关闭和outbox均未执行。安全停止回读 SHA256 `7df095003c7a1bec1d387d23fdea04d973c4e6704f993d022bf32683fccef903`，journal index SHA256 `9202f20cd78ad0b92e954b961f3414e0b6a58c5f9d300d1612caf1cae95856d3`。
 
 ## 2026-09-18 exact 操作安全停止
 
@@ -22,7 +30,7 @@
 
 新包路径为 `first-live-dsh-20260918-01-p3`，manifest/package SHA256 `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`。唯一选定计划为 `first-live-dsh-20260918-01-p3.plan-v2.json`，SHA256 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd`；初版 p3 plan `971cd26d…` 已被明确替代。p3 的48文件、metadata、canonical JSON、8项受审源码 Git bytes、pure compose、允许命令、目标 `59472b6`/`6f116d94…`、controller 绑定和 claim 前拒绝夹具均独立通过；整包复核报告 SHA256 `7f8098c96e55916954e31fd4504f4dad24818d17b0be5996150a54da707cb898`，记录 SHA256 `d642b8b33bbd912b34bd55c4d2df68d2ba3f655185b036ba4e1cf13fee3b7fa0`，`NEW_PACKAGE_SHIP_BLOCKERS=NONE`。
 
-这次复核没有改变实时入口结论：PID 43760 仍为 PPID 1 的 root `sudo ./deploy-auto-recovery-cfc2729-g2.sh --preflight`，无子进程，已记录 `PRODUCTION_MUTATION_PERFORMED=NO`。必须只终止该残留 preflight、确认所有竞争写入者消失并重新观察绑定，才能进入 p3；不能关闭整个终端进程组，也不能用新 operation/attempt 绕过。
+复核时 PID 43760 仍为 PPID 1 的 root `sudo ./deploy-auto-recovery-cfc2729-g2.sh --preflight`，无子进程。Owner 后续精确授权终止该残留进程；身份、出生时间、命令和无子进程状态匹配后只发送 TERM，并完成退出及前态重观察。没有关闭整个终端进程组。
 
 ## 首个真实交付
 
@@ -48,12 +56,12 @@ Watchdog 实际冻结来源为 `d602b592fad345fb1c9adebe2bc6611a6f5cfdc2`，所�
 
 | 关口 | 具体剩余工作 | 当前状态 |
 |---|---|---|
-| 关闭实际 root 入口 | LW helper 首先退役；其他实际入口拒绝或被现有锁序列化；Tailscale 同版本新 inode/保护路径、精确代际停启和回读 | 原生接线32767f0独立复审通过；未获新操作授权 |
+| 关闭实际 root 入口 | LW helper 首先退役；其他实际入口拒绝或被现有锁序列化；Tailscale 同版本新 inode/保护路径、精确代际停启和回读 | 原生接线32767f0独立复审通过；p3 在任何写入前停止，本项未执行 |
 | 证明当前无遗留 root 写入者 | 有限固定 OS/服务角色；完整 PID 枚举并覆盖 real/effective/saved UID0；实际启动角色、出生代际、闭包与重复回读，未知即停 | 有限条件策略和原生源码32767f0已独立通过；14个 XPC 动态域需要未来受保护前置，不能用普通读取失败或基线 PID 充当通过 |
 | 安全托管及一次登录 | 上述边界闭合后生成六个新角色材料，保留原 state1，追加同 payload 的 PENDING state2，并为原空 snapshot1重新签名保持CAS0→1→2；旧钥只验证精确历史；再进行一次独立 reviewer 登录 | REUSE设计、迁移与登录组件已独立通过；最终 native92f4ace 主流程及终验已独立通过；实际包已通过包级复核。不是重做genesis或清空历史 |
 | 真实 Watchdog 前置 | 同一mutex下完成维护/权限拒绝/回读；真实独立issuer构建评审；接管已有基线，实际canary及逐项验收 | 必要原生顺序和验证已实现并受审；真实 canary 与依赖 PASS 只在未来授权操作产生 |
-| 首个 Broker 自动部署 | 条件成立才启用controller；普通producer提交真实候选；自动Train安装、健康/代际/语义验收、回执回写 | 普通Broker wrapper35c784d独立复审通过，真实594 manifest已离线绑定；startup/enable的EN-01/02已于fdc6564独立复审通过；固定只读终验92f4ace独立通过；原 exact 授权已因执行前生产前态漂移安全停止，当前未执行 |
-| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | p3 package `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`、唯一 selected plan-v2 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd` 已冻结并独立复核 PASS；等待新的 exact Owner 授权与 PID 43760 消失后的入口重观察。p2 与初版 p3 plan 均不可执行 |
+| 首个 Broker 自动部署 | 条件成立才启用controller；普通producer提交真实候选；自动Train安装、健康/代际/语义验收、回执回写 | 普通Broker wrapper35c784d独立复审通过，真实594 manifest已离线绑定；p3 在 protected-prefix 只读阶段停止，controller 未启用，Broker 未提交 |
+| 完整操作授权包 | 最终源码、测试/fmt/clippy/release、受影响安全面独立审查、exact包及有效期/一次预算/失败恢复/本机动作 | p3 package `ad05e54a08b227a6476f7fa0f89378deb146a38ade4f3c1a8d7e5453375a1c18`、selected plan-v2 `600e4d5ebaf8dd227a80ead137f39e1b83073f1f1f05bad1639e247bc28f3fbd` 的唯一 attempt 已因确定性 `OUTPUT_BOUND` 消耗，禁止重放。后续若继续，必须先形成新的最小修复、测试、独立包级复核和新的 exact 授权；当前未请求 |
 
 ## 本轮收敛与权限
 
@@ -69,7 +77,7 @@ Owner最新指示的辅助推理分工已启用：使用 Codex 侧栏现有普�
 
 该普通对话已返回“收窄后继续”：保留首发必需的入口、托管及空前缀迁移，禁止将有限当前角色核验扩成历史无入侵或整机无漏洞证明。本地采纳该范围边界并继续实施，没有再叠加一轮相同辅助审计。对话坐标和处分见 `first-live-chatgpt-scope-check.md`。第二次普通对话只审查启用交接，核对真实缺口后本地采纳，见 `first-live-chatgpt-enable-scope-check.md`；正式审查仍独立执行。第三次只读终验范围检查未收到可用侧栏答复，已按Owner指示记录并本地继续，未转Work/Brave或等待。
 
-本次准备未执行 privileged bootstrap、建生产钥、登录重试、sudoers变更、服务启用/重启、入口切换或真实部署。后续 exact 包必须说明 Tailscale 网络影响、dsh现有任务维护影响、已知失败如何恢复、UNKNOWN如何保留，以及 Owner 一次授权和本机认证/登录的具体动作。
+本次 p3 attempt 只完成管理员认证和受保护只读 prefix 核验；未执行 privileged bootstrap、建生产钥、登录、sudoers变更、服务启用/重启、入口切换或真实部署。后续 exact 包仍须说明 Tailscale 网络影响、dsh现有任务维护影响、已知失败如何恢复、UNKNOWN如何保留，以及 Owner 一次授权和本机认证/登录的具体动作。
 
 未纳管目标、auth-service/gui svc-workflow权限分离、未来multi-resource事项及父Goal其余验收条件另行保留。首个闭环成功不会自动宣称父Goal完成。
 
