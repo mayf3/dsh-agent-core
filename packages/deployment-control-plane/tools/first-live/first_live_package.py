@@ -106,7 +106,7 @@ def commands(packet,ctl_hash):
         HANDOFF:('0440',20),PACKET+'/original-agent-deployd':('0400',0),
         PACKET+'/original-agent-deploy-issuer':('0400',0)})
     read_paths |= set(write_paths)
-    metadata_paths=protected_paths|set(absent_paths())|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
+    metadata_paths=protected_paths|read_paths|set(absent_paths())|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
         ROOT+'/first-live-operation',SOCKET+'/control.sock',SOCKET+'/issuer.sock','/usr/bin/sudo'}
     argv=[]
     for path in sorted(metadata_paths):
