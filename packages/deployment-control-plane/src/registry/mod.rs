@@ -226,3 +226,5 @@ mod adapter_tests;
 #[cfg(test)]
 #[path = "../../test/registry/fixture.rs"]
 pub(crate) mod test_fixture;
+
+pub(crate) mod readonly;

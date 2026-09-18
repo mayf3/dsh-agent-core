@@ -11,7 +11,17 @@ pub struct MutationGuard {
 }
 impl MutationGuard {
     pub(crate) fn acquire(root: &Dir, create: bool) -> Result<Self> {
-        let flags = libc::O_RDWR | if create { libc::O_CREAT } else { 0 };
+        Self::acquire_mode(root, create, false)
+    }
+    pub(crate) fn acquire_readonly(root: &Dir) -> Result<Self> {
+        Self::acquire_mode(root, false, true)
+    }
+    fn acquire_mode(root: &Dir, create: bool, readonly: bool) -> Result<Self> {
+        let flags = (if readonly {
+            libc::O_RDONLY
+        } else {
+            libc::O_RDWR
+        }) | if create { libc::O_CREAT } else { 0 };
         let file = root.open_file("production.lock", flags, 0o600)?;
         validate(&file, root.uid, false)?;
         let m = file.metadata()?;
@@ -27,8 +37,10 @@ impl MutationGuard {
             m.dev() == current.dev() && m.ino() == current.ino(),
             "MUTEX_REPLACED",
         )?;
-        file.sync_all()?;
-        root.file.sync_all()?;
+        if !readonly {
+            file.sync_all()?;
+            root.file.sync_all()?;
+        }
         let host = root.file.metadata()?;
         Ok(Self {
             file,

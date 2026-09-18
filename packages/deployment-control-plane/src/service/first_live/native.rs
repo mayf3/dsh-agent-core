@@ -193,10 +193,7 @@ pub(super) fn fresh() -> Result<()> {
     gate::absent(&root, "first-live-pending.json")?;
     gate::absent(&root, "first-live-operation")
 }
-pub(super) fn run() -> Result<()> {
-    let actual = controller()?;
-    let root = Dir::open(Path::new(ROOT), 0)?;
-    let guard = MutationGuard::acquire(&root, false)?;
+fn load(root: Dir, actual: String) -> Result<Native> {
     let packet_dir = Dir::open(Path::new("/private/var/db/agent-deploy-first-live"), 0)?;
     let packet_raw = snapshot(
         &packet_dir.open_file("packet.json", libc::O_RDONLY, 0)?,
@@ -246,13 +243,45 @@ pub(super) fn run() -> Result<()> {
         .and_then(|v| v.as_str())
         .ok_or_else(|| crate::Error::new("ENABLE_PACKET"))?
         .to_string();
-    let mut n = Native {
+    Ok(Native {
         root,
         area,
         binding,
         pin,
         grant,
-    };
+    })
+}
+pub(super) fn completion_binding(root: &Dir) -> Result<Binding> {
+    let n = load(
+        Dir {
+            file: root.file.try_clone()?,
+            uid: root.uid,
+        },
+        controller()?,
+    )?;
+    n.check()?;
+    require(
+        n.grant.expires_at.checked_sub(n.grant.issued_at) == Some(14400),
+        "COMPLETION_GRANT_WINDOW",
+    )?;
+    require(
+        matches!(
+            gate::startup(
+                &n.root,
+                Some(&n.binding.operation_id),
+                super::super::server::now()?
+            )?,
+            gate::Phase::Complete
+        ),
+        "COMPLETION_ENABLE_REQUIRED",
+    )?;
+    Ok(n.binding)
+}
+pub(super) fn run() -> Result<()> {
+    let actual = controller()?;
+    let root = Dir::open(Path::new(ROOT), 0)?;
+    let guard = MutationGuard::acquire(&root, false)?;
+    let mut n = load(root, actual)?;
     {
         n.check()?;
         let out = n.command(&["print", LABEL])?;

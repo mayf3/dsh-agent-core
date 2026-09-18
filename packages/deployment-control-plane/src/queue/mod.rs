@@ -13,6 +13,7 @@ use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior};
 use std::sync::Mutex;
 pub struct Queue {
     connection: Mutex<Connection>,
+    read_only: Option<completion::ReadOnly>,
 }
 impl Queue {
     /// The daemon must supply a protected path; this library never establishes root ownership.
@@ -25,6 +26,7 @@ impl Queue {
         require(integrity == "ok", "CORRUPT_JOURNAL")?;
         Ok(Self {
             connection: Mutex::new(conn),
+            read_only: None,
         })
     }
     fn transaction<T>(&self, f: impl FnOnce(&Transaction<'_>) -> Result<T>) -> Result<T> {
@@ -32,9 +34,20 @@ impl Queue {
             .connection
             .lock()
             .map_err(|_| Error::new("STORE_FAILURE"))?;
-        let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        if let Some(read) = &self.read_only {
+            read.check()?;
+        }
+        let behavior = if self.read_only.is_some() {
+            TransactionBehavior::Deferred
+        } else {
+            TransactionBehavior::Immediate
+        };
+        let tx = conn.transaction_with_behavior(behavior)?;
         let value = f(&tx)?;
         tx.commit()?;
+        if let Some(read) = &self.read_only {
+            read.check()?;
+        }
         Ok(value)
     }
     pub fn unit_count(&self) -> Result<u64> {
@@ -138,3 +151,5 @@ impl Queue {
       })
     }
 }
+
+pub(crate) mod completion;
