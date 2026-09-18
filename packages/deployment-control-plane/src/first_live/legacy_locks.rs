@@ -67,6 +67,59 @@ pub(super) struct Expectations {
     pub parents: [Identity; 4],
     pub permanent: PermanentExpectation,
 }
+pub(super) struct SocketNamespace {
+    plan: crate::bootstrap::socket::SocketAncestorPlan,
+    gid: u32,
+    identities: std::collections::BTreeSet<u32>,
+    #[cfg(test)]
+    fixture: Option<PathBuf>,
+}
+impl SocketNamespace {
+    pub(super) fn from_packet(p: &super::packet::Packet) -> Result<Self> {
+        Ok(Self {
+            plan: p
+                .configuration
+                .socket_ancestor
+                .clone()
+                .ok_or(Error::new("SOCKET_ANCESTOR_REQUIRED"))?,
+            gid: p.configuration.socket_gid,
+            identities: p
+                .configuration
+                .callers
+                .iter()
+                .map(|c| c.uid)
+                .chain(p.native_enrollment.services.iter().map(|s| s.uid))
+                .collect(),
+            #[cfg(test)]
+            fixture: None,
+        })
+    }
+    fn open(&self) -> Result<Dir> {
+        #[cfg(test)]
+        if let Some(path) = &self.fixture {
+            let parent = Dir::open(path.parent().unwrap(), unsafe { libc::geteuid() })?;
+            let dir = Dir {
+                file: parent.open_file(
+                    path.file_name().unwrap().to_str().unwrap(),
+                    libc::O_RDONLY | libc::O_DIRECTORY,
+                    0,
+                )?,
+                uid: parent.uid,
+            };
+            self.plan.check_retained_parent(&dir)?;
+            return Ok(dir);
+        }
+        self.plan.open_preflight(self.gid, &self.identities)
+    }
+    fn check(&self, held: &Dir) -> Result<()> {
+        self.plan.check_retained_parent(held)?;
+        let named = self.open()?;
+        require(
+            Identity::of(&named.file)? == Identity::of(&held.file)?,
+            "LEGACY_LOCK_DRIFT",
+        )
+    }
+}
 struct Owned {
     dir: Dir,
     identity: Identity,
@@ -85,6 +138,7 @@ pub(super) struct LegacyLocks<'a> {
     permanent_identity: Identity,
     owned: Vec<Owned>,
     binding: String,
+    namespace: Option<SocketNamespace>,
 }
 fn fd_path(dir: &Dir) -> Result<PathBuf> {
     let mut bytes = [0i8; libc::PATH_MAX as usize];
@@ -125,6 +179,7 @@ impl<'a> LegacyLocks<'a> {
         journal: &Dir,
         expected: &Expectations,
         guard: &'a MutationGuard,
+        namespace: SocketNamespace,
     ) -> Result<Self> {
         // Refuse before any production path is opened or any journal effect occurs.
         require(unsafe { libc::geteuid() } == 0, "ROOT_REQUIRED")?;
@@ -140,13 +195,22 @@ impl<'a> LegacyLocks<'a> {
         require(journal.uid == 0, "UNSAFE_OWNER")?;
         guard.binds(&Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?)?;
         let parents = [
-            Dir::open(Path::new(PARENTS[0]), 0)?,
+            namespace.open()?,
             Dir::open(Path::new(PARENTS[1]), 0)?,
             Dir::open(Path::new(PARENTS[2]), 0)?,
             Dir::open(Path::new(PARENTS[3]), 0)?,
         ];
-        Self::acquire_at(op, binding, journal, parents, expected, guard)
+        Self::acquire_with_namespace(
+            op,
+            binding,
+            journal,
+            parents,
+            expected,
+            guard,
+            Some(namespace),
+        )
     }
+    #[cfg(test)]
     fn acquire_at(
         op: &str,
         binding: &str,
@@ -154,6 +218,17 @@ impl<'a> LegacyLocks<'a> {
         parents: [Dir; 4],
         expected: &Expectations,
         guard: &'a MutationGuard,
+    ) -> Result<Self> {
+        Self::acquire_with_namespace(op, binding, journal, parents, expected, guard, None)
+    }
+    fn acquire_with_namespace(
+        op: &str,
+        binding: &str,
+        journal: &Dir,
+        parents: [Dir; 4],
+        expected: &Expectations,
+        guard: &'a MutationGuard,
+        namespace: Option<SocketNamespace>,
     ) -> Result<Self> {
         crate::fs::secure::component(op)?;
         hash(binding)?;
@@ -172,7 +247,15 @@ impl<'a> LegacyLocks<'a> {
             fd_path(&parents[3])?,
         ];
         for (index, parent) in parents.iter().enumerate() {
-            validate(&parent.file, journal.uid, true)?;
+            if index == 0 {
+                if let Some(namespace) = &namespace {
+                    namespace.check(parent)?;
+                } else {
+                    validate(&parent.file, journal.uid, true)?;
+                }
+            } else {
+                validate(&parent.file, journal.uid, true)?;
+            }
             expected.parents[index].check(&parent.file)?;
             require(expected.parents[index].uid == journal.uid, "UNSAFE_OWNER")?;
         }
@@ -236,6 +319,7 @@ impl<'a> LegacyLocks<'a> {
             permanent_identity,
             owned: Vec::new(),
             binding: binding.into(),
+            namespace,
         };
         let executable = File::open(std::env::current_exe()?)?;
         // Hash the exact ID in readable holders so it cannot impersonate a legacy parent.
@@ -307,7 +391,15 @@ impl<'a> LegacyLocks<'a> {
     }
     fn verify_parents(&self) -> Result<()> {
         for (index, path) in self.paths.iter().enumerate() {
-            self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
+            if index == 0 {
+                if let Some(namespace) = &self.namespace {
+                    namespace.check(&self.parents[index])?;
+                } else {
+                    self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
+                }
+            } else {
+                self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
+            }
             self.expected.parents[index].check(&self.parents[index].file)?;
         }
         absent(&self.parents[3], NAMES[3])
@@ -402,3 +494,7 @@ impl<'a> LegacyLocks<'a> {
 #[cfg(test)]
 #[path = "../../test/first_live/legacy_locks.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../test/first_live/legacy_locks/namespace.rs"]
+mod namespace_tests;

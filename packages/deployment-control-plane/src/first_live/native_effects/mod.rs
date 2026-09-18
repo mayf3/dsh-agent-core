@@ -43,6 +43,7 @@ pub(super) fn run() -> crate::Result<()> {
         &area,
         &p.lifecycle.legacy_locks,
         &guard,
+        super::legacy_locks::SocketNamespace::from_packet(p)?,
     )?;
     let mut effects = driver::NativeEffects::new(
         &prepared.root,

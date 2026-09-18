@@ -278,9 +278,31 @@ fn production_entry_refuses_nonroot_before_real_path_access() {
     let dirs = parents(&roots.root);
     let exp = expected(&dirs);
     let area = roots.root.mkdir("journal").unwrap();
-    let err = LegacyLocks::acquire("operation", BINDING, &area, &exp, &guard)
-        .err()
-        .unwrap();
+    let err = LegacyLocks::acquire(
+        "operation",
+        BINDING,
+        &area,
+        &exp,
+        &guard,
+        SocketNamespace {
+            plan: crate::bootstrap::socket::SocketAncestorPlan {
+                host: "a".repeat(64),
+                device: 1,
+                inode: 1,
+                uid: 0,
+                gid: 1,
+                mode: 0o775,
+                flags: 0,
+                acl_none: true,
+                memberships: Default::default(),
+            },
+            gid: 602,
+            identities: Default::default(),
+            fixture: None,
+        },
+    )
+    .err()
+    .unwrap();
     assert_eq!(err.code(), "ROOT_REQUIRED");
     assert!(area.names().unwrap().is_empty());
 }
