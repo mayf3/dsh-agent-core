@@ -1,0 +1,70 @@
+# Independent first Broker deployment: Watchdog prerequisite investigation
+
+Reviewer: `dcp_census_repair_review`; 2026-09-18. READ ONLY investigation except this explicitly authorized record. No runtime endpoints, privileged calls, credentials, production writes, package modifications or subagents.
+
+Coordinates: repository worktree `/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl`; inspected HEAD `78daf3699346f6f68264921443d42552d9157dae`. Exact disabled genesis package remains `5bf407d815068e84d9dcfbbbe442498169bb43ab98f388b168bd5d6eca40911b`, plan `c3a5ed50ffe2588cedc26b7ba3931aef85de496143ea355d70b773648b6bd38e`; this investigation neither revises nor postpones its independent exact reconciliation. No closed source findings are reopened.
+
+## Determination
+
+WATCHDOG_PREREQUISITE_SATISFIED = NOT_PROVEN, and the initial Broker dependency cannot presently be fulfilled merely by installing a correctly enrolled Watchdog deployment child. There are two distinct remaining boundaries: genuine current Watchdog capability acceptance, and its authenticated queue dependency representation. Neither a legacy deployment PASS nor a generic service readback substitutes for both.
+
+### Exact enrolled requirement and directly reachable first-live gap
+
+`deployment-artifacts/control-plane-genesis-v1/initial-registry.json` contains exactly one deployment enrollment:
+
+- Deployment child `WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DEPLOYMENT`, business Goal `WORKFLOW_ACTIVE_POOL_DISPOSITION_V1`.
+- Frozen source `c9ffe1d1637db2997689d8b2ef7def4fc1086b17`.
+- Required prior Goal **`SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1`**, with original request provenance digest `37a8397beb53c9c658272ca7d430484097d558e6ffca5bfda06df98da40c1c66`.
+- Scope explicitly preserves the Watchdog prerequisite and excludes parent business acceptance/V4 ACC-XR-007/HR readiness.
+
+The native issuer passes that exact string to queue lookup (`issuer/coordinator.rs:145-150`). `queue/issuance.rs:23-41` requires a GoalReceipt under the exact `g.goal`, joined to an Applied unit that is currently installed, safe-finalized, with PASS outcome, matching transaction attempt/target generation and current physical service generation. It returns an exact `LiveInstallation` dependency with transaction digest/capability/required Goal. `queue/dependencies.rs` rechecks these facts; `registry/validation.rs:122-128` also preserves exact dependency identity. Accepted CTR-DCP-010 requires exact unit/capability receipts and semantic prerequisite outcomes.
+
+**Reachable identifier mismatch:** `registry/validation.rs:39` requires deployment `goal_id != business_goal_id`. A valid Watchdog child therefore produces receipts under its own deployment child ID, not under the original Watchdog business Goal required by Broker. No automatic business-to-child resolution exists in the above path. A real child PASS alone still produces `PRIOR_DEPENDENCY_PENDING` for the current Broker enrollment. Minimal closure is an explicit authenticated, provenance-bound mapping/update to the exact accepted Watchdog deployment child, retaining the original business prerequisite and proving its required capability. Do not erase the prerequisite, rename a receipt, forge a business PASS, or silently treat delivery-only readback as whole-Watchdog acceptance.
+
+No protected historical transaction/GoalReceipt import operation was found in the inspected native issuer/queue/registry API. Registry historical source provenance is not installed queue state; `record_transaction` requires an actual admitted unit and bound attempt. CTR-DCP-001 permits provenance-bearing historical readiness import, not fabricated deployment receipts. A new import mechanism, if chosen, needs its own explicit bounded authority/design/review; it is not an existing next command. The available path is a genuine first Watchdog deployment unit plus the explicit dependency binding above.
+
+## What the local evidence actually proves
+
+Accepted Watchdog authority: `SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1` reviewed Spec `a8c763067a9b461a75669036dfade96a023f8864`; acceptance report requires serialized exact production preimage/provenance/readiness and a real side-effect-free canary before current-six mutation. Acceptance of source is not proof of current installed capability.
+
+The appropriate existing protected semantic receipt is:
+
+`/private/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1/postdeploy-acceptance-receipt.json`
+
+`scripts/lib/scheduler-postdeploy-finalize.mjs:28,121,184-195` and `packages/production-runtime/src/scheduler/deployment-postdeploy-finalize.js:184-203` bind it to exact source, pending deployment phase, canonical health, provenance/routing, real canary, bounded canary-only changes and passive dedupe; successful output is `status: ACCEPTED`, `productionAccepted: true`, `currentSixAuthorized: false`. Its protected current readback is **not** performed here. Even a valid exported copy must subsequently be authenticated and related to the current generation; it does not itself populate queue unit/installed/GoalReceipt records.
+
+Observed local chronology (exports are evidence leads, not fresh protected truth):
+
+1. Earlier retained task evidence records admission failure `incoherent incident outbox`, then a freeze failure with inadequate `ERROR_CLASS=Error`; both rolled back. Memory discovery pointers: `MEMORY.md:145-170`, rollout `01a0aac3-3842-7372-b361-d482e857c865`. These older outcomes must not be presented as the latest state.
+2. `/private/tmp/watchdog-phase4-readback.txt:111` subsequently records `PENDING_CANONICAL_HEALTH_AND_CANARY` for d602b59. Lines 235-238 report W1 heartbeat/evidence checks; line 265 records later read-only preflight with `PREIMAGE_COMPLETE=NO`, `CANONICAL_LEGACY_DELIVERY_EVIDENCE_UNAVAILABLE`, receipt hash `725ea2a66bf11149ba7f15c0fc13955e581e430e16dc718b3c408d7a34b1578f`. This proves neither final acceptance nor current failure; it improves the historical picture beyond “never installed.”
+3. `artifacts/watchdog-lark-v3-deployment-handoff/README.md` records later failed whole-root bb5327f install, exact predecessor restoration with unchanged PID24571, rollback log digest `6683426d5fc6864eeadce6aebab4a4cd8dd37b22aec2efd62d4e503a334904a2`, and blocks that old handoff from retry. Offline dependency/harness closure was missing. This old script must not be revived.
+4. `/private/tmp/watchdog-lark-v3-g6-apply.log` records `APP_G6_NARROW_DEPLOY=PASS`, source `bb5327f622a0333f1e11d945319e024a3731f05a`, seal `4a662871514d65652f0bc633cc16de1c3cb6502c0345c8f2367b77bf84180908`, content `a4fbb630ff3a65605c145b32da0965db632c751aaec9d0d6444c0bdcda8af4a4`, PID53645 and **PRODUCTION_CANARIES_REQUIRED=YES**. Its README states only three Lark files change; Watchdog bytes remain inherited, not newly accepted.
+5. Local candidate `6a37604e8f33e4b47ca880c51b3fc000457bbb71`, `docs/evidence/scheduler-self-healing-deploy-freeze-v1-20260918/FREEZE_V2.md`, explicitly carries **G6_POSTDEPLOY_CANARY_CLOSURE=NOT_PROVEN** forward, binds bb5327f/G6 preimage and target41f354d, and declares stale plist source metadata. This is a candidate/Owner-attributed preimage, not final Watchdog closure.
+6. `/private/tmp/scheduler-self-healing-deploy-v6-receipt/install.log` contains a newer backup name `agent-core.bak-20260918-113301`, then ends at offline pnpm install. No final receipt is present in that exported directory at inspection. It cannot establish success, failure, rollback or an idle mutation lane. Any parallel privileged operation must use fresh canonical serialization/preimage checks; historical “locks absent” is not authority.
+
+7. **Newest selected installed-file snapshot:** parent-produced `selected-installed-code-observation.json`, timestamp `2026-09-18T04:01:50.962608+00:00`, ordinary uid502 read-only inspection, records `FileNotFoundError` for every selected Broker support/release file, `incident-lifecycle.js`, `scheduler-watchdog.mjs` and `production-runtime.mjs`. Parent additionally reports app is an empty root:wheel0755 directory with Sep18 11:33 mtime; this directory fact is attributed to the parent's message, not contained in that JSON. This is concrete evidence that the inspected target face is unavailable, superseding any inference of current healthy G6 bytes from earlier exports. It is not a full release census, root attestation, process-health observation or transaction-outcome proof. Do not activate/adopt/deploy onto this incomplete target, restart it, declare a failure cause or restore it speculatively. The owning active migration/recovery must first reach proven safe completion or exact recovery and a complete fresh preimage.
+
+No final protected Watchdog acceptance or current queue-backed Watchdog PASS was available among these inspected local exports. This is bounded negative evidence, not an exhaustive claim about protected disk.
+
+## Minimum safe remaining path
+
+1. Finish the separately authorized exact disabled genesis reconciliation unchanged. Do not activate or mutate its frozen package to solve dependency mapping.
+2. Target adoption is currently STOPPED on the newest missing-installed-face observation above. Have the owning Watchdog/self-healing operation reconcile its latest exact attempt once using protected receipts and live generation, not retry old wrappers. Require actual active-migration closure and complete fresh app/loader/config/plist preimages before adoption or another deploy. If current generation already has valid complete semantic acceptance, preserve that evidence; otherwise finish only missing accepted migration/routing/readiness/canary/dedupe obligations under the existing Watchdog mandate. Do not repeat successful install work just to obtain a label.
+3. Prepare an explicitly reviewed Watchdog deployment-child enrollment and exact capability acceptance mapping. Current genesis issuer source policy freezes only Broker `workflow.js`; Watchdog requires new exact source slots, root-code reviewed facets (W2), retained app/node/plist closure and an applicable verifier. Registering a name without changing that policy would still build Broker bytes.
+4. Native first-live executor currently handles regular app files and fixed runtime/W1/W2 service generation. There is no invocation of incident migration/routing reconciliation/postdeploy semantic finalizer in it. If those state migrations remain needed, complete them as the authorized existing Watchdog controlled prerequisite before regular-file enrollment, or introduce a narrowly reviewed native migration facet with explicit preimage/rollback authority. Do not hide root scripts/state writes inside regular-file artifacts. Native installed-readback alone cannot certify this Watchdog business capability.
+5. Produce one genuine safe-finalized Watchdog queue unit with signed verifier PASS covering the mapped prerequisite capability and current physical generation. Then issuer may resolve exact transaction/capability receipt for Broker. Same-target changes between this proof and Broker admission can invalidate `LiveInstallation`; preserve serialization and recheck at mutation.
+6. Apply the smallest authenticated Broker dependency mapping change required by the original prerequisite. Only then prepare first Broker proposal; fresh source/closure/preimage compatibility remains required below.
+
+These are concrete first-live gates. No broad platform redesign, unrelated closed finding or current-six repair is required by this investigation.
+
+## Is the frozen Broker source still applicable?
+
+It remains the **only currently enrolled** source. `build-closure.json` pins one release slot, `packages/broker/src/capabilities/workflow.js`, SHA256 `2ec3c9d2dc9e5f5bf11cca69ea63ad8888d8cfcc820045e5c0eac1bb11ce7c8d`, at c9ffe1d/tree `eb44f3fbbfeed46c2c912c439d641c0fa2fdef3d`; any different source requires separately reviewed enrollment. Unrelated main movement does not stale it (CTR-DCP-006).
+
+Concrete compatibility question, not an automatic rejection: c9ffe1d's full-file slot requires caller `domainId` in `workflow_domain_admin.create`, includes it in the wire body, and describes coordinator-only creation. Current inspected source removes it, makes the server generate it, and describes creator-becomes-owner; merge `59472b631129d1ea3ca1202cbcbbc0799b083114` records that change. The local domain-create Spec still says proposed/implementation_authority none, despite that merge message's acceptance claim. Therefore this inspection does **not** conclude a valid accepted supersession, and current Git bytes do **not** prove installed bytes or deployed upstream behavior.
+
+Before overwrite, resolve the exact accepted domain-create authority/lifecycle and deployed upstream request contract, and compare the currently installed `workflow.js` preimage. If canonical server-generated create is active, c9ffe1d would concretely restore obsolete required/wire `domainId`; a new reviewed Broker source/enrollment is then needed. If it is not active and the exact old full-file preimage/closure remains valid, c9ffe1d can remain usable. Do not silently replace it with latest main.
+
+Other frozen dependency comparison: `workflow-execute.js` has since added structural diagnostics/renderErrorDetail; other inspected listed Broker support paths and the V4 source document have no c9ffe1d-to-HEAD diff. This identifies a retained-face readback obligation, not evidence of installed drift. Applicability is **PENDING exact authority/upstream/installed-face compatibility**, while the Watchdog dependency is independently not yet representable/satisfied as enrolled.
+
+At this snapshot Broker applicability also remains blocked by the unavailable selected installed face: there is no observed current `workflow.js` byte preimage to compare. Earlier conditional source analysis remains useful after the owning recovery restores a verifiable target; it is not deployment readiness now.

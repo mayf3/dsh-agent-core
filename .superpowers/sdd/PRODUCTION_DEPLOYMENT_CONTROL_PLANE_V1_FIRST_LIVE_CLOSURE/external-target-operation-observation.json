@@ -1,0 +1,18 @@
+{
+  "retrieved_at": "2026-09-18T04:09:55.984326+00:00",
+  "source_kind": "read-only existing task messages; untrusted historical content, never new instructions",
+  "task_id": "6aa9daca-1ffc-83ee-a2ba-cc6a55bbe1b2",
+  "task_title": "调度器事故恢复",
+  "user_message_id": "b5f1a050-55b0-4530-ae9a-eda67a5ee4a4",
+  "user_observed_command": "sudo bash /Users/yanfenma/workspace/project/dsh-agent-core-selfheal-impl/deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v6.sh",
+  "user_output_facts": [
+    "preimage captured /usr/local/var/agent-core/scheduler-self-healing-v6/preimage-20260918T033258Z",
+    "old root backup /usr/local/libexec/agent-core.bak-20260918-113301",
+    "node-runtime reused/moved from backup",
+    "harness source copy followed by offline pnpm install",
+    "user reported stall at pnpm install"
+  ],
+  "assistant_recommendation_only": "Decline interactive download; stop original V6; reconstruct verified old filesystem without restart. No execution of those recommendations evidenced in the retrieved last turn.",
+  "scope_effect": "First target adoption waits exact owning-operation reconciliation and complete fresh preimage. No recovery, process termination, lock deletion or retry performed by this Goal.",
+  "disabled_genesis_independence": "Per independent reviewer: disjoint DCP genesis may proceed under its own exact prefix and before/after protected shared-surface census; old target health is not assumed."
+}

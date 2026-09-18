@@ -1,0 +1,57 @@
+{
+  "at_utc": "2026-09-18T04:01:50.962608+00:00",
+  "method": "ordinary uid502 read-only selected public installed source metadata/hash; no runtime endpoint or process execution",
+  "limitations": "Not complete release-face census, root attestation, authority or transaction-completion proof",
+  "files": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js",
+      "source_path": "packages/broker/src/capabilities/workflow.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "source_path": "packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow-execute.js",
+      "source_path": "packages/broker/src/capabilities/workflow-execute.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/credential.js",
+      "source_path": "packages/broker/src/credential.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/error-detail-sanitizer.js",
+      "source_path": "packages/broker/src/error-detail-sanitizer.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/targets.js",
+      "source_path": "packages/broker/src/targets.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/transport.js",
+      "source_path": "packages/broker/src/transport.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/scheduler/src/watchdog/incident-lifecycle.js",
+      "source_path": "packages/scheduler/src/watchdog/incident-lifecycle.js",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "source_path": "scripts/scheduler-watchdog.mjs",
+      "unavailable": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "source_path": "scripts/production-runtime.mjs",
+      "unavailable": "FileNotFoundError"
+    }
+  ]
+}

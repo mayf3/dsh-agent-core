@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-09-18T04:34:07.530112+00:00",
+  "scope": "ordinary uid502 selected code read only; no runtime endpoints or root; not protected recovery or full generation proof",
+  "app_entries": [
+    "bundle-agent-switch",
+    "bundle-broker",
+    "bundle-demo",
+    "bundle-integration",
+    "bundle-memory",
+    "node_modules",
+    "package.json",
+    "packages",
+    "profile-demo",
+    "profile-integration",
+    "profile-integration-agent",
+    "profile-memory",
+    "profile-production",
+    "scripts"
+  ],
+  "files": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/workflow.js",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "size": 43099,
+      "sha256": "d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/scheduler/incident-lifecycle.js",
+      "error": "FileNotFoundError"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o755",
+      "size": 27215,
+      "sha256": "f84f974953954898aef49e4f4ed8f63639ad8109dcb3b75b97b09d4146990d6a"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "size": 573,
+      "sha256": "857a6103bf69e947c71bdbf9a22f3b5fe0e5e1ff569529514aeef8f08190f692"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/scheduler/src/scheduler.js",
+      "uid": 505,
+      "gid": 601,
+      "mode": "0o644",
+      "size": 11737,
+      "sha256": "dedffdc2ab4b5d464997d82e7ca94c547d05e57cbd4f2caa705fb43b5b8f47da"
+    }
+  ],
+  "external_attribution": {
+    "thread_id": "6aa9daca-1ffc-83ee-a2ba-cc6a55bbe1b2",
+    "title": "\u8c03\u5ea6\u5668\u4e8b\u6545\u6062\u590d",
+    "user_message_id": "a352b60b-454b-43b5-9d3b-5157be63bd0e",
+    "user_report": {
+      "ROLLBACK_FILESYSTEM": "PASS",
+      "FAILED_V6_TREE": "/usr/local/libexec/agent-core.failed-v6-corepack-20260918T041209Z"
+    },
+    "assistant_claims_not_independently_verified_here": {
+      "restored_app_manifest_sha256": "66ebc369987bebbfd44549c6d0c8cfc32700decae9b4755ec63913e3a58b6721",
+      "runtime_pid": 53645,
+      "runtime_restarted": false,
+      "health": "PASS",
+      "deployment_lock": "ABSENT"
+    },
+    "instructions_not_adopted": true
+  }
+}
