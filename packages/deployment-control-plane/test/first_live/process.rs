@@ -174,3 +174,53 @@ fn plutil_is_only_caller_readback_of_the_public_inert_probe() {
         assert!(validate_arguments(Tool::Plutil, &args).is_err());
     }
 }
+
+#[test]
+fn sudo_audit_is_root_read_only_for_two_numeric_identities() {
+    validate_identity(Tool::SudoAudit, None).unwrap();
+    for identity in [
+        Some((502, 20, &[20][..])),
+        Some((505, 601, &[601][..])),
+        Some((0, 0, &[0][..])),
+    ] {
+        assert!(validate_identity(Tool::SudoAudit, identity).is_err());
+    }
+    for uid in ["#505", "#612"] {
+        validate_arguments(
+            Tool::SudoAudit,
+            &["-n".into(), "-l".into(), "-U".into(), uid.into()],
+        )
+        .unwrap();
+    }
+    for argv in [
+        vec!["-n", "-l", "-U", "#502"],
+        vec!["-n", "-l", "-U", "authsvc"],
+        vec!["-n", "-l", "-U", "#505", "/bin/sh"],
+        vec!["-n", "/bin/sh"],
+        vec![],
+    ] {
+        assert!(validate_arguments(
+            Tool::SudoAudit,
+            &argv.iter().map(|s| s.to_string()).collect::<Vec<_>>()
+        )
+        .is_err());
+    }
+    assert!(validate_identity(Tool::Sudo, None).is_err());
+}
+
+#[test]
+fn ordinary_sudo_can_only_list_current_caller_policy() {
+    validate_arguments(Tool::Sudo, &["-n".into(), "-l".into()]).unwrap();
+    for argv in [
+        vec!["-n", "/bin/sh"],
+        vec!["-n", "-l", "-U", "#505"],
+        vec!["-n", "-l", "/bin/sh"],
+        vec![],
+    ] {
+        assert!(validate_arguments(
+            Tool::Sudo,
+            &argv.iter().map(|s| s.to_string()).collect::<Vec<_>>()
+        )
+        .is_err());
+    }
+}

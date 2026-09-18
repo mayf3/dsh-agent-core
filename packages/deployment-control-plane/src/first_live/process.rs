@@ -18,6 +18,7 @@ use std::{
 pub(super) enum Tool {
     Launchctl,
     Sudo,
+    SudoAudit,
     Node,
     Retired,
     Sh,
@@ -28,7 +29,7 @@ impl Tool {
     pub(super) fn path(self) -> &'static str {
         match self {
             Self::Launchctl => "/bin/launchctl",
-            Self::Sudo => "/usr/bin/sudo",
+            Self::Sudo | Self::SudoAudit => "/usr/bin/sudo",
             Self::Node | Self::RetiredNode => "/usr/local/libexec/agent-core/node-runtime/bin/node",
             Self::Retired => "/usr/local/libexec/lw-pilot-executor",
             Self::Sh => "/bin/sh",
@@ -50,11 +51,23 @@ pub(super) fn pinned(tool: Tool, expected: &str) -> Result<()> {
         libc::O_RDONLY,
         0,
     )?;
-    let bytes = if matches!(tool, Tool::Launchctl | Tool::Sudo | Tool::Sh | Tool::Plutil) {
-        validate_platform_file(&file)?;
+    let apple = matches!(
+        tool,
+        Tool::Launchctl | Tool::Sudo | Tool::SudoAudit | Tool::Sh | Tool::Plutil
+    );
+    let validate = |file: &std::fs::File| {
+        if matches!(tool, Tool::Sudo | Tool::SudoAudit) {
+            super::sudo::metadata(file)
+        } else {
+            validate_platform_file(file)
+        }
+    };
+    let bytes = if apple {
+        validate(&file)?;
         let mut b = Vec::new();
         (&mut file).take(32 * 1024 * 1024 + 1).read_to_end(&mut b)?;
         require(b.len() <= 32 * 1024 * 1024, "SIZE_LIMIT")?;
+        validate(&file)?;
         b
     } else {
         snapshot(&file, 0, 128 * 1024 * 1024)?.bytes
@@ -222,8 +235,12 @@ fn capture(
 }
 fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result<()> {
     match identity {
-        None => require(matches!(tool, Tool::Launchctl), "FIRST_LIVE_IDENTITY"),
+        None => require(
+            matches!(tool, Tool::Launchctl | Tool::SudoAudit),
+            "FIRST_LIVE_IDENTITY",
+        ),
         Some((uid, gid, groups)) => {
+            require(!matches!(tool, Tool::SudoAudit), "FIRST_LIVE_IDENTITY")?;
             let expected = if matches!(tool, Tool::Node) {
                 (505, 601)
             } else {
@@ -242,6 +259,17 @@ fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result
 mod tests;
 
 fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
+    if matches!(tool, Tool::SudoAudit) {
+        require(
+            args.len() == 4
+                && args[..3] == ["-n", "-l", "-U"]
+                && ["#505", "#612"].contains(&args[3].as_str()),
+            "FIRST_LIVE_SUDO_AUDIT_ARGUMENTS",
+        )?;
+    }
+    if matches!(tool, Tool::Sudo) {
+        require(args == ["-n", "-l"], "FIRST_LIVE_SUDO_ARGUMENTS")?;
+    }
     if matches!(tool, Tool::Plutil) {
         require(
             args == [

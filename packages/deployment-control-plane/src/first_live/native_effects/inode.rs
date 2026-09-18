@@ -331,6 +331,8 @@ fn deadline(expires_at: u64) -> Result<()> {
     require(now < expires_at, "FIRST_LIVE_GRANT_EXPIRED")
 }
 
+#[cfg(test)]
 #[path = "inode_recovery.rs"]
 mod recovery;
+#[cfg(test)]
 pub(super) use recovery::recover_tree;
