@@ -1,0 +1,26 @@
+✔ schema: all 22 bounded inventory manifests validate (7.590417ms)
+✔ ACC-023 identity derivation is deterministic per logical coordinates (2.613542ms)
+✔ ACC-023 runId/idempotencyKey derive from occurrenceId; session is fresh + non-main (0.195292ms)
+✔ ACC-023 natural/catchup jointly occupy the nominal slot space; retry occupies its predecessor (0.769584ms)
+✔ ACC-023 structured collision error is fail-loud and structured (1.067542ms)
+✔ ACC-006 state machine: legal transitions and hard rejections (0.14125ms)
+✔ ACC-006 applyTransition appends history and rejects illegal transitions (1.180584ms)
+✔ ACC-006 late settlement leaves the unknown history auditable (0.39175ms)
+✔ ACC-022 buildOccurrenceRecord carries every authority field (C-022) (0.562417ms)
+✔ ACC-022 corrupt occurrence records fail loud on validation (authority corruption) (0.617084ms)
+✔ ACC-006/011 unknown-to-terminal history without trusted lateSettlement fails loud (2.353584ms)
+✔ ACC-004/022 failed authority requires a valid terminalEvidence kind (0.701334ms)
+✔ ACC-022 default timeout falls back to the safety timeout (C-025) (0.239833ms)
+✔ ACC-024 payloadHash: canonical JSON, key order irrelevant, delivery excluded (0.102833ms)
+✔ ACC-024 canonicalJSON sorts keys recursively (0.040916ms)
+✔ ACC-028 rebuildFences derives fences from unresolved unknowns only (0.588292ms)
+✔ ACC-028 isUnresolvedUnknown + terminal helpers (0.05025ms)
+✔ findOccurrenceByCoords locates records by logical coordinates (1.06025ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 223.462583
