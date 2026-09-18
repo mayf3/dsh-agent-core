@@ -24,7 +24,49 @@ def root():
                 device=42, inode=99, nlink=4)
 
 
+def optional_graph():
+    a = 'node_modules/.pnpm/@anthropic-ai+claude-agent-sdk@0.3.220_@anthropic-ai+sdk@0.93.0_zod@4.4.3__@modelcontex_57ba44dcbc2a36491e18d36fec520472/node_modules/@anthropic-ai'
+    b = 'node_modules/.pnpm/@openai+codex@0.147.0/node_modules/@openai'
+    rows = {}
+    def add(path,kind):
+        parts=path.split('/')
+        for i in range(1,len(parts)): rows.setdefault('/'.join(parts[:i]), row('/'.join(parts[:i]),'directory'))
+        rows[path]=row(path,kind)
+        return rows[path]
+    for source,target,name,leaf,package,hashvalue in [(a,'@anthropic-ai+claude-agent-sdk-darwin-x64@0.3.220/node_modules/@anthropic-ai','claude-agent-sdk-darwin-x64','claude-agent-sdk-darwin-x64','claude-agent-sdk','1c9d0905f64e126850efe4fc4e7244c604a0855de8d4c82aff78da6f1988bd08'),
+            (b,'@openai+codex@0.147.0-darwin-x64/node_modules/@openai','codex-darwin-x64','codex','codex','bbaf3b9597b54bc1d4cf4aea93870e9035629d79bdaba58234011c31f0cfcf3d')]:
+        for path,up in [(source+'/'+name,'../../..'),('node_modules/.pnpm/node_modules/'+source.split('/')[-1]+'/'+name,'../..')]:
+            add(path,'symlink')['target']=up+'/'+target+'/'+leaf
+        add('node_modules/.pnpm/'+target.rsplit('/',1)[0],'directory')
+        add(source+'/'+package+'/package.json','file')['sha256']=hashvalue
+    for i,e in enumerate(rows.values(),1): e['inode']=i
+    return [m.typed_tree([row()],root()), m.typed_tree(list(rows.values()),root()),m.typed_tree([row()],root())]
+
+
 class StaticInputs(unittest.TestCase):
+    def test_exact_four_optional_negative_edges_are_preserved_without_fake_target(self):
+        trees=optional_graph();before=copy.deepcopy(trees)
+        self.assertEqual(len(m.link_issues(trees)),4)
+        m.closed_links(trees)
+        self.assertEqual(trees,before)
+
+    def test_optional_negative_edge_scope_never_accepts_drift_or_fifth(self):
+        trees=optional_graph()
+        issues=m.link_issues(trees)
+        for issue in issues:
+            bad=copy.deepcopy(trees);bad[1]['entries'][issue['path']]['link']+='/'
+            with self.assertRaises(ValueError):m.closed_links(bad)
+            bad=copy.deepcopy(trees);bad[1]['entries'].pop(issue['path'])
+            with self.assertRaises(ValueError):m.closed_links(bad)
+            bad=copy.deepcopy(trees);missing=issue['missing_path'].removeprefix(m.BASE+'harness/')
+            bad[1]['entries'][missing]=m.entry(row(missing,'directory'))
+            with self.assertRaises(ValueError):m.closed_links(bad)
+        bad=copy.deepcopy(trees);extra=m.entry(row('fifth','symlink'));extra['link']='absent';bad[1]['entries']['fifth']=extra
+        with self.assertRaises(ValueError):m.closed_links(bad)
+        for p,e in trees[1]['entries'].items():
+            if p.endswith('package.json'):
+                bad=copy.deepcopy(trees);bad[1]['entries'][p]['sha256']='f'*64
+                with self.assertRaises(ValueError):m.closed_links(bad)
     def test_public_configuration_retains_keys_and_omits_future_receipts(self):
         service = {'catalog': {'profiles': {'dsh-app': {'enabled': False, 'repo': 'mayf3/dsh-agent-core',
             'host': 'a'*64, 'revision': 'fixture-v1', 'verification_profiles': ['native'],
