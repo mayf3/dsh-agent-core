@@ -180,7 +180,7 @@ mod finalization_tests;
 
 #[cfg(test)]
 #[path = "../../test/transaction_fixture.rs"]
-mod test_fixture;
+pub(crate) mod test_fixture;
 
 #[cfg(test)]
 #[path = "../../test/common/final_transaction.rs"]

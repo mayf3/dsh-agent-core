@@ -190,6 +190,16 @@ pub fn run(sandbox: bool) -> Result<()> {
     }
     let _ = intake.poll(&queue);
     let mut train = super::train::Train::open(&intake, &queue, &path, sandbox)?;
+    if !sandbox
+        && intake
+            .config
+            .producers
+            .iter()
+            .any(|p| p == "local-deployment-registry")
+    {
+        let listener = crate::issuer::server::bind()?;
+        std::thread::spawn(move || crate::issuer::server::serve(listener));
+    }
     let socket_parent = if sandbox {
         path.clone()
     } else {

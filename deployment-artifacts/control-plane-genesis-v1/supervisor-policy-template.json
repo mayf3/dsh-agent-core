@@ -1,0 +1,72 @@
+{
+  "issuer_policy": {
+    "codex_sha256": "DERIVE_FROM_COPIED_EXECUTABLE",
+    "policy_epoch": 1,
+    "review_helper_sha256": "DERIVE_FROM_COPIED_EXECUTABLE",
+    "revoked_artifacts": [],
+    "revoked_sources": [],
+    "source": {
+      "accepted_contract_path": "docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md",
+      "accepted_contract_sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+      "additional_review_paths": [
+        "packages/broker/src/capabilities/workflow-definition-authoring.js",
+        "packages/broker/src/capabilities/workflow-execute.js",
+        "packages/broker/src/credential.js",
+        "packages/broker/src/error-detail-sanitizer.js",
+        "packages/broker/src/targets.js",
+        "packages/broker/src/transport.js",
+        "packages/broker/test/capabilities/workflow-global-instances-v2.test.js"
+      ],
+      "branch": "main",
+      "curl_sha256": "b636262803922ee1dd0fbf614818473ffa53c811e44fd3278c2270d3af4759d3",
+      "dependency_closure": [
+        "5adf307c63d6470baff4d8a89d4266cb80f99d241feaf76276efb9fc14520820"
+      ],
+      "repo": "mayf3/dsh-agent-core",
+      "slots": [
+        {
+          "executable": false,
+          "source": "packages/broker/src/capabilities/workflow.js",
+          "target": "packages/broker/src/capabilities/workflow.js"
+        }
+      ]
+    },
+    "version": 1
+  },
+  "platform_tools": {
+    "/usr/bin/dscl": "7870543dca5d253c509d2cb6c16893e53b688537b33f81d47d533d8693eb67f4",
+    "/usr/sbin/dseditgroup": "68369dbdf779d4c5653e67ff98e7eb469c3f25ef22eb0b6a10ff2e8a923c8339"
+  },
+  "profile": {
+    "actor_quota": 100,
+    "architecture": "x86_64",
+    "build_recipe": "immutable-regular-app-slots-v1",
+    "enabled": false,
+    "failure_policy": "StopTrain",
+    "goal_verifiers": {
+      "native-installed-readback-v1": "local-verifier"
+    },
+    "host": "343ecc65a7edc224c7b235c9bdbcc964ef5e81475734dc97bb1fa057e2959024",
+    "install_root_id": "agent-core-app",
+    "launchd_domain": "system",
+    "launchd_label": "ai.agent-core.runtime",
+    "policy_lease_seconds": 300,
+    "preflight_policy": "signed-lease-300s-v1",
+    "privileged_apply_profile": "fixed-regular-app-slots-v1",
+    "queue_quota": 1000,
+    "repo": "mayf3/dsh-agent-core",
+    "required_review_scopes": [
+      "release",
+      "root-code"
+    ],
+    "restart_profile": "runtime-w1-w2-system-v1",
+    "revision": "dsh-app-v1",
+    "rollback_profile": "journal-exact-preimage-v1",
+    "standing_authority_revision": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1",
+    "target_runtime": "dsh-system-runtime",
+    "toolchain": "rustc-1.98.1-aarch64-apple-darwin-regular-copy-v1",
+    "verification_profiles": [
+      "native-installed-readback-v1"
+    ]
+  }
+}

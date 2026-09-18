@@ -3,6 +3,7 @@ mod mailbox;
 pub mod protocol;
 mod server;
 mod train;
+pub(crate) use intake::Intake;
 pub use intake::{Caller, Configuration, VerifierBinding};
 pub use server::run;
 

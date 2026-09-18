@@ -372,7 +372,11 @@ fn native_signer(
         trusted.role == Role::Verifier && trusted.scopes.iter().any(|s| s == profile),
         "VERIFIER_SCOPE",
     )?;
-    let trust = intake.root.child("verifier-keys")?;
+    let trust = intake.root.child(if issuer == "local-verifier" {
+        "issuer-keys"
+    } else {
+        "verifier-keys"
+    })?;
     let file = trust.open_file(&format!("{issuer}.json"), libc::O_RDONLY, 0)?;
     let image = crate::fs::file::snapshot(&file, trust.uid, 1024)?;
     require(file.metadata()?.mode() & 0o777 == 0o600, "PRIVATE_KEY_MODE")?;
