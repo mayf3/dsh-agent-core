@@ -159,6 +159,7 @@ pub(super) fn prepare(ctx: &Context<'_>) -> Result<Tailscale> {
     let b = input(ctx.packet_dir, "tailscaled", PAYLOAD)?;
     require(b.len() == 23331104, "TAILSCALE_PACKET")?;
     input(ctx.packet_dir, "tailscaled.plist", NEW_PLIST)?;
+    old_preimage()?;
     let original = observed(ctx, OLD)?;
     let status = io::read(ctx, &original)?;
     let state_directory = state_directory()?;
@@ -257,6 +258,7 @@ impl state::Effects for Native<'_, '_> {
         state::checked(self.ctx)
     }
     fn intent(&mut self) -> Result<()> {
+        old_preimage()?;
         require(
             observed(self.ctx, OLD)? == *self.old
                 && io::read(self.ctx, self.old)? == self.status
@@ -302,6 +304,7 @@ impl state::Effects for Native<'_, '_> {
         )
     }
     fn stop(&mut self) -> Result<()> {
+        old_preimage()?;
         require(
             observed(self.ctx, OLD)? == *self.old,
             "TAILSCALE_GENERATION",

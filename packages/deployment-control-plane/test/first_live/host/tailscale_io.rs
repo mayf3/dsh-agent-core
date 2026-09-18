@@ -4,6 +4,66 @@ use std::{
     time::Duration,
 };
 #[test]
+fn authenticated_same_stream_survives_real_darwin_peer_fin() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("status.sock");
+    let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+    let child = std::thread::spawn(move || {
+        let (mut server, _) = listener.accept().unwrap();
+        let mut b = [0; 1];
+        let mut req = vec![];
+        while !req.ends_with(b"\r\n\r\n") {
+            server.read_exact(&mut b).unwrap();
+            req.push(b[0]);
+        }
+        server.write_all(b"HTTP/1.0 200 OK\r\n\r\n{\"BackendState\":\"Running\",\"Self\":{\"ID\":\"fixture\",\"PublicKey\":\"public\"}}").unwrap();
+    });
+    let mut client = UnixStream::connect(path).unwrap();
+    let expected = Peer {
+        uid: unsafe { libc::getuid() },
+        gid: unsafe { libc::getgid() },
+        pid: std::process::id(),
+    };
+    let mut checks = 0;
+    let response = authenticated_exchange(
+        &mut client,
+        expected,
+        Instant::now() + Duration::from_secs(1),
+        || {
+            checks += 1;
+            Ok(())
+        },
+    );
+    child.join().unwrap();
+    assert!(super::super::status::parse(&response.unwrap()).is_ok());
+    assert_eq!(checks, 2);
+}
+#[test]
+fn authenticated_exchange_rejects_mismatched_peer_before_any_request() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("status.sock");
+    let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+    let mut client = UnixStream::connect(path).unwrap();
+    let (mut server, _) = listener.accept().unwrap();
+    let expected = Peer {
+        uid: unsafe { libc::getuid() },
+        gid: unsafe { libc::getgid() },
+        pid: std::process::id() + 1,
+    };
+    let result = authenticated_exchange(
+        &mut client,
+        expected,
+        Instant::now() + Duration::from_secs(1),
+        || panic!("wrong peer admitted"),
+    );
+    assert!(result.is_err());
+    server.set_nonblocking(true).unwrap();
+    assert_eq!(
+        server.read(&mut [0u8; 1]).unwrap_err().kind(),
+        std::io::ErrorKind::WouldBlock
+    );
+}
+#[test]
 fn immediate_fin_and_delayed_body_complete_with_one_total_deadline() {
     for delay in [0, 20] {
         let (mut client, mut server) = UnixStream::pair().unwrap();
