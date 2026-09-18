@@ -1,0 +1,19 @@
+{
+  "base": "e8f863fdb5d3b95dc45cd202acee5c1c69124551",
+  "head": "ac8193ed5219c846007aaebd3e371db751653c1e",
+  "rust_files": 172,
+  "max_lines": 486,
+  "new_or_grown_violations": [],
+  "unchanged_legacy_directories": [
+    {
+      "path": "packages/deployment-control-plane/test",
+      "children": 25
+    }
+  ],
+  "semantics_preserving_relocation": {
+    "base": "2d74fa351c79dd0564c158341a0d5f5033fb1435",
+    "test_files": "11 renames with 100 percent matching blobs",
+    "source_edits": "11 cfg(test) module path strings only",
+    "test_names_and_bodies_changed": false
+  }
+}
