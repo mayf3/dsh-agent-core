@@ -15,7 +15,7 @@ import subprocess
 
 A = Path('/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1')
 P = Path(__file__).resolve().parents[4] / '.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE'
-STATIC = A / 'first-live-preparation/static-inputs-v5'
+STATIC = A / 'first-live-preparation/static-inputs-v6'
 OPERATION = 'first-live-dsh-20260918-01'
 WD = 'DCP_DSH_WATCHDOG_ACCEPTANCE_V1'
 BROKER = 'WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DELIVERY_V2'
@@ -26,8 +26,8 @@ LOCK_PARENTS = ['/private/var/run', '/usr/local/var/agent-core/production-mutati
 ANCESTORS = ['/', '/usr', '/usr/local', '/usr/local/libexec', '/usr/local/libexec/agent-core',
              '/usr/local/libexec/agent-deployd', '/Library', '/Library/LaunchDaemons']
 SOURCES = {
- 'static-index': (STATIC/'index.json', '8764ee69a82884e84aacfa97f1b24e758880a89a922f14f73f0b86de4c8c4042'),
- 'v7-baseline': (A/'first-live-preparation/v7-baseline-binding.json', '4947669ac0d0f41aea628451becdabb8d8737a73872b99e2b49f4fdc7c04fb8b'),
+ 'static-index': (STATIC/'index.json', '023a969163ce2bfbe073b8a05688d56c9549f7309ce32697677c224755602a49'),
+ 'v7-baseline': (A/'first-live-preparation/v7-baseline-binding.json', 'a2d1256ef56f66cb81cd113bd4bed5881b06e42de675416d447110887ce12317'),
  'enrollments': (P/'prospective-first-live-enrollments.json', '3211d45eb163c25ae026d1be71c81ca9ac96359261c679d03f7a8fe37843d193'),
  'watchdog-source': (P/'prospective-watchdog-source-policy.json', '1504fee8013a6b024545b1383f2132c4f65c0a4420ee07edf7ba61e4ce089d68'),
  'broker-source': (P/'prospective-broker-source-policy.json', 'a22d76d33f1a2724c4751dc2dcbdcc3b05e8d9ec3ead090127935426f4cc56f9'),
