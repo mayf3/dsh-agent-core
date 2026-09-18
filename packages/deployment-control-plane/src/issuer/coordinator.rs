@@ -46,12 +46,38 @@ pub struct SupervisorPolicy {
 /// Fixed producer operation, not a root deployment operation. It may publish a
 /// reviewed proposal; the existing controller still performs every admission gate.
 pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
+    prepare_scoped(goal, source_sha, None)
+}
+pub(crate) fn prepare_adoption(
+    proof: &crate::transaction::adoption::VerifiedAdoptionGrant,
+) -> Result<String> {
+    let a = &proof.get().payload;
+    prepare_scoped(&a.release.goal_id, &a.release.source_sha, Some(proof))
+}
+fn prepare_scoped(
+    goal: &str,
+    source_sha: &str,
+    adoption: Option<&crate::transaction::adoption::VerifiedAdoptionGrant>,
+) -> Result<String> {
     require(unsafe { libc::geteuid() } == 0, "ISSUER_REQUIRES_ROOT")?;
     valid_id(goal)?;
     source::source_sha(source_sha)?;
     let root_path = Path::new(ROOT);
     let intake = Intake::open(root_path, false)?;
     let root = &intake.root;
+    let db = root.open_file("queue.db", libc::O_RDONLY, 0)?;
+    validate(&db, 0, false)?;
+    let queue = Queue::open(root_path.join("queue.db"))?;
+    if let Some(proof) = adoption {
+        require(
+            intake.config.first_target_adoption.as_deref()
+                == Some(proof.get().payload.operation_id.as_str()),
+            "ADOPTION_BINDING",
+        )?;
+        queue.authorize_adoption_preparation(proof)?;
+    } else {
+        queue.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
+    }
     let lock = root.open_file("issuer.lock", libc::O_RDWR, 0)?;
     validate(&lock, 0, false)?;
     require(lock.metadata()?.mode() & 0o777 == 0o600, "UNSAFE_MODE")?;
@@ -141,9 +167,6 @@ pub fn prepare_native(goal: &str, source_sha: &str) -> Result<String> {
     )?;
     // Only the daemon's protected, initialized database may supply generation and
     // prerequisite facts. Absence is not a new empty production queue.
-    let db = root.open_file("queue.db", libc::O_RDONLY, 0)?;
-    validate(&db, 0, false)?;
-    let queue = Queue::open(root_path.join("queue.db"))?;
     let dependencies = queue.issuer_dependencies(&prerequisites)?;
     let observed = github::observe(selected, source_sha)?;
     let built = source::build_regular_files(&selected.slots, &observed.files)?;

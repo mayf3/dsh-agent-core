@@ -46,6 +46,7 @@ fn fixture(path: &std::path::Path, catalog: &Catalog) -> Intake {
     Intake {
         root: roots.root,
         config: Configuration {
+            first_target_adoption: None,
             catalog: catalog.clone(),
             callers: vec![Caller {
                 uid: unsafe { libc::geteuid() },

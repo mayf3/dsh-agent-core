@@ -34,6 +34,18 @@ pub(crate) fn strict_json(bytes: &[u8]) -> Result<Value> {
         !bytes.is_empty() && bytes.len() <= MAX_BYTES,
         "WATCHDOG_DOCUMENT_SIZE",
     )?;
+    decode(bytes)
+}
+/// The controller's fixed aggregate capture contains these bounded documents.
+/// This is not a caller-selectable size override for individual documents.
+pub(crate) fn strict_capture(bytes: &[u8]) -> Result<Value> {
+    require(
+        !bytes.is_empty() && bytes.len() <= 64 * 1024 * 1024,
+        "WATCHDOG_CAPTURE_SIZE",
+    )?;
+    decode(bytes)
+}
+fn decode(bytes: &[u8]) -> Result<Value> {
     let mut decoder = serde_json::Deserializer::from_slice(bytes);
     let value = StrictValue { depth: 0 }
         .deserialize(&mut decoder)

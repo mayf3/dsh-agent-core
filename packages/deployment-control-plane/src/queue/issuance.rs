@@ -30,12 +30,12 @@ impl Queue {
                 let goal: Signed<GoalReceipt> = parse(raw.ok_or(Error::new("PRIOR_DEPENDENCY_PENDING"))?)?;
                 let state = read_status(tx, &goal.payload.unit_id)?;
                 require(!super::executor_finalization::pending(tx, &goal.payload.unit_id)? && goal.payload.outcome == GoalOutcome::Pass, "PRIOR_DEPENDENCY_PENDING")?;
-                let (hash, raw): (String,String) = tx.query_row("SELECT r.digest,r.record FROM receipts r JOIN installed i ON i.receipt=r.digest WHERE i.unit=? AND r.kind='transaction'", [&goal.payload.unit_id], |r| Ok((r.get(0)?,r.get(1)?)))?;
-                let receipt: TransactionReceipt = parse(raw)?;
+                let (hash,receipt)=super::installation::installed(tx,&state.unit.target_runtime)?.ok_or(Error::new("PRIOR_DEPENDENCY_PENDING"))?;
+                let coordinates=receipt.current(&hash);
                 let physical = super::physical::current(tx, &state.unit.target_runtime)?.ok_or(Error::new("PRIOR_DEPENDENCY_PENDING"))?;
-                require(goal.payload.attempt == receipt.attempt && goal.payload.target_generation == receipt.target_generation
+                require(goal.payload.attempt == coordinates.attempt && goal.payload.target_generation == coordinates.target_generation
                     && goal.payload.service_generation == physical.service_generation, "PRIOR_DEPENDENCY_PENDING")?;
-                out.push(Dependency { unit_id: goal.payload.unit_id, receipt_digest: hash, capability: receipt.capability,
+                out.push(Dependency { unit_id: goal.payload.unit_id, receipt_digest: hash, capability: receipt.capability().into(),
                     required_goals: vec![goal_id.clone()], semantics: DependencySemantics::LiveInstallation });
             }
             Ok(out)

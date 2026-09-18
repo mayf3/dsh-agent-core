@@ -26,6 +26,12 @@ CREATE TABLE IF NOT EXISTS goal_receipts(unit TEXT NOT NULL REFERENCES units(id)
 CREATE TABLE IF NOT EXISTS installed(target TEXT PRIMARY KEY, unit TEXT NOT NULL REFERENCES units(id), generation INTEGER NOT NULL, receipt TEXT NOT NULL REFERENCES receipts(digest));
 CREATE TABLE IF NOT EXISTS physical_current(target TEXT PRIMARY KEY REFERENCES installed(target), receipt TEXT NOT NULL REFERENCES receipts(digest));
 CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY, unit TEXT NOT NULL REFERENCES units(id), goal TEXT NOT NULL, producer TEXT NOT NULL, expected_revision INTEGER NOT NULL, receipt TEXT NOT NULL REFERENCES receipts(digest), delivered INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS adoption_proposals(grant_digest TEXT PRIMARY KEY, proposal_digest TEXT NOT NULL, proposal TEXT NOT NULL);
+CREATE TRIGGER IF NOT EXISTS immutable_adoption_proposal_update BEFORE UPDATE ON adoption_proposals BEGIN SELECT RAISE(ABORT,'immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_adoption_proposal_delete BEFORE DELETE ON adoption_proposals BEGIN SELECT RAISE(ABORT,'immutable'); END;
+CREATE TABLE IF NOT EXISTS target_adoption(target TEXT PRIMARY KEY, operation TEXT UNIQUE NOT NULL, grant_digest TEXT NOT NULL, grant_record TEXT NOT NULL, unit TEXT REFERENCES units(id), receipt TEXT REFERENCES receipts(digest), baseline_done INTEGER NOT NULL DEFAULT 0, activation_receipt TEXT REFERENCES receipts(digest));
+CREATE TRIGGER IF NOT EXISTS immutable_adoption_identity BEFORE UPDATE OF target,operation,grant_digest,grant_record ON target_adoption BEGIN SELECT RAISE(ABORT,'immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_adoption_delete BEFORE DELETE ON target_adoption BEGIN SELECT RAISE(ABORT,'immutable'); END;
 CREATE TABLE IF NOT EXISTS executor_pending(unit TEXT PRIMARY KEY REFERENCES units(id));
 CREATE TABLE IF NOT EXISTS verification_requests(unit TEXT PRIMARY KEY REFERENCES units(id), generation INTEGER NOT NULL DEFAULT 1 CHECK(generation>0), last_error TEXT);
 CREATE TABLE IF NOT EXISTS pauses(unit TEXT PRIMARY KEY REFERENCES units(id));

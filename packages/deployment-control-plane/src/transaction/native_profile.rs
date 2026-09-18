@@ -59,6 +59,18 @@ pub struct EnrolledFile {
     pub mode: u32,
     pub gid: u32,
 }
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum RuntimeStartup {
+    #[default]
+    Legacy,
+    CatchupZero,
+}
+impl RuntimeStartup {
+    pub fn legacy(&self) -> bool {
+        *self == Self::Legacy
+    }
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct NativeEnrollment {
@@ -71,6 +83,8 @@ pub struct NativeEnrollment {
     pub profile_digest: String,
     pub initial_files: Vec<EnrolledFile>,
     pub runtime_root: String,
+    #[serde(default, skip_serializing_if = "RuntimeStartup::legacy")]
+    pub runtime_startup: RuntimeStartup,
     pub node_sha256: String,
     pub loader_files: Vec<crate::bootstrap::LoaderFile>,
     pub launchctl_sha256: String,
@@ -78,6 +92,13 @@ pub struct NativeEnrollment {
     pub services: Vec<ServiceEnrollment>,
 }
 impl NativeEnrollment {
+    pub(crate) fn argv(&self, kind: NativeKind) -> Vec<String> {
+        let mut argv = kind.argv(&self.runtime_root);
+        if kind == NativeKind::Runtime && self.runtime_startup == RuntimeStartup::CatchupZero {
+            argv.extend(["--catchup".into(), "0".into()]);
+        }
+        argv
+    }
     pub fn validate(&self) -> Result<()> {
         crate::trust::valid_id(&self.profile_id)?;
         crate::trust::valid_id(&self.profile_revision)?;
@@ -216,3 +237,7 @@ pub(crate) fn process_argv(pid: u32) -> Result<Vec<String>> {
     }
     Ok(result)
 }
+
+#[cfg(test)]
+#[path = "../../test/native_startup.rs"]
+mod startup_tests;

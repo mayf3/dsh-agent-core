@@ -8,6 +8,39 @@ impl Queue {
         proposal: &Proposal,
         now: u64,
     ) -> Result<Submission> {
+        self.submit_scoped(catalog, actor, proposal, now, None)
+    }
+    pub(crate) fn submit_adoption(
+        &self,
+        catalog: &Catalog,
+        actor: &Actor,
+        proposal: &Proposal,
+        now: u64,
+        proof: &crate::transaction::adoption::VerifiedAdoptionGrant,
+    ) -> Result<Submission> {
+        self.submit_scoped(
+            catalog,
+            actor,
+            proposal,
+            now,
+            Some(crate::trust::digest(proof.get())?),
+        )
+    }
+    fn submit_scoped(
+        &self,
+        catalog: &Catalog,
+        actor: &Actor,
+        proposal: &Proposal,
+        now: u64,
+        operation: Option<String>,
+    ) -> Result<Submission> {
+        self.transaction(|tx| {
+            super::adoption::gate(
+                tx,
+                operation.as_deref(),
+                &proposal.desired.payload.target_runtime,
+            )
+        })?;
         valid_id(&actor.id)?;
         valid_id(&proposal.request_id)?;
         let request_digest = digest(proposal)?;
@@ -20,6 +53,7 @@ impl Queue {
         let profile = validate_proposal(catalog, actor, proposal, now)?;
         self.transaction(|tx| {
             if let Some(result)=recover_request(tx,actor,proposal,&request_digest)? { return Ok(result); }
+            super::adoption::gate(tx,operation.as_deref(),&profile.target_runtime)?;
             pin_policy(tx,&proposal.deployment_profile,&proposal.policy)?;
             let recent: u64 = tx.query_row("SELECT count(*) FROM requests WHERE actor=? AND created_at>=?",
                 (&actor.id,now.saturating_sub(60)), |r|r.get(0))?;
@@ -79,6 +113,18 @@ impl Queue {
     ) -> Result<()> {
         validate_policy(catalog, profile, policy, now)?;
         self.transaction(|tx| pin_policy(tx, profile, policy))
+    }
+    pub(crate) fn revalidate_acceptance(
+        &self,
+        catalog: &Catalog,
+        id: &str,
+        policy: &Signed<Policy>,
+        now: u64,
+        proof: Option<&crate::transaction::VerifiedReadOnlyPredecessor>,
+    ) -> Result<()> {
+        self.transaction(|tx| {
+            super::gates::validate_with_predecessor(tx, catalog, id, policy, now, proof)
+        })
     }
     /// Call under the host mutex immediately before any mutating edge, using the latest signed policy.
     pub fn revalidate(

@@ -451,6 +451,7 @@ fn make(path: &str, uid: u32, gid: u32, mode: u32) -> Result<Dir> {
 
 pub(crate) fn generated_configuration(catalog: Catalog) -> Configuration {
     Configuration {
+        first_target_adoption: None,
         catalog,
         callers: vec![Caller {
             uid: 502,

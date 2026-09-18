@@ -30,6 +30,9 @@ pub(crate) enum Event {
     CompleteFace {
         entries: Vec<(String, Option<FileImage>)>,
     },
+    ExecutedPredecessor {
+        proof: super::predecessor::ExecutedPredecessor,
+    },
     NoMutation {
         reason: String,
     },

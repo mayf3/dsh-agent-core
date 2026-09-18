@@ -27,6 +27,7 @@ fn fixture_policy() -> (
         revoked_artifacts: vec![],
     };
     let native = NativeEnrollment {
+        runtime_startup: Default::default(),
         host: "fixture".into(),
         caller_uids: vec![502],
         lifecycle_denial_digest: "d".repeat(64),
@@ -308,6 +309,7 @@ fn active_native_selection(version: u32) {
     let mut catalog = fixture_catalog();
     catalog.profiles.insert("fixture".into(), profile.clone());
     let config = Configuration {
+        first_target_adoption: None,
         catalog,
         callers: vec![Caller {
             uid: 502,

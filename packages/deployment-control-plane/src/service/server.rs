@@ -185,6 +185,7 @@ pub fn run(sandbox: bool) -> Result<()> {
     let _singleton = singleton(&intake.root, sandbox)?;
     super::mailbox::initialize(&intake.root)?;
     let queue = queue(&intake.root, &path)?;
+    queue.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
     for producer in &intake.config.producers {
         queue.register_producer(&intake.config.catalog, producer)?;
     }

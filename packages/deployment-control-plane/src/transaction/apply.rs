@@ -66,6 +66,9 @@ impl Executor {
             service,
             installed_before: q.daemon_current_installation(&status.unit.target_runtime)?,
         })?;
+        if let Some(predecessor) = self.capture_predecessor(q, c, id, attempt)? {
+            journal.append(Event::ExecutedPredecessor { proof: predecessor })?;
+        }
         self.active = Some(journal);
         let current = q.daemon_status(id)?;
         let gate_time = now.saturating_add(started.elapsed().as_secs());
@@ -241,7 +244,7 @@ impl Executor {
         }
         reviews.sort();
         reviews.dedup();
-        let receipt = TransactionReceipt {
+        let mut receipt = TransactionReceipt {
             unit_id: id.into(),
             artifact_sha256: s.unit.artifact_sha256,
             source_sha: s.unit.source_sha,
@@ -271,13 +274,22 @@ impl Executor {
             rollback_digest: None,
             capability: "installed-release".into(),
         };
+        if let Some(Event::ExecutedPredecessor { proof }) = journal.events.get(1) {
+            receipt
+                .step_results
+                .push(format!("predecessor-{}", digest(proof)?));
+        }
         journal.append(Event::Verified {
             receipt: receipt.clone(),
         })?;
         Ok(receipt)
     }
     pub(crate) fn verify_live_baseline(&self, q: &Queue, target: &str) -> Result<()> {
-        if let Some(receipt) = q.daemon_installed_receipt(target)? {
+        let installed = q.daemon_installation_record(target)?;
+        if let Some(crate::queue::InstallationReceipt::Adoption(receipt)) = &installed {
+            return self.verify_adopted_baseline(receipt);
+        }
+        if let Some(crate::queue::InstallationReceipt::Mutation(receipt)) = installed {
             let journal = Journal::for_receipt(&self.journals, &receipt)?;
             require(journal.terminal(), "RECOVERY_REQUIRED")?;
             let mut bound = Vec::new();
