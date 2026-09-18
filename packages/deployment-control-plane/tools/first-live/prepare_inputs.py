@@ -23,9 +23,9 @@ RETIRED = {'scripts/trusted-cp-deploy-install.sh': 'SHELL', 'scripts/production-
            'deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh': 'SHELL'}
 WATCHDOG = 'watchdog-current-observation-v1'
 ARTIFACTS = Path('/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1')
-PINS = {'ordinary-app-harness-inventory-v7-02.json': 'f04d796827e7ba96040e3f22ea84cab01c32d37e0e72c4e0a46cab0e67c8e551',
+PINS = {'ordinary-app-harness-inventory-g2-01.json': '9fcc64e2a8d6cf074a4ee4984c7f147da48b89fec772f65c289410decbf7bb95',
         'node-inventory.json': '9e1d19247e6fea27fef54c46d1ff0d762e1fdb0f2e1156f8c99a2017447ee075',
-        'static-input-supplement-v4.json': 'e83cc2dc44a29708ab110ae2ee6870df285c1aca812c43e5478f0362fd8583ff'}
+        'static-input-supplement-v5.json': '8262df9a7971fbe62a849cbcfaa5b34d4522ea3c1b166a3357ed0b58a2488b9a'}
 SERVICE_SHA = 'bd7351e49a0b674917cb5b6cea52522186d2055b7dbacda31b7a1e1bf59c50d2'
 MANIFEST_SHA = 'cd8bcc09371c091fa6bd8d93b1f2aa053cc2a3c80b0135d6a1c5892c45e66bb8'
 
@@ -321,8 +321,8 @@ def prepare(args):
     manifest, sources['node-closure-manifest'] = document(closure / 'manifest.json', MANIFEST_SHA)
     acl, sources['socket-ordinary-acl'] = document(census / 'socket-acl-static-input.json', '9257cd7d2b62fce6f9ab60bc4106f15fc37609ec76b6b345a16ee7680b618e1f')
     absent, sources['retirement-path-observation'] = document(census / 'retirement-path-static-input.json', '6a72a8b5327d6e1825f24202aade74925899ab9e8261ff1fd565790fe7743fb1')
-    supplement = inputs['static-input-supplement-v4.json']
-    all_rows = inputs['ordinary-app-harness-inventory-v7-02.json']['roots']
+    supplement = inputs['static-input-supplement-v5.json']
+    all_rows = inputs['ordinary-app-harness-inventory-g2-01.json']['roots']
     node = inputs['node-inventory.json']
     need(node['root'] == BASE + 'node-runtime', 'NODE_ROOT_BINDING')
     trees = []
