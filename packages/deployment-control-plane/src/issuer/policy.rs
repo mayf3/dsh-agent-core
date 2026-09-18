@@ -1,6 +1,6 @@
 //! One durable current lease. Queue epochs are global, while Owner policy revisions
 //! describe configuration changes and must never be reused as renewal counters.
-use super::{coordinator::SupervisorPolicy, custody};
+use super::{custody, owner_policy::OwnerPolicy};
 use crate::{
     error::require,
     fs::{
@@ -8,9 +8,7 @@ use crate::{
         secure::{validate, Dir},
     },
     model::*,
-    trust::{
-        canonical_bytes, digest, valid_digest, valid_id, validate_policy, verify_signed, Signable,
-    },
+    trust::{canonical_bytes, digest, valid_id, validate_policy, verify_signed, Signable},
     Error, Result,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -27,7 +25,7 @@ const LIMIT: u64 = 4 * 1024 * 1024;
 #[serde(deny_unknown_fields)]
 struct CachedLease {
     version: u32,
-    owner: SupervisorPolicy,
+    owner: OwnerPolicy,
     owner_digest: String,
     source_digest: String,
     profile_id: String,
@@ -86,7 +84,7 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
         Err(e) if e.code() == "ABSENT" => (),
         Err(e) => return Err(e),
     }
-    let owner: SupervisorPolicy = read(root, "issuer-policy.json")?;
+    let owner: OwnerPolicy = read(root, "issuer-policy.json")?;
     validate_owner(&owner)?;
     let owner_digest = digest(&owner)?;
     let profile_digest = digest(profile)?;
@@ -98,12 +96,9 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
     if let Some(previous) = &previous {
         validate_cache(previous, catalog)?;
         let cache = &previous.payload;
+        require(owner.epoch() >= cache.owner.epoch(), "POLICY_CONFIG_REPLAY")?;
         require(
-            owner.policy_epoch >= cache.owner.policy_epoch,
-            "POLICY_CONFIG_REPLAY",
-        )?;
-        require(
-            owner.policy_epoch != cache.owner.policy_epoch || owner_digest == cache.owner_digest,
+            owner.epoch() != cache.owner.epoch() || owner_digest == cache.owner_digest,
             "POLICY_EQUIVOCATION",
         )?;
         require(now >= cache.lease.payload.issued_at, "CLOCK_ROLLBACK")?;
@@ -125,8 +120,8 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
             .epoch
             .checked_add(1)
             .ok_or(Error::new("POLICY_EPOCH_EXHAUSTED"))?
-            .max(owner.policy_epoch),
-        None => owner.policy_epoch,
+            .max(owner.epoch()),
+        None => owner.epoch(),
     };
     let key = custody::load(
         &root.child("issuer-keys")?,
@@ -142,8 +137,8 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
             issued_at: now,
             expires_at: now.checked_add(seconds).ok_or(Error::new("CLOCK"))?,
             standing_authority_revision: profile.standing_authority_revision.clone(),
-            revoked_sources: owner.revoked_sources.clone(),
-            revoked_artifacts: owner.revoked_artifacts.clone(),
+            revoked_sources: owner.revoked_sources().clone(),
+            revoked_artifacts: owner.revoked_artifacts().clone(),
         },
     )?;
     validate_policy(catalog, profile_id, &lease, now)?;
@@ -152,7 +147,7 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
         &key,
         CachedLease {
             version: 1,
-            source_digest: digest(&owner.source)?,
+            source_digest: owner.source_digest()?,
             owner_digest: owner_digest.clone(),
             owner,
             profile_id: profile_id.into(),
@@ -173,7 +168,7 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
         0o600,
     )?;
     // Owner updates cannot be accidentally covered by an already prepared lease.
-    let current_owner: SupervisorPolicy = read(root, "issuer-policy.json")?;
+    let current_owner: OwnerPolicy = read(root, "issuer-policy.json")?;
     require(
         digest(&current_owner)? == owner_digest,
         "POLICY_SOURCE_CHANGED",
@@ -181,25 +176,8 @@ fn current_at(root: &Dir, catalog: &Catalog, profile_id: &str, now: u64) -> Resu
     root.rename(TEMPORARY, root, CACHE)?;
     Ok(lease)
 }
-fn validate_owner(owner: &SupervisorPolicy) -> Result<()> {
-    require(
-        owner.version == 1 && owner.policy_epoch > 0,
-        "ISSUER_POLICY",
-    )?;
-    owner.source.validate()?;
-    valid_digest(&owner.codex_sha256)?;
-    valid_digest(&owner.review_helper_sha256)?;
-    require(
-        owner.revoked_sources.len() <= 4096 && owner.revoked_artifacts.len() <= 4096,
-        "SIZE_LIMIT",
-    )?;
-    for source in &owner.revoked_sources {
-        super::source::source_sha(source)?;
-    }
-    for artifact in &owner.revoked_artifacts {
-        valid_digest(artifact)?;
-    }
-    Ok(())
+fn validate_owner(owner: &OwnerPolicy) -> Result<()> {
+    owner.validate()
 }
 fn validate_cache(signed: &Signed<CachedLease>, catalog: &Catalog) -> Result<()> {
     let cache = &signed.payload;
@@ -215,12 +193,12 @@ fn validate_cache(signed: &Signed<CachedLease>, catalog: &Catalog) -> Result<()>
         cache.version == 1
             && lease.epoch > 0
             && cache.owner_digest == digest(&cache.owner)?
-            && cache.source_digest == digest(&cache.owner.source)?
+            && cache.source_digest == cache.owner.source_digest()?
             && cache.profile_digest == digest(&cache.profile)?
             && cache.lease_digest == digest(&cache.lease)?
             && lease.standing_authority_revision == cache.profile.standing_authority_revision
-            && lease.revoked_sources == cache.owner.revoked_sources
-            && lease.revoked_artifacts == cache.owner.revoked_artifacts
+            && lease.revoked_sources == *cache.owner.revoked_sources()
+            && lease.revoked_artifacts == *cache.owner.revoked_artifacts()
             && lease.expires_at > lease.issued_at
             && lease.expires_at - lease.issued_at == cache.profile.policy_lease_seconds.min(300),
         "POLICY_CACHE_BINDING",

@@ -247,3 +247,29 @@ fn two_goals_before_queue_submit_share_only_the_same_artifact() {
         "ISSUER_TARGET_PENDING"
     );
 }
+
+#[test]
+fn changed_source_binding_cannot_create_second_outstanding_draft() {
+    let (_tmp, roots, _, _, draft) = setup_issue();
+    save(&roots.root, &draft).unwrap();
+    let mut changed = draft.clone();
+    changed.binding.source_policy_digest = "f".repeat(64);
+    assert_eq!(
+        pending(&roots.root, &changed.binding)
+            .err()
+            .expect("conflicting draft must stop before build")
+            .code(),
+        "ISSUANCE_GOAL_PENDING"
+    );
+    assert_eq!(
+        save(&roots.root, &changed).unwrap_err().code(),
+        "ISSUANCE_GOAL_PENDING"
+    );
+    assert_eq!(
+        pending(&roots.root, &draft.binding)
+            .unwrap()
+            .unwrap()
+            .review_evidence_digest,
+        draft.review_evidence_digest
+    );
+}

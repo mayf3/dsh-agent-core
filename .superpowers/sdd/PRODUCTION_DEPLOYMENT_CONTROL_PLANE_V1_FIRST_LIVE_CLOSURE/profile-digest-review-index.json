@@ -1,0 +1,16 @@
+{
+  "reviewer": "dcp_first_live_binding_review",
+  "review_source": "e8f863fdb5d3b95dc45cd202acee5c1c69124551",
+  "review_tree": "b48cf247ab48b1ee77d1600af9cb80036592fe8b",
+  "sha256": {
+    "profile-digest-focused-rereview.md": "f1a53595855c8261c1c7b00bcf049271e8919d28d1083764e129a64fbd73f676",
+    "profile-digest-independent-checks.json": "c2c63a565572b96d8f8a3bf54d4e0147d4975c0e45ec3e6b5f2fac2d43ba17a9",
+    "profile-digest-red.log": "d457af45a0a7df5fe3f7fa29eb98c86fcd41be52db4136dbcbf0436b82ff584d",
+    "profile-digest-issuer-green.log": "5de4bcdfda0b9f6e9059164901660509ed4c75483f063378ff4a78a1dd3702b9",
+    "profile-digest-bootstrap.log": "38ea55e1d2cea6c2f76d08e0302fa291a74da975d8dd0a272d5a7dcb9408b650",
+    "profile-digest-genesis.log": "63b28491e88a83b41c67957df948fa8615cf56004f1ce16b27a2b5efb54db59b",
+    "profile-digest-fmt.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-digest-clippy.log": "70edd477327ec5132a68780d8aca400c12180e8f62a1bee73f56d5364c193dd7",
+    "profile-digest-release.log": "a2ad29b89c349b050c1b37c40a600f22b4e3289b86f0927ae8717d7dc0f0e104"
+  }
+}

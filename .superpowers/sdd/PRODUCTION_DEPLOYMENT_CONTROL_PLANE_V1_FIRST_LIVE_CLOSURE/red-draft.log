@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+thread 'issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft' (74911903) panicked at src/issuer/../../test/issuer/issuance.rs:257:61:
+conflicting draft must stop before build
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft ... FAILED
+
+failures:
+
+failures:
+    issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 91 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,103 @@
+{
+  "source_commit": "730d4a0539cc758eb8c0440e9ceddbefde4c017d",
+  "base_commit": "78daf3699346f6f68264921443d42552d9157dae",
+  "source_tree": "dcfc5c84b663da8b1713627757d29503d89aba99",
+  "observed_at": "2026-09-18T04:37:35.426719+00:00",
+  "environment": "nonroot macOS aarch64 isolated worktree; fixture roots only",
+  "governing_accepted_semantics": "39865536ce51005f95a98473e77c2329078512c0",
+  "full_test": {
+    "command": "cargo test --manifest-path packages/deployment-control-plane/Cargo.toml --locked",
+    "exit_code": 0,
+    "log": "full-final.log",
+    "sha256": "ebd97c1d47ef32dcbb3abe8acda645ece9cc5189e7667a7a7f5f4687edd8407a",
+    "top_level_passed": 272,
+    "failed": 0,
+    "ignored": 2,
+    "raw_sum_passed_including_nested_worker_processes": 336,
+    "count_method": "top-level result lines have 0 filtered out; nested lifecycle workers have 96 filtered out and are not additional suite test definitions"
+  },
+  "fmt": {
+    "command": "cargo fmt --manifest-path packages/deployment-control-plane/Cargo.toml -- --check",
+    "exit_code": 0
+  },
+  "clippy": {
+    "command": "cargo clippy --manifest-path packages/deployment-control-plane/Cargo.toml --all-targets -- -D warnings",
+    "exit_code": 0,
+    "log": "clippy.log"
+  },
+  "release": {
+    "command": "cargo build --manifest-path packages/deployment-control-plane/Cargo.toml --release --locked",
+    "exit_code": 0,
+    "log": "release.log"
+  },
+  "structure": {
+    "exit_code": 1,
+    "scope": "three unchanged baseline directory violations; no changed-surface violation",
+    "violations": [
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "severity": "VIOLATION",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/production-runtime/src",
+        "physicalLines": null,
+        "directChildren": 21,
+        "depth": 1,
+        "classification": "directory",
+        "baselineValue": 21,
+        "headValue": 21,
+        "exception": null,
+        "detail": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "severity": "VIOLATION",
+        "rule": "DIRECTORY_OVER_CEILING",
+        "path": "packages/production-runtime/test",
+        "physicalLines": null,
+        "directChildren": 23,
+        "depth": 1,
+        "classification": "directory",
+        "baselineValue": 23,
+        "headValue": 23,
+        "exception": 21,
+        "detail": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "severity": "VIOLATION",
+        "rule": "DIRECTORY_OVER_CEILING",
+        "path": "scripts",
+        "physicalLines": null,
+        "directChildren": 59,
+        "depth": 1,
+        "classification": "directory",
+        "baselineValue": 59,
+        "headValue": 59,
+        "exception": 40,
+        "detail": null
+      }
+    ]
+  },
+  "changed_source_test_sha256": {
+    "packages/deployment-control-plane/src/issuer/coordinator.rs": "ea65a45b3a54014d8baa3b173322f68125040e34166c878b9875ea1eae869c1c",
+    "packages/deployment-control-plane/src/issuer/issuance.rs": "fa7d219609b3325625ccb39f5ff201ff4c8c0b8e9086964161b01e4388c76f05",
+    "packages/deployment-control-plane/src/issuer/mod.rs": "f46d9f6e654591898a0fb6c7452fe9599df8256e1102d298f9cf21263504a0bd",
+    "packages/deployment-control-plane/src/issuer/owner_policy.rs": "6e8f2f8ce097ccc193c60b129abe752df40cad4d4eb008fb9e8aad3adf9bc704",
+    "packages/deployment-control-plane/src/issuer/policy.rs": "4ffd7e10e636edf4d47976ce605679ed2773f6497abb965a7d5c2d352f422bee",
+    "packages/deployment-control-plane/src/registry/dependencies.rs": "a252dc49261e04dc15b4451ac8e60a7c8b36f8de9b6c80df7ee29d70584c6893",
+    "packages/deployment-control-plane/src/registry/mod.rs": "e0198960f0df1bd5a27000d5c962c0ae245aa5b5193780ee6f71c741d8f7e498",
+    "packages/deployment-control-plane/src/registry/types.rs": "d991cb6ad044a8ebe3b293232ab9c16b68f8bd794aa2c0da6d0e4557f1e66252",
+    "packages/deployment-control-plane/src/registry/validation.rs": "6b6d9962d970954edf0a6bc81f55999489c47344562593d71b487fb75c0c17ee",
+    "packages/deployment-control-plane/test/issuer/issuance.rs": "13f63b811f71d4962f2b3a641332d54eb4030daac36cb1c26b253ae4bc8ad4f1",
+    "packages/deployment-control-plane/test/issuer/owner_policy.rs": "4aec6e3bc6427e8b845be604d105db371d9185f5786395048dd12e1693fb2f2f",
+    "packages/deployment-control-plane/test/issuer/policy.rs": "cf5bfed940369b1ab4e5bba18758a8b70c1fc0ccd5d9166c1f84abcb4d23aa95",
+    "packages/deployment-control-plane/test/registry/adapter.rs": "1f4df78fd9cfde3f21a3de3047ccc3a0e399d98f4f38f0dcc978d1a2ef33c1e8",
+    "packages/deployment-control-plane/test/registry/dependencies.rs": "c4bb11fa01f11175f9d027dd9f73c5ff21481a153a16e5eade1edf2713975ef3",
+    "packages/deployment-control-plane/test/registry/main.rs": "a3d6e157e4033c228d9c09a315ceab7cf48753293bcd05dadef2738c6d8db588",
+    "packages/deployment-control-plane/test/registry/security.rs": "ba57affb40f3237b1ee4aac2d84a06731bc233cc0a9d6dfd3e23400a0606089e"
+  },
+  "production_mutation_performed": false,
+  "privileged_bootstrap_performed": false,
+  "genesis_inputs_modified": false,
+  "independent_review_status": "Separate nonauthor review; not authored or certified by this report"
+}

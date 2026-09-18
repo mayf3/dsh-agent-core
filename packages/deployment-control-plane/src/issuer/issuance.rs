@@ -34,6 +34,25 @@ pub(crate) struct Draft {
 pub(crate) fn pending(root: &Dir, binding: &IssueBinding) -> Result<Option<Draft>> {
     let id = digest(binding)?;
     let dir = root.child("issuer-jobs")?;
+    // A changed binding must not escape an existing Goal reservation by choosing
+    // another content-addressed filename. Only exact resumptions are admissible.
+    for name in dir.names_bounded(MAX_FILES)? {
+        if !name.starts_with("draft-binding-") || !name.ends_with(".json") {
+            continue;
+        }
+        let hash: String = read(&dir, &name)?;
+        crate::trust::valid_digest(&hash)?;
+        let draft: Draft = read(&dir, &format!("draft-{hash}.json"))?;
+        require(
+            digest(&draft)? == hash
+                && name == format!("draft-binding-{}.json", digest(&draft.binding)?),
+            "ISSUANCE_BINDING",
+        )?;
+        require(
+            draft.binding.goal_id != binding.goal_id || digest(&draft.binding)? == id,
+            "ISSUANCE_GOAL_PENDING",
+        )?;
+    }
     let draft_digest: String = match read(&dir, &format!("draft-binding-{id}.json")) {
         Ok(value) => value,
         Err(e) if e.code() == "ABSENT" => return Ok(None),

@@ -32,10 +32,25 @@ record!(HistoricalSource {
     release_sha: String,
     review: EvidenceReference
 });
-record!(PriorDependency {
+record!(DeploymentChild {
     goal_id: String,
-    provenance: EvidenceReference
+    enrollment_digest: String
 });
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PriorDependency {
+    pub goal_id: String,
+    pub provenance: EvidenceReference,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deployment_child: Option<DeploymentChild>,
+}
+impl PriorDependency {
+    pub(crate) fn effective_goal(&self) -> &str {
+        self.deployment_child
+            .as_ref()
+            .map_or(&self.goal_id, |c| &c.goal_id)
+    }
+}
 record!(Enrollment { goal_id: String, business_goal_id: String, origin_uri: String, owner: String,
     producer_id: String, repo: String, target_runtime: String, deployment_profile: String,
     scope: DeploymentScope, scope_description: String, acceptance_revision: String,
