@@ -10,10 +10,22 @@ class Compose(unittest.TestCase):
     def test_all_real_static_sources_load_without_future_proofs(self):
         records, bindings = c.load_sources()
         self.assertGreater(len(bindings), 20)
-        self.assertEqual(len(records['native']['initial_files']), 1131)
+        self.assertEqual(len(records['native']['initial_files']), 1171)
         self.assertEqual(len(records['native']['loader_files']), 22)
         self.assertNotIn('lifecycle_denial_digest', records['native'])
         self.assertNotIn('denial_receipt', records['configuration']['socket_ancestor'])
+
+    def test_v7_baseline_keeps_scheduler_and_old_broker_as_distinct_coordinates(self):
+        records, _ = c.load_sources()
+        files = {row['path']: row['sha256'] for row in records['native']['initial_files']}
+        self.assertEqual(files['package.json'],
+            'd57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd')
+        self.assertEqual(files['packages/scheduler/src/scheduler.js'],
+            'e3e8dce0fd8959336521147b639007b82e8ce98d932eca82ca2b98ac2506770d')
+        self.assertEqual(files['packages/scheduler/src/watchdog/incident-lifecycle.js'],
+            'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1')
+        self.assertEqual(files['packages/broker/src/capabilities/workflow.js'],
+            'd76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee')
 
     def test_real_static_join_with_explicit_fixture_freeze_is_complete_template(self):
         records, _ = c.load_sources()
