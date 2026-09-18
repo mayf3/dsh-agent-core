@@ -137,7 +137,7 @@ class IO(unittest.TestCase):
             def serve():
                 while not stop.is_set():
                     try: conn, _ = listener.accept()
-                    except TimeoutError: continue
+                    except socket.timeout: continue
                     with conn:
                         try:
                             request = b""
