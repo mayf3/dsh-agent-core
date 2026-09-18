@@ -432,24 +432,31 @@ fn pre_entropy_validation_is_read_only_and_requires_pristine_state() {
 // Permanent regressions derived from the independent RB-01/02/03 probes.
 #[test]
 fn independent_old_reviewer_key_uppercase_alias_must_not_become_active() {
-    let mut c = Case::new();
-    let mut old = catalog("old").keys["local-reviewer"].clone();
-    old.public_key = old.public_key.to_uppercase();
-    c.fresh.keys.insert("local-reviewer".into(), old);
-    assert_eq!(
-        fixture::prepare(
-            &c.roots,
-            &c.guard,
-            &c.fresh,
-            &key("local-authority", "fresh"),
-            &key(PRODUCER, "fresh"),
-            bindings()
-        )
-        .err()
-        .unwrap()
-        .code(),
-        "CUSTODY_KEYSET"
-    );
+    for public_key in [
+        catalog("old").keys["local-reviewer"]
+            .public_key
+            .to_uppercase(),
+        catalog("fresh").keys["local-builder"]
+            .public_key
+            .to_uppercase(),
+    ] {
+        let mut c = Case::new();
+        c.fresh.keys.get_mut("local-reviewer").unwrap().public_key = public_key;
+        assert_eq!(
+            fixture::prepare(
+                &c.roots,
+                &c.guard,
+                &c.fresh,
+                &key("local-authority", "fresh"),
+                &key(PRODUCER, "fresh"),
+                bindings()
+            )
+            .err()
+            .unwrap()
+            .code(),
+            "CUSTODY_KEYSET"
+        );
+    }
 }
 
 #[test]
