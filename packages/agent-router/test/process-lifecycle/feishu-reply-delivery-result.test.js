@@ -13,6 +13,12 @@ const ingress = Object.freeze({
   text: 'one harmless prompt',
 })
 
+const RECOVERY_KEYS = [
+  'attemptedActions', 'failureStage', 'fencedBy', 'missingEvidence',
+  'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
+  'replyDelivery', 'requestAdmission', 'terminationEvidence',
+].sort()
+
 function harness({ turn, reply }) {
   const replies = []
   let executions = 0
@@ -130,12 +136,18 @@ test('V3 outer ingress sends one image answer as text and projects connector tim
   assert.match(sends[1].input.text, /可能已送达/)
 })
 
-test('V3 admission failure keeps the original fenced error and records zero reply delivery attempts', async () => {
-  const error = Object.assign(new Error('still fenced'), {
+test('Lifecycle V3 fenced admission uses the closed C-026 recovery projection', async () => {
+  const handle = 'turn:agt_expert:main:a1:g1:s1'
+  const error = Object.assign(new Error('SECRET_FENCE_SENTINEL'), {
     code: 'AGENT_PROCESS_TURN_FENCED',
     status: 'not_admitted',
     envelope: 'not_admitted',
-    fencedBy: 'turn:agt_expert:main:a1:g1:s1',
+    fencedBy: handle,
+    reconciliationHandle: handle,
+    processGeneration: 1,
+    missingEvidence: ['child_real_exit'],
+    attemptedActions: [],
+    nextSafeAction: 'await_late_evidence',
   })
   const fx = harness({
     turn: async () => { throw error },
@@ -144,12 +156,34 @@ test('V3 admission failure keeps the original fenced error and records zero repl
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.deepEqual(Object.keys(result).sort(), ['error', 'failureStage'])
-  assert.equal(result.error, error)
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   assert.equal(result.failureStage, 'admission')
-  assert.equal(result.error.fencedBy, 'turn:agt_expert:main:a1:g1:s1')
+  assert.equal(result.fencedBy, handle)
+  assert.equal(result.reconciliationHandle, handle)
+  assert.equal(result.requestAdmission, 'not_admitted')
+  assert.equal(JSON.stringify(result).includes('SECRET_FENCE_SENTINEL'), false)
   assert.equal(fx.executions(), 1)
   assert.equal(fx.replies.length, 1, 'only the existing failure receipt is attempted')
+})
+
+test('Lifecycle V3 outcome_unknown uses the closed C-026 recovery projection', async () => {
+  const handle = 'turn:epoch:a1:g1:s2'
+  const fx = harness({
+    turn: async () => ({
+      status: 'outcome_unknown', reconciliationHandle: handle,
+      deadlineAtWallMs: Date.now() + 1000, evidence: {},
+    }),
+    reply: async () => ({ messageId: 'om_receipt' }),
+  })
+
+  const result = await fx.delivery.onIngress(ingress)
+
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
+  assert.equal(result.failureStage, 'execution')
+  assert.equal(result.reconciliationHandle, handle)
+  assert.equal(result.requestAdmission, 'accepted')
+  assert.equal(result.replyDelivery, 'not_attempted')
+  assert.equal(result.partialDelivery, 'none')
 })
 
 test('V3 execution failure is distinct from reply delivery and preserves its original Error', async () => {

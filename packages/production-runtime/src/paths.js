@@ -103,6 +103,7 @@ export function resolveProductionLayout(rootInput) {
     workspacesRoot: join(root, 'workspaces'),
     homesRoot: join(root, 'homes'),
     controlDir: join(root, 'control'),
+    turnRecoveryStore: join(root, 'control', 'turn-recovery-v3.json'),
     evidenceLog: join(root, 'control', 'runtime-evidence.jsonl'),
     logsDir: join(root, 'logs'),
   }

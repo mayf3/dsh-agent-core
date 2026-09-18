@@ -1,8 +1,8 @@
 /**
  * @agent-core/agent-router/src/process/event-correlation.js — exact event
  * attribution, terminal settlement and the outcome_unknown fence of the
- * per-agent DSH process client (AGENT_PROCESS_LIFECYCLE_HARDENING_V2
- * C-011..C-016, C-017 precedence).
+ * per-agent DSH process client (AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+ * C-011..C-017 and C-023 precedence/recovery evidence).
  *
  * `eventCorrelationMethods` compose onto AgentProcess.prototype
  * (agent-process.js). The matcher attributes events incrementally at arrival
@@ -12,7 +12,10 @@
  * precedence over child_real_exit (C-017).
  */
 
+import { randomUUID } from 'node:crypto'
+
 import { sanitizeProviderError } from './provider-errors.js'
+import { monotonicNowMs } from './state-machine.js'
 
 /**
  * Bounded, secret-free classifications of one unresolved-unknown execution
@@ -50,7 +53,10 @@ export const eventCorrelationMethods = {
       for (let seq = execution.watermarkSeq + 1; seq <= this.eventSeq; seq += 1) {
         if (seq <= execution.lastFedSeq) continue
         const entry = this.eventLog.get(seq)
-        if (entry === undefined) continue // evicted ring head — bounded history
+        if (entry === undefined) {
+          execution.streamGapSeen = true
+          continue // evicted ring head — exact-started-idle can no longer be trusted
+        }
         if (entry.params?.sessionId !== execution.sessionId) continue
         this.feedExecution(execution, entry.params.event, seq, entry.observationSeq)
       }
@@ -81,7 +87,7 @@ export const eventCorrelationMethods = {
         return
       }
       if (type === 'turn/start') {
-        if (execution.terminalEvent !== null) {
+        if (execution.terminalEvent !== null || execution.currentTurnNumber !== undefined) {
           // B08 / C-015: a later turn/start invalidates terminal->idle proof;
           // it is never itself a substitute for a subsequently observed idle.
           execution.laterTurnStartSeen = true
@@ -120,8 +126,8 @@ export const eventCorrelationMethods = {
    * envelope; already-unknown executions go through the late machine and
    * release the fence (same handle only — C-016).
    */
-  trySettleExecution(execution) {
-    if (execution.settled || execution.terminalEvent === null) return
+  trySettleExecution(execution, allowTerminationOnly = false) {
+    if (execution.settled) return
     if (execution.laterTurnStartSeen) return
     // C-015 exact_terminal_then_idle admits two idle legs:
     // (a) an idle observation ordered after the terminal observation, or
@@ -139,6 +145,40 @@ export const eventCorrelationMethods = {
       && execution.idleObservationSeq !== null
       && execution.turnStartObservationSeq !== null
       && execution.idleObservationSeq > execution.turnStartObservationSeq
+    if (execution.terminalEvent === null) {
+      // V3 C-015/C-023: receipt + exact matched start + post-start idle is
+      // termination-only proof when the stream stayed continuous and the
+      // one-active-turn invariant still holds. It settles only an execution
+      // that already became outcome_unknown; it never fabricates a business
+      // result and never kills the resident child.
+      if (!execution.unknownMarked || !execution.receiptCorrelated()
+          || execution.currentTurnNumber === undefined
+          || execution.streamGapSeen || !currentIdlePastTurnStart
+          || this.executions.size !== 1 || this.executions.get(execution.handle) !== execution) return
+      // Give the current parser batch one event-loop turn to deliver an exact
+      // turn/end. Exact outcome always wins over termination-only evidence.
+      if (!allowTerminationOnly) {
+        if (execution.terminationOnlyCheck === undefined) {
+          execution.terminationOnlyCheck = setImmediate(() => {
+            execution.terminationOnlyCheck = undefined
+            this.trySettleExecution(execution, true)
+          })
+          execution.terminationOnlyCheck.unref?.()
+        }
+        return
+      }
+      this.store.settleLate(execution.handle, {
+        lateOutcome: 'terminated_without_outcome',
+        terminationEvidence: 'exact_started_then_idle',
+        finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+      })
+      execution.settled = true
+      execution.terminationEvidence = 'exact_started_then_idle'
+      execution.phase = 'terminal'
+      this.finishExecution(execution)
+      this.releaseFence(execution.handle)
+      return
+    }
     if (!idleObservedAfterTerminal && !currentIdlePastTurnStart) return
     const failed = execution.terminalReason?.kind === 'error'
     if (execution.unknownMarked) {
@@ -151,8 +191,8 @@ export const eventCorrelationMethods = {
       execution.settled = true
       execution.terminationEvidence = 'exact_terminal_then_idle'
       execution.phase = 'terminal'
-      this.releaseFence(execution.handle)
       this.finishExecution(execution)
+      this.releaseFence(execution.handle)
       return
     }
     if (failed) {
@@ -200,18 +240,34 @@ export const eventCorrelationMethods = {
       clearTimeout(execution.deadlineTimer)
       execution.deadlineTimer = undefined
     }
+    if (execution.recoveryTimer !== undefined) {
+      clearTimeout(execution.recoveryTimer)
+      execution.recoveryTimer = undefined
+    }
+    if (execution.terminationOnlyCheck !== undefined) {
+      clearImmediate(execution.terminationOnlyCheck)
+      execution.terminationOnlyCheck = undefined
+    }
     execution.releaseQueueOwnership?.()
     this.executions.delete(execution.handle)
   },
 
   markExecutionUnknown(execution, source) {
     if (execution.settled || execution.unknownMarked) return
-    this.store.markOutcomeUnknown(execution.handle, { source, deadlineAtWallMs: Date.now() })
+    this.store.markOutcomeUnknown(execution.handle, {
+      source,
+      deadlineAtWallMs: execution.hardDeadlineAt,
+    })
     execution.unknownMarked = true
     execution.unknownSource = source
     execution.phase = 'outcome_unknown'
     this.installUnknownFence(execution)
     execution.releaseQueueOwnership?.()
+    // Evidence may already have arrived before the caller/deadline callback.
+    // Re-evaluate synchronously so recovery never waits for another prompt or
+    // a future status transition that may never occur.
+    this.trySettleExecution(execution)
+    if (!execution.settled) this.scheduleUnknownRecovery(execution)
   },
 
   installUnknownFence(execution) {
@@ -229,6 +285,10 @@ export const eventCorrelationMethods = {
 
   /** C-016: settlement removes only that handle; every other unknown remains fenced. */
   releaseFence(handle) {
+    // Durable cleanup is the linearization point. If persistence fails, keep
+    // the local fence installed so every direct and outer admission stays
+    // fail closed.
+    this.store.markFenceCleared?.(handle)
     this.activeUnknownFences.delete(handle)
     this.activeUnknownFence = this.activeUnknownFences.values().next().value ?? null
   },
@@ -260,5 +320,103 @@ export const eventCorrelationMethods = {
         && execution.idleObservationSeq > execution.turnStartObservationSeq,
     }
     return { classification: classifyUnknownFence(facts), ...facts }
+  },
+
+  ensureRecoveryRuntimeState() {
+    this.recoveryPromises ??= new Map()
+    this.counters.originalPromptReplayWrites ??= 0
+    this.counters.originalAnswerResends ??= 0
+    this.counters.historicalSideEffectReplays ??= 0
+    this.counters.rejectedRequestAutoAdmissions ??= 0
+    this.counters.explicitNewRequestExecutions ??= 0
+    this.counters.shutdownInvocations ??= 0
+  },
+
+  scheduleUnknownRecovery(execution) {
+    this.ensureRecoveryRuntimeState()
+    if (execution.settled || execution.recoveryTimer !== undefined) return
+    const remaining = Math.max(0, execution.turnDeadlineMono - monotonicNowMs())
+    execution.recoveryTimer = setTimeout(() => {
+      execution.recoveryTimer = undefined
+      void this.recoverUnknownExecution(execution.handle).catch((cause) => {
+        this.log.error?.(`[router] agent ${this.agentId}: recovery worker failed for ${execution.handle} (${cause?.code ?? 'unclassified'})`)
+        try {
+          const snapshot = this.store.getTurnReconciliation(execution.handle).snapshot
+          const shutdownCommitted = snapshot?.reapClaim?.phase === 'shutdown_committed'
+          this.store.markRecoveryBlocked(
+            execution.handle,
+            shutdownCommitted ? ['child_real_exit'] : ['live_generation_ownership'],
+            'recovery_worker_failed',
+          )
+        } catch { /* durable-store failure already holds admission fail closed */ }
+      })
+    }, remaining)
+    execution.recoveryTimer.unref?.()
+  },
+
+  recoverUnknownExecution(handle) {
+    this.ensureRecoveryRuntimeState()
+    const existing = this.recoveryPromises.get(handle)
+    if (existing !== undefined) return existing
+    const operation = this.performUnknownRecovery(handle)
+      .finally(() => this.recoveryPromises.delete(handle))
+    this.recoveryPromises.set(handle, operation)
+    return operation
+  },
+
+  async performUnknownRecovery(handle) {
+    const execution = this.executions.get(handle)
+    const record = this.store.getTurnReconciliation(handle)
+    if (record.state === 'settled') return { status: 'already_settled' }
+    if (execution === undefined || !execution.unknownMarked) {
+      this.store.markRecoveryBlocked(handle, ['live_generation_ownership'], 'live_execution_unavailable')
+      return { status: 'blocked', reason: 'live_execution_unavailable' }
+    }
+    const beforeHardDeadline = execution.turnDeadlineMono - monotonicNowMs()
+    if (beforeHardDeadline > 0) {
+      await new Promise(resolve => {
+        const timer = setTimeout(resolve, beforeHardDeadline)
+        timer.unref?.()
+      })
+      if (execution.settled || this.store.getTurnReconciliation(handle).state === 'settled') {
+        return { status: 'settled_before_hard_deadline' }
+      }
+    }
+    const claimed = this.store.claimRecovery(handle, {
+      operationId: randomUUID(), claimantRuntimeEpoch: this.store.runtimeEpoch,
+    })
+    if (!claimed.won && claimed.reason !== 'joined') return { status: claimed.reason }
+
+    if (typeof this.recoveryBeforeShutdownCommit === 'function') {
+      await this.recoveryBeforeShutdownCommit({ handle, execution, claim: claimed.claim })
+    } else {
+      await Promise.resolve()
+    }
+    if (execution.settled || this.store.getTurnReconciliation(handle).state === 'settled') {
+      this.store.cancelRecoveryClaim(handle)
+      return { status: 'canceled_by_settlement' }
+    }
+    const exactSingleExecution = this.executions.size === 1 && this.executions.get(handle) === execution
+    const exactFence = this.activeUnknownFences.has(handle)
+    const locallyOwned = this.verifyOwnership()
+    if (this.state !== 'READY' || !exactSingleExecution || !exactFence || !locallyOwned) {
+      const missing = []
+      if (!locallyOwned || this.state !== 'READY') missing.push('live_generation_ownership')
+      if (!exactSingleExecution) missing.push('no_concurrent_execution', 'one_active_turn_invariant')
+      this.store.markRecoveryBlocked(handle, missing.length > 0 ? missing : ['live_generation_ownership'], 'reap_eligibility_failed')
+      return { status: 'blocked', reason: 'reap_eligibility_failed' }
+    }
+    if (!this.store.commitRecoveryShutdown(handle)) {
+      this.store.cancelRecoveryClaim(handle, 'settlement_won_before_shutdown_commit')
+      return { status: 'canceled_by_settlement' }
+    }
+    const reap = this.registryIntegration?.casReap?.(this, `outcome_unknown:${handle}`)
+    if (reap === null) {
+      this.store.abortRecoveryShutdown(handle, 'registry_generation_mismatch')
+      return { status: 'blocked', reason: 'registry_generation_mismatch' }
+    }
+    this.recoveryReapCommittedHandle = handle
+    await this.shutdown(this.deadlines.shutdownGraceMs)
+    return { status: 'settled_after_exit' }
   },
 }

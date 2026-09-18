@@ -18,13 +18,14 @@ import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
 export class TurnExecution {
-  constructor({ handle, sessionId, mode, watermarkSeq, startMono, deadlines, bindingContext }) {
+  constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
     this.handle = handle
     this.sessionId = sessionId
     this.mode = mode // 'turn' | 'deliver'
     this.watermarkSeq = watermarkSeq
     this.lastFedSeq = watermarkSeq
     this.startMono = startMono
+    this.hardDeadlineAt = hardDeadlineAt
     this.deadlines = deadlines
     this.bindingContext = bindingContext
     this.phase = 'queued'
@@ -44,6 +45,7 @@ export class TurnExecution {
     this.idleObservationSeq = null
     this.turnStartObservationSeq = null
     this.laterTurnStartSeen = false
+    this.streamGapSeen = false
     this.assistantSegments = []
     this.assistantOriginalBytes = 0
     this.assistantTruncated = false
@@ -167,7 +169,8 @@ export const turnExecutionMethods = {
         `prompt of ${promptBytes} bytes exceeds MAX_PROMPT_BYTES ${PROCESS_EVIDENCE_CAPS.MAX_PROMPT_BYTES} — rejected before queueing (input is never cached)`)
     }
     if (this.activeUnknownFences.size > 0) {
-      return fencedRejection(this.activeUnknownFence?.handle ?? this.activeUnknownFences.keys().next().value)
+      const handle = this.activeUnknownFence?.handle ?? this.activeUnknownFences.keys().next().value
+      return Object.assign(fencedRejection(handle), this.store.recoveryDiagnostic?.(handle) ?? {})
     }
     if (this.state !== 'READY') {
       return envelopeCarrier('not_admitted', null, this.state === 'DRAINING' || this.state === 'EXITED' ? 'AGENT_PROCESS_DRAINING' : 'AGENT_PROCESS_NOT_READY',
@@ -224,12 +227,15 @@ export const turnExecutionMethods = {
       reject(envelopeCarrier('not_admitted', null, cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED', cause?.message ?? String(cause)))
       return
     }
+    const startMono = monotonicNowMs()
+    const hardDeadlineAt = Date.now() + this.deadlines.turnTimeoutMs
     const execution = new TurnExecution({
       handle,
       sessionId,
       mode,
       watermarkSeq: this.eventSeq,
-      startMono: monotonicNowMs(),
+      startMono,
+      hardDeadlineAt,
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
@@ -238,7 +244,7 @@ export const turnExecutionMethods = {
       this.store.markAdmitted(handle, {
         eventWatermarkSeq: execution.watermarkSeq,
         promptRequestId: execution.promptRequestId,
-        deadlineAtWallMs: Date.now() + this.deadlines.turnTimeoutMs,
+        deadlineAtWallMs: execution.hardDeadlineAt,
       })
     } catch (cause) {
       try {
@@ -316,6 +322,12 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
+    execution.phase = 'prompt_sending'
+    this.store.markPromptWriteAttempted(execution.handle)
+    if (this.counters !== undefined) {
+      this.counters.explicitNewRequestExecutions ??= 0
+      this.counters.explicitNewRequestExecutions += 1
+    }
     const receipt = await this.request('session/prompt', {
       sessionId,
       contentBlocks: [{ type: 'text', text }],
@@ -329,10 +341,6 @@ export const turnExecutionMethods = {
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,
-      onWriteAttempted: () => {
-        execution.phase = 'prompt_sending'
-        this.store.markPromptWriteAttempted(execution.handle)
-      },
     })
     execution.receiptMessageId = receipt?.messageId ?? null
     execution.promptReceipt = receipt?.messageId !== undefined ? 'accepted' : 'unknown'
@@ -360,7 +368,7 @@ export const turnExecutionMethods = {
         `turn for session ${execution.sessionId} (agent ${this.agentId}) passed its ${source === 'turn_deadline_exceeded' ? 'turn deadline' : 'caller wait bound'} without termination proof — outcome_unknown`,
         {
           source,
-          deadlineAtWallMs: Date.now(),
+          deadlineAtWallMs: execution.hardDeadlineAt,
           evidence: execution.evidenceSnapshot(),
         }))
       execution.terminalReject = undefined
@@ -382,11 +390,6 @@ export const turnExecutionMethods = {
   handleExecutionCallerError(execution, error, reject) {
     if (error?.envelope === 'outcome_unknown') {
       if (!execution.unknownMarked) this.markExecutionUnknown(execution, error.source ?? 'unknown_source')
-      // Turn-path prompt-receipt timeout is fatal per §10.3
-      // PROMPT_RECEIPT_NEVER_REPLIES; deliver-path keeps reconciling.
-      if (execution.mode === 'turn' && error.source === 'prompt_receipt_timeout') {
-        void this.fatal('prompt_receipt_timeout')
-      }
       reject(error)
       return
     }

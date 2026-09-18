@@ -286,7 +286,7 @@ export async function composeProductionRuntime(options = {}) {
   }
 
   const router = applyRouter(ctx, {
-    bindingsStoreFile: layout.bindingsStore,
+    bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,

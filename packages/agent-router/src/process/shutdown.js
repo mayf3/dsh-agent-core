@@ -1,8 +1,8 @@
 /**
  * @agent-core/agent-router/src/process/shutdown.js — fatal teardown, exact
  * ownership-gated signalling and graceful-then-kill shutdown of the
- * per-agent DSH process client (AGENT_PROCESS_LIFECYCLE_HARDENING_V2
- * C-009, C-020..C-022).
+ * per-agent DSH process client (AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+ * C-009, C-020..C-025).
  *
  * `shutdownMethods` compose onto AgentProcess.prototype (agent-process.js).
  * Shutdown resolves only AFTER real exit + pending settlement +
@@ -98,6 +98,8 @@ export const shutdownMethods = {
   shutdown(timeoutMs) {
     if (this.exit !== undefined) return this.exit
     if (this.shutdownPromise !== undefined) return this.shutdownPromise
+    this.counters.shutdownInvocations ??= 0
+    this.counters.shutdownInvocations += 1
     const graceMs = timeoutMs ?? this.deadlines.shutdownGraceMs
     this.shutdownPromise = this.performShutdown(graceMs)
     return this.shutdownPromise
@@ -117,7 +119,10 @@ export const shutdownMethods = {
     }
     // Explicit operator/runtime shutdown: install REAP, then pending-first
     // handoff regardless of whether later ownership validation succeeds.
-    this.registryIntegration?.casReap?.(this, 'shutdown')
+    if (this.recoveryReapCommittedHandle === undefined
+        && this.registryIntegration?.isReapOwner?.(this) !== true) {
+      this.registryIntegration?.casReap?.(this, 'shutdown')
+    }
     if (this.state !== 'DRAINING') this.transition('DRAINING')
     this.rejectQueuedTurns('AGENT_PROCESS_DRAINING', 'shutdown')
     this.rejectAllPending('AGENT_PROCESS_UNAVAILABLE', { cause: 'shutdown' })
@@ -140,14 +145,24 @@ export const shutdownMethods = {
     }
     const graceDeadlineMono = monotonicNowMs() + graceMs
     this.counters.gracefulShutdownWriteAttempts += 1
-    await this.request('shutdown', undefined, undefined, { deadlineMono: graceDeadlineMono }).catch(() => {})
+    await this.request('shutdown', undefined, undefined, { deadlineMono: graceDeadlineMono })
+      .catch(() => {})
     // B14 / C-022: a graceful ACK is only receipt of the command. Wait the
     // remaining absolute grace for real exit before escalating.
     if (this.exit === undefined) {
       const remaining = Math.max(0, graceDeadlineMono - monotonicNowMs())
       await Promise.race([this.exitPromise, wait(remaining)])
     }
-    if (this.exit === undefined) this.killOwnedChild('SIGKILL', { cause: 'shutdown_grace_expired' })
+    if (this.exit === undefined) {
+      const signaled = this.killOwnedChild('SIGKILL', { cause: 'shutdown_grace_expired' })
+      for (const execution of this.executions.values()) {
+        if (execution.unknownMarked) {
+          this.store.recordRecoveryAction?.(execution.handle, {
+            action: 'forced_termination', result: signaled ? 'succeeded' : 'failed', reasonCode: 'shutdown_grace_expired',
+          })
+        }
+      }
+    }
     await this.exitPromise
     return this.exit
   },
