@@ -33,3 +33,7 @@ Tests use ordinary temporary fixtures, real exclusive file writes/flock and cont
 ## Remaining gates
 
 Independent source/security review must assess the exact frozen commit and operation bindings. Only after that review may a separately reviewed exact helper/grant delivery and Owner-authorized visible operation be considered. Missing/drifted current state, residual processes, malformed/expired grant, lost lock or consumed intent must stop; no replay/reinstall/activation is implied. Any actual login result still requires independent protected postreadback and reviewer CLI/model validation.
+
+## Exact source freeze and structure check
+
+Frozen implementation source commit: `89653e2c7bcb955f5520ec2247652232861dab9d`. `node scripts/verify-code-structure.mjs --base 1d92fb3aefc8dc7e00ea5ac499bf2758468b3cd0 --head 89653e2c7bcb955f5520ec2247652232861dab9d --json` completed with exit 1 / STRUCTURE_VIOLATION: three unchanged baseline directory violations (`packages/production-runtime/src` 21→21, unregistered legacy; `packages/production-runtime/test` 23→23 against ceiling21; `scripts` 59→59 against ceiling40), and 76 warnings. No login-reconciliation finding was reported. These unrelated existing findings were not edited or waived; repository-wide structure success is not claimed. This appendix changes only author evidence, not tested implementation bytes.
