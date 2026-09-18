@@ -71,8 +71,7 @@ export function makeFx({ deadlines, generation, integration, ...ctorOpts } = {})
   const registryIntegration = {
     casReap(proc, cause) {
       slotOps.push({ op: 'casReap', generation: proc.processGeneration, cause, ownershipToken: proc.ownershipToken ?? null })
-      if (integration?.casReap) integration.casReap(proc, cause)
-      return { fence: true }
+      return integration?.casReap ? integration.casReap(proc, cause) : { fence: true }
     },
     casStartupEmpty(proc) {
       slotOps.push({ op: 'casStartupEmpty', generation: proc.processGeneration, processRefNone: proc.ownership === null })
@@ -81,8 +80,7 @@ export function makeFx({ deadlines, generation, integration, ...ctorOpts } = {})
     },
     casEmpty(proc) {
       slotOps.push({ op: 'casEmpty', generation: proc.processGeneration, ownershipToken: proc.ownershipToken ?? null })
-      if (integration?.casEmpty) integration.casEmpty(proc)
-      return true
+      return integration?.casEmpty ? integration.casEmpty(proc) : true
     },
     verifyReapOwnership: (proc) => (integration?.verifyReapOwnership ? integration.verifyReapOwnership(proc) : true),
   }

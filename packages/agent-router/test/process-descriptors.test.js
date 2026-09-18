@@ -20,15 +20,15 @@ import { evidenceBufferMethods } from '../src/process/evidence-buffer.js'
 import { rpcChannelMethods } from '../src/process/rpc-channel.js'
 import { eventCorrelationMethods } from '../src/process/event-correlation.js'
 import { turnExecutionMethods } from '../src/process/turn-execution.js'
-import { recoveryMethods } from '../src/process/recovery.js'
 import { spawnMethods } from '../src/process/spawn.js'
 import { shutdownMethods } from '../src/process/shutdown.js'
 import { settlementMethods } from '../src/reconciliation/state-machine.js'
 import { queryMethods } from '../src/reconciliation/query.js'
 import { authorityCapacityMethods } from '../src/reconciliation/authority-capacity.js'
+import { startupRecoveryMethods } from '../src/reconciliation/startup-recovery.js'
 
 const METHOD_COUNT_AGENT_PROCESS = 45 // V3 adds parent-owned recovery scheduling/coordinator methods
-const METHOD_COUNT_RECONCILIATION = 32 // V3 adds durable recovery, capacity transactions and projections
+const METHOD_COUNT_RECONCILIATION = 37 // V3 adds durable recovery, capacity transactions and projections
 
 function composedKeys(groups) {
   const keys = new Set()
@@ -70,7 +70,6 @@ test('AgentProcess prototype method descriptors preserved (B-1: enumerable false
     rpcChannelMethods,
     eventCorrelationMethods,
     turnExecutionMethods,
-    recoveryMethods,
     spawnMethods,
     shutdownMethods,
   ])
@@ -83,7 +82,7 @@ test('AgentProcess prototype method descriptors preserved (B-1: enumerable false
 })
 
 test('TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete)', () => {
-  const composed = composedKeys([authorityCapacityMethods, settlementMethods, queryMethods])
+  const composed = composedKeys([authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods])
   assert.equal(composed.size, METHOD_COUNT_RECONCILIATION, 'frozen-audit TurnReconciliationStore composed method count')
 
   const own = assertDescriptorShape(TurnReconciliationStore, 'TurnReconciliationStore')

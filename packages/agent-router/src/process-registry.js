@@ -23,31 +23,32 @@
 import { randomUUID } from 'node:crypto'
 
 import { redactSensitiveText } from './process/index.js'
+import { fencedRejection } from './process/state-machine.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
-import { assertRecoveryAdmission, convergeStartedStartup, disposeProcessSlots, ownsReapSlot, restoreRecoveryFences, startupFailure } from './process-registry-startup.js'
+import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
 
-/**
- * Create the per-Agent process registry bound to one router mount.
- * @param {object} deps
- * @param {object} deps.log - structured logger.
- * @param {object} deps.cfg - validated router config (agentProfile).
- * @param {object} deps.workspaceBootstrap - workspace-bootstrap service.
- * @param {object} deps.agentDefinition - Agent Definition service.
- * @param {object} deps.deadlineConfig - resolved four-field deadline config
- *   (CLAUSE-PROC-DEADLINE-CONFIG; static per-Agent overrides).
- * @param {object} deps.reconciliationStore - the Router reconciliation store.
- * @param {function} deps.processFactory - (opts) => proc; default
- *   AgentProcess, injectable in tests.
- * @param {function} deps.resolveProcessConfig - (agentId) => process config.
- * @param {function} deps.provisionHome - (home, workspace, opts) => void;
- *   defaults to provisionAgentHome.
- * @param {function} deps.switchAgent - the unified switch domain operation
- *   (binding-resolution) wired into the per-process parent-RPC relay.
- * @param {function} deps.getBrokerGateway - () => broker gateway service
- *   (ctx.get('brokerGateway'), resolved lazily per request).
- */
+function assertRecoveryAdmission(store, agentId) {
+  store.assertBusinessAdmissionReady?.()
+  const fence = store.activeFenceForAgent?.(agentId)
+  if (fence) throw Object.assign(fencedRejection(fence.handle), store.recoveryDiagnostic?.(fence.handle) ?? {})
+}
+
+function ownsReapSlot(slots, agentId, proc, requireGeneration = false) {
+  const slot = slots.get(agentId)
+  return slot?.state === 'REAP' && slot.processRef === proc
+    && (!requireGeneration || slot.generation === proc.processGeneration)
+    && slot.ownershipToken === (proc.ownershipToken ?? null)
+}
+
+function restoreRecoveryFences(store) {
+  for (const record of store.unresolvedRecoveryRecords?.() ?? []) {
+    store.markRecoveryBlocked(record.handle, ['live_generation_ownership'], 'runtime_restart_ownership_unavailable')
+  }
+}
+
+/** Create the per-Agent process registry bound to one router mount. */
 export function createProcessRegistry({
   log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,
   processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,

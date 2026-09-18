@@ -1,5 +1,7 @@
 /** Capacity, eviction and transactional mutation methods for the V3 reconciliation store. */
-import { RECONCILIATION_CAPS, ReconciliationCapacityError, recordByteSize } from './capacity.js'
+import {
+  correlationEntryByteSize, RECONCILIATION_CAPS, ReconciliationCapacityError, recordByteSize,
+} from './capacity.js'
 
 export const authorityCapacityMethods = {
   snapshotAuthority() {
@@ -12,7 +14,7 @@ export const authorityCapacityMethods = {
     return {
       records: new Map(this.records), issuance, correlationIndex: new Map(this.correlationIndex),
       globalBytes: this.globalBytes, agentCounts: new Map(this.agentCounts), agentBytes: new Map(this.agentBytes),
-      discriminatorSeq: this.discriminatorSeq,
+      correlationBytes: this.correlationBytes, discriminatorSeq: this.discriminatorSeq,
     }
   },
 
@@ -23,12 +25,55 @@ export const authorityCapacityMethods = {
     this.globalBytes = snapshot.globalBytes
     this.agentCounts = snapshot.agentCounts
     this.agentBytes = snapshot.agentBytes
+    this.correlationBytes = snapshot.correlationBytes
     this.discriminatorSeq = snapshot.discriminatorSeq
   },
 
-  assertCorrelationCapacity() {
-    if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
+  assertCorrelationCapacity(additionalBytes = 0, excludeHandle = null) {
+    while (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL
+        || this.globalBytes + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
+      const candidate = [...this.correlationIndex.values()]
+        .map(handle => this.records.get(handle))
+        .find(record => record?.state === 'settled' && record.handle !== excludeHandle && this.canEvictRecord(record))
+      if (candidate === undefined) break
+      this.evictRecord(candidate)
+    }
+    if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL
+        || this.globalBytes + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
       throw new ReconciliationCapacityError('reconciliation: caller correlation index capacity exhausted')
+    }
+  },
+
+  compactRuntimeEpochs() {
+    const required = new Set([this.runtimeEpoch, ...[...this.records.values()].map(record => record.runtimeEpoch)])
+    if (required.size > RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS) {
+      throw new ReconciliationCapacityError('reconciliation: live runtime epoch capacity exhausted')
+    }
+    const historical = [...this.runtimeEpochs].reverse()
+    this.runtimeEpochs = new Set(required)
+    for (const epoch of historical) {
+      if (this.runtimeEpochs.size >= RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS) break
+      this.runtimeEpochs.add(epoch)
+    }
+  },
+
+  validateRestoredAuthority() {
+    for (const record of this.records.values()) {
+      const match = record.handle.match(/^turn:([^:]+):a(\d+):g(\d+):s(\d+)$/)
+      const issuance = this.issuance.get(record.agentId)
+      const generation = issuance?.generations.get(record.processGeneration)
+      if (match === null || match[1] !== record.runtimeEpoch
+          || Number(match[2]) !== issuance?.discriminator
+          || Number(match[3]) !== record.processGeneration || Number(match[4]) !== record.turnSeq
+          || generation === undefined || record.turnSeq < generation.minSeq || record.turnSeq > generation.maxSeq) {
+        throw new ReconciliationCapacityError('reconciliation: restored record authority mismatch')
+      }
+      if (record.callerCorrelation !== null && record.callerCorrelation !== undefined) {
+        const key = this.callerCorrelationKey(record.callerCorrelation)
+        if (this.correlationIndex.get(key) !== record.handle) {
+          throw new ReconciliationCapacityError('reconciliation: restored caller correlation authority mismatch')
+        }
+      }
     }
   },
 
@@ -122,6 +167,13 @@ export const authorityCapacityMethods = {
     this.globalBytes -= record.bytes
     this.agentCounts.set(record.agentId, (this.agentCounts.get(record.agentId) ?? 1) - 1)
     this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? record.bytes) - record.bytes)
+    for (const [key, handle] of [...this.correlationIndex]) {
+      if (handle !== record.handle) continue
+      const bytes = correlationEntryByteSize(key, handle)
+      this.correlationIndex.delete(key)
+      this.correlationBytes -= bytes
+      this.globalBytes -= bytes
+    }
     const issuance = this.issuance.get(record.agentId)
     if (issuance !== undefined) {
       if (record.turnSeq === issuance.evictedThroughTurnSeq + 1) {

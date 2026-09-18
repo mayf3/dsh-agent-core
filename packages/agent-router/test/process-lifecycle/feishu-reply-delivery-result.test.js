@@ -13,6 +13,12 @@ const ingress = Object.freeze({
   text: 'one harmless prompt',
 })
 
+const RECOVERY_KEYS = [
+  'attemptedActions', 'failureStage', 'fencedBy', 'missingEvidence',
+  'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
+  'replyDelivery', 'requestAdmission', 'terminationEvidence',
+].sort()
+
 function harness({ turn, reply }) {
   const replies = []
   let executions = 0
@@ -119,10 +125,11 @@ test('V3 outer ingress sends one image answer as text and projects connector tim
   const result = await delivery.onIngress(ingress)
 
   assert.equal(executions, 1)
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   assert.equal(result.failureStage, 'reply_delivery')
   assert.equal(result.replyDelivery, 'unknown')
-  assert.equal(result.error.code, 'send_timeout')
-  assert.equal(result.executionResult.reply, answer)
+  assert.equal(JSON.stringify(result).includes(answer), false)
+  assert.equal(JSON.stringify(result).includes('request timeout'), false)
   assert.deepEqual(sends[0].input, { text: answer })
   assert.deepEqual(sends[0].opts.mentions, [{ openId: 'ou_sender' }])
   assert.equal(sends.length, 2, 'one answer attempt plus one diagnostic receipt')
@@ -130,8 +137,8 @@ test('V3 outer ingress sends one image answer as text and projects connector tim
   assert.match(sends[1].input.text, /可能已送达/)
 })
 
-test('V3 admission failure keeps the original fenced error and records zero reply delivery attempts', async () => {
-  const error = Object.assign(new Error('still fenced'), {
+test('V3 admission failure returns the closed diagnostic without raw error content', async () => {
+  const error = Object.assign(new Error('SECRET_ADMISSION_SENTINEL'), {
     code: 'AGENT_PROCESS_TURN_FENCED',
     status: 'not_admitted',
     envelope: 'not_admitted',
@@ -144,20 +151,16 @@ test('V3 admission failure keeps the original fenced error and records zero repl
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.deepEqual(Object.keys(result).sort(), [
-    'attemptedActions', 'error', 'failureStage', 'fencedBy', 'missingEvidence',
-    'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
-    'replyDelivery', 'requestAdmission', 'terminationEvidence',
-  ])
-  assert.equal(result.error, error)
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   assert.equal(result.failureStage, 'admission')
-  assert.equal(result.error.fencedBy, 'turn:agt_expert:main:a1:g1:s1')
+  assert.equal(result.fencedBy, 'turn:agt_expert:main:a1:g1:s1')
+  assert.equal(JSON.stringify(result).includes('SECRET_ADMISSION_SENTINEL'), false)
   assert.equal(fx.executions(), 1)
   assert.equal(fx.replies.length, 1, 'only the existing failure receipt is attempted')
 })
 
-test('V3 execution failure is distinct from reply delivery and preserves its original Error', async () => {
-  const error = Object.assign(new Error('provider turn failed'), { code: 'provider_failure' })
+test('V3 execution failure is distinct from reply delivery without raw error content', async () => {
+  const error = Object.assign(new Error('SECRET_EXECUTION_SENTINEL'), { code: 'provider_failure' })
   const fx = harness({
     turn: async () => { throw error },
     reply: async () => ({ messageId: 'om_receipt' }),
@@ -165,13 +168,9 @@ test('V3 execution failure is distinct from reply delivery and preserves its ori
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.deepEqual(Object.keys(result).sort(), [
-    'attemptedActions', 'error', 'failureStage', 'fencedBy', 'missingEvidence',
-    'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
-    'replyDelivery', 'requestAdmission', 'terminationEvidence',
-  ])
-  assert.equal(result.error, error)
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   assert.equal(result.failureStage, 'execution')
+  assert.equal(JSON.stringify(result).includes('SECRET_EXECUTION_SENTINEL'), false)
   assert.equal(fx.executions(), 1)
   assert.equal(fx.replies.length, 1)
 })
@@ -198,9 +197,8 @@ for (const failureClass of [
 
     const result = await fx.delivery.onIngress(ingress)
 
-    assert.equal(result.error, error)
     assert.equal(result.failureStage, 'admission')
-    assert.equal(result.error.routeChain.failureClass, failureClass)
+    assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   })
 }
 
@@ -213,8 +211,8 @@ test('V3 envelope-only not_admitted failure stays in the admission variant', asy
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.equal(result.error, error)
   assert.equal(result.failureStage, 'admission')
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
 })
 
 test('V3 route-chain deadline before admission stays in the admission variant', async () => {
@@ -229,8 +227,8 @@ test('V3 route-chain deadline before admission stays in the admission variant', 
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.equal(result.error, error)
   assert.equal(result.failureStage, 'admission')
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
 })
 
 test('V3 pre-generation provider quota remains an execution failure', async () => {
@@ -249,8 +247,8 @@ test('V3 pre-generation provider quota remains an execution failure', async () =
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.equal(result.error, error)
   assert.equal(result.failureStage, 'execution')
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
 })
 
 const deliveryCases = [
@@ -284,41 +282,14 @@ for (const [code, expectedDelivery, receiptNeedle] of deliveryCases) {
 
     const result = await fx.delivery.onIngress(ingress)
 
-    assert.deepEqual(Object.keys(result).sort(), [
-      'attemptedActions',
-      'confirmedChunkReceipts',
-      'error',
-      'executionResult',
-      'failureReceipt',
-      'failureStage',
-      'fencedBy',
-      'missingEvidence',
-      'nextSafeAction',
-      'partialDelivery',
-      'processGeneration',
-      'reconciliationHandle',
-      'replyDelivery',
-      'requestAdmission',
-      'terminationEvidence',
-    ])
-    assert.equal(result.error, deliveryError)
-    assert.equal(result.error.code, code, 'terminal SDK classification is preserved')
+    assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
     assert.equal(result.failureStage, 'reply_delivery')
     assert.equal(result.replyDelivery, expectedDelivery)
     assert.equal(result.partialDelivery, 'possible')
     assert.equal(result.requestAdmission, 'accepted')
     assert.equal(result.reconciliationHandle, turnResult.reconciliationHandle)
-    assert.equal(result.confirmedChunkReceipts, 'unavailable')
-    assert.deepEqual(result.executionResult, {
-      reply: answer,
-      agentId: 'agt_expert',
-      sessionId: 'main',
-      pid: 4242,
-      status: 'completed',
-      reconciliationHandle: 'turn:agt_expert:main:a1:g1:s1',
-      evidence: { turnEnd: true },
-    })
-    assert.deepEqual(result.failureReceipt, { status: 'delivered' })
+    assert.equal(JSON.stringify(result).includes(answer), false)
+    assert.equal(JSON.stringify(result).includes(`terminal ${code}`), false)
     assert.equal(fx.executions(), 1)
     assert.equal(fx.replies.length, 2, 'one original-answer attempt plus one diagnostic receipt')
     assert.equal(fx.replies[0][1], answer)
@@ -328,7 +299,7 @@ for (const [code, expectedDelivery, receiptNeedle] of deliveryCases) {
   })
 }
 
-test('V3 failure-receipt failure changes only failureReceipt.status', async () => {
+test('V3 failure-receipt failure does not change the closed recovery projection', async () => {
   const deliveryError = Object.assign(new Error('ambiguous answer send'), { code: 'send_timeout' })
   const receiptError = new Error('receipt also failed')
   const fx = harness({
@@ -341,12 +312,11 @@ test('V3 failure-receipt failure changes only failureReceipt.status', async () =
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.equal(result.error, deliveryError)
+  assert.deepEqual(Object.keys(result).sort(), RECOVERY_KEYS)
   assert.equal(result.replyDelivery, 'unknown')
-  assert.deepEqual(result.executionResult, {
-    reply: 'answer', agentId: 'agt_expert', sessionId: 'main', pid: 7, status: 'completed',
-  })
-  assert.deepEqual(result.failureReceipt, { status: 'failed' })
+  assert.equal(JSON.stringify(result).includes('answer'), false)
+  assert.equal(JSON.stringify(result).includes('ambiguous answer send'), false)
+  assert.equal(JSON.stringify(result).includes('receipt also failed'), false)
   assert.equal(fx.executions(), 1)
   assert.equal(fx.replies.length, 2)
 })

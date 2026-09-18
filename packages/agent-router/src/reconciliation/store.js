@@ -36,11 +36,12 @@ import { randomUUID } from 'node:crypto'
 
 import {
   RECONCILIATION_CAPS, REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES,
-  ReconciliationCapacityError, recordByteSize,
+  ReconciliationCapacityError, correlationEntryByteSize, recordByteSize,
 } from './capacity.js'
 import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
+import { startupRecoveryMethods } from './startup-recovery.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore } from './durable-file.js'
 
 const MANDATORY_TRANSITION_HEADROOM_BYTES = 4096
@@ -62,6 +63,7 @@ export class TurnReconciliationStore {
     this.issuance = new Map()
     /** `${occurrenceId}\0${runId}\0${requestId}` -> handle (exact secondary index) */
     this.correlationIndex = new Map()
+    this.correlationBytes = 0
     this.listeners = new Set()
     /** Incremental capacity accounting (O(1) per mint/evict, no scans). */
     this.globalBytes = 0
@@ -86,6 +88,7 @@ export class TurnReconciliationStore {
         this.records.clear()
         this.issuance.clear()
         this.correlationIndex.clear()
+        this.correlationBytes = 0
         this.globalBytes = 0
         this.agentCounts.clear()
         this.agentBytes.clear()
@@ -99,9 +102,11 @@ export class TurnReconciliationStore {
   }
 
   recountCapacity() {
+    this.validateRestoredAuthority()
     this.globalBytes = 0
     this.agentCounts = new Map()
     this.agentBytes = new Map()
+    this.correlationBytes = 0
     for (const issuance of this.issuance.values()) {
       for (const generation of issuance.generations.values()) {
         generation.unresolvedCount = 0
@@ -122,6 +127,11 @@ export class TurnReconciliationStore {
         if (record.state !== 'settled') generation.unresolvedCount += 1
       }
     }
+    for (const [key, handle] of this.correlationIndex) {
+      if (!this.records.has(handle)) throw new ReconciliationCapacityError('reconciliation: orphan caller correlation')
+      this.correlationBytes += correlationEntryByteSize(key, handle)
+    }
+    this.globalBytes += this.correlationBytes
     if (this.records.size > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL
         || this.globalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
       throw new ReconciliationCapacityError('reconciliation: restored global capacity exceeds frozen caps')
@@ -143,58 +153,6 @@ export class TurnReconciliationStore {
     }
   }
 
-  restoreCrashInterruptedRecords() {
-    let changed = false
-    for (const record of this.records.values()) {
-      if (record.state === 'settled') continue
-      if (record.exitObservedAt !== null && record.exitObservedAt !== undefined) {
-        record.state = 'settled'
-        record.lateOutcome = 'terminated_without_outcome'
-        record.terminationEvidence = 'child_real_exit'
-        record.settledAtWallMs = record.settledAtWallMs ?? Date.now()
-        record.recoveryState = 'settled'
-        record.settlementResult = 'terminated_without_outcome'
-        record.missingEvidence = []
-        record.nextSafeAction = 'send_new_request_after_reopened'
-        record.fenceState = 'cleared'
-        record.updatedAt = Date.now()
-        if (record.reapClaim !== null && record.reapClaim !== undefined) {
-          record.reapClaim = { ...record.reapClaim, phase: 'settled' }
-        }
-        changed = true
-        continue
-      }
-      if (record.promptWriteAttempted === true && record.initialOutcome === null) {
-        record.initialOutcome = 'outcome_unknown'
-        record.initialSource = 'runtime_restart_after_prompt_write'
-        record.recoveryState = 'blocked'
-        record.missingEvidence = ['live_generation_ownership']
-        record.failureReason = 'runtime_restart_ownership_unavailable'
-        record.nextSafeAction = 'reestablish_exact_ownership'
-        record.fenceState = 'active'
-        record.updatedAt = Date.now()
-        changed = true
-      }
-      if (record.promptWriteAttempted !== true && record.initialOutcome === null) {
-        record.state = 'settled'
-        record.outcome = 'not_admitted'
-        record.outcomeEvidence = 'prompt_write_not_attempted'
-        record.settledAtWallMs = Date.now()
-        record.recoveryState = 'settled'
-        record.settlementResult = 'not_admitted'
-        record.missingEvidence = []
-        record.nextSafeAction = 'send_new_request_after_reopened'
-        record.fenceState = 'cleared'
-        record.updatedAt = Date.now()
-        changed = true
-      }
-    }
-    if (changed) {
-      this.recountCapacity()
-      this.persistDurable()
-    }
-  }
-
   persistDurable() {
     if (this.startupBlockedReason !== null) {
       throw Object.assign(new Error(`reconciliation durable store blocked: ${this.startupBlockedReason}`), {
@@ -202,6 +160,7 @@ export class TurnReconciliationStore {
       })
     }
     try {
+      this.compactRuntimeEpochs()
       writeDurableRecoveryStore(this.persistenceFile, this)
     } catch (error) {
       this.startupBlockedReason = 'durable_store_unavailable'
@@ -238,7 +197,7 @@ export class TurnReconciliationStore {
   activeFenceForAgent(agentId) {
     for (const record of this.records.values()) {
       if (record.agentId === agentId && record.initialOutcome === 'outcome_unknown'
-          && record.state !== 'settled' && record.fenceState !== 'cleared') return record
+          && record.fenceState !== 'cleared') return record
     }
     return null
   }
@@ -271,9 +230,6 @@ export class TurnReconciliationStore {
       if (existing !== undefined) {
         throw Object.assign(new Error(`reconciliation: caller correlation already bound to ${existing}; refusing a second authority mint`), { code: 'RECONCILIATION_CORRELATION_CONFLICT' })
       }
-      if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
-        throw new ReconciliationCapacityError('reconciliation: caller correlation index capacity exhausted')
-      }
     }
     const existingIssuance = this.issuance.get(agentId)
     const issuance = existingIssuance ?? {
@@ -290,6 +246,7 @@ export class TurnReconciliationStore {
     }
     const authorityBefore = this.snapshotAuthority()
     try {
+    const correlationBytes = correlationKey === null ? 0 : correlationEntryByteSize(correlationKey, `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${issuance.maxIssuedTurnSeq + 1}`)
     if (!issuance.generations.has(processGeneration)
         && issuance.generations.size + issuance.evictedGenerations.size >= RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
       this.evictSettledGenerationForCapacity(agentId, issuance)
@@ -300,6 +257,7 @@ export class TurnReconciliationStore {
     const turnSeq = issuance.maxIssuedTurnSeq + 1
     this.assertMintCapacity(agentId)
     const handle = `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${turnSeq}`
+    if (correlationKey !== null) this.assertCorrelationCapacity(correlationBytes)
     const createdAt = Date.now()
     const record = {
       handle,
@@ -350,7 +308,7 @@ export class TurnReconciliationStore {
     }
     this.evictResolvedForByteCapacity(agentId, record.bytes)
     if ((this.agentBytes.get(agentId) ?? 0) + record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
-        || this.globalBytes + record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
+        || this.globalBytes + record.bytes + correlationBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
       throw new ReconciliationCapacityError(
         `reconciliation: byte capacity exhausted for agent ${agentId} (agent ${this.agentBytes.get(agentId) ?? 0}B, global ${this.globalBytes}B) — unresolved records are not evictable`,
       )
@@ -372,7 +330,11 @@ export class TurnReconciliationStore {
     this.globalBytes += record.bytes
     this.agentCounts.set(agentId, (this.agentCounts.get(agentId) ?? 0) + 1)
     this.agentBytes.set(agentId, (this.agentBytes.get(agentId) ?? 0) + record.bytes)
-    if (correlationKey !== null) this.correlationIndex.set(correlationKey, handle)
+    if (correlationKey !== null) {
+      this.correlationIndex.set(correlationKey, handle)
+      this.correlationBytes += correlationBytes
+      this.globalBytes += correlationBytes
+    }
     this.persistDurable()
     return handle
     } catch (error) {
@@ -383,7 +345,15 @@ export class TurnReconciliationStore {
 
 
   callerCorrelationKey({ occurrenceId, runId, requestId }) {
-    return `${occurrenceId ?? ''}\u0000${runId ?? ''}\u0000${requestId ?? ''}`
+    const coordinates = [occurrenceId, runId, requestId]
+    if (coordinates.some(value => value !== null && value !== undefined && typeof value !== 'string')) {
+      throw new TypeError('reconciliation: caller correlation coordinates must be strings when present')
+    }
+    const key = coordinates.map(value => value ?? '').join('\u0000')
+    if (Buffer.byteLength(key, 'utf8') > RECONCILIATION_CAPS.MAX_CORRELATION_KEY_BYTES) {
+      throw new ReconciliationCapacityError('reconciliation: caller correlation key exceeds byte cap')
+    }
+    return key
   }
 
 
@@ -472,7 +442,7 @@ export class TurnReconciliationStore {
 // writable/configurable pass through unchanged and `constructor` is never
 // installed.
 const composedMethodDescriptors = {}
-for (const group of [authorityCapacityMethods, settlementMethods, queryMethods]) {
+for (const group of [authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue
     composedMethodDescriptors[key] = { ...descriptor, enumerable: false }

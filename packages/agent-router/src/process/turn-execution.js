@@ -318,6 +318,12 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
+    execution.phase = 'prompt_sending'
+    this.store.markPromptWriteAttempted(execution.handle)
+    if (this.counters !== undefined) {
+      this.counters.explicitNewRequestExecutions ??= 0
+      this.counters.explicitNewRequestExecutions += 1
+    }
     const receipt = await this.request('session/prompt', {
       sessionId,
       contentBlocks: [{ type: 'text', text }],
@@ -331,12 +337,6 @@ export const turnExecutionMethods = {
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,
-      onWriteAttempted: () => {
-        execution.phase = 'prompt_sending'
-        this.store.markPromptWriteAttempted(execution.handle)
-        this.counters.explicitNewRequestExecutions ??= 0
-        this.counters.explicitNewRequestExecutions += 1
-      },
     })
     execution.receiptMessageId = receipt?.messageId ?? null
     execution.promptReceipt = receipt?.messageId !== undefined ? 'accepted' : 'unknown'

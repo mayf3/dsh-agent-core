@@ -70,6 +70,15 @@ for (const scenario of [
     },
   },
   {
+    name: 'second turn start before exact receipt',
+    arrange(fx, messageId) {
+      fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
+      fx.emitEvent('main', { type: 'turn/start', data: { turn: 2 } })
+      fx.emitEvent('main', { type: 'user/message', data: { id: messageId } })
+      fx.emitStatus('main', 'idle')
+    },
+  },
+  {
     name: 'event stream gap',
     arrange(fx, messageId, execution) {
       fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
@@ -146,6 +155,34 @@ test('V3 hard deadline performs one exact REAP and waits for real child exit bef
   assert.equal(prompts(fx).length, 1)
 })
 
+test('V3 registry cleanup CAS mismatch keeps DRAINING and preserves the settled fence', async () => {
+  const fx = makeFx({
+    deadlines: { turnTimeoutMs: 35, shutdownGraceMs: 80 },
+    integration: { casEmpty: () => false },
+  })
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'harmless cleanup mismatch fixture')
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-cleanup-mismatch' })
+  const unknown = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  fx.childExit(0, null)
+  await fx.tick()
+
+  const snapshot = fx.store.getTurnReconciliation(unknown.reconciliationHandle).snapshot
+  assert.equal(fx.proc.state, 'DRAINING')
+  assert.equal(fx.fence(), unknown.reconciliationHandle)
+  assert.equal(snapshot.recoveryState, 'blocked')
+  assert.equal(snapshot.fenceState, 'active')
+  assert.equal(fx.store.activeFenceForAgent('agt_fx').handle, unknown.reconciliationHandle)
+  assert.equal(snapshot.nextSafeAction, 'operator_exact_generation_recovery')
+  assert.ok(snapshot.attemptedActions.some(action => action.action === 'registry_cleanup' && action.result === 'blocked'))
+  assert.equal(snapshot.attemptedActions.some(action => action.action === 'fence_cleanup'), false)
+  let exitResolved = false
+  fx.proc.exitPromise.then(() => { exitResolved = true })
+  await fx.tick()
+  assert.equal(exitResolved, false)
+})
+
 test('V3 caller unknown before the hard deadline does not start REAP early', async () => {
   const fx = makeFx({ deadlines: { turnTimeoutMs: 140, shutdownGraceMs: 40 } })
   await fx.readyNow()
@@ -193,6 +230,39 @@ test('V3 failed exact ownership keeps the fence and never signals the child', as
   assert.equal(query.snapshot.recoveryState, 'blocked')
   assert.deepEqual(query.snapshot.missingEvidence, ['live_generation_ownership'])
   assert.equal(fx.fence(), unknown.reconciliationHandle)
+  assert.equal(fx.counts().gracefulShutdownWriteAttempts, 0)
+  assert.equal(fx.counts().killSignals, 0)
+  await fx.tick()
+  const reapAttemptsBeforeRetry = fx.slotOps.filter(entry => entry.op === 'casReap').length
+  fx.proc.ownershipToken = fx.proc.ownership.token
+  const retry = await fx.proc.recoverUnknownExecution(unknown.reconciliationHandle)
+  assert.equal(retry.status, 'claim_blocked')
+  assert.equal(fx.slotOps.filter(entry => entry.op === 'casReap').length, reapAttemptsBeforeRetry)
+  assert.equal(fx.counts().gracefulShutdownWriteAttempts, 0)
+  assert.equal(fx.store.getTurnReconciliation(unknown.reconciliationHandle).snapshot.reapClaim.phase, 'blocked')
+})
+
+test('V3 registry REAP CAS failure rolls durable shutdown eligibility back to blocked', async () => {
+  const fx = makeFx({
+    deadlines: { turnTimeoutMs: 35, shutdownGraceMs: 25 },
+    integration: { casReap: () => null },
+  })
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'harmless registry mismatch')
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-registry-mismatch' })
+  const unknown = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  for (let i = 0; i < 20; i += 1) {
+    if (fx.store.getTurnReconciliation(unknown.reconciliationHandle).snapshot.failureReason === 'registry_generation_mismatch') break
+    await fx.sleep(5)
+  }
+  const snapshot = fx.store.getTurnReconciliation(unknown.reconciliationHandle).snapshot
+  assert.equal(snapshot.recoveryState, 'blocked')
+  assert.equal(snapshot.reapClaim.phase, 'blocked')
+  assert.equal(snapshot.shutdownRequestedAt, null)
+  assert.equal(snapshot.failureReason, 'registry_generation_mismatch')
+  assert.equal(snapshot.fenceState, 'active')
+  assert.equal(fx.proc.state, 'READY')
   assert.equal(fx.counts().gracefulShutdownWriteAttempts, 0)
   assert.equal(fx.counts().killSignals, 0)
 })
@@ -380,8 +450,10 @@ test('V3 simulated-child real outer entry recovers without a new prompt, then ac
   first.respondTo('session/prompt', { messageId: 'm-old' })
   const firstResult = await firstCall
   assert.equal(firstResult.failureStage, 'execution')
-  assert.equal(firstResult.error.status, 'outcome_unknown')
-  const oldHandle = firstResult.error.reconciliationHandle
+  assert.equal(firstResult.requestAdmission, 'accepted')
+  assert.equal(firstResult.nextSafeAction, 'await_late_evidence')
+  const oldHandle = firstResult.reconciliationHandle
+  assert.equal(typeof oldHandle, 'string')
   for (let i = 0; i < 20 && !first.writes.some(write => write.method === 'shutdown'); i += 1) await first.sleep(5)
   assert.equal(first.fence(), oldHandle)
   first.childExit(0, null)

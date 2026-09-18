@@ -165,10 +165,10 @@ test('HANDOFF_VISIBLE_BEFORE_RELEASE: reconciliation visible before slot release
   const order = []
   const originalSettleLate = fx.store.settleLate.bind(fx.store)
   fx.store.settleLate = (h, payload) => {
-    // Mid-sequence: exact exit is already durable, so the record is visible
-    // as recovering+unknown before the settlement CAS.
+    // Mid-sequence: the prior unknown remains continuously visible. Exit and
+    // parsed-outcome settlement commit atomically inside settleLate.
     const mid = fx.store.getTurnReconciliation(handle)
-    assert.equal(mid.state, 'recovering')
+    assert.equal(mid.state, 'pending')
     assert.equal(mid.snapshot.initialOutcome, 'outcome_unknown', 'visible continuously — no not_found window')
     order.push('store')
     return originalSettleLate(h, payload)
