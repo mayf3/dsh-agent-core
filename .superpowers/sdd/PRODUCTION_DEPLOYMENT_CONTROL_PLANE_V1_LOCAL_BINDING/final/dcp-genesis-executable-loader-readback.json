@@ -1,0 +1,50 @@
+{
+  "agent-deploy-bootstrap": {
+    "direct_non_system_loads": [],
+    "loads": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment": false
+  },
+  "agent-deploy-issuer": {
+    "direct_non_system_loads": [],
+    "loads": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment": false
+  },
+  "agent-deployd": {
+    "direct_non_system_loads": [],
+    "loads": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment": false
+  },
+  "codex": {
+    "direct_non_system_loads": [],
+    "loads": [
+      "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+      "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+      "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+      "/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration",
+      "/usr/lib/liblzma.5.dylib",
+      "/usr/lib/libbz2.1.0.dylib",
+      "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+      "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+      "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "/usr/lib/libSystem.B.dylib",
+      "/usr/lib/libobjc.A.dylib",
+      "/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork",
+      "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+      "/usr/lib/libiconv.2.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment": false
+  }
+}
