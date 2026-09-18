@@ -30,6 +30,7 @@ fn setup() -> (tempfile::TempDir, Intake) {
     let intake = Intake {
         root: roots.root,
         config: Configuration {
+            first_target_adoption: None,
             catalog: common::fixture_catalog(),
             callers: vec![],
             producers: vec!["producer".into()],

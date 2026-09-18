@@ -26,27 +26,20 @@ impl Queue {
     }
 }
 pub(super) fn current(tx: &Transaction<'_>, target: &str) -> Result<Option<CurrentInstallation>> {
-    let raw:Option<(String,String)>=tx.query_row("SELECT receipts.digest,receipts.record FROM installed JOIN receipts ON receipts.digest=installed.receipt WHERE installed.target=?",[target],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
-    let Some((hash, raw)) = raw else {
+    let Some((hash, receipt)) = super::installation::installed(tx, target)? else {
         return Ok(None);
     };
-    let t: TransactionReceipt = parse(raw)?;
-    let mut result = CurrentInstallation {
-        unit_id: t.unit_id,
-        target_generation: t.target_generation,
-        attempt: t.attempt,
-        transaction_receipt_digest: hash.clone(),
-        service_generation: t.new_service_generation,
-        binding_digest: hash,
-    };
+    let mut result = receipt.current(&hash);
     let physical:Option<(String,String)>=tx.query_row("SELECT receipts.digest,receipts.record FROM physical_current JOIN receipts ON receipts.digest=physical_current.receipt WHERE target=?",[target],|r|Ok((r.get(0)?,r.get(1)?))).optional()?;
     if let Some((hash, raw)) = physical {
         let r: RestoredInstallation = parse(raw)?;
         require(
-            r.previous.unit_id == result.unit_id
+            digest(&r)? == hash
+                && r.previous.unit_id == result.unit_id
                 && r.previous.target_generation == result.target_generation
                 && r.previous.attempt == result.attempt
-                && r.previous.transaction_receipt_digest == result.transaction_receipt_digest,
+                && r.previous.transaction_receipt_digest == result.transaction_receipt_digest
+                && r.previous.origin == result.origin,
             "RESTORATION_BINDING",
         )?;
         result.service_generation = r.service_generation;

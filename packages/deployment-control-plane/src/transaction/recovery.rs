@@ -160,10 +160,12 @@ impl Executor {
             }
             let id = id.to_string();
             // A crash before any owned operation or slot intent has a provable no-effect disposition.
-            let no_effect_intent = j
-                .events
-                .iter()
-                .all(|e| matches!(e, Event::Preflight { .. } | Event::Applying));
+            let no_effect_intent = j.events.iter().all(|e| {
+                matches!(
+                    e,
+                    Event::Preflight { .. } | Event::ExecutedPredecessor { .. } | Event::Applying
+                )
+            });
             if no_effect_intent {
                 if let Event::Preflight {
                     before, service, ..
@@ -292,7 +294,8 @@ impl Executor {
         now: u64,
     ) -> Result<CurrentInstallation> {
         guard.binds(&self.root)?;
-        q.revalidate(c, id, policy, now)?;
+        let proof = self.read_only_predecessor(q, c, id)?;
+        q.revalidate_acceptance(c, id, policy, now, proof.as_ref())?;
         let s = q.daemon_status(id)?;
         require(s.state == State::Applied, "NOT_APPLIED")?;
         self.verify_live_baseline(q, &s.unit.target_runtime)?;

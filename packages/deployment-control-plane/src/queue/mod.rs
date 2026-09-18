@@ -101,3 +101,7 @@ mod executor_recovery;
 mod physical;
 
 mod service;
+
+mod installation;
+pub(crate) use installation::InstallationReceipt;
+mod adoption;
