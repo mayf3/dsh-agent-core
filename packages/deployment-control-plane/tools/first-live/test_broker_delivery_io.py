@@ -111,7 +111,10 @@ class IO(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             p = Path(td) / "record"; p.write_bytes(b'{"fixture":true}'); p.chmod(0o440)
             parent = os.open(td, os.O_RDONLY | os.O_DIRECTORY)
-            m = os.stat(p); fields = list(m); fields[4] = 0; fields[5] = 20
+            m = os.stat(p)
+            fields = list(m)
+            fields[4] = 0
+            fields[5] = 20
             first = os.stat_result(fields); fields[7] += 1; after = os.stat_result(fields)
             try:
                 with patch.object(io.os, "fstat", side_effect=[first, after]), \

@@ -205,7 +205,10 @@ class Transport(unittest.TestCase):
     def test_noncanonical_manifest_symlink_and_wrong_owner_identity_refuse(self):
         self.save_manifest();(self.package/'manifest.json').chmod(0o600);(self.package/'manifest.json').write_text(json.dumps(self.manifest,indent=2))
         with self.assertRaises(RuntimeError):self.io.local_validate()
-        self.save_manifest();p=self.package/'first_live_io.py';p.unlink();p.symlink_to(self.package/'first_live_os.py')
+        self.save_manifest()
+        p=self.package/'first_live_io.py'
+        p.unlink()
+        p.symlink_to(self.package/'first_live_os.py')
         with self.assertRaises((RuntimeError,OSError)):self.io.local_validate()
         with mock.patch.object(transport.os,'getegid',return_value=601),self.assertRaisesRegex(RuntimeError,'GID20'):
             transport.OperatorIO(self.manifest,self.package,self.journal)

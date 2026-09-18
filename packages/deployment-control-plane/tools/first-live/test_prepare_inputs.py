@@ -61,7 +61,10 @@ class StaticInputs(unittest.TestCase):
             bad=copy.deepcopy(trees);missing=issue['missing_path'].removeprefix(m.BASE+'harness/')
             bad[1]['entries'][missing]=m.entry(row(missing,'directory'))
             with self.assertRaises(ValueError):m.closed_links(bad)
-        bad=copy.deepcopy(trees);extra=m.entry(row('fifth','symlink'));extra['link']='absent';bad[1]['entries']['fifth']=extra
+        bad=copy.deepcopy(trees)
+        extra=m.entry(row('fifth','symlink'))
+        extra['link']='absent'
+        bad[1]['entries']['fifth']=extra
         with self.assertRaises(ValueError):m.closed_links(bad)
         for p,e in trees[1]['entries'].items():
             if p.endswith('package.json'):
