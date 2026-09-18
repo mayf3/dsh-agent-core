@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+thread 'issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease' (74911881) panicked at src/issuer/../../test/issuer/policy.rs:296:63:
+bounded v2 Owner source selection: Error { code: "INVALID_RECORD" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease ... FAILED
+
+failures:
+
+failures:
+    issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 91 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`
