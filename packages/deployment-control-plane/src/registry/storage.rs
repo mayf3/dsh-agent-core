@@ -61,75 +61,13 @@ fn bytes(root: &Dir, file: &File) -> Result<Vec<u8>> {
 }
 impl Registry {
     pub(super) fn history(&self) -> Result<Vec<Signed<Ledger>>> {
-        let names = self.root.names_bounded(MAX_LEDGER + 2)?;
-        let mut history: Vec<Signed<Ledger>> = Vec::new();
-        for name in names {
-            if name == "registry.lock" || name == "pending.tmp" {
-                continue;
-            }
-            let revision = history.len() as u64 + 1;
-            require(
-                name == format!("state-{revision:020}.json"),
-                "REGISTRY_HISTORY_GAP",
-            )?;
-            let file = self.root.open_file(&name, libc::O_RDONLY, 0)?;
-            let raw = bytes(&self.root, &file)?;
-            let ledger: Signed<Ledger> = serde_json::from_slice(&raw)?;
-            let catalog = if let Some(b) = &self.bridge {
-                b.catalog(revision, &raw, &self.catalog)?
-            } else {
-                &self.catalog
-            };
-            verify_signed(&ledger, catalog, &self.producer)?;
-            let s = &ledger.payload;
-            let previous = history.last().map(digest).transpose()?;
-            require(
-                ledger.issuer == self.producer
-                    && s.revision == revision
-                    && s.previous_digest == previous,
-                "REGISTRY_HISTORY_BINDING",
-            )?;
-            verify_signed(&s.snapshot, catalog, &self.producer)?;
-            require(
-                s.snapshot.issuer == self.producer
-                    && s.snapshot.payload.producer_id == self.producer
-                    && s.snapshot.payload.revision == revision
-                    && s.snapshot.payload.previous_revision == revision - 1
-                    && s.snapshot.payload.watermark == revision,
-                "REGISTRY_HISTORY_BINDING",
-            )?;
-            for (id, row) in &s.rows {
-                validation::enrollment(catalog, &self.producer, &row.enrollment)?;
-                require(
-                    id == &row.enrollment.payload.goal_id && !row.business_goal_complete,
-                    "REGISTRY_HISTORY_BINDING",
-                )?;
-                if let Some(ready) = &row.ready {
-                    verify_signed(ready, catalog, &self.producer)?;
-                }
-            }
-            require(
-                s.snapshot.payload.records == records(&s.rows),
-                "REGISTRY_HISTORY_BINDING",
-            )?;
-            if revision == 2 {
-                if let Some(b) = &self.bridge {
-                    b.carry(s)?;
-                }
-            }
-            // Retried acknowledgement must finish durability after a visible rename
-            // whose fsync may previously have failed. Visibility alone is not commit.
-            #[cfg(test)]
-            super::durability::before_history_sync()?;
-            file.sync_all()?;
-            history.push(ledger);
-        }
-        require(
-            self.bridge.is_none() || history.len() >= 2,
-            "CUSTODY_INCOMPLETE",
-        )?;
-        self.root.file.sync_all()?;
-        Ok(history)
+        read_history(
+            &self.root,
+            &self.catalog,
+            &self.producer,
+            self.bridge.as_ref(),
+            true,
+        )
     }
     pub(super) fn commit(
         &self,
@@ -179,4 +117,83 @@ pub(super) fn publish(root: &Dir, name: &str, raw: &[u8]) -> Result<()> {
     file.sync_all()?;
     root.file.sync_all()?;
     root.rename("pending.tmp", root, name)
+}
+
+pub(super) fn read_history(
+    root: &Dir,
+    active: &Catalog,
+    producer: &str,
+    bridge: Option<&preactivation::ValidatedBridge>,
+    durable: bool,
+) -> Result<Vec<Signed<Ledger>>> {
+    let names = root.names_bounded(MAX_LEDGER + 2)?;
+    let mut history: Vec<Signed<Ledger>> = Vec::new();
+    for name in names {
+        if name == "registry.lock" || name == "pending.tmp" {
+            continue;
+        }
+        let revision = history.len() as u64 + 1;
+        require(
+            name == format!("state-{revision:020}.json"),
+            "REGISTRY_HISTORY_GAP",
+        )?;
+        let file = root.open_file(&name, libc::O_RDONLY, 0)?;
+        let raw = bytes(root, &file)?;
+        let ledger: Signed<Ledger> = serde_json::from_slice(&raw)?;
+        let catalog = if let Some(b) = bridge {
+            b.catalog(revision, &raw, active)?
+        } else {
+            active
+        };
+        verify_signed(&ledger, catalog, producer)?;
+        let s = &ledger.payload;
+        let previous = history.last().map(digest).transpose()?;
+        require(
+            ledger.issuer == *producer && s.revision == revision && s.previous_digest == previous,
+            "REGISTRY_HISTORY_BINDING",
+        )?;
+        verify_signed(&s.snapshot, catalog, producer)?;
+        require(
+            s.snapshot.issuer == *producer
+                && s.snapshot.payload.producer_id == *producer
+                && s.snapshot.payload.revision == revision
+                && s.snapshot.payload.previous_revision == revision - 1
+                && s.snapshot.payload.watermark == revision,
+            "REGISTRY_HISTORY_BINDING",
+        )?;
+        for (id, row) in &s.rows {
+            validation::enrollment(catalog, producer, &row.enrollment)?;
+            require(
+                id == &row.enrollment.payload.goal_id && !row.business_goal_complete,
+                "REGISTRY_HISTORY_BINDING",
+            )?;
+            if let Some(ready) = &row.ready {
+                verify_signed(ready, catalog, producer)?;
+            }
+        }
+        require(
+            s.snapshot.payload.records == records(&s.rows),
+            "REGISTRY_HISTORY_BINDING",
+        )?;
+        if revision == 2 {
+            if let Some(b) = bridge {
+                b.carry(s)?;
+            }
+        }
+        // Retried acknowledgement must finish durability after a visible rename
+        // whose fsync may previously have failed. Visibility alone is not commit.
+        #[cfg(test)]
+        if durable {
+            super::durability::before_history_sync()?;
+        }
+        if durable {
+            file.sync_all()?;
+        }
+        history.push(ledger);
+    }
+    require(bridge.is_none() || history.len() >= 2, "CUSTODY_INCOMPLETE")?;
+    if durable {
+        root.file.sync_all()?;
+    }
+    Ok(history)
 }

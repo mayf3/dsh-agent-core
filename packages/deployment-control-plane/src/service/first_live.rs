@@ -22,3 +22,9 @@ pub(crate) fn fresh() -> crate::Result<()> {
 pub(crate) fn enable() -> crate::Result<()> {
     native::run()
 }
+
+mod completion;
+
+pub(crate) fn completion() -> crate::Result<()> {
+    completion::run()
+}

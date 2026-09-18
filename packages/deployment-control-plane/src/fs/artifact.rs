@@ -72,30 +72,38 @@ impl ArtifactManifest {
     }
 }
 impl ArtifactStore {
+    pub(crate) fn open_existing(
+        &self,
+        artifact: &str,
+        manifest_digest: &str,
+    ) -> Result<SealedArtifact> {
+        valid_digest(artifact)?;
+        valid_digest(manifest_digest)?;
+        let existing = self.sealed.child(artifact)?;
+        let raw = snapshot(
+            &existing.open_file("manifest.json", libc::O_RDONLY, 0)?,
+            existing.uid,
+            1024 * 1024,
+        )?
+        .bytes;
+        require(sha(&raw) == artifact, "ARTIFACT_MISMATCH")?;
+        let manifest: ArtifactManifest = serde_json::from_slice(&raw)?;
+        manifest.validate()?;
+        require(digest(&manifest)? == manifest_digest, "ARTIFACT_MISMATCH")?;
+        let result = SealedArtifact {
+            dir: existing,
+            manifest,
+            artifact: artifact.into(),
+            manifest_digest: manifest_digest.into(),
+        };
+        result.verify()?;
+        Ok(result)
+    }
     pub fn import(&self, artifact: &str, manifest_digest: &str) -> Result<SealedArtifact> {
         valid_digest(artifact)?;
         valid_digest(manifest_digest)?;
         match self.sealed.child(artifact) {
-            Ok(existing) => {
-                let raw = snapshot(
-                    &existing.open_file("manifest.json", libc::O_RDONLY, 0)?,
-                    existing.uid,
-                    1024 * 1024,
-                )?
-                .bytes;
-                require(sha(&raw) == artifact, "ARTIFACT_MISMATCH")?;
-                let manifest: ArtifactManifest = serde_json::from_slice(&raw)?;
-                manifest.validate()?;
-                require(digest(&manifest)? == manifest_digest, "ARTIFACT_MISMATCH")?;
-                let result = SealedArtifact {
-                    dir: existing,
-                    manifest,
-                    artifact: artifact.into(),
-                    manifest_digest: manifest_digest.into(),
-                };
-                result.verify()?;
-                return Ok(result);
-            }
+            Ok(_) => return self.open_existing(artifact, manifest_digest),
             Err(e) if e.code() == "ABSENT" => (),
             Err(e) => return Err(e),
         }
@@ -189,3 +197,7 @@ impl SealedArtifact {
         require(self.dir.names()? == expected, "MANIFEST_FILES")
     }
 }
+
+#[cfg(test)]
+#[path = "../../test/completion/sealed.rs"]
+mod completion_tests;

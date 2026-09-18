@@ -30,3 +30,7 @@ pub fn run_first_live_and_enable() -> Result<()> {
     first_live::run_first_live()?;
     service::first_live::enable()
 }
+
+pub fn run_first_live_completion() -> Result<()> {
+    service::first_live::completion()
+}
