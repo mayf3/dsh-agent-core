@@ -50,6 +50,7 @@ class BindRecords(unittest.TestCase):
             "operation_id": "private-test-only",
             "previous": {"service_sha256": "a" * 64},
             "configuration": {"callers": [{"uid": 502, "gid": 20}]},
+            "lifecycle": {"tool_sha256": {"/bin/sh": "c" * 64}},
         }
         self.raw = canonical(self.template)
 
@@ -59,6 +60,7 @@ class BindRecords(unittest.TestCase):
             raw, sha(raw) if digest is None else digest,
             self.observed if observed is None else observed,
             self.grant if grant_raw is None else grant_raw,
+            b"1" * 64 + b"  /usr/bin/sudo\n",
         )
 
     def test_fixed_login_grant_has_exact_schema_and_one_hour(self):
@@ -77,8 +79,24 @@ class BindRecords(unittest.TestCase):
     def test_only_observed_login_hash_is_added_to_template(self):
         expected = copy.deepcopy(self.template)
         expected["previous"]["login_receipt_sha256"] = sha(self.observed)
+        expected["lifecycle"]["tool_sha256"]["/usr/bin/sudo"] = "1" * 64
         self.assertEqual(self.bind(), canonical(expected))
         self.assertEqual(self.raw, canonical(self.template))
+
+    def test_sudo_digest_requires_exact_single_path_line(self):
+        good = b"1" * 64 + b"  /usr/bin/sudo\n"
+        for line in [None, b"", good + good, good.replace(b"sudo", b"sh"),
+                     good.rstrip(), good.replace(b"  ", b" "), b"G" * 64 + good[64:],
+                     b"sudo: a password is required\n"]:
+            with self.subTest(line=line), self.assertRaises(ValueError):
+                binding.bind_packet(self.raw, sha(self.raw), self.observed, self.grant, line)
+
+    def test_prefilled_sudo_or_missing_tool_map_is_rejected(self):
+        for tools in [{"/usr/bin/sudo": "1" * 64}, None, []]:
+            value=copy.deepcopy(self.template)
+            value["lifecycle"]["tool_sha256"]=tools
+            with self.assertRaises(ValueError):
+                self.bind(raw=canonical(value))
 
     def test_missing_or_mutated_actual_receipt_is_rejected(self):
         cases = [b"", b"{}"]

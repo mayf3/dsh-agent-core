@@ -81,8 +81,18 @@ def expected_login_receipt(grant_raw):
     })
 
 
-def bind_packet(template_raw, template_sha256, observed_receipt_raw, grant_raw):
-    """Insert only the actual successful receipt hash into the exact template.
+def _sudo_digest(line):
+    # The outer operator must first authenticate the fixed OS entry and check
+    # its exact frozen tuple/ACL before and after this observed command output.
+    suffix = b"  /usr/bin/sudo\n"
+    _require(isinstance(line, bytes) and len(line) == 64 + len(suffix)
+             and line.endswith(suffix)
+             and all(c in b"0123456789abcdef" for c in line[:64]), "SUDO_DIGEST_OBSERVATION")
+    return line[:64].decode("ascii")
+
+
+def bind_packet(template_raw, template_sha256, observed_receipt_raw, grant_raw, sudo_line):
+    """Insert only checked login-receipt and fixed-sudo digests into the template.
 
     This is an ordinary byte transformation, not a proof or admission API. The
     native entry independently reads the real protected receipt and validates
@@ -95,5 +105,11 @@ def bind_packet(template_raw, template_sha256, observed_receipt_raw, grant_raw):
     previous = template.get("previous")
     _require(isinstance(previous, dict), "PREVIOUS_BINDING")
     _require("login_receipt_sha256" not in previous, "PREFILLED_LOGIN_RECEIPT")
+    lifecycle = template.get("lifecycle")
+    _require(isinstance(lifecycle, dict), "LIFECYCLE_BINDING")
+    tools = lifecycle.get("tool_sha256")
+    _require(isinstance(tools, dict), "TOOL_BINDING")
+    _require("/usr/bin/sudo" not in tools, "PREFILLED_SUDO_DIGEST")
+    tools["/usr/bin/sudo"] = _sudo_digest(sudo_line)
     previous["login_receipt_sha256"] = _sha(observed_receipt_raw)
     return _canonical(template)
