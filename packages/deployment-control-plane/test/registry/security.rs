@@ -127,6 +127,7 @@ fn historical_review_does_not_bypass_current_review_or_prior_dependency() {
     let r = open(temp.path(), &c);
     let mut e = enrollment("goal").payload;
     e.prior_dependencies = vec![PriorDependency {
+        deployment_child: None,
         goal_id: "watchdog".into(),
         provenance: reference("watchdog-first"),
     }];

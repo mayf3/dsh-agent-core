@@ -93,6 +93,16 @@ pub(super) fn enrollment(
             "DEPENDENCY_BINDING",
         )?;
         reference(&dependency.provenance)?;
+        if let Some(child) = &dependency.deployment_child {
+            valid_id(&child.goal_id)?;
+            valid_digest(&child.enrollment_digest)?;
+            require(
+                child.goal_id != e.goal_id
+                    && child.goal_id != dependency.goal_id
+                    && child.goal_id != e.business_goal_id,
+                "DEPENDENCY_BINDING",
+            )?;
+        }
     }
     Ok(())
 }
@@ -121,7 +131,11 @@ pub(super) fn ready(e: &Enrollment, proposal: &Proposal) -> Result<()> {
     require(
         e.prior_dependencies.iter().all(|required| {
             r.dependencies.iter().any(|dep| {
-                dep.required_goals.contains(&required.goal_id)
+                dep.required_goals
+                    .iter()
+                    .any(|id| id == required.effective_goal())
+                    && (required.deployment_child.is_none()
+                        || dep.semantics == DependencySemantics::LiveInstallation)
                     && proposal.dependencies.contains(dep)
             })
         }),

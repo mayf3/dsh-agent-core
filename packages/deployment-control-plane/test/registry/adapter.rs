@@ -165,3 +165,109 @@ fn local_poll_and_delivery_close_after_real_executor_finalization_and_retry() {
         assert_eq!(queue.daemon_producer_revision(PRODUCER).unwrap(), 3);
     }
 }
+
+#[test]
+fn mapped_child_needs_real_current_pass_finalize_and_producer_closure() {
+    use crate::registry::{DeploymentChild, PriorDependency};
+    let (temp, roots, original_queue, _c, original_id) = transaction_fixture::prepared();
+    let c = local_catalog();
+    let intake = fixture(temp.path(), &c);
+    let registry = enroll(&intake);
+    let child = registry.get("goal").unwrap().enrollment;
+    let mut broker = registry_fixture::enrollment("broker-child").payload;
+    broker.producer_id = PRODUCER.into();
+    broker.prior_dependencies = vec![PriorDependency {
+        goal_id: child.payload.business_goal_id.clone(),
+        provenance: registry_fixture::reference("original-prerequisite"),
+        deployment_child: Some(DeploymentChild {
+            goal_id: "goal".into(),
+            enrollment_digest: digest(&child).unwrap(),
+        }),
+    }];
+    registry.enroll(&signed("authority", broker)).unwrap();
+    let frozen_first_ledger =
+        std::fs::read(temp.path().join("registry/state-00000000000000000001.json")).unwrap();
+    let prerequisites = registry.resolved_dependencies("broker-child").unwrap();
+    assert_eq!(prerequisites, vec!["goal"]);
+    let queue = Queue::open(temp.path().join("local-queue.db")).unwrap();
+    assert!(queue.issuer_dependencies(&prerequisites).is_err());
+    let mut p = original_queue.daemon_evidence(&original_id).unwrap();
+    p.goals[0].payload.producer_id = PRODUCER.into();
+    p.goals[0] = signed(PRODUCER, p.goals[0].payload.clone());
+    let actor = actor(&intake);
+    registry.activate(&actor, &p, 0, 1001).unwrap();
+    intake.poll(&queue).unwrap();
+    let id = queue.submit(&c, &actor, &p, 1001).unwrap().unit_id;
+    let guard = roots.lock().unwrap();
+    let mut executor = Executor::fixture(&roots).unwrap();
+    let applied = executor
+        .apply(
+            &guard,
+            &queue,
+            &c,
+            &id,
+            &signed("authority", policy()),
+            1001,
+            &actor.id,
+        )
+        .unwrap();
+    assert!(queue.issuer_dependencies(&prerequisites).is_err());
+    for (i, outcome) in [
+        GoalOutcome::Pending,
+        GoalOutcome::Fail,
+        GoalOutcome::WaitingExternalAcceptance,
+        GoalOutcome::Pass,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        queue
+            .record_goal(
+                &c,
+                &signed(
+                    "verifier",
+                    GoalReceipt {
+                        unit_id: id.clone(),
+                        goal_id: "goal".into(),
+                        acceptance_revision: "accept-1".into(),
+                        target_generation: 1,
+                        attempt: 1,
+                        service_generation: applied.receipt.new_service_generation.clone(),
+                        attachment_digest: applied.receipt.attachment_digests[0].clone(),
+                        outcome,
+                        evidence_digest: "d".repeat(64),
+                        revision: i as u64 + 1,
+                    },
+                ),
+            )
+            .unwrap();
+        // Even PASS cannot stand in for the pending executor finalize.
+        assert!(queue.issuer_dependencies(&prerequisites).is_err());
+    }
+    executor.finalize(&guard, &queue, &id).unwrap();
+    intake.deliver(&queue).unwrap();
+    assert_eq!(registry.get("goal").unwrap().state, DeploymentState::Closed);
+    let dependencies = queue.issuer_dependencies(&prerequisites).unwrap();
+    assert_eq!(dependencies[0].unit_id, id);
+    assert_eq!(dependencies[0].required_goals, vec!["goal"]);
+    assert_eq!(
+        dependencies[0].semantics,
+        DependencySemantics::LiveInstallation
+    );
+    assert!(queue
+        .issuer_dependencies(&[child.payload.business_goal_id])
+        .is_err());
+    let mut broker_proposal = proposal("broker", "f", 2, "broker-child");
+    broker_proposal.dependencies = dependencies;
+    broker_proposal.goals[0].payload.dependencies = broker_proposal.dependencies.clone();
+    broker_proposal.goals[0].payload.producer_id = PRODUCER.into();
+    broker_proposal.goals[0] = signed(PRODUCER, broker_proposal.goals[0].payload.clone());
+    registry
+        .activate(&actor, &broker_proposal, 0, 1001)
+        .unwrap();
+    assert!(!registry.get("broker-child").unwrap().business_goal_complete);
+    assert_eq!(
+        std::fs::read(temp.path().join("registry/state-00000000000000000001.json")).unwrap(),
+        frozen_first_ledger
+    );
+}
