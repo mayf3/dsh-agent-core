@@ -132,7 +132,7 @@ fn singleton(root: &Dir, sandbox: bool) -> Result<File> {
     root.file.sync_all()?;
     Ok(file)
 }
-fn queue(root: &Dir, path: &Path) -> Result<Queue> {
+pub(crate) fn queue(root: &Dir, path: &Path) -> Result<Queue> {
     for name in [
         "queue.db",
         "queue.db-wal",

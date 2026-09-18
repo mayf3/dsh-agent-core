@@ -24,9 +24,21 @@ pub struct SocketAncestor {
     pub memberships: BTreeMap<u32, Vec<u32>>,
     pub denial_receipt: String,
 }
-impl SocketAncestor {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct SocketAncestorPlan {
+    pub host: String,
+    pub device: u64,
+    pub inode: u64,
+    pub uid: u32,
+    pub gid: u32,
+    pub mode: u32,
+    pub flags: u32,
+    pub acl_none: bool,
+    pub memberships: BTreeMap<u32, Vec<u32>>,
+}
+impl SocketAncestorPlan {
     pub fn validate(&self, host: &str, identities: &BTreeSet<u32>) -> Result<()> {
-        crate::trust::valid_digest(&self.denial_receipt)?;
         require(
             self.host == host
                 && self.uid == 0
@@ -57,7 +69,80 @@ impl SocketAncestor {
         Ok(())
     }
 }
-fn groups(uid: u32) -> Result<Vec<u32>> {
+impl SocketAncestorPlan {
+    pub(crate) fn bind(&self, denial_receipt: &str) -> Result<SocketAncestor> {
+        crate::trust::valid_digest(denial_receipt)?;
+        Ok(SocketAncestor {
+            host: self.host.clone(),
+            device: self.device,
+            inode: self.inode,
+            uid: self.uid,
+            gid: self.gid,
+            mode: self.mode,
+            flags: self.flags,
+            acl_none: self.acl_none,
+            memberships: self.memberships.clone(),
+            denial_receipt: denial_receipt.into(),
+        })
+    }
+    pub(crate) fn preflight(&self, socket_gid: u32, identities: &BTreeSet<u32>) -> Result<()> {
+        self.open_preflight(socket_gid, identities).map(|_| ())
+    }
+    pub(crate) fn open_preflight(
+        &self,
+        socket_gid: u32,
+        identities: &BTreeSet<u32>,
+    ) -> Result<Dir> {
+        self.validate(&super::observed_host()?, identities)?;
+        let var = Dir::open(Path::new("/private/var"), 0)?;
+        let parent = Dir {
+            file: var.open_file("run", libc::O_RDONLY | libc::O_DIRECTORY, 0)?,
+            uid: 0,
+        };
+        check_physical(&parent, self)?;
+        let child = parent.child("agent-deployd")?;
+        require(
+            child.file.metadata()?.mode() & 0o7777 == 0o750
+                && child.file.metadata()?.gid() == socket_gid,
+            "SOCKET_BINDING",
+        )?;
+        let named = Dir {
+            file: var.open_file("run", libc::O_RDONLY | libc::O_DIRECTORY, 0)?,
+            uid: 0,
+        };
+        check_physical(&named, self)?;
+        let current = named.child("agent-deployd")?.file.metadata()?;
+        let retained = child.file.metadata()?;
+        require(
+            (current.dev(), current.ino()) == (retained.dev(), retained.ino()),
+            "SOCKET_ANCESTOR_REPLACED",
+        )?;
+        Ok(parent)
+    }
+}
+impl From<&SocketAncestor> for SocketAncestorPlan {
+    fn from(p: &SocketAncestor) -> Self {
+        Self {
+            host: p.host.clone(),
+            device: p.device,
+            inode: p.inode,
+            uid: p.uid,
+            gid: p.gid,
+            mode: p.mode,
+            flags: p.flags,
+            acl_none: p.acl_none,
+            memberships: p.memberships.clone(),
+        }
+    }
+}
+impl SocketAncestor {
+    pub fn validate(&self, host: &str, identities: &BTreeSet<u32>) -> Result<()> {
+        crate::trust::valid_digest(&self.denial_receipt)?;
+        SocketAncestorPlan::from(self).validate(host, identities)
+    }
+}
+
+pub(crate) fn groups(uid: u32) -> Result<Vec<u32>> {
     let mut pwd: libc::passwd = unsafe { std::mem::zeroed() };
     let mut buffer = vec![0i8; 16384];
     let mut result = std::ptr::null_mut();
@@ -146,6 +231,9 @@ impl SocketDirectory {
     }
 }
 fn check(dir: &Dir, proof: &SocketAncestor) -> Result<()> {
+    check_physical(dir, &SocketAncestorPlan::from(proof))
+}
+fn check_physical(dir: &Dir, proof: &SocketAncestorPlan) -> Result<()> {
     let m = dir.file.metadata()?;
     require(
         m.is_dir()

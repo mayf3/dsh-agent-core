@@ -229,3 +229,8 @@ pub(crate) mod fixture;
 #[cfg(test)]
 #[path = "../../test/adoption/verification/watchdog.rs"]
 mod tests;
+
+/// Reuse the fixed accepted health predicates for the finite lifecycle availability join.
+pub(crate) fn canonical_health(value: &serde_json::Value, source: &str) -> crate::Result<()> {
+    semantic::health(value, source)
+}

@@ -214,7 +214,7 @@ pub fn run(args: &[String]) -> Result<serde_json::Value> {
 }
 /// Coordinates for the packet-bound conditional constructor. Never a PASS input.
 pub(crate) struct StandingActivationInputs {
-    canary: native::VerifiedCanary,
+    pub(crate) canary: native::VerifiedCanary,
     pub baseline_receipt_digest: String,
     pub goal_receipt_digest: String,
     pub canary_evidence_digest: String,

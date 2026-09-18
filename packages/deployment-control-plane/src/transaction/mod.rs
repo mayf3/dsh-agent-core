@@ -18,7 +18,9 @@ use crate::{
     queue::Queue,
     Result,
 };
-use journal::Journal;
+pub(crate) use journal::Journal;
+#[cfg(test)]
+pub(crate) use native::NativeService;
 pub use native_profile::{
     parse_launchd, ComponentImage, EnrolledFile, NativeEnrollment, NativeKind, RuntimeStartup,
     ServiceEnrollment,
@@ -209,3 +211,13 @@ mod adoption_activation_tests;
 #[cfg(test)]
 #[path = "../../test/adoption/adoption_crashes.rs"]
 mod adoption_crash_tests;
+
+pub(crate) use native::first_live_components;
+/// Read-only identity seam for the fixed first-live denial child correlation.
+pub(crate) fn first_live_process_identity(pid: u32) -> Result<ProcessIdentity> {
+    process::identity(pid)
+}
+
+pub(crate) use native::{NativeMaintenanceInput, NativeMaintenanceService};
+
+pub(crate) use native_profile::NativeProfileInput;

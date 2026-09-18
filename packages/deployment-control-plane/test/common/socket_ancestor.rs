@@ -46,3 +46,41 @@ fn equivalent_private_descriptor_binding_rejects_replacement_mode_and_acl() {
     assert!(status.success());
     assert!(check(&dir, &proof).is_err());
 }
+
+#[test]
+fn physical_plan_has_no_admission_receipt_and_keeps_exact_exception() {
+    let p = SocketAncestorPlan {
+        host: "a".repeat(64),
+        device: 1,
+        inode: 2,
+        uid: 0,
+        gid: 1,
+        mode: 0o775,
+        flags: 0,
+        acl_none: true,
+        memberships: BTreeMap::from([(502, vec![20]), (505, vec![601])]),
+    };
+    let ids = BTreeSet::from([0, 502, 505]);
+    p.validate(&p.host, &ids).unwrap();
+    let mut raw = serde_json::to_value(&p).unwrap();
+    assert!(raw.get("denial_receipt").is_none());
+    raw["denial_receipt"] = serde_json::json!("b".repeat(64));
+    assert!(serde_json::from_value::<SocketAncestorPlan>(raw).is_err());
+    assert!(p.bind("").is_err());
+    p.bind(&"b".repeat(64))
+        .unwrap()
+        .validate(&p.host, &ids)
+        .unwrap();
+    let mut bad = p.clone();
+    bad.memberships.get_mut(&505).unwrap().push(1);
+    assert!(bad.validate(&p.host, &ids).is_err());
+    let mut bad = p.clone();
+    bad.mode = 0o777;
+    assert!(bad.validate(&p.host, &ids).is_err());
+    let mut bad = p.clone();
+    bad.acl_none = false;
+    assert!(bad.validate(&p.host, &ids).is_err());
+    let mut bad = p.clone();
+    bad.memberships.remove(&502);
+    assert!(bad.validate(&p.host, &ids).is_err());
+}

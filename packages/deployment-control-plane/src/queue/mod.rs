@@ -105,3 +105,21 @@ mod service;
 mod installation;
 pub(crate) use installation::InstallationReceipt;
 mod adoption;
+
+impl Queue {
+    /// Fixed first-genesis initializer assertion; never a public reset or SQL API.
+    pub(crate) fn verify_first_live_empty(&self) -> Result<()> {
+        self.transaction(|tx| {
+            let mut statement=tx.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='meta'")?;
+            let names=statement.query_map([],|r|r.get::<_,String>(0))?.collect::<std::result::Result<Vec<_>,_>>()?;
+            for name in names {
+                require(name.bytes().all(|b|b.is_ascii_lowercase() || b==b'_'),"FIRST_LIVE_SCHEMA")?;
+                let count:u64=tx.query_row(&format!("SELECT count(*) FROM {name}"),[],|r|r.get(0))?;
+                require(count==0,"FIRST_LIVE_QUEUE_NOT_EMPTY")?;
+            }
+            let count:u64=tx.query_row("SELECT count(*) FROM meta WHERE (key IN ('census','sequence','quarantine') AND value=0) OR (key='verification' AND value=1)",[],|r|r.get(0))?;
+            let total:u64=tx.query_row("SELECT count(*) FROM meta",[],|r|r.get(0))?;
+            require(count==4 && total==4,"FIRST_LIVE_QUEUE_NOT_EMPTY")
+        })
+    }
+}

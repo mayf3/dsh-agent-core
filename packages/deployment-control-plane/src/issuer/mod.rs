@@ -4,7 +4,7 @@ pub mod custody;
 pub mod github;
 mod issuance;
 mod issuance_io;
-mod owner_policy;
+pub(crate) mod owner_policy;
 pub(crate) mod policy;
 pub mod review;
 pub mod server;

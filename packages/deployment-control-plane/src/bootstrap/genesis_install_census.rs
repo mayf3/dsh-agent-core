@@ -231,7 +231,7 @@ pub(crate) fn validate_identities(users: &str, groups: &str) -> Result<String> {
     }
     caller.ok_or(Error::new("BOOTSTRAP_CALLER_IDENTITY"))
 }
-pub(super) fn sudoers_census() -> Result<BTreeMap<String, String>> {
+pub(crate) fn sudoers_census() -> Result<BTreeMap<String, String>> {
     let mut found = BTreeMap::new();
     sudoers("/private/etc/sudoers", &mut found, 0, 0)?;
     Ok(found)
