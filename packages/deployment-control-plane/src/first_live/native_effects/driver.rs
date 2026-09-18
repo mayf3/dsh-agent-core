@@ -7,7 +7,7 @@ use super::super::{
     packet::Packet,
     retirement, sudo,
 };
-use super::{commands, denial, inode, launchd, leaves, node, preflight, service};
+use super::{commands, denial, host, inode, launchd, leaves, node, preflight, service};
 use crate::{
     error::require,
     fs::{file::sha, secure::Dir, MutationGuard},
@@ -32,6 +32,7 @@ pub(super) struct NativeEffects<'a> {
     stopped: bool,
     isolated: bool,
     start_attempted: bool,
+    host: Option<host::Session<'a>>,
 }
 impl<'a> NativeEffects<'a> {
     pub(super) fn new(
@@ -61,6 +62,7 @@ impl<'a> NativeEffects<'a> {
             stopped: false,
             isolated: false,
             start_attempted: false,
+            host: None,
         })
     }
     fn check(&self) -> Result<()> {
@@ -116,6 +118,19 @@ impl<'a> NativeEffects<'a> {
             "FIRST_LIVE_PUBLIC_LEAF_DRIFT",
         )
     }
+    fn host(&mut self) -> Result<&mut host::Session<'a>> {
+        self.host
+            .as_mut()
+            .ok_or(crate::Error::new("HOST_SESSION_MISSING"))
+    }
+    pub(super) fn finish_host(
+        &mut self,
+        life: &super::super::lifecycle::VerifiedLifecycle,
+    ) -> Result<host::VerifiedHost> {
+        self.check()?;
+        let services = host::observed_services(self.p)?;
+        self.host()?.finish(life, &services)
+    }
     pub(super) fn final_readback(&self) -> Result<String> {
         self.check()?;
         self.trees()?;
@@ -135,6 +150,8 @@ impl<'a> NativeEffects<'a> {
     }
     pub(super) fn failure_availability(&mut self) -> Result<serde_json::Value> {
         self.check()?;
+        let current = host::observed_services(self.p)?;
+        self.host()?.verify_failure_availability(&current)?;
         if let Some(image) = &self.restored {
             self.trees()?;
             self.maintenance.prove(image)?;
@@ -240,6 +257,17 @@ impl Effects for NativeEffects<'_> {
                 "FIRST_LIVE_LEGACY_DRIFT",
             )?;
         }
+        self.host = Some(host::Session::prepare(
+            host::Inputs {
+                root: self.root,
+                area: self.area,
+                packet_dir: self.packet_dir,
+                packet: self.p,
+                grant: self.g,
+                guard: self.guard,
+            },
+            &host::observed_services(self.p)?,
+        )?);
         Ok(Census {
             host: self.p.host.clone(),
             public_digest: digest(&(public, service_sudo))?,
@@ -301,11 +329,16 @@ impl Effects for NativeEffects<'_> {
         self.check()?;
         let value = self.maintenance.stop()?;
         self.stopped = true;
+        self.maintenance.confirm_stopped()?;
+        self.host()?.switch_tailscale()?;
         Ok(value)
     }
     fn isolate(&mut self) -> Result<String> {
         self.check()?;
         self.trees()?;
+        self.maintenance.confirm_stopped()?;
+        let services = host::observed_services(self.p)?;
+        self.host()?.before_publication(&services)?;
         files::publish(
             self.area,
             "pre-isolation-absent-retirement.json",
@@ -345,6 +378,9 @@ impl Effects for NativeEffects<'_> {
         )?;
         self.leaves = Some(leaves::capture()?);
         let value = self.trees()?;
+        self.maintenance.confirm_stopped()?;
+        let services = host::observed_services(self.p)?;
+        self.host()?.after_publication(&services)?;
         self.isolated = true;
         Ok(value)
     }

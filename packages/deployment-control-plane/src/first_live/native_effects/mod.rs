@@ -55,11 +55,37 @@ pub(super) fn run() -> crate::Result<()> {
     )?;
     let outcome = (|| {
         let life = lifecycle::run(&area, &g.packet_sha256, &mut effects)?;
-        let bound = BoundPacket::new(p, &life, &area, g.expires_at)?;
+        let host = effects.finish_host(&life)?;
+        let custody = crate::issuer::custody_transition::run(
+            &prepared.root,
+            &guard,
+            crate::registry::preactivation::Bindings {
+                operation_id: p.operation_id.clone(),
+                package_digest: g.packet_sha256.clone(),
+                owner_grant_digest: grant_sha.clone(),
+                safe_host_receipt_digest: host.receipt_sha256().into(),
+                controller_sha256: g.controller_sha256.clone(),
+                installation_receipt_digest: p.previous.installation_receipt_sha256.clone(),
+            },
+            g.expires_at,
+        )?;
+        let login = login::run(&prepared.root, &area, p, g, &guard, &custody)?;
+        let bound = BoundPacket::new(
+            p,
+            &life,
+            &custody,
+            &login,
+            super::packet::BindingContext {
+                root: &prepared.root,
+                area: &area,
+                grant: g,
+                guard: &guard,
+            },
+        )?;
         let standing = compose::run(&prepared.root, &area, &bound, g, &guard)?;
         gate::validate(g, g, compose::now()?)?;
         let retirement = effects.final_readback()?;
-        let result = serde_json::json!({"version":1,"operation_id":p.operation_id,"packet_sha256":g.packet_sha256,"grant_sha256":grant_sha,"lifecycle_digest":life.digest(),"standing_receipt_digest":standing,"state":"STANDING_ADOPTION_COMPLETE_CONTROLLER_DISABLED"});
+        let result = serde_json::json!({"version":1,"operation_id":p.operation_id,"packet_sha256":g.packet_sha256,"grant_sha256":grant_sha,"lifecycle_digest":life.digest(),"host_safety_receipt_digest":host.receipt_sha256(),"custody_completion_digest":custody.completion_sha256(),"reviewer_login_receipt_digest":login.receipt_sha256(),"standing_receipt_digest":standing,"state":"STANDING_ADOPTION_COMPLETE_CONTROLLER_DISABLED"});
         Ok::<_, crate::Error>((result, retirement))
     })();
     match outcome {
@@ -93,3 +119,7 @@ pub(super) fn run() -> crate::Result<()> {
 }
 
 mod availability;
+
+mod host;
+
+pub(super) mod login;
