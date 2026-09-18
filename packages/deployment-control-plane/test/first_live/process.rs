@@ -135,10 +135,11 @@ fn stdout_and_stderr_share_the_frozen_one_mib_budget() {
 }
 
 #[test]
-fn caller_node_can_only_enter_the_two_retired_constant_stubs() {
+fn caller_node_can_only_enter_the_one_installed_retired_constant_stub() {
     for args in [
         vec!["-e".into(), "process.exit()".into()],
         vec!["/tmp/arbitrary.mjs".into()],
+        vec!["/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs".into()],
         vec![],
         vec![
             "/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs".into(),
@@ -147,9 +148,11 @@ fn caller_node_can_only_enter_the_two_retired_constant_stubs() {
     ] {
         assert!(validate_arguments(Tool::RetiredNode, &args).is_err());
     }
-    for path in ["/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs","/usr/local/libexec/agent-core/app/deployment-artifacts/scheduler-watchdog-routing-v1/run-routing-install.mjs"] {
-        validate_arguments(Tool::RetiredNode,&[path.into()]).unwrap();
-    }
+    validate_arguments(
+        Tool::RetiredNode,
+        &["/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs".into()],
+    )
+    .unwrap();
     validate_identity(Tool::RetiredNode, Some((502, 20, &[20]))).unwrap();
     assert!(validate_identity(Tool::RetiredNode, None).is_err());
     assert!(validate_identity(Tool::RetiredNode, Some((505, 601, &[601]))).is_err());
