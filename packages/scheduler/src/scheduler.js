@@ -1,5 +1,6 @@
 import { normalizeJob, toPublicJob } from './job-model.js'
 import { applyTransition, rebuildFences } from './occurrence-model.js'
+import { classifyAdmissionFailure, createAdmissionIsolation, recordStaleSupersession } from './watchdog/admission-isolation.js'
 import {
   DEFAULT_AT_CATCHUP_GRACE_MS,
   deriveJobStateSummary,
@@ -49,6 +50,9 @@ const defaultLog = {
   error: (...args) => process.stderr.write(`[scheduler] ERROR ${args.join(' ')}\n`),
 }
 
+// C-SH-002 admission-failure classification lives in ./watchdog/admission-isolation.js.
+export { classifyAdmissionFailure }
+
 /**
  * Scheduler V2. Job definitions produce durable logical occurrences; every
  * execution decision is made from the occurrence ledger, never runningAtMs.
@@ -91,6 +95,13 @@ export class Scheduler {
     this._slotCursor = createSlotAccountingCursor()
     this._engineSessionId = `${process.pid}:${Date.now().toString(36)}`
     this._leaseLossRecorded = false
+    // Stale-retry receipts + admission-failure isolation (C-SH-001/C-SH-002).
+    this._admissionIsolation = createAdmissionIsolation({
+      store: this.store,
+      engineSessionId: this._engineSessionId,
+      nowMs: this.nowMs,
+      recordSlot: (job, slot, classification, reason) => this._recordSlot(job, slot, classification, reason),
+    })
   }
 
   async load() {
@@ -246,8 +257,12 @@ export class Scheduler {
         }
         const retry = retryCandidate({ job, occurrences: this.doc.occurrences, nowMs: now })
         if (retry && !retry.exhausted) {
-          if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId })
+          // retryEligibleAtMs = the retry candidate's receipt coordinate (C-SH-002).
+          if (retry.due) candidates.push({ kind: 'retry', job, retryOfOccurrenceId: retry.retryOfOccurrenceId, retryEligibleAtMs: retry.eligibleAtMs })
           continue
+        }
+        if (retry?.staleRevision) {
+          await recordStaleSupersession(this.store, this._admissionIsolation.staleRetryNoted, job, retry, now)
         }
         const natural = naturalCandidate({
           job,
@@ -271,20 +286,15 @@ export class Scheduler {
       try {
         reserved = await this._reserve(candidate, (reason) => { rejectionReason = reason })
       } catch (error) {
-        // Fail-closed stays fail-loud (accepted ACC-032/CROSS-AGENT semantics):
-        // the admission interruption is receipted, the not-yet-attempted
-        // candidates are receipted as skipped, and the error still propagates.
-        await this._recordSlot(candidate.job, slot, 'ADMISSION_INTERRUPTED', String(error?.message ?? error).slice(0, 300))
-        for (const pending of candidates.slice(candidates.indexOf(candidate) + 1)) {
-          await this._recordSlot(
-            pending.job, pending.nominalScheduledAt ?? pending.catchUpOfNominalAt,
-            'SKIPPED_POLICY', 'tick aborted by an admission failure (fail-closed propagation)',
-          )
-        }
-        throw error
+        const pending = candidates.slice(candidates.indexOf(candidate) + 1)
+        const verdict = await this._admissionIsolation.handleFailure(error, candidate, slot, pending)
+        if (verdict === 'global_fatal') throw error // GLOBAL_FATAL (C-SH-002): fail-closed stays
+        // JOB_LOCAL (C-SH-002): scoped to this candidate — the receipt stands in
+        // for the admission; every remaining candidate keeps its own merits.
+        continue
       }
       if (!reserved) {
-        await this._recordSlot(candidate.job, slot, 'ADMISSION_REJECTED', rejectionReason ?? 'reserve refused without a reason')
+        await this._admissionIsolation.recordRefusal(candidate, slot, rejectionReason ?? 'reserve refused without a reason')
         continue
       }
       if (reserved.deduped) continue

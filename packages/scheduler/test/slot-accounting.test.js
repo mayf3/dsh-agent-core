@@ -117,7 +117,7 @@ test('R2 LEASE LOSS: ticks return 0 silently — elapsed slots leave zero accoun
   assert.ok(ctx.clock.value - before >= MIN)
 })
 
-test('R3 SIBLING POISON: admission failure receipts the slot, skips remaining candidates with receipts, and stays fail-loud', async () => {
+test('R3 SIBLING POISON: an unrunnable agent is receipted and isolated — siblings mint, tick completes (supersedes the old fail-loud propagation per SCHEDULER_SELF_HEALING_FROM_FEISHU_V1 C-SH-002)', async () => {
   const assertRunnable = (agentId) => {
     if (agentId === 'agt_r3a') throw Object.assign(new Error('disabled'), { code: 'AGENT_DISABLED' })
   }
@@ -126,20 +126,22 @@ test('R3 SIBLING POISON: admission failure receipts the slot, skips remaining ca
   const jobA = await addEveryJob(ctx, 'r3a')
   const jobB = await addEveryJob(ctx, 'r3b')
   ctx.clock.value += 15_000
-  // Accepted fail-closed semantics: the eligibility rejection PROPAGATES.
-  await assert.rejects(() => ctx.scheduler.tick(), (error) => error.code === 'AGENT_DISABLED')
+  // ONE_BAD_JOB != GLOBAL_TICK_FAILURE: the job-local refusal is typed
+  // (agent_not_runnable), receipted, and isolated — the tick completes.
+  const fired = await ctx.scheduler.tick()
   await ctx.scheduler.whenIdle()
 
   // INVARIANT: nothing about either slot is silent — A's failed admission is
-  // receipted as interrupted; B's unattempted slot is receipted as skipped.
+  // receipted as rejected with the exact reason; B mints its own occurrence.
   const aAccounting = await slotEvents(ctx.store, jobA.id)
-  assert.ok(aAccounting.some((event) => event.classification === 'ADMISSION_INTERRUPTED'),
-    'R3 red: job A admission interruption left zero durable accounting')
-  assert.equal(ctx.invoker.calls.length, 0)
-  const bAccounting = await slotEvents(ctx.store, jobB.id)
-  assert.ok(bAccounting.some((event) => event.classification === 'SKIPPED_POLICY'
-    && /aborted by an admission failure/.test(event.reason)),
-    'R3 red: job B slot silently dropped by the aborted tick')
+  const rejected = aAccounting.find((event) => event.classification === 'ADMISSION_REJECTED')
+  assert.ok(rejected, 'R3 red: job A admission refusal left zero durable accounting')
+  assert.match(rejected.reason, /agent_not_runnable/)
+  assert.equal(ctx.invoker.calls.filter((request) => request.agentId === 'agt_r3a').length, 0,
+    'the refused candidate must never reach the invoker')
+  assert.equal(ctx.scheduler.listOccurrences(jobA.id).length, 0)
+  assert.equal(ctx.scheduler.listOccurrences(jobB.id).length, 1, 'healthy sibling must mint past a job-local refusal')
+  assert.equal(fired, 1)
 })
 
 test('R4 POLICY SWALLOW: every-terminal-hold silently drops the held slot while nextRun advances past it', async () => {

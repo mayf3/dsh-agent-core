@@ -455,9 +455,12 @@ export class JobStore {
   async readRunEvents({ limit = 100 } = {}) {
     try {
       const lines = (await fs.readFile(this.runLogPath, 'utf8')).split('\n').filter(Boolean)
-      return lines.slice(-limit).flatMap((line) => {
+      const parsed = lines.flatMap((line) => {
         try { return [JSON.parse(line)] } catch { return [] }
       })
+      // limit: null -> the full retained window (bounded by evidence rotation),
+      // for diagnosis surfaces that must not false-negative on event count.
+      return limit === null ? parsed : parsed.slice(-limit)
     } catch (error) {
       if (error.code === 'ENOENT') return []
       failLoud(`read ${this.runLogPath}`, error)
