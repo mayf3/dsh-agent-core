@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.75s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 2 tests
+
+thread 'issuer::owner_policy::tests::active_native_binding_selects_v1_source_without_profile_hash_drift' (74994658) panicked at src/issuer/../../test/issuer/owner_policy.rs:295:57:
+valid active native binding must select its enrolled source: Error { code: "ISSUER_PROFILE_BINDING" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'issuer::owner_policy::tests::active_native_binding_selects_v2_source_without_profile_hash_drift' (74994659) panicked at src/issuer/../../test/issuer/owner_policy.rs:295:57:
+valid active native binding must select its enrolled source: Error { code: "ISSUER_PROFILE_BINDING" }
+test issuer::owner_policy::tests::active_native_binding_selects_v1_source_without_profile_hash_drift ... FAILED
+test issuer::owner_policy::tests::active_native_binding_selects_v2_source_without_profile_hash_drift ... FAILED
+
+failures:
+
+failures:
+    issuer::owner_policy::tests::active_native_binding_selects_v1_source_without_profile_hash_drift
+    issuer::owner_policy::tests::active_native_binding_selects_v2_source_without_profile_hash_drift
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 97 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`
