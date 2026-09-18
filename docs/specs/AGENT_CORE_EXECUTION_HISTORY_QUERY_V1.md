@@ -10,7 +10,7 @@ authority_driver: EXECUTION_HISTORY_CORRELATION_AND_RECONCILIATION_V1 (Goal, Own
 scope:
   - packages/execution-history (NEW)
   - packages/broker/src/capabilities/execution-history.js (NEW)
-  - packages/broker/src/capabilities/index.js (wiring only)
+  - packages/broker/src/index.js (manifest registration wiring only)
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/agent-session/audit.js (WRITE_PATH_AMENDMENT_1: archive-on-rotate)
 governed_by:
@@ -26,7 +26,8 @@ owners:
 
 # AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 — 执行历史统一只读查询与保留闭环
 
-> **一句话**：在 canonical runtime 内新增只读 broker 工具 `execution_trace_query`，把已有的六套执行记录
+> **一句话**：在 canonical runtime 内新增只读 broker 工具族（`execution_trace_query` self 域 +
+> `execution_history_audit_query` global 域，同一查询核心），把已有的六套执行记录
 > （ASM 发送审计、workflow 执行账本、scheduler 结构化历史、session journals、runtime 证据行、svc-workflow
 > 事实面）组装为可分页、可回查证据、分维判定的执行轨迹；同时用一处最小写路径修订（ASM 审计轮转改为
 > 归档而非丢弃）关闭 send↔turn join 的保留缺口。**不建第二业务账本，不改任何既有派发/授权/幂等语义。**
@@ -47,7 +48,7 @@ owners:
 ## 1. 目标与非目标
 
 **目标（冻结）**
-- G1 统一只读查询入口：一个 broker 工具 `execution_trace_query`，四种查询根
+- G1 统一只读查询入口：broker 工具族（self+audit 两清单、同一核心），四种查询根
   （workflow_instance / agent_session / scheduler_run / message），结构化 JSON 与人类可读报告同一核心。
 - G2 保留闭环：ASM 审计轮转不再丢数据（归档追加）；关键证据保留起点/周期/覆盖成文（§7）。
 - G3 证据可信：reportId、查询边界、源标注（PRIMARY_PERSISTED / LIVE_OBSERVATION / RECOVERY_SYNTHETIC）、
@@ -70,11 +71,21 @@ packages/execution-history/src/
   index.js              # 公共 API: queryExecutionTrace({root, ...}) -> TraceResult
   loaders/
     session-journal.js  # homes/**/session.jsonl 装载 + 事件解码（DSH v0 兼容 allowlist 同 session-history）
-    asm-audit.js        # control/agent-session-messaging-audit.jsonl + .1 + archive（§6 后）
+    asm-audit.js        # control/agent-session-messaging-audit.jsonl + .1 + archive（§6 后）；行级去重（§6）
     attempts-ledger.js  # workflow-execution/attempts.jsonl
     scheduler-history.js# scheduler/history/events.jsonl + runs-YYYYMM.json
+    scheduler-store.js  # <root>/scheduler/jobs.json（只读、in-process）——job 级准入事实/从未 reserve 的
+                        # occurrence/ownership 判定所需的 routing agent；history 事件只覆盖
+                        # occurrence_reserved 之后，缺失本装载器则 Q1/Q7 对从未运行的 job 不可答
     runtime-evidence.js # control/runtime-evidence.jsonl（scheduler invocation 行）
-    svc-facts.js        # 经注入的 svc 读接口（broker 复用现有 workflow read transport/credential seam）
+    svc-facts.js        # 经注入的 svc 读接口：复用既有 per-caller credential seam（transportFor(agentId)）；
+                        # instance detail / submissions 走既有 broker 读工具同路径；
+                        # **timeline 是本能力内部的 NEW 直接 svc HTTP 调用**（GET
+                        # /internal/v1/workflow-instances/{id}/timeline，after=event_sequence 游标——部署代
+                        # f6a7400 契约面已有该端点，但今日无任何 broker 工具暴露它；本 Spec 不新增 broker
+                        # 读工具，唯一新工具仍是 execution_trace_query 族，见 §4.2）；
+                        # svc `workflow_command_receipts` 与 activation/closure 明细表 **无读端点**：
+                        # 一律 SOURCE_ABSENT 显式标注（R4/§7），不伪造。
   correlate.js          # 关联解析：root → 相邻记录闭包（§3 关联规则）
   rules.js              # §5 认知规则 → 判定引擎（分维 verdict）
   report.js             # TraceResult -> 结构化 JSON | 人类报告（同一中间模型）
@@ -91,31 +102,44 @@ packages/execution-history/src/
 
 R1 发送↔消息：ASM audit 行 requestId ↔ 目标 session user 消息（`source.kind='inter_agent'` 且
 `sourceAgentId` 匹配、`correlation` ↔ 调用侧 turnExecutionId/audit correlationHash），或 messageId 精确匹配。
-R2 visit↔attempt：`attemptId='wfeat-'+sha256(nodeVisitId)[:24]` 确定性派生 + attempts identity triple 精确匹配。
+R2 visit↔attempt：以 append-only 账本 identity triple 扫描为 **权威 join**；attemptId 派生仅作 gen-1 优化：
+`attemptId = 'wfeat-' + sha256(lowercase(nodeVisitId))[:24]`；generation N>1 材料 =
+`lowercase(nodeVisitId) + '#gen' + N`（ledger.js 实装公式——R2 不得用裸 sha256(nodeVisitId) 覆盖 N>1）。
 R3 attempt↔执行面：`run_delivered{requestId=attemptId, sessionId, messageId, reconciliationHandle}` →
 session journal 定位 +（在轮转/归档窗口内）ASM audit 反查调用链。
 R4 业务提交↔svc：session journal 的 `workflow_execute.*` tool call/result 直通 svc 响应 →
-`workflowStateVersion` ↔ `workflow_events.event_sequence` ↔ `command_id` ↔ `workflow_command_receipts`。
+`workflowStateVersion ↔ workflow_events.event_sequence ↔ command_id` 事件桥（"是否真提交"的充分证据）。
+`workflow_command_receipts` 无读端点 ⇒ ** receipts 关联显式 SOURCE_ABSENT**（不做 svc 写路径、FOLLOW_UP F6）。
 R5 scheduler occurrence↔session：`session_id='cron-run-<occ>'` 命名 + runtime-evidence invocation 行
 （sessionId/reconciliationHandle）辅助确认；命名匹配单独出现时标注 `JOIN_BY_NAME_CONVENTION`（弱键显式降级）。
 R6 反向定位：root=message{messageId|reconciliationHandle|requestId} → session journal 全文 + ASM audit
-（live/.1/archive）+ attempts run_delivered + turn-recovery-v3.json（命中标注 LIVE_OBSERVATION，重启失效语义）。
+（live/.1/archive）+ attempts run_delivered + turn-recovery-v3.json。turn-recovery durable 记录分类为
+PRIMARY_PERSISTED 并附 **coverage-write + 结算后 unlink + 缺 callerCorrelation/messageId 字段（F1）** 三项 caveat。
 R7 禁猜：时间接近、agent 名称相似、标题/正文语义 **不得** 作为关联依据；无法建立关联时输出
 `CORRELATION_GAP{stage, knownFacts}`，不造链。
 R8 correlation 不承担授权/幂等职责：授权仍由 broker scope + svc 可见性 + 文件访问边界决定；幂等仍由
 Idempotency-Key/svc receipts 决定。
+R9 ID 命名空间（native vs display）：查询坐标一律 **native** messageId（目标 DSH 在 session/prompt 回执铸造、
+经 `agent/inbox/spliced` 事件与 ASM audit/reconciliationHandle 落盘的 ID）；mobile 面展示用 `msg_sh1_*`
+公共 ID **不是** 查询根——携带 `msg_sh1_` 前缀的输入返回 `ID_NAMESPACE_MISMATCH`（422 族）并说明换算
+不可行（公共 ID 是内容哈希，非可逆坐标）。scheduler run / router turnExecutionId / harness turn 序号
+分属不同命名空间，timeline 中各自保留原生标识，不互相改写。
 
 ## 4. 查询面（broker 工具清单）
 
-### 4.1 `execution_trace_query`（唯一新工具；scope：`execution.history.read`）
+### 4.1 查询坐标与结果形状
+
+**root 可见域（冻结）**：工具只看 **本 runtime root**（canonical 部署中=authsvc root）。GUI root、
+scheduler-v2 root 的数据不在查询域内；跨 root 需求=非目标（记档）。
 
 ```jsonc
 {
   "root": "workflow_instance | agent_session | scheduler_run | message",
   // root=workflow_instance: { workflowInstanceId, includeVisits?, includeSubmissions?, cursor?, limit? }
   // root=agent_session:    { agentId, sessionId, cursor?, limit? }
-  // root=scheduler_run:    { jobId? , occurrenceId?, runId?, cursor?, limit? }  // 至少一个
-  // root=message:          { messageId } | { reconciliationHandle } | { requestId }
+  // root=scheduler_run:    { jobId? , occurrenceId?, runId?, cursor?, limit? }  // 至少一个；jobId-only
+                            // 命中从未运行的 job 时由 scheduler-store 装载器回答准入事实（§2）
+  // root=message:          { messageId } | { reconciliationHandle } | { requestId }   // 全部 native 坐标（R9）
   "view": "structured | report",       // 同一核心，两种渲染；默认 structured
   "reportOptions": { "audience": "owner | agent" }   // report 视图用
 }
@@ -124,27 +148,42 @@ Idempotency-Key/svc receipts 决定。
 结果（structured）固定顶层：
 ```jsonc
 {
-  "reportId": "ehq-<sha256(root+args+readBoundary)[:16]>",   // 同查询+同边界可重复
-  "queryRoot": {...}, "readBoundary": { "asOfUtc": ..., "sources": [{name, status: OK|DEGRADED{reason}|ABSENT, coverageUtc}] },
+  // reportId 确定性：hash 输入 = root + args + **sourceGenerationToken**（各源 file size/mtime/行数快照）。
+  // **wall-clock asOfUtc 不参与 hash**（否则同边界重复查询必得不同 ID，T4 不可满足）。
+  // asOfUtc 记录在 readBoundary 体内供人读，不入 hash。
+  "reportId": "ehq-<sha256(root+args+sourceGenerationToken)[:16]>",
+  "queryRoot": {...}, "readBoundary": { "asOfUtc": ..., "sourceGenerationToken": {...},
+                "sources": [{name, status: OK|DEGRADED{reason}|ABSENT, coverageUtc}] },
   "summary": { "fiveDimensions": { "schedulingAdmission": ..., "agentExecution": ...,
                 "businessProgress": ..., "messageDelivery": ..., "evidenceIntegrity": ... } },
-  "timeline": [ {order, nativeRefs, atUtc, provenanceClass, kind, brief} ],   // 原生序号保留；跨系统顺序仅 NON_AUTHORITY 参考
-  "correlations": [ {rule: "R1..R8", from, to, evidenceRefs} ],
-  "gaps": [ {code: "CORRELATION_GAP|SOURCE_DEGRADED|SOURCE_ABSENT|TRUNCATED|RETENTION_LOSS_PRE_V1", ...} ],
+  "timeline": [ {order, nativeRefs, atUtc, provenanceClass, kind, brief} ],
+  "correlations": [ {rule: "R1..R9", from, to, evidenceRefs} ],
+  "gaps": [ {code: "CORRELATION_GAP|SOURCE_DEGRADED|SOURCE_ABSENT|TRUNCATED|RETENTION_LOSS_PRE_V1|JOIN_BY_NAME_CONVENTION", ...} ],
   "nextCursor": ...
 }
 ```
 
-### 4.2 鉴权与所有权（结构化规则，沿用既有模式）
+**分页语义（冻结）**
+- 边界冻结：首次查询确定 `sourceGenerationToken`；同 token 的后续页 **不重读源的新增数据**（新增数据
+  属于新边界=新 reportId）。
+- cursor=**向量游标** `{perSource: {sourceName: {file?, lastSeq|lastOffset}}}`；页窗口定义在 **合并序** 上：
+  每源按其原生序（event_sequence/seq/visit_number）保持；跨源交错按 `(atUtc, sourceRank, nativeSeq)` 排序，
+  该交错序显式标 `NON_AUTHORITY`（满足"不跨系统时钟推精确顺序"，同时给分页一个确定性全序）。
+- 关联闭包（R1-R9）**每页都对冻结边界全量计算**（不随页窗裁剪）——闭包确定性由边界冻结保证，T4 可断言。
+- timeline 单条目上限与总条目 caps 沿用 turn_inspect 量级（10k/8 MiB/1 MiB），超限=TRUNCATED 可见。
 
-- `execution.history.read`（self）+ `execution.history.audit`（global，运维/Owner 面）。
-  两 scope 为 **新增** auth-service grant（additive packet，部署前置项，走既有 Owner 授权流程）。
-- root=agent_session：`agentId == caller` 或持 audit scope，否则 `forbidden_not_owner`（403 族）。
-- root=scheduler_run：job 的 routing agent == caller 或持 audit scope（对齐 scheduler.read 自限语义）。
-- root=workflow_instance：caller 需能通过 svc 可见性（用 caller 自己的 credential 走既有 svc read transport；
-  svc 侧裁决，查询层不复制授权逻辑）。
-- root=message：messageId 所在 session 的所有权规则同 agent_session。
-- caller 身份一律取 gateway 实际进程身份，永不取模型参数（既有 broker 纪律）。
+### 4.2 工具族与鉴权（机制如实对齐既有 gateway 能力）
+
+- **两个 broker 工具，同一查询核心**（gateway `requiredScopes` 是 all-or-nothing 单请求检查，无 per-op
+  scope、handler 亦无法探测"是否另持某 scope"——故不做单工具双 scope）：
+  - `execution_trace_query`，`requiredScopes: ['execution.history.read']`——**self 域**：session root 必须
+    `agentId == caller`；scheduler root 必须 job 的 routing agent == caller；workflow root 用 caller 自己的
+    credential 过 svc 可见性；message root 所在 session 同 session 规则。
+  - `execution_history_audit_query`，`requiredScopes: ['execution.history.audit']`——**global 域**：
+    跨 agent/跨 job 查询；**内容投影仍受 §4.3 redaction 约束（audit ≠ 解密权）**。
+  - caller 身份一律取 gateway 信任进程关系派生的 `context.agentId`，永不取模型参数（gateway.js 既有纪律）。
+- 两 scope 为 **新增** auth-service grant（additive packet，部署前置项，走既有 Owner 授权流程）。
+- svc 读取用 caller 自己的 credential seam（transportFor(agentId)）；timeline 为能力内部直接调用（§2）。
 
 ### 4.3 内容可见性与脱敏（§六"能看 Workflow ≠ 能看 Agent 私人历史"）
 
@@ -153,12 +192,14 @@ Idempotency-Key/svc receipts 决定。
   stateVersion）与**结构性结果字段**（stateVersion、submission 坐标）；正文/完整参数/私有 tool 内容一律
   `redacted`。audit scope 持有人同样适用（audit ≠ 解密权）。
 - 自有 session（agentId==caller）：turn-bounded 全内容（对齐 turn_inspect 既有 caps：10k 记录/8 MiB 文件/
-  1 MiB 记录/1 MiB 响应；超限即 TRUNCATED 可见）。
+  1 MiB 记录/1 MiB 响应；超限即 TRUNCATED 可见）。**显式声明**：这是相对 turn_inspect"own-dispatch 单轮"
+  视窗的特权扩张（自有 session 全轮），依据=Goal §三要求独立 session 可完整还原；跨 agent 非目标不变。
 - 隔离测试必须含越权投影断言（§9-T6）。
 
 ### 4.4 错误表（结构化，全部本地判定）
 
-`invalid_arguments`（root/参数不合法）、`forbidden_not_owner`(403)、`workflow_instance_not_found`(404)、
+`invalid_arguments`（root/参数不合法）、`id_namespace_mismatch`(422，`msg_sh1_*` 等 display ID 入参，R9)、
+`forbidden_not_owner`(403)、`workflow_instance_not_found`(404)、
 `session_not_found`(404)、`scheduler_record_not_found`(404)、`message_not_found`(404)、
 `downstream_unavailable`(503，svc 不可达时降级为仅本地面+GAP 注记，不硬失败)、`history_unavailable`(503，
 全部源 ABSENT/DEGRADED 时)。
@@ -184,16 +225,33 @@ Idempotency-Key/svc receipts 决定。
 
 ## 6. WRITE_PATH_AMENDMENT_1 — ASM 审计轮转归档（唯一写路径变更）
 
-- 现状：`audit.js` 8 MiB 轮转仅保留 live+.1 两代，更早内容 **物理丢弃** ⇒ send↔turn join 随时间不可逆丢失
-  （evidence §4-G2）。
-- 修订：轮转时将当前代内容 **追加** 至 `control/agent-session-messaging-audit-archive.jsonl`（append-only，
-  原子 append + fsync；失败则轮转照旧发生并在 runtime-evidence 记 `ASM_ARCHIVE_APPEND_FAILED`——归档是
-  best-effort 增强，绝不阻塞发送主路径）。
-- 读面影响：`execution_trace_query` 读 live+.1+archive；`agent_session_send_reconcile` **保持 live+.1 不变**
-  （reconcile 语义零变化）；`agent_session_turn_inspect` 不读审计归档。
-- 保留政策：archive 文件不轮转不删除；>1 GiB 时由 FOLLOW_UP 另立政策（本期只报告体积）。
-- 评审要求：本节改动需独立 diff 评审（旋转原子性、append 失败路径、并发 append 与既有锁语义），
-  作为 merge gate 的显式条目；**不得** 与查询核心拆成"只读"名义绕过评审。
+- 现状：`audit.js` 8 MiB 轮转 `renameSync(live, live+'.1')` 直接覆盖旧 `.1` ⇒ 两代之前内容物理丢弃 ⇒
+  send↔turn join 随时间不可逆丢失（evidence §4-G2）。audit.js 今日 **无锁**（单进程同步 append），
+  `readGeneration` 对单条坏行整代抛错（:157-186）。
+- 修订语义（按序）：
+  1. 轮转触发条件不变（append 后 size>8 MiB）。
+  2. 归档先于 rename：把 live 文件 **尚未归档的字节区间** `[archivedUpToBytes, size)` 追加到
+     `control/agent-session-messaging-audit-archive.jsonl`，append+fsync；随后 **原子写 checkpoint**
+     `…-archive.pos`（temp+rename：`{archivedUpToBytes}`）；最后 `renameSync(live, live+'.1')`。
+  3. **崩溃窗口与幂等**：append 成功但 checkpoint 未落 → 下次轮转按 checkpoint 会重追加同一区间
+     ⇒ archive 中可能出现重复行。接受该窗口（每次崩溃至多一代重复），由 **读取端行级去重** 兜底：
+     asm-audit 装载器对 live+.1+archive 全部行按整行内容 hash 去重（行无原生 uuid；同一行内容在本设计下
+     无合法重复语义）。checkpoint 落盘先于 rename ⇒ rename 后内容必已入 archive（无丢失窗口）。
+  4. 归档失败（append/fsync/ checkpoint 任一抛错）：轮转 **照常继续**（rename 照做，避免阻塞发送主路径），
+     在 runtime-evidence 记 `ASM_ARCHIVE_APPEND_FAILED{bytesAttempted}`；丢失窗口=该代内容（下次成功后
+     恢复）。归档是 best-effort 增强，绝不改变发送路径成败语义。
+  5. 读端容错：archive 中单条坏行/截断行 → 跳过该行并计 `skippedLines`，源状态 `SOURCE_DEGRADED`，
+     **不** 整代抛错（与 audit.js readGeneration 行为有意不同，仅用于历史查询路径）。
+- 读面影响矩阵：`execution_trace_query`/`execution_history_audit_query` 读 live+.1+archive（去重后）；
+  `agent_session_send_reconcile` **保持 live+.1 不变**（reconcile 语义零变化）；`agent_session_turn_inspect`
+  不读审计归档。
+- 保留政策：archive 文件不轮转不删除；>1 GiB 时由 FOLLOW_UP F4 另立政策（本期只报告体积）。
+- 已知代价（如实记档）：归档为同步读+append，单次至多 ~8 MiB，会瞬时阻塞 runtime 事件循环；按当前发送
+  量（8 MiB/多周）频率可接受。
+- 治理交叉引用：本节 **amends** ASM V1 部署授权的"单代 .1 轮转"契约（R12 family）与 ASM V2 的
+  "no archive index or retention promise"表述（该表述是"不承诺"而非"禁止"；修订经本 Spec 评审授权）。
+- 评审要求：本节改动需独立 diff 评审（触发条件/区间计算/checkpoint 原子性/失败路径/去重正确性/
+  reconcile 窗口不变性），作为 merge gate 的显式条目；**不得** 与查询核心拆成"只读"名义绕过评审。
 
 ## 7. 保留与覆盖（Goal §五C 交付）
 
@@ -215,15 +273,20 @@ Idempotency-Key/svc receipts 决定。
 ## 9. 测试与验收
 
 **隔离测试（fixtures=临时 root，零生产副作用）**
-- T1 多 attempt/重入：同 visit 两次 attempt（stale_superseded 链）全保留且可分页重放。
+- T1 多 attempt/重入：同 visit 两次 attempt（stale_superseded 链）全保留且可分页重放；attemptId 按
+  R2（gen1 派生 + genN `#genN` 材料）与 identity-triple 扫描双路一致。
 - T2 回执丢失/未知：run_delivered 无 messageId + fence outcome_unknown → UNKNOWN_OUTCOME+证据行列出。
 - T3 正常完成/明确失败/人工等待三态分维正确（assistance case 不误判失败）。
-- T4 分页/重复采集/进程重启：cursor 稳定、重复查询 reportId 一致（边界相同）、索引删后重建等价。
-- T5 轮转/缺失/损坏/权限：audit archive 追加失败、session 文件截断、某源 0700、svc 503 → 全部可见降级，
-  绝不输出"已查全"。
-- T6 越权投影：非 owner 调他者 session root=403；audit scope 读他者 session 时正文=redacted 断言。
+- T4 分页/重复采集/进程重启：向量 cursor 稳定；同 sourceGenerationToken 下重复查询 reportId 一致、
+  跨页结果拼接=全量；关联闭包跨页不变；索引删后重建等价。
+- T5 轮转/缺失/损坏/权限：audit archive 追加失败、archive 坏行（跳过+DEGRADED 计数）、session 文件截断、
+  某源 0700、svc 503 → 全部可见降级，绝不输出"已查全"。
+- T6 越权投影：非 owner 调他者 session root=403；audit 工具读他者 session 时正文=redacted 断言。
 - T7 消费禁令：import 图断言（§4.5）。
-- T8 WPA-1：archive-on-rotate 原子性/失败续行/reconcile 读窗不变。
+- T8 WPA-1：archive-on-rotate 原子性/区间幂等（模拟 checkpoint 缺失重轮转→读端去重后无重复）/失败续行/
+  reconcile 读窗不变（reconcile 结果在 archive 存在与否下一致）。
+- T9 命名空间：`msg_sh1_*` 入参 → id_namespace_mismatch；native messageId 三源（ASM audit、
+  inbox/spliced、session journal）互证。
 
 **真实样本验收（§七；Phase A=部署前只读核实，Phase B=部署后经产品入口）**
 - A1（Phase A）Workflow 链：真实 instance（当前已获准读取的 BIP/todo 域样本）——visit→attempt→session tool
@@ -248,3 +311,5 @@ Idempotency-Key/svc receipts 决定。
 - F2 scheduler run 持久 messageId/turnExecutionId 写路径（R9-J3 强化）。
 - F3 mobile 8789 投影 provenance 暴露（独立产品决策）。
 - F4 archive >1 GiB 保留政策；F5 runtime.log 轮转治理。
+- F6 svc 读端点缺口：`workflow_command_receipts` 与 activation/closure 明细表无任何读 API
+  （R4/§2 已按 SOURCE_ABSENT 处理）；若未来需要 command 级回执/receipt 关联，须 svc 侧独立立项。
