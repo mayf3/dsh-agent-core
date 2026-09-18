@@ -29,7 +29,14 @@ fn effect(area: &Dir, b: &Binding, name: &str, f: impl FnOnce() -> Result<()>) -
         &serde_json::json!({"binding":digest(b)?,"state":"OBSERVED_COMPLETE"}),
     )
 }
-pub(super) fn run(area: &Dir, b: &Binding, e: &mut impl Effects) -> Result<()> {
+pub(super) fn run(
+    root: &Dir,
+    area: &Dir,
+    b: &Binding,
+    e: &mut impl Effects,
+    guard: MutationGuard,
+) -> Result<()> {
+    guard.binds(root)?;
     require(
         gate::read::<Binding>(area, "enable-intent.json")? == *b,
         "ENABLE_BINDING",
@@ -51,6 +58,7 @@ pub(super) fn run(area: &Dir, b: &Binding, e: &mut impl Effects) -> Result<()> {
             readback_digest: digest(&rb)?,
         };
         gate::publish(area, "enable-admission.json", &admission)?;
+        drop(guard);
         let ready = e.ready(&rb)?;
         require(
             ready.readback == rb && ready.admission_digest == digest(&admission)?,

@@ -87,7 +87,8 @@ fn armed(r: &FixtureRoots) -> (Dir, Binding, Readback) {
     );
     let b = core(&r.root, Some(op), 100).unwrap();
     publish(&area, "enable-intent.json", &b).unwrap();
-    let rb = Readback {
+    let mut rb = Readback {
+        startup_intent_digest: String::new(),
         binding: b.clone(),
         process: crate::transaction::ProcessIdentity {
             pid: 10,
@@ -100,6 +101,12 @@ fn armed(r: &FixtureRoots) -> (Dir, Binding, Readback) {
         socket_device: 1,
         socket_inode: 2,
     };
+    // armed() itself models pre-start, so publication occurs only for tests using the readback.
+    rb.startup_intent_digest = crate::trust::digest(&GenerationIntent {
+        binding: b.clone(),
+        process: rb.process.clone(),
+    })
+    .unwrap();
     (area, b, rb)
 }
 #[test]
@@ -117,6 +124,7 @@ fn valid_core_is_only_readback_until_actual_completion_and_initial_lease_applies
 fn completed_restart_does_not_inherit_old_lease_or_pid() {
     let (_t, r) = fixture();
     let (a, b, rb) = armed(&r);
+    claim_generation(&a, &rb.binding, &rb.process).unwrap();
     publish(&a, "daemon-readback.json", &rb).unwrap();
     let admission = Admission {
         binding: b.clone(),
@@ -147,6 +155,7 @@ fn completed_restart_does_not_inherit_old_lease_or_pid() {
 fn admission_is_generation_specific_and_never_normal_dispatch_permission() {
     let (_t, r) = fixture();
     let (a, b, mut rb) = armed(&r);
+    claim_generation(&a, &rb.binding, &rb.process).unwrap();
     publish(&a, "daemon-readback.json", &rb).unwrap();
     publish(
         &a,
@@ -202,4 +211,53 @@ fn well_formed_failed_or_cross_operation_core_cannot_use_existing_enable_intent(
             .unwrap();
         assert!(startup(&r.root, Some("first-live"), 10).is_err());
     }
+}
+
+#[test]
+fn startup_crash_prefix_child() {
+    let Some(path) = std::env::var_os("DCP_ENABLE_STARTUP_FIXTURE") else {
+        return;
+    };
+    let roots = FixtureRoots::open(std::path::Path::new(&path)).unwrap();
+    let area = roots.root.child("first-live-operation").unwrap();
+    let b: Binding = read(&area, "enable-intent.json").unwrap();
+    let process = crate::transaction::first_live_process_identity(std::process::id()).unwrap();
+    claim_generation(&area, &b, &process).unwrap();
+    // Actual private listener side effect, then no readback/Drop cleanup.
+    let _listener =
+        std::os::unix::net::UnixListener::bind(std::path::Path::new(&path).join("c.sock")).unwrap();
+    std::process::exit(73);
+}
+#[test]
+fn death_after_private_listener_bind_cannot_authorize_replacement_generation() {
+    use std::os::unix::fs::MetadataExt;
+    let (t, r) = fixture();
+    let (a, b, _) = armed(&r);
+    let status = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "service::first_live::gate::tests::startup_crash_prefix_child",
+            "--nocapture",
+        ])
+        .env("DCP_ENABLE_STARTUP_FIXTURE", t.path())
+        .status()
+        .unwrap();
+    assert_eq!(status.code(), Some(73));
+    let before = std::fs::symlink_metadata(t.path().join("c.sock"))
+        .unwrap()
+        .ino();
+    assert!(optional::<Readback>(&a, "daemon-readback.json")
+        .unwrap()
+        .is_none());
+    let replacement = crate::transaction::first_live_process_identity(std::process::id()).unwrap();
+    assert!(
+        claim_generation(&a, &b, &replacement).is_err(),
+        "crash prefix did not consume generation before real socket effect"
+    );
+    assert_eq!(
+        std::fs::symlink_metadata(t.path().join("c.sock"))
+            .unwrap()
+            .ino(),
+        before
+    );
 }

@@ -38,7 +38,9 @@ impl Startup {
                         && m.gid() == intake.config.socket_gid,
                     "ENABLE_SOCKET_BINDING",
                 )?;
+                let area = intake.root.child("first-live-operation")?;
                 let rb = Readback {
+                    startup_intent_digest: gate::generation_digest(&area, &b, &process)?,
                     binding: *b,
                     process,
                     socket_device: m.dev(),
@@ -165,10 +167,16 @@ pub(crate) fn preflight(intake: &Intake) -> Result<bool> {
             "ENABLE_CONTROLLER_BINDING",
         )?;
     }
-    if matches!(phase, gate::Phase::Readback(_)) {
-        gate::absent(
+    if let gate::Phase::Readback(binding) = &phase {
+        let process = crate::transaction::first_live_process_identity(std::process::id())?;
+        require(
+            process.uid == 0 && process.gid == 0 && process.executable == native::EXECUTABLE,
+            "ENABLE_GENERATION_BINDING",
+        )?;
+        gate::claim_generation(
             &intake.root.child("first-live-operation")?,
-            "daemon-readback.json",
+            binding,
+            &process,
         )?;
     }
     Ok(matches!(phase, gate::Phase::Readback(_)))

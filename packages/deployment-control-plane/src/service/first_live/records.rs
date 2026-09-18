@@ -36,7 +36,14 @@ pub(super) struct Binding {
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
+pub(super) struct GenerationIntent {
+    pub binding: Binding,
+    pub process: crate::transaction::ProcessIdentity,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub(super) struct Readback {
+    pub startup_intent_digest: String,
     pub binding: Binding,
     pub process: crate::transaction::ProcessIdentity,
     pub socket_device: u64,
