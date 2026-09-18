@@ -29,7 +29,13 @@ struct ObservationRequest<'a> {
     verification_profile: &'a str,
 }
 impl Train {
-    pub fn open(intake: &Intake, q: &Queue, path: &Path, sandbox: bool) -> Result<Self> {
+    pub(crate) fn open_startup(
+        intake: &Intake,
+        q: &Queue,
+        path: &Path,
+        sandbox: bool,
+        startup: Option<&super::first_live::Startup>,
+    ) -> Result<Self> {
         q.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
         let mut executors = BTreeMap::new();
         for (name, p) in &intake.config.catalog.profiles {
@@ -54,12 +60,23 @@ impl Train {
             .next()
             .ok_or(Error::new("PROFILE_NOT_ALLOWED"))?
             .lock()?;
-        for executor in executors.values_mut() {
-            executor.recover(&guard, q)?;
+        if let Some(startup) = startup.filter(|s| s.first()) {
+            startup.check_initialization(intake)?;
+            require(
+                intake.root.child("transactions")?.names()?.is_empty(),
+                "ENABLE_OPEN_TRANSACTION",
+            )?;
+            startup.check_queue(intake, q)?;
+        } else {
+            super::first_live::ordinary(intake)?;
+            for executor in executors.values_mut() {
+                executor.recover(&guard, q)?;
+            }
         }
         Ok(Self { executors })
     }
     pub fn tick(&mut self, intake: &Intake, q: &Queue) -> Result<()> {
+        super::first_live::ordinary(intake)?;
         q.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
         // Admission keeps working while a registered producer is disconnected.
         let _ = intake.poll(q);

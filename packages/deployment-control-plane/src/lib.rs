@@ -24,3 +24,9 @@ mod verification;
 mod first_live;
 
 pub use first_live::run_first_live;
+
+pub fn run_first_live_and_enable() -> Result<()> {
+    service::first_live::fresh()?;
+    first_live::run_first_live()?;
+    service::first_live::enable()
+}

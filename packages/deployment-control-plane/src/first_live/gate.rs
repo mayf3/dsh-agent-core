@@ -6,7 +6,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Grant {
+pub(crate) struct Grant {
     pub version: u32,
     pub owner: String,
     pub scope: String,
@@ -20,7 +20,7 @@ pub(super) struct Grant {
     pub expires_at: u64,
     pub temporary_supply_hold: bool,
 }
-pub(super) fn validate(g: &Grant, expected: &Grant, now: u64) -> Result<()> {
+pub(crate) fn validate(g: &Grant, expected: &Grant, now: u64) -> Result<()> {
     require(
         g == expected
             && g.version == 1

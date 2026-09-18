@@ -1,5 +1,5 @@
 //! One externally authorized first-live operation; no request-controlled executor.
-mod gate;
+pub(crate) mod gate;
 #[cfg(test)]
 #[path = "../../test/first_live/gate.rs"]
 mod tests;
@@ -34,7 +34,7 @@ mod lifecycle_tests;
 #[path = "../../test/first_live/paths.rs"]
 mod path_tests;
 
-mod process;
+pub(crate) mod process;
 
 mod compose;
 

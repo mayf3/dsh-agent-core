@@ -123,3 +123,18 @@ impl Queue {
         })
     }
 }
+
+impl Queue {
+    pub(crate) fn verify_first_live_startup(&self, operation: &str, standing: &str) -> Result<()> {
+        self.require_configured_activation(Some(operation))?;
+        self.transaction(|tx| {
+        let quarantine:u64=tx.query_row("SELECT value FROM meta WHERE key='quarantine'",[],|r|r.get(0))?;
+        let unfinished:u64=tx.query_row("SELECT count(*) FROM executor_pending",[],|r|r.get(0))?;
+        let bad:u64=tx.query_row("SELECT count(*) FROM units WHERE state != '\"Applied\"'",[],|r|r.get(0))?;
+        let units:u64=tx.query_row("SELECT count(*) FROM units",[],|r|r.get(0))?;
+        let adoption:u64=tx.query_row("SELECT count(*) FROM target_adoption WHERE operation=? AND baseline_done=1 AND receipt IS NOT NULL AND activation_receipt=?",(operation,standing),|r|r.get(0))?;
+        let all_adoption:u64=tx.query_row("SELECT count(*) FROM target_adoption",[],|r|r.get(0))?;
+        require(quarantine==0 && unfinished==0 && bad==0 && units==1 && adoption==1 && all_adoption==1,"ENABLE_QUEUE_UNFINISHED")
+      })
+    }
+}

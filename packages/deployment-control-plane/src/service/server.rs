@@ -40,6 +40,7 @@ struct Service {
 }
 impl Service {
     fn dispatch(&self, uid: u32, gid: u32, request: Request) -> Result<serde_json::Value> {
+        super::first_live::ordinary(&self.intake)?;
         request.validate()?;
         let actor = self.intake.actor(uid, gid)?;
         let q = &self.queue;
@@ -182,25 +183,21 @@ pub fn run(sandbox: bool) -> Result<()> {
         PathBuf::from("/private/var/db/agent-deployd")
     };
     let intake = Intake::open(&path, sandbox)?;
+    let readback_only = super::first_live::preflight(&intake)?;
     let _singleton = singleton(&intake.root, sandbox)?;
-    super::mailbox::initialize(&intake.root)?;
-    let queue = queue(&intake.root, &path)?;
-    queue.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
-    for producer in &intake.config.producers {
-        queue.register_producer(&intake.config.catalog, producer)?;
-    }
-    let _ = intake.poll(&queue);
-    let mut train = super::train::Train::open(&intake, &queue, &path, sandbox)?;
-    if !sandbox
-        && intake
-            .config
-            .producers
-            .iter()
-            .any(|p| p == "local-deployment-registry")
-    {
-        let listener = crate::issuer::server::bind()?;
-        std::thread::spawn(move || crate::issuer::server::serve(listener));
-    }
+    let early = if readback_only {
+        None
+    } else {
+        super::mailbox::initialize(&intake.root)?;
+        let queue = queue(&intake.root, &path)?;
+        queue.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
+        for producer in &intake.config.producers {
+            queue.register_producer(&intake.config.catalog, producer)?;
+        }
+        let _ = intake.poll(&queue);
+        let train = super::train::Train::open_startup(&intake, &queue, &path, sandbox, None)?;
+        Some((queue, train))
+    };
     let socket_parent = if sandbox {
         path.clone()
     } else {
@@ -253,11 +250,6 @@ pub fn run(sandbox: bool) -> Result<()> {
         // Own daemon singleton excludes a live peer; never remove production.lock.
         std::fs::remove_file(&socket)?;
     }
-    let service = Arc::new(Service {
-        intake,
-        queue,
-        traffic: Mutex::new(BTreeMap::new()),
-    });
     let listener = UnixListener::bind(&socket)?;
     std::fs::set_permissions(
         &socket,
@@ -268,7 +260,7 @@ pub fn run(sandbox: bool) -> Result<()> {
         let name = CString::new(socket.as_os_str().as_encoded_bytes())
             .map_err(|_| Error::new("UNSAFE_PATH"))?;
         require(
-            unsafe { libc::chown(name.as_ptr(), 0, service.intake.config.socket_gid) } == 0,
+            unsafe { libc::chown(name.as_ptr(), 0, intake.config.socket_gid) } == 0,
             "SOCKET_BINDING",
         )?;
     }
@@ -276,6 +268,45 @@ pub fn run(sandbox: bool) -> Result<()> {
         socket.recheck()?;
     }
     socket_dir.file.sync_all()?;
+    let startup = super::first_live::Startup::admit(&intake, &socket)?;
+    let (queue, mut train) = match early {
+        Some(v) => v,
+        None => {
+            super::mailbox::initialize(&intake.root)?;
+            let queue = queue(&intake.root, &path)?;
+            queue.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
+            for producer in &intake.config.producers {
+                queue.register_producer(&intake.config.catalog, producer)?;
+            }
+            let train =
+                super::train::Train::open_startup(&intake, &queue, &path, sandbox, Some(&startup))?;
+            (queue, train)
+        }
+    };
+    let issuer_listener = if !sandbox
+        && intake
+            .config
+            .producers
+            .iter()
+            .any(|p| p == "local-deployment-registry")
+    {
+        Some(crate::issuer::server::bind()?)
+    } else {
+        None
+    };
+    startup.ready(&intake)?;
+    super::first_live::ordinary(&intake)?;
+    if readback_only {
+        let _ = intake.poll(&queue);
+    }
+    if let Some(listener) = issuer_listener {
+        std::thread::spawn(move || crate::issuer::server::serve(listener));
+    }
+    let service = Arc::new(Service {
+        intake,
+        queue,
+        traffic: Mutex::new(BTreeMap::new()),
+    });
     let worker = service.clone();
     std::thread::spawn(move || {
         let mut last_error = None;

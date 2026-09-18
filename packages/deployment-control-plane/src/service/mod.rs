@@ -19,3 +19,5 @@ pub(crate) use server::queue as initialize_queue;
 
 pub(crate) use intake::Activation;
 pub(crate) use train::verify_goals;
+
+pub(crate) mod first_live;

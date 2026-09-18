@@ -1,7 +1,9 @@
 fn main() {
     let args: Vec<_> = std::env::args().skip(1).collect();
     let sandbox = args == ["--sandbox"];
-    let result = if args == ["--first-live"] {
+    let result = if args == ["--first-live-and-enable"] {
+        deployment_control_plane::run_first_live_and_enable()
+    } else if args == ["--first-live"] {
         deployment_control_plane::run_first_live()
     } else if args
         .first()
