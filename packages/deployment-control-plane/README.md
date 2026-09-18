@@ -5,6 +5,11 @@ Task 1 of accepted `PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1`, authority reviewed 
 a daemon nor authorizes production/profile activation. All fixture writes are in
 private temporary directories; fixture setup refuses euid 0.
 
+The current local issuer/registry and exact disabled-bootstrap path are documented
+in [LOCAL_BINDING.md](LOCAL_BINDING.md). The older candidate and external-mailbox
+sections below describe those separate APIs; they do not supersede the local
+binding or claim current external-service integration.
+
 ## Trust boundary
 
 The embedding daemon supplies a bootstrap-protected `Catalog`, kernel-derived

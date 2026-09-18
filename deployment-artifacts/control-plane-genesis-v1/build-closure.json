@@ -1,0 +1,289 @@
+{
+  "accepted_contract": {
+    "docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e"
+  },
+  "activation_requirements": [
+    "Authenticated NativeEnrollment digest is derived into each signed BuildAttestation alongside exact issuer executable digest.",
+    "Native controller verifies complete enrolled retained app faces, Node loader closure, fixed plists and physical process generation before mutation.",
+    "No NativeEnrollment, activation proof, legacy retirement or runtime closure is claimed by genesis installation.",
+    "Any different source requires a new independently reviewed closure/Owner enrollment; the initial record freezes c9ffe1d."
+  ],
+  "candidate_code_executed_during_build": false,
+  "cargo_lock_sha256": "a12618104e08601e2dea4650d8655c8292737391c5019e0458eab89ba3de56dc",
+  "copy_builder_source_files": {
+    "packages/deployment-control-plane/src/bin/agent-deploy-bootstrap.rs": "2f8f452cf9007bd45ff954b637c052237ca8b32052fe3c5c55bb83e9e676bd1b",
+    "packages/deployment-control-plane/src/bin/agent-deploy-issuer.rs": "368c4b98f01889a7b8317dc215a340f9813e40c8dcaa1a657267766d883215ec",
+    "packages/deployment-control-plane/src/bin/agent-deploy-prepare.rs": "d0c5b1915ccea138051ccb626924a65d05058c5025d97639b929c9a7f3baf763",
+    "packages/deployment-control-plane/src/bin/agent-deployctl.rs": "28f035802296b30569f43708338e2422e5826d9bc6196d8ff2706b416ab096fa",
+    "packages/deployment-control-plane/src/bin/agent-deployd.rs": "53722951ea988efdeed9cdb0c4c68105c087c4b1d5160e71e554de011eaa3a6b",
+    "packages/deployment-control-plane/src/bootstrap/binding.rs": "a9933e5850c3dd52537e2cd8af2bbfc8e6db3ee4bfffe55ce374ba6794ebb5dd",
+    "packages/deployment-control-plane/src/bootstrap/bundle.rs": "a6265595224f476ddc907dac3e51690afec33463f3be4f196b5d3ab8d0d1e22c",
+    "packages/deployment-control-plane/src/bootstrap/genesis.rs": "d806afda0f28c10b8272c735f229929769366b6846310ce3058f09a11b98e187",
+    "packages/deployment-control-plane/src/bootstrap/genesis_install.rs": "30390e87e7d34f452fa4551df773587c88035f1010db1492c627940338d1415d",
+    "packages/deployment-control-plane/src/bootstrap/genesis_install_actions.rs": "121df207510b37162abe85220845413625957dcb75835652be136063e436533a",
+    "packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs": "9e306405f68b77c13367d9052596eea4a2464cab4c113d9641ea39c99a904f9d",
+    "packages/deployment-control-plane/src/bootstrap/genesis_install_io.rs": "a80b6e06beb960d36b2001e3e48a9c48009b028bba4eee6463806a942f598960",
+    "packages/deployment-control-plane/src/bootstrap/genesis_install_native.rs": "a8df52b678c196ba3205cbc01e4dbc0eda283b4af98e74558d4dad510897ae5e",
+    "packages/deployment-control-plane/src/bootstrap/genesis_policy.rs": "d9d6c4826ed96c4b455a4f401d8e6f5382378d20ddbfc1b5c442ec63df181243",
+    "packages/deployment-control-plane/src/bootstrap/genesis_types.rs": "3101dc64b4ea4d8cdbbfb87aa488e1a6ee74db74e5eaddedb739e46044c5fd65",
+    "packages/deployment-control-plane/src/bootstrap/loader.rs": "cfe2b7ab3ec7ccfe4223d6cf2ef66ac4bdf0433f802d740711cd1a7e0977d081",
+    "packages/deployment-control-plane/src/bootstrap/mod.rs": "fbde262dce9615c1872ec7c159e5bb71102d2a297cfd4ec39a79def84fea1063",
+    "packages/deployment-control-plane/src/bootstrap/plist.rs": "f9521f7ea232b759990cff6d0e51a968d74cbdcd1c3178d942b64f3126a34599",
+    "packages/deployment-control-plane/src/bootstrap/preparation.rs": "e40e24a62fd8e19328b5a3748725fa4dfb7c0c34761489bec7b23b9ca67471cb",
+    "packages/deployment-control-plane/src/bootstrap/prospective.rs": "5a33695cf93f39282b919d313214ef4cb897341af34136f5b66fab1e7186c053",
+    "packages/deployment-control-plane/src/bootstrap/socket.rs": "529168a08f3ebc914dca7b44f4502ccce0d17d9dd538130ed0fdf1ec1ac1d281",
+    "packages/deployment-control-plane/src/bootstrap/verify.rs": "8fab233a098f3fd250decb5609b613dbe78362616cff1df98048a34c85383141",
+    "packages/deployment-control-plane/src/error.rs": "538867015dcae7f912be143fe50cb9c02bad3476e026b7a8968aa28430a89faa",
+    "packages/deployment-control-plane/src/fs/artifact.rs": "e7b798b309e4e89b8315d7c12d259975aa88e1530f9d93df9f06200031a9813f",
+    "packages/deployment-control-plane/src/fs/file.rs": "cc5af26928982e8c464d00a1ced93c981b8717498623055e6ac9fb7574668b4e",
+    "packages/deployment-control-plane/src/fs/mod.rs": "8dd2ebc755d2191684fc0f035ff9e44e9728efdaba19e15e05aeba452f874c12",
+    "packages/deployment-control-plane/src/fs/mutex.rs": "6aad5f02717eb4c2b0ea7388cc31f6d4caeb34681f8c1b90bda6174f3519bbd3",
+    "packages/deployment-control-plane/src/fs/secure.rs": "cd9a04a7cd8411871071a7d55e0b7aacd51c13860b2a419d1d1f6471db86acd1",
+    "packages/deployment-control-plane/src/fs/target.rs": "385cd4dd06a06f2fc2344131f6c16a2c6377220a50b8a4a31bc3797b0321066d",
+    "packages/deployment-control-plane/src/issuer/coordinator.rs": "2889f2710837630456d6f17aa47a3c648d8ace087db9e8cb04f501d217d6ec92",
+    "packages/deployment-control-plane/src/issuer/custody.rs": "c0b7b05ac7303c95c4af5f8d5a0980dcb333de2711bb05ab7021989b877beb41",
+    "packages/deployment-control-plane/src/issuer/github.rs": "89c981ff47526314ce9a5f9a2092934fe9b639620a93d5fc45a43848e70fe737",
+    "packages/deployment-control-plane/src/issuer/issuance.rs": "a798f16edaf015eedca40a0583e16eac671607920f7974fc2f4a7f65019e9ad5",
+    "packages/deployment-control-plane/src/issuer/issuance_io.rs": "938cdde17850b61c7789953c5a499defd038cc05830a32f4722af02df665828a",
+    "packages/deployment-control-plane/src/issuer/mod.rs": "32c1e54b1c9e068b81976caf2fcf4424f1a3cfce3adef3ecad93784cfda41c7a",
+    "packages/deployment-control-plane/src/issuer/policy.rs": "25133138dd9fee4572a789ad03a973622c0e3208405f739e8e815fb973e8f7a8",
+    "packages/deployment-control-plane/src/issuer/review.rs": "3a0b47c24380ff0dcd67f0ce942860ea11fe42be1c404af35ca40e74969fcd9a",
+    "packages/deployment-control-plane/src/issuer/review/policy.rs": "c58ff427075f4f2a9e2288ef99c53b1f2da9a855272c01198e761a4f8e374bf2",
+    "packages/deployment-control-plane/src/issuer/review/process.rs": "1e2b2b93527abd2e18b868ccccd4f760c59ea684a69ccf52df09d176118d579e",
+    "packages/deployment-control-plane/src/issuer/server.rs": "b6e681084d81e16531211d78f30ff3b41884d1417a7df0ae907f800e356e2965",
+    "packages/deployment-control-plane/src/issuer/source.rs": "b85c0fb614019c2095331c013e5bff46e53db7b1fb46af653e42b4a6ac95afbf",
+    "packages/deployment-control-plane/src/lib.rs": "df2aecc24386fbff3c4d2eae98f516e1a3070246b1e21d164d970f85f2892f01",
+    "packages/deployment-control-plane/src/model.rs": "8f2677bce085a3d8f83af7bfd03581358a820b1cbd246cb5dfe4f2e41e83870c",
+    "packages/deployment-control-plane/src/queue/admission.rs": "b2669c26d573ccba368c12b5c22c17ed9683358eec93c001e15326ecb605f57b",
+    "packages/deployment-control-plane/src/queue/dependencies.rs": "cce455bd57ceebc353a0455d7c5856adc6206b6ed6323d6fc3147a426f34d3f1",
+    "packages/deployment-control-plane/src/queue/executor_finalization.rs": "653b2e5dfb8ee13f5b0f21b7d27fd46cb0b18b09ae3d5b83dce828716fde2ed4",
+    "packages/deployment-control-plane/src/queue/executor_recovery.rs": "63be3f307a62d1b84484c7388c41fb4be898f52cc9b7de08c3568473b25c4193",
+    "packages/deployment-control-plane/src/queue/gates.rs": "6b62fa901451888944ce0259da28ff4c0fae113db68c068f30af35ec0817661e",
+    "packages/deployment-control-plane/src/queue/issuance.rs": "74f095b5d1b640a1c657e0af209186eb24cb84e574e25471163767e6d9a0c8ff",
+    "packages/deployment-control-plane/src/queue/lifecycle.rs": "c51b81193840abe73a5531d0c77ac634f3e65e5e2075ae21f0cdc284b0a0c85c",
+    "packages/deployment-control-plane/src/queue/mod.rs": "df4da9fc89e0ff3437a74a5d3adbec68568f397efebe1c89145905dd6f2a87b5",
+    "packages/deployment-control-plane/src/queue/physical.rs": "ef92f61063496d58033adc9b7a603877506b4484e11c2cf654486641047a7fe3",
+    "packages/deployment-control-plane/src/queue/producer.rs": "374c88bc3e287bd4af8ff609834916c0518bd2866a54b587d46c6f383a784e1b",
+    "packages/deployment-control-plane/src/queue/readback.rs": "4f15f4c0202c89f1101aeac0ebe7ad7fbb0303fb5ea046d411fdf0195d5ec314",
+    "packages/deployment-control-plane/src/queue/receipts.rs": "40099a880a5bb183c0e8803c58ccc41110ef1bc7f54af7ab5bf80ff7661db78d",
+    "packages/deployment-control-plane/src/queue/schema.rs": "73060d33f7bdf88a93ff1751af5b35adb2c013961187ba230ef5305dc4917d78",
+    "packages/deployment-control-plane/src/queue/service.rs": "2b4aaf99fb2c2c49ec16caec7bec63ed31b5775d580dc29a9dfa3a3ad5867a7b",
+    "packages/deployment-control-plane/src/registry/closure.rs": "a9bbb38351a74c46e90e91ef2391a3e2e85acb517bfe088c889cbaed9d7b1290",
+    "packages/deployment-control-plane/src/registry/mod.rs": "f1f99008614debf3451bb892179fcc41e311bcb284086dd5b4313b56513ec8cb",
+    "packages/deployment-control-plane/src/registry/storage.rs": "0c82a0c148716387313bd9164f965858999826e2ef8041c94a20734e79a107d1",
+    "packages/deployment-control-plane/src/registry/types.rs": "0d967e49f643646fe80cbebdf1416e886257cd2a8df0f09e46de019f8799ef97",
+    "packages/deployment-control-plane/src/registry/validation.rs": "e4beb99f502cda27f42d2237d0756f1a13eaf969484dcece0b82cfadcea7f87f",
+    "packages/deployment-control-plane/src/service/intake.rs": "c383c54e729c6575d0ac85299f91a8a4bb0cd2e29a75ff2f935015d6e7c18346",
+    "packages/deployment-control-plane/src/service/mailbox.rs": "fbe699985708753d519e819095bb8a8d76fe3ae69c753c1182e6f11ef2c18b41",
+    "packages/deployment-control-plane/src/service/mod.rs": "19e7d71b55fd8183f9bb3d2749202d50b9563482b09afcf76701d17b063c95d5",
+    "packages/deployment-control-plane/src/service/protocol.rs": "529be67d4149e0938c9c31289592f21e966d45f5e406f8e062c4d6fdf0bfa031",
+    "packages/deployment-control-plane/src/service/server.rs": "b7e415a35250abe176d4c4e653575e2378d6ed2670d12a6891f0e7497b38ac30",
+    "packages/deployment-control-plane/src/service/train.rs": "73338d9d4dce6ae2c84ade8b27d6d72fe5228923057e2b4fd4fb04a245ac39b8",
+    "packages/deployment-control-plane/src/transaction/apply.rs": "283d5408f49876091219dc0db730650d488f4c1894b42bc3e9f481df301db27a",
+    "packages/deployment-control-plane/src/transaction/fault.rs": "ccf2b48c0bd0c6d918f8c5e53b53fbc9a9a620e560b163d6ed045be1fe2753ab",
+    "packages/deployment-control-plane/src/transaction/health.rs": "ebd96fd98c0d6c106b15cc2edfd36928512d902364ae7e4a9e8288c548ec5f9d",
+    "packages/deployment-control-plane/src/transaction/journal.rs": "614e355530cc1c923f58bdcf21dcacec6d0e55f8528302d5fbfee72683073f2f",
+    "packages/deployment-control-plane/src/transaction/mod.rs": "6ecd8f111066c5ee13c5b016193bf2b8293258b4ccd7d216610893813267c7cb",
+    "packages/deployment-control-plane/src/transaction/native.rs": "a979ee2e27c2562cd7dde88f37653789d6fcafa82ab7e940064d2af87c5c5070",
+    "packages/deployment-control-plane/src/transaction/native_profile.rs": "05c6ef0014b5d54368046ea8a2760ac962362ba374a1f0648b87f10db58a96f4",
+    "packages/deployment-control-plane/src/transaction/process.rs": "e4a2409d2a547fb4004a71d2f077f2a1a186263fbe04f9a7fffc38e363c2458a",
+    "packages/deployment-control-plane/src/transaction/recovery.rs": "bcbb079092b5770c71578a488236646bd7673440714c1d7981f3684f3ed76819",
+    "packages/deployment-control-plane/src/transaction/remediation.rs": "d72d3a2ac495930b04a24e8f915a564393c658ea34f1e692f7bbd1495ebb1580",
+    "packages/deployment-control-plane/src/transaction/service.rs": "70e72de73c539bae0ce36f9a47f824cd962e680cefd9ff88e9a0de00d6aa81c8",
+    "packages/deployment-control-plane/src/transaction/slots.rs": "79583626cb12f4fe0d07e9eaedddae4b1770d1f3cec0a4f1aaa5959a5de1e4ab",
+    "packages/deployment-control-plane/src/trust/admission.rs": "b2e422ad31aa71805b925e0f545e380df0dd4fba3ac20156040d84ebc1d638c9",
+    "packages/deployment-control-plane/src/trust/mod.rs": "c451f49c9f48b68030276c31c10abf9d3dc37463f7924e6e1a87a1306d41212c",
+    "packages/deployment-control-plane/src/trust/verify.rs": "cda775e6b79c3f823051f51aea8a3ca304e6d5c6354a4083b54ccb012370078c"
+  },
+  "external_imports": [
+    "node:process"
+  ],
+  "future_runtime_candidate": {
+    "historical_manifest_sha256": "cd8bcc09371c091fa6bd8d93b1f2aa053cc2a3c80b0135d6a1c5892c45e66bb8",
+    "node_payloads": [
+      {
+        "blob": "payload-00",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "mode": 365,
+        "sha256": "2b6222cbadb3c746f061a35ad4923d7a912aa8a3151fda011fa05e3d5b942c86",
+        "size": 52176
+      },
+      {
+        "blob": "payload-01",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libada.3.4.3.dylib",
+        "mode": 365,
+        "sha256": "5de38080556d6a766b0d6c608df55b2b37d164b1da7ec05aaacc73e1f9ede626",
+        "size": 572944
+      },
+      {
+        "blob": "payload-02",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlicommon.1.2.0.dylib",
+        "mode": 365,
+        "sha256": "b69c104f102c90fff24d00d94500cdde6df903848081c5a005622574d0b4a230",
+        "size": 155776
+      },
+      {
+        "blob": "payload-03",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlidec.1.2.0.dylib",
+        "mode": 365,
+        "sha256": "56a4139c3c21ccf27d6b73ffabc8928802bbbbb01902deb7a2814df2b88cd914",
+        "size": 67568
+      },
+      {
+        "blob": "payload-04",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libbrotlienc.1.2.0.dylib",
+        "mode": 365,
+        "sha256": "be9dbdfb63afd9cb187b74329aec32ef06872fbce0f653815dcd51ba60968550",
+        "size": 661200
+      },
+      {
+        "blob": "payload-05",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libcares.2.19.5.dylib",
+        "mode": 365,
+        "sha256": "9bac38771f613aea44049b561fc9fada399077c585c66976c9475f23c0fee0e0",
+        "size": 207696
+      },
+      {
+        "blob": "payload-06",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libcrypto.3.dylib",
+        "mode": 365,
+        "sha256": "6fe7f9959091843dc7dd8b3af353d3e9dd007c09dd689651c899303245d1ba7e",
+        "size": 5261328
+      },
+      {
+        "blob": "payload-07",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libhdr_histogram.6.2.3.dylib",
+        "mode": 365,
+        "sha256": "16f0f4a867de77945fa4b861d96150bce7d061c607f5972e89d09f6ac12a056e",
+        "size": 51184
+      },
+      {
+        "blob": "payload-08",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicudata.78.3.dylib",
+        "mode": 365,
+        "sha256": "62b14e8d139f0125c940b959be8c0ac74942b545b60a016bbda20a3f230f00b5",
+        "size": 33389184
+      },
+      {
+        "blob": "payload-09",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicui18n.78.3.dylib",
+        "mode": 365,
+        "sha256": "c836ad9776ae6a0eb606d00cc5b7a5bc39f6ccc4caa2d4eff3e8c92fe4d29214",
+        "size": 3137504
+      },
+      {
+        "blob": "payload-10",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libicuuc.78.3.dylib",
+        "mode": 365,
+        "sha256": "d9fe5d5bc0a7b36ba905c95b534d6ca9164d9dbae5aa0fc735c4edcd1d00f9cc",
+        "size": 1845072
+      },
+      {
+        "blob": "payload-11",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libllhttp.9.3.1.dylib",
+        "mode": 365,
+        "sha256": "1bf33fb2407869116222d93b1927400aa5911eef974f8501c60ab1ab5312a8df",
+        "size": 74880
+      },
+      {
+        "blob": "payload-12",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp2.14.dylib",
+        "mode": 365,
+        "sha256": "a72992df40f18861ea26f8dd5786890d0d7c3a9afcccfd736d4e6417d211ea9b",
+        "size": 181520
+      },
+      {
+        "blob": "payload-13",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnghttp3.9.6.1.dylib",
+        "mode": 365,
+        "sha256": "f9080e2d47e169d4c251df5790806883226886dc2956ad1c2da3b27e7138ded1",
+        "size": 184352
+      },
+      {
+        "blob": "payload-14",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libngtcp2.16.dylib",
+        "mode": 365,
+        "sha256": "a72134157930a52baac319bc6af7c818b8f8c619834c101510974643b0948f30",
+        "size": 326784
+      },
+      {
+        "blob": "payload-15",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libnode.141.dylib",
+        "mode": 365,
+        "sha256": "9a7dbd4d31b8b6179c3d3e5ed18c442b4fd4d11d91955c0fed164be4437ff917",
+        "size": 67737296
+      },
+      {
+        "blob": "payload-16",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libsimdjson.30.0.0.dylib",
+        "mode": 365,
+        "sha256": "3af9dad09400dda38f73b4955fb81b22feef0e3ac54ac81878a7c123cf496043",
+        "size": 178064
+      },
+      {
+        "blob": "payload-17",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libsqlite3.3.53.1.dylib",
+        "mode": 365,
+        "sha256": "6b304b8b130ccadcae7627aa18b3d86e691f34f2c5ea6b4a37fcad6e63fe99cd",
+        "size": 1274080
+      },
+      {
+        "blob": "payload-18",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libssl.3.dylib",
+        "mode": 365,
+        "sha256": "1b27b34956e99784b18608194bbc0ac8a4d42a83a3c5d9447d798c828995e5ed",
+        "size": 908192
+      },
+      {
+        "blob": "payload-19",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libuv.1.0.0.dylib",
+        "mode": 365,
+        "sha256": "a86d94dd706a91366744d844938685f57c594f9688e6b53b35c79f5f63fe5297",
+        "size": 174528
+      },
+      {
+        "blob": "payload-20",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libuvwasi.dylib",
+        "mode": 365,
+        "sha256": "40597b1a18e3b1b4068668750693520732bc06899d0e4f1e856d64f7012e880f",
+        "size": 71264
+      },
+      {
+        "blob": "payload-21",
+        "destination": "/usr/local/libexec/agent-core/node-runtime/lib/libzstd.1.5.7.dylib",
+        "mode": 365,
+        "sha256": "5b95154bcdf8e9b598e6e480b36b2f3ee037f0e5f9eb829a0044992574bc8bcb",
+        "size": 754128
+      }
+    ],
+    "retained_path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/reviewed-node-8ab5904",
+    "status": "NOT_INSTALLED_NOT_ENROLLED"
+  },
+  "proof_status": {
+    "build_attestation_issued": false,
+    "production_runtime_observed": false,
+    "source_and_candidate_bytes_rehashed": true
+  },
+  "recipe": "immutable-regular-app-slots-v1",
+  "release_slots": {
+    "packages/broker/src/capabilities/workflow.js": "2ec3c9d2dc9e5f5bf11cca69ea63ad8888d8cfcc820045e5c0eac1bb11ce7c8d"
+  },
+  "repo": "mayf3/dsh-agent-core",
+  "review_files": {
+    "packages/broker/test/capabilities/workflow-global-instances-v2.test.js": "6808d20d6e135aac414757940b95b5d232e2d515f270a0aafd154693985000c7"
+  },
+  "scope": "frozen Broker regular-file build; target activation remains separately gated",
+  "source_dependency_files": {
+    "packages/broker/src/capabilities/workflow-definition-authoring.js": "c95d4e45c827ae2026318052fc17ae7b2a87e634f49ee31d377883f8bf76ac0d",
+    "packages/broker/src/capabilities/workflow-execute.js": "fa345c678c9653d7204a15bd907fc9fe28072fd673572721af038fcd8c10e7af",
+    "packages/broker/src/capabilities/workflow.js": "2ec3c9d2dc9e5f5bf11cca69ea63ad8888d8cfcc820045e5c0eac1bb11ce7c8d",
+    "packages/broker/src/credential.js": "b306ed3e09dce8f0d67e3972648392f3fcc58dbfbbda149c44f6ea43ffd55605",
+    "packages/broker/src/error-detail-sanitizer.js": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+    "packages/broker/src/targets.js": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+    "packages/broker/src/transport.js": "9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445"
+  },
+  "source_sha": "c9ffe1d1637db2997689d8b2ef7def4fc1086b17",
+  "toolchain_observation": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: aarch64-apple-darwin\nrelease: 1.98.1\nLLVM version: 22.1.8\n",
+  "tree_sha": "eb44f3fbbfeed46c2c912c439d641c0fa2fdef3d",
+  "version": 1
+}

@@ -46,3 +46,11 @@ path = "test/adoption/bootstrap.rs"
 [[test]]
 name = "e2e"
 path = "test/adoption/e2e.rs"
+
+[[test]]
+name = "genesis"
+path = "test/genesis/plan.rs"
+
+[[test]]
+name = "registry"
+path = "test/registry/main.rs"

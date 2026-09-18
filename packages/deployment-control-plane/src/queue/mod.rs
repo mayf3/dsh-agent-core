@@ -2,6 +2,7 @@ mod admission;
 mod dependencies;
 mod executor_finalization;
 mod gates;
+mod issuance;
 mod lifecycle;
 mod producer;
 mod readback;

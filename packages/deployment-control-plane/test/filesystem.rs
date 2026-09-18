@@ -288,6 +288,10 @@ fn multiprocess_lock_worker() {
     let intent = std::path::Path::new(&root).join("holder-intent");
     fs::write(&intent, b"durable nonterminal intent").unwrap();
     fs::File::open(&intent).unwrap().sync_all().unwrap();
+    fs::File::open(&root).unwrap().sync_all().unwrap();
+    // File creation precedes write/fsync. Signal only after durable intent exists;
+    // otherwise the parent may kill this worker between create and write.
+    fs::write(std::path::Path::new(&root).join("holder-ready"), b"ready").unwrap();
     std::thread::sleep(std::time::Duration::from_secs(30));
 }
 #[test]
@@ -308,10 +312,10 @@ fn killed_holder_releases_kernel_lock_without_unlinking_inode_or_intent() {
         .spawn()
         .unwrap();
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    while !path.join("holder-intent").exists() && std::time::Instant::now() < deadline {
+    while !path.join("holder-ready").exists() && std::time::Instant::now() < deadline {
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
-    assert!(path.join("holder-intent").exists());
+    assert!(path.join("holder-ready").exists());
     assert_eq!(roots.lock().err().unwrap().code(), "MUTEX_BUSY");
     let inode = fs::metadata(path.join("production.lock")).unwrap().ino();
     child.kill().unwrap();

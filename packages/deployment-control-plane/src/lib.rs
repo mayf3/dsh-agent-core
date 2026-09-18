@@ -10,9 +10,12 @@ pub mod transaction;
 extern crate self as deployment_control_plane;
 
 pub mod bootstrap;
+pub mod issuer;
 pub mod service;
 
 #[cfg(test)]
 #[path = "../test/common/mod.rs"]
 #[allow(dead_code)]
 mod common;
+
+pub mod registry;

@@ -3,6 +3,7 @@ use crate::{
     fs::{file::snapshot, secure::Dir},
     model::*,
     queue::Queue,
+    registry::Registry,
     trust::{digest, valid_digest, valid_id, verify_signed, Signable},
     Error, Result,
 };
@@ -132,7 +133,7 @@ impl Intake {
             allowed_producers: c.producers.clone(),
         })
     }
-    fn area(&self, name: &str) -> Result<Dir> {
+    pub(crate) fn area(&self, name: &str) -> Result<Dir> {
         self.root.child("intake")?.child(name)
     }
     pub fn proposal(&self, hash: &str) -> Result<Proposal> {
@@ -166,11 +167,26 @@ impl Intake {
     }
     pub fn policy(&self, profile: &str) -> Result<Signed<Policy>> {
         valid_id(profile)?;
+        if self.config.catalog.keys.contains_key("local-authority") {
+            return crate::issuer::coordinator::current_policy(
+                &self.root,
+                &self.config.catalog,
+                profile,
+            );
+        }
         read(&self.area("policies")?, &format!("{profile}.json"))
     }
     pub fn poll(&self, q: &Queue) -> Result<()> {
         for producer in &self.config.producers {
             q.register_producer(&self.config.catalog, producer)?;
+            if producer == "local-deployment-registry" {
+                let registry = Registry::open_local_root(&self.root, &self.config.catalog)?;
+                let revision = q.daemon_producer_revision(producer)?;
+                for snapshot in registry.snapshots_after(revision, 16)? {
+                    q.ingest_snapshot(&self.config.catalog, &snapshot)?;
+                }
+                continue;
+            }
             // At most 16 snapshots per poll; a gap leaves census incomplete.
             for _ in 0..16 {
                 let revision = q.daemon_producer_revision(producer)?;
@@ -210,6 +226,18 @@ impl Intake {
         for caller in &self.config.callers {
             let actor = self.actor(caller.uid, caller.gid)?;
             for entry in q.outbox(&actor)? {
+                if entry.producer_id == "local-deployment-registry" {
+                    require(
+                        self.config.producers.contains(&entry.producer_id),
+                        "PRODUCER_SCOPE",
+                    )?;
+                    let registry = Registry::open_local_root(&self.root, &self.config.catalog)?;
+                    let receipt: Signed<GoalReceipt> =
+                        serde_json::from_str(&q.receipt(&actor, &entry.receipt_digest)?)?;
+                    let ack = registry.close_from_queue(q, &actor, &entry, &receipt)?;
+                    q.acknowledge_closure(&self.config.catalog, &ack)?;
+                    continue;
+                }
                 self.publish("closure", &entry.id, &entry)?;
                 match read::<Signed<ClosureAcknowledgement>>(
                     &self.area("acks")?,
