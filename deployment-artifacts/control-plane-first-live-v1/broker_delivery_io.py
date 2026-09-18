@@ -192,7 +192,7 @@ def socket_ready(name):
     fd = protected_directory(SOCKET)
     try:
         m = os.stat(name, dir_fd=fd, follow_symlinks=False)
-        require(stat.S_ISSOCK(m.st_mode) and m.st_uid == 0 and m.st_gid == 20 and
+        require(stat.S_ISSOCK(m.st_mode) and m.st_uid == 0 and m.st_gid == 602 and
                 stat.S_IMODE(m.st_mode) == 0o660, "SOCKET_METADATA")
     finally:
         os.close(fd)
