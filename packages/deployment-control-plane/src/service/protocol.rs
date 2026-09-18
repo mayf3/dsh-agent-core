@@ -5,8 +5,8 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    io::{Read, Write},
-    os::unix::net::UnixStream,
+    io::Write,
+    os::{fd::AsRawFd, unix::net::UnixStream},
     time::{Duration, Instant},
 };
 pub const MAX_FRAME: usize = 65536;
@@ -70,12 +70,43 @@ fn exact(stream: &mut UnixStream, mut buffer: &mut [u8], deadline: Instant) -> R
         let remaining = deadline
             .checked_duration_since(Instant::now())
             .ok_or(Error::new("READ_TIMEOUT"))?;
-        stream.set_read_timeout(Some(remaining))?;
-        let count = stream
-            .read(buffer)
-            .map_err(|_| Error::new("READ_TIMEOUT"))?;
+        // Darwin can reject SO_RCVTIMEO after a peer's FIN even while a
+        // complete response remains buffered. Poll + nonblocking recv honors
+        // the same total deadline without altering a disconnected socket.
+        let mut poll = libc::pollfd {
+            fd: stream.as_raw_fd(),
+            events: libc::POLLIN,
+            revents: 0,
+        };
+        let timeout = remaining
+            .as_millis()
+            .saturating_add(1)
+            .min(i32::MAX as u128) as i32;
+        let ready = unsafe { libc::poll(&mut poll, 1, timeout) };
+        if ready < 0 && std::io::Error::last_os_error().kind() == std::io::ErrorKind::Interrupted {
+            continue;
+        }
+        require(ready > 0 && Instant::now() < deadline, "READ_TIMEOUT")?;
+        let count = unsafe {
+            libc::recv(
+                stream.as_raw_fd(),
+                buffer.as_mut_ptr().cast(),
+                buffer.len(),
+                libc::MSG_DONTWAIT,
+            )
+        };
+        if count < 0 {
+            let kind = std::io::Error::last_os_error().kind();
+            if matches!(
+                kind,
+                std::io::ErrorKind::Interrupted | std::io::ErrorKind::WouldBlock
+            ) {
+                continue;
+            }
+            return Err(Error::new("READ_TIMEOUT"));
+        }
         require(count != 0, "DISCONNECTED")?;
-        buffer = &mut buffer[count..];
+        buffer = &mut buffer[count as usize..];
     }
     Ok(())
 }

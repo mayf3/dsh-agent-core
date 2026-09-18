@@ -135,6 +135,30 @@ fn read_prepared_reply(stream: &mut UnixStream) -> Result<serde_json::Value> {
 mod client_deadline_tests {
     use super::*;
     #[test]
+    fn complete_buffered_reply_survives_peer_close() {
+        for _ in 0..200 {
+            let (mut client, mut server) = UnixStream::pair().unwrap();
+            protocol::write_frame(&mut server, &serde_json::json!({"ok":true})).unwrap();
+            drop(server);
+            assert_eq!(
+                read_prepared_reply(&mut client).unwrap(),
+                serde_json::json!({"ok":true})
+            );
+        }
+    }
+    #[test]
+    fn truncated_closed_reply_remains_disconnected() {
+        use std::io::Write;
+        let (mut client, mut server) = UnixStream::pair().unwrap();
+        server.write_all(&12u32.to_be_bytes()).unwrap();
+        server.write_all(b"{}").unwrap();
+        drop(server);
+        assert_eq!(
+            read_prepared_reply(&mut client).unwrap_err().code(),
+            "DISCONNECTED"
+        );
+    }
+    #[test]
     fn real_delayed_independent_review_reply_survives_inbound_one_second_budget() {
         let (mut client, mut server) = UnixStream::pair().unwrap();
         let child = std::thread::spawn(move || {
