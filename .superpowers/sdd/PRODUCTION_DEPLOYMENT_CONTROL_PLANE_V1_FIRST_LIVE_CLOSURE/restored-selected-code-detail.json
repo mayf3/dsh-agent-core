@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-09-18T04:35:37.444396+00:00",
+  "scope": "ordinary restored source observations only",
+  "correct_incident_lifecycle_path": "/usr/local/libexec/agent-core/app/packages/scheduler/src/watchdog/incident-lifecycle.js",
+  "sha256": "cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1",
+  "uid": 505,
+  "gid": 601,
+  "mode": "0o644",
+  "correction": "Earlier packages/production-runtime/src/scheduler/incident-lifecycle.js path is not a required source file; its absence is not missing installed closure evidence. Correct owning source is packages/scheduler/src/watchdog/incident-lifecycle.js.",
+  "broker_contract": "Restored workflow_domain_admin.create still requires caller domainId; fresh upstream contract and accepted supersession remain separate checks."
+}

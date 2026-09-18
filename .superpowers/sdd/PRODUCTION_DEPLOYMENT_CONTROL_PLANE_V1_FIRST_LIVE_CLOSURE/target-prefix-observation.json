@@ -1,0 +1,53 @@
+{
+  "at_utc": "2026-09-18T04:06:00.801492+00:00",
+  "method": "ordinary lstat and app directory names only",
+  "rows": [
+    {
+      "path": "/usr/local/libexec/agent-core",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "mtime_ns": 1789702386003930294,
+      "is_symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "mtime_ns": 1789702381483274427,
+      "is_symlink": false,
+      "entry_names": []
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/config",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "mtime_ns": 1789702381483350052,
+      "is_symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/home",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o755",
+      "flags": 0,
+      "mtime_ns": 1789702381483316385,
+      "is_symlink": false
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o555",
+      "flags": 0,
+      "mtime_ns": 1787873692650089909,
+      "is_symlink": false
+    }
+  ],
+  "limitations": "No protected deployment receipt, runtime status or mutation outcome inferred."
+}
