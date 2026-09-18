@@ -117,7 +117,10 @@ def prefix_gate(io,packet):
             require(m['gid']==1 and m['mode']==0o775,'SOCKET_ANCESTOR')
         else:require(m['mode'] & 0o7022==0,'PROTECTED_ANCESTOR')
         if mode is not None:require(m['mode']==int(mode,8) and m['flags']==0,'PROTECTED_DIRECTORY')
-    old={path:protected_read(io,path,spec) for path,spec in layout.prefix_files(packet).items()}
+    old={}
+    for path,spec in layout.prefix_files(packet).items():
+        if path==layout.CODE+'/codex':io.stream_hash_fixed_codex(path,spec)
+        else:old[path]=protected_read(io,path,spec)
     for path in layout.absent_paths():
         require(io.metadata(path,absent=True) is None,'PRIOR_OPERATION_PRESENT')
     require(io.call(['/bin/launchctl','print',layout.LABEL],missing=True) is None,'CONTROLLER_ALREADY_LOADED')

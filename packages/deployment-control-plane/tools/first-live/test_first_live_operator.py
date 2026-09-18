@@ -96,6 +96,32 @@ class Bindings(unittest.TestCase):
 
 
 class OperationStops(unittest.TestCase):
+    def test_prefix_gate_streams_only_fixed_codex_and_materializes_small_preimages(self):
+        codex=op.layout.CODE+'/codex';small=op.layout.CODE+'/agent-deployd'
+        specs={codex:{'sha256':'a'*64,'size':220584000},small:{'sha256':'b'*64}}
+        class IO:
+            def __init__(self):self.streamed=[];self.read=[]
+            def stream_hash_fixed_codex(self,path,spec):self.streamed.append((path,spec))
+            def expect(self,path,spec):self.read.append(path);return {'inode':1}
+            def metadata(self,path,absent=False):
+                if absent:return None
+                return {'inode':1}
+            def call(self,argv,**kwargs):
+                if argv==['/bin/launchctl','print',op.layout.LABEL]:return None
+                if argv==['/bin/launchctl','print-disabled','system']:
+                    return b'"ai.agent-deployd" => true\n'
+                if argv==['/usr/bin/shasum','-a','256','/usr/bin/sudo']:
+                    return b'f'*64+b'  /usr/bin/sudo\n'
+                self.read.append(argv[-1]);return b'small bytes'
+        io=IO()
+        with patch.object(op.layout,'directories',return_value={}),patch.object(
+                op.layout,'prefix_files',return_value=specs),patch.object(
+                op.layout,'absent_paths',return_value=[]):
+            old,_=op.prefix_gate(io,{})
+        self.assertEqual(io.streamed,[(codex,specs[codex])])
+        self.assertEqual(old,{small:b'small bytes'})
+        self.assertNotIn(codex,io.read)
+
     def test_no_deployment_handoff_without_full_remaining_window(self):
         p,g,_=fixture();p['review_helper_sha256']='8'*64
         p['configuration']={'catalog':{'profiles':{'dsh-app':{'revision':'dsh-app-v1'}}}}

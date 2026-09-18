@@ -10,6 +10,18 @@ def packet():
 
 
 class Mapping(unittest.TestCase):
+    def test_fixed_codex_stream_spec_has_exact_size_and_no_subprocess_read_command(self):
+        x=packet();x['previous']={k:'a'*64 for k in ['installation_receipt_sha256','service_sha256',
+            'trust_sha256','issuer_policy_sha256','registry_sha256']}
+        codex=p.CODE+'/codex';spec=p.prefix_files(x)[codex]
+        self.assertEqual((spec['sha256'],spec['size']),
+            ('b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3',220584000))
+        commands=p.commands(x,'8'*64)
+        self.assertNotIn(['/bin/cat',codex],commands)
+        self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,codex],commands)
+        self.assertIn(['/bin/ls','-ldeO',codex],commands)
+        self.assertIn(['/bin/cat',p.CODE+'/agent-deployd'],commands)
+
     def test_native_fixed_filenames_and_all_real_payloads(self):
         x=p.inputs(packet())
         self.assertEqual(x['node-inventory.json'],'3'*64)
