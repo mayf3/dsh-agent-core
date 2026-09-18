@@ -239,5 +239,5 @@ pub(crate) fn process_argv(pid: u32) -> Result<Vec<String>> {
 }
 
 #[cfg(test)]
-#[path = "../../test/native_startup.rs"]
+#[path = "../../test/adoption/native_startup.rs"]
 mod startup_tests;

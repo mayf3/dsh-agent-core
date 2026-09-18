@@ -191,21 +191,21 @@ pub(crate) mod test_fixture;
 mod final_repair_tests;
 
 #[cfg(test)]
-#[path = "../../test/executed_predecessor.rs"]
+#[path = "../../test/adoption/executed_predecessor.rs"]
 mod executed_predecessor_tests;
 
 #[cfg(test)]
-#[path = "../../test/adopted_baseline.rs"]
+#[path = "../../test/adoption/adopted_baseline.rs"]
 mod adopted_baseline_tests;
 pub(crate) mod adoption;
 
 pub(crate) mod activation;
 #[cfg(test)]
-#[path = "../../test/adopted_chain.rs"]
+#[path = "../../test/adoption/adopted_chain.rs"]
 mod adopted_chain_tests;
 #[cfg(test)]
-#[path = "../../test/adoption_activation.rs"]
+#[path = "../../test/adoption/adoption_activation.rs"]
 mod adoption_activation_tests;
 #[cfg(test)]
-#[path = "../../test/adoption_crashes.rs"]
+#[path = "../../test/adoption/adoption_crashes.rs"]
 mod adoption_crash_tests;
