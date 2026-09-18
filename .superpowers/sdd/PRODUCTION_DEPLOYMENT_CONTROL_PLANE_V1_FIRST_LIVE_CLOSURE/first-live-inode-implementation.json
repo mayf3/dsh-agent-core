@@ -36,6 +36,10 @@
   "not_valid_red": "inode-recovery-red.log was a compile visibility error, excluded from assertion RED evidence",
   "unknown_rule": "missing durable target intent or interrupted recovery is preserved as UNKNOWN; no blind replay or assumed cleanup",
   "integrated_operator_complete": false,
-  "independent_source_review": "PENDING",
+  "independent_source_review": {
+    "status": "PASS_COMPONENT_ONLY",
+    "path": "first-live-inode-source-review.md",
+    "sha256": "6ad512a0cb11040d79eb62d1657995a4e689de709dfad6c93ea32c04b68eda4a"
+  },
   "production_mutation": false
 }
