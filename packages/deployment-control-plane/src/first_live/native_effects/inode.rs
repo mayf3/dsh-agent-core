@@ -149,6 +149,7 @@ fn rename(dir: &Dir, from: &str, to: &str) -> Result<()> {
     dir.file.sync_all()?;
     Ok(())
 }
+type PreparedNames = Vec<(Dir, String, String)>;
 fn prepare(
     root: &Dir,
     paths: &[String],
@@ -156,7 +157,7 @@ fn prepare(
     image: &FileImage,
     e: &Entry,
     recovery: bool,
-) -> Result<(Entry, Vec<(Dir, String, String)>)> {
+) -> Result<(Entry, PreparedNames)> {
     let mut parents = Vec::new();
     for (i, path) in paths.iter().enumerate() {
         let (dir, name) = parent(root, path)?;

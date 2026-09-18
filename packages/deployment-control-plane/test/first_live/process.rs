@@ -154,3 +154,23 @@ fn caller_node_can_only_enter_the_two_retired_constant_stubs() {
     assert!(validate_identity(Tool::RetiredNode, None).is_err());
     assert!(validate_identity(Tool::RetiredNode, Some((505, 601, &[601]))).is_err());
 }
+
+#[test]
+fn plutil_is_only_caller_readback_of_the_public_inert_probe() {
+    let exact = vec![
+        "-lint".into(),
+        "/usr/local/libexec/agent-deployd/lifecycle-denial-probe.plist".into(),
+    ];
+    validate_arguments(Tool::Plutil, &exact).unwrap();
+    validate_identity(Tool::Plutil, Some((502, 20, &[20]))).unwrap();
+    assert!(validate_identity(Tool::Plutil, None).is_err());
+    assert!(validate_identity(Tool::Plutil, Some((505, 601, &[601]))).is_err());
+    for args in [
+        vec![],
+        vec!["-lint".into(), "/tmp/arbitrary.plist".into()],
+        vec!["-remove".into(), "Label".into(), exact[1].clone()],
+        vec![exact[0].clone(), exact[1].clone(), "extra".into()],
+    ] {
+        assert!(validate_arguments(Tool::Plutil, &args).is_err());
+    }
+}
