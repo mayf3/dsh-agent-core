@@ -22,6 +22,7 @@ pub(super) enum Tool {
     Retired,
     Sh,
     RetiredNode,
+    Plutil,
 }
 impl Tool {
     pub(super) fn path(self) -> &'static str {
@@ -31,6 +32,7 @@ impl Tool {
             Self::Node | Self::RetiredNode => "/usr/local/libexec/agent-core/node-runtime/bin/node",
             Self::Retired => "/usr/local/libexec/lw-pilot-executor",
             Self::Sh => "/bin/sh",
+            Self::Plutil => "/usr/bin/plutil",
         }
     }
 }
@@ -48,7 +50,7 @@ pub(super) fn pinned(tool: Tool, expected: &str) -> Result<()> {
         libc::O_RDONLY,
         0,
     )?;
-    let bytes = if matches!(tool, Tool::Launchctl | Tool::Sudo | Tool::Sh) {
+    let bytes = if matches!(tool, Tool::Launchctl | Tool::Sudo | Tool::Sh | Tool::Plutil) {
         validate_platform_file(&file)?;
         let mut b = Vec::new();
         (&mut file).take(32 * 1024 * 1024 + 1).read_to_end(&mut b)?;
@@ -240,6 +242,15 @@ fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result
 mod tests;
 
 fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
+    if matches!(tool, Tool::Plutil) {
+        require(
+            args == [
+                "-lint",
+                "/usr/local/libexec/agent-deployd/lifecycle-denial-probe.plist",
+            ],
+            "FIRST_LIVE_PROBE_READBACK_ARGUMENTS",
+        )?;
+    }
     if matches!(tool, Tool::RetiredNode) {
         require(args.len()==1 && [
             "/usr/local/libexec/agent-core/app/scripts/production-runtime-launchd.mjs",
