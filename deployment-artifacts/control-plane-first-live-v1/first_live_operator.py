@@ -3,6 +3,9 @@
 This file prepares the explicitly invoked --execute-exact entry. Its package
 requires separate exact Owner approval after source and package review.
 """
+if __name__ == "__main__":
+    raise SystemExit("Use the exact reviewed first_live_launcher.py entry")
+
 import re
 from first_live_io import require, digest
 from bind_records import _object, _canonical
@@ -173,7 +176,7 @@ def execute(io,manifest,package_path):
     require(digest(local('owner-scope.json'))==p['owner_acceptance_digest'],'OWNER_SCOPE_BINDING')
     ctl=manifest['files']['agent-deployctl']['sha256'];layout.sha(ctl)
     require(manifest['root_argv_allowlist']==layout.commands(p,ctl),'ROOT_COMMAND_SET')
-    wrapper=['/usr/bin/python3','-B','-E','-s',str(package_path/'broker_first_delivery.py')]
+    wrapper=['/usr/bin/python3','-I','-S','-B',str(package_path/'first_live_launcher.py'),'--broker-exact']
     require(manifest['ordinary_argv_allowlist']==[wrapper],'ORDINARY_COMMAND_SET')
     io.claim()
     try:
@@ -184,6 +187,7 @@ def execute(io,manifest,package_path):
         io.phase('protected-copy')
         io.call(['/bin/mkdir','-m','0700',layout.PACKET])
         io.call(['/bin/mkdir','-m','0700',layout.PACKET+'/payloads'])
+        prepare_socket(io,p)
         for name in ['agent-deployd','agent-deploy-issuer']:
             value=old[layout.CODE+'/'+name]
             io.copy(value,digest(value),'0400',layout.PACKET+'/original-'+name)
@@ -248,4 +252,25 @@ def main():
     print(_canonical(execute(io,manifest,package)).decode())
 
 
-if __name__=='__main__':main()
+
+def prepare_socket(io, packet):
+    expected=packet['configuration']['socket_ancestor']
+    keys=['device','inode','uid','gid','mode','flags']
+    def parent():
+        m=io.metadata('/private/var/run')
+        require(m['type']=='Directory' and all(type(m[k]) is int and m[k]==expected[k] for k in keys),
+            'SOCKET_ANCESTOR_BINDING')
+    parent()
+    require(io.metadata(layout.SOCKET,absent=True) is None,'SOCKET_NAMESPACE_ALREADY_PRESENT')
+    io.call(['/bin/mkdir','-m','0700',layout.SOCKET])
+    before=io.metadata(layout.SOCKET)
+    require(before['type']=='Directory' and before['uid']==0 and before['mode']==0o700
+        and before['flags']==0,'SOCKET_NAMESPACE_CLAIM')
+    require(io.call(['/bin/ls','-1A',layout.SOCKET])==b'','SOCKET_NAMESPACE_NOT_EMPTY')
+    io.call(['/usr/bin/install','-d','-o','root','-g','602','-m','0750',layout.SOCKET])
+    after=io.metadata(layout.SOCKET)
+    require(after['type']=='Directory' and after['uid']==0 and after['gid']==602 and after['mode']==0o750
+        and after['flags']==0 and (after['device'],after['inode'])==(before['device'],before['inode']),
+        'SOCKET_NAMESPACE_CHANGED')
+    require(io.call(['/bin/ls','-1A',layout.SOCKET])==b'','SOCKET_NAMESPACE_NOT_EMPTY')
+    parent()
