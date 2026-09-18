@@ -118,6 +118,9 @@ export const Config = z.object({
    * home). Relative / `~`-prefixed values are rejected fail-loud.
    */
   bindingsStoreFile: z.string(),
+  /** Optional absolute V3 durable turn-recovery authority file. Production
+   *  composition always supplies it; isolated legacy mounts remain in-memory. */
+  reconciliationStoreFile: z.string(),
   // Runtime-only option (not in the schema — Config is documentation here):
   // `processFactory(opts) => proc` — per-agent process factory (test/ops
   // seam, defaults to AgentProcess). The proc must expose `spawn()`,
@@ -220,7 +223,11 @@ export function apply(ctx, config) {
    * The Router reconciliation store — the SINGLE query authority for late
    * turn reconciliation (C-018). One store per control-plane runtime epoch.
    */
-  const reconciliationStore = new TurnReconciliationStore()
+  const reconciliationStore = new TurnReconciliationStore({
+    persistenceFile: typeof cfg.reconciliationStoreFile === 'string' && cfg.reconciliationStoreFile !== ''
+      ? cfg.reconciliationStoreFile
+      : null,
+  })
 
   const bindingResolution = createBindingResolution({ agentDefinition, workspaceBootstrap, store, cfg, log })
   const registry = createProcessRegistry({
@@ -347,10 +354,17 @@ export function apply(ctx, config) {
     // defers to the existing termination authorities via the read-only
     // getTurnReconciliation / resolveCallerCorrelation queries above; the
     // engine gates the generation N+1 delivery on that evidence.
-    reconciliationRuntimeStatus: () => ({
-      generationId: reconciliationStore.occupancy().runtimeEpoch,
-      health: 'healthy',
-    }),
+    reconciliationRuntimeStatus: () => {
+      const admission = reconciliationStore.businessAdmissionStatus()
+      return {
+        generationId: reconciliationStore.occupancy().runtimeEpoch,
+        health: admission.ready ? 'healthy' : 'blocked',
+        businessAdmission: admission.ready ? 'open' : 'fail_closed',
+        blockedReason: admission.reason,
+        unresolvedRecoveries: reconciliationStore.unresolvedRecoveryRecords().length,
+      }
+    },
+    getRecoveryDiagnostic: (handle) => reconciliationStore.recoveryDiagnostic(handle),
     onTurnReconciled: (listener) => reconciliationStore.onTurnReconciled(listener),
     turnExecutionSnapshot: (turnExecutionId) => {
       const owner = registry.findOwningProcess(turnExecutionId)

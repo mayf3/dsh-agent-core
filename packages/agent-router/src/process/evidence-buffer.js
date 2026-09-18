@@ -1,6 +1,6 @@
 /**
  * @agent-core/agent-router/src/process/evidence-buffer.js — the bounded
- * process-evidence surfaces of AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+ * process-evidence surfaces of AGENT_PROCESS_LIFECYCLE_HARDENING_V3
  * (CLAUSE-PROC-BOUNDED frozen ceilings + the event ring / stderr tail /
  * creation records / status map intake).
  *
@@ -136,7 +136,7 @@ export const evidenceBufferMethods = {
     for (const execution of [...this.executions.values()]) {
       if (execution.sessionId !== params.sessionId) continue
       if (params.status === 'idle') execution.idleObservationSeq = this.observationSeq
-      if (execution.terminalEvent !== null) this.trySettleExecution(execution)
+      if (execution.terminalEvent !== null || execution.unknownMarked) this.trySettleExecution(execution)
     }
   },
 }

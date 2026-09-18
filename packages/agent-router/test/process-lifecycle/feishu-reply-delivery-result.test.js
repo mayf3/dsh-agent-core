@@ -144,7 +144,11 @@ test('V3 admission failure keeps the original fenced error and records zero repl
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.deepEqual(Object.keys(result).sort(), ['error', 'failureStage'])
+  assert.deepEqual(Object.keys(result).sort(), [
+    'attemptedActions', 'error', 'failureStage', 'fencedBy', 'missingEvidence',
+    'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
+    'replyDelivery', 'requestAdmission', 'terminationEvidence',
+  ])
   assert.equal(result.error, error)
   assert.equal(result.failureStage, 'admission')
   assert.equal(result.error.fencedBy, 'turn:agt_expert:main:a1:g1:s1')
@@ -161,7 +165,11 @@ test('V3 execution failure is distinct from reply delivery and preserves its ori
 
   const result = await fx.delivery.onIngress(ingress)
 
-  assert.deepEqual(Object.keys(result).sort(), ['error', 'failureStage'])
+  assert.deepEqual(Object.keys(result).sort(), [
+    'attemptedActions', 'error', 'failureStage', 'fencedBy', 'missingEvidence',
+    'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
+    'replyDelivery', 'requestAdmission', 'terminationEvidence',
+  ])
   assert.equal(result.error, error)
   assert.equal(result.failureStage, 'execution')
   assert.equal(fx.executions(), 1)
@@ -277,19 +285,29 @@ for (const [code, expectedDelivery, receiptNeedle] of deliveryCases) {
     const result = await fx.delivery.onIngress(ingress)
 
     assert.deepEqual(Object.keys(result).sort(), [
+      'attemptedActions',
       'confirmedChunkReceipts',
       'error',
       'executionResult',
       'failureReceipt',
       'failureStage',
+      'fencedBy',
+      'missingEvidence',
+      'nextSafeAction',
       'partialDelivery',
+      'processGeneration',
+      'reconciliationHandle',
       'replyDelivery',
+      'requestAdmission',
+      'terminationEvidence',
     ])
     assert.equal(result.error, deliveryError)
     assert.equal(result.error.code, code, 'terminal SDK classification is preserved')
     assert.equal(result.failureStage, 'reply_delivery')
     assert.equal(result.replyDelivery, expectedDelivery)
     assert.equal(result.partialDelivery, 'possible')
+    assert.equal(result.requestAdmission, 'accepted')
+    assert.equal(result.reconciliationHandle, turnResult.reconciliationHandle)
     assert.equal(result.confirmedChunkReceipts, 'unavailable')
     assert.deepEqual(result.executionResult, {
       reply: answer,

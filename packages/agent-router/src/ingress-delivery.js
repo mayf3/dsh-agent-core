@@ -11,12 +11,11 @@
  * Both paths run the CLAUSE-PROC-BOUNDED rule 8 reconciliation-capacity
  * precheck BEFORE any spawn/write.
  */
-
 import { createHash } from 'node:crypto'
-
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
 import { ROUTE_HOP_FAILURE_CLASSES } from './route-chain.js'
-
+import { fencedRejection } from './process/state-machine.js'
+import { outerFailureProjection } from './recovery-projection.js'
 const PROVEN_NO_ADMISSION_ROUTE_FAILURES = new Set([
   ROUTE_HOP_FAILURE_CLASSES.SPAWN_FAILED_WITHOUT_CHILD,
   ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE,
@@ -32,7 +31,6 @@ function classifyFailureStage(error, turnStarted) {
   if (PROVEN_NO_ADMISSION_ROUTE_FAILURES.has(error?.routeChain?.failureClass)) return 'admission'
   return 'execution'
 }
-
 /**
  * Create the ingress/delivery surface bound to one router mount.
  * @param {object} deps
@@ -87,6 +85,7 @@ export function createIngressDelivery({
     let binding
     let turnStarted = false
     try {
+      reconciliationStore.assertBusinessAdmissionReady?.()
       ;({ channelConversation, binding } = await resolveChannelConversation({
         channel: namespace,
         externalId: ingress.conversationId,
@@ -96,6 +95,10 @@ export function createIngressDelivery({
         workspace: ingress.workspace,
         sessionId: ingress.session,
       }))
+      const restoredFence = reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
+      if (restoredFence !== null && restoredFence !== undefined) {
+        throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
+      }
       log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
       // AGENT_CORE_BINDING_WORKSPACE_V1: resolve the Binding's effective
       // workspace and hand it to the turn as the SESSION cwd (R1 create /
@@ -190,12 +193,21 @@ export function createIngressDelivery({
           }
           log.error(`reply delivery failed for ${binding.activeAgentId}: ${error?.code ?? 'unclassified'}`)
           if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
+          const recovery = typeof executionResult.reconciliationHandle === 'string'
+            ? reconciliationStore.recoveryDiagnostic?.(executionResult.reconciliationHandle, {
+                failureStage: 'reply_delivery', requestAdmission: 'accepted',
+              }) ?? {}
+            : {}
           return {
-            error,
-            failureStage: 'reply_delivery',
+            ...outerFailureProjection(error, 'reply_delivery', {
+              ...recovery,
+              reconciliationHandle: executionResult.reconciliationHandle ?? null,
+              terminationEvidence: executionResult.evidence?.terminationEvidence ?? null,
+              replyDelivery,
+              partialDelivery: 'possible',
+              requestAdmission: 'accepted',
+            }),
             executionResult,
-            replyDelivery,
-            partialDelivery: 'possible',
             confirmedChunkReceipts: 'unavailable',
             failureReceipt,
           }
@@ -218,7 +230,14 @@ export function createIngressDelivery({
         // receipt path — CANARY-C expects exactly one failure delivery).
         if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
       }
-      return { error, failureStage }
+      const recoveryHandle = error?.fencedBy ?? error?.reconciliationHandle
+      const recovery = typeof recoveryHandle === 'string'
+        ? reconciliationStore.recoveryDiagnostic?.(recoveryHandle, {
+            failureStage,
+            requestAdmission: failureStage === 'admission' ? 'not_admitted' : 'accepted',
+          }) ?? {}
+        : {}
+      return outerFailureProjection(error, failureStage, recovery)
     }
   }
 
@@ -329,6 +348,7 @@ export function createIngressDelivery({
    * @returns {Promise<{accepted:true, sessionId:string}>}
    */
   async function deliver(req, controlOpts = undefined) {
+    reconciliationStore.assertBusinessAdmissionReady?.()
     const requestId = req?.requestId
     const sessionMode = req?.sessionMode
     const message = req?.message
@@ -405,6 +425,10 @@ export function createIngressDelivery({
         }
         throw error
       }
+    }
+    const restoredFence = reconciliationStore.activeFenceForAgent?.(agent.id)
+    if (restoredFence !== null && restoredFence !== undefined) {
+      throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
     }
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt

@@ -26,7 +26,7 @@ import { redactSensitiveText } from './process/index.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
-import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
+import { assertRecoveryAdmission, convergeStartedStartup, disposeProcessSlots, ownsReapSlot, restoreRecoveryFences, startupFailure } from './process-registry-startup.js'
 
 /**
  * Create the per-Agent process registry bound to one router mount.
@@ -60,6 +60,8 @@ export function createProcessRegistry({
   const staleSlotAudits = []
   let disposing = false
 
+  restoreRecoveryFences(reconciliationStore)
+
   // DEC-IMPL-004 route-aware reuse gate (ordered route chain Q-4): the
   // route-aware ensureRunning variant the unified chain executor calls.
   const routeGate = createRouteGate({
@@ -90,7 +92,9 @@ export function createProcessRegistry({
   function casReapSlot(agentId, proc, cause) {
     const slot = lifecycleSlots.get(agentId)
     if (slot === undefined || slot.processRef !== proc
-        || (slot.state !== 'STARTUP' && slot.state !== 'READY')) {
+        || (slot.state !== 'STARTUP' && slot.state !== 'READY')
+        || slot.generation !== proc.processGeneration
+        || slot.ownershipToken !== (proc.ownershipToken ?? null)) {
       auditStaleSlot(`casReap ignored for agent ${agentId}: slot ${slot?.state ?? 'EMPTY'} does not identity-match the callback's process`)
       return null
     }
@@ -233,6 +237,7 @@ export function createProcessRegistry({
    * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.
    */
   function assertRunnable(agentId) {
+    assertRecoveryAdmission(reconciliationStore, agentId)
     const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`agent-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
@@ -253,6 +258,7 @@ export function createProcessRegistry({
     // seeding. Returning the entry's exact resultPromise (rather than an
     // async wrapper) makes the whole bootstrap a true single flight.
     try {
+      assertRecoveryAdmission(reconciliationStore, agentId)
       assertRunnable(agentId)
     } catch (error) {
       return Promise.reject(error)
@@ -339,12 +345,8 @@ export function createProcessRegistry({
       casReap: (proc, cause) => casReapSlot(agentId, proc, cause),
       casStartupEmpty: (proc) => casStartupEmptySlot(agentId, proc),
       casEmpty: (proc) => casEmptySlot(agentId, proc),
-      verifyReapOwnership: (proc) => {
-        const slot = lifecycleSlots.get(agentId)
-        return slot?.state === 'REAP'
-          && slot.processRef === proc
-          && slot.ownershipToken === (proc.ownershipToken ?? null)
-      },
+      verifyReapOwnership: (proc) => ownsReapSlot(lifecycleSlots, agentId, proc, true),
+      isReapOwner: (proc) => ownsReapSlot(lifecycleSlots, agentId, proc, true),
     }
     let proc
     try {
@@ -394,6 +396,7 @@ export function createProcessRegistry({
     try {
       entry.startupFailureStage = 'spawn'
       proc.spawn()
+      entry.ownershipToken = proc.ownershipToken ?? null
     } catch (error) {
       // No-child spawn failure: the process already ran its explicit
       // no-child DRAINING/EXITED bookkeeping (spawn_failed_without_child +

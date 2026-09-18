@@ -1,7 +1,7 @@
 /**
  * @agent-core/agent-router/src/process/spawn.js — child spawn, ownership
  * binding and the child exit settlement order of the per-agent DSH process
- * client (AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-003, C-009, C-017
+ * client (AGENT_PROCESS_LIFECYCLE_HARDENING_V3 C-003, C-009, C-017
  * precedence, C-020).
  *
  * `spawnMethods` compose onto AgentProcess.prototype (agent-process.js).
@@ -155,6 +155,7 @@ export const spawnMethods = {
           execution.terminalReject = undefined
         }
       }
+      if (!execution.settled) this.store.markExitObserved?.(execution.handle)
       // 5. C-017 precedence: parsed exact outcome (received before the exit
       //    callback) wins over child_real_exit.
       if (execution.terminalEvent !== null) {
@@ -172,13 +173,26 @@ export const spawnMethods = {
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
         })
       }
-      this.releaseFence(execution.handle)
       this.finishExecution(execution)
     }
     // 6. authoritative reconciliation records are visible (in-memory store)
     // 7. local matcher/output copies released (finishExecution above)
     // 8. CAS exact REAP entry -> EMPTY
     this.registryIntegration?.casEmpty?.(this)
+    for (const execution of exitExecutions) {
+      if (this.store.getTurnReconciliation(execution.handle).state === 'settled') {
+        this.store.recordRecoveryAction?.(execution.handle, {
+          action: 'registry_cleanup', result: 'succeeded', reasonCode: 'exact_reap_empty',
+        })
+      }
+    }
+    // Fence cleanup follows authoritative settlement visibility AND exact
+    // registry cleanup. A shutdown request or signal alone never reopens.
+    for (const execution of exitExecutions) {
+      if (execution.settled || this.store.getTurnReconciliation(execution.handle).state === 'settled') {
+        this.releaseFence(execution.handle)
+      }
+    }
     // 9. EXITED
     this.transition('EXITED')
     // exitPromise resolves LAST — never before settlement/reconciliation.
