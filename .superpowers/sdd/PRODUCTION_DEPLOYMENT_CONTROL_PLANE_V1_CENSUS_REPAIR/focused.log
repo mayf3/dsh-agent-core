@@ -1,0 +1,28 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.51s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 4 tests
+
+thread 'bootstrap::genesis_install_census::tests::census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner' (74526287) panicked at src/bootstrap/genesis_census_tests.rs:97:5:
+assertion `left == right` failed
+  left: -1
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test bootstrap::genesis_install_census::tests::census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner ... FAILED
+test bootstrap::genesis_install_census::tests::census_compressed_size_limit_is_logical_size ... ok
+test bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects ... ok
+
+thread 'bootstrap::genesis_install_census::tests::census_compressed_include_graph_and_fail_closed_parser' (74526285) panicked at src/bootstrap/genesis_census_tests.rs:58:36:
+called `Result::unwrap()` on an `Err` value: Os { code: 13, kind: PermissionDenied, message: "Permission denied" }
+test bootstrap::genesis_install_census::tests::census_compressed_include_graph_and_fail_closed_parser ... FAILED
+
+failures:
+
+failures:
+    bootstrap::genesis_install_census::tests::census_compressed_include_graph_and_fail_closed_parser
+    bootstrap::genesis_install_census::tests::census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner
+
+test result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`

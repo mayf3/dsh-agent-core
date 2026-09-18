@@ -1,0 +1,9 @@
+{
+  "time": 1789696426,
+  "prior_probe": "fresh-preflight.json",
+  "source_package_host_identity_path_checks": "PASS before service-content read",
+  "nonroot_service_content_limit": "Permission denied on existing root-only plist; no system writes performed; complete readable privileged service/sudoers census is the reviewed native installer gate",
+  "classification": "EXPECTED_PRIVILEGED_CENSUS_DEFERRED",
+  "independent_preoperation_review": "dcp_binding_authority_review PASS",
+  "single_attempt": "genesis-65559dd-20260918-01"
+}

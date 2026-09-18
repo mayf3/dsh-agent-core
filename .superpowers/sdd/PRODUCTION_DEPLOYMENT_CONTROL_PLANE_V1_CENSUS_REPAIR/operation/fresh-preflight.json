@@ -1,0 +1,39 @@
+{
+  "absent_targets": [
+    "/usr/local/libexec/agent-deployd",
+    "/private/var/db/agent-deployd",
+    "/private/var/db/agent-deploy-review",
+    "/private/var/db/agent-deploy-review-workspace",
+    "/Library/LaunchDaemons/ai.agent-deployd.plist",
+    "/private/var/run/agent-deployd",
+    "/private/var/db/agent-deploy-bootstrap",
+    "/private/var/db/genesis-65559dd-20260918-01.authorization.json"
+  ],
+  "attempt_id": "genesis-65559dd-20260918-01",
+  "caller": {
+    "gid": 20,
+    "name": "yanfenma",
+    "uid": 502
+  },
+  "error": "[Errno 13] Permission denied: '/Library/LaunchDaemons/com.openclaw.forum-scheduler.plist'",
+  "host": "343ecc65a7edc224c7b235c9bdbcc964ef5e81475734dc97bb1fa057e2959024",
+  "pins": {
+    "initial_registry_digest": "2a02f1b597c1963a1b080924d778099b6aea3c1ef345ae04643648cd8e333842",
+    "package_digest": "fe3d6711df190b76de32cabf3607b6de12f575803f213d6603ee1eb264c5b065",
+    "plan_digest": "7c516b2f349226b258e5289cd5c8ac3e9c879ae19d9ecf5d0c284698598895ab",
+    "review_record_digest": "89f50873ae411a3df017d45e1d72feadc3b0c52862a51c86422094c26f15ea82",
+    "source_digest": "81aee70d3d96b976b55f2e92b814e876121b5f31a2dc40960247fc327e695d06",
+    "supervisor_policy_digest": "254ac64e7c3c3f0a4026b6feab568f2090cd2701234308c5e0594f4fcbdd7bb0"
+  },
+  "platform_tools": {
+    "/usr/bin/curl": "b636262803922ee1dd0fbf614818473ffa53c811e44fd3278c2270d3af4759d3",
+    "/usr/bin/dscl": "7870543dca5d253c509d2cb6c16893e53b688537b33f81d47d533d8693eb67f4",
+    "/usr/bin/install": "66a36cfae72df019e1dc8649331f956fc93d3d096226b535a4e5931535d024cc",
+    "/usr/bin/shasum": "0812595f981a26f813d98dc380af14d4af427626c9339eda29eb849ae13de1e3",
+    "/usr/sbin/dseditgroup": "68369dbdf779d4c5653e67ff98e7eb469c3f25ef22eb0b6a10ff2e8a923c8339"
+  },
+  "result": "STOP",
+  "source_revision": "65559ddb9d414d248f640f46216bd62e8068983d",
+  "source_tree": "7fce58177bda5afa55a7c696f609378a7beb4f58",
+  "time": 1789696338
+}

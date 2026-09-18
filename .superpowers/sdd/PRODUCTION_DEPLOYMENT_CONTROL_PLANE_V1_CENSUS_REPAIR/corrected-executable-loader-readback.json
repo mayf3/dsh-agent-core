@@ -1,0 +1,50 @@
+{
+  "/usr/local/libexec/agent-deployd/agent-deploy-bootstrap": {
+    "sha256": "d918d8f6f1d5e84334cd4a5e130cca998bcc5eb049a5de10a95093c0f4e7fe3c",
+    "dependencies": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment_command": false
+  },
+  "/usr/local/libexec/agent-deployd/agent-deploy-issuer": {
+    "sha256": "13f1afd7173356069939253ea53a06b757ca0d76442cff42fd9c61f3161b22cb",
+    "dependencies": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment_command": false
+  },
+  "/usr/local/libexec/agent-deployd/agent-deployd": {
+    "sha256": "d334470bfac831b6dee1ce314ac8db6aecdafcca7aec9804336ad6362e743a88",
+    "dependencies": [
+      "/usr/lib/libiconv.2.dylib",
+      "/usr/lib/libSystem.B.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment_command": false
+  },
+  "/usr/local/libexec/agent-deployd/codex": {
+    "sha256": "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3",
+    "dependencies": [
+      "/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit",
+      "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+      "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices",
+      "/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration",
+      "/usr/lib/liblzma.5.dylib",
+      "/usr/lib/libbz2.1.0.dylib",
+      "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+      "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+      "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+      "/usr/lib/libSystem.B.dylib",
+      "/usr/lib/libobjc.A.dylib",
+      "/System/Library/Frameworks/CFNetwork.framework/Versions/A/CFNetwork",
+      "/System/Library/Frameworks/Security.framework/Versions/A/Security",
+      "/usr/lib/libiconv.2.dylib"
+    ],
+    "rpath": false,
+    "dyld_environment_command": false
+  }
+}

@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.24s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+thread 'bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects' (74513390) panicked at src/bootstrap/genesis_census_tests.rs:28:83:
+called `Result::unwrap()` on an `Err` value: Error { code: "UNSAFE_FLAGS" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects ... FAILED
+
+failures:
+
+failures:
+    bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`

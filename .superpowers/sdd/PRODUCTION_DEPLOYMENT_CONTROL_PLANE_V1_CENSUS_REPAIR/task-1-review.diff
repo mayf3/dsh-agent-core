@@ -1,0 +1,383 @@
+diff --git a/packages/deployment-control-plane/src/bootstrap/genesis_census_tests.rs b/packages/deployment-control-plane/src/bootstrap/genesis_census_tests.rs
+new file mode 100644
+index 0000000..1dc1536
+--- /dev/null
++++ b/packages/deployment-control-plane/src/bootstrap/genesis_census_tests.rs
+@@ -0,0 +1,219 @@
++use super::*;
++use crate::fs::{file::snapshot, FixtureRoots};
++use std::os::{
++    macos::fs::MetadataExt as MacMetadataExt,
++    unix::fs::{MetadataExt, PermissionsExt},
++};
++
++fn fixture() -> tempfile::TempDir {
++    tempfile::tempdir_in(FixtureRoots::kernel_temp().unwrap()).unwrap()
++}
++fn compressed(root: &Path, name: &str, bytes: &[u8]) -> std::path::PathBuf {
++    let source = root.join("source");
++    let target = root.join(name);
++    std::fs::write(&source, bytes).unwrap();
++    assert!(Command::new("/usr/bin/ditto")
++        .arg("--hfsCompression")
++        .arg(&source)
++        .arg(&target)
++        .status()
++        .unwrap()
++        .success());
++    std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o400)).unwrap();
++    assert_eq!(std::fs::metadata(&target).unwrap().st_flags(), 0x20);
++    assert_eq!(std::fs::read(&target).unwrap(), bytes);
++    std::fs::remove_file(source).unwrap();
++    target
++}
++#[test]
++fn compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects() {
++    let temp = fixture();
++    let bytes = b"# isolated sudoers fixture\n".repeat(8192);
++    let target = compressed(temp.path(), "sudoers", &bytes);
++    let metadata = std::fs::metadata(&target).unwrap();
++    let dir = Dir::open(temp.path(), metadata.uid()).unwrap();
++    assert_eq!(
++        snapshot(
++            &dir.open_file("sudoers", libc::O_RDONLY, 0).unwrap(),
++            metadata.uid(),
++            4 * 1024 * 1024
++        )
++        .unwrap_err()
++        .code(),
++        "UNSAFE_FLAGS"
++    );
++    let mut found = BTreeMap::new();
++    sudoers(
++        target.to_str().unwrap(),
++        &mut found,
++        metadata.uid(),
++        metadata.gid(),
++    )
++    .unwrap();
++    assert_eq!(found.get(target.to_str().unwrap()), Some(&sha(&bytes)));
++}
++
++fn ordinary(root: &Path, name: &str, bytes: &[u8]) -> std::path::PathBuf {
++    let target = root.join(name);
++    if target.exists() {
++        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o600)).unwrap();
++    }
++    std::fs::write(&target, bytes).unwrap();
++    std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o400)).unwrap();
++    target
++}
++fn census(path: &Path) -> Result<BTreeMap<String, String>> {
++    let mut found = BTreeMap::new();
++    sudoers(
++        path.to_str().unwrap(),
++        &mut found,
++        unsafe { libc::geteuid() },
++        unsafe { libc::getegid() },
++    )?;
++    Ok(found)
++}
++#[test]
++fn census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner() {
++    use std::os::fd::AsRawFd;
++    let temp = fixture();
++    let target = ordinary(temp.path(), "sudoers", b"# fixture\n");
++    assert!(census(&target).is_ok());
++    let link = temp.path().join("symlink");
++    std::os::unix::fs::symlink(&target, &link).unwrap();
++    assert_eq!(census(&link).unwrap_err().code(), "UNSAFE_FILE");
++    let hard = temp.path().join("hardlink");
++    std::fs::hard_link(&target, &hard).unwrap();
++    assert_eq!(census(&target).unwrap_err().code(), "UNSAFE_TYPE");
++    std::fs::remove_file(hard).unwrap();
++    for mode in [0o420, 0o402, 0o4400] {
++        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(mode)).unwrap();
++        assert_eq!(census(&target).unwrap_err().code(), "UNSAFE_MODE");
++    }
++    std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o400)).unwrap();
++    std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o600)).unwrap();
++    let file = std::fs::File::open(&target).unwrap();
++    assert_eq!(
++        unsafe { libc::fchflags(file.as_raw_fd(), libc::UF_NODUMP) },
++        0
++    );
++    assert_eq!(census(&target).unwrap_err().code(), "UNSAFE_FLAGS");
++    assert_eq!(unsafe { libc::fchflags(file.as_raw_fd(), 0) }, 0);
++    assert_eq!(
++        unsafe {
++            libc::fsetxattr(
++                file.as_raw_fd(),
++                c"user.census-test".as_ptr(),
++                b"x".as_ptr().cast(),
++                1,
++                0,
++                0,
++            )
++        },
++        0
++    );
++    assert_eq!(census(&target).unwrap_err().code(), "UNSAFE_XATTR");
++    assert_eq!(
++        unsafe { libc::fremovexattr(file.as_raw_fd(), c"user.census-test".as_ptr(), 0) },
++        0
++    );
++    let uid = file.metadata().unwrap().uid();
++    let gid = file.metadata().unwrap().gid();
++    let dir = Dir::open(temp.path(), uid).unwrap();
++    assert_eq!(
++        read_sudoers(&dir, "sudoers", gid + 1, 1024)
++            .unwrap_err()
++            .code(),
++        "UNSAFE_OWNER"
++    );
++    let wrong = Dir {
++        file: dir.file.try_clone().unwrap(),
++        uid: uid + 1,
++    };
++    assert_eq!(
++        read_sudoers(&wrong, "sudoers", gid, 1024)
++            .unwrap_err()
++            .code(),
++        "UNSAFE_OWNER"
++    );
++    assert!(Command::new("/bin/chmod")
++        .args(["+a", "everyone allow read"])
++        .arg(&target)
++        .status()
++        .unwrap()
++        .success());
++    assert_eq!(census(&target).unwrap_err().code(), "UNSAFE_ACL");
++    assert!(Command::new("/bin/chmod")
++        .arg("-N")
++        .arg(&target)
++        .status()
++        .unwrap()
++        .success());
++}
++#[test]
++fn census_compressed_size_limit_is_logical_size() {
++    let temp = fixture();
++    let bytes = b"# compressible fixture\n".repeat(8192);
++    let target = compressed(temp.path(), "sudoers", &bytes);
++    let m = std::fs::metadata(&target).unwrap();
++    let dir = Dir::open(temp.path(), m.uid()).unwrap();
++    assert_eq!(
++        read_sudoers(&dir, "sudoers", m.gid(), bytes.len() as u64 - 1)
++            .unwrap_err()
++            .code(),
++        "SIZE_LIMIT"
++    );
++    assert_eq!(
++        read_sudoers(&dir, "sudoers", m.gid(), bytes.len() as u64).unwrap(),
++        bytes
++    );
++}
++#[test]
++fn census_compressed_include_graph_and_fail_closed_parser() {
++    let temp = fixture();
++    let include = compressed(
++        temp.path(),
++        "included",
++        &b"# included fixture\n".repeat(8192),
++    );
++    let top = ordinary(
++        temp.path(),
++        "sudoers",
++        format!("@include {}\n", include.display()).as_bytes(),
++    );
++    assert_eq!(census(&top).unwrap().len(), 2);
++    let sub = temp.path().join("includes");
++    std::fs::create_dir(&sub).unwrap();
++    std::fs::set_permissions(&sub, std::fs::Permissions::from_mode(0o700)).unwrap();
++    compressed(&sub, "entry", &b"# directory entry\n".repeat(8192));
++    for directive in [
++        format!("#includedir {}\n", sub.display()),
++        format!("@includedir {}\n", sub.display()),
++    ] {
++        ordinary(temp.path(), "sudoers", directive.as_bytes());
++        assert_eq!(census(&top).unwrap().len(), 2);
++    }
++    for directive in [
++        format!("@include {}\n", top.display()),
++        "@include relative\n".into(),
++        "@include /x extra\n".into(),
++        "@include \"/x\"\n".into(),
++        "@includeunknown /x\n".into(),
++    ] {
++        ordinary(temp.path(), "sudoers", directive.as_bytes());
++        assert_eq!(census(&top).unwrap_err().code(), "BOOTSTRAP_SUDOERS_CENSUS");
++    }
++    let mut found = (0..256)
++        .map(|n| (format!("fixture-{n}"), String::new()))
++        .collect();
++    assert_eq!(
++        sudoers(
++            top.to_str().unwrap(),
++            &mut found,
++            unsafe { libc::geteuid() },
++            unsafe { libc::getegid() }
++        )
++        .unwrap_err()
++        .code(),
++        "BOOTSTRAP_SUDOERS_CENSUS"
++    );
++}
+diff --git a/packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs b/packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs
+index 613254c..5430ec5 100644
+--- a/packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs
++++ b/packages/deployment-control-plane/src/bootstrap/genesis_install_census.rs
+@@ -1,14 +1,11 @@
+-use super::{
+-    genesis_install::GenesisInstallPolicy,
+-    genesis_install_io::{hash_protected, read},
+-};
++use super::{genesis_install::GenesisInstallPolicy, genesis_install_io::hash_protected};
+ use crate::{
+     error::require,
+     fs::{
+         file::sha,
+         secure::{validate_platform_file, Dir},
+     },
+     Error, Result,
+ };
+ use std::{
+     collections::BTreeMap,
+@@ -229,76 +226,130 @@ pub(crate) fn validate_identities(users: &str, groups: &str) -> Result<String> {
+                 )?;
+                 crate::fs::secure::component(fields[0])?;
+                 caller = Some(fields[0].to_string());
+             }
+         }
+     }
+     caller.ok_or(Error::new("BOOTSTRAP_CALLER_IDENTITY"))
+ }
+ pub(super) fn sudoers_census() -> Result<BTreeMap<String, String>> {
+     let mut found = BTreeMap::new();
+-    sudoers("/private/etc/sudoers", &mut found)?;
++    sudoers("/private/etc/sudoers", &mut found, 0, 0)?;
+     Ok(found)
+ }
+-fn sudoers(path: &str, found: &mut BTreeMap<String, String>) -> Result<()> {
++fn sudoers(path: &str, found: &mut BTreeMap<String, String>, uid: u32, gid: u32) -> Result<()> {
+     let path = if let Some(suffix) = path.strip_prefix("/etc/") {
+         format!("/private/etc/{suffix}")
+     } else {
+         path.to_string()
+     };
+     require(
+         found.len() < 256 && !found.contains_key(&path),
+         "BOOTSTRAP_SUDOERS_CENSUS",
+     )?;
+     let p = Path::new(&path);
+-    let dir = Dir::open(p.parent().ok_or(Error::new("UNSAFE_PATH"))?, 0)?;
+-    let raw = read(
++    let dir = Dir::open(p.parent().ok_or(Error::new("UNSAFE_PATH"))?, uid)?;
++    let raw = read_sudoers(
+         &dir,
+         p.file_name()
+             .and_then(|n| n.to_str())
+             .ok_or(Error::new("UNSAFE_PATH"))?,
++        gid,
+         4 * 1024 * 1024,
+     )?;
+     found.insert(path, sha(&raw));
+     let text = std::str::from_utf8(&raw).map_err(|_| Error::new("BOOTSTRAP_SUDOERS_CENSUS"))?;
+     for line in text.lines() {
+         let line = line.trim();
+         if !(line.starts_with("#include") || line.starts_with("@include")) {
+             continue;
+         }
+         let parts: Vec<_> = line.split_whitespace().collect();
+         require(
+             parts.len() == 2 && parts[1].starts_with('/') && !parts[1].contains(['"', '\\']),
+             "BOOTSTRAP_SUDOERS_CENSUS",
+         )?;
+         match parts[0] {
+-            "#include" | "@include" => sudoers(parts[1], found)?,
++            "#include" | "@include" => sudoers(parts[1], found, uid, gid)?,
+             "#includedir" | "@includedir" => {
+                 let directory = parts[1].replacen(
+                     "/etc/",
+                     "/private/etc/",
+                     usize::from(parts[1].starts_with("/etc/")),
+                 );
+-                let dir = Dir::open(Path::new(&directory), 0)?;
++                let dir = Dir::open(Path::new(&directory), uid)?;
+                 for name in dir.names_bounded(256)? {
+-                    sudoers(&format!("{directory}/{name}"), found)?;
++                    sudoers(&format!("{directory}/{name}"), found, uid, gid)?;
+                 }
+             }
+             _ => return Err(Error::new("BOOTSTRAP_SUDOERS_CENSUS")),
+         }
+     }
+     Ok(())
+ }
++// Existing OS configuration is censused, never admitted as an installable artifact.
++// The kernel exposes decompressed logical bytes and interprets compression backing
++// attributes hidden from the default xattr view. Visible xattrs retain the same
++// strict whitelist as artifact inputs, including byte-for-byte stability checks.
++fn read_sudoers(dir: &Dir, name: &str, gid: u32, limit: u64) -> Result<Vec<u8>> {
++    use crate::fs::secure::{read_xattrs, reject_acl};
++    use std::os::{macos::fs::MetadataExt as _, unix::fs::MetadataExt as _};
++    let mut file = dir.open_file(name, libc::O_RDONLY, 0)?;
++    let check = |file: &std::fs::File, m: &std::fs::Metadata| -> Result<()> {
++        require(m.is_file() && m.nlink() == 1, "UNSAFE_TYPE")?;
++        require(m.uid() == dir.uid && m.gid() == gid, "UNSAFE_OWNER")?;
++        require(m.mode() & 0o7022 == 0, "UNSAFE_MODE")?;
++        require(m.st_flags() & !libc::UF_COMPRESSED == 0, "UNSAFE_FLAGS")?;
++        reject_acl(file)
++    };
++    let before = file.metadata()?;
++    check(&file, &before)?;
++    let xattrs = read_xattrs(&file)?;
++    require(before.len() <= limit, "SIZE_LIMIT")?;
++    let bounded = limit.checked_add(1).ok_or(Error::new("SIZE_LIMIT"))?;
++    let mut bytes = Vec::new();
++    (&mut file).take(bounded).read_to_end(&mut bytes)?;
++    require(bytes.len() as u64 <= limit, "SIZE_LIMIT")?;
++    require(bytes.len() as u64 == before.len(), "INPUT_CHANGED")?;
++    file.seek(SeekFrom::Start(0))?;
++    let mut second = Vec::new();
++    (&mut file).take(bounded).read_to_end(&mut second)?;
++    require(second.len() as u64 <= limit, "SIZE_LIMIT")?;
++    let after = file.metadata()?;
++    check(&file, &after)?;
++    require(
++        bytes == second
++            && before.dev() == after.dev()
++            && before.ino() == after.ino()
++            && before.mode() == after.mode()
++            && before.uid() == after.uid()
++            && before.gid() == after.gid()
++            && before.nlink() == after.nlink()
++            && before.len() == after.len()
++            && before.st_flags() == after.st_flags()
++            && before.mtime() == after.mtime()
++            && before.mtime_nsec() == after.mtime_nsec()
++            && before.ctime() == after.ctime()
++            && before.ctime_nsec() == after.ctime_nsec()
++            && xattrs == read_xattrs(&file)?,
++        "INPUT_CHANGED",
++    )?;
++    Ok(bytes)
++}
+ pub(super) fn service_census() -> Result<BTreeMap<String, String>> {
+     let dir = Dir::open(Path::new("/Library/LaunchDaemons"), 0)?;
+     let mut values = BTreeMap::new();
+     for name in dir.names_bounded(512)? {
+         if name == "ai.agent-deployd.plist" {
+             continue;
+         }
+         if name.ends_with(".plist") {
+             let path = format!("/Library/LaunchDaemons/{name}");
+             values.insert(path.clone(), hash_protected(&path, 1024 * 1024)?);
+         }
+     }
+     Ok(values)
+ }
++
++#[cfg(test)]
++#[path = "genesis_census_tests.rs"]
++mod tests;

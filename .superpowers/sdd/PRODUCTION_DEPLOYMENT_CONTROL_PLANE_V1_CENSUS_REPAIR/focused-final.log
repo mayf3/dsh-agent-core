@@ -1,0 +1,102 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.84s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 4 tests
+test bootstrap::genesis_install_census::tests::census_rejects_links_writable_metadata_flags_xattrs_acl_and_wrong_owner ... ok
+test bootstrap::genesis_install_census::tests::census_compressed_size_limit_is_logical_size ... ok
+test bootstrap::genesis_install_census::tests::compressed_sudoers_census_reads_logical_bytes_but_artifact_rejects ... ok
+test bootstrap::genesis_install_census::tests::census_compressed_include_graph_and_fail_closed_parser ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 86 filtered out; finished in 0.06s
+
+     Running unittests src/bin/agent-deploy-bootstrap.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_bootstrap-52f3ec928986e988)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-issuer.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_issuer-90e78bf9b57d6c3f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deploy-prepare.rs (packages/deployment-control-plane/target/debug/deps/agent_deploy_prepare-8840734468385c5d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployctl.rs (packages/deployment-control-plane/target/debug/deps/agent_deployctl-9de1eb1fa774123f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent-deployd.rs (packages/deployment-control-plane/target/debug/deps/agent_deployd-6bef577873b561d1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running test/authority.rs (packages/deployment-control-plane/target/debug/deps/authority-de0bf7c1dea05463)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-aae2efec8abdfa65)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running test/adoption/e2e.rs (packages/deployment-control-plane/target/debug/deps/e2e-aa89c3d70b82609c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running test/filesystem.rs (packages/deployment-control-plane/target/debug/deps/filesystem-8f03a6117b2d14c2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running test/genesis/plan.rs (packages/deployment-control-plane/target/debug/deps/genesis-f1c3a4e0d7126131)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+     Running test/queue.rs (packages/deployment-control-plane/target/debug/deps/queue-d0546310f49f6ec9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 30 filtered out; finished in 0.00s
+
+     Running test/registry/main.rs (packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.00s
+
+     Running test/socket.rs (packages/deployment-control-plane/target/debug/deps/socket-a8638e66ab23789c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running test/train.rs (packages/deployment-control-plane/target/debug/deps/train-28b27b17770a28c5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.00s
+
+     Running test/transactions.rs (packages/deployment-control-plane/target/debug/deps/transactions-f366065d401b8987)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+
