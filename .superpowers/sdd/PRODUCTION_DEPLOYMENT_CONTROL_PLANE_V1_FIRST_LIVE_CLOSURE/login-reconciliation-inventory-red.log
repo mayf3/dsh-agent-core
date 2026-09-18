@@ -1,0 +1,19 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.84s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+
+thread 'bootstrap::login_reconciliation::tests::safety::unexpected_attempt_state_cannot_be_ignored' (75226570) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:145:5:
+assertion failed: state::inventory(&d, &[]).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test bootstrap::login_reconciliation::tests::safety::unexpected_attempt_state_cannot_be_ignored ... FAILED
+
+failures:
+
+failures:
+    bootstrap::login_reconciliation::tests::safety::unexpected_attempt_state_cannot_be_ignored
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 113 filtered out; finished in 0.03s
+
+error: test failed, to rerun pass `--lib`

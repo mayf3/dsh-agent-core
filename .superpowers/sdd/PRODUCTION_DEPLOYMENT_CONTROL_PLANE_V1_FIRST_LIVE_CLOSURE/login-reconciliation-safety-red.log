@@ -1,0 +1,113 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/packages/deployment-control-plane)
+warning: constant `ATTEMPT` is never used
+  --> src/bootstrap/login_reconciliation.rs:11:7
+   |
+11 | const ATTEMPT:&str="/private/var/db/agent-deploy-bootstrap/genesis-65559dd-20260918-01";
+   |       ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `JOURNAL` is never used
+  --> src/bootstrap/login_reconciliation.rs:12:7
+   |
+12 | const JOURNAL:&str="/private/var/db/agent-deploy-bootstrap";
+   |       ^^^^^^^
+
+warning: constant `GRANT` is never used
+  --> src/bootstrap/login_reconciliation.rs:13:7
+   |
+13 | const GRANT:&str="login-reconciliation-grant.json";
+   |       ^^^^^
+
+warning: constant `ORIGINAL_INTENT` is never used
+  --> src/bootstrap/login_reconciliation.rs:18:7
+   |
+18 | const ORIGINAL_INTENT:&str="3ca4b44d4d3e418ea78df8ad6c0a04b7a650e0006c807ffd9f96441b0d10abc6";
+   |       ^^^^^^^^^^^^^^^
+
+warning: struct `Binding` is never constructed
+ --> src/bootstrap/login_reconciliation/binding.rs:6:19
+  |
+6 | pub(super) struct Binding {pub version:u32,pub host:String,pub attempt:String,pub pins:super::super::GenesisPins,pub public:BTreeMap<...
+  |                   ^^^^^^^
+
+warning: constant `RAW` is never used
+ --> src/bootstrap/login_reconciliation/binding.rs:7:18
+  |
+7 | pub(super) const RAW:&str=r###"{
+  |                  ^^^
+
+warning: function `load` is never used
+  --> src/bootstrap/login_reconciliation/binding.rs:71:15
+   |
+71 | pub(super) fn load()->crate::Result<Binding>{Ok(serde_json::from_str(RAW)?)}
+   |               ^^^^
+
+warning: function `digest` is never used
+  --> src/bootstrap/login_reconciliation/binding.rs:72:15
+   |
+72 | pub(super) fn digest()->String{crate::fs::file::sha(RAW.as_bytes())}
+   |               ^^^^^^
+
+warning: fields `pid`, `ppid`, `uid`, and `command` are never read
+ --> src/bootstrap/login_reconciliation/process.rs:3:28
+  |
+3 | pub(super) struct Row {pub pid:u32,pub ppid:u32,pub uid:u32,pub start:String,pub command:String}
+  |                   ---      ^^^         ^^^^         ^^^                          ^^^^^^^
+  |                   |
+  |                   fields in this struct
+  |
+  = note: `Row` has a derived impl for the trait `Clone`, but this is intentionally ignored during dead code analysis
+
+warning: `deployment-control-plane` (lib test) generated 9 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.58s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 14 tests
+
+thread 'bootstrap::login_reconciliation::tests::safety::child_requires_exact_live_parent_identity_and_start' (75214987) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:31:120:
+assertion failed: process::check(&[parent.clone(), own.clone()], 43, Some(&intent)).is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'bootstrap::login_reconciliation::tests::safety::foreign_reviewer_bootstrap_and_helper_processes_block' (75214990) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:27:132:
+assertion failed: process::check(&[own.clone(), other], 42, None).is_err()
+test bootstrap::login_reconciliation::tests::grant_scope_identity_binding_and_one_hour_bound_are_exact ... ok
+test bootstrap::login_reconciliation::tests::safety::child_requires_exact_live_parent_identity_and_start ... FAILED
+test bootstrap::login_reconciliation::tests::safety::foreign_reviewer_bootstrap_and_helper_processes_block ... FAILED
+test bootstrap::login_reconciliation::tests::malformed_grant_unknown_fields_cannot_be_ignored ... ok
+test bootstrap::login_reconciliation::tests::safety::missing_lock_is_not_created ... ok
+test bootstrap::login_reconciliation::tests::precondition_failure_produces_no_login_intent_or_spawn ... 
+thread 'bootstrap::login_reconciliation::tests::safety::empty_auth_and_wrong_identity_do_not_complete' (75214988) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:12:153:
+assertion failed: state::metadata(&f, d.uid, unsafe { libc::getegid() }, 0o600, true).is_err()
+ok
+
+thread 'bootstrap::login_reconciliation::tests::safety::existing_lock_identity_and_real_nonblocking_exclusion_are_required' (75214989) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:15:2:
+assertion failed: state::lock(&d, m.dev(), m.ino() + 1, true).is_err()
+
+thread 'bootstrap::login_reconciliation::tests::safety::private_metadata_is_checked_without_reading_contents' (75214992) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:8:126:
+assertion failed: state::metadata(&f, d.uid, unsafe { libc::getegid() }, 0o600, true).is_err()
+test bootstrap::login_reconciliation::tests::safety::existing_lock_identity_and_real_nonblocking_exclusion_are_required ... FAILED
+test bootstrap::login_reconciliation::tests::safety::empty_auth_and_wrong_identity_do_not_complete ... FAILED
+
+thread 'bootstrap::login_reconciliation::tests::safety::public_hash_drift_is_rejected' (75214993) panicked at src/bootstrap/../../test/login_reconciliation/safety.rs:4:119:
+assertion failed: state::pinned(&d, "old.json", &"0".repeat(64)).is_err()
+test bootstrap::login_reconciliation::tests::safety::private_metadata_is_checked_without_reading_contents ... FAILED
+test bootstrap::login_reconciliation::tests::safety::public_hash_drift_is_rejected ... FAILED
+test bootstrap::login_reconciliation::tests::safety::public_read_preserves_bytes_and_denies_symlink ... ok
+test bootstrap::login_reconciliation::tests::exactly_once_success_retains_original_history ... ok
+test bootstrap::login_reconciliation::tests::any_existing_budget_record_blocks_before_spawn ... ok
+test bootstrap::login_reconciliation::tests::failed_timeout_or_unknown_poststate_stays_consumed ... ok
+
+failures:
+
+failures:
+    bootstrap::login_reconciliation::tests::safety::child_requires_exact_live_parent_identity_and_start
+    bootstrap::login_reconciliation::tests::safety::empty_auth_and_wrong_identity_do_not_complete
+    bootstrap::login_reconciliation::tests::safety::existing_lock_identity_and_real_nonblocking_exclusion_are_required
+    bootstrap::login_reconciliation::tests::safety::foreign_reviewer_bootstrap_and_helper_processes_block
+    bootstrap::login_reconciliation::tests::safety::private_metadata_is_checked_without_reading_contents
+    bootstrap::login_reconciliation::tests::safety::public_hash_drift_is_rejected
+
+test result: FAILED. 8 passed; 6 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `--lib`
