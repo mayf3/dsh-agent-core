@@ -157,7 +157,10 @@ class Broker(unittest.TestCase):
                 b.run_once(h, Journal(), f)
 
     def test_unknown_submit_preserves_once_intent_no_changed_id_replay(self):
-        h = handoff(); f = Fake(h); j = Journal(); original = f.call
+        h = handoff()
+        f = Fake(h)
+        j = Journal()
+        original = f.call
         def call(*args):
             if args[0] == "submit": raise ValueError("OUTCOME_UNKNOWN_TRANSPORT")
             return original(*args)
@@ -189,6 +192,9 @@ class Broker(unittest.TestCase):
     def test_bad_handoff_rejects_before_intent_or_any_call(self):
         for key, value in [("operation_id", "other"), ("expires_at", 109), ("issued_at", 1),
             ("ctl_sha256", "wrong"), ("version", True), ("extra", True)]:
-            h = handoff(); h[key] = value; j = Journal(); f = Fake(h)
+            h = handoff()
+            h[key] = value
+            j = Journal()
+            f = Fake(h)
             with self.subTest(key=key), self.assertRaises(ValueError): b.run_once(h, j, f)
             self.assertFalse(j.rows); self.assertFalse(f.calls)

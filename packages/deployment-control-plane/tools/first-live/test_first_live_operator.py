@@ -146,7 +146,12 @@ class PhaseCuts(unittest.TestCase):
             files={k:{'sha256':digest(v),'size':len(v)} for k,v in blobs.items()},root_argv_allowlist=[],
             ordinary_argv_allowlist=[['/usr/bin/python3','-I','-S','-B','/private-fixture/first_live_launcher.py','--broker-exact']])
         class IO:
-            def __init__(self):self.events=[];self.copied={};self.saved={};self.time=100;self.auth=0
+            def __init__(self):
+                self.events=[]
+                self.copied={}
+                self.saved={}
+                self.time=100
+                self.auth=0
             def local_validate(self):self.events.append('validated')
             def claim(self):self.events.append('claim')
             def phase(self,name):

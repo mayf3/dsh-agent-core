@@ -331,7 +331,10 @@ class OperatorIO:
                 (gid==20 and mode=='0440' and dest==HANDOFF),'INSTALL_OWNERSHIP')
         require(type(dest) is str and dest.startswith('/') and '\0' not in dest,'INSTALL_DESTINATION')
         with tempfile.TemporaryFile(dir=self.journal) as source:
-            source.write(raw);source.flush();source.seek(0);m=os.fstat(source.fileno())
+            source.write(raw)
+            source.flush()
+            source.seek(0)
+            m=os.fstat(source.fileno())
             require(stat.S_ISREG(m.st_mode) and m.st_uid==502 and m.st_nlink==0 and
                 stat.S_IMODE(m.st_mode)==0o600 and m.st_size==len(raw) and sha(source.read())==digest,'INSTALL_INPUT_FD')
             source.seek(0)
