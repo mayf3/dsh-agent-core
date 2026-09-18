@@ -148,7 +148,7 @@ fn nonblocking(stream: &impl std::os::fd::AsRawFd) -> Result<()> {
         "FIRST_LIVE_CHILD_UNKNOWN",
     )
 }
-fn drain(stream: &mut impl Read, bytes: &mut Vec<u8>) -> Result<bool> {
+fn drain(stream: &mut impl Read, bytes: &mut Vec<u8>, limit: usize) -> Result<bool> {
     let mut buffer = [0u8; 8192];
     // Bound each drain as well as total bytes, so continuous output cannot
     // starve the other stream, child status or wall-clock deadline.
@@ -156,7 +156,7 @@ fn drain(stream: &mut impl Read, bytes: &mut Vec<u8>) -> Result<bool> {
         match stream.read(&mut buffer) {
             Ok(0) => return Ok(true),
             Ok(n) => {
-                require(bytes.len() + n <= 1024 * 1024, "FIRST_LIVE_CHILD_LIMIT")?;
+                require(bytes.len() + n <= limit, "FIRST_LIVE_CHILD_LIMIT")?;
                 bytes.extend_from_slice(&buffer[..n]);
             }
             Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => return Ok(false),
@@ -186,8 +186,8 @@ fn capture(
     let mut status = None;
     loop {
         require(Instant::now() < deadline, "FIRST_LIVE_CHILD_UNKNOWN")?;
-        let out_eof = drain(&mut stdout, &mut out)?;
-        let err_eof = drain(&mut stderr, &mut err)?;
+        let out_eof = drain(&mut stdout, &mut out, 1024 * 1024 - err.len())?;
+        let err_eof = drain(&mut stderr, &mut err, 1024 * 1024 - out.len())?;
         if status.is_none() {
             status = child
                 .try_wait()

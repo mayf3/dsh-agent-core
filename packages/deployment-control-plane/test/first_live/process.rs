@@ -124,3 +124,12 @@ fn production_runner_rejects_nonroot_before_touching_fixed_tools() {
         matches!(run(Tool::Launchctl, "not-a-digest", &[], None, 5), Err(e) if e.code() == "FIRST_LIVE_REQUIRES_ROOT")
     );
 }
+
+#[test]
+fn stdout_and_stderr_share_the_frozen_one_mib_budget() {
+    let result = collect(
+        command("printf '%524289s' x; printf '%524289s' y >&2"),
+        Duration::from_secs(2),
+    );
+    assert!(matches!(result, Err(e) if e.code() == "FIRST_LIVE_CHILD_LIMIT"));
+}
