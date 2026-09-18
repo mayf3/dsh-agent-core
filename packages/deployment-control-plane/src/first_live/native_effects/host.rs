@@ -21,7 +21,7 @@ mod inspect;
 
 mod owned;
 
-// Integration scaffold: no host receipt can yet be constructed or published.
+// A host receipt is constructed only after the actual finite closure checks.
 pub(in crate::first_live) struct VerifiedHost {
     receipt_sha256: String,
 }
@@ -29,10 +29,6 @@ impl VerifiedHost {
     pub(in crate::first_live) fn receipt_sha256(&self) -> &str {
         &self.receipt_sha256
     }
-}
-
-pub(super) fn implementation_ready() -> crate::Result<()> {
-    Err(crate::Error::new("HOST_IMPLEMENTATION_INCOMPLETE"))
 }
 
 mod census;

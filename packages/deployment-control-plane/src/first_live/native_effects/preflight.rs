@@ -60,7 +60,6 @@ pub(super) fn prepare() -> Result<Prepared> {
     use crate::fs::{file::snapshot, secure::Dir};
     use std::{os::unix::fs::MetadataExt, path::Path};
     require(unsafe { libc::geteuid() } == 0, "FIRST_LIVE_REQUIRES_ROOT")?;
-    super::host::implementation_ready()?;
     let executable = "/usr/local/libexec/agent-deployd/agent-deployd";
     require(
         std::env::current_exe()? == Path::new(executable),
