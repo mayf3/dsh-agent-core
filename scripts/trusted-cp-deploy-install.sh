@@ -30,8 +30,12 @@
 # never modify it; its own workspace/runtime stays 502-writable as before.
 #
 # Usage (run as root):
-#   sudo ./scripts/trusted-cp-deploy-install.sh [REPO_SRC] [HARNESS_SRC]
-#   REPO_SRC    default: the repo this script lives in (feature worktree)
+#   sudo ./scripts/trusted-cp-deploy-install.sh REPO_SRC [HARNESS_SRC] [MAIN_REPO]
+#   (env REQUIRED: EXPECTED_SOURCE_SHA, EXPECTED_SOURCE_TREE; env OPTIONAL:
+#    GENERATION_LABEL_SHA; --selftest-provenance [SCRATCH_REPO] = no-root selftest)
+#   REPO_SRC    REQUIRED, explicit-only (TRUSTED_CP_PACK_INPUT_PROVENANCE_V1):
+#               defaulting it to the installer location silently repacked the
+#               OLD live app under a new generation label (2026-09-18 incident)
 #   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness
 #
 # Verifies at the end: every symlink in the trusted tree resolves INSIDE the
@@ -83,6 +87,204 @@ acquire_global_deploy_mutex() {
     > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
   GLOBAL_LOCK_ACQUIRED_BY_ME=1
 }
+
+# =============================================================================
+# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1 — pack-source provenance guard
+# =============================================================================
+# Fixes the 2026-09-18 incident class: an installer invocation from the
+# INSTALLED live app defaulted REPO_SRC to that live app, so a fresh
+# generation label was packed from stale live bytes (cfc2729-labeled
+# generation shipped ~4dc598be-era broker bytes; the 19:33 rebuild
+# reproduced the identical stale fingerprint).
+#
+# Guards implemented here (all BEFORE any production mutation):
+#   P1 REPO_SRC explicit-only (no default derived from installer location)
+#   P2 EXPECTED_SOURCE_SHA / EXPECTED_SOURCE_TREE required from the caller
+#   P3 REPO_SRC must be a git checkout whose HEAD/tree equal the expectations
+#      and whose tree is clean
+#   P4 REPO_SRC must NOT live inside the trusted live root or its
+#      backup/failed/rollback generations (those are pack OUTPUTS, never
+#      pack INPUTS)
+#   P5 TOCTOU: pre-pack and post-pack source stamps must match
+#   P6 pack-provenance receipt persisted into the new app closure
+# Selftest (no root, scratch fixtures only):
+#   TRUSTED_CP_SELFTEST_PROVENANCE=1 [SCRATCH_REPO] ./trusted-cp-deploy-install.sh
+
+gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
+ok_msg() { echo "PROVENANCE_OK $1"; }
+
+pack_source_stamp() {
+  # $1 = repo src; prints "head=<sha> tree=<sha> clean=<yes|no>"
+  local repo="$1"
+  local head tree dirty
+  head="$(git -C "$repo" rev-parse HEAD 2>/dev/null)" || return 1
+  tree="$(git -C "$repo" rev-parse 'HEAD^{tree}' 2>/dev/null)" || return 1
+  dirty="$(git -C "$repo" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+  echo "head=$head tree=$tree clean=$([ "$dirty" = "0" ] && echo yes || echo no)"
+}
+
+reject_trusted_live_source() {
+  # $1 = repo src realpath, $2 = trusted root; pack input must never be the
+  # live closure or any of its backup/failed/rollback generations.
+  local rp="$1" tr="$2"
+  case "$rp" in
+    "$tr"|"$tr"/*|"$tr".*|"$tr"-*)
+      echo "  rejected: pack source resolves inside the trusted live root family: $rp" >&2
+      return 1 ;;
+  esac
+  return 0
+}
+
+validate_pack_source() {
+  # $1 = REPO_SRC, $2 = TRUSTED_ROOT; env: EXPECTED_SOURCE_SHA,
+  # EXPECTED_SOURCE_TREE, GENERATION_LABEL_SHA (optional).
+  # Sets REPO_SRC_REALPATH, PRE_PACK_HEAD, PRE_PACK_TREE, PRE_PACK_CLEAN.
+  local repo="$1" tr="$2" rp stamps head tree clean
+  [ -n "$repo" ] || gate_fail "P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)"
+  [ -d "$repo" ] || gate_fail "P3 REPO_SRC_NOT_FOUND: $repo"
+  rp="$(cd "$repo" && pwd -P)"
+  reject_trusted_live_source "$rp" "$tr" || gate_fail "P4 LIVE_TRUSTED_APP_REJECTED_AS_SOURCE"
+  [ -d "$rp/.git" ] || git -C "$rp" rev-parse --git-dir >/dev/null 2>&1 || gate_fail "P3 REPO_SRC_NOT_A_GIT_CHECKOUT: $rp"
+  stamps="$(pack_source_stamp "$rp")" || gate_fail "P3 REPO_SRC_GIT_PROBE_FAILED: $rp"
+  head="$(echo "$stamps" | awk '{print $1}' | sed 's/^head=//')"
+  tree="$(echo "$stamps" | awk '{print $2}' | sed 's/^tree=//')"
+  clean="$(echo "$stamps" | awk '{print $3}' | sed 's/^clean=//')"
+  [ -n "${EXPECTED_SOURCE_SHA:-}" ] || gate_fail "P2 EXPECTED_SOURCE_SHA_REQUIRED (caller must pin the source HEAD)"
+  [ -n "${EXPECTED_SOURCE_TREE:-}" ] || gate_fail "P2 EXPECTED_SOURCE_TREE_REQUIRED (caller must pin the source tree)"
+  [ "$head" = "$EXPECTED_SOURCE_SHA" ] || gate_fail "P3 SOURCE_HEAD_MISMATCH: pack input HEAD $head != EXPECTED_SOURCE_SHA $EXPECTED_SOURCE_SHA"
+  [ "$tree" = "$EXPECTED_SOURCE_TREE" ] || gate_fail "P3 SOURCE_TREE_MISMATCH: pack input tree $tree != EXPECTED_SOURCE_TREE $EXPECTED_SOURCE_TREE"
+  [ "$clean" = "yes" ] || gate_fail "P3 SOURCE_DIRTY: pack input worktree must be clean"
+  if [ -n "${GENERATION_LABEL_SHA:-}" ] && [ "$GENERATION_LABEL_SHA" != "$head" ]; then
+    gate_fail "P6 SOURCE_LABEL_MISMATCH: label $GENERATION_LABEL_SHA != validated HEAD $head"
+  fi
+  REPO_SRC_REALPATH="$rp"
+  PRE_PACK_HEAD="$head"; PRE_PACK_TREE="$tree"; PRE_PACK_CLEAN="$clean"
+}
+
+packed_app_provenance() {
+  # $1 = packed app dir; prints the packed-tree aggregate sha and the
+  # load-bearing broker fingerprints into the provenance receipt file ($2).
+  local appdir="$1" receipt="$2"
+  local aggregate wfsha pkgsha
+  aggregate="$(find "$appdir" -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')"
+  wfsha=""; pkgsha=""
+  [ -f "$appdir/packages/broker/src/capabilities/workflow.js" ]     && wfsha="$(shasum -a 256 "$appdir/packages/broker/src/capabilities/workflow.js" | awk '{print $1}')"
+  [ -f "$appdir/packages/broker/package.json" ]     && pkgsha="$(shasum -a 256 "$appdir/packages/broker/package.json" | awk '{print $1}')"
+  cat > "$receipt" << JSON
+{
+  "provenance": "TRUSTED_CP_PACK_INPUT_PROVENANCE_V1",
+  "repo_src_realpath": "$REPO_SRC_REALPATH",
+  "source_head_sha": "$PRE_PACK_HEAD",
+  "source_tree_sha": "$PRE_PACK_TREE",
+  "source_clean": "$PRE_PACK_CLEAN",
+  "generation_label_sha": "${GENERATION_LABEL_SHA:-}",
+  "source_label_matches_pack_input": "$([ -z "${GENERATION_LABEL_SHA:-}" ] || [ "${GENERATION_LABEL_SHA:-}" = "$PRE_PACK_HEAD" ] && echo YES || echo NO)",
+  "main_repo_realpath": "${MAIN_REPO_REALPATH:-}",
+  "main_repo_head_sha": "${MAIN_REPO_HEAD:-}",
+  "packed_app_tree_sha256": "$aggregate",
+  "broker_workflow_js_sha256": "$wfsha",
+  "broker_package_json_sha256": "$pkgsha"
+}
+JSON
+  echo "$aggregate"
+}
+
+# Read-only operator mode: validate a pack source against expected coordinates
+# without any mutation (also the acceptance vehicle for the real candidate).
+#   ./trusted-cp-deploy-install.sh --validate-source REPO_SRC
+if [ "${1:-}" = "--validate-source" ]; then
+  gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
+  REPO_SRC_CANDIDATE="${2:-}"
+  TRUSTED_ROOT=/usr/local/libexec/agent-core
+  validate_pack_source "$REPO_SRC_CANDIDATE" "$TRUSTED_ROOT"
+  echo "PROVENANCE_VALIDATE=PASS"
+  echo "  realpath=$REPO_SRC_REALPATH"
+  echo "  head=$PRE_PACK_HEAD"
+  echo "  tree=$PRE_PACK_TREE"
+  echo "  clean=$PRE_PACK_CLEAN"
+  exit 0
+fi
+
+if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" = "1" ] || [ "${1:-}" = "--selftest-provenance" ]; then
+  # No-root selftest: scratch git fixtures only; never touches /usr/local.
+  SCRATCH_REPO="${1:-}"
+  gate_fail() { echo "SELFTEST_PROVENANCE_FAIL $1" >&2; exit 1; }
+  ok_msg() { echo "SELFTEST_PROVENANCE_OK $1"; }
+  T="$(mktemp -d /tmp/trusted-cp-prov-selftest-XXXXXX)"
+  # OLD fixture: pre-V4 broker bytes (mirrors the stale 4dc598be-era input)
+  git init -q "$T/old" && mkdir -p "$T/old/scripts" "$T/old/packages/broker/src/capabilities"
+  echo 'demo' > "$T/old/scripts/demo-home.mjs"
+  echo '{"name":"app"}' > "$T/old/package.json"
+  echo '// legacy broker capability (pre-V4)' > "$T/old/packages/broker/src/capabilities/workflow.js"
+  echo '{"name":"broker"}' > "$T/old/packages/broker/package.json"
+  git -C "$T/old" add -A && git -C "$T/old" -c user.name=t -c user.email=t@t commit -qm old
+  OLD_SHA="$(git -C "$T/old" rev-parse HEAD)"; OLD_TREE="$(git -C "$T/old" rev-parse HEAD^{tree})"
+  # NEW fixture: V4 broker bytes (mirrors cfc2729)
+  git init -q "$T/new" && mkdir -p "$T/new/scripts" "$T/new/packages/broker/src/capabilities"
+  echo 'demo' > "$T/new/scripts/demo-home.mjs"
+  echo '{"name":"app"}' > "$T/new/package.json"
+  cat > "$T/new/packages/broker/src/capabilities/workflow.js" << 'JS'
+// broker capability with V4 global instances passthrough
+export const QUERY_KEYS = ['lifecycle', 'status', 'currentExecutorType'];
+export const ERR_INVALID_EXECUTOR = 'invalid_current_executor_type';
+export const RESPONSE_FIELD = 'current_executor_type';
+JS
+  echo '{"name":"broker"}' > "$T/new/packages/broker/package.json"
+  git -C "$T/new" add -A && git -C "$T/new" -c user.name=t -c user.email=t@t commit -qm new
+  NEW_SHA="$(git -C "$T/new" rev-parse HEAD)"; NEW_TREE="$(git -C "$T/new" rev-parse HEAD^{tree})"
+  TRUSTED_ROOT="$T/trusted-root"   # scratch; only used by the rejection check
+
+EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT"
+  ok_msg "T2 explicit REPO_SRC + matching SHA/tree accepted"
+
+  unset EXPECTED_SOURCE_SHA
+  if ( EXPECTED_SOURCE_SHA="" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
+    gate_fail "T1 implicit/absent pack source must fail"
+  fi
+  ok_msg "T1 missing EXPECTED_SOURCE_SHA fails closed (implicit pack source eliminated)"
+
+  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" GENERATION_LABEL_SHA="$OLD_SHA" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
+    gate_fail "T3 label/HEAD mismatch must fail"
+  fi
+  ok_msg "T3 SOURCE_LABEL_MISMATCH fails before mutation"
+
+  echo dirty > "$T/new/packages/broker/src/capabilities/dirty.txt"
+  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
+    gate_fail "T4 dirty source must fail"
+  fi
+  rm "$T/new/packages/broker/src/capabilities/dirty.txt"
+  ok_msg "T4 dirty pack input fails closed"
+
+  mkdir -p "$T/installed-app/scripts"
+  cp "$0" "$T/installed-app/scripts/trusted-cp-deploy-install.sh" 2>/dev/null || true
+  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/installed-app" validate_pack_source "$T/installed-app" "$T/trusted-root" ) 2>/dev/null; then
+    gate_fail "T5 trusted live app family must be rejected as pack source"
+  fi
+  ok_msg "T5 live trusted app rejected as pack source"
+
+  EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new"     validate_pack_source "$T/new" "$TRUSTED_ROOT"
+  PRE_H="$PRE_PACK_HEAD"
+  echo more >> "$T/new/packages/broker/src/capabilities/workflow.js"
+  git -C "$T/new" add -A && git -C "$T/new" -c user.name=t -c user.email=t@t commit -qm drift --quiet
+  POST_H="$(pack_source_stamp "$T/new" | sed -n 's/^head=//p')"
+  [ "$PRE_H" != "$POST_H" ] || gate_fail "T6 fixture drift did not change HEAD"
+  [ "$PRE_H" != "$POST_H" ] && ok_msg "T6 TOCTOU stamp pair detects source drift between pre/post pack"
+
+  # T7/T8: pack simulation from NEW must carry V4 bytes into the packed output,
+  # and the packed workflow.js must differ from the stale pre-V4 fingerprint.
+  PACK="$T/packed-app"; mkdir -p "$PACK/packages" "$PACK/scripts"
+  cp "$T/new/package.json" "$PACK/package.json"
+  cp "$T/new/packages/broker/package.json" "$PACK/packages/broker/package.json" 2>/dev/null || { mkdir -p "$PACK/packages/broker"; cp "$T/new/packages/broker/package.json" "$PACK/packages/broker/package.json"; }
+  cp -R "$T/new/packages/broker/src" "$PACK/packages/broker/src"
+  grep -q "currentExecutorType" "$PACK/packages/broker/src/capabilities/workflow.js"     && grep -q "invalid_current_executor_type" "$PACK/packages/broker/src/capabilities/workflow.js"     && grep -q "current_executor_type" "$PACK/packages/broker/src/capabilities/workflow.js"     || gate_fail "T7 packed artifact lost V4 bytes"
+  PW=$(shasum -a 256 "$PACK/packages/broker/src/capabilities/workflow.js" | awk '{print $1}')
+  [ "$PW" != "d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee" ]     || gate_fail "T8 packed broker bytes equal the stale pre-V4 fingerprint"
+  ok_msg "T7/T8 packed artifact carries V4 bytes and differs from the stale fingerprint"
+
+  rm -rf "$T"
+  echo "SELFTEST_PROVENANCE=PASS"
+  exit 0
+fi
 
 if [ "${TRUSTED_CP_SELFTEST_LOCK:-}" = "1" ]; then
   # Offline lock/trap regression (B6): standalone success, ordinary failure,
@@ -143,11 +345,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # backups nor modifies Runtime/Router/Scheduler/Kernel/product semantics.
 BACKUP_OPS="$SCRIPT_DIR/agent-core-backup-ops.sh"
 SOURCE_GIT_STAMP="$SCRIPT_DIR/lib/trusted-source-git-stamp.sh"
-REPO_SRC="${1:-$(dirname "$SCRIPT_DIR")}"
+# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: REPO_SRC is explicit-only. The removed
+# default (dirname of this script) made an invocation from the INSTALLED live
+# app repack the live app's own stale bytes under a fresh generation label.
+REPO_SRC="${1:-}"
 HARNESS_SRC="${2:-/Users/yanfenma/workspace/github/deepseek-harness}"
 # The main repo holds the dev node_modules (third-party deps); a worktree
-# does not check node_modules out.
-MAIN_REPO="${3:-$(dirname "$REPO_SRC")/dsh-agent-core}"
+# does not check node_modules out. Its provenance is recorded in the pack
+# receipt; it is never used as the app source.
+MAIN_REPO="${3:-}"
 TRUSTED_ROOT=/usr/local/libexec/agent-core
 HELPER=/usr/local/libexec/dsh-agent-spawn-helper
 AUTHSVC_UID=505
@@ -161,6 +367,17 @@ echo "  repo source  : $REPO_SRC"
 echo "  harness src  : $HARNESS_SRC"
 
 # ---- 0. sanity -------------------------------------------------------------
+# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: pack-source validation runs BEFORE the
+# backup/mv/install mutations below (fail-closed preflight, not a cutover-time check).
+validate_pack_source "$REPO_SRC" "$TRUSTED_ROOT"
+echo "  provenance  : HEAD=$PRE_PACK_HEAD tree=$PRE_PACK_TREE clean=$PRE_PACK_CLEAN realpath=$REPO_SRC_REALPATH"
+if [ -n "$MAIN_REPO" ]; then
+  MAIN_REPO_REALPATH="$(cd "$MAIN_REPO" 2>/dev/null && pwd -P)" || MAIN_REPO_REALPATH="$MAIN_REPO"
+  reject_trusted_live_source "$MAIN_REPO_REALPATH" "$TRUSTED_ROOT"     || { echo "ERROR: MAIN_REPO resolves inside the trusted live root family" >&2; exit 2; }
+  MAIN_REPO_HEAD="$(git -C "$MAIN_REPO" rev-parse HEAD 2>/dev/null || echo unknown)"
+else
+  MAIN_REPO_REALPATH=""; MAIN_REPO_HEAD="unknown"
+fi
 [ -f "$REPO_SRC/scripts/demo-home.mjs" ] || { echo "ERROR: bad REPO_SRC: $REPO_SRC" >&2; exit 2; }
 [ -f "$HARNESS_SRC/apps/cli/lib/bin.js" ] || { echo "ERROR: bad HARNESS_SRC: $HARNESS_SRC" >&2; exit 2; }
 id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2; exit 2; }
@@ -334,6 +551,24 @@ done
 # Agent existence authority closure (AGENT_DEFINITION_CONFIG_V1): the formal
 # Agent Definition package MUST be in the trusted app closure, and the
 # removed agent-registry package MUST NOT be (no second Agent authority).
+# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: post-pack TOCTOU stamp. The source
+# must be byte-identical (same HEAD/tree, still clean) to the pre-pack stamp;
+# drift here means the packed closure may not correspond to the validated
+# source, so the install fails before any service/restart mutation.
+POST_PACK_STAMP="$(pack_source_stamp "$REPO_SRC")"
+POST_PACK_HEAD="$(echo "$POST_PACK_STAMP" | awk '{print $1}' | sed 's/^head=//')"
+POST_PACK_TREE="$(echo "$POST_PACK_STAMP" | awk '{print $2}' | sed 's/^tree=//')"
+POST_PACK_CLEAN="$(echo "$POST_PACK_STAMP" | awk '{print $3}' | sed 's/^clean=//')"
+if [ "$POST_PACK_HEAD" != "$PRE_PACK_HEAD" ] || [ "$POST_PACK_TREE" != "$PRE_PACK_TREE" ] \
+   || [ "$POST_PACK_CLEAN" != "$PRE_PACK_CLEAN" ]; then
+  echo "ERROR: SOURCE_CHANGED_DURING_PACK: pre=($PRE_PACK_HEAD/$PRE_PACK_TREE/$PRE_PACK_CLEAN) post=($POST_PACK_HEAD/$POST_PACK_TREE/$POST_PACK_CLEAN)" >&2
+  exit 2
+fi
+echo "  ok: pack input source unchanged during pack (TOCTOU stamp match)"
+PACKED_APP_TREE_SHA256="$(packed_app_provenance "$(pwd)/app" "$(pwd)/app/pack-provenance.json")"
+echo "  packed app tree sha256: $PACKED_APP_TREE_SHA256"
+echo "  pack provenance receipt: app/pack-provenance.json"
+
 if [ ! -f "app/packages/agent-definition/package.json" ] \
    || [ ! -d "app/packages/agent-definition/src" ]; then
   echo "ERROR: app closure missing packages/agent-definition (Agent Definition authority)" >&2
