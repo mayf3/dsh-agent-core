@@ -134,5 +134,5 @@ pub(super) fn run_within_plan(plan: &Value, run: &Value) -> Result<()> {
     )
 }
 #[cfg(test)]
-#[path = "../../test/verification/canary_plan.rs"]
+#[path = "../../test/adoption/verification/canary_plan.rs"]
 mod tests;
