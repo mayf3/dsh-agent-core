@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "created_at": "2026-09-18T07:18:06.316273+00:00",
+  "runtime_observation": {
+    "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/ordinary-census/svc-workflow-compatibility.json",
+    "sha256": "d61237be8da794d213ed66438f24ac1e22befb1e22fb42222f236e8beae2d15a"
+  },
+  "accepted_upstream_source": "07d888205001708080aa50720e428c6f1c775c7b",
+  "observed_upstream_source": "f6a74001b71af106777045b596b30c3a7e99934d",
+  "accepted_ancestor_exit": 0,
+  "source_changed_paths": [
+    "contracts/workflow-http/v1/changelog.md",
+    "contracts/workflow-http/v1/contract.md",
+    "contracts/workflow-http/v1/errors.json",
+    "contracts/workflow-http/v1/manifest.json",
+    "contracts/workflow-http/v1/openapi.yaml",
+    "docs/reports/M1B_DANGLING_INSTANCE_CANCEL_CLOSURE_V1.md",
+    "docs/specs/SVC_WORKFLOW_DANGLING_INSTANCE_CANCEL_V1.md",
+    "src/store/postgres/workflow_instance_repository/cancel_transaction.rs",
+    "tests/21_instance_cancel_archive.rs"
+  ],
+  "required_implementation_files": [
+    {
+      "path": "src/http/handlers/health.rs",
+      "accepted_sha256": "e0ce6e1649316694e1f6b313e3d65b7f023eef778b60d1d791260bdacffa3ab7",
+      "observed_source_sha256": "e0ce6e1649316694e1f6b313e3d65b7f023eef778b60d1d791260bdacffa3ab7",
+      "unchanged": true
+    },
+    {
+      "path": "build.rs",
+      "accepted_sha256": "ff14f9297cf5a97c1c1df2f47b9164ca81c1bcc0b9e8e5d1e26c4f12269cdeac",
+      "observed_source_sha256": "ff14f9297cf5a97c1c1df2f47b9164ca81c1bcc0b9e8e5d1e26c4f12269cdeac",
+      "unchanged": true
+    },
+    {
+      "path": "src/http/dto.rs",
+      "accepted_sha256": "721ddcf644e76ec3836a94f67bf444f856d1070284bc69de32bc6502ae47efd0",
+      "observed_source_sha256": "721ddcf644e76ec3836a94f67bf444f856d1070284bc69de32bc6502ae47efd0",
+      "unchanged": true
+    },
+    {
+      "path": "src/http/mod.rs",
+      "accepted_sha256": "f857a55762eb3f9180c38cbaf781f2814548d8d0d53c248c88a6a499f8a4676e",
+      "observed_source_sha256": "f857a55762eb3f9180c38cbaf781f2814548d8d0d53c248c88a6a499f8a4676e",
+      "unchanged": true
+    },
+    {
+      "path": "src/http/handlers/coordinator_domains.rs",
+      "accepted_sha256": "160b4fc69360cb5ae8408ba471714d33e8a2c726705366b6e3b6ee04049ccd58",
+      "observed_source_sha256": "160b4fc69360cb5ae8408ba471714d33e8a2c726705366b6e3b6ee04049ccd58",
+      "unchanged": true
+    },
+    {
+      "path": "src/application/provisioning/mod.rs",
+      "accepted_sha256": "969be645c5e9e22333afc5b38541974fbcdaf57f23f91883af873b3280434f67",
+      "observed_source_sha256": "969be645c5e9e22333afc5b38541974fbcdaf57f23f91883af873b3280434f67",
+      "unchanged": true
+    },
+    {
+      "path": "src/http/handlers/instances.rs",
+      "accepted_sha256": "708573cec0ba45d1fa9d8ca996e1b28af14840ac8e63733a31370c4280e18db5",
+      "observed_source_sha256": "708573cec0ba45d1fa9d8ca996e1b28af14840ac8e63733a31370c4280e18db5",
+      "unchanged": true
+    },
+    {
+      "path": "src/application/workflow_instance/query_types.rs",
+      "accepted_sha256": "447b50632e906df25222c4317b850eacb0ce27dbd7898084d275c878bdd0035d",
+      "observed_source_sha256": "447b50632e906df25222c4317b850eacb0ce27dbd7898084d275c878bdd0035d",
+      "unchanged": true
+    },
+    {
+      "path": "src/store/postgres/workflow_instance_repository/query_global_instances.rs",
+      "accepted_sha256": "5343f414d1428930ff997e943b6d0414bc129f5551471b7660de7bb889cb2684",
+      "observed_source_sha256": "5343f414d1428930ff997e943b6d0414bc129f5551471b7660de7bb889cb2684",
+      "unchanged": true
+    }
+  ],
+  "installed_broker_target_chain": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "sha256": "857a6103bf69e947c71bdbf9a22f3b5fe0e5e1ff569529514aeef8f08190f692"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/entry.js",
+      "sha256": "5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js",
+      "sha256": "17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/index.js",
+      "sha256": "37501c48ebeea3cac34f2f5892ab095567174ebe2f5de45c6914dce9573bad8f"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/targets.js",
+      "sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7"
+    }
+  ],
+  "release_provenance": {
+    "path": "/Users/yanfenma/.local/services/svc-workflow/releases/f6a74001b71af106777045b596b30c3a7e99934d/provenance.json",
+    "sha256": "f5fa730b110b9bbed3f468150d448dde2367aaa3e854f4dfe9299569f74d56e0",
+    "contents": {
+      "source_sha": "f6a74001b71af106777045b596b30c3a7e99934d",
+      "tree_state": "clean",
+      "binary_sha256": "4dc498396f18fd7571c80726f8c08f638903353c508774beee10ba14ca1b2a98",
+      "embedded_git_sha": "f6a74001b71af106777045b596b30c3a7e99934d",
+      "embedded_tree_state": "clean",
+      "embedded_build_timestamp": "2026-09-18T05:29:28Z",
+      "frozen_by": "OWNER A_PRIME_EXACT_ARTIFACT_REFREEZE (2026-09-18)",
+      "seal_method": "byte copy (cp -p) from /tmp/svcwf-bundle/target/release/svc-workflow; NO compile/link/transform"
+    }
+  },
+  "binary_copies": [
+    {
+      "path": "/Users/yanfenma/.local/services/svc-workflow/releases/f6a74001b71af106777045b596b30c3a7e99934d/svc-workflow",
+      "sha256": "4dc498396f18fd7571c80726f8c08f638903353c508774beee10ba14ca1b2a98"
+    },
+    {
+      "path": "/private/tmp/svcwf-bundle/target/release/svc-workflow",
+      "sha256": "4dc498396f18fd7571c80726f8c08f638903353c508774beee10ba14ca1b2a98"
+    }
+  ],
+  "contract_manifest": {
+    "serial": "V1-2026-09-18",
+    "contract_id": "WORKFLOW_HTTP_CONTRACT_V1",
+    "contract_version": "1.8.0",
+    "contract_scope": "runtime",
+    "title": "Workflow Runtime HTTP Contract V1 (Active Agent list documentation closure)",
+    "owner_repository": "svc-workflow",
+    "owner_head_sha": "1e5a6057d000a115637dad3f0324a4f534dd2417",
+    "owner_tree_sha": "ed24da30a726c96cfb3aa0cf8c9576bb00eeed4e",
+    "owner_semantics": "Owner head and tree pin the accepted AAL-V2 + M1B implementation base the documented wire behavior belongs to. The implementation delivery commits are recorded separately in the implementation history and review records.",
+    "digest_algorithm": "SHA-256",
+    "digest_spec_version": "1.0.0",
+    "bundle_file_set": [
+      "changelog.md",
+      "compatibility.md",
+      "conformance/run.sh",
+      "contract.md",
+      "errors.json",
+      "fixtures/assistance-escalate.json",
+      "fixtures/assistance-request.json",
+      "fixtures/assistance-resolve.json",
+      "fixtures/create-request.json",
+      "manifest.json",
+      "openapi.yaml"
+    ],
+    "schema_digest": "ea2b3e1ca940feabbe3e0bb9bc0b765e5d3971002094f6fca98d6996a558223d",
+    "bundle_digest": "778edee5b7bb794221838146d365a79c3b792eb2ebdd01aed9be0acc8ad49ed5",
+    "compatibility_policy": "strict_backward_compatible_except_accepted_graph_diagnostics",
+    "created_at": "2026-09-18T00:00:00Z",
+    "author": "IMPLEMENTATION_AGENT",
+    "description": "Documents the accepted SVC_WORKFLOW_ACTIVE_AGENT_LIST_V2 wire behavior on the global instance list: optional currentExecutorType query filter (HUMAN|AGENT, 422 invalid_current_executor_type otherwise) and the additive nullable current_executor_type summary member (GlobalInstanceSummary). Documentation-only; no new product semantics."
+  },
+  "limitations": [
+    "ordinary non-atomic snapshot; not privileged integrity or permission proof",
+    "current health/version plus installed and retained build equality; no authenticated business query or domain-create mutation",
+    "must recheck selected target, binary, version and readiness before later Broker operation",
+    "svc-workflow remains outside DCP target enrollment; stale old deployment ledger row retained"
+  ]
+}

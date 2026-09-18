@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "scope": "OFFLINE_SCHEMA_AND_PUBLIC_RECEIPT_MAPPING_ONLY",
+  "baseline_readback_sha256": "5168000958f4778e1a9adfa06db1ddee576f890c204c292d4c7a384edf7e52cf",
+  "source_commit": "bcfd929b7c760947df9c6f03a830a9e8a0b16651",
+  "fresh_protected_preflight_required": true,
+  "rows": {
+    "installation_receipt_sha256": {
+      "path": "/private/var/db/agent-deploy-bootstrap/genesis-65559dd-20260918-01/steps/installation.json",
+      "sha256": "2d3b0e23b20aaaf3187a40a813e10098c1c0a639a61810f7e82bec7dca62bbb7",
+      "evidence": "protected public export in readback-result.json"
+    },
+    "service_sha256": {
+      "path": "/private/var/db/agent-deployd/service.json",
+      "sha256": "bd7351e49a0b674917cb5b6cea52522186d2055b7dbacda31b7a1e1bf59c50d2",
+      "evidence": "protected public export in readback-result.json"
+    },
+    "registry_sha256": {
+      "path": "/private/var/db/agent-deployd/registry/state-00000000000000000001.json",
+      "sha256": "74e98530ee6689b1ca5c822b4719791a86f3cdd60e2a53ad250f7210af6844f1",
+      "evidence": "protected public export in readback-result.json"
+    },
+    "local_trust_sha256": {
+      "path": "/private/var/db/agent-deployd/local-trust.json",
+      "sha256": "d7d01af3aa0f80b02529410f03a1c0c12818fd977a21ea40281a45d111916dd4",
+      "evidence": "protected public export in readback-result.json"
+    },
+    "issuer_policy_sha256": {
+      "path": "/private/var/db/agent-deployd/issuer-policy.json",
+      "sha256": "6fd96a3c2b037ea9ab27935751bd093d8c499fd74abb2c93576ea4e17be8777a",
+      "evidence": "protected steps/013-result.json new_files, matches canonical reviewed supervisor-policy.issuer_policy"
+    },
+    "issuer_bindings": {
+      "path": "/private/var/db/agent-deployd/issuer-bindings.json",
+      "expected_state": "ABSENT",
+      "evidence": "exact genesis implementation creates no issuer-bindings file; signed package support_files has only review-output-schema.json; installation new_files has no bindings entry",
+      "fresh_protected_absence_required": true,
+      "transition": "exclusive first publication after observed lifecycle proof; never replace a supposed prior digest"
+    },
+    "login_receipt": {
+      "path": "/private/var/db/agent-deploy-bootstrap/genesis-65559dd-20260918-01/login-reconciliation-result.json",
+      "expected_state": "NOT_YET_EXECUTED",
+      "sha256": null,
+      "transition": "exact future one-use login grant and real completed helper result required; original UNKNOWN retained; no placeholder hash or historical PASS"
+    }
+  },
+  "corrections": [
+    "installation.json belongs to attempt/steps, not attempt root",
+    "initial-registry.json is package input, not installed registry state",
+    "issuer-bindings.json has no prior installed digest; require absence and publish once"
+  ],
+  "no_keys_or_auth_read": true,
+  "production_mutation": false
+}

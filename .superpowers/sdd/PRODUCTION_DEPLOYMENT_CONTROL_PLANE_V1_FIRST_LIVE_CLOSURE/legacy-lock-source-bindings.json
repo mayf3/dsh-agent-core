@@ -1,0 +1,21 @@
+{
+  "scope": "read-only source protocol evidence; not current lock state",
+  "files": [
+    {
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/scripts/trusted-cp-deploy-install.sh",
+      "sha256": "b275b38c3de761f0f7f0ddc4e10225b3b88f67065eb9287c5937aa9196c56d06"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/deployment-artifacts/scheduler-watchdog-routing-v1/run-authorized-transaction.sh",
+      "sha256": "0ff9c4d9ca49faee3b433324308c01a47733423a3fc5d27dc0544f35336ed1d5"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/operator-scripts/scheduler-watchdog-production-freeze-sudo.sh",
+      "sha256": "e8ca4a0ce17a50640fc895a4a61c992bf11ae253762b75b2b3313f2729015698"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/artifacts/agent-core-session-trace-v2-restored-v1-r2/agent_core_session_trace_v2_root_transaction.py",
+      "sha256": "72dacfe1990c5de0dab9d7d28f21da990ccf115e3c4877272b5baf94dd09878d"
+    }
+  ]
+}

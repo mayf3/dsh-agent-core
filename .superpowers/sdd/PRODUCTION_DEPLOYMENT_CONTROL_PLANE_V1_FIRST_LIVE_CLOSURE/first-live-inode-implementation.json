@@ -1,0 +1,41 @@
+{
+  "source_commit": "91584ea",
+  "focused_tests": 14,
+  "real_fault_exit_windows": 6,
+  "test_scope": "nonroot private temporary files and child processes only",
+  "evidence": {
+    "inode-red.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-red.log",
+      "sha256": "0d2e8d94ee32de6a543cc4b4c82d5e439d542cd18c5c77e805c78b601590aa09"
+    },
+    "inode-expiry-red.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-expiry-red.log",
+      "sha256": "c29bd832199b4327f8136e02d6d80f06091cb2bf0eb6b3be38a2a6f5d720ac99"
+    },
+    "inode-recovery-assertion-red.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-recovery-assertion-red.log",
+      "sha256": "b0b5c5be2374973b3df497a14f23abc1405710cba0aadb3db314a921cd2bbc8a"
+    },
+    "inode-recovery-green.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-recovery-green.log",
+      "sha256": "458dc82561a2ad9bd00da4ad27c9a58449e078ac839d1f01dc30372fb0ea71fd"
+    },
+    "inode-expanded.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-expanded.log",
+      "sha256": "add4296043cb7fe340aaed62805af7f212edf67427c7159547334e5a73dc6c7e"
+    },
+    "inode-owner-mode-red.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-owner-mode-red.log",
+      "sha256": "625fb2bf180d5020d88248cdd54cb2b4f63ad0664585353d0ff2aafb8c021ce8"
+    },
+    "inode-final.log": {
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/inode-final.log",
+      "sha256": "752798cd05d3baeec6533bac52a6d0dea2522e7324fc7f92f8b85191724f1b93"
+    }
+  },
+  "not_valid_red": "inode-recovery-red.log was a compile visibility error, excluded from assertion RED evidence",
+  "unknown_rule": "missing durable target intent or interrupted recovery is preserved as UNKNOWN; no blind replay or assumed cleanup",
+  "integrated_operator_complete": false,
+  "independent_source_review": "PENDING",
+  "production_mutation": false
+}
