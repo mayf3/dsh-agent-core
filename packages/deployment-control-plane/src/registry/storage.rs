@@ -33,6 +33,10 @@ pub(super) fn initialize(root: &Dir) -> Result<()> {
     Ok(())
 }
 pub(super) fn lock(root: &Dir) -> Result<File> {
+    require(
+        root.file.metadata()?.mode() & 0o7777 == 0o700,
+        "UNSAFE_MODE",
+    )?;
     let file = root.open_file("registry.lock", libc::O_RDWR, 0)?;
     validate(&file, root.uid, false)?;
     require(file.metadata()?.mode() & 0o7777 == 0o600, "UNSAFE_MODE")?;

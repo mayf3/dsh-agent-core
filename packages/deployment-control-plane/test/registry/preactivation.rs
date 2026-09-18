@@ -428,3 +428,64 @@ fn pre_entropy_validation_is_read_only_and_requires_pristine_state() {
     write(&c.roots.root, "queue.db", b"existing", 0o600);
     assert!(fixture::validate_pristine(&c.roots, &c.guard).is_err());
 }
+
+// Permanent regressions derived from the independent RB-01/02/03 probes.
+#[test]
+fn independent_old_reviewer_key_uppercase_alias_must_not_become_active() {
+    let mut c = Case::new();
+    let mut old = catalog("old").keys["local-reviewer"].clone();
+    old.public_key = old.public_key.to_uppercase();
+    c.fresh.keys.insert("local-reviewer".into(), old);
+    assert_eq!(
+        fixture::prepare(
+            &c.roots,
+            &c.guard,
+            &c.fresh,
+            &key("local-authority", "fresh"),
+            &key(PRODUCER, "fresh"),
+            bindings()
+        )
+        .err()
+        .unwrap()
+        .code(),
+        "CUSTODY_KEYSET"
+    );
+}
+
+#[test]
+fn independent_operational_residue_must_stop_pristine_validation() {
+    let mut accepted = vec![];
+    for name in ["adoptions", "policy-cache.json", "policy-cache.tmp"] {
+        let c = Case::new();
+        if name == "adoptions" {
+            let d = c.roots.root.mkdir(name).unwrap();
+            write(&d, "existing-observation.json", b"{}", 0o600);
+        } else {
+            write(&c.roots.root, name, b"existing", 0o600);
+        }
+        if fixture::validate_pristine(&c.roots, &c.guard).is_ok() {
+            accepted.push(name);
+        }
+    }
+    assert!(
+        accepted.is_empty(),
+        "pristine accepted operational residue: {accepted:?}"
+    );
+}
+#[test]
+fn independent_bridge_must_retain_exact_registry_directory_mode_gate() {
+    use std::os::unix::fs::PermissionsExt;
+    let c = Case::new();
+    c.publish();
+    std::fs::set_permissions(
+        c._temp.path().join("registry"),
+        std::fs::Permissions::from_mode(0o755),
+    )
+    .unwrap();
+    let d = c.roots.root.child("registry").unwrap();
+    assert_eq!(storage::initialize(&d).unwrap_err().code(), "UNSAFE_MODE");
+    assert!(
+        fixture::load(&c.roots, &c.fresh).is_err(),
+        "bridge accepted registry0755 which prior open gate rejects"
+    );
+}

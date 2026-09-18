@@ -223,27 +223,35 @@ fn keyset(old: &Catalog, fresh: &Catalog) -> Result<String> {
         fresh.revision == CATALOG_REVISION && old.keys.len() == 6 && fresh.keys.len() == 6,
         "CUSTODY_KEYSET",
     )?;
-    let old_values: std::collections::BTreeSet<_> =
-        old.keys.values().map(|k| &k.public_key).collect();
+    let old_values = old
+        .keys
+        .values()
+        .map(|k| public_bytes(&k.public_key))
+        .collect::<Result<std::collections::BTreeSet<_>>>()?;
     let mut new_values = std::collections::BTreeSet::new();
     for (id, role) in crate::issuer::custody::ROLES {
         let a = old.keys.get(id).ok_or(Error::new("CUSTODY_KEYSET"))?;
         let b = fresh.keys.get(id).ok_or(Error::new("CUSTODY_KEYSET"))?;
+        let bytes = public_bytes(&b.public_key)?;
         require(
             a.role == role
                 && b.role == role
                 && a.scopes == b.scopes
-                && !old_values.contains(&b.public_key)
-                && new_values.insert(&b.public_key),
+                && !old_values.contains(&bytes)
+                && new_values.insert(bytes),
             "CUSTODY_KEYSET",
         )?;
-        let bytes: [u8; 32] = hex::decode(&b.public_key)
-            .map_err(|_| Error::new("INVALID_KEY"))?
-            .try_into()
-            .map_err(|_| Error::new("INVALID_KEY"))?;
-        ed25519_dalek::VerifyingKey::from_bytes(&bytes).map_err(|_| Error::new("INVALID_KEY"))?;
     }
     digest(&fresh.keys)
+}
+
+fn public_bytes(value: &str) -> Result<[u8; 32]> {
+    let bytes: [u8; 32] = hex::decode(value)
+        .map_err(|_| Error::new("INVALID_KEY"))?
+        .try_into()
+        .map_err(|_| Error::new("INVALID_KEY"))?;
+    ed25519_dalek::VerifyingKey::from_bytes(&bytes).map_err(|_| Error::new("INVALID_KEY"))?;
+    Ok(bytes)
 }
 
 #[cfg(test)]
