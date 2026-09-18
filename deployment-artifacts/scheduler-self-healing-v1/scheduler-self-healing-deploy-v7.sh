@@ -399,7 +399,8 @@ KEYS
     echo "DO_NOT_REENABLE_HR_RETRY_AUTO=true (until POSTDEPLOY_VERIFICATION=PASS)"
     echo "COMMITTED_AT=$(date -u +%FT%TZ)"
   } | tee "$RB_TMP/deploy-receipt.txt"
-  cp "$RB_TMP/deploy-receipt.txt" "$STATE_ROOT/receipts/deploy-v7.receipt" 2>/dev/null || true
+  cp "$RB_TMP/deploy-receipt.txt" "$STATE_ROOT/receipts/deploy-v7.receipt" \
+    || { echo "FATAL: receipt write failed — deployment SUCCEEDED but receipt only in $RB_TMP" >&2; exit 1; }
   finish_ok
 }
 
