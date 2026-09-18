@@ -108,9 +108,17 @@ acquire_global_deploy_mutex() {
 #   P5 TOCTOU: pre-pack and post-pack source stamps must match
 #   P6 pack-provenance receipt persisted into the new app closure
 # Selftest (no root, scratch fixtures only):
-#   TRUSTED_CP_SELFTEST_PROVENANCE=1 [SCRATCH_REPO] ./trusted-cp-deploy-install.sh
+#   TRUSTED_CP_SELFTEST_PROVENANCE=1 ./trusted-cp-deploy-install.sh
 
 gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
+if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ] && [ -z "${1:-}" ]; then
+  echo "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)" >&2
+  exit 1
+fi
+if [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ]; then
+  [ -n "${EXPECTED_SOURCE_SHA:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_SHA_REQUIRED" >&2; exit 1; }
+  [ -n "${EXPECTED_SOURCE_TREE:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_TREE_REQUIRED" >&2; exit 1; }
+fi
 ok_msg() { echo "PROVENANCE_OK $1"; }
 
 pack_source_stamp() {
@@ -125,10 +133,13 @@ pack_source_stamp() {
 
 reject_trusted_live_source() {
   # $1 = repo src realpath, $2 = trusted root; pack input must never be the
-  # live closure or any of its backup/failed/rollback generations.
-  local rp="$1" tr="$2"
+  # live closure or any of its backup/failed/rollback generations. The trusted
+  # root is realpath-resolved too (macOS /tmp -> /private/tmp class of
+  # divergences must not bypass the family gate).
+  local rp="$1" tr="$2" trp
+  trp="$(cd "$tr" 2>/dev/null && pwd -P || echo "$tr")"
   case "$rp" in
-    "$tr"|"$tr"/*|"$tr".*|"$tr"-*)
+    "$tr"|"$tr"/*|"$tr".*|"$trp"|"$trp"/*|"$trp".*)
       echo "  rejected: pack source resolves inside the trusted live root family: $rp" >&2
       return 1 ;;
   esac
@@ -239,9 +250,12 @@ EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new
 
   unset EXPECTED_SOURCE_SHA
   if ( EXPECTED_SOURCE_SHA="" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
-    gate_fail "T1 implicit/absent pack source must fail"
+    gate_fail "T1a missing EXPECTED_SOURCE_SHA must fail"
   fi
-  ok_msg "T1 missing EXPECTED_SOURCE_SHA fails closed (implicit pack source eliminated)"
+  ok_msg "T1a missing EXPECTED_SOURCE_SHA fails closed (P2)"
+  T1OUT="$( bash "$0" 2>&1 || true )"
+  echo "$T1OUT" | grep -q "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN" || gate_fail "T1b no-arg invocation must fail via P1 IMPLICIT_PACK_SOURCE_FORBIDDEN (got: $T1OUT)"
+  ok_msg "T1b no-arg installer invocation fails via P1 before any mutation"
 
   if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" GENERATION_LABEL_SHA="$OLD_SHA" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
     gate_fail "T3 label/HEAD mismatch must fail"
@@ -255,12 +269,11 @@ EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new
   rm "$T/new/packages/broker/src/capabilities/dirty.txt"
   ok_msg "T4 dirty pack input fails closed"
 
-  mkdir -p "$T/installed-app/scripts"
-  cp "$0" "$T/installed-app/scripts/trusted-cp-deploy-install.sh" 2>/dev/null || true
-  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/installed-app" validate_pack_source "$T/installed-app" "$T/trusted-root" ) 2>/dev/null; then
-    gate_fail "T5 trusted live app family must be rejected as pack source"
-  fi
-  ok_msg "T5 live trusted app rejected as pack source"
+  mkdir -p "$T/trusted-root/app/packages/broker/src/capabilities"
+  echo '// stale live bytes' > "$T/trusted-root/app/packages/broker/src/capabilities/workflow.js"
+  T5MSG="$( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/trusted-root/app/packages/broker/src/capabilities" validate_pack_source "$T/trusted-root/app/packages/broker/src/capabilities" "$T/trusted-root" 2>&1 )" || true
+  echo "$T5MSG" | grep -q "P4 LIVE_TRUSTED_APP_REJECTED_AS_SOURCE" || gate_fail "T5 must fail via the P4 live-root family gate (got: $T5MSG)"
+  ok_msg "T5 trusted live app family rejected via the P4 gate"
 
   EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new"     validate_pack_source "$T/new" "$TRUSTED_ROOT"
   PRE_H="$PRE_PACK_HEAD"
