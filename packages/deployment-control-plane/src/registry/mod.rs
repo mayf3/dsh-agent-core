@@ -1,5 +1,6 @@
 //! Deployment obligations only. Original business Goal completion is never inferred here.
 mod closure;
+mod dependencies;
 mod storage;
 mod types;
 mod validation;
@@ -105,6 +106,7 @@ impl Registry {
             closure: None,
         };
         rows.insert(id.clone(), row.clone());
+        dependencies::validate(&rows, id)?;
         self.commit(&history, rows)?;
         Ok(row)
     }
@@ -114,6 +116,20 @@ impl Registry {
         Self::rows(&self.history()?)
             .remove(goal)
             .ok_or(Error::new("UNKNOWN_ENROLLMENT"))
+    }
+    /// Resolve only explicit signed child mappings from one authenticated locked snapshot.
+    pub(crate) fn resolved_dependencies(&self, goal: &str) -> Result<Vec<String>> {
+        valid_id(goal)?;
+        let _lock = storage::lock(&self.root)?;
+        let rows = Self::rows(&self.history()?);
+        dependencies::validate(&rows, goal)?;
+        Ok(rows[goal]
+            .enrollment
+            .payload
+            .prior_dependencies
+            .iter()
+            .map(|p| p.effective_goal().to_owned())
+            .collect())
     }
     /// Initial PENDING enrollment publishes an authenticated empty complete snapshot.
     pub fn snapshot(&self) -> Result<Signed<ProducerSnapshot>> {
@@ -153,6 +169,7 @@ impl Registry {
         let _lock = storage::lock(&self.root)?;
         let history = self.history()?;
         let mut rows = Self::rows(&history);
+        dependencies::validate(&rows, &ready.payload.goal_id)?;
         let row = rows
             .get_mut(&ready.payload.goal_id)
             .ok_or(Error::new("UNKNOWN_ENROLLMENT"))?;

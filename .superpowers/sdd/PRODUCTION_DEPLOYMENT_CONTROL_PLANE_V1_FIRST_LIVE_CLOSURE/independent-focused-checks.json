@@ -1,0 +1,50 @@
+{
+  "reviewer": "dcp_first_live_binding_review",
+  "time_unix": 1789706126,
+  "base": "78daf3699346f6f68264921443d42552d9157dae",
+  "staged_tree": "dcfc5c84b663da8b1713627757d29503d89aba99",
+  "runs": [
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "bc2f6f8b47839776946a737be213186e704584a69c7d46f5713f19675b1c6c13",
+      "filter": "issuer::owner_policy::",
+      "exit_code": 0,
+      "output": "\nrunning 4 tests\ntest issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding ... ok\ntest issuer::owner_policy::tests::exact_goal_selection_cannot_fallback_or_change_slots_contract_or_enrollment ... ok\ntest issuer::owner_policy::tests::old_owner_canonical_bytes_and_lease_source_binding_are_unchanged ... ok\ntest issuer::owner_policy::tests::source_map_rejects_duplicate_unknown_mixed_and_unbounded_shapes ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "bc2f6f8b47839776946a737be213186e704584a69c7d46f5713f19675b1c6c13",
+      "filter": "issuer::issuance::",
+      "exit_code": 0,
+      "output": "\nrunning 6 tests\ntest issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft ... ok\ntest issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... ok\ntest issuer::issuance::tests::partial_protected_publication_resumes_exact_prefix_without_accepting_mismatch ... ok\ntest issuer::issuance::tests::restart_after_each_publication_boundary_renews_without_losing_exact_evidence ... ok\ntest issuer::issuance::tests::retained_partial_and_failed_outputs_count_before_any_new_write ... ok\ntest issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 91 filtered out; finished in 0.82s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "bc2f6f8b47839776946a737be213186e704584a69c7d46f5713f19675b1c6c13",
+      "filter": "issuer::policy::",
+      "exit_code": 0,
+      "output": "\nrunning 10 tests\ntest issuer::policy::tests::backwards_clock_cannot_return_a_future_lease ... ok\ntest issuer::policy::tests::cache_and_lock_metadata_and_unknown_temporary_fail_closed ... ok\ntest issuer::policy::tests::cache_signed_by_wrong_issuer_or_with_wrong_source_binding_is_rejected ... ok\ntest issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease ... ok\ntest issuer::policy::tests::native_policy_entry_refuses_fixture_identity_before_effects ... ok\ntest issuer::policy::tests::owner_revision_is_independent_and_revocation_cannot_be_hidden ... ok\ntest issuer::policy::tests::profile_switches_use_global_monotonic_epochs_without_old_profile_replay ... ok\ntest issuer::policy::tests::restart_and_expiry_renewal_keep_monotonic_issuance_epochs ... ok\ntest issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... ok\ntest issuer::policy::tests::semantic_config_change_without_owner_revision_is_equivocation ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 87 filtered out; finished in 0.86s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "bc2f6f8b47839776946a737be213186e704584a69c7d46f5713f19675b1c6c13",
+      "filter": "registry::adapter_tests::mapped_child",
+      "exit_code": 0,
+      "output": "\nrunning 1 test\ntest registry::adapter_tests::mapped_child_needs_real_current_pass_finalize_and_producer_closure ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.37s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "bc2f6f8b47839776946a737be213186e704584a69c7d46f5713f19675b1c6c13",
+      "filter": "queue::issuance::",
+      "exit_code": 0,
+      "output": "\nrunning 1 test\ntest queue::issuance::tests::desired_issuance_reuses_exact_intent_and_cannot_invent_dependency_pass ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.01s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/registry-fec8d32ae93b2e42",
+      "binary_sha256": "4773c20927cefb766692a4a4202fababe2ad7d6a58750a801a87efa7c8341d28",
+      "filter": "dependencies::",
+      "exit_code": 0,
+      "output": "\nrunning 5 tests\ntest dependencies::child_identity_scope_digest_duplicates_and_cycles_fail_closed ... ok\ntest dependencies::exact_child_mapping_preserves_parent_and_activates_only_child_dependency ... ok\ntest dependencies::legacy_dependency_signatures_and_ledger_bytes_roundtrip_unchanged ... ok\ntest dependencies::mapped_child_ready_cannot_downgrade_to_historical_dependency ... ok\ntest dependencies::missing_or_altered_child_cannot_enter_registry ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.53s\n\n"
+    }
+  ]
+}

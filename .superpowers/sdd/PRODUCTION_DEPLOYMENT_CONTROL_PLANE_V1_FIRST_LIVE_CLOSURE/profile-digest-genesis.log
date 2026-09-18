@@ -1,0 +1,17 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running test/genesis/plan.rs (packages/deployment-control-plane/target/debug/deps/genesis-f1c3a4e0d7126131)
+
+running 10 tests
+test freezes_disabled_future_operations_without_claiming_protected_state ... ok
+test rejects_unpinned_review_schema_bytes ... ok
+test review_contents_are_pinned_without_becoming_an_execution_grant ... ok
+test rejects_independent_pin_drift ... ok
+test rejects_path_substitution_and_parent_components ... ok
+test rejects_tampered_missing_and_extra_artifacts ... ok
+test rejects_malformed_refs_and_self_reported_readiness ... ok
+test rejects_incomplete_reordered_and_unknown_steps ... ok
+test rejects_activation_self_signed_owner_and_fixture_keys ... ok
+test rejects_shared_privileged_review_or_caller_identities ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

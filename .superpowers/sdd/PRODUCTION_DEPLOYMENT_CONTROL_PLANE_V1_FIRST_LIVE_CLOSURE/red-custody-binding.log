@@ -1,0 +1,24 @@
+   Compiling deployment-control-plane v0.1.0 (/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.87s
+     Running unittests src/lib.rs (packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c)
+
+running 1 test
+test issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding ... FAILED
+
+failures:
+
+---- issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding stdout ----
+
+thread 'issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding' (74933942) panicked at src/issuer/../../test/issuer/owner_policy.rs:230:5:
+assertion `left != right` failed
+  left: "58156520857c241bd88aa176c1cf4d769e3d0ae522c2614cfe67ed49943b8f6b"
+ right: "58156520857c241bd88aa176c1cf4d769e3d0ae522c2614cfe67ed49943b8f6b"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 96 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`
