@@ -70,6 +70,9 @@ impl SocketAncestorPlan {
     }
 }
 impl SocketAncestorPlan {
+    pub(crate) fn check_retained_parent(&self, parent: &Dir) -> Result<()> {
+        check_physical(parent, self)
+    }
     pub(crate) fn bind(&self, denial_receipt: &str) -> Result<SocketAncestor> {
         crate::trust::valid_digest(denial_receipt)?;
         Ok(SocketAncestor {
