@@ -11,7 +11,12 @@ amendment_ref: >-
   narrows C-026 applicability to recovery/fence-domain results, preserves
   AGENT_CORE_LARK_UX_PHASE1_V3 CTR-DISPLAY-003 for normal Lark delivery
   results, and adds three exact implementation/test paths to §14.
-amendment_status: proposed
+amendment_status: accepted
+amendment_reviewed_head: 5f7fa6c0d8f7e1ada5d8ece40b466a6b67fbdd1d
+amendment_reviewed_spec_sha256: df27fa4692a860520876be0e53b9cd4c0ff5b67568f1672bb144b9d8fa7a11b0
+amendment_independent_review: PASS
+amendment_accepted_by: mayf3
+amendment_accepted_date: 2026-09-18
 amendment_owner_decision: >-
   OWNER_DECISION=ACCEPT_NARROW_AMENDMENT, review-gated; acceptance may be
   finalized only after an independent exact-head semantic review returns
