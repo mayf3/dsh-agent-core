@@ -1,0 +1,116 @@
+{
+  "external_evidence": [
+    {
+      "bytes": 890,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/tailscale-provenance/comparison.json",
+      "sha256": "e55d64b5b7426371454697515dce89801a6321a5b9187d4c34c689e83ae9f40f"
+    },
+    {
+      "bytes": 1209,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/tailscale-provenance/independent-provenance-verification.json",
+      "sha256": "f81331bcb6dcb06f7bdf318b631939b367bee935e7c3fc1fec0062b05693dc4e"
+    },
+    {
+      "bytes": 1075,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/tailscale-provenance/independent-macho-readback.json",
+      "sha256": "dd608d29329782c1a31879c2f3cea934352784bd6f5ea4bcf4ff617fed3d9017"
+    },
+    {
+      "bytes": 1699,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/tailscale-static-candidate-v1/manifest.json",
+      "sha256": "b4ac483e12ce4c173424c384d67bb55f09ffe9ab16aaa0c1abb7bf4de2956c5f"
+    },
+    {
+      "bytes": 775,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/ordinary-census/disabled-state-20260918-01.json",
+      "sha256": "acd3aa3ca1b1b7850e85148efa24758f7b036ec9040298c01c29ac8e6236d117"
+    },
+    {
+      "bytes": 439,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/ordinary-census/broker-slot-fresh-20260918-01.json",
+      "sha256": "f088429130dddec6afaa0ca55898cced0ce8dd2865de254142834ef918c8c872"
+    },
+    {
+      "bytes": 4955,
+      "path": "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/first-live-preparation/static-inputs-v4/index.json",
+      "sha256": "d7849dd1312ff93a272dc9d316fad08387e4b1e5425a307fd79cf3fdfd5e3f4e"
+    }
+  ],
+  "native_checkpoint": "2753ab3",
+  "original_attempt": "genesis-65559dd-20260918-01",
+  "original_login_outcome": "UNKNOWN_RETAINED",
+  "parent_source_before_index": "0d424800ac796452a0a902eb9ac51715b8e88a33",
+  "production_mutation_this_preparation": false,
+  "remaining": [
+    "finite current root-role closure",
+    "custody bridge design disposition and implementation",
+    "phase ordering and reviewer login successor",
+    "whole source verification and independent review",
+    "exact future operation package and Owner authority",
+    "executed Watchdog prerequisite and Broker production loop"
+  ],
+  "reports": [
+    {
+      "bytes": 3107,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-bind-records-source-review.md",
+      "sha256": "a383128d40796e0501f192198494fb7de87964910de411a5d0ffb43eb9968309"
+    },
+    {
+      "bytes": 5972,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-domain-signal-source-review.md",
+      "sha256": "1094b8fb7fa00942dc0c4e1e6b81e1d0279a2bd1a54c13bec981e47660907e46"
+    },
+    {
+      "bytes": 5192,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-sudo-source-review.md",
+      "sha256": "c571217024337a8a60755e656b26198027f049504f2b2b4239b2d8ed10df54c1"
+    },
+    {
+      "bytes": 2360,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-issuer-deadline-source-review.md",
+      "sha256": "98a9bffc04c30e95e576f1f83c5b62ed8b9ef7da6c3e4736a1cb30c0f1e48a0b"
+    },
+    {
+      "bytes": 8012,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-negative-edges-source-review.md",
+      "sha256": "f48f545642556b5b8f57a31fd0f6ab4e8b98c43fd9fa50fd723dfe78d8540e9c"
+    },
+    {
+      "bytes": 9774,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-host-custody-scope-review.md",
+      "sha256": "b4abb2104519c940b1dc4a2649a5af23103d9b2f291eb1dd980cfe74343d49ed"
+    },
+    {
+      "bytes": 9280,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-legacy-process-handover-review.md",
+      "sha256": "8260ecbf6f14eafe0da6e6f8536dac890ca7723893f7a6bb481743d59c8c7cae"
+    },
+    {
+      "bytes": 7395,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-root-role-inventory.md",
+      "sha256": "ca11ed7f7e5b5f0ff8e420551faf964c28b19437e8a3aa969292d225aba4af75"
+    },
+    {
+      "bytes": 5339,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-tailscale-boundary-proposal.md",
+      "sha256": "275423adce826d329cc479ed40b5374d4e4d5231942c9516af090be4e19bb718"
+    },
+    {
+      "bytes": 6185,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-tailscale-provenance-review.md",
+      "sha256": "9ce2b68792acf9baf3e4a2078ea3f91a4fe852247050933e03456fac93e6d07e"
+    },
+    {
+      "bytes": 13385,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-custody-transition-design.md",
+      "sha256": "60a81ff78cbff93d4f05316ac9fa66b5adf09340b3f8bdea53d1e7e6159c758b"
+    },
+    {
+      "bytes": 13047,
+      "path": "/Users/yanfenma/workspace/worktrees/production-deployment-control-plane-v1-impl/.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/first-live-custody-sequencing-inspection.md",
+      "sha256": "e388c0ffa2027460b25ae1dc845a000bdca2750f12389ad361a2328407d5da29"
+    }
+  ],
+  "state": "SOURCE_COMPONENTS_REVIEWED_WHOLE_OPERATION_NOT_READY",
+  "version": 1
+}
