@@ -47,6 +47,33 @@ test('V3 durable unknown reservation and fence survive a store reopen', () => {
   }
 })
 
+test('V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later', () => {
+  const originalNow = Date.now
+  let wallNow = 1_000_000
+  Date.now = () => wallNow
+  try {
+    const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-frozen-deadline' })
+    const handle = store.mintTurnExecution({
+      agentId: 'agt_frozen_deadline', processGeneration: 1, sessionId: 'main',
+    })
+    const frozenHardDeadlineAt = wallNow + 30_000
+    store.markAdmitted(handle, {
+      eventWatermarkSeq: 0, promptRequestId: 'frozen-deadline', deadlineAtWallMs: frozenHardDeadlineAt,
+    })
+
+    wallNow += 90_000
+    store.markOutcomeUnknown(handle, {
+      source: 'turn_deadline_exceeded', deadlineAtWallMs: wallNow + 30_000,
+    })
+
+    const snapshot = store.getTurnReconciliation(handle).snapshot
+    assert.equal(snapshot.deadlineAtWallMs, frozenHardDeadlineAt)
+    assert.equal(snapshot.hardDeadlineAt, frozenHardDeadlineAt)
+  } finally {
+    Date.now = originalNow
+  }
+})
+
 test('V3 restart mints a fresh runtime epoch while old durable handles remain queryable', () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-epoch-'))
   const persistenceFile = join(root, 'turn-recovery.json')
