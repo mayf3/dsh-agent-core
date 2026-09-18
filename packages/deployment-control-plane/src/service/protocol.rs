@@ -80,7 +80,20 @@ fn exact(stream: &mut UnixStream, mut buffer: &mut [u8], deadline: Instant) -> R
     Ok(())
 }
 pub fn read_frame(stream: &mut UnixStream, limit: usize) -> Result<Vec<u8>> {
-    let deadline = Instant::now() + Duration::from_secs(1);
+    read_frame_with_budget(stream, limit, Duration::from_secs(1))
+}
+// Only the outbound issuer client waits for a supervised review. Inbound
+// requests still use read_frame's one-second total budget, including slow data.
+pub(crate) fn read_frame_with_budget(
+    stream: &mut UnixStream,
+    limit: usize,
+    budget: Duration,
+) -> Result<Vec<u8>> {
+    require(
+        !budget.is_zero() && budget <= Duration::from_secs(900),
+        "READ_BUDGET",
+    )?;
+    let deadline = Instant::now() + budget;
     let mut size = [0; 4];
     exact(stream, &mut size, deadline)?;
     let length = u32::from_be_bytes(size) as usize;
@@ -105,4 +118,50 @@ pub fn client(stream: &mut UnixStream, request: &Request) -> Result<serde_json::
         stream,
         8 * 1024 * 1024,
     )?)?)
+}
+
+#[cfg(test)]
+mod deadline_tests {
+    use super::*;
+    #[test]
+    fn issuer_budget_does_not_weaken_length_depth_or_total_deadline() {
+        let (mut a, mut b) = UnixStream::pair().unwrap();
+        b.write_all(&4097u32.to_be_bytes()).unwrap();
+        assert!(
+            matches!(read_frame_with_budget(&mut a,4096,Duration::from_secs(2)),Err(e) if e.code()=="FRAME_LIMIT")
+        );
+        let (mut a, mut b) = UnixStream::pair().unwrap();
+        let raw = format!("{}0{}", "[".repeat(17), "]".repeat(17));
+        b.write_all(&(raw.len() as u32).to_be_bytes()).unwrap();
+        b.write_all(raw.as_bytes()).unwrap();
+        assert!(
+            matches!(read_frame_with_budget(&mut a,4096,Duration::from_secs(2)),Err(e) if e.code()=="NESTING_LIMIT")
+        );
+        let (mut a, mut b) = UnixStream::pair().unwrap();
+        b.write_all(&20u32.to_be_bytes()).unwrap();
+        let writer = std::thread::spawn(move || {
+            for _ in 0..10 {
+                std::thread::sleep(Duration::from_millis(20));
+                let _ = b.write_all(b" ");
+            }
+        });
+        let start = Instant::now();
+        assert!(
+            matches!(read_frame_with_budget(&mut a,4096,Duration::from_millis(60)),Err(e) if e.code()=="READ_TIMEOUT")
+        );
+        assert!(start.elapsed() < Duration::from_secs(1));
+        writer.join().unwrap();
+    }
+    #[test]
+    fn no_unbounded_budget_and_default_inbound_budget_is_retained() {
+        let (mut a, _b) = UnixStream::pair().unwrap();
+        for budget in [Duration::ZERO, Duration::from_secs(901), Duration::MAX] {
+            assert!(
+                matches!(read_frame_with_budget(&mut a,4096,budget),Err(e) if e.code()=="READ_BUDGET")
+            );
+        }
+        let start = Instant::now();
+        assert!(matches!(read_frame(&mut a,4096),Err(e) if e.code()=="READ_TIMEOUT"));
+        assert!(start.elapsed() < Duration::from_secs(2));
+    }
 }
