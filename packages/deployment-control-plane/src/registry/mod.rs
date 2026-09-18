@@ -1,6 +1,7 @@
 //! Deployment obligations only. Original business Goal completion is never inferred here.
 mod closure;
 mod dependencies;
+pub(crate) mod preactivation;
 mod storage;
 mod types;
 mod validation;
@@ -20,6 +21,7 @@ pub struct Registry {
     catalog: Catalog,
     producer: String,
     key: SigningKey,
+    bridge: Option<preactivation::ValidatedBridge>,
 }
 impl Registry {
     /// Explicit non-root fixture mode, confined to the kernel-selected private temporary root.
@@ -35,6 +37,7 @@ impl Registry {
             catalog,
             producer,
             SigningKey::from_bytes(&seed),
+            None,
         )
     }
     pub(crate) fn open_native(catalog: &Catalog) -> Result<Self> {
@@ -46,12 +49,19 @@ impl Registry {
     }
     /// Internal daemon adapter; callers supply only its already authenticated root.
     pub(crate) fn open_local_root(root: &Dir, catalog: &Catalog) -> Result<Self> {
+        let bridge = preactivation::load(root, catalog)?;
         let keys = root.child("issuer-keys")?;
         let producer = "local-deployment-registry";
         let key = crate::issuer::custody::load(&keys, producer, Role::Producer, catalog)?;
-        Self::open(root.child("registry")?, catalog, producer, key)
+        Self::open(root.child("registry")?, catalog, producer, key, bridge)
     }
-    fn open(root: Dir, catalog: &Catalog, producer: &str, key: SigningKey) -> Result<Self> {
+    fn open(
+        root: Dir,
+        catalog: &Catalog,
+        producer: &str,
+        key: SigningKey,
+        bridge: Option<preactivation::ValidatedBridge>,
+    ) -> Result<Self> {
         valid_id(producer)?;
         let trusted = catalog
             .keys
@@ -65,12 +75,15 @@ impl Registry {
             trusted.public_key == hex::encode(key.verifying_key().as_bytes()),
             "ISSUER_KEY_MISMATCH",
         )?;
-        storage::initialize(&root)?;
+        if bridge.is_none() {
+            storage::initialize(&root)?;
+        }
         let registry = Self {
             root,
             catalog: catalog.clone(),
             producer: producer.into(),
             key,
+            bridge,
         };
         let _lock = storage::lock(&registry.root)?;
         registry.history()?;
@@ -153,7 +166,14 @@ impl Registry {
             .into_iter()
             .skip(revision as usize)
             .take(limit)
-            .map(|s| s.payload.snapshot)
+            .map(|s| {
+                if s.payload.revision == 1 {
+                    if let Some(b) = &self.bridge {
+                        return b.snapshot1.clone();
+                    }
+                }
+                s.payload.snapshot
+            })
             .collect())
     }
     pub fn activate(

@@ -71,7 +71,12 @@ impl Registry {
             let file = self.root.open_file(&name, libc::O_RDONLY, 0)?;
             let raw = bytes(&self.root, &file)?;
             let ledger: Signed<Ledger> = serde_json::from_slice(&raw)?;
-            verify_signed(&ledger, &self.catalog, &self.producer)?;
+            let catalog = if let Some(b) = &self.bridge {
+                b.catalog(revision, &raw, &self.catalog)?
+            } else {
+                &self.catalog
+            };
+            verify_signed(&ledger, catalog, &self.producer)?;
             let s = &ledger.payload;
             let previous = history.last().map(digest).transpose()?;
             require(
@@ -80,7 +85,7 @@ impl Registry {
                     && s.previous_digest == previous,
                 "REGISTRY_HISTORY_BINDING",
             )?;
-            verify_signed(&s.snapshot, &self.catalog, &self.producer)?;
+            verify_signed(&s.snapshot, catalog, &self.producer)?;
             require(
                 s.snapshot.issuer == self.producer
                     && s.snapshot.payload.producer_id == self.producer
@@ -90,19 +95,24 @@ impl Registry {
                 "REGISTRY_HISTORY_BINDING",
             )?;
             for (id, row) in &s.rows {
-                validation::enrollment(&self.catalog, &self.producer, &row.enrollment)?;
+                validation::enrollment(catalog, &self.producer, &row.enrollment)?;
                 require(
                     id == &row.enrollment.payload.goal_id && !row.business_goal_complete,
                     "REGISTRY_HISTORY_BINDING",
                 )?;
                 if let Some(ready) = &row.ready {
-                    verify_signed(ready, &self.catalog, &self.producer)?;
+                    verify_signed(ready, catalog, &self.producer)?;
                 }
             }
             require(
                 s.snapshot.payload.records == records(&s.rows),
                 "REGISTRY_HISTORY_BINDING",
             )?;
+            if revision == 2 {
+                if let Some(b) = &self.bridge {
+                    b.carry(s)?;
+                }
+            }
             // Retried acknowledgement must finish durability after a visible rename
             // whose fsync may previously have failed. Visibility alone is not commit.
             #[cfg(test)]
@@ -110,6 +120,10 @@ impl Registry {
             file.sync_all()?;
             history.push(ledger);
         }
+        require(
+            self.bridge.is_none() || history.len() >= 2,
+            "CUSTODY_INCOMPLETE",
+        )?;
         self.root.file.sync_all()?;
         Ok(history)
     }
@@ -143,7 +157,7 @@ fn records(rows: &BTreeMap<String, DeploymentRecord>) -> Vec<Signed<ReadyRecord>
 }
 // Called while the permanent registry lock is held. An interrupted exact prefix can
 // resume; a different operation cannot overwrite ambiguous uncommitted bytes.
-fn publish(root: &Dir, name: &str, raw: &[u8]) -> Result<()> {
+pub(super) fn publish(root: &Dir, name: &str, raw: &[u8]) -> Result<()> {
     let mut file = match root.open_file("pending.tmp", libc::O_RDWR, 0) {
         Ok(file) => file,
         Err(e) if e.code() == "ABSENT" => root.open_file(
