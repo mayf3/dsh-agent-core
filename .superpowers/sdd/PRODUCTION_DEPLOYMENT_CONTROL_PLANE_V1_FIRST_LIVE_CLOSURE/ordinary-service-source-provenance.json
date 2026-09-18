@@ -1,0 +1,29 @@
+{
+  "observed_at_utc": "2026-09-18T05:57:45.056458+00:00",
+  "read_only_ordinary": true,
+  "values_allowlist": [
+    "AGENT_CORE_DEPLOYED_SHA",
+    "SCHEDULER_DEPLOYED_SHA",
+    "SCHEDULER_WATCHDOG_SOURCE_SHA"
+  ],
+  "services": {
+    "ai.agent-core.runtime": {
+      "sha256": "dc715fd8b73c6debfd35dd54c61fd55f38ff0e3f0f8937ebdc7cfa4afde3c3d9",
+      "source_provenance_values": {
+        "AGENT_CORE_DEPLOYED_SHA": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2"
+      }
+    },
+    "ai.agent-core.scheduler-watchdog-w1": {
+      "sha256": "7901ef3eee2a5736b49a456c28ac1f8a349666792e55f66edb986fcc6756ff9b",
+      "source_provenance_values": {
+        "AGENT_CORE_DEPLOYED_SHA": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2"
+      }
+    },
+    "ai.agent-core.scheduler-watchdog-w2": {
+      "sha256": "8c8e5107ef66cdcf6b0aa8c0f39a7eabe350bb4c7f6d99b826c5021b8bb48e49",
+      "source_provenance_values": {
+        "AGENT_CORE_DEPLOYED_SHA": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2"
+      }
+    }
+  }
+}

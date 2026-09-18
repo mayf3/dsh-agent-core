@@ -1,0 +1,9 @@
+{
+  "dependency_closure_digest": "7665e6239d58db37bae231b84ce6494d6c6c0294a2ba73f0e6f24b502813db5d",
+  "inputs": {
+    "package.json": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+    "packages/scheduler/package.json": "3ea454db4db55a3a035a63526a140b1353f1faf9f533ca9fdcc96748ab8aa45a"
+  },
+  "meaning": "Canonical regular-copy build inputs; not a native runtime loader-closure proof. No root lockfile exists at this source.",
+  "source_sha": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2"
+}

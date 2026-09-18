@@ -1,0 +1,21 @@
+{
+  "observed_at_utc": "2026-09-18T05:54:43.958455+00:00",
+  "method": "GET",
+  "url": "http://127.0.0.1:8790/health",
+  "read_only": true,
+  "privileged": false,
+  "source": "fixed native driver health endpoint in transaction/native.rs",
+  "raw_body_persisted": false,
+  "http_status": 200,
+  "response_sha256": "f0b3c3e1cd77e36f0708c18e1071521278a5cf7d6a0a79c6924f45172bec6f96",
+  "top_level_keys": [
+    "authConfigured",
+    "deliverReady",
+    "ok",
+    "service",
+    "storeReady"
+  ],
+  "public_summary": {
+    "ok": true
+  }
+}
