@@ -174,3 +174,18 @@ sys.stdout.buffer.write(b)
                 self.assertEqual(f.calls, calls); self.assertFalse(failures)
             finally:
                 stop.set(); thread.join(2); listener.close()
+
+    def test_socket_group_matches_actual_configuration_602_not_caller_or_handoff_20(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as td:
+            for group, accepted in [(602, True), (20, False), (0, False)]:
+                for name in ['control.sock', 'issuer.sock']:
+                    m = SimpleNamespace(st_mode=stat.S_IFSOCK | 0o660, st_uid=0, st_gid=group)
+                    with self.subTest(group=group, name=name), \
+                         patch.object(io, 'protected_directory', side_effect=lambda _: os.open(td, os.O_RDONLY | os.O_DIRECTORY)), \
+                         patch.object(io.os, 'stat', return_value=m):
+                        if accepted:
+                            io.socket_ready(name)
+                        else:
+                            with self.assertRaisesRegex(ValueError, 'SOCKET_METADATA'):
+                                io.socket_ready(name)
