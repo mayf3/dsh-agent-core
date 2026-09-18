@@ -85,8 +85,11 @@ SPAWN_HELPER_PRE_SHA=a9fdfe66a2494557c80d9e8e8f210b2cdbbfab29a2b3fea2eeaa2101971
 
 ```text
 RUNBOOK=deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh
-RUNBOOK_SHA256(V7)=c4120877ab084688254149e86f515e978ba59ede20c294626ab51f3f345e4049 (archived
-byte-identical copy in this directory)
+RUNBOOK_SHA256(V7)=f709ca05b4713715889ae15f08518b48f065f69cc89e3d3e01c7ed9cdb51fe8b (archived byte-identical copy in this directory;
+r2: fail() now exits (all pre-swap gates fail-closed), do_build call-name fixed, conflicting-
+process gate + staging key pins restored, engine-lease identity check restored, routing pre==post
+check fixed, RB_TMP mkdir + robust restore for partial-mv states, final pm_guard enforced,
+G7b in-flight re-check adjacent to the swap; re-verified: FIXTURE=PASS)
 ROOT COMMAND (single line):
   sudo bash /Users/yanfenma/workspace/project/dsh-agent-core-selfheal-impl/deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh 2>&1 | tee /private/tmp/scheduler-self-healing-deploy-v7.log
 ```

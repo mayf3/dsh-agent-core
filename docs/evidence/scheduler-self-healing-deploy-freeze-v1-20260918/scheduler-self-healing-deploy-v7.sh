@@ -46,7 +46,7 @@ STATE_ROOT="/usr/local/var/agent-core/scheduler-self-healing-v7"
 RB_TMP="/private/tmp/scheduler-self-healing-deploy-v7-receipt"
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 
-fail() { echo "FAIL $1" >&2; }
+fail() { echo "FAIL $1" >&2; echo "DEPLOY=NO STOP=YES NO_BLIND_RETRY" >&2; exit 1; }
 say() { echo "[deploy-v7] $*"; }
 manifest_of() { (cd "$1" && find . -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | cut -d' ' -f1); }
 file_sha() { shasum -a 256 "$1" 2>/dev/null | cut -d' ' -f1; }
@@ -186,6 +186,7 @@ production_main() {
   [ "$(id -u)" = "0" ] || { fail "must run as root"; exit 2; }
   mkdir -p "$STATE_ROOT/receipts" || exit 1
   chmod 700 "$STATE_ROOT"
+  mkdir -p "$RB_TMP" || { echo "FATAL: cannot create $RB_TMP" >&2; exit 1; }
   local AUTH_MARKER="$STATE_ROOT/receipts/deploy-v7.auth"
   if [ -e "$AUTH_MARKER" ]; then
     echo "ERROR: authorization already consumed ($AUTH_MARKER) — EXACTLY_ONCE" >&2
@@ -239,7 +240,12 @@ production_main() {
   fi
   case "$engine_pid" in "" | *[!0-9]*) fail "G3 engine lease holder pid unreadable" ;; esac
   kill -0 "$engine_pid" 2>/dev/null || fail "G3 engine lease holder pid $engine_pid not alive"
-  say "G3 locks: mutation/deploy/routing-tx ABSENT; engine lease HELD by pid $engine_pid"
+  local engine_cmd="$(ps -o command= -p "$engine_pid" 2>/dev/null)"
+  case "$engine_cmd" in
+    *production-runtime.mjs*"/Users/authsvc/.agent-core"*) : ;;
+    *) fail "G3 engine lease holder is not the canonical runtime (pid $engine_pid: $engine_cmd)" ;;
+  esac
+  say "G3 locks: mutation/deploy/routing-tx ABSENT; engine lease HELD by live runtime pid $engine_pid"
 
   # G4 runtime health
   pgrep -f "app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core" >/dev/null || fail "G4 runtime not running"
@@ -273,6 +279,29 @@ production_main() {
   local pre_routing="$(file_sha /Users/authsvc/.agent-core/scheduler/routing.json)"
   say "G6 non-target PRE hashes captured (harness/node-runtime/home/config/helper/routing)"
 
+  # G6b no conflicting production mutation process (restored from v6)
+  if pgrep -fl "trusted-cp-deploy-install|run-authorized-transaction|run-routing-install" >/dev/null 2>&1; then
+    pgrep -fl "trusted-cp-deploy-install|run-authorized-transaction|run-routing-install"
+    fail "G6b conflicting production mutation process running"
+  fi
+  # G6c staging key-hash pins (restored from v6)
+  local line want rel got
+  while IFS= read -r line; do
+    want="${line%% *}"
+    rel="${line#*  }"
+    got="$(file_sha "$STAGING/$rel")"
+    [ "$got" = "$want" ] || fail "G6c staging key hash mismatch $rel"
+  done <<'KEYS'
+e3e8dce0fd8959336521147b639007b82e8ce98d932eca82ca2b98ac2506770d  packages/scheduler/src/scheduler.js
+939863a5d706c74c9129a443b00445ea638dd7791c60609259ee80d11006627b  packages/scheduler/src/eligibility.js
+5c770d5e99ebc20f794284020aa9cf5471609e9bf7c9e1e2ff3c2be5a8671d25  packages/scheduler/src/watchdog/admission-isolation.js
+0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293  packages/scheduler/src/self-ops/index.js
+4038e4f88086f49bae3e367b1df669e9f874286231b50606397ba5b6c90540df  packages/scheduler/src/self-ops/diagnosis.js
+86f547f3ee51b291999432aab119916e98696f1dd4b5a3a9dccb505bc2b9a5a7  packages/scheduler/src/occurrence.js
+a8eacf4f16edd207b7181a5fcc47b30a4b26c9e852d335ca2746c88fd4ac3fcc  packages/scheduler/src/store.js
+KEYS
+  say "G6b/G6c no conflicting process; staging key pins verified"
+
   # G7 no in-flight occurrence (restart must not create outcome_unknown)
   local wait=0 inflight=1
   while [ "$wait" -le 2 ]; do
@@ -294,7 +323,7 @@ production_main() {
   # BUILD + VERIFY sealed generation
   setup_pm_guard
   local next="$TRUSTED_ROOT/app.next-v7-$TS"
-  do_build "$APP" "$STAGING" "$next" || fail "G9 build/scope-creep guard (see SCOPE_CREEP above)"
+  build_app_next "$APP" "$STAGING" "$next" || fail "G9 build/scope-creep guard (see SCOPE_CREEP above)"
   local built_man="$(manifest_of "$next")"
   [ "$built_man" = "$FROZEN_TARGET_APP_MANIFEST_SHA" ] || fail "G9 built app.next manifest != frozen target ($built_man)"
   local sched_sha="$(file_sha "$next/packages/scheduler/src/scheduler.js")"
@@ -304,9 +333,19 @@ production_main() {
   pm_guard_clean || fail "G9 package manager invoked (see $(cat "$PM_TRIPFILE"))"
   say "G9 sealed app.next built+verified (manifest $built_man; pm-guard clean)"
 
+  # G7b in-flight re-check adjacent to the swap (the build window may have
+  # admitted a new slot; kickstart over it would manufacture an outcome_unknown)
+  inflight="$(jq '[.occurrences[] | select(.state == "admitted" or .state == "running")] | length' "$CANONICAL_STORE" 2>/dev/null || echo 999)"
+  [ "$inflight" = "0" ] || fail "G7b in-flight occurrence appeared during build — re-run this packet when idle"
+  say "G7b in-flight re-check clean"
+
   # APPLY (atomic renames, same parent dir)
   app_rb="$APP.rollback-v7-$TS"
-  swap_generations "$APP" "$next" "$app_rb" >/dev/null || fail "APPLY swap failed"
+  if ! swap_out="$(swap_generations "$APP" "$next" "$app_rb")"; then
+    # partial mv state possible: restore from the rollback generation directly
+    [ -d "$app_rb" ] && { rm -rf "$APP" 2>/dev/null || true; mv "$app_rb" "$APP"; launchctl kickstart -k system/ai.agent-core.runtime || true; }
+    fail "APPLY swap failed (restored pre-V7 generation)"
+  fi
   say "APPLY swapped: old generation preserved at $app_rb"
   launchctl kickstart -k system/ai.agent-core.runtime || post_swap_fail "kickstart failed"
   sleep 20
@@ -335,11 +374,12 @@ production_main() {
   local post_helper="$(file_sha /usr/local/libexec/dsh-agent-spawn-helper)"
   local post_routing="$(file_sha /Users/authsvc/.agent-core/scheduler/routing.json)"
   [ "$post_harness" = "$pre_harness" ] && [ "$post_node" = "$pre_node" ] && [ "$post_home" = "$pre_home" ] \
-    && [ "$post_config" = "$pre_config" ] && [ "$post_helper" = "$pre_helper" ] && [ "$post_routing" = "$post_routing" ] \
+    && [ "$post_config" = "$pre_config" ] && [ "$post_helper" = "$pre_helper" ] && [ "$post_routing" = "$pre_routing" ] \
     || post_swap_fail "non-target surface hash changed (harness/node-runtime/home/config/helper/routing)"
   local hr_after="$(jq -c '.jobs[] | select(.id|startswith("b115cb96")) | {retry, scheduleRevision}' "$CANONICAL_STORE" 2>/dev/null | head -1)"
   jq -e '.retry.auto == false' >/dev/null 2>&1 <<<"$hr_after" || post_swap_fail "HR retry.auto changed during deploy"
 
+  pm_guard_clean || post_swap_fail "package manager invoked during deployment"
   {
     echo "DEPLOYMENT=PASS"
     echo "TARGET_SOURCE_SHA=$FROZEN_MAIN_SHA"
@@ -354,7 +394,7 @@ production_main() {
     echo "HR_JOB_AFTER=$hr_after"
     echo "ERROR_TAIL_COUNT_LAST200=$err_tail"
     echo "RUNS_JSONL_PARSE_SMOKE=$runs_parse"
-    echo "PM_GUARD=CLEAN"
+    echo "PM_GUARD=$(pm_guard_clean && echo CLEAN || echo TRIPPED)"
     echo "R1_ATTRIBUTION=WATCHDOG_LARK_V3_G6_NARROW_DEPLOY (carried into acceptance)"
     echo "DO_NOT_REENABLE_HR_RETRY_AUTO=true (until POSTDEPLOY_VERIFICATION=PASS)"
     echo "COMMITTED_AT=$(date -u +%FT%TZ)"
