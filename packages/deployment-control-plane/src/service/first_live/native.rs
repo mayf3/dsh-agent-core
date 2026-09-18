@@ -72,6 +72,7 @@ impl Native {
     }
     fn verify(&self, rb: &Readback) -> Result<()> {
         self.check()?;
+        gate::generation(&self.area, rb)?;
         require(
             rb.binding == self.binding
                 && crate::transaction::first_live_process_identity(rb.process.pid)? == rb.process
@@ -195,6 +196,7 @@ pub(super) fn fresh() -> Result<()> {
 pub(super) fn run() -> Result<()> {
     let actual = controller()?;
     let root = Dir::open(Path::new(ROOT), 0)?;
+    let guard = MutationGuard::acquire(&root, false)?;
     let packet_dir = Dir::open(Path::new("/private/var/db/agent-deploy-first-live"), 0)?;
     let packet_raw = snapshot(
         &packet_dir.open_file("packet.json", libc::O_RDONLY, 0)?,
@@ -252,7 +254,6 @@ pub(super) fn run() -> Result<()> {
         grant,
     };
     {
-        let guard = MutationGuard::acquire(&n.root, false)?;
         n.check()?;
         let out = n.command(&["print", LABEL])?;
         require(
@@ -281,7 +282,11 @@ pub(super) fn run() -> Result<()> {
         uid: n.area.uid,
     };
     let binding = n.binding.clone();
-    enable::run(&area, &binding, &mut n)?;
+    let guarded_root = Dir {
+        file: n.root.file.try_clone()?,
+        uid: n.root.uid,
+    };
+    enable::run(&guarded_root, &area, &binding, &mut n, guard)?;
     println!(
         "FIRST_LIVE_ENABLED {}",
         sha(&gate::raw(&area, "enable-result.json")?)

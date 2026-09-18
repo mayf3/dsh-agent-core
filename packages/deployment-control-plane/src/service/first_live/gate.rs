@@ -119,6 +119,7 @@ fn complete(area: &Dir, b: &Binding) -> Result<bool> {
         return Ok(false);
     };
     let readback: Readback = read(area, "daemon-readback.json")?;
+    generation(area, &readback)?;
     let admission: Admission = read(area, "enable-admission.json")?;
     let ready: Ready = read(area, "daemon-ready.json")?;
     require(
@@ -149,6 +150,7 @@ pub(super) fn startup(root: &Dir, configured: Option<&str>, now: u64) -> Result<
     Ok(Phase::Readback(Box::new(b)))
 }
 pub(super) fn initialization(area: &Dir, current: &Readback) -> Result<()> {
+    generation(area, current)?;
     let admitted: Admission = read(area, "enable-admission.json")?;
     let retained: Readback = read(area, "daemon-readback.json")?;
     require(
@@ -167,6 +169,42 @@ pub(super) fn ordinary(root: &Dir, configured: Option<&str>, now: u64) -> Result
         "ENABLE_ADMISSION_PENDING",
     )
 }
+
+pub(super) fn claim_generation(
+    area: &Dir,
+    binding: &Binding,
+    process: &crate::transaction::ProcessIdentity,
+) -> Result<()> {
+    absent(area, "daemon-readback.json")?;
+    publish(
+        area,
+        "daemon-startup-intent.json",
+        &GenerationIntent {
+            binding: binding.clone(),
+            process: process.clone(),
+        },
+    )
+}
+pub(super) fn generation_digest(
+    area: &Dir,
+    binding: &Binding,
+    process: &crate::transaction::ProcessIdentity,
+) -> Result<String> {
+    let intent: GenerationIntent = read(area, "daemon-startup-intent.json")?;
+    require(
+        intent.binding == *binding && intent.process == *process,
+        "ENABLE_GENERATION_BINDING",
+    )?;
+    digest(&intent)
+}
+pub(super) fn generation(area: &Dir, current: &Readback) -> Result<()> {
+    require(
+        generation_digest(area, &current.binding, &current.process)?
+            == current.startup_intent_digest,
+        "ENABLE_GENERATION_BINDING",
+    )
+}
+
 #[cfg(test)]
 #[path = "../../../test/service/first_live/gate.rs"]
 mod tests;
