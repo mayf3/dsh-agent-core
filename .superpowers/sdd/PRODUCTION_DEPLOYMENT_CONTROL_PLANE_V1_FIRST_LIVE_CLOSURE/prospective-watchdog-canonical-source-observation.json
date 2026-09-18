@@ -1,0 +1,11 @@
+{
+  "binary_sha256": "13f1afd7173356069939253ea53a06b757ca0d76442cff42fd9c61f3161b22cb",
+  "exit_code": 0,
+  "observed_at": "2026-09-18T06:07:54.588758+00:00",
+  "policy_sha256": "1504fee8013a6b024545b1383f2132c4f65c0a4420ee07edf7ba61e4ce089d68",
+  "root": false,
+  "signing": false,
+  "source_sha": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2",
+  "stderr": "",
+  "stdout": "{\"artifact\":\"6d265105639be050f44ab25ed030292a485fefde4f1431317e2f8b02d65bbb09\",\"canonical_lineage_digest\":\"1c83ea40bb52f43aba1689c75b1cecbe0cd0b5e3babf89a371d50c3581271f8d\",\"signed\":false,\"slots\":[{\"blob\":\"blob-0000\",\"executable\":false,\"path\":\"packages/scheduler/src/watchdog/incident-lifecycle.js\",\"sha256\":\"cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1\",\"size\":13003}],\"source\":\"d602b592fad345fb1c9adebe2bc6611a6f5cfdc2\",\"tree\":\"c300ee02f1fc08536d0a0aa3122cc75c56ec26f2\"}\n"
+}

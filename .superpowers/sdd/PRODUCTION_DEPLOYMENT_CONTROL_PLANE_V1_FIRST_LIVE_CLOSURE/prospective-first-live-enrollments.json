@@ -1,0 +1,235 @@
+{
+  "broker_dependency_child_binding": {
+    "business_goal_id": "SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1",
+    "deployment_child_goal_id": "DCP_DSH_WATCHDOG_ACCEPTANCE_V1",
+    "enrollment_digest_source": "Digest of the actual Authority-signed Watchdog enrollment created by the exact Owner-authorized materializer; no placeholder accepted at registry enrollment."
+  },
+  "broker_enrollment_before_authenticated_child_binding": {
+    "acceptance_revision": "DEPLOYMENT_DELIVERY_V1",
+    "authority": {
+      "acceptance": {
+        "sha256": "ff14b5a7d5bd1385430f1712a011923d3f595f1682df577a4243ef5e2fe5c21a",
+        "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/reports/WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4_ACCEPTANCE_V1.md"
+      },
+      "contracts": [
+        {
+          "id": "ACC-V3-001",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-V3-002",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-V3-003",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-V3-004",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-V3-005",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-V3-006",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-001",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-002",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-003",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-004",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-005",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-006",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        },
+        {
+          "id": "ACC-XR-007",
+          "source": {
+            "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+            "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+          }
+        }
+      ],
+      "lifecycle_head": "104e2d5fe16f72290728be357453d93fb5b83394",
+      "revision": "AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4",
+      "semantic_head": "ea38081abac6cf6ce36ad4ae4bcf723578763bc4",
+      "source": {
+        "sha256": "6fcf2fc1a07d9c2e01820adfaafe366c1c0c5e61263b22b88af39ca5b4baab5e",
+        "uri": "git:mayf3/dsh-agent-core@104e2d5fe16f72290728be357453d93fb5b83394:docs/specs/AGENT_CORE_WORKFLOW_GLOBAL_INSTANCES_CAPABILITY_V4.md"
+      }
+    },
+    "business_goal_id": "WORKFLOW_ACTIVE_POOL_DISPOSITION_V1",
+    "deployment_profile": "dsh-app",
+    "frozen_source_sha": "59472b631129d1ea3ca1202cbcbbc0799b083114",
+    "goal_id": "WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DELIVERY_V2",
+    "historical_source": {
+      "implementation_sha": "1a1e59b8e41901c57beb8e5306a557350f56bfa9",
+      "release_sha": "c9ffe1d1637db2997689d8b2ef7def4fc1086b17",
+      "review": {
+        "sha256": "2954412c597506db41e8f0692f7ee5288de6f700afe668c42929decbc6b8f51c",
+        "uri": "/Users/yanfenma/.codex/sessions/2026/09/16/rollout-2026-09-16T07-02-33-01a0a74e-ca7d-7852-a31c-d6f81e820e4c.jsonl#L2872"
+      }
+    },
+    "origin_uri": "codex://threads/01a0a74e-ca7d-7852-a31c-d6f81e820e4c",
+    "original_request": {
+      "sha256": "730b47e88f48118981e0480e92be63a484251be6cc607ce582246df704288842",
+      "uri": "/Users/yanfenma/.codex/attachments/85f286cd-5e18-4de1-9cb4-d5ee51405bac/pasted-text.txt"
+    },
+    "owner": "mayf3",
+    "prior_dependencies": [
+      {
+        "goal_id": "SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1",
+        "provenance": {
+          "sha256": "37a8397beb53c9c658272ca7d430484097d558e6ffca5bfda06df98da40c1c66",
+          "uri": "/Users/yanfenma/.codex/attachments/864f5db7-76be-4df2-81a5-285d329a5e2c/pasted-text.txt"
+        }
+      }
+    ],
+    "producer_id": "local-deployment-registry",
+    "repo": "mayf3/dsh-agent-core",
+    "scope": "DeploymentOnly",
+    "scope_description": "DEPLOYMENT_DELIVERY_V1: only the exact reviewed Broker workflow.js artifact installed on the bound system runtime, matching bytes and process/service generation readback, safe finalize and durable per-delivery PASS. This record never asserts parent business acceptance, V4 ACC-XR-007, HR consumption readiness, or whole business Goal completion. Watchdog prerequisite remains required. The original business acceptance references below remain original obligations, not claims discharged by native readback. This prospective authenticated continuation preserves the immutable original Broker enrollment and original business Goal; source59472b6 additionally preserves the exact related Owner-accepted canonical-create contract at45abf5e. Selection is not installation or closure. The explicit signed Watchdog child binding is constructed only by the reviewed operation after that child is authenticated.",
+    "standing_authority_revision": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1",
+    "target_runtime": "dsh-system-runtime",
+    "verification_profile": "native-installed-readback-v1"
+  },
+  "new_records_are_deployment_scoped_not_user_managed_goals": true,
+  "operation_authority": "Future separate exact Owner package authorization required; current Owner mandate authorizes selection and nonproduction preparation only.",
+  "preserve_original_enrollment_sha256": "f8dedad84e805a8886fb85859767159ff6ac720b07b31412cbfdff52e43e8197",
+  "preserve_original_goal_id": "WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DEPLOYMENT",
+  "related_broker_acceptance": {
+    "accepted_head": "45abf5ea0402f5e04d14974030aa6661428b5cc3",
+    "merge_head": "59472b631129d1ea3ca1202cbcbbc0799b083114",
+    "owner_message_id": "39589d61-b3be-4de9-b069-448aa0a9d91b",
+    "spec_header_caveat": "Related Domain Create source header remains proposed/none; this exact Owner acceptance record and merge are external provenance, not a rewritten accepted header.",
+    "task": "6aaaac50-a1fc-83e8-8e19-c2cd6a7a12ee"
+  },
+  "state": "PROSPECTIVE_UNSIGNED_NOT_INSTALLED",
+  "version": 1,
+  "watchdog_enrollment": {
+    "acceptance_revision": "DSH_WATCHDOG_INSTALLATION_ACCEPTANCE_V1",
+    "authority": {
+      "acceptance": {
+        "sha256": "470d0ff254f332623682809bab3a3a4bb00645ed40f1b953983b074b719a2d4b",
+        "uri": "git:mayf3/dsh-agent-core@0557bd9cc107e7ded05dce6c1a43633b11e779b4:docs/reports/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1_ACCEPTANCE.md"
+      },
+      "contracts": [
+        {
+          "id": "ACC-FENCE-001",
+          "source": {
+            "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+            "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+          }
+        },
+        {
+          "id": "ACC-INCIDENT-001",
+          "source": {
+            "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+            "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+          }
+        },
+        {
+          "id": "ACC-ROUTE-001",
+          "source": {
+            "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+            "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+          }
+        },
+        {
+          "id": "ACC-HEALTH-001",
+          "source": {
+            "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+            "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+          }
+        },
+        {
+          "id": "ACC-GOV-001",
+          "source": {
+            "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+            "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+          }
+        }
+      ],
+      "lifecycle_head": "0557bd9cc107e7ded05dce6c1a43633b11e779b4",
+      "revision": "SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1",
+      "semantic_head": "a8c763067a9b461a75669036dfade96a023f8864",
+      "source": {
+        "sha256": "98fee2d46b9c980a86c1026ae146c981a6fd057b34eaa2dd3eca4f8cba28d206",
+        "uri": "git:mayf3/dsh-agent-core@d602b592fad345fb1c9adebe2bc6611a6f5cfdc2:docs/specs/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1.md"
+      }
+    },
+    "business_goal_id": "SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1",
+    "deployment_profile": "dsh-app",
+    "frozen_source_sha": "d602b592fad345fb1c9adebe2bc6611a6f5cfdc2",
+    "goal_id": "DCP_DSH_WATCHDOG_ACCEPTANCE_V1",
+    "historical_source": null,
+    "origin_uri": "codex://threads/6aa9daca-1ffc-83ee-a2ba-cc6a55bbe1b2",
+    "original_request": {
+      "sha256": "37a8397beb53c9c658272ca7d430484097d558e6ffca5bfda06df98da40c1c66",
+      "uri": "/Users/yanfenma/.codex/attachments/864f5db7-76be-4df2-81a5-285d329a5e2c/pasted-text.txt"
+    },
+    "owner": "mayf3",
+    "prior_dependencies": [],
+    "producer_id": "local-deployment-registry",
+    "repo": "mayf3/dsh-agent-core",
+    "scope": "DeploymentOnly",
+    "scope_description": "Existing dsh Watchdog installation verification only. Zero install/restart baseline plus new authorized canary and fresh generation-bound semantic Watchdog acceptance. No current-six recovery, unknown settlement, incident deletion, business completion or claim that the original Watchdog Goal has closed. Provides only the explicit live-installation prerequisite for the Broker deployment continuation.",
+    "standing_authority_revision": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1",
+    "target_runtime": "dsh-system-runtime",
+    "verification_profile": "watchdog-current-observation-v1"
+  }
+}

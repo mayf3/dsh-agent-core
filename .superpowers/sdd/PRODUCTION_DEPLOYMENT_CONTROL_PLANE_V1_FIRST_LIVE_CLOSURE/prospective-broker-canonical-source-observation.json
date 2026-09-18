@@ -1,0 +1,16 @@
+{
+  "started_at_utc": "2026-09-18T05:56:26.373718+00:00",
+  "argv": [
+    "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/genesis-bcfd929/executables/agent-deploy-issuer",
+    "observe-public-source",
+    "59472b631129d1ea3ca1202cbcbbc0799b083114",
+    ".superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE/prospective-broker-source-policy.json"
+  ],
+  "uid": 502,
+  "signed": false,
+  "production_mutation": false,
+  "exit": 0,
+  "stdout": "{\"artifact\":\"165b79833a23f480bd5d265b51377005e2e2526ea1c7dc0aee37fab4ad5c06f1\",\"canonical_lineage_digest\":\"412d672e4a153fe40f1d64d1f7c544e600101b88eec6b868039f1ae6343cc734\",\"signed\":false,\"slots\":[{\"blob\":\"blob-0000\",\"executable\":false,\"path\":\"packages/broker/src/capabilities/workflow.js\",\"sha256\":\"6f116d94b58a739216d2af2b25dfd51b32268aba26dcea281f16199f70ff93b2\",\"size\":43827}],\"source\":\"59472b631129d1ea3ca1202cbcbbc0799b083114\",\"tree\":\"429d63ac26d5995ee836949de9658ed76becd1d6\"}\n",
+  "stderr": "",
+  "ended_at_utc": "2026-09-18T05:56:44.495691+00:00"
+}
