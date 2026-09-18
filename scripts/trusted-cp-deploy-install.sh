@@ -108,14 +108,14 @@ acquire_global_deploy_mutex() {
 #   P5 TOCTOU: pre-pack and post-pack source stamps must match
 #   P6 pack-provenance receipt persisted into the new app closure
 # Selftest (no root, scratch fixtures only):
-#   TRUSTED_CP_SELFTEST_PROVENANCE=1 ./trusted-cp-deploy-install.sh
+#   ./trusted-cp-deploy-install.sh --selftest-provenance
 
 gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
 if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ] && [ -z "${1:-}" ]; then
   echo "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)" >&2
   exit 1
 fi
-if [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ]; then
+if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ]; then
   [ -n "${EXPECTED_SOURCE_SHA:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_SHA_REQUIRED" >&2; exit 1; }
   [ -n "${EXPECTED_SOURCE_TREE:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_TREE_REQUIRED" >&2; exit 1; }
 fi
@@ -178,7 +178,7 @@ packed_app_provenance() {
   local appdir="$1" receipt="$2"
   local aggregate wfsha pkgsha
   aggregate="$(find "$appdir" -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')"
-  wfsha=""; pkgsha=""
+  wfsha="ABSENT"; pkgsha="ABSENT"
   [ -f "$appdir/packages/broker/src/capabilities/workflow.js" ]     && wfsha="$(shasum -a 256 "$appdir/packages/broker/src/capabilities/workflow.js" | awk '{print $1}')"
   [ -f "$appdir/packages/broker/package.json" ]     && pkgsha="$(shasum -a 256 "$appdir/packages/broker/package.json" | awk '{print $1}')"
   cat > "$receipt" << JSON
@@ -218,7 +218,6 @@ fi
 
 if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" = "1" ] || [ "${1:-}" = "--selftest-provenance" ]; then
   # No-root selftest: scratch git fixtures only; never touches /usr/local.
-  SCRATCH_REPO="${1:-}"
   gate_fail() { echo "SELFTEST_PROVENANCE_FAIL $1" >&2; exit 1; }
   ok_msg() { echo "SELFTEST_PROVENANCE_OK $1"; }
   T="$(mktemp -d /tmp/trusted-cp-prov-selftest-XXXXXX)"
@@ -253,7 +252,7 @@ EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new
     gate_fail "T1a missing EXPECTED_SOURCE_SHA must fail"
   fi
   ok_msg "T1a missing EXPECTED_SOURCE_SHA fails closed (P2)"
-  T1OUT="$( bash "$0" 2>&1 || true )"
+  T1OUT="$( env -u TRUSTED_CP_SELFTEST_PROVENANCE bash "$0" 2>&1 || true )"
   echo "$T1OUT" | grep -q "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN" || gate_fail "T1b no-arg invocation must fail via P1 IMPLICIT_PACK_SOURCE_FORBIDDEN (got: $T1OUT)"
   ok_msg "T1b no-arg installer invocation fails via P1 before any mutation"
 
@@ -574,6 +573,9 @@ POST_PACK_TREE="$(echo "$POST_PACK_STAMP" | awk '{print $2}' | sed 's/^tree=//')
 POST_PACK_CLEAN="$(echo "$POST_PACK_STAMP" | awk '{print $3}' | sed 's/^clean=//')"
 if [ "$POST_PACK_HEAD" != "$PRE_PACK_HEAD" ] || [ "$POST_PACK_TREE" != "$PRE_PACK_TREE" ] \
    || [ "$POST_PACK_CLEAN" != "$PRE_PACK_CLEAN" ]; then
+  # Known abort shape (documented): the previous install is already in $BAK and
+  # the half-built closure remains — no service restart follows, operators restore
+  # from $BAK. This is the pre-existing backup-then-rebuild deployment shape.
   echo "ERROR: SOURCE_CHANGED_DURING_PACK: pre=($PRE_PACK_HEAD/$PRE_PACK_TREE/$PRE_PACK_CLEAN) post=($POST_PACK_HEAD/$POST_PACK_TREE/$POST_PACK_CLEAN)" >&2
   exit 2
 fi
