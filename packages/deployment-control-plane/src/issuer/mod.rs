@@ -1,6 +1,7 @@
 //! Fixed local evidence producers. No caller-facing arbitrary signing operation.
 pub mod coordinator;
 pub mod custody;
+pub(crate) mod custody_transition;
 pub mod github;
 mod issuance;
 mod issuance_io;
