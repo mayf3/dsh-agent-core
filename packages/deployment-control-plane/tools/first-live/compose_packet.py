@@ -15,7 +15,7 @@ import subprocess
 
 A = Path('/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1')
 P = Path(__file__).resolve().parents[4] / '.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE'
-STATIC = A / 'first-live-preparation/static-inputs-v4'
+STATIC = A / 'first-live-preparation/static-inputs-v5'
 OPERATION = 'first-live-dsh-20260918-01'
 WD = 'DCP_DSH_WATCHDOG_ACCEPTANCE_V1'
 BROKER = 'WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DELIVERY_V2'
@@ -26,7 +26,8 @@ LOCK_PARENTS = ['/private/var/run', '/usr/local/var/agent-core/production-mutati
 ANCESTORS = ['/', '/usr', '/usr/local', '/usr/local/libexec', '/usr/local/libexec/agent-core',
              '/usr/local/libexec/agent-deployd', '/Library', '/Library/LaunchDaemons']
 SOURCES = {
- 'static-index': (STATIC/'index.json', 'd7849dd1312ff93a272dc9d316fad08387e4b1e5425a307fd79cf3fdfd5e3f4e'),
+ 'static-index': (STATIC/'index.json', '8764ee69a82884e84aacfa97f1b24e758880a89a922f14f73f0b86de4c8c4042'),
+ 'v7-baseline': (A/'first-live-preparation/v7-baseline-binding.json', '3482098efbba6ca9ffe1f2e0b1939e89f110ef17df77be9db55879fa3a7f976c'),
  'enrollments': (P/'prospective-first-live-enrollments.json', '3211d45eb163c25ae026d1be71c81ca9ac96359261c679d03f7a8fe37843d193'),
  'watchdog-source': (P/'prospective-watchdog-source-policy.json', '1504fee8013a6b024545b1383f2132c4f65c0a4420ee07edf7ba61e4ce089d68'),
  'broker-source': (P/'prospective-broker-source-policy.json', 'a22d76d33f1a2724c4751dc2dcbdcc3b05e8d9ec3ead090127935426f4cc56f9'),
@@ -94,6 +95,16 @@ def load_sources():
     index = records['static-index']
     require(index['operation_id'] == OPERATION and index['link_blockers'] == 0 and
             index['preserved_negative_edges'] == 4, 'STATIC_CLOSURE')
+    baseline = records['v7-baseline']
+    require(baseline['operation_id'] == OPERATION and
+            baseline['state'] == 'V7_BASELINE_BOUND_FOR_NONPRODUCTION_PACKAGE_PREPARATION' and
+            baseline['production_mutation_performed'] is False and
+            baseline['fresh_static']['static_index_sha256'] == SOURCES['static-index'][1] and
+            baseline['coordinates']['broker_workflow_preimage_sha256'] ==
+                'd76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee' and
+            baseline['coordinates']['watchdog_incident_lifecycle_sha256'] ==
+                'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1',
+            'V7_BASELINE_BINDING')
     for name, row in index['files'].items():
         require(re.fullmatch(r'[a-z0-9-]+\.json', name), 'STATIC_NAME')
         raw = verified_bytes(STATIC/name, row['sha256'])
