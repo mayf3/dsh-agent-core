@@ -246,8 +246,43 @@ def closed_aliases(trees):
 
 def closed_links(trees):
     closed_aliases(trees)
-    issues = link_issues(trees)
+    _, issues = negative_edges(trees, link_issues(trees))
     need(not issues, 'LINK_DANGLING_OR_UNSAFE:' + (issues[0]['path'] if issues else ''))
+
+
+def negative_edges(trees, issues):
+    """Mirror only the four compiled REUSE edges; no caller allowlist or new bytes."""
+    a = 'node_modules/.pnpm/@anthropic-ai+claude-agent-sdk@0.3.220_@anthropic-ai+sdk@0.93.0_zod@4.4.3__@modelcontex_57ba44dcbc2a36491e18d36fec520472/node_modules/@anthropic-ai'
+    b = 'node_modules/.pnpm/@openai+codex@0.147.0/node_modules/@openai'
+    expected = []
+    for source, target, leaf, package, hashvalue in [(a, '@anthropic-ai+claude-agent-sdk-darwin-x64@0.3.220/node_modules/@anthropic-ai', 'claude-agent-sdk-darwin-x64', 'claude-agent-sdk', '1c9d0905f64e126850efe4fc4e7244c604a0855de8d4c82aff78da6f1988bd08'),
+            (b, '@openai+codex@0.147.0-darwin-x64/node_modules/@openai', 'codex', 'codex', 'bbaf3b9597b54bc1d4cf4aea93870e9035629d79bdaba58234011c31f0cfcf3d')]:
+        name = 'codex-darwin-x64' if package == 'codex' else leaf
+        for path, up in [(source+'/'+name, '../../..'), ('node_modules/.pnpm/node_modules/'+source.split('/')[-1]+'/'+name, '../..')]:
+            expected.append(dict(source=path, raw=up+'/'+target+'/'+leaf, missing='node_modules/.pnpm/'+target,
+                leaf=leaf, manifest=source+'/'+package+'/package.json', hash=hashvalue))
+    tree = trees[1]; entries = tree['entries']
+    if not any(r['source'] in entries for r in expected):
+        return [], issues
+    need(tree['root']['kind'] == 'directory', 'NEGATIVE_ANCESTOR')
+    for r in expected:
+        e = entries.get(r['source'], {})
+        need(e.get('kind') == 'link' and e.get('link') == r['raw'], 'NEGATIVE_SOURCE')
+        for path in (r['source'], r['manifest'], r['missing']):
+            parts = path.split('/')
+            need(all(entries.get('/'.join(parts[:i]), {}).get('kind') == 'directory' for i in range(1, len(parts))), 'NEGATIVE_ANCESTOR')
+        e = entries.get(r['manifest'], {})
+        need(e.get('kind') == 'file' and e.get('sha256') == r['hash'], 'NEGATIVE_MANIFEST')
+        need(not any(p == r['missing'] or p.startswith(r['missing']+'/') for p in entries), 'NEGATIVE_BECAME_PRESENT')
+    allowed, unresolved = [], []
+    for issue in issues:
+        match = any(issue['tree'] == 'harness' and issue['path'] == r['source'] and issue['raw_link'] == r['raw']
+            and issue['code'] == 'LINK_DANGLING' and issue['missing_path'] == BASE+'harness/'+r['missing']
+            and issue['remaining_components'] == [r['leaf']] and issue['symlink_chain'] == [{'path':BASE+'harness/'+r['source'], 'target':r['raw']}]
+            for r in expected)
+        (allowed if match else unresolved).append(issue)
+    need(len(allowed) == 4, 'NEGATIVE_SET')
+    return allowed, unresolved
 
 
 def package_context(issues, trees):
@@ -303,7 +338,8 @@ def prepare(args):
             rows = all_rows[BASE + name]['entries']
         trees.append(typed_tree(rows, root))
     closed_aliases(trees)
-    issues = package_context(link_issues(trees), trees)
+    observed_issues = package_context(link_issues(trees), trees)
+    negatives, issues = negative_edges(trees, observed_issues)
     retirement = args.operator_source / 'packages/deployment-control-plane/src/first_live/retirement.rs'
     raw = retirement.read_bytes(); stubs = stub_bytes(raw.decode())
     sources['retirement-source'] = {'path': str(retirement), 'sha256': sha(raw)}
@@ -314,17 +350,17 @@ def prepare(args):
     outputs = {name + '-inventory.json': tree for name, tree in zip(NAMES, trees)}
     outputs.update({'configuration-template.json': config, 'native-enrollment-template.json': native,
                     'node-payloads.json': payloads, 'retirement-sha256.json': {p: sha(stubs[k]) for p, k in RETIRED.items() if p not in missing_retirement},
-                    'link-closure-blockers.json': {'status': 'BLOCKED' if issues else 'NO_STATIC_LINK_BLOCKERS', 'issues': issues},
+                    'link-closure-blockers.json': {'status': 'BLOCKED' if issues else 'NO_UNRECOGNIZED_STATIC_LINKS', 'issues': issues, 'preserved_negative_edges': negatives},
                     'absent-retirement-paths.json': {'status': 'BLOCKED_CURRENT_RETIREMENT_ASSUMPTION', 'paths': missing_retirement, 'observation': absent}})
     encoded = {name: canonical(value) for name, value in outputs.items()}
     index = {'version': 1, 'operation_id': OPERATION, 'scope': 'STATIC_UNTRUSTED_PREPARATION_INPUTS_NOT_EXECUTED_PROOF',
-             'status': 'BLOCKED' if issues or missing_retirement else 'STATIC_INPUTS_PREPARED_NOT_ADMISSION', 'link_blockers': len(issues), 'absent_retirement_paths': missing_retirement,
+             'status': 'BLOCKED' if issues or missing_retirement else 'STATIC_INPUTS_PREPARED_NOT_ADMISSION', 'link_blockers': len(issues), 'preserved_negative_edges': len(negatives), 'absent_retirement_paths': missing_retirement,
              'sources': sources, 'converter_sha256': sha(Path(__file__).read_bytes()), 'schema_sources': {}, 'files': {name: {'sha256': sha(raw), 'bytes': len(raw)} for name, raw in encoded.items()},
              'counts': {name: {kind: sum(e['kind'] == kind for e in tree['entries'].values()) for kind in ('file', 'directory', 'link')} for name, tree in zip(NAMES, trees)},
              'initial_app_slots': len(native['initial_files']), 'mutable_app_slots': sorted(MUTABLE), 'loader_files': len(loaders),
              'omitted_derived_fields': ['denial_receipt', 'lifecycle_denial_digest', 'login_receipt', 'controller_sha256', 'signatures', 'PASS'],
              'limits': ['ordinary non-atomic census requires protected current preflight', 'harness root metadata supplements missing prior root tuple', 'no installation or service calls performed', 'current groups/ACL/root metadata must be revalidated under native guard']}
-    for name in ('first_live/inventory.rs', 'first_live/template.rs', 'transaction/native_profile.rs', 'bootstrap/socket.rs'):
+    for name in ('first_live/inventory.rs', 'first_live/native_effects/link_graph.rs', 'first_live/native_effects/negative_edges.rs', 'first_live/template.rs', 'transaction/native_profile.rs', 'bootstrap/socket.rs'):
         path = args.operator_source / 'packages/deployment-control-plane/src' / name
         index['schema_sources'][name] = sha(path.read_bytes())
     need(not args.out.exists(), 'OUTPUT_ALREADY_EXISTS')
