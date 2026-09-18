@@ -24,6 +24,7 @@ TOOLS = {'/bin/cat','/bin/chmod','/bin/launchctl','/bin/ls','/bin/mkdir',
          '/usr/bin/install','/usr/bin/python3','/usr/bin/shasum','/usr/bin/stat','/usr/bin/sudo'}
 HANDOFF = '/private/var/run/agent-deployd/broker-first-delivery.json'
 NATIVE = '/usr/local/libexec/agent-deployd/agent-deployd'
+SOCKET_DIRECTORY_INSTALL = ['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']
 
 
 def sha(data):
@@ -85,11 +86,11 @@ class OperatorIO:
             require(type(rows) is list and all(type(row) is list and row and
                 all(type(v) is str and v and '\0' not in v for v in row) for row in rows), 'ARGV_SCHEMA')
             require(len({tuple(row) for row in rows})==len(rows),'ARGV_DUPLICATE')
-        require(m['ordinary_argv_allowlist']==[['/usr/bin/python3','-B','-E','-s',str(self.package/'broker_first_delivery.py')]],'ORDINARY_ARGV')
+        require(m['ordinary_argv_allowlist']==[['/usr/bin/python3','-I','-S','-B',str(self.package/'first_live_launcher.py'),'--broker-exact']],'ORDINARY_ARGV')
         for row in m['root_argv_allowlist']:
             require(row[0] in TOOLS-{'/usr/bin/sudo','/usr/bin/python3'} or
                 row in ([NATIVE,'--first-live-and-enable'],[NATIVE,'--first-live-completion']), 'ROOT_PROGRAM')
-            if row[0]=='/usr/bin/install':
+            if row[0]=='/usr/bin/install' and row!=SOCKET_DIRECTORY_INSTALL:
                 require(len(row)==9 and row[:3]==['/usr/bin/install','-o','root'] and
                     row[3]=='-g' and row[5]=='-m' and row[7]=='/dev/fd/0' and
                     ((row[4]=='wheel' and row[6] in ('0400','0555','0600')) or
@@ -108,8 +109,8 @@ class OperatorIO:
         raw=read_local(path,self.manifest_digest)
         require(json.loads(raw)==m,'MANIFEST_DRIFT')
         require(Path(__file__).absolute()==self.package/'first_live_os.py','OPERATOR_LOCATION')
-        required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py'}
-        require(required<=m['operator_files'].keys(),'OPERATOR_SET')
+        required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py'}
+        require(required==set(m['operator_files']),'OPERATOR_SET')
         for name,digest in m['operator_files'].items():
             require(re.fullmatch(r'[a-z0-9_]+\.py',name),'OPERATOR_NAME');exact_digest(digest)
             p=self.package/name;read_local(p,digest)
@@ -233,7 +234,7 @@ class OperatorIO:
         selector=selectors.DefaultSelector();data=[bytearray(),bytearray()]
         try:
             for i,stream in enumerate((p.stdout,p.stderr)):selector.register(stream,selectors.EVENT_READ,i)
-            end=time.monotonic()+(1900 if argv==self.manifest['ordinary_argv_allowlist'][0] else 120)
+            end=time.monotonic()+(1900 if argv==self.manifest['ordinary_argv_allowlist'][0]+[self.manifest_digest] else 120)
             while selector.get_map() or p.poll() is None:
                 require(time.monotonic()<end,'COMMAND_TIMEOUT')
                 for key,_ in selector.select(min(0.1,max(0,end-time.monotonic()))):
@@ -279,13 +280,16 @@ class OperatorIO:
         require(not visible or root and argv==[NATIVE,'--first-live-and-enable'],'VISIBLE_COMMAND_NOT_AUTHORIZED')
         require(argv!=[NATIVE,'--first-live-and-enable'] or visible,'NATIVE_VISIBLE_REQUIRED')
         if expected_digest is not None:exact_digest(expected_digest)
-        if argv[0]=='/usr/bin/install':
+        if argv==SOCKET_DIRECTORY_INSTALL:
+            require(stdin is None,'DIRECTORY_INSTALL_STDIN_FORBIDDEN')
+        elif argv[0]=='/usr/bin/install':
             require(stdin is not None,'INSTALL_INPUT_FD')
             m=os.fstat(stdin.fileno())
             require(stat.S_ISREG(m.st_mode) and m.st_uid==502 and m.st_nlink==0 and
                 stat.S_IMODE(m.st_mode)==0o600 and 0<m.st_size<=LIMIT and stdin.tell()==0,'INSTALL_INPUT_FD')
         else:require(stdin is None,'UNEXPECTED_STDIN')
-        return self._command((['/usr/bin/sudo','-n'] if root else [])+argv,visible=visible,stdin=stdin,
+        actual=['/usr/bin/sudo','-n']+argv if root else argv+[self.manifest_digest]
+        return self._command(actual,visible=visible,stdin=stdin,
             expected_digest=expected_digest,missing=missing)
 
     def authenticate(self):
