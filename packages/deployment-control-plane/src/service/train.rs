@@ -30,6 +30,7 @@ struct ObservationRequest<'a> {
 }
 impl Train {
     pub fn open(intake: &Intake, q: &Queue, path: &Path, sandbox: bool) -> Result<Self> {
+        q.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
         let mut executors = BTreeMap::new();
         for (name, p) in &intake.config.catalog.profiles {
             if !p.enabled {
@@ -59,6 +60,7 @@ impl Train {
         Ok(Self { executors })
     }
     pub fn tick(&mut self, intake: &Intake, q: &Queue) -> Result<()> {
+        q.require_configured_activation(intake.config.first_target_adoption.as_deref())?;
         // Admission keeps working while a registered producer is disconnected.
         let _ = intake.poll(q);
         intake.deliver(q)?;
@@ -111,6 +113,8 @@ impl Train {
             receipt.attempt,
             receipt.target_generation,
             &receipt.new_service_generation,
+            executor,
+            &guard,
         );
         match result {
             Ok(()) => {
@@ -203,16 +207,24 @@ impl Train {
             current.attempt,
             current.target_generation,
             &current.service_generation,
+            executor,
+            &guard,
         )
     }
 }
-fn verify_goals(
+#[expect(
+    clippy::too_many_arguments,
+    reason = "Existing goal coordinates plus the caller-owned physical guard are distinct"
+)]
+pub(crate) fn verify_goals(
     intake: &Intake,
     q: &Queue,
     id: &str,
     attempt: u32,
     generation: u64,
     service: &str,
+    executor: &mut Executor,
+    guard: &crate::fs::MutationGuard,
 ) -> Result<()> {
     let coverage = q.daemon_coverage(id)?;
     require(coverage.len() <= 256, "GOAL_VERIFICATION_LIMIT")?;
@@ -306,6 +318,57 @@ fn verify_goals(
                         verification_profile: &g.coverage.verification_profile,
                     },
                 )?;
+                if g.coverage.verification_profile == crate::verification::native::PROFILE {
+                    let grant = q
+                        .adoption_grant_for_unit(id)?
+                        .ok_or(Error::new("WATCHDOG_CAPTURE_BINDING"))?;
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .map_err(|_| Error::new("CLOCK"))?
+                        .as_millis()
+                        .try_into()
+                        .map_err(|_| Error::new("CLOCK"))?;
+                    let (verdict, _) = crate::verification::native::observe(
+                        &intake.root,
+                        &intake.config.catalog,
+                        q,
+                        executor,
+                        guard,
+                        id,
+                        &grant,
+                        &request_id,
+                        now,
+                    )?;
+                    let mut payload = expected.clone();
+                    use crate::verification::watchdog::WatchdogVerdict;
+                    match verdict {
+                        WatchdogVerdict::Pass { evidence_digest } => {
+                            payload.outcome = GoalOutcome::Pass;
+                            payload.evidence_digest = evidence_digest;
+                        }
+                        WatchdogVerdict::Waiting { .. } => {
+                            q.daemon_record_waiting(&intake.config.catalog, payload)?;
+                            continue;
+                        }
+                        WatchdogVerdict::Fail { reason } => return Err(Error::new(reason)),
+                        WatchdogVerdict::Unknown { reason } => {
+                            payload.outcome = GoalOutcome::OutcomeUnknown;
+                            payload.evidence_digest = digest(&(id, reason))?;
+                        }
+                    }
+                    let signer = native_signer(
+                        intake,
+                        "local-verifier",
+                        &status.unit.deployment_profile,
+                        &g.coverage.verification_profile,
+                    )?;
+                    let receipt = Signed {
+                        issuer: "local-verifier".into(),
+                        signature: hex::encode(signer.sign(&signing_bytes(&payload)?).to_bytes()),
+                        payload,
+                    };
+                    intake.publish("results", &request_id, &receipt)?;
+                }
                 let deadline = std::cmp::min(
                     Instant::now() + Duration::from_millis(*deadline_ms),
                     all_deadline,
@@ -348,7 +411,7 @@ fn verify_goals(
     Ok(())
 }
 
-fn native_signer(
+pub(crate) fn native_signer(
     intake: &Intake,
     issuer: &str,
     profile: &str,

@@ -109,7 +109,7 @@ impl NativeService {
                 "SERVICE_IDENTITY",
             )?;
             require(
-                process_argv(pid)? == e.kind.argv(&self.enrollment.runtime_root),
+                process_argv(pid)? == self.enrollment.argv(e.kind),
                 "SERVICE_ARGV",
             )?;
             Some(p)
@@ -188,9 +188,7 @@ impl NativeService {
                 crate::bootstrap::verify_service_plist(&bytes, &self.enrollment.plutil_sha256)?;
             require(
                 plist.get("ProgramArguments")
-                    == Some(&serde_json::json!(e
-                        .kind
-                        .argv(&self.enrollment.runtime_root))),
+                    == Some(&serde_json::json!(self.enrollment.argv(e.kind))),
                 "SERVICE_ARGV",
             )?;
         }
@@ -242,7 +240,7 @@ impl NativeService {
             }
             require(!self.component(e)?.loaded, "OLD_GENERATION_UNPROVEN")?;
             // Complete root kernel census plus unloaded launchd blocks tick/start races.
-            super::process::prove_no_service_process(&kind.argv(&self.enrollment.runtime_root))?;
+            super::process::prove_no_service_process(&self.enrollment.argv(kind))?;
         }
         Ok(())
     }

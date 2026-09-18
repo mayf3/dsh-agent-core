@@ -3,7 +3,10 @@ mod health;
 mod journal;
 mod native;
 mod native_profile;
+mod observation;
+mod predecessor;
 mod process;
+pub(crate) use predecessor::VerifiedReadOnlyPredecessor;
 mod recovery;
 mod remediation;
 pub(crate) use remediation::RecoveryFailure;
@@ -17,7 +20,8 @@ use crate::{
 };
 use journal::Journal;
 pub use native_profile::{
-    parse_launchd, ComponentImage, EnrolledFile, NativeEnrollment, NativeKind, ServiceEnrollment,
+    parse_launchd, ComponentImage, EnrolledFile, NativeEnrollment, NativeKind, RuntimeStartup,
+    ServiceEnrollment,
 };
 pub use process::ProcessIdentity;
 pub use service::ServiceImage;
@@ -185,3 +189,23 @@ pub(crate) mod test_fixture;
 #[cfg(test)]
 #[path = "../../test/common/final_transaction.rs"]
 mod final_repair_tests;
+
+#[cfg(test)]
+#[path = "../../test/executed_predecessor.rs"]
+mod executed_predecessor_tests;
+
+#[cfg(test)]
+#[path = "../../test/adopted_baseline.rs"]
+mod adopted_baseline_tests;
+pub(crate) mod adoption;
+
+pub(crate) mod activation;
+#[cfg(test)]
+#[path = "../../test/adopted_chain.rs"]
+mod adopted_chain_tests;
+#[cfg(test)]
+#[path = "../../test/adoption_activation.rs"]
+mod adoption_activation_tests;
+#[cfg(test)]
+#[path = "../../test/adoption_crashes.rs"]
+mod adoption_crash_tests;

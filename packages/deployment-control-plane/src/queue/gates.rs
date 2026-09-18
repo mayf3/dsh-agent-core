@@ -7,6 +7,16 @@ pub(super) fn validate_unit(
     policy: &Signed<Policy>,
     now: u64,
 ) -> Result<()> {
+    validate_with_predecessor(tx, catalog, id, policy, now, None)
+}
+pub(super) fn validate_with_predecessor(
+    tx: &Transaction<'_>,
+    catalog: &Catalog,
+    id: &str,
+    policy: &Signed<Policy>,
+    now: u64,
+    predecessor: Option<&crate::transaction::VerifiedReadOnlyPredecessor>,
+) -> Result<()> {
     let status = read_status(tx, id)?;
     validate_policy(catalog, &status.unit.deployment_profile, policy, now)?;
     super::admission::pin_policy(tx, &status.unit.deployment_profile, policy)?;
@@ -26,9 +36,20 @@ pub(super) fn validate_unit(
         };
         validate_proposal(catalog, &actor, &evidence, now)?;
     }
-    super::admission::check_dependencies(tx, &status.unit.dependency_units)?;
     require(
-        super::dependencies::satisfied(tx, id)?,
+        predecessor.is_none() || status.state == State::Applied,
+        "NOT_APPLIED",
+    )?;
+    let current_dependencies: Vec<_> = status
+        .unit
+        .dependency_units
+        .iter()
+        .filter(|d| !predecessor.is_some_and(|p| p.permits(id, d)))
+        .cloned()
+        .collect();
+    super::admission::check_dependencies(tx, &current_dependencies)?;
+    require(
+        super::dependencies::satisfied_records(tx, &current_dependencies)?,
         "DEPENDENCY_NOT_SATISFIED",
     )?;
     let current: Option<(String, u64)> = tx

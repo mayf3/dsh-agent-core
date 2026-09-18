@@ -10,3 +10,6 @@ pub use server::run;
 #[cfg(test)]
 #[path = "../../test/common/mailbox.rs"]
 mod mailbox_tests;
+
+pub(crate) mod adoption;
+pub use adoption::run as run_adoption;
