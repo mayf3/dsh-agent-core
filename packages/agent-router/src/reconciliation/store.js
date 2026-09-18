@@ -1,6 +1,6 @@
 /**
  * @agent-core/agent-router/src/reconciliation/store.js — the Router
- * reconciliation store of AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+ * reconciliation store of AGENT_PROCESS_LIFECYCLE_HARDENING_V3
  * (CLAUSE-PROC-RECONCILIATION C-017..C-019 + the reconciliation caps of
  * CLAUSE-PROC-BOUNDED).
  *
@@ -16,8 +16,8 @@
  * Agent) with no gaps, enabling exact distinction between `evicted` (legally
  * issued, resolved payload removed) and `never_existed` (seq beyond the
  * high-water / illegal agent-generation combination / never minted). A
- * runtime-epoch mismatch is uniformly `restart_lost`; this Spec promises no
- * disk persistence across control-plane restarts.
+ * runtime-epoch mismatch is `restart_lost` only when the epoch was never
+ * durably observed. V3 records remain queryable across control-plane restarts.
  *
  * Settle-once (C-017): every `outcome_unknown` record may transition exactly
  * once into exactly one of late_completed | late_failed |
@@ -40,6 +40,8 @@ import {
 } from './capacity.js'
 import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
+import { authorityCapacityMethods } from './authority-capacity.js'
+import { readDurableRecoveryStore, writeDurableRecoveryStore } from './durable-file.js'
 
 const MANDATORY_TRANSITION_HEADROOM_BYTES = 4096
 
@@ -49,8 +51,11 @@ export class TurnReconciliationStore {
    * @param {string} [opts.runtimeEpoch] opaque epoch id (default: fresh UUID —
    *   a new control-plane runtime never claims a previous epoch's handles).
    */
-  constructor({ runtimeEpoch } = {}) {
+  constructor({ runtimeEpoch, persistenceFile = null } = {}) {
     this.runtimeEpoch = runtimeEpoch ?? randomUUID()
+    this.runtimeEpochs = new Set([this.runtimeEpoch])
+    this.persistenceFile = persistenceFile
+    this.startupBlockedReason = null
     /** handle -> record */
     this.records = new Map()
     /** agentId -> { discriminator, maxIssuedTurnSeq, evictedThroughTurnSeq, evictedSparseSeqs:Set, generations: Map<generation, {minSeq,maxSeq,hasUnresolved}> } */
@@ -63,6 +68,190 @@ export class TurnReconciliationStore {
     this.agentCounts = new Map()
     this.agentBytes = new Map()
     this.discriminatorSeq = 0
+    if (this.persistenceFile !== null) {
+      try {
+        const durable = readDurableRecoveryStore(this.persistenceFile)
+        if (durable !== null) {
+          for (const epoch of durable.runtimeEpochs) this.runtimeEpochs.add(epoch)
+          this.records = durable.records
+          this.issuance = durable.issuance
+          this.correlationIndex = durable.correlationIndex
+          this.discriminatorSeq = durable.discriminatorSeq
+          this.recountCapacity()
+          this.restoreCrashInterruptedRecords()
+        } else {
+          this.persistDurable()
+        }
+      } catch (error) {
+        this.records.clear()
+        this.issuance.clear()
+        this.correlationIndex.clear()
+        this.globalBytes = 0
+        this.agentCounts.clear()
+        this.agentBytes.clear()
+        this.startupBlockedReason = error instanceof SyntaxError
+          || error instanceof TypeError
+          || error instanceof ReconciliationCapacityError
+          ? 'durable_store_invalid'
+          : 'durable_store_unavailable'
+      }
+    }
+  }
+
+  recountCapacity() {
+    this.globalBytes = 0
+    this.agentCounts = new Map()
+    this.agentBytes = new Map()
+    for (const issuance of this.issuance.values()) {
+      for (const generation of issuance.generations.values()) {
+        generation.unresolvedCount = 0
+        generation.liveRecords = 0
+      }
+    }
+    for (const record of this.records.values()) {
+      record.bytes = recordByteSize(record)
+      if (record.bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES) {
+        throw new ReconciliationCapacityError(`reconciliation: restored record ${record.handle} exceeds byte cap`)
+      }
+      this.globalBytes += record.bytes
+      this.agentCounts.set(record.agentId, (this.agentCounts.get(record.agentId) ?? 0) + 1)
+      this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? 0) + record.bytes)
+      const generation = this.issuance.get(record.agentId)?.generations.get(record.processGeneration)
+      if (generation !== undefined) {
+        generation.liveRecords += 1
+        if (record.state !== 'settled') generation.unresolvedCount += 1
+      }
+    }
+    if (this.records.size > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL
+        || this.globalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
+      throw new ReconciliationCapacityError('reconciliation: restored global capacity exceeds frozen caps')
+    }
+    for (const [agentId, count] of this.agentCounts) {
+      if (count > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
+          || (this.agentBytes.get(agentId) ?? 0) > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT) {
+        throw new ReconciliationCapacityError(`reconciliation: restored capacity exceeds frozen caps for ${agentId}`)
+      }
+    }
+    for (const [agentId, issuance] of this.issuance) {
+      if (issuance.generations.size + issuance.evictedGenerations.size
+          > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+        throw new ReconciliationCapacityError(`reconciliation: restored issuance capacity exceeds frozen caps for ${agentId}`)
+      }
+    }
+    if (this.correlationIndex.size > RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
+      throw new ReconciliationCapacityError('reconciliation: restored correlation capacity exceeds frozen caps')
+    }
+  }
+
+  restoreCrashInterruptedRecords() {
+    let changed = false
+    for (const record of this.records.values()) {
+      if (record.state === 'settled') continue
+      if (record.exitObservedAt !== null && record.exitObservedAt !== undefined) {
+        record.state = 'settled'
+        record.lateOutcome = 'terminated_without_outcome'
+        record.terminationEvidence = 'child_real_exit'
+        record.settledAtWallMs = record.settledAtWallMs ?? Date.now()
+        record.recoveryState = 'settled'
+        record.settlementResult = 'terminated_without_outcome'
+        record.missingEvidence = []
+        record.nextSafeAction = 'send_new_request_after_reopened'
+        record.fenceState = 'cleared'
+        record.updatedAt = Date.now()
+        if (record.reapClaim !== null && record.reapClaim !== undefined) {
+          record.reapClaim = { ...record.reapClaim, phase: 'settled' }
+        }
+        changed = true
+        continue
+      }
+      if (record.promptWriteAttempted === true && record.initialOutcome === null) {
+        record.initialOutcome = 'outcome_unknown'
+        record.initialSource = 'runtime_restart_after_prompt_write'
+        record.recoveryState = 'blocked'
+        record.missingEvidence = ['live_generation_ownership']
+        record.failureReason = 'runtime_restart_ownership_unavailable'
+        record.nextSafeAction = 'reestablish_exact_ownership'
+        record.fenceState = 'active'
+        record.updatedAt = Date.now()
+        changed = true
+      }
+      if (record.promptWriteAttempted !== true && record.initialOutcome === null) {
+        record.state = 'settled'
+        record.outcome = 'not_admitted'
+        record.outcomeEvidence = 'prompt_write_not_attempted'
+        record.settledAtWallMs = Date.now()
+        record.recoveryState = 'settled'
+        record.settlementResult = 'not_admitted'
+        record.missingEvidence = []
+        record.nextSafeAction = 'send_new_request_after_reopened'
+        record.fenceState = 'cleared'
+        record.updatedAt = Date.now()
+        changed = true
+      }
+    }
+    if (changed) {
+      this.recountCapacity()
+      this.persistDurable()
+    }
+  }
+
+  persistDurable() {
+    if (this.startupBlockedReason !== null) {
+      throw Object.assign(new Error(`reconciliation durable store blocked: ${this.startupBlockedReason}`), {
+        code: 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED',
+      })
+    }
+    try {
+      writeDurableRecoveryStore(this.persistenceFile, this)
+    } catch (error) {
+      this.startupBlockedReason = 'durable_store_unavailable'
+      throw error
+    }
+  }
+
+  businessAdmissionStatus() {
+    return this.startupBlockedReason === null
+      ? { ready: true, reason: null }
+      : { ready: false, reason: this.startupBlockedReason }
+  }
+
+  assertBusinessAdmissionReady() {
+    if (this.startupBlockedReason === null) return true
+    throw Object.assign(new Error(`agent-router: recovery startup blocked (${this.startupBlockedReason})`), {
+      code: 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED',
+      status: 'not_admitted',
+      envelope: 'not_admitted',
+      requestAdmission: 'not_admitted',
+      failureStage: 'admission',
+      fencedBy: null,
+      reconciliationHandle: null,
+      processGeneration: null,
+      terminationEvidence: null,
+      missingEvidence: ['live_generation_ownership'],
+      attemptedActions: [],
+      nextSafeAction: 'operator_exact_generation_recovery',
+      replyDelivery: 'not_attempted',
+      partialDelivery: 'none',
+    })
+  }
+
+  activeFenceForAgent(agentId) {
+    for (const record of this.records.values()) {
+      if (record.agentId === agentId && record.initialOutcome === 'outcome_unknown'
+          && record.state !== 'settled' && record.fenceState !== 'cleared') return record
+    }
+    return null
+  }
+
+  unresolvedRecoveryRecords() {
+    return [...this.records.values()]
+      .filter(record => record.initialOutcome === 'outcome_unknown' && record.state !== 'settled')
+      .map(record => ({
+        handle: record.handle,
+        agentId: record.agentId,
+        processGeneration: record.processGeneration,
+        recoveryState: record.recoveryState,
+      }))
   }
 
   // ---------------------------------------------------------------- mint
@@ -111,6 +300,7 @@ export class TurnReconciliationStore {
     const turnSeq = issuance.maxIssuedTurnSeq + 1
     this.assertMintCapacity(agentId)
     const handle = `turn:${this.runtimeEpoch}:a${issuance.discriminator}:g${processGeneration}:s${turnSeq}`
+    const createdAt = Date.now()
     const record = {
       handle,
       runtimeEpoch: this.runtimeEpoch,
@@ -119,7 +309,9 @@ export class TurnReconciliationStore {
       turnSeq,
       sessionId: sessionId ?? null,
       callerCorrelation: callerCorrelation === null ? null : { ...callerCorrelation },
-      createdAtWallMs: Date.now(),
+      createdAtWallMs: createdAt,
+      createdAt,
+      updatedAt: createdAt,
       admitted: false,
       promptWriteAttempted: false,
       eventWatermarkSeq: null,
@@ -138,6 +330,17 @@ export class TurnReconciliationStore {
       cancelRequestedAtWallMs: null,
       finalAssistantOutput: null,
       audit: [],
+      hardDeadlineAt: null,
+      recoveryState: 'reserved',
+      missingEvidence: [],
+      reapClaim: null,
+      attemptedActions: [],
+      shutdownRequestedAt: null,
+      exitObservedAt: null,
+      settlementResult: null,
+      failureReason: null,
+      nextSafeAction: 'none',
+      fenceState: 'armed',
       reservedMandatoryBytes: MANDATORY_TRANSITION_HEADROOM_BYTES,
       bytes: 0,
     }
@@ -170,6 +373,7 @@ export class TurnReconciliationStore {
     this.agentCounts.set(agentId, (this.agentCounts.get(agentId) ?? 0) + 1)
     this.agentBytes.set(agentId, (this.agentBytes.get(agentId) ?? 0) + record.bytes)
     if (correlationKey !== null) this.correlationIndex.set(correlationKey, handle)
+    this.persistDurable()
     return handle
     } catch (error) {
       this.restoreAuthority(authorityBefore)
@@ -177,161 +381,11 @@ export class TurnReconciliationStore {
     }
   }
 
-  snapshotAuthority() {
-    const issuance = new Map([...this.issuance].map(([agentId, entry]) => [agentId, {
-      ...entry,
-      evictedSparseSeqs: new Set(entry.evictedSparseSeqs),
-      evictedGenerations: new Map(entry.evictedGenerations),
-      generations: new Map([...entry.generations].map(([generation, value]) => [generation, { ...value }])),
-    }]))
-    return {
-      records: new Map(this.records), issuance, correlationIndex: new Map(this.correlationIndex),
-      globalBytes: this.globalBytes, agentCounts: new Map(this.agentCounts), agentBytes: new Map(this.agentBytes),
-      discriminatorSeq: this.discriminatorSeq,
-    }
-  }
-
-  restoreAuthority(snapshot) {
-    this.records = snapshot.records
-    this.issuance = snapshot.issuance
-    this.correlationIndex = snapshot.correlationIndex
-    this.globalBytes = snapshot.globalBytes
-    this.agentCounts = snapshot.agentCounts
-    this.agentBytes = snapshot.agentBytes
-    this.discriminatorSeq = snapshot.discriminatorSeq
-  }
 
   callerCorrelationKey({ occurrenceId, runId, requestId }) {
     return `${occurrenceId ?? ''}\u0000${runId ?? ''}\u0000${requestId ?? ''}`
   }
 
-  assertCorrelationCapacity() {
-    if (this.correlationIndex.size >= RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL) {
-      throw new ReconciliationCapacityError('reconciliation: caller correlation index capacity exhausted')
-    }
-  }
-
-  evictSettledGenerationForCapacity(agentId, issuance) {
-    const candidate = [...issuance.generations.entries()]
-      .filter(([generation, entry]) => entry.unresolvedCount === 0
-        && generation === issuance.evictedThroughGeneration + 1)
-      .sort((a, b) => a[0] - b[0])[0]
-    if (candidate === undefined) return
-    const generation = candidate[0]
-    for (const record of [...this.records.values()]) {
-      if (record.agentId === agentId && record.processGeneration === generation && record.state === 'settled') {
-        this.evictRecord(record)
-      }
-    }
-  }
-
-  canEvictRecord(record) {
-    const issuance = this.issuance.get(record.agentId)
-    const generationEntry = issuance?.generations.get(record.processGeneration)
-    if (issuance === undefined || generationEntry === undefined || generationEntry.liveRecords > 1) return true
-    return record.processGeneration === issuance.evictedThroughGeneration + 1
-      || issuance.evictedGenerations.has(record.processGeneration)
-      || issuance.evictedGenerations.size < RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT
-  }
-
-  evictResolvedForByteCapacity(agentId, additionalBytes, excludeHandle = null) {
-    const candidates = [...this.records.values()].filter(record => record.state === 'settled'
-      && record.handle !== excludeHandle && this.canEvictRecord(record))
-    for (const record of candidates) {
-      const agentPressure = (this.agentBytes.get(agentId) ?? 0) + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
-      const globalPressure = this.globalBytes + additionalBytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL
-      if (!agentPressure && !globalPressure) break
-      if (!globalPressure && record.agentId !== agentId) continue
-      this.evictRecord(record)
-    }
-  }
-
-  /**
-   * Admission capacity precheck (CLAUSE-PROC-BOUNDED rule 8): fails loud
-   * BEFORE any reservation when neither per-Agent nor global count/byte caps
-   * can be satisfied — first attempting oldest-first eviction of RESOLVED
-   * records. Unresolved records are never evictable. Router-level admission
-   * calls this BEFORE spawning / writing so capacity exhaustion never costs a
-   * spawn or a prompt byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S=0).
-   */
-  assertMintCapacity(agentId) {
-    const agentCount = this.agentCounts.get(agentId) ?? 0
-    const agentBytes = this.agentBytes.get(agentId) ?? 0
-    if (agentCount + 1 <= RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
-        && this.records.size + 1 <= RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL) {
-      return true
-    }
-    this.evictResolvedForCapacity(agentId)
-    const agentCountAfter = this.agentCounts.get(agentId) ?? 0
-    if (agentCountAfter + 1 > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
-        || this.records.size + 1 > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL) {
-      throw new ReconciliationCapacityError(
-        `reconciliation: record capacity exhausted (agent records ${agentCountAfter}/${RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT}, global ${this.records.size}/${RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL}) — unresolved records are not evictable`,
-      )
-    }
-    return true
-  }
-
-  /** Oldest-first eviction of RESOLVED records only (rule: unresolved never evicted). */
-  evictResolvedForCapacity(agentId) {
-    const agentCountPressure = () => (this.agentCounts.get(agentId) ?? 0) + 1 > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
-    const globalCountPressure = () => this.records.size + 1 > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_GLOBAL
-    // Per-Agent pressure evicts THAT agent's oldest resolved records; global
-    // pressure evicts globally-oldest resolved records.
-    const candidates = [...this.records.values()]
-      .filter(r => r.state === 'settled' && this.canEvictRecord(r))
-      .sort((a, b) => {
-        const aPinned = a.agentId === agentId
-        const bPinned = b.agentId === agentId
-        if (aPinned !== bPinned) return aPinned ? -1 : 1
-        return a.agentId === b.agentId ? a.turnSeq - b.turnSeq : (a.agentId < b.agentId ? -1 : 1)
-      })
-    for (const record of candidates) {
-      if (!agentCountPressure() && !globalCountPressure()
-          && this.globalBytes < RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) break
-      this.evictRecord(record)
-    }
-  }
-
-  evictRecord(record) {
-    if (!this.canEvictRecord(record)) {
-      throw new ReconciliationCapacityError(`reconciliation: evicting ${record.handle} would exceed issuance metadata cap`)
-    }
-    this.records.delete(record.handle)
-    this.globalBytes -= record.bytes
-    this.agentCounts.set(record.agentId, (this.agentCounts.get(record.agentId) ?? 1) - 1)
-    this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? record.bytes) - record.bytes)
-    const issuance = this.issuance.get(record.agentId)
-    if (issuance !== undefined) {
-      if (record.turnSeq === issuance.evictedThroughTurnSeq + 1) {
-        issuance.evictedThroughTurnSeq = record.turnSeq
-      } else {
-        issuance.evictedSparseSeqs.add(record.turnSeq)
-        if (issuance.evictedSparseSeqs.size > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT) {
-          // Bounded: drop the oldest sparse entry; the contiguous watermark
-          // plus record-presence checks remain the authoritative signals.
-          const oldest = issuance.evictedSparseSeqs.values().next().value
-          issuance.evictedSparseSeqs.delete(oldest)
-        }
-      }
-      // Rule 11: compact the generation range once none of its records are
-      // live — legally-evicted handles of the removed generation still
-      // resolve as `evicted` through the watermarks above.
-      const generationEntry = issuance.generations.get(record.processGeneration)
-      if (generationEntry !== undefined) {
-        generationEntry.liveRecords -= 1
-        if (generationEntry.liveRecords <= 0) {
-          const generation = record.processGeneration
-          issuance.generations.delete(generation)
-          if (generation === issuance.evictedThroughGeneration + 1) {
-            issuance.evictedThroughGeneration = generation
-          } else {
-            issuance.evictedGenerations.set(generation, generationEntry.maxSeq)
-          }
-        }
-      }
-    }
-  }
 
   // ------------------------------------------------------ record lifecycle
 
@@ -349,6 +403,7 @@ export class TurnReconciliationStore {
       candidate.eventWatermarkSeq = eventWatermarkSeq ?? null
       candidate.promptRequestId = promptRequestId ?? null
       candidate.deadlineAtWallMs = deadlineAtWallMs ?? null
+      candidate.hardDeadlineAt = deadlineAtWallMs ?? null
     })
   }
 
@@ -391,70 +446,6 @@ export class TurnReconciliationStore {
   }
 
   /** Trim optional evidence before an authoritative mutation can exceed byte caps. */
-  clampOptionalEvidence(candidate, record) {
-    const agentBytes = this.agentBytes.get(record.agentId) ?? 0
-    let reclaimableAgentBytes = 0
-    let reclaimableGlobalBytes = 0
-    for (const other of this.records.values()) {
-      if (other.handle === record.handle || other.state !== 'settled' || !this.canEvictRecord(other)) continue
-      reclaimableGlobalBytes += other.bytes
-      if (other.agentId === record.agentId) reclaimableAgentBytes += other.bytes
-    }
-    const maxBytes = Math.min(
-      RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES,
-      record.bytes + RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT - agentBytes + reclaimableAgentBytes,
-      record.bytes + RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL - this.globalBytes + reclaimableGlobalBytes,
-    )
-    while (recordByteSize(candidate) > maxBytes && candidate.audit.length > 0) {
-      const dropped = candidate.audit.shift()
-      candidate.auditDroppedCount = (candidate.auditDroppedCount ?? 0) + 1
-      candidate.auditDroppedBytes = (candidate.auditDroppedBytes ?? 0)
-        + Buffer.byteLength(JSON.stringify(dropped), 'utf8')
-    }
-    if (recordByteSize(candidate) <= maxBytes) return
-    if (candidate.finalAssistantOutput !== null) {
-      const output = candidate.finalAssistantOutput
-      const source = Buffer.from(String(output.text ?? ''), 'utf8')
-      let start = Math.min(source.length, Math.max(0, recordByteSize(candidate) - maxBytes))
-      while (start < source.length && (source[start] & 0xc0) === 0x80) start += 1
-      if (source.length > 0 && start >= source.length) {
-        start = source.length - 1
-        while (start > 0 && (source[start] & 0xc0) === 0x80) start -= 1
-      }
-      candidate.finalAssistantOutput = {
-        text: source.subarray(start).toString('utf8'), truncated: true,
-        originalBytes: Math.max(output.originalBytes ?? source.length, source.length),
-      }
-    }
-    const excess = Math.max(0, recordByteSize(candidate) - maxBytes)
-    candidate.reservedMandatoryBytes = Math.max(0, (candidate.reservedMandatoryBytes ?? 0) - excess)
-  }
-
-  mutateRecord(record, mutate) {
-    const candidate = {
-      ...record,
-      callerCorrelation: record.callerCorrelation === null ? null : { ...record.callerCorrelation },
-      finalAssistantOutput: record.finalAssistantOutput === null ? null : { ...record.finalAssistantOutput },
-      audit: record.audit.map(entry => ({ ...entry })),
-    }
-    mutate(candidate)
-    this.clampOptionalEvidence(candidate, record)
-    const bytes = recordByteSize(candidate)
-    if (bytes > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORD_BYTES) {
-      throw new ReconciliationCapacityError(`reconciliation: record ${record.handle} exceeds per-record byte cap`)
-    }
-    const delta = bytes - record.bytes
-    if (delta > 0) this.evictResolvedForByteCapacity(record.agentId, delta, record.handle)
-    if ((this.agentBytes.get(record.agentId) ?? 0) + delta > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_PER_AGENT
-        || this.globalBytes + delta > RECONCILIATION_CAPS.MAX_RECONCILIATION_BYTES_GLOBAL) {
-      throw new ReconciliationCapacityError(`reconciliation: mutation byte capacity exhausted for ${record.handle}`)
-    }
-    const before = record.bytes
-    Object.assign(record, candidate, { bytes })
-    this.globalBytes += bytes - before
-    this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? before) + bytes - before)
-    return record
-  }
 
   appendAudit(record, entry) {
     const bounded = {
@@ -472,12 +463,6 @@ export class TurnReconciliationStore {
     })
   }
 
-  retally(record) {
-    const before = record.bytes
-    record.bytes = recordByteSize(record)
-    this.globalBytes += record.bytes - before
-    this.agentBytes.set(record.agentId, (this.agentBytes.get(record.agentId) ?? before) + record.bytes - before)
-  }
 }
 
 // Settlement machines (state-machine.js) + non-consuming queries (query.js)
@@ -487,7 +472,7 @@ export class TurnReconciliationStore {
 // writable/configurable pass through unchanged and `constructor` is never
 // installed.
 const composedMethodDescriptors = {}
-for (const group of [settlementMethods, queryMethods]) {
+for (const group of [authorityCapacityMethods, settlementMethods, queryMethods]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue
     composedMethodDescriptors[key] = { ...descriptor, enumerable: false }

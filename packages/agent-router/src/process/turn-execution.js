@@ -44,6 +44,7 @@ export class TurnExecution {
     this.idleObservationSeq = null
     this.turnStartObservationSeq = null
     this.laterTurnStartSeen = false
+    this.streamGapSeen = false
     this.assistantSegments = []
     this.assistantOriginalBytes = 0
     this.assistantTruncated = false
@@ -167,7 +168,8 @@ export const turnExecutionMethods = {
         `prompt of ${promptBytes} bytes exceeds MAX_PROMPT_BYTES ${PROCESS_EVIDENCE_CAPS.MAX_PROMPT_BYTES} — rejected before queueing (input is never cached)`)
     }
     if (this.activeUnknownFences.size > 0) {
-      return fencedRejection(this.activeUnknownFence?.handle ?? this.activeUnknownFences.keys().next().value)
+      const handle = this.activeUnknownFence?.handle ?? this.activeUnknownFences.keys().next().value
+      return Object.assign(fencedRejection(handle), this.store.recoveryDiagnostic?.(handle) ?? {})
     }
     if (this.state !== 'READY') {
       return envelopeCarrier('not_admitted', null, this.state === 'DRAINING' || this.state === 'EXITED' ? 'AGENT_PROCESS_DRAINING' : 'AGENT_PROCESS_NOT_READY',
@@ -332,6 +334,8 @@ export const turnExecutionMethods = {
       onWriteAttempted: () => {
         execution.phase = 'prompt_sending'
         this.store.markPromptWriteAttempted(execution.handle)
+        this.counters.explicitNewRequestExecutions ??= 0
+        this.counters.explicitNewRequestExecutions += 1
       },
     })
     execution.receiptMessageId = receipt?.messageId ?? null
@@ -382,11 +386,6 @@ export const turnExecutionMethods = {
   handleExecutionCallerError(execution, error, reject) {
     if (error?.envelope === 'outcome_unknown') {
       if (!execution.unknownMarked) this.markExecutionUnknown(execution, error.source ?? 'unknown_source')
-      // Turn-path prompt-receipt timeout is fatal per §10.3
-      // PROMPT_RECEIPT_NEVER_REPLIES; deliver-path keeps reconciling.
-      if (execution.mode === 'turn' && error.source === 'prompt_receipt_timeout') {
-        void this.fatal('prompt_receipt_timeout')
-      }
       reject(error)
       return
     }

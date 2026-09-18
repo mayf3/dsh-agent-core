@@ -19,8 +19,8 @@ import { makeFx, firstHandle, prompts, rejectsWith, slotSeq } from './helpers.js
 // Prompt admission / correlation (C-010 / C-012) — deadline rows
 // ---------------------------------------------------------------------------
 
-test('PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt deadline -> unknown, fatal kill, exit settlement', async () => {
-  const fx = makeFx({ deadlines: { promptReceiptTimeoutMs: 140 } })
+test('PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt unknown stays fenced until hard-deadline REAP', async () => {
+  const fx = makeFx({ deadlines: { promptReceiptTimeoutMs: 35, turnTimeoutMs: 100, shutdownGraceMs: 80 } })
   await fx.readyNow()
   const turn = fx.proc.turn('main', 'void', {}, 5000)
   await fx.tick()
@@ -30,12 +30,16 @@ test('PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt deadline -> unknown, fat
   })
   // The unknown is queryable BEFORE the kill lands.
   assert.equal(fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot.initialOutcome, 'outcome_unknown')
-  assert.equal(fx.counts().killSignals, 1, 'turn-path receipt timeout is fatal (kill)')
+  assert.equal(fx.proc.state, 'READY')
+  assert.equal(fx.counts().killSignals, 0, 'receipt timeout alone is not kill authority')
+  for (let i = 0; i < 20 && !fx.writes.some(write => write.method === 'shutdown'); i += 1) await fx.sleep(5)
+  assert.equal(fx.writes.filter(write => write.method === 'shutdown').length, 1, 'hard deadline owns the single REAP')
   fx.childExit(1, null)
   await fx.proc.exitPromise
   const snapshot = fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot
   assert.equal(snapshot.lateOutcome, 'terminated_without_outcome')
   assert.deepEqual(slotSeq(fx), ['casReap:g1', 'casEmpty:g1'])
+  assert.equal(fx.counts().gracefulShutdownWriteAttempts, 1)
   assert.equal(prompts(fx).length, 1, 'no second request was created')
 })
 

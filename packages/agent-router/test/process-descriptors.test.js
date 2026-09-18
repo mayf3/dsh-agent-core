@@ -3,7 +3,7 @@
  * split method groups must preserve the pre-refactor class prototype
  * descriptors exactly. Plain `Object.assign(proto, group)` installs the
  * groups' plain-object descriptors verbatim (enumerable: true), flipping the
- * frozen-audit 40 AgentProcess + 12 TurnReconciliationStore methods away from
+ * frozen-audit AgentProcess + TurnReconciliationStore methods away from
  * the pre-refactor class-prototype shape. These tests pin every own method
  * (composed and class-body alike) to enumerable: false / writable: true /
  * configurable: true, pin the audited composition counts, and confirm the
@@ -20,13 +20,15 @@ import { evidenceBufferMethods } from '../src/process/evidence-buffer.js'
 import { rpcChannelMethods } from '../src/process/rpc-channel.js'
 import { eventCorrelationMethods } from '../src/process/event-correlation.js'
 import { turnExecutionMethods } from '../src/process/turn-execution.js'
+import { recoveryMethods } from '../src/process/recovery.js'
 import { spawnMethods } from '../src/process/spawn.js'
 import { shutdownMethods } from '../src/process/shutdown.js'
 import { settlementMethods } from '../src/reconciliation/state-machine.js'
 import { queryMethods } from '../src/reconciliation/query.js'
+import { authorityCapacityMethods } from '../src/reconciliation/authority-capacity.js'
 
-const METHOD_COUNT_AGENT_PROCESS = 41 // +unknownFenceDiagnostic (unknown-fence repair); the r2 WORKFLOW_STALE_REENTRY_V1 removed the transient resolveStaleExecution addition
-const METHOD_COUNT_RECONCILIATION = 12
+const METHOD_COUNT_AGENT_PROCESS = 45 // V3 adds parent-owned recovery scheduling/coordinator methods
+const METHOD_COUNT_RECONCILIATION = 32 // V3 adds durable recovery, capacity transactions and projections
 
 function composedKeys(groups) {
   const keys = new Set()
@@ -68,6 +70,7 @@ test('AgentProcess prototype method descriptors preserved (B-1: enumerable false
     rpcChannelMethods,
     eventCorrelationMethods,
     turnExecutionMethods,
+    recoveryMethods,
     spawnMethods,
     shutdownMethods,
   ])
@@ -80,7 +83,7 @@ test('AgentProcess prototype method descriptors preserved (B-1: enumerable false
 })
 
 test('TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete)', () => {
-  const composed = composedKeys([settlementMethods, queryMethods])
+  const composed = composedKeys([authorityCapacityMethods, settlementMethods, queryMethods])
   assert.equal(composed.size, METHOD_COUNT_RECONCILIATION, 'frozen-audit TurnReconciliationStore composed method count')
 
   const own = assertDescriptorShape(TurnReconciliationStore, 'TurnReconciliationStore')

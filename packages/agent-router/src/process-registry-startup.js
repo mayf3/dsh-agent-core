@@ -1,3 +1,30 @@
+import { fencedRejection } from './process/state-machine.js'
+
+export function restoreRecoveryFences(reconciliationStore) {
+  for (const record of reconciliationStore.unresolvedRecoveryRecords?.() ?? []) {
+    reconciliationStore.markRecoveryBlocked(
+      record.handle, ['live_generation_ownership'], 'runtime_restart_ownership_unavailable',
+    )
+  }
+}
+
+export function assertRecoveryAdmission(reconciliationStore, agentId) {
+  reconciliationStore.assertBusinessAdmissionReady?.()
+  const fence = reconciliationStore.activeFenceForAgent?.(agentId)
+  if (fence !== null && fence !== undefined) {
+    throw Object.assign(
+      fencedRejection(fence.handle), reconciliationStore.recoveryDiagnostic?.(fence.handle) ?? {},
+    )
+  }
+}
+
+export function ownsReapSlot(lifecycleSlots, agentId, proc, requireGeneration = false) {
+  const slot = lifecycleSlots.get(agentId)
+  return slot?.state === 'REAP' && slot.processRef === proc
+    && (!requireGeneration || slot.generation === proc.processGeneration)
+    && slot.ownershipToken === (proc.ownershipToken ?? null)
+}
+
 /** Normalize dependency failures into an extensible startup carrier. */
 export async function disposeProcessSlots(lifecycleSlots, failNoChild) {
   const shutdowns = []
