@@ -251,7 +251,7 @@ def main():
     manifest=_object(read_local(package/'manifest.json',manifest_hash),16*1024*1024)
     # This explicit invocation is only supplied in the separately approved package.
     home=Path(pwd.getpwuid(502).pw_dir)
-    io=OperatorIO(manifest,package,home/'.agent-deploy-first-live-operator'/OPERATION)
+    io=OperatorIO(manifest,package,home/'.agent-deploy-first-live-operator'/layout.EXECUTION_ID)
     print(_canonical(execute(io,manifest,package)).decode())
 
 
