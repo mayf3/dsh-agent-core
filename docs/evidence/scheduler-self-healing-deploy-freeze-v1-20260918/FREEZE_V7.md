@@ -40,7 +40,7 @@ TARGET_APP_MANIFEST_SHA256=c41a90453d0170085b3959943af70b1111c9403b5191e097649e2
 2. verify manifest == TARGET_APP_MANIFEST_SHA256 + scheduler.js/package.json digests
 3. mv app -> app.rollback-v7-<ts>       (exact rollback generation)
    mv app.next-<ts> -> app
-4. launchctl kickstart -k system/ai.agent.core.runtime
+4. launchctl kickstart -k system/ai.agent-core.runtime
 NO per-file overwriting inside live app/.
 ```
 
@@ -85,7 +85,7 @@ SPAWN_HELPER_PRE_SHA=a9fdfe66a2494557c80d9e8e8f210b2cdbbfab29a2b3fea2eeaa2101971
 
 ```text
 RUNBOOK=deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh
-RUNBOOK_SHA256(V7)=c5ee02aa46aeda2de0ca2e58aad11fe3fc69643a868ba2a29d0d12c7f6c77ea7 (archived byte-identical copy in this directory;
+RUNBOOK_SHA256(V7)=73a5b2d4d0a2e4eaffacc682cf3d56e14115294cee8f586a4ec2f77547d2611a (archived byte-identical copy in this directory;
 r2: fail() now exits (all pre-swap gates fail-closed), do_build call-name fixed, conflicting-
 process gate + staging key pins restored, engine-lease identity check restored, routing pre==post
 check fixed, RB_TMP mkdir + robust restore for partial-mv states, final pm_guard enforced,
@@ -100,3 +100,14 @@ ROOT COMMAND (single line):
 MECHANICAL_REVIEW=see V7-REVIEW-MECHANICAL.md
 SAFETY_REVIEW=see V7-REVIEW-SAFETY.md
 ```
+
+## r3→r4 review fixes (final review round)
+
+1. G6c parse: rel now strips through the LAST space (##*  ) — the two-space shasum separator no
+   longer leaves a leading space (r2/r3 false-fail class closed; verified 7/7 by simulation).
+2. The staging-vs-live scope-creep file loop was REMOVED (unsatisfiable against the narrow-overlay
+   live closure — staging is a full checkout). Scope enforcement is carried entirely by G9
+   (built manifest == frozen TARGET_APP_MANIFEST pins every non-scheduler byte to live and every
+   scheduler byte to 41f354d).
+3. The non-target PRE-hash capture moved to immediately before the swap (smaller churn window).
+4. G9 fail message renamed (stale SCOPE_CREEP reference).
