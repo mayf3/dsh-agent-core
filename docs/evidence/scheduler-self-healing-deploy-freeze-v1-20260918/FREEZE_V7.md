@@ -85,7 +85,7 @@ SPAWN_HELPER_PRE_SHA=a9fdfe66a2494557c80d9e8e8f210b2cdbbfab29a2b3fea2eeaa2101971
 
 ```text
 RUNBOOK=deployment-artifacts/scheduler-self-healing-v1/scheduler-self-healing-deploy-v7.sh
-RUNBOOK_SHA256(V7)=f709ca05b4713715889ae15f08518b48f065f69cc89e3d3e01c7ed9cdb51fe8b (archived byte-identical copy in this directory;
+RUNBOOK_SHA256(V7)=c5ee02aa46aeda2de0ca2e58aad11fe3fc69643a868ba2a29d0d12c7f6c77ea7 (archived byte-identical copy in this directory;
 r2: fail() now exits (all pre-swap gates fail-closed), do_build call-name fixed, conflicting-
 process gate + staging key pins restored, engine-lease identity check restored, routing pre==post
 check fixed, RB_TMP mkdir + robust restore for partial-mv states, final pm_guard enforced,
