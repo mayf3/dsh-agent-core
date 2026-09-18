@@ -4,6 +4,23 @@ status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
+revision: r2
+revision_date: 2026-09-18
+amendment_ref: >-
+  r2 = C026_LARK_COEXISTENCE_AND_IMPLEMENTATION_SCOPE_AMENDMENT_V1;
+  narrows C-026 applicability to recovery/fence-domain results, preserves
+  AGENT_CORE_LARK_UX_PHASE1_V3 CTR-DISPLAY-003 for normal Lark delivery
+  results, and adds three exact implementation/test paths to §14.
+amendment_status: accepted
+amendment_reviewed_head: 5f7fa6c0d8f7e1ada5d8ece40b466a6b67fbdd1d
+amendment_reviewed_spec_sha256: df27fa4692a860520876be0e53b9cd4c0ff5b67568f1672bb144b9d8fa7a11b0
+amendment_independent_review: PASS
+amendment_accepted_by: mayf3
+amendment_accepted_date: 2026-09-18
+amendment_owner_decision: >-
+  OWNER_DECISION=ACCEPT_NARROW_AMENDMENT, review-gated; acceptance may be
+  finalized only after an independent exact-head semantic review returns
+  PASS with BLOCKERS=NONE.
 scope:
   - AgentProcess lifecycle and readiness
   - RPC deadlines and child-exit cleanup
@@ -16,6 +33,8 @@ governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V2
 external_authorities: []
+related_specs:
+  - AGENT_CORE_LARK_UX_PHASE1_V3
 supersedes:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
 superseded_by: null
@@ -28,6 +47,7 @@ replaced_authority_revision: 3c7b169a864c1e45df8b5c67333a9478138a22ee
 references:
   - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
+  - docs/specs/AGENT_CORE_LARK_UX_PHASE1_V3.md
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md
   - docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
   - docs/investigations/AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1.md
@@ -40,7 +60,53 @@ references:
 > REAP、durable recovery/fence state 与结构化外层诊断。未接受前不授权 implementation。
 > 本轮不改产品代码、不 merge、不部署、不重启、不执行生产 mutation。
 
-## 0. Authoring result and whole-authority transition plan
+## 0A. r2 narrow amendment — C-026/Lark coexistence and exact scope
+
+`r2` is a narrow semantic amendment authorized by the Owner decision
+`ACCEPT_NARROW_AMENDMENT`. It changes only the C-026 applicability boundary and
+the three exact §14 paths listed below. It does not supersede
+`AGENT_CORE_LARK_UX_PHASE1_V3`, alter its `CTR-DISPLAY-003` result union, or
+change any other C-001–C-026 lifecycle semantic.
+
+The two accepted authorities coexist by result domain:
+
+```text
+RECOVERY_OR_FENCE_RESULT
+  -> AGENT_PROCESS_LIFECYCLE_HARDENING_V3 C-026
+
+NORMAL_LARK_DELIVERY_RESULT
+  -> AGENT_CORE_LARK_UX_PHASE1_V3 CTR-DISPLAY-003
+```
+
+An ingress seam that can return either domain MUST classify the result before
+projection. Code ordering, object spread order, catch ordering, or an implicit
+"newer Spec wins" rule MUST NOT decide authority precedence.
+
+This amendment remains docs-only and grants no production mutation authority.
+Product implementation remains frozen until `amendment_status: accepted` is
+merged into current main from the exact independently reviewed semantic head.
+
+After independent review PASS with no blockers, r2 acceptance is exactly this
+mechanical docs-only transaction:
+
+```text
+amendment_status: proposed -> accepted
+amendment_reviewed_head: absent -> <exact reviewed semantic head>
+amendment_reviewed_spec_sha256: absent -> <exact reviewed semantic SHA-256>
+amendment_independent_review: absent -> PASS
+amendment_accepted_by: absent -> mayf3
+amendment_accepted_date: absent -> <acceptance date>
+```
+
+The finalization commit MUST NOT change the reviewed semantic body. It does not
+repeat the r1 V3/V2 succession transaction and does not change either governing
+Spec's `status`, `supersedes`, or `superseded_by` fields.
+
+## 0. Historical r1 authoring result and completed whole-authority transition
+
+This section records the original r1 transition, completed by authority merge
+`72e19853bca806a4fb2c977068a7fb849b77909d`. It is historical and is not the
+r2 amendment acceptance procedure.
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
@@ -1366,8 +1432,15 @@ operation/history and cannot mutate a new slot or fence.
 
 #### C-026 — Structured outer recovery diagnostics and no replay
 
-Every outer ingress/query projection for an admitted or fenced request exposes
-this closed top-level shape. Every key is present; only `fencedBy`,
+Only the following recovery/fence-domain results expose C-026's closed
+top-level shape:
+
+1. an `outcome_unknown` result;
+2. a fenced admission result;
+3. a recovery startup/store blocked result;
+4. a recovery query/diagnostic result.
+
+Every key is present; only `fencedBy`,
 `reconciliationHandle`, `processGeneration` and `terminationEvidence` may be
 `null` when no execution identity/evidence exists. The two evidence/action
 fields are arrays, never null:
@@ -1398,10 +1471,19 @@ replyDelivery = not_attempted | delivered | failed | unknown
 partialDelivery = none | possible | confirmed
 ```
 
-Admission/execution failure before any reply attempt uses
+Within the recovery/fence domain, an admission/execution failure before any reply attempt uses
 `replyDelivery=not_attempted` and `partialDelivery=none`. All strings are enums
 or bounded redacted reason codes; raw prompt, answer, environment, credential,
 private message and production dump are forbidden in this projection.
+
+C-026 does not cover a normal Lark admission result, successful execution
+result, or reply-delivery failure. Those results continue to obey the accepted
+`AGENT_CORE_LARK_UX_PHASE1_V3` `CTR-DISPLAY-003` closed union. In particular, a
+normal Lark reply-delivery failure retains `error`, `executionResult` including
+`executionResult.reply`, `confirmedChunkReceipts`, and `failureReceipt` exactly
+as that authority requires. C-026's raw-answer prohibition applies only to the
+four recovery/fence-domain projections above and MUST NOT be used to delete or
+compress fields required by `CTR-DISPLAY-003`.
 
 ```text
 ORIGINAL_PROMPT_REPLAY = 0
@@ -1852,6 +1934,11 @@ Product Surface late-delivery policy, Agent identity, Binding/Session or
 business idempotency. Existing timeout variables keep their V2 mapping; no
 fifth timeout is added.
 
+The r2 amendment makes the existing Lark boundary explicit: normal Lark
+delivery results remain governed by `AGENT_CORE_LARK_UX_PHASE1_V3`
+`CTR-DISPLAY-003`; only the four C-026 recovery/fence-domain result classes use
+the lifecycle closed projection. Neither authority supersedes the other.
+
 ## 13. Open questions
 
 ```text
@@ -1877,13 +1964,17 @@ Independent review verifies:
 - restart restores unresolved records/fences but never reconstructs ownership from PID;
 - duplicate/concurrent recovery performs one shutdown;
 - old-generation callbacks cannot affect a new generation;
-- C-026 diagnostics and all no-replay counters are executable;
+- all four recovery/fence-domain C-026 results expose exactly the closed
+  recovery shape and all no-replay counters are executable;
+- normal Lark admission, successful execution and reply-delivery results remain
+  byte/field compatible with `AGENT_CORE_LARK_UX_PHASE1_V3`
+  `CTR-DISPLAY-003`, including the full reply-delivery execution result;
 - fault plan covers the ten required scenarios and a real outer-entry E2E;
 - docs-only scope is preserved.
 
-After review PASS, Owner accepts the exact reviewed semantic commit through
-§0's atomic docs-only lifecycle transaction. Implementation may begin only from
-a fresh descendant of the accepted authority in main.
+After review PASS, Owner finalizes the exact reviewed r2 semantic commit through
+§0A's r2-specific mechanical transaction. Implementation may begin only from a
+fresh descendant of the accepted amendment in main.
 
 Implementation scope after acceptance is limited to:
 
@@ -1891,6 +1982,7 @@ Implementation scope after acceptance is limited to:
 packages/agent-router/src/reconciliation/**
 packages/agent-router/src/process/turn-execution.js
 packages/agent-router/src/process/event-correlation.js
+packages/agent-router/src/process/evidence-buffer.js
 packages/agent-router/src/process/shutdown.js
 packages/agent-router/src/process/spawn.js
 packages/agent-router/src/process-registry.js
@@ -1898,8 +1990,14 @@ packages/agent-router/src/ingress-delivery.js
 packages/agent-router/src/index.js
 packages/agent-router/test/process-lifecycle/**
 packages/agent-router/test/route-chain/**
+packages/agent-router/test/helpers/fake-child.js
+packages/agent-router/test/process-descriptors.test.js
 minimal production-runtime composition needed to open the durable store
 ```
+
+The three r2-added paths are authorized only for the accepted lifecycle
+recovery semantics. They do not authorize unrelated AgentProcess/Router
+refactoring or changes to normal Lark result contracts.
 
 Scheduler, Lark rendering, Binding/Session, credential, generic recovery
 platform or deployment changes require re-PREFLIGHT.
