@@ -335,3 +335,122 @@ fn held_readonly_parent_probes_exact_leaf_even_when_parent_cannot_be_opened() {
     assert_eq!(r.denied, 1);
     assert!(!r.inconclusive);
 }
+
+#[test]
+fn held_socket_parent_requires_real_create_denial_and_fresh_recheck() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let c = context(&roots.root, &guard);
+    let parent = roots.root.mkdir("socket-parent").unwrap();
+    std::fs::set_permissions(
+        t.path().join("socket-parent"),
+        std::fs::Permissions::from_mode(0o500),
+    )
+    .unwrap();
+    let calls = std::cell::Cell::new(0);
+    let result = probe_socket_parent(
+        parent,
+        || {
+            calls.set(calls.get() + 1);
+            Ok(())
+        },
+        &c,
+    );
+    assert_eq!(calls.get(), 2);
+    assert_eq!(result.unwrap().denied, 1);
+    assert!(!t
+        .path()
+        .join("socket-parent/.agent-deployd-denial-probe")
+        .exists());
+    std::fs::set_permissions(
+        t.path().join("socket-parent"),
+        std::fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
+}
+#[test]
+fn held_socket_parent_unexpected_permission_fails_and_cleans_only_owned_probe() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let c = context(&roots.root, &guard);
+    let parent = roots.root.mkdir("socket-parent").unwrap();
+    assert!(probe_socket_parent(parent, || Ok(()), &c).is_err());
+    assert!(!t
+        .path()
+        .join("socket-parent/.agent-deployd-denial-probe")
+        .exists());
+    assert!(t
+        .path()
+        .join("socket-denial/native-denial-create-result.json")
+        .exists());
+    assert!(t
+        .path()
+        .join("socket-denial/native-denial-create-cleanup.json")
+        .exists());
+}
+#[test]
+fn socket_physical_drift_after_actual_denial_cannot_be_pass() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let c = context(&roots.root, &guard);
+    let parent = roots.root.mkdir("socket-parent").unwrap();
+    std::fs::set_permissions(
+        t.path().join("socket-parent"),
+        std::fs::Permissions::from_mode(0o500),
+    )
+    .unwrap();
+    let calls = std::cell::Cell::new(0);
+    let result = probe_socket_parent(
+        parent,
+        || {
+            calls.set(calls.get() + 1);
+            if calls.get() == 2 {
+                Err(Error::new("FIXTURE_PHYSICAL_DRIFT"))
+            } else {
+                Ok(())
+            }
+        },
+        &c,
+    );
+    assert!(result.is_err());
+    assert_eq!(calls.get(), 2);
+    assert!(t
+        .path()
+        .join("socket-denial/native-denial-create-result.json")
+        .exists());
+    std::fs::set_permissions(
+        t.path().join("socket-parent"),
+        std::fs::Permissions::from_mode(0o700),
+    )
+    .unwrap();
+}
+
+#[test]
+fn socket_recheck_failure_precedes_probe_intent() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let c = context(&roots.root, &guard);
+    let parent = roots.root.mkdir("socket-parent").unwrap();
+    assert!(probe_socket_parent(parent, || Err(Error::new("FIXTURE_DRIFT")), &c).is_err());
+    assert!(!t.path().join("socket-denial").exists());
+}
+#[test]
+fn socket_foreign_probe_is_retained_and_never_counts_as_denial() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let c = context(&roots.root, &guard);
+    let parent = roots.root.mkdir("socket-parent").unwrap();
+    let path = t.path().join("socket-parent/.agent-deployd-denial-probe");
+    std::fs::write(&path, b"foreign").unwrap();
+    assert!(probe_socket_parent(parent, || Ok(()), &c).is_err());
+    assert_eq!(std::fs::read(&path).unwrap(), b"foreign");
+    assert!(!t
+        .path()
+        .join("socket-denial/native-denial-create-cleanup.json")
+        .exists());
+}

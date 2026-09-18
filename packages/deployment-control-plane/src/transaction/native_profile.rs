@@ -100,24 +100,54 @@ impl NativeEnrollment {
         argv
     }
     pub fn validate(&self) -> Result<()> {
-        crate::trust::valid_id(&self.profile_id)?;
-        crate::trust::valid_id(&self.profile_revision)?;
-        crate::trust::valid_digest(&self.profile_digest)?;
-        crate::trust::valid_digest(&self.node_sha256)?;
+        NativeProfileInput {
+            profile_id: &self.profile_id,
+            profile_revision: &self.profile_revision,
+            profile_digest: &self.profile_digest,
+            initial_files: &self.initial_files,
+            runtime_root: &self.runtime_root,
+            node_sha256: &self.node_sha256,
+            loader_files: &self.loader_files,
+            launchctl_sha256: &self.launchctl_sha256,
+            plutil_sha256: &self.plutil_sha256,
+            services: &self.services,
+        }
+        .validate()
+    }
+}
+/// Borrowed physical shape, never an activation or evidence object.
+pub(crate) struct NativeProfileInput<'a> {
+    pub profile_id: &'a str,
+    pub profile_revision: &'a str,
+    pub profile_digest: &'a str,
+    pub initial_files: &'a [EnrolledFile],
+    pub runtime_root: &'a str,
+    pub node_sha256: &'a str,
+    pub loader_files: &'a [crate::bootstrap::LoaderFile],
+    pub launchctl_sha256: &'a str,
+    pub plutil_sha256: &'a str,
+    pub services: &'a [ServiceEnrollment],
+}
+impl NativeProfileInput<'_> {
+    pub(crate) fn validate(&self) -> Result<()> {
+        crate::trust::valid_id(self.profile_id)?;
+        crate::trust::valid_id(self.profile_revision)?;
+        crate::trust::valid_digest(self.profile_digest)?;
+        crate::trust::valid_digest(self.node_sha256)?;
         require(
             self.loader_files
                 .iter()
                 .any(|f| f.path == NODE && f.sha256 == self.node_sha256),
             "LOADER_CLOSURE_MISSING",
         )?;
-        crate::trust::valid_digest(&self.launchctl_sha256)?;
-        crate::trust::valid_digest(&self.plutil_sha256)?;
+        crate::trust::valid_digest(self.launchctl_sha256)?;
+        crate::trust::valid_digest(self.plutil_sha256)?;
         require(
             !self.initial_files.is_empty() && self.initial_files.len() <= 4096,
             "PROFILE_NOT_ALLOWED",
         )?;
         let mut paths = std::collections::BTreeSet::new();
-        for f in &self.initial_files {
+        for f in self.initial_files {
             crate::fs::secure::relative(&f.path)?;
             if let Some(hash) = &f.sha256 {
                 crate::trust::valid_digest(hash)?;
@@ -140,7 +170,7 @@ impl NativeEnrollment {
                     ],
             "PROFILE_NOT_ALLOWED",
         )?;
-        for service in &self.services {
+        for service in self.services {
             crate::trust::valid_digest(&service.plist_sha256)?;
         }
         require(
