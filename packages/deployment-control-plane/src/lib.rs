@@ -19,3 +19,4 @@ pub mod service;
 mod common;
 
 pub mod registry;
+mod verification;

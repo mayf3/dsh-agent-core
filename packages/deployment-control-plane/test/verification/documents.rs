@@ -1,7 +1,6 @@
 use super::*;
+use crate::verification::watchdog::fixture;
 use serde_json::json;
-#[path = "../../src/verification/watchdog/fixture.rs"]
-mod fixture;
 const NAMES: &[&str] = &[
     "phaseReceipt",
     "routingReceipt",
@@ -128,4 +127,12 @@ fn optional_migration_document_has_exact_presence_body_and_hash_binding() {
     bundle["documentSha256"]["incidentMigrationAuthority"] = json!(crate::fs::file::sha(&bytes));
     docs.insert("incidentMigrationAuthority".into(), bytes);
     assert_eq!(verified_semantic(&docs, &bundle).unwrap(), bundle);
+}
+#[test]
+fn aggregate_capture_uses_its_own_closed_bound_without_widening_documents() {
+    let bytes =
+        serde_json::to_vec(&serde_json::json!({"raw_documents":"x".repeat(4*1024*1024)})).unwrap();
+    assert!(strict_json(&bytes).is_err());
+    assert!(strict_capture(&bytes).is_ok());
+    assert!(strict_capture(br#"{"x":1,"x":2}"#).is_err());
 }

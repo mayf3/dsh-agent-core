@@ -26,6 +26,7 @@ fn inputs(package: &Package) -> (ResolvedPreparation, Catalog) {
     let mut catalog = trust.clone();
     catalog.profiles.insert("dsh-app".into(), profile.clone());
     let config = Configuration {
+        first_target_adoption: None,
         catalog,
         callers: vec![Caller {
             uid: 502,
@@ -65,6 +66,7 @@ fn inputs(package: &Package) -> (ResolvedPreparation, Catalog) {
         })
         .collect::<Vec<_>>();
     let enrollment = NativeEnrollment {
+        runtime_startup: Default::default(),
         host: profile.host.clone(),
         caller_uids: vec![502],
         lifecycle_denial_digest: "c".repeat(64),

@@ -36,6 +36,8 @@ pub struct Configuration {
     pub producers: Vec<String>,
     pub verifiers: BTreeMap<String, VerifierBinding>,
     pub socket_gid: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub first_target_adoption: Option<String>,
     #[serde(default)]
     pub socket_ancestor: Option<crate::bootstrap::SocketAncestor>,
 }
@@ -69,6 +71,9 @@ impl Intake {
             "CONFIG_LIMIT",
         )?;
         require(!config.producers.is_empty(), "PRODUCER_REGISTRY_EMPTY")?;
+        if let Some(operation) = &config.first_target_adoption {
+            valid_id(operation)?;
+        }
         let mut identities = BTreeSet::new();
         for caller in &config.callers {
             require(identities.insert(caller.uid), "SHARED_UID_SCOPE")?;
@@ -86,6 +91,11 @@ impl Intake {
         }
         for (name, binding) in &config.verifiers {
             valid_id(name)?;
+            require(
+                name != crate::verification::native::PROFILE
+                    || matches!(binding, VerifierBinding::ExternalObservation { .. }),
+                "WATCHDOG_TYPED_OBSERVER_REQUIRED",
+            )?;
             if let VerifierBinding::ExternalObservation { deadline_ms } = binding {
                 require(
                     *deadline_ms > 0 && *deadline_ms <= 2000,

@@ -2,9 +2,10 @@ use super::*;
 impl Queue {
     /// Executor-only current installed receipt, pinned by the authoritative target ledger.
     pub fn daemon_installed_receipt(&self, target: &str) -> Result<Option<TransactionReceipt>> {
-        self.transaction(|tx| {
-            let raw: Option<String> = tx.query_row("SELECT receipts.record FROM installed JOIN receipts ON receipts.digest=installed.receipt WHERE installed.target=?", [target], |r| r.get(0)).optional()?;
-            raw.map(parse).transpose()
+        self.transaction(|tx| match super::installation::installed(tx, target)? {
+            None => Ok(None),
+            Some((_, InstallationReceipt::Mutation(r))) => Ok(Some(r)),
+            Some((_, InstallationReceipt::Adoption(_))) => Err(Error::new("INSTALLATION_ORIGIN")),
         })
     }
 

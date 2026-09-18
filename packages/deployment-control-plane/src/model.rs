@@ -179,14 +179,19 @@ record!(CoverageAttachment {
     proposal: Proposal
 });
 
-record!(CurrentInstallation {
-    unit_id: String,
-    target_generation: u64,
-    attempt: u32,
-    transaction_receipt_digest: String,
-    service_generation: String,
-    binding_digest: String
-});
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CurrentInstallation {
+    pub unit_id: String,
+    pub target_generation: u64,
+    pub attempt: u32,
+    pub transaction_receipt_digest: String,
+    pub service_generation: String,
+    pub binding_digest: String,
+    #[serde(default, skip_serializing_if = "InstallationOrigin::legacy")]
+    pub origin: InstallationOrigin,
+}
+
 record!(RestoredInstallation {
     previous: CurrentInstallation,
     service_generation: String,
@@ -194,3 +199,6 @@ record!(RestoredInstallation {
     restoring_unit: String,
     restoring_attempt: u32
 });
+
+mod adoption;
+pub use adoption::*;

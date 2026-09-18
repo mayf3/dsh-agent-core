@@ -35,6 +35,7 @@ impl Queue {
         now: u64,
         preflight_evidence: &str,
     ) -> Result<UnitStatus> {
+        self.require_standing_activation()?;
         valid_digest(preflight_evidence)?;
         let status = self.daemon_status(id)?;
         self.observe_policy(catalog, &status.unit.deployment_profile, policy, now)?;
@@ -239,6 +240,9 @@ pub(super) fn change(
 }
 
 fn select_ready(tx: &Transaction<'_>) -> Result<Option<UnitStatus>> {
+    if super::adoption::pending(tx)? {
+        return Ok(None);
+    }
     let quarantine: u64 =
         tx.query_row("SELECT value FROM meta WHERE key='quarantine'", [], |r| {
             r.get(0)

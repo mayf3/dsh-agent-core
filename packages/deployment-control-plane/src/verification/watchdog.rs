@@ -225,7 +225,7 @@ fn fresh(at: u64, now: u64, age: u64) -> Result<()> {
     )
 }
 #[cfg(test)]
-mod fixture;
+pub(crate) mod fixture;
 #[cfg(test)]
 #[path = "../../test/verification/watchdog.rs"]
 mod tests;

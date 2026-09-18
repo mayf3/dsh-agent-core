@@ -22,8 +22,14 @@ pub(super) fn satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
     let records = stmt
         .query_map([id], |r| r.get::<_, String>(0))?
         .collect::<std::result::Result<Vec<_>, _>>()?;
-    for raw in records {
-        let dep: Dependency = parse(raw)?;
+    let records = records
+        .into_iter()
+        .map(parse)
+        .collect::<Result<Vec<Dependency>>>()?;
+    satisfied_records(tx, &records)
+}
+pub(super) fn satisfied_records(tx: &Transaction<'_>, records: &[Dependency]) -> Result<bool> {
+    for dep in records {
         if super::executor_finalization::pending(tx, &dep.unit_id)? {
             return Ok(false);
         }
@@ -31,21 +37,12 @@ pub(super) fn satisfied(tx: &Transaction<'_>, id: &str) -> Result<bool> {
         if s.state != State::Applied {
             return Ok(false);
         }
-        if dep.semantics == DependencySemantics::LiveInstallation && !is_current(tx, &dep)? {
+        if dep.semantics == DependencySemantics::LiveInstallation && !is_current(tx, dep)? {
             return Ok(false);
         }
-        let raw: Option<String> = tx
-            .query_row(
-                "SELECT record FROM receipts WHERE digest=? AND unit=? AND kind='transaction'",
-                (&dep.receipt_digest, &dep.unit_id),
-                |r| r.get(0),
-            )
-            .optional()?;
-        let Some(raw) = raw else {
-            return Ok(false);
-        };
-        let transaction: TransactionReceipt = parse(raw)?;
-        if transaction.capability != dep.capability || transaction.attempt != s.mutating_attempts {
+        let receipt = super::installation::by_digest(tx, &dep.receipt_digest, &dep.unit_id)?;
+        let transaction = receipt.current(&dep.receipt_digest);
+        if receipt.capability() != dep.capability || transaction.attempt != s.mutating_attempts {
             return Ok(false);
         }
         let physical = super::physical::current(tx, &s.unit.target_runtime)?

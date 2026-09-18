@@ -1,5 +1,5 @@
 // Frozen data from the original JS postdeploy verifier test; never runtime evidence.
-pub(super) fn semantic_fixture() -> serde_json::Value {
+pub(crate) fn semantic_fixture() -> serde_json::Value {
     serde_json::from_str(r###"{
   "phaseReceipt": {
     "sourceSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
