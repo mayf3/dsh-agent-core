@@ -77,9 +77,16 @@ function finalize(ctx, result, meta) {
     const name = `journal:${key}`
     loadedSources.set(name, {
       status: { status: 'OK', badLines: journal.raw.skipped, truncated: journal.raw.truncated },
-      files: [{ file: journal.file, size: journal.raw.size, mtimeMs: 0 }],
+      files: [{ file: journal.file, size: journal.raw.size, mtimeMs: journal.raw.mtimeMs ?? 0 }],
       rows: journal.raw.events.length,
     })
+  }
+  // §4.4 history_unavailable: zero records AND every consulted source
+  // absent/degraded — the honest "we could see nothing at all" answer.
+  const recordCount = result.records.length
+  const consulted = [...loadedSources.values()]
+  if (recordCount === 0 && consulted.length > 0 && consulted.every((s) => s.status?.status === 'ABSENT' || s.status?.status === 'DEGRADED')) {
+    return err('history_unavailable', 'every consulted history source is absent or degraded')
   }
   const assembled = assembleResult({
     root, args: meta.args, build: result, loadedSources, viewer: { agentId: viewer.agentId, audit },
@@ -123,7 +130,14 @@ async function runScheduler(ctx, args, meta) {
   const hasId = ['jobId', 'occurrenceId', 'runId'].some((k) => typeof args[k] === 'string' && args[k] !== '')
   if (!hasId) return err('invalid_arguments', 'one of jobId | occurrenceId | runId is required')
   const built = await buildSchedulerRoot(ctx, args)
-  if (built.notFound === undefined && meta.audit !== true) {
+  if (built.notFound !== undefined) return err(built.notFound.code, built.notFound.detail)
+  // §4.4 ordering rules (404) come before ownership rules (403) —
+  // an unknown coordinate must not answer as a forbidden one.
+  const storeFacts = built.records.some((r) => r.source === 'scheduler_store' || r.source === 'scheduler_history')
+  if (!storeFacts && built.records.length === 0) {
+    return err('scheduler_record_not_found', 'no job/occurrence/run matches the given coordinates')
+  }
+  if (meta.audit !== true) {
     const owned = ownershipOfSchedulerResult(ctx, built, meta.viewer.agentId)
     if (owned === false) return err('forbidden_not_owner', 'scheduler records are not owned by the caller')
   }
@@ -159,9 +173,13 @@ async function runMessage(ctx, args, meta) {
 function ownedMessageAccess(ctx, built, viewerAgentId, needle) {
   const ownedJournal = [...ctx._journals.values()].some((j) => j !== null && j.agentId === viewerAgentId)
   if (ownedJournal) return true
-  return ctx.source('asm_audit').records.some((r) => r.nativeRefs.requestId === needle || r.nativeRefs.messageId === needle
-    ? r.nativeRefs.sourceAgentId === viewerAgentId
-    : false)
+  // The caller was the SENDER of this dispatch (ASM sourceAgentId) or is the
+  // agent the workflow attempt was delivered TO (run_delivered.agentId) —
+  // both are owner-class observers of the coordinate.
+  if (ctx.source('asm_audit').records.some((r) => (r.nativeRefs.requestId === needle || r.nativeRefs.messageId === needle) && r.nativeRefs.sourceAgentId === viewerAgentId)) return true
+  return ctx.attemptProjections().some((proj) => proj.events.some((e) => e.kind === 'attempt_run_delivered'
+    && (e.nativeRefs?.requestId === needle || e.nativeRefs?.messageId === needle)
+    && e.nativeRefs?.agentId === viewerAgentId))
 }
 
 function briefScheduler(rec) {

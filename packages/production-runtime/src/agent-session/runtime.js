@@ -13,9 +13,9 @@ export function createAgentSessionRuntime({ layout, definition, workspaceBootstr
     // WPA-1 (AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 §6): an archive failure is
     // a retention loss, not a send failure — report it in the runtime evidence
     // log and keep the send path untouched.
-    onArchiveFailure: ({ reason, detail }) => {
+    onArchiveFailure: ({ reason, bytesAttempted, detail }) => {
       try {
-        appendFileSync(layout.evidenceLog, `${JSON.stringify({ kind: reason, source: 'agent-session-messaging-audit-archive', detail, ts: Date.now() })}\n`)
+        appendFileSync(layout.evidenceLog, `${JSON.stringify({ kind: reason, source: 'agent-session-messaging-audit-archive', bytesAttempted: bytesAttempted ?? null, detail, ts: Date.now() })}\n`)
       } catch { /* evidence is best-effort */ }
       log.error(`[agent-session-messaging] audit archive failed: ${detail}`)
     },

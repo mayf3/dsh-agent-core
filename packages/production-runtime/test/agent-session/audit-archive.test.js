@@ -9,7 +9,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -81,6 +81,62 @@ test('archive failure keeps rotation running, reports once, send path unaffected
     assert.ok(existsSync(`${auditFile}.1`), 'rotation continued despite archive failure')
     assert.ok(failures.length >= 1, 'ASM_ARCHIVE_APPEND_FAILED reported')
     assert.equal(failures[0].reason, 'ASM_ARCHIVE_APPEND_FAILED')
+  } finally { rmSync(join(auditFile, '..'), { recursive: true, force: true }) }
+})
+
+test('stale checkpoint from a previous generation is detected as 0 — no silent interval misalignment', () => {
+  const auditFile = tempAuditFile('e')
+  try {
+    const audit = createAgentSessionMessagingAudit({ auditFile, maxBytes: 512 })
+    for (let i = 0; i < 40; i += 1) {
+      audit.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rs${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' })
+    }
+    assert.ok(existsSync(`${auditFile}.1`), 'at least one rotation happened')
+    // Simulate the §6.2 reachable failure: a checkpoint carrying the PREVIOUS
+    // generation's offset (e.g. the reset threw after a rename). The
+    // generation key must make readCheckpoint treat it as 0.
+    const { posFile } = auditArchivePaths(auditFile)
+    writeFileSync(posFile, `${JSON.stringify({ gen: 99, archivedUpToBytes: 999999 })}\n`)
+    const failures = []
+    const audited = createAgentSessionMessagingAudit({
+      auditFile,
+      maxBytes: 512,
+      onArchiveFailure: (info) => failures.push(info),
+    })
+    for (let i = 40; i < 80; i += 1) {
+      audited.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rs${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' })
+    }
+    const { archiveFile } = auditArchivePaths(auditFile)
+    const archived = readFileSync(archiveFile, 'utf8')
+    assert.ok(archived.includes('rs40') || failures.length > 0, 'next generation archived from 0 (stale offset neutralized) or the loss is visible')
+    // The critical negative: no SILENT misalignment — either full archive or
+    // a reported failure, never an unreported partial slice.
+    if (failures.length === 0) {
+      const live = readFileSync(auditFile, 'utf8')
+      for (let i = 40; i < 80; i += 1) {
+        assert.ok(archived.includes(`rs${i}`) || live.includes(`rs${i}`), `rs${i} preserved`)
+      }
+    }
+  } finally { rmSync(join(auditFile, '..'), { recursive: true, force: true }) }
+})
+
+test('archive failure payload carries bytesAttempted (§6.4 ASM_ARCHIVE_APPEND_FAILED{bytesAttempted})', () => {
+  const auditFile = tempAuditFile('f')
+  try {
+    const { archiveFile } = auditArchivePaths(auditFile)
+    mkdirSync(archiveFile, { recursive: true })
+    const failures = []
+    const audit = createAgentSessionMessagingAudit({
+      auditFile,
+      maxBytes: 512,
+      onArchiveFailure: (info) => failures.push(info),
+    })
+    for (let i = 0; i < 40; i += 1) {
+      audit.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rb${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' })
+    }
+    assert.ok(failures.length >= 1)
+    assert.equal(failures[0].reason, 'ASM_ARCHIVE_APPEND_FAILED')
+    assert.ok('bytesAttempted' in failures[0], 'bytesAttempted key present in the failure payload')
   } finally { rmSync(join(auditFile, '..'), { recursive: true, force: true }) }
 })
 

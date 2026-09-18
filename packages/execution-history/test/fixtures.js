@@ -51,10 +51,12 @@ export function buildFixtureRoot() {
   writeFileSync(join(controlDir, 'runtime-evidence.jsonl'), `${JSON.stringify({ kind: 'invocation', jobId: JOB_ID, occurrenceId: OCC_ID, sessionId: 'cron-run-occ:003a05ed6629f358ff53', reconciliationHandle: 'te-cron-1', summary: 'ok', ts: T0 + 900 })}\n${JSON.stringify({ kind: 'ready', pid: 1, ts: T0 - 100 })}\n`)
 
   // ── Workflow attempts ledger: gen-1 planned → delivered (with messageId).
+  // Row shape mirrors the real producer (ledger.js #recordForActive: every
+  // row carries nodeVisitId + atMs).
   const ledgerRows = [
-    { kind: 'attempt_planned', attemptId: ATTEMPT_ID, nodeVisitId: VISIT_ID, dispatchIntentId: INTENT_ID, workflowInstanceId: WF_ID, ownerPrincipalId: PRINCIPAL_ID, generation: 1, ts: T0 + 100 },
-    { kind: 'delivery_started', nodeVisitId: VISIT_ID, ts: T0 + 110 },
-    { kind: 'run_delivered', attemptId: ATTEMPT_ID, agentId: 'agt_a', requestId: ATTEMPT_ID, sessionId: 'main', messageId: 'om_wf_dispatch_1', reconciliationHandle: 'te-wf-1', ts: T0 + 200 },
+    { kind: 'attempt_planned', attemptId: ATTEMPT_ID, nodeVisitId: VISIT_ID, dispatchIntentId: INTENT_ID, workflowInstanceId: WF_ID, ownerPrincipalId: PRINCIPAL_ID, generation: 1, atMs: T0 + 100 },
+    { kind: 'delivery_started', nodeVisitId: VISIT_ID, atMs: T0 + 110 },
+    { kind: 'run_delivered', nodeVisitId: VISIT_ID, attemptId: ATTEMPT_ID, agentId: 'agt_a', requestId: ATTEMPT_ID, sessionId: 'main', messageId: 'om_wf_dispatch_1', reconciliationHandle: 'te-wf-1', atMs: T0 + 200 },
   ]
   writeFileSync(join(workflowExecutionDir, 'attempts.jsonl'), ledgerRows.map((r) => JSON.stringify(r)).join('\n') + '\n')
 
@@ -101,6 +103,7 @@ export function buildFixtureRoot() {
     { type: 'turn/end', seq: 8, time: new Date(T0 + 440).toISOString(), data: { turn: 1, reason: { kind: 'completed' } } },
     { type: 'agent/inbox/spliced', seq: 9, time: new Date(T0 + 500).toISOString(), data: { messageId: MESSAGE_ID } },
     { type: 'user/message', seq: 10, time: new Date(T0 + 501).toISOString(), data: { content: 'inter_agent hello from scheduler', source: { kind: 'inter_agent', sourceAgentId: 'agt_scheduler', correlation: 'te-src-1' }, messageId: MESSAGE_ID } },
+    { type: 'user/message', seq: 11, time: new Date(T0 + 600).toISOString(), data: { content: 'L'.repeat(2000), source: { kind: 'user' } } },
   ]
   writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), agtAEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')
 
@@ -146,10 +149,23 @@ export function destroyFixtureRoot(fixture) {
 }
 
 /** Fake per-caller svc read surface (visibility + timeline + submissions). */
-export function fakeSvcRequest({ visible = true } = {}) {
+export function fakeSvcRequest({ visible = true, assistanceOnly = false } = {}) {
   return async (_agentId, req) => {
     if (!visible) return { ok: false, code: 'downstream_unavailable', detail: 'not visible' }
     if (req.path.endsWith('/timeline')) {
+      if (assistanceOnly) {
+        return {
+          ok: true,
+          body: {
+            items: [
+              { eventType: 'INSTANCE_CREATED', eventSequence: 1, createdAt: new Date(T0).toISOString(), commandId: 'cmd-create-1' },
+              { eventType: 'ASSISTANCE_REQUESTED', eventSequence: 2, createdAt: new Date(T0 + 100).toISOString() },
+              { eventType: 'ASSISTANCE_ESCALATED_TO_HUMAN', eventSequence: 3, createdAt: new Date(T0 + 200).toISOString() },
+            ],
+            next_cursor: null,
+          },
+        }
+      }
       return {
         ok: true,
         body: {

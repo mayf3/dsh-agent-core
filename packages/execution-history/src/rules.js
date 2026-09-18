@@ -49,7 +49,7 @@ export function reduceDimensions(observations) {
   const out = {}
   for (const dim of DIMENSIONS) {
     const list = byDim.get(dim)
-    if (list.length === 0) { out[dim] = { verdict: VERDICTS.UNKNOWN, ruleId: 'S-NO-OBSERVATION', evidenceRefs: [] }; continue }
+    if (list.length === 0) { out[dim] = { verdict: VERDICTS.UNKNOWN, ruleId: 'R7', evidenceRefs: [] }; continue }
     out[dim] = fold(dim, list)
   }
   return out
@@ -65,7 +65,9 @@ function fold(dim, list) {
     case 'agentExecution':
       return { verdict: pick(facts, [VERDICTS.FAILED, VERDICTS.STARTED, VERDICTS.REPLIED, VERDICTS.ACCEPTED, VERDICTS.OUTCOME_UNKNOWN, VERDICTS.NO_RECEIPT, VERDICTS.LEGAL_WAIT]) ?? VERDICTS.UNKNOWN, ruleIds, evidenceRefs: evidence }
     case 'businessProgress':
-      return { verdict: pick(facts, [VERDICTS.BUSINESS_COMMITTED, VERDICTS.BUSINESS_REJECTED, VERDICTS.LEGAL_WAIT, VERDICTS.LEGAL_SKIP, VERDICTS.OUTCOME_UNKNOWN]) ?? VERDICTS.UNKNOWN, ruleIds, evidenceRefs: evidence }
+      // LEGAL_WAIT outranks COMMITTED by design: it is only emitted for an
+      // OPEN assistance case postdating the last commit — the current state.
+      return { verdict: pick(facts, [VERDICTS.LEGAL_WAIT, VERDICTS.BUSINESS_COMMITTED, VERDICTS.BUSINESS_REJECTED, VERDICTS.LEGAL_SKIP, VERDICTS.OUTCOME_UNKNOWN]) ?? VERDICTS.UNKNOWN, ruleIds, evidenceRefs: evidence }
     case 'messageDelivery':
       return { verdict: pick(facts, [VERDICTS.REPLIED, VERDICTS.ACCEPTED, VERDICTS.NO_RECEIPT, VERDICTS.OUTCOME_UNKNOWN, VERDICTS.NOT_APPLICABLE]) ?? VERDICTS.UNKNOWN, ruleIds, evidenceRefs: evidence }
     case 'evidenceIntegrity':
@@ -131,16 +133,33 @@ export function classifyAttempt(proj) {
 /** svc timeline events (workflow_execute transitions / admin events). */
 export function classifySvcEvents(records) {
   const observations = []
+  let lastCommitSeq = -1
+  let lastAssistanceSeq = -1
+  let lastAssistanceResolutionSeq = -1
   for (const rec of records) {
-    if (rec.nativeRefs.commandId) {
+    const seq = Number.isFinite(rec.nativeSeq) ? rec.nativeSeq : -1
+    const type = String(rec.data?.eventType ?? rec.data?.event_type ?? rec.kind)
+    if (rec.nativeRefs.commandId && !/ASSISTANCE/.test(type)) {
+      lastCommitSeq = Math.max(lastCommitSeq, seq)
       observations.push(observation('businessProgress', VERDICTS.BUSINESS_COMMITTED, {
         ruleId: 'R4',
         evidenceRefs: [String(rec.nativeSeq ?? ''), rec.nativeRefs.commandId].filter(Boolean),
         note: `event_sequence=${rec.nativeSeq} == result workflowStateVersion bridge`,
       }))
     }
-    const type = String(rec.data?.eventType ?? rec.data?.event_type ?? rec.kind)
+    if (/ASSISTANCE_(REQUESTED|ESCALATED)/.test(type)) lastAssistanceSeq = Math.max(lastAssistanceSeq, seq)
+    if (/ASSISTANCE_RESOLVED/.test(type)) lastAssistanceResolutionSeq = Math.max(lastAssistanceResolutionSeq, seq)
     if (type.includes('CANCELLED')) observations.push(observation('businessProgress', VERDICTS.LEGAL_SKIP, { ruleId: 'R4', evidenceRefs: [String(rec.nativeSeq ?? '')], note: 'instance cancelled' }))
+  }
+  // §5: an OPEN assistance case that postdates the last business commit is a
+  // human/owner wait — the CURRENT business state is LEGAL_WAIT, never a
+  // failure and not a completed commit narrative.
+  if (lastAssistanceSeq > lastCommitSeq && lastAssistanceSeq > lastAssistanceResolutionSeq) {
+    observations.push(observation('businessProgress', VERDICTS.LEGAL_WAIT, {
+      ruleId: 'R4',
+      evidenceRefs: [String(lastAssistanceSeq)],
+      note: `open assistance case at event_sequence=${lastAssistanceSeq} (after last commit at ${lastCommitSeq}): owner/human input is being waited for (§5)`,
+    }))
   }
   return observations
 }
@@ -154,9 +173,9 @@ export function absenceObservations(sourceStatuses) {
   const observations = []
   for (const [source, status] of Object.entries(sourceStatuses)) {
     if (status?.status === 'ABSENT') {
-      observations.push(observation('evidenceIntegrity', 'SOURCE_ABSENT', { ruleId: 'S5', evidenceRefs: [source], note: `${source} absent — not proof that events did not happen` }))
+      observations.push(observation('evidenceIntegrity', 'SOURCE_ABSENT', { ruleId: 'R7', evidenceRefs: [source], note: `${source} absent — not proof that events did not happen` }))
     } else if (status?.status === 'DEGRADED' || status?.truncated) {
-      observations.push(observation('evidenceIntegrity', 'SOURCE_DEGRADED', { ruleId: 'S5', evidenceRefs: [source], note: status.reason ?? 'degraded read' }))
+      observations.push(observation('evidenceIntegrity', 'SOURCE_DEGRADED', { ruleId: 'R7', evidenceRefs: [source], note: status.reason ?? 'degraded read' }))
     }
   }
   return observations

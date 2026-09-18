@@ -46,6 +46,13 @@ const ERROR_CODE_MAP = {
   unsupported_operation: 'internal_error',
 }
 
+/** The closed manifest error table (capabilities/execution-history.js). */
+const KNOWN_ERROR_CODES = new Set([
+  'invalid_arguments', 'id_namespace_mismatch', 'forbidden_not_owner',
+  'workflow_instance_not_found', 'session_not_found', 'scheduler_record_not_found',
+  'message_not_found', 'downstream_unavailable', 'history_unavailable',
+])
+
 export function createExecutionHistoryRuntime({ layout, credentialsFile, authServiceOrigin, log }) {
   const transports = new Map()
 
@@ -99,10 +106,14 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
         limit: Number.isInteger(args?.limit) ? args.limit : 200,
         view: args?.view === 'report' ? 'report' : 'structured',
       })
-      if (outcome.ok !== true) {
-        return { ok: false, error: { code: outcome.code, detail: outcome.detail } }
-      }
-      return { ok: true, result: outcome.result }
+    if (outcome.ok !== true) {
+      // The manifest error table is CLOSED (broker error preservation rules):
+      // an unmapped code (e.g. an unexpected library error code) must never
+      // surface as an undeclared string — map it to internal_error.
+      const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
+      return { ok: false, error: { code, detail: outcome.detail } }
+    }
+    return { ok: true, result: outcome.result }
     }
   }
 
