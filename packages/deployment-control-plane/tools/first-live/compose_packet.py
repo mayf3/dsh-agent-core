@@ -15,7 +15,7 @@ import subprocess
 
 A = Path('/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1')
 P = Path(__file__).resolve().parents[4] / '.superpowers/sdd/PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1_FIRST_LIVE_CLOSURE'
-STATIC = A / 'first-live-preparation/static-inputs-v7'
+STATIC = A / 'first-live-preparation/static-inputs-v8'
 OPERATION = 'first-live-dsh-20260918-01'
 WD = 'DCP_DSH_WATCHDOG_ACCEPTANCE_V1'
 BROKER = 'WORKFLOW_ACTIVE_POOL_DISPOSITION_V1_BROKER_DELIVERY_V2'
@@ -26,8 +26,8 @@ LOCK_PARENTS = ['/private/var/run', '/usr/local/var/agent-core/production-mutati
 ANCESTORS = ['/', '/usr', '/usr/local', '/usr/local/libexec', '/usr/local/libexec/agent-core',
              '/usr/local/libexec/agent-deployd', '/Library', '/Library/LaunchDaemons']
 SOURCES = {
- 'static-index': (STATIC/'index.json', '1ef5b271630238d422a21cb986dcb5eac7b8c3e8be74a771548cfb79d4710dcc'),
- 'current-baseline': (A/'first-live-preparation/g2-baseline-binding.json', 'a487389caef5c4d0c995ec57d95cdb5d6d324274570293603a1f35044a17b966'),
+ 'static-index': (STATIC/'index.json', '01dc5a583e28af95a181b151abff138acdc090896b527bc61444d92523b71e25'),
+ 'current-baseline': (A/'first-live-preparation/post-safe-stop-baseline-binding.json', 'd9684a6356e5a300e188e8f25b8b473f22c4290703157d1866cbe3d7cd2e4e78'),
  'enrollments': (P/'prospective-first-live-enrollments.json', '3211d45eb163c25ae026d1be71c81ca9ac96359261c679d03f7a8fe37843d193'),
  'watchdog-source': (P/'prospective-watchdog-source-policy.json', '1504fee8013a6b024545b1383f2132c4f65c0a4420ee07edf7ba61e4ce089d68'),
  'broker-source': (P/'prospective-broker-source-policy.json', 'a22d76d33f1a2724c4751dc2dcbdcc3b05e8d9ec3ead090127935426f4cc56f9'),
@@ -37,7 +37,7 @@ SOURCES = {
  'supervisor': (A/'genesis-bcfd929/supervisor-policy.json', '980d3f08cd741139b6d1c1d5ade9b0a7a9deefe4a650776b1b504c0258cdb6a0'),
  'ancestors': (A/'first-live-preparation/ordinary-census/protected-ancestor-tuples.json', '86e4b2f5fbba97b32fa1c79ff440b4d3900dddabea78c5f14afcc53d2f28535a'),
  'lock-tools': (A/'first-live-preparation/ordinary-census/packet-lock-tool-input.json', '753c65c774d4f59bc2946d84ceeb16c13b48528850d8e6b954a345430adf0156'),
- 'supplement': (A/'first-live-preparation/ordinary-census/static-input-supplement-v5.json', '8262df9a7971fbe62a849cbcfaa5b34d4522ea3c1b166a3357ed0b58a2488b9a'),
+ 'supplement': (A/'first-live-preparation/ordinary-census/static-input-supplement-post-stop-02.json', '495daf07bc67eed0d5491bbd4ba1b49474b750b115dc56e648dc80ce8c82e03c'),
  'effective-sudo': (P/'ordinary-effective-sudo-policy.json', 'df3e4b069373452a4740349bf7aa5e110301d016a63979d92ed3b4d608a9f27c'),
  'sudoers': (A/'genesis-65559dd-20260918-01/reconciliation-bcfd929/login-failure-readback/observation-once/054-readonly-postinstall.stdout', '855b85fd8516cb607429eba0581d57a7a1df24b82ba5d42103b71f12ae1e56a1'),
 }
@@ -97,14 +97,22 @@ def load_sources():
             index['preserved_negative_edges'] == 4, 'STATIC_CLOSURE')
     baseline = records['current-baseline']
     require(baseline['operation_id'] == OPERATION and
-            baseline['state'] == 'POST_V7_G2_BASELINE_BOUND_FOR_NONPRODUCTION_PACKAGE_PREPARATION' and
+            baseline['state'] == 'POST_SAFE_STOP_STABLE_ORDINARY_BASELINE_BOUND_FOR_NONPRODUCTION_REPACKAGE' and
             baseline['production_mutation_performed_by_control_plane_goal'] is False and
             baseline['external_production_mutation_observed'] is True and
             baseline['fresh_static']['static_index_sha256'] == SOURCES['static-index'][1] and
-            baseline['coordinates']['broker_workflow_preimage_sha256'] ==
-                'd76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee' and
-            baseline['coordinates']['watchdog_incident_lifecycle_sha256'] ==
-                'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1',
+            baseline['stability']['double_census_tree_equal'] is True and
+            baseline['current_provenance']['current_app_content_sha256'] ==
+                '57a14f9c07ab036cc241191654de9eb96a884dd809aae579ce10adcce5e427df' and
+            baseline['current_provenance']['classification'] ==
+                'EXACT_BYTES_OBSERVED_SOURCE_AUTHORITY_NOT_ESTABLISHED_BY_THIS_GOAL' and
+            baseline['current_provenance']['broker_workflow_sha256'] ==
+                'ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e' and
+            baseline['current_provenance']['watchdog_incident_lifecycle_sha256'] ==
+                'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1' and
+            baseline['known_execution_blocker']['code'] == 'ORPHAN_ROOT_PREFLIGHT_PROCESS_PRESENT' and
+            baseline['known_execution_blocker']['required_disposition'] ==
+                'MUST_BE_ABSENT_AND_REOBSERVED_BEFORE_ANY_PACKAGE_ENTRY',
             'CURRENT_BASELINE_BINDING')
     for name, row in index['files'].items():
         require(re.fullmatch(r'[a-z0-9-]+\.json', name), 'STATIC_NAME')

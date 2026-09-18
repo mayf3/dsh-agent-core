@@ -15,7 +15,7 @@ class Compose(unittest.TestCase):
         self.assertNotIn('lifecycle_denial_digest', records['native'])
         self.assertNotIn('denial_receipt', records['configuration']['socket_ancestor'])
 
-    def test_current_g2_baseline_keeps_scheduler_and_old_broker_as_distinct_coordinates(self):
+    def test_post_safe_stop_baseline_keeps_scheduler_and_observed_broker_as_distinct_coordinates(self):
         records, _ = c.load_sources()
         files = {row['path']: row['sha256'] for row in records['native']['initial_files']}
         self.assertEqual(files['package.json'],
@@ -25,7 +25,7 @@ class Compose(unittest.TestCase):
         self.assertEqual(files['packages/scheduler/src/watchdog/incident-lifecycle.js'],
             'cd0d7b0ca09a78d514f9c28dc240c16271536cd6ccaa2546805b2b569c18b1c1')
         self.assertEqual(files['packages/broker/src/capabilities/workflow.js'],
-            'd76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee')
+            'ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e')
         self.assertEqual(files['packages/agent-router/src/reconciliation/authority-capacity.js'],
             '994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9')
 
