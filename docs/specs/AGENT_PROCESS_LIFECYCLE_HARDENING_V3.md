@@ -81,7 +81,27 @@ This amendment remains docs-only and grants no production mutation authority.
 Product implementation remains frozen until `amendment_status: accepted` is
 merged into current main from the exact independently reviewed semantic head.
 
-## 0. Authoring result and whole-authority transition plan
+After independent review PASS with no blockers, r2 acceptance is exactly this
+mechanical docs-only transaction:
+
+```text
+amendment_status: proposed -> accepted
+amendment_reviewed_head: absent -> <exact reviewed semantic head>
+amendment_reviewed_spec_sha256: absent -> <exact reviewed semantic SHA-256>
+amendment_independent_review: absent -> PASS
+amendment_accepted_by: absent -> mayf3
+amendment_accepted_date: absent -> <acceptance date>
+```
+
+The finalization commit MUST NOT change the reviewed semantic body. It does not
+repeat the r1 V3/V2 succession transaction and does not change either governing
+Spec's `status`, `supersedes`, or `superseded_by` fields.
+
+## 0. Historical r1 authoring result and completed whole-authority transition
+
+This section records the original r1 transition, completed by authority merge
+`72e19853bca806a4fb2c977068a7fb849b77909d`. It is historical and is not the
+r2 amendment acceptance procedure.
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
@@ -1947,9 +1967,9 @@ Independent review verifies:
 - fault plan covers the ten required scenarios and a real outer-entry E2E;
 - docs-only scope is preserved.
 
-After review PASS, Owner accepts the exact reviewed semantic commit through
-§0's atomic docs-only lifecycle transaction. Implementation may begin only from
-a fresh descendant of the accepted authority in main.
+After review PASS, Owner finalizes the exact reviewed r2 semantic commit through
+§0A's r2-specific mechanical transaction. Implementation may begin only from a
+fresh descendant of the accepted amendment in main.
 
 Implementation scope after acceptance is limited to:
 
