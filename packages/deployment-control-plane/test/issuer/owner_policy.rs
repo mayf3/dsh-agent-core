@@ -33,7 +33,7 @@ fn fixture_policy() -> (
         required_facets: vec![],
         profile_revision: profile.revision.clone(),
         profile_id: "fixture".into(),
-        profile_digest: digest(&profile).unwrap(),
+        profile_digest: crate::bootstrap::profile_digest(&profile).unwrap(),
         initial_files: vec![
             EnrolledFile {
                 path: "watchdog.js".into(),
@@ -250,4 +250,122 @@ fn changed_review_custody_cannot_resume_v2_draft_binding() {
             .issue_digest(&e, changed.select(&e, &profile, &native).unwrap(), "native")
             .unwrap()
     );
+}
+
+fn active_native_selection(version: u32) {
+    use crate::{
+        bootstrap::{profile_digest, validate_native_binding, LoaderFile, SocketAncestor},
+        service::{Caller, Configuration, VerifierBinding},
+        transaction::{NativeKind, ServiceEnrollment},
+    };
+    let (owner, mut e, mut profile, mut native) = fixture_policy();
+    profile.host = "a".repeat(64);
+    profile.target_runtime = "dsh-system-runtime".into();
+    profile.install_root_id = "agent-core-app".into();
+    profile.launchd_label = "ai.agent-core.runtime".into();
+    profile.standing_authority_revision = "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1".into();
+    profile.build_recipe = "immutable-regular-app-slots-v1".into();
+    profile.privileged_apply_profile = "fixed-regular-app-slots-v1".into();
+    profile.restart_profile = "runtime-w1-w2-system-v1".into();
+    profile.rollback_profile = "journal-exact-preimage-v1".into();
+    profile.preflight_policy = "signed-lease-300s-v1".into();
+    profile.architecture = "x86_64".into();
+    profile.required_review_scopes.push("root-code".into());
+    assert!(profile.enabled);
+    native.host = profile.host.clone();
+    native.profile_digest = profile_digest(&profile).unwrap();
+    native.runtime_root = "/Users/fixture/runtime".into();
+    native.required_facets = vec![
+        "app-slots".into(),
+        "node-closure".into(),
+        "service-plists".into(),
+    ];
+    native.loader_files = vec![LoaderFile {
+        path: "/usr/local/libexec/agent-core/node-runtime/bin/node".into(),
+        sha256: native.node_sha256.clone(),
+    }];
+    native.services = [
+        NativeKind::Runtime,
+        NativeKind::WatchdogW1,
+        NativeKind::WatchdogW2,
+    ]
+    .into_iter()
+    .map(|kind| ServiceEnrollment {
+        kind,
+        uid: if kind == NativeKind::WatchdogW2 {
+            0
+        } else {
+            505
+        },
+        gid: if kind == NativeKind::WatchdogW2 {
+            0
+        } else {
+            601
+        },
+        plist_sha256: "e".repeat(64),
+    })
+    .collect();
+    let mut catalog = fixture_catalog();
+    catalog.profiles.insert("fixture".into(), profile.clone());
+    let config = Configuration {
+        catalog,
+        callers: vec![Caller {
+            uid: 502,
+            gid: 20,
+            profiles: vec!["fixture".into()],
+            producers: vec!["producer".into()],
+        }],
+        producers: vec!["producer".into()],
+        verifiers: BTreeMap::from([(
+            "verify-1".into(),
+            VerifierBinding::ExternalObservation { deadline_ms: 500 },
+        )]),
+        socket_gid: 602,
+        socket_ancestor: Some(SocketAncestor {
+            host: profile.host.clone(),
+            device: 1,
+            inode: 2,
+            uid: 0,
+            gid: 1,
+            mode: 0o775,
+            flags: 0,
+            acl_none: true,
+            memberships: BTreeMap::from([(502, vec![20]), (505, vec![601])]),
+            denial_receipt: "b".repeat(64),
+        }),
+    };
+    validate_native_binding(&config, &native, &profile.host, true).unwrap();
+    e.payload.target_runtime = profile.target_runtime.clone();
+    e.payload.standing_authority_revision = profile.standing_authority_revision.clone();
+    e = signed("authority", e.payload);
+    let policy = if version == 1 {
+        OwnerPolicy::V1(owner.clone())
+    } else {
+        serde_json::from_value(v2(&owner, &e)).unwrap()
+    };
+    let selected = policy
+        .select(&e, &profile, &native)
+        .expect("valid active native binding must select its enrolled source");
+    assert_eq!(selected.slots[0].target, "watchdog.js");
+    let mut tampered = native.clone();
+    tampered.profile_digest = "f".repeat(64);
+    assert!(policy.select(&e, &profile, &tampered).is_err());
+    assert!(validate_native_binding(&config, &tampered, &profile.host, true).is_err());
+    let mut drifted = profile.clone();
+    drifted.rollback_profile = "another-rollback".into();
+    assert!(policy.select(&e, &drifted, &native).is_err());
+    let mut drifted_config = config;
+    drifted_config
+        .catalog
+        .profiles
+        .insert("fixture".into(), drifted);
+    assert!(validate_native_binding(&drifted_config, &native, &profile.host, true).is_err());
+}
+#[test]
+fn active_native_binding_selects_v1_source_without_profile_hash_drift() {
+    active_native_selection(1);
+}
+#[test]
+fn active_native_binding_selects_v2_source_without_profile_hash_drift() {
+    active_native_selection(2);
 }

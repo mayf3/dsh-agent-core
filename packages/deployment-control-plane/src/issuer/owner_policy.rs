@@ -223,7 +223,7 @@ impl OwnerPolicy {
         require(
             native.profile_id == e.deployment_profile
                 && native.profile_revision == profile.revision
-                && native.profile_digest == digest(profile)?
+                && native.profile_digest == crate::bootstrap::profile_digest(profile)?
                 && e.target_runtime == profile.target_runtime
                 && profile
                     .verification_profiles

@@ -1,0 +1,20 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running test/adoption/bootstrap.rs (packages/deployment-control-plane/target/debug/deps/bootstrap-aae2efec8abdfa65)
+
+running 13 tests
+test common::private::root_refusal_precedes_effect_without_root_execution ... ok
+test common::private::hostile_tmpdir_worker ... ok
+test loader_rejects_transitive_homebrew_rpath_environment_and_wrong_architecture ... ok
+test common::private::outside_kernel_temp_is_rejected_before_creation ... ok
+test common::private::kernel_selected_temp_ignores_caller_tmpdir ... ok
+test common::private::hostile_tmpdir_is_ignored_before_first_fixture_effect ... ok
+test fixed_apple_utility_accepts_os_protection_flags_but_rejects_hash_drift ... ok
+test package_has_no_activation_or_secrets_and_parses_as_disabled_plist ... ok
+test resolved_tests::resolved_fixture_is_ready_to_authorize_but_cannot_activate ... ok
+test prospective_producer_scope_registers_and_unknown_host_is_explicit ... ok
+test resolved_tests::signed_foreign_driver_and_socket_counterexamples_refuse ... ok
+test package_rejects_source_binary_metadata_and_unallowlisted_target ... ok
+test plist_loader_environment_is_rejected_from_the_exact_supplied_bytes ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
+
