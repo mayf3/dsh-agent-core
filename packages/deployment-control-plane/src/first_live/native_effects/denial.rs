@@ -12,7 +12,7 @@ use crate::{
         secure::{validate, Dir},
         MutationGuard,
     },
-    transaction::{NativeEnrollment, ProcessIdentity},
+    transaction::{NativeMaintenanceInput, ProcessIdentity},
     trust::digest,
     Error, Result,
 };
@@ -62,7 +62,10 @@ fn cs(s: &str) -> Result<CString> {
     CString::new(s).map_err(|_| Error::new("DENIAL_PATH"))
 }
 impl Targets {
-    pub(super) fn from_inventory(trees: &[Tree; 3], enrollment: &NativeEnrollment) -> Result<Self> {
+    pub(super) fn from_inventory(
+        trees: &[Tree; 3],
+        enrollment: &NativeMaintenanceInput,
+    ) -> Result<Self> {
         enrollment.validate()?;
         let mut result = Self {
             parents: Vec::new(),
@@ -100,12 +103,7 @@ impl Targets {
         let meta = dir.file.metadata()?;
         result.parent(&mut indices, control, meta.dev(), meta.ino())?;
         result.parents[indices[control]].held = Some(dir.file);
-        for name in [
-            "service.json",
-            "issuer-policy.json",
-            "issuer-bindings.json",
-            "local-trust.json",
-        ] {
+        for name in ["service.json", "issuer-policy.json", "local-trust.json"] {
             result.file(&indices, &format!("{control}/{name}"))?;
         }
         for s in &enrollment.services {
@@ -402,7 +400,14 @@ fn finish(
             .get(report.failed_index)
             .ok_or(Error::new("DENIAL_CLEANUP_SCOPE"))?;
         let path = Path::new(p.path.to_str().map_err(|_| Error::new("DENIAL_PATH"))?);
-        let parent = Dir::open(path, context.journal.uid)?;
+        let parent = if let Some(held) = &p.held {
+            Dir {
+                file: held.try_clone()?,
+                uid: context.journal.uid,
+            }
+        } else {
+            Dir::open(path, context.journal.uid)?
+        };
         let m = parent.file.metadata()?;
         require(
             m.dev() == p.device && m.ino() == p.inode,
@@ -443,3 +448,45 @@ fn finish(
 #[cfg(test)]
 #[path = "../../../test/first_live/denial.rs"]
 mod tests;
+
+/// Separate fixed journal avoids colliding with the inventory Create-class receipt.
+pub(super) fn probe_socket(
+    plan: &crate::bootstrap::socket::SocketAncestorPlan,
+    socket_gid: u32,
+    identities: &std::collections::BTreeSet<u32>,
+    context: &Context<'_>,
+) -> Result<Report> {
+    let parent = plan.open_preflight(socket_gid, identities)?;
+    probe_socket_parent(parent, || plan.preflight(socket_gid, identities), context)
+}
+fn probe_socket_parent(
+    parent: Dir,
+    recheck: impl Fn() -> Result<()>,
+    context: &Context<'_>,
+) -> Result<Report> {
+    recheck()?;
+    let meta = parent.file.metadata()?;
+    let targets = Targets {
+        parents: vec![Parent {
+            held: Some(parent.file),
+            path: cs("/private/var/run")?,
+            device: meta.dev(),
+            inode: meta.ino(),
+        }],
+        files: Vec::new(),
+    };
+    let journal = context.journal.mkdir("socket-denial")?;
+    let socket_context = Context {
+        journal: &journal,
+        _guard: context._guard,
+        proof: [context.proof[0].try_clone()?, context.proof[1].try_clone()?],
+        stamps: context.stamps,
+        groups: context.groups.clone(),
+        uid: context.uid,
+        gid: context.gid,
+    };
+    let report = run(Class::Create, &targets, &[], &socket_context)?;
+    let result = finish(Class::Create, &targets, &socket_context, report);
+    recheck()?;
+    result
+}
