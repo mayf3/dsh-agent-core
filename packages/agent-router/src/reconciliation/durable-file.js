@@ -2,7 +2,9 @@ import {
   closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync,
   renameSync, unlinkSync, writeFileSync,
 } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
+import { RECONCILIATION_CAPS } from './capacity.js'
 
 export const DURABLE_RECOVERY_VERSION = 3
 
@@ -79,6 +81,14 @@ function assertDurableRecord(raw) {
       || !Array.isArray(raw.attemptedActions) || raw.attemptedActions.length > 32) {
     throw new TypeError('durable recovery record schema is invalid')
   }
+  const answerEvidence = raw.finalAssistantOutputEvidence
+  if (raw.finalAssistantOutput !== null
+      || !(answerEvidence === null || (typeof answerEvidence === 'object'
+        && /^[a-f0-9]{64}$/.test(answerEvidence.sha256)
+        && Number.isSafeInteger(answerEvidence.originalBytes) && answerEvidence.originalBytes >= 0
+        && typeof answerEvidence.truncated === 'boolean'))) {
+    throw new TypeError('durable recovery answer evidence is invalid')
+  }
   for (const entry of raw.attemptedActions) {
     if (entry === null || typeof entry !== 'object'
         || !RECOVERY_ACTIONS.has(entry.action) || !ACTION_RESULTS.has(entry.result)
@@ -103,6 +113,25 @@ function assertDurableRecord(raw) {
       throw new TypeError('durable recovery claim identity is invalid')
     }
   }
+  const pendingUnknown = new Set([
+    'pending_unknown', 'recovery_claimed', 'shutdown_requested', 'exit_observed',
+  ])
+  if ((raw.queryState === 'settled') !== (raw.settlementResult !== null)
+      || (raw.queryState === 'pending' && (raw.state === 'settled' || raw.fenceState === 'cleared'))
+      || (raw.queryState === 'settled' && !['settled', 'blocked'].includes(raw.state))
+      || (raw.fenceState === 'cleared' && raw.queryState !== 'settled')
+      || (raw.state === 'reserved' && (raw.queryState !== 'pending' || raw.fenceState !== 'armed'))
+      || (pendingUnknown.has(raw.state)
+        && (raw.queryState !== 'pending' || raw.initialOutcome !== 'outcome_unknown' || raw.fenceState !== 'active'))
+      || (raw.state === 'blocked' && (raw.fenceState !== 'active' || raw.failureReason === null))
+      || (raw.state === 'recovery_claimed' && raw.reapClaim?.phase !== 'claimed')
+      || (raw.state === 'shutdown_requested' && raw.reapClaim?.phase !== 'shutdown_committed')
+      || (raw.state === 'exit_observed'
+        && (raw.exitObservedAt === null || (raw.reapClaim !== null && raw.reapClaim.phase !== 'exit_observed')))
+      || (raw.reapClaim?.phase === 'settled' && raw.queryState !== 'settled')
+      || (raw.reapClaim?.phase === 'canceled_by_settlement' && raw.queryState !== 'settled')) {
+    throw new TypeError('durable recovery record state invariants are invalid')
+  }
 }
 
 function encodeIssuance(issuance) {
@@ -115,9 +144,53 @@ function encodeIssuance(issuance) {
   }))
 }
 
-function decodeIssuance(entries) {
+function decodeIssuance(entries, discriminatorSeq) {
+  if (entries.length > RECONCILIATION_CAPS.MAX_ISSUANCE_AGENTS_GLOBAL) {
+    throw new TypeError('durable issuance agent capacity is invalid')
+  }
   const issuance = new Map()
+  const discriminators = new Set()
   for (const entry of entries ?? []) {
+    const sparse = entry?.evictedSparseSeqs
+    const evictedGenerations = entry?.evictedGenerations
+    const generations = entry?.generations
+    if (entry === null || typeof entry !== 'object'
+        || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
+        || issuance.has(entry.agentId)
+        || !Number.isSafeInteger(entry.discriminator) || entry.discriminator <= 0
+        || entry.discriminator > discriminatorSeq || discriminators.has(entry.discriminator)
+        || !Number.isSafeInteger(entry.maxIssuedTurnSeq) || entry.maxIssuedTurnSeq < 0
+        || !Number.isSafeInteger(entry.evictedThroughTurnSeq) || entry.evictedThroughTurnSeq < 0
+        || entry.evictedThroughTurnSeq > entry.maxIssuedTurnSeq
+        || !Number.isSafeInteger(entry.evictedThroughGeneration) || entry.evictedThroughGeneration < 0
+        || !Array.isArray(sparse) || sparse.length > RECONCILIATION_CAPS.MAX_EVICTED_SPARSE_SEQS_PER_AGENT
+        || !Array.isArray(evictedGenerations) || !Array.isArray(generations)
+        || evictedGenerations.length + generations.length > RECONCILIATION_CAPS.MAX_ISSUANCE_GENERATIONS_PER_AGENT) {
+      throw new TypeError('durable issuance entry is invalid')
+    }
+    const validGenerationTuple = tuple => Array.isArray(tuple) && tuple.length === 2
+      && Number.isSafeInteger(tuple[0]) && tuple[0] > 0
+      && tuple[1] !== null && typeof tuple[1] === 'object'
+    if (sparse.some(seq => !Number.isSafeInteger(seq) || seq <= entry.evictedThroughTurnSeq || seq > entry.maxIssuedTurnSeq)
+        || new Set(sparse).size !== sparse.length
+        || evictedGenerations.some(tuple => !Array.isArray(tuple) || tuple.length !== 2
+          || !Number.isSafeInteger(tuple[0]) || tuple[0] <= 0
+          || tuple[0] <= entry.evictedThroughGeneration
+          || !Number.isSafeInteger(tuple[1]) || tuple[1] <= 0 || tuple[1] > entry.maxIssuedTurnSeq)
+        || generations.some(tuple => !validGenerationTuple(tuple)
+          || tuple[0] <= entry.evictedThroughGeneration
+          || !Number.isSafeInteger(tuple[1].minSeq) || tuple[1].minSeq <= 0
+          || !Number.isSafeInteger(tuple[1].maxSeq) || tuple[1].maxSeq < tuple[1].minSeq
+          || tuple[1].maxSeq > entry.maxIssuedTurnSeq)) {
+      throw new TypeError('durable issuance metadata is invalid')
+    }
+    const generationIds = [...evictedGenerations, ...generations].map(tuple => tuple[0])
+    if (new Set(generationIds).size !== generationIds.length) throw new TypeError('duplicate durable issuance generation')
+    const liveRanges = generations.map(tuple => tuple[1]).sort((a, b) => a.minSeq - b.minSeq)
+    if (liveRanges.some((range, index) => index > 0 && range.minSeq <= liveRanges[index - 1].maxSeq)) {
+      throw new TypeError('overlapping durable issuance generation ranges')
+    }
+    discriminators.add(entry.discriminator)
     issuance.set(entry.agentId, {
       discriminator: entry.discriminator,
       maxIssuedTurnSeq: entry.maxIssuedTurnSeq,
@@ -132,8 +205,16 @@ function decodeIssuance(entries) {
 }
 
 function durableRecord(record) {
+  const output = record.finalAssistantOutput
+  const finalAssistantOutputEvidence = output === null || output === undefined ? null : {
+    sha256: createHash('sha256').update(String(output.text ?? ''), 'utf8').digest('hex'),
+    originalBytes: output.originalBytes ?? Buffer.byteLength(String(output.text ?? ''), 'utf8'),
+    truncated: output.truncated === true,
+  }
   return {
     ...structuredClone(record),
+    finalAssistantOutput: null,
+    finalAssistantOutputEvidence,
     reconciliationHandle: record.handle,
     turnExecutionId: record.handle,
     queryState: record.state,
@@ -175,8 +256,21 @@ export function readDurableRecoveryStore(file) {
   const parsed = JSON.parse(readFileSync(file, 'utf8'))
   if (parsed === null || typeof parsed !== 'object' || parsed.version !== DURABLE_RECOVERY_VERSION
       || typeof parsed.runtimeEpoch !== 'string' || parsed.runtimeEpoch === ''
+      || parsed.runtimeEpoch.length > 128
+      || !Number.isSafeInteger(parsed.discriminatorSeq) || parsed.discriminatorSeq < 0
+      || !Array.isArray(parsed.runtimeEpochs)
+      || parsed.runtimeEpochs.length > RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS
+      || parsed.runtimeEpochs.some(epoch => typeof epoch !== 'string' || epoch === '' || epoch.length > 128)
+      || new Set(parsed.runtimeEpochs).size !== parsed.runtimeEpochs.length
+      || !parsed.runtimeEpochs.includes(parsed.runtimeEpoch)
       || !Array.isArray(parsed.records) || !Array.isArray(parsed.issuance)
-      || !Array.isArray(parsed.correlationIndex)) {
+      || !Array.isArray(parsed.correlationIndex)
+      || parsed.correlationIndex.length > RECONCILIATION_CAPS.MAX_CORRELATION_INDEX_ENTRIES_GLOBAL
+      || parsed.correlationIndex.some(entry => !Array.isArray(entry) || entry.length !== 2
+        || typeof entry[0] !== 'string'
+        || Buffer.byteLength(entry[0], 'utf8') > RECONCILIATION_CAPS.MAX_CORRELATION_KEY_BYTES
+        || entry[0].split('\u0000').length !== 3
+        || typeof entry[1] !== 'string' || entry[1].length > 512)) {
     throw new TypeError('durable recovery store schema is invalid')
   }
   const records = new Map()
@@ -191,6 +285,10 @@ export function readDurableRecoveryStore(file) {
     delete record.turnExecutionId
     records.set(record.handle, record)
   }
+  const correlationIndex = new Map(parsed.correlationIndex)
+  if (correlationIndex.size !== parsed.correlationIndex.length) {
+    throw new TypeError('duplicate durable caller correlation')
+  }
   return {
     runtimeEpochs: new Set([
       parsed.runtimeEpoch,
@@ -198,7 +296,7 @@ export function readDurableRecoveryStore(file) {
     ]),
     discriminatorSeq: parsed.discriminatorSeq ?? 0,
     records,
-    issuance: decodeIssuance(parsed.issuance),
-    correlationIndex: new Map(parsed.correlationIndex),
+    issuance: decodeIssuance(parsed.issuance, parsed.discriminatorSeq),
+    correlationIndex,
   }
 }

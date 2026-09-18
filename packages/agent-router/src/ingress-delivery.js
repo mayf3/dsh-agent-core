@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto'
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
 import { ROUTE_HOP_FAILURE_CLASSES } from './route-chain.js'
 import { fencedRejection } from './process/state-machine.js'
-import { outerFailureProjection } from './recovery-projection.js'
+import { outerFailureProjection } from './reconciliation/query.js'
 const PROVEN_NO_ADMISSION_ROUTE_FAILURES = new Set([
   ROUTE_HOP_FAILURE_CLASSES.SPAWN_FAILED_WITHOUT_CHILD,
   ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE,
@@ -184,13 +184,9 @@ export function createIngressDelivery({
           const receiptText = replyDelivery === 'unknown'
             ? '[agent-core] 答案已生成，但投递结果未知，可能已送达；可能部分送达，已确认块回执不可用。'
             : '[agent-core] 答案已生成，但回复投递失败；可能部分送达，已确认块回执不可用。'
-          let failureReceipt = { status: 'not_attempted' }
           try {
             await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), receiptText)
-            failureReceipt = { status: 'delivered' }
-          } catch {
-            failureReceipt = { status: 'failed' }
-          }
+          } catch { /* best effort diagnostic receipt */ }
           log.error(`reply delivery failed for ${binding.activeAgentId}: ${error?.code ?? 'unclassified'}`)
           if (error?.canaryNonce !== undefined) routeChain.noteCanaryExternalDelivery?.(error.canaryNonce)
           const recovery = typeof executionResult.reconciliationHandle === 'string'
@@ -198,19 +194,14 @@ export function createIngressDelivery({
                 failureStage: 'reply_delivery', requestAdmission: 'accepted',
               }) ?? {}
             : {}
-          return {
-            ...outerFailureProjection(error, 'reply_delivery', {
-              ...recovery,
-              reconciliationHandle: executionResult.reconciliationHandle ?? null,
-              terminationEvidence: executionResult.evidence?.terminationEvidence ?? null,
-              replyDelivery,
-              partialDelivery: 'possible',
-              requestAdmission: 'accepted',
-            }),
-            executionResult,
-            confirmedChunkReceipts: 'unavailable',
-            failureReceipt,
-          }
+          return outerFailureProjection(error, 'reply_delivery', {
+            ...recovery,
+            reconciliationHandle: executionResult.reconciliationHandle ?? null,
+            terminationEvidence: executionResult.evidence?.terminationEvidence ?? null,
+            replyDelivery,
+            partialDelivery: 'possible',
+            requestAdmission: 'accepted',
+          })
         }
       }
       // CTR-I2-015 observer external-delivery lifecycle point (structural

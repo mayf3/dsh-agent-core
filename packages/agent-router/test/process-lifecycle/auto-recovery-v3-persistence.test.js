@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -6,6 +7,8 @@ import test from 'node:test'
 
 import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 import { createIngressDelivery } from '../../src/ingress-delivery.js'
+import { RECONCILIATION_CAPS } from '../../src/reconciliation/capacity.js'
+import { makeFx } from './helpers.js'
 
 test('V3 durable unknown reservation and fence survive a store reopen', () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-'))
@@ -122,7 +125,7 @@ test('V3 durable write failure rolls back the transition and closes business adm
   }
 })
 
-test('V3 restart finishes settlement when exact child exit was durable before the crash', () => {
+test('V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof', () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-exit-crash-'))
   const persistenceFile = join(root, 'turn-recovery.json')
   try {
@@ -139,8 +142,61 @@ test('V3 restart finishes settlement when exact child exit was durable before th
     assert.equal(query.state, 'settled')
     assert.equal(query.snapshot.lateOutcome, 'terminated_without_outcome')
     assert.equal(query.snapshot.terminationEvidence, 'child_real_exit')
-    assert.equal(query.snapshot.fenceState, 'cleared')
-    assert.equal(reopened.activeFenceForAgent('agt_exit_crash'), null)
+    assert.equal(query.snapshot.fenceState, 'active')
+    assert.equal(query.snapshot.recoveryState, 'blocked')
+    assert.equal(reopened.activeFenceForAgent('agt_exit_crash').handle, handle)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 restart completes a normal late-evidence fence cleanup without a new prompt', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-late-cleanup-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const first = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-late-cleanup' })
+    const handle = first.mintTurnExecution({ agentId: 'agt_late_cleanup', processGeneration: 2, sessionId: 'main' })
+    first.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'late', deadlineAtWallMs: Date.now() })
+    first.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded' })
+    first.settleLate(handle, {
+      lateOutcome: 'late_completed', outcomeEvidence: 'exact_turn_end_success',
+      terminationEvidence: 'exact_terminal_then_idle',
+    })
+    assert.equal(first.activeFenceForAgent('agt_late_cleanup').handle, handle)
+
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-after-late-cleanup' })
+    const snapshot = reopened.getTurnReconciliation(handle).snapshot
+    assert.equal(snapshot.fenceState, 'cleared')
+    assert.equal(reopened.activeFenceForAgent('agt_late_cleanup'), null)
+    assert.ok(snapshot.attemptedActions.some(action => (
+      action.action === 'fence_cleanup' && action.reasonCode === 'startup_completed_proven_cleanup'
+    )))
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 restart clears a REAP fence only after durable registry cleanup proof', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-reap-cleanup-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const first = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-reap-cleanup' })
+    const handle = first.mintTurnExecution({ agentId: 'agt_reap_cleanup', processGeneration: 5, sessionId: 'main' })
+    first.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'reap', deadlineAtWallMs: Date.now() })
+    first.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded' })
+    first.claimRecovery(handle, { operationId: 'op-reap-cleanup', claimantRuntimeEpoch: first.runtimeEpoch })
+    first.commitRecoveryShutdown(handle)
+    first.settleLate(handle, {
+      lateOutcome: 'terminated_without_outcome', terminationEvidence: 'child_real_exit', exitObserved: true,
+    })
+    first.recordRecoveryAction(handle, {
+      action: 'registry_cleanup', result: 'succeeded', reasonCode: 'exact_reap_empty',
+    })
+    assert.equal(first.activeFenceForAgent('agt_reap_cleanup').handle, handle)
+
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-after-reap-cleanup' })
+    assert.equal(reopened.getTurnReconciliation(handle).snapshot.fenceState, 'cleared')
+    assert.equal(reopened.activeFenceForAgent('agt_reap_cleanup'), null)
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
@@ -179,6 +235,183 @@ test('V3 durable schema drift keeps startup business admission fail closed', () 
     assert.deepEqual(reopened.businessAdmissionStatus(), {
       ready: false, reason: 'durable_store_invalid',
     })
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 invalid durable top-level and issuance authority fail startup closed', () => {
+  for (const mutate of [
+    durable => { durable.discriminatorSeq = '1' },
+    durable => { durable.issuance.push(structuredClone(durable.issuance[0])) },
+    durable => { durable.correlationIndex.push(['occ\u0000run\u0000request', 'turn:missing:a1:g1:s1']) },
+  ]) {
+    const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-authority-'))
+    const persistenceFile = join(root, 'turn-recovery.json')
+    try {
+      const first = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-authority' })
+      first.mintTurnExecution({ agentId: 'agt_authority', processGeneration: 1, sessionId: 'main' })
+      const durable = JSON.parse(readFileSync(persistenceFile, 'utf8'))
+      mutate(durable)
+      writeFileSync(persistenceFile, JSON.stringify(durable), 'utf8')
+      const reopened = new TurnReconciliationStore({ persistenceFile })
+      assert.deepEqual(reopened.businessAdmissionStatus(), { ready: false, reason: 'durable_store_invalid' })
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  }
+})
+
+test('V3 repeated restart and mutation keeps durable runtime epochs bounded', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-epochs-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    let latestHandle
+    for (let index = 0; index < RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS + 8; index += 1) {
+      const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: `epoch-${index}` })
+      latestHandle = store.mintTurnExecution({ agentId: 'agt_epoch_bound', processGeneration: 1, sessionId: 'main' })
+      store.settleDirect(latestHandle, { outcome: 'completed', outcomeEvidence: 'exact_turn_end_success' })
+    }
+    const durable = JSON.parse(readFileSync(persistenceFile, 'utf8'))
+    assert.equal(durable.runtimeEpochs.length, RECONCILIATION_CAPS.MAX_RUNTIME_EPOCHS)
+    assert.ok(durable.records.length <= RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT)
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-final-read' })
+    assert.equal(reopened.getTurnReconciliation(latestHandle).state, 'settled')
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 resolved record eviction atomically retires caller correlation capacity and bytes', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-correlation-bound' })
+  const triples = []
+  for (let index = 0; index <= RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT; index += 1) {
+    const triple = { occurrenceId: `occ-${index}`, runId: `run-${index}`, requestId: `request-${index}` }
+    triples.push(triple)
+    const handle = store.mintTurnExecution({
+      agentId: 'agt_correlation_bound', processGeneration: 1, sessionId: 'main', callerCorrelation: triple,
+    })
+    store.settleDirect(handle, { outcome: 'completed', outcomeEvidence: 'exact_turn_end_success' })
+  }
+  assert.equal(store.correlationIndex.size, RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT)
+  assert.equal(store.resolveCallerCorrelation(triples[0]).state, 'never_existed')
+  assert.equal(store.resolveCallerCorrelation(triples.at(-1)).state, 'settled')
+  assert.ok(store.correlationBytes > 0)
+  assert.ok(store.occupancy().globalBytes > store.correlationBytes)
+})
+
+test('V3 caller correlation keys are type-safe and byte-bounded before authority mutation', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-correlation-input-bound' })
+  assert.throws(() => store.mintTurnExecution({
+    agentId: 'agt_correlation_input', processGeneration: 1, sessionId: 'main',
+    callerCorrelation: { requestId: 42 },
+  }), /coordinates must be strings/)
+  assert.throws(() => store.mintTurnExecution({
+    agentId: 'agt_correlation_input', processGeneration: 1, sessionId: 'main',
+    callerCorrelation: { requestId: '界'.repeat(RECONCILIATION_CAPS.MAX_CORRELATION_KEY_BYTES) },
+  }), error => error?.code === 'RECONCILIATION_CAPACITY_EXHAUSTED')
+  assert.equal(store.occupancy().records, 0)
+  assert.equal(store.correlationIndex.size, 0)
+})
+
+test('V3 durable record correlation must match the durable exact secondary index', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-correlation-authority-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-correlation-authority' })
+    store.mintTurnExecution({
+      agentId: 'agt_correlation_authority', processGeneration: 1, sessionId: 'main',
+      callerCorrelation: { occurrenceId: 'occ', runId: 'run', requestId: 'request' },
+    })
+    const durable = JSON.parse(readFileSync(persistenceFile, 'utf8'))
+    durable.records[0].callerCorrelation.requestId = 'different-request'
+    writeFileSync(persistenceFile, JSON.stringify(durable), 'utf8')
+    const reopened = new TurnReconciliationStore({ persistenceFile })
+    assert.deepEqual(reopened.businessAdmissionStatus(), { ready: false, reason: 'durable_store_invalid' })
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 impossible unresolved-cleared durable state keeps startup admission fail closed', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-invariant-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const first = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-invariant' })
+    const handle = first.mintTurnExecution({ agentId: 'agt_invariant', processGeneration: 1, sessionId: 'main' })
+    first.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'invariant', deadlineAtWallMs: Date.now() })
+    first.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded' })
+    const durable = JSON.parse(readFileSync(persistenceFile, 'utf8'))
+    durable.records[0].fenceState = 'cleared'
+    writeFileSync(persistenceFile, JSON.stringify(durable), 'utf8')
+
+    const reopened = new TurnReconciliationStore({ persistenceFile })
+    assert.deepEqual(reopened.businessAdmissionStatus(), {
+      ready: false, reason: 'durable_store_invalid',
+    })
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 durable recovery stores answer evidence without storing answer bytes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-answer-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  const sentinel = 'SECRET_ANSWER_PAYLOAD'
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-answer' })
+    const handle = store.mintTurnExecution({ agentId: 'agt_answer', processGeneration: 1, sessionId: 'main' })
+    store.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'answer', deadlineAtWallMs: Date.now() })
+    store.markOutcomeUnknown(handle, { source: 'turn_deadline_exceeded' })
+    store.settleLate(handle, {
+      lateOutcome: 'late_completed', outcomeEvidence: 'exact_turn_end_success',
+      terminationEvidence: 'exact_terminal_then_idle',
+      finalAssistantOutput: { text: sentinel, truncated: false },
+    })
+
+    const rawText = readFileSync(persistenceFile, 'utf8')
+    const durable = JSON.parse(rawText)
+    assert.equal(rawText.includes(sentinel), false)
+    assert.equal(durable.records[0].finalAssistantOutput, null)
+    assert.deepEqual(durable.records[0].finalAssistantOutputEvidence, {
+      sha256: createHash('sha256').update(sentinel).digest('hex'),
+      originalBytes: Buffer.byteLength(sentinel),
+      truncated: false,
+    })
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('V3 parsed terminal and child exit remain uncommitted together when durable settlement fails', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-atomic-exit-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-atomic-exit' })
+    const fx = makeFx({ deadlines: { turnTimeoutMs: 70 } })
+    fx.proc.store = store
+    fx.store = store
+    await fx.readyNow()
+    const turn = fx.proc.turn('main', 'atomic exit fixture', {}, 25)
+    await fx.tick()
+    fx.respondTo('session/prompt', { messageId: 'm-atomic-exit' })
+    const unknown = await new Promise((resolve, reject) => turn.then(reject, resolve))
+    assert.equal(unknown.status, 'outcome_unknown')
+    fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
+    fx.emitEvent('main', { type: 'user/message', data: { id: 'm-atomic-exit' } })
+    fx.emitEvent('main', { type: 'turn/end', data: { turn: 1, reason: { kind: 'completed' } } })
+
+    const originalPersist = store.persistDurable.bind(store)
+    store.persistDurable = () => { throw new Error('injected durable settlement failure') }
+    assert.throws(() => fx.childExit(0, null), /injected durable settlement failure/)
+    store.persistDurable = originalPersist
+
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-after-atomic-failure' })
+    const snapshot = reopened.getTurnReconciliation(unknown.reconciliationHandle).snapshot
+    assert.equal(snapshot.lateOutcome, null)
+    assert.equal(snapshot.exitObservedAt, null)
+    assert.notEqual(snapshot.settlementResult, 'terminated_without_outcome')
+    assert.equal(snapshot.fenceState, 'active')
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
@@ -292,7 +525,11 @@ test('V3 invalid durable store blocks the real outer entry before route executio
       messageId: 'om_blocked', sender: { openId: 'ou_test' }, text: 'must not admit',
     })
     assert.equal(fx.executions(), 0)
-    assert.equal(result.error.code, 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED')
+    assert.deepEqual(Object.keys(result).sort(), [
+      'attemptedActions', 'failureStage', 'fencedBy', 'missingEvidence',
+      'nextSafeAction', 'partialDelivery', 'processGeneration', 'reconciliationHandle',
+      'replyDelivery', 'requestAdmission', 'terminationEvidence',
+    ])
     assert.equal(result.requestAdmission, 'not_admitted')
     assert.equal(result.replyDelivery, 'not_attempted')
     assert.equal(result.partialDelivery, 'none')

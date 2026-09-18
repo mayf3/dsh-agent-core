@@ -11,6 +11,35 @@
  * epochs; V3 records remain queryable across control-plane restarts.
  */
 
+import { correlationEntryByteSize } from './capacity.js'
+
+const RECOVERY_PROJECTION_KEYS = Object.freeze([
+  'failureStage', 'fencedBy', 'reconciliationHandle', 'processGeneration', 'terminationEvidence',
+  'missingEvidence', 'attemptedActions', 'nextSafeAction', 'replyDelivery',
+  'partialDelivery', 'requestAdmission',
+])
+
+export function outerFailureProjection(error, failureStage, recovery = {}) {
+  const projection = {
+    failureStage,
+    fencedBy: null,
+    reconciliationHandle: null,
+    processGeneration: null,
+    terminationEvidence: null,
+    missingEvidence: [],
+    attemptedActions: [],
+    nextSafeAction: 'none',
+    replyDelivery: 'not_attempted',
+    partialDelivery: 'none',
+    requestAdmission: failureStage === 'admission' ? 'not_admitted' : 'accepted',
+  }
+  for (const key of RECOVERY_PROJECTION_KEYS) {
+    if (error?.[key] !== undefined) projection[key] = error[key]
+    if (recovery?.[key] !== undefined) projection[key] = recovery[key]
+  }
+  return projection
+}
+
 export const queryMethods = {
   recordQueryState(record) {
     if (record.state === 'settled') return 'settled'
@@ -168,10 +197,19 @@ export const queryMethods = {
       }
       return handle
     }
-    this.assertCorrelationCapacity()
-    this.correlationIndex.set(key, handle)
-    this.persistDurable()
-    return handle
+    const bytes = correlationEntryByteSize(key, handle)
+    const authorityBefore = this.snapshotAuthority()
+    try {
+      this.assertCorrelationCapacity(bytes, handle)
+      this.correlationIndex.set(key, handle)
+      this.correlationBytes += bytes
+      this.globalBytes += bytes
+      this.persistDurable()
+      return handle
+    } catch (error) {
+      this.restoreAuthority(authorityBefore)
+      throw error
+    }
   },
 
   /**

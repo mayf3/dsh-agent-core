@@ -31,7 +31,6 @@ import { evidenceBufferMethods } from './evidence-buffer.js'
 import { rpcChannelMethods } from './rpc-channel.js'
 import { eventCorrelationMethods } from './event-correlation.js'
 import { turnExecutionMethods } from './turn-execution.js'
-import { recoveryMethods } from './recovery.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
 
@@ -292,7 +291,7 @@ export class AgentProcess {
       finalAssistantOutputAvailable: snapshot.finalAssistantOutput !== null && snapshot.finalAssistantOutput !== undefined,
       finalAssistantOutputTruncated: snapshot.finalAssistantOutput?.truncated === true,
       diagnostic,
-      updatedAtWallMs: snapshot.updatedAt,
+      updatedAtWallMs: snapshot.settledAtWallMs ?? snapshot.createdAtWallMs,
     }
   }
 }
@@ -310,7 +309,6 @@ for (const group of [
   rpcChannelMethods,
   eventCorrelationMethods,
   turnExecutionMethods,
-  recoveryMethods,
   spawnMethods,
   shutdownMethods,
 ]) {

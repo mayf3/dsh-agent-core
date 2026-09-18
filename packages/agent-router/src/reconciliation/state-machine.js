@@ -41,7 +41,13 @@ export const settlementMethods = {
     if (record.state === 'settled') return { won: false, reason: 'already_settled', claim: record.reapClaim }
     if (record.initialOutcome !== 'outcome_unknown') return { won: false, reason: 'not_outcome_unknown', claim: null }
     if (record.reapClaim !== null && record.reapClaim !== undefined) {
-      return { won: false, reason: 'joined', claim: { ...record.reapClaim } }
+      const sameRuntimeClaim = record.reapClaim.phase === 'claimed'
+        && record.reapClaim.claimantRuntimeEpoch === claimantRuntimeEpoch
+      return {
+        won: false,
+        reason: sameRuntimeClaim ? 'joined' : `claim_${record.reapClaim.phase}`,
+        claim: { ...record.reapClaim },
+      }
     }
     const claimedAt = Date.now()
     this.mutateRecord(record, (candidate) => {
@@ -92,6 +98,23 @@ export const settlementMethods = {
     return true
   },
 
+  abortRecoveryShutdown(handle, reasonCode) {
+    const record = this.requireRecord(handle)
+    if (record.state === 'settled' || record.reapClaim?.phase !== 'shutdown_committed') return false
+    this.mutateRecord(record, (candidate) => {
+      candidate.reapClaim = { ...candidate.reapClaim, phase: 'blocked' }
+      candidate.recoveryState = 'blocked'
+      candidate.shutdownRequestedAt = null
+      candidate.failureReason = reasonCode
+      candidate.missingEvidence = ['live_generation_ownership']
+      candidate.nextSafeAction = 'reestablish_exact_ownership'
+      candidate.attemptedActions = [...(candidate.attemptedActions ?? []), {
+        action: 'ownership_check', result: 'blocked', observedAtWallMs: Date.now(), reasonCode,
+      }].slice(-32)
+    })
+    return true
+  },
+
   markRecoveryBlocked(handle, missingEvidence, reasonCode) {
     const record = this.requireRecord(handle)
     if (record.state === 'settled') return false
@@ -138,6 +161,19 @@ export const settlementMethods = {
       if (candidate.state === 'settled') candidate.nextSafeAction = 'send_new_request_after_reopened'
       candidate.attemptedActions = [...(candidate.attemptedActions ?? []), {
         action: 'fence_cleanup', result: 'succeeded', observedAtWallMs: Date.now(), reasonCode: 'exact_fence_cleared',
+      }].slice(-32)
+    })
+    return true
+  },
+
+  markRegistryCleanupBlocked(handle, reasonCode = 'exact_reap_empty_cas_failed') {
+    const record = this.requireRecord(handle)
+    this.mutateRecord(record, (candidate) => {
+      candidate.recoveryState = 'blocked'
+      candidate.failureReason = reasonCode
+      candidate.nextSafeAction = 'operator_exact_generation_recovery'
+      candidate.attemptedActions = [...(candidate.attemptedActions ?? []), {
+        action: 'registry_cleanup', result: 'blocked', observedAtWallMs: Date.now(), reasonCode,
       }].slice(-32)
     })
     return true
@@ -222,7 +258,10 @@ export const settlementMethods = {
    * append bounded audit entries.
    * @returns {{won:boolean, lateOutcome?:string}}
    */
-  settleLate(handle, { lateOutcome, outcomeEvidence = null, terminationEvidence = null, finalAssistantOutput = undefined }) {
+  settleLate(handle, {
+    lateOutcome, outcomeEvidence = null, terminationEvidence = null,
+    finalAssistantOutput = undefined, exitObserved = false,
+  }) {
     if (!LATE_OUTCOMES.includes(lateOutcome)) {
       throw new TypeError(`settleLate: illegal lateOutcome ${JSON.stringify(lateOutcome)}`)
     }
@@ -246,6 +285,16 @@ export const settlementMethods = {
       throw new Error(`settleLate: handle ${handle} has no outcome_unknown source (initialOutcome=${JSON.stringify(record.initialOutcome)})`)
     }
     this.mutateRecord(record, (candidate) => {
+      if (exitObserved) {
+        candidate.exitObservedAt = Date.now()
+        candidate.attemptedActions = [...(candidate.attemptedActions ?? []), {
+          action: 'exit_wait', result: 'succeeded', observedAtWallMs: candidate.exitObservedAt,
+          reasonCode: 'child_real_exit',
+        }].slice(-32)
+        if (candidate.reapClaim !== null && candidate.reapClaim !== undefined) {
+          candidate.reapClaim = { ...candidate.reapClaim, phase: 'exit_observed' }
+        }
+      }
       candidate.state = 'settled'
       candidate.reservedMandatoryBytes = 64
       candidate.lateOutcome = lateOutcome

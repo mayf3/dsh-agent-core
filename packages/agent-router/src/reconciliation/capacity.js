@@ -20,6 +20,9 @@ export const RECONCILIATION_CAPS = Object.freeze({
   MAX_RECONCILIATION_AUDIT_BYTES_PER_RECORD: 65536,
   MAX_ISSUANCE_GENERATIONS_PER_AGENT: 256,
   MAX_CORRELATION_INDEX_ENTRIES_GLOBAL: 8192,
+  MAX_CORRELATION_KEY_BYTES: 1024,
+  MAX_RUNTIME_EPOCHS: 256,
+  MAX_ISSUANCE_AGENTS_GLOBAL: 8192,
   /** Bounded sparse set of evicted-but-non-contiguous turn sequences. */
   MAX_EVICTED_SPARSE_SEQS_PER_AGENT: 4096,
 })
@@ -54,4 +57,8 @@ export function recordByteSize(record) {
   // Complete owned-state accounting uses actual retained UTF-8 leaf bytes,
   // not JSON wire escaping. Structural keys/separators count explicitly.
   return ownedValueBytes(record) + (record.reservedMandatoryBytes ?? 0)
+}
+
+export function correlationEntryByteSize(key, handle) {
+  return ownedValueBytes([key, handle])
 }

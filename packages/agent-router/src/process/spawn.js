@@ -129,6 +129,10 @@ export const spawnMethods = {
       this.auditBounded({ kind: 'stale_callback', detail: `late exit after EXITED (code=${code}, signal=${signal}) — bounded audit only` })
       return
     }
+    if (this.registryCleanupBlocked === true) {
+      this.auditBounded({ kind: 'stale_callback', detail: 'duplicate child exit while exact registry cleanup is blocked' })
+      return
+    }
     // 1. atomically mark exact child exit evidence
     this.exit = { code, signal }
     if (this.state === 'SPAWNING' || this.state === 'INITIALIZING' || this.state === 'READY') {
@@ -155,7 +159,6 @@ export const spawnMethods = {
           execution.terminalReject = undefined
         }
       }
-      if (!execution.settled) this.store.markExitObserved?.(execution.handle)
       // 5. C-017 precedence: parsed exact outcome (received before the exit
       //    callback) wins over child_real_exit.
       if (execution.terminalEvent !== null) {
@@ -165,12 +168,14 @@ export const spawnMethods = {
           outcomeEvidence: failed ? 'exact_turn_end_failure' : 'exact_turn_end_success',
           terminationEvidence: 'child_real_exit',
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+          exitObserved: true,
         })
       } else {
         this.store.settleLate(execution.handle, {
           lateOutcome: 'terminated_without_outcome',
           terminationEvidence: 'child_real_exit',
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
+          exitObserved: true,
         })
       }
       this.finishExecution(execution)
@@ -178,7 +183,14 @@ export const spawnMethods = {
     // 6. authoritative reconciliation records are visible (in-memory store)
     // 7. local matcher/output copies released (finishExecution above)
     // 8. CAS exact REAP entry -> EMPTY
-    this.registryIntegration?.casEmpty?.(this)
+    const registryCleaned = this.registryIntegration?.casEmpty?.(this) !== false
+    if (!registryCleaned) {
+      this.registryCleanupBlocked = true
+      for (const execution of exitExecutions) {
+        this.store.markRegistryCleanupBlocked?.(execution.handle)
+      }
+      return
+    }
     for (const execution of exitExecutions) {
       if (this.store.getTurnReconciliation(execution.handle).state === 'settled') {
         this.store.recordRecoveryAction?.(execution.handle, {

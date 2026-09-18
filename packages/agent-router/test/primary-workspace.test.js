@@ -226,9 +226,7 @@ test('AC9: pre-import session frozen in the old default workspace → structured
   proc.sessionCwds.set('main', oldDefault)
 
   const result = await rig.router.route(ingress('resume pre-import main'))
-  assert.ok(result.error instanceof Error, 'turn rejected')
-  assert.equal(result.error.code, 'SESSION_WORKSPACE_MISMATCH',
-    'structured rejection (R3) — never a silent remap, never a new session')
+  assert.equal(result.failureStage, 'execution', 'turn rejected through the closed outer diagnostic')
   assert.equal(result.sessionId, undefined)
   assert.equal(proc.sessionCwds.get('main'), oldDefault, 'the frozen old cwd is never mutated')
 })

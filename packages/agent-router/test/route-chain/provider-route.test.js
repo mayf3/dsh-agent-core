@@ -227,11 +227,11 @@ test('all frozen runtime classes traverse the real session.event turn/end shape'
   }
 })
 
-test('turn correlation ignores history, another session and another message', async () => {
+test('turn correlation ignores history/another session but fences two same-session pre-receipt starts', async () => {
   const { proc, writes, answer, readyNow } = fakeProcess()
   await readyNow()
   injectFailedTurn(proc, 'main', 'owned-message', { code: 'QUOTA', message: 'historical quota' }, 1)
-  const pending = proc.turn('main', 'owned', {}, 2000)
+  const pending = proc.turn('main', 'owned', {}, 80)
   await new Promise((resolve) => setTimeout(resolve, 0))
   answer(writes[1], { messageId: 'owned-message' })
   injectFailedTurn(proc, 'other', 'owned-message', { code: 'QUOTA', message: 'other session quota' }, 2)
@@ -242,10 +242,11 @@ test('turn correlation ignores history, another session and another message', as
   wireEvent(proc, 'main', { type: 'assistant/message', data: { message: { id: 'answer', content: [{ type: 'text', text: 'owned answer' }] } } })
   wireEvent(proc, 'main', { type: 'turn/end', data: { turn: 4, reason: { kind: 'completed' } } })
   proc.onStdout(`${JSON.stringify({ jsonrpc: '2.0', method: 'session.status', params: { sessionId: 'main', status: 'idle' } })}\n`)
-  const envelope = await pending
-  assert.equal(envelope.reply, 'owned answer')
-  assert.equal(envelope.status, 'completed')
-  assert.equal(typeof envelope.reconciliationHandle, 'string')
+  await assert.rejects(pending, error => {
+    assert.equal(error.status, 'outcome_unknown')
+    assert.equal(typeof error.reconciliationHandle, 'string')
+    return true
+  })
 })
 
 test('async and sync provider errors share full token redaction and never retain raw payloads', async () => {
