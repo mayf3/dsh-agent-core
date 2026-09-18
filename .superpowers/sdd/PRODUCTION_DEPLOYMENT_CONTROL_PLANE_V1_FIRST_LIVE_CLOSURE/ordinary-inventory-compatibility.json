@@ -1,0 +1,69 @@
+{
+  "source_sha256": "6dbcc8c0c4ed27be76ee621bef3259eb8516527bb9526d880b612e3ce5e248dc",
+  "scope": "derived ordinary non-atomic observation; protected current checks required",
+  "roots": {
+    "/usr/local/libexec/agent-core/app": {
+      "counts": {
+        "UNSUPPORTED": 0,
+        "directory": 254,
+        "file": 1131,
+        "symlink": 22
+      },
+      "max_path_components": 7,
+      "component_characters_outside_current_shared_allowlist": [
+        "@"
+      ],
+      "closed_hardlink_groups": []
+    },
+    "/usr/local/libexec/agent-core/harness": {
+      "counts": {
+        "UNSUPPORTED": 0,
+        "directory": 10686,
+        "file": 70766,
+        "symlink": 5618
+      },
+      "max_path_components": 14,
+      "component_characters_outside_current_shared_allowlist": [
+        "$",
+        "+",
+        "=",
+        "@"
+      ],
+      "closed_hardlink_groups": [
+        {
+          "device": 16777230,
+          "inode": 60452822,
+          "observed_nlink": 2,
+          "paths": [
+            "node_modules/.pnpm/@esbuild+darwin-x64@0.21.5/node_modules/@esbuild/darwin-x64/bin/esbuild",
+            "node_modules/.pnpm/esbuild@0.21.5/node_modules/esbuild/bin/esbuild"
+          ],
+          "sha256": "c50b052b009c7f310191d14056bcd4deefe423400212207acd8b4544ef1c0a4f",
+          "all_members_in_inventory": true
+        },
+        {
+          "device": 16777230,
+          "inode": 60415039,
+          "observed_nlink": 2,
+          "paths": [
+            "node_modules/.pnpm/@esbuild+darwin-x64@0.25.12/node_modules/@esbuild/darwin-x64/bin/esbuild",
+            "node_modules/.pnpm/esbuild@0.25.12/node_modules/esbuild/bin/esbuild"
+          ],
+          "sha256": "bd09e65a6a1a903c40269d3a4ae23ffc6139f691703728c1faf25f62e48baa40",
+          "all_members_in_inventory": true
+        },
+        {
+          "device": 16777230,
+          "inode": 60392482,
+          "observed_nlink": 2,
+          "paths": [
+            "node_modules/.pnpm/@esbuild+darwin-x64@0.28.1/node_modules/@esbuild/darwin-x64/bin/esbuild",
+            "node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/bin/esbuild"
+          ],
+          "sha256": "dd53ccf32f9b5b3ab30d41388ef1fc8f81c44ca57ee7a32a7364a1753308d009",
+          "all_members_in_inventory": true
+        }
+      ]
+    }
+  }
+}
