@@ -39,12 +39,18 @@ test('capability file exists with the registration markers', () => {
 })
 
 test('DEFAULT_MANIFESTS composes the life-workbench manifests', () => {
-  const index = readFileSync(join(src, 'index.js'), 'utf8')
+  // The plugin entry imports ALL capability families through the aggregation
+  // surface (capabilities/manifests.js — CODE_STRUCTURE_GUARDRAILS_V1
+  // split_followup for the entry file's barrel limit), so the import-side
+  // assertion pins THAT surface; the composition assertion below is the
+  // invariant this guard exists for: a clean stage/deploy carries the tools.
+  const aggregate = readFileSync(join(src, 'capabilities', 'manifests.js'), 'utf8')
   assert.match(
-    index,
-    /import \{ lifeWorkbenchManifests \} from '\.\/capabilities\/life-workbench\.mjs'/,
-    'index.js must import the life-workbench manifests',
+    aggregate,
+    /export \{ lifeWorkbenchManifests \} from '\.\/life-workbench\.mjs'/,
+    'the capability-manifest aggregation surface must re-export the life-workbench manifests',
   )
+  const index = readFileSync(join(src, 'index.js'), 'utf8')
   assert.match(
     index,
     /\.\.\.lifeWorkbenchManifests,/,
