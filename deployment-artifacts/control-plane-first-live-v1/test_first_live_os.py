@@ -25,7 +25,7 @@ class Transport(unittest.TestCase):
         self.journal = self.base/'.agent-deploy-first-live-operator'/'first-live-dsh-20260918-01'
         self.raw = b'fixture script never executed'
         scripts = ['first_live_os.py','first_live_io.py','first_live_operator.py',
-                   'broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py']
+                   'broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py']
         for name in scripts:
             (self.package/name).write_bytes(self.raw); (self.package/name).chmod(0o400)
         self.manifest = {'version':1,'operation_id':'first-live-dsh-20260918-01',
@@ -34,7 +34,7 @@ class Transport(unittest.TestCase):
             'root_argv_allowlist':[['/bin/cat','/fixed/public'],
                 ['/usr/bin/stat','-f','%u|%g|%p|%l|%f|%z|%m|%c|%i|%B|%d|%HT','/fixed/public'],
                 ['/bin/ls','-ldeO','/fixed/public']],
-            'ordinary_argv_allowlist':[['/usr/bin/python3','-B','-E','-s',str(self.package/'broker_first_delivery.py')]]}
+            'ordinary_argv_allowlist':[['/usr/bin/python3','-I','-S','-B',str(self.package/'first_live_launcher.py'),'--broker-exact']]}
         self.save_manifest()
         self.stack = contextlib.ExitStack(); self.addCleanup(self.stack.close)
         user=transport.pwd.getpwuid(502)
@@ -265,6 +265,43 @@ class Transport(unittest.TestCase):
         with self.invoke(return_value=(0,b'',b'')) as run,self.assertRaises(RuntimeError):
             self.io.call(['/bin/cat','/different'])
         self.assertEqual(run.call_count,0)
+
+
+    def test_broker_prefix_appends_only_own_exact_manifest_digest(self):
+        self.io.claim();prefix=self.manifest['ordinary_argv_allowlist'][0]
+        with self.invoke(return_value=(0,b'{}',b'')) as run:
+            self.assertEqual(self.io.call(prefix,root=False),b'{}')
+            self.assertEqual(run.call_args.args[0],prefix+[self.io.manifest_digest])
+            for bad in [prefix+['a'*64],prefix+[self.io.manifest_digest],prefix[:-1]+['--execute-exact']]:
+                with self.assertRaises(RuntimeError):self.io.call(bad,root=False)
+            self.assertEqual(run.call_count,1)
+
+    def test_only_fixed_socket_directory_install_is_allowed_without_fd(self):
+        command=['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']
+        self.manifest['root_argv_allowlist'].append(command);self.save_manifest()
+        io=transport.OperatorIO(self.manifest,self.package,self.journal)
+        with mock.patch.object(io,'_validate_tools'):
+            io.claim()
+            with mock.patch.object(io,'_invoke',return_value=(0,b'',b'')) as run:
+                self.assertEqual(io.call(command),b'')
+                self.assertIsNone(run.call_args.kwargs['stdin'])
+                with tempfile.TemporaryFile() as fd,self.assertRaises(RuntimeError):io.call(command,stdin=fd)
+                self.assertEqual(run.call_count,1)
+        for position,value in [(5,'20'),(7,'0777'),(8,'/other')]:
+            changed=json.loads(json.dumps(self.manifest));changed['root_argv_allowlist'][-1][position]=value
+            with self.subTest(value=value),self.assertRaises(RuntimeError):transport.OperatorIO(changed,self.package,self.journal)
+
+    def test_real_private_install_d_preserves_existing_inode_and_parent(self):
+        # Apple install behavior only; actual UID/GID, private paths, no sudo/root.
+        parent=self.base/'install-parent';parent.mkdir(mode=0o700)
+        child=parent/'existing';child.mkdir(mode=0o700)
+        before=child.stat();p_before=parent.stat()
+        subprocess.run(['/usr/bin/install','-d','-o',str(os.getuid()),'-g',str(os.getgid()),'-m','0750',str(child)],check=True,timeout=5)
+        after=child.stat();p_after=parent.stat()
+        self.assertEqual((after.st_dev,after.st_ino),(before.st_dev,before.st_ino))
+        self.assertEqual(stat.S_IMODE(after.st_mode),0o750)
+        self.assertEqual((p_after.st_dev,p_after.st_ino,p_after.st_mode,p_after.st_uid,p_after.st_gid),
+                         (p_before.st_dev,p_before.st_ino,p_before.st_mode,p_before.st_uid,p_before.st_gid))
 
 
 if __name__=='__main__':unittest.main()
