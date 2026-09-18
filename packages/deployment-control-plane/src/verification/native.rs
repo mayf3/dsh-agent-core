@@ -482,5 +482,5 @@ impl VerifiedCanary {
 }
 
 #[cfg(test)]
-#[path = "../../test/verification/capture.rs"]
+#[path = "../../test/adoption/verification/capture.rs"]
 mod tests;
