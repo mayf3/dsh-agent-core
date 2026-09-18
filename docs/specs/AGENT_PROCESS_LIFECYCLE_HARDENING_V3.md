@@ -1,6 +1,6 @@
 ---
-spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-status: superseded
+spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -8,142 +8,72 @@ scope:
   - AgentProcess lifecycle and readiness
   - RPC deadlines and child-exit cleanup
   - interactive turn timeout and late reconciliation
+  - parent-Runtime outcome_unknown auto-convergence
+  - durable unknown fence and recovery operation
   - graceful shutdown and bounded process evidence
-  - termination evidence seam consumed by Scheduler
+  - termination evidence seam consumed by outer callers
 governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V2
 external_authorities: []
 supersedes:
-  - AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+superseded_by: null
 owners:
   - mayf3
-date: 2026-08-21
+date: 2026-09-18
 repository: mayf3/dsh-agent-core
-authoring_base_main: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-replaced_authority_revision: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-accepted_date: 2026-08-21
-accepted_reviewed_base: 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-accepted_reviewed_head: 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-historical_pr28_replacement_review_claim: PROCESS_IMPLEMENTATION_AUTHORITY_REPLACEMENT_REVIEW
-historical_pr28_replacement_review_claim_result: PASS
-historical_pr28_required_fixes_claim: NONE
-historical_pr28_review_verdict_claim: READY_TO_ACCEPT_REPLACEMENT
-acceptance_finalize_semantic_change: none
+authoring_base_main: 3c7b169a864c1e45df8b5c67333a9478138a22ee
+replaced_authority_revision: 3c7b169a864c1e45df8b5c67333a9478138a22ee
 references:
-  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md
+  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md
   - docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md
+  - docs/investigations/AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1.md
 ---
 
-# AGENT_PROCESS_LIFECYCLE_HARDENING_V2 — 进程生命周期、deadline 与未知结果收口
+# AGENT_PROCESS_LIFECYCLE_HARDENING_V3 — outcome_unknown 父 Runtime 自动收敛
 
-> 状态：**accepted / current on `main`**（2026-08-21 whole-authority acceptance finalize；reviewed replacement HEAD `08c041c3ad11bab6b1632b24103b40b2d698dfdf`；supersedes `AGENT_PROCESS_LIFECYCLE_HARDENING_V1`）。
-> 当前实现状态：**NOT_STARTED**。Accepted/current authority 不等于 implementation complete、production fixed、production deployed 或 implementation PR automatically mergeable。
-> 本收口：**DOCS ONLY**；不 implementation；不修改 production；不修改当前 `DSH_AGENT_TURN_TIMEOUT=900000` 运维缓解；不修改 Scheduler；不 merge。
+> 状态：**proposed / docs-only candidate**。V2 仍是 current accepted authority。
+> 本候选完整承接 V2，并新增父 Runtime 自动消费 late evidence、hard-deadline exact-generation
+> REAP、durable recovery/fence state 与结构化外层诊断。未接受前不授权 implementation。
+> 本轮不改产品代码、不 merge、不部署、不重启、不执行生产 mutation。
 
----
-
-## 0. Authoring Result and Supersession Lifecycle
+## 0. Authoring result and whole-authority transition plan
 
 ```text
 SPEC_GOVERNANCE_MODE = AUTHOR
-PREFLIGHT_MODE = AMEND
-AGENT_PROCESS_LIFECYCLE_HARDENING_V2_SPEC = PASS
-SPEC_STATUS = accepted
-ACTIVE_AUTHORITY_ON_MAIN = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-IMPLEMENTATION_AUTHORITY = contracts
-SUPERSEDES = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-V1_CURRENT_STATUS = superseded
-IMPLEMENTATION_STATE = NOT_STARTED
-PRODUCTION_ROLLOUT_STATE = NOT_STARTED
-AUTHORITY_CONFORMANCE_AUDIT = FIX_REQUIRED_UNTIL_THIS_CONVERGENCE_IS_INDEPENDENTLY_REVIEWED_AND_MERGED
-IMPLEMENTATION_ALLOWED_TO_START = NO
-NEEDS_OWNER_DECISION = NO
-OPEN_OWNER_DECISIONS = NONE
-NORMATIVE_TBD = NONE
-PARTIAL_SUPERSESSION = NONE
+GOAL = AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1
+AUTHORITY_ACTION = SUPERSEDE
+ROUTE_STAGE = AUTHORITY_AUTHORING
+AUTHORING_BASE = 3c7b169a864c1e45df8b5c67333a9478138a22ee
+ACTIVE_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
+CANDIDATE_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+CANDIDATE_STATUS = proposed
+IMPLEMENTATION_AUTHORITY = none
+IMPLEMENTATION_STARTED = NO
+PRODUCTION_MUTATION_PERFORMED = NO
 ```
 
-`PASS` 只表示历史 replacement authoring 输入完整；whole-authority acceptance provenance 见 §0.4。当前独立审计结论仍为 `FIX_REQUIRED`，本 docs-only 收口在独立 review 并合入前不授权 implementation 启动。
+This is a complete standalone successor, not a partial amendment. Until a
+future exact-head Owner acceptance transaction, V3 has no authority effect and
+V2 remains unchanged.
 
-### 0.1 Complete replacement declaration
+Future acceptance must atomically apply:
 
 ```text
-REPLACEMENT_SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-REPLACED_SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-REPLACED_AUTHORITY_REVISION = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-REPLACEMENT_FORM = COMPLETE_STANDALONE_WHOLE_AUTHORITY
-DELTA_AMENDMENT = NO
-CONTRACT_SEMANTIC_CHANGE = NONE
-IMPLEMENTATION_SCOPE_CHANGE = NONE
-ACCEPTANCE_CRITERIA_CHANGE = NONE
-ONLY_INTENTIONAL_AUTHORITY_CHANGE = implementation_authority:none->contracts
+AGENT_PROCESS_LIFECYCLE_HARDENING_V3.status: proposed -> accepted
+AGENT_PROCESS_LIFECYCLE_HARDENING_V3.implementation_authority: none -> contracts
+AGENT_PROCESS_LIFECYCLE_HARDENING_V3.supersedes: [] -> [AGENT_PROCESS_LIFECYCLE_HARDENING_V2]
+AGENT_PROCESS_LIFECYCLE_HARDENING_V2.status: accepted -> superseded
+AGENT_PROCESS_LIFECYCLE_HARDENING_V2.superseded_by: null -> AGENT_PROCESS_LIFECYCLE_HARDENING_V3
 ```
 
-本文件完整、自包含地承载被替换 authority 的 Goal、scope、Owner decisions、全部
-Contracts、Acceptance Criteria、production / Scheduler / security boundaries，以及 compatibility 要求。
-读者不需要拼接 V1 与失败 amendment 才能得到 V2 authority。V1 的正文语义由本 replacement
-完整保留；唯一有意变化是 V2 在未来合法 accepted 后可由其 Contracts 授予 bounded
-implementation authority。
+Acceptance binds the independently reviewed semantic commit. The final
+lifecycle commit may contain only the mechanical frontmatter transitions above.
+Review recommendation does not perform acceptance.
 
-### 0.2 Replaced authority review provenance (historical input only)
-
-```text
-REPLACED_SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-REPLACED_SPEC_ACCEPTED_DATE = 2026-08-20
-REPLACED_SPEC_ACCEPTANCE_REVIEWED_SEMANTIC_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
-REPLACED_SPEC_INDEPENDENT_FOCUSED_RE_REVIEW = PASS
-REPLACED_SPEC_REQUIRED_FIXES_CLOSED = 9/9
-REPLACED_SPEC_SEMANTIC_CHANGE_AT_FINALIZE = NONE
-```
-
-以上 provenance 仅证明 V1 被完整携带语义的历史来源；它不是 V2 的 review 或 acceptance
-provenance。V2 未填写 `accepted_by`、`accepted_at` 或任何等价的 acceptance claim。
-
-### 0.3 Atomic whole-authority supersession plan — HISTORICAL_ACCEPTANCE_PLAN
-
-以下是 2026-08-21 acceptance-finalize 之前的历史计划：当时的 authoring PR 只准备未来原子 transition；V2 frontmatter 的 `supersedes` 保持空列表，V1 保持 `status: accepted`。计划要求 authorized maintainer 在后续 docs-only acceptance-finalize change 中原子执行：
-
-```text
-AGENT_PROCESS_LIFECYCLE_HARDENING_V2.status: proposed -> accepted
-AGENT_PROCESS_LIFECYCLE_HARDENING_V2.supersedes: [] -> [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
-AGENT_PROCESS_LIFECYCLE_HARDENING_V1.status: accepted -> superseded
-AGENT_PROCESS_LIFECYCLE_HARDENING_V1.superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-```
-
-该历史计划规定任一 backlink/lifecycle 更新缺失都不得完成 transition；当时的 authority 状态绑定于 authoring base `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`。
-
-**2026-08-21 执行记录：以上 plan 已由 docs-only whole-authority acceptance-finalize transaction 在同一 commit 中原子执行完成，并由 PR #28 merge `12375d6282ede5015088a7d7f5495d6f46ca7738` 进入 `main`；acceptance provenance 见 §0.4。**
-
-### 0.4 Acceptance Record — HISTORICAL_PRE_MERGE_RECORD
-
-```text
-ACCEPTANCE_FINALIZE = AGENT_PROCESS_LIFECYCLE_HARDENING_V2_WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE
-ACCEPTED_DATE = 2026-08-21
-REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-HISTORICAL_PR28_REVIEW_CLAIM = PASS
-PERSISTENT_INDEPENDENT_REVIEW_PROVENANCE_AT_MERGE = INCOMPLETE
-POST_MERGE_INDEPENDENT_AUTHORITY_AUDIT = FIX_REQUIRED
-ACCEPTANCE_FINAL_HEAD_RECHECK = INVALID
-SEMANTIC_DELTA_FROM_REVIEWED_SPEC_COMMIT = NONE
-SPEC_STATUS = accepted
-SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
-SUPERSEDED_AUTHORITY = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (status = superseded; superseded_by = AGENT_PROCESS_LIFECYCLE_HARDENING_V2)
-ATOMIC_WHOLE_AUTHORITY_SUPERSESSION = SINGLE_DOCS_ONLY_TRANSACTION
-FINAL_ACCEPTED_HEAD = 5c1d03b8543674ffe2af42c6d0529cf4e0552bff
-AUTHORITY_MERGE = 12375d6282ede5015088a7d7f5495d6f46ca7738
-HISTORICAL_IMPLEMENTATION_ALLOWED_BEFORE_ACTIVATION = NO
-```
-
-本 finalize 只机械执行 §0.3 预定的原子 transition 与 acceptance provenance；§1–§15 reviewed
-semantics（C-001..C-022 Contracts、§10.2 的 39 条 acceptance items、§10.3 的 48 个 fault
-cases、11 个 stable clause anchors、production / Scheduler / security boundaries）保持逐字不变。
-
----
 
 ## 1. Goal
 
@@ -178,19 +108,26 @@ child real exit observed
 
 本 Spec 优先保证：不永久挂起、不错误复用、不自动重放、不把“停止等待”冒充“执行已终止”。
 
+V3 还保证：普通业务 prompt 之外的父 Runtime coordinator 自动消费可信 late evidence；
+到 exact turn 的既有 absolute turn deadline 仍无 termination proof 时，只对 exact owned
+generation 取得一次 REAP claim。只有真实 child exit 与规定的 settlement/cleanup 完成后才
+重新开放 admission。V3 不增加第五个 timeout：`hardDeadlineAt` 就是 prompt 写入前已冻结的
+turn deadline。
+
 ---
 
 ## 2. Scope and non-goals
 
-In scope（与 V1 完全相同）：
+In scope：
 
 - AgentProcess lifecycle and readiness；
 - RPC deadlines and child-exit cleanup；
 - interactive turn timeout and late reconciliation；
 - graceful shutdown and bounded process evidence；
-- termination evidence seam consumed by Scheduler。
+- termination evidence seam consumed by Scheduler；
+- parent-Runtime auto-convergence、durable recovery/fence record 与 outer diagnostics。
 
-Non-goals / forbidden changes（与 V1 完全相同）：
+Non-goals / forbidden changes：
 
 - 不在本 Spec authoring 中实现任何 Contract；
 - 不修改 production code、deployment state 或当前 `DSH_AGENT_TURN_TIMEOUT=900000` 缓解；
@@ -209,9 +146,10 @@ Session/product authority = AGENT_WORKSPACE_SESSION_MODEL_V2 (accepted)
 Evidence authority = AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1 (PASS)
 Current AgentProcess authority on main = AGENT_PROCESS_LIFECYCLE_HARDENING_V2 (accepted; implementation_authority=contracts)
 Historical replaced authority = AGENT_PROCESS_LIFECYCLE_HARDENING_V1 (superseded; implementation_authority=none)
-Implementation state = NOT_STARTED
-Production rollout state = NOT_STARTED
-Implementation start gate = NO pending independent convergence review and merge
+V2 source implementation at fresh base = PRESENT
+V3 implementation state = NOT_STARTED
+V3 production rollout state = NOT_STARTED
+V3 implementation start gate = NO pending review, exact-head acceptance and merge
 ```
 
 Owner 边界：
@@ -275,6 +213,14 @@ This State/compatibility note records adjacent behavior already present on curre
 - Basis: main V2/V1 frontmatter, mutual backlinks, authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`, current main `b312ef88532d2750e6df95a8ef2e4a83284b9562`, and the AgentProcess index synchronized by this amendment.
 
 ---
+
+### STATE-PROC-V3-001 — Fresh current-main implementation gap
+
+At `origin/main@3c7b169a864c1e45df8b5c67333a9478138a22ee`, exact late
+terminal/idle and child-exit settlement plus exact-owned shutdown exist. No
+ordinary unknown hard-deadline coordinator exists; reconciliation, fence,
+registry and generation state remain runtime-memory only. See
+`AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1`.
 
 ## 5. Observations
 
@@ -542,155 +488,100 @@ PY
 
 ## 6. Claims and assumptions
 
-### CLM-PROC-001 — V2 cannot authorize implementation while proposed — HISTORICAL_PRE_MERGE_RECORD
+### CLM-PROC-V3-001 — Existing primitives are necessary but not sufficient
 
 - Support state: SUPPORTED
-- Supported by evidence: `EVD-PROC-002`
-- Contradicted by evidence: none known
-- Uncertainty: none for the repository/base coordinates stated here
+- Evidence: fresh source observations in the V1 recovery investigation.
+- Meaning: exact late settlement and exact-owned shutdown are present; no
+  ordinary unknown hard-deadline coordinator connects them.
 
-### CLM-PROC-002 — V1's accepted factual and normative model can be carried unchanged
-
-- Support state: SUPPORTED
-- Supported by evidence: `EVD-PROC-005`
-- Contradicted by evidence: none known
-- Uncertainty: V2 makes no fresh claim that implementation/runtime state has changed since V1
-
-### CLM-PROC-003 — The authority-field change requires a replacement Spec
+### CLM-PROC-V3-002 — Durable state is required to preserve safety on restart
 
 - Support state: SUPPORTED
-- Supported by evidence: `EVD-PROC-003`, `EVD-PROC-006`
-- Contradicted by evidence: none known
-- Uncertainty: none under the current accepted V0 governance
+- Evidence: reconciliation store, registry, generation map and fence are all
+  runtime-memory only; old epoch queries return `restart_lost`.
+- Meaning: restart cannot silently lose the Agent fence or substitute a new
+  generation for old termination proof.
+
+### CLM-PROC-V3-003 — Safe restart may remain fenced
+
+- Support state: SUPPORTED
+- Evidence: C-020 kill authority depends on live processRef, child identity and
+  ownership token, none of which can be serialized safely.
+- Meaning: durable recovery resumes settlement/diagnosis, but signaling after a
+  coordinator restart requires re-established exact ownership. Otherwise the
+  safe result is structured blockage, not guessed termination.
 
 ```text
 OPEN_ASSUMPTIONS_AFFECTING_AUTHORITY = NONE
 ```
 
----
-
 ## 7. Evidence relations
 
-### EVD-PROC-001 — V1 metadata supports the historical active-authority State — HISTORICAL_PRE_MERGE_RECORD
+### EVD-PROC-V3-001 — Fresh source supports the coordinator gap
 
-- Source observations: `OBS-PROC-001`
-- Target: `STATE-PROC-001`
-- Relation: SUPPORTS
-- Bound coordinates: repository `mayf3/dsh-agent-core`, main
-  `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`, observed `2026-08-21T01:21:17Z`
-- Strength/sufficiency: direct frontmatter observation
-- Limitations: says nothing about future acceptance actions
-- Provenance: V1 file at the stated commit
+- Source: `AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1` observations
+  OUR-001 through OUR-010.
+- Target: `CLM-PROC-V3-001`, `CLM-PROC-V3-002`, `CLM-PROC-V3-003`.
+- Coordinates: `mayf3/dsh-agent-core@3c7b169a864c1e45df8b5c67333a9478138a22ee`.
+- Method: direct source and test inspection in a clean isolated worktree.
+- Limit: source evidence does not identify the historical production turn's
+  original execution cause and does not prove deployment state.
 
-### EVD-PROC-002 — Governance lifecycle supports no implementation authority while proposed — HISTORICAL_PRE_MERGE_RECORD
+### EVD-PROC-V3-002 — Accepted V2 supplies the preserved safety baseline
 
-- Source observations: `OBS-PROC-002`
-- Target: `CLM-PROC-001`
-- Relation: SUPPORTS
-- Bound coordinates: accepted governance bytes at main
-  `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`, observed `2026-08-21T01:21:17Z`
-- Strength/sufficiency: direct accepted-governance lifecycle rule
-- Limitations: semantic completeness still requires independent review
-- Provenance: named governance sections in `OBS-PROC-002`
-
-### EVD-PROC-003 — Governance mutation rule supports whole replacement
-
-- Source observations: `OBS-PROC-002`
-- Target: `CLM-PROC-003`
-- Relation: SUPPORTS
-- Bound coordinates: accepted governance bytes at main
-  `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`, observed `2026-08-21T01:21:17Z`
-- Strength/sufficiency: direct accepted-governance immutability and supersession rule
-- Limitations: does not itself establish V2 semantic completeness
-- Provenance: named governance sections in `OBS-PROC-002`
-
-### EVD-PROC-004 — Accepted V1 evidence supports the carried gap State
-
-- Source observations: `OBS-PROC-003`
-- Target: `STATE-PROC-002`
-- Relation: SUPPORTS
-- Bound coordinates: V1 at main
-  `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`; historical environment/incident coordinates remain those recorded by V1
-- Strength/sufficiency: sufficient to preserve, not reinterpret, the accepted authority basis
-- Limitations: not a fresh runtime verification
-- Provenance: V1 §3 and its investigation reference
-
-### EVD-PROC-005 — Deterministic comparison supports semantic preservation
-
-- Source observations: `OBS-PROC-005`
-- Target: `CLM-PROC-002`
-- Relation: SUPPORTS
-- Bound coordinates: V1 at `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`; V2 semantic commit
-  `52558b23c5278c77a2a64482bd41f9d26f2fad19`, Spec blob
-  `edb7ffe75c685687923589dbe684ee528da19354`, and normalized surface hashes in `OBS-PROC-005`
-- Strength/sufficiency: deterministic 22/22 Contract-body preservation and unchanged detailed
-  Acceptance Criteria/fault table
-- Limitations: identity-only wording and stable-reference repairs are normalized; deterministic comparison does not replace semantic review
-- Provenance: exact hashes and reproducible validation recorded in `OBS-PROC-005` and the Draft PR
-
-### EVD-PROC-006 — Failed revision demonstrates the forbidden mutation shape
-
-- Source observations: `OBS-PROC-004`
-- Target: `CLM-PROC-003`
-- Relation: SUPPORTS
-- Bound coordinates: failed revision
-  `9dba2e437191c974a31665b4cc4dff0c5978b0ab` over main
-  `79cc8e861cbb16755370b0e9f30ef3fb47c56fa6`
-- Strength/sufficiency: direct immutable diff corroborating the governance classification
-- Limitations: the failed revision is evidence only and grants no authority
-- Provenance: Git commit named in `OBS-PROC-004`
-
----
+- Source: `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` at the authoring base.
+- Target: preserved C-001–C-014, C-016/C-017 and C-020–C-022, plus the
+  unchanged portions of C-015/C-018/C-019.
+- Relation: COMPLETE_STANDALONE_CARRY_FORWARD_WITH_DECLARED_V3_DELTA.
+- Limit: V2 explicitly lacks durable restart recovery, so it cannot authorize
+  the V3 delta before the whole-successor lifecycle is accepted.
 
 ## 8. Decisions
 
-The acceptance-oriented future tense in `DEC-PROC-001` through `DEC-PROC-003` is a `HISTORICAL_ACCEPTANCE_PLAN` bound to the authoring coordinate. The planned authority transaction is recorded as executed in §0.4; this label does not alter the accepted Decision meaning.
+### DEC-PROC-V3-001 — Use a complete standalone V3 successor
 
-### DEC-PROC-001 — Use a complete standalone V2 replacement
+- Decision owner: repository owner `mayf3`.
+- Decision: supersede V2 as one complete authority; do not partially amend the
+  accepted V2 or create a parallel child contract.
+- Reason: V3 changes V2's explicit no-persistence/restart-lost semantics and
+  adds a parent-owned lifecycle mutation.
 
-- Decision owner: repository owner `mayf3`
-- Decision: author `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` as a complete replacement
-  of the whole V1 authority; do not continue the same-ID amendment.
-- Rejected alternative: mutate V1 `implementation_authority` in place.
-- Reason: accepted normative meaning is immutable under the same Spec ID and V0 forbids partial supersession.
-- Remaining owner input: none for authoring; future acceptance remains a separate authorized action.
+### DEC-PROC-V3-002 — Reuse the existing turn deadline as hard deadline
 
-### DEC-PROC-002 — Preserve all V1 semantics except future implementation authority
+- Decision owner: repository owner `mayf3`.
+- Decision: `hardDeadlineAt` is the existing turn absolute deadline.
+- Reason: the coordinator runs when caller outcome becomes unknown; no fifth
+  timeout, per-message override or Scheduler-owned timer is introduced.
 
-- Decision owner: repository owner `mayf3`
-- Decision: preserve Goal, scope, C-001–C-022, Acceptance Criteria, production/Scheduler/security
-  boundaries, Owner decisions, non-goals, and evidence requirements; the only intended authority
-  delta is `implementation_authority: none -> contracts` after legal V2 acceptance.
-- Rejected alternative: use replacement authoring to revise implementation behavior or acceptance.
-- Reason: those semantics already completed independent V1 review and are outside this task.
-- Remaining owner input: none.
+### DEC-PROC-V3-003 — Separate evidence settlement from REAP fallback
 
-### DEC-PROC-003 — Keep V1 active until an atomic acceptance-finalize transaction — HISTORICAL_ACCEPTANCE_PLAN
+- Decision owner: repository owner `mayf3`.
+- Decision: sufficient exact evidence settles without killing a resident child;
+  insufficient evidence at hard deadline may enter exact-generation REAP only
+  after C-024 eligibility succeeds.
+- Reason: normal long-lived children need not exit after each turn.
 
-- Decision owner: repository owner `mayf3`
-- Decision: while V2 is proposed, its `supersedes` list remains empty and V1 remains accepted.
-  A later docs-only transaction must atomically accept V2, add V2's forward edge, supersede V1,
-  and add V1's backlink.
-- Rejected alternative: install either graph edge early or claim V1 is already inactive.
-- Reason: current governance requires atomic whole-authority supersession.
-- Remaining owner input at authoring coordinate: authorized acceptance action after independent review.
-- Historical execution status: the transaction was executed and entered `main` through authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`; V2 is current and V1 is superseded.
+### DEC-PROC-V3-004 — Persist proof state, never serialize kill authority
 
-### DEC-PROC-004 — Keep implementation and product boundaries unchanged
+- Decision owner: repository owner `mayf3`.
+- Decision: persist canonical identity, state, evidence, claim and audit fields;
+  keep processRef/child/ownership token runtime-local. Restart without exact
+  ownership restores the fence and diagnosis but cannot signal or unlock.
 
-- Decision owner: repository owner `mayf3`
-- Decision: future implementation may be authorized only by accepted C-001–C-022 and must retain
-  all existing no-Scheduler, no-Product-Surface-delivery, no-Kernel, production-safety, and security boundaries.
-- Rejected alternative: treat `contracts` as blanket implementation authority.
-- Reason: implementation authority is bounded by accepted Contracts and scope.
-- Remaining owner input: none.
+### DEC-PROC-V3-005 — Preserve product boundaries and replay prohibition
+
+- Decision owner: repository owner `mayf3`.
+- Decision: C-001–C-026 authorize only the bounded implementation scope in
+  §14. Scheduler, Lark rendering, Binding/Session, credentials, business retry
+  and unsolicited late delivery remain unchanged.
 
 ---
 
 ## 9. Contracts
 
-The complete V1 normative model and C-001–C-022 text follow unchanged except for the
-replacement Spec identity and the editorial phrase “本 Spec”. The `CLAUSE-PROC-*` IDs below
+The complete V2 normative model and C-001–C-022 text follows, with explicit V3
+deltas in C-015, C-018/C-019 and C-023–C-026. This document is standalone. The `CLAUSE-PROC-*` IDs below
 are stable anchors that attach every carried normative block to its parent C-* Contracts; they
 create no additional obligation and prevent legacy section-number references from becoming ambiguous.
 
@@ -702,9 +593,9 @@ create no additional obligation and prevent legacy section-number references fro
 | `CLAUSE-PROC-REGISTRY` | `C-006`–`C-009` |
 | `CLAUSE-PROC-ADMISSION` | `C-010`–`C-013` |
 | `CLAUSE-PROC-OUTCOME` | `C-014`–`C-016` |
-| `CLAUSE-PROC-RECONCILIATION` | `C-017`–`C-019` |
-| `CLAUSE-PROC-BOUNDED` | `C-002`, `C-009`, `C-013`, `C-018`, `C-019` |
-| `CLAUSE-PROC-SHUTDOWN` | `C-020`–`C-022` |
+| `CLAUSE-PROC-RECONCILIATION` | `C-017`–`C-019`, `C-023`–`C-026` |
+| `CLAUSE-PROC-BOUNDED` | `C-002`, `C-009`, `C-013`, `C-018`, `C-019`, `C-024`, `C-025` |
+| `CLAUSE-PROC-SHUTDOWN` | `C-020`–`C-025` |
 | `CLAUSE-PROC-SCHEDULER-SEAM` | `C-010`, `C-015`, `C-016`, `C-018`, `C-019` |
 | `CLAUSE-PROC-FAILURE-TAXONOMY` | `C-003`, `C-004`, `C-009`, `C-012`, `C-014`, `C-017`, `C-020`, `C-022` |
 
@@ -1118,9 +1009,10 @@ timeout -> immediately admit next turn on same AgentProcess
 **Termination evidence** 只回答 exact execution 能否继续。本 Spec 可信类型仅为：
 
 1. `exact_terminal_then_idle`：上述 exact `turn/end` 已观察，随后同一 `sessionId` 的 status 为 `idle`，且两者之间没有同 Session 的 later turn/start；
-2. `exact_queued_removal`：DSH 明确 acknowledgment **同一 `turnExecutionId` / prompt request / messageId** 尚未开始且已从 native queue 移除；
-3. `child_real_exit`：承载该 turn 的 exact processGeneration 已真实 exit；
-4. future accepted cancellation contract 的 exact turn terminal acknowledgment。
+2. `exact_started_then_idle`：没有 terminal outcome 时，仅在 exact receipt messageId 已观察、watermark 后唯一 active `turn/start` 已绑定、同 Session idle observation 严格晚于该 start、期间无 later turn/start、event stream 无 gap/loss，且 one-active-turn invariant 持续成立时，作为 termination-only evidence；
+3. `exact_queued_removal`：DSH 明确 acknowledgment **同一 `turnExecutionId` / prompt request / messageId** 尚未开始且已从 native queue 移除；
+4. `child_real_exit`：承载该 turn 的 exact processGeneration 已真实 exit；
+5. future accepted cancellation contract 的 exact turn terminal acknowledgment。
 
 因此在 deadline 前：
 
@@ -1128,7 +1020,7 @@ timeout -> immediately admit next turn on same AgentProcess
 - exact failure outcome + `exact_terminal_then_idle` → `failed`；
 - proven pre-send zero-byte rejection → `failed/not_admitted`。
 
-`child_real_exit` 可证明 termination，但没有 exact turn/end 时不证明 success/failure。仅本地 Promise rejection、AbortSignal、cancel request、时间流逝、caller disconnect、unrelated queue removal 或 unrelated Session idle 都不是 termination proof。
+`exact_started_then_idle` 与 `child_real_exit` 可证明 termination，但没有 exact turn/end 时不证明 success/failure。仅本地 Promise rejection、AbortSignal、cancel request、时间流逝、caller disconnect、unrelated queue removal、pre-start idle、存在 event gap 的 idle 或 unrelated Session idle 都不是 termination proof。
 
 #### C-016 — Unknown fence release
 
@@ -1178,9 +1070,10 @@ Evidence precedence：如果 parser 在 child exit callback 前已经接收并�
 
 Winning settlement 后，duplicate same evidence 与 conflicting evidence 都不得改写 state、不得第二次 emit、不得改变 output；只追加 bounded audit entry：`duplicate_ignored` 或 `conflict_ignored`，包含 evidence type/hash/observedAt。历史 `outcome_unknown`、`deadlineAtWallMs`、late `settledAtWallMs` 与 termination evidence 在 `CLAUSE-PROC-RECONCILIATION` / `CLAUSE-PROC-BOUNDED` retention window 内可审计；late settlement 不触发第二 prompt admission。
 
-#### C-018 — Final assistant output is retained, not silently dropped
+#### C-018 — Durable reconciliation is the sole query authority
 
-Exact turn 的 final assistant output 必须进入 bounded reconciliation record，并随 `late_completed` event 暴露给原 caller/Router reconciliation seam。若超过 byte cap，保留尾部/最终 message与明确 `truncated=true`、original byte count；不得静默返回空字符串。
+Exact final assistant output remains retained and bounded. AgentProcess autonomous
+Product Surface delivery remains forbidden:
 
 ```text
 AGENTPROCESS_AUTONOMOUS_USER_DELIVERY = FORBIDDEN
@@ -1188,70 +1081,107 @@ LATE_REPLY_DELIVERY = RETAIN_AND_EXPOSE_VIA_ORIGINAL_CALLER_RECONCILIATION_HANDL
 AUTOMATIC_UNSOLICITED_PRODUCT_SURFACE_DELIVERY = NO
 ```
 
-即：AgentProcess 必须让迟到 reply 对原 caller/Router 可查询、可观察、可审计，但不自行或要求 Feishu/Mobile/其他 Product Surface 自动发送消息。本 child 明确选择 **不自动 unsolicited delivery**，避免在 caller 已收到 timeout 后制造新的跨 surface 产品行为；未来若要改变用户可见 delivery，必须由独立 accepted Product Surface Spec 授权。该选择不允许丢弃 output，也不允许通过重新 prompt/replay 用户消息补偿。
+The Router recovery store is the sole authority. Before prompt bytes, it durably
+reserves the handle, immutable execution identity, deadline and fence intent. A
+prompt write is forbidden until this reservation is crash-recoverable. Every
+later transition uses atomic compare-and-set or an equivalent single-winner
+durable transaction. Settled output/audit remains bounded; an unresolved
+unknown/recovery operation is never evicted.
 
-Router reconciliation store 是唯一 query authority。AgentProcess local matcher/cache 不可直接被 caller 查询，也不得与 Router store形成两个 truth source。Authoritative `pending` record 在 prompt write 前已可见；exit/fatal/shutdown settlement 必须先 CAS/update Router store 可见，再释放 AgentProcess object、reap fence或 generation metadata，因此不得出现 handoff `not_found` 空窗。
-
-Read API 全部 non-consuming、repeatable、idempotent：
+Queries remain non-consuming and repeatable:
 
 ```text
-getTurnReconciliation(reconciliationHandle)
-  -> { state: pending, snapshot }
-   | { state: settled, snapshot }
-   | { state: evicted }
-   | { state: restart_lost }
-   | { state: never_existed }
-
-readFinalAssistantOutput(reconciliationHandle)
-  -> { state: available, text, truncated, originalBytes, terminalState }
-   | { state: pending }
-   | { state: no_output, terminalState }
-   | { state: evicted }
-   | { state: restart_lost }
-   | { state: never_existed }
-
-resolveCallerCorrelation({ occurrenceId, runId, requestId })
-  -> reconciliationHandle | same five-state absence semantics
-
-onTurnReconciled(listener) -> disposer
+getTurnReconciliation(handle)
+  -> pending | recovering | settled | evicted | restart_lost | never_existed
+readFinalAssistantOutput(handle)
+  -> available | pending | no_output | evicted | restart_lost | never_existed
 ```
 
-语义：
+For records minted under V3, restart reloads the durable record and returns
+`pending`, `recovering` or `settled`; it must not return `restart_lost`.
+`restart_lost` remains only for a legacy pre-V3 handle or a valid foreign epoch
+with no durable reservation. It never clears a fence. Resolved records may be
+evicted under bounded retention; unresolved records and Agent admission fences
+are durable and non-evictable.
 
-- `pending`：authoritative record 存在且尚未 settle；不是 not-found。
-- `no_output`：record 已 terminal，但该 outcome 没有 assistant output；不同于空字符串。
-- `evicted`：handle 属于当前 runtime epoch，Router issuance metadata证明曾 mint，但 resolved payload 已按 `CLAUSE-PROC-BOUNDED` eviction。
-- `restart_lost`：handle 的 embedded runtimeEpoch 与当前 control-plane runtime 不同；本 Spec 不承诺 disk persistence。
-- `never_existed`：handle 格式/epoch合法，但 generation/monotonic turn sequence 从未由 Router mint。
+#### C-019 — Canonical durable recovery identity and record
 
-Handle 必须嵌入 opaque `runtimeEpoch + agentId discriminator + processGeneration + monotonicTurnSeq`。`monotonicTurnSeq` 在同一 runtime epoch / Agent 内由 Router 连续 mint、无跳号；Router 保留 `maxIssuedTurnSeq`、`evictedThroughTurnSeq` 与尚存 generation ranges，使当前 epoch 内精确区分 `evicted`（合法已发行且 payload被移除）和 `never_existed`（seq 超 high-water、非法 Agent/generation组合或从未 mint）。Runtime epoch 不匹配统一为 `restart_lost`。任何 read 不删除 record、不推进 state、不改变后续 read 结果。
-
-本 Spec retention 保证是同一 control-plane runtime lifetime 内、直到 `CLAUSE-PROC-BOUNDED` 允许的 **resolved** record eviction。Unresolved record 永不 eviction；eviction 不得解释为 success/failure或解除 fence。
-
-#### C-019 — Reconciliation identity
-
-Late event 至少携带：
+Canonical execution identity is:
 
 ```text
+(runtimeEpoch, agentId, processGeneration, turnExecutionId)
+turnExecutionId == reconciliationHandle
+```
+
+The bare generation integer is never global identity. Durable mandatory fields:
+
+```text
+reconciliationHandle
 runtimeEpoch
 agentId
+turnExecutionId
 processGeneration
-turnExecutionId == reconciliationHandle
-callerCorrelation { occurrenceId, runId, requestId } (optional opaque index)
 sessionId
-eventWatermarkSeq
-promptRequestId
-messageId (when eventually known)
-deadlineAtWallMs               # audit only; enforcement uses private deadlineMono
-initialOutcome
-lateOutcome
-cancelRequestedAtWallMs (optional)
-terminationProven
+state
+createdAt
+hardDeadlineAt
 terminationEvidence
-finalAssistantOutput / truncated/originalBytes metadata
-settledAtWallMs
-boundedEvidenceAudit[]
+missingEvidence
+reapClaim
+attemptedActions
+shutdownRequestedAt
+exitObservedAt
+settlementResult
+failureReason
+nextSafeAction
+fenceState
+updatedAt
 ```
+
+`processRef`, child object identity, in-memory ownership token, monotonic timer
+handles and open pipes are runtime-local derived values. They MUST NOT be
+serialized or reconstructed from a PID. Durable `reapClaim` stores canonical
+identity, logical operation id, claimant runtime epoch, claim time and phase;
+it is not kill authority.
+
+Recovery fields use closed values so the outer projection is actionable:
+
+```text
+state = pending_unknown | recovery_claimed | shutdown_requested |
+        exit_observed | settled | blocked
+missingEvidence[] = exact_terminal | exact_turn_idle | child_real_exit |
+                    live_generation_ownership | no_concurrent_execution |
+                    event_stream_continuity | one_active_turn_invariant
+attemptedActions[].action = coordinator_scheduled | ownership_check |
+                            reap_claim | graceful_shutdown |
+                            forced_termination | exit_wait | settlement |
+                            registry_cleanup | fence_cleanup
+attemptedActions[].result = started | succeeded | failed | blocked
+reapClaim.phase = claimed | canceled_by_settlement | shutdown_committed |
+                  exit_observed | settled | blocked
+nextSafeAction = await_late_evidence | await_real_exit |
+                 reestablish_exact_ownership |
+                 operator_exact_generation_recovery |
+                 send_new_request_after_reopened | none
+```
+
+Every action entry contains a wall-clock audit timestamp and bounded redacted
+reason code. It contains no prompt/answer or secret payload.
+
+Startup restores unresolved records and Agent fences before accepting business
+prompts. A restarted coordinator may resume settlement or cleanup already
+backed by durable evidence. It may signal only after re-establishing live
+registry ownership through the exact processRef/child/ownership-token checks in
+C-020. If that authority is unavailable, it keeps the Agent fenced and reports
+missing evidence and the minimal operator action. A new PID, elapsed time,
+absent PID lookup or new generation never proves the old generation terminated.
+
+Router startup holds one fail-closed business-admission barrier until the
+durable store is open, schema/caps validate, and every unresolved Agent fence is
+installed. While open, validation or restoration is pending—or when any step
+fails—real outer ingress returns `requestAdmission=not_admitted`; process spawn
+and prompt-write deltas are zero. Health/readiness must expose the blocked
+reason. No asynchronous post-readiness fence reload is legal.
 
 ---
 
@@ -1295,7 +1225,9 @@ MAX_PROMPT_BYTES = 1048576
 8. Unresolved reconciliation record 不得 eviction。任一 per-record/per-Agent/global cap 无法通过 eviction resolved records腾出空间时，新 prompt admission 必须在 watermark/prompt write 前 fail-loud `RECONCILIATION_CAPACITY_EXHAUSTED`；不得先执行再丢 evidence。
 9. queued turns 同时受 count、total prompt bytes、single prompt bytes cap；超限在 prompt-send 前 structured reject，并且不得缓存 oversized input。
 10. Assistant output 必须 UTF-8-safe incremental capture：只保留最多 cap 的 **tail**，不得先 buffer full output再截断；每个 chunk 更新 `originalBytes`，截断不得切开 UTF-8 code point，record 保存 `truncated=true`。Output 必须绑定 winning terminal state/evidence hash，conflicting late evidence不得替换。
-11. Issuance metadata 使用 generation range/high-water compact records并受 per-Agent generation cap。只有已无 unresolved handle 的最旧 generation可 compact/evict；被移除 generation 的合法旧 handle在当前 epoch查询仍返回 `evicted`，可用一个 bounded contiguous evicted-through generation/sequence watermark表达，不保存逐 handle tombstone。
+11. Issuance metadata 使用 generation range/high-water compact records并受 per-Agent generation cap。只有已无 unresolved handle 的最旧 generation可 compact/evict；旧 handle 用 bounded watermark 表达。
+12. Durable recovery uses the same record cap and stores only bounded enums, timestamps, hashes and action summaries；不得存 prompt、answer、credentials、environment、private messages 或 production dump。
+13. Durable capacity unavailable 时，prompt write 前 fail-loud；不得 eviction unresolved record/fence。
 
 Resolved reconciliation record 可 oldest-first eviction；unresolved `outcome_unknown` 不得因 cap 被忘记或解除 fence。Router store 是唯一 authoritative copy；AgentProcess local matcher只保留 bounded working state，store update visible 后立即释放重复 payload。
 
@@ -1348,6 +1280,140 @@ Child real-exit callback 的 mandatory order：
 
 ---
 
+#### C-023 — Parent-owned recovery coordinator and normal late evidence
+
+Creating `outcome_unknown` atomically schedules or wakes a parent-owned recovery
+operation. This path is outside ordinary prompt admission and requires no new
+business prompt. Event callbacks continue to consume trusted exact evidence:
+
+```text
+exact outcome + exact_terminal_then_idle -> late_completed | late_failed
+trusted exact-turn termination-only evidence -> terminated_without_outcome
+```
+
+Generic idle is insufficient. Idle without terminal is trusted only as C-015
+`exact_started_then_idle`, including exact receipt, matched start, post-start
+idle, no later start, no stream gap and one-active-turn checks. When evidence
+settles the exact execution, no resident child is killed merely to recover
+admission.
+
+#### C-024 — Hard-deadline eligibility and unique REAP claim
+
+V3 adds no timeout config. `hardDeadlineAt` equals the existing exact turn
+absolute deadline fixed before prompt write. At or after it, insufficient
+termination evidence permits one REAP attempt only when one atomic eligibility
+transaction proves all of:
+
+```text
+record is unresolved outcome_unknown
+claim matches runtimeEpoch + agentId + processGeneration + turnExecutionId
+reconciliationHandle matches that execution
+registry slot is the exact STARTUP|READY processRef/generation/ownership
+generation has not been replaced
+no other execution in that generation may still write
+no new generation exists or is controlled by this operation
+no winning termination evidence or settlement appeared before claim commit
+```
+
+Same-runtime deadline enforcement uses the original private monotonic deadline;
+the durable wall-clock `hardDeadlineAt` is audit/projection only. After a whole
+Runtime restart it MUST NOT by itself authorize a signal. The minimal V3 slice
+therefore resumes durable settlement/cleanup when proof is already durable, and
+otherwise remains fenced unless exact live ownership and deadline continuity
+are re-established by a separately accepted trusted mechanism.
+
+If another execution might still write, ownership cannot be established, or a
+new generation exists, REAP is forbidden and the record remains fenced with a
+structured reason. Concurrent/repeated triggers join the same durable operation.
+
+A durable claim alone does not commit shutdown. Before registry CAS or any
+shutdown write/signal, the recovery worker enters the same per-process event
+serialization boundary used by terminal settlement and performs one final
+durable/parser recheck. If exact evidence has already won, it atomically marks
+the unsignaled claim `canceled_by_settlement`; registry mutation, shutdown and
+kill counts remain zero. Otherwise the worker atomically commits the exact
+registry `STARTUP|READY -> REAP` CAS and durable
+`reapClaim.phase=shutdown_committed` before releasing that boundary. This is
+the recovery shutdown linearization point; no late callback can observe an
+uncommitted claim and still race an unconditional signal.
+
+#### C-025 — REAP execution and crash-safe ordering
+
+The only legal final fallback is:
+
+```text
+durable unique REAP claim
+-> exact registry CAS to REAP
+-> graceful shutdown
+-> bounded forced termination once if grace expires
+-> OBSERVE exact real child exit
+-> durable terminated_without_outcome settlement (unless parsed outcome wins)
+-> exact registry cleanup
+-> exact durable fence cleanup
+-> business admission reopen
+```
+
+`shutdownRequestedAt` or kill-sent is attempted action, never termination
+proof. Fence cleanup/reopen are forbidden before real exit and settlement
+visibility. One logical operation shares the existing `shutdownPromise`;
+`SHUTDOWN_COUNT=1` and forced signal count is at most one.
+
+Coordinator restart reloads the operation. Durable control phases may resume;
+business prompt/answer never does. Without re-established live ownership it
+does not signal; without durable real-exit evidence it does not settle or clear
+the fence. A late callback for an old generation may update only that old
+operation/history and cannot mutate a new slot or fence.
+
+#### C-026 — Structured outer recovery diagnostics and no replay
+
+Every outer ingress/query projection for an admitted or fenced request exposes
+this closed top-level shape. Every key is present; only `fencedBy`,
+`reconciliationHandle`, `processGeneration` and `terminationEvidence` may be
+`null` when no execution identity/evidence exists. The two evidence/action
+fields are arrays, never null:
+
+```text
+failureStage
+fencedBy
+reconciliationHandle
+processGeneration
+terminationEvidence
+missingEvidence
+attemptedActions
+nextSafeAction
+replyDelivery
+partialDelivery
+requestAdmission
+```
+
+It identifies the stuck execution, generation, missing proof, attempted action,
+stop reason, minimal safe operator action and whether the new request was
+admitted. Feishu text may summarize this but is not the only representation.
+`requestAdmission` is `accepted | not_admitted`; a fenced new request is always
+`not_admitted` and is never queued for recovery-time execution.
+
+```text
+failureStage = admission | execution | reply_delivery
+replyDelivery = not_attempted | delivered | failed | unknown
+partialDelivery = none | possible | confirmed
+```
+
+Admission/execution failure before any reply attempt uses
+`replyDelivery=not_attempted` and `partialDelivery=none`. All strings are enums
+or bounded redacted reason codes; raw prompt, answer, environment, credential,
+private message and production dump are forbidden in this projection.
+
+```text
+ORIGINAL_PROMPT_REPLAY = 0
+ORIGINAL_ANSWER_REPLAY = 0
+HISTORICAL_SIDE_EFFECT_REPLAY = 0
+FENCED_REJECTED_REQUEST_AUTO_ADMISSION = 0
+```
+
+Recovery only reopens future admission. The user sends a new request.
+
+---
+
 ### CLAUSE-PROC-SCHEDULER-SEAM — Scheduler Termination Seam (No Scheduler Implementation)
 
 AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Scheduler policy 的通用 seam。
@@ -1370,10 +1436,15 @@ AgentProcess implementation 必须提供 Scheduler 可消费、但不含 Schedul
   cancelRequested: boolean,
   cancelRequestedAtWallMs: number | null,
   terminationProven: boolean,
-  terminationEvidence: exact_terminal_then_idle | exact_queued_removal | child_real_exit | cancellation_ack | null,
+  terminationEvidence: exact_terminal_then_idle | exact_started_then_idle | exact_queued_removal | child_real_exit | cancellation_ack | null,
   reconciliationHandle: turnExecutionId,
   finalAssistantOutputAvailable: boolean,
   finalAssistantOutputTruncated: boolean,
+  hardDeadlineAtWallMs,
+  recoveryState,
+  missingEvidence,
+  attemptedActions,
+  nextSafeAction,
   updatedAtWallMs
 }
 ```
@@ -1417,6 +1488,9 @@ protocol_buffer_overflow
 child_error
 child_exited
 shutdown_grace_expired
+recovery_ownership_unavailable
+recovery_concurrent_execution
+recovery_exit_unproven
 ```
 
 以上是 failure/evidence class，不自动等于 turn outcome。尤其：
@@ -1432,7 +1506,9 @@ shutdown_grace_expired
 
 ### 10.1 Stable Contract-to-Acceptance mappings
 
-The detailed V1 acceptance criteria and fault-injection table are carried unchanged in §10.2–§10.3.
+V2 criteria 1–39 are carried forward; V3 criteria 40–50 and recovery fault rows
+extend the matrix. All process/clock/event tests are simulated unless a row or
+§15 explicitly says real process or production E2E.
 Every mapping below uses this common execution contract:
 
 - Method: execute the cited numbered criteria and fault rows against the exact implementation commit.
@@ -1462,7 +1538,7 @@ Every mapping below uses this common execution contract:
 | `ACC-PROC-012` | `C-012` | §10.2 items 11, 26; `PROMPT_RECEIPT_NEVER_REPLIES`, `DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD` |
 | `ACC-PROC-013` | `C-013` | §10.2 items 13, 25; `DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE`, `UNKNOWN_REJECTS_QUEUED_TURNS`, `UNRESOLVED_RECONCILIATION_CAP_PRESSURE`, `ROUTER_GLOBAL_RECONCILIATION_CAP` |
 | `ACC-PROC-014` | `C-014` | §10.2 items 12, 18, 26; `ENVELOPE_OUTCOME_UNKNOWN`, `TURN_TIMEOUT_THEN_LATE_SUCCESS`, `TURN_TIMEOUT_THEN_LATE_FAILURE`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL` |
-| `ACC-PROC-015` | `C-015` | §10.2 item 14; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL` |
+| `ACC-PROC-015` | `C-015` | §10.2 items 14, 41; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL`, `RECOVERY_EXACT_TURN_IDLE_ONLY` and its five negative controls |
 | `ACC-PROC-016` | `C-016` | §10.2 items 14, 17; `UNRELATED_IDLE_OR_QUEUE_REMOVAL`, `DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE` |
 | `ACC-PROC-017` | `C-017` | §10.2 items 15–18, 34; `TURN_TIMEOUT_THEN_LATE_SUCCESS`, `TURN_TIMEOUT_THEN_LATE_FAILURE`, `TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL`, `PARSED_OUTCOME_PRECEDES_CHILD_EXIT`, `DUPLICATE_CONFLICTING_LATE_EVIDENCE` |
 | `ACC-PROC-018` | `C-018` | §10.2 items 19, 24, 33, 35; `QUERY_NO_OUTPUT_REPEATABLE`, `LATE_OUTPUT_AFTER_GENERATION_EXIT`, `EVENT_RING_WRAP_DURING_ACTIVE_TURN`, `STDERR_AND_CREATIONS_OVERFLOW`, `UTF8_OUTPUT_INCREMENTAL_TAIL` |
@@ -1470,6 +1546,10 @@ Every mapping below uses this common execution contract:
 | `ACC-PROC-020` | `C-020` | §10.2 items 1, 21, 22, 30, 36; `CHILD_EXIT_WITH_MULTIPLE_PENDING_RPC`, `GRACEFUL_SHUTDOWN_SUCCESS`, `SHUTDOWN_GRACE_EXPIRES_THEN_KILL`, `SHUTDOWN_OWNERSHIP_MISMATCH`, `CONCURRENT_SHUTDOWN` |
 | `ACC-PROC-021` | `C-021` | §10.2 item 23; `CONCURRENT_SHUTDOWN` |
 | `ACC-PROC-022` | `C-022` | §10.2 item 22; `SHUTDOWN_GRACE_EXPIRES_THEN_KILL` |
+| `ACC-PROC-023` | `C-023` | items 40–42; late evidence without prompt, exact termination-only evidence plus five negative controls, child already exited |
+| `ACC-PROC-024` | `C-024` | items 43–45, 51; hard-deadline REAP, duplicate trigger, concurrent workers, post-claim evidence race |
+| `ACC-PROC-025` | `C-025` | items 43–48, 51–52; REAP ordering, stale callback, insufficient proof, coordinator restart, startup barrier |
+| `ACC-PROC-026` | `C-026` | items 49–50, 52; outer diagnostics, no replay and startup admission result |
 
 Every clause anchor is covered through its exact parent Contract mappings:
 
@@ -1481,11 +1561,11 @@ Every clause anchor is covered through its exact parent Contract mappings:
 | `CLAUSE-PROC-REGISTRY` | `ACC-PROC-006`, `ACC-PROC-007`, `ACC-PROC-008`, `ACC-PROC-009` |
 | `CLAUSE-PROC-ADMISSION` | `ACC-PROC-010`, `ACC-PROC-011`, `ACC-PROC-012`, `ACC-PROC-013` |
 | `CLAUSE-PROC-OUTCOME` | `ACC-PROC-014`, `ACC-PROC-015`, `ACC-PROC-016` |
-| `CLAUSE-PROC-RECONCILIATION` | `ACC-PROC-017`, `ACC-PROC-018`, `ACC-PROC-019` |
-| `CLAUSE-PROC-BOUNDED` | `ACC-PROC-002`, `ACC-PROC-009`, `ACC-PROC-013`, `ACC-PROC-018`, `ACC-PROC-019` |
-| `CLAUSE-PROC-SHUTDOWN` | `ACC-PROC-020`, `ACC-PROC-021`, `ACC-PROC-022` |
-| `CLAUSE-PROC-SCHEDULER-SEAM` | `ACC-PROC-010`, `ACC-PROC-015`, `ACC-PROC-016`, `ACC-PROC-018`, `ACC-PROC-019` |
-| `CLAUSE-PROC-FAILURE-TAXONOMY` | `ACC-PROC-003`, `ACC-PROC-004`, `ACC-PROC-009`, `ACC-PROC-012`, `ACC-PROC-014`, `ACC-PROC-017`, `ACC-PROC-020`, `ACC-PROC-022` |
+| `CLAUSE-PROC-RECONCILIATION` | `ACC-PROC-017`–`ACC-PROC-019`, `ACC-PROC-023`–`ACC-PROC-026` |
+| `CLAUSE-PROC-BOUNDED` | `ACC-PROC-002`, `ACC-PROC-009`, `ACC-PROC-013`, `ACC-PROC-018`, `ACC-PROC-019`, `ACC-PROC-024`, `ACC-PROC-025` |
+| `CLAUSE-PROC-SHUTDOWN` | `ACC-PROC-020`–`ACC-PROC-025` |
+| `CLAUSE-PROC-SCHEDULER-SEAM` | `ACC-PROC-010`, `ACC-PROC-015`, `ACC-PROC-016`, `ACC-PROC-018`, `ACC-PROC-019`, `ACC-PROC-026` |
+| `CLAUSE-PROC-FAILURE-TAXONOMY` | `ACC-PROC-003`, `ACC-PROC-004`, `ACC-PROC-009`, `ACC-PROC-012`, `ACC-PROC-014`, `ACC-PROC-017`, `ACC-PROC-020`, `ACC-PROC-022`, `ACC-PROC-024`–`ACC-PROC-026` |
 
 
 ### 10.2 Carried future implementation acceptance criteria
@@ -1524,13 +1604,26 @@ Every clause anchor is covered through its exact parent Contract mappings:
 30. 每个 fatal fixture 都证明 stop admission、queue/pending reject、exact REAP、defined kill policy、exact real exit；
 31. parent-RPC handler + response write 共享一个 absolute deadline并有固定 response reserve；response write best-effort且 attempt≤1；
 32. all outcome envelopes与 handle propagation contract一致；Scheduler triple可恢复同一 handle且不产生新 admission；
-33. Router store 是唯一 query authority；handoff前后无 not_found 空窗；五种 absence/output semantics与 repeated reads一致；
+33. Router store 是唯一 query authority；handoff前后无 not_found 空窗；V3 durable pending/recovering/settled 与 legacy restart_lost 等 query semantics repeated reads一致；
 34. all unknown sources进入一个 settle-once machine；parsed outcome precedence、duplicate/conflict audit通过；
 35. reconciliation/output 的 per-record/per-Agent/global count+byte caps与 UTF-8 incremental tail通过；
 36. shutdown/kill只命中 exact Router-owned generation；ownership mismatch kill count=0；child exit先 pending settlement再 reconciliation visibility；
 37. §10.3 每个 fault case 都输出完整 evidence schema、唯一 oracle、exact counts/snapshots/final reconciliation；
 38. Scheduler code/store change = none for AgentProcess implementation PR；
 39. Kernel change = none。
+40. late exact terminal, no new prompt -> auto settlement/fence release; resident child kill count 0；
+41. `exact_started_then_idle` -> `terminated_without_outcome` only when all C-015 predicates hold; missing receipt, pre-start idle, later start, stream gap/loss and one-active-turn violation each remain fenced with kill=0；
+42. child already exited -> settle/cleanup without second shutdown；
+43. hard deadline/no proof -> one claim, shutdown, real exit, settlement, registry then fence cleanup；
+44. duplicate triggers -> one operation and `SHUTDOWN_COUNT=1`；
+45. concurrent workers -> one winner, others join same operation；
+46. old-generation callback cannot mutate/unlock new generation；
+47. insufficient proof/ownership keeps fence and exact diagnosis；
+48. coordinator restart reloads operation/fence and resumes only with durable evidence/exact ownership；
+49. real outer-entry fixture exposes every C-026 field and marks admission result；
+50. prompt/answer/side-effect/rejected-request replay counters all zero.
+51. exact evidence winning after durable claim but before shutdown commit cancels the claim; registry remains READY and shutdown/kill counts are zero；
+52. startup store-open/schema/cap/fence-restore barrier blocks real outer ingress with spawn/write delta zero; invalid/unavailable store stays fail-closed.
 
 ### 10.3 Fault-injection crosswalk and evidence schema
 
@@ -1548,7 +1641,13 @@ Every clause anchor is covered through its exact parent Contract mappings:
     rpcResponseWriteAttempts,
     gracefulShutdownWriteAttempts,
     killSignals,
-    replayAdmissions
+    replayAdmissions,
+    originalPromptReplayWrites,
+    originalAnswerResends,
+    historicalSideEffectReplays,
+    rejectedRequestAutoAdmissions,
+    explicitNewRequestExecutions,
+    shutdownInvocations
   },
   snapshots: {
     registryBefore, registryAtFault, registryBeforeRealExit, registryAfter,
@@ -1556,6 +1655,9 @@ Every clause anchor is covered through its exact parent Contract mappings:
     fenceBefore, fenceAfter
   },
   reconciliation: { handle, initial, final, outputState, audit },
+  recovery: { operationId, hardDeadlineAt, claim, attemptedActions,
+              shutdownRequestedAt, exitObservedAt, missingEvidence,
+              nextSafeAction },
   exactCommands,
   commit,
   environment
@@ -1623,11 +1725,31 @@ F[fenceBefore,fenceAfter]
 | `UNRESOLVED_RECONCILIATION_CAP_PRESSURE` | metadata-only per-Agent cap full | new prompt | admit attempt | fail pre-reservation/write; no eviction | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[true,true]` | existing unknowns unchanged; new=`not_admitted(handle=null)` |
 | `ROUTER_GLOBAL_RECONCILIATION_CAP` | metadata-only global cap full | prompt on another Agent | admit attempt | fail pre-reservation/spawn/write | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,N/A]` | existing records unchanged; new=`not_admitted(handle=null)` |
 | `CONCURRENT_ENSURE_RUNNING` | slot Ø | 30 calls | release spawn barrier | one STARTUP/pid/READY ref | `1/0/0/0` | `R[Ø,STARTUP(g),N/A,READY(g)];P[0,0];F[N/A,N/A]` | `N/A` |
+| `RECOVERY_LATE_TERMINAL_NO_PROMPT` | READY(g), unknown | exact success+idle after caller return | emit only | late_completed; child READY | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | late_completed |
+| `RECOVERY_EXACT_TURN_IDLE_ONLY` | READY(g), unknown; exact receipt message observed; unique watermark-after active start; no stream gap/loss | same-session idle strictly after start, no later start, one-active-turn remains true | emit only | exact_started_then_idle; terminated_without_outcome; shutdown/kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | terminated_without_outcome |
+| `RECOVERY_IDLE_MISSING_RECEIPT` | READY(g), unknown; no exact receipt message observed | matched-looking start then post-start idle | emit only | no settlement; kill=0; missingEvidence contains exact_turn_idle/exact receipt prerequisite | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_PRE_START_ONLY` | READY(g), unknown; exact receipt present | idle observed before matched start; no later idle | emit only | no settlement; kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_LATER_START` | READY(g), unknown; exact receipt and first start present | later turn/start before idle | emit only | no settlement; kill=0; later-start diagnostic | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_STREAM_GAP` | READY(g), unknown; exact receipt/start present | mark event gap/loss then idle | emit only | no settlement; kill=0; missingEvidence contains event_stream_continuity | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_IDLE_MULTI_ACTIVE_VIOLATION` | READY(g), unknown; exact receipt/start present | inject second active execution invariant before idle | evaluate idle | no settlement; kill=0 at oracle; missingEvidence contains one_active_turn_invariant | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_CHILD_ALREADY_EXITED` | READY(g), unknown | exit races trigger | observe exit | no second shutdown | `1/1/0/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | terminated_without_outcome |
+| `RECOVERY_HARD_DEADLINE_REAP` | READY(g), unknown | advance deadline | coordinator, release exit | one claim; exact order | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | terminated_without_outcome |
+| `RECOVERY_DUPLICATE_TRIGGER` | READY(g), unknown | 20 triggers | release exit | one operation/shutdown | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one settlement |
+| `RECOVERY_CONCURRENT_WORKERS` | durable unknown + READY(g) | two claimants | release both | one winner/shared op | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one settlement |
+| `RECOVERY_EVIDENCE_AFTER_CLAIM_BEFORE_COMMIT` | READY(g), unknown, durable claim held before shutdown barrier | exact terminal+idle wins | release worker | claim=canceled_by_settlement; shutdownInvocations=0; graceful/kill=0 | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,false]` | late_completed; claim canceled |
+| `RECOVERY_OLD_GENERATION_CALLBACK` | settled g; READY(g+1) | replay g callback | invoke | g+1 unchanged | `2/1/0/0` | `R[READY(g+1),READY(g+1),N/A,READY(g+1)];P[0,0];F[false,false]` | old audit only |
+| `RECOVERY_INSUFFICIENT_PROOF` | durable unknown; ownership absent | deadline | coordinator | no signal/cleanup; fenced | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[true,true]` | pending + diagnosis |
+| `RECOVERY_COORDINATOR_RESTART_WITH_REGISTRY` | durable claim + live exact READY(g) registry | coordinator object crash before shutdown call | recreate coordinator, release exit | same operation; one shutdown | `1/1/1/0` | `R[READY(g),REAP(g),REAP(g),Ø];P[0,0];F[true,false]` | one terminated_without_outcome settlement |
+| `RECOVERY_RUNTIME_RESTART_OWNERSHIP_LOST` | durable claim; no re-established processRef/ownership | whole Router restart | reload store/fence | zero signal/cleanup; diagnostic blockage | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[true,true]` | recovering/pending, missing ownership |
+| `RECOVERY_STARTUP_BARRIER_RESTORE_PENDING` | durable unknown exists; store open or fence restore paused | real outer request during startup | call `onIngress`, then finish restore | requestAdmission=not_admitted; spawn/write=0; exact fence installed before readiness | `0/0/0/0` | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,true]` | original durable record pending |
+| `RECOVERY_STARTUP_STORE_INVALID` | store unavailable, schema invalid, or cap validation fails (three subcases) | Router startup | call real outer entry per subcase | readiness blocked; requestAdmission=not_admitted; spawn/write=0 | `0/0/0/0` each | `R[N/A,N/A,N/A,N/A];P[0,0];F[N/A,N/A]` each | no fabricated settlement/fence cleanup |
+| `RECOVERY_OUTER_DIAGNOSTICS` | real `createIngressDelivery.onIngress` composition + simulated child | unknown then second fenced request | call outer entry | second: failureStage=admission, requestAdmission=not_admitted, fencedBy/handle=old exact handle, generation=g, terminationEvidence=null, missingEvidence nonempty, attemptedActions bounded, nextSafeAction=await_late_evidence, replyDelivery=not_attempted, partialDelivery=none; all forbidden sensitive fields absent | `1/1/0/0` | `R[READY(g),READY(g),N/A,READY(g)];P[0,0];F[true,true]` | pending |
+| `RECOVERY_NO_REPLAY` | spawn g; old prompt becomes unknown with possible side effect; one later request rejected by fence | REAP g, then user explicitly submits one new harmless request which spawns g+1 | complete new request | originalPromptReplayWrites=0; originalAnswerResends=0; historicalSideEffectReplays=0; rejectedRequestAutoAdmissions=0; explicitNewRequestExecutions=1; shutdownInvocations=1 | `2/2/1/0` | `R[READY(g),REAP(g),REAP(g),READY(g+1)];P[0,0];F[true,false]` | old=terminated_without_outcome; new=completed |
 | `OLD_GENERATION_LATE_EXIT_AFTER_RESPAWN` | harness creates/kills g, then starts g+1 | replay g exit callback | invoke stale callback | g+1 unchanged; audit only | `2/0/1/0` | `R[READY(g+1),READY(g+1),N/A,READY(g+1)];P[0,0];F[N/A,N/A]` | `N/A` |
 
 每个 table row 的 counters 从该 case harness reset 开始；标为 READY/STARTUP 的 fixture 除非明确写 metadata-only seeded，必须通过表中计数的真实 spawn 建立。每个 counter 都是唯一 exact integer。Unique oracle必须是单一 machine assertion，不接受“日志看起来正确”。
 
-### 10.4 Historical V1 amendment closure crosswalk (provenance only; not V2 review/acceptance)
+### 10.4 Historical V1 amendment closure crosswalk (provenance only; not V3 review/acceptance)
 
 | Required fix | Normative closure |
 |---:|---|
@@ -1688,26 +1810,47 @@ REPLACED_V1_PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
 
 ---
 
-## 12. Migration, compatibility, and rollback
+#### hard deadline 直接 clear fence
 
-### 12.1 Authority transition status
+拒绝。Deadline 只授权 eligibility check；没有 termination proof 时必须 exact REAP 并观察真实 exit。
 
-No implementation or runtime migration occurs in this docs-only convergence. The historical acceptance-finalize plan in §0.3 was executed and merged by authority merge `12375d6282ede5015088a7d7f5495d6f46ca7738`: V2 is accepted/current and V1 is superseded. This authority transition does not claim implementation completion or production rollout.
+#### Runtime restart 后用 PID 猜测旧 child
 
-### 12.2 Compatibility preserved from V1
+拒绝。PID/startedAt/launchd runs 不能重建 processRef 与 ownership token。
 
-V2 carries unchanged the existing compatibility obligations in `CLAUSE-PROC-DEADLINE-CONFIG`:
+#### 恢复后补投旧 prompt、答案或被拒绝请求
 
-- legacy `DSH_AGENT_TURN_TIMEOUT` continues to map only to `turnTimeoutMs` when the new variable is absent；
-- legacy `DSH_AGENT_DELIVER_TIMEOUT` continues to map only to `promptReceiptTimeoutMs` when the new variable is absent；
-- current production `DSH_AGENT_TURN_TIMEOUT=900000` remains effective during any future rollout；
-- no fifth timeout field, per-message override, Scheduler override, Session-model change, Router-product-policy change, or Kernel change is introduced。
-
-### 12.3 Rollback
-
-Implementation rollback behavior: Not applicable to this docs-only authority transition because V1 defined no implementation rollback Contract and this replacement introduces none. The historical non-acceptance path would have left V1 unchanged; it is not the current lifecycle state. This section imposes no requirement on future implementation rollback.
+拒绝。旧执行可能已有副作用；恢复只开放新的显式 admission。
 
 ---
+
+## 12. Migration, compatibility, and rollback
+
+### 12.1 Authority lifecycle
+
+This proposed candidate changes no active authority. Future acceptance is the
+atomic transaction in §0. V2 remains accepted until that transaction is
+reviewed, authorized and merged.
+
+### 12.2 Data migration
+
+Implementation introduces a versioned durable recovery store. On first V3
+startup, no pre-V3 in-memory record can be fabricated or migrated. Legacy
+handles without durable reservations retain `restart_lost`; absence clears no
+fence. New V3 admissions are forbidden until the durable store opens, validates
+its schema/caps and restores unresolved Agent fences.
+
+Rollback from deployed V3 may occur only after every durable unresolved
+operation is settled or the rollback runtime can read and enforce V3 fence
+records. Downgrade to code that ignores unresolved durable fences is forbidden.
+
+### 12.3 Compatibility
+
+Existing envelopes and V2 evidence semantics remain. V3 adds recovery/diagnostic
+fields and durable states. It does not change Scheduler occurrence policy,
+Product Surface late-delivery policy, Agent identity, Binding/Session or
+business idempotency. Existing timeout variables keep their V2 mapping; no
+fifth timeout is added.
 
 ## 13. Open questions
 
@@ -1715,108 +1858,84 @@ Implementation rollback behavior: Not applicable to this docs-only authority tra
 OPEN_OWNER_DECISIONS = NONE
 NORMATIVE_TBD = NONE
 UNRESOLVED_AUTHORITY_CONFLICT = NONE
-PARTIAL_SUPERSESSION = NONE
 ```
 
-Any future change to Scheduler occurrence/retry policy, Product Surface late delivery, cancellation
-semantics, peer-Agent security domain, or DSH Kernel behavior requires its own governing authority and is
-not an open implementation choice under this Spec.
+Runtime restart without re-established ownership is intentionally fail-closed:
+restore durable fence/diagnosis, but do not signal or unlock. A later accepted
+supervisor receipt/ownership mechanism may extend recovery; it is not required
+by this minimal same-runtime auto-REAP slice.
 
----
+## 14. Acceptance and implementation gate
 
-## 14. Spec Review Gate
+Independent review verifies:
 
-Independent reviewer 必须确认：
+- all V2 C-001–C-022 safety semantics remain except the declared C-015 exact-started-idle and C-018/C-019 durable-query changes;
+- exact late evidence needs no prompt and never kills a healthy resident child merely to clear a settled turn;
+- hard deadline is the existing turn deadline and adds no config;
+- C-024 eligibility is atomic and exact-generation-bound;
+- C-025 observes real exit before settlement/cleanup/reopen;
+- restart restores unresolved records/fences but never reconstructs ownership from PID;
+- duplicate/concurrent recovery performs one shutdown;
+- old-generation callbacks cannot affect a new generation;
+- C-026 diagnostics and all no-replay counters are executable;
+- fault plan covers the ten required scenarios and a real outer-entry E2E;
+- docs-only scope is preserved.
 
-- 五态 lifecycle 完整且 failure cleanup 不跳过 `DRAINING`；
-- 四个 timeout 字段独立、static、owner 正确；
-- 当前 `DSH_AGENT_TURN_TIMEOUT=900000` 兼容边界未被改变；
-- 所有 RPC 有 total deadline；
-- child exit/error 与 stdin failure 不泄漏 pending；
-- Registry ready-only + shared startup resultPromise + nonblocking reap fence；
-- ready failure bounded caller reject、kill、created-child real exit + cleanup；
-- all prompt paths watermark before prompt send + exact receipt correlation；legacy deliver timeout无第五字段；
-- outcome evidence与termination evidence分离且可执行；
-- timeout unknown fence、no replay、late reconciliation 完整；
-- final assistant output 有明确 handle/query/retention/eviction contract，且 AgentProcess 不越权自行向 Product Surface 发消息；
-- shutdown 必须先 reconciliation/handoff，再以 created-child real exit或no-child terminal evidence收口；
-- 所有长期 state 同时有 count/byte bound；
-- Scheduler 只有 termination/query recovery seam，没有 implementation或 occurrence policy；
-- historical V1 amendment 9 项 closure crosswalk 与 §10.3 acceptance evidence逐项可验证；
-- 本轮 docs-only，无 production、Scheduler、timeout mitigation、Kernel、merge 变化。
+After review PASS, Owner accepts the exact reviewed semantic commit through
+§0's atomic docs-only lifecycle transaction. Implementation may begin only from
+a fresh descendant of the accepted authority in main.
 
-Review 输出：
+Implementation scope after acceptance is limited to:
 
 ```text
-AGENT_PROCESS_LIFECYCLE_HARDENING_V2_SPEC_REVIEW = PASS | FIX_REQUIRED
-REQUIRED_FIXES = [...]
-VERDICT = READY_TO_ACCEPT | NOT_READY
+packages/agent-router/src/reconciliation/**
+packages/agent-router/src/process/turn-execution.js
+packages/agent-router/src/process/event-correlation.js
+packages/agent-router/src/process/shutdown.js
+packages/agent-router/src/process/spawn.js
+packages/agent-router/src/process-registry.js
+packages/agent-router/src/ingress-delivery.js
+packages/agent-router/src/index.js
+packages/agent-router/test/process-lifecycle/**
+packages/agent-router/test/route-chain/**
+minimal production-runtime composition needed to open the durable store
 ```
 
-Review recommendation 不自动等于 acceptance；status flip 由 authorized Owner / maintainer 完成。
+Scheduler, Lark rendering, Binding/Session, credential, generic recovery
+platform or deployment changes require re-PREFLIGHT.
 
----
+## 15. Required real E2E before Goal completion
 
-## 15. Final Output
+Source tests are insufficient. Before Goal completion, a controlled harmless
+Feishu ingress produces an exact `outcome_unknown` without business effects and
+proves:
 
 ```text
-AGENT_PROCESS_LIFECYCLE_HARDENING_V2_SPEC = PASS
-REPLACEMENT_AUTHORING = PASS
-REPLACEMENT_FORM = COMPLETE_STANDALONE_WHOLE_AUTHORITY
+OUTCOME_UNKNOWN_OBSERVED=YES
+NO_NEW_PROMPT_REQUIRED_FOR_RECOVERY=YES
+AUTO_RECOVERY_OPERATION_CREATED=YES
+EXACT_GENERATION_BOUND=YES
+REAL_CHILD_EXIT_OBSERVED=YES  # REAP case only
+FENCE_CLEARED_AFTER_VALID_TERMINATION_PROOF=YES
+NEW_ADMISSION_REOPENED=YES
+NEXT_NEW_USER_MESSAGE_SUCCESS=YES
+ORIGINAL_PROMPT_REPLAY_COUNT=0
+ORIGINAL_ANSWER_REPLAY_COUNT=0
+HISTORICAL_SIDE_EFFECT_REPLAY_COUNT=0
+```
 
-AUTHORING_BASE_MAIN = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-REPLACED_V1_SPEC_ID = AGENT_PROCESS_LIFECYCLE_HARDENING_V1
-REPLACED_V1_AUTHORITY_REVISION = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-REPLACED_V1_ACCEPTANCE_REVIEWED_HEAD = 8475318f12068a28fe937779c91735817b6db9ca
-REPLACED_V1_REQUIRED_FIXES_CLOSED = 9/9
-REPLACED_V1_PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
+This E2E belongs to a later accepted implementation/deployment phase and is not
+claimed by this docs-only Goal.
 
-PROCESS_STATE_MACHINE = SPAWNING -> INITIALIZING -> READY -> DRAINING -> EXITED
-TIMEOUT_CONFIG_MODEL = initializeTimeoutMs,promptReceiptTimeoutMs,turnTimeoutMs,shutdownGraceMs; global defaults + optional static per-Agent override
+## 16. Candidate output
 
-CHILD_EXIT_PENDING_RPC = REJECT_ALL_AND_CLEAR
-REGISTRY_READY_MODEL = SINGLE_LINEARIZABLE_SLOT + READY_ONLY_VIEW + SHARED_STARTUP_RESULT + ATOMIC_GENERATION_BOUND_REAP_FENCE
-WATERMARK_MODEL = MONOTONIC_EVENT_SEQUENCE_BEFORE_PROMPT_SEND + EXACT_RECEIPT_MESSAGE_ID
-
-TURN_DEADLINE_OUTCOME = outcome_unknown_without_termination_proof
-NEW_TURN_AFTER_OUTCOME_UNKNOWN = FORBIDDEN_ON_SAME_AGENTPROCESS_UNTIL_LATE_TERMINAL_OR_PROVEN_TERMINATION
-LATE_TERMINAL_RECONCILIATION = ALL_UNKNOWN_SOURCES -> SETTLE_ONCE(late_completed | late_failed | terminated_without_outcome)
-LATE_REPLY_DELIVERY = RETAIN_AND_EXPOSE_VIA_ORIGINAL_CALLER_RECONCILIATION_HANDLE; AUTOMATIC_UNSOLICITED_PRODUCT_SURFACE_DELIVERY=NO
-
-SHUTDOWN_MODEL = exact_router_owned_generation_only + atomic_REAP + graceful_or_immediate_kill_policy + await_real_exit + pending_first + authoritative_reconciliation_visible + identity_CAS_cleanup
-BOUNDED_BUFFERS = per_record + per_Agent + Router_global count_and_byte_caps; unresolved_non_evict; UTF8_incremental_tail
-
-SCHEDULER_TERMINATION_SEAM = active_turn_snapshot + stable_reconciliationHandle + occurrence/run/requestId_restore_index + outcome_evidence_distinct_from_termination_evidence + cancel_requested_distinct_from_termination_proven
-
-SPEC_STATUS = accepted
-ACTIVE_AUTHORITY_ON_MAIN = AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-IMPLEMENTATION_AUTHORITY = contracts
-CURRENT_SUPERSEDES = [AGENT_PROCESS_LIFECYCLE_HARDENING_V1]
-V1_CURRENT_STATUS = superseded
-ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_PLAN_PREPARED = YES
-ATOMIC_WHOLE_AUTHORITY_SUPERSESSION_EXECUTED = YES (2026-08-21)
-AUTHORITY_MERGE = 12375d6282ede5015088a7d7f5495d6f46ca7738
-CURRENT_MAIN_COMPATIBILITY_NOTE = NON_NORMATIVE_STATE_CONTEXT_IN_SECTION_3_1
-IMPLEMENTATION_STATE = NOT_STARTED
-PRODUCTION_ROLLOUT_STATE = NOT_STARTED
-AUTHORITY_CONFORMANCE_AUDIT = FIX_REQUIRED_UNTIL_THIS_CONVERGENCE_IS_INDEPENDENTLY_REVIEWED_AND_MERGED
-IMPLEMENTATION_ALLOWED_TO_START = NO
-CONTRACT_SEMANTIC_CHANGE = NONE
-IMPLEMENTATION_SCOPE_CHANGE = NONE
-ACCEPTANCE_CRITERIA_CHANGE = NONE
-HISTORICAL_WHOLE_AUTHORITY_ACCEPTANCE_FINALIZE_CLAIM = PASS (2026-08-21)
-REVIEWED_BASE_COMMIT = 79cc8e861cbb16755370b0e9f30ef3fb47c56fa6
-REVIEWED_SPEC_COMMIT = 08c041c3ad11bab6b1632b24103b40b2d698dfdf
-HISTORICAL_PR28_REVIEW_CLAIM = PASS
-PERSISTENT_INDEPENDENT_REVIEW_PROVENANCE_AT_MERGE = INCOMPLETE
-POST_MERGE_INDEPENDENT_AUTHORITY_AUDIT = FIX_REQUIRED
-ACCEPTANCE_FINAL_HEAD_RECHECK = INVALID
-SEMANTIC_CHANGE_FROM_REVIEWED_HEAD = NONE
-
-IMPLEMENTATION_STARTED = NO
-PRODUCTION_CHANGE = NONE
-DSH_AGENT_TURN_TIMEOUT_900000_CHANGE = NONE
-SCHEDULER_CHANGE = NONE
-KERNEL_CHANGE = NONE
-CONVERGENCE_MERGE = NO
+```text
+SOURCE_FIX_IMPLEMENTED = NO
+DEPLOYED_FIXED = NO
+CURRENT_AGENT_RECOVERED = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
+AUTO_RECOVERY_E2E = NO
+HISTORICAL_PROMPT_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
+HISTORICAL_ANSWER_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
+READY_FOR_IMPLEMENTATION = NO
+REASON = proposed authority requires independent review, exact-head Owner acceptance and merge
 ```
