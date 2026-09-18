@@ -144,7 +144,7 @@ class PhaseCuts(unittest.TestCase):
         p['controller_sha256']=digest(blobs['agent-deployd']);blobs['packet-template.json']=raw(p)
         m=dict(version=1,operation_id=op.OPERATION,source_sha=p['source_sha'],controller_sha256=p['controller_sha256'],
             files={k:{'sha256':digest(v),'size':len(v)} for k,v in blobs.items()},root_argv_allowlist=[],
-            ordinary_argv_allowlist=[['/usr/bin/python3','-B','-E','-s','/private-fixture/broker_first_delivery.py']])
+            ordinary_argv_allowlist=[['/usr/bin/python3','-I','-S','-B','/private-fixture/first_live_launcher.py','--broker-exact']])
         class IO:
             def __init__(self):self.events=[];self.copied={};self.saved={};self.time=100;self.auth=0
             def local_validate(self):self.events.append('validated')
@@ -199,6 +199,7 @@ class PhaseCuts(unittest.TestCase):
              patch.object(op.layout,'commands',return_value=[]),patch.object(op.layout,'copies',return_value={}),\
              patch.object(op,'prefix_gate',return_value=({op.layout.CODE+'/agent-deployd':b'old',
                  op.layout.CODE+'/agent-deploy-issuer':b'old issuer'},b'f'*64+b'  /usr/bin/sudo\n')),\
+             patch.object(op,'prepare_socket',side_effect=lambda _io,_p:io.events.append('socket-prepared')),\
              patch.object(op,'enabled_records',side_effect=lambda _:io.records()):
             try:result=op.execute(io,m,Path('/private-fixture'))
             except RuntimeError:result=None
@@ -224,8 +225,42 @@ class PhaseCuts(unittest.TestCase):
             io,result=self.run_case(pending=pending)
             self.assertEqual(result['state'],'FIRST_AUTOMATIC_DELIVERY_'+('PENDING' if pending else 'COMPLETE'))
             self.assertFalse(result['parent_goal_complete']);self.assertEqual(io.auth,3)
+            self.assertLess(io.events.index('socket-prepared'),io.events.index((op.CONTROLLER,'--first-live-and-enable')))
             self.assertEqual(sum(e==(op.CONTROLLER,'--first-live-and-enable') for e in io.events),1)
             self.assertEqual(sum(e==(op.CONTROLLER,'--first-live-completion') for e in io.events),1)
+
+
+class SocketNamespace(unittest.TestCase):
+    def io(self,existing=False,replaced=False):
+        class IO:
+            def __init__(self):self.calls=[];self.created=False;self.normalized=False
+            def metadata(self,path,absent=False):
+                if path=='/private/var/run':return dict(type='Directory',uid=0,gid=1,mode=0o775,flags=0,device=1,inode=2)
+                if not self.created:return {'type':'Directory'} if existing else None
+                return dict(type='Directory',uid=0,gid=602 if self.normalized else 1,
+                    mode=0o750 if self.normalized else 0o700,flags=0,device=1,inode=4 if replaced and self.normalized else 3)
+            def call(self,argv):
+                self.calls.append(argv)
+                if argv[0]=='/bin/mkdir':self.created=True
+                elif argv[0]=='/usr/bin/install':self.normalized=True
+                return b''
+        return IO()
+
+    def test_exact_new_namespace_exists_with_required_gid_before_native_entry(self):
+        io=self.io();p={'configuration':{'socket_ancestor':{'uid':0,'gid':1,'mode':0o775,'flags':0,'device':1,'inode':2}}}
+        op.prepare_socket(io,p)
+        self.assertEqual(io.metadata(op.layout.SOCKET)['gid'],602)
+        self.assertEqual(io.calls[0],['/bin/mkdir','-m','0700',op.layout.SOCKET])
+        self.assertEqual([a for a in io.calls if a[0]=='/usr/bin/install'],[
+            ['/usr/bin/install','-d','-o','root','-g','602','-m','0750',op.layout.SOCKET]])
+
+    def test_existing_or_replaced_namespace_is_not_repaired_or_accepted(self):
+        p={'configuration':{'socket_ancestor':{'uid':0,'gid':1,'mode':0o775,'flags':0,'device':1,'inode':2}}}
+        io=self.io(existing=True)
+        with self.assertRaises(RuntimeError):op.prepare_socket(io,p)
+        self.assertEqual(io.calls,[])
+        io=self.io(replaced=True)
+        with self.assertRaises(RuntimeError):op.prepare_socket(io,p)
 
 
 if __name__=='__main__':unittest.main()

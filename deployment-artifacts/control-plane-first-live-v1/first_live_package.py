@@ -112,7 +112,8 @@ def commands(packet,ctl_hash):
     argv += [['/bin/cat',p] for p in sorted(read_paths)]
     argv += [['/usr/bin/install','-o','root','-g','wheel' if gid==0 else '20','-m',mode,'/dev/fd/0',p]
              for p,(mode,gid) in sorted(write_paths.items())]
-    argv += [['/bin/mkdir','-m','0700',p] for p in [PACKET,PACKET+'/payloads']]
+    argv += [['/bin/mkdir','-m','0700',p] for p in [PACKET,PACKET+'/payloads',SOCKET]]
+    argv += [['/bin/ls','-1A',SOCKET],['/usr/bin/install','-d','-o','root','-g','602','-m','0750',SOCKET]]
     argv += [['/usr/bin/shasum','-a','256','/usr/bin/sudo'],['/bin/launchctl','print',LABEL],
              ['/bin/launchctl','print-disabled','system'],[CODE+'/agent-deployd','--first-live-and-enable'],
              [CODE+'/agent-deployd','--first-live-completion']]
