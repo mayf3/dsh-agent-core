@@ -112,3 +112,67 @@ pub fn login_reconciliation(action: &str) -> Result<()> {
 #[cfg(test)]
 #[path = "../../test/login_reconciliation/main.rs"]
 mod tests;
+
+/// Read-only predicates reused by the separately Owner-bound first-live operator.
+/// This module exposes none of the old helper's execution or retry entry points.
+pub(crate) mod observation {
+    use super::*;
+    use std::fs::Metadata;
+    #[derive(Clone)]
+    pub(crate) struct Process {
+        pub pid: u32,
+        pub ppid: u32,
+        pub uid: u32,
+        pub start: String,
+        pub command: String,
+    }
+    fn rows(input: Vec<process::Row>) -> Vec<Process> {
+        input
+            .into_iter()
+            .map(|r| Process {
+                pid: r.pid,
+                ppid: r.ppid,
+                uid: r.uid,
+                start: r.start,
+                command: r.command,
+            })
+            .collect()
+    }
+    pub(crate) fn census(ps_sha256: &str) -> Result<Vec<Process>> {
+        Ok(rows(process::census(ps_sha256)?))
+    }
+    #[cfg(test)]
+    pub(crate) fn parse(text: &str) -> Result<Vec<Process>> {
+        Ok(rows(process::parse(text)?))
+    }
+    pub(crate) fn executable(path: &str, digest: &str) -> Result<()> {
+        state::executable(path, digest)
+    }
+    pub(crate) fn reviewer(auth_required: bool) -> Result<Option<Metadata>> {
+        state::reviewer(auth_required)?;
+        if !auth_required {
+            return Ok(None);
+        }
+        let home = state::private_directory(crate::issuer::review::REVIEW_HOME, 612, 612)?;
+        let file = home.open_file("auth.json", libc::O_RDONLY, 0)?;
+        state::metadata(&file, 612, 612, 0o600, true)?;
+        Ok(Some(file.metadata()?))
+    }
+    pub(crate) fn original_unknown() -> Result<()> {
+        let dir = state::private_directory(ATTEMPT, 0, 0)?;
+        state::pinned(&dir, "login-intent.json", ORIGINAL_INTENT)?;
+        for name in [
+            "login-result.json",
+            "rollback-intent.json",
+            "rollback-result.json",
+            "failure.json",
+            INTENT,
+            RESULT,
+            FAILURE,
+        ] {
+            state::absent(&dir, name)?;
+        }
+        // This is metadata/absence only; private authentication bytes are never read.
+        Ok(())
+    }
+}
