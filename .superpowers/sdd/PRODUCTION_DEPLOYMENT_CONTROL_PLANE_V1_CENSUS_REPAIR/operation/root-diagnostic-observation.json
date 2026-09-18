@@ -1,0 +1,11 @@
+{
+  "provenance": "Transcribed from functions tools.write_stdin session97202, exit0; fixed read-only Apple commands via macOS local administrator authentication",
+  "bootstrap_root_entries": ["bootstrap.lock"],
+  "bootstrap_lock": {"uid":0,"gid":0,"mode":"0600","nlink":1,"flags":0,"mtime":1789696678,"ctime":1789696678,"size":0},
+  "sudoers": {"path":"/private/etc/sudoers","uid":0,"gid":0,"mode":"0440","nlink":1,"flags":32,"mtime":1786589515,"ctime":1788023518,"sha256":"65a09ed9f0e681000606b97797398241f482e4318acccd77b50f673f02e3f10f","visible_xattr_names":[]},
+  "visudo_readonly_validation": {"/private/etc/sudoers":"parsed OK","/private/etc/sudoers.d/lw-pilot-executor":"parsed OK","/private/etc/sudoers.d/openclaw-gateway-restart":"parsed OK"},
+  "diagnostic_system_mutation":false,
+  "installation_retried":false,
+  "attempt_id":"genesis-65559dd-20260918-01",
+  "limitation":"The earlier diagnostic command sent to the already-exited Terminal did not execute; no diagnostic-invocation marker exists. This observation came from the separate authenticated read-only osascript invocation."
+}

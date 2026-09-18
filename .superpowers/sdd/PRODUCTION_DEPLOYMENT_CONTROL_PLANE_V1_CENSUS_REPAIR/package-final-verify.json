@@ -1,0 +1,9 @@
+{
+  "plan_ready": true,
+  "artifact_integrity_verified": true,
+  "bootstrap_allowed": false,
+  "activation_allowed": false,
+  "protected_poststate_verified": false,
+  "independent_review_result_verified": false,
+  "plan_digest": "c3a5ed50ffe2588cedc26b7ba3931aef85de496143ea355d70b773648b6bd38e"
+}
