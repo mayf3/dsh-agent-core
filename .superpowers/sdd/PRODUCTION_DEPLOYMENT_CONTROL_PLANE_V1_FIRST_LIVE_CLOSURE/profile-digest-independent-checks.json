@@ -1,0 +1,36 @@
+{
+  "reviewer": "dcp_first_live_binding_review",
+  "time_unix": 1789707131,
+  "prior_source": "730d4a0539cc758eb8c0440e9ceddbefde4c017d",
+  "head_at_execution": "fd4b5f19bf1b5023e91dd4b674dbac1d6cb36cc6",
+  "corrected_file_sha256": {
+    "packages/deployment-control-plane/src/issuer/owner_policy.rs": "c7847974a796d0ce3479c398b8dd890ee5e6c74f6eb7ed154a97174bb56198e4",
+    "packages/deployment-control-plane/test/issuer/owner_policy.rs": "6b7079ecba23bb85e03fd72869ff99efcbced146ac5e4c11f487e86a05d77b60"
+  },
+  "unchanged_during_check": true,
+  "runs": [
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "1cb66e8dcae15f51b359f9956e08743a0ecf2298def0ed97fc8bed1c36e85d08",
+      "filter": "issuer::owner_policy::",
+      "exit_code": 0,
+      "output": "\nrunning 6 tests\ntest issuer::owner_policy::tests::active_native_binding_selects_v1_source_without_profile_hash_drift ... ok\ntest issuer::owner_policy::tests::active_native_binding_selects_v2_source_without_profile_hash_drift ... ok\ntest issuer::owner_policy::tests::changed_review_custody_cannot_resume_v2_draft_binding ... ok\ntest issuer::owner_policy::tests::exact_goal_selection_cannot_fallback_or_change_slots_contract_or_enrollment ... ok\ntest issuer::owner_policy::tests::old_owner_canonical_bytes_and_lease_source_binding_are_unchanged ... ok\ntest issuer::owner_policy::tests::source_map_rejects_duplicate_unknown_mixed_and_unbounded_shapes ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.02s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "1cb66e8dcae15f51b359f9956e08743a0ecf2298def0ed97fc8bed1c36e85d08",
+      "filter": "issuer::policy::",
+      "exit_code": 0,
+      "output": "\nrunning 10 tests\ntest issuer::policy::tests::backwards_clock_cannot_return_a_future_lease ... ok\ntest issuer::policy::tests::cache_and_lock_metadata_and_unknown_temporary_fail_closed ... ok\ntest issuer::policy::tests::cache_signed_by_wrong_issuer_or_with_wrong_source_binding_is_rejected ... ok\ntest issuer::policy::tests::finite_v2_source_map_renews_current_owner_lease ... ok\ntest issuer::policy::tests::native_policy_entry_refuses_fixture_identity_before_effects ... ok\ntest issuer::policy::tests::owner_revision_is_independent_and_revocation_cannot_be_hidden ... ok\ntest issuer::policy::tests::profile_switches_use_global_monotonic_epochs_without_old_profile_replay ... ok\ntest issuer::policy::tests::restart_and_expiry_renewal_keep_monotonic_issuance_epochs ... ok\ntest issuer::policy::tests::seconds_apart_reuse_exact_policy_and_queue_revalidation_accepts_it ... ok\ntest issuer::policy::tests::semantic_config_change_without_owner_revision_is_equivocation ... ok\n\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 89 filtered out; finished in 0.76s\n\n"
+    },
+    {
+      "binary": "/Users/yanfenma/workspace/worktrees/dcp-first-live-binding/packages/deployment-control-plane/target/debug/deps/deployment_control_plane-f5a61e6e2546900c",
+      "binary_sha256": "1cb66e8dcae15f51b359f9956e08743a0ecf2298def0ed97fc8bed1c36e85d08",
+      "filter": "issuer::issuance::",
+      "exit_code": 0,
+      "output": "\nrunning 6 tests\ntest issuer::issuance::tests::changed_source_binding_cannot_create_second_outstanding_draft ... ok\ntest issuer::issuance::tests::interrupted_unpublished_draft_does_not_poison_a_fresh_review ... ok\ntest issuer::issuance::tests::partial_protected_publication_resumes_exact_prefix_without_accepting_mismatch ... ok\ntest issuer::issuance::tests::restart_after_each_publication_boundary_renews_without_losing_exact_evidence ... ok\ntest issuer::issuance::tests::retained_partial_and_failed_outputs_count_before_any_new_write ... ok\ntest issuer::issuance::tests::two_goals_before_queue_submit_share_only_the_same_artifact ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.74s\n\n"
+    }
+  ],
+  "exact_corrected_source": "e8f863fdb5d3b95dc45cd202acee5c1c69124551",
+  "commit_bytes_match_checked_file_hashes": true
+}
