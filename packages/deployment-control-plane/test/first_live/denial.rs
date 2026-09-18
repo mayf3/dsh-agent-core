@@ -454,3 +454,47 @@ fn socket_foreign_probe_is_retained_and_never_counts_as_denial() {
         .join("socket-denial/native-denial-create-cleanup.json")
         .exists());
 }
+fn service_process(uid: u32, gid: u32) -> ProcessIdentity {
+    ProcessIdentity {
+        pid: 12345,
+        started_seconds: 123,
+        started_micros: 456,
+        uid,
+        gid,
+        executable: "/usr/local/libexec/agent-core/node-runtime/bin/node".into(),
+    }
+}
+#[test]
+fn exact_running_w2_root_and_runtime_identities_reach_signal_probe() {
+    for (uid, gid) in [(0, 0), (505, 601)] {
+        let p = service_process(uid, gid);
+        assert!(
+            signal_identity(&p, |_| Ok(p.clone())).is_ok(),
+            "fixed service uid {uid} rejected"
+        );
+        let mut drift = p.clone();
+        drift.started_micros += 1;
+        assert!(signal_identity(&p, |_| Ok(drift.clone())).is_err());
+        let mut drift = p.clone();
+        drift.pid += 1;
+        assert!(signal_identity(&p, |_| Ok(drift.clone())).is_err());
+        let mut drift = p.clone();
+        drift.executable = "/bin/sh".into();
+        assert!(signal_identity(&p, |_| Ok(drift.clone())).is_err());
+        let mut drift = p.clone();
+        drift.gid += 1;
+        assert!(signal_identity(&p, |_| Ok(drift.clone())).is_err());
+    }
+}
+#[test]
+fn signal_policy_never_accepts_caller_or_unbounded_pid() {
+    let mut p = service_process(502, 20);
+    assert!(signal_identity(&p, |_| panic!("invalid identity queried")).is_err());
+    p.uid = 501;
+    assert!(signal_identity(&p, |_| panic!("invalid identity queried")).is_err());
+    p.uid = 0;
+    for pid in [0, 1, u32::MAX] {
+        p.pid = pid;
+        assert!(signal_identity(&p, |_| panic!("invalid identity queried")).is_err());
+    }
+}

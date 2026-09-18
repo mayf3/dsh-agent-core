@@ -248,19 +248,23 @@ pub(super) fn probe_quiescent(targets: &Targets, context: &Context<'_>) -> Resul
     }
     Ok(results)
 }
+fn signal_identity(
+    expected: &ProcessIdentity,
+    read: impl FnOnce(u32) -> Result<ProcessIdentity>,
+) -> Result<()> {
+    require(
+        expected.pid > 1 && expected.pid <= i32::MAX as u32 && matches!(expected.uid, 0 | 505),
+        "DENIAL_PROCESS_DRIFT",
+    )?;
+    require(read(expected.pid)? == *expected, "DENIAL_PROCESS_DRIFT")
+}
 pub(super) fn probe_signal(processes: &[ProcessIdentity], context: &Context<'_>) -> Result<Report> {
     require(
         !processes.is_empty() && processes.len() <= 3,
         "DENIAL_PROCESS_SET",
     )?;
     for p in processes {
-        require(
-            p.pid > 1
-                && p.pid <= i32::MAX as u32
-                && p.uid == 505
-                && crate::transaction::first_live_process_identity(p.pid)? == *p,
-            "DENIAL_PROCESS_DRIFT",
-        )?;
+        signal_identity(p, crate::transaction::first_live_process_identity)?;
     }
     let targets = Targets {
         parents: Vec::new(),
@@ -269,10 +273,7 @@ pub(super) fn probe_signal(processes: &[ProcessIdentity], context: &Context<'_>)
     let pids: Vec<_> = processes.iter().map(|p| p.pid).collect();
     let r = run(Class::Signal, &targets, &pids, context)?;
     for p in processes {
-        require(
-            crate::transaction::first_live_process_identity(p.pid)? == *p,
-            "DENIAL_PROCESS_DRIFT",
-        )?;
+        signal_identity(p, crate::transaction::first_live_process_identity)?;
     }
     finish(Class::Signal, &targets, context, r)
 }
