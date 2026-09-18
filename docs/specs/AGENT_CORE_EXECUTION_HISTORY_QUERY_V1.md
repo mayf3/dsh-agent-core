@@ -1,6 +1,8 @@
 ---
 spec_id: AGENT_CORE_EXECUTION_HISTORY_QUERY_V1
-status: proposed
+status: accepted
+accepted_reviewed_head: 6bcb933 (round-2 ACCEPT; non-blocking nits absorbed in this acceptance commit)
+review_record: round-1 REVISE/7 load-bearing gaps (jobs.json loader absent; reportId wall-clock self-contradiction; pagination undesigned; WPA-1 dedupe/ordering unspecified; R2 attemptId formula wrong for gen>1; svc-facts transport underspecified + receipts over-promise; single-tool dual-scope not an existing enforcement pattern) + messageId-namespace omission → all fixed in r2 6bcb933; round-2 mechanical re-verification ACCEPT/0 load-bearing (6 non-blocking nits absorbed here: pre-append trigger wording, checkpoint reset at rename, dedupe denial-row approximation, A1 events-bridge wording, R1-R9 ruleId stale ref, §7 reachability cross-ref)
 spec_kind: spec
 authority_level: implementation
 implementation_authority: contracts
@@ -221,7 +223,7 @@ scheduler-v2 root 的数据不在查询域内；跨 root 需求=非目标（记�
 - 时间展示一律 UTC ISO-8601，同时保留原生序号（event_sequence/seq/visit_number）；跨系统时钟只给
   `NON_AUTHORITY` 参考序，不参与精确因果断言。
 - report 视图五维分离输出：调度/准入、Agent 执行、业务推进、消息/结果投递、证据完整性；
-  诊断均附 `ruleId`（R1-R8/S1-S8）与证据引用（nativeRefs）。
+  诊断均附 `ruleId`（R1-R9）与证据引用（nativeRefs）。
 
 ## 6. WRITE_PATH_AMENDMENT_1 — ASM 审计轮转归档（唯一写路径变更）
 
@@ -229,14 +231,17 @@ scheduler-v2 root 的数据不在查询域内；跨 root 需求=非目标（记�
   send↔turn join 随时间不可逆丢失（evidence §4-G2）。audit.js 今日 **无锁**（单进程同步 append），
   `readGeneration` 对单条坏行整代抛错（:157-186）。
 - 修订语义（按序）：
-  1. 轮转触发条件不变（append 后 size>8 MiB）。
+  1. 轮转触发条件不变（pre-append 检查 `size + rowBytes > maxBytes`，audit.js:56-66 原语义）。
   2. 归档先于 rename：把 live 文件 **尚未归档的字节区间** `[archivedUpToBytes, size)` 追加到
      `control/agent-session-messaging-audit-archive.jsonl`，append+fsync；随后 **原子写 checkpoint**
-     `…-archive.pos`（temp+rename：`{archivedUpToBytes}`）；最后 `renameSync(live, live+'.1')`。
+     `…-archive.pos`（temp+rename：`{archivedUpToBytes}`）；最后 `renameSync(live, live+'.1')`，
+     **rename 同时重置/代键化 checkpoint**（新 live 代从 0 起，旧代 offset 不得带入下一代——失败路径
+     "归档失败但 rename 成功"后尤其可达，否则区间错位）。
   3. **崩溃窗口与幂等**：append 成功但 checkpoint 未落 → 下次轮转按 checkpoint 会重追加同一区间
      ⇒ archive 中可能出现重复行。接受该窗口（每次崩溃至多一代重复），由 **读取端行级去重** 兜底：
-     asm-audit 装载器对 live+.1+archive 全部行按整行内容 hash 去重（行无原生 uuid；同一行内容在本设计下
-     无合法重复语义）。checkpoint 落盘先于 rename ⇒ rename 后内容必已入 archive（无丢失窗口）。
+     asm-audit 装载器对 live+.1+archive 全部行按整行内容 hash 去重（行无原生 uuid）。**接受的近似**：
+     同毫秒内两条全等 denial 行（appendDenial 无 requestId）会被合并少计一条——有界、与关联无关，
+     接受。checkpoint 落盘先于 rename ⇒ rename 后内容必已入 archive（无丢失窗口）。
   4. 归档失败（append/fsync/ checkpoint 任一抛错）：轮转 **照常继续**（rename 照做，避免阻塞发送主路径），
      在 runtime-evidence 记 `ASM_ARCHIVE_APPEND_FAILED{bytesAttempted}`；丢失窗口=该代内容（下次成功后
      恢复）。归档是 best-effort 增强，绝不改变发送路径成败语义。
@@ -261,7 +266,7 @@ scheduler-v2 root 的数据不在查询域内；跨 root 需求=非目标（记�
 | session journals | 既状（append-only 无删除） | 无 | 全量可达 08-16 起 |
 | attempts/history/events | 既状（append-only/永不截断） | 无 | 全量 |
 | session-index（§8） | 首次查询/构建起 | 可随时删除重建 | 派生视图，非证据本体 |
-| svc 事实 | 既状（不可变账本） | 无 | 全量 |
+| svc 事实 | 既状（不可变账本） | 无 | svc 自身账本全量；**查询可达性见 §2/R4**（receipts/activation/closure 无读端点=SOURCE_ABSENT） |
 
 ## 8. 隔离索引（rebuildable read view）
 
@@ -290,7 +295,7 @@ scheduler-v2 root 的数据不在查询域内；跨 root 需求=非目标（记�
 
 **真实样本验收（§七；Phase A=部署前只读核实，Phase B=部署后经产品入口）**
 - A1（Phase A）Workflow 链：真实 instance（当前已获准读取的 BIP/todo 域样本）——visit→attempt→session tool
-  result→svc event/command receipt 全链 + report。
+  result→svc event（含 command_id）桥全链 + report（receipts 环节按 R4=SOURCE_ABSENT 显式标注）。
 - A2（Phase A）Scheduler 链：HR `b115cb96` 历史 occurrence（含 fence/unknown 证据）+ `cron-run-*` session
   对齐（经既有授权读取路径；canonical store 不可读时按访问矩阵降级并如实标注）。
 - A3（Phase A）A2A 发送：FLEET-E2E 真实样本（content-ops session inter_agent 落盘）——来源调用↔目标消息
