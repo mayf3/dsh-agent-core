@@ -99,8 +99,14 @@ ROOT COMMAND (single line):
 ## Independent reviews
 
 ```text
-MECHANICAL_REVIEW=see V7-REVIEW-MECHANICAL.md
-SAFETY_REVIEW=see V7-REVIEW-SAFETY.md
+MECHANICAL_REVIEW=PASS / BLOCKERS=NONE — executed-verification review of the r5 bytes
+  (cb0f12b2…): fixture rerun, G6c 7/7 parse sim, marker noclobber race sim, gate inventory
+  (all fail-closed), constants byte-match, live preimage/staging manifests + 7 key hashes
+  recomputed. See V7-REVIEW-MECHANICAL.md
+SAFETY_REVIEW=PASS / BLOCKERS=NONE — blast radius confined to app*/apponly-state/tmp-receipt;
+  all 8 post-swap failure modes auto-rollback w/ forensic preservation; store provably
+  read-only; reviewer's independent /tmp rebuild reproduced the target manifest c41a9045….
+  See V7-REVIEW-SAFETY.md
 ```
 
 ## r3→r4 review fixes (final review round)
