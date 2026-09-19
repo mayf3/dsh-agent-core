@@ -91,18 +91,25 @@ class RetirementTests(unittest.TestCase):
         finally:
             os.close(active); os.close(state); temp.cleanup()
 
-    def test_retained_operation_accepts_only_exact_macos_provenance(self):
+    def test_security_xattrs_accepts_only_exact_policy_and_provenance(self):
         with patch.object(r, "_xattrs", return_value=["com.apple.provenance"]), \
-             patch.object(r, "_xattr_value",
-                          return_value=bytes.fromhex("010200b853f6dc8c0be32b")):
-            r._retained_operation_xattr(99)
+             patch.object(r, "_xattr_value", return_value=r.PROVENANCE):
+            r._security_xattrs(99, "provenance")
+            r._security_xattrs(99, "created")
+            with self.assertRaisesRegex(RuntimeError, "SECURITY_XATTR"):
+                r._security_xattrs(99, "none")
+        with patch.object(r, "_xattrs", return_value=[]):
+            r._security_xattrs(99, "none")
+            r._security_xattrs(99, "created")
+            with self.assertRaisesRegex(RuntimeError, "SECURITY_XATTR"):
+                r._security_xattrs(99, "provenance")
         for names, value in [([], b""), (["com.apple.provenance"], b"\x01\x03"),
                              (["com.apple.quarantine"],
-                              bytes.fromhex("010200b853f6dc8c0be32b"))]:
+                              r.PROVENANCE)]:
             with patch.object(r, "_xattrs", return_value=names), \
                  patch.object(r, "_xattr_value", return_value=value), \
-                 self.assertRaisesRegex(RuntimeError, "RETAINED_OPERATION_XATTR"):
-                r._retained_operation_xattr(99)
+                 self.assertRaisesRegex(RuntimeError, "SECURITY_XATTR"):
+                r._security_xattrs(99, "provenance")
 
 
 if __name__ == "__main__": unittest.main()
