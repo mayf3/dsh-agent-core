@@ -109,7 +109,7 @@ def protected_read(io,path,spec):
     return raw
 
 
-def prefix_gate(io,packet):
+def prefix_gate(io,packet,installed=None):
     for path,mode in layout.directories().items():
         m=io.metadata(path)
         require(m['type']=='Directory' and m['uid']==0,'PROTECTED_ANCESTOR')
@@ -118,10 +118,10 @@ def prefix_gate(io,packet):
         else:require(m['mode'] & 0o7022==0,'PROTECTED_ANCESTOR')
         if mode is not None:require(m['mode']==int(mode,8) and m['flags']==0,'PROTECTED_DIRECTORY')
     old={}
-    for path,spec in layout.prefix_files(packet).items():
+    for path,spec in layout.prefix_files(packet,installed).items():
         if path==layout.CODE+'/codex':io.stream_hash_fixed_codex(path,spec)
         else:old[path]=protected_read(io,path,spec)
-    for path in layout.absent_paths():
+    for path in layout.absent_paths(installed is not None):
         require(io.metadata(path,absent=True) is None,'PRIOR_OPERATION_PRESENT')
     require(io.call(['/bin/launchctl','print',layout.LABEL],missing=True) is None,'CONTROLLER_ALREADY_LOADED')
     disabled=io.call(['/bin/launchctl','print-disabled','system']).decode('utf-8').splitlines()
@@ -190,18 +190,20 @@ def execute(io,manifest,package_path):
         import p4r9_reconcile
         p4r9_reconcile.reconcile(io,p4r9_raw)
         io.phase('protected-prefix')
-        old,sudo_line=prefix_gate(io,p)
+        old,sudo_line=prefix_gate(io,p,p4r9['installed_files'])
         packet_raw=bind_packet(template,digest(template),sudo_line)
         p=_object(packet_raw,16*1024*1024)
         io.phase('protected-copy')
         io.call(['/bin/mkdir','-m','0700',layout.PACKET])
         io.call(['/bin/mkdir','-m','0700',layout.PACKET+'/payloads'])
-        prepare_socket(io,p)
+        prepare_socket(io,p,p4r9['socket_directory'])
         for name in ['agent-deployd','agent-deploy-issuer']:
-            value=old[layout.CODE+'/'+name]
+            value=protected_read(io,layout.P4R9_PACKET_ARCHIVE+'/original-'+name,
+                p4r9['staging_files']['original-'+name])
             io.copy(value,digest(value),'0400',layout.PACKET+'/original-'+name)
         for name,(dest,mode,gid) in layout.copies(p,ctl).items():
-            io.copy(local(name),manifest['files'][name]['sha256'],mode,dest,gid=gid)
+            if name in p4r9['installed_files']:io.expect(dest,p4r9['installed_files'][name])
+            else:io.copy(local(name),manifest['files'][name]['sha256'],mode,dest,gid=gid)
         io.copy(packet_raw,digest(packet_raw),'0400',layout.PACKET+'/packet.json')
         g=grant(packet_raw,int(io.now()));grant_raw=_canonical(g)
         io.copy(grant_raw,digest(grant_raw),'0600',layout.PACKET+'/owner-grant.json')
@@ -262,7 +264,7 @@ def main():
 
 
 
-def prepare_socket(io, packet):
+def prepare_socket(io, packet, existing=None):
     expected=packet['configuration']['socket_ancestor']
     keys=['device','inode','uid','gid','mode','flags']
     def parent():
@@ -270,6 +272,12 @@ def prepare_socket(io, packet):
         require(m['type']=='Directory' and all(type(m[k]) is int and m[k]==expected[k] for k in keys),
             'SOCKET_ANCESTOR_BINDING')
     parent()
+    if existing is not None:
+        current=io.metadata(layout.SOCKET)
+        require(current['type']=='Directory' and all(current[k]==existing[k]
+            for k in ['device','inode','uid','gid','mode','flags']),'SOCKET_NAMESPACE_CHANGED')
+        require(io.call(['/bin/ls','-1A',layout.SOCKET])==b'','SOCKET_NAMESPACE_NOT_EMPTY')
+        parent();return
     require(io.metadata(layout.SOCKET,absent=True) is None,'SOCKET_NAMESPACE_ALREADY_PRESENT')
     io.call(['/bin/mkdir','-m','0700',layout.SOCKET])
     before=io.metadata(layout.SOCKET)

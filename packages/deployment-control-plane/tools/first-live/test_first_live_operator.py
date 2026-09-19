@@ -194,9 +194,13 @@ class PhaseCuts(unittest.TestCase):
         p.update(review_helper_sha256=digest(b'issuer'),previous={},issuer_bindings=[
             {'public_key':None,'custody_receipt':None} for _ in range(6)],
             lifecycle={'tool_sha256':{}},configuration={'catalog':{'profiles':{'dsh-app':{'revision':'dsh-app-v1'}}}})
+        spec={'sha256':'a'*64,'uid':0,'gid':0,'mode':'0555','nlink':1,'flags':0}
+        reconciliation={'installed_files':{n:spec for n in ['agent-deployd','agent-deploy-issuer','agent-deployctl']},
+            'socket_directory':{'device':1,'inode':2,'uid':0,'gid':602,'mode':0o750,'flags':0},
+            'staging_files':{'original-agent-deployd':spec,'original-agent-deploy-issuer':spec}}
         blobs={'packet-template.json':raw(p),'owner-scope.json':scope,'agent-deployctl':b'ctl',
             'agent-deployd':b'controller','agent-deploy-issuer':b'issuer',
-            'p4r9-successor-reconciliation.json':b'{}'}
+            'p4r9-successor-reconciliation.json':raw(reconciliation)}
         p['controller_sha256']=digest(blobs['agent-deployd']);blobs['packet-template.json']=raw(p)
         m=dict(version=1,operation_id=op.OPERATION,source_sha=p['source_sha'],controller_sha256=p['controller_sha256'],
             files={k:{'sha256':digest(v),'size':len(v)} for k,v in blobs.items()},root_argv_allowlist=[],
@@ -260,7 +264,8 @@ class PhaseCuts(unittest.TestCase):
              patch.object(op.layout,'commands',return_value=[]),patch.object(op.layout,'copies',return_value={}),\
              patch.object(op,'prefix_gate',return_value=({op.layout.CODE+'/agent-deployd':b'old',
                  op.layout.CODE+'/agent-deploy-issuer':b'old issuer'},b'f'*64+b'  /usr/bin/sudo\n')),\
-             patch.object(op,'prepare_socket',side_effect=lambda _io,_p:io.events.append('socket-prepared')),\
+             patch.object(op,'protected_read',side_effect=lambda _io,path,_spec: b'old issuer' if path.endswith('agent-deploy-issuer') else b'old'),\
+             patch.object(op,'prepare_socket',side_effect=lambda _io,_p,_existing:io.events.append('socket-prepared')),\
              patch.object(op,'enabled_records',side_effect=lambda _:io.records()),\
              patch('p4r9_reconcile.reconcile',side_effect=lambda _io,_raw:io.events.append('p4r9-reconciled')):
             try:result=op.execute(io,m,Path('/private-fixture'))

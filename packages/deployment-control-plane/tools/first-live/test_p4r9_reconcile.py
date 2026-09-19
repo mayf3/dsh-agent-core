@@ -23,6 +23,8 @@ class IO:
             return dict(type='Directory', **self.record['operation_directory'])
         if path in (r.layout.PACKET, r.layout.P4R9_PACKET_ARCHIVE):
             return dict(type='Directory', **self.record['packet_directory'])
+        if path == r.layout.SOCKET:
+            return dict(type='Directory', **self.record['socket_directory'])
         return {'inode': 1}
     def expect(self, path, spec): return {'inode': 1}
     def copy(self, raw, h, mode, path):
@@ -37,6 +39,7 @@ class IO:
         self.calls.append(argv)
         if argv[:2] == ['/bin/ls', '-1A']:
             if argv[-1].endswith('first-live-operation'): return b'first-live-intent.json\n'
+            if argv[-1] == r.layout.SOCKET: return b''
             names = self.record['payload_names'] if argv[-1].endswith('/payloads') else self.record['packet_names']
             return (('\n'.join(names) + '\n') if names else '').encode()
         if argv[0] == '/bin/mv' and argv[-1] == r.layout.P4R9_PACKET_ARCHIVE:
@@ -54,7 +57,10 @@ def record():
         packet_directory=dict(uid=0,gid=0,mode=0o700,flags=0,device=1,inode=3),
         first_live_intent=spec, first_live_pending=spec,
         packet_names=['packet.json','payloads'], payload_names=[],
-        staging_files={'packet.json':spec}, retry_forbidden=True, production_target_mutation=False)
+        staging_files={'packet.json':spec,'original-agent-deployd':spec,'original-agent-deploy-issuer':spec},
+        installed_files={'agent-deployd':spec,'agent-deploy-issuer':spec,'agent-deployctl':spec},
+        socket_directory=dict(uid=0,gid=602,mode=0o750,flags=0,device=1,inode=4),
+        retry_forbidden=True, production_target_mutation=False)
 
 
 class Reconciliation(unittest.TestCase):

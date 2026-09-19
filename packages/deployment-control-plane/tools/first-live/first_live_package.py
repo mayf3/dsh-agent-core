@@ -74,7 +74,7 @@ def file_spec(hash_value=None,mode='0600',gid=0):
     return value
 
 
-def prefix_files(packet):
+def prefix_files(packet, installed=None):
     p=packet['previous']
     out={CODE+'/'+name:file_spec(h,'0444' if name.endswith('.json') else '0555') for name,h in OLD_CODE.items()}
     out[CODE+'/codex']['size']=220584000
@@ -85,11 +85,16 @@ def prefix_files(packet):
                      (ROOT+'/registry/state-00000000000000000001.json','registry_sha256')]:
         out[path]=file_spec(p[key])
     out[ATTEMPT+'/login-intent.json']=file_spec('3ca4b44d4d3e418ea78df8ad6c0a04b7a650e0006c807ffd9f96441b0d10abc6')
+    if installed is not None:
+        require(type(installed) is dict and set(installed)=={'agent-deployd','agent-deploy-issuer','agent-deployctl'},
+            'P4R9_INSTALLED_SET')
+        for name,spec in installed.items():out[CODE+'/'+name]=spec
     return out
 
 
-def absent_paths():
-    return [PACKET,SOCKET,CODE+'/agent-deployctl']+[ATTEMPT+'/'+n for n in
+def absent_paths(staged=False):
+    initial=[PACKET] if staged else [PACKET,SOCKET,CODE+'/agent-deployctl']
+    return initial+[ATTEMPT+'/'+n for n in
         ['login-result.json','login-reconciliation-intent.json','login-reconciliation-result.json',
          'login-reconciliation-failure.json','rollback-intent.json','rollback-result.json','failure.json']]+[
         ROOT+'/'+n for n in ['queue.db','queue.db-wal','queue.db-shm','queue.db-journal','activation.json',
@@ -120,14 +125,15 @@ def copies(packet,ctl_hash):
 def commands(packet,ctl_hash,reconciliation=None):
     """Exact public reads and finite fixed writes; no caller paths, keys or auth."""
     mapping=copies(packet,ctl_hash)
-    protected_paths=set(prefix_files(packet))|set(record_path(n) for n in RECORDS)
+    installed=None if reconciliation is None else reconciliation.get('installed_files')
+    protected_paths=set(prefix_files(packet,installed))|set(record_path(n) for n in RECORDS)
     read_paths=protected_paths-{CODE+'/codex'}
     write_paths={dest:(mode,gid) for dest,mode,gid in mapping.values()}
     write_paths.update({PACKET+'/packet.json':('0400',0),PACKET+'/owner-grant.json':('0600',0),
         HANDOFF:('0440',20),PACKET+'/original-agent-deployd':('0400',0),
         PACKET+'/original-agent-deploy-issuer':('0400',0)})
     read_paths |= set(write_paths)
-    metadata_paths=protected_paths|read_paths|set(absent_paths())|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
+    metadata_paths=protected_paths|read_paths|set(absent_paths(reconciliation is not None))|set(directories())|{PACKET,PACKET+'/payloads',SOCKET,
         ROOT+'/first-live-operation',SOCKET+'/control.sock',SOCKET+'/issuer.sock','/usr/bin/sudo'}
     argv=[]
     for path in sorted(metadata_paths):
@@ -145,12 +151,13 @@ def commands(packet,ctl_hash,reconciliation=None):
             'P4R9_RECONCILIATION_SHAPE')
         p4reads={ROOT+'/first-live-pending.json',ROOT+'/first-live-operation/first-live-intent.json'}
         p4reads.update(PACKET+'/'+name for name in reconciliation['staging_files'])
-        p4meta=p4reads|{ROOT+'/first-live-operation',P4R9_OPERATION_ARCHIVE,P4R9_PACKET_ARCHIVE,
+        active_reconciliation=ROOT+'/first-live-operation/successor-reconciliation.json'
+        p4meta=p4reads|{ROOT+'/first-live-operation',active_reconciliation,P4R9_OPERATION_ARCHIVE,P4R9_PACKET_ARCHIVE,
             P4R9_OPERATION_ARCHIVE+'/first-live-intent.json',P4R9_OPERATION_ARCHIVE+'/p4r9-pending.json',
             P4R9_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R9_PACKET_ARCHIVE+'/packet.json'}
         for path in sorted(p4meta):
             argv.extend([['/usr/bin/stat','-f',STAT_FORMAT,path],['/bin/ls','-ldeO',path]])
-        argv += [['/bin/cat',p] for p in sorted(p4reads|{
+        argv += [['/bin/cat',p] for p in sorted(p4reads|{active_reconciliation,
             P4R9_OPERATION_ARCHIVE+'/first-live-intent.json',P4R9_OPERATION_ARCHIVE+'/p4r9-pending.json',
             P4R9_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R9_PACKET_ARCHIVE+'/packet.json'})]
         argv += [['/bin/ls','-1A',ROOT+'/first-live-operation'],['/bin/ls','-1A',PACKET],
@@ -160,4 +167,4 @@ def commands(packet,ctl_hash,reconciliation=None):
             ['/bin/mv',ROOT+'/first-live-pending.json',ROOT+'/first-live-operation/p4r9-pending.json'],
             ['/bin/mv',ROOT+'/first-live-operation',P4R9_OPERATION_ARCHIVE],
             ['/bin/mv',PACKET,P4R9_PACKET_ARCHIVE],['/bin/sync']]
-    return argv
+    return [list(row) for row in dict.fromkeys(tuple(row) for row in argv)]
