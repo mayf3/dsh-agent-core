@@ -44,3 +44,23 @@ future runbook revision — this packet's outcome is unaffected.
 
 腿① recovery target selected: c9d52a33 / agt_content-ops-agent (reconcile doubles as healing the
 V7C-restart casualty). 腿② HR diagnosis line issued. 腿③ 04:42 slot census pending tomorrow.
+
+## OPEN ITEM RESOLVED (2026-09-19 09:0x timeline forensics) — GATES VINDICATED, prior attribution CORRECTED
+
+runs.jsonl timeline (00:25-00:45Z) proves: pid 12649 died SPONTANEOUSLY at ~00:32:01Z — 24 seconds
+BEFORE the V7C script started (00:32:25Z). launchd KeepAlive respawned the runtime as pid 76251,
+which reaped the dead owner's engine lock at 00:32:01.430Z (lock_recovery deadPid=12649
+reaperPid=76251) and reaped the in-flight content-ops turn (occ:3ac47524eceae156, running since
+00:30:01Z) to outcome_unknown "restart_unresolved" at 00:32:01.498Z. V7C's G7/G7b therefore
+correctly observed ZERO admitted/running occurrences — the gates are sound; V7C's kickstart
+(00:32:45Z) replaced 76251 (not 12649). The outcome_unknown is a casualty of the PRE-V7C
+spontaneous death, not of V7C. (Why 12649 died: outside runs.jsonl scope; no known mutation
+process was running per G6b; runtime self-recovered via KeepAlive exactly as designed. Non-blocking.)
+
+Strengthened acceptance evidence: f0fb5c6c (agt_article-publisher-agent — UNRELATED to this goal)
+minted a natural slot post-V7C and completed the full chain to succeeded (00:42:23→00:43:32).
+UNRELATED_JOBS_MINT now has direct unrelated-job proof.
+
+Recovery-leg coordinates (from timeline + occurrence record): jobId c9d52a33-eae7-4033-8331-7cec9e09134d ·
+occurrenceId occ:3ac47524eceae156 · runId run:occ:3ac47524eceae156 · owner agt_content-ops-agent ·
+reason "restart_unresolved: no termination proof at recovery" (trusted-runtime proven termination → R1).
