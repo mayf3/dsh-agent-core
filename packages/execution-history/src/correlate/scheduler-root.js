@@ -47,6 +47,9 @@ export async function buildSchedulerRoot(ctx, args) {
   }
 
   // Job admission facts (exists even when no occurrence was ever reserved).
+  // §5: the EXISTENCE of an enabled job proves nothing about any specific
+  // run's admission — it is a timeline fact, not a per-run verdict. Only a
+  // DISABLED gate yields a verdict (LEGAL_SKIP), because it bounds every run.
   if (job !== null) {
     records.push({
       source: 'scheduler_store', kind: 'job_definition', provenanceClass: 'PRIMARY_PERSISTED',
@@ -54,7 +57,9 @@ export async function buildSchedulerRoot(ctx, args) {
       nativeRefs: { job_id: job.id ?? job.jobId, ...(jobRouting(job) ? { agentId: jobRouting(job) } : {}) },
       dedupeKey: `job:${job.id ?? job.jobId}`, data: summarizeJob(job),
     })
-    observations.push(observation('schedulingAdmission', job.enabled === false ? VERDICTS.LEGAL_SKIP : VERDICTS.ADMITTED, { ruleId: 'R5', evidenceRefs: [String(job.id ?? job.jobId)], note: job.enabled === false ? 'job disabled' : 'job definition present in authority ledger' }))
+    if (job.enabled === false) {
+      observations.push(observation('schedulingAdmission', VERDICTS.LEGAL_SKIP, { ruleId: 'R5', evidenceRefs: [String(job.id ?? job.jobId)], note: 'job disabled — no run of it can be admitted while disabled' }))
+    }
   }
 
   const occurrences = occurrenceId !== undefined
@@ -74,10 +79,16 @@ export async function buildSchedulerRoot(ctx, args) {
   }
 
   // History events + run records for the resolved coordinates.
+  // §二 scoping: when the query names ONE occurrence, records of sibling
+  // occurrences of the same job never enter the timeline — not even when the
+  // authority ledger is unreadable (the store-absent world must WIDEN THE
+  // GAP, never the result set). The job-wide run_record projection applies
+  // ONLY to job-level queries.
+  const occurrenceScoped = occurrenceId !== undefined
   const occurrenceIds = new Set(occurrences.map((o) => o.occurrenceId))
   for (const rec of history.records) {
     const matches = (rec.nativeRefs.occurrence_id !== undefined && occurrenceIds.has(rec.nativeRefs.occurrence_id))
-      || (rec.kind === 'run_record' && jobId !== undefined && rec.nativeRefs.job_id === jobId && occurrences.length === 0)
+      || (rec.kind === 'run_record' && !occurrenceScoped && jobId !== undefined && rec.nativeRefs.job_id === jobId && occurrences.length === 0)
     if (!matches) continue
     records.push(rec)
     if (rec.kind === 'run_record') {
@@ -124,16 +135,34 @@ export async function buildSchedulerRoot(ctx, args) {
             if (obs !== null) observations.push(obs)
           }
         }
-        correlations.push(correlation('R5', { source: 'scheduler_store', nativeRef: occId }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}` }, [occId, entry.sessionId]))
+        correlations.push({
+          rule: 'R5',
+          // Honest provenance: when the authority ledger is outside the
+          // readable boundary the FROM side is the query coordinate, not an
+          // observed store row. Naming joins are WEAK — they never pose as
+          // precise execution evidence.
+          from: { source: occurrenceIds.has(occId) ? 'scheduler_store' : 'query_coordinate', nativeRef: occId },
+          to: { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}` },
+          evidenceRefs: [occId, entry.sessionId],
+          strength: 'WEAK_NAME_JOIN',
+        })
       }
   }
 
-  // Runtime-evidence invocation rows.
+  // Runtime-evidence invocation rows: included ONLY on an explicit coordinate
+  // match — an invocation without coordinates, or one belonging to another
+  // occurrence/job, is never pulled in by default (§二). When nothing can be
+  // matched the SOURCE_ABSENT/DEGRADED gap stands as-is.
   const evidence = ctx.source('runtime_evidence')
   for (const row of evidence.records) {
     const occ = row.nativeRefs.occurrenceId ?? row.data?.occurrenceId
-    if (occ === undefined && row.kind !== 'evidence_invocation') continue
-    if (occ !== undefined && occurrenceIds.size > 0 && !occurrenceIds.has(occ)) continue
+    const rowJob = row.nativeRefs.jobId ?? row.data?.jobId
+    const included = occurrenceScoped
+      ? (occ !== undefined && (occ === occurrenceId || occurrenceIds.has(occ)))
+      : (occurrenceIds.size > 0
+          ? (occ !== undefined && occurrenceIds.has(occ))
+          : (jobId !== undefined && rowJob === jobId))
+    if (!included) continue
     records.push(row)
   }
 

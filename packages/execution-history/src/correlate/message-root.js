@@ -29,15 +29,27 @@ export async function buildMessageRoot(ctx, args) {
     if (obs !== null) observations.push(obs)
   }
   if (asmHits.length === 0) {
-    const auditSource = ctx.source('asm_audit')
-    const preV1 = auditSource.archivePresent === false
-    gaps.push({
-      code: preV1 ? 'RETENTION_LOSS_PRE_V1' : 'CORRELATION_GAP',
-      stage: 'asm_audit',
-      reason: preV1
-        ? `no send-audit row matches ${needleKind}=${needle} and no WPA-1 archive exists — rows rotated before the archive amendment are permanently unprovable`
-        : `no send-audit row matches ${needleKind}=${needle} (outside live/.1/archive window, or not a send coordinate)`,
-    })
+    // §三 gap taxonomy — each cause speaks for itself, none over-claims:
+    //   DEGRADED  = read/permission failure in this boundary;
+    //   ABSENT    = source not present/readable here (never "didn't happen",
+    //               never "proven lost");
+    //   RETENTION_LOSS_PRE_V1 = STRUCTURALLY proven loss only: rotations are
+    //               visible (live + .1 both readable) while no WPA-1 archive
+    //               exists — generations older than the retained .1 were
+    //               discarded by the pre-amendment rotation;
+    //   otherwise = plain correlation gap (outside window / not a send).
+    const auditStatus = asm.status?.status
+    const labels = (asm.files ?? []).map((f) => f.label)
+    const rotationsVisible = labels.includes('live') && labels.includes('.1')
+    if (auditStatus === 'DEGRADED') {
+      gaps.push(gap('SOURCE_DEGRADED', 'asm_audit', { reason: `send-audit source unreadable in this boundary (${asm.status?.reason ?? 'degraded'}) — caller-side rows neither confirmed nor disproven` }))
+    } else if (auditStatus === 'ABSENT') {
+      gaps.push(gap('SOURCE_ABSENT', 'asm_audit', { reason: 'send-audit source not present/readable in this boundary — caller-side rows neither confirmed nor disproven' }))
+    } else if (!asm.archivePresent && rotationsVisible) {
+      gaps.push({ code: 'RETENTION_LOSS_PRE_V1', stage: 'asm_audit', reason: `no send-audit row matches ${needleKind}=${needle}; rotations are visible (live + .1) but no WPA-1 archive exists — generations older than the retained .1 were discarded by the pre-amendment rotation` })
+    } else {
+      gaps.push(gap('CORRELATION_GAP', 'asm_audit', { reason: `no send-audit row matches ${needleKind}=${needle} (outside live/.1/archive window, or not a send coordinate)` }))
+    }
   }
 
   // 2) Attempts ledger (workflow dispatch side).
@@ -67,6 +79,7 @@ export async function buildMessageRoot(ctx, args) {
     candidates = [...sessionIds].flatMap((sessionId) => lookups.bySessionId(sessionId))
     if (candidates.length === 0) candidates = lookups.byCorrelation(String(needle))
   }
+  let matchedSidecar = false
   for (const entry of uniqueByFile(candidates).slice(0, ctx.caps.maxSessionsPerQuery)) {
     const loaded = ctx.journal(entry.agentId, entry.sessionId)
     if (loaded === null) continue
@@ -78,12 +91,22 @@ export async function buildMessageRoot(ctx, args) {
     })
     const splicedHit = loaded.projected.spliced.find((s) => s.messageId === needle)
     if (splicedHit !== undefined) {
-      correlations.push(correlation('R6', { source: 'asm_audit', nativeRef: String(needle) }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${splicedHit.seq}` }, [String(needle)]))
+      // R6 from-side honesty: 'asm_audit' only when a caller-side audit row
+      // was actually observed; otherwise the needle itself is the coordinate.
+      const asmObserved = asmHits.length > 0
+      correlations.push({
+        rule: 'R6',
+        from: { source: asmObserved ? 'asm_audit' : 'query', nativeRef: String(needle) },
+        to: { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${splicedHit.seq}` },
+        evidenceRefs: [String(needle)],
+        ...(asmObserved ? {} : { strength: 'SIDECAR_PROVENANCE_ONLY' }),
+      })
       // The turn that consumed this message (next user message + turn/start).
       const start = view.turns?.find((t) => t.startSeq > splicedHit.seq)
       observations.push(observation('agentExecution', start !== undefined ? VERDICTS.STARTED : VERDICTS.UNKNOWN, { ruleId: 'R6', evidenceRefs: [`${entry.agentId}/${entry.sessionId}`], note: start !== undefined ? `consumed at turn starting seq=${start.startSeq}` : 'message spliced but no subsequent turn observed' }))
     }
-    // R1 reverse join: ASM requestId rows ↔ the exact target message.
+    // R1 reverse join: ASM requestId rows ↔ the exact target message. A row
+    // here was OBSERVED — asm_audit provenance is honest for this arm.
     for (const row of asmHits) {
       const rowMessageId = row.nativeRefs.messageId
       if (rowMessageId === undefined) continue
@@ -93,11 +116,26 @@ export async function buildMessageRoot(ctx, args) {
         correlations.push(correlation('R1', { source: 'asm_audit', nativeRef: row.nativeRefs.requestId ?? rowMessageId }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${rowMessageId}` }, [rowMessageId]))
       }
     }
+    // Sidecar-provenance arm: the RECEIVE-side journal record itself carries
+    // the parent-turn correlation. That proves the message ↔ parent-turn
+    // linkage — it does NOT identify the specific caller send invocation, so
+    // the evidence source is THIS session record (never a synthesized ASM
+    // row) and the precise-caller gap stays open.
     for (const msg of view.messages ?? []) {
-      if (msg.source?.correlation === needle) {
-        correlations.push(correlation('R1', { source: 'asm_audit', nativeRef: msg.source.correlation ?? String(needle) }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${msg.seq}` }, [String(needle)]))
-      }
+      const correlation = msg.source?.correlation ?? msg.correlation
+      if (correlation !== needle) continue
+      correlations.push({
+        rule: 'R1',
+        from: { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${msg.seq} (inserted source sidecar)` },
+        to: { source: 'query', nativeRef: String(needle) },
+        evidenceRefs: [String(needle)],
+        strength: 'SIDECAR_PROVENANCE_ONLY',
+      })
+      matchedSidecar = true
     }
+  }
+  if (matchedSidecar && asmHits.length === 0) {
+    gaps.push(gap('CORRELATION_GAP', 'caller_send_invocation', { reason: `parent-turn correlation ${needle} anchors the receive side only; no caller-side send invocation row was observed in the readable boundary — the precise dispatch call is unproven (kept open, not synthesized)` }))
   }
 
   // 4) turn-recovery durable records (handle-shaped needles only).

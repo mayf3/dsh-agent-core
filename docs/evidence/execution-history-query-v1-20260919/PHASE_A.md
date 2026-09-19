@@ -1,46 +1,47 @@
-# EXECUTION_HISTORY_QUERY_V1 — Phase A 真实样本只读验收（2026-09-19）
+# EXECUTION_HISTORY_QUERY_V1 — Phase A 真实样本只读验收（2026-09-19，r4 口径修订版）
 
 > Spec: `docs/specs/AGENT_CORE_EXECUTION_HISTORY_QUERY_V1.md` (accepted) §9。
-> 边界：**全只读**。session corpus（world-readable）直读；authsvc-only 存储（ASM audit、
-> attempts ledger、scheduler store/history、runtime-evidence、turn-recovery）按访问矩阵
-> 指向空临时目录 → 诚实的 SOURCE_ABSENT/DEGRADED，不伪造。索引与产物写入 /tmp 与本目录。
-> 产物只含坐标（IDs/序号/关联），**不含任何消息正文**（隐私边界，§4.3 精神）。
-> 生产 mutation：**零**（本验收在 PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1 冻结期内执行，
-> 纯离线读；部署=Phase B，按冻结暂停，待 Owner 队列）。
+> 边界：**全只读**。session corpus（world-readable）直读；**authsvc-only 存储以空目录
+> 代替是本次测试的读取范围限制——它只证明"本边界内读不到"，不构成生产权威源不存在
+> 或已丢失的证明**。查询层据此输出 SOURCE_ABSENT/SOURCE_DEGRADED（而非丢失断言）。
+> 产物只含坐标（IDs/序号/关联），不含任何消息正文。
+> 生产 mutation：**零**（执行于 PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1 冻结期内，纯离线读）。
 
 ## 运行
 
 ```
-node phase-a-run.mjs --homes /Users/authsvc/.agent-core/homes --out /tmp/ehq-phase-a-final
+node phase-a-run.mjs --homes /Users/authsvc/.agent-core/homes --out /tmp/ehq-phase-a-postfix
 ```
 
-- 语料：765 个 session.jsonl（669→765 含当日新文件）；索引构建 1052ms（2 MiB/文件扫描帽，
-  31 个部分扫描如实标记）；含 workflow 坐标的 journal=319，含 inter_agent sidecar=43。
-- 查询核心 = `packages/execution-history/src/index.js`（与 broker 工具同一核心，零分支差异）。
+- 语料：772 个 session.jsonl；索引 1053ms（部分扫描 31 如实标记；unreadable=0）。
+- 含 workflow 坐标 journal=324、inter_agent sidecar journal=43。
+- 查询核心 = `packages/execution-history/src/index.js`（与 broker 工具同一核心）。
+- 本版已吸收 Owner 反例修订（r4）：intent≠ACCEPTED、job-enabled≠ADMITTED、
+  occurrence 查询严格作用域、保留损失仅在结构可证时断言、sidecar 关联来源=Session 记录、
+  父 turn correlation ≠ 具体发送调用（caller 缺口保留）。
 
-## 五链结果（结构化产物见同目录 *.json）
+## 五链结果（产物 *.json；timeline 条数是记录数，不是执行操作数）
 
-| 链 | 真实样本 | 结果 | 诚实缺口（按 §5 显式输出） |
+| 链 | 真实样本 | 结果（修订后语义） | 诚实缺口 |
 |---|---|---|---|
-| A1 workflow_instance | 索引选出的真实实例（agtv8 UUID，来自真实 tool-call 坐标，`A1_workflow_instance.json`） | ok；session_view 定位到真实 journal（agt_arch-reviewer/main 与 agt_hr-agent cron session 的 R4 坐标关联） | `SOURCE_ABSENT svc`（离线无 caller credential）、`CORRELATION_GAP dispatch_attempts`（ledger authsvc-only） |
-| A2 scheduler occurrence | `occ:003A001022a7134495ba`（真实 agt_hr-agent cron-run 目录名反推） | ok；**R5 命名约定 join 命中真实 cron-run session**，agentExecution=STARTED（turn 存在） | `SOURCE_ABSENT scheduler_store ×2` |
-| A3 A2A 接收侧 | agt_product-manager/main 真实 inter_agent 注入消息 | ok；sidecar 坐标可见：sourceAgentId=agt_course-community-agent-2、correlation=turn:a4994258-…（seq 精确定位，多任务不混淆） | `CORRELATION_GAP inbound_dispatch`（ASM 行 authsvc-only） |
-| A3b correlation 反查 | 用 A3 的真实 correlation（=源 turnExecutionId）作 message 根 | ok；**反查命中目标 journal**（12 条 timeline），R1 关联 rule 落地 | `RETENTION_LOSS_PRE_V1`（无 WPA-1 archive 的离线世界，如实标注） |
-| A4 独立 session | agt_stock_agent/main（无 workflow 依赖） | ok；输入/turn 坐标独立还原 | 同 A3 的调用侧缺口 |
+| A1 workflow_instance | 索引选出的真实实例 | ok；session_view 定位相关 journal | `SOURCE_ABSENT svc`（本边界无 caller credential=测试范围限制）；`CORRELATION_GAP dispatch_attempts`（ledger 本边界不可读） |
+| A2 scheduler occurrence | `occ:003A001022a7134495ba` | ok；R5 **WEAK_NAME_JOIN**（from=query_coordinate，弱关联如实标注）命中真实 cron session；agentExecution=STARTED | `SOURCE_ABSENT scheduler_store ×2`；**该 STARTED 依托弱命名关联，非精确 run↔turn 证据（Phase B 项）** |
+| A3 A2A 接收侧 | agt_product-manager/main 真实 inter_agent 注入 | ok；sidecar 坐标可见（sourceAgentId/correlation，seq 精确） | `CORRELATION_GAP inbound_dispatch`（ASM 行本边界不可读） |
+| A3b correlation 反查 | 真实源 turnExecutionId | ok；R1 **SIDECAR_PROVENANCE_ONLY**、from=session_journal——只证明"该 Session 记录把消息锚到该父 turn"；**精确发送链未闭合** | `SOURCE_ABSENT asm_audit` + `CORRELATION_GAP caller_send_invocation`（缺口保留，不合成调用方审计来源） |
+| A4 独立 session | agt_stock_agent/main | ok；独立还原输入/turn 坐标 | 同 A3 |
 
-## 判定
+## 判定（r4 口径）
 
-- **Phase A = PASS（离线边界内的四类查询根 × 真实数据全部可查询、可解释、缺口显式）**。
-  每条关键结论都能回查到坐标级证据引用（nativeRefs/sampleRefs）；"查不到 ≠ 没发生"在三处
-  SOURCE_ABSENT 场景下按 §5 输出 UNKNOWN+缺口码，无一例伪造链路。
-- **Phase B（部署后经 broker 产品入口重放四链）= BLOCKED_BY_FREEZE**：
-  `PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1` 首次接管期间暂停一切生产 mutation（含本 Goal
-  的 runtime 部署与 auth-service 两 scope grant）。接手：freeze 解除后按 Spec §10 排队执行
-  （grant packet → PRODUCTION_DEPLOY_QUEUE → 部署 → broker 实调四链）。
-- Phase A 中发现并已回灌产品的真实格式事实（implementation r3 吸收）：
-  1. tool args/results 在 journal 中是**转义 JSON 字符串** → 索引正则升级为转义容忍形；
-  2. spliced 的 `inserted[]` 才携带 source sidecar（无独立 messageId 字段，旧 seam 构建）→
-     projectJournal 提取 inserted[] 为注入消息；
-  3. correlation（=源 turnExecutionId）是可索引的反查坐标 → 索引新增 interAgentCorrelations
-     键 + message 根反查回退（A3b 即其真实命中）；
-  4. 权威账本不可读时，occurrence 坐标仍驱动命名约定 join（A2 的 R5 命中即该退化路径）。
+- **Phase A = PASS，但结论限定为：在只读离线边界内，四类查询根都能对真实数据给出
+  可解释、缺口显式的轨迹**。它**不证明**：生产权威源的内容状态、精确发送链闭合、
+  或任何一次真实运行的操作级事实——那些需要 Phase B 的边界内读取。
+- Phase B 检查项（=部署后经 broker 工具的只读查询重放；**不是**重放任务或消息）：
+  1. A1/A2 在权威源可读边界内复跑：occurrence-scoped 查询无同 job 兄弟 run 混入
+     （本修订的回归测试已钉该语义，生产数据复核一次）；
+  2. A3/A3b 在 ASM 审计可读边界内复跑：`caller_send_invocation` 缺口应被真实
+     requestId 关联闭合（R1 from=asm_audit），弱关联升级为精确关联；
+  3. WPA-1 生效后新轮转产生 archive：RETENTION_LOSS_PRE_V1 仅对历史代成立；
+  4. `workflow_execution` sidecar 出现首条真实样本后，A1 链补齐 sidecar 证据级；
+  5. self/audit 双工具的鉴权实调（Owner 或获权 agent 经飞书触发一次）。
+- Phase B **BLOCKED_BY_FREEZE**：`PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1` 解除后，
+  按 Spec §10：grant packet → PRODUCTION_DEPLOY_QUEUE → 部署 → 上列检查项。

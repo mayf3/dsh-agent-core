@@ -72,7 +72,7 @@ export async function buildWorkflowRoot(ctx, args) {
   const attemptMessageIds = []
   for (const proj of attempts) {
     records.push(...proj.events.map((rec) => ({ ...rec, dedupeKey: `att:${proj.nodeVisitId}:${rec.dedupeKey}` })))
-    observations.push(classifyAttempt(proj))
+    observations.push(...classifyAttempt(proj))
     correlations.push(correlation('R2', { source: 'svc_timeline', nativeRef: `nodeVisit:${proj.nodeVisitId}` }, { source: 'attempts_ledger', nativeRef: proj.attemptId }, [proj.attemptId]))
     const delivered = proj.events.find((e) => e.kind === 'attempt_run_delivered')
     if (typeof delivered?.data?.messageId === 'string') attemptMessageIds.push(delivered.data.messageId)

@@ -7,7 +7,7 @@
   "ok": true,
   "result": {
     "reportId": "ehq-24218aa27fffd799",
-    "asOfUtc": "2026-09-19T00:05:59.006Z",
+    "asOfUtc": "2026-09-19T00:55:05.295Z",
     "fiveDimensions": {
       "schedulingAdmission": {
         "verdict": "UNKNOWN",
@@ -70,6 +70,16 @@
         "name": "svc_submissions",
         "status": "ABSENT",
         "reason": "svc transport unavailable"
+      },
+      {
+        "name": "journal:agt_arch-reviewer::main",
+        "status": "OK",
+        "reason": null
+      },
+      {
+        "name": "journal:agt_hr-agent::cron-run-occ~003Af6e50c7cd11c39c7",
+        "status": "OK",
+        "reason": null
       }
     ],
     "timelineCount": 2,

@@ -7,7 +7,7 @@
   "ok": true,
   "result": {
     "reportId": "ehq-f4b984900a38c9fc",
-    "asOfUtc": "2026-09-19T00:05:59.032Z",
+    "asOfUtc": "2026-09-19T00:55:05.320Z",
     "fiveDimensions": {
       "schedulingAdmission": {
         "verdict": "UNKNOWN",
@@ -66,6 +66,11 @@
         "name": "runtime_evidence",
         "status": "ABSENT",
         "reason": "runtime evidence absent"
+      },
+      {
+        "name": "journal:agt_hr-agent::cron-run-occ~003A001022a7134495ba",
+        "status": "OK",
+        "reason": null
       }
     ],
     "timelineCount": 1,
@@ -76,7 +81,7 @@
       {
         "rule": "R5",
         "from": {
-          "source": "scheduler_store",
+          "source": "query_coordinate",
           "nativeRef": "occ:003A001022a7134495ba"
         },
         "to": {
@@ -86,7 +91,8 @@
         "evidenceRefs": [
           "occ:003A001022a7134495ba",
           "cron-run-occ~003A001022a7134495ba"
-        ]
+        ],
+        "strength": "WEAK_NAME_JOIN"
       }
     ],
     "gaps": [

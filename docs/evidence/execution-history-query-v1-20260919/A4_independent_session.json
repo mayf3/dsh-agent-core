@@ -8,7 +8,7 @@
   "ok": true,
   "result": {
     "reportId": "ehq-2d91d572185ab20f",
-    "asOfUtc": "2026-09-19T00:05:59.040Z",
+    "asOfUtc": "2026-09-19T00:55:05.328Z",
     "fiveDimensions": {
       "schedulingAdmission": {
         "verdict": "UNKNOWN",
@@ -63,6 +63,11 @@
         "name": "runtime_evidence",
         "status": "ABSENT",
         "reason": "runtime evidence absent"
+      },
+      {
+        "name": "journal:agt_stock_agent::cron-run-occ~003A664c36350acd1fb9",
+        "status": "OK",
+        "reason": null
       }
     ],
     "timelineCount": 1,

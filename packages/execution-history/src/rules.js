@@ -95,7 +95,12 @@ function pick(facts, precedence) {
 export function classifySendOutcome(row) {
   const refs = row.nativeRefs ?? {}
   if (row.kind === 'send_intent') {
-    return observation('messageDelivery', VERDICTS.ACCEPTED, { ruleId: 'R1', evidenceRefs: [refs.requestId].filter(Boolean), note: 'intent recorded pre-delivery' })
+    // §5: an intent row is written BEFORE delivery — it is not a receipt.
+    // ACCEPTED is reserved for the outcome row's proven `result: 'accepted'`;
+    // an intent alone must never mint a delivery verdict (and must never
+    // mask a later failure/unknown: UNKNOWN ranks below every concrete
+    // outcome in the reducer precedence).
+    return observation('messageDelivery', VERDICTS.UNKNOWN, { ruleId: 'R1', evidenceRefs: [refs.requestId].filter(Boolean), note: 'send intent recorded pre-delivery — no receipt observed yet (intent ≠ accepted)' })
   }
   if (row.kind === 'send_outcome') {
     const result = row.data?.result
@@ -109,25 +114,34 @@ export function classifySendOutcome(row) {
   return null
 }
 
-/** Attempts ledger projection → agentExecution/businessProgress facts. */
+/** Attempts ledger projection → agentExecution/businessProgress facts.
+ * Returns an ARRAY: every generation's outcome stays visible — an earlier
+ * delivered receipt never masks a later generation's fence/supersession. */
 export function classifyAttempt(proj) {
-  const kinds = new Set(proj.events.map((e) => e.kind))
   const delivered = proj.events.find((e) => e.kind === 'attempt_run_delivered')
   const failed = proj.events.find((e) => e.kind === 'attempt_delivery_failed')
   const stale = proj.events.find((e) => e.kind === 'attempt_stale_superseded')
+  const fence = proj.events.find((e) => e.kind === 'attempt_delivery_started')
   const refs = [proj.attemptId, proj.workflowInstanceId].filter(Boolean)
+  const out = []
   if (delivered !== undefined) {
     const hasMessage = typeof delivered.data?.messageId === 'string'
-    return observation('agentExecution', hasMessage ? VERDICTS.ACCEPTED : VERDICTS.NO_RECEIPT, {
+    out.push(observation('agentExecution', hasMessage ? VERDICTS.ACCEPTED : VERDICTS.NO_RECEIPT, {
       ruleId: 'R3',
       evidenceRefs: refs.concat(hasMessage ? [delivered.data.messageId] : []),
       note: hasMessage ? undefined : 'run_delivered without messageId — receipt loss visible',
-    })
+    }))
+  } else if (failed !== undefined) {
+    out.push(observation('agentExecution', VERDICTS.FAILED, { ruleId: 'R3', evidenceRefs: refs }))
+  } else if (fence !== undefined) {
+    out.push(observation('agentExecution', VERDICTS.OUTCOME_UNKNOWN, { ruleId: 'R3', evidenceRefs: refs, note: 'delivery fence open — outcome unknown, side effects possible' }))
+  } else {
+    out.push(observation('agentExecution', VERDICTS.UNKNOWN, { ruleId: 'R2', evidenceRefs: refs }))
   }
-  if (stale !== undefined) return observation('agentExecution', VERDICTS.LEGAL_SKIP, { ruleId: 'R2', evidenceRefs: refs, note: `stale superseded at stateVersion ${stale.data?.observedWorkflowStateVersion ?? '?'}` })
-  if (failed !== undefined) return observation('agentExecution', VERDICTS.FAILED, { ruleId: 'R3', evidenceRefs: refs })
-  if (kinds.has('attempt_delivery_started')) return observation('agentExecution', VERDICTS.OUTCOME_UNKNOWN, { ruleId: 'R3', evidenceRefs: refs, note: 'delivery fence open — outcome unknown, side effects possible' })
-  return observation('agentExecution', VERDICTS.UNKNOWN, { ruleId: 'R2', evidenceRefs: refs })
+  if (stale !== undefined) {
+    out.push(observation('agentExecution', VERDICTS.LEGAL_SKIP, { ruleId: 'R2', evidenceRefs: refs.concat([String(stale.data?.observedWorkflowStateVersion ?? '')]), note: `a later generation superseded this attempt at stateVersion ${stale.data?.observedWorkflowStateVersion ?? '?'}` }))
+  }
+  return out
 }
 
 /** svc timeline events (workflow_execute transitions / admin events). */
