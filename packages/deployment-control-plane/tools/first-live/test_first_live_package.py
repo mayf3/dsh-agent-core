@@ -1,4 +1,6 @@
 import copy
+import json
+from pathlib import Path
 import unittest
 import first_live_package as p
 
@@ -11,12 +13,12 @@ def packet():
 
 class Mapping(unittest.TestCase):
     def test_fixed_successor_identity_and_predecessor_binding(self):
-        self.assertEqual(p.EXECUTION_ID,'first-live-dsh-20260918-01-p4r13-successor')
+        self.assertEqual(p.EXECUTION_ID,'first-live-dsh-20260918-01-p4r15-recovery-successor')
         self.assertEqual(p.PREDECESSOR['operation_id'],p.OPERATION)
-        self.assertEqual(p.PREDECESSOR['execution_id'],'first-live-dsh-20260918-01-p4r10-successor')
-        self.assertEqual(p.PREDECESSOR['package_sha256'],'f79dce644e89e1e2386dabf2b1bd2a385640a0d25cc839cac90b1eb49ab2d026')
-        self.assertEqual(p.PREDECESSOR['plan_sha256'],'e0d546e16dedd1d96211e001e13dba909b3be11e002d66b36debb68b0d1366a0')
-        self.assertEqual(p.PREDECESSOR['stop_class'],'LEGACY_FENCE_EFFECT_ABSENT')
+        self.assertEqual(p.PREDECESSOR['execution_id'],'first-live-dsh-20260918-01-p4r13-successor')
+        self.assertEqual(p.PREDECESSOR['package_sha256'],'43d3a4661f768d9bdfd32349e8aa87c11a9ae1a7cf22a9f20895beb0df00d68d')
+        self.assertEqual(p.PREDECESSOR['plan_sha256'],'72e3201520c617e96342ecf04214e92041add0765bfc9263cca2e0f064cea7c7')
+        self.assertEqual(p.PREDECESSOR['stop_class'],'FIRST_LIVE_SERVICE_SUDO_POLICY')
         self.assertIs(p.PREDECESSOR['consumed'],True)
         self.assertIs(p.PREDECESSOR['retry_forbidden'],True)
         self.assertIs(p.PREDECESSOR['production_mutation_performed'],True)
@@ -41,16 +43,16 @@ class Mapping(unittest.TestCase):
     def test_reconciliation_commands_cover_new_source_tools_and_active_copy_readback(self):
         x=packet();x['previous']={k:'a'*64 for k in ['installation_receipt_sha256','service_sha256',
             'trust_sha256','issuer_policy_sha256','registry_sha256']}
-        rec={'staging_files':{'packet.json':{'sha256':'8'*64}}}
+        rec=json.loads(Path(__file__).with_name('p4r14-successor-reconciliation.json').read_text())
         commands=p.commands(x,'9'*64,rec)
-        active=p.ROOT+'/first-live-operation/successor-reconciliation.json'
+        active=p.P4R15_RECONCILIATION+'/complete.json'
         self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,active],commands)
         self.assertIn(['/bin/ls','-ldeO',active],commands)
         self.assertIn(['/bin/cat',active],commands)
-        self.assertIn(['/bin/mv',p.PACKET,p.P4R12_PACKET_ARCHIVE],commands)
+        self.assertIn(['/bin/mv',p.PACKET,p.P4R14_PACKET_ARCHIVE],commands)
         self.assertIn(['/bin/sync'],commands)
         for name in ['original-agent-deployd','original-agent-deploy-issuer']:
-            archived=p.P4R12_PACKET_ARCHIVE+'/'+name
+            archived=p.P4R14_PACKET_ARCHIVE+'/'+name
             self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,archived],commands)
             self.assertIn(['/bin/ls','-ldeO',archived],commands)
             self.assertIn(['/bin/cat',archived],commands)

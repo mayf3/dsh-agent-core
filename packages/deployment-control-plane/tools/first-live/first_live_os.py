@@ -112,7 +112,7 @@ class OperatorIO:
         require(m['ordinary_argv_allowlist']==[['/usr/bin/python3','-I','-S','-B',str(self.package/'first_live_launcher.py'),'--broker-exact']],'ORDINARY_ARGV')
         for row in m['root_argv_allowlist']:
             require(row[0] in TOOLS-{'/usr/bin/sudo','/usr/bin/python3'} or
-                row in ([NATIVE,'--first-live-and-enable'],[NATIVE,'--first-live-completion']), 'ROOT_PROGRAM')
+                row in ([NATIVE,'--first-live-recovery-and-enable'],[NATIVE,'--first-live-completion']), 'ROOT_PROGRAM')
             if row[0]=='/usr/bin/install' and row!=SOCKET_DIRECTORY_INSTALL:
                 require(len(row)==9 and row[:3]==['/usr/bin/install','-o','root'] and
                     row[3]=='-g' and row[5]=='-m' and row[7]=='/dev/fd/0' and
@@ -134,7 +134,7 @@ class OperatorIO:
         require(Path(__file__).absolute()==self.package/'first_live_os.py','OPERATOR_LOCATION')
         required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py',
             'broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py',
-            'p4r12_reconcile.py'}
+            'p4r14_reconcile.py'}
         require(required==set(m['operator_files']),'OPERATOR_SET')
         for name,digest in m['operator_files'].items():
             require(re.fullmatch(r'[a-z0-9_]+\.py',name),'OPERATOR_NAME');exact_digest(digest)
@@ -388,8 +388,8 @@ class OperatorIO:
         require(type(argv) is list and all(type(x) is str for x in argv),'ARGV_SCHEMA')
         self._ready(argv)
         require(argv in self.manifest['root_argv_allowlist' if root else 'ordinary_argv_allowlist'],'ARGV_NOT_AUTHORIZED')
-        require(not visible or root and argv==[NATIVE,'--first-live-and-enable'],'VISIBLE_COMMAND_NOT_AUTHORIZED')
-        require(argv!=[NATIVE,'--first-live-and-enable'] or visible,'NATIVE_VISIBLE_REQUIRED')
+        require(not visible or root and argv==[NATIVE,'--first-live-recovery-and-enable'],'VISIBLE_COMMAND_NOT_AUTHORIZED')
+        require(argv!=[NATIVE,'--first-live-recovery-and-enable'] or visible,'NATIVE_VISIBLE_REQUIRED')
         if expected_digest is not None:exact_digest(expected_digest)
         if argv==SOCKET_DIRECTORY_INSTALL:
             require(stdin is None,'DIRECTORY_INSTALL_STDIN_FORBIDDEN')

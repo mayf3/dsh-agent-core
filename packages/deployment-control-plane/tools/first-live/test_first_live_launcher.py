@@ -9,7 +9,7 @@ import unittest
 
 FILES={'first_live_launcher.py','first_live_os.py','first_live_io.py','first_live_operator.py',
        'first_live_package.py','bind_records.py','broker_first_delivery.py','broker_delivery_io.py',
-       'p4r12_reconcile.py'}
+       'p4r14_reconcile.py'}
 PYTHON='/usr/bin/python3'
 
 
@@ -30,7 +30,7 @@ class SourceOnly(unittest.TestCase):
         (self.package/'first_live_operator.py').write_text(program)
         (self.package/'broker_delivery_io.py').write_text(program)
         self.manifest={'version':1,'operation_id':'first-live-dsh-20260918-01',
-                       'execution_id':'first-live-dsh-20260918-01-p4r13-successor','predecessor':{},
+                       'execution_id':'first-live-dsh-20260918-01-p4r15-recovery-successor','predecessor':{},
                        'operator_files':{n:sha((self.package/n).read_bytes()) for n in FILES}}
         self.freeze()
 
