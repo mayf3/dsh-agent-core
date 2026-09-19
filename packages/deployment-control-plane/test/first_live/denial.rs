@@ -274,6 +274,17 @@ fn production_context_refuses_nonroot_without_real_file_access() {
         "ROOT_REQUIRED"
     );
 }
+
+#[test]
+fn denial_child_receives_only_bounded_supplementary_groups() {
+    let full_groups = [
+        12, 20, 33, 61, 79, 80, 81, 98, 100, 204, 250, 395, 398, 399, 400, 599, 602,
+    ];
+    assert_eq!(
+        caller_supplementary_groups(&full_groups).unwrap(),
+        vec![12, 33, 61, 79, 80, 81, 98, 100, 204, 250, 395, 398, 399, 400, 599, 602]
+    );
+}
 #[test]
 fn reaper_does_not_signal_a_process_owned_by_another_parent() {
     assert_ne!(unsafe { libc::geteuid() }, 0);

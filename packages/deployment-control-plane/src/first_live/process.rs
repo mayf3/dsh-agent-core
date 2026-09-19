@@ -254,7 +254,7 @@ fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result
     }
 }
 
-fn supplementary_groups(gid: u32, groups: &[u32]) -> Result<Vec<u32>> {
+pub(super) fn supplementary_groups(gid: u32, groups: &[u32]) -> Result<Vec<u32>> {
     let mut unique = std::collections::BTreeSet::new();
     require(
         groups.len() <= 32
