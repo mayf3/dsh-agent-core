@@ -3,13 +3,25 @@ use super::{context::Context, credentials::Identity, environment, image, reader,
 use crate::{error::require, Error, Result};
 pub(super) struct Owned {
     identities: Vec<Identity>,
+    executable: String,
+    digest: String,
 }
 impl Owned {
     pub(super) fn capture(ctx: &Context<'_>) -> Result<Self> {
+        Self::capture_exact(
+            ctx,
+            "/usr/local/libexec/agent-deployd/agent-deployd",
+            &ctx.grant.controller_sha256,
+        )
+    }
+    pub(super) fn capture_probe(ctx: &Context<'_>, executable: &str, digest: &str) -> Result<Self> {
+        Self::capture_exact(ctx, executable, digest)
+    }
+    fn capture_exact(ctx: &Context<'_>, executable: &str, digest: &str) -> Result<Self> {
         ctx.check()?;
         let current = reader::identity(std::process::id())?;
         require(
-            current.executable.as_deref() == Some("/usr/local/libexec/agent-deployd/agent-deployd"),
+            current.executable.as_deref() == Some(executable),
             "HOST_OPERATOR_IDENTITY",
         )?;
         let mut identities = vec![current];
@@ -25,7 +37,11 @@ impl Owned {
             )?;
             identities.push(parent);
         }
-        let this = Self { identities };
+        let this = Self {
+            identities,
+            executable: executable.into(),
+            digest: digest.into(),
+        };
         this.verify(ctx)?;
         Ok(this)
     }
@@ -41,11 +57,8 @@ impl Owned {
             )?;
             if index == 0 {
                 let before_environment = environment::running(identity.pid)?;
-                let actual = image::protected("/usr/local/libexec/agent-deployd/agent-deployd")?;
-                require(
-                    actual.digest == ctx.grant.controller_sha256,
-                    "HOST_OPERATOR_CODE",
-                )?;
+                let actual = image::protected(&self.executable)?;
+                require(actual.digest == self.digest, "HOST_OPERATOR_CODE")?;
                 require(
                     environment::running(identity.pid)? == before_environment,
                     "HOST_ENVIRONMENT_DRIFT",

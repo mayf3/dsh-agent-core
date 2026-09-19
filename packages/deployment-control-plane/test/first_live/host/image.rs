@@ -37,3 +37,65 @@ fn writable_alias_setid_wrong_owner_and_hardlink_are_refused() {
     std::fs::remove_file(sibling).unwrap();
     assert!(result.is_err());
 }
+
+#[test]
+fn streaming_digest_accepts_a_file_larger_than_the_command_output_bound() {
+    use std::os::unix::fs::PermissionsExt;
+    let p = tempfile::NamedTempFile::new().unwrap();
+    p.as_file().set_len(129 * 1024 * 1024).unwrap();
+    p.as_file()
+        .set_permissions(std::fs::Permissions::from_mode(0o600))
+        .unwrap();
+    let mut expected = sha2::Sha256::new();
+    use sha2::Digest as _;
+    let zero = vec![0u8; 1024 * 1024];
+    for _ in 0..129 {
+        expected.update(&zero);
+    }
+    let expected = hex::encode(expected.finalize());
+    let mut f = p.reopen().unwrap();
+    assert_eq!(
+        stream_digest(
+            &mut f,
+            unsafe { libc::geteuid() },
+            512 * 1024 * 1024,
+            &expected,
+            || Ok(()),
+        )
+        .unwrap(),
+        expected
+    );
+}
+
+#[test]
+fn streaming_digest_rejects_content_mismatch_and_mid_read_metadata_change() {
+    use std::os::unix::fs::PermissionsExt;
+    let mut p = tempfile::NamedTempFile::new().unwrap();
+    use std::io::Write;
+    p.write_all(b"fixed").unwrap();
+    p.as_file()
+        .set_permissions(std::fs::Permissions::from_mode(0o600))
+        .unwrap();
+    let mut f = p.reopen().unwrap();
+    assert!(stream_digest(
+        &mut f,
+        unsafe { libc::geteuid() },
+        1024,
+        &crate::fs::file::sha(b"different"),
+        || Ok(()),
+    )
+    .is_err());
+
+    let changed = p.path().to_path_buf();
+    assert!(stream_digest(
+        &mut f,
+        unsafe { libc::geteuid() },
+        1024,
+        &crate::fs::file::sha(b"fixed"),
+        || {
+            std::fs::set_permissions(&changed, std::fs::Permissions::from_mode(0o400))?;
+            Ok(())
+        },
+    )
+    .is_err());
+}

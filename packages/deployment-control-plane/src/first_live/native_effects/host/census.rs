@@ -18,20 +18,26 @@ mod tests;
 
 use super::{context::Context, credentials, inspect, owned::Owned, policy, reader};
 use crate::{error::require, Error, Result};
-pub(super) fn prove(
+fn observe(
     ctx: &Context<'_>,
     phase: &str,
     services: &crate::transaction::ServiceImage,
     tail: &Identity,
     owned: &Owned,
-) -> Result<String> {
+    readonly: bool,
+) -> Result<serde_json::Value> {
     ctx.check()?;
     owned.verify(ctx)?;
     let expected_services = crate::trust::digest(&services.components)?;
+    let current = || {
+        if readonly {
+            super::super::readonly_components(ctx.packet)
+        } else {
+            crate::transaction::first_live_components(&ctx.packet.native_enrollment.maintenance()?)
+        }
+    };
     require(
-        crate::trust::digest(&crate::transaction::first_live_components(
-            &ctx.packet.native_enrollment.maintenance()?,
-        )?)? == expected_services,
+        crate::trust::digest(&current()?)? == expected_services,
         "HOST_SERVICE_DRIFT",
     )?;
     let before = reader::snapshot()?;
@@ -91,13 +97,37 @@ pub(super) fn prove(
     let after = reader::snapshot()?;
     credentials::stable(&before, &after)?;
     require(
-        crate::trust::digest(&crate::transaction::first_live_components(
-            &ctx.packet.native_enrollment.maintenance()?,
-        )?)? == expected_services,
+        crate::trust::digest(&current()?)? == expected_services,
         "HOST_SERVICE_DRIFT",
     )?;
     ctx.check()?;
-    let proof = serde_json::json!({"version":1,"operation_id":ctx.packet.operation_id,"packet_sha256":ctx.grant.packet_sha256,"controller_sha256":ctx.grant.controller_sha256,"phase":phase,"all_pid_count":before.len(),"selector_digest":crate::trust::digest(&before)?,"roles":observations});
+    Ok(
+        serde_json::json!({"version":1,"operation_id":ctx.packet.operation_id,"packet_sha256":ctx.grant.packet_sha256,"controller_sha256":ctx.grant.controller_sha256,"phase":phase,"all_pid_count":before.len(),"selector_digest":crate::trust::digest(&before)?,"roles":observations}),
+    )
+}
+pub(super) fn prove(
+    ctx: &Context<'_>,
+    phase: &str,
+    services: &crate::transaction::ServiceImage,
+    tail: &Identity,
+    owned: &Owned,
+) -> Result<String> {
+    let proof = observe(ctx, phase, services, tail, owned, false)?;
     crate::first_live::files::publish(ctx.area, &format!("host-roles-{phase}.json"), &proof)?;
     crate::trust::digest(&proof)
+}
+pub(super) fn probe(
+    ctx: &Context<'_>,
+    services: &crate::transaction::ServiceImage,
+    tail: &Identity,
+    owned: &Owned,
+) -> Result<String> {
+    crate::trust::digest(&observe(
+        ctx,
+        "readonly-burn-in",
+        services,
+        tail,
+        owned,
+        true,
+    )?)
 }

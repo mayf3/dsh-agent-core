@@ -29,6 +29,10 @@ pub fn run_first_live_fence_capability_probe() -> Result<serde_json::Value> {
     first_live::run_fence_capability_probe()
 }
 
+pub fn run_first_live_host_readonly_probe() -> Result<serde_json::Value> {
+    first_live::run_host_readonly_probe()
+}
+
 pub fn run_first_live_and_enable() -> Result<()> {
     service::first_live::fresh()?;
     first_live::run_first_live()?;

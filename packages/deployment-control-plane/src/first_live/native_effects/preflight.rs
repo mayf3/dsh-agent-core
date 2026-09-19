@@ -55,6 +55,49 @@ pub(super) struct Prepared {
     pub packet: super::super::packet::Packet,
     pub grant: super::super::gate::Grant,
 }
+pub(super) fn probe() -> Result<Prepared> {
+    use super::super::{files, gate, materialize, packet::Packet};
+    use crate::fs::{file::snapshot, secure::Dir};
+    use std::{os::unix::fs::MetadataExt, path::Path};
+    require(unsafe { libc::geteuid() } == 0, "FIRST_LIVE_REQUIRES_ROOT")?;
+    let packet_dir = Dir::open(Path::new("/private/var/db/agent-deploy-first-live"), 0)?;
+    require(
+        packet_dir.file.metadata()?.mode() & 0o7777 == 0o700,
+        "FIRST_LIVE_PACKET_MODE",
+    )?;
+    let packet_raw = files::raw(&packet_dir, "packet.json")?;
+    let packet: Packet =
+        serde_json::from_value(crate::verification::documents::strict_json(&packet_raw)?)?;
+    let grant_file = packet_dir.open_file("owner-grant.json", libc::O_RDONLY, 0)?;
+    require(
+        grant_file.metadata()?.mode() & 0o7777 == 0o600,
+        "FIRST_LIVE_OWNER_GRANT_MODE",
+    )?;
+    let grant: gate::Grant = serde_json::from_value(crate::verification::documents::strict_json(
+        &snapshot(&grant_file, 0, 65536)?.bytes,
+    )?)?;
+    let mut expected = grant.clone();
+    expected.operation_id = packet.operation_id.clone();
+    expected.host = crate::bootstrap::observed_host()?;
+    expected.packet_sha256 = crate::fs::file::sha(&packet_raw);
+    expected.controller_sha256 = packet.controller_sha256.clone();
+    expected.source_sha = packet.source_sha.clone();
+    expected.review_sha256 = packet.review_sha256.clone();
+    gate::validate(&grant, &expected, super::super::compose::now()?)?;
+    materialize::validate(&packet)?;
+    physical_socket(&packet)?;
+    let root = Dir::open(Path::new(crate::issuer::custody::ROOT), 0)?;
+    require(
+        root.file.metadata()?.mode() & 0o7777 == 0o700,
+        "FIRST_LIVE_STATE_MODE",
+    )?;
+    Ok(Prepared {
+        root,
+        packet_dir,
+        packet,
+        grant,
+    })
+}
 pub(super) fn prepare() -> Result<Prepared> {
     use super::super::{files, gate, materialize, packet::Packet};
     use crate::fs::{file::snapshot, secure::Dir};

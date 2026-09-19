@@ -217,6 +217,10 @@ pub(crate) use native::first_live_components;
 pub(crate) fn first_live_process_identity(pid: u32) -> Result<ProcessIdentity> {
     process::identity(pid)
 }
+pub(crate) fn first_live_process_argv(pid: u32) -> Result<Vec<String>> {
+    native_profile::process_argv(pid)
+}
+pub(crate) const FIRST_LIVE_NODE: &str = native_profile::NODE;
 
 pub(crate) use native::{NativeMaintenanceInput, NativeMaintenanceService};
 

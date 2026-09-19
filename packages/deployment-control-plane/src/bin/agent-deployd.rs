@@ -3,6 +3,10 @@ fn main() {
     let sandbox = args == ["--sandbox"];
     let result = if args == ["--first-live-completion"] {
         deployment_control_plane::run_first_live_completion()
+    } else if args == ["--first-live-host-readonly-probe"] {
+        deployment_control_plane::run_first_live_host_readonly_probe()
+            .and_then(|value| deployment_control_plane::trust::canonical_bytes(&value))
+            .map(|bytes| println!("{}", String::from_utf8_lossy(&bytes)))
     } else if args == ["--first-live-and-enable"] {
         deployment_control_plane::run_first_live_and_enable()
     } else if args == ["--first-live-recovery-and-enable"] {

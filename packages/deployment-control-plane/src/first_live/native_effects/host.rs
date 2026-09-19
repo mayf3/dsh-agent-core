@@ -79,6 +79,12 @@ mod session;
 pub(super) use session::Session;
 
 pub(super) use context::Context as Inputs;
+pub(super) fn probe_executable(path: &str) -> crate::Result<String> {
+    Ok(image::protected(path)?.digest)
+}
+pub(super) fn probe_large_file(path: &str, expected: &str, maximum: u64) -> crate::Result<String> {
+    image::protected_stream_digest(path, expected, maximum)
+}
 pub(super) fn observed_services(
     packet: &crate::first_live::packet::Packet,
 ) -> crate::Result<crate::transaction::ServiceImage> {

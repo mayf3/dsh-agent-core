@@ -54,6 +54,9 @@ pub(crate) fn run_fence_capability_probe() -> crate::Result<serde_json::Value> {
     legacy_locks::run_fence_capability_probe()
 }
 mod native_effects;
+pub(crate) fn run_host_readonly_probe() -> crate::Result<serde_json::Value> {
+    native_effects::run_readonly_probe()
+}
 pub fn run_first_live() -> crate::Result<()> {
     crate::error::require(unsafe { libc::geteuid() } == 0, "FIRST_LIVE_REQUIRES_ROOT")?;
     native_effects::run()
