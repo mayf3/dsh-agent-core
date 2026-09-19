@@ -22,17 +22,26 @@ fn loaded_domain_denial_never_accepts_missing_service_generic_io_or_success() {
 }
 #[test]
 fn disabled_controller_requires_fresh_unambiguous_disabled_and_unloaded_state() {
-    let disabled = Output {
-        code: Some(0),
-        stdout: "disabled services = {\n\"ai.agent-deployd\" => true\n}".into(),
-        stderr: String::new(),
-    };
     let absent = Output {
         code: Some(113),
         stdout: String::new(),
         stderr: "Could not find service \"ai.agent-deployd\" in domain for system".into(),
     };
-    assert!(off_observation(&disabled, &absent));
+    for value in ["true", "disabled"] {
+        assert!(off_observation(
+            &Output {
+                code: Some(0),
+                stdout: format!("disabled services = {{\n\"ai.agent-deployd\" => {value}\n}}"),
+                stderr: String::new(),
+            },
+            &absent
+        ));
+    }
+    let disabled = Output {
+        code: Some(0),
+        stdout: "disabled services = {\n\"ai.agent-deployd\" => true\n}".into(),
+        stderr: String::new(),
+    };
     assert!(!off_observation(
         &disabled,
         &Output {
@@ -47,4 +56,14 @@ fn disabled_controller_requires_fresh_unambiguous_disabled_and_unloaded_state() 
         stderr: String::new(),
     };
     assert!(!off_observation(&duplicate, &absent));
+    for value in ["false", "enabled", "unknown"] {
+        assert!(!off_observation(
+            &Output {
+                code: Some(0),
+                stdout: format!("disabled services = {{\n\"ai.agent-deployd\" => {value}\n}}"),
+                stderr: String::new(),
+            },
+            &absent
+        ));
+    }
 }

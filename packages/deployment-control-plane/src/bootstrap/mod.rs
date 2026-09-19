@@ -49,3 +49,14 @@ pub(crate) use genesis_install_census::sudoers_census as first_live_sudoers_cens
 pub(crate) use binding::{validate_physical_binding, ConfigBindingInput, NativeBindingInput};
 
 pub(crate) use bundle::PLIST as DISABLED_CONTROLLER_PLIST;
+
+pub(crate) fn agent_deployd_disabled_override(code: Option<i32>, stdout: &str) -> bool {
+    let entries: Vec<_> = stdout
+        .lines()
+        .map(str::trim)
+        .filter_map(|line| line.strip_prefix("\"ai.agent-deployd\" => "))
+        .collect();
+    code == Some(0)
+        && stdout.contains("disabled services = {")
+        && matches!(entries.as_slice(), ["true"] | ["disabled"])
+}
