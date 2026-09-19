@@ -18,37 +18,6 @@ fn expected(parents: &[Dir; 4]) -> Expectations {
         permanent: PermanentExpectation::AbsentCreate,
     }
 }
-
-#[test]
-fn exact_legacy_parent_can_be_opened_through_untrusted_ancestor_only_by_bound_inode() {
-    use std::os::unix::fs::PermissionsExt;
-
-    let t = crate::common::private::temp();
-    let unsafe_ancestor = t.path().join("caller-owned");
-    let expected_path = unsafe_ancestor.join("root-owned-parent");
-    std::fs::create_dir(&unsafe_ancestor).unwrap();
-    std::fs::create_dir(&expected_path).unwrap();
-    std::fs::set_permissions(&unsafe_ancestor, std::fs::Permissions::from_mode(0o777)).unwrap();
-    std::fs::set_permissions(&expected_path, std::fs::Permissions::from_mode(0o755)).unwrap();
-
-    let expected_file = std::fs::File::open(&expected_path).unwrap();
-    let identity = Identity::of(&expected_file).unwrap();
-    assert!(Dir::open(&expected_path, identity.uid).is_err());
-
-    let opened = open_bound_parent(&expected_path, &identity).unwrap();
-    identity.check(&opened.file).unwrap();
-
-    let original = unsafe_ancestor.join("original");
-    std::fs::rename(&expected_path, &original).unwrap();
-    identity.check(&opened.file).unwrap();
-    std::fs::create_dir(&expected_path).unwrap();
-    std::fs::set_permissions(&expected_path, std::fs::Permissions::from_mode(0o755)).unwrap();
-    assert!(open_bound_parent(&expected_path, &identity).is_err());
-
-    std::fs::remove_dir(&expected_path).unwrap();
-    std::os::unix::fs::symlink(&original, &expected_path).unwrap();
-    assert!(open_bound_parent(&expected_path, &identity).is_err());
-}
 fn success(area: &Dir) {
     super::super::files::publish(
         area,

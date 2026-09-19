@@ -14,11 +14,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::CString,
     fs::File,
-    os::{
-        fd::{AsRawFd, FromRawFd},
-        unix::fs::MetadataExt,
-    },
-    path::{Component, Path, PathBuf},
+    os::{fd::AsRawFd, unix::fs::MetadataExt},
+    path::{Path, PathBuf},
 };
 
 const PARENTS: [&str; 4] = [
@@ -154,52 +151,6 @@ fn fd_path(dir: &Dir) -> Result<PathBuf> {
         .map_err(|_| Error::new("LEGACY_PARENT_PATH"))?;
     Ok(PathBuf::from(value))
 }
-
-/// Open a fixed legacy parent through an ancestor that is not itself trusted.
-/// The opened directory is usable only if it is the exact reviewed object;
-/// all later operations retain this descriptor and rebind the named path to
-/// the same device/inode before use.
-fn open_bound_parent(path: &Path, expected: &Identity) -> Result<Dir> {
-    require(path.is_absolute(), "UNSAFE_PATH")?;
-    let root = unsafe {
-        libc::open(
-            c"/".as_ptr(),
-            libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC,
-        )
-    };
-    require(root >= 0, "FILESYSTEM_IO")?;
-    let mut file = unsafe { File::from_raw_fd(root) };
-    for part in path.components() {
-        match part {
-            Component::RootDir => (),
-            Component::Normal(part) => {
-                let part = part.to_str().ok_or(Error::new("UNSAFE_PATH"))?;
-                crate::fs::secure::component(part)?;
-                let part = CString::new(part).map_err(|_| Error::new("UNSAFE_PATH"))?;
-                let fd = unsafe {
-                    libc::openat(
-                        file.as_raw_fd(),
-                        part.as_ptr(),
-                        libc::O_RDONLY
-                            | libc::O_DIRECTORY
-                            | libc::O_NOFOLLOW
-                            | libc::O_CLOEXEC
-                            | libc::O_NONBLOCK,
-                    )
-                };
-                require(fd >= 0, "UNSAFE_FILE")?;
-                file = unsafe { File::from_raw_fd(fd) };
-            }
-            _ => return Err(Error::new("UNSAFE_PATH")),
-        }
-    }
-    validate(&file, expected.uid, true)?;
-    expected.check(&file)?;
-    Ok(Dir {
-        file,
-        uid: expected.uid,
-    })
-}
 fn hash(value: &str) -> Result<()> {
     require(
         value.len() == 64
@@ -245,7 +196,7 @@ impl<'a> LegacyLocks<'a> {
         guard.binds(&Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?)?;
         let parents = [
             namespace.open()?,
-            open_bound_parent(Path::new(PARENTS[1]), &expected.parents[1])?,
+            Dir::open(Path::new(PARENTS[1]), 0)?,
             Dir::open(Path::new(PARENTS[2]), 0)?,
             Dir::open(Path::new(PARENTS[3]), 0)?,
         ];
@@ -446,9 +397,6 @@ impl<'a> LegacyLocks<'a> {
                 } else {
                     self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
                 }
-            } else if index == 1 {
-                self.expected.parents[index]
-                    .check(&open_bound_parent(path, &self.expected.parents[index])?.file)?;
             } else {
                 self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
             }
