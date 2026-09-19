@@ -9,6 +9,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import pwd
+import re
 import selectors
 import stat
 import subprocess
@@ -23,7 +25,6 @@ INSTALL_PARENT = "/usr/local/libexec/agent-deployd"
 INSTALL_TARGET = INSTALL_PARENT + "/agent-deploy-first-live-fence-probe"
 PROBE_PARENT = "/private/var/db/agent-deployd"
 PROBE_DIR = PROBE_PARENT + "/first-live-fence-capability-p4r13"
-LOCAL_JOURNAL = Path.home() / ".agent-deploy-first-live-operator" / OPERATION
 STAT_FORMAT = "%d|%i|%u|%g|%Lp|%l|%f|%z|%m|%c|%B|%HT"
 LIMIT = 2 * 1024 * 1024
 
@@ -66,6 +67,80 @@ def identity(metadata):
 
 def stable_parent(value):
     return {key: value[key] for key in ("device", "inode", "uid", "gid", "mode", "flags", "type")}
+
+
+def ordinary_home():
+    require(
+        os.getuid() == os.geteuid() == 502
+        and os.getgid() == os.getegid() == 20
+        and 1 not in os.getgroups(),
+        "UID502_GID20_REQUIRED",
+    )
+    user = pwd.getpwuid(502)
+    require(user.pw_uid == 502 and user.pw_gid == 20 and Path(user.pw_dir).is_absolute(), "PASSWD_BINDING")
+    return Path(user.pw_dir)
+
+
+def open_directory(path):
+    require(path.is_absolute() and ".." not in path.parts, "DIRECTORY_PATH")
+    descriptor = os.open("/", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+    try:
+        for part in path.parts[1:]:
+            next_descriptor = os.open(
+                part,
+                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+                dir_fd=descriptor,
+            )
+            os.close(descriptor)
+            descriptor = next_descriptor
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def claim_journal(home):
+    home_descriptor = open_directory(home)
+    try:
+        try:
+            os.mkdir(".agent-deploy-first-live-operator", 0o700, dir_fd=home_descriptor)
+            os.fsync(home_descriptor)
+        except FileExistsError:
+            pass
+        parent = os.open(
+            ".agent-deploy-first-live-operator",
+            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            dir_fd=home_descriptor,
+        )
+    finally:
+        os.close(home_descriptor)
+    try:
+        metadata = os.fstat(parent)
+        require(
+            metadata.st_uid == 502
+            and metadata.st_gid == 20
+            and stat.S_IMODE(metadata.st_mode) == 0o700
+            and getattr(metadata, "st_flags", 0) == 0,
+            "JOURNAL_PARENT_METADATA",
+        )
+        os.mkdir(OPERATION, 0o700, dir_fd=parent)
+        os.fsync(parent)
+        journal = os.open(
+            OPERATION,
+            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            dir_fd=parent,
+        )
+    finally:
+        os.close(parent)
+    metadata = os.fstat(journal)
+    require(
+        metadata.st_uid == 502
+        and metadata.st_gid == 20
+        and stat.S_IMODE(metadata.st_mode) == 0o700
+        and getattr(metadata, "st_flags", 0) == 0,
+        "JOURNAL_METADATA",
+    )
+    return journal, (metadata.st_dev, metadata.st_ino), home / ".agent-deploy-first-live-operator" / OPERATION
 
 
 def open_package(path):
@@ -133,16 +208,35 @@ def read_file(parent, name, expected, *, maximum=LIMIT):
         os.close(descriptor)
 
 
+def validate_source_review(manifest, review_md, review_json):
+    review = json.loads(review_json, object_pairs_hook=unique)
+    require(canonical(review) == review_json, "SOURCE_REVIEW_CANONICAL")
+    require(
+        manifest["source_review"]
+        == {"report_sha256": sha(review_md), "record_sha256": sha(review_json), "verdict": "PASS"}
+        and review.get("version") == 1
+        and review.get("verdict") == "PASS"
+        and review.get("source_commit") == manifest["source_commit"]
+        and review.get("source_tree") == manifest["source_tree"]
+        and review.get("report_sha256") == sha(review_md)
+        and review.get("new_ship_blockers") == []
+        and review.get("production_mutation_performed") is False
+        and review.get("root_probe_executed") is False,
+        "SOURCE_REVIEW",
+    )
+
+
 class Operation:
-    def __init__(self, manifest, manifest_digest, binary):
+    def __init__(self, manifest, manifest_digest, binary, journal_fd, journal_identity, journal_path):
         self.manifest = manifest
         self.manifest_digest = manifest_digest
         self.binary = binary
         self.sequence = 0
         self.phase = "preflight"
+        self.journal_fd = journal_fd
+        self.journal_identity = journal_identity
+        self.journal_path = journal_path
         self.env = {"PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "C", "LC_ALL": "C"}
-        LOCAL_JOURNAL.parent.mkdir(mode=0o700, exist_ok=True)
-        LOCAL_JOURNAL.mkdir(mode=0o700)
         self.record(
             "operation-intent.json",
             {
@@ -155,19 +249,30 @@ class Operation:
         )
 
     def record(self, name, value):
-        path = LOCAL_JOURNAL / name
+        require(re.fullmatch(r"[a-zA-Z0-9_.-]{1,160}", name) is not None, "RECORD_NAME")
+        metadata = self.journal_path.lstat()
+        require(
+            stat.S_ISDIR(metadata.st_mode)
+            and (metadata.st_dev, metadata.st_ino) == self.journal_identity
+            and metadata.st_uid == 502
+            and metadata.st_gid == 20
+            and stat.S_IMODE(metadata.st_mode) == 0o700
+            and getattr(metadata, "st_flags", 0) == 0,
+            "JOURNAL_DRIFT",
+        )
         raw = canonical(value)
-        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC, 0o600)
-        try:
-            os.write(descriptor, raw)
-            os.fsync(descriptor)
-        finally:
-            os.close(descriptor)
-        directory = os.open(LOCAL_JOURNAL, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
-        try:
-            os.fsync(directory)
-        finally:
-            os.close(directory)
+        require(len(raw) <= LIMIT, "RECORD_BOUND")
+        descriptor = os.open(
+            name,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC,
+            0o600,
+            dir_fd=self.journal_fd,
+        )
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.fsync(self.journal_fd)
 
     def invoke(self, argv, *, visible=False, stdin=None, timeout=120):
         self.sequence += 1
@@ -251,7 +356,6 @@ class Operation:
         return value
 
     def run(self):
-        require(not LOCAL_JOURNAL.joinpath("completed.json").exists(), "ATTEMPT_EXISTS")
         self.expect_success(self.invoke(["/usr/bin/sudo", "-v"], visible=True), "AUTHENTICATION")
         install_parent = self.stat(INSTALL_PARENT)
         require(
@@ -264,7 +368,7 @@ class Operation:
         require(self.stat(PROBE_DIR, missing=True) is None, "PROBE_ALREADY_PRESENT")
 
         self.phase = "install"
-        with tempfile.TemporaryFile(dir=LOCAL_JOURNAL) as source:
+        with tempfile.TemporaryFile(dir=self.journal_path) as source:
             source.write(self.binary)
             source.flush()
             source.seek(0)
@@ -370,6 +474,24 @@ class Operation:
         self.record("completed.json", final)
         return final
 
+    def execute(self):
+        try:
+            return self.run()
+        except BaseException as error:
+            try:
+                self.record(
+                    "stopped.json",
+                    {
+                        "state": "STOP_RECONCILE",
+                        "retry_forbidden": True,
+                        "error_type": type(error).__name__,
+                        "reason": str(error),
+                    },
+                )
+            except BaseException:
+                pass
+            raise
+
 
 def main():
     require(
@@ -399,6 +521,7 @@ def main():
                 "source_commit",
                 "source_tree",
                 "source_review",
+                "operator_files",
                 "files",
                 "install_parent",
                 "probe_parent",
@@ -410,6 +533,17 @@ def main():
             "MANIFEST_SCHEMA",
         )
         require(
+            type(manifest["operator_files"]) is dict
+            and set(manifest["operator_files"]) == {"fence_capability_prerequisite.py"},
+            "OPERATOR_SET",
+        )
+        require(Path(__file__).absolute() == package / "fence_capability_prerequisite.py", "OPERATOR_LOCATION")
+        read_file(
+            parent,
+            "fence_capability_prerequisite.py",
+            manifest["operator_files"]["fence_capability_prerequisite.py"],
+        )
+        require(
             set(manifest["files"])
             == {"agent-deploy-first-live-fence-probe", "source-review.md", "source-review.json"},
             "FILE_SET",
@@ -417,16 +551,18 @@ def main():
         binary = read_file(parent, "agent-deploy-first-live-fence-probe", manifest["files"]["agent-deploy-first-live-fence-probe"])
         review_md = read_file(parent, "source-review.md", manifest["files"]["source-review.md"])
         review_json = read_file(parent, "source-review.json", manifest["files"]["source-review.json"])
-        require(
-            manifest["source_review"]
-            == {"report_sha256": sha(review_md), "record_sha256": sha(review_json), "verdict": "PASS"},
-            "SOURCE_REVIEW",
-        )
+        validate_source_review(manifest, review_md, review_json)
         require(manifest["installed_probe"] == manifest["files"]["agent-deploy-first-live-fence-probe"], "BINARY_BINDING")
     finally:
         os.close(parent)
-    result = Operation(manifest, sys.argv[1], binary).run()
-    print(canonical(result).decode())
+    home = ordinary_home()
+    journal_fd, journal_identity, journal_path = claim_journal(home)
+    try:
+        operation = Operation(manifest, sys.argv[1], binary, journal_fd, journal_identity, journal_path)
+        result = operation.execute()
+        print(canonical(result).decode())
+    finally:
+        os.close(journal_fd)
 
 
 if __name__ == "__main__":
