@@ -47,3 +47,14 @@ fn absent_domain_environment_block_is_empty_namespace_and_loader_keys_are_reject
     );
     assert!(domain("system = {\n\tenvironment = {\n\t\tA => b\n").is_err());
 }
+#[test]
+fn malformed_environment_like_blocks_and_unbalanced_domain_are_rejected() {
+    for raw in [
+        "system = {\nenvironment = {\n\tDYLD_INSERT_LIBRARIES => x\n}\n}\n",
+        "system = {\n  default environment = {\n    LD_PRELOAD => x\n  }\n}\n",
+        "system = {\n\t\tenvironment = {\n\t\t\tDYLD_LIBRARY_PATH => x\n\t\t}\n}\n",
+        "system = {\n}\n}\n",
+    ] {
+        assert!(domain(raw).is_err(), "accepted malformed domain: {raw:?}");
+    }
+}
