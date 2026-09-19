@@ -184,6 +184,10 @@ pub(super) struct Context<'a> {
     uid: u32,
     gid: u32,
 }
+fn caller_supplementary_groups(groups: &[u32]) -> Result<Vec<u32>> {
+    crate::first_live::process::supplementary_groups(20, groups)
+        .map_err(|_| Error::new("DENIAL_IDENTITY"))
+}
 impl<'a> Context<'a> {
     pub(super) fn new(
         journal: &'a Dir,
@@ -194,10 +198,8 @@ impl<'a> Context<'a> {
     ) -> Result<Self> {
         require(unsafe { libc::geteuid() } == 0, "ROOT_REQUIRED")?;
         guard.binds(&Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?)?;
-        require(
-            journal.uid == 0 && groups.len() <= 32 && groups.contains(&20) && !groups.contains(&0),
-            "DENIAL_IDENTITY",
-        )?;
+        require(journal.uid == 0, "DENIAL_IDENTITY")?;
+        let groups = caller_supplementary_groups(groups)?;
         let self_dir = Dir::open(Path::new("/usr/local/libexec/agent-deployd"), 0)?;
         let executable = self_dir.open_file("agent-deployd", libc::O_RDONLY, 0)?;
         require(
@@ -221,7 +223,7 @@ impl<'a> Context<'a> {
             _guard: guard,
             proof: [executable, intent],
             stamps,
-            groups: groups.into(),
+            groups,
             uid: 502,
             gid: 20,
         })
