@@ -89,30 +89,38 @@ fn domain(raw: &str) -> Result<()> {
     let mut names = BTreeSet::new();
     let mut depth = 1usize;
     for line in &lines[1..lines.len() - 1] {
-        let field = line.trim_start_matches('\t');
-        if line.ends_with(" = {") {
+        let tabs = line.bytes().take_while(|byte| *byte == b'\t').count();
+        let field = &line[tabs..];
+        let normalized = field.trim_start_matches(|value: char| value.is_ascii_whitespace());
+        if (normalized.starts_with("environment") || normalized.starts_with("default environment"))
+            && normalized != field
+        {
+            return Err(Error::new("HOST_ENVIRONMENT_SHAPE"));
+        }
+        if field == "}" {
+            require(depth > 1 && tabs + 1 == depth, "HOST_ENVIRONMENT_SHAPE")?;
+            depth -= 1;
+            if inside {
+                require(tabs == 1, "HOST_ENVIRONMENT_SHAPE")?;
+                inside = false;
+            }
+            continue;
+        }
+        if field.ends_with(" = {") {
+            require(tabs == depth, "HOST_ENVIRONMENT_SHAPE")?;
             depth = depth
                 .checked_add(1)
                 .ok_or_else(|| Error::new("HOST_ENVIRONMENT_SHAPE"))?;
-        } else if field == "}" {
-            require(depth > 1, "HOST_ENVIRONMENT_SHAPE")?;
-            depth -= 1;
         }
         if inside {
-            if *line == "\t}" {
-                inside = false;
-                continue;
-            }
-            let field = line
-                .strip_prefix("\t\t")
-                .ok_or_else(|| Error::new("HOST_ENVIRONMENT_SHAPE"))?;
+            require(tabs == depth, "HOST_ENVIRONMENT_SHAPE")?;
             let (name, _) = field
                 .split_once(" => ")
                 .ok_or_else(|| Error::new("HOST_ENVIRONMENT_SHAPE"))?;
             key(name.as_bytes())?;
             require(names.insert(name), "HOST_ENVIRONMENT_SHAPE")?;
-        } else if matches!(*line, "\tenvironment = {" | "\tdefault environment = {") {
-            require(blocks.insert(*line), "HOST_ENVIRONMENT_SHAPE")?;
+        } else if matches!(field, "environment = {" | "default environment = {") {
+            require(depth == 2 && blocks.insert(field), "HOST_ENVIRONMENT_SHAPE")?;
             inside = true;
             names.clear();
         } else if field.starts_with("environment") || field.starts_with("default environment") {
