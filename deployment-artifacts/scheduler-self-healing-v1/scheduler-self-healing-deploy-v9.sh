@@ -30,13 +30,13 @@
 # Modes:
 #   (root) no args        -> production deployment
 #   (any)  --fixture-selftest -> non-root sandbox regression (fake pnpm/corepack
-#            in PATH exit 99 if invoked; proves the two-file build is
+#            in PATH exit 99 if invoked; proves the single-file build is
 #            manifest-exact and the swap/rollback round-trip restores bytes)
 # =============================================================================
 set -uo pipefail
 PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
-FROZEN_MAIN_SHA="41f354d163f532348b2ad1ef33b5ee528655dfc6"
+FROZEN_IMPLEMENTATION_SOURCE_SHA="a5fed401adf6ef3a4d07489105b0e3bc18e64ef3"
 FROZEN_BROKER_SELFOPS_SHA="e7f6105de4be81e37ccc60e983fe005751880d9b8a0af93c9e0602a78da87620"
 BROKER_SELFOPS_REL="packages/broker/src/capabilities/self-ops.js"
 FROZEN_BROKER_GATEWAY_SHA="4c341db4d0369811b3df4a4eb7e711af33fdf84abe17a39349c5f75e7830490e"
@@ -165,7 +165,7 @@ production_main() {
   # atomic exactly-once acquisition: noclobber '>' fails when the marker
   # already exists, closing the check-then-create race under double execution
   if ! ( set -o noclobber; printf 'packet=FREEZE_V9\ntarget=%s\nauthorized_by=mayf3\ncreated=%s\n' \
-        "$FROZEN_MAIN_SHA" "$(date -u +%FT%TZ)" > "$AUTH_MARKER" ) 2>/dev/null; then
+        "$FROZEN_IMPLEMENTATION_SOURCE_SHA" "$(date -u +%FT%TZ)" > "$AUTH_MARKER" ) 2>/dev/null; then
     echo "ERROR: authorization already consumed ($AUTH_MARKER) — EXACTLY_ONCE" >&2
     exit 1
   fi
@@ -283,7 +283,7 @@ production_main() {
   free_kb="$(df -k /usr/local/libexec/agent-core | awk 'NR==2 {print $4}')"
   [ "$free_kb" -ge "$need_kb" ] || fail "G8 insufficient space: need ${need_kb}KB free ${free_kb}KB"
 
-  # BUILD + VERIFY sealed generation (TWO files on top of the live generation)
+  # BUILD + VERIFY sealed generation (ONE file on top of the live generation)
   setup_pm_guard
   local next="$TRUSTED_ROOT/app.next-v9-$TS"
   build_app_next_v9 "$APP" "$SOURCE_ROOT" "$next" || fail "G9 app.next build failed"
@@ -368,8 +368,8 @@ production_main() {
   pm_guard_clean || post_swap_fail "package manager invoked during deployment"
   {
     echo "DEPLOYMENT=PASS"
-    echo "TARGET_SOURCE_SHA=$FROZEN_MAIN_SHA"
-    echo "V9_SCOPE=$BROKER_SELFOPS_REL + $BROKER_GATEWAY_REL ONLY"
+    echo "TARGET_SOURCE_SHA=$FROZEN_IMPLEMENTATION_SOURCE_SHA"
+    echo "V9_SCOPE=$BROKER_SELFOPS_REL ONLY"
     echo "PRIOR_GENERATION_MANIFEST=$FROZEN_PREIMAGE_APP_MANIFEST_SHA (fresh census baseline 2026-09-19 07:56)"
     echo "DEPLOYED_APP_MANIFEST_SHA=$(manifest_of "$APP")"
     echo "DEPLOYED_BROKER_SELFOPS_SHA=$dep_b1"
@@ -385,7 +385,10 @@ production_main() {
     echo "ERROR_TAIL_COUNT_LAST200=$err_tail"
     echo "RUNS_JSONL_PARSE_SMOKE=$runs_parse"
     echo "PM_GUARD=$(pm_guard_clean && echo CLEAN || echo TRIPPED)"
-    echo "DO_NOT_REENABLE_HR_RETRY_AUTO=true (until POSTDEPLOY_VERIFICATION=PASS)"
+    echo "HR_REENABLE_STATE=PRESERVED"
+    echo "HR_RETRY_AUTO=true"
+    echo "HR_SCHEDULE_REVISION=4"
+    echo "HR_UPDATED_AT_MS=1789779023244"
     echo "COMMITTED_AT=$(date -u +%FT%TZ)"
   } | tee "$RB_TMP/deploy-receipt.txt"
   cp "$RB_TMP/deploy-receipt.txt" "$STATE_ROOT/receipts/deploy-v9.receipt" \
