@@ -11,15 +11,7 @@ pub(super) fn denied(output: &Output) -> bool {
 #[path = "../../../test/first_live/native_effects/launchd.rs"]
 mod tests;
 fn off_observation(disabled: &Output, service: &Output) -> bool {
-    let entries: Vec<_> = disabled
-        .stdout
-        .lines()
-        .map(str::trim)
-        .filter_map(|s| s.strip_prefix("\"ai.agent-deployd\" => "))
-        .collect();
-    disabled.code == Some(0)
-        && disabled.stdout.contains("disabled services = {")
-        && entries == ["true"]
+    crate::bootstrap::agent_deployd_disabled_override(disabled.code, &disabled.stdout)
         && service.code == Some(113)
         && (service.stdout.contains("Could not find service")
             || service.stderr.contains("Could not find service"))

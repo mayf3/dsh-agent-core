@@ -187,6 +187,9 @@ pub(super) fn enabled_plist(old: &[u8]) -> Result<Vec<u8>> {
         .replacen(old, new, 1)
         .into_bytes())
 }
+fn disabled_override(output: &crate::first_live::process::Output) -> bool {
+    crate::bootstrap::agent_deployd_disabled_override(output.code, &output.stdout)
+}
 pub(super) fn fresh() -> Result<()> {
     controller()?;
     let root = Dir::open(Path::new(ROOT), 0)?;
@@ -294,16 +297,7 @@ pub(super) fn run() -> Result<()> {
             "ENABLE_ALREADY_LOADED",
         )?;
         let disabled = n.command(&["print-disabled", "system"])?;
-        let entries: Vec<_> = disabled
-            .stdout
-            .lines()
-            .map(str::trim)
-            .filter_map(|l| l.strip_prefix("\"ai.agent-deployd\" => "))
-            .collect();
-        require(
-            disabled.code == Some(0) && entries == ["true"],
-            "ENABLE_NOT_DISABLED",
-        )?;
+        require(disabled_override(&disabled), "ENABLE_NOT_DISABLED")?;
         enable::claim(&n.area, &n.root, &n.binding, &guard)?;
     }
     let area = Dir {
