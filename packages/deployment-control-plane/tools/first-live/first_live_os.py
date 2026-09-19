@@ -114,7 +114,7 @@ class OperatorIO:
         require(Path(__file__).absolute()==self.package/'first_live_os.py','OPERATOR_LOCATION')
         required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py',
             'broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py',
-            'p4r9_reconcile.py'}
+            'p4r12_reconcile.py'}
         require(required==set(m['operator_files']),'OPERATOR_SET')
         for name,digest in m['operator_files'].items():
             require(re.fullmatch(r'[a-z0-9_]+\.py',name),'OPERATOR_NAME');exact_digest(digest)

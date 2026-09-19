@@ -171,8 +171,8 @@ def execute(io,manifest,package_path):
         require(len(raw)==row['size'],'PACKAGE_FILE_SIZE')
         return raw
     template=local('packet-template.json');p=_object(template,16*1024*1024)
-    p4r9_raw=local('p4r9-successor-reconciliation.json')
-    p4r9=_object(p4r9_raw,4*1024*1024)
+    p4r12_raw=local('p4r12-successor-reconciliation.json')
+    p4r12=_object(p4r12_raw,4*1024*1024)
     expected=layout.inputs(p)
     require(manifest['version']==1 and manifest['operation_id']==OPERATION and
         manifest['source_sha']==p['source_sha'] and manifest['controller_sha256']==p['controller_sha256'],
@@ -181,25 +181,25 @@ def execute(io,manifest,package_path):
         'PACKAGE_INPUT_BINDING')
     require(digest(local('owner-scope.json'))==p['owner_acceptance_digest'],'OWNER_SCOPE_BINDING')
     ctl=manifest['files']['agent-deployctl']['sha256'];layout.sha(ctl)
-    require(manifest['root_argv_allowlist']==layout.commands(p,ctl,p4r9),'ROOT_COMMAND_SET')
+    require(manifest['root_argv_allowlist']==layout.commands(p,ctl,p4r12),'ROOT_COMMAND_SET')
     wrapper=['/usr/bin/python3','-I','-S','-B',str(package_path/'first_live_launcher.py'),'--broker-exact']
     require(manifest['ordinary_argv_allowlist']==[wrapper],'ORDINARY_COMMAND_SET')
     io.claim()
     try:
-        io.phase('p4r9-reconciliation');io.authenticate()
-        import p4r9_reconcile
-        p4r9_reconcile.reconcile(io,p4r9_raw)
+        io.phase('p4r12-reconciliation');io.authenticate()
+        import p4r12_reconcile
+        p4r12_reconcile.reconcile(io,p4r12_raw)
         io.phase('protected-prefix')
-        old,sudo_line=prefix_gate(io,p,p4r9['installed_files'])
+        old,sudo_line=prefix_gate(io,p,p4r12['installed_files'])
         packet_raw=bind_packet(template,digest(template),sudo_line)
         p=_object(packet_raw,16*1024*1024)
         io.phase('protected-copy')
         io.call(['/bin/mkdir','-m','0700',layout.PACKET])
         io.call(['/bin/mkdir','-m','0700',layout.PACKET+'/payloads'])
-        prepare_socket(io,p,p4r9['socket_directory'])
+        prepare_socket(io,p,p4r12['socket_directory'])
         for name in ['agent-deployd','agent-deploy-issuer']:
-            value=protected_read(io,layout.P4R9_PACKET_ARCHIVE+'/original-'+name,
-                p4r9['staging_files']['original-'+name])
+            value=protected_read(io,layout.P4R12_PACKET_ARCHIVE+'/original-'+name,
+                p4r12['staging_files']['original-'+name])
             io.copy(value,digest(value),'0400',layout.PACKET+'/original-'+name)
         for name,(dest,mode,gid) in layout.copies(p,ctl).items():
             io.copy(local(name),manifest['files'][name]['sha256'],mode,dest,gid=gid)
