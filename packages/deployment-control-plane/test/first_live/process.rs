@@ -86,6 +86,17 @@ fn scripts_and_unprivileged_probes_cannot_run_as_root_or_cross_identities() {
 }
 
 #[test]
+fn primary_gid_is_not_passed_to_the_bounded_supplementary_group_syscall() {
+    let full_groups = [
+        12, 20, 33, 61, 79, 80, 81, 98, 100, 204, 250, 395, 398, 399, 400, 599, 602,
+    ];
+    assert_eq!(
+        supplementary_groups(20, &full_groups).unwrap(),
+        vec![12, 33, 61, 79, 80, 81, 98, 100, 204, 250, 395, 398, 399, 400, 599, 602]
+    );
+}
+
+#[test]
 fn output_limit_and_invalid_utf8_cannot_be_accepted() {
     let huge = collect(command("printf '%1049600s' x"), Duration::from_secs(2));
     assert!(matches!(huge, Err(e) if e.code() == "FIRST_LIVE_CHILD_LIMIT"));
