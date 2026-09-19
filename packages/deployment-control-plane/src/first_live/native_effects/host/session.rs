@@ -8,6 +8,36 @@ pub(in crate::first_live::native_effects) struct Session<'a> {
     stage: Stage,
 }
 impl<'a> Session<'a> {
+    pub(in crate::first_live::native_effects) fn readonly_probe(
+        ctx: Context<'a>,
+        services: &ServiceImage,
+        executable: &str,
+        executable_digest: &str,
+    ) -> Result<serde_json::Value> {
+        ctx.check()?;
+        let global = environment::global(&ctx)?;
+        let running = environment::running(std::process::id())?;
+        let owned = Owned::capture_probe(&ctx, executable, executable_digest)?;
+        let tail = tailscale::prepare(&ctx)?;
+        let census = census::probe(&ctx, services, tail.transition_identity(), &owned)?;
+        owned.verify(&ctx)?;
+        require(
+            environment::global(&ctx)? == global,
+            "HOST_ENVIRONMENT_DRIFT",
+        )?;
+        require(
+            environment::running(std::process::id())? == running,
+            "HOST_ENVIRONMENT_DRIFT",
+        )?;
+        ctx.check()?;
+        Ok(serde_json::json!({
+            "global_environment_digest":global,
+            "operator_environment_digest":running,
+            "process_role_census_digest":census,
+            "service_generation_digest":services.generation,
+            "tailscale_generation":"OBSERVED_UNCHANGED"
+        }))
+    }
     pub(in crate::first_live::native_effects) fn prepare(
         ctx: Context<'a>,
         services: &ServiceImage,

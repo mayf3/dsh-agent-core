@@ -644,6 +644,19 @@ impl SocketNamespace {
             "LEGACY_LOCK_DRIFT",
         )
     }
+    pub(super) fn readonly_digest(&self) -> Result<String> {
+        let held = self.open()?;
+        self.check(&held)?;
+        let metadata = Identity::of(&held.file)?;
+        crate::trust::digest(&serde_json::json!({
+            "state":"SOCKET_NAMESPACE_OBSERVED",
+            "device":metadata.device,
+            "inode":metadata.inode,
+            "uid":metadata.uid,
+            "gid":metadata.gid,
+            "mode":metadata.mode
+        }))
+    }
 }
 struct Owned {
     dir: Dir,
@@ -711,6 +724,116 @@ fn append(dir: &Dir, name: &str, value: &impl Serialize) -> Result<()> {
     super::journal::append(dir, name, value)
 }
 impl<'a> LegacyLocks<'a> {
+    pub(super) fn readonly_observe(
+        op: &str,
+        binding: &str,
+        area: &Dir,
+        expected: &Expectations,
+        namespace: SocketNamespace,
+    ) -> Result<String> {
+        require(unsafe { libc::geteuid() } == 0, "ROOT_REQUIRED")?;
+        require(
+            op == "first-live-dsh-20260918-01",
+            "LEGACY_RECOVERY_OPERATION",
+        )?;
+        hash(binding)?;
+        check_production_fence_policy(&expected.ancestor_fence)?;
+        let fence = open_fixed_legacy_ancestor(0)?;
+        require(
+            fd_path(&fence)? == Path::new(LEGACY_ANCESTOR),
+            "LEGACY_FENCE_PATH",
+        )?;
+        check_fence_object::<NativeFenceFlags>(
+            &fence,
+            &expected.ancestor_fence,
+            expected.ancestor_fence.flags | LEGACY_ANCESTOR_FLAG,
+        )?;
+        let root = Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?;
+        let predecessor = root.child("first-live-operation-p4r14r2-retained")?;
+        verify_fence_journal(
+            &predecessor,
+            op,
+            P4R14R2_BINDING,
+            &expected.ancestor_fence,
+            Path::new(LEGACY_ANCESTOR),
+        )?;
+        let parents = [
+            namespace.open()?,
+            AncestorFence::<NativeFenceFlags> {
+                dir: fence,
+                expected: expected.ancestor_fence.clone(),
+                operation_id: op.into(),
+                binding: P4R14R2_BINDING.into(),
+                original_flags: expected.ancestor_fence.flags,
+                path: PathBuf::from(LEGACY_ANCESTOR),
+                _flags: std::marker::PhantomData,
+            }
+            .lock_parent(&expected.parents[1])?,
+            Dir::open(Path::new(PARENTS[2]), 0)?,
+            Dir::open(Path::new(PARENTS[3]), 0)?,
+        ];
+        for (index, parent) in parents.iter().enumerate() {
+            expected.parents[index].check(&parent.file)?;
+        }
+        namespace.check(&parents[0])?;
+        let permanent = parents[0].open_file(NAMES[0], libc::O_RDONLY, 0)?;
+        let permanent_identity = match &expected.permanent {
+            PermanentExpectation::Present { identity } => identity,
+            PermanentExpectation::AbsentCreate => {
+                return Err(Error::new("LEGACY_RECOVERY_PERMANENT"))
+            }
+        };
+        permanent_identity.check(&permanent)?;
+        let mut retained = Vec::new();
+        for index in [1usize, 2] {
+            let created: serde_json::Value =
+                super::files::read(&predecessor, &format!("legacy-{index}-created.json"))?;
+            let result: serde_json::Value =
+                super::files::read(&predecessor, &format!("legacy-{index}-result.json"))?;
+            let identity: Identity = serde_json::from_value(created["identity"].clone())?;
+            let holder_identity: Identity =
+                serde_json::from_value(result["holder_identity"].clone())?;
+            let dir = parents[index].child(NAMES[index])?;
+            identity.check(&dir.file)?;
+            require(
+                dir.names()? == vec![HOLDERS[index - 1]],
+                "LEGACY_CONTENT_DRIFT",
+            )?;
+            let holder = dir.open_file(HOLDERS[index - 1], libc::O_RDONLY, 0)?;
+            holder_identity.check(&holder)?;
+            let bytes = snapshot(&holder, 0, 16 * 1024)?.bytes;
+            require(
+                result["holder_sha256"] == sha(&bytes),
+                "LEGACY_HOLDER_DRIFT",
+            )?;
+            retained.push(serde_json::json!({
+                "index":index,
+                "directory":identity,
+                "holder":holder_identity,
+                "holder_sha256":sha(&bytes)
+            }));
+        }
+        absent(&parents[3], NAMES[3])?;
+        let intent: serde_json::Value = super::files::read(area, "legacy-recovery-intent.json")?;
+        let result: serde_json::Value = super::files::read(area, "legacy-recovery-result.json")?;
+        require(
+            intent["operation_id"] == op
+                && intent["binding"] == binding
+                && intent["predecessor_binding"] == P4R14R2_BINDING
+                && result["operation_id"] == op
+                && result["binding"] == binding
+                && result["predecessor_binding"] == P4R14R2_BINDING
+                && result["state"] == "RETAINED_LOCKS_JOINED",
+            "LEGACY_RECOVERY_HISTORY",
+        )?;
+        crate::trust::digest(&serde_json::json!({
+            "state":"RETAINED_FENCE_AND_LOCKS_OBSERVED",
+            "binding":binding,
+            "fence":expected.ancestor_fence,
+            "permanent":permanent_identity,
+            "retained":retained
+        }))
+    }
     pub(super) fn recover(
         op: &str,
         binding: &str,

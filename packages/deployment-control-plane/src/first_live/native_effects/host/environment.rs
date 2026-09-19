@@ -56,10 +56,10 @@ fn arguments(bytes: &[u8]) -> Result<()> {
     while cursor < bytes.len() {
         let entry = nul(bytes, &mut cursor)?;
         if entry.is_empty() {
-            return require(
-                bytes[cursor..].iter().all(|b| *b == 0),
-                "HOST_ENVIRONMENT_SHAPE",
-            );
+            if bytes[cursor..].iter().all(|b| *b == 0) {
+                break;
+            }
+            continue;
         }
         let split = entry
             .iter()
@@ -72,7 +72,7 @@ fn arguments(bytes: &[u8]) -> Result<()> {
             "HOST_ENVIRONMENT_SHAPE",
         )?;
     }
-    Err(Error::new("HOST_ENVIRONMENT_SHAPE"))
+    Ok(())
 }
 fn domain(raw: &str) -> Result<()> {
     require(

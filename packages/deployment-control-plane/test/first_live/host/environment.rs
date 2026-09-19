@@ -11,6 +11,7 @@ fn args(env: &[&[u8]]) -> Vec<u8> {
 }
 #[test]
 fn current_environment_accepts_unrelated_values_without_interpreting_arguments() {
+    assert!(arguments(&args(&[])).is_ok());
     assert!(arguments(&args(&[
         b"PATH=/fixture",
         b"SECRET=DYLD_INSERT_LIBRARIES=not-a-key"
@@ -37,6 +38,59 @@ fn malformed_or_truncated_arguments_are_not_empty_environment_proof() {
     let mut b = args(&[b"A=1"]);
     b.truncate(b.len() - 2);
     assert!(arguments(&b).is_err());
+}
+#[test]
+fn kern_procargs2_accepts_nul_separated_trailing_key_value_groups() {
+    let mut b = args(&[b"PATH=/fixture", b"SAFE=value"]);
+    b.pop();
+    b.extend_from_slice(b"\0executable_path=/fixed/program\0\0");
+    b.extend_from_slice(b"secure_mode=1\0\0audit_token=fixture\0\0");
+    assert!(arguments(&b).is_ok());
+}
+#[test]
+fn kern_procargs2_trailing_groups_remain_fail_closed() {
+    for trailing in [
+        &b"\0MALFORMED\0\0"[..],
+        &b"\0PATH=duplicate\0\0"[..],
+        &b"\0DYLD_INSERT_LIBRARIES=/tmp/injected\0\0"[..],
+        &b"\0__XPC_DYLD_FRAMEWORK_PATH=/tmp/injected\0\0"[..],
+        &b"\0LD_PRELOAD=/tmp/injected\0\0"[..],
+    ] {
+        let mut b = args(&[b"PATH=/fixture"]);
+        b.pop();
+        b.extend_from_slice(trailing);
+        assert!(arguments(&b).is_err(), "accepted trailing shape");
+    }
+}
+#[test]
+#[cfg(target_os = "macos")]
+fn current_host_kern_procargs2_shape_uses_the_same_parser_without_logging_values() {
+    let mut child = std::process::Command::new("/bin/sleep")
+        .arg("5")
+        .env_clear()
+        .env("PATH", "/usr/bin:/bin")
+        .spawn()
+        .unwrap();
+    let mut raw = vec![0u8; LIMIT];
+    let mut length = raw.len();
+    let mut mib = [libc::CTL_KERN, libc::KERN_PROCARGS2, child.id() as i32];
+    assert_eq!(
+        unsafe {
+            libc::sysctl(
+                mib.as_mut_ptr(),
+                3,
+                raw.as_mut_ptr().cast(),
+                &mut length,
+                std::ptr::null_mut(),
+                0,
+            )
+        },
+        0
+    );
+    raw.truncate(length);
+    assert!(arguments(&raw).is_ok());
+    child.kill().unwrap();
+    child.wait().unwrap();
 }
 #[test]
 fn absent_domain_environment_block_is_empty_namespace_and_loader_keys_are_rejected() {
