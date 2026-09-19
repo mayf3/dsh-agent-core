@@ -109,7 +109,7 @@ fn domain(raw: &str) -> Result<()> {
             return Err(Error::new("HOST_ENVIRONMENT_SHAPE"));
         }
     }
-    require(!inside && !blocks.is_empty(), "HOST_ENVIRONMENT_SHAPE")
+    require(!inside, "HOST_ENVIRONMENT_SHAPE")
 }
 pub(super) fn running(pid: u32) -> Result<String> {
     require(
