@@ -364,10 +364,33 @@ class Transport(unittest.TestCase):
         self.io.claim();prefix=self.manifest['ordinary_argv_allowlist'][0]
         with self.invoke(return_value=(0,b'{}',b'')) as run:
             self.assertEqual(self.io.call(prefix,root=False),b'{}')
-            self.assertEqual(run.call_args.args[0],prefix+[self.io.manifest_digest])
+            actual=run.call_args.args[0]
+            self.assertEqual(actual[:6],['/usr/bin/python3','-I','-S','-B','-c',transport.BROKER_LOADER])
+            self.assertEqual(actual[-4:-1],[self.manifest['operator_files']['first_live_launcher.py'],
+                self.io.manifest_digest,str(self.package/'first_live_launcher.py')])
+            self.assertEqual(actual[-1],'--broker-exact')
+            self.assertEqual(len(run.call_args.kwargs['pass_fds']),1)
+            self.assertEqual(run.call_args.kwargs['timeout'],1900)
             for bad in [prefix+['a'*64],prefix+[self.io.manifest_digest],prefix[:-1]+['--execute-exact']]:
                 with self.assertRaises(RuntimeError):self.io.call(bad,root=False)
             self.assertEqual(run.call_count,1)
+
+    def test_broker_reentry_executes_retained_verified_fd_after_path_replacement(self):
+        launcher=b'import json,sys;print(json.dumps({"file":__file__,"argv":sys.argv[1:]}))\n'
+        target=self.package/'first_live_launcher.py';target.chmod(0o600);target.write_bytes(launcher);target.chmod(0o400)
+        self.manifest['operator_files']['first_live_launcher.py']=digest(launcher);self.save_manifest()
+        io=transport.OperatorIO(self.manifest,self.package,self.journal)
+        with mock.patch.object(io,'_validate_tools'):
+            io.claim();real=io._invoke
+            def replace_then_run(argv,**kwargs):
+                target.rename(self.package/'displaced-launcher.py')
+                target.write_text('raise SystemExit("replacement executed")')
+                target.chmod(0o400)
+                return real(argv,**kwargs)
+            with mock.patch.object(io,'_invoke',side_effect=replace_then_run):
+                result=json.loads(io.call(self.manifest['ordinary_argv_allowlist'][0],root=False))
+        self.assertEqual(result['file'],str(target))
+        self.assertEqual(result['argv'],['--broker-exact',io.manifest_digest])
 
     def test_only_fixed_socket_directory_install_is_allowed_without_fd(self):
         command=['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']

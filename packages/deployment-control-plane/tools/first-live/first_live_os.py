@@ -27,6 +27,26 @@ HANDOFF = '/private/var/run/agent-deployd/broker-first-delivery.json'
 NATIVE = '/usr/local/libexec/agent-deployd/agent-deployd'
 CODEX = '/usr/local/libexec/agent-deployd/codex'
 SOCKET_DIRECTORY_INSTALL = ['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']
+BROKER_LOADER = '''import hashlib,os,stat,sys
+fd=int(sys.argv[1]);expected=sys.argv[2];manifest=sys.argv[3];logical=sys.argv[4];mode=sys.argv[5]
+def require(value,reason):
+    if not value:raise RuntimeError(reason)
+identity=lambda value:(value.st_dev,value.st_ino,value.st_uid,value.st_gid,value.st_mode,value.st_nlink,
+    value.st_size,value.st_mtime_ns,value.st_ctime_ns,getattr(value,"st_flags",0))
+before=os.fstat(fd)
+require(stat.S_ISREG(before.st_mode) and before.st_uid==502 and before.st_gid==20 and before.st_nlink==1
+    and stat.S_IMODE(before.st_mode) in (0o400,0o500) and getattr(before,"st_flags",0)==0
+    and 0<before.st_size<=16777216,"LAUNCHER_METADATA")
+raw=bytearray()
+while len(raw)<=16777216:
+    chunk=os.read(fd,min(1048576,16777217-len(raw)))
+    if not chunk:break
+    raw.extend(chunk)
+require(len(raw)==before.st_size and identity(os.fstat(fd))==identity(before)
+    and hashlib.sha256(raw).hexdigest()==expected,"LAUNCHER_DIGEST")
+sys.argv=[logical,mode,manifest]
+namespace={"__name__":"__main__","__file__":logical,"__package__":None,"__cached__":None}
+exec(compile(bytes(raw),logical,"exec",dont_inherit=True),namespace)'''
 
 
 def sha(data):
@@ -230,17 +250,18 @@ class OperatorIO:
             raw=read_local(self.package/'agent-deployd',row['sha256'])
             require(len(raw)==row['size'],'PACKAGE_FILE_SIZE')
 
-    def _invoke(self,argv,*,visible,stdin):
+    def _invoke(self,argv,*,visible,stdin,pass_fds=(),timeout=120):
         if visible:
-            require(stdin is None and sys.stdin.isatty() and sys.stdout.isatty(),'VISIBLE_TTY_REQUIRED')
+            require(stdin is None and not pass_fds and sys.stdin.isatty() and sys.stdout.isatty(),
+                    'VISIBLE_TTY_REQUIRED')
             result=subprocess.run(argv,env=self.env,cwd='/',close_fds=True,check=False)
             return result.returncode,b'',b''
         p=subprocess.Popen(argv,env=self.env,cwd='/',stdin=stdin if stdin is not None else subprocess.DEVNULL,
-            stdout=subprocess.PIPE,stderr=subprocess.PIPE,close_fds=True)
+            stdout=subprocess.PIPE,stderr=subprocess.PIPE,close_fds=True,pass_fds=pass_fds)
         selector=selectors.DefaultSelector();data=[bytearray(),bytearray()]
         try:
             for i,stream in enumerate((p.stdout,p.stderr)):selector.register(stream,selectors.EVENT_READ,i)
-            end=time.monotonic()+(1900 if argv==self.manifest['ordinary_argv_allowlist'][0]+[self.manifest_digest] else 120)
+            end=time.monotonic()+timeout
             while selector.get_map() or p.poll() is None:
                 require(time.monotonic()<end,'COMMAND_TIMEOUT')
                 for key,_ in selector.select(min(0.1,max(0,end-time.monotonic()))):
@@ -257,11 +278,12 @@ class OperatorIO:
         finally:
             selector.close();p.stdout.close();p.stderr.close()
 
-    def _command(self,argv,*,visible=False,stdin=None,expected_digest=None,missing=False):
+    def _command(self,argv,*,visible=False,stdin=None,expected_digest=None,missing=False,
+                 pass_fds=(),timeout=120):
         self.sequence+=1;name=f'{self.sequence:04d}-{self.current_phase}'
         self.record(name+'-intent.json',{'argv':argv,'visible':visible,'observed_at':self.now()})
         try:
-            status,out,err=self._invoke(argv,visible=visible,stdin=stdin)
+            status,out,err=self._invoke(argv,visible=visible,stdin=stdin,pass_fds=pass_fds,timeout=timeout)
             require(len(out)<=LIMIT and len(err)<=LIMIT,'OUTPUT_BOUND')
             self.record(name+'-result.json',{'exit':status,'stdout_sha256':sha(out),'stdout_size':len(out),
                 'stderr_sha256':sha(err),'stderr_size':len(err),'contents_retained':False,'visible':visible})
@@ -278,6 +300,32 @@ class OperatorIO:
             self.stopped=True
             self.record(name+'-unknown.json',{'state':'STOP_RECONCILE','error_type':type(error).__name__,'retry_forbidden':True})
             raise RuntimeError(str(error)) from error
+
+    def _broker_command(self,argv):
+        require(argv==self.manifest['ordinary_argv_allowlist'][0],'ORDINARY_ARGV')
+        path=self.package/'first_live_launcher.py'
+        expected=self.manifest['operator_files']['first_live_launcher.py']
+        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+        try:
+            before=os.fstat(fd)
+            require(stat.S_ISREG(before.st_mode) and before.st_uid==502 and before.st_gid==20
+                    and before.st_nlink==1 and stat.S_IMODE(before.st_mode) in (0o400,0o500)
+                    and getattr(before,'st_flags',0)==0 and 0<before.st_size<=16*1024*1024,
+                    'LAUNCHER_METADATA')
+            raw=bytearray()
+            while len(raw)<=16*1024*1024:
+                chunk=os.read(fd,min(1024*1024,16*1024*1024+1-len(raw)))
+                if not chunk:break
+                raw.extend(chunk)
+            require(len(raw)==before.st_size and sha(raw)==expected
+                    and tuple_of(os.fstat(fd))==tuple_of(before)
+                    and tuple_of(path.lstat())==tuple_of(before),'LAUNCHER_DIGEST')
+            os.lseek(fd,0,os.SEEK_SET)
+            actual=['/usr/bin/python3','-I','-S','-B','-c',BROKER_LOADER,str(fd),expected,
+                self.manifest_digest,str(path),'--broker-exact']
+            return self._command(actual,pass_fds=(fd,),timeout=1900)
+        finally:
+            os.close(fd)
 
     def stream_hash_fixed_codex(self,path,spec):
         self._ready()
@@ -351,7 +399,8 @@ class OperatorIO:
             require(stat.S_ISREG(m.st_mode) and m.st_uid==502 and m.st_nlink==0 and
                 stat.S_IMODE(m.st_mode)==0o600 and 0<m.st_size<=LIMIT and stdin.tell()==0,'INSTALL_INPUT_FD')
         else:require(stdin is None,'UNEXPECTED_STDIN')
-        actual=['/usr/bin/sudo','-n']+argv if root else argv+[self.manifest_digest]
+        if not root:return self._broker_command(argv)
+        actual=['/usr/bin/sudo','-n']+argv
         return self._command(actual,visible=visible,stdin=stdin,
             expected_digest=expected_digest,missing=missing)
 
