@@ -6,22 +6,22 @@ import re
 from first_live_io import require
 
 OPERATION='first-live-dsh-20260918-01'
-EXECUTION_ID='first-live-dsh-20260918-01-p4r13-successor'
+EXECUTION_ID='first-live-dsh-20260918-01-p4r15-recovery-successor'
 PREDECESSOR={
  'operation_id':OPERATION,
- 'execution_id':'first-live-dsh-20260918-01-p4r10-successor',
- 'package_sha256':'f79dce644e89e1e2386dabf2b1bd2a385640a0d25cc839cac90b1eb49ab2d026',
- 'plan_sha256':'e0d546e16dedd1d96211e001e13dba909b3be11e002d66b36debb68b0d1366a0',
- 'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_INTENT_ONLY_SAFE_STOP_SF_NOUNLINK_EFFECT_ABSENT',
+ 'execution_id':'first-live-dsh-20260918-01-p4r13-successor',
+ 'package_sha256':'43d3a4661f768d9bdfd32349e8aa87c11a9ae1a7cf22a9f20895beb0df00d68d',
+ 'plan_sha256':'72e3201520c617e96342ecf04214e92041add0765bfc9263cca2e0f064cea7c7',
+ 'operation_packet_sha256':'04ffd0d460f4ee1e61667a3ba4dc5b5d4457b2c2ecc033d6869d79b6e29dd174',
+ 'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_RETAINED_SAFE_STOP_FIRST_LIVE_SERVICE_SUDO_POLICY',
  'consumed':True,
  'retry_forbidden':True,
- 'stop_class':'LEGACY_FENCE_EFFECT_ABSENT',
+ 'stop_class':'FIRST_LIVE_SERVICE_SUDO_POLICY',
  'production_mutation_performed':True,
  'control_plane_staging_performed':True,
  'controller_enable_performed':False,
- 'stop_readback_sha256':'e3da869bf2e0c8960c5b33d368c14271958bc5c98c417f1b86f0f68b5c072fef',
- 'capability_completion_sha256':'6071e0e9343ba342470263c0bcc7a7a4e35c563e2a46474a7563cb455e75d404',
- 'capability_root_readback_sha256':'43a949d2442434981bb04b72c831d7a57988fe15d212539aefcd387b0eb93ef1',
+ 'retained_fence_flag':131072,
+ 'retained_operation_inode':88513828,
  'fresh_production_revalidation_required':True,
  'standing_successor_authority_applies':True,
 }
@@ -35,9 +35,19 @@ HANDOFF=SOCKET+'/broker-first-delivery.json'
 LABEL='system/ai.agent-deployd'
 P4R9_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r9-superseded'
 P4R9_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r9-superseded'
+P4R14_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r14r2-retained'
+P4R14_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r14r2-retained'
+P4R14_PENDING_ARCHIVE=ROOT+'/first-live-pending-p4r14r2-retained.json'
+P4R15_RECONCILIATION=ROOT+'/first-live-p4r15-reconciliation'
+# Historical module constants remain only for its immutable regression tests.
 P4R12_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r12-superseded'
 P4R12_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r12-superseded'
 LEGACY_ANCESTOR='/usr/local/var/agent-core'
+LEGACY_DEPLOY_LOCK=LEGACY_ANCESTOR+'/production-mutation-locks/production-deploy.lock'
+LEGACY_TRANSACTION_LOCK='/private/var/db/agent-core/production-transaction.lock'
+SUDOERS_ACTIVE='/private/etc/sudoers.d'
+LEGACY_SUDOERS_NAMES=('openclaw-gateway-restart','openclaw-gateway-restart.ztWs0g')
+SUDOERS_RETIREMENT=ROOT+'/first-live-sudoers-retirement-p4r15'
 FENCE_PROBE_BINARY=CODE+'/agent-deploy-first-live-fence-probe'
 FENCE_PROBE_ROOT=ROOT+'/first-live-fence-capability-p4r13'
 STAT_FORMAT='%u|%g|%p|%l|%f|%z|%m|%c|%i|%B|%d|%HT'
@@ -149,37 +159,46 @@ def commands(packet,ctl_hash,reconciliation=None):
     argv += [['/bin/mkdir','-m','0700',p] for p in [PACKET,PACKET+'/payloads',SOCKET]]
     argv += [['/bin/ls','-1A',SOCKET],['/usr/bin/install','-d','-o','root','-g','602','-m','0750',SOCKET]]
     argv += [['/usr/bin/shasum','-a','256','/usr/bin/sudo'],['/bin/launchctl','print',LABEL],
-             ['/bin/launchctl','print-disabled','system'],[CODE+'/agent-deployd','--first-live-and-enable'],
+             ['/bin/launchctl','print-disabled','system'],[CODE+'/agent-deployd','--first-live-recovery-and-enable'],
              [CODE+'/agent-deployd','--first-live-completion']]
     if reconciliation is not None:
         require(type(reconciliation) is dict and type(reconciliation.get('staging_files')) is dict,
-            'P4R12_RECONCILIATION_SHAPE')
-        p4reads={ROOT+'/first-live-pending.json',ROOT+'/first-live-operation/first-live-intent.json',
-            ROOT+'/first-live-operation/legacy-ancestor-fence-intent.json',FENCE_PROBE_BINARY,
-            FENCE_PROBE_ROOT+'/result.json'}
+            'P4R14_RECONCILIATION_SHAPE')
+        p4reads={ROOT+'/first-live-pending.json'}
+        p4reads.update(ROOT+'/first-live-operation/'+name for name in reconciliation['operation_files'])
         p4reads.update(PACKET+'/'+name for name in reconciliation['staging_files'])
-        active_reconciliation=ROOT+'/first-live-operation/successor-reconciliation.json'
-        p4meta=p4reads|{ROOT+'/first-live-operation',active_reconciliation,P4R12_OPERATION_ARCHIVE,
-            P4R12_PACKET_ARCHIVE,LEGACY_ANCESTOR,LEGACY_ANCESTOR+'/transaction.lock',FENCE_PROBE_ROOT,
-            FENCE_PROBE_ROOT+'/target',P4R12_OPERATION_ARCHIVE+'/first-live-intent.json',
-            P4R12_OPERATION_ARCHIVE+'/legacy-ancestor-fence-intent.json',
-            P4R12_OPERATION_ARCHIVE+'/p4r12-pending.json',
-            P4R12_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R12_PACKET_ARCHIVE+'/packet.json'}
-        archive_originals={P4R12_PACKET_ARCHIVE+'/original-agent-deployd',
-            P4R12_PACKET_ARCHIVE+'/original-agent-deploy-issuer'}
+        p4reads.add(SUDOERS_RETIREMENT+'/retirement-complete.json')
+        p4reads.update(SUDOERS_RETIREMENT+'/preimages/'+name for name in LEGACY_SUDOERS_NAMES)
+        for path,value in reconciliation['legacy_locks'].items():
+            p4reads.add(path+'/'+value['holder_name'])
+        reconcile_records={P4R15_RECONCILIATION+'/'+name for name in (
+            'intent.json','pending-archive-result.json','operation-archive-result.json',
+            'packet-archive-result.json','complete.json')}
+        write_paths.update({path:('0400',0) for path in reconcile_records})
+        p4meta=p4reads|{ROOT+'/first-live-operation',
+            ROOT+'/first-live-operation/first-live-maintenance-0-0',P4R14_OPERATION_ARCHIVE,
+            P4R14_PACKET_ARCHIVE,P4R14_PENDING_ARCHIVE,P4R15_RECONCILIATION,
+            LEGACY_ANCESTOR,SUDOERS_RETIREMENT,SUDOERS_RETIREMENT+'/preimages',
+            P4R14_OPERATION_ARCHIVE+'/first-live-intent.json',P4R14_PENDING_ARCHIVE,
+            P4R14_PACKET_ARCHIVE+'/packet.json'}|set(reconciliation['legacy_locks'])
+        p4meta.update(SUDOERS_ACTIVE+'/'+name for name in LEGACY_SUDOERS_NAMES)
+        p4meta |= reconcile_records
+        archive_originals={P4R14_PACKET_ARCHIVE+'/original-agent-deployd',
+            P4R14_PACKET_ARCHIVE+'/original-agent-deploy-issuer'}
         p4meta |= archive_originals
         for path in sorted(p4meta):
             argv.extend([['/usr/bin/stat','-f',STAT_FORMAT,path],['/bin/ls','-ldeO',path]])
-        argv += [['/bin/cat',p] for p in sorted(p4reads|archive_originals|{active_reconciliation,
-            P4R12_OPERATION_ARCHIVE+'/first-live-intent.json',
-            P4R12_OPERATION_ARCHIVE+'/legacy-ancestor-fence-intent.json',
-            P4R12_OPERATION_ARCHIVE+'/p4r12-pending.json',
-            P4R12_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R12_PACKET_ARCHIVE+'/packet.json'})]
+        argv += [['/bin/cat',p] for p in sorted(p4reads|archive_originals|reconcile_records|{
+            P4R14_OPERATION_ARCHIVE+'/first-live-intent.json',P4R14_PENDING_ARCHIVE,
+            P4R14_PACKET_ARCHIVE+'/packet.json'})]
         argv += [['/bin/ls','-1A',ROOT+'/first-live-operation'],['/bin/ls','-1A',PACKET],
-            ['/bin/ls','-1A',PACKET+'/payloads']]
-        argv += [['/usr/bin/install','-o','root','-g','wheel','-m','0400','/dev/fd/0',
-            ROOT+'/first-live-operation/successor-reconciliation.json'],
-            ['/bin/mv',ROOT+'/first-live-pending.json',ROOT+'/first-live-operation/p4r12-pending.json'],
-            ['/bin/mv',ROOT+'/first-live-operation',P4R12_OPERATION_ARCHIVE],
-            ['/bin/mv',PACKET,P4R12_PACKET_ARCHIVE],['/bin/sync']]
+            ['/bin/ls','-1A',PACKET+'/payloads'],
+            ['/bin/ls','-1A',ROOT+'/first-live-operation/first-live-maintenance-0-0']]
+        argv += [['/bin/ls','-1A',path] for path in reconciliation['legacy_locks']]
+        argv += [['/usr/bin/install','-o','root','-g','wheel','-m','0400','/dev/fd/0',p]
+            for p in sorted(reconcile_records)]
+        argv += [['/bin/mkdir','-m','0700',P4R15_RECONCILIATION],
+            ['/bin/mv',ROOT+'/first-live-pending.json',P4R14_PENDING_ARCHIVE],
+            ['/bin/mv',ROOT+'/first-live-operation',P4R14_OPERATION_ARCHIVE],
+            ['/bin/mv',PACKET,P4R14_PACKET_ARCHIVE],['/bin/sync']]
     return [list(row) for row in dict.fromkeys(tuple(row) for row in argv)]

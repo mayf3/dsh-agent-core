@@ -200,7 +200,7 @@ class PhaseCuts(unittest.TestCase):
             'staging_files':{'original-agent-deployd':spec,'original-agent-deploy-issuer':spec}}
         blobs={'packet-template.json':raw(p),'owner-scope.json':scope,'agent-deployctl':b'ctl',
             'agent-deployd':b'controller','agent-deploy-issuer':b'issuer',
-            'p4r12-successor-reconciliation.json':raw(reconciliation)}
+            'p4r14-successor-reconciliation.json':raw(reconciliation)}
         p['controller_sha256']=digest(blobs['agent-deployd']);blobs['packet-template.json']=raw(p)
         m=dict(version=1,operation_id=op.OPERATION,source_sha=p['source_sha'],controller_sha256=p['controller_sha256'],
             files={k:{'sha256':digest(v),'size':len(v)} for k,v in blobs.items()},root_argv_allowlist=[],
@@ -267,13 +267,13 @@ class PhaseCuts(unittest.TestCase):
              patch.object(op,'protected_read',side_effect=lambda _io,path,_spec: b'old issuer' if path.endswith('agent-deploy-issuer') else b'old'),\
              patch.object(op,'prepare_socket',side_effect=lambda _io,_p,_existing:io.events.append('socket-prepared')),\
              patch.object(op,'enabled_records',side_effect=lambda _:io.records()),\
-             patch('p4r12_reconcile.reconcile',side_effect=lambda _io,_raw:io.events.append('p4r12-reconciled')):
+             patch('p4r14_reconcile.reconcile',side_effect=lambda _io,_raw:io.events.append('p4r14-reconciled')):
             try:result=op.execute(io,m,Path('/private-fixture'))
             except RuntimeError:result=None
         return io,result
 
     def test_phase_cuts_keep_attempt_consumed_and_never_reach_later_effect(self):
-        phases=['p4r12-reconciliation','protected-prefix','protected-copy','native-first-live-enable','enabled-readback',
+        phases=['p4r14-reconciliation','protected-prefix','protected-copy','native-first-live-enable','enabled-readback',
                 'ordinary-broker-delivery','current-closure-readback']
         for i,cut in enumerate(phases):
             with self.subTest(cut=cut):
@@ -292,8 +292,8 @@ class PhaseCuts(unittest.TestCase):
             io,result=self.run_case(pending=pending)
             self.assertEqual(result['state'],'FIRST_AUTOMATIC_DELIVERY_'+('PENDING' if pending else 'COMPLETE'))
             self.assertFalse(result['parent_goal_complete']);self.assertEqual(io.auth,3)
-            self.assertLess(io.events.index('socket-prepared'),io.events.index((op.CONTROLLER,'--first-live-and-enable')))
-            self.assertEqual(sum(e==(op.CONTROLLER,'--first-live-and-enable') for e in io.events),1)
+            self.assertLess(io.events.index('socket-prepared'),io.events.index((op.CONTROLLER,'--first-live-recovery-and-enable')))
+            self.assertEqual(sum(e==(op.CONTROLLER,'--first-live-recovery-and-enable') for e in io.events),1)
             self.assertEqual(sum(e==(op.CONTROLLER,'--first-live-completion') for e in io.events),1)
 
 
