@@ -44,6 +44,7 @@ RETAINED_FILES = {
     "legacy-ancestor-fence-result.json": (88513833, 248, "300a10ff2407d5693aa6603e8cb064a029151ec93d45dab72d07ca4bcbc9514a"),
 }
 ENV = {"PATH": "/usr/bin:/bin:/usr/sbin:/sbin", "LANG": "C", "LC_ALL": "C", "HOME": "/var/root"}
+PROVENANCE = bytes.fromhex("010200b853f6dc8c0be32b")
 
 
 def require(value, reason):
@@ -114,19 +115,21 @@ def _xattr_value(fd, name):
     return buffer.raw[:count]
 
 
-def _retained_operation_xattr(fd):
-    require(_xattrs(fd) == ["com.apple.provenance"] and
-            _xattr_value(fd, "com.apple.provenance") ==
-            bytes.fromhex("010200b853f6dc8c0be32b"),
-            "RETAINED_OPERATION_XATTR")
+def _security_xattrs(fd, policy):
+    names = _xattrs(fd)
+    if names == [] and policy in ("none", "created"):
+        return
+    require(names == ["com.apple.provenance"] and policy in ("provenance", "created")
+            and _xattr_value(fd, "com.apple.provenance") == PROVENANCE,
+            "SECURITY_XATTR")
 
 
-def _image(fd, expected_uid):
+def _image(fd, expected_uid, xattr_policy="none"):
     before = os.fstat(fd)
     require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_uid == expected_uid,
             "SUDOERS_PREIMAGE_METADATA")
     _acl_none(fd)
-    require(_xattrs(fd) == [], "SUDOERS_PREIMAGE_XATTR")
+    _security_xattrs(fd, xattr_policy)
     os.lseek(fd, 0, os.SEEK_SET)
     data = bytearray()
     while len(data) <= 4096:
@@ -163,7 +166,7 @@ def _mkdir(parent, name, uid):
     require(meta.st_uid == uid and meta.st_gid == (0 if uid == 0 else os.getgid())
             and stat.S_IMODE(meta.st_mode) == 0o700 and
             getattr(meta, "st_flags", 0) == 0, "JOURNAL_METADATA")
-    _acl_none(fd); require(_xattrs(fd) == [], "JOURNAL_METADATA")
+    _acl_none(fd); _security_xattrs(fd, "created")
     return fd
 
 
@@ -172,7 +175,7 @@ def _record(area, name, value, uid):
     existing = _open_optional(area, name)
     if existing is not None:
         try:
-            image = _image(existing, uid)
+            image = _image(existing, uid, "created")
             require(image == {"device": image["device"], "inode": image["inode"], "uid": uid,
                     "gid": 0 if uid == 0 else os.getgid(), "mode": 0o400, "flags": 0,
                     "size": len(raw), "sha256": sha(raw)}, "JOURNAL_DRIFT")
@@ -321,7 +324,7 @@ def _retained_state():
         require((meta.st_dev, meta.st_ino, meta.st_uid, stat.S_IMODE(meta.st_mode)) ==
                 (16777230, 88513828, 0, 0o700), "RETAINED_STATE")
         require(getattr(meta, "st_flags", 0) == 0, "RETAINED_STATE")
-        _retained_operation_xattr(old)
+        _security_xattrs(old, "provenance")
         _acl_none(old)
         expected_names = sorted([*RETAINED_FILES, "first-live-maintenance-0-0"])
         require(sorted(os.listdir(old)) == expected_names, "RETAINED_HISTORY")
@@ -329,7 +332,7 @@ def _retained_state():
             fd = _open_optional(old, name)
             require(fd is not None, "RETAINED_HISTORY")
             try:
-                image = _image(fd, 0)
+                image = _image(fd, 0, "provenance")
                 require(image == {"device": 16777230, "inode": inode, "uid": 0, "gid": 0,
                         "mode": 0o400, "flags": 0, "size": size, "sha256": expected_sha},
                         "RETAINED_HISTORY")
@@ -343,7 +346,7 @@ def _retained_state():
             require((m.st_dev, m.st_ino, m.st_uid, m.st_gid, stat.S_IMODE(m.st_mode),
                     getattr(m, "st_flags", 0), os.listdir(maintenance)) ==
                     (16777230, 88513855, 0, 0, 0o700, 0, []), "RETAINED_HISTORY")
-            _acl_none(maintenance); require(_xattrs(maintenance) == [], "RETAINED_HISTORY")
+            _acl_none(maintenance); _security_xattrs(maintenance, "provenance")
         finally:
             os.close(maintenance)
     finally:
@@ -355,7 +358,7 @@ def _retained_state():
         require((m.st_dev, m.st_ino, m.st_uid, m.st_gid, stat.S_IMODE(m.st_mode),
                 getattr(m, "st_flags", 0)) == (16777230, 80401184, 0, 80, 0o755, 131072),
                 "RETAINED_FENCE")
-        _acl_none(fence); require(_xattrs(fence) == [], "RETAINED_FENCE")
+        _acl_none(fence); _security_xattrs(fence, "provenance")
     finally:
         os.close(fence)
     for path, identity, holder_name, holder_identity, holder_sha in (
@@ -372,11 +375,12 @@ def _retained_state():
             require((m.st_dev, m.st_ino, m.st_uid, m.st_gid, stat.S_IMODE(m.st_mode)) == identity
                     and getattr(m, "st_flags", 0) == 0 and os.listdir(directory) == [holder_name],
                     "RETAINED_LOCK")
+            _acl_none(directory); _security_xattrs(directory, "provenance")
             holder = _open_optional(directory, holder_name)
             require(holder is not None, "RETAINED_LOCK")
             try:
                 before = os.fstat(holder)
-                image = _image(holder, 0)
+                image = _image(holder, 0, "provenance")
                 require((before.st_dev, before.st_ino, before.st_uid, before.st_gid,
                         stat.S_IMODE(before.st_mode)) == holder_identity
                         and image["sha256"] == holder_sha, "RETAINED_LOCK")
@@ -431,8 +435,8 @@ def run():
         require((state_meta.st_dev, state_meta.st_ino, state_meta.st_uid, state_meta.st_gid,
                 stat.S_IMODE(state_meta.st_mode), getattr(state_meta, "st_flags", 0)) ==
                 (16777230, 85616151, 0, 0, 0o700, 0), "STATE_ROOT")
-        for directory in (active, state):
-            _acl_none(directory); require(_xattrs(directory) == [], "PROTECTED_ROOT_METADATA")
+        _acl_none(active); _security_xattrs(active, "none")
+        _acl_none(state); _security_xattrs(state, "provenance")
         expected = (
             {"device": 16777230, "inode": 34603253, "uid": 0, "gid": 0, "mode": 0o440,
              "flags": 0, "size": 167, "sha256": PREIMAGE_SHA},
