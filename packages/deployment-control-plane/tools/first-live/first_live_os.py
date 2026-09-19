@@ -305,7 +305,7 @@ class OperatorIO:
         require(argv==self.manifest['ordinary_argv_allowlist'][0],'ORDINARY_ARGV')
         path=self.package/'first_live_launcher.py'
         expected=self.manifest['operator_files']['first_live_launcher.py']
-        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+        fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC)
         try:
             before=os.fstat(fd)
             require(stat.S_ISREG(before.st_mode) and before.st_uid==502 and before.st_gid==20
