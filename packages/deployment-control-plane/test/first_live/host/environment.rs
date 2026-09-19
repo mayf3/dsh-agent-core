@@ -56,6 +56,10 @@ fn malformed_environment_like_blocks_and_unbalanced_domain_are_rejected() {
         "system = {\n \tdefault environment = {\n\t\tLD_PRELOAD => x\n\t}\n}\n",
         "system = {\n environment = {\n  DYLD_INSERT_LIBRARIES => x\n }\n}\n",
         "system = {\n\t environment = {\n\t\tLD_LIBRARY_PATH => x\n\t}\n}\n",
+        "system = {\n\tdefault  environment = {\n\t\tLD_PRELOAD => x\n\t}\n}\n",
+        "system = {\n\tdefault\tenvironment = {\n\t\tLD_PRELOAD => x\n\t}\n}\n",
+        "system = {\n\tdefault environment\n\t\tLD_PRELOAD => x\n}\n",
+        "system = {\n }\n}\n",
         "system = {\n}\n}\n",
     ] {
         assert!(domain(raw).is_err(), "accepted malformed domain: {raw:?}");
