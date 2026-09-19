@@ -202,8 +202,7 @@ def execute(io,manifest,package_path):
                 p4r9['staging_files']['original-'+name])
             io.copy(value,digest(value),'0400',layout.PACKET+'/original-'+name)
         for name,(dest,mode,gid) in layout.copies(p,ctl).items():
-            if name in p4r9['installed_files']:io.expect(dest,p4r9['installed_files'][name])
-            else:io.copy(local(name),manifest['files'][name]['sha256'],mode,dest,gid=gid)
+            io.copy(local(name),manifest['files'][name]['sha256'],mode,dest,gid=gid)
         io.copy(packet_raw,digest(packet_raw),'0400',layout.PACKET+'/packet.json')
         g=grant(packet_raw,int(io.now()));grant_raw=_canonical(g)
         io.copy(grant_raw,digest(grant_raw),'0600',layout.PACKET+'/owner-grant.json')

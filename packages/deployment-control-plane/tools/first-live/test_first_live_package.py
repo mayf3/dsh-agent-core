@@ -49,6 +49,11 @@ class Mapping(unittest.TestCase):
         self.assertIn(['/bin/cat',active],commands)
         self.assertIn(['/bin/mv',p.PACKET,p.P4R9_PACKET_ARCHIVE],commands)
         self.assertIn(['/bin/sync'],commands)
+        for name in ['original-agent-deployd','original-agent-deploy-issuer']:
+            archived=p.P4R9_PACKET_ARCHIVE+'/'+name
+            self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,archived],commands)
+            self.assertIn(['/bin/ls','-ldeO',archived],commands)
+            self.assertIn(['/bin/cat',archived],commands)
         self.assertEqual(len(commands),len({tuple(row) for row in commands}))
 
     def test_native_fixed_filenames_and_all_real_payloads(self):
