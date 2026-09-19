@@ -1,7 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { DEFAULT_MANIFESTS } from '../src/index.js'
+import { DEFAULT_MANIFESTS, apply as applyBroker } from '../src/index.js'
+import { schedulerManifest } from '../src/capabilities/scheduler.js'
+import { agentSessionReconcileManifest } from '../src/capabilities/agent-session-reconcile.js'
 import { selfOpsManifest } from '../src/capabilities/self-ops.js'
 import { createBrokerGateway } from '../src/gateway.js'
 import { buildToolDefinition } from '../src/registry.js'
@@ -18,11 +20,11 @@ function gateway(handlers) {
   })
 }
 
-test('Tools V3 registers exactly one infrastructure self_ops manifest with three actions', () => {
+test('Tools V4 registers exactly one model-visible self_ops manifest with three actions', () => {
   assert.equal(DEFAULT_MANIFESTS.filter((manifest) => manifest.id === 'self_ops').length, 1)
   const canonical = validateManifest(selfOpsManifest)
   assert.equal(canonical.ok, true)
-  assert.equal(canonical.manifest.infrastructure, true)
+  assert.equal(canonical.manifest.infrastructure, undefined) // Tools V4: infrastructure=true superseded for self_ops (model-visible)
   assert.equal(canonical.manifest.selector, 'action')
   assert.deepEqual(canonical.manifest.operations.map((operation) => operation.name), ['status', 'reconcile_turn', 'job_disposition'])
   const { definition } = buildToolDefinition({ manifest: selfOpsManifest, handlers: {} })
@@ -80,4 +82,35 @@ test('availability reports self_ops provider readiness without credentials', asy
     ready: true,
     operations: { status: true, reconcile_turn: true, job_disposition: true },
   })
+})
+
+// ─── Tools V4: the REAL model tool list (production registration path) ──────
+// AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4 acceptance regression:
+//   MODEL_TOOL_LIST_CONTAINS_SELF_OPS=YES (actions exactly three)
+//   MODEL_TOOL_LIST_CONTAINS_AGENT_SESSION_RECONCILE=NO (stays infrastructure/hidden)
+//   MODEL_TOOL_LIST_CONTAINS_SCHEDULER=YES (unchanged)
+
+function fakeCtx() {
+  const names = []
+  const ctx = {}
+  ctx.tools = { register: (definition) => names.push(definition) }
+  ctx.get = () => undefined
+  ctx.provide = () => undefined
+  return { ctx, names }
+}
+
+test('model tool list contains self_ops with exactly three actions, keeps scheduler, excludes agent_session_send_reconcile', () => {
+  const { ctx, names } = fakeCtx()
+  applyBroker(ctx, {
+    mode: 'child',
+    manifests: [selfOpsManifest, schedulerManifest, agentSessionReconcileManifest],
+  })
+  const toolNames = names.map((definition) => definition.name)
+  assert.ok(toolNames.includes('self_ops'), `self_ops missing from model tool list: ${toolNames.join(',')}`)
+  assert.ok(toolNames.includes('scheduler'), 'scheduler must remain model-visible')
+  assert.ok(!toolNames.includes('agent_session_send_reconcile'), 'agent_session_send_reconcile must stay infrastructure-hidden')
+  const selfOpsTool = names.find((definition) => definition.name === 'self_ops')
+  assert.match(selfOpsTool.description, /\bstatus\b/)
+  assert.match(selfOpsTool.description, /\breconcile_turn\b/)
+  assert.match(selfOpsTool.description, /\bjob_disposition\b/)
 })
