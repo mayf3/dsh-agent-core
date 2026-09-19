@@ -155,9 +155,12 @@ def commands(packet,ctl_hash,reconciliation=None):
         p4meta=p4reads|{ROOT+'/first-live-operation',active_reconciliation,P4R9_OPERATION_ARCHIVE,P4R9_PACKET_ARCHIVE,
             P4R9_OPERATION_ARCHIVE+'/first-live-intent.json',P4R9_OPERATION_ARCHIVE+'/p4r9-pending.json',
             P4R9_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R9_PACKET_ARCHIVE+'/packet.json'}
+        archive_originals={P4R9_PACKET_ARCHIVE+'/original-agent-deployd',
+            P4R9_PACKET_ARCHIVE+'/original-agent-deploy-issuer'}
+        p4meta |= archive_originals
         for path in sorted(p4meta):
             argv.extend([['/usr/bin/stat','-f',STAT_FORMAT,path],['/bin/ls','-ldeO',path]])
-        argv += [['/bin/cat',p] for p in sorted(p4reads|{active_reconciliation,
+        argv += [['/bin/cat',p] for p in sorted(p4reads|archive_originals|{active_reconciliation,
             P4R9_OPERATION_ARCHIVE+'/first-live-intent.json',P4R9_OPERATION_ARCHIVE+'/p4r9-pending.json',
             P4R9_OPERATION_ARCHIVE+'/successor-reconciliation.json',P4R9_PACKET_ARCHIVE+'/packet.json'})]
         argv += [['/bin/ls','-1A',ROOT+'/first-live-operation'],['/bin/ls','-1A',PACKET],
