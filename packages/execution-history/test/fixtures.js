@@ -27,6 +27,7 @@ export const ATTEMPT_ID = attemptIdFor(VISIT_ID, 1)
 export const MESSAGE_ID = 'om_fixture_message_0001'
 export const REQUEST_ID = 'req-fixture-0001'
 export const OCC_ID = 'occ:003a05ed6629f358ff53'
+export const OCC_ID_2 = 'occ:003a05ed6629ffff'
 export const JOB_ID = 'job_hr_daily'
 
 const T0 = 1758100000000
@@ -48,7 +49,13 @@ export function buildFixtureRoot() {
   ]
   writeFileSync(join(controlDir, 'agent-session-messaging-audit.jsonl'), auditRows.map((r) => JSON.stringify(r)).join('\n') + '\n')
   writeFileSync(join(controlDir, 'agent-session-messaging-audit-archive.jsonl'), JSON.stringify({ kind: 'agent_session_send', phase: 'intent', sourceAgentId: 'agt_scheduler', targetAgentId: 'agt_b', requestId: 'req-old-archived', correlationHash: 'ffff', ts: T0 - 9000 }) + '\n')
-  writeFileSync(join(controlDir, 'runtime-evidence.jsonl'), `${JSON.stringify({ kind: 'invocation', jobId: JOB_ID, occurrenceId: OCC_ID, sessionId: 'cron-run-occ:003a05ed6629f358ff53', reconciliationHandle: 'te-cron-1', summary: 'ok', ts: T0 + 900 })}\n${JSON.stringify({ kind: 'ready', pid: 1, ts: T0 - 100 })}\n`)
+  writeFileSync(join(controlDir, 'runtime-evidence.jsonl'), [
+    { kind: 'invocation', jobId: JOB_ID, occurrenceId: OCC_ID, sessionId: 'cron-run-occ:003a05ed6629f358ff53', reconciliationHandle: 'te-cron-1', summary: 'ok', ts: T0 + 900 },
+    // SIBLING invocation + an uncoordinated row — §二 default-inclusion counterexamples.
+    { kind: 'invocation', jobId: JOB_ID, occurrenceId: OCC_ID_2, sessionId: 'cron-run-occ:003a05ed6629ffff', reconciliationHandle: 'te-cron-2', summary: 'ok', ts: T0 + 1900 },
+    { kind: 'invocation', sessionId: 'some-unrelated-session', summary: 'no coordinates', ts: T0 + 1950 },
+    { kind: 'ready', pid: 1, ts: T0 - 100 },
+  ].map((r) => JSON.stringify(r)).join('\n') + '\n')
 
   // ── Workflow attempts ledger: gen-1 planned → delivered (with messageId).
   // Row shape mirrors the real producer (ledger.js #recordForActive: every
@@ -60,12 +67,20 @@ export function buildFixtureRoot() {
   ]
   writeFileSync(join(workflowExecutionDir, 'attempts.jsonl'), ledgerRows.map((r) => JSON.stringify(r)).join('\n') + '\n')
 
-  // ── Scheduler store: one job (routing agt_hr) + one failed occurrence.
+  // ── Scheduler store: one job (routing agt_hr) + two occurrences (occ2 is
+  // a SIBLING run of the same job — the §二 mixing counterexample), plus an
+  // enabled never-reserved job (the §一 job-presence counterexample).
   mkdirSync(join(root, 'scheduler'), { recursive: true })
   writeFileSync(join(root, 'scheduler', 'jobs.json'), JSON.stringify({
     version: 2,
-    jobs: [{ id: JOB_ID, name: 'HR daily', targetAgentId: 'agt_hr', enabled: true, schedule: { kind: 'cron', expr: '0 9 * * *' }, payload: {} }],
-    occurrences: [{ occurrenceId: OCC_ID, jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1, state: 'failed', fenced: false, nativeSessionId: 'cron-run-occ:003a05ed6629f358ff53', executionOutcome: 'failed', deliveryStatus: 'none', admittedAt: T0 + 800, updatedAtMs: T0 + 990 }],
+    jobs: [
+      { id: JOB_ID, name: 'HR daily', targetAgentId: 'agt_hr', enabled: true, schedule: { kind: 'cron', expr: '0 9 * * *' }, payload: {} },
+      { id: 'job_never_ran', name: 'Enabled idle job', targetAgentId: 'agt_hr', enabled: true, schedule: { kind: 'cron', expr: '0 5 * * *' }, payload: {} },
+    ],
+    occurrences: [
+      { occurrenceId: OCC_ID, jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1, state: 'failed', fenced: false, nativeSessionId: 'cron-run-occ:003a05ed6629f358ff53', executionOutcome: 'failed', deliveryStatus: 'none', admittedAt: T0 + 800, updatedAtMs: T0 + 990 },
+      { occurrenceId: OCC_ID_2, jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1, state: 'succeeded', fenced: false, nativeSessionId: 'cron-run-occ:003a05ed6629ffff', executionOutcome: 'succeeded', deliveryStatus: 'none', admittedAt: T0 + 1800, updatedAtMs: T0 + 1990 },
+    ],
     fences: {},
   }))
 
@@ -84,6 +99,13 @@ export function buildFixtureRoot() {
       scheduled_at: '2026-09-17T04:42:00.000Z', started_at_ms: T0 + 850, ended_at_ms: T0 + 980,
       correlation_id: `schcorr:${OCC_ID}`, request_id: OCC_ID, delivery_status: 'none',
       result: { final_status: 'FAIL', counters: { attempts: 1 }, notes: 'turn failed', wake_sent: [{ target_agent_id: 'agt_a', workflow_instance_id: WF_ID_2, request_id: 'req-wake-1' }] },
+    }, {
+      // SIBLING run of the same job — must never appear in an occ1-scoped query.
+      run_id: `run:${OCC_ID_2}`, occurrence_id: OCC_ID_2, job_id: JOB_ID, agent_id: 'agt_hr',
+      session_id: 'cron-run-occ:003a05ed6629ffff', outcome: 'succeeded', status_view: 'succeeded',
+      scheduled_at: '2026-09-18T04:42:00.000Z', started_at_ms: T0 + 1850, ended_at_ms: T0 + 1900,
+      correlation_id: `schcorr:${OCC_ID_2}`, request_id: OCC_ID_2, delivery_status: 'none',
+      result: { final_status: 'PASS', counters: {}, notes: '' },
     }],
   }, null, 2) + '\n')
 
@@ -109,6 +131,9 @@ export function buildFixtureRoot() {
     // Escaped-JSON tool coordinate (results/args pass through as strings in
     // real journals) — the index extractor must find these too.
     { type: 'tool/call', seq: 13, time: new Date(T0 + 710).toISOString(), data: { turn: 1, callId: 'call-2', name: 'workflow_instance_detail', arguments: '{"workflowInstanceId":"' + WF_ID_2 + '"}' } },
+    // Real A2A sidecar with the production turn: correlation namespace —
+    // the §三 reverse-lookup coordinate.
+    { type: 'agent/inbox/spliced', seq: 14, time: new Date(T0 + 720).toISOString(), data: { target: 'next-turn', inserted: [{ content: [{ type: 'text', text: 'injected from turn namespace' }], source: { kind: 'inter_agent', sourceAgentId: 'agt_scheduler', correlation: 'turn:fixture-src-1' } }] } },
     { type: 'user/message', seq: 11, time: new Date(T0 + 600).toISOString(), data: { content: 'L'.repeat(2000), source: { kind: 'user' } } },
   ]
   writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), agtAEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')

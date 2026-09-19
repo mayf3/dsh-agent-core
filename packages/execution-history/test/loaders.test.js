@@ -99,9 +99,9 @@ test('T3 scheduler store: admission facts for jobs and occurrences; routing agen
     assert.ok(job)
     assert.equal(jobRoutingAgent(job), 'agt_hr')
     const occs = occurrencesOf(store.occurrences, JOB_ID)
-    assert.equal(occs.length, 1)
-    assert.equal(occs[0].occurrenceId, OCC_ID)
-    assert.equal(occs[0].nativeSessionId, 'cron-run-occ:003a05ed6629f358ff53')
+    assert.equal(occs.length, 2, 'both sibling occurrences present (mixing counterexample fixture)')
+    const occ1 = occs.find((o) => o.occurrenceId === OCC_ID)
+    assert.equal(occ1.nativeSessionId, 'cron-run-occ:003a05ed6629f358ff53')
   } finally { destroyFixtureRoot(fixture) }
 })
 
