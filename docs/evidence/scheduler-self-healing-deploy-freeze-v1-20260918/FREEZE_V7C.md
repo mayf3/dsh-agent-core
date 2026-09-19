@@ -73,6 +73,13 @@ Readbacks: /private/tmp/scheduler-self-healing-deploy-v7c-receipt/deploy-receipt
 RUNBOOK_SHA256(V7C)=0de835fcb45b2873bddf23574fff98210813b52bbc5333f9d29bcfb6927741e2
   (archived byte-identical copy in this directory; fixture-caught source-layout bug fixed before
    first green run; FIXTURE=PASS observed)
-MECHANICAL_REVIEW=see V7C-REVIEW-MECHANICAL.md
-SAFETY_REVIEW=see V7C-REVIEW-SAFETY.md
+MECHANICAL_REVIEW=PASS / BLOCKERS=NONE — executed verification: fixture rerun, full v7b→v7c delta
+  inventory zero-regression, independent manifest recomputation (live 6447676c / target 2d45fda7),
+  noclobber + G6b decoy sims (wap + v7-family caught, self family excluded), set-u audit, live spot
+  checks. See V7C-REVIEW-MECHANICAL.md
+SAFETY_REVIEW=PASS / BLOCKERS=NONE — blast radius confined; gateway diff = EXACTLY the two
+  job_disposition hunks (presentation-only seam, dispatch generic, live scheduler handler verified);
+  independent 1174-file two-hash substitution reproduces the target manifest exactly (WAP bytes
+  provably untouchable); eleven post-swap failure modes auto-rollback; W2 read-only to routing.
+  See V7C-REVIEW-SAFETY.md
 ```
