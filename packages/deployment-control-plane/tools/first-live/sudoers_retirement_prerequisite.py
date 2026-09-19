@@ -99,6 +99,27 @@ def _xattrs(fd):
     return [name.decode() for name in buffer.raw[:count].split(b"\0") if name]
 
 
+def _xattr_value(fd, name):
+    require(sys.platform == "darwin", "XATTR_PLATFORM_UNSUPPORTED")
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.fgetxattr.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p,
+                               ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int)
+    libc.fgetxattr.restype = ctypes.c_ssize_t
+    encoded = name.encode()
+    count = libc.fgetxattr(fd, encoded, None, 0, 0, 0)
+    require(0 <= count <= 4096, "XATTR_VALUE_READ_FAILED")
+    buffer = ctypes.create_string_buffer(count or 1)
+    require(libc.fgetxattr(fd, encoded, buffer, count, 0, 0) == count,
+            "XATTR_VALUE_CHANGED")
+    return buffer.raw[:count]
+
+
+def _retained_operation_xattr(fd):
+    require(_xattrs(fd) == ["com.apple.provenance"] and
+            _xattr_value(fd, "com.apple.provenance") == b"\x01\x02",
+            "RETAINED_OPERATION_XATTR")
+
+
 def _image(fd, expected_uid):
     before = os.fstat(fd)
     require(stat.S_ISREG(before.st_mode) and before.st_nlink == 1 and before.st_uid == expected_uid,
@@ -298,7 +319,8 @@ def _retained_state():
         meta = os.fstat(old)
         require((meta.st_dev, meta.st_ino, meta.st_uid, stat.S_IMODE(meta.st_mode)) ==
                 (16777230, 88513828, 0, 0o700), "RETAINED_STATE")
-        require(getattr(meta, "st_flags", 0) == 0 and _xattrs(old) == [], "RETAINED_STATE")
+        require(getattr(meta, "st_flags", 0) == 0, "RETAINED_STATE")
+        _retained_operation_xattr(old)
         _acl_none(old)
         expected_names = sorted([*RETAINED_FILES, "first-live-maintenance-0-0"])
         require(sorted(os.listdir(old)) == expected_names, "RETAINED_HISTORY")
