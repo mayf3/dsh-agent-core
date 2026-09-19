@@ -4,7 +4,7 @@ use crate::{
     error::require,
     fs::{
         file::{sha, snapshot, write_new},
-        secure::{reject_acl, validate, Dir},
+        secure::{component, reject_acl, validate, Dir},
         MutationGuard,
     },
     trust::canonical_bytes,
@@ -36,8 +36,14 @@ const NAMES: [&str; 4] = [
 const HOLDERS: [&str; 2] = ["holder", "dcp-handover.json"];
 const LEGACY_ANCESTOR: &str = "/usr/local/var/agent-core";
 const LEGACY_LOCK_CHILD: &str = "production-mutation-locks";
-// Current macOS/XNU SF_NOUNLINK. Keep this local: this is not a generic chflags API.
-const LEGACY_ANCESTOR_FLAG: u32 = 0x0010_0000;
+const FENCE_PROBE_PARENT: &str = "/private/var/db/agent-deployd";
+const FENCE_PROBE_NAME: &str = "first-live-fence-capability-p4r13";
+const FENCE_PROBE_PARENT_DEVICE: u64 = 16_777_230;
+const FENCE_PROBE_PARENT_INODE: u64 = 85_616_151;
+// Current macOS/XNU SF_IMMUTABLE. P4R12 proved that SF_NOUNLINK could not be
+// established on the exact production APFS inode. Keep this local: this is not
+// a generic chflags API.
+const LEGACY_ANCESTOR_FLAG: u32 = 0x0002_0000;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Identity {
@@ -88,15 +94,28 @@ trait FenceFlags {
     fn set(file: &File, flags: u32) -> Result<()>;
 }
 struct NativeFenceFlags;
+fn fence_effect_error(errno: i32) -> Error {
+    Error::new(match errno {
+        libc::EPERM => "LEGACY_FENCE_EFFECT_EPERM",
+        libc::EINVAL => "LEGACY_FENCE_EFFECT_EINVAL",
+        libc::ENOTSUP => "LEGACY_FENCE_EFFECT_ENOTSUP",
+        libc::EROFS => "LEGACY_FENCE_EFFECT_EROFS",
+        libc::EBADF => "LEGACY_FENCE_EFFECT_EBADF",
+        _ => "LEGACY_FENCE_EFFECT_OTHER",
+    })
+}
 impl FenceFlags for NativeFenceFlags {
     fn flags(file: &File) -> Result<u32> {
         Ok(std::os::macos::fs::MetadataExt::st_flags(&file.metadata()?))
     }
     fn set(file: &File, flags: u32) -> Result<()> {
-        require(
-            unsafe { libc::fchflags(file.as_raw_fd(), flags) } == 0,
-            "LEGACY_FENCE_EFFECT",
-        )
+        if unsafe { libc::fchflags(file.as_raw_fd(), flags) } == 0 {
+            Ok(())
+        } else {
+            Err(fence_effect_error(
+                std::io::Error::last_os_error().raw_os_error().unwrap_or(0),
+            ))
+        }
     }
 }
 
@@ -265,7 +284,36 @@ impl<F: FenceFlags> AncestorFence<F> {
             }),
         )?;
         checkpoint("legacy-ancestor-fence-intent");
-        F::set(&dir.file, expected.flags | LEGACY_ANCESTOR_FLAG)?;
+        if let Err(error) = F::set(&dir.file, expected.flags | LEGACY_ANCESTOR_FLAG) {
+            // An effect error is a known failure only when both the retained
+            // object and the fixed name still identify the exact preimage with
+            // its original flags. Otherwise preserve intent-only UNKNOWN.
+            let named = open_fixed();
+            let effect_absent = check_fence_object::<F>(&dir, expected, expected.flags).is_ok()
+                && named.as_ref().is_ok_and(|named| {
+                    fd_path(named).ok().as_deref() == Some(expected_path)
+                        && check_fence_object::<F>(named, expected, expected.flags).is_ok()
+                        && Identity::of(&named.file).ok() == Identity::of(&dir.file).ok()
+                });
+            if effect_absent {
+                append(
+                    journal,
+                    "legacy-ancestor-fence-failure.json",
+                    &serde_json::json!({
+                        "operation_id":operation_id,
+                        "binding":binding,
+                        "path":path,
+                        "identity":before,
+                        "attempted_flag":LEGACY_ANCESTOR_FLAG,
+                        "observed_flags":expected.flags,
+                        "code":error.code(),
+                        "state":"effect_absent"
+                    }),
+                )?;
+                return Err(error);
+            }
+            return Err(Error::new("LEGACY_FENCE_EFFECT_UNKNOWN"));
+        }
         dir.file.sync_all()?;
         checkpoint("legacy-ancestor-fence-effect");
         check_fence_object::<F>(&dir, expected, expected.flags | LEGACY_ANCESTOR_FLAG)?;
@@ -387,6 +435,148 @@ impl<F: FenceFlags> AncestorFence<F> {
         )
     }
 }
+
+fn fence_capability_probe_at<F: FenceFlags>(parent: &Dir, name: &str) -> Result<serde_json::Value> {
+    component(name)?;
+    absent(parent, name)?;
+    let area = parent.mkdir(name)?;
+    let target = area.mkdir("target")?;
+    let operations = target.mkdir("operations")?;
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&target.file)?,
+        flags: F::flags(&target.file)?,
+        acl_none: true,
+    };
+    require(expected.flags == 0, "LEGACY_FENCE_PROBE_FLAGS")?;
+    check_fence_object::<F>(&target, &expected, 0)?;
+    append(
+        &area,
+        "intent.json",
+        &serde_json::json!({
+            "version":1,
+            "identity":expected.identity,
+            "original_flags":0,
+            "selected_flag":LEGACY_ANCESTOR_FLAG
+        }),
+    )?;
+    if let Err(error) = F::set(&target.file, LEGACY_ANCESTOR_FLAG) {
+        let observed = F::flags(&target.file);
+        if matches!(observed, Ok(0)) && check_fence_object::<F>(&target, &expected, 0).is_ok() {
+            append(
+                &area,
+                "failure.json",
+                &serde_json::json!({
+                    "version":1,
+                    "state":"EFFECT_ABSENT",
+                    "selected_flag":LEGACY_ANCESTOR_FLAG,
+                    "observed_flags":0,
+                    "code":error.code()
+                }),
+            )?;
+            return Err(error);
+        }
+        return Err(Error::new("LEGACY_FENCE_PROBE_UNKNOWN"));
+    }
+    target.file.sync_all()?;
+    check_fence_object::<F>(&target, &expected, LEGACY_ANCESTOR_FLAG)?;
+    append(
+        &area,
+        "set-result.json",
+        &serde_json::json!({
+            "version":1,
+            "state":"SET_AND_VERIFIED",
+            "selected_flag":LEGACY_ANCESTOR_FLAG,
+            "identity":expected.identity
+        }),
+    )?;
+    require(
+        area.rename("target", &area, "moved").is_err(),
+        "LEGACY_FENCE_PROBE_RENAME_ALLOWED",
+    )?;
+    let child = write_new(
+        &operations,
+        "probe.lock",
+        b"probe",
+        operations.uid,
+        operations.file.metadata()?.gid(),
+        0o600,
+    )?;
+    drop(child);
+    operations.unlink("probe.lock")?;
+    append(
+        &area,
+        "clear-intent.json",
+        &serde_json::json!({
+            "version":1,
+            "identity":expected.identity,
+            "expected_flags":LEGACY_ANCESTOR_FLAG,
+            "restore_flags":0
+        }),
+    )?;
+    if let Err(error) = F::set(&target.file, 0) {
+        let named = area.child("target");
+        let retained = F::flags(&target.file).ok() == Some(LEGACY_ANCESTOR_FLAG)
+            && check_fence_object::<F>(&target, &expected, LEGACY_ANCESTOR_FLAG).is_ok()
+            && named.as_ref().is_ok_and(|named| {
+                check_fence_object::<F>(named, &expected, LEGACY_ANCESTOR_FLAG).is_ok()
+                    && Identity::of(&named.file).ok() == Identity::of(&target.file).ok()
+            });
+        if retained {
+            append(
+                &area,
+                "clear-failure.json",
+                &serde_json::json!({
+                    "version":1,
+                    "state":"FLAG_RETAINED",
+                    "selected_flag":LEGACY_ANCESTOR_FLAG,
+                    "observed_flags":LEGACY_ANCESTOR_FLAG,
+                    "code":error.code()
+                }),
+            )?;
+            return Err(Error::new("LEGACY_FENCE_PROBE_CLEAR_RETAINED"));
+        }
+        return Err(Error::new("LEGACY_FENCE_PROBE_CLEAR_UNKNOWN"));
+    }
+    target.file.sync_all()?;
+    check_fence_object::<F>(&target, &expected, 0)?;
+    let named = area.child("target")?;
+    check_fence_object::<F>(&named, &expected, 0)?;
+    require(
+        Identity::of(&named.file)? == Identity::of(&target.file)?,
+        "LEGACY_FENCE_PROBE_REPLACED",
+    )?;
+    let result = serde_json::json!({
+        "version":1,
+        "state":"SUPPORTED_AND_CLEARED",
+        "selected_flag":LEGACY_ANCESTOR_FLAG,
+        "rename_blocked":true,
+        "child_operations":true,
+        "final_flags":0
+    });
+    append(&area, "result.json", &result)?;
+    Ok(result)
+}
+
+pub(super) fn run_fence_capability_probe() -> Result<serde_json::Value> {
+    require(
+        unsafe { libc::geteuid() } == 0,
+        "LEGACY_FENCE_PROBE_ROOT_REQUIRED",
+    )?;
+    let parent = Dir::open(Path::new(FENCE_PROBE_PARENT), 0)?;
+    let metadata = parent.file.metadata()?;
+    require(
+        metadata.dev() == FENCE_PROBE_PARENT_DEVICE
+            && metadata.ino() == FENCE_PROBE_PARENT_INODE
+            && metadata.uid() == 0
+            && metadata.gid() == 0
+            && metadata.mode() & 0o7777 == 0o700
+            && NativeFenceFlags::flags(&parent.file)? == 0,
+        "LEGACY_FENCE_PROBE_PARENT",
+    )?;
+    reject_acl(&parent.file)?;
+    fence_capability_probe_at::<NativeFenceFlags>(&parent, FENCE_PROBE_NAME)
+}
+
 fn retained_fence_requires_review<F: FenceFlags>(
     operation_id: &str,
     binding: &str,
