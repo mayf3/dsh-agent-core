@@ -190,6 +190,26 @@ test('view=report renders human-readable report with five dimensions and gaps', 
   } finally { destroyFixtureRoot(fixture) }
 })
 
+test('T5 journal-0700: an unreadable session journal degrades the session query — never EACCES', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const { chmodSync } = await import('node:fs')
+    const journalFile = fixture.agtAMainFile
+    chmodSync(journalFile, 0o000)
+    try {
+      const outcome = await queryExecutionTrace({
+        root: 'agent_session', args: { agentId: 'agt_a', sessionId: 'main' }, viewer: { agentId: 'agt_a', audit: true }, paths: fixture.paths,
+      })
+      assert.equal(outcome.ok, true, 'journal read failure must degrade, not hard-fail (T5 named case)')
+      const journalSource = outcome.result.readBoundary.sources.find((s) => s.name.startsWith('journal:'))
+      assert.equal(journalSource?.status, 'DEGRADED', 'journal source visibly degraded in the read boundary')
+      assert.ok(outcome.result.gaps.some((g) => g.code === 'SOURCE_DEGRADED' && g.stage === 'session_journal'))
+    } finally {
+      chmodSync(journalFile, 0o644)
+    }
+  } finally { destroyFixtureRoot(fixture) }
+})
+
 test('T3 assistance case classifies LEGAL_WAIT — human wait is never an execution failure', async () => {
   const fixture = buildFixtureRoot()
   try {

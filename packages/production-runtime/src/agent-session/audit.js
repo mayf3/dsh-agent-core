@@ -120,34 +120,36 @@ export function createAgentSessionMessagingAudit({ auditFile, now = () => Date.n
     const start = readCheckpoint()
     if (start >= size) return
     const bytesAttempted = size - start
-    const chunk = Buffer.allocUnsafe(bytesAttempted)
-    const fd = openSync(auditFile, 'r')
-    let off = 0
     try {
-      while (off < chunk.length) {
-        const count = readSync(fd, chunk, off, chunk.length - off, start + off)
-        if (count === 0) break
-        off += count
+      const chunk = Buffer.allocUnsafe(bytesAttempted)
+      const fd = openSync(auditFile, 'r')
+      let off = 0
+      try {
+        while (off < chunk.length) {
+          const count = readSync(fd, chunk, off, chunk.length - off, start + off)
+          if (count === 0) break
+          off += count
+        }
+      } finally {
+        closeSync(fd)
       }
-    } finally {
-      closeSync(fd)
-    }
-    if (off !== chunk.length) {
-      const error = new Error(`short archive read (${off}/${chunk.length})`)
-      error.bytesAttempted = bytesAttempted
+      if (off !== chunk.length) throw new Error(`short archive read (${off}/${chunk.length})`)
+      const archiveFd = openSync(archiveFile, 'a')
+      try {
+        let written = 0
+        while (written < chunk.length) {
+          written += writeSync(archiveFd, chunk, written, chunk.length - written)
+        }
+        fsyncSync(archiveFd)
+      } finally {
+        closeSync(archiveFd)
+      }
+      writeCheckpoint(size)
+    } catch (error) {
+      // §6.4: every archive failure reports the attempted interval size.
+      if (error.bytesAttempted === undefined) error.bytesAttempted = bytesAttempted
       throw error
     }
-    const archiveFd = openSync(archiveFile, 'a')
-    try {
-      let written = 0
-      while (written < chunk.length) {
-        written += writeSync(archiveFd, chunk, written, chunk.length - written)
-      }
-      fsyncSync(archiveFd)
-    } finally {
-      closeSync(archiveFd)
-    }
-    writeCheckpoint(size)
   }
 
   function rotateIfNeeded(rowBytes) {

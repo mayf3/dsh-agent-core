@@ -22,6 +22,9 @@ export async function buildSessionRoot(ctx, args) {
   if (loaded === null) {
     return { notFound: { code: 'session_not_found', detail: `${agentId}/${sessionId}` }, records, correlations, gaps, observations }
   }
+  if (loaded.raw.readFailed !== undefined) {
+    gaps.push({ code: 'SOURCE_DEGRADED', stage: 'session_journal', reason: `journal unreadable: ${loaded.raw.readFailed}` })
+  }
   const view = projectForViewer({ sessionAgentId: agentId, viewerAgentId: ctx.viewer.agentId, audit: ctx.viewer.audit === true, journal: loaded.projected })
   records.push({
     source: 'session_journal', kind: 'session_view', provenanceClass: 'PRIMARY_PERSISTED',

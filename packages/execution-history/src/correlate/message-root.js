@@ -58,9 +58,14 @@ export async function buildMessageRoot(ctx, args) {
   if (needleKind === 'messageId') {
     candidates = lookups.byMessageId(needle)
   } else {
-    // For handle/requestId needles the ASM rows name the target session.
+    // Handle-shaped needles: ASM rows name the target session; the source
+    // turnExecutionId (ASM V2 correlation, R1) is ALSO a direct journal
+    // coordinate via the inserted[] sidecar index — this is what makes the
+    // reverse lookup work even when the caller-side audit rows are outside
+    // the readable boundary.
     const sessionIds = new Set(asmHits.map((row) => row.nativeRefs.sessionId).filter(Boolean))
     candidates = [...sessionIds].flatMap((sessionId) => lookups.bySessionId(sessionId))
+    if (candidates.length === 0) candidates = lookups.byCorrelation(String(needle))
   }
   for (const entry of uniqueByFile(candidates).slice(0, ctx.caps.maxSessionsPerQuery)) {
     const loaded = ctx.journal(entry.agentId, entry.sessionId)
@@ -89,7 +94,7 @@ export async function buildMessageRoot(ctx, args) {
       }
     }
     for (const msg of view.messages ?? []) {
-      if (msg.source?.correlation === needle || msg.source?.sourceAgentId !== undefined && needleKind === 'messageId' && msg.messageId === needle) {
+      if (msg.source?.correlation === needle) {
         correlations.push(correlation('R1', { source: 'asm_audit', nativeRef: msg.source.correlation ?? String(needle) }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${msg.seq}` }, [String(needle)]))
       }
     }
@@ -109,7 +114,7 @@ export async function buildMessageRoot(ctx, args) {
       })
       correlations.push(correlation('R6', { source: 'turn_recovery', nativeRef: String(hit.reconciliationHandle ?? hit.turnExecutionId) }, { source: 'session_journal', nativeRef: `${hit.sessionId ?? '?'}` }, [String(hit.reconciliationHandle ?? hit.turnExecutionId)]))
     }
-    if (recovery.absent !== true && recovery.hits.length === 0 && recovery.corrupt !== true) {
+    if (recovery.absent !== true && recovery.hits.length === 0 && recovery.corrupt !== true && records.length === 0) {
       gaps.push(gap('CORRELATION_GAP', 'turn_recovery', { reason: 'no durable recovery record for this handle (settled+unlinked, or pre-V3 epoch)' }))
     }
   }

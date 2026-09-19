@@ -140,6 +140,43 @@ test('archive failure payload carries bytesAttempted (§6.4 ASM_ARCHIVE_APPEND_F
   } finally { rmSync(join(auditFile, '..'), { recursive: true, force: true }) }
 })
 
+test('checkpoint reset failure after a successful rename reports ASM_ARCHIVE_CHECKPOINT_RESET_FAILED and never corrupts the next generation', () => {
+  const auditFile = tempAuditFile('g')
+  try {
+    const audit = createAgentSessionMessagingAudit({ auditFile, maxBytes: 512 })
+    for (let i = 0; i < 40; i += 1) {
+      audit.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rg${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' })
+    }
+    assert.ok(existsSync(`${auditFile}.1`), 'first rotation happened (checkpoint reset path exercised)')
+    // Make the NEXT reset fail: replace the checkpoint file with a DIRECTORY
+    // so renameSync(tmp, posFile) throws EISDIR after the rename succeeded.
+    const { posFile } = auditArchivePaths(auditFile)
+    rmSync(posFile)
+    mkdirSync(posFile)
+    const failures = []
+    const audited = createAgentSessionMessagingAudit({
+      auditFile,
+      maxBytes: 512,
+      onArchiveFailure: (info) => failures.push(info),
+    })
+    for (let i = 40; i < 80; i += 1) {
+      assert.equal(audited.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rg${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' }), 'appended', 'send path unaffected by checkpoint reset failure')
+    }
+    assert.ok(failures.some((f) => f.reason === 'ASM_ARCHIVE_CHECKPOINT_RESET_FAILED'), 'reset failure reported distinctly')
+    // Generation-keyed checkpoint: the stale on-disk offset (foreign gen) is
+    // treated as 0 by the next audit instance — no misaligned archive slice.
+    const recovery = createAgentSessionMessagingAudit({ auditFile, maxBytes: 512, onArchiveFailure: (info) => failures.push(info) })
+    for (let i = 80; i < 120; i += 1) {
+      recovery.appendIntent({ sourceAgentId: 'agt_x', targetAgentId: 'agt_y', requestId: `rg${i}`, correlation: `t${i}`, timeoutMode: 'receipt_only' })
+    }
+    const { archiveFile } = auditArchivePaths(auditFile)
+    if (existsSync(archiveFile)) {
+      const archived = readFileSync(archiveFile, 'utf8')
+      assert.ok(archived.includes('rg40') || archived.includes('rg39'), 'stale offset neutralized: next generation archived from 0')
+    }
+  } finally { rmSync(join(auditFile, '..'), { recursive: true, force: true }) }
+})
+
 test('reconcile window unchanged: findInvocation reads exactly live + .1, never the archive', () => {
   const auditFile = tempAuditFile('d')
   try {
