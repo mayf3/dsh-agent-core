@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -34,11 +35,11 @@ def directory(path, inode):
 
 
 class FakeOperation(prerequisite.Operation):
-    def __init__(self, manifest, manifest_digest, binary):
+    def __init__(self, manifest, manifest_digest, binary, journal_fd, journal_identity, journal_path):
         self.installed = False
         self.probed = False
         self.root_argv = []
-        super().__init__(manifest, manifest_digest, binary)
+        super().__init__(manifest, manifest_digest, binary, journal_fd, journal_identity, journal_path)
 
     def invoke(self, argv, *, visible=False, stdin=None, timeout=120):
         self.sequence += 1
@@ -101,8 +102,11 @@ class FakeOperation(prerequisite.Operation):
 class PrerequisiteTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.old_journal = prerequisite.LOCAL_JOURNAL
-        prerequisite.LOCAL_JOURNAL = Path(self.temp.name) / "journal"
+        self.journal_path = Path(self.temp.name) / "journal"
+        self.journal_path.mkdir(mode=0o700)
+        self.journal_fd = os.open(self.journal_path, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
+        metadata = os.fstat(self.journal_fd)
+        self.journal_identity = (metadata.st_dev, metadata.st_ino)
         self.binary = b"reviewed-probe"
         self.manifest = {
             "source_commit": "a" * 40,
@@ -125,16 +129,26 @@ class PrerequisiteTests(unittest.TestCase):
         }
 
     def tearDown(self):
-        prerequisite.LOCAL_JOURNAL = self.old_journal
+        os.close(self.journal_fd)
         self.temp.cleanup()
 
+    def operation(self):
+        return FakeOperation(
+            self.manifest,
+            "c" * 64,
+            self.binary,
+            self.journal_fd,
+            self.journal_identity,
+            self.journal_path,
+        )
+
     def test_exact_operation_installs_verified_fd_then_probes_and_reads_clear_state(self):
-        operation = FakeOperation(self.manifest, "c" * 64, self.binary)
-        result = operation.run()
+        operation = self.operation()
+        result = operation.execute()
         self.assertEqual(operation.assert_install_input, self.binary)
         self.assertTrue(operation.probed)
         self.assertEqual(result["state"], "SUPPORTED_AND_CLEARED")
-        self.assertTrue((prerequisite.LOCAL_JOURNAL / "completed.json").is_file())
+        self.assertTrue((self.journal_path / "completed.json").is_file())
         self.assertEqual(
             operation.root_argv[0],
             ["/usr/bin/sudo", "-v"],
@@ -142,12 +156,13 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertEqual(operation.root_argv[-1], ["/bin/ls", "-1A", prerequisite.PROBE_DIR])
 
     def test_present_install_target_stops_before_install_or_probe(self):
-        operation = FakeOperation(self.manifest, "c" * 64, self.binary)
+        operation = self.operation()
         operation.installed = True
         with self.assertRaisesRegex(RuntimeError, "INSTALL_TARGET_PRESENT"):
-            operation.run()
+            operation.execute()
         self.assertFalse(operation.probed)
         self.assertFalse(any(argv and argv[0] == "/usr/bin/install" for argv in operation.root_argv))
+        self.assertTrue((self.journal_path / "stopped.json").is_file())
 
     def test_paths_and_effects_are_fixed_not_caller_selected(self):
         self.assertEqual(prerequisite.INSTALL_TARGET, "/usr/local/libexec/agent-deployd/agent-deploy-first-live-fence-probe")
@@ -163,6 +178,49 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertEqual(prerequisite.stable_parent(before), prerequisite.stable_parent(after))
         after["inode"] = 12
         self.assertNotEqual(prerequisite.stable_parent(before), prerequisite.stable_parent(after))
+
+    def test_replaced_journal_path_is_rejected_while_retained_fd_is_not_rebound(self):
+        operation = self.operation()
+        moved = self.journal_path.with_name("moved")
+        self.journal_path.rename(moved)
+        self.journal_path.mkdir(mode=0o700)
+        with self.assertRaisesRegex(RuntimeError, "JOURNAL_DRIFT"):
+            operation.record("later.json", {"state": "must-not-write"})
+        self.assertFalse((self.journal_path / "later.json").exists())
+
+    def test_source_review_must_bind_pass_commit_tree_and_report(self):
+        report = b"review"
+        review = {
+            "version": 1,
+            "verdict": "PASS",
+            "source_commit": self.manifest["source_commit"],
+            "source_tree": self.manifest["source_tree"],
+            "report_sha256": prerequisite.sha(report),
+            "new_ship_blockers": [],
+            "production_mutation_performed": False,
+            "root_probe_executed": False,
+        }
+        review_raw = prerequisite.canonical(review)
+        self.manifest["source_review"] = {
+            "report_sha256": prerequisite.sha(report),
+            "record_sha256": prerequisite.sha(review_raw),
+            "verdict": "PASS",
+        }
+        prerequisite.validate_source_review(self.manifest, report, review_raw)
+        review["verdict"] = "FAIL"
+        bad = prerequisite.canonical(review)
+        self.manifest["source_review"]["record_sha256"] = prerequisite.sha(bad)
+        with self.assertRaisesRegex(RuntimeError, "SOURCE_REVIEW"):
+            prerequisite.validate_source_review(self.manifest, report, bad)
+
+    def test_symlink_journal_parent_is_never_accepted(self):
+        home = Path(self.temp.name) / "home"
+        outside = Path(self.temp.name) / "outside"
+        home.mkdir(mode=0o700)
+        outside.mkdir(mode=0o700)
+        (home / ".agent-deploy-first-live-operator").symlink_to(outside, target_is_directory=True)
+        with self.assertRaises(OSError):
+            prerequisite.claim_journal(home)
 
 
 if __name__ == "__main__":
