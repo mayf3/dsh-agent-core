@@ -4,7 +4,7 @@ use crate::{
     error::require,
     fs::{
         file::{sha, snapshot, write_new},
-        secure::{validate, Dir},
+        secure::{reject_acl, validate, Dir},
         MutationGuard,
     },
     trust::canonical_bytes,
@@ -14,7 +14,10 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::CString,
     fs::File,
-    os::{fd::AsRawFd, unix::fs::MetadataExt},
+    os::{
+        fd::{AsRawFd, FromRawFd},
+        unix::fs::MetadataExt,
+    },
     path::{Path, PathBuf},
 };
 
@@ -31,6 +34,10 @@ const NAMES: [&str; 4] = [
     "transaction.lock",
 ];
 const HOLDERS: [&str; 2] = ["holder", "dcp-handover.json"];
+const LEGACY_ANCESTOR: &str = "/usr/local/var/agent-core";
+const LEGACY_LOCK_CHILD: &str = "production-mutation-locks";
+// Current macOS/XNU SF_NOUNLINK. Keep this local: this is not a generic chflags API.
+const LEGACY_ANCESTOR_FLAG: u32 = 0x0010_0000;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Identity {
@@ -39,6 +46,13 @@ pub(super) struct Identity {
     pub uid: u32,
     pub gid: u32,
     pub mode: u32,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct AncestorFenceExpectation {
+    pub identity: Identity,
+    pub flags: u32,
+    pub acl_none: bool,
 }
 impl Identity {
     fn of(file: &File) -> Result<Self> {
@@ -64,8 +78,318 @@ pub(super) enum PermanentExpectation {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Expectations {
+    pub ancestor_fence: AncestorFenceExpectation,
     pub parents: [Identity; 4],
     pub permanent: PermanentExpectation,
+}
+
+trait FenceFlags {
+    fn flags(file: &File) -> Result<u32>;
+    fn set(file: &File, flags: u32) -> Result<()>;
+}
+struct NativeFenceFlags;
+impl FenceFlags for NativeFenceFlags {
+    fn flags(file: &File) -> Result<u32> {
+        Ok(std::os::macos::fs::MetadataExt::st_flags(&file.metadata()?))
+    }
+    fn set(file: &File, flags: u32) -> Result<()> {
+        require(
+            unsafe { libc::fchflags(file.as_raw_fd(), flags) } == 0,
+            "LEGACY_FENCE_EFFECT",
+        )
+    }
+}
+
+struct AncestorFence<F: FenceFlags = NativeFenceFlags> {
+    dir: Dir,
+    expected: AncestorFenceExpectation,
+    operation_id: String,
+    binding: String,
+    original_flags: u32,
+    path: PathBuf,
+    _flags: std::marker::PhantomData<F>,
+}
+fn open_fixed_legacy_ancestor(uid: u32) -> Result<Dir> {
+    let root = unsafe {
+        libc::open(
+            c"/".as_ptr(),
+            libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC | libc::O_NOFOLLOW,
+        )
+    };
+    require(root >= 0, "LEGACY_FENCE_OPEN")?;
+    let mut file = unsafe { File::from_raw_fd(root) };
+    for name in ["usr", "local", "var", "agent-core"] {
+        let name = CString::new(name).unwrap();
+        let fd = unsafe {
+            libc::openat(
+                file.as_raw_fd(),
+                name.as_ptr(),
+                libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC | libc::O_NOFOLLOW,
+            )
+        };
+        require(fd >= 0, "LEGACY_FENCE_OPEN")?;
+        file = unsafe { File::from_raw_fd(fd) };
+    }
+    Ok(Dir { file, uid })
+}
+fn check_fence_object<F: FenceFlags>(
+    dir: &Dir,
+    expected: &AncestorFenceExpectation,
+    flags: u32,
+) -> Result<()> {
+    let metadata = dir.file.metadata()?;
+    require(metadata.is_dir(), "LEGACY_FENCE_TYPE")?;
+    expected.identity.check(&dir.file)?;
+    require(expected.identity.uid == dir.uid, "UNSAFE_OWNER")?;
+    require(F::flags(&dir.file)? == flags, "LEGACY_FENCE_FLAGS")?;
+    require(expected.acl_none, "LEGACY_FENCE_ACL")?;
+    reject_acl(&dir.file)
+}
+fn verify_fence_journal(
+    journal: &Dir,
+    operation_id: &str,
+    binding: &str,
+    expected: &AncestorFenceExpectation,
+    expected_path: &Path,
+) -> Result<()> {
+    let intent: serde_json::Value =
+        super::files::read(journal, "legacy-ancestor-fence-intent.json")?;
+    let result: serde_json::Value =
+        super::files::read(journal, "legacy-ancestor-fence-result.json")?;
+    let path = expected_path
+        .to_str()
+        .ok_or(Error::new("LEGACY_FENCE_PATH"))?;
+    require(
+        intent
+            == serde_json::json!({
+                "operation_id":operation_id,
+                "binding":binding,
+                "path":path,
+                "identity":expected.identity,
+                "original_flags":expected.flags,
+                "set_flag":LEGACY_ANCESTOR_FLAG
+            })
+            && result
+                == serde_json::json!({
+                    "operation_id":operation_id,
+                    "binding":binding,
+                    "path":path,
+                    "identity":expected.identity,
+                    "flags":expected.flags | LEGACY_ANCESTOR_FLAG
+                }),
+        "LEGACY_FENCE_JOURNAL",
+    )
+}
+fn verify_retained_fence_journal(
+    journal: &Dir,
+    operation_id: &str,
+    binding: &str,
+    expected: &AncestorFenceExpectation,
+    expected_path: &Path,
+) -> Result<()> {
+    let intent: serde_json::Value =
+        super::files::read(journal, "legacy-ancestor-fence-intent.json")?;
+    let path = expected_path
+        .to_str()
+        .ok_or(Error::new("LEGACY_FENCE_PATH"))?;
+    require(
+        intent
+            == serde_json::json!({
+                "operation_id":operation_id,
+                "binding":binding,
+                "path":path,
+                "identity":expected.identity,
+                "original_flags":expected.flags,
+                "set_flag":LEGACY_ANCESTOR_FLAG
+            }),
+        "LEGACY_FENCE_JOURNAL",
+    )?;
+    let names = journal.names()?;
+    if names.contains(&"legacy-ancestor-fence-result.json".to_string()) {
+        let result: serde_json::Value =
+            super::files::read(journal, "legacy-ancestor-fence-result.json")?;
+        require(
+            result
+                == serde_json::json!({
+                    "operation_id":operation_id,
+                    "binding":binding,
+                    "path":path,
+                    "identity":expected.identity,
+                    "flags":expected.flags | LEGACY_ANCESTOR_FLAG
+                }),
+            "LEGACY_FENCE_JOURNAL",
+        )?;
+    }
+    Ok(())
+}
+impl<F: FenceFlags> AncestorFence<F> {
+    fn acquire(
+        operation_id: &str,
+        binding: &str,
+        journal: &Dir,
+        expected: &AncestorFenceExpectation,
+        expected_path: &Path,
+        open_fixed: impl Fn() -> Result<Dir>,
+    ) -> Result<Self> {
+        require(
+            expected.flags & LEGACY_ANCESTOR_FLAG == 0,
+            "LEGACY_FENCE_FLAGS",
+        )?;
+        let dir = open_fixed()?;
+        check_fence_object::<F>(&dir, expected, expected.flags)?;
+        require(fd_path(&dir)? == expected_path, "LEGACY_FENCE_PATH")?;
+        let before = expected.identity.clone();
+        let path = expected_path
+            .to_str()
+            .ok_or(Error::new("LEGACY_FENCE_PATH"))?;
+        append(
+            journal,
+            "legacy-ancestor-fence-intent.json",
+            &serde_json::json!({
+                "operation_id":operation_id,
+                "binding":binding,
+                "path":path,
+                "identity":before,
+                "original_flags":expected.flags,
+                "set_flag":LEGACY_ANCESTOR_FLAG
+            }),
+        )?;
+        checkpoint("legacy-ancestor-fence-intent");
+        F::set(&dir.file, expected.flags | LEGACY_ANCESTOR_FLAG)?;
+        dir.file.sync_all()?;
+        checkpoint("legacy-ancestor-fence-effect");
+        check_fence_object::<F>(&dir, expected, expected.flags | LEGACY_ANCESTOR_FLAG)?;
+        let named = open_fixed()?;
+        check_fence_object::<F>(&named, expected, expected.flags | LEGACY_ANCESTOR_FLAG)?;
+        require(
+            Identity::of(&named.file)? == Identity::of(&dir.file)?,
+            "LEGACY_FENCE_REPLACED",
+        )?;
+        append(
+            journal,
+            "legacy-ancestor-fence-result.json",
+            &serde_json::json!({
+                "operation_id":operation_id,
+                "binding":binding,
+                "path":path,
+                "identity":before,
+                "flags":expected.flags | LEGACY_ANCESTOR_FLAG
+            }),
+        )?;
+        Ok(Self {
+            dir,
+            expected: expected.clone(),
+            operation_id: operation_id.into(),
+            binding: binding.into(),
+            original_flags: expected.flags,
+            path: expected_path.to_path_buf(),
+            _flags: std::marker::PhantomData,
+        })
+    }
+    fn verify(&self, expected_path: &Path, open_fixed: impl Fn() -> Result<Dir>) -> Result<()> {
+        let flags = self.original_flags | LEGACY_ANCESTOR_FLAG;
+        check_fence_object::<F>(&self.dir, &self.expected, flags)?;
+        let named = open_fixed()?;
+        require(fd_path(&named)? == expected_path, "LEGACY_FENCE_PATH")?;
+        check_fence_object::<F>(&named, &self.expected, flags)?;
+        require(
+            Identity::of(&named.file)? == Identity::of(&self.dir.file)?,
+            "LEGACY_FENCE_REPLACED",
+        )
+    }
+    fn lock_parent(&self, expected: &Identity) -> Result<Dir> {
+        self.lock_parent_at(expected, Path::new(LEGACY_ANCESTOR), || {
+            open_fixed_legacy_ancestor(self.expected.identity.uid)
+        })
+    }
+    fn lock_parent_at(
+        &self,
+        expected: &Identity,
+        expected_path: &Path,
+        open_fixed: impl Fn() -> Result<Dir>,
+    ) -> Result<Dir> {
+        self.verify(expected_path, open_fixed)?;
+        let file = self
+            .dir
+            .open_file(LEGACY_LOCK_CHILD, libc::O_RDONLY | libc::O_DIRECTORY, 0)?;
+        validate(&file, self.dir.uid, true)?;
+        expected.check(&file)?;
+        Ok(Dir {
+            file,
+            uid: self.dir.uid,
+        })
+    }
+    fn clear(
+        self,
+        journal: &Dir,
+        expected_path: &Path,
+        open_fixed: impl Fn() -> Result<Dir>,
+    ) -> Result<()> {
+        require(self.path == expected_path, "LEGACY_FENCE_PATH")?;
+        self.verify(expected_path, &open_fixed)?;
+        verify_fence_journal(
+            journal,
+            &self.operation_id,
+            &self.binding,
+            &self.expected,
+            expected_path,
+        )?;
+        let names = journal.names()?;
+        require(
+            !names.iter().any(|name| {
+                name == "legacy-ancestor-fence-clear-intent.json"
+                    || name == "legacy-ancestor-fence-clear-result.json"
+            }),
+            "LEGACY_FENCE_PRIOR_CLEAR",
+        )?;
+        append(
+            journal,
+            "legacy-ancestor-fence-clear-intent.json",
+            &serde_json::json!({
+                "operation_id":self.operation_id,
+                "binding":self.binding,
+                "identity":self.expected.identity,
+                "expected_flags":self.original_flags | LEGACY_ANCESTOR_FLAG,
+                "restore_flags":self.original_flags
+            }),
+        )?;
+        checkpoint("legacy-ancestor-fence-clear-intent");
+        F::set(&self.dir.file, self.original_flags)?;
+        self.dir.file.sync_all()?;
+        checkpoint("legacy-ancestor-fence-clear-effect");
+        check_fence_object::<F>(&self.dir, &self.expected, self.original_flags)?;
+        let named = open_fixed()?;
+        require(fd_path(&named)? == expected_path, "LEGACY_FENCE_PATH")?;
+        check_fence_object::<F>(&named, &self.expected, self.original_flags)?;
+        require(
+            Identity::of(&named.file)? == Identity::of(&self.dir.file)?,
+            "LEGACY_FENCE_REPLACED",
+        )?;
+        append(
+            journal,
+            "legacy-ancestor-fence-clear-result.json",
+            &serde_json::json!({
+                "operation_id":self.operation_id,
+                "binding":self.binding,
+                "identity":self.expected.identity,
+                "flags":self.original_flags
+            }),
+        )
+    }
+}
+fn retained_fence_requires_review<F: FenceFlags>(
+    operation_id: &str,
+    binding: &str,
+    journal: &Dir,
+    expected: &AncestorFenceExpectation,
+    expected_path: &Path,
+    open_fixed: impl Fn() -> Result<Dir>,
+) -> Result<()> {
+    let dir = open_fixed()?;
+    require(fd_path(&dir)? == expected_path, "LEGACY_FENCE_PATH")?;
+    check_fence_object::<F>(&dir, expected, expected.flags | LEGACY_ANCESTOR_FLAG)?;
+    verify_retained_fence_journal(journal, operation_id, binding, expected, expected_path)?;
+    Err(Error::new("LEGACY_FENCE_RECOVERY_REQUIRED"))
 }
 pub(super) struct SocketNamespace {
     plan: crate::bootstrap::socket::SocketAncestorPlan,
@@ -126,6 +450,10 @@ struct Owned {
     holder: Identity,
     bytes: Vec<u8>,
 }
+struct AcquisitionContext {
+    namespace: Option<SocketNamespace>,
+    ancestor_fence: Option<AncestorFence>,
+}
 /// The outer DCP guard cannot be dropped while legacy ownership is live.
 /// Deliberately no Drop cleanup: any error/crash leaves ephemeral evidence intact.
 pub(super) struct LegacyLocks<'a> {
@@ -139,6 +467,7 @@ pub(super) struct LegacyLocks<'a> {
     owned: Vec<Owned>,
     binding: String,
     namespace: Option<SocketNamespace>,
+    ancestor_fence: Option<AncestorFence>,
 }
 fn fd_path(dir: &Dir) -> Result<PathBuf> {
     let mut bytes = [0i8; libc::PATH_MAX as usize];
@@ -194,9 +523,42 @@ impl<'a> LegacyLocks<'a> {
         )?;
         require(journal.uid == 0, "UNSAFE_OWNER")?;
         guard.binds(&Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?)?;
+        let prior: Vec<_> = journal
+            .names()?
+            .into_iter()
+            .filter(|name| name.starts_with("legacy-"))
+            .collect();
+        if !prior.is_empty() {
+            if prior == ["legacy-ancestor-fence-intent.json".to_string()]
+                || prior
+                    == [
+                        "legacy-ancestor-fence-intent.json".to_string(),
+                        "legacy-ancestor-fence-result.json".to_string(),
+                    ]
+            {
+                retained_fence_requires_review::<NativeFenceFlags>(
+                    op,
+                    binding,
+                    journal,
+                    &expected.ancestor_fence,
+                    Path::new(LEGACY_ANCESTOR),
+                    || open_fixed_legacy_ancestor(0),
+                )?;
+            }
+            return Err(Error::new("LEGACY_PRIOR_ATTEMPT"));
+        }
+        let ancestor_fence = AncestorFence::<NativeFenceFlags>::acquire(
+            op,
+            binding,
+            journal,
+            &expected.ancestor_fence,
+            Path::new(LEGACY_ANCESTOR),
+            || open_fixed_legacy_ancestor(0),
+        )?;
+        let lock_parent = ancestor_fence.lock_parent(&expected.parents[1])?;
         let parents = [
             namespace.open()?,
-            Dir::open(Path::new(PARENTS[1]), 0)?,
+            lock_parent,
             Dir::open(Path::new(PARENTS[2]), 0)?,
             Dir::open(Path::new(PARENTS[3]), 0)?,
         ];
@@ -207,7 +569,10 @@ impl<'a> LegacyLocks<'a> {
             parents,
             expected,
             guard,
-            Some(namespace),
+            AcquisitionContext {
+                namespace: Some(namespace),
+                ancestor_fence: Some(ancestor_fence),
+            },
         )
     }
     #[cfg(test)]
@@ -219,7 +584,18 @@ impl<'a> LegacyLocks<'a> {
         expected: &Expectations,
         guard: &'a MutationGuard,
     ) -> Result<Self> {
-        Self::acquire_with_namespace(op, binding, journal, parents, expected, guard, None)
+        Self::acquire_with_namespace(
+            op,
+            binding,
+            journal,
+            parents,
+            expected,
+            guard,
+            AcquisitionContext {
+                namespace: None,
+                ancestor_fence: None,
+            },
+        )
     }
     fn acquire_with_namespace(
         op: &str,
@@ -228,16 +604,26 @@ impl<'a> LegacyLocks<'a> {
         parents: [Dir; 4],
         expected: &Expectations,
         guard: &'a MutationGuard,
-        namespace: Option<SocketNamespace>,
+        context: AcquisitionContext,
     ) -> Result<Self> {
         crate::fs::secure::component(op)?;
         hash(binding)?;
         validate(&journal.file, journal.uid, true)?;
+        let prior: Vec<_> = journal
+            .names()?
+            .into_iter()
+            .filter(|name| name.starts_with("legacy-"))
+            .collect();
+        let allowed = vec![
+            "legacy-ancestor-fence-intent.json".to_string(),
+            "legacy-ancestor-fence-result.json".to_string(),
+        ];
         require(
-            !journal
-                .names()?
-                .iter()
-                .any(|name| name.starts_with("legacy-")),
+            if context.ancestor_fence.is_some() {
+                prior == allowed
+            } else {
+                prior.is_empty()
+            },
             "LEGACY_PRIOR_ATTEMPT",
         )?;
         let paths = [
@@ -248,7 +634,7 @@ impl<'a> LegacyLocks<'a> {
         ];
         for (index, parent) in parents.iter().enumerate() {
             if index == 0 {
-                if let Some(namespace) = &namespace {
+                if let Some(namespace) = &context.namespace {
                     namespace.check(parent)?;
                 } else {
                     validate(&parent.file, journal.uid, true)?;
@@ -319,7 +705,8 @@ impl<'a> LegacyLocks<'a> {
             permanent_identity,
             owned: Vec::new(),
             binding: binding.into(),
-            namespace,
+            namespace: context.namespace,
+            ancestor_fence: context.ancestor_fence,
         };
         let executable = File::open(std::env::current_exe()?)?;
         // Hash the exact ID in readable holders so it cannot impersonate a legacy parent.
@@ -390,6 +777,9 @@ impl<'a> LegacyLocks<'a> {
         Ok(locks)
     }
     fn verify_parents(&self) -> Result<()> {
+        if let Some(fence) = &self.ancestor_fence {
+            fence.verify(Path::new(LEGACY_ANCESTOR), || open_fixed_legacy_ancestor(0))?;
+        }
         for (index, path) in self.paths.iter().enumerate() {
             if index == 0 {
                 if let Some(namespace) = &self.namespace {
@@ -397,6 +787,10 @@ impl<'a> LegacyLocks<'a> {
                 } else {
                     self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
                 }
+            } else if index == 1 && self.ancestor_fence.is_some() {
+                let fence = self.ancestor_fence.as_ref().unwrap();
+                let named = fence.lock_parent(&self.expected.parents[index])?;
+                self.expected.parents[index].check(&named.file)?;
             } else {
                 self.expected.parents[index].check(&Dir::open(path, self.journal.uid)?.file)?;
             }
@@ -427,7 +821,7 @@ impl<'a> LegacyLocks<'a> {
         }
         Ok(())
     }
-    pub(super) fn release_completed(self, retirement: &str) -> Result<()> {
+    pub(super) fn release_completed(mut self, retirement: &str) -> Result<()> {
         hash(retirement)?;
         #[derive(Deserialize)]
         #[serde(deny_unknown_fields)]
@@ -481,6 +875,11 @@ impl<'a> LegacyLocks<'a> {
             )?;
             self.parents[offset + 1].file.sync_all()?;
             checkpoint(&format!("legacy-release-{}-directory", offset + 1));
+        }
+        if let Some(fence) = self.ancestor_fence.take() {
+            fence.clear(&self.journal, Path::new(LEGACY_ANCESTOR), || {
+                open_fixed_legacy_ancestor(0)
+            })?;
         }
         append(
             &self.journal,

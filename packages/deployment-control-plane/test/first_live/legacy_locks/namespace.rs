@@ -29,6 +29,11 @@ fn exact_group_writable_first_parent_uses_bound_namespace_through_acquire_and_ve
         fixture: Some(t.path().join("p0")),
     };
     let expected = Expectations {
+        ancestor_fence: AncestorFenceExpectation {
+            identity: Identity::of(&parents[1].file).unwrap(),
+            flags: 0,
+            acl_none: true,
+        },
         parents: std::array::from_fn(|i| Identity::of(&parents[i].file).unwrap()),
         permanent: PermanentExpectation::AbsentCreate,
     };
@@ -40,7 +45,10 @@ fn exact_group_writable_first_parent_uses_bound_namespace_through_acquire_and_ve
         parents,
         &expected,
         &guard,
-        Some(ns),
+        AcquisitionContext {
+            namespace: Some(ns),
+            ancestor_fence: None,
+        },
     )
     .unwrap();
     locks.verify().unwrap();
@@ -79,6 +87,11 @@ fn group_write_on_other_parent_still_refuses_before_any_lock_intent() {
     let parents: [Dir; 4] = std::array::from_fn(|i| r.root.mkdir(&format!("p{i}")).unwrap());
     std::fs::set_permissions(t.path().join("p1"), std::fs::Permissions::from_mode(0o775)).unwrap();
     let expected = Expectations {
+        ancestor_fence: AncestorFenceExpectation {
+            identity: Identity::of(&parents[1].file).unwrap(),
+            flags: 0,
+            acl_none: true,
+        },
         parents: std::array::from_fn(|i| Identity::of(&parents[i].file).unwrap()),
         permanent: PermanentExpectation::AbsentCreate,
     };
