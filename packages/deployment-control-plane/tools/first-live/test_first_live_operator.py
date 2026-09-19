@@ -195,7 +195,8 @@ class PhaseCuts(unittest.TestCase):
             {'public_key':None,'custody_receipt':None} for _ in range(6)],
             lifecycle={'tool_sha256':{}},configuration={'catalog':{'profiles':{'dsh-app':{'revision':'dsh-app-v1'}}}})
         blobs={'packet-template.json':raw(p),'owner-scope.json':scope,'agent-deployctl':b'ctl',
-            'agent-deployd':b'controller','agent-deploy-issuer':b'issuer'}
+            'agent-deployd':b'controller','agent-deploy-issuer':b'issuer',
+            'p4r9-successor-reconciliation.json':b'{}'}
         p['controller_sha256']=digest(blobs['agent-deployd']);blobs['packet-template.json']=raw(p)
         m=dict(version=1,operation_id=op.OPERATION,source_sha=p['source_sha'],controller_sha256=p['controller_sha256'],
             files={k:{'sha256':digest(v),'size':len(v)} for k,v in blobs.items()},root_argv_allowlist=[],
@@ -260,13 +261,14 @@ class PhaseCuts(unittest.TestCase):
              patch.object(op,'prefix_gate',return_value=({op.layout.CODE+'/agent-deployd':b'old',
                  op.layout.CODE+'/agent-deploy-issuer':b'old issuer'},b'f'*64+b'  /usr/bin/sudo\n')),\
              patch.object(op,'prepare_socket',side_effect=lambda _io,_p:io.events.append('socket-prepared')),\
-             patch.object(op,'enabled_records',side_effect=lambda _:io.records()):
+             patch.object(op,'enabled_records',side_effect=lambda _:io.records()),\
+             patch('p4r9_reconcile.reconcile',side_effect=lambda _io,_raw:io.events.append('p4r9-reconciled')):
             try:result=op.execute(io,m,Path('/private-fixture'))
             except RuntimeError:result=None
         return io,result
 
     def test_phase_cuts_keep_attempt_consumed_and_never_reach_later_effect(self):
-        phases=['protected-prefix','protected-copy','native-first-live-enable','enabled-readback',
+        phases=['p4r9-reconciliation','protected-prefix','protected-copy','native-first-live-enable','enabled-readback',
                 'ordinary-broker-delivery','current-closure-readback']
         for i,cut in enumerate(phases):
             with self.subTest(cut=cut):
