@@ -91,9 +91,14 @@ fn domain(raw: &str) -> Result<()> {
     for line in &lines[1..lines.len() - 1] {
         let tabs = line.bytes().take_while(|byte| *byte == b'\t').count();
         let field = &line[tabs..];
-        let normalized = field.trim_start_matches(|value: char| value.is_ascii_whitespace());
-        if (normalized.starts_with("environment") || normalized.starts_with("default environment"))
-            && normalized != field
+        let environment_header =
+            field.to_ascii_lowercase().contains("environment") && field.contains('{');
+        if (field.trim_matches(|value: char| value.is_ascii_whitespace()) == "}" && field != "}")
+            || (!matches!(field, "environment = {" | "default environment = {")
+                && environment_header)
+            || ["DYLD_", "__XPC_DYLD_", "LD_PRELOAD", "LD_LIBRARY_PATH"]
+                .iter()
+                .any(|name| field.contains(name))
         {
             return Err(Error::new("HOST_ENVIRONMENT_SHAPE"));
         }
