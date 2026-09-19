@@ -3,6 +3,7 @@ use crate::fs::{file::write_new, FixtureRoots};
 use std::{os::fd::AsRawFd, process::Command};
 const BINDING: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const RETIRED: &str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+const SUCCESSOR: &str = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 const NAMES: [&str; 4] = [
     "agent-core-production-mutation.lock",
     "production-deploy.lock",
@@ -720,6 +721,115 @@ fn present_permanent_is_bound_and_never_repaired() {
     success(&area);
     locks.release_completed(RETIRED).unwrap();
     assert_eq!(Identity::of(&p).unwrap(), identity);
+}
+
+#[test]
+fn reviewed_successor_joins_retained_locks_without_recreating_them() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let dirs = parents(&roots.root);
+    let mut exp = expected(&dirs);
+    let area = roots.root.mkdir("journal").unwrap();
+    let permanent = write_new(
+        &dirs[0],
+        NAMES[0],
+        b"",
+        dirs[0].uid,
+        dirs[0].file.metadata().unwrap().gid(),
+        0o600,
+    )
+    .unwrap();
+    exp.permanent = PermanentExpectation::Present {
+        identity: Identity::of(&permanent).unwrap(),
+    };
+    let locks = LegacyLocks::acquire_at("operation", BINDING, &area, dirs, &exp, &guard).unwrap();
+    let retained: Vec<_> = [1usize, 2]
+        .iter()
+        .map(|index| {
+            std::fs::metadata(t.path().join(format!("parent-{index}/{}", NAMES[*index])))
+                .unwrap()
+                .ino()
+        })
+        .collect();
+    drop(locks);
+    let recovered = LegacyLocks::recover_with_context(
+        "operation",
+        SUCCESSOR,
+        &exp,
+        &guard,
+        RecoveryContext {
+            predecessor_binding: BINDING,
+            predecessor: &area,
+            journal: &area,
+            parents: parents(&roots.root),
+            acquisition: AcquisitionContext {
+                namespace: None,
+                ancestor_fence: None,
+            },
+        },
+    )
+    .unwrap();
+    recovered.verify().unwrap();
+    let after: Vec<_> = [1usize, 2]
+        .iter()
+        .map(|index| {
+            std::fs::metadata(t.path().join(format!("parent-{index}/{}", NAMES[*index])))
+                .unwrap()
+                .ino()
+        })
+        .collect();
+    assert_eq!(retained, after);
+    super::super::files::publish(
+        &area,
+        "legacy-retirement-result.json",
+        &serde_json::json!({"binding":SUCCESSOR,"retirement_digest":RETIRED}),
+    )
+    .unwrap();
+    recovered.release_completed(RETIRED).unwrap();
+}
+
+#[test]
+fn retained_lock_recovery_rejects_wrong_predecessor_binding() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let guard = roots.lock().unwrap();
+    let dirs = parents(&roots.root);
+    let mut exp = expected(&dirs);
+    let area = roots.root.mkdir("journal").unwrap();
+    let permanent = write_new(
+        &dirs[0],
+        NAMES[0],
+        b"",
+        dirs[0].uid,
+        dirs[0].file.metadata().unwrap().gid(),
+        0o600,
+    )
+    .unwrap();
+    exp.permanent = PermanentExpectation::Present {
+        identity: Identity::of(&permanent).unwrap(),
+    };
+    drop(LegacyLocks::acquire_at("operation", BINDING, &area, dirs, &exp, &guard).unwrap());
+    let error = match LegacyLocks::recover_with_context(
+        "operation",
+        SUCCESSOR,
+        &exp,
+        &guard,
+        RecoveryContext {
+            predecessor_binding: &"d".repeat(64),
+            predecessor: &area,
+            journal: &area,
+            parents: parents(&roots.root),
+            acquisition: AcquisitionContext {
+                namespace: None,
+                ancestor_fence: None,
+            },
+        },
+    ) {
+        Ok(_) => panic!("wrong predecessor binding recovered"),
+        Err(error) => error,
+    };
+    assert_eq!(error.code(), "LEGACY_RECOVERY_HISTORY");
 }
 #[test]
 fn crash_worker() {

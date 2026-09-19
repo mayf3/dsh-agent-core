@@ -263,7 +263,7 @@ fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
         require(
             args.len() == 4
                 && args[..3] == ["-n", "-l", "-U"]
-                && ["#505", "#612"].contains(&args[3].as_str()),
+                && ["authsvc", "_dcp_review"].contains(&args[3].as_str()),
             "FIRST_LIVE_SUDO_AUDIT_ARGUMENTS",
         )?;
     }

@@ -44,6 +44,7 @@ const FENCE_PROBE_PARENT_INODE: u64 = 85_616_151;
 // established on the exact production APFS inode. Keep this local: this is not
 // a generic chflags API.
 const LEGACY_ANCESTOR_FLAG: u32 = 0x0002_0000;
+const P4R14R2_BINDING: &str = "04ffd0d460f4ee1e61667a3ba4dc5b5d4457b2c2ecc033d6869d79b6e29dd174";
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Identity {
@@ -654,11 +655,19 @@ struct AcquisitionContext {
     namespace: Option<SocketNamespace>,
     ancestor_fence: Option<AncestorFence>,
 }
+struct RecoveryContext<'a> {
+    predecessor_binding: &'a str,
+    predecessor: &'a Dir,
+    journal: &'a Dir,
+    parents: [Dir; 4],
+    acquisition: AcquisitionContext,
+}
 /// The outer DCP guard cannot be dropped while legacy ownership is live.
 /// Deliberately no Drop cleanup: any error/crash leaves ephemeral evidence intact.
 pub(super) struct LegacyLocks<'a> {
     _guard: &'a MutationGuard,
     journal: Dir,
+    fence_journal: Dir,
     parents: [Dir; 4],
     paths: [PathBuf; 4],
     expected: Expectations,
@@ -702,6 +711,272 @@ fn append(dir: &Dir, name: &str, value: &impl Serialize) -> Result<()> {
     super::journal::append(dir, name, value)
 }
 impl<'a> LegacyLocks<'a> {
+    pub(super) fn recover(
+        op: &str,
+        binding: &str,
+        predecessor: &Dir,
+        journal: &Dir,
+        expected: &Expectations,
+        guard: &'a MutationGuard,
+        namespace: SocketNamespace,
+    ) -> Result<Self> {
+        require(unsafe { libc::geteuid() } == 0, "ROOT_REQUIRED")?;
+        require(
+            op == "first-live-dsh-20260918-01",
+            "LEGACY_RECOVERY_OPERATION",
+        )?;
+        guard.binds(&Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?)?;
+        let dir = open_fixed_legacy_ancestor(0)?;
+        require(
+            fd_path(&dir)? == Path::new(LEGACY_ANCESTOR),
+            "LEGACY_FENCE_PATH",
+        )?;
+        check_fence_object::<NativeFenceFlags>(
+            &dir,
+            &expected.ancestor_fence,
+            expected.ancestor_fence.flags | LEGACY_ANCESTOR_FLAG,
+        )?;
+        verify_fence_journal(
+            predecessor,
+            op,
+            P4R14R2_BINDING,
+            &expected.ancestor_fence,
+            Path::new(LEGACY_ANCESTOR),
+        )?;
+        let ancestor_fence = AncestorFence::<NativeFenceFlags> {
+            dir,
+            expected: expected.ancestor_fence.clone(),
+            operation_id: op.into(),
+            binding: P4R14R2_BINDING.into(),
+            original_flags: expected.ancestor_fence.flags,
+            path: PathBuf::from(LEGACY_ANCESTOR),
+            _flags: std::marker::PhantomData,
+        };
+        let lock_parent = ancestor_fence.lock_parent(&expected.parents[1])?;
+        let parents = [
+            namespace.open()?,
+            lock_parent,
+            Dir::open(Path::new(PARENTS[2]), 0)?,
+            Dir::open(Path::new(PARENTS[3]), 0)?,
+        ];
+        Self::recover_with_context(
+            op,
+            binding,
+            expected,
+            guard,
+            RecoveryContext {
+                predecessor_binding: P4R14R2_BINDING,
+                predecessor,
+                journal,
+                parents,
+                acquisition: AcquisitionContext {
+                    namespace: Some(namespace),
+                    ancestor_fence: Some(ancestor_fence),
+                },
+            },
+        )
+    }
+
+    fn recover_with_context(
+        op: &str,
+        binding: &str,
+        expected: &Expectations,
+        guard: &'a MutationGuard,
+        recovery: RecoveryContext<'_>,
+    ) -> Result<Self> {
+        let RecoveryContext {
+            predecessor_binding,
+            predecessor,
+            journal,
+            parents,
+            acquisition: context,
+        } = recovery;
+        crate::fs::secure::component(op)?;
+        hash(binding)?;
+        hash(predecessor_binding)?;
+        validate(&predecessor.file, predecessor.uid, true)?;
+        validate(&journal.file, journal.uid, true)?;
+        require(predecessor.uid == journal.uid, "LEGACY_RECOVERY_HISTORY")?;
+        let expected_prior = if context.ancestor_fence.is_some() {
+            vec![
+                "legacy-0-intent.json",
+                "legacy-0-result.json",
+                "legacy-1-created.json",
+                "legacy-1-intent.json",
+                "legacy-1-result.json",
+                "legacy-2-created.json",
+                "legacy-2-intent.json",
+                "legacy-2-result.json",
+                "legacy-ancestor-fence-intent.json",
+                "legacy-ancestor-fence-result.json",
+            ]
+        } else {
+            vec![
+                "legacy-0-intent.json",
+                "legacy-0-result.json",
+                "legacy-1-created.json",
+                "legacy-1-intent.json",
+                "legacy-1-result.json",
+                "legacy-2-created.json",
+                "legacy-2-intent.json",
+                "legacy-2-result.json",
+            ]
+        };
+        let prior: Vec<_> = predecessor
+            .names()?
+            .into_iter()
+            .filter(|name| name.starts_with("legacy-") && !name.starts_with("legacy-recovery-"))
+            .collect();
+        require(
+            prior
+                == expected_prior
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<_>>(),
+            "LEGACY_RECOVERY_HISTORY",
+        )?;
+        let paths = [
+            fd_path(&parents[0])?,
+            fd_path(&parents[1])?,
+            fd_path(&parents[2])?,
+            fd_path(&parents[3])?,
+        ];
+        for (index, parent) in parents.iter().enumerate() {
+            if index == 0 {
+                if let Some(namespace) = &context.namespace {
+                    namespace.check(parent)?;
+                } else {
+                    validate(&parent.file, journal.uid, true)?;
+                }
+            } else {
+                validate(&parent.file, journal.uid, true)?;
+            }
+            expected.parents[index].check(&parent.file)?;
+        }
+        absent(&parents[3], NAMES[3])?;
+        let permanent = parents[0].open_file(NAMES[0], libc::O_RDWR, 0)?;
+        validate(&permanent, journal.uid, false)?;
+        let permanent_identity = match &expected.permanent {
+            PermanentExpectation::Present { identity } => identity.clone(),
+            PermanentExpectation::AbsentCreate => {
+                return Err(Error::new("LEGACY_RECOVERY_PERMANENT"))
+            }
+        };
+        permanent_identity.check(&permanent)?;
+        require(
+            unsafe { libc::flock(permanent.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
+            "LEGACY_FLOCK_BUSY",
+        )?;
+        let original: serde_json::Value = super::files::read(predecessor, "legacy-0-intent.json")?;
+        require(
+            original["operation_id"] == op
+                && original["binding"] == predecessor_binding
+                && original["expected"] == serde_json::to_value(expected)?
+                && original["paths"] == serde_json::to_value(&paths)?,
+            "LEGACY_RECOVERY_HISTORY",
+        )?;
+        let zero: serde_json::Value = super::files::read(predecessor, "legacy-0-result.json")?;
+        require(
+            zero == serde_json::json!({"binding":predecessor_binding,"identity":permanent_identity}),
+            "LEGACY_RECOVERY_HISTORY",
+        )?;
+        let mut owned = Vec::new();
+        let mut predecessor_pid = None;
+        for index in [1usize, 2] {
+            let intent: serde_json::Value =
+                super::files::read(predecessor, &format!("legacy-{index}-intent.json"))?;
+            require(
+                intent["binding"] == predecessor_binding
+                    && intent["parent"] == serde_json::to_value(&expected.parents[index])?
+                    && intent["name"] == NAMES[index]
+                    && intent["expected_preimage"] == "absent",
+                "LEGACY_RECOVERY_HISTORY",
+            )?;
+            let pid = intent["process"]["pid"]
+                .as_i64()
+                .ok_or(Error::new("LEGACY_RECOVERY_HISTORY"))?;
+            require(
+                predecessor_pid.is_none() || predecessor_pid == Some(pid),
+                "LEGACY_RECOVERY_HISTORY",
+            )?;
+            predecessor_pid = Some(pid);
+            let created: serde_json::Value =
+                super::files::read(predecessor, &format!("legacy-{index}-created.json"))?;
+            let result: serde_json::Value =
+                super::files::read(predecessor, &format!("legacy-{index}-result.json"))?;
+            require(
+                created["binding"] == predecessor_binding
+                    && result["binding"] == predecessor_binding,
+                "LEGACY_RECOVERY_HISTORY",
+            )?;
+            let identity: Identity = serde_json::from_value(created["identity"].clone())?;
+            let holder_identity: Identity =
+                serde_json::from_value(result["holder_identity"].clone())?;
+            require(
+                result["identity"] == created["identity"],
+                "LEGACY_RECOVERY_HISTORY",
+            )?;
+            let dir = parents[index].child(NAMES[index])?;
+            identity.check(&dir.file)?;
+            require(
+                dir.names()? == vec![HOLDERS[index - 1]],
+                "LEGACY_CONTENT_DRIFT",
+            )?;
+            let holder = dir.open_file(HOLDERS[index - 1], libc::O_RDONLY, 0)?;
+            holder_identity.check(&holder)?;
+            let bytes = snapshot(&holder, journal.uid, 16 * 1024)?.bytes;
+            require(
+                result["holder_sha256"] == sha(&bytes),
+                "LEGACY_HOLDER_DRIFT",
+            )?;
+            owned.push(Owned {
+                dir,
+                identity,
+                holder: holder_identity,
+                bytes,
+            });
+        }
+        if context.ancestor_fence.is_some() {
+            require(predecessor_pid == Some(51_690), "LEGACY_RECOVERY_HISTORY")?;
+            require(
+                unsafe { libc::kill(predecessor_pid.unwrap() as i32, 0) } == -1
+                    && std::io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH),
+                "LEGACY_RECOVERY_PREDECESSOR_ACTIVE",
+            )?;
+        }
+        append(
+            journal,
+            "legacy-recovery-intent.json",
+            &serde_json::json!({"operation_id":op,"binding":binding,"predecessor_binding":predecessor_binding}),
+        )?;
+        let locks = Self {
+            _guard: guard,
+            journal: Dir {
+                file: journal.file.try_clone()?,
+                uid: journal.uid,
+            },
+            fence_journal: Dir {
+                file: predecessor.file.try_clone()?,
+                uid: predecessor.uid,
+            },
+            parents,
+            paths,
+            expected: expected.clone(),
+            permanent,
+            permanent_identity,
+            owned,
+            binding: binding.into(),
+            namespace: context.namespace,
+            ancestor_fence: context.ancestor_fence,
+        };
+        locks.verify()?;
+        append(
+            journal,
+            "legacy-recovery-result.json",
+            &serde_json::json!({"operation_id":op,"binding":binding,"predecessor_binding":predecessor_binding,"state":"RETAINED_LOCKS_JOINED"}),
+        )?;
+        Ok(locks)
+    }
     pub(super) fn acquire(
         op: &str,
         binding: &str,
@@ -899,6 +1174,10 @@ impl<'a> LegacyLocks<'a> {
                 file: journal.file.try_clone()?,
                 uid: journal.uid,
             },
+            fence_journal: Dir {
+                file: journal.file.try_clone()?,
+                uid: journal.uid,
+            },
             parents,
             paths,
             expected: expected.clone(),
@@ -1078,7 +1357,7 @@ impl<'a> LegacyLocks<'a> {
             checkpoint(&format!("legacy-release-{}-directory", offset + 1));
         }
         if let Some(fence) = self.ancestor_fence.take() {
-            fence.clear(&self.journal, Path::new(LEGACY_ANCESTOR), || {
+            fence.clear(&self.fence_journal, Path::new(LEGACY_ANCESTOR), || {
                 open_fixed_legacy_ancestor(0)
             })?;
         }

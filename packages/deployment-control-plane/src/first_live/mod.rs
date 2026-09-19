@@ -58,6 +58,10 @@ pub fn run_first_live() -> crate::Result<()> {
     crate::error::require(unsafe { libc::geteuid() } == 0, "FIRST_LIVE_REQUIRES_ROOT")?;
     native_effects::run()
 }
+
+pub fn run_first_live_recovery() -> crate::Result<()> {
+    native_effects::run_recovery()
+}
 #[cfg(test)]
 #[path = "../../test/first_live/ancestors.rs"]
 mod ancestor_tests;

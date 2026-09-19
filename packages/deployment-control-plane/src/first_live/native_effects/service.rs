@@ -44,6 +44,7 @@ impl<'g> Maintenance<'g> {
         area: &crate::fs::secure::Dir,
         p: &super::super::packet::Packet,
         guard: &'g crate::fs::MutationGuard,
+        journal_unit: &str,
     ) -> Result<Self> {
         guard.binds(root)?;
         crate::bootstrap::verify_platform_launchctl(&p.native_enrollment.launchctl_sha256)?;
@@ -68,7 +69,7 @@ impl<'g> Maintenance<'g> {
             generation: crate::trust::digest(&components)?,
             components,
         };
-        let journal = crate::transaction::Journal::create(area, "first-live-maintenance", 0, 0)?;
+        let journal = crate::transaction::Journal::create(area, journal_unit, 0, 0)?;
         let service = crate::transaction::NativeMaintenanceService {
             root: crate::fs::secure::Dir {
                 file: root.file.try_clone()?,
