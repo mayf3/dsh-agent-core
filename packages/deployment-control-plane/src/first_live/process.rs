@@ -105,7 +105,7 @@ pub(crate) fn run(
                 )
                 .current_dir("/Users/authsvc");
         }
-        let groups = groups.to_vec();
+        let groups = supplementary_groups(gid, groups)?;
         unsafe {
             command.pre_exec(move || {
                 // Only async-signal-safe syscalls after fork; Command owns its stdio descriptors.
@@ -247,11 +247,33 @@ fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result
                 (502, 20)
             };
             require(
-                (uid, gid) == expected && groups.len() <= 32 && !groups.contains(&0),
+                (uid, gid) == expected && supplementary_groups(gid, groups).is_ok(),
                 "FIRST_LIVE_IDENTITY",
             )
         }
     }
+}
+
+fn supplementary_groups(gid: u32, groups: &[u32]) -> Result<Vec<u32>> {
+    let mut unique = std::collections::BTreeSet::new();
+    require(
+        groups.len() <= 32
+            && groups.iter().filter(|group| **group == gid).count() == 1
+            && !groups.contains(&0)
+            && groups.iter().all(|group| unique.insert(*group)),
+        "FIRST_LIVE_IDENTITY",
+    )?;
+    let supplementary: Vec<_> = groups
+        .iter()
+        .copied()
+        .filter(|group| *group != gid)
+        .collect();
+    let limit = unsafe { libc::sysconf(libc::_SC_NGROUPS_MAX) };
+    require(
+        limit > 0 && supplementary.len() <= limit as usize,
+        "FIRST_LIVE_IDENTITY",
+    )?;
+    Ok(supplementary)
 }
 
 #[cfg(test)]
