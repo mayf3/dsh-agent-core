@@ -165,6 +165,10 @@ class PrerequisiteTests(unittest.TestCase):
         self.assertTrue((self.journal_path / "stopped.json").is_file())
 
     def test_paths_and_effects_are_fixed_not_caller_selected(self):
+        self.assertEqual(
+            prerequisite.PACKAGE_PATH,
+            Path("/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/p4r13-fence-capability-prerequisite"),
+        )
         self.assertEqual(prerequisite.INSTALL_TARGET, "/usr/local/libexec/agent-deployd/agent-deploy-first-live-fence-probe")
         self.assertEqual(prerequisite.PROBE_DIR, "/private/var/db/agent-deployd/first-live-fence-capability-p4r13")
         source = (HERE / "fence_capability_prerequisite.py").read_text()

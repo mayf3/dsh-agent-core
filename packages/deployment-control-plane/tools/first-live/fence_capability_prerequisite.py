@@ -21,6 +21,9 @@ import time
 
 OPERATION = "first-live-dsh-20260918-01-p4r13-fence-capability-prerequisite-01"
 PACKAGE_NAME = "p4r13-fence-capability-prerequisite"
+PACKAGE_PATH = Path(
+    "/Users/yanfenma/workspace/artifacts/production-deployment-control-plane-v1/p4r13-fence-capability-prerequisite"
+)
 INSTALL_PARENT = "/usr/local/libexec/agent-deployd"
 INSTALL_TARGET = INSTALL_PARENT + "/agent-deploy-first-live-fence-probe"
 PROBE_PARENT = "/private/var/db/agent-deployd"
@@ -505,7 +508,8 @@ def main():
     require(os.getuid() == os.geteuid() == 502 and os.getgid() == os.getegid() == 20, "UID502_GID20_REQUIRED")
     require(len(sys.argv) == 2 and len(sys.argv[1]) == 64, "MANIFEST_ARGUMENT")
     require(Path(sys.executable) == Path("/Library/Developer/CommandLineTools/usr/bin/python3"), "SYSTEM_PYTHON_REQUIRED")
-    package = Path(__file__).absolute().parent
+    require(Path(__file__) == Path("/dev/fd/9"), "FD_BOUND_ENTRY_REQUIRED")
+    package = PACKAGE_PATH
     parent = open_package(package)
     try:
         manifest_spec = {"sha256": sys.argv[1], "size": os.stat(package / "manifest.json").st_size, "mode": "0400"}
@@ -537,7 +541,6 @@ def main():
             and set(manifest["operator_files"]) == {"fence_capability_prerequisite.py"},
             "OPERATOR_SET",
         )
-        require(Path(__file__).absolute() == package / "fence_capability_prerequisite.py", "OPERATOR_LOCATION")
         read_file(
             parent,
             "fence_capability_prerequisite.py",
