@@ -14,7 +14,8 @@ import stat
 import sys
 
 FILES=frozenset({'first_live_launcher.py','first_live_os.py','first_live_io.py','first_live_operator.py',
-    'first_live_package.py','bind_records.py','broker_first_delivery.py','broker_delivery_io.py'})
+    'first_live_package.py','bind_records.py','broker_first_delivery.py','broker_delivery_io.py',
+    'p4r9_reconcile.py'})
 LIMIT=16*1024*1024
 
 
