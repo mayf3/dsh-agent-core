@@ -392,6 +392,15 @@ class Transport(unittest.TestCase):
         self.assertEqual(result['file'],str(target))
         self.assertEqual(result['argv'],['--broker-exact',io.manifest_digest])
 
+    def test_broker_reentry_fifo_substitution_refuses_without_blocking_before_intent(self):
+        self.io.claim();target=self.package/'first_live_launcher.py';target.unlink();os.mkfifo(target,0o400)
+        started=transport.time.monotonic()
+        with self.assertRaisesRegex(RuntimeError,'LAUNCHER_METADATA'):
+            self.io._broker_command(self.manifest['ordinary_argv_allowlist'][0])
+        self.assertLess(transport.time.monotonic()-started,1)
+        self.assertFalse(any(p.name.endswith('-intent.json') and p.name.startswith('0001-')
+            for p in self.journal.iterdir()))
+
     def test_only_fixed_socket_directory_install_is_allowed_without_fd(self):
         command=['/usr/bin/install','-d','-o','root','-g','602','-m','0750','/private/var/run/agent-deployd']
         self.manifest['root_argv_allowlist'].append(command);self.save_manifest()
