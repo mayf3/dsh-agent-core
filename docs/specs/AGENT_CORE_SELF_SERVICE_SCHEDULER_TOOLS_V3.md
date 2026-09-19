@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
-status: accepted
+status: superseded
 date: 2026-09-13
 accepted_date: 2026-09-13
 accepted_by: mayf3
@@ -33,7 +33,7 @@ external_authorities:
     relation: constrained_by
 supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V2
-superseded_by: null
+superseded_by: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4
 amendments:
   - AMENDMENT_3 (2026-09-11, status: accepted, semantic delta NONE, code-structure
     guardrails delta NONE — AMENDMENT_2_STRUCTURE_CLOSURE_RECONCILIATION;

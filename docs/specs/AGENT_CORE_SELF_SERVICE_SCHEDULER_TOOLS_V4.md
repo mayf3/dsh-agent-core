@@ -1,7 +1,12 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4
-status: proposed
+status: accepted
 date: 2026-09-19
+accepted_date: 2026-09-19
+accepted_by: mayf3
+accepted_reviewed_head: 886e2dd3bc8f149aa9a00fa6b95a116c07cb0936
+independent_review_result: PASS
+independent_review_blockers: []
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
