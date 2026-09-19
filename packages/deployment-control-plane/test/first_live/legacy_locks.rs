@@ -14,6 +14,11 @@ fn parents(root: &Dir) -> [Dir; 4] {
 }
 fn expected(parents: &[Dir; 4]) -> Expectations {
     Expectations {
+        ancestor_fence: AncestorFenceExpectation {
+            identity: Identity::of(&parents[1].file).unwrap(),
+            flags: 0,
+            acl_none: true,
+        },
         parents: std::array::from_fn(|i| Identity::of(&parents[i].file).unwrap()),
         permanent: PermanentExpectation::AbsentCreate,
     }
@@ -25,6 +30,265 @@ fn success(area: &Dir) {
         &serde_json::json!({"binding":BINDING,"retirement_digest":RETIRED}),
     )
     .unwrap();
+}
+
+// SF_NOUNLINK is root-only. This fixture maps the same narrow set/clear contract
+// onto the owner-settable immutable bit so pathname operations exercise the macOS
+// kernel while production code remains bound to fchflags(fd, SF_NOUNLINK).
+struct FixtureFenceFlags;
+impl FenceFlags for FixtureFenceFlags {
+    fn flags(file: &File) -> Result<u32> {
+        use std::os::macos::fs::MetadataExt;
+        Ok(if file.metadata()?.st_flags() & libc::UF_IMMUTABLE != 0 {
+            LEGACY_ANCESTOR_FLAG
+        } else {
+            0
+        })
+    }
+    fn set(file: &File, flags: u32) -> Result<()> {
+        let flags = if flags & LEGACY_ANCESTOR_FLAG != 0 {
+            libc::UF_IMMUTABLE
+        } else {
+            0
+        };
+        require(
+            unsafe { libc::fchflags(file.as_raw_fd(), flags) } == 0,
+            "FIXTURE_FLAG",
+        )
+    }
+}
+fn fixture_fence(
+    root: &Dir,
+    area: &Dir,
+) -> (
+    PathBuf,
+    AncestorFenceExpectation,
+    AncestorFence<FixtureFenceFlags>,
+) {
+    let ancestor = root.mkdir("agent-core").unwrap();
+    ancestor.mkdir(LEGACY_LOCK_CHILD).unwrap();
+    let path = fd_path(&ancestor).unwrap();
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&ancestor.file).unwrap(),
+        flags: 0,
+        acl_none: true,
+    };
+    let fence = AncestorFence::<FixtureFenceFlags>::acquire(
+        "operation",
+        BINDING,
+        area,
+        &expected,
+        &path,
+        || root.child("agent-core"),
+    )
+    .unwrap();
+    (path, expected, fence)
+}
+
+#[test]
+fn nounlink_fence_closes_ancestor_rename_and_preserves_lock_child_operations() {
+    assert_eq!(LEGACY_ANCESTOR_FLAG, 0x0010_0000);
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let area = roots.root.mkdir("journal").unwrap();
+    let before = roots.root.mkdir("agent-core").unwrap();
+    before.mkdir(LEGACY_LOCK_CHILD).unwrap();
+    roots
+        .root
+        .rename("agent-core", &roots.root, "moved")
+        .unwrap();
+    roots
+        .root
+        .rename("moved", &roots.root, "agent-core")
+        .unwrap();
+    std::fs::remove_dir_all(t.path().join("agent-core")).unwrap();
+
+    let (path, expected, fence) = fixture_fence(&roots.root, &area);
+    assert!(std::fs::rename(t.path().join("agent-core"), t.path().join("moved")).is_err());
+    assert!(std::fs::remove_dir_all(t.path().join("agent-core")).is_err());
+    assert_eq!(
+        Identity::of(&roots.root.child("agent-core").unwrap().file).unwrap(),
+        expected.identity
+    );
+    let lock_parent = fence
+        .lock_parent_at(
+            &expected_identity(
+                &roots
+                    .root
+                    .child("agent-core")
+                    .unwrap()
+                    .child(LEGACY_LOCK_CHILD)
+                    .unwrap(),
+            ),
+            &path,
+            || roots.root.child("agent-core"),
+        )
+        .unwrap();
+    let child = write_new(
+        &lock_parent,
+        "fixture.lock",
+        b"held",
+        lock_parent.uid,
+        lock_parent.file.metadata().unwrap().gid(),
+        0o600,
+    )
+    .unwrap();
+    drop(child);
+    lock_parent.unlink("fixture.lock").unwrap();
+    fence
+        .clear(&area, &path, || roots.root.child("agent-core"))
+        .unwrap();
+    roots
+        .root
+        .rename("agent-core", &roots.root, "moved")
+        .unwrap();
+}
+
+fn expected_identity(dir: &Dir) -> Identity {
+    Identity::of(&dir.file).unwrap()
+}
+
+#[test]
+fn retained_fence_rejects_replacement_and_requires_exact_reviewed_recovery() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let area = roots.root.mkdir("journal").unwrap();
+    let (path, expected, fence) = fixture_fence(&roots.root, &area);
+    assert!(std::fs::rename(t.path().join("agent-core"), t.path().join("old-agent-core")).is_err());
+    assert_eq!(
+        Identity::of(&roots.root.child("agent-core").unwrap().file).unwrap(),
+        expected.identity
+    );
+    drop(fence); // Simulated crash: there is deliberately no Drop cleanup.
+    let exact = retained_fence_requires_review::<FixtureFenceFlags>(
+        "operation",
+        BINDING,
+        &area,
+        &expected,
+        &path,
+        || roots.root.child("agent-core"),
+    )
+    .unwrap_err();
+    assert_eq!(exact.code(), "LEGACY_FENCE_RECOVERY_REQUIRED");
+    assert_eq!(
+        retained_fence_requires_review::<FixtureFenceFlags>(
+            "wrong-operation",
+            BINDING,
+            &area,
+            &expected,
+            &path,
+            || roots.root.child("agent-core"),
+        )
+        .unwrap_err()
+        .code(),
+        "LEGACY_FENCE_JOURNAL"
+    );
+    let held = roots.root.child("agent-core").unwrap();
+    FixtureFenceFlags::set(&held.file, 0).unwrap();
+}
+
+#[test]
+fn fence_crash_worker() {
+    let Ok(path) = std::env::var("DCP_FENCE_FIXTURE") else {
+        return;
+    };
+    let roots = FixtureRoots::open(std::path::Path::new(&path)).unwrap();
+    let area = roots.root.child("journal").unwrap();
+    let ancestor = roots.root.child("agent-core").unwrap();
+    let expected_path = fd_path(&ancestor).unwrap();
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&ancestor.file).unwrap(),
+        flags: 0,
+        acl_none: true,
+    };
+    let _fence = AncestorFence::<FixtureFenceFlags>::acquire(
+        "operation",
+        BINDING,
+        &area,
+        &expected,
+        &expected_path,
+        || roots.root.child("agent-core"),
+    )
+    .unwrap();
+    panic!("fault point not reached");
+}
+
+#[test]
+fn crash_after_flag_effect_retains_exact_fence_for_reviewed_recovery_only() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    roots.root.mkdir("journal").unwrap();
+    let ancestor = roots.root.mkdir("agent-core").unwrap();
+    ancestor.mkdir(LEGACY_LOCK_CHILD).unwrap();
+    let expected_path = fd_path(&ancestor).unwrap();
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&ancestor.file).unwrap(),
+        flags: 0,
+        acl_none: true,
+    };
+    drop(ancestor);
+    drop(roots);
+    let out = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "first_live::legacy_locks::tests::fence_crash_worker",
+            "--nocapture",
+        ])
+        .env("DCP_FENCE_FIXTURE", t.path())
+        .env("DCP_TEST_POINT", "legacy-ancestor-fence-effect")
+        .output()
+        .unwrap();
+    assert_eq!(out.status.code(), Some(75));
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let area = roots.root.child("journal").unwrap();
+    assert_eq!(
+        area.names().unwrap(),
+        vec!["legacy-ancestor-fence-intent.json".to_string()]
+    );
+    assert_eq!(
+        retained_fence_requires_review::<FixtureFenceFlags>(
+            "operation",
+            BINDING,
+            &area,
+            &expected,
+            &expected_path,
+            || roots.root.child("agent-core"),
+        )
+        .unwrap_err()
+        .code(),
+        "LEGACY_FENCE_RECOVERY_REQUIRED"
+    );
+    let held = roots.root.child("agent-core").unwrap();
+    FixtureFenceFlags::set(&held.file, 0).unwrap();
+}
+
+#[test]
+fn fence_clear_rejects_wrong_operation_inode_flag_and_prior_clear_phase() {
+    for drift in ["operation", "inode", "flag", "phase"] {
+        let t = crate::common::private::temp();
+        let roots = FixtureRoots::open(t.path()).unwrap();
+        let area = roots.root.mkdir("journal").unwrap();
+        let (path, _expected, mut fence) = fixture_fence(&roots.root, &area);
+        match drift {
+            "operation" => fence.operation_id = "wrong".into(),
+            "inode" => fence.expected.identity.inode += 1,
+            "flag" => FixtureFenceFlags::set(&fence.dir.file, 0).unwrap(),
+            "phase" => super::super::files::publish(
+                &area,
+                "legacy-ancestor-fence-clear-intent.json",
+                &serde_json::json!({"foreign":true}),
+            )
+            .unwrap(),
+            _ => unreachable!(),
+        }
+        assert!(fence
+            .clear(&area, &path, || roots.root.child("agent-core"))
+            .is_err());
+        let held = roots.root.child("agent-core").unwrap();
+        if FixtureFenceFlags::flags(&held.file).unwrap() == LEGACY_ANCESTOR_FLAG {
+            FixtureFenceFlags::set(&held.file, 0).unwrap();
+        }
+    }
 }
 #[test]
 fn real_legacy_mkdir_and_flock_are_excluded_until_owned_release() {
