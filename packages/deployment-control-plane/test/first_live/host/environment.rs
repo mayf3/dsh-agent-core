@@ -39,9 +39,9 @@ fn malformed_or_truncated_arguments_are_not_empty_environment_proof() {
     assert!(arguments(&b).is_err());
 }
 #[test]
-fn complete_domain_environment_required_and_loader_keys_rejected() {
+fn absent_domain_environment_block_is_empty_namespace_and_loader_keys_are_rejected() {
     assert!(domain("system = {\n\tenvironment = {\n\t\tPATH => /fixture\n\t}\n}\n").is_ok());
-    assert!(domain("system = {\n}\n").is_err());
+    assert!(domain("system = {\n}\n").is_ok());
     assert!(
         domain("system = {\n\tenvironment = {\n\t\tDYLD_INSERT_LIBRARIES => x\n\t}\n}\n").is_err()
     );
