@@ -33,6 +33,16 @@ pub(super) struct NativeEffects<'a> {
     isolated: bool,
     start_attempted: bool,
     host: Option<host::Session<'a>>,
+    initial_sudo_phase: &'static str,
+}
+struct Construction<'a> {
+    root: &'a Dir,
+    packet_dir: &'a Dir,
+    area: &'a Dir,
+    p: &'a Packet,
+    g: &'a gate::Grant,
+    guard: &'a MutationGuard,
+    locks: &'a LegacyLocks<'a>,
 }
 impl<'a> NativeEffects<'a> {
     pub(super) fn new(
@@ -44,6 +54,53 @@ impl<'a> NativeEffects<'a> {
         guard: &'a MutationGuard,
         locks: &'a LegacyLocks<'a>,
     ) -> Result<Self> {
+        Self::new_with_mode(
+            Construction {
+                root,
+                packet_dir,
+                area,
+                p,
+                g,
+                guard,
+                locks,
+            },
+            false,
+        )
+    }
+
+    pub(super) fn new_recovery(
+        root: &'a Dir,
+        packet_dir: &'a Dir,
+        area: &'a Dir,
+        p: &'a Packet,
+        g: &'a gate::Grant,
+        guard: &'a MutationGuard,
+        locks: &'a LegacyLocks<'a>,
+    ) -> Result<Self> {
+        Self::new_with_mode(
+            Construction {
+                root,
+                packet_dir,
+                area,
+                p,
+                g,
+                guard,
+                locks,
+            },
+            true,
+        )
+    }
+
+    fn new_with_mode(input: Construction<'a>, recovery: bool) -> Result<Self> {
+        let Construction {
+            root,
+            packet_dir,
+            area,
+            p,
+            g,
+            guard,
+            locks,
+        } = input;
         guard.binds(root)?;
         Ok(Self {
             root,
@@ -54,7 +111,17 @@ impl<'a> NativeEffects<'a> {
             guard,
             locks,
             trees: native_tree::load(packet_dir, p)?,
-            maintenance: service::Maintenance::new(root, area, p, guard)?,
+            maintenance: service::Maintenance::new(
+                root,
+                area,
+                p,
+                guard,
+                if recovery {
+                    "first-live-recovery-maintenance"
+                } else {
+                    "first-live-maintenance"
+                },
+            )?,
             restored: None,
             intent_sha: sha(&files::raw(area, "first-live-intent.json")?),
             leaves: None,
@@ -63,6 +130,11 @@ impl<'a> NativeEffects<'a> {
             isolated: false,
             start_attempted: false,
             host: None,
+            initial_sudo_phase: if recovery {
+                "recovery-initial"
+            } else {
+                "initial"
+            },
         })
     }
     fn check(&self) -> Result<()> {
@@ -192,7 +264,7 @@ impl Effects for NativeEffects<'_> {
             crate::bootstrap::first_live_sudoers_census()? == self.p.lifecycle.sudoers_sha256,
             "FIRST_LIVE_SUDOERS_DRIFT",
         )?;
-        let service_sudo = self.service_sudo("initial")?;
+        let service_sudo = self.service_sudo(self.initial_sudo_phase)?;
         commands::effective_sudo(self.area, "initial-effective-sudo", self.p, self.g)?;
         launchd::controller_off(self.area, "initial", self.p, self.g)?;
         let inventory_digest = self.trees()?;

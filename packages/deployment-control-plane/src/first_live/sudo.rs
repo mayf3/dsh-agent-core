@@ -70,7 +70,7 @@ fn account(uid: u32) -> Result<(&'static str, u32)> {
         _ => Err(crate::Error::new("FIRST_LIVE_SUDO_IDENTITY")),
     }
 }
-fn no_commands(uid: u32, out: &Output) -> Result<()> {
+pub(super) fn no_commands(uid: u32, out: &Output) -> Result<()> {
     let (name, _) = account(uid)?;
     // sudo v1.9.17p2 display_privs: successful listing with zero rules is
     // exactly one INFO (stdout) sentence. policy_list exits0 on true, not1.
@@ -137,7 +137,12 @@ pub(super) fn audit(pin: &str) -> Result<Vec<Report>> {
         let output = process::run(
             Tool::SudoAudit,
             pin,
-            &["-n".into(), "-l".into(), "-U".into(), format!("#{uid}")],
+            &[
+                "-n".into(),
+                "-l".into(),
+                "-U".into(),
+                account(uid)?.0.into(),
+            ],
             None,
             5,
         )?;

@@ -35,6 +35,12 @@ pub fn run_first_live_and_enable() -> Result<()> {
     service::first_live::enable()
 }
 
+pub fn run_first_live_recovery_and_enable() -> Result<()> {
+    service::first_live::fresh()?;
+    first_live::run_first_live_recovery()?;
+    service::first_live::enable()
+}
+
 pub fn run_first_live_completion() -> Result<()> {
     service::first_live::completion()
 }

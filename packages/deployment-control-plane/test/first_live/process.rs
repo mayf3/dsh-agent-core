@@ -179,7 +179,7 @@ fn plutil_is_only_caller_readback_of_the_public_inert_probe() {
 }
 
 #[test]
-fn sudo_audit_is_root_read_only_for_two_numeric_identities() {
+fn sudo_audit_is_root_read_only_for_two_uid_bound_account_names() {
     validate_identity(Tool::SudoAudit, None).unwrap();
     for identity in [
         Some((502, 20, &[20][..])),
@@ -188,7 +188,7 @@ fn sudo_audit_is_root_read_only_for_two_numeric_identities() {
     ] {
         assert!(validate_identity(Tool::SudoAudit, identity).is_err());
     }
-    for uid in ["#505", "#612"] {
+    for uid in ["authsvc", "_dcp_review"] {
         validate_arguments(
             Tool::SudoAudit,
             &["-n".into(), "-l".into(), "-U".into(), uid.into()],
@@ -196,9 +196,9 @@ fn sudo_audit_is_root_read_only_for_two_numeric_identities() {
         .unwrap();
     }
     for argv in [
-        vec!["-n", "-l", "-U", "#502"],
-        vec!["-n", "-l", "-U", "authsvc"],
-        vec!["-n", "-l", "-U", "#505", "/bin/sh"],
+        vec!["-n", "-l", "-U", "#505"],
+        vec!["-n", "-l", "-U", "root"],
+        vec!["-n", "-l", "-U", "authsvc", "/bin/sh"],
         vec!["-n", "/bin/sh"],
         vec![],
     ] {
