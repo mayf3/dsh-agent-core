@@ -11,7 +11,7 @@ PREDECESSOR={
  'operation_id':OPERATION,'execution_id':'first-live-dsh-20260918-01-p4r15r4-group-recovery-successor',
  'package_sha256':'77196829b9dbe4515b22e829b97b0ea0ab32d18cd9da561a7c73ffa574858d57',
  'plan_sha256':'c1702441732e161119ea3089ab025b4806f2d05cfd76b9cb344d33097af048f3',
- 'operation_packet_sha256':'7c53170ac4013b86ad43a2fa89097623a1d01554e3db52cc0d84eb2d428cd419',
+ 'operation_packet_sha256':'2981cda780cea19acc2409b211bcfbc1bd2f3756adc02d5699a4eb506b3b264f',
  'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_RETAINED_HOST_ENVIRONMENT_SHAPE_STOP','consumed':True,
  'retry_forbidden':True,'stop_class':'HOST_ENVIRONMENT_SHAPE','production_mutation_performed':True,
  'control_plane_staging_performed':True,'controller_enable_performed':False,

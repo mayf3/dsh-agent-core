@@ -18,6 +18,7 @@ class Mapping(unittest.TestCase):
         self.assertEqual(p.PREDECESSOR['execution_id'],'first-live-dsh-20260918-01-p4r15r4-group-recovery-successor')
         self.assertEqual(p.PREDECESSOR['package_sha256'],'77196829b9dbe4515b22e829b97b0ea0ab32d18cd9da561a7c73ffa574858d57')
         self.assertEqual(p.PREDECESSOR['plan_sha256'],'c1702441732e161119ea3089ab025b4806f2d05cfd76b9cb344d33097af048f3')
+        self.assertEqual(p.PREDECESSOR['operation_packet_sha256'],'2981cda780cea19acc2409b211bcfbc1bd2f3756adc02d5699a4eb506b3b264f')
         self.assertEqual(p.PREDECESSOR['stop_class'],'HOST_ENVIRONMENT_SHAPE')
         self.assertIs(p.PREDECESSOR['consumed'],True)
         self.assertIs(p.PREDECESSOR['retry_forbidden'],True)
