@@ -32,9 +32,9 @@ fn success(area: &Dir) {
     .unwrap();
 }
 
-// SF_NOUNLINK is root-only. This fixture maps the same narrow set/clear contract
+// SF_IMMUTABLE is root-only. This fixture maps the same narrow set/clear contract
 // onto the owner-settable immutable bit so pathname operations exercise the macOS
-// kernel while production code remains bound to fchflags(fd, SF_NOUNLINK).
+// kernel while production code remains bound to fchflags(fd, SF_IMMUTABLE).
 struct FixtureFenceFlags;
 impl FenceFlags for FixtureFenceFlags {
     fn flags(file: &File) -> Result<u32> {
@@ -56,6 +56,221 @@ impl FenceFlags for FixtureFenceFlags {
             "FIXTURE_FLAG",
         )
     }
+}
+
+struct KnownAbsentFenceFlags;
+impl FenceFlags for KnownAbsentFenceFlags {
+    fn flags(file: &File) -> Result<u32> {
+        FixtureFenceFlags::flags(file)
+    }
+    fn set(_file: &File, _flags: u32) -> Result<()> {
+        Err(Error::new("LEGACY_FENCE_EFFECT_EINVAL"))
+    }
+}
+
+struct AmbiguousFenceFlags;
+impl FenceFlags for AmbiguousFenceFlags {
+    fn flags(file: &File) -> Result<u32> {
+        FixtureFenceFlags::flags(file)
+    }
+    fn set(file: &File, flags: u32) -> Result<()> {
+        FixtureFenceFlags::set(file, flags)?;
+        Err(Error::new("LEGACY_FENCE_EFFECT_EIO"))
+    }
+}
+
+struct RetainedClearFenceFlags;
+impl FenceFlags for RetainedClearFenceFlags {
+    fn flags(file: &File) -> Result<u32> {
+        FixtureFenceFlags::flags(file)
+    }
+    fn set(file: &File, flags: u32) -> Result<()> {
+        if flags == 0 {
+            Err(Error::new("LEGACY_FENCE_EFFECT_EIO"))
+        } else {
+            FixtureFenceFlags::set(file, flags)
+        }
+    }
+}
+
+#[test]
+fn production_fence_uses_sf_immutable_after_real_nounlink_counterexample() {
+    assert_eq!(LEGACY_ANCESTOR_FLAG, 0x0002_0000);
+}
+
+#[test]
+fn native_flag_effect_errno_is_preserved_as_a_bounded_code() {
+    assert_eq!(
+        fence_effect_error(libc::EPERM).code(),
+        "LEGACY_FENCE_EFFECT_EPERM"
+    );
+    assert_eq!(
+        fence_effect_error(libc::EINVAL).code(),
+        "LEGACY_FENCE_EFFECT_EINVAL"
+    );
+    assert_eq!(
+        fence_effect_error(libc::ENOTSUP).code(),
+        "LEGACY_FENCE_EFFECT_ENOTSUP"
+    );
+    assert_eq!(
+        fence_effect_error(libc::EROFS).code(),
+        "LEGACY_FENCE_EFFECT_EROFS"
+    );
+    assert_eq!(
+        fence_effect_error(libc::EBADF).code(),
+        "LEGACY_FENCE_EFFECT_EBADF"
+    );
+    assert_eq!(
+        fence_effect_error(libc::EIO).code(),
+        "LEGACY_FENCE_EFFECT_OTHER"
+    );
+}
+
+#[test]
+fn known_absent_flag_effect_gets_a_durable_failure_record() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let area = roots.root.mkdir("journal").unwrap();
+    let ancestor = roots.root.mkdir("agent-core").unwrap();
+    ancestor.mkdir(LEGACY_LOCK_CHILD).unwrap();
+    let path = fd_path(&ancestor).unwrap();
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&ancestor.file).unwrap(),
+        flags: 0,
+        acl_none: true,
+    };
+    let error = match AncestorFence::<KnownAbsentFenceFlags>::acquire(
+        "operation",
+        BINDING,
+        &area,
+        &expected,
+        &path,
+        || roots.root.child("agent-core"),
+    ) {
+        Ok(_) => panic!("known absent effect must fail"),
+        Err(error) => error,
+    };
+    assert_eq!(error.code(), "LEGACY_FENCE_EFFECT_EINVAL");
+    assert_eq!(
+        area.names().unwrap(),
+        vec![
+            "legacy-ancestor-fence-failure.json".to_string(),
+            "legacy-ancestor-fence-intent.json".to_string(),
+        ]
+    );
+    let failure: serde_json::Value =
+        super::super::files::read(&area, "legacy-ancestor-fence-failure.json").unwrap();
+    assert_eq!(
+        failure,
+        serde_json::json!({
+            "operation_id":"operation",
+            "binding":BINDING,
+            "path":path.to_str().unwrap(),
+            "identity":expected.identity,
+            "attempted_flag":LEGACY_ANCESTOR_FLAG,
+            "observed_flags":0,
+            "code":"LEGACY_FENCE_EFFECT_EINVAL",
+            "state":"effect_absent"
+        })
+    );
+}
+
+#[test]
+fn ambiguous_flag_effect_keeps_intent_only_and_returns_unknown() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let area = roots.root.mkdir("journal").unwrap();
+    let ancestor = roots.root.mkdir("agent-core").unwrap();
+    ancestor.mkdir(LEGACY_LOCK_CHILD).unwrap();
+    let path = fd_path(&ancestor).unwrap();
+    let expected = AncestorFenceExpectation {
+        identity: Identity::of(&ancestor.file).unwrap(),
+        flags: 0,
+        acl_none: true,
+    };
+    let error = match AncestorFence::<AmbiguousFenceFlags>::acquire(
+        "operation",
+        BINDING,
+        &area,
+        &expected,
+        &path,
+        || roots.root.child("agent-core"),
+    ) {
+        Ok(_) => panic!("ambiguous effect must fail"),
+        Err(error) => error,
+    };
+    assert_eq!(error.code(), "LEGACY_FENCE_EFFECT_UNKNOWN");
+    assert_eq!(
+        area.names().unwrap(),
+        vec!["legacy-ancestor-fence-intent.json".to_string()]
+    );
+    let held = roots.root.child("agent-core").unwrap();
+    assert_eq!(
+        AmbiguousFenceFlags::flags(&held.file).unwrap(),
+        LEGACY_ANCESTOR_FLAG
+    );
+    FixtureFenceFlags::set(&held.file, 0).unwrap();
+}
+
+#[test]
+fn exact_capability_probe_verifies_effect_semantics_and_clear() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let result = fence_capability_probe_at::<FixtureFenceFlags>(&roots.root, "probe").unwrap();
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "version":1,
+            "state":"SUPPORTED_AND_CLEARED",
+            "selected_flag":LEGACY_ANCESTOR_FLAG,
+            "rename_blocked":true,
+            "child_operations":true,
+            "final_flags":0
+        })
+    );
+    let probe = roots.root.child("probe").unwrap();
+    assert_eq!(
+        probe.names().unwrap(),
+        vec![
+            "clear-intent.json".to_string(),
+            "intent.json".to_string(),
+            "result.json".to_string(),
+            "set-result.json".to_string(),
+            "target".to_string(),
+        ]
+    );
+    probe.rename("target", &probe, "target-cleared").unwrap();
+}
+
+#[test]
+fn production_capability_probe_refuses_nonroot_before_fixed_path_access() {
+    if unsafe { libc::geteuid() } == 0 {
+        return;
+    }
+    assert_eq!(
+        run_fence_capability_probe().unwrap_err().code(),
+        "LEGACY_FENCE_PROBE_ROOT_REQUIRED"
+    );
+}
+
+#[test]
+fn capability_probe_records_a_known_retained_clear_failure() {
+    let t = crate::common::private::temp();
+    let roots = FixtureRoots::open(t.path()).unwrap();
+    let error =
+        fence_capability_probe_at::<RetainedClearFenceFlags>(&roots.root, "probe").unwrap_err();
+    assert_eq!(error.code(), "LEGACY_FENCE_PROBE_CLEAR_RETAINED");
+    let probe = roots.root.child("probe").unwrap();
+    assert!(probe
+        .names()
+        .unwrap()
+        .contains(&"clear-failure.json".to_string()));
+    let target = probe.child("target").unwrap();
+    assert_eq!(
+        RetainedClearFenceFlags::flags(&target.file).unwrap(),
+        LEGACY_ANCESTOR_FLAG
+    );
+    FixtureFenceFlags::set(&target.file, 0).unwrap();
 }
 fn fixture_fence(
     root: &Dir,
@@ -86,8 +301,8 @@ fn fixture_fence(
 }
 
 #[test]
-fn nounlink_fence_closes_ancestor_rename_and_preserves_lock_child_operations() {
-    assert_eq!(LEGACY_ANCESTOR_FLAG, 0x0010_0000);
+fn immutable_fence_closes_ancestor_rename_and_preserves_lock_child_operations() {
+    assert_eq!(LEGACY_ANCESTOR_FLAG, 0x0002_0000);
     let t = crate::common::private::temp();
     let roots = FixtureRoots::open(t.path()).unwrap();
     let area = roots.root.mkdir("journal").unwrap();
