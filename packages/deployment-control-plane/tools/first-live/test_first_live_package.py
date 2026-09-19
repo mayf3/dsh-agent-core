@@ -56,6 +56,9 @@ class Mapping(unittest.TestCase):
             self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,archived],commands)
             self.assertIn(['/bin/ls','-ldeO',archived],commands)
             self.assertIn(['/bin/cat',archived],commands)
+        for directory in [p.SUDOERS_RETIREMENT, p.LEGACY_ANCESTOR,
+                          p.P4R14_OPERATION_ARCHIVE, p.P4R14_PACKET_ARCHIVE]:
+            self.assertIn(['/bin/ls','-1A',directory],commands)
         self.assertEqual(len(commands),len({tuple(row) for row in commands}))
 
     def test_native_fixed_filenames_and_all_real_payloads(self):

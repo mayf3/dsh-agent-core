@@ -194,6 +194,8 @@ def commands(packet,ctl_hash,reconciliation=None):
         argv += [['/bin/ls','-1A',ROOT+'/first-live-operation'],['/bin/ls','-1A',PACKET],
             ['/bin/ls','-1A',PACKET+'/payloads'],
             ['/bin/ls','-1A',ROOT+'/first-live-operation/first-live-maintenance-0-0']]
+        argv += [['/bin/ls','-1A',path] for path in (
+            SUDOERS_RETIREMENT,LEGACY_ANCESTOR,P4R14_OPERATION_ARCHIVE,P4R14_PACKET_ARCHIVE)]
         argv += [['/bin/ls','-1A',path] for path in reconciliation['legacy_locks']]
         argv += [['/usr/bin/install','-o','root','-g','wheel','-m','0400','/dev/fd/0',p]
             for p in sorted(reconcile_records)]
