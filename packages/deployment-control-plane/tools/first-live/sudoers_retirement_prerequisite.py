@@ -116,7 +116,8 @@ def _xattr_value(fd, name):
 
 def _retained_operation_xattr(fd):
     require(_xattrs(fd) == ["com.apple.provenance"] and
-            _xattr_value(fd, "com.apple.provenance") == b"\x01\x02",
+            _xattr_value(fd, "com.apple.provenance") ==
+            bytes.fromhex("010200b853f6dc8c0be32b"),
             "RETAINED_OPERATION_XATTR")
 
 

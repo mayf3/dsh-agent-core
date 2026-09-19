@@ -93,10 +93,12 @@ class RetirementTests(unittest.TestCase):
 
     def test_retained_operation_accepts_only_exact_macos_provenance(self):
         with patch.object(r, "_xattrs", return_value=["com.apple.provenance"]), \
-             patch.object(r, "_xattr_value", return_value=b"\x01\x02"):
+             patch.object(r, "_xattr_value",
+                          return_value=bytes.fromhex("010200b853f6dc8c0be32b")):
             r._retained_operation_xattr(99)
         for names, value in [([], b""), (["com.apple.provenance"], b"\x01\x03"),
-                             (["com.apple.quarantine"], b"\x01\x02")]:
+                             (["com.apple.quarantine"],
+                              bytes.fromhex("010200b853f6dc8c0be32b"))]:
             with patch.object(r, "_xattrs", return_value=names), \
                  patch.object(r, "_xattr_value", return_value=value), \
                  self.assertRaisesRegex(RuntimeError, "RETAINED_OPERATION_XATTR"):
