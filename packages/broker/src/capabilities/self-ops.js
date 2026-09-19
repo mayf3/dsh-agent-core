@@ -18,7 +18,6 @@ export const selfOpsManifest = {
   id: 'self_ops',
   toolName: 'self_ops',
   selector: 'action',
-  infrastructure: true,
   name: 'Self Operations',
   description:
     'Inspect the calling Agent runtime and Scheduler blockers, and reconcile only an exact '
