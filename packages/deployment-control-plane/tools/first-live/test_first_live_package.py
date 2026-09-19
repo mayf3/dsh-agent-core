@@ -11,17 +11,17 @@ def packet():
 
 class Mapping(unittest.TestCase):
     def test_fixed_successor_identity_and_predecessor_binding(self):
-        self.assertEqual(p.EXECUTION_ID,'first-live-dsh-20260918-01-p4r10-successor')
+        self.assertEqual(p.EXECUTION_ID,'first-live-dsh-20260918-01-p4r13-successor')
         self.assertEqual(p.PREDECESSOR['operation_id'],p.OPERATION)
-        self.assertEqual(p.PREDECESSOR['execution_id'],'first-live-dsh-20260918-01-p4-successor')
-        self.assertEqual(p.PREDECESSOR['package_sha256'],'d320d4b27bcda875e459129ae6e449146295c4d6357677874678ef3b83d0090c')
-        self.assertEqual(p.PREDECESSOR['plan_sha256'],'b2d2473360f4b760603fc99df2e06f16484b05de57654fa12500535b373f7761')
-        self.assertEqual(p.PREDECESSOR['stop_class'],'LEGACY_LOCK_ANCESTOR_RENAME')
+        self.assertEqual(p.PREDECESSOR['execution_id'],'first-live-dsh-20260918-01-p4r10-successor')
+        self.assertEqual(p.PREDECESSOR['package_sha256'],'f79dce644e89e1e2386dabf2b1bd2a385640a0d25cc839cac90b1eb49ab2d026')
+        self.assertEqual(p.PREDECESSOR['plan_sha256'],'e0d546e16dedd1d96211e001e13dba909b3be11e002d66b36debb68b0d1366a0')
+        self.assertEqual(p.PREDECESSOR['stop_class'],'LEGACY_FENCE_EFFECT_ABSENT')
         self.assertIs(p.PREDECESSOR['consumed'],True)
         self.assertIs(p.PREDECESSOR['retry_forbidden'],True)
-        self.assertIs(p.PREDECESSOR['production_mutation_performed'],False)
+        self.assertIs(p.PREDECESSOR['production_mutation_performed'],True)
         self.assertIs(p.PREDECESSOR['fresh_production_revalidation_required'],True)
-        self.assertIs(p.PREDECESSOR['new_owner_authorization_required'],True)
+        self.assertIs(p.PREDECESSOR['standing_successor_authority_applies'],True)
 
     def test_fixed_codex_stream_spec_has_exact_size_and_no_subprocess_read_command(self):
         x=packet();x['previous']={k:'a'*64 for k in ['installation_receipt_sha256','service_sha256',
@@ -47,10 +47,10 @@ class Mapping(unittest.TestCase):
         self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,active],commands)
         self.assertIn(['/bin/ls','-ldeO',active],commands)
         self.assertIn(['/bin/cat',active],commands)
-        self.assertIn(['/bin/mv',p.PACKET,p.P4R9_PACKET_ARCHIVE],commands)
+        self.assertIn(['/bin/mv',p.PACKET,p.P4R12_PACKET_ARCHIVE],commands)
         self.assertIn(['/bin/sync'],commands)
         for name in ['original-agent-deployd','original-agent-deploy-issuer']:
-            archived=p.P4R9_PACKET_ARCHIVE+'/'+name
+            archived=p.P4R12_PACKET_ARCHIVE+'/'+name
             self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,archived],commands)
             self.assertIn(['/bin/ls','-ldeO',archived],commands)
             self.assertIn(['/bin/cat',archived],commands)
