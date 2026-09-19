@@ -68,31 +68,44 @@ const EVENT_TYPE_RE = /^[a-z]+[a-z0-9]*([/.][a-z0-9-]+)*$/
 
 /**
  * Load and parse one journal, bounded. Returns events in file order with
- * {lineNo, seq, timeMs, type, data}; oversized/corrupt lines degrade.
+ * {lineNo, seq, timeMs, type, data}; oversized/corrupt lines degrade; an
+ * unreadable file (EACCES, vanished, I/O error) returns readFailed — never a
+ * throw (§2 fail-soft per source; T5's named 0700 case).
  */
 export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRecords = 10_000, maxRecordBytes = 1024 * 1024 }) {
   let st
-  try { st = statSync(file) } catch (error) { return { absent: true, events: [], skipped: 0, truncated: false, size: 0, mtimeMs: 0 } }
+  try {
+    st = statSync(file)
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { absent: true, events: [], skipped: 0, truncated: false, size: 0, mtimeMs: 0 }
+    return { absent: false, readFailed: String(error?.message ?? error), events: [], skipped: 0, truncated: true, size: 0, mtimeMs: 0 }
+  }
   const size = Number(st.size)
   const mtimeMs = Number(st.mtimeMs)
   const scanBytes = Math.min(size, maxFileBytes)
   let truncated = scanBytes < size
-  const fd = openSync(file, 'r')
   let text = ''
   try {
-    const buffer = Buffer.allocUnsafe(scanBytes)
-    let off = 0
-    while (off < buffer.length) {
-      const n = readSync(fd, buffer, off, buffer.length - off, off)
-      if (n === 0) break
-      off += n
-    }
-    text = buffer.subarray(0, off).toString('utf8')
-  } finally { closeSync(fd) }
+    const fd = openSync(file, 'r')
+    try {
+      const buffer = Buffer.allocUnsafe(Math.max(0, scanBytes))
+      let off = 0
+      while (off < buffer.length) {
+        const n = readSync(fd, buffer, off, buffer.length - off, off)
+        if (n === 0) break
+        off += n
+      }
+      text = buffer.subarray(0, off).toString('utf8')
+    } finally { closeSync(fd) }
+  } catch (error) {
+    return { absent: false, readFailed: String(error?.message ?? error), events: [], skipped: 0, truncated: true, size, mtimeMs }
+  }
   const events = []
   let skipped = 0
   const rawLines = text.split('\n')
-  const complete = text.endsWith('\n') ? rawLines.length - 1 : rawLines.length - 1
+  // A trailing '\n' makes the last split element ''; without it the last
+  // element is a PARTIAL line (torn write / byte-cap cut) and is never parsed.
+  const complete = rawLines.length - 1
   for (let i = 0; i < complete; i += 1) {
     const line = rawLines[i]
     if (line.trim() === '') continue
@@ -159,8 +172,25 @@ export function projectJournal(events, { briefMaxChars = 400 } = {}) {
     return compact.length > briefMaxChars ? `${compact.slice(0, briefMaxChars)}…` : compact
   }
   for (const ev of events) {
-    if (ev.type === 'agent/inbox/spliced' && typeof ev.data?.messageId === 'string') {
-      spliced.push({ seq: ev.seq ?? ev.lineNo, messageId: ev.data.messageId, timeMs: ev.timeMs })
+    if (ev.type === 'agent/inbox/spliced') {
+      // Real DSH shape: data.inserted[] entries carry {content, source?, ...}.
+      // ASM V2 stamps inter_agent/workflow_execution provenance HERE — the
+      // target-side anchor of every dispatch. messageId is a per-entry
+      // optional field (present in newer seam builds, absent in older ones).
+      const inserted = Array.isArray(ev.data?.inserted) ? ev.data.inserted : []
+      for (const entry of inserted) {
+        if (entry === null || typeof entry !== 'object') continue
+        messages.push({
+          seq: ev.seq ?? ev.lineNo, role: 'user', injected: true, timeMs: ev.timeMs,
+          messageId: typeof entry.messageId === 'string' ? entry.messageId : undefined,
+          source: entry.source && typeof entry.source === 'object' ? entry.source : undefined,
+          text: textOf(entry.content),
+          brief: brief(entry.content),
+        })
+      }
+      if (typeof ev.data?.messageId === 'string') {
+        spliced.push({ seq: ev.seq ?? ev.lineNo, messageId: ev.data.messageId, timeMs: ev.timeMs })
+      }
       continue
     }
     if (ev.type === 'user/message') {

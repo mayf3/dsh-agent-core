@@ -36,6 +36,10 @@ export function assembleResult(input) {
   const hashArgs = Object.fromEntries(Object.entries(args ?? {}).filter(([key]) => !['cursor', 'limit', 'view', 'audience'].includes(key)))
   const reportId = computeReportId(root, hashArgs, token)
   const pagination = paginateTimeline(build.records, { cursor, limit })
+  // Every consulted source appears — including per-journal entries, which
+  // carry their own read status (a 0700 journal is a DEGRADED source, §2/T5).
+  const rankOf = new Map(SOURCE_RANKS.map((name, index) => [name, index]))
+  const sourceNames = [...loadedSources.keys()].sort((a, b) => ((rankOf.get(a) ?? SOURCE_RANKS.length) - (rankOf.get(b) ?? SOURCE_RANKS.length)) || a.localeCompare(b))
   return {
     reportId,
     queryRoot: { root, ...args },
@@ -43,7 +47,7 @@ export function assembleResult(input) {
     readBoundary: {
       asOfUtc: utcIso(nowMs),
       sourceGenerationToken: token,
-      sources: SOURCE_RANKS.filter((name) => sourceStatuses[name] !== undefined).map((name) => ({
+      sources: sourceNames.map((name) => ({
         name,
         status: sourceStatuses[name].status,
         ...(sourceStatuses[name].reason !== undefined ? { reason: sourceStatuses[name].reason } : {}),

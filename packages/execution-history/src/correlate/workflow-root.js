@@ -93,6 +93,10 @@ export async function buildWorkflowRoot(ctx, args) {
   for (const entry of sessionEntries) {
     const loaded = ctx.journal(entry.agentId, entry.sessionId)
     if (loaded === null) { gaps.push(gap('SOURCE_DEGRADED', 'session_journal', { reason: `journal unresolvable: ${entry.agentId}/${entry.sessionId}` })); continue }
+    if (loaded.raw.readFailed !== undefined) {
+      gaps.push(gap('SOURCE_DEGRADED', 'session_journal', { reason: `journal unreadable: ${entry.agentId}/${entry.sessionId}: ${loaded.raw.readFailed}` }))
+      continue
+    }
     const view = projectForViewer({ sessionAgentId: entry.agentId, viewerAgentId: ctx.viewer.agentId, audit: ctx.viewer.audit === true, journal: loaded.projected })
     records.push({
       source: 'session_journal', kind: 'session_view', provenanceClass: 'PRIMARY_PERSISTED',
@@ -100,8 +104,10 @@ export async function buildWorkflowRoot(ctx, args) {
       dedupeKey: `journal:${entry.file}`, data: view,
     })
     for (const coord of view.workflowCoordinates ?? []) {
-      if (lower(coord.workflowInstanceId) === workflowInstanceId) {
-        correlations.push(correlation('R4', { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${coord.seq}` }, { source: 'svc_timeline', nativeRef: `stateVersion:${coord.workflowStateVersion ?? coord.expectedWorkflowStateVersion ?? '?'}` }, [workflowInstanceId]))
+      if (lower(coord.workflowInstanceId) !== workflowInstanceId) continue
+      const version = coord.workflowStateVersion ?? coord.expectedWorkflowStateVersion
+      if (version !== undefined) {
+        correlations.push(correlation('R4', { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}#${coord.seq}` }, { source: 'svc_timeline', nativeRef: `stateVersion:${version}` }, [workflowInstanceId]))
       }
     }
   }

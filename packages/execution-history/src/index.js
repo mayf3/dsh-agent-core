@@ -76,7 +76,9 @@ function finalize(ctx, result, meta) {
     if (journal === null) continue
     const name = `journal:${key}`
     loadedSources.set(name, {
-      status: { status: 'OK', badLines: journal.raw.skipped, truncated: journal.raw.truncated },
+      status: journal.raw.readFailed !== undefined
+        ? { status: 'DEGRADED', reason: `journal unreadable: ${journal.raw.readFailed}`, truncated: true }
+        : { status: 'OK', badLines: journal.raw.skipped, truncated: journal.raw.truncated },
       files: [{ file: journal.file, size: journal.raw.size, mtimeMs: journal.raw.mtimeMs ?? 0 }],
       rows: journal.raw.events.length,
     })

@@ -99,8 +99,13 @@ export async function buildSchedulerRoot(ctx, args) {
   }
 
   // Correlated cron-run sessions (index; name-derived + content coordinate).
-  if (occurrenceIds.size > 0) {
-    for (const occId of [...occurrenceIds].slice(0, 10)) {
+  // When the authority ledger is outside the readable boundary, the
+  // occurrence coordinate itself still drives the name-convention join —
+  // degraded, but never silently empty.
+  const sessionOccurrenceIds = occurrenceIds.size > 0
+    ? [...occurrenceIds].slice(0, 10)
+    : (occurrenceId !== undefined ? [occurrenceId] : [])
+  for (const occId of sessionOccurrenceIds) {
       for (const entry of ctx.sessionsMatching((lookups) => lookups.byCronOccurrence(occId))) {
         const loaded = ctx.journal(entry.agentId, entry.sessionId)
         if (loaded === null) continue
@@ -121,7 +126,6 @@ export async function buildSchedulerRoot(ctx, args) {
         }
         correlations.push(correlation('R5', { source: 'scheduler_store', nativeRef: occId }, { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}` }, [occId, entry.sessionId]))
       }
-    }
   }
 
   // Runtime-evidence invocation rows.

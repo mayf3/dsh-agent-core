@@ -1,0 +1,124 @@
+{
+  "chain": "A4_independent_session",
+  "root": "agent_session",
+  "args": {
+    "agentId": "agt_stock_agent",
+    "sessionId": "cron-run-occ~003A664c36350acd1fb9"
+  },
+  "ok": true,
+  "result": {
+    "reportId": "ehq-2d91d572185ab20f",
+    "asOfUtc": "2026-09-19T00:05:59.040Z",
+    "fiveDimensions": {
+      "schedulingAdmission": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "agentExecution": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "businessProgress": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "messageDelivery": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "evidenceIntegrity": {
+        "verdict": "PARTIAL",
+        "ruleIds": [
+          "R7"
+        ],
+        "evidenceRefs": [
+          "scheduler_history",
+          "attempts_ledger",
+          "asm_audit",
+          "runtime_evidence"
+        ]
+      }
+    },
+    "sources": [
+      {
+        "name": "scheduler_history",
+        "status": "ABSENT",
+        "reason": "history events.jsonl absent"
+      },
+      {
+        "name": "attempts_ledger",
+        "status": "ABSENT",
+        "reason": "attempts ledger absent"
+      },
+      {
+        "name": "asm_audit",
+        "status": "ABSENT",
+        "reason": "archive absent"
+      },
+      {
+        "name": "runtime_evidence",
+        "status": "ABSENT",
+        "reason": "runtime evidence absent"
+      }
+    ],
+    "timelineCount": 1,
+    "timelineKinds": [
+      "session_journal/session_view"
+    ],
+    "correlations": [],
+    "gaps": [
+      {
+        "code": "CORRELATION_GAP",
+        "stage": "inbound_dispatch",
+        "reason": "no ASM audit row matches this session (outside live/.1/archive window or never dispatched through agent_session_send)"
+      }
+    ],
+    "sampleRefs": [
+      {
+        "source": "session_journal",
+        "kind": "session_view",
+        "nativeRefs": {
+          "agentId": "agt_stock_agent",
+          "sessionId": "cron-run-occ~003A664c36350acd1fb9",
+          "file": "/Users/authsvc/.agent-core/homes/agt_stock_agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_0480991b97f1e27c96514ac66b4f122c--/cron-run-occ~003A664c36350acd1fb9/session.jsonl"
+        },
+        "atUtc": null,
+        "provenanceClass": "PRIMARY_PERSISTED"
+      }
+    ],
+    "sidecarCoordinates": [
+      {
+        "seq": 3,
+        "kind": "user",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 7,
+        "kind": "user",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 8,
+        "kind": "agent-instructions",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 9,
+        "kind": "plugin",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      }
+    ]
+  }
+}

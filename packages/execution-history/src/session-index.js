@@ -13,9 +13,13 @@ import { listAgentSessionFiles } from './loaders/session-journal.js'
 
 export const INDEX_VERSION = 1
 
-const RE_MESSAGE_ID = /"messageId":"([^"\\]{1,128})"/g
-const RE_WF_INSTANCE = /"workflowInstanceId":"([0-9a-fA-F-]{36})"/g
-const RE_DISPATCH_INTENT = /"dispatchIntentId":"([0-9a-fA-F-]{36})"/g
+const RE_MESSAGE_ID = /\\?"messageId\\?":\\?"([^"\\]{1,128})\\?"/g
+const RE_WF_INSTANCE = /\\?"workflowInstanceId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
+const RE_DISPATCH_INTENT = /\\?"dispatchIntentId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
+// ASM V2 provenance: inserted[]/user-message sidecars carry correlation =
+// the SOURCE turnExecutionId ('turn:...') — the target-side anchor of every
+// inter_agent dispatch (R1/R6 reverse coordinate).
+const RE_CORRELATION = /\\?"correlation\\?":\\?"(turn:[^"\\]{1,160})\\?"/g
 const RE_INTER_AGENT = /"kind":"inter_agent"/
 const RE_WF_SIDECAR = /"kind":"workflow_execution"/
 
@@ -48,6 +52,8 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
   for (const m of text.matchAll(RE_WF_INSTANCE)) workflowInstanceIds.push(m[1].toLowerCase())
   const dispatchIntentIds = []
   for (const m of text.matchAll(RE_DISPATCH_INTENT)) dispatchIntentIds.push(m[1].toLowerCase())
+  const interAgentCorrelations = []
+  for (const m of text.matchAll(RE_CORRELATION)) interAgentCorrelations.push(m[1])
   return {
     size,
     mtimeMs: Number(st.mtimeMs),
@@ -57,6 +63,7 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
       messageIds: uniqueSorted(messageIds).slice(0, 2000),
       workflowInstanceIds: uniqueSorted(workflowInstanceIds).slice(0, 200),
       dispatchIntentIds: uniqueSorted(dispatchIntentIds).slice(0, 200),
+      interAgentCorrelations: uniqueSorted(interAgentCorrelations).slice(0, 500),
       hasInterAgent: RE_INTER_AGENT.test(text),
       hasWorkflowExecutionSidecar: RE_WF_SIDECAR.test(text),
     },
@@ -78,12 +85,13 @@ function require_fd(_file) { return true }
 export function buildSessionIndex({ homesRoot, indexDir, maxFiles = 4000, maxScanBytes }) {
   const entries = []
   let partialScanCount = 0
+  let unreadableCount = 0
   const agents = safeReaddir(homesRoot)
   for (const agentId of agents) {
     for (const session of listAgentSessionFiles(homesRoot, agentId)) {
       if (entries.length >= maxFiles) break
       let extracted
-      try { extracted = extractJournalCoordinates(session.file, { maxScanBytes }) } catch { continue }
+      try { extracted = extractJournalCoordinates(session.file, { maxScanBytes }) } catch { unreadableCount += 1; continue }
       if (extracted.partialScan) partialScanCount += 1
       entries.push({
         v: INDEX_VERSION,
@@ -104,7 +112,7 @@ export function buildSessionIndex({ homesRoot, indexDir, maxFiles = 4000, maxSca
     writeFileSync(tmp, entries.map((e) => JSON.stringify(e)).join('\n') + (entries.length > 0 ? '\n' : ''))
     renameSync(tmp, join(indexDir, 'sessions.idx.jsonl'))
   } catch { /* index write is best-effort; queries fall back to direct scans */ }
-  return { entries, coverage: { files: entries.length, partialScanCount } }
+  return { entries, coverage: { files: entries.length, partialScanCount, unreadableCount } }
 }
 
 /** Load the index; null when absent/corrupt (caller rebuilds). */
@@ -143,6 +151,7 @@ export function indexLookups(entries) {
     byWorkflowInstanceId: (id) => entries.filter((e) => e.coordinates.workflowInstanceIds.includes(String(id).toLowerCase())),
     byDispatchIntentId: (id) => entries.filter((e) => e.coordinates.dispatchIntentIds.includes(String(id).toLowerCase())),
     byMessageId: (id) => entries.filter((e) => e.coordinates.messageIds.includes(id)),
+    byCorrelation: (correlation) => entries.filter((e) => e.coordinates.interAgentCorrelations?.includes(correlation)),
     bySessionId: (sessionId) => entries.filter((e) => e.sessionId === sessionId),
     byCronOccurrence: (occurrenceId) => {
       const needle = String(occurrenceId).replace(/:/g, '~')

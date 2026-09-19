@@ -103,6 +103,12 @@ export function buildFixtureRoot() {
     { type: 'turn/end', seq: 8, time: new Date(T0 + 440).toISOString(), data: { turn: 1, reason: { kind: 'completed' } } },
     { type: 'agent/inbox/spliced', seq: 9, time: new Date(T0 + 500).toISOString(), data: { messageId: MESSAGE_ID } },
     { type: 'user/message', seq: 10, time: new Date(T0 + 501).toISOString(), data: { content: 'inter_agent hello from scheduler', source: { kind: 'inter_agent', sourceAgentId: 'agt_scheduler', correlation: 'te-src-1' }, messageId: MESSAGE_ID } },
+    // Real-production spliced shape: inserted[] entries carry source sidecars
+    // without per-entry messageId (older seam builds).
+    { type: 'agent/inbox/spliced', seq: 12, time: new Date(T0 + 700).toISOString(), data: { target: 'next-turn', inserted: [{ content: [{ type: 'text', text: 'injected dispatch note' }], source: { kind: 'inter_agent', sourceAgentId: 'agt_scheduler', correlation: 'te-src-2' } }] } },
+    // Escaped-JSON tool coordinate (results/args pass through as strings in
+    // real journals) — the index extractor must find these too.
+    { type: 'tool/call', seq: 13, time: new Date(T0 + 710).toISOString(), data: { turn: 1, callId: 'call-2', name: 'workflow_instance_detail', arguments: '{"workflowInstanceId":"' + WF_ID_2 + '"}' } },
     { type: 'user/message', seq: 11, time: new Date(T0 + 600).toISOString(), data: { content: 'L'.repeat(2000), source: { kind: 'user' } } },
   ]
   writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), agtAEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')

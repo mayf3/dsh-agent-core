@@ -1,0 +1,192 @@
+{
+  "chain": "A1_workflow_instance",
+  "root": "workflow_instance",
+  "args": {
+    "workflowInstanceId": "db31bce0-f5a3-4af9-baab-e595add23ef1"
+  },
+  "ok": true,
+  "result": {
+    "reportId": "ehq-24218aa27fffd799",
+    "asOfUtc": "2026-09-19T00:05:59.006Z",
+    "fiveDimensions": {
+      "schedulingAdmission": {
+        "verdict": "UNKNOWN",
+        "ruleIds": [
+          "R4"
+        ],
+        "evidenceRefs": []
+      },
+      "agentExecution": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "businessProgress": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "messageDelivery": {
+        "verdict": "UNKNOWN",
+        "ruleId": "R7",
+        "evidenceRefs": []
+      },
+      "evidenceIntegrity": {
+        "verdict": "PARTIAL",
+        "ruleIds": [
+          "R7"
+        ],
+        "evidenceRefs": [
+          "attempts_ledger",
+          "asm_audit",
+          "svc_detail",
+          "svc_timeline",
+          "svc_submissions"
+        ]
+      }
+    },
+    "sources": [
+      {
+        "name": "attempts_ledger",
+        "status": "ABSENT",
+        "reason": "attempts ledger absent"
+      },
+      {
+        "name": "asm_audit",
+        "status": "ABSENT",
+        "reason": "archive absent"
+      },
+      {
+        "name": "svc_detail",
+        "status": "ABSENT",
+        "reason": "svc transport unavailable"
+      },
+      {
+        "name": "svc_timeline",
+        "status": "ABSENT",
+        "reason": "svc transport unavailable"
+      },
+      {
+        "name": "svc_submissions",
+        "status": "ABSENT",
+        "reason": "svc transport unavailable"
+      }
+    ],
+    "timelineCount": 2,
+    "timelineKinds": [
+      "session_journal/session_view"
+    ],
+    "correlations": [],
+    "gaps": [
+      {
+        "code": "SOURCE_ABSENT",
+        "stage": "svc",
+        "reason": "svc transport unavailable in this context"
+      },
+      {
+        "code": "CORRELATION_GAP",
+        "stage": "dispatch_attempts",
+        "reason": "no attempts-ledger attempt for this instance (visit dispatch may predate the ledger or was never engine-dispatched — G6)",
+        "knownFacts": {
+          "workflowInstanceId": "db31bce0-f5a3-4af9-baab-e595add23ef1"
+        }
+      }
+    ],
+    "sampleRefs": [
+      {
+        "source": "session_journal",
+        "kind": "session_view",
+        "nativeRefs": {
+          "agentId": "agt_arch-reviewer",
+          "sessionId": "main",
+          "file": "/Users/authsvc/.agent-core/homes/agt_arch-reviewer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_2869be92de1eac6deeb49d8253f717f0--/main/session.jsonl"
+        },
+        "atUtc": null,
+        "provenanceClass": "PRIMARY_PERSISTED"
+      },
+      {
+        "source": "session_journal",
+        "kind": "session_view",
+        "nativeRefs": {
+          "agentId": "agt_hr-agent",
+          "sessionId": "cron-run-occ~003Af6e50c7cd11c39c7",
+          "file": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/cron-run-occ~003Af6e50c7cd11c39c7/session.jsonl"
+        },
+        "atUtc": null,
+        "provenanceClass": "PRIMARY_PERSISTED"
+      }
+    ],
+    "sidecarCoordinates": [
+      {
+        "seq": 3,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 7,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 8,
+        "kind": "agent-instructions",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 9,
+        "kind": "plugin",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 1857,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 1861,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 1862,
+        "kind": "plugin",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 2529,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:3d815125-c598-4436-8b10-f3f631453c67:a2:g1:s2",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 2533,
+        "kind": "inter_agent",
+        "sourceAgentId": "agt_hr-agent",
+        "correlation": "turn:3d815125-c598-4436-8b10-f3f631453c67:a2:g1:s2",
+        "workflowInstanceId": null
+      },
+      {
+        "seq": 2534,
+        "kind": "plugin",
+        "sourceAgentId": null,
+        "correlation": null,
+        "workflowInstanceId": null
+      }
+    ]
+  }
+}
