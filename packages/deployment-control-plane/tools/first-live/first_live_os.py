@@ -21,7 +21,7 @@ from first_live_package import EXECUTION_ID, OPERATION, PREDECESSOR
 
 STAT_FORMAT = '%u|%g|%p|%l|%f|%z|%m|%c|%i|%B|%d|%HT'
 LIMIT = 128 * 1024 * 1024
-TOOLS = {'/bin/cat','/bin/chmod','/bin/launchctl','/bin/ls','/bin/mkdir',
+TOOLS = {'/bin/cat','/bin/chmod','/bin/launchctl','/bin/ls','/bin/mkdir','/bin/mv','/bin/sync',
          '/usr/bin/install','/usr/bin/python3','/usr/bin/shasum','/usr/bin/stat','/usr/bin/sudo'}
 HANDOFF = '/private/var/run/agent-deployd/broker-first-delivery.json'
 NATIVE = '/usr/local/libexec/agent-deployd/agent-deployd'
@@ -112,7 +112,9 @@ class OperatorIO:
         raw=read_local(path,self.manifest_digest)
         require(json.loads(raw)==m,'MANIFEST_DRIFT')
         require(Path(__file__).absolute()==self.package/'first_live_os.py','OPERATOR_LOCATION')
-        required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py'}
+        required={'first_live_os.py','first_live_io.py','first_live_operator.py','broker_first_delivery.py',
+            'broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py',
+            'p4r9_reconcile.py'}
         require(required==set(m['operator_files']),'OPERATOR_SET')
         for name,digest in m['operator_files'].items():
             require(re.fullmatch(r'[a-z0-9_]+\.py',name),'OPERATOR_NAME');exact_digest(digest)

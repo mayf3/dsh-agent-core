@@ -38,6 +38,19 @@ class Mapping(unittest.TestCase):
         self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,postimage],commands)
         self.assertIn(['/bin/ls','-ldeO',postimage],commands)
 
+    def test_reconciliation_commands_cover_new_source_tools_and_active_copy_readback(self):
+        x=packet();x['previous']={k:'a'*64 for k in ['installation_receipt_sha256','service_sha256',
+            'trust_sha256','issuer_policy_sha256','registry_sha256']}
+        rec={'staging_files':{'packet.json':{'sha256':'8'*64}}}
+        commands=p.commands(x,'9'*64,rec)
+        active=p.ROOT+'/first-live-operation/successor-reconciliation.json'
+        self.assertIn(['/usr/bin/stat','-f',p.STAT_FORMAT,active],commands)
+        self.assertIn(['/bin/ls','-ldeO',active],commands)
+        self.assertIn(['/bin/cat',active],commands)
+        self.assertIn(['/bin/mv',p.PACKET,p.P4R9_PACKET_ARCHIVE],commands)
+        self.assertIn(['/bin/sync'],commands)
+        self.assertEqual(len(commands),len({tuple(row) for row in commands}))
+
     def test_native_fixed_filenames_and_all_real_payloads(self):
         x=p.inputs(packet())
         self.assertEqual(x['node-inventory.json'],'3'*64)

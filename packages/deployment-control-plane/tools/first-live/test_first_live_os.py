@@ -1,5 +1,6 @@
 """Private files and mock process boundaries only; never actual sudo or runtime."""
 import contextlib
+import copy
 import hashlib
 import json
 import os
@@ -25,7 +26,8 @@ class Transport(unittest.TestCase):
         self.journal = self.base/'.agent-deploy-first-live-operator'/'first-live-dsh-20260918-01-p4r10-successor'
         self.raw = b'fixture script never executed'
         scripts = ['first_live_os.py','first_live_io.py','first_live_operator.py',
-                   'broker_first_delivery.py','broker_delivery_io.py','first_live_package.py','bind_records.py','first_live_launcher.py']
+                   'broker_first_delivery.py','broker_delivery_io.py','first_live_package.py',
+                   'bind_records.py','first_live_launcher.py','p4r9_reconcile.py']
         for name in scripts:
             (self.package/name).write_bytes(self.raw); (self.package/name).chmod(0o400)
         self.manifest = {'version':1,'operation_id':'first-live-dsh-20260918-01',
@@ -71,6 +73,17 @@ class Transport(unittest.TestCase):
             flags=getattr(meta,'st_flags',0),size=meta.st_size,mtime=int(meta.st_mtime),
             ctime=int(meta.st_ctime),inode=meta.st_ino,birthtime=int(getattr(meta,'st_birthtime',meta.st_ctime)),
             device=meta.st_dev,type='Regular File')
+
+    def test_exact_reconciliation_tools_and_ninth_source_are_admitted_once(self):
+        self.manifest['root_argv_allowlist'] += [
+            ['/bin/mv','/fixed/source','/fixed/archive'], ['/bin/sync']]
+        self.save_manifest()
+        io=transport.OperatorIO(self.manifest,self.package,self.journal)
+        self.assertIn('p4r9_reconcile.py',io.manifest['operator_files'])
+        duplicate=copy.deepcopy(self.manifest)
+        duplicate['root_argv_allowlist'].append(['/bin/sync'])
+        with self.assertRaisesRegex(RuntimeError,'ARGV_DUPLICATE'):
+            transport.OperatorIO(duplicate,self.package,self.journal)
 
     def test_claim_is_exclusive_and_records_are_append_only(self):
         self.io.local_validate(); self.io.claim(); self.io.phase('prefix')

@@ -26,7 +26,8 @@ def reconcile(io, raw):
     record = _object(raw, 4 * 1024 * 1024)
     require(set(record) == {'version','state','operation_id','execution_id','package_sha256',
         'operation_directory','packet_directory','first_live_intent','first_live_pending',
-        'packet_names','payload_names','staging_files','retry_forbidden','production_target_mutation'},
+        'packet_names','payload_names','staging_files','installed_files','socket_directory',
+        'retry_forbidden','production_target_mutation'},
         'P4R9_RECONCILIATION_SHAPE')
     require(record['version'] == 1 and record['state'] == 'P4R9_PENDING_ONLY_SUPERSEDED'
         and record['operation_id'] == layout.OPERATION
@@ -49,6 +50,12 @@ def reconcile(io, raw):
             record['payload_names'], 'P4R9_PAYLOAD_SHAPE')
     for relative, spec in record['staging_files'].items():
         _protected(io, layout.PACKET + '/' + relative, spec)
+    require(set(record['installed_files']) == {'agent-deployd','agent-deploy-issuer','agent-deployctl'},
+            'P4R9_INSTALLED_SET')
+    for name, spec in record['installed_files'].items():
+        _protected(io, layout.CODE + '/' + name, spec)
+    _directory(io, layout.SOCKET, record['socket_directory'])
+    require(io.call(['/bin/ls', '-1A', layout.SOCKET]) == b'', 'P4R9_SOCKET_NOT_EMPTY')
     io.copy(raw, digest(raw), '0400',
             layout.ROOT + '/first-live-operation/successor-reconciliation.json')
     io.call(['/bin/mv', layout.ROOT + '/first-live-pending.json',
