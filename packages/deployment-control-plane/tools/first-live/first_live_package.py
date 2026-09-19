@@ -6,16 +6,16 @@ import re
 from first_live_io import require
 
 OPERATION='first-live-dsh-20260918-01'
-EXECUTION_ID='first-live-dsh-20260918-01-p4r15r4-group-recovery-successor'
+EXECUTION_ID='first-live-dsh-20260918-01-p4r17-host-environment-successor'
 PREDECESSOR={
- 'operation_id':OPERATION,'execution_id':'first-live-dsh-20260918-01-p4r15-recovery-successor',
- 'package_sha256':'a13c473f77cd894c868524b2d77442c106669d756aff67d0aba788e812c26918',
- 'plan_sha256':'6b235fb380b11051bb5facc5bfcb0aa8342f9675446fdb509d877b833464afc4',
+ 'operation_id':OPERATION,'execution_id':'first-live-dsh-20260918-01-p4r15r4-group-recovery-successor',
+ 'package_sha256':'77196829b9dbe4515b22e829b97b0ea0ab32d18cd9da561a7c73ffa574858d57',
+ 'plan_sha256':'c1702441732e161119ea3089ab025b4806f2d05cfd76b9cb344d33097af048f3',
  'operation_packet_sha256':'7c53170ac4013b86ad43a2fa89097623a1d01554e3db52cc0d84eb2d428cd419',
- 'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_RETAINED_FILESYSTEM_IO_STOP','consumed':True,
- 'retry_forbidden':True,'stop_class':'FILESYSTEM_IO','production_mutation_performed':True,
+ 'disposition':'AUTHORIZED_ATTEMPT_CONSUMED_RETAINED_HOST_ENVIRONMENT_SHAPE_STOP','consumed':True,
+ 'retry_forbidden':True,'stop_class':'HOST_ENVIRONMENT_SHAPE','production_mutation_performed':True,
  'control_plane_staging_performed':True,'controller_enable_performed':False,
- 'retained_fence_flag':131072,'retained_operation_inode':88690739,
+ 'retained_fence_flag':131072,'retained_operation_inode':88933557,
  'fresh_production_revalidation_required':True,'standing_successor_authority_applies':True,
 }
 PACKET='/private/var/db/agent-deploy-first-live'
@@ -36,6 +36,10 @@ P4R15R4_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r15r4-retained'
 P4R15R4_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r15r4-retained'
 P4R15R4_PENDING_ARCHIVE=ROOT+'/first-live-pending-p4r15r4-retained.json'
 P4R16_RECONCILIATION=ROOT+'/first-live-p4r16-reconciliation'
+P4R16R3_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r16r3-retained'
+P4R16R3_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r16r3-retained'
+P4R16R3_PENDING_ARCHIVE=ROOT+'/first-live-pending-p4r16r3-retained.json'
+P4R17_RECONCILIATION=ROOT+'/first-live-p4r17-reconciliation'
 # Historical module constants remain only for its immutable regression tests.
 P4R12_OPERATION_ARCHIVE=ROOT+'/first-live-operation-p4r12-superseded'
 P4R12_PACKET_ARCHIVE='/private/var/db/agent-deploy-first-live-p4r12-superseded'
@@ -160,7 +164,7 @@ def commands(packet,ctl_hash,reconciliation=None):
              [CODE+'/agent-deployd','--first-live-completion']]
     if reconciliation is not None:
         require(type(reconciliation) is dict and type(reconciliation.get('staging_files')) is dict,
-            'P4R15_RECONCILIATION_SHAPE')
+            'P4R16R3_RECONCILIATION_SHAPE')
         active_operation=ROOT+'/first-live-operation'
         maintenance=active_operation+'/'+reconciliation['maintenance_name']
         reads={ROOT+'/first-live-pending.json'}
@@ -168,22 +172,25 @@ def commands(packet,ctl_hash,reconciliation=None):
         reads.update(PACKET+'/'+name for name in reconciliation['staging_files'])
         reads.update(path+'/'+value['holder_name'] for path,value in reconciliation['legacy_locks'].items())
         reads.update({P4R14_PENDING_ARCHIVE,P4R15_RECONCILIATION+'/complete.json',
-            P4R15R4_PACKET_ARCHIVE+'/original-agent-deployd',P4R15R4_PACKET_ARCHIVE+'/original-agent-deploy-issuer'})
-        records={P4R16_RECONCILIATION+'/'+name for name in ('intent.json','pending-archive-result.json',
+            P4R15R4_PENDING_ARCHIVE,P4R16_RECONCILIATION+'/complete.json',
+            P4R16R3_PACKET_ARCHIVE+'/original-agent-deployd',P4R16R3_PACKET_ARCHIVE+'/original-agent-deploy-issuer'})
+        records={P4R17_RECONCILIATION+'/'+name for name in ('intent.json','pending-archive-result.json',
             'operation-archive-result.json','packet-archive-result.json','complete.json')}
         meta=reads|records|{active_operation,maintenance,PACKET,PACKET+'/payloads',
-            P4R15R4_OPERATION_ARCHIVE,P4R15R4_PACKET_ARCHIVE,P4R15R4_PENDING_ARCHIVE,
-            P4R16_RECONCILIATION,LEGACY_ANCESTOR,P4R14_OPERATION_ARCHIVE,P4R14_PACKET_ARCHIVE,
+            P4R16R3_OPERATION_ARCHIVE,P4R16R3_PACKET_ARCHIVE,P4R16R3_PENDING_ARCHIVE,
+            P4R17_RECONCILIATION,LEGACY_ANCESTOR,P4R14_OPERATION_ARCHIVE,P4R14_PACKET_ARCHIVE,
             P4R14_PENDING_ARCHIVE,P4R15_RECONCILIATION,SOCKET,P4R15R4_PENDING_ARCHIVE,
-            P4R15R4_PACKET_ARCHIVE+'/packet.json'}|set(reconciliation['legacy_locks'])
+            P4R15R4_OPERATION_ARCHIVE,P4R15R4_PACKET_ARCHIVE,P4R16_RECONCILIATION,
+            P4R16R3_PACKET_ARCHIVE+'/packet.json'}|set(reconciliation['legacy_locks'])
         for path in sorted(meta):argv.extend([['/usr/bin/stat','-f',STAT_FORMAT,path],['/bin/ls','-ldeO',path]])
-        argv += [['/bin/cat',p] for p in sorted(reads|records|{P4R15R4_PENDING_ARCHIVE,P4R15R4_PACKET_ARCHIVE+'/packet.json'})]
+        argv += [['/bin/cat',p] for p in sorted(reads|records|{P4R16R3_PENDING_ARCHIVE,P4R16R3_PACKET_ARCHIVE+'/packet.json'})]
         argv += [['/bin/ls','-1A',path] for path in (active_operation,maintenance,PACKET,PACKET+'/payloads',
-            LEGACY_ANCESTOR,P4R14_OPERATION_ARCHIVE,P4R14_PACKET_ARCHIVE,P4R15R4_OPERATION_ARCHIVE,P4R15R4_PACKET_ARCHIVE)]
+            LEGACY_ANCESTOR,P4R14_OPERATION_ARCHIVE,P4R14_PACKET_ARCHIVE,P4R15R4_OPERATION_ARCHIVE,
+            P4R15R4_PACKET_ARCHIVE,P4R16R3_OPERATION_ARCHIVE,P4R16R3_PACKET_ARCHIVE)]
         argv += [['/bin/ls','-1A',path] for path in reconciliation['legacy_locks']]
         argv += [['/usr/bin/install','-o','root','-g','wheel','-m','0400','/dev/fd/0',p] for p in sorted(records)]
-        argv += [['/bin/mkdir','-m','0700',P4R16_RECONCILIATION],
-            ['/bin/mv',ROOT+'/first-live-pending.json',P4R15R4_PENDING_ARCHIVE],
-            ['/bin/mv',active_operation,P4R15R4_OPERATION_ARCHIVE],
-            ['/bin/mv',PACKET,P4R15R4_PACKET_ARCHIVE],['/bin/sync']]
+        argv += [['/bin/mkdir','-m','0700',P4R17_RECONCILIATION],
+            ['/bin/mv',ROOT+'/first-live-pending.json',P4R16R3_PENDING_ARCHIVE],
+            ['/bin/mv',active_operation,P4R16R3_OPERATION_ARCHIVE],
+            ['/bin/mv',PACKET,P4R16R3_PACKET_ARCHIVE],['/bin/sync']]
     return [list(row) for row in dict.fromkeys(tuple(row) for row in argv)]
