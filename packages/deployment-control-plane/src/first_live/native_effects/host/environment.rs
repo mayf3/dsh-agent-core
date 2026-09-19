@@ -87,7 +87,17 @@ fn domain(raw: &str) -> Result<()> {
     let mut blocks = BTreeSet::new();
     let mut inside = false;
     let mut names = BTreeSet::new();
+    let mut depth = 1usize;
     for line in &lines[1..lines.len() - 1] {
+        let field = line.trim_start_matches('\t');
+        if line.ends_with(" = {") {
+            depth = depth
+                .checked_add(1)
+                .ok_or_else(|| Error::new("HOST_ENVIRONMENT_SHAPE"))?;
+        } else if field == "}" {
+            require(depth > 1, "HOST_ENVIRONMENT_SHAPE")?;
+            depth -= 1;
+        }
         if inside {
             if *line == "\t}" {
                 inside = false;
@@ -105,11 +115,11 @@ fn domain(raw: &str) -> Result<()> {
             require(blocks.insert(*line), "HOST_ENVIRONMENT_SHAPE")?;
             inside = true;
             names.clear();
-        } else if line.starts_with("\tenvironment") || line.starts_with("\tdefault environment") {
+        } else if field.starts_with("environment") || field.starts_with("default environment") {
             return Err(Error::new("HOST_ENVIRONMENT_SHAPE"));
         }
     }
-    require(!inside, "HOST_ENVIRONMENT_SHAPE")
+    require(!inside && depth == 1, "HOST_ENVIRONMENT_SHAPE")
 }
 pub(super) fn running(pid: u32) -> Result<String> {
     require(
