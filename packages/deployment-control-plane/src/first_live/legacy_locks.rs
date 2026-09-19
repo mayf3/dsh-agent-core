@@ -145,6 +145,16 @@ fn check_fence_object<F: FenceFlags>(
     require(expected.acl_none, "LEGACY_FENCE_ACL")?;
     reject_acl(&dir.file)
 }
+fn check_production_fence_policy(expected: &AncestorFenceExpectation) -> Result<()> {
+    require(
+        expected.identity.uid == 0
+            && expected.identity.gid == 80
+            && expected.identity.mode == 0o755
+            && expected.flags == 0
+            && expected.acl_none,
+        "LEGACY_FENCE_POLICY",
+    )
+}
 fn verify_fence_journal(
     journal: &Dir,
     operation_id: &str,
@@ -547,6 +557,7 @@ impl<'a> LegacyLocks<'a> {
             }
             return Err(Error::new("LEGACY_PRIOR_ATTEMPT"));
         }
+        check_production_fence_policy(&expected.ancestor_fence)?;
         let ancestor_fence = AncestorFence::<NativeFenceFlags>::acquire(
             op,
             binding,

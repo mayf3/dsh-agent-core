@@ -290,6 +290,37 @@ fn fence_clear_rejects_wrong_operation_inode_flag_and_prior_clear_phase() {
         }
     }
 }
+
+#[test]
+fn production_fence_policy_rejects_writable_or_nonexact_ancestor_contract() {
+    let exact = AncestorFenceExpectation {
+        identity: Identity {
+            device: 1,
+            inode: 2,
+            uid: 0,
+            gid: 80,
+            mode: 0o755,
+        },
+        flags: 0,
+        acl_none: true,
+    };
+    check_production_fence_policy(&exact).unwrap();
+    for drift in ["uid", "gid", "mode", "flags", "acl"] {
+        let mut bad = exact.clone();
+        match drift {
+            "uid" => bad.identity.uid = 502,
+            "gid" => bad.identity.gid = 20,
+            "mode" => bad.identity.mode = 0o775,
+            "flags" => bad.flags = libc::UF_NODUMP,
+            "acl" => bad.acl_none = false,
+            _ => unreachable!(),
+        }
+        assert_eq!(
+            check_production_fence_policy(&bad).unwrap_err().code(),
+            "LEGACY_FENCE_POLICY"
+        );
+    }
+}
 #[test]
 fn real_legacy_mkdir_and_flock_are_excluded_until_owned_release() {
     let t = crate::common::private::temp();
