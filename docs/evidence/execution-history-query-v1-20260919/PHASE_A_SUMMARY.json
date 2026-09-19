@@ -1,0 +1,1285 @@
+{
+  "phase": "A (offline read-only; authsvc-only stores intentionally absent → honest SOURCE_ABSENT)",
+  "homesRoot": "/Users/authsvc/.agent-core/homes",
+  "durationMs": 1124,
+  "indexStats": {
+    "files": 772,
+    "partialScanCount": 31,
+    "unreadableCount": 0,
+    "buildMs": 1053,
+    "withWorkflowCoordinates": 324,
+    "withInterAgent": 43
+  },
+  "chains": [
+    {
+      "chain": "A1_workflow_instance",
+      "root": "workflow_instance",
+      "args": {
+        "workflowInstanceId": "db31bce0-f5a3-4af9-baab-e595add23ef1"
+      },
+      "ok": true,
+      "result": {
+        "reportId": "ehq-24218aa27fffd799",
+        "asOfUtc": "2026-09-19T00:55:05.295Z",
+        "fiveDimensions": {
+          "schedulingAdmission": {
+            "verdict": "UNKNOWN",
+            "ruleIds": [
+              "R4"
+            ],
+            "evidenceRefs": []
+          },
+          "agentExecution": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "businessProgress": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "messageDelivery": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "evidenceIntegrity": {
+            "verdict": "PARTIAL",
+            "ruleIds": [
+              "R7"
+            ],
+            "evidenceRefs": [
+              "attempts_ledger",
+              "asm_audit",
+              "svc_detail",
+              "svc_timeline",
+              "svc_submissions"
+            ]
+          }
+        },
+        "sources": [
+          {
+            "name": "attempts_ledger",
+            "status": "ABSENT",
+            "reason": "attempts ledger absent"
+          },
+          {
+            "name": "asm_audit",
+            "status": "ABSENT",
+            "reason": "archive absent"
+          },
+          {
+            "name": "svc_detail",
+            "status": "ABSENT",
+            "reason": "svc transport unavailable"
+          },
+          {
+            "name": "svc_timeline",
+            "status": "ABSENT",
+            "reason": "svc transport unavailable"
+          },
+          {
+            "name": "svc_submissions",
+            "status": "ABSENT",
+            "reason": "svc transport unavailable"
+          },
+          {
+            "name": "journal:agt_arch-reviewer::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_hr-agent::cron-run-occ~003Af6e50c7cd11c39c7",
+            "status": "OK",
+            "reason": null
+          }
+        ],
+        "timelineCount": 2,
+        "timelineKinds": [
+          "session_journal/session_view"
+        ],
+        "correlations": [],
+        "gaps": [
+          {
+            "code": "SOURCE_ABSENT",
+            "stage": "svc",
+            "reason": "svc transport unavailable in this context"
+          },
+          {
+            "code": "CORRELATION_GAP",
+            "stage": "dispatch_attempts",
+            "reason": "no attempts-ledger attempt for this instance (visit dispatch may predate the ledger or was never engine-dispatched — G6)",
+            "knownFacts": {
+              "workflowInstanceId": "db31bce0-f5a3-4af9-baab-e595add23ef1"
+            }
+          }
+        ],
+        "sampleRefs": [
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_arch-reviewer",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_arch-reviewer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_2869be92de1eac6deeb49d8253f717f0--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_hr-agent",
+              "sessionId": "cron-run-occ~003Af6e50c7cd11c39c7",
+              "file": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/cron-run-occ~003Af6e50c7cd11c39c7/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          }
+        ],
+        "sidecarCoordinates": [
+          {
+            "seq": 3,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 1857,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 1861,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 1862,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 2529,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:3d815125-c598-4436-8b10-f3f631453c67:a2:g1:s2",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 2533,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:3d815125-c598-4436-8b10-f3f631453c67:a2:g1:s2",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 2534,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          }
+        ]
+      }
+    },
+    {
+      "chain": "A2_scheduler_occurrence",
+      "root": "scheduler_run",
+      "args": {
+        "occurrenceId": "occ:003A001022a7134495ba"
+      },
+      "ok": true,
+      "result": {
+        "reportId": "ehq-f4b984900a38c9fc",
+        "asOfUtc": "2026-09-19T00:55:05.320Z",
+        "fiveDimensions": {
+          "schedulingAdmission": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "agentExecution": {
+            "verdict": "STARTED",
+            "ruleIds": [
+              "R5"
+            ],
+            "evidenceRefs": [
+              "agt_hr-agent/cron-run-occ~003A001022a7134495ba"
+            ]
+          },
+          "businessProgress": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "messageDelivery": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "evidenceIntegrity": {
+            "verdict": "PARTIAL",
+            "ruleIds": [
+              "R7"
+            ],
+            "evidenceRefs": [
+              "scheduler_store",
+              "scheduler_history",
+              "asm_audit",
+              "runtime_evidence"
+            ]
+          }
+        },
+        "sources": [
+          {
+            "name": "scheduler_store",
+            "status": "ABSENT",
+            "reason": "scheduler store absent"
+          },
+          {
+            "name": "scheduler_history",
+            "status": "ABSENT",
+            "reason": "history events.jsonl absent"
+          },
+          {
+            "name": "asm_audit",
+            "status": "ABSENT",
+            "reason": "archive absent"
+          },
+          {
+            "name": "runtime_evidence",
+            "status": "ABSENT",
+            "reason": "runtime evidence absent"
+          },
+          {
+            "name": "journal:agt_hr-agent::cron-run-occ~003A001022a7134495ba",
+            "status": "OK",
+            "reason": null
+          }
+        ],
+        "timelineCount": 1,
+        "timelineKinds": [
+          "session_journal/session_view"
+        ],
+        "correlations": [
+          {
+            "rule": "R5",
+            "from": {
+              "source": "query_coordinate",
+              "nativeRef": "occ:003A001022a7134495ba"
+            },
+            "to": {
+              "source": "session_journal",
+              "nativeRef": "agt_hr-agent/cron-run-occ~003A001022a7134495ba"
+            },
+            "evidenceRefs": [
+              "occ:003A001022a7134495ba",
+              "cron-run-occ~003A001022a7134495ba"
+            ],
+            "strength": "WEAK_NAME_JOIN"
+          }
+        ],
+        "gaps": [
+          {
+            "code": "SOURCE_ABSENT",
+            "stage": "scheduler_store",
+            "reason": "scheduler store absent"
+          },
+          {
+            "code": "SOURCE_ABSENT",
+            "stage": "scheduler_store",
+            "reason": "occurrence occ:003A001022a7134495ba not in authority ledger (never reserved here, or store since rotated)"
+          }
+        ],
+        "sampleRefs": [
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_hr-agent",
+              "sessionId": "cron-run-occ~003A001022a7134495ba",
+              "file": "/Users/authsvc/.agent-core/homes/agt_hr-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74--/cron-run-occ~003A001022a7134495ba/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          }
+        ],
+        "sidecarCoordinates": [
+          {
+            "seq": 3,
+            "kind": "user",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "user",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          }
+        ]
+      }
+    },
+    {
+      "chain": "A3_a2a_receive_side",
+      "root": "agent_session",
+      "args": {
+        "agentId": "agt_product-manager",
+        "sessionId": "main"
+      },
+      "ok": true,
+      "result": {
+        "reportId": "ehq-10695cc45cb603f8",
+        "asOfUtc": "2026-09-19T00:55:05.326Z",
+        "fiveDimensions": {
+          "schedulingAdmission": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "agentExecution": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "businessProgress": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "messageDelivery": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "evidenceIntegrity": {
+            "verdict": "PARTIAL",
+            "ruleIds": [
+              "R7"
+            ],
+            "evidenceRefs": [
+              "scheduler_history",
+              "attempts_ledger",
+              "asm_audit",
+              "runtime_evidence"
+            ]
+          }
+        },
+        "sources": [
+          {
+            "name": "scheduler_history",
+            "status": "ABSENT",
+            "reason": "history events.jsonl absent"
+          },
+          {
+            "name": "attempts_ledger",
+            "status": "ABSENT",
+            "reason": "attempts ledger absent"
+          },
+          {
+            "name": "asm_audit",
+            "status": "ABSENT",
+            "reason": "archive absent"
+          },
+          {
+            "name": "runtime_evidence",
+            "status": "ABSENT",
+            "reason": "runtime evidence absent"
+          },
+          {
+            "name": "journal:agt_product-manager::main",
+            "status": "OK",
+            "reason": null
+          }
+        ],
+        "timelineCount": 1,
+        "timelineKinds": [
+          "session_journal/session_view"
+        ],
+        "correlations": [],
+        "gaps": [
+          {
+            "code": "CORRELATION_GAP",
+            "stage": "inbound_dispatch",
+            "reason": "no ASM audit row matches this session (outside live/.1/archive window or never dispatched through agent_session_send)"
+          }
+        ],
+        "sampleRefs": [
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_product-manager",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_product-manager/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_bc7dc434d18d606d0b1ed1f7d0e14d9d--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          }
+        ],
+        "sidecarCoordinates": [
+          {
+            "seq": 3,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_course-community-agent-2",
+            "correlation": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_course-community-agent-2",
+            "correlation": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          }
+        ]
+      }
+    },
+    {
+      "chain": "A4_independent_session",
+      "root": "agent_session",
+      "args": {
+        "agentId": "agt_stock_agent",
+        "sessionId": "cron-run-occ~003A664c36350acd1fb9"
+      },
+      "ok": true,
+      "result": {
+        "reportId": "ehq-2d91d572185ab20f",
+        "asOfUtc": "2026-09-19T00:55:05.328Z",
+        "fiveDimensions": {
+          "schedulingAdmission": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "agentExecution": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "businessProgress": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "messageDelivery": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "evidenceIntegrity": {
+            "verdict": "PARTIAL",
+            "ruleIds": [
+              "R7"
+            ],
+            "evidenceRefs": [
+              "scheduler_history",
+              "attempts_ledger",
+              "asm_audit",
+              "runtime_evidence"
+            ]
+          }
+        },
+        "sources": [
+          {
+            "name": "scheduler_history",
+            "status": "ABSENT",
+            "reason": "history events.jsonl absent"
+          },
+          {
+            "name": "attempts_ledger",
+            "status": "ABSENT",
+            "reason": "attempts ledger absent"
+          },
+          {
+            "name": "asm_audit",
+            "status": "ABSENT",
+            "reason": "archive absent"
+          },
+          {
+            "name": "runtime_evidence",
+            "status": "ABSENT",
+            "reason": "runtime evidence absent"
+          },
+          {
+            "name": "journal:agt_stock_agent::cron-run-occ~003A664c36350acd1fb9",
+            "status": "OK",
+            "reason": null
+          }
+        ],
+        "timelineCount": 1,
+        "timelineKinds": [
+          "session_journal/session_view"
+        ],
+        "correlations": [],
+        "gaps": [
+          {
+            "code": "CORRELATION_GAP",
+            "stage": "inbound_dispatch",
+            "reason": "no ASM audit row matches this session (outside live/.1/archive window or never dispatched through agent_session_send)"
+          }
+        ],
+        "sampleRefs": [
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_stock_agent",
+              "sessionId": "cron-run-occ~003A664c36350acd1fb9",
+              "file": "/Users/authsvc/.agent-core/homes/agt_stock_agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_0480991b97f1e27c96514ac66b4f122c--/cron-run-occ~003A664c36350acd1fb9/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          }
+        ],
+        "sidecarCoordinates": [
+          {
+            "seq": 3,
+            "kind": "user",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "user",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          }
+        ]
+      }
+    },
+    {
+      "chain": "A3b_correlation_reverse",
+      "root": "message",
+      "args": {
+        "reconciliationHandle": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+      },
+      "ok": true,
+      "result": {
+        "reportId": "ehq-0da9090bd2efc7c0",
+        "asOfUtc": "2026-09-19T00:55:05.329Z",
+        "fiveDimensions": {
+          "schedulingAdmission": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "agentExecution": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "businessProgress": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "messageDelivery": {
+            "verdict": "UNKNOWN",
+            "ruleId": "R7",
+            "evidenceRefs": []
+          },
+          "evidenceIntegrity": {
+            "verdict": "PARTIAL",
+            "ruleIds": [
+              "R7"
+            ],
+            "evidenceRefs": [
+              "attempts_ledger",
+              "asm_audit"
+            ]
+          }
+        },
+        "sources": [
+          {
+            "name": "attempts_ledger",
+            "status": "ABSENT",
+            "reason": "attempts ledger absent"
+          },
+          {
+            "name": "asm_audit",
+            "status": "ABSENT",
+            "reason": "archive absent"
+          },
+          {
+            "name": "journal:agt_agent-dev-engineer::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_arch-reviewer::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_biz-product-designer::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_book-deconstructor-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_delivery-review-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_discipline-coach-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_explorer::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_finance-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_game-designer-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_game-dev-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_game-producer-agent::main",
+            "status": "OK",
+            "reason": null
+          },
+          {
+            "name": "journal:agt_learning-expert::main",
+            "status": "OK",
+            "reason": null
+          }
+        ],
+        "timelineCount": 12,
+        "timelineKinds": [
+          "session_journal/session_view"
+        ],
+        "correlations": [
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_agent-dev-engineer/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_agent-dev-engineer/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_arch-reviewer/main#5603 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_arch-reviewer/main#5607 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_biz-product-designer/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_biz-product-designer/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_book-deconstructor-agent/main#758 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_book-deconstructor-agent/main#762 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_delivery-review-agent/main#683 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_delivery-review-agent/main#687 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_discipline-coach-agent/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_discipline-coach-agent/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_explorer/main#343 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_explorer/main#347 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_finance-agent/main#205 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_finance-agent/main#209 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-designer-agent/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-designer-agent/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-dev-agent/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-dev-agent/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-producer-agent/main#3 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_game-producer-agent/main#7 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_learning-expert/main#5115 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          },
+          {
+            "rule": "R1",
+            "from": {
+              "source": "session_journal",
+              "nativeRef": "agt_learning-expert/main#5119 (inserted source sidecar)"
+            },
+            "to": {
+              "source": "query",
+              "nativeRef": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            },
+            "evidenceRefs": [
+              "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6"
+            ],
+            "strength": "SIDECAR_PROVENANCE_ONLY"
+          }
+        ],
+        "gaps": [
+          {
+            "code": "SOURCE_ABSENT",
+            "stage": "asm_audit",
+            "reason": "send-audit source not present/readable in this boundary — caller-side rows neither confirmed nor disproven"
+          },
+          {
+            "code": "CORRELATION_GAP",
+            "stage": "caller_send_invocation",
+            "reason": "parent-turn correlation turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6 anchors the receive side only; no caller-side send invocation row was observed in the readable boundary — the precise dispatch call is unproven (kept open, not synthesized)"
+          }
+        ],
+        "sampleRefs": [
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_agent-dev-engineer",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_agent-dev-engineer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_cbf2d9e1823c72f033b1a6096922c501--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_arch-reviewer",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_arch-reviewer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_2869be92de1eac6deeb49d8253f717f0--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_biz-product-designer",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_biz-product-designer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_5764d047f02c334bfeba90f650fa6c49--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_book-deconstructor-agent",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_book-deconstructor-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_134de8778027c200ef96ea2af5c20f94--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_delivery-review-agent",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_delivery-review-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_9d66ca856ef4e36ec2238755a9c076a8--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_discipline-coach-agent",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_discipline-coach-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_5e4feca3288041d516e340ebd1842e6a--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_explorer",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_explorer/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_83f2a2fe33240417c0dfb49d5181e18b--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          },
+          {
+            "source": "session_journal",
+            "kind": "session_view",
+            "nativeRefs": {
+              "agentId": "agt_finance-agent",
+              "sessionId": "main",
+              "file": "/Users/authsvc/.agent-core/homes/agt_finance-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_5cefafad5b2be03819fd2561db0b132f--/main/session.jsonl"
+            },
+            "atUtc": null,
+            "provenanceClass": "PRIMARY_PERSISTED"
+          }
+        ],
+        "sidecarCoordinates": [
+          {
+            "seq": 3,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_course-community-agent-2",
+            "correlation": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_course-community-agent-2",
+            "correlation": "turn:a4994258-03e8-41b3-83b7-58b8ab4aa8d5:a8:g1:s6",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 3,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 7,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s10",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 8,
+            "kind": "agent-instructions",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 9,
+            "kind": "plugin",
+            "sourceAgentId": null,
+            "correlation": null,
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 1857,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+            "workflowInstanceId": null
+          },
+          {
+            "seq": 1861,
+            "kind": "inter_agent",
+            "sourceAgentId": "agt_hr-agent",
+            "correlation": "turn:282bf515-3259-4cff-9726-9ca07b54eb1a:a2:g1:s21",
+            "workflowInstanceId": null
+          }
+        ]
+      }
+    }
+  ]
+}

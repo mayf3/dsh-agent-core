@@ -58,6 +58,7 @@ import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflo
 import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
@@ -333,8 +334,7 @@ export async function composeProductionRuntime(options = {}) {
   const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
   const broker = applyBroker(ctx, {
     mode: 'gateway',
-    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
-    authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE, authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
@@ -391,7 +391,7 @@ export async function composeProductionRuntime(options = {}) {
   // canonical main; the runtime derives source identity + exact source-turn
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
-  agentSessionRuntime.mount(ctx)
+  agentSessionRuntime.mount(ctx); mountExecutionHistoryRuntime(ctx, { layout, broker: opts.broker, log })
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the

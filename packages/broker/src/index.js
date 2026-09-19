@@ -52,22 +52,11 @@ import { createBrokerGateway } from './gateway.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
-  manifests as forumManifests,
-  normalManifests as forumNormalManifests,
-} from './capabilities/forum.js'
-import { moderatorManifests as forumModeratorManifests } from './capabilities/forum-moderation.js'
-import { manifests as workflowManifests } from './capabilities/workflow.js'
-import { manifests as okrManifests } from './capabilities/okr.js'
-import { agentDefinitionManifests } from './capabilities/agent-definition.js'
-import { schedulerManifests } from './capabilities/scheduler.js'
-import { selfOpsManifests } from './capabilities/self-ops.js'
-import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
-import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
-import { manifests as agentDirectoryManifests } from './capabilities/agent-directory.js'
-import {
-  manifests as workflowHumanPrincipalProjectionManifests,
-} from './capabilities/workflow-human-principal-projection.js'
-import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
+  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, okrManifests,
+  agentDefinitionManifests, schedulerManifests, selfOpsManifests, agentSessionMessagingManifests,
+  agentPrincipalResolutionManifests, agentDirectoryManifests, workflowHumanPrincipalProjectionManifests,
+  executionHistoryManifests, lifeWorkbenchManifests,
+} from './capabilities/manifests.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -105,6 +94,7 @@ export const DEFAULT_MANIFESTS = [
   ...agentPrincipalResolutionManifests,
   ...agentDirectoryManifests,
   ...workflowHumanPrincipalProjectionManifests,
+  ...executionHistoryManifests,
   ...lifeWorkbenchManifests,
 ]
 
@@ -318,6 +308,9 @@ export function apply(ctx, config = {}) {
         // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
         // Human projection provider; workflow.admin remains caller-bound.
         ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
+        // AGENT_CORE_EXECUTION_HISTORY_QUERY_V1: read-only execution-history
+        // provider (self + audit tools; one query core).
+        ...(ctx.get('executionHistoryAccess')?.handlers ?? {}),
       }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
