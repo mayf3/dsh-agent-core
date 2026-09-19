@@ -126,7 +126,8 @@ def prefix_gate(io,packet):
     require(io.call(['/bin/launchctl','print',layout.LABEL],missing=True) is None,'CONTROLLER_ALREADY_LOADED')
     disabled=io.call(['/bin/launchctl','print-disabled','system']).decode('utf-8').splitlines()
     rows=[line.strip() for line in disabled if '"ai.agent-deployd"' in line]
-    require(rows==['"ai.agent-deployd" => true'],'CONTROLLER_NOT_DISABLED')
+    require(rows in (['"ai.agent-deployd" => true'], ['"ai.agent-deployd" => disabled']),
+        'CONTROLLER_NOT_DISABLED')
     before=io.metadata('/usr/bin/sudo')
     sudo_line=io.call(['/usr/bin/shasum','-a','256','/usr/bin/sudo'])
     require(io.metadata('/usr/bin/sudo')==before,'SUDO_ENTRY_CHANGED')
