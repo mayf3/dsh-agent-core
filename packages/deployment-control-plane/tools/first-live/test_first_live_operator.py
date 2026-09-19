@@ -96,6 +96,35 @@ class Bindings(unittest.TestCase):
 
 
 class OperationStops(unittest.TestCase):
+    def test_fixed_controller_disabled_semantics_fail_closed(self):
+        class IO:
+            def __init__(self, disabled): self.disabled = disabled
+            def metadata(self, path, absent=False):
+                if absent: return None
+                return {'inode': 1}
+            def call(self, argv, **kwargs):
+                if argv == ['/bin/launchctl', 'print', op.layout.LABEL]: return None
+                if argv == ['/bin/launchctl', 'print-disabled', 'system']: return self.disabled
+                if argv == ['/usr/bin/shasum', '-a', '256', '/usr/bin/sudo']:
+                    return b'f' * 64 + b'  /usr/bin/sudo\n'
+                raise AssertionError(argv)
+        def gate(value):
+            with patch.object(op.layout, 'directories', return_value={}), patch.object(
+                    op.layout, 'prefix_files', return_value={}), patch.object(
+                    op.layout, 'absent_paths', return_value=[]):
+                op.prefix_gate(IO(value), {})
+        for accepted in (b'"ai.agent-deployd" => true\n', b'"ai.agent-deployd" => disabled\n'):
+            with self.subTest(accepted=accepted): gate(accepted)
+        rejected = (
+            b'"ai.agent-deployd" => false\n', b'"ai.agent-deployd" => enabled\n', b'',
+            b'"ai.agent-deployd" => true\n"ai.agent-deployd" => true\n',
+            b'"ai.agent-deployd" => true\n"ai.agent-deployd" => disabled\n',
+            b'"ai.agent-deployd" => unknown\n',
+        )
+        for value in rejected:
+            with self.subTest(rejected=value), self.assertRaisesRegex(RuntimeError, 'CONTROLLER_NOT_DISABLED'):
+                gate(value)
+
     def test_prefix_gate_streams_only_fixed_codex_and_materializes_small_preimages(self):
         codex=op.layout.CODE+'/codex';small=op.layout.CODE+'/agent-deployd'
         specs={codex:{'sha256':'a'*64,'size':220584000},small:{'sha256':'b'*64}}
