@@ -1,4 +1,34 @@
 use super::*;
+
+#[test]
+fn exact_single_loginwindow_instance_is_selected_without_pinning_boot_uuid() {
+    let raw = "system/com.apple.loginwindow = {\n\tpath = /System/Library/LaunchDaemons/com.apple.loginwindow.plist\n\ttype = LaunchDaemon\n\tstate = not running\n\tprogram = /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow\n\tinstances = {\n\t\tcom.apple.loginwindow.8B78FC26-B458-4419-AF5B-77AD6D2254A8,\n\t}\n\tmultiple instances = 1\n}\n";
+    assert_eq!(
+        parse_single_instance(
+            raw,
+            "system/com.apple.loginwindow",
+            "com.apple.loginwindow."
+        )
+        .unwrap(),
+        "com.apple.loginwindow.8B78FC26-B458-4419-AF5B-77AD6D2254A8"
+    );
+    for changed in [
+        raw.replace("8B78FC26-B458-4419-AF5B-77AD6D2254A8", "not-a-uuid"),
+        raw.replace(
+            "\t}\n\tmultiple",
+            "\t\tcom.apple.loginwindow.11111111-1111-1111-1111-111111111111,\n\t}\n\tmultiple",
+        ),
+        raw.replace("com.apple.loginwindow.8B", "com.example.loginwindow.8B"),
+        raw.replace("\tinstances = {\n", ""),
+    ] {
+        assert!(parse_single_instance(
+            &changed,
+            "system/com.apple.loginwindow",
+            "com.apple.loginwindow."
+        )
+        .is_err());
+    }
+}
 fn sample() -> String {
     "system/com.apple.fixed = {\n\tpath = /System/Library/LaunchDaemons/com.apple.fixed.plist\n\ttype = LaunchDaemon\n\tprogram = /usr/libexec/fixed\n\tpid = 42\n\tenvironment = {\n\t\tSECRET = never retain this\n\t\tpid = 900\n\t}\n}\n".into()
 }

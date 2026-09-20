@@ -53,13 +53,22 @@ fn all_compiled_kernel_paths_are_absolute_unique_role_inputs() {
 fn current_boot_root_roles_have_exact_reviewed_authorities() {
     for (path, class) in [
         ("/usr/libexec/peakpowermanagerd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
-        ("/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
-        ("/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/SkyLight.framework/Versions/A/Resources/WindowServer", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow", "APPLE_FIXED_INSTANCE_LAUNCH_ROLE"),
         ("/usr/libexec/secinitd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
         ("/System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent", "APPLE_FIXED_XPC_ROLE"),
         ("/System/Library/PrivateFrameworks/AppleDeviceQuerySupport.framework/Versions/A/XPCServices/AppleDeviceQueryService.xpc/Contents/MacOS/AppleDeviceQueryService", "APPLE_FIXED_XPC_ROLE"),
         ("/System/Library/PrivateFrameworks/SystemAdministration.framework/XPCServices/writeconfig.xpc/Contents/MacOS/writeconfig", "APPLE_FIXED_XPC_ROLE"),
         ("/System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/Contents/MacOS/ANECompilerService", "APPLE_FIXED_XPC_ROLE"),
+        ("/usr/libexec/endpointsecurityd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/CoreDuetContext.framework/Versions/A/Resources/contextstored", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Support/coreservicesd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/SystemMigration.framework/Versions/A/Resources/systemmigrationd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/PackageKit.framework/Versions/A/Resources/installd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/PackageKit.framework/Versions/A/Resources/system_installd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Versions/A/Resources/backgroundtaskmanagementd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/AssetCacheServicesExtensions.framework/Versions/A/XPCServices/AssetCacheTetheratorService.xpc/Contents/MacOS/AssetCacheTetheratorService", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/FindMyMac.framework/Versions/A/Resources/FindMyMacd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
     ] {
         let found = roles(path).unwrap_or_else(|_| panic!("missing current role: {path}"));
         assert_eq!(found.len(), 1, "ambiguous current role: {path}");

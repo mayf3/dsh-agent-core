@@ -1,4 +1,8 @@
-use super::{credentials::Identity, launch::Metadata, policy::Role};
+use super::{
+    credentials::Identity,
+    launch::{self, Metadata},
+    policy::Role,
+};
 use crate::{Error, Result};
 pub(super) fn join(role: &Role, identity: &Identity, metadata: &Metadata) -> Result<()> {
     use crate::error::require;
@@ -28,6 +32,27 @@ pub(super) fn join(role: &Role, identity: &Identity, metadata: &Metadata) -> Res
                 && metadata.path.ends_with(')'),
             "HOST_ROLE_ATTRIBUTION",
         ),
+        "APPLE_FIXED_INSTANCE_LAUNCH_ROLE" => {
+            let identifier = role
+                .identifier
+                .as_deref()
+                .ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?;
+            let label = metadata
+                .domain_service
+                .strip_prefix("system/")
+                .ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?;
+            require(
+                identifier == "com.apple.loginwindow"
+                    && launch::valid_instance_label(label, "com.apple.loginwindow.")
+                    && metadata.kind == "LaunchDaemon"
+                    && role.authorities.iter().any(|authority| {
+                        metadata.path == authority.path
+                            && metadata.program == authority.program
+                            && authority.label == identifier
+                    }),
+                "HOST_ROLE_ATTRIBUTION",
+            )
+        }
         "APPLE_FIXED_XPC_ROLE" => {
             let identifier = role
                 .identifier

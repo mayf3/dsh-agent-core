@@ -114,6 +114,19 @@ fn code(path: &str) -> Result<Owned> {
     })?;
     Owned::output(|out| unsafe { SecStaticCodeCreateWithPath(url.0, 0, out) })
 }
+fn validation_flags(path: &str, identifier: Option<&str>) -> u32 {
+    match (path, identifier) {
+        (
+            "/Library/Apple/System/Library/CoreServices/XProtect.app/Contents/XPCServices/XProtectPluginService.xpc/Contents/MacOS/XProtectPluginService",
+            Some("com.apple.XprotectFramework.PluginService"),
+        )
+        | (
+            "/Library/Apple/System/Library/CoreServices/XProtect.app/Contents/MacOS/XProtect",
+            Some("com.apple.XProtectFramework.XProtect"),
+        ) => 0,
+        _ => 1 << 4,
+    }
+}
 fn unique(code: Ref) -> Result<Vec<u8>> {
     let info = Owned::output(|out| unsafe { SecCodeCopySigningInformation(code, 0, out) })?;
     let data = unsafe { CFDictionaryGetValue(info.0, kSecCodeInfoUnique) };
@@ -128,20 +141,27 @@ pub(super) fn static_apple(path: &str, identifier: Option<&str>) -> Result<()> {
     let expected = requirement(identifier)?;
     let file = code(path)?;
     require(
-        unsafe { SecStaticCodeCheckValidity(file.0, 1 << 4, expected.0) } == 0,
+        unsafe {
+            SecStaticCodeCheckValidity(file.0, validation_flags(path, identifier), expected.0)
+        } == 0,
         "HOST_SIGNATURE_UNPROVEN",
     )
 }
 /// Both kernel path/birth/credentials and protected filesystem ancestry are
 /// independently joined by the caller before/after this dynamic-code check.
 pub(super) fn running_apple(pid: u32, path: &str, identifier: Option<&str>) -> Result<Vec<u8>> {
-    running(pid, path, requirement(identifier)?)
+    running(
+        pid,
+        path,
+        requirement(identifier)?,
+        validation_flags(path, identifier),
+    )
 }
-fn running(pid: u32, path: &str, expected: Owned) -> Result<Vec<u8>> {
+fn running(pid: u32, path: &str, expected: Owned, static_flags: u32) -> Result<Vec<u8>> {
     require(pid > 0 && pid <= i32::MAX as u32, "HOST_SIGNATURE_PID")?;
     let file = code(path)?;
     require(
-        unsafe { SecStaticCodeCheckValidity(file.0, 1 << 4, expected.0) } == 0,
+        unsafe { SecStaticCodeCheckValidity(file.0, static_flags, expected.0) } == 0,
         "HOST_SIGNATURE_UNPROVEN",
     )?;
     let pid = pid as i32;
@@ -178,7 +198,7 @@ pub(super) fn running_docker(pid: u32, path: &str) -> Result<Vec<u8>> {
         path == "/Library/PrivilegedHelperTools/com.docker.vmnetd",
         "HOST_DOCKER_PATH",
     )?;
-    let proof=running(pid,path,text_requirement("anchor apple generic and identifier \"com.docker.vmnetd\" and certificate leaf[subject.OU] = \"9BNSXJN65R\"")?)?;
+    let proof=running(pid,path,text_requirement("anchor apple generic and identifier \"com.docker.vmnetd\" and certificate leaf[subject.OU] = \"9BNSXJN65R\"")?, 1 << 4)?;
     let hex: String = proof.iter().map(|b| format!("{b:02x}")).collect();
     require(
         hex == "b0b013ccb8b9d42a7654ff2e5621f8568b277e83",

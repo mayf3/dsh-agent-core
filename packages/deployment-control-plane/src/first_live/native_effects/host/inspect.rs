@@ -117,6 +117,20 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
             attribution::join(role, identity, &found.metadata)?;
             Some(found)
         }
+        "APPLE_FIXED_INSTANCE_LAUNCH_ROLE" => {
+            let identifier = role
+                .identifier
+                .as_deref()
+                .ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?;
+            require(
+                identifier == "com.apple.loginwindow",
+                "HOST_ROLE_ATTRIBUTION",
+            )?;
+            let found = ctx
+                .query_single_instance("system/com.apple.loginwindow", "com.apple.loginwindow.")?;
+            attribution::join(role, identity, &found.metadata)?;
+            Some(found)
+        }
         "APPLE_FIXED_XPC_ROLE" => {
             let id = role
                 .identifier
