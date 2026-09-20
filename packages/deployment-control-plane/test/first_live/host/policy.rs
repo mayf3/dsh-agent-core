@@ -48,3 +48,32 @@ fn all_compiled_kernel_paths_are_absolute_unique_role_inputs() {
         );
     }
 }
+
+#[test]
+fn current_boot_root_roles_have_exact_reviewed_authorities() {
+    for (path, class) in [
+        ("/usr/libexec/peakpowermanagerd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/usr/libexec/secinitd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/Frameworks/ColorSync.framework/Versions/A/XPCServices/com.apple.ColorSyncXPCAgent.xpc/Contents/MacOS/com.apple.ColorSyncXPCAgent", "APPLE_FIXED_XPC_ROLE"),
+        ("/System/Library/PrivateFrameworks/AppleDeviceQuerySupport.framework/Versions/A/XPCServices/AppleDeviceQueryService.xpc/Contents/MacOS/AppleDeviceQueryService", "APPLE_FIXED_XPC_ROLE"),
+        ("/System/Library/PrivateFrameworks/SystemAdministration.framework/XPCServices/writeconfig.xpc/Contents/MacOS/writeconfig", "APPLE_FIXED_XPC_ROLE"),
+        ("/System/Library/PrivateFrameworks/AppleNeuralEngine.framework/XPCServices/ANECompilerService.xpc/Contents/MacOS/ANECompilerService", "APPLE_FIXED_XPC_ROLE"),
+    ] {
+        let found = roles(path).unwrap_or_else(|_| panic!("missing current role: {path}"));
+        assert_eq!(found.len(), 1, "ambiguous current role: {path}");
+        assert_eq!(found[0].class, class, "wrong class: {path}");
+        if class == "APPLE_FIXED_XPC_ROLE" {
+            assert!(found[0].authorities.is_empty(), "unexpected plist: {path}");
+            assert!(found[0].identifier.is_some(), "missing identifier: {path}");
+            assert!(found[0].executable_sha256.is_some(), "missing image digest: {path}");
+            assert!(found[0].bundle_path.is_some(), "missing bundle authority: {path}");
+            assert!(found[0].bundle_sha256.is_some(), "missing bundle digest: {path}");
+            assert!(found[0].service_type.is_some(), "missing service type: {path}");
+        } else {
+            assert!(!found[0].authorities.is_empty(), "missing launch authority: {path}");
+        }
+    }
+    assert!(roles("/usr/libexec/current-boot-lookalike").is_err());
+}
