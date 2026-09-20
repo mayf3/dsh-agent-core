@@ -25,7 +25,11 @@ import {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   REPO,
   assertOAuthCredentialBoundary,
+  assertSameDomainCredentialFile,
+  canonicalOpenAICodexCredentialFileFor,
   cliBin,
+  deploymentRootOfAgentHome,
+  persistOpenAICodexCredentialFile,
   provisionAgentHome,
   provisionExactProfilePlugin,
   readHarnessIdentity,
@@ -465,13 +469,92 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY
   assert.doesNotMatch(source, /credentialBoundary\s*\(/iu, 'provisionAgentHome must not invoke any credential boundary probe')
 })
 
-test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential reference is idempotently rewritten to the canonical path before the child starts', (t) => {
+test('FLEET_SHARED_CODEX_AUTH A2/A4: canonical store resolves per deployment root; the yanfenma-domain constant stays frozen', () => {
+  // The yanfenma-domain freeze (ACTIVATION_V2 CTR-ACT2-002) is preserved byte-for-byte…
+  assert.equal(canonicalOpenAICodexCredentialFileFor('/Users/yanfenma/.agent-core'), CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  // …and the SAME layout resolves under a foreign surface's own deployment root.
+  assert.equal(
+    canonicalOpenAICodexCredentialFileFor('/Users/authsvc/.agent-core'),
+    '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
+  )
+  assert.throws(() => canonicalOpenAICodexCredentialFileFor('relative/root'), /absolute/)
+  assert.throws(() => canonicalOpenAICodexCredentialFileFor(''), /absolute/)
+  // Production homes attribute to <root>/homes/<agent>; flat layouts to their parent dir.
+  assert.equal(deploymentRootOfAgentHome('/Users/authsvc/.agent-core/homes/agt_x'), '/Users/authsvc/.agent-core')
+  assert.equal(deploymentRootOfAgentHome('/srv/flat-homes/agt_x'), '/srv/flat-homes')
+})
+
+test('FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refused — one OAuth lineage per security surface', () => {
+  // Same-domain references pass; the foreign surface's canonical is refused.
+  assertSameDomainCredentialFile('/Users/yanfenma/.agent-core/homes/agt_x', CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  assert.throws(
+    () => assertSameDomainCredentialFile('/Users/authsvc/.agent-core/homes/agt_x', CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE),
+    /cross-surface/,
+  )
+  assert.throws(
+    () => assertSameDomainCredentialFile(
+      '/Users/yanfenma/.agent-core/homes/agt_x',
+      '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
+    ),
+    /cross-surface/,
+  )
+  assertSameDomainCredentialFile(
+    '/Users/authsvc/.agent-core/homes/agt_x',
+    '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
+  )
+})
+
+test('FLEET_SHARED_CODEX_AUTH A4: persistOpenAICodexCredentialFile refuses drift shapes and foreign deployment pins', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-persist-guard-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const patch = join(dir, 'cordis.patch.yml')
+  writeFileSync(patch, 'x: 1\n', 'utf8')
+  // Per-agent relative path = the duplicated-store drift shape itself.
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, 'profiles/node_modules/dsh-codex/.openai-codex-auth.json'),
+    /absolute/,
+  )
+  // Arbitrary non-canonical files are refused…
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, '/tmp/whatever.json'),
+    /<deploymentRoot>\/shared-credentials/,
+  )
+  // …including a per-home store sitting under an agent home.
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, '/Users/yanfenma/.agent-core/homes/agt_x/.openai-codex-auth.json'),
+    /<deploymentRoot>\/shared-credentials/,
+  )
+  // A canonical path of a FOREIGN surface fails loud against an explicit deployment pin…
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { deploymentRoot: '/Users/authsvc/.agent-core' }),
+    /cross-surface/,
+  )
+  // …and against the production-layout home's own deployment root.
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { agentHome: '/Users/authsvc/.agent-core/homes/agt_x' }),
+    /cross-surface/,
+  )
+  // The home's own-domain canonical persists cleanly under the pin.
+  persistOpenAICodexCredentialFile(
+    patch,
+    '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
+    { deploymentRoot: '/Users/authsvc/.agent-core' },
+  )
+  assert.match(
+    readFileSync(patch, 'utf8'),
+    /credentialFile: "\/Users\/authsvc\/\.agent-core\/shared-credentials\/openai-codex\/\.openai-codex-auth\.json"/,
+  )
+})
+
+test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale foreign credential reference is idempotently rewritten to the own-domain canonical before the child starts', (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'agent-stale-cred-ref-'))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
-  const home = join(dir, 'home')
+  const home = join(dir, 'homes', 'agt_stale')
   const workspace = join(dir, 'ws')
-  // Pre-seed a home shaped like the B2-era fleet: the profile patch references
-  // the DEAD authsvc-side store that the uid502 child can never read.
+  const ownCanonical = join(dir, 'shared-credentials', 'openai-codex', '.openai-codex-auth.json')
+  // Pre-seed a home shaped like the B2-era fleet: the profile patch references a
+  // FOREIGN surface's store (the authsvc domain's canonical) that this surface's
+  // child must never consume.
   const profileDir = join(home, 'profiles', 'agent-core-production')
   mkdirSync(profileDir, { recursive: true })
   const staleBlock = [
@@ -486,7 +569,7 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential ref
 
   provisionAgentHome(home, workspace, {
     profile: 'agent-core-production',
-    subscription: SUBSCRIPTION,
+    subscription: { ...SUBSCRIPTION, credentialFile: ownCanonical },
     harnessIdentity: HARNESS_IDENTITY,
     pluginInstaller: (input) => fakeInstall(input),
     artifactIdentity: ARTIFACT_IDENTITY,
@@ -496,11 +579,36 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale authsvc credential ref
   // spawn/provider initialization could read the reference.
   const patch = readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8')
   assert.ok(
-    patch.includes(`credentialFile: ${JSON.stringify(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)}`),
-    'stale reference must be rewritten to the canonical uid502-readable store',
+    patch.includes(`credentialFile: ${JSON.stringify(ownCanonical)}`),
+    'stale reference must be rewritten to the home own-surface canonical store',
   )
-  assert.equal(patch.includes('/Users/authsvc/.agent-core/shared-credentials'), false, 'dead authsvc reference must be gone')
+  assert.equal(patch.includes('/Users/authsvc/.agent-core/shared-credentials'), false, 'foreign authsvc reference must be gone')
   assert.equal(patch.match(/BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1/gu)?.length, 1, 'exactly one patch block')
+})
+
+test('FLEET_SHARED_CODEX_AUTH A4: provisioning a production-layout home refuses a foreign surface canonical even without an explicit deploymentRoot', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-cross-surface-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'homes', 'agt_cross')
+  // The yanfenma-domain catalog value pointed at an authsvc-layout home: the
+  // <root>/homes/<agent> shape alone is enough to derive the home surface and
+  // fail loud — the foreign lineage must never land in any patch file.
+  assert.throws(
+    () => provisionAgentHome(home, join(dir, 'ws'), {
+      profile: 'agent-core-production',
+      subscription: SUBSCRIPTION,
+      harnessIdentity: HARNESS_IDENTITY,
+      pluginInstaller: (input) => fakeInstall(input),
+      artifactIdentity: ARTIFACT_IDENTITY,
+    }),
+    /cross-surface/,
+  )
+  const patch = readFileSync(join(home, 'profiles', 'agent-core-production', 'cordis.patch.yml'), 'utf8')
+  assert.equal(
+    patch.includes(CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE),
+    false,
+    'no foreign canonical reference may be persisted',
+  )
 })
 
 test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable', (t) => {
