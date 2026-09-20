@@ -15,6 +15,7 @@ pub(super) fn join(role: &Role, identity: &Identity, metadata: &Metadata) -> Res
     match role.class.as_str() {
         "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"
         | "APPLE_PROTECTED_LAUNCH_ROLE"
+        | "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE"
         | "THIRD_PARTY_AUTHORITY_REQUIRED" => require(
             metadata.kind == "LaunchDaemon"
                 && role.authorities.iter().any(|authority| {
@@ -30,6 +31,14 @@ pub(super) fn join(role: &Role, identity: &Identity, metadata: &Metadata) -> Res
                 && metadata.program == role.path
                 && metadata.path.starts_with("(submitted by ")
                 && metadata.path.ends_with(')'),
+            "HOST_ROLE_ATTRIBUTION",
+        ),
+        "APPLE_FIXED_ROOT_USER_LAUNCH_AGENT_ROLE" => require(
+            role.fixed_launch_target.as_deref() == Some(metadata.domain_service.as_str())
+                && metadata.kind == "LaunchAgent"
+                && role.authorities.iter().any(|authority| {
+                    metadata.path == authority.path && metadata.program == authority.program
+                }),
             "HOST_ROLE_ATTRIBUTION",
         ),
         "APPLE_FIXED_INSTANCE_LAUNCH_ROLE" => {
@@ -78,6 +87,26 @@ pub(super) fn join(role: &Role, identity: &Identity, metadata: &Metadata) -> Res
         }
         _ => Err(Error::new("HOST_ROLE_ATTRIBUTION")),
     }
+}
+pub(super) fn join_fork_child(
+    role: &Role,
+    child: &Identity,
+    parent: &Identity,
+    metadata: &Metadata,
+) -> Result<()> {
+    use crate::error::require;
+    require(
+        role.class == "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE"
+            && child.pid != parent.pid
+            && child.parent_pid == parent.pid
+            && parent.parent_pid == 1
+            && child.process_group == parent.process_group
+            && child.executable.as_deref() == Some(role.resolved_path.as_str())
+            && child.executable == parent.executable
+            && child.credentials.root_capable(),
+        "HOST_ROLE_ATTRIBUTION",
+    )?;
+    join(role, parent, metadata)
 }
 #[cfg(test)]
 #[path = "../../../../test/first_live/host/attribution.rs"]
