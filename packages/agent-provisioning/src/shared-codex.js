@@ -1,7 +1,47 @@
 import { lstatSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
-import { dirname, isAbsolute, join } from 'node:path'
+import { basename, dirname, isAbsolute, join } from 'node:path'
 
 export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+
+/** Layout suffix of the canonical store under every deployment root (path-only; no fs access). */
+const CANONICAL_CREDENTIAL_TAIL = join('shared-credentials', 'openai-codex', '.openai-codex-auth.json')
+
+/**
+ * Per-deployment-root canonical store resolution. ACTIVATION_V2 CTR-ACT2-002 freezes the
+ * yanfenma-domain constant above; the authsvc-domain reconciliation (FLEET_SHARED_CODEX_AUTH
+ * amendment A2/A4) requires the SAME layout under that domain's own deployment root —
+ * one canonical per security surface, never a cross-surface reference. Pure path math.
+ */
+export function canonicalOpenAICodexCredentialFileFor(deploymentRoot) {
+  if (typeof deploymentRoot !== 'string' || deploymentRoot === '' || !isAbsolute(deploymentRoot)) {
+    throw error('credential_path_invalid', `deployment root must be an absolute path, got ${JSON.stringify(deploymentRoot)}`)
+  }
+  return join(deploymentRoot, CANONICAL_CREDENTIAL_TAIL)
+}
+
+/**
+ * The deployment root that owns an agent home: production homes live at
+ * `<deploymentRoot>/homes/<agent>`; any other (non-production / flat) layout
+ * attributes the home to its immediate parent directory.
+ */
+export function deploymentRootOfAgentHome(agentHome) {
+  const parent = dirname(agentHome)
+  return basename(parent) === 'homes' ? dirname(parent) : parent
+}
+
+/**
+ * Cross-surface lineage guard: a credentialFile referenced by a provisioning patch must be
+ * the canonical store of the SAME deployment root that owns the home being provisioned.
+ * This is the enforcement point for "one OAuth lineage per security surface" — persisting
+ * the yanfenma canonical into an authsvc-owned home (or vice versa) fails loud here.
+ */
+export function assertSameDomainCredentialFile(agentHome, credentialFile) {
+  const expected = canonicalOpenAICodexCredentialFileFor(deploymentRootOfAgentHome(agentHome))
+  if (credentialFile !== expected) {
+    throw error('credential_path_invalid', `cross-surface credential reference refused: ${credentialFile} is not the canonical store of the home's own deployment root (expected ${expected})`)
+  }
+  return credentialFile
+}
 
 /**
  * The ONE built-in default model route (DEFAULT_MODEL_ROUTING_CONFIG_V1 §2):
@@ -65,11 +105,29 @@ export function assertOAuthCredentialBoundary(_home, credentialFile, options = {
   return credentialFile
 }
 
-/** Persist the shared credential path in the copied per-Agent profile only. */
-export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFile) {
-  if (!isAbsolute(credentialFile) || credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE) {
-    throw error('credential_path_invalid', `shared credentialFile must be exactly ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+/**
+ * Persist the shared credential path in the copied per-Agent profile only.
+ *
+ * `credentialFile` must be a canonical-shaped store `<deploymentRoot>/shared-credentials/
+ * openai-codex/.openai-codex-auth.json` — a per-agent relative path (the duplicated-store
+ * drift shape) or any arbitrary file is refused. When `options.deploymentRoot` is given
+ * (the production seam: the runtime's `--root`), the reference must be THAT deployment's
+ * canonical store, so a foreign surface's lineage can never be persisted. When
+ * `options.agentHome` is given, the same-domain guard applies against the home's own
+ * deployment root.
+ */
+export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFile, options = {}) {
+  if (!isAbsolute(credentialFile)) {
+    throw error('credential_path_invalid', 'shared credentialFile must be an absolute canonical path')
   }
+  const structuralRoot = dirname(dirname(dirname(credentialFile)))
+  if (credentialFile !== canonicalOpenAICodexCredentialFileFor(structuralRoot)) {
+    throw error('credential_path_invalid', `shared credentialFile must be <deploymentRoot>/shared-credentials/openai-codex/.openai-codex-auth.json, got ${credentialFile}`)
+  }
+  if (options.deploymentRoot !== undefined && credentialFile !== canonicalOpenAICodexCredentialFileFor(options.deploymentRoot)) {
+    throw error('credential_path_invalid', `cross-surface credential reference refused: ${credentialFile} is not this deployment's canonical store (${canonicalOpenAICodexCredentialFileFor(options.deploymentRoot)})`)
+  }
+  if (options.agentHome !== undefined) assertSameDomainCredentialFile(options.agentHome, credentialFile)
   const current = readFileSync(profilePatchFile, 'utf8')
   const pattern = new RegExp(`\\n?${PATCH_BEGIN}[\\s\\S]*?${PATCH_END}\\n?`, 'gu')
   const block = [
