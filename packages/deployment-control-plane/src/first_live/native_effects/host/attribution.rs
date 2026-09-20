@@ -103,7 +103,8 @@ pub(super) fn join_fork_child(
             && child.process_group == parent.process_group
             && child.executable.as_deref() == Some(role.resolved_path.as_str())
             && child.executable == parent.executable
-            && child.credentials.root_capable(),
+            && child.credentials.root_capable()
+            && child.credentials == parent.credentials,
         "HOST_ROLE_ATTRIBUTION",
     )?;
     join(role, parent, metadata)

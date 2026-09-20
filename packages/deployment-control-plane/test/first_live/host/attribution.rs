@@ -45,7 +45,7 @@ fn only_current_exact_manifest_program_pid_tuple_can_attribute() {
 }
 #[test]
 fn each_wrong_launch_field_or_kernel_path_refuses() {
-    for index in 0..6 {
+    for index in 0..4 {
         let (r, mut p, mut m) = inputs();
         match index {
             0 => m.pid += 1,
@@ -127,7 +127,7 @@ fn fixed_root_user_launch_agent_requires_exact_target_kind_and_authority() {
     metadata.program = role.authorities[0].program.clone();
     join(&role, &process, &metadata).unwrap();
 
-    for index in 0..4 {
+    for index in 0..6 {
         let mut wrong = copy_metadata(&metadata);
         match index {
             0 => wrong.domain_service = "gui/0/com.apple.distnoted.xpc.agent".into(),
@@ -156,7 +156,7 @@ fn fixed_fork_child_requires_exact_current_launch_parent_and_same_image() {
     parent.parent_pid = 1;
     join_fork_child(&role, &child, &parent, &metadata).unwrap();
 
-    for index in 0..4 {
+    for index in 0..6 {
         let mut wrong_child = child.clone();
         let mut wrong_parent = parent.clone();
         let mut wrong_metadata = copy_metadata(&metadata);
@@ -168,7 +168,9 @@ fn fixed_fork_child_requires_exact_current_launch_parent_and_same_image() {
                 wrong_parent.credentials.real_uid = 501;
                 wrong_parent.credentials.saved_uid = 501;
             }
-            _ => wrong_metadata.pid = 899,
+            3 => wrong_metadata.pid = 899,
+            4 => wrong_child.process_group = 901,
+            _ => wrong_child.credentials.effective_gid = 1,
         }
         assert!(join_fork_child(&role, &wrong_child, &wrong_parent, &wrong_metadata).is_err());
     }
