@@ -491,6 +491,13 @@ test('FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refuse
     () => assertSameDomainCredentialFile('/Users/authsvc/.agent-core/homes/agt_x', CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE),
     /cross-surface/,
   )
+  assert.throws(
+    () => assertSameDomainCredentialFile(
+      '/Users/yanfenma/.agent-core/homes/agt_x',
+      '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
+    ),
+    /cross-surface/,
+  )
   assertSameDomainCredentialFile(
     '/Users/authsvc/.agent-core/homes/agt_x',
     '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json',
