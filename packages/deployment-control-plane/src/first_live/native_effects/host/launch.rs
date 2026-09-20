@@ -45,10 +45,21 @@ pub(super) fn parse_optional(raw: &str, expected: &str) -> Result<Option<Metadat
         if body.starts_with('\t') || body == "}" {
             continue;
         }
+        let protected = ["path", "type", "program", "pid", "state"];
+        if let Some(key) = protected.iter().find(|key| {
+            body.strip_prefix(*key).is_some_and(|tail| {
+                tail.is_empty() || tail.starts_with('=') || tail.starts_with(char::is_whitespace)
+            })
+        }) {
+            require(
+                body.starts_with(&format!("{key} = ")),
+                "HOST_LAUNCH_UNPROVEN",
+            )?;
+        }
         let Some((key, value)) = body.split_once(" = ") else {
             continue;
         };
-        if ["path", "type", "program", "pid", "state"].contains(&key) {
+        if protected.contains(&key) {
             require(
                 !value.is_empty() && value.len() < 4096 && fields.insert(key, value).is_none(),
                 "HOST_LAUNCH_UNPROVEN",

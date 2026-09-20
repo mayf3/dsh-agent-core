@@ -80,3 +80,18 @@ fn missing_pid_requires_exact_inactive_state_and_complete_identity() {
         assert!(parse_optional(&raw, "system/com.apple.fixed").is_err());
     }
 }
+
+#[test]
+fn malformed_authoritative_field_cannot_be_hidden_as_inactive() {
+    let inactive = sample().replace("\tpid = 42\n", "").replace(
+        "\tprogram = /usr/libexec/fixed\n",
+        "\tstate = not running\n\tprogram = /usr/libexec/fixed\n",
+    );
+    for malformed in ["pid=42", "pid =42", "pid  = 42", "pid\t= 42", "pid"] {
+        let raw = inactive.replace(
+            "\tstate = not running\n",
+            &format!("\t{malformed}\n\tstate = not running\n"),
+        );
+        assert!(parse_optional(&raw, "system/com.apple.fixed").is_err());
+    }
+}
