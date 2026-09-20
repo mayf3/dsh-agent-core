@@ -82,7 +82,19 @@ export function createProcessRegistry({
 
   /** CAS(EMPTY -> STARTUP) — synchronous, before any further async work. */
   function installStartup(agentId) {
-    return installStartupSlot(lifecycleSlots, agentGenerations, agentId)
+    // Durable generation restart safety: floor every allocation above the
+    // agent's highest durably recorded generation (live/evicted/watermark).
+    // Without this, a runtime restart resets the in-memory counter to 1 and
+    // the next mint extends an old generation's range past a newer one — the
+    // store then fails closed at its next load. The registry construction
+    // already fails closed when the durable store is unreadable (admission
+    // blocks before any startup), so the floor is only consulted on a
+    // successfully loaded store; a store-less registry (no persistenceFile)
+    // has no durable history by definition and floors at 0.
+    const generationFloor = reconciliationStore === undefined
+      ? undefined
+      : (agentId) => reconciliationStore.highestIssuedGeneration(agentId)
+    return installStartupSlot(lifecycleSlots, agentGenerations, agentId, generationFloor)
   }
 
   /**
