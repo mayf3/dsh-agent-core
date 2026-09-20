@@ -19,6 +19,7 @@ pub(super) struct Role {
     pub executable_sha256: Option<String>,
     pub bundle_path: Option<String>,
     pub bundle_sha256: Option<String>,
+    pub artifact_uid: Option<u32>,
     pub service_type: Option<String>,
     pub fixed_launch_target: Option<String>,
     pub tty: Option<String>,

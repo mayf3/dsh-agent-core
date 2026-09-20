@@ -68,18 +68,28 @@ fn read(file: &mut std::fs::File, uid: u32, login: bool) -> Result<Image> {
 /// The caller supplies only a path from the compiled finite role table or the
 /// fixed host transition constants. Dir traverses every ancestor without links.
 pub(super) fn protected(path: &str) -> Result<Image> {
+    protected_owned(path, 0)
+}
+/// Reads an exact compiled role artifact whose reviewed on-disk owner is not
+/// root. Callers must supply the owner from the finite role record; ordinary
+/// protected artifacts continue to require uid 0 through `protected`.
+pub(super) fn protected_owned(path: &str, uid: u32) -> Result<Image> {
     use crate::fs::secure::Dir;
     let path = std::path::Path::new(path);
     let parent = Dir::open(
         path.parent().ok_or_else(|| Error::new("HOST_IMAGE_PATH"))?,
-        0,
+        uid,
     )?;
     let name = path
         .file_name()
         .and_then(|s| s.to_str())
         .ok_or_else(|| Error::new("HOST_IMAGE_PATH"))?;
     let mut file = parent.open_file(name, libc::O_RDONLY, 0)?;
-    let image = read(&mut file, 0, path == std::path::Path::new("/usr/bin/login"))?;
+    let image = read(
+        &mut file,
+        uid,
+        path == std::path::Path::new("/usr/bin/login"),
+    )?;
     use std::os::unix::fs::MetadataExt;
     let current = parent.open_file(name, libc::O_RDONLY, 0)?.metadata()?;
     crate::error::require(

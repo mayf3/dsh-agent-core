@@ -39,6 +39,23 @@ fn writable_alias_setid_wrong_owner_and_hardlink_are_refused() {
 }
 
 #[test]
+fn exact_system_asset_owner_is_explicit_and_never_a_global_relaxation() {
+    let executable = "/System/Library/AssetsV2/com_apple_MobileAsset_RecoveryOSUpdateBrain/28f9b40aedc0bda53bdc29e31682c998de89e5cb.asset/AssetData/com.apple.NRD.UpdateBrainService.xpc/Contents/MacOS/com.apple.NRD.UpdateBrainService";
+    let bundle = "/System/Library/AssetsV2/com_apple_MobileAsset_RecoveryOSUpdateBrain/28f9b40aedc0bda53bdc29e31682c998de89e5cb.asset/AssetData/com.apple.NRD.UpdateBrainService.xpc/Contents/Info.plist";
+    assert!(protected(executable).is_err());
+    assert!(protected(bundle).is_err());
+    assert_eq!(
+        protected_owned(executable, 242).unwrap().digest,
+        "33d957339e5e274d09751e7726dc0ce13f3eeaef213c0502c107a7ce968d3da0"
+    );
+    assert_eq!(
+        protected_owned(bundle, 242).unwrap().digest,
+        "52f3a6e47c8f15f8828bc0bae87d1d5a28413752379ace613e653ebb61fc9f84"
+    );
+    assert!(protected_owned(executable, 0).is_err());
+}
+
+#[test]
 fn streaming_digest_accepts_a_file_larger_than_the_command_output_bound() {
     use std::os::unix::fs::PermissionsExt;
     let p = tempfile::NamedTempFile::new().unwrap();

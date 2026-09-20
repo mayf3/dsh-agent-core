@@ -86,3 +86,20 @@ fn current_boot_root_roles_have_exact_reviewed_authorities() {
     }
     assert!(roles("/usr/libexec/current-boot-lookalike").is_err());
 }
+
+#[test]
+fn nonroot_owned_system_asset_is_bound_to_one_exact_role() {
+    let path = "/System/Library/AssetsV2/com_apple_MobileAsset_RecoveryOSUpdateBrain/28f9b40aedc0bda53bdc29e31682c998de89e5cb.asset/AssetData/com.apple.NRD.UpdateBrainService.xpc/Contents/MacOS/com.apple.NRD.UpdateBrainService";
+    let role = roles(path).unwrap().remove(0);
+    assert_eq!(role.artifact_uid, Some(242));
+    for line in include_str!("../../../src/first_live/native_effects/host/roles.jsonl").lines() {
+        let other: Role = serde_json::from_str(line).unwrap();
+        if other.resolved_path != path {
+            assert_eq!(
+                other.artifact_uid, None,
+                "unexpected owner override: {}",
+                other.resolved_path
+            );
+        }
+    }
+}
