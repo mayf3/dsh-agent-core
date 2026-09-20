@@ -29,9 +29,31 @@
 
 import { randomUUID } from 'node:crypto'
 
-/** CAS(EMPTY -> STARTUP) — synchronous, before any further async work. */
-export function installStartupSlot(lifecycleSlots, agentGenerations, agentId) {
-  const generation = (agentGenerations.get(agentId) ?? 0) + 1
+/**
+ * CAS(EMPTY -> STARTUP) — synchronous, before any further async work.
+ *
+ * `generationFloor` (durable generation restart safety): optional () => int
+ * seam consulted at EVERY allocation. The minted generation is strictly above
+ * the floor so a runtime restart can never reissue a generation id that the
+ * agent's durable issuance history already records — such a reuse extends an
+ * old generation's seq range past a newer one (overlapping ranges => the
+ * store is rejected at its next load, admission fail-closed). A floor that is
+ * not a safe non-negative integer throws BEFORE any slot state changes: an
+ * unprovable allocator state never falls back to in-memory generation 1.
+ */
+export function installStartupSlot(lifecycleSlots, agentGenerations, agentId, generationFloor) {
+  const inMemoryGeneration = agentGenerations.get(agentId) ?? 0
+  let floor = 0
+  if (generationFloor !== undefined) {
+    floor = generationFloor(agentId)
+    if (!Number.isSafeInteger(floor) || floor < 0) {
+      throw Object.assign(
+        new Error(`process-registry: durable generation floor for ${agentId} is not provable (${String(floor)}) — refusing to mint a process generation`),
+        { code: 'AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE' },
+      )
+    }
+  }
+  const generation = Math.max(inMemoryGeneration, floor) + 1
   agentGenerations.set(agentId, generation)
   let resolveResult
   let rejectResult
