@@ -27,6 +27,12 @@ pub(super) fn parse(raw: &str, expected: &str) -> Result<Metadata> {
             closed = true;
             continue;
         }
+        // macOS launchctl separates top-level field groups with an exactly
+        // empty line. Whitespace or content remains structural input and must
+        // retain the one-tab/nested-field checks below.
+        if line.is_empty() {
+            continue;
+        }
         // launchctl's outer job fields have exactly one tab. Nested environment,
         // arguments and subservice records cannot supply authoritative fields.
         let Some(body) = line.strip_prefix('\t') else {
