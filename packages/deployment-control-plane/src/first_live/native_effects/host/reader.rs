@@ -1,9 +1,12 @@
 use super::credentials::Identity;
 use crate::{error::require, Error, Result};
 
+/// A process that vanished between listing and its selector read (proc_pidinfo
+/// returning zero) is the only shape allowed to skip a listed pid; both snapshots
+/// must then agree on the readable set, so every other churn shape still refuses.
 fn collect_all(
     mut list: impl FnMut() -> Result<Vec<u32>>,
-    mut read: impl FnMut(u32) -> Result<Identity>,
+    mut read: impl FnMut(u32) -> Result<Option<Identity>>,
 ) -> Result<Vec<Identity>> {
     let before_pids = list()?;
     crate::error::require(
@@ -11,19 +14,38 @@ fn collect_all(
         "HOST_CENSUS_INCOMPLETE",
     )?;
     let mut before = Vec::with_capacity(before_pids.len());
+    let mut skipped_before = Vec::new();
     for &pid in &before_pids {
-        let row = read(pid)?;
-        crate::error::require(row.pid == pid, "HOST_CENSUS_DRIFT")?;
-        before.push(row);
+        match read(pid)? {
+            Some(row) => {
+                crate::error::require(row.pid == pid, "HOST_CENSUS_DRIFT")?;
+                before.push(row);
+            }
+            None => skipped_before.push(pid),
+        }
     }
     let after_pids = list()?;
-    crate::error::require(before_pids == after_pids, "HOST_CENSUS_DRIFT")?;
     let mut after = Vec::with_capacity(after_pids.len());
-    for pid in after_pids {
-        let row = read(pid)?;
-        crate::error::require(row.pid == pid, "HOST_CENSUS_DRIFT")?;
-        after.push(row);
+    let mut skipped_after = Vec::new();
+    for pid in &after_pids {
+        match read(*pid)? {
+            Some(row) => {
+                crate::error::require(row.pid == *pid, "HOST_CENSUS_DRIFT")?;
+                after.push(row);
+            }
+            None => skipped_after.push(*pid),
+        }
     }
+    let readable = |pids: &[u32], skipped: &[u32]| -> Vec<u32> {
+        pids.iter()
+            .copied()
+            .filter(|pid| !skipped.contains(pid))
+            .collect()
+    };
+    crate::error::require(
+        readable(&before_pids, &skipped_before) == readable(&after_pids, &skipped_after),
+        "HOST_CENSUS_DRIFT",
+    )?;
     super::credentials::stable(&before, &after)?;
     Ok(before)
 }
@@ -35,10 +57,12 @@ mod tests;
 /// One bounded snapshot pair; no retry on process churn or unreadable selectors.
 /// Never invoked by fixture tests. PID zero, if returned inside the byte count,
 /// is retained and must pass the separate fixed kernel identity predicate.
+/// A pid that vanished between listing and reading is skipped, not failed: both
+/// snapshots must then agree on the readable set or the census refuses.
 #[cfg(target_os = "macos")]
 pub(super) fn snapshot() -> Result<Vec<Identity>> {
     require(unsafe { libc::geteuid() } == 0, "ROOT_REQUIRED")?;
-    collect_all(pids, identity)
+    collect_all(pids, identity_optional)
 }
 #[cfg(target_os = "macos")]
 fn pids() -> Result<Vec<u32>> {
@@ -60,6 +84,12 @@ fn pids() -> Result<Vec<u32>> {
 }
 #[cfg(target_os = "macos")]
 pub(super) fn identity(pid: u32) -> Result<Identity> {
+    identity_optional(pid)?.ok_or_else(|| crate::Error::new("HOST_SELECTOR_UNREADABLE"))
+}
+/// Directed readers keep failing closed through `identity`; the census alone may
+/// treat the zero return of `proc_pidinfo` (process gone since listing) as absent.
+/// A negative return or a short/pid-mismatched read still refuses exactly as before.
+pub(super) fn identity_optional(pid: u32) -> Result<Option<Identity>> {
     use super::credentials::Credentials;
     let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
     let size = std::mem::size_of_val(&info) as i32;
@@ -72,6 +102,9 @@ pub(super) fn identity(pid: u32) -> Result<Identity> {
             size,
         )
     };
+    if n == 0 {
+        return Ok(None);
+    }
     require(n == size && info.pbi_pid == pid, "HOST_SELECTOR_UNREADABLE")?;
     let credentials = Credentials {
         effective_uid: info.pbi_uid,
@@ -98,7 +131,7 @@ pub(super) fn identity(pid: u32) -> Result<Identity> {
     } else {
         None
     };
-    Ok(Identity {
+    Ok(Some(Identity {
         pid,
         parent_pid: info.pbi_ppid,
         birth_seconds: info.pbi_start_tvsec,
@@ -114,13 +147,13 @@ pub(super) fn identity(pid: u32) -> Result<Identity> {
             Some(sid as u32)
         },
         executable,
-    })
+    }))
 }
 
 #[cfg(test)]
 fn collect(
     list: impl FnMut() -> Result<Vec<u32>>,
-    read: impl FnMut(u32) -> Result<Identity>,
+    read: impl FnMut(u32) -> Result<Option<Identity>>,
 ) -> Result<Vec<Identity>> {
     let rows = collect_all(list, read)?;
     super::credentials::stable(&rows, &rows)
