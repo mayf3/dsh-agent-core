@@ -26,6 +26,7 @@ import { redactSensitiveText } from './process/index.js'
 import { fencedRejection } from './process/state-machine.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
+import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
 import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
 
@@ -338,6 +339,11 @@ export function createProcessRegistry({
       provisionHome(home, workspace, {
         profile: cfg.agentProfile,
         ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),
+        // The runtime's own deployment root pins the shared credentialFile
+        // reference to THIS surface's canonical store — a foreign domain's
+        // lineage (or a per-home drift path) fails loud in provisioning
+        // instead of ever reaching a child (FLEET_SHARED_CODEX_AUTH A2/A4).
+        deploymentRoot: resolveProductionRoot(cfg.productionRoot),
       })
     } catch (cause) {
       throw failStartupSlotNoChild(agentId, entry, cause)

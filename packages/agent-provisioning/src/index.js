@@ -25,13 +25,26 @@ import {
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { persistOpenAICodexCredentialFile, CANONICAL_DEFAULT_MODEL_ROUTE } from './shared-codex.js'
+import {
+  assertSameDomainCredentialFile,
+  canonicalOpenAICodexCredentialFileFor,
+  deploymentRootOfAgentHome,
+  persistOpenAICodexCredentialFile,
+  CANONICAL_DEFAULT_MODEL_ROUTE,
+} from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
 
-export { assertOAuthCredentialBoundary, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, persistOpenAICodexCredentialFile } from './shared-codex.js'
+export {
+  assertOAuthCredentialBoundary,
+  assertSameDomainCredentialFile,
+  canonicalOpenAICodexCredentialFileFor,
+  deploymentRootOfAgentHome,
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  persistOpenAICodexCredentialFile,
+} from './shared-codex.js'
 
 /** Repo root (three levels up from src/: packages/agent-provisioning/src). */
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
@@ -409,9 +422,13 @@ export function ensureRepoCoreBridge() {
  * production spawn must never silently fall back to a default composition.
  * @param {string} home - absolute home directory (the agent's DSH_HOME).
  * @param {string} workspace - absolute working directory for the agent process.
- * @param {object} options - `{ profile, subscription? }` — the per-agent
+ * @param {object} options - `{ profile, subscription?, deploymentRoot? }` — the per-agent
  *   profile to install plus an optional deployment-resolved target-only
  *   external plugin/credential requirement; unknown profiles fail loud.
+ *   `deploymentRoot` (the runtime's `--root`) pins the persisted shared credentialFile
+ *   reference to THAT surface's canonical store; production homes laid out as
+ *   `<root>/homes/<agent>` are additionally guarded against cross-surface references
+ *   even without it.
  * @returns {string} the resolved home path.
  */
 export function provisionAgentHome(home, workspace, options = {}) {
@@ -465,7 +482,12 @@ export function provisionAgentHome(home, workspace, options = {}) {
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
-    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile)
+    const persistOptions = {}
+    if (typeof options.deploymentRoot === 'string' && options.deploymentRoot !== '') {
+      persistOptions.deploymentRoot = options.deploymentRoot
+    }
+    if (basename(dirname(home)) === 'homes') persistOptions.agentHome = home
+    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile, persistOptions)
   }
 
   // Out-of-tree plugin resolution links for this profile's composition.
