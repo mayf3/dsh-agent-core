@@ -23,8 +23,10 @@ pub(super) struct Role {
     pub fixed_launch_target: Option<String>,
     pub tty: Option<String>,
 }
-// Mechanical projection of reviewed policy v3 fd562779ce789c3b9eb1891f53ea7199ac6d459bf835fdab32a7133fd57caf65.
-// Historical PID values and observed PASS claims are intentionally not inputs.
+// Finite exact-role projection.  The original baseline is reviewed policy v3
+// fd562779ce789c3b9eb1891f53ea7199ac6d459bf835fdab32a7133fd57caf65;
+// successor rows retain the same fixed path and authority model. Historical PID
+// values and observed PASS claims are intentionally not inputs.
 pub(super) fn roles(path: &str) -> Result<Vec<Role>> {
     let mut found = Vec::new();
     for line in include_str!("roles.jsonl").lines() {
