@@ -1,7 +1,14 @@
 use super::*;
 #[test]
 fn exact_frozen_apple_tuple_only() {
-    exact(&FROZEN).unwrap();
+    exact(&FROZEN, FROZEN.device).unwrap();
+    // The device id is boot-local: sudo on this boot's parent volume with every
+    // durable field frozen passes, whatever the volume was renumbered to.
+    let mut rebooted = FROZEN.clone();
+    rebooted.device = 16777232;
+    exact(&rebooted, 16777232).unwrap();
+    // A sudo copied to (or observed on) any other volume refuses separately.
+    assert!(exact(&rebooted, FROZEN.device).is_err());
     type TupleMutation = Box<dyn Fn(&mut Tuple)>;
     let variants: Vec<TupleMutation> = vec![
         Box::new(|v| v.file = false),
@@ -26,7 +33,7 @@ fn exact_frozen_apple_tuple_only() {
     for change in variants {
         let mut v = FROZEN.clone();
         change(&mut v);
-        assert!(exact(&v).is_err(), "{v:?}");
+        assert!(exact(&v, FROZEN.device).is_err(), "{v:?}");
     }
 }
 fn output(uid: u32) -> Output {
@@ -83,7 +90,9 @@ fn copied_or_generic_setuid_file_cannot_use_fixed_entry_exception() {
     std::fs::write(&p, b"not sudo").unwrap();
     std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o4511)).unwrap();
     let f = File::open(&p).unwrap();
-    assert!(metadata(&f).is_err());
+    let parent = std::fs::metadata(t.path()).unwrap();
+    use std::os::unix::fs::MetadataExt;
+    assert!(metadata(&f, parent.dev()).is_err());
     assert!(crate::fs::secure::validate_platform_file(&f).is_err());
 }
 

@@ -55,9 +55,11 @@ pub(crate) fn pinned(tool: Tool, expected: &str) -> Result<()> {
         tool,
         Tool::Launchctl | Tool::Sudo | Tool::SudoAudit | Tool::Sh | Tool::Plutil
     );
+    use std::os::unix::fs::MetadataExt;
+    let parent_device = dir.file.metadata()?.dev();
     let validate = |file: &std::fs::File| {
         if matches!(tool, Tool::Sudo | Tool::SudoAudit) {
-            super::sudo::metadata(file)
+            super::sudo::metadata(file, parent_device)
         } else {
             validate_platform_file(file)
         }

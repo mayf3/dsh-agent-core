@@ -38,10 +38,15 @@ const FROZEN: Tuple = Tuple {
     birth: 1786589515,
     birth_ns: 0,
 };
-fn exact(v: &Tuple) -> Result<()> {
-    require(*v == FROZEN, "FIRST_LIVE_SUDO_METADATA")
+fn exact(v: &Tuple, parent_device: u64) -> Result<()> {
+    // The system volume device id is boot-local: sudo must sit on its own parent
+    // directory's volume this boot, while every durable field stays frozen.
+    require(v.device == parent_device, "FIRST_LIVE_SUDO_DEVICE_VOLUME")?;
+    let mut w = v.clone();
+    w.device = FROZEN.device;
+    require(w == FROZEN, "FIRST_LIVE_SUDO_METADATA")
 }
-pub(super) fn metadata(file: &File) -> Result<()> {
+pub(super) fn metadata(file: &File, parent_device: u64) -> Result<()> {
     let m = file.metadata()?;
     let v = Tuple {
         file: m.is_file(),
@@ -60,7 +65,7 @@ pub(super) fn metadata(file: &File) -> Result<()> {
         birth: std::os::macos::fs::MetadataExt::st_birthtime(&m),
         birth_ns: std::os::macos::fs::MetadataExt::st_birthtime_nsec(&m),
     };
-    exact(&v)?;
+    exact(&v, parent_device)?;
     reject_acl(file)
 }
 fn account(uid: u32) -> Result<(&'static str, u32)> {
