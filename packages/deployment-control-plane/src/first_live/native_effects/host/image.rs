@@ -9,7 +9,7 @@ pub(super) struct Image {
     #[serde(skip)]
     pub bytes: Vec<u8>,
 }
-fn read(file: &mut std::fs::File, uid: u32, login: bool) -> Result<Image> {
+fn read(file: &mut std::fs::File, uid: u32, login: bool, nlink: u64) -> Result<Image> {
     use crate::{
         error::require,
         fs::{file::sha, secure::reject_acl},
@@ -21,7 +21,7 @@ fn read(file: &mut std::fs::File, uid: u32, login: bool) -> Result<Image> {
     let before = file.metadata()?;
     require(
         before.is_file()
-            && before.nlink() == 1
+            && before.nlink() == nlink
             && before.uid() == uid
             && before.len() <= 128 * 1024 * 1024
             && (if login {
@@ -74,6 +74,16 @@ pub(super) fn protected(path: &str) -> Result<Image> {
 /// root. Callers must supply the owner from the finite role record; ordinary
 /// protected artifacts continue to require uid 0 through `protected`.
 pub(super) fn protected_owned(path: &str, uid: u32) -> Result<Image> {
+    protected_exact(path, uid, 1)
+}
+/// Reads one compiled launch authority with its exact reviewed link count.
+/// The link count comes only from the finite role table; ordinary protected
+/// files retain the single-link requirement.
+pub(super) fn protected_authority(path: &str, nlink: u64) -> Result<Image> {
+    crate::error::require(nlink == 1 || nlink == 2, "HOST_IMAGE_UNPROVEN")?;
+    protected_exact(path, 0, nlink)
+}
+fn protected_exact(path: &str, uid: u32, nlink: u64) -> Result<Image> {
     use crate::fs::secure::Dir;
     let path = std::path::Path::new(path);
     let parent = Dir::open(
@@ -89,6 +99,7 @@ pub(super) fn protected_owned(path: &str, uid: u32) -> Result<Image> {
         &mut file,
         uid,
         path == std::path::Path::new("/usr/bin/login"),
+        nlink,
     )?;
     use std::os::unix::fs::MetadataExt;
     let current = parent.open_file(name, libc::O_RDONLY, 0)?.metadata()?;

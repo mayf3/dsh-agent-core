@@ -5,6 +5,7 @@ use serde::Deserialize;
 pub(super) struct Authority {
     pub path: String,
     pub sha256: String,
+    pub nlink: Option<u64>,
     pub label: String,
     pub program: String,
 }
