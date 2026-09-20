@@ -195,11 +195,19 @@ Exact changed-file set (bounded; no other file may change):
 | `docs/specs/AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1.md` | this Spec |
 | `docs/specs/README.md` | one index row (carried by the acceptance docs-only change) |
 | `packages/broker/src/capabilities/agent-principal-reverse-resolution.js` | new pure-data manifest (shape of the forward sibling's manifest) |
+| `packages/broker/src/capabilities/manifests.js` | CLOSURE-CORRECTION-APR-001 (bounded): one additive re-export line — the plugin entry imports ONE manifest surface through this pure re-export hub (CODE_STRUCTURE_GUARDRAILS_V1 barrel limit), so a new capability family appends exactly one line here per the hub's own header contract |
 | `packages/broker/src/index.js` | additive: import + append to `DEFAULT_MANIFESTS` |
 | `packages/production-runtime/src/identity/agent-principal-reverse-resolution.js` | new trusted provider (shape of the forward sibling's provider) |
 | `packages/production-runtime/src/compose.js` | additive: one `ctx.provide('agentPrincipalReverseResolutionAccess', …)` wiring with the identity-directory token seam |
 | `packages/broker/test/agent-principal-reverse-resolution.test.js` | new manifest/structural tests |
-| `packages/production-runtime/test/agent-principal-reverse-resolution.test.js` | new provider unit + composed E2E tests (synthetic fixtures; production canary Principal UUIDs FORBIDDEN as constants) |
+| `packages/production-runtime/test/identity/agent-principal-reverse-resolution.test.js` | new provider unit tests under the family's `identity/` test directory, mirroring the forward sibling's layout (synthetic fixtures; production canary Principal UUIDs FORBIDDEN as constants) |
+
+CLOSURE-CORRECTION-APR-001 (2026-09-21, mechanical): discovered during
+implementation — the broker plugin imports manifests exclusively through the
+pure re-export hub `packages/broker/src/capabilities/manifests.js` (its header
+contract: "New capability families append exactly one line here plus the
+DEFAULT_MANIFESTS entry"). This correction adds that one-line re-export to the
+closure; no semantic delta.
 
 No change to the forward sibling's manifest/provider/tests, no registry or
 grant-supply change, no Agent Definition change. Production deployment proceeds
