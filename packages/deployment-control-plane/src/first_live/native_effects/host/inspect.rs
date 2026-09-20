@@ -67,7 +67,8 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
     let loader_environment = (!sealed_entry(&role.resolved_path))
         .then(|| environment::running(identity.pid))
         .transpose()?;
-    let code = image::protected(&role.resolved_path)?;
+    let artifact_uid = role.artifact_uid.unwrap_or(0);
+    let code = image::protected_owned(&role.resolved_path, artifact_uid)?;
     if let Some(expected) = &role.executable_sha256 {
         require(code.digest == *expected, "HOST_ROLE_CODE_DRIFT")?;
     }
@@ -87,7 +88,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
         authorities.insert(a.path.clone(), actual.digest);
     }
     if let Some(path) = &role.bundle_path {
-        let actual = image::protected(path)?;
+        let actual = image::protected_owned(path, artifact_uid)?;
         require(
             role.bundle_sha256.as_deref() == Some(actual.digest.as_str()),
             "HOST_ROLE_AUTHORITY_DRIFT",
@@ -168,7 +169,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
             "HOST_ENVIRONMENT_DRIFT",
         )?;
     }
-    let after = image::protected(&role.resolved_path)?;
+    let after = image::protected_owned(&role.resolved_path, artifact_uid)?;
     require(
         after.digest == code.digest
             && after.device == code.device
