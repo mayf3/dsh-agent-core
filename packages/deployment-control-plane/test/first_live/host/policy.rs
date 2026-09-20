@@ -103,3 +103,27 @@ fn nonroot_owned_system_asset_is_bound_to_one_exact_role() {
         }
     }
 }
+
+#[test]
+fn sealed_system_authority_hardlinks_are_two_exact_policy_entries() {
+    let mut linked = std::collections::BTreeSet::new();
+    for line in include_str!("../../../src/first_live/native_effects/host/roles.jsonl").lines() {
+        let role: Role = serde_json::from_str(line).unwrap();
+        for authority in role.authorities {
+            if authority.nlink.is_some() {
+                assert_eq!(authority.nlink, Some(2));
+                linked.insert(authority.path);
+            }
+        }
+    }
+    assert_eq!(
+        linked,
+        [
+            "/System/Library/LaunchDaemons/com.apple.coreservices.sharedfilelistd.plist"
+                .to_string(),
+            "/System/Library/LaunchDaemons/com.apple.powerd.plist".to_string(),
+        ]
+        .into_iter()
+        .collect()
+    );
+}

@@ -83,7 +83,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
     };
     let mut authorities = BTreeMap::new();
     for a in &role.authorities {
-        let actual = image::protected(&a.path)?;
+        let actual = image::protected_authority(&a.path, a.nlink.unwrap_or(1))?;
         require(actual.digest == a.sha256, "HOST_ROLE_AUTHORITY_DRIFT")?;
         authorities.insert(a.path.clone(), actual.digest);
     }

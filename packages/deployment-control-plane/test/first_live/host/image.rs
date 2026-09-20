@@ -13,7 +13,7 @@ fn fixture() -> (tempfile::NamedTempFile, std::fs::File) {
 #[test]
 fn hashes_exact_descriptor_bytes_without_exposing_them_in_receipt() {
     let (_p, mut f) = fixture();
-    let v = read(&mut f, unsafe { libc::geteuid() }, false).unwrap();
+    let v = read(&mut f, unsafe { libc::geteuid() }, false, 1).unwrap();
     assert_eq!(v.digest, crate::fs::file::sha(b"fixed public image"));
     assert!(!serde_json::to_string(&v)
         .unwrap()
@@ -23,19 +23,51 @@ fn hashes_exact_descriptor_bytes_without_exposing_them_in_receipt() {
 fn writable_alias_setid_wrong_owner_and_hardlink_are_refused() {
     let (p, mut f) = fixture();
     let uid = unsafe { libc::geteuid() };
-    assert!(read(&mut f, uid.wrapping_add(1), false).is_err());
+    assert!(read(&mut f, uid.wrapping_add(1), false, 1).is_err());
     for mode in [0o666, 0o4644] {
         f.set_permissions(std::fs::Permissions::from_mode(mode))
             .unwrap();
-        assert!(read(&mut f, uid, false).is_err());
+        assert!(read(&mut f, uid, false, 1).is_err());
     }
     f.set_permissions(std::fs::Permissions::from_mode(0o644))
         .unwrap();
     let sibling = p.path().with_extension("alias");
     std::fs::hard_link(p.path(), &sibling).unwrap();
-    let result = read(&mut f, uid, false);
+    let result = read(&mut f, uid, false, 1);
     std::fs::remove_file(sibling).unwrap();
     assert!(result.is_err());
+}
+
+#[test]
+fn exact_hardlink_count_is_finite_and_does_not_relax_default_reads() {
+    let (p, mut f) = fixture();
+    let uid = unsafe { libc::geteuid() };
+    let sibling = p.path().with_extension("reviewed-alias");
+    std::fs::hard_link(p.path(), &sibling).unwrap();
+    assert!(read(&mut f, uid, false, 1).is_err());
+    assert_eq!(
+        read(&mut f, uid, false, 2).unwrap().digest,
+        crate::fs::file::sha(b"fixed public image")
+    );
+    std::fs::remove_file(sibling).unwrap();
+    assert!(read(&mut f, uid, false, 2).is_err());
+}
+
+#[test]
+fn exact_sealed_system_authority_hardlinks_are_individually_pinned() {
+    for (path, digest) in [
+        (
+            "/System/Library/LaunchDaemons/com.apple.powerd.plist",
+            "b340cbd21616d81fde35e19d6b753e92da2ea6bd3bd6b825f30bd1b08396bf7d",
+        ),
+        (
+            "/System/Library/LaunchDaemons/com.apple.coreservices.sharedfilelistd.plist",
+            "150fc9da3bbf4c6456691aae10bf1506cfe492503ad8362ba9c2c4c5116c764e",
+        ),
+    ] {
+        assert!(protected(path).is_err());
+        assert_eq!(protected_authority(path, 2).unwrap().digest, digest);
+    }
 }
 
 #[test]
