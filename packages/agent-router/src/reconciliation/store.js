@@ -202,6 +202,33 @@ export class TurnReconciliationStore {
     return null
   }
 
+  /**
+   * Restart-safety floor for the process-generation allocator (durable
+   * generation restart safety): the HIGHEST generation id this agent has ever
+   * recorded in its issuance history — live buckets, evicted buckets, and the
+   * eviction watermark included. A fresh allocation must be strictly greater:
+   * after a runtime restart the in-memory allocator restarts at 1, and
+   * reissuing any of these ids would extend an old generation's range past a
+   * newer one (overlapping ranges => the store is rejected at its next load)
+   * or duplicate an evicted id (duplicate-generation rejection). Read-only:
+   * never mutates store state; returns 0 when the agent has no history. A
+   * store whose durable file failed to load is cleared + admission-blocked by
+   * the constructor, so this accessor is only ever consulted on a store whose
+   * contents provably loaded.
+   */
+  highestIssuedGeneration(agentId) {
+    const issuance = this.issuance.get(agentId)
+    if (issuance === undefined) return 0
+    let highest = Number.isSafeInteger(issuance.evictedThroughGeneration) ? issuance.evictedThroughGeneration : 0
+    for (const generation of issuance.generations.keys()) {
+      if (generation > highest) highest = generation
+    }
+    for (const generation of issuance.evictedGenerations.keys()) {
+      if (generation > highest) highest = generation
+    }
+    return highest
+  }
+
   unresolvedRecoveryRecords() {
     return [...this.records.values()]
       .filter(record => record.initialOutcome === 'outcome_unknown' && record.state !== 'settled')
