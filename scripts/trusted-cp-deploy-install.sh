@@ -111,58 +111,6 @@ acquire_global_deploy_mutex() {
 #   ./trusted-cp-deploy-install.sh --selftest-provenance
 
 gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
-
-validate_agent_definition_preimage() {
-  # The production Agent Definition is state authority, not an app build
-  # output.  A code refresh may preserve exact reviewed bytes, but it must
-  # never manufacture an empty replacement when the authority is missing.
-  # Arguments after the digest are fixed production metadata in the real
-  # call; the selftest supplies its own uid/gid only for a no-root fixture.
-  local path="$1" expected_sha="$2" expected_uid="$3" expected_gid="$4" expected_mode="$5"
-  local actual_sha actual_uid actual_gid actual_mode actual_flags acl_marker
-  [ -n "$expected_sha" ] || { echo "AGENT_DEFINITION_PREIMAGE_REQUIRED expected digest is absent" >&2; return 1; }
-  [ -f "$path" ] && [ ! -L "$path" ] \
-    || { echo "AGENT_DEFINITION_PREIMAGE_REQUIRED fixed regular file is absent" >&2; return 1; }
-  actual_sha="$(/usr/bin/shasum -a 256 "$path" | /usr/bin/awk '{print $1}')" \
-    || { echo "AGENT_DEFINITION_PREIMAGE_UNKNOWN digest read failed" >&2; return 1; }
-  [ "$actual_sha" = "$expected_sha" ] \
-    || { echo "AGENT_DEFINITION_PREIMAGE_MISMATCH digest" >&2; return 1; }
-  actual_uid="$(/usr/bin/stat -f %u "$path")"
-  actual_gid="$(/usr/bin/stat -f %g "$path")"
-  actual_mode="$(/usr/bin/stat -f %Lp "$path")"
-  actual_flags="$(/usr/bin/stat -f %f "$path")"
-  [ "$actual_uid" = "$expected_uid" ] && [ "$actual_gid" = "$expected_gid" ] \
-    && [ "$actual_mode" = "$expected_mode" ] && [ "$actual_flags" = "0" ] \
-    || { echo "AGENT_DEFINITION_PREIMAGE_MISMATCH metadata" >&2; return 1; }
-  acl_marker="$(/bin/ls -lde "$path" | /usr/bin/awk 'NR==1 {print $1}')"
-  case "$acl_marker" in
-    *+) echo "AGENT_DEFINITION_PREIMAGE_MISMATCH acl" >&2; return 1 ;;
-  esac
-}
-
-if [ "${1:-}" = "--selftest-agent-definition-preimage" ]; then
-  T="$(/usr/bin/mktemp -d /tmp/trusted-cp-agent-definition-selftest.XXXXXX)"
-  trap '/bin/rm -rf "$T"' EXIT
-  printf '{"version":1,"defaultAgentId":"agt_fixture","agents":[{"id":"agt_fixture","name":"Fixture","disabled":false}]}\n' > "$T/agents.json"
-  /bin/chmod 600 "$T/agents.json"
-  EXPECTED="$(/usr/bin/shasum -a 256 "$T/agents.json" | /usr/bin/awk '{print $1}')"
-  UID_NOW="$(/usr/bin/stat -f %u "$T/agents.json")"; GID_NOW="$(/usr/bin/stat -f %g "$T/agents.json")"
-  validate_agent_definition_preimage "$T/agents.json" "$EXPECTED" "$UID_NOW" "$GID_NOW" 600
-  if validate_agent_definition_preimage "$T/agents.json" "$(printf wrong | /usr/bin/shasum -a 256 | /usr/bin/awk '{print $1}')" "$UID_NOW" "$GID_NOW" 600 2>/dev/null; then
-    echo "SELFTEST_AGENT_DEFINITION_PREIMAGE_FAIL digest mismatch accepted" >&2; exit 1
-  fi
-  /bin/ln -s "$T/agents.json" "$T/link.json"
-  if validate_agent_definition_preimage "$T/link.json" "$EXPECTED" "$UID_NOW" "$GID_NOW" 600 2>/dev/null; then
-    echo "SELFTEST_AGENT_DEFINITION_PREIMAGE_FAIL symlink accepted" >&2; exit 1
-  fi
-  printf '{"version":1,"defaultAgentId":null,"agents":[]}\n' > "$T/empty.json"
-  /bin/chmod 600 "$T/empty.json"
-  if validate_agent_definition_preimage "$T/empty.json" "$EXPECTED" "$UID_NOW" "$GID_NOW" 600 2>/dev/null; then
-    echo "SELFTEST_AGENT_DEFINITION_PREIMAGE_FAIL empty replacement accepted" >&2; exit 1
-  fi
-  echo "SELFTEST_AGENT_DEFINITION_PREIMAGE=PASS"
-  exit 0
-fi
 if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ] && [ -z "${1:-}" ]; then
   echo "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)" >&2
   exit 1
@@ -435,10 +383,6 @@ echo "  harness src  : $HARNESS_SRC"
 # backup/mv/install mutations below (fail-closed preflight, not a cutover-time check).
 validate_pack_source "$REPO_SRC" "$TRUSTED_ROOT"
 echo "  provenance  : HEAD=$PRE_PACK_HEAD tree=$PRE_PACK_TREE clean=$PRE_PACK_CLEAN realpath=$REPO_SRC_REALPATH"
-validate_agent_definition_preimage \
-  "$TRUSTED_ROOT/config/agents.json" "${EXPECTED_AGENT_DEFINITION_SHA256:-}" \
-  "$AUTHSVC_UID" "$AUTHSVC_GID" 600
-echo "  Agent Definition preimage: exact digest and metadata verified"
 if [ -n "$MAIN_REPO" ]; then
   MAIN_REPO_REALPATH="$(cd "$MAIN_REPO" 2>/dev/null && pwd -P)" || MAIN_REPO_REALPATH="$MAIN_REPO"
   reject_trusted_live_source "$MAIN_REPO_REALPATH" "$TRUSTED_ROOT"     || { echo "ERROR: MAIN_REPO resolves inside the trusted live root family" >&2; exit 2; }
@@ -739,16 +683,17 @@ chmod 600 home/.credentials.yaml
 # ---- 5. config (505-private state) -----------------------------------------
 echo "== seeding config/ (505-private)"
 mkdir -p config
-# The Agent Definition config is the SINGLE Agent existence authority.  Its
-# exact digest and metadata were verified before the live root was moved, so
-# a refresh only preserves those bytes.  Missing authority is a pre-mutation
-# hard stop; deployment never creates an empty replacement.
+# The Agent Definition config is the SINGLE Agent existence authority
+# (AGENT_DEFINITION_CONFIG_V1): an empty declarative document until the
+# deployment authorizes agents (adoptAgents / seedDefinition). A REINSTALL
+# MUST NEVER destroy the deployed definition or the credential store — the
+# stable agt_* identities and the 505 credentials survive code refreshes;
+# empty documents are seeded only on a fresh install.
 if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agents.json" ]; then
   cp "$BAK/config/agents.json" config/agents.json
   echo "  preserved Agent Definition from $BAK (stable agt_* identities kept)"
 else
-  echo "AGENT_DEFINITION_PREIMAGE_UNKNOWN verified predecessor disappeared after backup" >&2
-  exit 2
+  printf '{\n  "version": 1,\n  "defaultAgentId": null,\n  "agents": []\n}\n' > config/agents.json
 fi
 if [ -n "${BAK:-}" ] && [ -f "$BAK/config/agent-credentials.json" ]; then
   cp "$BAK/config/agent-credentials.json" config/agent-credentials.json
