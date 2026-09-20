@@ -77,3 +77,27 @@ fn xpc_domain_is_fixed_by_bundle_service_type_and_current_pid() {
     m.domain_service = "pid/900/com.apple.authd".into();
     assert!(join(&role, &p, &m).is_err());
 }
+
+#[test]
+fn loginwindow_role_accepts_only_one_validated_instance_of_its_fixed_parent() {
+    let (_, mut process, mut metadata) = inputs();
+    let role =
+        policy::roles("/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow")
+            .unwrap()
+            .remove(0);
+    process.executable = Some(role.resolved_path.clone());
+    metadata.domain_service =
+        "system/com.apple.loginwindow.8B78FC26-B458-4419-AF5B-77AD6D2254A8".into();
+    metadata.program = role.path.clone();
+    metadata.path = role.authorities[0].path.clone();
+    metadata.kind = "LaunchDaemon".into();
+    join(&role, &process, &metadata).unwrap();
+    for target in [
+        "system/com.apple.loginwindow",
+        "system/com.apple.loginwindow.not-a-uuid",
+        "system/com.example.loginwindow.8B78FC26-B458-4419-AF5B-77AD6D2254A8",
+    ] {
+        metadata.domain_service = target.into();
+        assert!(join(&role, &process, &metadata).is_err());
+    }
+}

@@ -8,6 +8,61 @@ pub(super) struct Metadata {
     pub program: String,
     pub pid: u32,
 }
+pub(super) fn valid_instance_label(label: &str, prefix: &str) -> bool {
+    let Some(uuid) = label.strip_prefix(prefix) else {
+        return false;
+    };
+    let groups: Vec<_> = uuid.split('-').collect();
+    groups.iter().map(|part| part.len()).collect::<Vec<_>>() == [8, 4, 4, 4, 12]
+        && uuid
+            .bytes()
+            .all(|byte| byte == b'-' || byte.is_ascii_hexdigit())
+}
+pub(super) fn parse_single_instance(raw: &str, expected: &str, prefix: &str) -> Result<String> {
+    use crate::error::require;
+    require(
+        raw.len() <= 1024 * 1024 && !raw.as_bytes().contains(&0),
+        "HOST_LAUNCH_UNPROVEN",
+    )?;
+    let lines: Vec<_> = raw.lines().collect();
+    require(
+        lines.first().copied() == Some(format!("{expected} = {{").as_str())
+            && lines.last().copied() == Some("}"),
+        "HOST_LAUNCH_UNPROVEN",
+    )?;
+    let mut found = None;
+    let mut index = 1;
+    while index + 1 < lines.len() {
+        let line = lines[index];
+        if line == "\tinstances = {" {
+            require(found.is_none(), "HOST_LAUNCH_UNPROVEN")?;
+            index += 1;
+            let mut labels = Vec::new();
+            while index + 1 < lines.len() && lines[index] != "\t}" {
+                let label = lines[index]
+                    .strip_prefix("\t\t")
+                    .and_then(|value| value.strip_suffix(','))
+                    .ok_or_else(|| Error::new("HOST_LAUNCH_UNPROVEN"))?;
+                require(valid_instance_label(label, prefix), "HOST_LAUNCH_UNPROVEN")?;
+                labels.push(label.to_owned());
+                index += 1;
+            }
+            require(
+                index + 1 < lines.len() && lines[index] == "\t}" && labels.len() == 1,
+                "HOST_LAUNCH_UNPROVEN",
+            )?;
+            found = labels.pop();
+        } else if line.strip_prefix('\t').is_some_and(|body| {
+            body.strip_prefix("instances").is_some_and(|tail| {
+                tail.is_empty() || tail.starts_with('=') || tail.starts_with(char::is_whitespace)
+            })
+        }) {
+            return Err(Error::new("HOST_LAUNCH_UNPROVEN"));
+        }
+        index += 1;
+    }
+    found.ok_or_else(|| Error::new("HOST_LAUNCH_UNPROVEN"))
+}
 #[cfg(test)]
 pub(super) fn parse(raw: &str, expected: &str) -> Result<Metadata> {
     parse_optional(raw, expected)?.ok_or_else(|| Error::new("HOST_LAUNCH_UNPROVEN"))

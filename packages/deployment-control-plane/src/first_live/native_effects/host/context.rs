@@ -47,6 +47,36 @@ impl Context<'_> {
         self.check()?;
         from_output(out, target)
     }
+    /// A fixed multiple-instance parent is authoritative only when its current
+    /// launchd record is complete, inactive itself, and names one exact child.
+    /// Only the parent and child digests are retained; raw launch output may
+    /// contain environment values and is never persisted.
+    pub(super) fn query_single_instance(
+        &self,
+        parent: &str,
+        prefix: &str,
+    ) -> Result<LaunchObservation> {
+        self.check()?;
+        let out = process::run(
+            Tool::Launchctl,
+            &self.packet.native_enrollment.launchctl_sha256,
+            &["print".into(), parent.into()],
+            None,
+            5,
+        )?;
+        self.check()?;
+        require(
+            out.code == Some(0)
+                && out.stderr.is_empty()
+                && launch::parse_optional(&out.stdout, parent)?.is_none(),
+            "HOST_LAUNCH_UNPROVEN",
+        )?;
+        let parent_digest = crate::fs::file::sha(out.stdout.as_bytes());
+        let label = launch::parse_single_instance(&out.stdout, parent, prefix)?;
+        let mut instance = self.query(&format!("system/{label}"))?;
+        instance.raw_sha256 = crate::trust::digest(&(parent_digest, &instance.raw_sha256))?;
+        Ok(instance)
+    }
 }
 fn from_output(out: process::Output, target: &str) -> Result<Option<LaunchObservation>> {
     let label = target
