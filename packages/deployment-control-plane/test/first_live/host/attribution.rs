@@ -45,7 +45,7 @@ fn only_current_exact_manifest_program_pid_tuple_can_attribute() {
 }
 #[test]
 fn each_wrong_launch_field_or_kernel_path_refuses() {
-    for index in 0..4 {
+    for index in 0..6 {
         let (r, mut p, mut m) = inputs();
         match index {
             0 => m.pid += 1,
@@ -127,7 +127,7 @@ fn fixed_root_user_launch_agent_requires_exact_target_kind_and_authority() {
     metadata.program = role.authorities[0].program.clone();
     join(&role, &process, &metadata).unwrap();
 
-    for index in 0..6 {
+    for index in 0..4 {
         let mut wrong = copy_metadata(&metadata);
         match index {
             0 => wrong.domain_service = "gui/0/com.apple.distnoted.xpc.agent".into(),
