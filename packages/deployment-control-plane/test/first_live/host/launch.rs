@@ -50,3 +50,33 @@ fn rejects_whitespace_or_content_in_place_of_blank_separator() {
         assert!(parse(&raw, "system/com.apple.fixed").is_err());
     }
 }
+
+#[test]
+fn classifies_exact_not_running_job_without_pid_as_inactive() {
+    let raw = sample().replace("\tpid = 42\n", "").replace(
+        "\tprogram = /usr/libexec/fixed\n",
+        "\tstate = not running\n\tprogram = /usr/libexec/fixed\n",
+    );
+    assert_eq!(
+        parse_optional(&raw, "system/com.apple.fixed").unwrap(),
+        None
+    );
+    assert!(parse(&raw, "system/com.apple.fixed").is_err());
+}
+
+#[test]
+fn missing_pid_requires_exact_inactive_state_and_complete_identity() {
+    for raw in [
+        sample().replace("\tpid = 42\n", ""),
+        sample().replace("\tpid = 42\n", "").replace(
+            "\tprogram = /usr/libexec/fixed\n",
+            "\tstate = waiting\n\tprogram = /usr/libexec/fixed\n",
+        ),
+        sample().replace("\tpid = 42\n", "").replace(
+            "\tprogram = /usr/libexec/fixed\n",
+            "\tstate = not running\n",
+        ),
+    ] {
+        assert!(parse_optional(&raw, "system/com.apple.fixed").is_err());
+    }
+}
