@@ -29,3 +29,24 @@ fn duplicate_field_wrong_service_or_incomplete_output_is_unknown() {
         assert!(parse(&s, "system/com.apple.fixed").is_err());
     }
 }
+
+#[test]
+fn accepts_real_launchctl_blank_group_separators() {
+    let raw = sample()
+        .replace("\ttype = LaunchDaemon\n", "\ttype = LaunchDaemon\n\n")
+        .replace("\tenvironment = {\n", "\n\tenvironment = {\n")
+        .replace("\t}\n", "\t}\n\n");
+    let parsed = parse(&raw, "system/com.apple.fixed").unwrap();
+    assert_eq!(parsed.pid, 42);
+}
+
+#[test]
+fn rejects_whitespace_or_content_in_place_of_blank_separator() {
+    for separator in [" ", "unexpected"] {
+        let raw = sample().replace(
+            "\ttype = LaunchDaemon\n",
+            &format!("\ttype = LaunchDaemon\n{separator}\n"),
+        );
+        assert!(parse(&raw, "system/com.apple.fixed").is_err());
+    }
+}
