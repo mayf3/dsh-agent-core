@@ -11,6 +11,17 @@ fn exact_missing_optional_job_is_absence_not_positive_role_proof() {
         .is_none());
 }
 #[test]
+fn exact_loaded_but_not_running_job_is_not_positive_role_proof() {
+    let out = process::Output {
+        code: Some(0),
+        stdout: "system/com.apple.fixed = {\n\tpath = /System/Library/LaunchDaemons/com.apple.fixed.plist\n\ttype = LaunchDaemon\n\tstate = not running\n\tprogram = /usr/libexec/fixed\n}\n".into(),
+        stderr: String::new(),
+    };
+    assert!(from_output(out, "system/com.apple.fixed")
+        .unwrap()
+        .is_none());
+}
+#[test]
 fn permission_truncation_wrong_label_or_unknown_status_is_never_absence() {
     for (code, text) in [
         (Some(1), "Operation not permitted"),

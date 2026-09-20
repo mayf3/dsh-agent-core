@@ -67,8 +67,11 @@ fn from_output(out: process::Output, target: &str) -> Result<Option<LaunchObserv
         out.code == Some(0) && out.stderr.is_empty(),
         "HOST_LAUNCH_UNPROVEN",
     )?;
+    let Some(metadata) = launch::parse_optional(&out.stdout, target)? else {
+        return Ok(None);
+    };
     Ok(Some(LaunchObservation {
-        metadata: launch::parse(&out.stdout, target)?,
+        metadata,
         raw_sha256: crate::fs::file::sha(out.stdout.as_bytes()),
     }))
 }
