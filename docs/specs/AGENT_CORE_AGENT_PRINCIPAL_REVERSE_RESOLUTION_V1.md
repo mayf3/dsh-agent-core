@@ -129,8 +129,9 @@ Trusted seam (mirrors the forward sibling, CTR-EPAR-001..005):
    `principalId`, `agentId`, `principalStatus`; `principalId` must be a
    canonical UUID; `agentId` must exactly equal the requested agentId (byte
    equality — the Auth exact-equality proof is re-verified client-side);
-   anything else is `identity_resolution_unavailable`. No success is ever
-   fabricated from a partial or malformed response.
+   `principalStatus` must be `active` or `disabled` (the CTR-IDR-003 value
+   domain); anything else is `identity_resolution_unavailable`. No success is
+   ever fabricated from a partial or malformed response.
 6. Composition with the local Agent Definition registry (deliverability, same
    closed pattern as the forward sibling's CTR-EPAR-003): after a valid Auth
    answer, one synchronous exact `definition.getAgent(agentId)` must succeed and
