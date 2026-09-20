@@ -54,8 +54,8 @@ import { manifest as calculatorManifest, handlers as calculatorHandlers } from '
 import {
   forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, agentSessionMessagingManifests,
-  agentPrincipalResolutionManifests, agentDirectoryManifests, workflowHumanPrincipalProjectionManifests,
-  executionHistoryManifests, lifeWorkbenchManifests,
+  agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
+  workflowHumanPrincipalProjectionManifests, executionHistoryManifests, lifeWorkbenchManifests,
 } from './capabilities/manifests.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
@@ -92,6 +92,7 @@ export const DEFAULT_MANIFESTS = [
   ...selfOpsManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
+  ...agentPrincipalReverseResolutionManifests,
   ...agentDirectoryManifests,
   ...workflowHumanPrincipalProjectionManifests,
   ...executionHistoryManifests,
