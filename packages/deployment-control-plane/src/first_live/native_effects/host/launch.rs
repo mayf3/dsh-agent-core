@@ -45,6 +45,10 @@ pub(super) fn parse_optional(raw: &str, expected: &str) -> Result<Option<Metadat
         if body.starts_with('\t') || body == "}" {
             continue;
         }
+        require(
+            !body.starts_with(char::is_whitespace),
+            "HOST_LAUNCH_UNPROVEN",
+        )?;
         let protected = ["path", "type", "program", "pid", "state"];
         if let Some(key) = protected.iter().find(|key| {
             body.strip_prefix(*key).is_some_and(|tail| {

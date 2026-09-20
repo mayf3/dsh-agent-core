@@ -87,7 +87,14 @@ fn malformed_authoritative_field_cannot_be_hidden_as_inactive() {
         "\tprogram = /usr/libexec/fixed\n",
         "\tstate = not running\n\tprogram = /usr/libexec/fixed\n",
     );
-    for malformed in ["pid=42", "pid =42", "pid  = 42", "pid\t= 42", "pid"] {
+    for malformed in [
+        "pid=42",
+        "pid =42",
+        "pid  = 42",
+        "pid\t= 42",
+        "pid",
+        " pid = 42",
+    ] {
         let raw = inactive.replace(
             "\tstate = not running\n",
             &format!("\t{malformed}\n\tstate = not running\n"),
