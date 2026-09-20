@@ -29,6 +29,15 @@ fn inputs() -> (Role, Identity, Metadata) {
     };
     (role, process, metadata)
 }
+fn copy_metadata(metadata: &Metadata) -> Metadata {
+    Metadata {
+        domain_service: metadata.domain_service.clone(),
+        path: metadata.path.clone(),
+        kind: metadata.kind.clone(),
+        program: metadata.program.clone(),
+        pid: metadata.pid,
+    }
+}
 #[test]
 fn only_current_exact_manifest_program_pid_tuple_can_attribute() {
     let (r, p, m) = inputs();
@@ -99,5 +108,68 @@ fn loginwindow_role_accepts_only_one_validated_instance_of_its_fixed_parent() {
     ] {
         metadata.domain_service = target.into();
         assert!(join(&role, &process, &metadata).is_err());
+    }
+}
+
+#[test]
+fn fixed_root_user_launch_agent_requires_exact_target_kind_and_authority() {
+    let (_, mut process, mut metadata) = inputs();
+    let role = policy::roles("/usr/sbin/distnoted").unwrap().remove(0);
+    assert_eq!(role.class, "APPLE_FIXED_ROOT_USER_LAUNCH_AGENT_ROLE");
+    assert_eq!(
+        role.fixed_launch_target.as_deref(),
+        Some("user/0/com.apple.distnoted.xpc.agent")
+    );
+    process.executable = Some(role.resolved_path.clone());
+    metadata.domain_service = role.fixed_launch_target.clone().unwrap();
+    metadata.kind = "LaunchAgent".into();
+    metadata.path = role.authorities[0].path.clone();
+    metadata.program = role.authorities[0].program.clone();
+    join(&role, &process, &metadata).unwrap();
+
+    for index in 0..4 {
+        let mut wrong = copy_metadata(&metadata);
+        match index {
+            0 => wrong.domain_service = "gui/0/com.apple.distnoted.xpc.agent".into(),
+            1 => wrong.kind = "LaunchDaemon".into(),
+            2 => wrong.path = "/tmp/distnoted.plist".into(),
+            _ => wrong.program = "/tmp/distnoted".into(),
+        }
+        assert!(join(&role, &process, &wrong).is_err());
+    }
+}
+
+#[test]
+fn fixed_fork_child_requires_exact_current_launch_parent_and_same_image() {
+    let (_, mut child, mut metadata) = inputs();
+    let role = policy::roles("/usr/sbin/systemstats").unwrap().remove(0);
+    assert_eq!(role.class, "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE");
+    metadata.domain_service = "system/com.apple.systemstats.analysis".into();
+    metadata.path = role.authorities[1].path.clone();
+    metadata.program = role.authorities[1].program.clone();
+    child.executable = Some(role.resolved_path.clone());
+    child.pid = 901;
+    child.parent_pid = 900;
+    child.process_group = 900;
+    let mut parent = child.clone();
+    parent.pid = 900;
+    parent.parent_pid = 1;
+    join_fork_child(&role, &child, &parent, &metadata).unwrap();
+
+    for index in 0..4 {
+        let mut wrong_child = child.clone();
+        let mut wrong_parent = parent.clone();
+        let mut wrong_metadata = copy_metadata(&metadata);
+        match index {
+            0 => wrong_child.parent_pid = 899,
+            1 => wrong_child.executable = Some("/tmp/systemstats".into()),
+            2 => {
+                wrong_parent.credentials.effective_uid = 501;
+                wrong_parent.credentials.real_uid = 501;
+                wrong_parent.credentials.saved_uid = 501;
+            }
+            _ => wrong_metadata.pid = 899,
+        }
+        assert!(join_fork_child(&role, &wrong_child, &wrong_parent, &wrong_metadata).is_err());
     }
 }

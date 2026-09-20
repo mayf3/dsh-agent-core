@@ -95,6 +95,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
         )?;
         authorities.insert(path.clone(), actual.digest);
     }
+    let mut launch_parent = None;
     let launch = match role.class.as_str() {
         "OS_INIT_STATIC_CANDIDATE" => {
             require(
@@ -117,6 +118,41 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
             let found = ctx.query(target)?;
             attribution::join(role, identity, &found.metadata)?;
             Some(found)
+        }
+        "APPLE_FIXED_ROOT_USER_LAUNCH_AGENT_ROLE" => {
+            let target = role
+                .fixed_launch_target
+                .as_deref()
+                .ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?;
+            let found = ctx.query(target)?;
+            attribution::join(role, identity, &found.metadata)?;
+            Some(found)
+        }
+        "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE" => {
+            let mut found = None;
+            for authority in &role.authorities {
+                if let Some(observation) =
+                    ctx.query_optional(&format!("system/{}", authority.label))?
+                {
+                    if observation.metadata.pid == identity.pid {
+                        attribution::join(role, identity, &observation.metadata)?;
+                    } else if observation.metadata.pid == identity.parent_pid {
+                        let parent = reader::identity(identity.parent_pid)?;
+                        attribution::join_fork_child(
+                            role,
+                            identity,
+                            &parent,
+                            &observation.metadata,
+                        )?;
+                        launch_parent = Some(parent);
+                    } else {
+                        continue;
+                    }
+                    require(found.is_none(), "HOST_ROLE_AMBIGUOUS")?;
+                    found = Some(observation);
+                }
+            }
+            Some(found.ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?)
         }
         "APPLE_FIXED_INSTANCE_LAUNCH_ROLE" => {
             let identifier = role
@@ -168,6 +204,9 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
             environment::running(identity.pid)? == *before,
             "HOST_ENVIRONMENT_DRIFT",
         )?;
+    }
+    if let Some(parent) = launch_parent {
+        require(reader::identity(parent.pid)? == parent, "HOST_CENSUS_DRIFT")?;
     }
     let after = image::protected_owned(&role.resolved_path, artifact_uid)?;
     require(
