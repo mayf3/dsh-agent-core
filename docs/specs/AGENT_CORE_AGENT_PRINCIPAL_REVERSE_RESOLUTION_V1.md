@@ -1,6 +1,20 @@
 ---
 spec_id: AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-21
+accepted_by: mayf3
+accepted_reviewed_spec_commit: da38d7d
+acceptance_review_verdict: PASS
+acceptance_review: independent two-round semantic review (round-1 head 1a8e6fa = ACCEPT / 0 blockers / 5 non-blocking; the one recommended hardening — principalStatus value domain in CTR-APR-003 item 5 — applied as round-2 head da38d7d and re-confirmed ACCEPT / 0 blockers; reviewer = independent Agent not authoring the change, SPEC_GOVERNANCE_MODE=REVIEW)
+acceptance_authority_basis: >-
+  Owner exact-head acceptance via GOAL AGENT_PRINCIPAL_REVERSE_LOOKUP_DELIVERY_V1
+  (OWNER_DECISION APPROVE_NARROW_REVERSE_READ_PATH, 2026-09-21) — persistent Owner
+  authorization. Auth upstream verified accepted-in-main during review:
+  AUTH_SERVICE_IDENTITY_DIRECTORY_REVERSE_RESOLUTION_V1 accepted at auth main
+  862eab3 (reviewed head cf9b474, impl b1aa0ae ACCEPT/0 blockers); live Auth
+  route deployment remains a separately authorized controlled operation with its
+  packet at
+  /Users/yanfenma/workspace/deployment-artifacts/auth-service-idr-reverse-resolution-v1-deploy/.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -215,6 +229,8 @@ svc-workflow principals projection (not the identity authority); a
 production-effective); provisioning-scope credentials (Owner forbidden);
 UUID-in-prompt or preseeded-UUID test designs (forbidden).
 
-STATUS=proposed; IMPLEMENTATION_ALLOWED_NOW=NO; PRODUCTION_READY=NO. Requires
-independent semantic review and exact-head Owner acceptance (mayf3, via GOAL
-`AGENT_PRINCIPAL_REVERSE_LOOKUP_DELIVERY_V1`) before implementation.
+STATUS=accepted (2026-09-21; reviewed head da38d7d; independent review
+ACCEPT/0 blockers). Implementation proceeds under
+`implementation_authority: contracts` within CTR-APR-001..005 only; production
+deployment of the fleet runtime remains a separately authorized controlled
+operation through the existing Production Deployment Control Plane.
