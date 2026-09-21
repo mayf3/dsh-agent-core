@@ -75,7 +75,10 @@ fn existing_lock_identity_and_real_nonblocking_exclusion_are_required() {
 #[test]
 fn missing_lock_is_not_created() {
     let (_t, d) = dir();
-    assert!(state::lock(&d, 1, 1, true).is_err());
+    assert_eq!(
+        state::lock(&d, 16_777_230, 1, true).unwrap_err().code(),
+        "ABSENT"
+    );
     assert!(d.names().unwrap().is_empty());
 }
 fn row(pid: u32, ppid: u32, uid: u32, command: &str) -> process::Row {
