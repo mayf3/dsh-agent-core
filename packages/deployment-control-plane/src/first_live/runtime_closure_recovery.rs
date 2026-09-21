@@ -949,7 +949,17 @@ pub fn status() -> Result<Value> {
             && !fields.contains_key("pid")
         {
             "PREIMAGE".to_string()
-        } else if service.stdout.contains(SOURCE)
+        } else if service
+            .stdout
+            .matches(&format!("AGENT_CORE_DEPLOYED_SHA => {SOURCE}"))
+            .count()
+            == 1
+            && service
+                .stdout
+                .lines()
+                .filter(|line| line.trim() == format!("working directory = {LIVE}/app"))
+                .count()
+                == 1
             && fields.get("state").map(String::as_str) == Some("running")
         {
             let pid = fields
