@@ -25,6 +25,12 @@ pub fn start() -> Daemon {
     start_with(|_| {})
 }
 pub fn start_with(edit: impl FnOnce(&mut Value)) -> Daemon {
+    start_prepared(edit, |_| {})
+}
+pub fn start_prepared(
+    edit: impl FnOnce(&mut Value),
+    prepare: impl FnOnce(&std::path::Path),
+) -> Daemon {
     let temp = common::private::temp();
     fs::set_permissions(temp.path(), fs::Permissions::from_mode(0o700)).unwrap();
     let mut config = json!({"catalog": common::fixture_catalog(),
@@ -51,6 +57,7 @@ pub fn start_with(edit: impl FnOnce(&mut Value)) -> Daemon {
     ] {
         fs::create_dir(temp.path().join(dir)).unwrap();
     }
+    prepare(temp.path());
     let child = Command::new(binary())
         .arg("--sandbox")
         .current_dir(temp.path())
