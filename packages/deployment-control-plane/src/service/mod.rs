@@ -11,6 +11,10 @@ pub use server::run;
 #[path = "../../test/common/mailbox.rs"]
 mod mailbox_tests;
 
+#[cfg(test)]
+#[path = "../../test/service_caller_denied.rs"]
+mod caller_denied_tests;
+
 pub(crate) mod adoption;
 pub use adoption::run as run_adoption;
 
