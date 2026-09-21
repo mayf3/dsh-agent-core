@@ -296,6 +296,61 @@ fn current_service(area: &Dir, name: &str) -> Result<process::Output> {
     observed(area, name, &["print", LABEL])
 }
 
+fn exact_running_service(
+    output: &process::Output,
+    expected: Option<&crate::transaction::ProcessIdentity>,
+) -> Result<crate::transaction::ProcessIdentity> {
+    let pid = exact_running_service_pid(output)?;
+    let identity = crate::transaction::first_live_process_identity(pid)?;
+    require(
+        identity.uid == 505
+            && identity.gid == 601
+            && identity.executable == format!("{LIVE}/node-runtime/bin/node")
+            && expected.is_none_or(|value| value == &identity),
+        "RUNTIME_CLOSURE_PROCESS_IDENTITY",
+    )?;
+    require(
+        crate::transaction::first_live_process_argv(identity.pid)?
+            == vec![
+                format!("{LIVE}/node-runtime/bin/node"),
+                format!("{LIVE}/app/scripts/production-runtime.mjs"),
+                "--root".into(),
+                "/Users/authsvc/.agent-core".into(),
+                "--catchup".into(),
+                "0".into(),
+            ],
+        "RUNTIME_CLOSURE_PROCESS_ARGV",
+    )?;
+    Ok(identity)
+}
+
+fn exact_running_service_pid(output: &process::Output) -> Result<u32> {
+    require(
+        output.code == Some(0) && output.stderr.is_empty(),
+        "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
+    )?;
+    let fields = crate::transaction::parse_launchd(&output.stdout)?;
+    require(
+        fields.get("state").map(String::as_str) == Some("running")
+            && output
+                .stdout
+                .lines()
+                .filter(|line| line.trim() == format!("working directory = {LIVE}/app"))
+                .count()
+                == 1
+            && output
+                .stdout
+                .matches(&format!("AGENT_CORE_DEPLOYED_SHA => {SOURCE}"))
+                .count()
+                == 1,
+        "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
+    )?;
+    fields
+        .get("pid")
+        .and_then(|value| value.parse::<u32>().ok())
+        .ok_or(Error::new("RUNTIME_CLOSURE_GENERATION_UNKNOWN"))
+}
+
 fn stage_file(
     dir: &Dir,
     name: &str,
@@ -649,7 +704,7 @@ fn execute() -> Result<Value> {
     success(&area, "runtime-kickstart", &["kickstart", "-k", LABEL])?;
     let deadline = Instant::now() + Duration::from_secs(60);
     let mut readback_attempt = 0u32;
-    let (service, process_identity) = loop {
+    let process_identity = loop {
         readback_attempt += 1;
         require(readback_attempt <= 120, "RUNTIME_CLOSURE_START_TIMEOUT")?;
         let service = current_service(
@@ -657,85 +712,54 @@ fn execute() -> Result<Value> {
             &format!("runtime-generation-readback-{readback_attempt}"),
         )?;
         if service.code == Some(0) {
-            let fields = crate::transaction::parse_launchd(&service.stdout)?;
-            if fields.get("state").map(String::as_str) == Some("running") {
-                let pid: u32 = fields
-                    .get("pid")
-                    .and_then(|v| v.parse().ok())
-                    .ok_or(Error::new("RUNTIME_CLOSURE_GENERATION_UNKNOWN"))?;
-                let identity = crate::transaction::first_live_process_identity(pid)?;
-                break (service, identity);
+            if let Ok(identity) = exact_running_service(&service, None) {
+                break identity;
             }
         }
         require(Instant::now() < deadline, "RUNTIME_CLOSURE_START_TIMEOUT")?;
         std::thread::sleep(Duration::from_millis(100));
     };
-    require(
-        process_identity.uid == 505
-            && process_identity.gid == 601
-            && process_identity.executable == format!("{LIVE}/node-runtime/bin/node"),
-        "RUNTIME_CLOSURE_PROCESS_IDENTITY",
-    )?;
-    require(
-        crate::transaction::first_live_process_argv(process_identity.pid)?
-            == vec![
-                format!("{LIVE}/node-runtime/bin/node"),
-                format!("{LIVE}/app/scripts/production-runtime.mjs"),
-                "--root".into(),
-                "/Users/authsvc/.agent-core".into(),
-                "--catchup".into(),
-                "0".into(),
-            ],
-        "RUNTIME_CLOSURE_PROCESS_ARGV",
-    )?;
-    require(
-        service
-            .stdout
-            .lines()
-            .filter(|l| l.trim() == format!("working directory = {LIVE}/app"))
-            .count()
-            == 1
-            && service
-                .stdout
-                .matches(&format!("AGENT_CORE_DEPLOYED_SHA => {SOURCE}"))
-                .count()
-                == 1,
-        "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
-    )?;
-    let listeners_before = listener_census(&process_identity)?;
     let health_deadline = Instant::now() + Duration::from_secs(60);
-    loop {
-        if crate::transaction::health::probe(
-            "127.0.0.1:8790".parse().unwrap(),
-            Duration::from_secs(2),
-        )
-        .is_ok()
-        {
-            break;
+    let (listeners_before, scheduler_health, generated) = loop {
+        require(
+            crate::transaction::first_live_process_identity(process_identity.pid)?
+                == process_identity,
+            "RUNTIME_CLOSURE_PROCESS_DRIFT",
+        )?;
+        let readiness = listener_census(&process_identity).and_then(|listeners| {
+            crate::transaction::health::probe(
+                "127.0.0.1:8790".parse().unwrap(),
+                Duration::from_secs(2),
+            )?;
+            let scheduler_health = crate::verification::native_io::get(None)?;
+            let scheduler_health_value =
+                crate::verification::documents::strict_json(&scheduler_health)?;
+            crate::verification::watchdog::canonical_health(&scheduler_health_value, SOURCE)?;
+            let generated = scheduler_health_value["generatedAt"]
+                .as_u64()
+                .ok_or(Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?;
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_err(|_| Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?
+                .as_millis() as u64;
+            require(
+                generated <= now && now - generated <= 60_000,
+                "RUNTIME_CLOSURE_HEALTH_TIME",
+            )?;
+            Ok((listeners, scheduler_health, generated))
+        });
+        if let Ok(evidence) = readiness {
+            break evidence;
         }
         require(
             Instant::now() < health_deadline,
             "RUNTIME_CLOSURE_HEALTH_TIMEOUT",
         )?;
         std::thread::sleep(Duration::from_millis(100));
-    }
+    };
     require(
         crate::transaction::first_live_process_identity(process_identity.pid)? == process_identity,
         "RUNTIME_CLOSURE_PROCESS_DRIFT",
-    )?;
-    let scheduler_health = crate::verification::native_io::get(None)?;
-    let scheduler_health_value = crate::verification::documents::strict_json(&scheduler_health)?;
-    crate::verification::watchdog::canonical_health(&scheduler_health_value, SOURCE)?;
-    let generated = scheduler_health_value["generatedAt"]
-        .as_u64()
-        .ok_or(Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?;
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_err(|_| Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?
-        .as_millis() as u64;
-    require(
-        generated <= now && now - generated <= 60_000,
-        "RUNTIME_CLOSURE_HEALTH_TIME",
     )?;
     let listeners_after = listener_census(&process_identity)?;
     journal::append(
@@ -744,19 +768,7 @@ fn execute() -> Result<Value> {
         &serde_json::json!({"source":SOURCE,"process":process_identity,"listeners_before":listeners_before,"listeners_after":listeners_after,"scheduler_health_sha256":sha(&scheduler_health),"generated_at":generated}),
     )?;
     let final_service = current_service(&area, "runtime-final-generation-readback")?;
-    require(
-        final_service.code == Some(0),
-        "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
-    )?;
-    let final_fields = crate::transaction::parse_launchd(&final_service.stdout)?;
-    require(
-        final_fields.get("state").map(String::as_str) == Some("running")
-            && final_fields.get("pid").and_then(|v| v.parse::<u32>().ok())
-                == Some(process_identity.pid)
-            && crate::transaction::first_live_process_identity(process_identity.pid)?
-                == process_identity,
-        "RUNTIME_CLOSURE_PROCESS_DRIFT",
-    )?;
+    exact_running_service(&final_service, Some(&process_identity))?;
     require(
         sha(&snapshot(
             &config.open_file("agents.json", libc::O_RDONLY, 0)?,
@@ -962,29 +974,7 @@ pub fn status() -> Result<Value> {
                 == 1
             && fields.get("state").map(String::as_str) == Some("running")
         {
-            let pid = fields
-                .get("pid")
-                .and_then(|value| value.parse::<u32>().ok())
-                .ok_or(Error::new("RUNTIME_CLOSURE_GENERATION_UNKNOWN"))?;
-            let identity = crate::transaction::first_live_process_identity(pid)?;
-            require(
-                identity.uid == 505
-                    && identity.gid == 601
-                    && identity.executable == format!("{LIVE}/node-runtime/bin/node"),
-                "RUNTIME_CLOSURE_PROCESS_IDENTITY",
-            )?;
-            require(
-                crate::transaction::first_live_process_argv(identity.pid)?
-                    == vec![
-                        format!("{LIVE}/node-runtime/bin/node"),
-                        format!("{LIVE}/app/scripts/production-runtime.mjs"),
-                        "--root".into(),
-                        "/Users/authsvc/.agent-core".into(),
-                        "--catchup".into(),
-                        "0".into(),
-                    ],
-                "RUNTIME_CLOSURE_PROCESS_ARGV",
-            )?;
+            let identity = exact_running_service(&service, None)?;
             status_process = Some(identity);
             "POSTIMAGE".to_string()
         } else {
@@ -1014,6 +1004,16 @@ pub fn status() -> Result<Value> {
                     crate::transaction::first_live_process_identity(process.pid)? == process,
                     "RUNTIME_CLOSURE_PROCESS_DRIFT",
                 )
+            })
+            .and_then(|_| {
+                let final_service = process::run(
+                    process::Tool::Launchctl,
+                    LAUNCHCTL_SHA,
+                    &["print".into(), LABEL.into()],
+                    None,
+                    10,
+                )?;
+                exact_running_service(&final_service, Some(&process)).map(|_| ())
             });
         if canonical.is_err() {
             service_face = "UNKNOWN".into();
@@ -1126,5 +1126,30 @@ mod tests {
         assert!(validate_listener_output(valid, 123, 8787).is_err());
         assert!(validate_listener_output(&format!("{valid}f18u\n"), 123, 8790).is_err());
         assert!(validate_listener_output(&format!("{valid}n127.0.0.1:1\n"), 123, 8790).is_err());
+    }
+
+    #[test]
+    fn running_service_face_requires_one_generation_and_working_directory() {
+        let stdout = format!(
+            "system/ai.agent-core.runtime = {{\n\tprogram = {LIVE}/node-runtime/bin/node\n\tstate = running\n\tpid = 123\n\tworking directory = {LIVE}/app\n\t\tAGENT_CORE_DEPLOYED_SHA => {SOURCE}\n}}\n"
+        );
+        let output = process::Output {
+            code: Some(0),
+            stdout: stdout.clone(),
+            stderr: String::new(),
+        };
+        assert_eq!(exact_running_service_pid(&output).unwrap(), 123);
+        let duplicate_generation = process::Output {
+            code: Some(0),
+            stdout: format!("{stdout}\t\tAGENT_CORE_DEPLOYED_SHA => {SOURCE}\n"),
+            stderr: String::new(),
+        };
+        assert!(exact_running_service_pid(&duplicate_generation).is_err());
+        let missing_working_directory = process::Output {
+            code: Some(0),
+            stdout: stdout.replace(&format!("\tworking directory = {LIVE}/app\n"), ""),
+            stderr: String::new(),
+        };
+        assert!(exact_running_service_pid(&missing_working_directory).is_err());
     }
 }
