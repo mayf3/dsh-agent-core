@@ -64,16 +64,48 @@ pub fn start_prepared(
         .stdout(Stdio::null())
         .spawn()
         .expect("native daemon must exist");
-    let d = Daemon { child, temp };
-    let start = Instant::now();
-    while !d.temp.path().join("control.sock").exists() {
+    let mut d = Daemon { child, temp };
+    let deadline = Instant::now() + Duration::from_secs(5);
+    loop {
         assert!(
-            start.elapsed() < Duration::from_secs(5),
-            "daemon did not listen"
+            d.child.try_wait().unwrap().is_none(),
+            "daemon exited before becoming ready"
         );
-        std::thread::sleep(Duration::from_millis(10));
+        if probe_ready(&d.temp.path().join("control.sock")) {
+            break;
+        }
+        assert!(Instant::now() < deadline, "daemon did not become ready");
+        std::thread::sleep(Duration::from_millis(20));
     }
     d
+}
+fn probe_ready(path: &std::path::Path) -> bool {
+    let Ok(mut stream) = UnixStream::connect(path) else {
+        return false;
+    };
+    let timeout = Some(Duration::from_millis(200));
+    if stream.set_read_timeout(timeout).is_err() || stream.set_write_timeout(timeout).is_err() {
+        return false;
+    }
+    let raw = serde_json::to_vec(&status()).unwrap();
+    let mut frame = Vec::with_capacity(raw.len() + 4);
+    frame.extend_from_slice(&(raw.len() as u32).to_be_bytes());
+    frame.extend_from_slice(&raw);
+    // An unconfigured caller can receive CALLER_DENIED before the server reads its frame.
+    let _ = stream.write_all(&frame);
+    let mut len = [0; 4];
+    if stream.read_exact(&mut len).is_err() {
+        return false;
+    }
+    let length = u32::from_be_bytes(len) as usize;
+    if length == 0 || length > 8 * 1024 * 1024 {
+        return false;
+    }
+    let mut response = vec![0; length];
+    stream.read_exact(&mut response).is_ok()
+        && serde_json::from_slice::<Value>(&response)
+            .map(|value| value.is_object())
+            .unwrap_or(false)
 }
 pub fn connect(d: &Daemon) -> UnixStream {
     let s = UnixStream::connect(d.temp.path().join("control.sock")).unwrap();
@@ -110,7 +142,7 @@ impl Daemon {
                 self.child.try_wait().unwrap().is_none(),
                 "daemon exited during recovery"
             );
-            if UnixStream::connect(self.temp.path().join("control.sock")).is_ok() {
+            if probe_ready(&self.temp.path().join("control.sock")) {
                 break;
             }
             assert!(

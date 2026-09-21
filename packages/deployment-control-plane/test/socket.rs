@@ -78,6 +78,18 @@ fn submit(d: &Daemon, digest: &str) -> Value {
         }),
     )
 }
+
+fn assert_no_submission_mutation(d: &Daemon) {
+    let db = rusqlite::Connection::open(d.temp.path().join("queue.db")).unwrap();
+    for table in ["units", "requests", "coverage", "attachments", "actors"] {
+        let count: u64 = db
+            .query_row(&format!("SELECT count(*) FROM {table}"), [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert_eq!(count, 0, "denied submit mutated {table}");
+    }
+}
 #[test]
 fn real_socket_rejects_identity_paths_unknown_fields_and_deep_frames() {
     let d = start();
@@ -161,6 +173,7 @@ fn m2_real_transport_rejects_unauthorized_profile_target() {
         |root| digest = prepare_proposal(root, &proposal),
     );
     assert_eq!(submit(&d, &digest)["error"], "ACTOR_SCOPE");
+    assert_no_submission_mutation(&d);
 }
 
 #[test]
@@ -171,6 +184,7 @@ fn m2_real_transport_rejects_wrong_runtime_target() {
     let mut digest = String::new();
     let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
     assert_eq!(submit(&d, &digest)["error"], "PROFILE_MISMATCH");
+    assert_no_submission_mutation(&d);
 }
 
 #[test]
@@ -181,6 +195,7 @@ fn m2_real_transport_rejects_bad_artifact_binding() {
     let mut digest = String::new();
     let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
     assert_eq!(submit(&d, &digest)["error"], "ARTIFACT_MISMATCH");
+    assert_no_submission_mutation(&d);
 }
 
 #[test]
@@ -191,6 +206,7 @@ fn m2_real_transport_rejects_stale_preimage() {
     let mut digest = String::new();
     let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
     assert_eq!(submit(&d, &digest)["error"], "PREIMAGE_MISMATCH");
+    assert_no_submission_mutation(&d);
 }
 
 #[path = "common/mod.rs"]
