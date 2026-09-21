@@ -1,5 +1,8 @@
-use super::secure::{validate, Dir};
-use crate::{error::require, Result};
+use super::{
+    file::snapshot,
+    secure::{validate, Dir},
+};
+use crate::{error::require, Error, Result};
 use std::fs::File;
 use std::os::fd::AsRawFd;
 use std::os::unix::fs::MetadataExt;
@@ -38,6 +41,25 @@ impl MutationGuard {
             "MUTEX_REPLACED",
         )?;
         if !readonly {
+            match root.open_file("runtime-closure-recovery-pending.json", libc::O_RDONLY, 0) {
+                Err(error) if error.code() == "ABSENT" => (),
+                Err(error) => return Err(error),
+                Ok(pending) => {
+                    let image = snapshot(&pending, root.uid, 64 * 1024)?;
+                    let value = crate::verification::documents::strict_json(&image.bytes)?;
+                    require(
+                        value["operation_id"]
+                            == "pdc-fasttrack-runtime-closure-recovery-20260921-02"
+                            && value["state"] == "MUTATION_PENDING"
+                            && value["retry_forbidden"] == true
+                            && value.as_object().is_some_and(|v| v.len() == 3),
+                        "RUNTIME_CLOSURE_PENDING_MALFORMED",
+                    )?;
+                    return Err(Error::new("RUNTIME_CLOSURE_QUARANTINED"));
+                }
+            }
+        }
+        if !readonly {
             file.sync_all()?;
             root.file.sync_all()?;
         }
@@ -57,5 +79,56 @@ impl Drop for MutationGuard {
         unsafe {
             libc::flock(self.file.as_raw_fd(), libc::LOCK_UN);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn durable_runtime_closure_pending_blocks_mutation_but_not_read_only_join() {
+        let temp = tempfile::tempdir_in(crate::fs::FixtureRoots::kernel_temp().unwrap()).unwrap();
+        let uid = unsafe { libc::geteuid() };
+        let gid = unsafe { libc::getegid() };
+        let root = Dir::open(temp.path(), uid).unwrap();
+        crate::fs::file::write_new(&root, "production.lock", b"", uid, gid, 0o600).unwrap();
+        drop(MutationGuard::acquire(&root, false).unwrap());
+        crate::fs::file::write_new(
+            &root,
+            "runtime-closure-recovery-pending.json",
+            br#"{"operation_id":"pdc-fasttrack-runtime-closure-recovery-20260921-02","retry_forbidden":true,"state":"MUTATION_PENDING"}"#,
+            uid,
+            gid,
+            0o400,
+        )
+        .unwrap();
+        assert_eq!(
+            MutationGuard::acquire(&root, false).err().unwrap().code(),
+            "RUNTIME_CLOSURE_QUARANTINED"
+        );
+        drop(MutationGuard::acquire_readonly(&root).unwrap());
+    }
+
+    #[test]
+    fn malformed_runtime_closure_pending_fails_closed() {
+        let temp = tempfile::tempdir_in(crate::fs::FixtureRoots::kernel_temp().unwrap()).unwrap();
+        let uid = unsafe { libc::geteuid() };
+        let gid = unsafe { libc::getegid() };
+        let root = Dir::open(temp.path(), uid).unwrap();
+        crate::fs::file::write_new(&root, "production.lock", b"", uid, gid, 0o600).unwrap();
+        crate::fs::file::write_new(
+            &root,
+            "runtime-closure-recovery-pending.json",
+            br#"{"state":"MUTATION_PENDING"}"#,
+            uid,
+            gid,
+            0o400,
+        )
+        .unwrap();
+        assert_eq!(
+            MutationGuard::acquire(&root, false).err().unwrap().code(),
+            "RUNTIME_CLOSURE_PENDING_MALFORMED"
+        );
     }
 }

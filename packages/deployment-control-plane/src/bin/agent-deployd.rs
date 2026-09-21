@@ -9,6 +9,8 @@ fn main() {
         deployment_control_plane::run_first_live_recovery_and_enable()
     } else if args == ["--runtime-closure-recovery"] {
         deployment_control_plane::run_runtime_closure_recovery()
+    } else if args == ["--runtime-closure-recovery-status"] {
+        deployment_control_plane::runtime_closure_recovery_status()
     } else if args == ["--first-live"] {
         deployment_control_plane::run_first_live()
     } else if args

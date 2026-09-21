@@ -25,6 +25,7 @@ pub use native_profile::{
     parse_launchd, ComponentImage, EnrolledFile, NativeEnrollment, NativeKind, RuntimeStartup,
     ServiceEnrollment,
 };
+pub(crate) use process::prove_no_service_process;
 pub use process::ProcessIdentity;
 pub use service::ServiceImage;
 use service::{FixtureService, ServiceDriver};

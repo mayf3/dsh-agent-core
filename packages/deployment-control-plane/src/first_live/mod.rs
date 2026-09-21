@@ -77,3 +77,4 @@ mod sudo;
 
 mod runtime_closure_recovery;
 pub use runtime_closure_recovery::run as run_runtime_closure_recovery;
+pub use runtime_closure_recovery::status as runtime_closure_recovery_status;

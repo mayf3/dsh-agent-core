@@ -26,6 +26,14 @@ mod first_live;
 pub use first_live::run_first_live;
 pub use first_live::run_runtime_closure_recovery;
 
+pub fn runtime_closure_recovery_status() -> Result<()> {
+    use std::io::Write;
+    let mut bytes = trust::canonical_bytes(&first_live::runtime_closure_recovery_status()?)?;
+    bytes.push(b'\n');
+    std::io::stdout().write_all(&bytes)?;
+    Ok(())
+}
+
 pub fn run_first_live_fence_capability_probe() -> Result<serde_json::Value> {
     first_live::run_fence_capability_probe()
 }
