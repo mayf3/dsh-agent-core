@@ -182,23 +182,26 @@ pub(super) fn prove(
                 Some("Application") | Some("User") => format!("pid/{}/{id}", identity.pid),
                 _ => return Err(Error::new("HOST_ROLE_ATTRIBUTION")),
             };
-            let found = match ctx.query_optional(&target)? {
-                Some(found) => found,
-                None => {
-                    // Transient Apple XPC services (ANE/MTL compilers, …) exit
-                    // between the census snapshot and this launch-provenance
-                    // query; their launchd record then reads "not running" or
-                    // is reaped. The census pid decides: still alive means real
-                    // launch drift (fail closed); gone means the observation
-                    // retires and the census records the retirement.
-                    if reader::identity_optional(identity.pid)?.is_some() {
-                        return Err(Error::new("HOST_LAUNCH_UNPROVEN"));
-                    }
-                    return Ok(None);
-                }
-            };
-            attribution::join(role, identity, &found.metadata)?;
-            Some(found)
+            let found = ctx.query_optional(&target)?;
+            if let Some(found) = &found {
+                attribution::join(role, identity, &found.metadata)?;
+            }
+            if reader::identity_optional(identity.pid)?.is_none() {
+                // Exited between the census snapshot and this query (or during
+                // attribution): retire with evidence.
+                return Ok(None);
+            }
+            if found.is_none() {
+                // launchd keeps no live own-pid record for XPC service
+                // instances (op -27/-28 + offline evidence: every live
+                // XPC-role process is launchd-parented while its own-pid
+                // record is missing or stale), so provenance falls back to
+                // the kernel launchd parentage; the record stays
+                // opportunistic evidence when present. Alive with neither
+                // signal is launch drift (fail closed).
+                require(identity.parent_pid == 1, "HOST_LAUNCH_UNPROVEN")?;
+            }
+            found
         }
         _ => {
             let mut found = None;
