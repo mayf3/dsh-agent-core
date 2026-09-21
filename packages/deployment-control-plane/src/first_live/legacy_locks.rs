@@ -38,7 +38,6 @@ const LEGACY_ANCESTOR: &str = "/usr/local/var/agent-core";
 const LEGACY_LOCK_CHILD: &str = "production-mutation-locks";
 const FENCE_PROBE_PARENT: &str = "/private/var/db/agent-deployd";
 const FENCE_PROBE_NAME: &str = "first-live-fence-capability-p4r13";
-const FENCE_PROBE_PARENT_DEVICE: u64 = 16_777_230;
 const FENCE_PROBE_PARENT_INODE: u64 = 85_616_151;
 // Current macOS/XNU SF_IMMUTABLE. P4R12 proved that SF_NOUNLINK could not be
 // established on the exact production APFS inode. Keep this local: this is not
@@ -563,19 +562,28 @@ pub(super) fn run_fence_capability_probe() -> Result<serde_json::Value> {
         unsafe { libc::geteuid() } == 0,
         "LEGACY_FENCE_PROBE_ROOT_REQUIRED",
     )?;
+    let volume = Dir::open(Path::new("/private/var/db"), 0)?;
     let parent = Dir::open(Path::new(FENCE_PROBE_PARENT), 0)?;
-    let metadata = parent.file.metadata()?;
+    let identity = Identity::of(&parent.file)?;
     require(
-        metadata.dev() == FENCE_PROBE_PARENT_DEVICE
-            && metadata.ino() == FENCE_PROBE_PARENT_INODE
-            && metadata.uid() == 0
-            && metadata.gid() == 0
-            && metadata.mode() & 0o7777 == 0o700
-            && NativeFenceFlags::flags(&parent.file)? == 0,
+        fence_probe_parent_matches(
+            &identity,
+            volume.file.metadata()?.dev(),
+            NativeFenceFlags::flags(&parent.file)?,
+        ),
         "LEGACY_FENCE_PROBE_PARENT",
     )?;
     reject_acl(&parent.file)?;
     fence_capability_probe_at::<NativeFenceFlags>(&parent, FENCE_PROBE_NAME)
+}
+
+fn fence_probe_parent_matches(identity: &Identity, volume_device: u64, flags: u32) -> bool {
+    identity.device == volume_device
+        && identity.inode == FENCE_PROBE_PARENT_INODE
+        && identity.uid == 0
+        && identity.gid == 0
+        && identity.mode == 0o700
+        && flags == 0
 }
 
 fn retained_fence_requires_review<F: FenceFlags>(

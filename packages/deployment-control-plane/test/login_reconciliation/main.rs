@@ -1,4 +1,34 @@
 use super::*;
+use std::os::unix::fs::MetadataExt;
+
+#[test]
+fn bootstrap_lock_device_is_boot_local_while_binding_device_stays_frozen() {
+    let t = crate::common::private::temp();
+    let roots = crate::fs::FixtureRoots::open(t.path()).unwrap();
+    crate::fs::file::write_new(
+        &roots.root,
+        "bootstrap.lock",
+        b"",
+        unsafe { libc::geteuid() },
+        roots.root.file.metadata().unwrap().gid(),
+        0o600,
+    )
+    .unwrap();
+    let inode = roots
+        .root
+        .open_file("bootstrap.lock", libc::O_RDONLY, 0)
+        .unwrap()
+        .metadata()
+        .unwrap()
+        .ino();
+    state::lock(&roots.root, 16_777_230, inode, false).unwrap();
+    assert_eq!(
+        state::lock(&roots.root, 16_777_232, inode, false)
+            .unwrap_err()
+            .code(),
+        "LOGIN_LOCK_BINDING"
+    );
+}
 use crate::{bootstrap::genesis_install::append, error::require};
 use serde_json::json;
 use std::fs;
