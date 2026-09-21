@@ -13,6 +13,7 @@ use crate::{
 };
 use serde_json::Value;
 use std::{
+    net::{SocketAddr, TcpStream},
     os::unix::fs::MetadataExt,
     path::Path,
     time::{Duration, Instant},
@@ -32,7 +33,7 @@ const EMPTY_SHA: &str = "95db062c891d1d3628c1f2fde50e2e1801b8568f99994b1e95d23ff
 const AUTHORITY_SHA: &str = "e0800b0fde6fc46b2873decd0f83c9b807b48b56cc3c9ad9cf578a5685b5b6fe";
 const INVENTORY_SHA: &str = "dd546e83d724da67dba5b02da5af6bf0c488a2ff3dfabeca35748aa24b2da0b5";
 const PLIST_BEFORE_SHA: &str = "dc715fd8b73c6debfd35dd54c61fd55f38ff0e3f0f8937ebdc7cfa4afde3c3d9";
-const PLIST_AFTER_SHA: &str = "0d1be037237b800f70e606b859f85bba5fbbc20be884f03431b48a1359c87701";
+const PLIST_AFTER_SHA: &str = "27f8c42989d7ffa09dc49707b54cdb7d741357a5eceab42269aad1fa2e63a8f9";
 const SOURCE: &str = "2097e4f948dca77a12d24afa1ff9fb42e9ec7756";
 const PROVENANCE_SHA: &str = "bede66f18fa352b09c58b56bc045a180181145c9f2a2ea56db7e8d5bc9a5bb71";
 const WORKFLOW_SHA: &str = "6f116d94b58a739216d2af2b25dfd51b32268aba26dcea281f16199f70ff93b2";
@@ -120,6 +121,52 @@ fn linked() -> Result<()> {
             && std::fs::read_link(path)?
                 == Path::new("/usr/local/libexec/agent-core/config/agents.json"),
         "RUNTIME_CLOSURE_AUTHORITY_LINK_DRIFT",
+    )
+}
+
+fn require_listener_absent(address: SocketAddr) -> Result<()> {
+    match TcpStream::connect_timeout(&address, Duration::from_secs(1)) {
+        Err(error) if error.kind() == std::io::ErrorKind::ConnectionRefused => Ok(()),
+        _ => Err(Error::new("RUNTIME_CLOSURE_FOREIGN_LISTENER")),
+    }
+}
+
+fn verify_payload(app: &Dir, node_dir: &Dir) -> Result<()> {
+    require(
+        sha(&snapshot(
+            &app.open_file("pack-provenance.json", libc::O_RDONLY, 0)?,
+            505,
+            1024 * 1024,
+        )?
+        .bytes)
+            == PROVENANCE_SHA,
+        "RUNTIME_CLOSURE_APP_DRIFT",
+    )?;
+    for (path, expected) in [
+        ("packages/broker/src/capabilities/workflow.js", WORKFLOW_SHA),
+        ("packages/broker/src/capabilities/self-ops.js", SELF_OPS_SHA),
+        ("scripts/production-runtime.mjs", RUNTIME_SHA),
+    ] {
+        require(
+            sha(&snapshot(
+                &inventory_path::descendant(&app.file, path, libc::O_RDONLY)?,
+                505,
+                128 * 1024 * 1024,
+            )?
+            .bytes)
+                == expected,
+            "RUNTIME_CLOSURE_APP_DRIFT",
+        )?;
+    }
+    require(
+        sha(&snapshot(
+            &node_dir.open_file("node", libc::O_RDONLY, 0)?,
+            0,
+            512 * 1024 * 1024,
+        )?
+        .bytes)
+            == NODE_SHA,
+        "RUNTIME_CLOSURE_NODE_DRIFT",
     )
 }
 
@@ -297,43 +344,9 @@ fn execute() -> Result<Value> {
             && sha(&plist_before.bytes) == PLIST_BEFORE_SHA,
         "RUNTIME_CLOSURE_PLIST_DRIFT",
     )?;
-    require(
-        sha(&snapshot(
-            &app.open_file("pack-provenance.json", libc::O_RDONLY, 0)?,
-            505,
-            1024 * 1024,
-        )?
-        .bytes)
-            == PROVENANCE_SHA,
-        "RUNTIME_CLOSURE_APP_DRIFT",
-    )?;
-    for (path, expected) in [
-        ("packages/broker/src/capabilities/workflow.js", WORKFLOW_SHA),
-        ("packages/broker/src/capabilities/self-ops.js", SELF_OPS_SHA),
-        ("scripts/production-runtime.mjs", RUNTIME_SHA),
-    ] {
-        require(
-            sha(&snapshot(
-                &inventory_path::descendant(&app.file, path, libc::O_RDONLY)?,
-                505,
-                128 * 1024 * 1024,
-            )?
-            .bytes)
-                == expected,
-            "RUNTIME_CLOSURE_APP_DRIFT",
-        )?;
-    }
     let node_dir = Dir::open(Path::new(&format!("{LIVE}/node-runtime/bin")), 0)?;
-    require(
-        sha(&snapshot(
-            &node_dir.open_file("node", libc::O_RDONLY, 0)?,
-            0,
-            512 * 1024 * 1024,
-        )?
-        .bytes)
-            == NODE_SHA,
-        "RUNTIME_CLOSURE_NODE_DRIFT",
-    )?;
+    verify_payload(&app, &node_dir)?;
+    require_listener_absent("127.0.0.1:8790".parse().unwrap())?;
     let prior_service = current_service(&area, "preimage-service")?;
     require(
         prior_service.code == Some(0)
@@ -341,6 +354,38 @@ fn execute() -> Result<Value> {
                 .stdout
                 .contains("d602b592fad345fb1c9adebe2bc6611a6f5cfdc2"),
         "RUNTIME_CLOSURE_SERVICE_DRIFT",
+    )?;
+    let prior_fields = crate::transaction::parse_launchd(&prior_service.stdout)?;
+    require(
+        prior_fields.get("state").map(String::as_str) != Some("running")
+            && !prior_fields.contains_key("pid"),
+        "RUNTIME_CLOSURE_SERVICE_DRIFT",
+    )?;
+    let expected_runtime_argv = vec![
+        format!("{LIVE}/node-runtime/bin/node"),
+        format!("{LIVE}/app/scripts/production-runtime.mjs"),
+        "--root".into(),
+        "/Users/authsvc/.agent-core".into(),
+        "--catchup".into(),
+        "0".into(),
+    ];
+    crate::transaction::prove_no_service_process(&expected_runtime_argv)?;
+    journal::append(
+        &area,
+        "private-preimage.json",
+        &serde_json::json!({
+            "operation_id":OP,
+            "agents":agents_before,
+            "credentials":credentials_before,
+            "plist":plist_before,
+            "harness":"ABSENT",
+            "staging":"ABSENT",
+            "service_output":prior_service.stdout,
+            "service_fields":prior_fields,
+            "runtime_process":"ABSENT",
+            "runtime_argv":expected_runtime_argv,
+            "rollback":"UNSAFE_ROLLBACK_QUARANTINE_ONLY"
+        }),
     )?;
     journal::append(
         &area,
@@ -382,6 +427,11 @@ fn execute() -> Result<Value> {
         cp.code == Some(0) && cp.stdout.is_empty() && cp.stderr.is_empty(),
         "RUNTIME_CLOSURE_COPY_UNKNOWN",
     )?;
+    journal::append(
+        &area,
+        "harness-copy-command-result.json",
+        &serde_json::json!({"code":cp.code,"stdout":cp.stdout,"stderr":cp.stderr}),
+    )?;
     let stage_handle = live.open_file(STAGING, libc::O_RDONLY | libc::O_DIRECTORY, 0)?;
     let staged = Dir {
         file: stage_handle,
@@ -394,6 +444,11 @@ fn execute() -> Result<Value> {
         &serde_json::json!({"tree_digest":digest(&staged_tree)?,"entries":staged_tree.entries.len()}),
     )?;
 
+    journal::append(
+        &area,
+        "agents-prepare-intent.json",
+        &serde_json::json!({"name":".agents.json.pdc-runtime-closure","sha256":AUTHORITY_SHA}),
+    )?;
     let prepared_agents = stage_file(
         &config,
         ".agents.json.pdc-runtime-closure",
@@ -401,6 +456,12 @@ fn execute() -> Result<Value> {
         505,
         601,
         0o600,
+    )?;
+    journal::append(&area, "agents-prepare-result.json", &prepared_agents)?;
+    journal::append(
+        &area,
+        "plist-prepare-intent.json",
+        &serde_json::json!({"name":".ai.agent-core.runtime.plist.pdc-runtime-closure","sha256":PLIST_AFTER_SHA}),
     )?;
     let prepared_plist = stage_file(
         &plist_dir,
@@ -410,10 +471,16 @@ fn execute() -> Result<Value> {
         0,
         0o644,
     )?;
+    journal::append(&area, "plist-prepare-result.json", &prepared_plist)?;
     journal::append(
         &area,
         "filesystem-apply-intent.json",
         &serde_json::json!({"agents_before":EMPTY_SHA,"agents_after":AUTHORITY_SHA,"plist_before":PLIST_BEFORE_SHA,"plist_after":PLIST_AFTER_SHA,"harness_tree":digest(&staged_tree)?}),
+    )?;
+    journal::append(
+        &area,
+        "agents-apply-intent.json",
+        &serde_json::json!({"preimage":EMPTY_SHA,"postimage":AUTHORITY_SHA}),
     )?;
     let agents_after = apply_file(
         &config,
@@ -422,12 +489,32 @@ fn execute() -> Result<Value> {
         &agents_before,
         &prepared_agents,
     )?;
+    journal::append(
+        &area,
+        "agents-apply-result.json",
+        &serde_json::json!({"inode":agents_after.inode,"sha256":AUTHORITY_SHA}),
+    )?;
+    journal::append(
+        &area,
+        "plist-apply-intent.json",
+        &serde_json::json!({"preimage":PLIST_BEFORE_SHA,"postimage":PLIST_AFTER_SHA}),
+    )?;
     let plist_after = apply_file(
         &plist_dir,
         PLIST,
         ".ai.agent-core.runtime.plist.pdc-runtime-closure",
         &plist_before,
         &prepared_plist,
+    )?;
+    journal::append(
+        &area,
+        "plist-apply-result.json",
+        &serde_json::json!({"inode":plist_after.inode,"sha256":PLIST_AFTER_SHA}),
+    )?;
+    journal::append(
+        &area,
+        "harness-apply-intent.json",
+        &serde_json::json!({"preimage":"ABSENT","postimage_tree":digest(&staged_tree)?}),
     )?;
     files::absent(&live, "harness")?;
     live.rename(STAGING, &live, "harness")?;
@@ -438,6 +525,11 @@ fn execute() -> Result<Value> {
     require(
         inventory::census(&installed_harness, &staged_tree, false, true)? == digest(&staged_tree)?,
         "RUNTIME_CLOSURE_HARNESS_POSTIMAGE",
+    )?;
+    journal::append(
+        &area,
+        "harness-apply-result.json",
+        &serde_json::json!({"tree_digest":digest(&staged_tree)?}),
     )?;
     linked()?;
     require(
@@ -539,6 +631,39 @@ fn execute() -> Result<Value> {
         crate::transaction::first_live_process_identity(process_identity.pid)? == process_identity,
         "RUNTIME_CLOSURE_PROCESS_DRIFT",
     )?;
+    let scheduler_health = crate::verification::native_io::get(None)?;
+    let scheduler_health_value = crate::verification::documents::strict_json(&scheduler_health)?;
+    crate::verification::watchdog::canonical_health(&scheduler_health_value, SOURCE)?;
+    let generated = scheduler_health_value["generatedAt"]
+        .as_u64()
+        .ok_or(Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?;
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|_| Error::new("RUNTIME_CLOSURE_HEALTH_TIME"))?
+        .as_millis() as u64;
+    require(
+        generated <= now && now - generated <= 60_000,
+        "RUNTIME_CLOSURE_HEALTH_TIME",
+    )?;
+    journal::append(
+        &area,
+        "generation-health.json",
+        &serde_json::json!({"source":SOURCE,"pid":process_identity.pid,"scheduler_health_sha256":sha(&scheduler_health),"generated_at":generated}),
+    )?;
+    let final_service = current_service(&area, "runtime-final-generation-readback")?;
+    require(
+        final_service.code == Some(0),
+        "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
+    )?;
+    let final_fields = crate::transaction::parse_launchd(&final_service.stdout)?;
+    require(
+        final_fields.get("state").map(String::as_str) == Some("running")
+            && final_fields.get("pid").and_then(|v| v.parse::<u32>().ok())
+                == Some(process_identity.pid)
+            && crate::transaction::first_live_process_identity(process_identity.pid)?
+                == process_identity,
+        "RUNTIME_CLOSURE_PROCESS_DRIFT",
+    )?;
     require(
         sha(&snapshot(
             &config.open_file("agents.json", libc::O_RDONLY, 0)?,
@@ -560,6 +685,7 @@ fn execute() -> Result<Value> {
         inventory::census(&installed_harness, &staged_tree, false, true)? == digest(&staged_tree)?,
         "RUNTIME_CLOSURE_FINAL_DRIFT",
     )?;
+    verify_payload(&app, &node_dir)?;
     require(
         snapshot(
             &config.open_file("agent-credentials.json", libc::O_RDONLY, 0)?,
@@ -587,16 +713,204 @@ pub fn run() -> Result<()> {
         Err(error) => {
             if let Ok(control) = Dir::open(Path::new("/private/var/db/agent-deployd"), 0) {
                 if let Ok(area) = control.child(OP) {
+                    let state = match control.open_file(
+                        "runtime-closure-recovery-pending.json",
+                        libc::O_RDONLY,
+                        0,
+                    ) {
+                        Err(absent) if absent.code() == "ABSENT" => "BLOCKED_NO_MUTATION",
+                        _ => "QUARANTINED",
+                    };
                     let _ = journal::append(
                         &area,
                         "failure.json",
-                        &serde_json::json!({"operation_id":OP,"state":"UNKNOWN_RETAINED","code":error.code(),"retry_forbidden":true}),
+                        &serde_json::json!({"operation_id":OP,"state":state,"code":error.code(),"retry_forbidden":true,"rollback":"UNSAFE_ROLLBACK"}),
                     );
                 }
             }
             Err(error)
         }
     }
+}
+
+fn face(
+    image: &FileImage,
+    preimage: &FileImage,
+    post_sha: &str,
+    uid: u32,
+    gid: u32,
+    mode: u32,
+) -> &'static str {
+    if image == preimage {
+        "PREIMAGE"
+    } else if image.uid == uid
+        && image.gid == gid
+        && image.mode == mode
+        && sha(&image.bytes) == post_sha
+    {
+        "POSTIMAGE"
+    } else {
+        "DRIFT"
+    }
+}
+
+/// Bounded read-only discriminator for a retained recovery fence. It never
+/// clears pending state, writes a journal record, restarts a service, or replays
+/// an effect.
+pub fn status() -> Result<Value> {
+    require(
+        unsafe { libc::geteuid() } == 0,
+        "RUNTIME_CLOSURE_ROOT_REQUIRED",
+    )?;
+    require(
+        std::env::current_exe()? == Path::new(EXECUTABLE),
+        "RUNTIME_CLOSURE_FIXED_EXECUTABLE",
+    )?;
+    let control = Dir::open(Path::new("/private/var/db/agent-deployd"), 0)?;
+    let guard = MutationGuard::acquire_readonly(&control)?;
+    guard.binds(&control)?;
+    let pending: Value = files::read(&control, "runtime-closure-recovery-pending.json")?;
+    require(
+        pending["operation_id"] == OP
+            && pending["state"] == "MUTATION_PENDING"
+            && pending["retry_forbidden"] == true
+            && pending.as_object().is_some_and(|v| v.len() == 3),
+        "RUNTIME_CLOSURE_PENDING_MALFORMED",
+    )?;
+    let area = control.child(OP)?;
+    let preimage: Value = files::read(&area, "private-preimage.json")?;
+    let agents_pre: FileImage = serde_json::from_value(preimage["agents"].clone())?;
+    let plist_pre: FileImage = serde_json::from_value(preimage["plist"].clone())?;
+    let credentials_pre: FileImage = serde_json::from_value(preimage["credentials"].clone())?;
+    let config = Dir::open(Path::new(&format!("{LIVE}/config")), 505)?;
+    let plist_dir = Dir::open(Path::new("/Library/LaunchDaemons"), 0)?;
+    let agents = snapshot(
+        &config.open_file("agents.json", libc::O_RDONLY, 0)?,
+        505,
+        1024 * 1024,
+    )?;
+    let plist = snapshot(
+        &plist_dir.open_file(PLIST, libc::O_RDONLY, 0)?,
+        0,
+        1024 * 1024,
+    )?;
+    let credentials = snapshot(
+        &config.open_file("agent-credentials.json", libc::O_RDONLY, 0)?,
+        505,
+        64 * 1024 * 1024,
+    )?;
+    let packet = Dir::open(Path::new(PACKET), 0)?;
+    let inventory_raw = packet_file(
+        &packet,
+        "harness-inventory.json",
+        INVENTORY_SHA,
+        64 * 1024 * 1024,
+    )?;
+    let inventory: inventory::Tree = serde_json::from_slice(&inventory_raw)?;
+    let live = Dir::open(Path::new(LIVE), 0)?;
+    let harness = match live.open_file("harness", libc::O_RDONLY | libc::O_DIRECTORY, 0) {
+        Err(error) if error.code() == "ABSENT" => "ABSENT".to_string(),
+        Err(_) => "UNKNOWN".to_string(),
+        Ok(file) => {
+            match inventory::capture_equivalent(&Dir { file, uid: 505 }, &inventory, true)
+                .and_then(|captured| digest(&captured))
+            {
+                Ok(captured_digest) => {
+                    match files::read::<Value>(&area, "harness-stage-result.json") {
+                        Ok(record) if record["tree_digest"] == captured_digest => {
+                            "POSTIMAGE".into()
+                        }
+                        _ => "UNKNOWN".into(),
+                    }
+                }
+                Err(_) => "DRIFT".into(),
+            }
+        }
+    };
+    let staging = match live.open_file(STAGING, libc::O_RDONLY | libc::O_DIRECTORY, 0) {
+        Err(error) if error.code() == "ABSENT" => "ABSENT".to_string(),
+        Err(_) => "UNKNOWN".to_string(),
+        Ok(file) => {
+            match inventory::capture_equivalent(&Dir { file, uid: 505 }, &inventory, true)
+                .and_then(|captured| digest(&captured))
+            {
+                Ok(captured_digest) => {
+                    match files::read::<Value>(&area, "harness-stage-result.json") {
+                        Ok(record) if record["tree_digest"] == captured_digest => "STAGED".into(),
+                        _ => "UNKNOWN".into(),
+                    }
+                }
+                Err(_) => "DRIFT".into(),
+            }
+        }
+    };
+    let service = process::run(
+        process::Tool::Launchctl,
+        LAUNCHCTL_SHA,
+        &["print".into(), LABEL.into()],
+        None,
+        10,
+    )?;
+    let mut service_face = if service.code == Some(113) {
+        "ABSENT".to_string()
+    } else if service.code == Some(0) {
+        let fields = crate::transaction::parse_launchd(&service.stdout)?;
+        if service
+            .stdout
+            .contains("d602b592fad345fb1c9adebe2bc6611a6f5cfdc2")
+            && fields.get("state").map(String::as_str) != Some("running")
+            && !fields.contains_key("pid")
+        {
+            "PREIMAGE".to_string()
+        } else if service.stdout.contains(SOURCE)
+            && fields.get("state").map(String::as_str) == Some("running")
+        {
+            let pid = fields
+                .get("pid")
+                .and_then(|value| value.parse::<u32>().ok())
+                .ok_or(Error::new("RUNTIME_CLOSURE_GENERATION_UNKNOWN"))?;
+            let identity = crate::transaction::first_live_process_identity(pid)?;
+            require(
+                identity.uid == 505
+                    && identity.gid == 601
+                    && identity.executable == format!("{LIVE}/node-runtime/bin/node"),
+                "RUNTIME_CLOSURE_PROCESS_IDENTITY",
+            )?;
+            "POSTIMAGE".to_string()
+        } else {
+            "UNKNOWN".to_string()
+        }
+    } else {
+        "UNKNOWN".to_string()
+    };
+    if service_face == "POSTIMAGE" {
+        let canonical = crate::transaction::health::probe(
+            "127.0.0.1:8790".parse().unwrap(),
+            Duration::from_secs(2),
+        )
+        .and_then(|_| crate::verification::native_io::get(None))
+        .and_then(|bytes| {
+            let value = crate::verification::documents::strict_json(&bytes)?;
+            crate::verification::watchdog::canonical_health(&value, SOURCE)?;
+            Ok(())
+        });
+        if canonical.is_err() {
+            service_face = "UNKNOWN".into();
+        }
+    }
+    let journal_files = area.names_bounded(128)?;
+    Ok(serde_json::json!({
+        "operation_id":OP,
+        "state":"READ_ONLY_RECONCILIATION",
+        "agents":face(&agents,&agents_pre,AUTHORITY_SHA,505,601,0o600),
+        "plist":face(&plist,&plist_pre,PLIST_AFTER_SHA,0,0,0o644),
+        "credentials":if credentials==credentials_pre {"PREIMAGE"} else {"DRIFT"},
+        "harness":harness,
+        "staging":staging,
+        "service":service_face,
+        "journal_files":journal_files,
+        "production_mutation":false
+    }))
 }
 
 #[cfg(test)]
@@ -646,5 +960,27 @@ mod tests {
         write_new(&dir, "value", b"foreign", uid, gid, 0o600).unwrap();
         assert!(apply_file(&dir, "value", "next", &before, &prepared).is_err());
         assert_eq!(files::raw(&dir, "value").unwrap(), b"foreign");
+    }
+
+    #[test]
+    fn status_face_never_labels_unattributed_bytes_as_postimage() {
+        let pre = FileImage {
+            bytes: b"before".to_vec(),
+            uid: 1,
+            gid: 2,
+            mode: 0o600,
+            device: 3,
+            inode: 4,
+            xattrs: Default::default(),
+            mtime_seconds: 5,
+            mtime_nanos: 6,
+        };
+        assert_eq!(face(&pre, &pre, &sha(b"after"), 1, 2, 0o600), "PREIMAGE");
+        let mut post = pre.clone();
+        post.bytes = b"after".to_vec();
+        post.inode = 7;
+        assert_eq!(face(&post, &pre, &sha(b"after"), 1, 2, 0o600), "POSTIMAGE");
+        post.bytes = b"foreign".to_vec();
+        assert_eq!(face(&post, &pre, &sha(b"after"), 1, 2, 0o600), "DRIFT");
     }
 }
