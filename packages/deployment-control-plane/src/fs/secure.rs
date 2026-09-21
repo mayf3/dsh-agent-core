@@ -208,7 +208,15 @@ pub(crate) fn validate(file: &File, uid: u32, directory: bool) -> Result<()> {
         m.uid() == uid || (directory && m.uid() == 0),
         "UNSAFE_OWNER",
     )?;
-    require(m.mode() & 0o7022 == 0, "UNSAFE_MODE")?;
+    // The setgid bit on a DIRECTORY is a legitimate collaboration semantic
+    // (group-inherit) and carries no execution risk; setuid-on-dir, group-write
+    // and other-write remain rejected. Files keep the full 0o7022 rejection.
+    let forbidden = if directory {
+        0o7022 & !0o2000
+    } else {
+        0o7022
+    };
+    require(m.mode() & forbidden == 0, "UNSAFE_MODE")?;
     reject_acl(file)?;
     #[cfg(target_os = "macos")]
     if !directory {
@@ -290,4 +298,56 @@ pub(crate) fn validate_platform_file(file: &File) -> Result<()> {
         "UNSAFE_FLAGS",
     )?;
     reject_acl(file)
+}
+
+#[cfg(test)]
+mod validate_mode_tests {
+    use super::validate;
+    use std::os::unix::fs::PermissionsExt;
+
+    fn check(path: &str, uid: u32, directory: bool) -> Result<(), crate::Error> {
+        let f = std::fs::File::open(path).unwrap();
+        let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700));
+        let r = validate(&f, uid, directory);
+        let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700));
+        r
+    }
+
+    #[test]
+    fn setgid_on_directory_is_legitimate_group_inherit() {
+        let dir = std::env::temp_dir().join("pdc_sg_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir(&dir).unwrap();
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o2750)).unwrap();
+        let f = std::fs::File::open(&dir).unwrap();
+        // owner matches (uid 502 process, temp dir owned by 502): setgid dir accepted
+        let r = validate(&f, 502, true);
+        std::fs::remove_dir_all(&dir).unwrap();
+        assert!(r.is_ok(), "{r:?}");
+    }
+
+    #[test]
+    fn group_and_other_write_still_rejected_on_directories() {
+        let dir = std::env::temp_dir().join("pdc_gw_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir(&dir).unwrap();
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o2770)).unwrap();
+        let f = std::fs::File::open(&dir).unwrap();
+        let r = validate(&f, 502, true);
+        std::fs::remove_dir_all(&dir).unwrap();
+        assert!(r.is_err());
+        assert_eq!(r.unwrap_err().code(), "UNSAFE_MODE");
+    }
+
+    #[test]
+    fn setuid_on_file_still_rejected() {
+        let path = std::env::temp_dir().join("pdc_su_test");
+        std::fs::write(&path, b"x").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o4600)).unwrap();
+        let f = std::fs::File::open(&path).unwrap();
+        let r = validate(&f, 502, false);
+        let _ = std::fs::remove_file(&path);
+        assert!(r.is_err());
+        assert_eq!(r.unwrap_err().code(), "UNSAFE_MODE");
+    }
 }
