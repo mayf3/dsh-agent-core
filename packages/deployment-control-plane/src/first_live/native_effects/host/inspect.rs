@@ -58,7 +58,11 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
     }
     Ok(result)
 }
-pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Result<Observation> {
+pub(super) fn prove(
+    ctx: &Context<'_>,
+    role: &Role,
+    identity: &Identity,
+) -> Result<Option<Observation>> {
     ctx.check()?;
     require(
         reader::identity(identity.pid)? == *identity,
@@ -178,7 +182,21 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
                 Some("Application") | Some("User") => format!("pid/{}/{id}", identity.pid),
                 _ => return Err(Error::new("HOST_ROLE_ATTRIBUTION")),
             };
-            let found = ctx.query(&target)?;
+            let found = match ctx.query_optional(&target)? {
+                Some(found) => found,
+                None => {
+                    // Transient Apple XPC services (ANE/MTL compilers, …) exit
+                    // between the census snapshot and this launch-provenance
+                    // query; their launchd record then reads "not running" or
+                    // is reaped. The census pid decides: still alive means real
+                    // launch drift (fail closed); gone means the observation
+                    // retires and the census records the retirement.
+                    if reader::identity_optional(identity.pid)?.is_some() {
+                        return Err(Error::new("HOST_LAUNCH_UNPROVEN"));
+                    }
+                    return Ok(None);
+                }
+            };
             attribution::join(role, identity, &found.metadata)?;
             Some(found)
         }
@@ -217,7 +235,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
         "HOST_CENSUS_DRIFT",
     )?;
     ctx.check()?;
-    Ok(Observation {
+    Ok(Some(Observation {
         identity: identity.clone(),
         role: role.class.clone(),
         image: code,
@@ -226,7 +244,7 @@ pub(super) fn prove(ctx: &Context<'_>, role: &Role, identity: &Identity) -> Resu
         launch,
         loaders,
         loader_environment,
-    })
+    }))
 }
 fn login(role: &Role, identity: &Identity) -> Result<()> {
     use std::os::unix::fs::{FileTypeExt, MetadataExt};

@@ -43,6 +43,7 @@ fn observe(
     let before = reader::snapshot()?;
     let selected = credentials::stable(&before, &before)?;
     let mut observations = Vec::new();
+    let mut retired = Vec::new();
     let mut tail_count = 0;
     for identity in &selected {
         ctx.check()?;
@@ -88,14 +89,27 @@ fn observe(
                 require(candidates.len() == 1, "HOST_ROLE_AMBIGUOUS")?;
                 &candidates[0]
             };
-            serde_json::to_value(inspect::prove(ctx, role, identity)?)?
+            match inspect::prove(ctx, role, identity)? {
+                Some(observation) => serde_json::to_value(observation)?,
+                None => {
+                    retired.push(identity.pid);
+                    serde_json::json!({"role":"APPLE_FIXED_XPC_ROLE_RETIRED_TRANSIENT","identity":identity})
+                }
+            }
         };
         observations.push(observation);
     }
     require(tail_count == 1, "HOST_TAILSCALE_GENERATION")?;
     owned.verify(ctx)?;
     let after = reader::snapshot()?;
-    credentials::stable(&before, &after)?;
+    // Retired transient XPC observations died with evidence recorded above; any
+    // other pid-set difference between the snapshots is drift and fails closed.
+    let survivors: Vec<Identity> = before
+        .iter()
+        .filter(|p| !retired.contains(&p.pid))
+        .cloned()
+        .collect();
+    credentials::stable(&survivors, &after)?;
     require(
         crate::trust::digest(&current()?)? == expected_services,
         "HOST_SERVICE_DRIFT",
