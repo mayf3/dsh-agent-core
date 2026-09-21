@@ -24,6 +24,7 @@ mod verification;
 mod first_live;
 
 pub use first_live::run_first_live;
+pub use first_live::run_runtime_closure_recovery;
 
 pub fn run_first_live_fence_capability_probe() -> Result<serde_json::Value> {
     first_live::run_fence_capability_probe()

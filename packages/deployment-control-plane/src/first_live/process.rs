@@ -24,6 +24,7 @@ pub(crate) enum Tool {
     Sh,
     RetiredNode,
     Plutil,
+    Cp,
 }
 impl Tool {
     pub(super) fn path(self) -> &'static str {
@@ -34,6 +35,7 @@ impl Tool {
             Self::Retired => "/usr/local/libexec/lw-pilot-executor",
             Self::Sh => "/bin/sh",
             Self::Plutil => "/usr/bin/plutil",
+            Self::Cp => "/bin/cp",
         }
     }
 }
@@ -53,7 +55,7 @@ pub(crate) fn pinned(tool: Tool, expected: &str) -> Result<()> {
     )?;
     let apple = matches!(
         tool,
-        Tool::Launchctl | Tool::Sudo | Tool::SudoAudit | Tool::Sh | Tool::Plutil
+        Tool::Launchctl | Tool::Sudo | Tool::SudoAudit | Tool::Sh | Tool::Plutil | Tool::Cp
     );
     let validate = |file: &std::fs::File| {
         if matches!(tool, Tool::Sudo | Tool::SudoAudit) {
@@ -236,7 +238,7 @@ fn capture(
 fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result<()> {
     match identity {
         None => require(
-            matches!(tool, Tool::Launchctl | Tool::SudoAudit),
+            matches!(tool, Tool::Launchctl | Tool::SudoAudit | Tool::Cp),
             "FIRST_LIVE_IDENTITY",
         ),
         Some((uid, gid, groups)) => {
@@ -281,6 +283,16 @@ pub(super) fn supplementary_groups(gid: u32, groups: &[u32]) -> Result<Vec<u32>>
 mod tests;
 
 fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
+    if matches!(tool, Tool::Cp) {
+        require(
+            args == [
+                "-cR",
+                "/usr/local/libexec/agent-core.bak-20260921-072049/harness",
+                "/usr/local/libexec/agent-core/.pdc-runtime-closure-recovery-20260921-02-harness",
+            ],
+            "FIRST_LIVE_COPY_ARGUMENTS",
+        )?;
+    }
     if matches!(tool, Tool::SudoAudit) {
         require(
             args.len() == 4
