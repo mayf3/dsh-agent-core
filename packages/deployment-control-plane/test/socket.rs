@@ -21,12 +21,63 @@ fn production_entry_refuses_unprivileged_and_path_overrides() {
 #[path = "common/service.rs"]
 #[allow(dead_code)]
 mod fixture;
+use deployment_control_plane::{model::*, trust};
 use fixture::*;
 use serde_json::{json, Value};
 use std::{
+    fs,
     io::{Read, Write},
+    path::Path,
     time::{Duration, Instant},
 };
+
+fn current_proposal(request: &str) -> Proposal {
+    let mut proposal = common::proposal(request, "e", 1, "goal");
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    proposal.policy.payload.issued_at = now - 1;
+    proposal.policy.payload.expires_at = now + 299;
+    proposal.policy = common::signed("authority", proposal.policy.payload);
+    proposal
+}
+
+fn prepare_proposal(root: &Path, proposal: &Proposal) -> String {
+    let digest = trust::digest(proposal).unwrap();
+    fs::write(
+        root.join("intake/proposals").join(format!("{digest}.json")),
+        serde_json::to_vec(proposal).unwrap(),
+    )
+    .unwrap();
+    let snapshot = common::signed(
+        "producer",
+        ProducerSnapshot {
+            producer_id: "producer".into(),
+            revision: 1,
+            previous_revision: 0,
+            records: proposal.goals.clone(),
+            watermark: 1,
+        },
+    );
+    fs::write(
+        root.join("intake/snapshots/producer-1.json"),
+        serde_json::to_vec(&snapshot).unwrap(),
+    )
+    .unwrap();
+    digest
+}
+
+fn submit(d: &Daemon, digest: &str) -> Value {
+    send(
+        &mut connect(d),
+        &json!({
+            "version": 1,
+            "request_id": format!("m2-{}", &digest[..16]),
+            "operation": {"op": "submit", "proposal_digest": digest},
+        }),
+    )
+}
 #[test]
 fn real_socket_rejects_identity_paths_unknown_fields_and_deep_frames() {
     let d = start();
@@ -93,6 +144,53 @@ fn peer_scope_and_connection_quota_are_enforced_by_real_transport() {
     drop(pending);
     std::thread::sleep(Duration::from_millis(100));
     assert_eq!(send(&mut connect(&d), &status())["error"], "ACTOR_SCOPE");
+}
+
+#[test]
+fn m2_real_transport_rejects_unconfigured_kernel_peer() {
+    let d = start_with(|config| config["callers"] = json!([]));
+    assert_eq!(send(&mut connect(&d), &status())["error"], "CALLER_DENIED");
+}
+
+#[test]
+fn m2_real_transport_rejects_unauthorized_profile_target() {
+    let proposal = current_proposal("unauthorized-target");
+    let mut digest = String::new();
+    let d = start_prepared(
+        |config| config["callers"][0]["profiles"] = json!([]),
+        |root| digest = prepare_proposal(root, &proposal),
+    );
+    assert_eq!(submit(&d, &digest)["error"], "ACTOR_SCOPE");
+}
+
+#[test]
+fn m2_real_transport_rejects_wrong_runtime_target() {
+    let mut proposal = current_proposal("wrong-runtime");
+    proposal.desired.payload.target_runtime = "wrong-runtime".into();
+    proposal.desired = common::signed("authority", proposal.desired.payload);
+    let mut digest = String::new();
+    let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
+    assert_eq!(submit(&d, &digest)["error"], "PROFILE_MISMATCH");
+}
+
+#[test]
+fn m2_real_transport_rejects_bad_artifact_binding() {
+    let mut proposal = current_proposal("bad-artifact");
+    proposal.desired.payload.artifact_sha256 = "f".repeat(64);
+    proposal.desired = common::signed("authority", proposal.desired.payload);
+    let mut digest = String::new();
+    let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
+    assert_eq!(submit(&d, &digest)["error"], "ARTIFACT_MISMATCH");
+}
+
+#[test]
+fn m2_real_transport_rejects_stale_preimage() {
+    let mut proposal = current_proposal("stale-preimage");
+    proposal.desired.payload.expected_target_generation = 1;
+    proposal.desired = common::signed("authority", proposal.desired.payload);
+    let mut digest = String::new();
+    let d = start_prepared(|_| {}, |root| digest = prepare_proposal(root, &proposal));
+    assert_eq!(submit(&d, &digest)["error"], "PREIMAGE_MISMATCH");
 }
 
 #[path = "common/mod.rs"]
