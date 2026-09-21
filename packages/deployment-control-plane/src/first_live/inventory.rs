@@ -9,10 +9,11 @@ use crate::{
     Error, Result,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     collections::BTreeMap,
     fs::File,
-    io::Read,
+    io::{Read, Seek, SeekFrom},
     os::{fd::AsRawFd, unix::fs::MetadataExt},
 };
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -246,6 +247,195 @@ pub(super) fn census(root: &Dir, tree: &Tree, post: bool, harness: bool) -> Resu
     })?;
     require(count == tree.entries.len(), "FIRST_LIVE_MISSING_ENTRY")?;
     digest(tree)
+}
+
+/// Verify a protected clone against reviewed content/metadata while rebasing only
+/// device/inode identities created by the clone. The returned tree is then used
+/// for exact post-publication face comparisons.
+pub(super) fn capture_equivalent(root: &Dir, expected: &Tree, harness: bool) -> Result<Tree> {
+    validate(&expected.entries)?;
+    aliases(expected, harness)?;
+    fn capture(file: &File, e: &Entry) -> Result<Entry> {
+        let before = file.metadata()?;
+        require(
+            before.uid() == e.uid
+                && before.gid() == e.gid
+                && before.mode() & 0o7777 == e.mode
+                && std::os::macos::fs::MetadataExt::st_flags(&before) == e.flags
+                && match e.kind {
+                    Kind::File => before.is_file() && before.nlink() == e.links,
+                    Kind::Directory => before.is_dir(),
+                    Kind::Link => before.file_type().is_symlink() && before.nlink() == 1,
+                },
+            "FIRST_LIVE_CLONE_METADATA",
+        )?;
+        reject_acl(file)?;
+        let xattrs = read_xattrs(file)?;
+        if let Some(want) = &e.sha256 {
+            let mut f = file;
+            f.seek(SeekFrom::Start(0))?;
+            let mut hash = Sha256::new();
+            let mut size = 0u64;
+            let mut buffer = [0u8; 1024 * 1024];
+            loop {
+                let n = f.read(&mut buffer)?;
+                if n == 0 {
+                    break;
+                }
+                size = size.checked_add(n as u64).ok_or(Error::new("SIZE_LIMIT"))?;
+                require(size <= 1024 * 1024 * 1024, "SIZE_LIMIT")?;
+                hash.update(&buffer[..n]);
+            }
+            let after = file.metadata()?;
+            require(
+                size == before.len()
+                    && hex::encode(hash.finalize()) == *want
+                    && before.dev() == after.dev()
+                    && before.ino() == after.ino()
+                    && before.len() == after.len()
+                    && before.ctime() == after.ctime()
+                    && before.ctime_nsec() == after.ctime_nsec()
+                    && before.mtime() == after.mtime()
+                    && before.mtime_nsec() == after.mtime_nsec()
+                    && read_xattrs(file)? == xattrs,
+                "FIRST_LIVE_CLONE_BYTES",
+            )?;
+        }
+        let mut actual = e.clone();
+        actual.device = before.dev();
+        actual.inode = before.ino();
+        actual.links = before.nlink();
+        Ok(actual)
+    }
+    fn descend(
+        dir: &Dir,
+        prefix: &str,
+        expected: &Tree,
+        actual: &mut BTreeMap<String, Entry>,
+    ) -> Result<()> {
+        for name in dir.names_bounded(100000)? {
+            let path = if prefix.is_empty() {
+                name.clone()
+            } else {
+                format!("{prefix}/{name}")
+            };
+            let e = expected
+                .entries
+                .get(&path)
+                .ok_or(Error::new("FIRST_LIVE_UNLISTED_ENTRY"))?;
+            let flags = if e.kind == Kind::Link {
+                libc::O_SYMLINK
+            } else {
+                libc::O_RDONLY
+            };
+            let file = super::inventory_path::open(&dir.file, &name, flags)?;
+            let got = capture(&file, e)?;
+            if e.kind == Kind::Link {
+                let mut buffer = vec![0u8; 4096];
+                let name = std::ffi::CString::new(name.as_bytes())
+                    .map_err(|_| Error::new("FIRST_LIVE_LINK"))?;
+                let n = unsafe {
+                    libc::readlinkat(
+                        dir.file.as_raw_fd(),
+                        name.as_ptr(),
+                        buffer.as_mut_ptr().cast(),
+                        buffer.len(),
+                    )
+                };
+                require(n >= 0 && (n as usize) < buffer.len(), "FIRST_LIVE_LINK")?;
+                require(
+                    e.link.as_deref() == std::str::from_utf8(&buffer[..n as usize]).ok(),
+                    "FIRST_LIVE_LINK_DRIFT",
+                )?;
+            }
+            if e.kind == Kind::Directory {
+                descend(
+                    &Dir {
+                        file: file.try_clone()?,
+                        uid: dir.uid,
+                    },
+                    &path,
+                    expected,
+                    actual,
+                )?;
+            }
+            require(actual.insert(path, got).is_none(), "FIRST_LIVE_INVENTORY")?;
+        }
+        Ok(())
+    }
+    let root_entry = capture(&root.file, &expected.root)?;
+    let mut entries = BTreeMap::new();
+    descend(root, "", expected, &mut entries)?;
+    require(
+        entries.len() == expected.entries.len(),
+        "FIRST_LIVE_MISSING_ENTRY",
+    )?;
+    let actual = Tree {
+        root: root_entry,
+        entries,
+    };
+    aliases(&actual, harness)?;
+    Ok(actual)
+}
+
+#[cfg(test)]
+mod capture_tests {
+    use super::*;
+    #[test]
+    fn clone_census_rebases_identity_but_never_content() {
+        let temp = tempfile::tempdir_in(crate::fs::FixtureRoots::kernel_temp().unwrap()).unwrap();
+        std::fs::write(temp.path().join("payload"), b"reviewed payload").unwrap();
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(temp.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(
+            temp.path().join("payload"),
+            std::fs::Permissions::from_mode(0o600),
+        )
+        .unwrap();
+        let uid = unsafe { libc::geteuid() };
+        let gid = unsafe { libc::getegid() };
+        let dir = Dir::open(temp.path(), uid).unwrap();
+        let root_meta = dir.file.metadata().unwrap();
+        let file = dir.open_file("payload", libc::O_RDONLY, 0).unwrap();
+        let file_meta = file.metadata().unwrap();
+        let root = Entry {
+            kind: Kind::Directory,
+            uid,
+            gid,
+            mode: 0o700,
+            flags: 0,
+            device: root_meta.dev() + 1,
+            inode: root_meta.ino() + 1,
+            links: root_meta.nlink(),
+            sha256: None,
+            link: None,
+            post_gid: gid,
+            post_mode: 0o700,
+        };
+        let payload = Entry {
+            kind: Kind::File,
+            uid,
+            gid,
+            mode: 0o600,
+            flags: 0,
+            device: file_meta.dev() + 1,
+            inode: file_meta.ino() + 1,
+            links: 1,
+            sha256: Some(sha(b"reviewed payload")),
+            link: None,
+            post_gid: gid,
+            post_mode: 0o600,
+        };
+        let expected = Tree {
+            root,
+            entries: BTreeMap::from([("payload".into(), payload)]),
+        };
+        let captured = capture_equivalent(&dir, &expected, false).unwrap();
+        assert_eq!(captured.root.inode, root_meta.ino());
+        assert_eq!(captured.entries["payload"].inode, file_meta.ino());
+        std::fs::write(temp.path().join("payload"), b"foreign payload").unwrap();
+        assert!(capture_equivalent(&dir, &expected, false).is_err());
+    }
 }
 pub(super) fn protect_directories(
     root: &Dir,

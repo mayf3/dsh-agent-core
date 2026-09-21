@@ -23,7 +23,7 @@ fn io(error: std::io::Error) -> Error {
         },
     )
 }
-pub(super) fn probe(address: SocketAddr, limit: Duration) -> Result<()> {
+pub(crate) fn probe(address: SocketAddr, limit: Duration) -> Result<()> {
     let deadline = Instant::now() + limit;
     let mut stream = TcpStream::connect_timeout(&address, remaining(deadline)?).map_err(io)?;
     let mut request = &b"GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"[..];

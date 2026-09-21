@@ -7,6 +7,8 @@ fn main() {
         deployment_control_plane::run_first_live_and_enable()
     } else if args == ["--first-live-recovery-and-enable"] {
         deployment_control_plane::run_first_live_recovery_and_enable()
+    } else if args == ["--runtime-closure-recovery"] {
+        deployment_control_plane::run_runtime_closure_recovery()
     } else if args == ["--first-live"] {
         deployment_control_plane::run_first_live()
     } else if args

@@ -1,5 +1,5 @@
 mod apply;
-mod health;
+pub(crate) mod health;
 mod journal;
 mod native;
 mod native_profile;
@@ -216,6 +216,10 @@ pub(crate) use native::first_live_components;
 /// Read-only identity seam for the fixed first-live denial child correlation.
 pub(crate) fn first_live_process_identity(pid: u32) -> Result<ProcessIdentity> {
     process::identity(pid)
+}
+
+pub(crate) fn first_live_process_argv(pid: u32) -> Result<Vec<String>> {
+    native_profile::process_argv(pid)
 }
 
 pub(crate) use native::{NativeMaintenanceInput, NativeMaintenanceService};
