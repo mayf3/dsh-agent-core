@@ -175,3 +175,35 @@ fn fixed_fork_child_requires_exact_current_launch_parent_and_same_image() {
         assert!(join_fork_child(&role, &wrong_child, &wrong_parent, &wrong_metadata).is_err());
     }
 }
+
+#[test]
+fn trampoline_fork_child_role_binds_parent_daemon_and_refuses_exec_swaps() {
+    let (_, mut child, mut metadata) = inputs();
+    let role = policy::roles("/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python")
+        .unwrap()
+        .remove(0);
+    assert_eq!(role.class, "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE");
+    assert_eq!(role.authorities.len(), 1);
+    assert_eq!(
+        role.authorities[0].label,
+        "com.apple.security.authtrampoline"
+    );
+    metadata.domain_service = "system/com.apple.security.authtrampoline".into();
+    metadata.path = role.authorities[0].path.clone();
+    metadata.program = role.authorities[0].program.clone();
+    child.executable = Some(role.resolved_path.clone());
+    child.pid = 901;
+    child.parent_pid = 900;
+    child.process_group = 900;
+    let mut parent = child.clone();
+    parent.pid = 900;
+    parent.parent_pid = 1;
+    // The live trampolined child exec'd the CommandLineTools Python image while
+    // its launch parent still runs the authtrampoline image: the exact-image
+    // fork gate must keep refusing that shape.
+    parent.executable = Some("/System/Library/Frameworks/Security.framework/authtrampoline".into());
+    assert!(join_fork_child(&role, &child, &parent, &metadata).is_err());
+    // Attribution succeeds only when the forked child kept the reviewed image.
+    parent.executable = Some(role.resolved_path.clone());
+    join_fork_child(&role, &child, &parent, &metadata).unwrap();
+}

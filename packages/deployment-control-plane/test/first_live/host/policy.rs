@@ -69,6 +69,8 @@ fn current_boot_root_roles_have_exact_reviewed_authorities() {
         ("/System/Library/PrivateFrameworks/BackgroundTaskManagement.framework/Versions/A/Resources/backgroundtaskmanagementd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
         ("/System/Library/PrivateFrameworks/AssetCacheServicesExtensions.framework/Versions/A/XPCServices/AssetCacheTetheratorService.xpc/Contents/MacOS/AssetCacheTetheratorService", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
         ("/System/Library/PrivateFrameworks/FindMyMac.framework/Versions/A/Resources/FindMyMacd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/System/Library/CoreServices/uncd", "OS_LAUNCH_DAEMON_STATIC_CANDIDATE"),
+        ("/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/Resources/Python.app/Contents/MacOS/Python", "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE"),
     ] {
         let found = roles(path).unwrap_or_else(|_| panic!("missing current role: {path}"));
         assert_eq!(found.len(), 1, "ambiguous current role: {path}");
