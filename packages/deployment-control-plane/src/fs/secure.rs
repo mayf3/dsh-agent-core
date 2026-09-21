@@ -13,6 +13,9 @@ fn cstr(name: &str) -> Result<CString> {
     CString::new(name).map_err(|_| Error::new("UNSAFE_PATH"))
 }
 pub(crate) fn component(name: &str) -> Result<()> {
+    // A space is a single-entry name character (Apple bundles: "Software
+    // Update.app") with no traversal semantics; slash/NUL/dot-dot remain
+    // structurally impossible here.
     require(
         !name.is_empty()
             && name.len() <= 200
@@ -20,7 +23,7 @@ pub(crate) fn component(name: &str) -> Result<()> {
             && name != ".."
             && name
                 .bytes()
-                .all(|c| c.is_ascii_alphanumeric() || b"._-@".contains(&c)),
+                .all(|c| c.is_ascii_alphanumeric() || b"._-@ ".contains(&c)),
         "UNSAFE_PATH",
     )
 }
@@ -32,6 +35,23 @@ pub(crate) fn relative(path: &str) -> Result<Vec<&str>> {
         component(p)?;
     }
     Ok(parts)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::component;
+
+    #[test]
+    fn spaces_are_single_entry_name_characters_without_traversal() {
+        assert!(component("Software Update.app").is_ok());
+        assert!(component(" ").is_ok());
+        assert!(component("").is_err());
+        assert!(component(".").is_err());
+        assert!(component("..").is_err());
+        assert!(component("a/b").is_err());
+        assert!(component("Software\tUpdate").is_err());
+        assert!(component(&"x".repeat(201)).is_err());
+    }
 }
 impl Dir {
     pub fn open(path: &Path, uid: u32) -> Result<Self> {
