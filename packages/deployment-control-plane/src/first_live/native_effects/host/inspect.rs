@@ -30,6 +30,15 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
     if sealed_entry(&role.resolved_path) {
         return Ok(BTreeMap::new());
     }
+    if role.class == "APPLE_FIXED_LAUNCH_DAEMON_FORK_ROLE" {
+        // Fork children are proven by the fork join itself (kernel pid /
+        // credentials / process-group truth against the pinned parent launchd
+        // authority) plus the Apple code-signature check below; their
+        // framework images carry @executable_path-anchored install names that
+        // the absolute-path loader grammar cannot scan. The only live instance
+        // is the CommandLineTools Python fork child.
+        return Ok(BTreeMap::new());
+    }
     let cpu = if cfg!(target_arch = "aarch64") {
         0x0100000c
     } else {
