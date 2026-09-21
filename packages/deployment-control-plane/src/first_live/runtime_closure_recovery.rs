@@ -29,6 +29,7 @@ const LABEL: &str = "system/ai.agent-core.runtime";
 const PLIST: &str = "ai.agent-core.runtime.plist";
 const LAUNCHCTL_SHA: &str = "b4dbf509754d8e1117f7851baa93ede75bc75218c48d6ddf19fbb1505d261be7";
 const CP_SHA: &str = "f0629f462c6535f7b1a19f559b7093638e714961bea9228cfb2ae7896f8557f4";
+const LSOF_SHA: &str = "b1b9151bbc56f4749890dbe4e533af9a4f8700240ad431a6c9ddf70fe137c165";
 const EMPTY_SHA: &str = "95db062c891d1d3628c1f2fde50e2e1801b8568f99994b1e95d23ff036130c4e";
 const AUTHORITY_SHA: &str = "e0800b0fde6fc46b2873decd0f83c9b807b48b56cc3c9ad9cf578a5685b5b6fe";
 const INVENTORY_SHA: &str = "dd546e83d724da67dba5b02da5af6bf0c488a2ff3dfabeca35748aa24b2da0b5";
@@ -129,6 +130,93 @@ fn require_listener_absent(address: SocketAddr) -> Result<()> {
         Err(error) if error.kind() == std::io::ErrorKind::ConnectionRefused => Ok(()),
         _ => Err(Error::new("RUNTIME_CLOSURE_FOREIGN_LISTENER")),
     }
+}
+
+fn listener_census(process: &crate::transaction::ProcessIdentity) -> Result<Value> {
+    let mut evidence = serde_json::Map::new();
+    for port in [8787u16, 8790u16] {
+        require(
+            crate::transaction::first_live_process_identity(process.pid)? == *process,
+            "RUNTIME_CLOSURE_PROCESS_DRIFT",
+        )?;
+        let output = process::run(
+            process::Tool::Lsof,
+            LSOF_SHA,
+            &[
+                "-nP".into(),
+                "-a".into(),
+                "-p".into(),
+                process.pid.to_string(),
+                format!("-iTCP:{port}"),
+                "-sTCP:LISTEN".into(),
+                "-FpcfnPT".into(),
+            ],
+            None,
+            10,
+        )?;
+        require(
+            output.code == Some(0) && output.stderr.is_empty(),
+            "RUNTIME_CLOSURE_LISTENER_UNKNOWN",
+        )?;
+        validate_listener_output(&output.stdout, process.pid, port)?;
+        evidence.insert(
+            port.to_string(),
+            serde_json::json!({"sha256":sha(output.stdout.as_bytes())}),
+        );
+    }
+    require(
+        crate::transaction::first_live_process_identity(process.pid)? == *process,
+        "RUNTIME_CLOSURE_PROCESS_DRIFT",
+    )?;
+    Ok(Value::Object(evidence))
+}
+
+fn validate_listener_output(stdout: &str, pid: u32, port: u16) -> Result<()> {
+    let lines = stdout.lines().collect::<Vec<_>>();
+    require(
+        lines
+            .iter()
+            .filter(|line| **line == format!("p{pid}"))
+            .count()
+            == 1
+            && lines.iter().filter(|line| line.starts_with('c')).count() == 1
+            && lines
+                .iter()
+                .filter(|line| {
+                    line.strip_prefix('f')
+                        .and_then(|value| value.trim_end_matches('u').parse::<u32>().ok())
+                        .is_some()
+                })
+                .count()
+                == 1
+            && lines.iter().filter(|line| **line == "PTCP").count() == 1
+            && lines
+                .iter()
+                .filter(|line| **line == format!("n127.0.0.1:{port}"))
+                .count()
+                == 1
+            && lines.iter().filter(|line| **line == "TST=LISTEN").count() == 1
+            && lines.iter().all(|line| {
+                line == &format!("p{pid}")
+                    || line
+                        .strip_prefix('c')
+                        .is_some_and(|value| !value.is_empty() && value.is_ascii())
+                    || line
+                        .strip_prefix('f')
+                        .and_then(|value| value.trim_end_matches('u').parse::<u32>().ok())
+                        .is_some()
+                    || *line == "PTCP"
+                    || *line == format!("n127.0.0.1:{port}")
+                    || *line == "TST=LISTEN"
+                    || line
+                        .strip_prefix("TQR=")
+                        .is_some_and(|value| value.parse::<u64>().is_ok())
+                    || line
+                        .strip_prefix("TQS=")
+                        .is_some_and(|value| value.parse::<u64>().is_ok())
+            }),
+        "RUNTIME_CLOSURE_LISTENER_UNKNOWN",
+    )
 }
 
 fn verify_payload(app: &Dir, node_dir: &Dir) -> Result<()> {
@@ -346,6 +434,7 @@ fn execute() -> Result<Value> {
     )?;
     let node_dir = Dir::open(Path::new(&format!("{LIVE}/node-runtime/bin")), 0)?;
     verify_payload(&app, &node_dir)?;
+    require_listener_absent("127.0.0.1:8787".parse().unwrap())?;
     require_listener_absent("127.0.0.1:8790".parse().unwrap())?;
     let prior_service = current_service(&area, "preimage-service")?;
     require(
@@ -384,6 +473,8 @@ fn execute() -> Result<Value> {
             "service_fields":prior_fields,
             "runtime_process":"ABSENT",
             "runtime_argv":expected_runtime_argv,
+            "validated_flags":{"agents":0,"credentials":0,"plist":0,"live":0,"app":0,"config":0},
+            "validated_acl":"ABSENT",
             "rollback":"UNSAFE_ROLLBACK_QUARANTINE_ONLY"
         }),
     )?;
@@ -423,14 +514,14 @@ fn execute() -> Result<Value> {
         None,
         60,
     )?;
-    require(
-        cp.code == Some(0) && cp.stdout.is_empty() && cp.stderr.is_empty(),
-        "RUNTIME_CLOSURE_COPY_UNKNOWN",
-    )?;
     journal::append(
         &area,
         "harness-copy-command-result.json",
         &serde_json::json!({"code":cp.code,"stdout":cp.stdout,"stderr":cp.stderr}),
+    )?;
+    require(
+        cp.code == Some(0) && cp.stdout.is_empty() && cp.stderr.is_empty(),
+        "RUNTIME_CLOSURE_COPY_UNKNOWN",
     )?;
     let stage_handle = live.open_file(STAGING, libc::O_RDONLY | libc::O_DIRECTORY, 0)?;
     let staged = Dir {
@@ -611,6 +702,7 @@ fn execute() -> Result<Value> {
                 == 1,
         "RUNTIME_CLOSURE_GENERATION_UNKNOWN",
     )?;
+    let listeners_before = listener_census(&process_identity)?;
     let health_deadline = Instant::now() + Duration::from_secs(60);
     loop {
         if crate::transaction::health::probe(
@@ -645,10 +737,11 @@ fn execute() -> Result<Value> {
         generated <= now && now - generated <= 60_000,
         "RUNTIME_CLOSURE_HEALTH_TIME",
     )?;
+    let listeners_after = listener_census(&process_identity)?;
     journal::append(
         &area,
         "generation-health.json",
-        &serde_json::json!({"source":SOURCE,"pid":process_identity.pid,"scheduler_health_sha256":sha(&scheduler_health),"generated_at":generated}),
+        &serde_json::json!({"source":SOURCE,"process":process_identity,"listeners_before":listeners_before,"listeners_after":listeners_after,"scheduler_health_sha256":sha(&scheduler_health),"generated_at":generated}),
     )?;
     let final_service = current_service(&area, "runtime-final-generation-readback")?;
     require(
@@ -733,22 +826,13 @@ pub fn run() -> Result<()> {
     }
 }
 
-fn face(
-    image: &FileImage,
-    preimage: &FileImage,
-    post_sha: &str,
-    uid: u32,
-    gid: u32,
-    mode: u32,
-) -> &'static str {
+fn face(image: &FileImage, preimage: &FileImage, prepared: Option<&FileImage>) -> &'static str {
     if image == preimage {
         "PREIMAGE"
-    } else if image.uid == uid
-        && image.gid == gid
-        && image.mode == mode
-        && sha(&image.bytes) == post_sha
-    {
+    } else if prepared.is_some_and(|expected| image == expected) {
         "POSTIMAGE"
+    } else if prepared.is_none() {
+        "UNKNOWN"
     } else {
         "DRIFT"
     }
@@ -782,6 +866,8 @@ pub fn status() -> Result<Value> {
     let agents_pre: FileImage = serde_json::from_value(preimage["agents"].clone())?;
     let plist_pre: FileImage = serde_json::from_value(preimage["plist"].clone())?;
     let credentials_pre: FileImage = serde_json::from_value(preimage["credentials"].clone())?;
+    let agents_prepared = files::read::<FileImage>(&area, "agents-prepare-result.json").ok();
+    let plist_prepared = files::read::<FileImage>(&area, "plist-prepare-result.json").ok();
     let config = Dir::open(Path::new(&format!("{LIVE}/config")), 505)?;
     let plist_dir = Dir::open(Path::new("/Library/LaunchDaemons"), 0)?;
     let agents = snapshot(
@@ -851,6 +937,7 @@ pub fn status() -> Result<Value> {
         None,
         10,
     )?;
+    let mut status_process = None;
     let mut service_face = if service.code == Some(113) {
         "ABSENT".to_string()
     } else if service.code == Some(0) {
@@ -876,6 +963,19 @@ pub fn status() -> Result<Value> {
                     && identity.executable == format!("{LIVE}/node-runtime/bin/node"),
                 "RUNTIME_CLOSURE_PROCESS_IDENTITY",
             )?;
+            require(
+                crate::transaction::first_live_process_argv(identity.pid)?
+                    == vec![
+                        format!("{LIVE}/node-runtime/bin/node"),
+                        format!("{LIVE}/app/scripts/production-runtime.mjs"),
+                        "--root".into(),
+                        "/Users/authsvc/.agent-core".into(),
+                        "--catchup".into(),
+                        "0".into(),
+                    ],
+                "RUNTIME_CLOSURE_PROCESS_ARGV",
+            )?;
+            status_process = Some(identity);
             "POSTIMAGE".to_string()
         } else {
             "UNKNOWN".to_string()
@@ -884,16 +984,27 @@ pub fn status() -> Result<Value> {
         "UNKNOWN".to_string()
     };
     if service_face == "POSTIMAGE" {
-        let canonical = crate::transaction::health::probe(
-            "127.0.0.1:8790".parse().unwrap(),
-            Duration::from_secs(2),
-        )
-        .and_then(|_| crate::verification::native_io::get(None))
-        .and_then(|bytes| {
-            let value = crate::verification::documents::strict_json(&bytes)?;
-            crate::verification::watchdog::canonical_health(&value, SOURCE)?;
-            Ok(())
-        });
+        let process = status_process.ok_or(Error::new("RUNTIME_CLOSURE_PROCESS_IDENTITY"))?;
+        let canonical = listener_census(&process)
+            .and_then(|_| {
+                crate::transaction::health::probe(
+                    "127.0.0.1:8790".parse().unwrap(),
+                    Duration::from_secs(2),
+                )
+            })
+            .and_then(|_| crate::verification::native_io::get(None))
+            .and_then(|bytes| {
+                let value = crate::verification::documents::strict_json(&bytes)?;
+                crate::verification::watchdog::canonical_health(&value, SOURCE)?;
+                Ok(())
+            })
+            .and_then(|_| listener_census(&process))
+            .and_then(|_| {
+                require(
+                    crate::transaction::first_live_process_identity(process.pid)? == process,
+                    "RUNTIME_CLOSURE_PROCESS_DRIFT",
+                )
+            });
         if canonical.is_err() {
             service_face = "UNKNOWN".into();
         }
@@ -902,8 +1013,8 @@ pub fn status() -> Result<Value> {
     Ok(serde_json::json!({
         "operation_id":OP,
         "state":"READ_ONLY_RECONCILIATION",
-        "agents":face(&agents,&agents_pre,AUTHORITY_SHA,505,601,0o600),
-        "plist":face(&plist,&plist_pre,PLIST_AFTER_SHA,0,0,0o644),
+        "agents":face(&agents,&agents_pre,agents_prepared.as_ref()),
+        "plist":face(&plist,&plist_pre,plist_prepared.as_ref()),
         "credentials":if credentials==credentials_pre {"PREIMAGE"} else {"DRIFT"},
         "harness":harness,
         "staging":staging,
@@ -975,12 +1086,35 @@ mod tests {
             mtime_seconds: 5,
             mtime_nanos: 6,
         };
-        assert_eq!(face(&pre, &pre, &sha(b"after"), 1, 2, 0o600), "PREIMAGE");
+        assert_eq!(face(&pre, &pre, None), "PREIMAGE");
         let mut post = pre.clone();
         post.bytes = b"after".to_vec();
         post.inode = 7;
-        assert_eq!(face(&post, &pre, &sha(b"after"), 1, 2, 0o600), "POSTIMAGE");
+        assert_eq!(face(&post, &pre, None), "UNKNOWN");
+        let prepared = post.clone();
+        assert_eq!(face(&post, &pre, Some(&prepared)), "POSTIMAGE");
+        post.inode = 8;
+        assert_eq!(face(&post, &pre, Some(&prepared)), "DRIFT");
+        post = prepared.clone();
+        post.xattrs.insert("foreign".into(), b"value".to_vec());
+        assert_eq!(face(&post, &pre, Some(&prepared)), "DRIFT");
+        post = prepared.clone();
+        post.mtime_nanos += 1;
+        assert_eq!(face(&post, &pre, Some(&prepared)), "DRIFT");
+        post = prepared.clone();
+        post.device += 1;
+        assert_eq!(face(&post, &pre, Some(&prepared)), "DRIFT");
         post.bytes = b"foreign".to_vec();
-        assert_eq!(face(&post, &pre, &sha(b"after"), 1, 2, 0o600), "DRIFT");
+        assert_eq!(face(&post, &pre, Some(&prepared)), "DRIFT");
+    }
+
+    #[test]
+    fn listener_evidence_is_exactly_pid_and_port_bound() {
+        let valid = "p123\ncnode\nf17u\nPTCP\nn127.0.0.1:8790\nTST=LISTEN\nTQR=0\nTQS=0\n";
+        validate_listener_output(valid, 123, 8790).unwrap();
+        assert!(validate_listener_output(valid, 124, 8790).is_err());
+        assert!(validate_listener_output(valid, 123, 8787).is_err());
+        assert!(validate_listener_output(&format!("{valid}f18u\n"), 123, 8790).is_err());
+        assert!(validate_listener_output(&format!("{valid}n127.0.0.1:1\n"), 123, 8790).is_err());
     }
 }
