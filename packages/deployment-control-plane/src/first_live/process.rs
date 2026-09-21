@@ -25,6 +25,7 @@ pub(crate) enum Tool {
     RetiredNode,
     Plutil,
     Cp,
+    Lsof,
 }
 impl Tool {
     pub(super) fn path(self) -> &'static str {
@@ -36,6 +37,7 @@ impl Tool {
             Self::Sh => "/bin/sh",
             Self::Plutil => "/usr/bin/plutil",
             Self::Cp => "/bin/cp",
+            Self::Lsof => "/usr/sbin/lsof",
         }
     }
 }
@@ -55,7 +57,13 @@ pub(crate) fn pinned(tool: Tool, expected: &str) -> Result<()> {
     )?;
     let apple = matches!(
         tool,
-        Tool::Launchctl | Tool::Sudo | Tool::SudoAudit | Tool::Sh | Tool::Plutil | Tool::Cp
+        Tool::Launchctl
+            | Tool::Sudo
+            | Tool::SudoAudit
+            | Tool::Sh
+            | Tool::Plutil
+            | Tool::Cp
+            | Tool::Lsof
     );
     let validate = |file: &std::fs::File| {
         if matches!(tool, Tool::Sudo | Tool::SudoAudit) {
@@ -238,7 +246,10 @@ fn capture(
 fn validate_identity(tool: Tool, identity: Option<(u32, u32, &[u32])>) -> Result<()> {
     match identity {
         None => require(
-            matches!(tool, Tool::Launchctl | Tool::SudoAudit | Tool::Cp),
+            matches!(
+                tool,
+                Tool::Launchctl | Tool::SudoAudit | Tool::Cp | Tool::Lsof
+            ),
             "FIRST_LIVE_IDENTITY",
         ),
         Some((uid, gid, groups)) => {
@@ -283,6 +294,19 @@ pub(super) fn supplementary_groups(gid: u32, groups: &[u32]) -> Result<Vec<u32>>
 mod tests;
 
 fn validate_arguments(tool: Tool, args: &[String]) -> Result<()> {
+    if matches!(tool, Tool::Lsof) {
+        require(
+            args.len() == 7
+                && args[0] == "-nP"
+                && args[1] == "-a"
+                && args[2] == "-p"
+                && args[3].parse::<u32>().is_ok_and(|pid| pid > 1)
+                && matches!(args[4].as_str(), "-iTCP:8787" | "-iTCP:8790")
+                && args[5] == "-sTCP:LISTEN"
+                && args[6] == "-FpcfnPT",
+            "FIRST_LIVE_LSOF_ARGUMENTS",
+        )?;
+    }
     if matches!(tool, Tool::Cp) {
         require(
             args == [
