@@ -44,11 +44,17 @@ pub(super) fn absent(dir: &Dir, name: &str) -> Result<()> {
     }
 }
 pub(super) fn lock(dir: &Dir, device: u64, inode: u64, acquire: bool) -> Result<File> {
+    // The APFS device number is allocated at boot.  Keep the reviewed genesis
+    // value in the signed binding, but bind the live lock to the already-opened
+    // protected journal directory's volume on this boot.  The durable inode and
+    // every other metadata check remain exact.
+    require(device == 16_777_230, "LOGIN_LOCK_BINDING")?;
+    let current_device = dir.file.metadata()?.dev();
     let file = dir.open_file("bootstrap.lock", libc::O_RDWR, 0)?;
     metadata(&file, dir.uid, dir.file.metadata()?.gid(), 0o600, false)?;
     let m = file.metadata()?;
     require(
-        m.dev() == device && m.ino() == inode && m.len() == 0,
+        m.dev() == current_device && m.ino() == inode && m.len() == 0,
         "LOGIN_LOCK_REPLACED",
     )?;
     if acquire {
@@ -61,7 +67,7 @@ pub(super) fn lock(dir: &Dir, device: u64, inode: u64, acquire: bool) -> Result<
         .open_file("bootstrap.lock", libc::O_RDONLY, 0)?
         .metadata()?;
     require(
-        current.dev() == device && current.ino() == inode,
+        current.dev() == current_device && current.ino() == inode,
         "LOGIN_LOCK_REPLACED",
     )?;
     Ok(file)

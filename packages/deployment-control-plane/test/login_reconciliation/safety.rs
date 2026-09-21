@@ -59,13 +59,13 @@ fn existing_lock_identity_and_real_nonblocking_exclusion_are_required() {
     )
     .unwrap();
     let m = f.metadata().unwrap();
-    assert!(state::lock(&d, m.dev(), m.ino() + 1, true).is_err());
-    let held = state::lock(&d, m.dev(), m.ino(), true).unwrap();
+    assert!(state::lock(&d, 16_777_230, m.ino() + 1, true).is_err());
+    let held = state::lock(&d, 16_777_230, m.ino(), true).unwrap();
     assert_ne!(
         unsafe { libc::flock(f.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) },
         0
     );
-    assert!(state::lock(&d, m.dev(), m.ino(), true).is_err());
+    assert!(state::lock(&d, 16_777_230, m.ino(), true).is_err());
     drop(held);
     assert_eq!(
         unsafe { libc::flock(f.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) },

@@ -255,6 +255,27 @@ fn production_capability_probe_refuses_nonroot_before_fixed_path_access() {
 }
 
 #[test]
+fn fence_probe_device_is_boot_local_but_inode_remains_frozen() {
+    let identity = Identity {
+        device: 16_777_232,
+        inode: FENCE_PROBE_PARENT_INODE,
+        uid: 0,
+        gid: 0,
+        mode: 0o700,
+    };
+    assert!(fence_probe_parent_matches(&identity, 16_777_232, 0));
+    assert!(!fence_probe_parent_matches(&identity, 16_777_230, 0));
+    assert!(!fence_probe_parent_matches(
+        &Identity {
+            inode: FENCE_PROBE_PARENT_INODE + 1,
+            ..identity
+        },
+        16_777_232,
+        0,
+    ));
+}
+
+#[test]
 fn capability_probe_records_a_known_retained_clear_failure() {
     let t = crate::common::private::temp();
     let roots = FixtureRoots::open(t.path()).unwrap();
