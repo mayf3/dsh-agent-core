@@ -272,6 +272,8 @@ fn retries_are_bounded_and_unknown_cannot_be_reset_by_request_or_claim() {
     assert_eq!(q.status(&actor(), &unit).unwrap().preflight_attempts, 3);
     assert!(q.next_ready(&c).unwrap().is_none());
 }
+#[path = "queue_preimage_negatives.rs"]
+mod preimage_negatives;
 #[path = "queue_receipts.rs"]
 mod receipts;
 #[path = "queue_repairs.rs"]
