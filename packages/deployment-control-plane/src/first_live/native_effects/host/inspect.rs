@@ -296,7 +296,12 @@ fn login(role: &Role, identity: &Identity) -> Result<()> {
         .tty
         .as_deref()
         .ok_or_else(|| Error::new("HOST_LOGIN_ROLE"))?;
-    require(matches!(tty, "ttys000" | "ttys017"), "HOST_LOGIN_ROLE")?;
+    // The tty NAME list is deliberately not hardcoded: tmux churns the
+    // owner's pty names across sessions, and the decisive binding is the
+    // credential set above (real uid 502 through setuid root login) plus
+    // the device identity below — the controlling tty must be a character
+    // device matching the process's tty device and OWNED BY THE OWNER.
+    // A login running against another user's pty cannot pass.
     let metadata = std::fs::symlink_metadata(format!("/dev/{tty}"))?;
     require(
         metadata.file_type().is_char_device()
