@@ -27,14 +27,18 @@ fn developer_role_binds_resolved_program_and_exact_submitted_job() {
     );
 }
 #[test]
-fn root_login_has_only_two_reviewed_tty_roles() {
+fn root_login_has_only_the_reviewed_tty_roles() {
+    // Reviewed set extended Sep-23: the owner's live sessions moved to
+    // ttys001/ttys002 (tmux churn) after the original ttys000/ttys017
+    // pin.  Still a finite, exactly-pinned set — growth beyond it is a
+    // review event, not an accident.
     let r = roles("/usr/bin/login").unwrap();
-    assert_eq!(r.len(), 2);
+    assert_eq!(r.len(), 4);
     assert_eq!(
         r.iter()
             .map(|r| r.tty.as_deref().unwrap())
             .collect::<std::collections::BTreeSet<_>>(),
-        ["ttys000", "ttys017"].into_iter().collect()
+        ["ttys000", "ttys001", "ttys002", "ttys017"].into_iter().collect()
     );
 }
 #[test]
