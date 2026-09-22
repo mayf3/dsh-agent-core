@@ -151,6 +151,12 @@ pub(super) fn prove(
             // binding is therefore the pinned executable digest, the
             // pinned codesign identifier and Apple's own platform
             // signature on the running image.
+            if reader::identity_optional(identity.pid)?.is_none() {
+                // Exited between the census snapshot and this probe (the
+                // daemon finished its on-demand work): retire with
+                // evidence, same as the XPC shape.
+                return Ok(None);
+            }
             let identifier = role
                 .identifier
                 .as_deref()
