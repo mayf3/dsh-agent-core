@@ -7,7 +7,7 @@ fn main() {
     match result {
         Ok(value) => println!("{value}"),
         Err(error) => {
-            eprintln!("BLOCKED {}", error.code());
+            eprintln!("BLOCKED {error}");
             std::process::exit(1);
         }
     }

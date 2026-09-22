@@ -194,36 +194,53 @@ impl Dir {
         Ok(())
     }
 }
+/// Best-effort path of an already-open fd (F_GETPATH); falls back to a
+/// stable placeholder so context attachment never masks the real code.
+pub(crate) fn fd_context(file: &File) -> String {
+    let mut bytes = [0i8; libc::PATH_MAX as usize];
+    if unsafe { libc::fcntl(file.as_raw_fd(), libc::F_GETPATH, bytes.as_mut_ptr()) } == 0 {
+        unsafe { std::ffi::CStr::from_ptr(bytes.as_ptr()) }
+            .to_string_lossy()
+            .into_owned()
+    } else {
+        "<unresolvable-fd-path>".to_string()
+    }
+}
+
 pub(crate) fn validate(file: &File, uid: u32, directory: bool) -> Result<()> {
     let m = file.metadata()?;
-    require(
+    if let Err(error) = require(
         if directory {
             m.is_dir()
         } else {
             m.is_file() && m.nlink() == 1
         },
         "UNSAFE_TYPE",
-    )?;
-    require(
+    ) {
+        return Err(error.context(fd_context(file)));
+    }
+    if let Err(error) = require(
         m.uid() == uid || (directory && m.uid() == 0),
         "UNSAFE_OWNER",
-    )?;
+    ) {
+        return Err(error.context(fd_context(file)));
+    }
     // The setgid bit on a DIRECTORY is a legitimate collaboration semantic
     // (group-inherit) and carries no execution risk; setuid-on-dir, group-write
     // and other-write remain rejected. Files keep the full 0o7022 rejection.
-    let forbidden = if directory {
-        0o7022 & !0o2000
-    } else {
-        0o7022
-    };
-    require(m.mode() & forbidden == 0, "UNSAFE_MODE")?;
+    let forbidden = if directory { 0o7022 & !0o2000 } else { 0o7022 };
+    if let Err(error) = require(m.mode() & forbidden == 0, "UNSAFE_MODE") {
+        return Err(error.context(fd_context(file)));
+    }
     reject_acl(file)?;
     #[cfg(target_os = "macos")]
     if !directory {
-        require(
+        if let Err(error) = require(
             std::os::macos::fs::MetadataExt::st_flags(&m) == 0,
             "UNSAFE_FLAGS",
-        )?;
+        ) {
+            return Err(error.context(fd_context(file)));
+        }
         read_xattrs(file)?;
     }
     Ok(())

@@ -1,19 +1,34 @@
 #[derive(Debug)]
 pub struct Error {
     code: &'static str,
+    /// Optional failing-object path (or other decisive context).  Never part
+    /// of `code`: equality and digest matching keep working on the bare code,
+    /// while Display carries the context so one probe run pinpoints the
+    /// object instead of burning an attempt on a bare code.
+    context: Option<String>,
 }
 pub type Result<T> = std::result::Result<T, Error>;
 impl Error {
     pub fn new(code: &'static str) -> Self {
-        Self { code }
+        Self {
+            code,
+            context: None,
+        }
     }
     pub fn code(&self) -> &'static str {
         self.code
     }
+    pub(crate) fn context(mut self, value: impl Into<String>) -> Self {
+        self.context = Some(value.into());
+        self
+    }
 }
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.code)
+        match &self.context {
+            Some(context) => write!(f, "{}:{}", self.code, context),
+            None => f.write_str(self.code),
+        }
     }
 }
 impl std::error::Error for Error {}
