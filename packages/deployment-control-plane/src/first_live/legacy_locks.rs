@@ -72,7 +72,20 @@ impl Identity {
         })
     }
     fn check(&self, file: &File) -> Result<()> {
-        require(*self == Self::of(file)?, "LEGACY_LOCK_DRIFT")
+        // The APFS device number is boot-volatile (16777230 -> 16777232 across
+        // the Sep-20/22 reboots) while inodes persist, and the retained
+        // p4r14r2 records are immutable history pinned on their original
+        // boot.  The binding is therefore inode/uid/gid/mode equality; the
+        // observed device still lands in the observation digest for
+        // forensics via Identity::of.
+        let observed = Self::of(file)?;
+        require(
+            self.inode == observed.inode
+                && self.uid == observed.uid
+                && self.gid == observed.gid
+                && self.mode == observed.mode,
+            "LEGACY_LOCK_DRIFT",
+        )
     }
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
