@@ -110,13 +110,14 @@ impl Dir {
             )
         };
         if fd < 0 {
-            return Err(Error::new(
-                if std::io::Error::last_os_error().raw_os_error() == Some(libc::ENOENT) {
-                    "ABSENT"
-                } else {
-                    "UNSAFE_FILE"
-                },
-            ));
+            let code = if std::io::Error::last_os_error().raw_os_error() == Some(libc::ENOENT) {
+                "ABSENT"
+            } else {
+                "UNSAFE_FILE"
+            };
+            // Self-identifying: the caller needs to know WHICH file was
+            // absent/unreadable. The `name` parameter is the filename.
+            return Err(Error::new(code).context(name.to_string()));
         }
         Ok(unsafe { File::from_raw_fd(fd) })
     }
