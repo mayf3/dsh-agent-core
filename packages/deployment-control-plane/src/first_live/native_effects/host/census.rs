@@ -123,8 +123,15 @@ fn observe(
                 require(candidates.len() == 1, "HOST_ROLE_AMBIGUOUS")?;
                 &candidates[0]
             };
-            let proven = inspect::prove(ctx, role, identity)
-                .map_err(|e| e.context(role.resolved_path.clone()));
+            let proven = inspect::prove(ctx, role, identity).map_err(|e| {
+                e.context(format!(
+                    "{} pid={} parent={} exe={:?}",
+                    role.resolved_path,
+                    identity.pid,
+                    identity.parent_pid,
+                    identity.executable
+                ))
+            });
             match proven? {
                 Some(observation) => serde_json::to_value(observation)?,
                 None => {
