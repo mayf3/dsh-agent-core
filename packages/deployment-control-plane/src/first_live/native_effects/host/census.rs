@@ -69,6 +69,8 @@ fn observe(
                 })?;
             let candidates =
                 policy::roles(path).map_err(|e| e.context(path.to_string()))?;
+            // Owned by the dynamic-login fallback below; otherwise unused.
+            let mut dynamic_login: Option<policy::Role> = None;
             let role = if path == "/usr/bin/login" {
                 use std::os::unix::fs::MetadataExt;
                 let mut matches = Vec::new();
@@ -86,8 +88,37 @@ fn observe(
                         Err(e) => return Err(e.into()),
                     }
                 }
-                require(matches.len() == 1, "HOST_LOGIN_ROLE")?;
-                matches[0]
+                match matches.len() {
+                    1 => matches[0],
+                    // tmux churns the owner's pty names faster than a frozen
+                    // table can pin them.  A login on an unpinned tty is
+                    // still the owner's session when the controlling device
+                    // is a pty OWNED BY THE GRANT OWNER (502): bind by
+                    // device identity and ownership, not by name.  The
+                    // credential set (real uid 502 through setuid root) and
+                    // the device match are still enforced by login() below.
+                    0 if !candidates.is_empty() => {
+                        use std::os::unix::fs::{FileTypeExt, MetadataExt};
+                        let owned_tty = std::fs::read_dir("/dev")
+                            .map_err(Error::from)?
+                            .filter_map(|e| e.ok())
+                            .find(|e| {
+                                e.file_name().to_str().is_some_and(|n| n.starts_with("ttys"))
+                                    && std::fs::symlink_metadata(e.path()).is_ok_and(|m| {
+                                        m.file_type().is_char_device()
+                                            && m.rdev() == identity.tty_device as u64
+                                            && m.uid() == 502
+                                    })
+                            })
+                            .map(|e| e.file_name().to_string_lossy().into_owned())
+                            .ok_or_else(|| Error::new("HOST_LOGIN_ROLE"))?;
+                        let mut r = candidates[0].clone();
+                        r.tty = Some(owned_tty);
+                        dynamic_login = Some(r);
+                        dynamic_login.as_ref().unwrap()
+                    }
+                    _ => return Err(Error::new("HOST_LOGIN_ROLE")),
+                }
             } else {
                 require(candidates.len() == 1, "HOST_ROLE_AMBIGUOUS")?;
                 &candidates[0]
