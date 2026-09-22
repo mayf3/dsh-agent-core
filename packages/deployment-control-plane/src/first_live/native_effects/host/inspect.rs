@@ -144,6 +144,24 @@ pub(super) fn prove(
             login(role, identity)?;
             None
         }
+        "APPLE_FRAMEWORK_SUPPORT_DAEMON_ROLE" => {
+            // On-demand Apple framework daemons (contacts contactsd /
+            // postersyncd) have no LaunchDaemons plist, no XPC bundle and
+            // no launchd Submitted record to attribute against.  The
+            // binding is therefore the pinned executable digest, the
+            // pinned codesign identifier and Apple's own platform
+            // signature on the running image.
+            let identifier = role
+                .identifier
+                .as_deref()
+                .ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?;
+            require(
+                code.digest == role.executable_sha256.as_deref().ok_or_else(|| Error::new("HOST_ROLE_ATTRIBUTION"))?,
+                "HOST_ROLE_CODE_DRIFT",
+            )?;
+            signature::running_apple(identity.pid, &role.resolved_path, Some(identifier))?;
+            None
+        }
         "APPLE_FIXED_SUBMITTED_HELPER_ROLE" => {
             let target = role
                 .fixed_launch_target
