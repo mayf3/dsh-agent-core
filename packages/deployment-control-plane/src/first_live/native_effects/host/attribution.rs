@@ -102,7 +102,15 @@ pub(super) fn join_fork_child(
             && parent.parent_pid == 1
             && child.process_group == parent.process_group
             && child.executable.as_deref() == Some(role.resolved_path.as_str())
-            && child.executable == parent.executable
+            // Pure fork keeps the parent's image; the exec-fork pattern
+            // (trampoline forks, the fork execs the payload — the live
+            // CLT Python scanner under authtrampoline) instead binds the
+            // parent to the reviewed launch authority's exact program.
+            && (child.executable.as_deref() == parent.executable.as_deref()
+                || role
+                    .authorities
+                    .iter()
+                    .any(|a| parent.executable.as_deref() == Some(a.program.as_str())))
             && child.credentials.root_capable()
             && child.credentials == parent.credentials,
         "HOST_ROLE_ATTRIBUTION",
