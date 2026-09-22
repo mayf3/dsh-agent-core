@@ -37,25 +37,26 @@ impl Owned {
             )?;
             identities.push(parent);
         }
-        // The one-auth session also runs its root journal sidecar (and the
-        // bootstrap root script) as SIBLING sudo processes of the same
-        // operator parent — alive for the whole transaction, so the census
-        // must classify them as owned lineage instead of aborting on the
-        // session's own infrastructure.  macOS sudo additionally re-parents
-        // the monitored command through an INNER sudo child, so the capture
-        // walks two sudo generations out from the operator parent.  Every
-        // member binds exactly like the ancestor chain: live, root-capable
-        // /usr/bin/sudo, kernel parentage — never arbitrary pids.
+        // The one-auth session also runs its root journal sidecar and the
+        // bootstrap root script as SIBLING processes of the same operator
+        // parent — alive for the whole transaction, so the census must
+        // classify them as owned lineage instead of aborting on the
+        // session's own infrastructure.  macOS sudo re-parents through an
+        // inner sudo child, and /usr/bin/python3 execs the CommandLineTools
+        // interpreter, so the session's root descendants are a mixed
+        // sudo/python tree.  The capture therefore walks THREE generations
+        // of live root-capable descendants of the operator parent (kernel
+        // parentage only — never arbitrary pids); everything outside this
+        // tree stays unowned and must classify through the reviewed roles.
         let operator_parent = identities.last().unwrap().parent_pid;
         let snapshot = reader::snapshot()?;
         let mut frontiers: Vec<u32> = identities.iter().map(|i| i.pid).collect();
         frontiers.push(operator_parent);
-        for _ in 0..2 {
+        for _ in 0..3 {
             let mut added = Vec::new();
             for process in &snapshot {
                 if !identities.iter().any(|i| i.pid == process.pid)
                     && frontiers.contains(&process.parent_pid)
-                    && process.executable.as_deref() == Some("/usr/bin/sudo")
                     && process.credentials.root_capable()
                 {
                     added.push(process.clone());
