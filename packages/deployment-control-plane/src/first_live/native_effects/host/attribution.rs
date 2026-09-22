@@ -115,28 +115,7 @@ pub(super) fn join_fork_child(
             && child.credentials == parent.credentials,
         "HOST_ROLE_ATTRIBUTION",
     )?;
-    // The exec-fork parent is the trampoline program, not the payload
-    // image, so the parent binds against the reviewed launch authority's
-    // program plus the launchd record it fronts — not against the role's
-    // resolved path.
-    require(
-        parent.pid == metadata.pid
-            && role
-                .authorities
-                .iter()
-                .any(|a| parent.executable.as_deref() == Some(a.program.as_str()))
-            && parent.credentials.root_capable(),
-        "HOST_ROLE_ATTRIBUTION",
-    )?;
-    require(
-        metadata.kind == "LaunchDaemon"
-            && role.authorities.iter().any(|authority| {
-                metadata.domain_service == format!("system/{}", authority.label)
-                    && metadata.path == authority.path
-                    && metadata.program == authority.program
-            }),
-        "HOST_ROLE_ATTRIBUTION",
-    )
+    join(role, parent, metadata)
 }
 #[cfg(test)]
 #[path = "../../../../test/first_live/host/attribution.rs"]
