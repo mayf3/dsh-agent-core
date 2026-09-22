@@ -744,6 +744,17 @@ fn absent(dir: &Dir, name: &str) -> Result<()> {
 fn append(dir: &Dir, name: &str, value: &impl Serialize) -> Result<()> {
     super::journal::append(dir, name, value)
 }
+fn predecessor_pid_is_active(pid: u32, retained_lock_write_ms: i128) -> bool {
+    match crate::transaction::first_live_process_identity(pid) {
+        // No such process (or nothing to probe): the predecessor is gone.
+        Err(_) => false,
+        Ok(live) => {
+            let start_ms = (live.started_seconds as i128) * 1000
+                + (live.started_micros as i128) / 1000;
+            start_ms <= retained_lock_write_ms + 60_000
+        }
+    }
+}
 impl<'a> LegacyLocks<'a> {
     pub(super) fn readonly_observe(
         op: &str,
@@ -1076,6 +1087,7 @@ impl<'a> LegacyLocks<'a> {
         }
         let mut owned = Vec::new();
         let mut predecessor_pid = None;
+        let mut retained_started_ms: Option<i64> = None;
         for index in [1usize, 2] {
             let intent: serde_json::Value =
                 super::files::read(predecessor, &format!("legacy-{index}-intent.json"))?;
@@ -1089,10 +1101,18 @@ impl<'a> LegacyLocks<'a> {
             let pid = intent["process"]["pid"]
                 .as_i64()
                 .ok_or(Error::new("LEGACY_RECOVERY_HISTORY"))?;
+            let predecessor_started_ms = intent["process"]["started_ms"]
+                .as_i64()
+                .ok_or(Error::new("LEGACY_RECOVERY_HISTORY"))?;
             require(
                 predecessor_pid.is_none() || predecessor_pid == Some(pid),
                 "LEGACY_RECOVERY_HISTORY",
             )?;
+            require(
+                retained_started_ms.is_none() || retained_started_ms == Some(predecessor_started_ms),
+                "LEGACY_RECOVERY_HISTORY",
+            )?;
+            retained_started_ms = Some(predecessor_started_ms);
             predecessor_pid = Some(pid);
             let created: serde_json::Value =
                 super::files::read(predecessor, &format!("legacy-{index}-created.json"))?;
@@ -1132,9 +1152,22 @@ impl<'a> LegacyLocks<'a> {
         }
         if context.ancestor_fence.is_some() {
             require(predecessor_pid == Some(51_690), "LEGACY_RECOVERY_HISTORY")?;
+            // kill(2) liveness is unsound across long recovery gaps: pids
+            // recycle.  pid 51690 was the p4r14r2 controller on Sep-18 and
+            // is an unrelated process today, yet kill(2) reports it alive.
+            // The retained record pins the predecessor's lock-write
+            // instant; the real predecessor STARTED at or before it, while
+            // a recycled pid belongs to a process born long after.  The
+            // pid therefore names the still-running predecessor only when
+            // a live process with that pid exists AND its kernel start
+            // instant is not after the retained instant (60s slack covers
+            // exec-to-lock-acquisition scheduling).  Unprobeable live
+            // processes fail closed as active.
             require(
-                unsafe { libc::kill(predecessor_pid.unwrap() as i32, 0) } == -1
-                    && std::io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH),
+                !predecessor_pid_is_active(
+                    predecessor_pid.unwrap() as u32,
+                    retained_started_ms.unwrap_or(i64::MAX) as i128,
+                ),
                 "LEGACY_RECOVERY_PREDECESSOR_ACTIVE",
             )?;
         }
