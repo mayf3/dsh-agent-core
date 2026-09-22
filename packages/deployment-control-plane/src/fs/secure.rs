@@ -227,9 +227,17 @@ pub(crate) fn validate(file: &File, uid: u32, directory: bool) -> Result<()> {
         return Err(error.context(fd_context(file)));
     }
     // The setgid bit on a DIRECTORY is a legitimate collaboration semantic
-    // (group-inherit) and carries no execution risk; setuid-on-dir, group-write
+    // (group-inherit) and the sticky bit restricts deletion to the file
+    // owner — neither grants any permission; setuid-on-dir, group-write
     // and other-write remain rejected. Files keep the full 0o7022 rejection.
-    let forbidden = if directory { 0o7022 & !0o2000 } else { 0o7022 };
+    // (Live on this host: /Library/PrivilegedHelperTools has carried
+    // 0o1755 since Aug-30; op -34's host census was the first flow to
+    // reach it and failed UNSAFE_MODE on exactly this bit.)
+    let forbidden = if directory {
+        0o7022 & !(0o2000 | 0o1000)
+    } else {
+        0o7022
+    };
     if let Err(error) = require(m.mode() & forbidden == 0, "UNSAFE_MODE") {
         return Err(error.context(fd_context(file)));
     }
@@ -339,6 +347,21 @@ mod validate_mode_tests {
         std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o2750)).unwrap();
         let f = std::fs::File::open(&dir).unwrap();
         // owner matches (uid 502 process, temp dir owned by 502): setgid dir accepted
+        let r = validate(&f, 502, true);
+        std::fs::remove_dir_all(&dir).unwrap();
+        assert!(r.is_ok(), "{r:?}");
+    }
+
+    #[test]
+    fn sticky_on_directory_is_deletion_restriction_not_permission() {
+        // /Library/PrivilegedHelperTools ships 0o1755 on this host; the
+        // sticky bit only narrows unlink authority, so it must not fail
+        // the directory scan the way setuid/group-write/other-write do.
+        let dir = std::env::temp_dir().join("pdc_sticky_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir(&dir).unwrap();
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o1755)).unwrap();
+        let f = std::fs::File::open(&dir).unwrap();
         let r = validate(&f, 502, true);
         std::fs::remove_dir_all(&dir).unwrap();
         assert!(r.is_ok(), "{r:?}");
