@@ -64,8 +64,11 @@ fn observe(
             let path = identity
                 .executable
                 .as_deref()
-                .ok_or_else(|| Error::new("HOST_ROLE_UNKNOWN"))?;
-            let candidates = policy::roles(path)?;
+                .ok_or_else(|| {
+                    Error::new("HOST_ROLE_UNKNOWN").context(format!("pid {}", identity.pid))
+                })?;
+            let candidates =
+                policy::roles(path).map_err(|e| e.context(path.to_string()))?;
             let role = if path == "/usr/bin/login" {
                 use std::os::unix::fs::MetadataExt;
                 let mut matches = Vec::new();
