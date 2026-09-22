@@ -24,7 +24,7 @@ fn main() {
         deployment_control_plane::service::run(sandbox)
     };
     if let Err(error) = result {
-        eprintln!("BLOCKED {}", error.code());
+        eprintln!("BLOCKED {error}");
         std::process::exit(1);
     }
 }

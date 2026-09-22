@@ -784,14 +784,28 @@ impl<'a> LegacyLocks<'a> {
             expected.parents[index].check(&parent.file)?;
         }
         namespace.check(&parents[0])?;
-        let permanent = parents[0].open_file(NAMES[0], libc::O_RDONLY, 0)?;
+        // The readonly probe must observe whatever state the packet declares:
+        // absent_create is a legal pre-enable state (the enable path creates
+        // the permanent lock), so the probe verifies the absence and records
+        // it instead of failing the whole observation.
         let permanent_identity = match &expected.permanent {
-            PermanentExpectation::Present { identity } => identity,
+            PermanentExpectation::Present { identity } => {
+                let permanent = parents[0].open_file(NAMES[0], libc::O_RDONLY, 0)?;
+                identity.check(&permanent)?;
+                serde_json::json!({
+                    "state":"present",
+                    "device":identity.device,
+                    "inode":identity.inode,
+                    "uid":identity.uid,
+                    "gid":identity.gid,
+                    "mode":identity.mode
+                })
+            }
             PermanentExpectation::AbsentCreate => {
-                return Err(Error::new("LEGACY_RECOVERY_PERMANENT"))
+                absent(&parents[0], NAMES[0])?;
+                serde_json::json!({"state":"absent_create"})
             }
         };
-        permanent_identity.check(&permanent)?;
         let mut retained = Vec::new();
         for index in [1usize, 2] {
             let created: serde_json::Value =
