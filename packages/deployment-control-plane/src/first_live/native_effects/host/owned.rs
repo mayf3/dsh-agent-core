@@ -41,17 +41,33 @@ impl Owned {
         // bootstrap root script) as SIBLING sudo processes of the same
         // operator parent — alive for the whole transaction, so the census
         // must classify them as owned lineage instead of aborting on the
-        // session's own infrastructure.  Siblings bind exactly like the
-        // ancestor chain: root-capable /usr/bin/sudo under the same
-        // operator parent, live at capture time.
+        // session's own infrastructure.  macOS sudo additionally re-parents
+        // the monitored command through an INNER sudo child, so the capture
+        // walks two sudo generations out from the operator parent.  Every
+        // member binds exactly like the ancestor chain: live, root-capable
+        // /usr/bin/sudo, kernel parentage — never arbitrary pids.
         let operator_parent = identities.last().unwrap().parent_pid;
-        for process in reader::snapshot()? {
-            if process.parent_pid == operator_parent
-                && !identities.contains(&process)
-                && process.executable.as_deref() == Some("/usr/bin/sudo")
-                && process.credentials.root_capable()
-            {
-                identities.push(process);
+        let snapshot = reader::snapshot()?;
+        let mut frontiers: Vec<u32> = identities.iter().map(|i| i.pid).collect();
+        frontiers.push(operator_parent);
+        for _ in 0..2 {
+            let mut added = Vec::new();
+            for process in &snapshot {
+                if !identities.iter().any(|i| i.pid == process.pid)
+                    && frontiers.contains(&process.parent_pid)
+                    && process.executable.as_deref() == Some("/usr/bin/sudo")
+                    && process.credentials.root_capable()
+                {
+                    added.push(process.clone());
+                }
+            }
+            if added.is_empty() {
+                break;
+            }
+            frontiers.clear();
+            for process in &added {
+                frontiers.push(process.pid);
+                identities.push(process.clone());
             }
         }
         let this = Self {
