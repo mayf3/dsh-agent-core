@@ -1012,32 +1012,68 @@ impl<'a> LegacyLocks<'a> {
             expected.parents[index].check(&parent.file)?;
         }
         absent(&parents[3], NAMES[3])?;
-        let permanent = parents[0].open_file(NAMES[0], libc::O_RDWR, 0)?;
-        validate(&permanent, journal.uid, false)?;
-        let permanent_identity = match &expected.permanent {
-            PermanentExpectation::Present { identity } => identity.clone(),
+        // The permanent lock lives in the boot-cleaned /private/var/run, so
+        // the p4r14r2 design assumption "no reboot between acquisition and
+        // recovery" leaves the retained inode unrecoverable after a restart.
+        // AbsentCreate — the packet's declared state since the -02
+        // authorization, already honored by acquire() and readonly_observe()
+        // — therefore means here: verify the absence, recreate exactly as
+        // acquire() does (0600 root, parent gid), and keep the retained
+        // history verified against ITSELF instead of against the live lock.
+        let permanent = match &expected.permanent {
+            PermanentExpectation::Present { identity } => {
+                let permanent = parents[0].open_file(NAMES[0], libc::O_RDWR, 0)?;
+                validate(&permanent, journal.uid, false)?;
+                identity.check(&permanent)?;
+                permanent
+            }
             PermanentExpectation::AbsentCreate => {
-                return Err(Error::new("LEGACY_RECOVERY_PERMANENT"))
+                absent(&parents[0], NAMES[0])?;
+                write_new(
+                    &parents[0],
+                    NAMES[0],
+                    b"",
+                    journal.uid,
+                    parents[0].file.metadata()?.gid(),
+                    0o600,
+                )?
             }
         };
-        permanent_identity.check(&permanent)?;
         require(
             unsafe { libc::flock(permanent.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
             "LEGACY_FLOCK_BUSY",
         )?;
+        let permanent_identity = Identity::of(&permanent)?;
+        permanent_identity.check(&parents[0].open_file(NAMES[0], libc::O_RDONLY, 0)?)?;
         let original: serde_json::Value = super::files::read(predecessor, "legacy-0-intent.json")?;
+        let expected_value = serde_json::to_value(expected)?;
+        let retained_permanent = original["expected"]["permanent"].clone();
         require(
             original["operation_id"] == op
                 && original["binding"] == predecessor_binding
-                && original["expected"] == serde_json::to_value(expected)?
-                && original["paths"] == serde_json::to_value(&paths)?,
+                && original["paths"] == serde_json::to_value(&paths)?
+                && (original["expected"] == expected_value
+                    || (matches!(
+                        &expected.permanent,
+                        PermanentExpectation::AbsentCreate
+                    ) && original["expected"]["ancestor_fence"]
+                        == expected_value["ancestor_fence"]
+                        && original["expected"]["parents"] == expected_value["parents"]
+                        && retained_permanent["state"] == "present")),
             "LEGACY_RECOVERY_HISTORY",
         )?;
         let zero: serde_json::Value = super::files::read(predecessor, "legacy-0-result.json")?;
         require(
-            zero == serde_json::json!({"binding":predecessor_binding,"identity":permanent_identity}),
+            zero == serde_json::json!({"binding":predecessor_binding,"identity":retained_permanent["identity"]}),
             "LEGACY_RECOVERY_HISTORY",
         )?;
+        if matches!(&expected.permanent, PermanentExpectation::AbsentCreate) {
+            append(
+                journal,
+                "legacy-recovery-permanent.json",
+                &serde_json::json!({"operation_id":op,"binding":binding,"predecessor_binding":predecessor_binding,"reason":"boot-cleaned-permanent-lock","identity":permanent_identity}),
+            )?;
+        }
         let mut owned = Vec::new();
         let mut predecessor_pid = None;
         for index in [1usize, 2] {
