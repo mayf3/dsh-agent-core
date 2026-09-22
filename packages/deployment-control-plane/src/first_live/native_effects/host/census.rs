@@ -123,7 +123,9 @@ fn observe(
                 require(candidates.len() == 1, "HOST_ROLE_AMBIGUOUS")?;
                 &candidates[0]
             };
-            match inspect::prove(ctx, role, identity)? {
+            let proven = inspect::prove(ctx, role, identity)
+                .map_err(|e| e.context(role.resolved_path.clone()));
+            match proven? {
                 Some(observation) => serde_json::to_value(observation)?,
                 None => {
                     retired.push(identity.pid);
