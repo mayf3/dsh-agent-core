@@ -94,8 +94,16 @@ pub(super) fn prove(
     identity: &Identity,
 ) -> Result<Option<Observation>> {
     ctx.check()?;
+    // A snapshot process may legitimately EXIT before its prove (on-demand
+    // Apple daemons, per-auth trampolines): retire it with evidence instead
+    // of failing the whole census.  A LIVE pid whose identity drifted
+    // (reuse) still fails closed below.
+    let live = match reader::identity_optional(identity.pid)? {
+        Some(live) => live,
+        None => return Ok(None),
+    };
     require(
-        reader::identity(identity.pid)? == *identity,
+        live == *identity,
         "HOST_CENSUS_DRIFT",
     )?;
     let loader_environment = (!sealed_entry(&role.resolved_path))
