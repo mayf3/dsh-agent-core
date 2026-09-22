@@ -44,7 +44,8 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
     } else {
         0x01000007
     };
-    let mut pending = macho::dependencies(&initial.bytes, cpu)?;
+    let mut pending = macho::dependencies(&initial.bytes, cpu)
+        .map_err(|e| e.context(role.resolved_path.clone()))?;
     let mut seen = BTreeSet::new();
     let mut result = BTreeMap::new();
     let mut total = initial.bytes.len();
@@ -62,7 +63,9 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
         total += image.bytes.len();
         require(total <= 512 * 1024 * 1024, "HOST_LOADER_CLOSURE")?;
         signature::static_apple(&path, None)?;
-        pending.extend(macho::dependencies(&image.bytes, cpu)?);
+        pending.extend(
+            macho::dependencies(&image.bytes, cpu).map_err(|e| e.context(path.clone()))?,
+        );
         result.insert(path, image.digest);
     }
     Ok(result)
