@@ -26,6 +26,26 @@ fn platform_library(path: &str) -> bool {
             .skip(1)
             .all(|p| !p.is_empty() && p != "." && p != "..")
 }
+/// Scans the image's loader graph under the host cpu, falling back to the
+/// translated slice for Rosetta-executed binaries (live example: Docker's
+/// x86_64-only com.docker.vmnetd on this arm64 host).  The loader grammar
+/// itself is identical for both slices; the role's code authority stays
+/// bound by the signature checks, so this only widens WHICH slice of the
+/// same running binary is scanned, never what counts as passing.
+fn scan(bytes: &[u8], host_cpu: u32) -> Result<Vec<String>> {
+    let translated = if host_cpu == 0x0100000c {
+        0x01000007
+    } else {
+        0x0100000c
+    };
+    match macho::dependencies(bytes, host_cpu) {
+        Ok(v) => Ok(v),
+        Err(e) if e.code() == "HOST_LOADER_ARCHITECTURE" => {
+            macho::dependencies(bytes, translated).map_err(|_| e)
+        }
+        Err(e) => Err(e),
+    }
+}
 fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, String>> {
     if sealed_entry(&role.resolved_path) {
         return Ok(BTreeMap::new());
@@ -44,7 +64,7 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
     } else {
         0x01000007
     };
-    let mut pending = macho::dependencies(&initial.bytes, cpu)
+    let mut pending = scan(&initial.bytes, cpu)
         .map_err(|e| e.context(role.resolved_path.clone()))?;
     let mut seen = BTreeSet::new();
     let mut result = BTreeMap::new();
@@ -63,9 +83,7 @@ fn closure(role: &Role, initial: &image::Image) -> Result<BTreeMap<String, Strin
         total += image.bytes.len();
         require(total <= 512 * 1024 * 1024, "HOST_LOADER_CLOSURE")?;
         signature::static_apple(&path, None)?;
-        pending.extend(
-            macho::dependencies(&image.bytes, cpu).map_err(|e| e.context(path.clone()))?,
-        );
+        pending.extend(scan(&image.bytes, cpu).map_err(|e| e.context(path.clone()))?);
         result.insert(path, image.digest);
     }
     Ok(result)
