@@ -1039,15 +1039,34 @@ impl<'a> LegacyLocks<'a> {
                 permanent
             }
             PermanentExpectation::AbsentCreate => {
-                absent(&parents[0], NAMES[0])?;
-                write_new(
-                    &parents[0],
-                    NAMES[0],
-                    b"",
-                    journal.uid,
-                    parents[0].file.metadata()?.gid(),
-                    0o600,
-                )?
+                match parents[0].open_file(NAMES[0], libc::O_RDWR, 0) {
+                    Err(e) if e.code() == "ABSENT" => write_new(
+                        &parents[0],
+                        NAMES[0],
+                        b"",
+                        journal.uid,
+                        parents[0].file.metadata()?.gid(),
+                        0o600,
+                    )?,
+                    Err(e) => return Err(e),
+                    Ok(existing) => {
+                        // Re-entry: a prior AbsentCreate attempt of this
+                        // same recovery may have recreated the anchor
+                        // before dying later in the transaction.  Adopt it
+                        // only when it is byte-for-byte what this path
+                        // creates — root-owned, 0600, empty — so the flock
+                        // anchor regains its meaning without any blind
+                        // retry semantics.
+                        validate(&existing, journal.uid, false)?;
+                        let meta = existing.metadata()?;
+                        require(
+                            meta.mode() & 0o7777 == 0o600
+                                && snapshot(&existing, journal.uid, 4096)?.bytes.is_empty(),
+                            "LEGACY_CONTENT_DRIFT",
+                        )?;
+                        existing
+                    }
+                }
             }
         };
         require(
