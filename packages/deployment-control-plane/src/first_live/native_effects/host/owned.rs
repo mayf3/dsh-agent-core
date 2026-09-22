@@ -37,6 +37,23 @@ impl Owned {
             )?;
             identities.push(parent);
         }
+        // The one-auth session also runs its root journal sidecar (and the
+        // bootstrap root script) as SIBLING sudo processes of the same
+        // operator parent — alive for the whole transaction, so the census
+        // must classify them as owned lineage instead of aborting on the
+        // session's own infrastructure.  Siblings bind exactly like the
+        // ancestor chain: root-capable /usr/bin/sudo under the same
+        // operator parent, live at capture time.
+        let operator_parent = identities.last().unwrap().parent_pid;
+        for process in reader::snapshot()? {
+            if process.parent_pid == operator_parent
+                && !identities.contains(&process)
+                && process.executable.as_deref() == Some("/usr/bin/sudo")
+                && process.credentials.root_capable()
+            {
+                identities.push(process);
+            }
+        }
         let this = Self {
             identities,
             executable: executable.into(),
