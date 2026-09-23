@@ -74,3 +74,21 @@ CAN_SHIP_WITH_WHOLE_MAIN = YES
 READY_FOR_DEPLOYMENT = YES（merge 后）
 WAITING_FOR_PDC_DEPLOYMENT = YES
 ```
+
+---
+
+## §A. Post-landing correction record (2026-09-24, PR_318_MERGE_BLOCKER_CLOSURE)
+
+`PREVIOUS_REAUDIT_INCOMPLETE = YES`. `NEW_EVIDENCE_SOURCE = GitHub Codex fresh review @ PR #318 exact head d715869e`.
+
+The fresh exact-head review surfaced five concrete findings that the prior internal re-audit (above) had not covered. The sections above are retained as history; they are superseded on the following points only:
+
+| Finding | Class | Prior claim invalidated | Closure |
+|---|---|---|---|
+| G1 | REPOSITORY_INVARIANT_VIOLATION + REQUIRED_GATE_FAILURE | "MERGE_READY=YES" — the accepted authorizing Spec did not exist in implementation base `2a85d065`; docs-first was violated | Docs-only authority lane (`spec/session-centric-execution-traceability-v1`: census + spec at final reviewed state) lands first; implementation branch reconstructed stacked on it; `IMPLEMENTATION_BASE_CONTAINS_ACCEPTED_SPEC=YES` mechanically verifiable |
+| B1 | CONTRACT_VIOLATION (exact join) | "exact scheduler join fully safe" — `byCronOccurrence` suffix fallback + missing owner check promoted `agt_evil/unrelated-<occBody>` to `DERIVED_EXACT` | Exact canonical identity required: decoded native sessionId === `cron-run-<occurrenceId>` AND located-journal agentId === routed/owning agent (occurrence owner → job routing → history run_record agent_id); foreign/suffix counterexample regression test added |
+| B2 | CONTRACT_VIOLATION (listing completeness) | "listing correct" — journals created after index build were invisible indefinitely | `ensureFreshSessionIndex` now runs a bounded stat-only journal-inventory comparison and rebuilds on newly-discovered files; discriminating regression test added; index remains coordinate-only/rebuildable, no second registry |
+| B3 | Structure gate regression | "structure violations base-identical" — `packages/broker/test` grew 21→22 direct children | Test moved to existing scoped subdirectory `packages/broker/test/capabilities/`; fresh A/B re-run required: `NEW_VIOLATIONS_FROM_THIS_GOAL=0` |
+| F1 | CONTRACT_VIOLATION (validation boundary) | implicit — direct parent-RPC pagination was clamped/silently dropped (`limit:0/201/1.5/"10"/null`, `cursor:5/{}/[]` all succeeded) | Trusted handler + core both fail closed with `invalid_arguments`; no clamping; direct-handler regression matrix added |
+
+Corrected gate claims: `SHIP_BLOCKERS=NONE` (above) is superseded by this record until the closure re-audit returns ACCEPT on the exact repaired head; `verify:structure` "no new violations" claim stands corrected — the prior run DID contain a goal-caused violation (B3).

@@ -124,18 +124,31 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
   /** CTR-SCT-002: MY_SESSIONS — self-only, coordinate-only derived listing. */
   function listHandle() {
     return async function handle(args, trustedContext) {
-      // Exact-args discipline: only the pagination keys are admitted; the
-      // trusted handler is the validation authority (local capabilities).
-      if (args !== undefined && args !== null
-        && Object.keys(args).some((k) => k !== 'cursor' && k !== 'limit')) {
+      // F1: the trusted LOCAL handler is the authoritative validation
+      // boundary (direct parent-RPC calls bypass manifest validation).
+      // Invalid pagination input FAILS CLOSED with invalid_arguments — it is
+      // never clamped, coerced, or silently dropped.
+      if (args !== undefined && args !== null && (typeof args !== 'object' || Array.isArray(args))) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'arguments must be an object' } }
+      }
+      const keys = Object.keys(args ?? {})
+      if (keys.some((k) => k !== 'cursor' && k !== 'limit')) {
         return { ok: false, error: { code: 'invalid_arguments', detail: 'unknown argument; only cursor and limit are admitted' } }
+      }
+      const rawCursor = args?.cursor
+      if (rawCursor !== undefined && rawCursor !== null && typeof rawCursor !== 'string') {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'cursor must be a string' } }
+      }
+      const rawLimit = args?.limit
+      if (rawLimit !== undefined && (!Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 200)) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'limit must be an integer in 1..200' } }
       }
       const outcome = listAgentSessions({
         homesRoot: layout.homesRoot,
         indexDir: join(layout.controlDir, 'execution-history-index'),
         viewerAgentId: trustedContext.agentId,
-        cursor: typeof args?.cursor === 'string' ? args.cursor : undefined,
-        limit: Number.isInteger(args?.limit) ? args.limit : undefined,
+        cursor: typeof rawCursor === 'string' ? rawCursor : undefined,
+        limit: rawLimit === undefined ? undefined : rawLimit,
       })
       if (outcome.ok !== true) {
         const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
