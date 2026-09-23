@@ -13,10 +13,14 @@ scope:
   - packages/broker/src/index.js (manifest registration wiring only)
   - packages/production-runtime/src/execution-history/runtime.js (handler wiring only)
   - packages/scheduler/src/self-service/projections.js (occurrence projection enrichment only)
+  - packages/scheduler/src/occurrence.js (invokeWithDeadline request: additive jobId field only)
   - packages/production-runtime/src/scheduler-invoker.js (invocation evidence row additive fields)
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/workflow-execution-runtime.js (deliver receipt messageId plumb)
   - packages/workflow-execution/src/engine.js (run_delivered messageId field pass-through only)
+  - packages/execution-history/src/session-index.js + src/loaders/session-journal.js (additive user-origin extractor key only)
+  - packages/execution-history/src/loaders/runtime-evidence.js (additive runId coordinate key parse only)
+  - packages/execution-history/src/loaders/scheduler-store.js (additive fences exposure only)
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
   - AGENT_CORE_EXECUTION_HISTORY_QUERY_V1
@@ -49,7 +53,9 @@ owners:
   `EXECUTION_HISTORY_RECORD_CENSUS_AND_CORRELATION_GAPS_V1.md`（2026-09-18）继续有效。
 - Governing boundaries reused（不改其冻结语义）：
   - **EXECUTION_HISTORY_QUERY_V1**：四根查询、R1-R9 关联规则、§4.3 可见性/redaction、§4.5 消费禁令、
-    §8 隔离索引、WPA-1 归档——全部原样 REUSE。本文为其查询语义做**严格加法细化**（K4/K5），
+    §8 隔离索引、WPA-1 归档——R1-R4/R6-R9 原样 REUSE；R5 按 D-SCT-5 做严格加法精化
+    （journal 存在性证明使"命名匹配单独出现"的弱键触发条件不再可达；`JOIN_BY_NAME_CONVENTION`
+    标签词表保留用于无证明残态）；其余为查询语义加法细化（K4/K5），
     不触碰其冻结非目标（仍不做 scheduler run→messageId 写路径补录=F2，仍不做跨 agent 全文浏览）。
   - **ASM V2（CTR-ASM2-*）**：send 行为、结果字段集、reconcile live+.1 读窗、无 dispatch ID 铸造
     ——零变化。send 链的 exact 双 Session 证据 = 既有 ASM audit（live+.1+archive）+ 同步回执，
@@ -193,7 +199,10 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 - 排序：`lastActiveAtUtc` 倒序、同刻按 `sessionId` 字典序；单响应上限 200 条，超限
   `truncated:true` + `nextCursor`（keyset 续读，全序确定）。
 - 数据源纪律：只读 `homes/<callerAgentId>/sessions/**`；session-index 不可用时懒构建
-  （既有语义）；`origins`/坐标键为 best-effort，缺失记空数组+不报错（不阻塞 listing 主功能）。
+  （既有语义）。`origins.inter_agent`/`origins.workflow_execution` 与坐标键来自既有
+  session-index 抽取键；`origins.user` 由本 Spec 在 journal 坐标抽取器上加法新增键
+  （source.kind='user' 出现判定，镜像既有 hasInterAgent 模式；scope 已列）。
+  origins/坐标键为 best-effort，缺失记空数组/false 且不报错（不阻塞 listing 主功能）。
 - 错误表（封闭）：`invalid_arguments`、`forbidden_not_owner`、`history_unavailable`
   （caller homes 根不可读时）。
 - 隐私：输出不含任何消息正文、tool 参数/结果、模型输出；仅坐标与布尔 presence。
@@ -218,6 +227,11 @@ nativeSessionId, fences, terminationSettlement?}`（无任何写路径变化）�
 规则：`not_created` 时**任何面不得输出 sessionId**（含 execution-history 的 timeline 关联——
 不产生 R5 关联，只产生 disposition 行）；`unknown` 不猜方向。pre-reserve 从未铸造 occurrence
 的失败继续由既有 `self_ops.job_disposition`（slot 分类词表）回答，本表不重复其职责。
+已知局限（如实记档，F-SCT-5）：postdeploy canary invoker 的 reserved 身份不触碰 AgentProcess
+却会 terminalize `succeeded` 并持久 nativeSessionId——此类 occurrence 的投影按表输出
+`created`（忠实于 ledger 既有证据），但 session 实际不存在；execution-history scheduler-root
+侧因 journal 不存在仍降级为诚实 `CORRELATION_GAP`（不产生假 exact）。消除该边差需 canary
+invoker 身份标记，记 FOLLOW_UP 不阻塞本期。
 
 ### CTR-SCT-004 — self `runs` 投影加法
 
@@ -235,10 +249,17 @@ Auth 模型零变化（self 零 Auth；foreign/all_agents 仍需 `scheduler.audi
 ### CTR-SCT-005 — invocation 证据行坐标补齐
 
 `<root>/control/runtime-evidence.jsonl` 的 `kind:'invocation'` 行追加 `occurrenceId, runId, jobId,
-requestId` 四字段（invocation 对象在 `invokeWithDeadline` 既有入参中已全部持有；纯加法）。
-纪律不变：evidence 写入继续 best-effort try/catch，写失败不得影响调用成败语义；旧行（无新字段）
-继续可读。消费方（execution-history `runtime-evidence` loader）已在解析这些键——补齐后
-scheduler-root 的坐标匹配自然生效；坐标匹配是 `DERIVED_EXACT` 的辅助证据，非必要条件。
+requestId` 四字段。 Plumbing 路径（precise）：evidence writer（observed invoker wrap）只看得到
+`invokeWithDeadline` 构造的 invocation **request 对象**，该对象既有字段为
+`{agentId, sessionId, occurrenceId, runId, requestId, payloadHash, message, model, timeoutMs,
+deliveryTarget, signal, onStart}`——即 `occurrenceId/runId/requestId` writer 已在手；
+**`jobId` 不在 request 上**（只在外层 job 实参与 router callerCorrelation 之外），故本 Spec
+在 `packages/scheduler/src/occurrence.js` 的 request 构造处做**仅一字段加法**（`jobId`），
+writer 随即四键齐写。纪律不变：evidence 写入继续 best-effort try/catch，写失败不得影响调用
+成败语义；任何路径上某键不可得时该键省略（诚实 absent），旧行（无新字段）继续可读。
+消费方（execution-history `runtime-evidence` loader）既有解析键为 `sessionId/reconciliationHandle/
+occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）；scheduler-root 的坐标
+匹配由此自然生效；坐标匹配是 `DERIVED_EXACT` 的辅助证据，非必要条件。
 
 ### CTR-SCT-006 — workflow `run_delivered.messageId` 生产填充
 
@@ -332,6 +353,9 @@ scheduler-root 的坐标匹配自然生效；坐标匹配是 `DERIVED_EXACT` 的
 - F-SCT-3：渠道/Human trigger 外部坐标持久化（notification-ingress 幂等记录 7 天 sweep 之外）。
 - F-SCT-4：`kind` 细分 D-008 `agent-delegation/task-*`、`background-*` 前缀核实后细化
   （现按 CTR-SCT-002 保守归 `other`）。
+- F-SCT-5：postdeploy canary invoker 身份标记，使 canary occurrence 的 `sessionCreated`
+  处置可判 `not_created`（见 CTR-SCT-003 已知局限；现状其对 session 无副作用，execution-history
+  侧已诚实降级）。
 
 ## 10. 被拒绝的替代方案
 
@@ -345,5 +369,5 @@ scheduler-root 的坐标匹配自然生效；坐标匹配是 `DERIVED_EXACT` 的
 
 ## 11. Open owner decisions
 
-- 无。CTR-SCT-004 对 V4 CTR-SCT-002 inclusive 清单的读法已在 §0 显式声明并给出降级路径
+- 无。CTR-SCT-004 对 V4 CTR-RESULT-002 inclusive 清单的读法已在 §0 显式声明并给出降级路径
   （评审若不认可 → 按 §14.2 型 AMEND 记录补 V4 amendment 注记，契约本身不变）。
