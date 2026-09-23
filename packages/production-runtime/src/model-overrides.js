@@ -6,10 +6,13 @@
  * AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V1 CTR-IMPL-001): the ONLY route
  * order authority. Schema:
  *
- *   { "version": 2,
+ *   { "version": 3,
  *     "routeCatalog": { "<routeRef>": { routeKind: builtin|subscription,
  *        provider, model, credentialReadiness, providerEnv?,
- *        plugin + pluginVersion (subscription ONLY — FORBIDDEN on builtin) } },
+ *        plugin + pluginVersion (subscription ONLY — FORBIDDEN on builtin),
+ *        reasoningEffort? (GPT6_LUNA_AND_REASONING_EFFORT_V1: dsh-codex
+ *        subscription routes ONLY — closed REASONING_EFFORT_VALUES set,
+ *        absent = provider/model default behavior) } },
  *     "overrides": { "<agentId>": { "model": { "primary": <routeRef>,
  *        "fallbacks": [<routeRef>, ...] } } } }
  *
@@ -29,7 +32,10 @@ import { createHash } from 'node:crypto'
 import { isIP } from 'node:net'
 
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
-import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
+import {
+  CANONICAL_DEFAULT_MODEL_ROUTE,
+  REASONING_EFFORT_VALUES,
+} from '../../agent-provisioning/src/shared-codex.js'
 
 /**
  * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
@@ -43,12 +49,23 @@ export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-co
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',
   plugin: 'dsh-codex',
-  pluginVersion: '0.2.3',
-  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
-  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
+  pluginVersion: '0.2.3-dshr1',
+  sourceCommit: '42f14343e1506d7d06216d7fa580cae5161001dc',
+  artifactSha256: '160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5',
   dshVersion: '0.1.0-rc.8',
   dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
   credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  /**
+   * GPT6_LUNA_AND_REASONING_EFFORT_V1: the reasoning effort of the BUILT-IN
+   * default global route (canonicalDefaultGlobalRoute). pi-ai 0.87.x emits an
+   * explicit `reasoning.effort` on EVERY Codex request — an omitted effort
+   * defaults to `none` (no thinking), silently degrading every agent that
+   * does not carry an explicit value. The default route therefore pins
+   * medium explicitly: the closest explicit proxy for today's server-default
+   * behavior and the task-mandated default. Explicit routeCatalog entries
+   * always carry their own reasoningEffort and never read this value.
+   */
+  defaultRouteReasoningEffort: 'medium',
 })
 
 export const PROVIDER_ENV_ALLOWLIST = Object.freeze([
@@ -238,6 +255,10 @@ function exactKeys(value, expected) {
  * collapse to the same identity even when every other field matches. Two
  * different routeRefs resolving to the same canonical identity are a malformed
  * config (no alias bypass of ATTEMPTED_AT_MOST_ONCE).
+ *
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1: the per-route reasoningEffort joins the
+ * canonical form (ABSENT when unconfigured) — `gpt-6-luna + medium` and
+ * `gpt-6-luna + high` are DIFFERENT routes because their requests differ.
  */
 function catalogCanonicalIdentity(route) {
   return JSON.stringify([
@@ -246,6 +267,7 @@ function catalogCanonicalIdentity(route) {
     route.model,
     route.plugin ?? 'ABSENT',
     route.pluginVersion ?? 'ABSENT',
+    route.reasoningEffort ?? 'ABSENT',
     route.credentialFile ?? 'ABSENT',
     route.credentialReadiness,
     route.providerEnv === undefined
@@ -270,7 +292,7 @@ function makeChainRoute(routeRef, route) {
     // block; a builtin processConfig has NO subscription key, so the spawn
     // side's conditional expansion keeps it off the plugin/pin path entirely.
     ...(route.routeKind === 'subscription' ? {
-      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile),
+      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, route.reasoningEffort),
     } : {}),
   })
   return Object.freeze({
@@ -283,8 +305,11 @@ function makeChainRoute(routeRef, route) {
 }
 
 /** DEC-IMPL-011 subscription provisioning block, shared by routeCatalog
- * entries and the built-in default route (DEFAULT_MODEL_ROUTING_CONFIG_V1). */
-function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile) {
+ * entries and the built-in default route (DEFAULT_MODEL_ROUTING_CONFIG_V1).
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1: reasoningEffort rides the block so the
+ * spawn's provisioning writes it into the plugin config patch — one route
+ * tuple, one internally consistent provisioning output. */
+function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort) {
   return Object.freeze({
     plugin,
     pluginVersion,
@@ -293,6 +318,7 @@ function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile) {
     dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
     dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
     ...(credentialFile === undefined ? {} : { credentialFile }),
+    ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
       packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
     }),
@@ -318,6 +344,10 @@ export function canonicalDefaultGlobalRoute() {
       CHATGPT_SUBSCRIPTION_V1.plugin,
       CHATGPT_SUBSCRIPTION_V1.pluginVersion,
       CHATGPT_SUBSCRIPTION_V1.credentialFile,
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: pi-ai 0.87.x defaults an omitted
+      // effort to wire `none` — the built-in default route pins medium so
+      // zero-config Agents keep thinking at the server-default level.
+      CHATGPT_SUBSCRIPTION_V1.defaultRouteReasoningEffort,
     ),
   })
 }
@@ -366,15 +396,17 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       const isSubscription = routeKind === 'subscription'
       const isOpenAICodex = route?.provider === 'openai-codex' || route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
       const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
+      const hasReasoningEffort = Object.hasOwn(route ?? {}, 'reasoningEffort')
       const routeKeys = [
         'credentialReadiness', 'model', 'provider', 'routeKind',
         ...(isSubscription ? ['plugin', 'pluginVersion'] : []),
         ...(isSubscription && isOpenAICodex ? ['credentialFile'] : []),
         ...(hasProviderEnv ? ['providerEnv'] : []),
+        ...(hasReasoningEffort ? ['reasoningEffort'] : []),
       ]
       if (routeRef === '' || !exactKeys(route, routeKeys)) {
         throw invalid(isSubscription
-          ? `routeCatalog.${routeRef} must contain routeKind, provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv only`
+          ? `routeCatalog.${routeRef} must contain routeKind, provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv/reasoningEffort only`
           : `routeCatalog.${routeRef} must contain routeKind, provider, model, credentialReadiness and optional providerEnv only (plugin/pluginVersion are FORBIDDEN on a builtin route)`)
       }
       const requiredFields = isSubscription
@@ -402,6 +434,19 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       )) {
         throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@0.2.3 and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
       }
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: an explicit per-route reasoning
+      // effort is legal ONLY on a dsh-codex subscription route — the dsh-codex
+      // plugin config is the one provisioned passthrough seam. Any other
+      // route kind (builtin, other subscription providers) carrying the field
+      // is a config error, never an ignored hint. The value vocabulary is the
+      // closed REASONING_EFFORT_VALUES set; per-MODEL capability is enforced
+      // downstream fail-loud (dsh-llm UNSUPPORTED_REASONING_EFFORT).
+      if (hasReasoningEffort && (!isSubscription || route.plugin !== CHATGPT_SUBSCRIPTION_V1.plugin)) {
+        throw invalid(`routeCatalog.${routeRef}.reasoningEffort is only supported on ${CHATGPT_SUBSCRIPTION_V1.plugin} subscription routes (routeKind ${routeKind}${isSubscription ? ', plugin ' + JSON.stringify(route.plugin) : ''})`)
+      }
+      if (hasReasoningEffort && !REASONING_EFFORT_VALUES.includes(route.reasoningEffort)) {
+        throw invalid(`routeCatalog.${routeRef}.reasoningEffort must be one of ${REASONING_EFFORT_VALUES.join(', ')} (got ${JSON.stringify(route.reasoningEffort)})`)
+      }
       const providerEnv = hasProviderEnv ? validateProviderEnv(route.providerEnv) : undefined
       const frozenRoute = Object.freeze({
         routeKind,
@@ -410,6 +455,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         ...(isSubscription ? { plugin: route.plugin, pluginVersion: route.pluginVersion } : {}),
         ...(isOpenAICodex ? { credentialFile: route.credentialFile } : {}),
         credentialReadiness: route.credentialReadiness,
+        ...(hasReasoningEffort ? { reasoningEffort: route.reasoningEffort } : {}),
         ...(providerEnv === undefined ? {} : { providerEnv }),
       })
       const canonical = catalogCanonicalIdentity(frozenRoute)
@@ -491,6 +537,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         model: route.model,
         ...(route.plugin === undefined ? {} : { plugin: route.plugin, pluginVersion: route.pluginVersion }),
         ...(route.credentialFile === undefined ? {} : { credentialFile: route.credentialFile }),
+        ...(route.reasoningEffort === undefined ? {} : { reasoningEffort: route.reasoningEffort }),
         ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),
       })
     },

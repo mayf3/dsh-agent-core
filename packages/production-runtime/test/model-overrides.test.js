@@ -6,6 +6,7 @@ import { test } from 'node:test'
 
 import {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  canonicalDefaultGlobalRoute,
   CHATGPT_SUBSCRIPTION_V1,
   loadAgentModelOverrides,
   MAX_CONFIGURED_ROUTES,
@@ -27,7 +28,7 @@ const VALID_PROVIDER_ENV = Object.freeze({
  * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
  * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
  * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
- * (dsh-codex@0.2.3 exact). Route CONTENT lives entirely in the config — the
+ * (dsh-codex exact-pin). Route CONTENT lives entirely in the config — the
  * code constant below only carries pins/scope (F-10 / ACC-014).
  */
 const CATALOG = Object.freeze({
@@ -42,7 +43,7 @@ const CATALOG = Object.freeze({
     provider: 'openai-codex',
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
-    pluginVersion: '0.2.3',
+    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
     credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
     credentialReadiness: 'luna-oauth-home',
   },
@@ -58,7 +59,7 @@ const VALID = {
 test('the code constant carries ONLY pins and scope — no route tuple values (F-10)', () => {
   assert.equal(CHATGPT_SUBSCRIPTION_V1.targetAgentId, 'agt_cto-agent')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.plugin, 'dsh-codex')
-  assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3-dshr1')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshVersion, '0.1.0-rc.8')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshCommit, '514ab7b0029141b88c807704764d0d3e1eea1da4')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
@@ -270,7 +271,7 @@ test('ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConf
   // subscription: the provisioning block is constructed with the frozen pins.
   assert.deepEqual(fallback.processConfig.subscription, {
     plugin: 'dsh-codex',
-    pluginVersion: '0.2.3',
+    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
     sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
     artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
     dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
@@ -383,3 +384,136 @@ test('providerEnv URL, key and value failures are fail-loud without secret echo'
 // malformed-config respawn isolation) live in model-overrides-runtime.test.js
 // since the 500-line structure cap split — same suite glob, zero semantic
 // change.
+
+// --- GPT6_LUNA_AND_REASONING_EFFORT_V1: per-route reasoningEffort ------------
+
+test('GPT6-1: an explicit reasoningEffort on a dsh-codex subscription route loads and rides the process config', (t) => {
+  const { file } = fixture(t)
+  const catalog = {
+    ...CATALOG,
+    luna_medium: {
+      routeKind: 'subscription',
+      provider: 'openai-codex',
+      model: 'gpt-6-luna',
+      plugin: 'dsh-codex',
+      pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+      credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+      credentialReadiness: 'owner-reauth-pending',
+      reasoningEffort: 'medium',
+    },
+  }
+  write(file, { version: 3, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: [] } } } })
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const route = loaded.resolveChain(TARGET, GLOBAL).routes[0]
+  assert.equal(route.processConfig.subscription.reasoningEffort, 'medium')
+  assert.equal(route.processConfig.model, 'gpt-6-luna')
+})
+
+test('GPT6-2: reasoningEffort joins the canonical route identity — medium vs high are different routes', (t) => {
+  const { file } = fixture(t)
+  const base = {
+    routeKind: 'subscription',
+    provider: 'openai-codex',
+    model: 'gpt-6-luna',
+    plugin: 'dsh-codex',
+    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+    credentialReadiness: 'owner-reauth-pending',
+  }
+  const catalog = {
+    ...CATALOG,
+    luna_medium: { ...base, reasoningEffort: 'medium' },
+    luna_high: { ...base, reasoningEffort: 'high' },
+    luna_plain: { ...base },
+  }
+  write(file, { version: 3, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: ['luna_high', 'luna_plain'] } } } })
+  const routes = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  const [medium, high, plain] = routes
+  assert.notEqual(medium.identity, high.identity)
+  assert.notEqual(medium.identity, plain.identity)
+  assert.notEqual(high.identity, plain.identity)
+  // The identity delta is exactly the subscription reasoningEffort.
+  assert.equal(JSON.parse(medium.identity)[4], 'medium')
+  assert.equal(JSON.parse(high.identity)[4], 'high')
+  assert.equal(JSON.parse(plain.identity)[4], 'ABSENT')
+})
+
+test('GPT6-3: a route without reasoningEffort stays byte-compatible with the pre-change schema', (t) => {
+  const { file } = fixture(t)
+  write(file, VALID)
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const [, fallback] = loaded.resolveChain(TARGET, GLOBAL).routes
+  assert.equal(Object.hasOwn(fallback.processConfig.subscription, 'reasoningEffort'), false)
+  assert.equal(Object.hasOwn(loaded.overrides[TARGET].routes.luna, 'reasoningEffort'), false)
+})
+
+test('GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message', (t) => {
+  const { file } = fixture(t)
+  const bad = (reasoningEffort) => ({
+    version: 3,
+    routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, reasoningEffort } },
+    overrides: VALID.overrides,
+  })
+  for (const value of ['ultra-mega', 'NONE', 'Medium', '', 'medium ', 42, null]) {
+    write(file, bad(value))
+    assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+      assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+      assert.match(error.message, /reasoningEffort must be one of/)
+      return true
+    }, `expected fail-loud for ${JSON.stringify(value)}`)
+  }
+})
+
+test('GPT6-5: reasoningEffort is FORBIDDEN on builtin routes and non-dsh-codex subscription routes', (t) => {
+  const { file } = fixture(t)
+  // builtin carrying the field
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, reasoningEffort: 'medium' } },
+    overrides: VALID.overrides,
+  })
+  assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+    assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+    assert.match(error.message, /only supported on dsh-codex subscription routes/)
+    return true
+  })
+  // other-plugin subscription carrying the field (pluginVersion left unpinned)
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, other: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin: 'other-plugin', pluginVersion: '0.2.3', credentialReadiness: 'zai-api-key-home', reasoningEffort: 'medium' } },
+    overrides: VALID.overrides,
+  })
+  assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+    assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+    assert.match(error.message, /only supported on dsh-codex subscription routes/)
+    return true
+  })
+})
+
+test('GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity', (t) => {
+  const { file } = fixture(t)
+  const base = {
+    routeKind: 'subscription',
+    provider: 'openai-codex',
+    model: 'gpt-6-luna',
+    plugin: 'dsh-codex',
+    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+    credentialReadiness: 'owner-reauth-pending',
+  }
+  write(file, {
+    version: 3,
+    routeCatalog: { a: { ...base, reasoningEffort: 'low' }, b: { ...base, reasoningEffort: 'high' } },
+    overrides: { [TARGET]: { model: { primary: 'a', fallbacks: ['b'] } } },
+  })
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  assert.equal(loaded.resolveChain(TARGET, GLOBAL).routes.length, 2)
+})
+
+test('GPT6-7: the built-in default global route carries the pinned explicit default effort', () => {
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.defaultRouteReasoningEffort, 'medium')
+  const loaded = loadAgentModelOverrides(join(tmpdir(), 'gpt6-missing-overrides-file.json'), [TARGET])
+  const passthrough = loaded.resolveChain(OTHER, canonicalDefaultGlobalRoute()).routes[0]
+  assert.equal(passthrough.processConfig.subscription.reasoningEffort, 'medium')
+  assert.equal(passthrough.processConfig.model, 'gpt-5.6-luna')
+})

@@ -631,3 +631,54 @@ test('DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to t
   assert.match(settings, /opencode-go:\n {6}apiKeyEnv: OPENCODE_GO_API_KEY/u)
   assert.doesNotMatch(settings, /provider: opencode-go/u)
 })
+
+// --- GPT6_LUNA_AND_REASONING_EFFORT_V1: reasoning rides the profile patch ----
+
+test('GPT6-P1: persistOpenAICodexCredentialFile writes the route reasoning effort into the plugin config block', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-persist-reasoning-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const patch = join(dir, 'cordis.patch.yml')
+  writeFileSync(patch, '[]\n', 'utf8')
+  persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 'medium' })
+  const text = readFileSync(patch, 'utf8')
+  assert.match(text, /- id: llm-openai-codex/)
+  assert.match(text, /credentialFile: /)
+  assert.match(text, /reasoning: medium/)
+  // Idempotent rewrite: a different effort replaces the previous value, never appends.
+  persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 'high' })
+  const rewritten = readFileSync(patch, 'utf8')
+  assert.match(rewritten, /reasoning: high/)
+  assert.equal(rewritten.match(/reasoning: /g).length, 1)
+  assert.equal(rewritten.split('BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1').length - 1, 1)
+})
+
+test('GPT6-P2: absent reasoningEffort keeps the block byte-identical to the legacy shape', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-persist-legacy-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const before = join(dir, 'before.yml')
+  const after = join(dir, 'after.yml')
+  writeFileSync(before, '[]\n', 'utf8')
+  writeFileSync(after, '[]\n', 'utf8')
+  persistOpenAICodexCredentialFile(before, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  persistOpenAICodexCredentialFile(after, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, {})
+  assert.equal(readFileSync(before, 'utf8'), readFileSync(after, 'utf8'))
+  assert.doesNotMatch(readFileSync(after, 'utf8'), /reasoning/)
+})
+
+test('GPT6-P3: an out-of-vocabulary reasoningEffort fails loud (reasoning_effort_invalid)', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-persist-invalid-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const patch = join(dir, 'cordis.patch.yml')
+  writeFileSync(patch, '[]\n', 'utf8')
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 'ultra-mega' }),
+    (error) => error.code === 'reasoning_effort_invalid' && /ultra-mega/.test(error.message),
+  )
+  assert.throws(
+    () => persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 42 }),
+    (error) => error.code === 'reasoning_effort_invalid',
+  )
+  // `none` is legal and spelled `off` in the dsh-codex config vocabulary.
+  persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 'none' })
+  assert.match(readFileSync(patch, 'utf8'), /reasoning: off/)
+})

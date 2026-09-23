@@ -23,7 +23,7 @@ const OVERRIDE = {
       provider: 'openai-codex',
       model: 'gpt-5.6-luna',
       plugin: 'dsh-codex',
-      pluginVersion: '0.2.3',
+      pluginVersion: '0.2.3-dshr1',
     },
   },
 }
@@ -149,7 +149,7 @@ test('real production seam: local exact package, create/resume restart, and roll
   const targetHome = join(layout.homesRoot, TARGET)
   const otherHome = join(layout.homesRoot, OTHER)
   const installed = JSON.parse(readFileSync(join(targetHome, 'profiles', 'node_modules', 'dsh-codex', 'package.json'), 'utf8'))
-  assert.equal(installed.version, '0.2.3')
+  assert.equal(installed.version, '0.2.3-dshr1')
   assert.equal(statSync(targetHome).mode & 0o777, 0o700)
   assert.equal(existsSync(join(targetHome, '.openai-codex-auth.json')), false)
   await firstTarget.shutdown(5_000)

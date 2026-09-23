@@ -482,7 +482,13 @@ export function provisionAgentHome(home, workspace, options = {}) {
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
-    const persistOptions = {}
+    const persistOptions = {
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: the route's per-route reasoning
+      // effort rides the SAME provisioned profile patch as the credential
+      // reference, so one spawn's provisioning output is internally
+      // consistent (plugin artifact + plugin config always from one route).
+      reasoningEffort: subscription.reasoningEffort,
+    }
     if (typeof options.deploymentRoot === 'string' && options.deploymentRoot !== '') {
       persistOptions.deploymentRoot = options.deploymentRoot
     }

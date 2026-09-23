@@ -3,6 +3,36 @@ import { basename, dirname, isAbsolute, join } from 'node:path'
 
 export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 
+/**
+ * The closed reasoning-effort vocabulary of the dsh-codex reasoning passthrough
+ * (GPT6_LUNA_AND_REASONING_EFFORT_V1). Values are the pi-ai ModelThinkingLevel
+ * ids the dsh-llm-pi-ai adapter forwards as `options.reasoning` and validates
+ * fail-loud against the resolved model's own capability metadata
+ * (UNSUPPORTED_REASONING_EFFORT) — a value a model cannot take never reaches
+ * the wire. `off` (configured as `none` in agent-model-overrides.json) omits
+ * the reasoning option entirely, i.e. the provider's default thinking
+ * behavior; the distinct wire `effort:"none"` is not exposed by the current
+ * dsh-llm seam.
+ */
+export const REASONING_EFFORT_VALUES = Object.freeze([
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+])
+
+/** The dsh-codex plugin config spelling of an override `reasoningEffort`. */
+export function dshCodexReasoningValue(reasoningEffort) {
+  if (reasoningEffort === undefined) return undefined
+  if (typeof reasoningEffort !== 'string' || !REASONING_EFFORT_VALUES.includes(reasoningEffort)) {
+    throw error('reasoning_effort_invalid', `reasoningEffort must be one of ${REASONING_EFFORT_VALUES.join(', ')} (got ${JSON.stringify(reasoningEffort)})`)
+  }
+  return reasoningEffort === 'none' ? 'off' : reasoningEffort
+}
+
 /** Layout suffix of the canonical store under every deployment root (path-only; no fs access). */
 const CANONICAL_CREDENTIAL_TAIL = join('shared-credentials', 'openai-codex', '.openai-codex-auth.json')
 
@@ -128,11 +158,14 @@ export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFil
     throw error('credential_path_invalid', `cross-surface credential reference refused: ${credentialFile} is not this deployment's canonical store (${canonicalOpenAICodexCredentialFileFor(options.deploymentRoot)})`)
   }
   if (options.agentHome !== undefined) assertSameDomainCredentialFile(options.agentHome, credentialFile)
+  const reasoning = dshCodexReasoningValue(options.reasoningEffort)
   const current = readFileSync(profilePatchFile, 'utf8')
   const pattern = new RegExp(`\\n?${PATCH_BEGIN}[\\s\\S]*?${PATCH_END}\\n?`, 'gu')
   const block = [
     PATCH_BEGIN, '- id: llm-openai-codex', '  config:',
-    `    credentialFile: ${JSON.stringify(credentialFile)}`, PATCH_END, '',
+    `    credentialFile: ${JSON.stringify(credentialFile)}`,
+    ...(reasoning === undefined ? [] : [`    reasoning: ${reasoning}`]),
+    PATCH_END, '',
   ].join('\n')
   const next = `${current.replace(pattern, '\n').trimEnd()}\n\n${block}`
   const temp = `${profilePatchFile}.tmp-${process.pid}`

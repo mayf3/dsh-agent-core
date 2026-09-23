@@ -1,0 +1,41 @@
+{
+  "version": 3,
+  "routeCatalog": {
+    "luna": {
+      "routeKind": "subscription",
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "plugin": "dsh-codex",
+      "pluginVersion": "0.2.3-dshr1",
+      "credentialReadiness": "owner-reauth-pending",
+      "reasoningEffort": "medium",
+      "credentialFile": "/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json",
+      "providerEnv": {
+        "HTTP_PROXY": "http://127.0.0.1:7890",
+        "HTTPS_PROXY": "http://127.0.0.1:7890",
+        "NO_PROXY": "localhost,127.0.0.1,::1",
+        "NODE_USE_ENV_PROXY": "1"
+      }
+    }
+  },
+  "overrides": {
+    "agt_stock_agent": {
+      "model": {
+        "primary": "luna",
+        "fallbacks": []
+      }
+    },
+    "agt_ceo-agent": {
+      "model": {
+        "primary": "luna",
+        "fallbacks": []
+      }
+    },
+    "agt_knowledge-curator-agent": {
+      "model": {
+        "primary": "luna",
+        "fallbacks": []
+      }
+    }
+  }
+}

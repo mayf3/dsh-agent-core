@@ -127,7 +127,16 @@ function terminalQuotaEvidenceProven(error, turnEvidence) {
     && evidence.transportTimeout === false
 }
 
-/** Reuse identity, with ABSENT normalization; CTR-I2-003 composes this. */
+/**
+ * Reuse identity, with ABSENT normalization; CTR-I2-003 composes this.
+ *
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1: the subscription block's per-route
+ * reasoningEffort joins the identity (ABSENT when unconfigured) — two routes
+ * differing only in effort produce different requests and therefore must
+ * never reuse one another's process (the reuse gate compares this string).
+ * Routes without a subscription block (builtin / global-env) keep the exact
+ * pre-change identity bytes.
+ */
 export function canonicalRouteIdentity(processConfig = {}) {
   const subscription = processConfig.subscription
   const providerEnv = processConfig.providerEnv
@@ -136,6 +145,7 @@ export function canonicalRouteIdentity(processConfig = {}) {
     processConfig.model ?? null,
     subscription?.plugin ?? null,
     subscription?.pluginVersion ?? null,
+    subscription?.reasoningEffort ?? 'ABSENT',
     subscription?.credentialFile === undefined ? 'ABSENT' : resolve(subscription.credentialFile),
     providerEnv === undefined
       ? 'ABSENT'

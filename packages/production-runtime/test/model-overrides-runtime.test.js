@@ -35,7 +35,7 @@ const VALID_PROVIDER_ENV = Object.freeze({
  * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
  * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
  * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
- * (dsh-codex@0.2.3 exact). Route CONTENT lives entirely in the config — the
+ * (dsh-codex exact-pin). Route CONTENT lives entirely in the config — the
  * code constant below only carries pins/scope (F-10 / ACC-014).
  */
 const CATALOG = Object.freeze({
@@ -50,7 +50,7 @@ const CATALOG = Object.freeze({
     provider: 'openai-codex',
     model: 'gpt-5.6-luna',
     plugin: 'dsh-codex',
-    pluginVersion: '0.2.3',
+    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
     credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
     credentialReadiness: 'luna-oauth-home',
   },
