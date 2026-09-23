@@ -302,6 +302,12 @@ export function apply(ctx, config = {}) {
         // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
         // provider (read-only exact Principal -> enabled agentId).
         ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1: read-only exact
+        // agentId -> stored AGENT Principal UUID (the reverse sibling; its
+        // manifest is registered in DEFAULT_MANIFESTS, so a missing entry
+        // here degraded every real relay to CTR-APR-004
+        // `unsupported_operation`).
+        ...(ctx.get('agentPrincipalReverseResolutionAccess')?.handlers ?? {}),
         // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: LOCAL provider (read-only
         // Agent discovery: exact reference resolve + list, Agent Definition
         // snapshot only).
