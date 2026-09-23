@@ -91,8 +91,16 @@ impl Owned {
                 }
                 let role = if process.executable.as_deref() == Some("/usr/bin/sudo") {
                     Some(MemberRole::SudoTransport)
-                } else if sidecar_binding(ctx, process).is_ok() {
-                    Some(MemberRole::ExactJournalSidecar)
+                } else if process.executable.as_deref().is_some_and(|e| e.ends_with(SIDECAR_NAME)) {
+                    // TEMP DIAGNOSTIC: name exactly why a sidecar-shaped
+                    // descendant fails the binding.
+                    match sidecar_binding(ctx, process) {
+                        Ok(()) => Some(MemberRole::ExactJournalSidecar),
+                        Err(e) => {
+                            eprintln!("SIDECAR_BIND_DEBUG {}", e);
+                            None
+                        }
+                    }
                 } else {
                     // Not our approved worker: leave unowned.
                     None
