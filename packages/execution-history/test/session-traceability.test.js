@@ -223,7 +223,7 @@ test('T7: privacy — the listing is self-only and coordinate-only (no content f
 test('T8: no fuzzy join — with the journal gone the scheduler→session join becomes an explicit gap, never a success', async () => {
   const fixture = buildFixtureRoot()
   try {
-    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003a05ed6629f358ff53'), { recursive: true, force: true })
+    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true, force: true })
     const outcome = await queryExecutionTrace({
       root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
     })
@@ -234,6 +234,31 @@ test('T8: no fuzzy join — with the journal gone the scheduler→session join b
     const gapEntry = r.gaps.find((g) => g.code === 'CORRELATION_GAP' && g.stage === 'session_journal')
     assert.ok(gapEntry, 'the missing journal is an explicit, honest gap')
     assert.equal(gapEntry.knownFacts.occurrenceId, OCC_ID)
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('CTR-SCT-007 blocker regression: ledger-absent AND journal-absent world still emits the honest session gap (rotated occurrence)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // The job's occurrences have fully rotated out of the authority ledger
+    // (store readable, job present, zero occurrences) and the cron journal
+    // deleted — a JOB-LEVEL query then rides only on the history run_records.
+    // The pre-repair build silently emitted ZERO session gaps here; the
+    // honest-gap flush must cover the unswept world.
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    store.occurrences = store.occurrences.filter((o) => o.jobId !== JOB_ID)
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true, force: true })
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { jobId: JOB_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(r.timeline.some((e) => e.kind === 'run_record'), 'history-only run_record surfaced in the job-level query')
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/')), 'no fabricated join')
+    const gapEntry = r.gaps.find((g) => g.code === 'CORRELATION_GAP' && g.stage === 'session_journal' && g.knownFacts.occurrenceId === OCC_ID)
+    assert.ok(gapEntry, 'the run still answers with an explicit gap — never silence')
+    assert.match(gapEntry.knownFacts.reason, /sweep bound/, 'the gap wording does not claim the journal is unreadable — only unlocated within the sweep')
   } finally { destroyFixtureRoot(fixture) }
 })
 
@@ -266,6 +291,8 @@ test('CTR-SCT-002: scheduler-kind sessions carry their occurrence coordinate; or
     assert.equal(forHr.ok, true)
     const cron = forHr.result.sessions.find((s) => s.kind === 'scheduler')
     assert.ok(cron, 'cron-run session listed with kind=scheduler')
+    assert.equal(cron.sessionId, 'cron-run-occ:003a05ed6629f358ff53', 'dir name decoded to the native session id (real ~003A encoding)')
+    assert.equal(forHr.result.anomalies.idMismatch, 0, 'a healthy dir/header encoding pair is NEVER an anomaly (CTR-SCT-002 honesty counter)')
     assert.ok(cron.schedulerOccurrenceIds.includes(OCC_ID), 'occurrence coordinate derived from the session id')
     const main = forHr.result.sessions.find((s) => s.sessionId === 'main')
     assert.equal(main.kind, 'main')

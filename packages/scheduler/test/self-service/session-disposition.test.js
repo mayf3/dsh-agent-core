@@ -65,6 +65,15 @@ test('CTR-SCT-004: projection exposes sessionId + disposition; not_created hides
   assert.equal(unknown.sessionCreated, 'unknown', 'outcome_unknown never guesses')
   assert.equal(unknown.sessionId, 'cron-run-occ:d')
   assert.equal(unknown.fenceActive, true, 'fence state rides along with the unknown disposition')
+  assert.equal(unknown.terminationSettled, false, 'bare unknown: no trusted settlement')
+
+  const settledUnknown = occurrenceProjection({
+    occurrenceId: 'occ:x5', runId: 'run:occ:x5', jobId: 'job_1', kind: 'natural',
+    state: 'outcome_unknown', deliveryStatus: 'unknown', admittedAt: 1,
+    nativeSessionId: 'cron-run-occ:e',
+    terminationSettlement: { kind: 'terminated_without_outcome', businessStateAtCommit: 'outcome_unknown' },
+  }, FENCES)
+  assert.equal(settledUnknown.terminationSettled, true, 'C-039 settlement presence is surfaced (CTR-SCT-003 annotation)')
 })
 
 test('CTR-SCT-004: the additive tail keeps every pre-existing projection field', () => {
