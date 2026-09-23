@@ -7,6 +7,8 @@
  * the generic broker transport — identity travels only in the credential).
  */
 
+import { join } from 'node:path'
+
 import {
   createHttpTransport,
 } from '../../../broker/src/transport.js'
@@ -15,8 +17,9 @@ import { loadCredentialFor } from '../../../broker/src/credential-store.js'
 import {
   EXECUTION_TRACE_QUERY_CAPABILITY_ID,
   EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID,
+  AGENT_SESSION_LIST_CAPABILITY_ID,
 } from '../../../broker/src/capabilities/execution-history.js'
-import { queryExecutionTrace } from '../../../execution-history/src/index.js'
+import { listAgentSessions, queryExecutionTrace } from '../../../execution-history/src/index.js'
 
 /**
  * Synthetic single-op manifests let the generic authorized transport execute
@@ -118,12 +121,31 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
     }
   }
 
+  /** CTR-SCT-002: MY_SESSIONS — self-only, coordinate-only derived listing. */
+  function listHandle() {
+    return async function handle(args, trustedContext) {
+      const outcome = listAgentSessions({
+        homesRoot: layout.homesRoot,
+        indexDir: join(layout.controlDir, 'execution-history-index'),
+        viewerAgentId: trustedContext.agentId,
+        cursor: typeof args?.cursor === 'string' ? args.cursor : undefined,
+        limit: Number.isInteger(args?.limit) ? args.limit : undefined,
+      })
+      if (outcome.ok !== true) {
+        const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
+        return { ok: false, error: { code, detail: outcome.detail } }
+      }
+      return { ok: true, result: outcome.result }
+    }
+  }
+
   return {
     mount(ctx) {
       ctx.provide('executionHistoryAccess', {
         handlers: {
           [EXECUTION_TRACE_QUERY_CAPABILITY_ID]: { query: handleFor(false) },
           [EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID]: { query: handleFor(true) },
+          [AGENT_SESSION_LIST_CAPABILITY_ID]: { list: listHandle() },
         },
       })
     },

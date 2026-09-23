@@ -19,6 +19,7 @@
 
 export const EXECUTION_TRACE_QUERY_CAPABILITY_ID = 'execution_trace_query'
 export const EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID = 'execution_history_audit_query'
+export const AGENT_SESSION_LIST_CAPABILITY_ID = 'agent_session_list'
 
 const baseErrors = [
   { code: 'invalid_arguments', description: 'Arguments violate the root contract (unknown root, missing root key, bad UUID/agentId, or a msg_sh1_* display id where a native messageId is required).' },
@@ -99,4 +100,43 @@ export const executionHistoryAuditQueryManifest = {
   )],
 }
 
-export const manifests = [executionTraceQueryManifest, executionHistoryAuditQueryManifest]
+export const agentSessionListManifest = {
+  id: AGENT_SESSION_LIST_CAPABILITY_ID,
+  toolName: 'agent_session_list',
+  selector: 'operation',
+  name: 'Agent Session List',
+  description:
+    'List YOUR OWN sessions (MY_SESSIONS) as a coordinate-only view: sessionId, kind (main | scheduler | other), createdAt, lastActiveAt, origin presence (user / inter_agent / workflow_execution), and the scheduler/workflow coordinates each session touches. Sessions are keyed by (agentId, sessionId); you only ever see your own. No message content, tool bodies, or private text is included — coordinates and presence flags only. Use a returned sessionId with execution_trace_query root=agent_session to read the full trace of that session.',
+  // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-002/D-SCT-2: zero-Auth
+  // self surface (scheduler self-service precedent). Ownership comes from the
+  // trusted gateway identity — the tool takes NO identity argument, so there
+  // is no cross-agent enumeration face at all. requiredScopes is OMITTED
+  // (agent-directory precedent): the schema treats omitted as [] and the
+  // gateway performs zero token requests.
+  local: true,
+  errors: [
+    { code: 'invalid_arguments', description: 'Arguments violate the operation schema (list takes no arguments; only cursor/limit pagination may be supplied).' },
+    { code: 'forbidden_not_owner', description: 'Trusted caller identity unavailable (fail closed).' },
+    { code: 'history_unavailable', description: 'The session homes root or coordinate index is not readable.' },
+    { code: 'unsupported_operation', description: 'The execute-time local handler is not resolvable (missing or miswired provider).' },
+    { code: 'internal_error', description: 'The trusted handler failed.' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description: 'List the calling Agent\'s own sessions, newest-first (keyset cursor for the next page).',
+      arguments: {
+        additionalProperties: false,
+        properties: {
+          cursor: { type: 'string', description: 'Opaque keyset cursor from a previous page (nextCursor).' },
+          limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Page size (default/max 200).' },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'forbidden_not_owner', 'history_unavailable', 'internal_error'],
+    },
+  ],
+}
+
+export const manifests = [executionTraceQueryManifest, executionHistoryAuditQueryManifest, agentSessionListManifest]

@@ -11,17 +11,23 @@ import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, 
 
 import { listAgentSessionFiles } from './loaders/session-journal.js'
 
-export const INDEX_VERSION = 1
+export const INDEX_VERSION = 2
 
 const RE_MESSAGE_ID = /\\?"messageId\\?":\\?"([^"\\]{1,128})\\?"/g
 const RE_WF_INSTANCE = /\\?"workflowInstanceId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
 const RE_DISPATCH_INTENT = /\\?"dispatchIntentId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
+// CTR-SCT-002 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1): scheduler
+// occurrence coordinates mentioned in tool call arguments/result payloads.
+const RE_OCCURRENCE_ID = /\\?"occurrenceId\\?":\\?"(occ:[^"\\]{1,80})\\?"/g
 // ASM V2 provenance: inserted[]/user-message sidecars carry correlation =
 // the SOURCE turnExecutionId ('turn:...') — the target-side anchor of every
 // inter_agent dispatch (R1/R6 reverse coordinate).
 const RE_CORRELATION = /\\?"correlation\\?":\\?"(turn:[^"\\]{1,160})\\?"/g
 const RE_INTER_AGENT = /"kind":"inter_agent"/
 const RE_WF_SIDECAR = /"kind":"workflow_execution"/
+// CTR-SCT-002: presence boolean for plain user-origin messages
+// (source.kind === 'user') — the origins.user listing face.
+const RE_USER_SOURCE = /"kind":"user"/
 
 function uniqueSorted(values) {
   return [...new Set(values)].sort()
@@ -54,6 +60,8 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
   for (const m of text.matchAll(RE_DISPATCH_INTENT)) dispatchIntentIds.push(m[1].toLowerCase())
   const interAgentCorrelations = []
   for (const m of text.matchAll(RE_CORRELATION)) interAgentCorrelations.push(m[1])
+  const occurrenceIds = []
+  for (const m of text.matchAll(RE_OCCURRENCE_ID)) occurrenceIds.push(m[1])
   return {
     size,
     mtimeMs: Number(st.mtimeMs),
@@ -64,6 +72,8 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
       workflowInstanceIds: uniqueSorted(workflowInstanceIds).slice(0, 200),
       dispatchIntentIds: uniqueSorted(dispatchIntentIds).slice(0, 200),
       interAgentCorrelations: uniqueSorted(interAgentCorrelations).slice(0, 500),
+      occurrenceIds: uniqueSorted(occurrenceIds).slice(0, 200),
+      hasUserSource: RE_USER_SOURCE.test(text),
       hasInterAgent: RE_INTER_AGENT.test(text),
       hasWorkflowExecutionSidecar: RE_WF_SIDECAR.test(text),
     },
