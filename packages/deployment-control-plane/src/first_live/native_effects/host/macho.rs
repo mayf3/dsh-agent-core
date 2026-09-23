@@ -60,7 +60,29 @@ fn thin(bytes: &[u8], cpu: u32) -> Result<Vec<String>> {
                     result.push(path.into());
                 }
             }
-            0x8000001c | 0x27 => return Err(Error::new("HOST_LOADER_DYNAMIC")),
+            // LC_LOAD_UPWARD_DYLIB and LC_LOAD_WEAK_DYLIB are still
+            // deterministic absolute-path dependencies of the image (Apple's
+            // own XProtect ships a weak load); they scan under the same
+            // grammar and the same downstream allowlist rules as the rest.
+            0x8000001c | 0x27 => {
+                let n = word(data, 8, false)? as usize;
+                require(n >= 12 && n < data.len(), "HOST_LOADER_FORMAT")?;
+                let end = data[n..]
+                    .iter()
+                    .position(|b| *b == 0)
+                    .ok_or_else(|| Error::new("HOST_LOADER_FORMAT"))?;
+                let path = std::str::from_utf8(&data[n..n + end])
+                    .map_err(|_| Error::new("HOST_LOADER_FORMAT"))?;
+                require(
+                    path.starts_with('/')
+                        && path.len() < 4096
+                        && path[1..]
+                            .split('/')
+                            .all(|p| !p.is_empty() && p != "." && p != ".."),
+                    "HOST_LOADER_DYNAMIC",
+                )?;
+                result.push(path.into());
+            }
             1 | 2 | 3 | 4 | 5 | 0xb | 0xd | 0x19 | 0x1b | 0x1d | 0x1e | 0x21 | 0x22
             | 0x80000022 | 0x24 | 0x25 | 0x26 | 0x28 | 0x80000028 | 0x29 | 0x2a | 0x2b | 0x2c
             | 0x2d | 0x2e | 0x2f | 0x30 | 0x31 | 0x32 | 0x80000033 | 0x80000034 | 0x36 => (),
