@@ -79,10 +79,11 @@ test('二-1 an occurrence-scoped query never mixes sibling runs when the authori
     // the coordinate-less row.
     const invocationRefs = r.timeline.filter((e) => e.kind === 'evidence_invocation').map((e) => e.nativeRefs.occurrenceId ?? e.data?.occurrenceId)
     assert.deepEqual(invocationRefs, [OCC_ID])
-    // The naming join is honestly weak and its FROM side is the query
-    // coordinate (not an observed store row).
+    // CTR-SCT-007: the join is DERIVED_EXACT only because the journal itself
+    // was located (existence proof); the ledger-absent world keeps the FROM
+    // side honest — the query coordinate, not an observed store row.
     const r5Join = r.correlations.find((c) => c.rule === 'R5')
-    assert.equal(r5Join?.strength, 'WEAK_NAME_JOIN')
+    assert.equal(r5Join?.strength, 'DERIVED_EXACT')
     assert.equal(r5Join?.from?.source, 'query_coordinate')
   } finally { destroyFixtureRoot(fixture) }
 })

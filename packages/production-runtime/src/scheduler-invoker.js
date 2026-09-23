@@ -27,6 +27,12 @@ export function createObservedSchedulerInvoker({ router, definition, writeEviden
       pid: process.pid,
       agentId: request.agentId,
       sessionId: request.sessionId,
+      // CTR-SCT-005 coordinate keys (additive): whatever the request carries,
+      // so execution-history can coordinate-match this row to its occurrence.
+      occurrenceId: request.occurrenceId ?? null,
+      runId: request.runId ?? null,
+      jobId: request.jobId ?? null,
+      requestId: request.requestId ?? null,
       status: outcome.status,
       summary: outcome.status === 'ok' ? (outcome.summary ?? null) : null,
       error: outcome.status === 'ok' ? null : (outcome.error ?? null),

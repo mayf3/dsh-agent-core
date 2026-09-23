@@ -17,6 +17,11 @@ export async function buildSchedulerRoot(ctx, args) {
   const correlations = []
   const gaps = []
   const observations = []
+  // CTR-SCT-007: occurrences whose session journal was NOT found but whose
+  // disposition says a session should exist — they owe an honest
+  // CORRELATION_GAP once the session sweep below has completed.
+  const pendingJournalGaps = new Map()
+  const journalsFound = new Set()
 
   const store = ctx.source('scheduler_store')
   if (store.status.status === 'ABSENT') {
@@ -69,12 +74,19 @@ export async function buildSchedulerRoot(ctx, args) {
     gaps.push(gap('SOURCE_ABSENT', 'scheduler_store', { reason: `occurrence ${occurrenceId} not in authority ledger (never reserved here, or store since rotated)` }))
   }
   for (const occ of occurrences) {
+    // CTR-SCT-003: the session disposition is derived ONLY from persisted
+    // fields. A not_created occurrence must never expose its designated
+    // session id as a coordinate (SC-1: no fabricated sessionId).
+    const disposition = sessionDispositionOf(occ)
     records.push({
       source: 'scheduler_store', kind: 'occurrence', provenanceClass: 'PRIMARY_PERSISTED',
       atMs: Number.isFinite(occ.admittedAt) ? occ.admittedAt : Number.isFinite(occ.updatedAtMs) ? occ.updatedAtMs : null,
-      nativeRefs: { occurrence_id: occ.occurrenceId, job_id: occ.jobId, ...(occ.nativeSessionId ? { sessionId: occ.nativeSessionId } : {}) },
+      nativeRefs: {
+        occurrence_id: occ.occurrenceId, job_id: occ.jobId,
+        ...(disposition.sessionCreated !== 'not_created' && occ.nativeSessionId ? { sessionId: occ.nativeSessionId } : {}),
+      },
       dedupeKey: `occ:${occ.occurrenceId}:${occ.updatedAtMs ?? ''}`,
-      data: summarizeOccurrence(occ),
+      data: summarizeOccurrence(occ, store.fences, disposition),
     })
   }
 
@@ -94,8 +106,18 @@ export async function buildSchedulerRoot(ctx, args) {
     if (rec.kind === 'run_record') {
       const outcome = rec.data?.outcome ?? rec.data?.status_view
       observations.push(observation('agentExecution', outcome === 'succeeded' ? VERDICTS.REPLIED : outcome === 'failed' ? VERDICTS.FAILED : outcome === 'outcome_unknown' ? VERDICTS.OUTCOME_UNKNOWN : VERDICTS.UNKNOWN, { ruleId: 'R5', evidenceRefs: [rec.nativeRefs.run_id] }))
-      if (rec.nativeRefs.sessionId !== undefined) {
-        gaps.push(gap('JOIN_BY_NAME_CONVENTION', 'scheduler_session', { reason: `run ${rec.nativeRefs.run_id} joined via session_id naming convention` }))
+      // CTR-SCT-007: disposition-aware session linkage. A ledger disposition
+      // of not_created suppresses any session expectation entirely; otherwise
+      // a run whose journal never surfaces owes an explicit gap AFTER the
+      // session sweep below (never a silent success, never a name-only claim).
+      const ledgerOcc = store.occurrences.find((o) => o.occurrenceId === rec.nativeRefs.occurrence_id)
+      const disposition = ledgerOcc !== undefined
+        ? sessionDispositionOf(ledgerOcc)
+        : conservativeDispositionFromOutcome(outcome)
+      if (rec.nativeRefs.sessionId !== undefined && disposition.sessionCreated !== 'not_created') {
+        pendingJournalGaps.set(rec.nativeRefs.occurrence_id ?? rec.nativeRefs.run_id, {
+          runId: rec.nativeRefs.run_id, sessionId: rec.nativeRefs.sessionId,
+        })
       }
       for (const wake of Array.isArray(rec.data?.result?.wake_sent) ? rec.data.result.wake_sent : []) {
         if (typeof wake.workflow_instance_id === 'string') {
@@ -120,13 +142,14 @@ export async function buildSchedulerRoot(ctx, args) {
       for (const entry of ctx.sessionsMatching((lookups) => lookups.byCronOccurrence(occId))) {
         const loaded = ctx.journal(entry.agentId, entry.sessionId)
         if (loaded === null) continue
+        journalsFound.add(occId)
         const view = projectForViewer({ sessionAgentId: entry.agentId, viewerAgentId: ctx.viewer.agentId, audit: ctx.viewer.audit === true, journal: loaded.projected })
         records.push({
           source: 'session_journal', kind: 'session_view', provenanceClass: 'PRIMARY_PERSISTED',
           atMs: loaded.raw.events[0]?.timeMs ?? null, nativeRefs: { agentId: entry.agentId, sessionId: entry.sessionId, file: entry.file },
           dedupeKey: `journal:${entry.file}`, data: view,
         })
-        observations.push(observation('agentExecution', view.turns?.length > 0 ? VERDICTS.STARTED : VERDICTS.UNKNOWN, { ruleId: 'R5', evidenceRefs: [`${entry.agentId}/${entry.sessionId}`], note: 'cron-run session located by naming convention + occurrence coordinate' }))
+        observations.push(observation('agentExecution', view.turns?.length > 0 ? VERDICTS.STARTED : VERDICTS.UNKNOWN, { ruleId: 'R5', evidenceRefs: [`${entry.agentId}/${entry.sessionId}`], note: 'cron-run session located by deterministic derivation + journal existence proof (CTR-SCT-007)' }))
         const asmByMessage = ctx.asmRowsByMessage()
         for (const spliced of loaded.projected.spliced.slice(0, 50)) {
           for (const row of asmByMessage.get(spliced.messageId) ?? []) {
@@ -137,15 +160,25 @@ export async function buildSchedulerRoot(ctx, args) {
         }
         correlations.push({
           rule: 'R5',
-          // Honest provenance: when the authority ledger is outside the
-          // readable boundary the FROM side is the query coordinate, not an
-          // observed store row. Naming joins are WEAK — they never pose as
-          // precise execution evidence.
+          // CTR-SCT-007 / D-SCT-5: the cron-run-<occ> id is a deterministic
+          // derivation from the occurrence coordinate; the located journal is
+          // the EXISTENCE PROOF, so this join is DERIVED_EXACT — no longer a
+          // weak name convention. When no journal exists the honest
+          // CORRELATION_GAP below stands instead.
           from: { source: occurrenceIds.has(occId) ? 'scheduler_store' : 'query_coordinate', nativeRef: occId },
           to: { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}` },
           evidenceRefs: [occId, entry.sessionId],
-          strength: 'WEAK_NAME_JOIN',
+          strength: 'DERIVED_EXACT',
         })
+      }
+      if (!journalsFound.has(occId)) {
+        const pending = pendingJournalGaps.get(occId)
+        if (pending !== undefined) {
+          gaps.push(gap('CORRELATION_GAP', 'session_journal', {
+            stage: 'session_journal',
+            knownFacts: { occurrenceId: occId, runId: pending.runId, designatedSessionId: pending.sessionId, reason: 'run recorded a session coordinate but no session journal is readable — existence unproven (SC-2 WEAK/ABSENT, never claimed exact)' },
+          }))
+        }
       }
   }
 
@@ -185,19 +218,47 @@ function summarizeJob(job) {
   }
 }
 
-function summarizeOccurrence(occ) {
+function summarizeOccurrence(occ, fences, disposition) {
+  const resolved = disposition ?? sessionDispositionOf(occ)
   return {
     occurrenceId: occ.occurrenceId,
     jobId: occ.jobId,
     agentId: occ.agentId,
     scheduleRevision: occ.scheduleRevision,
     state: occ.state,
-    fenced: occ.fenced,
+    fenced: fences?.[occ.jobId] !== undefined,
     retryOfOccurrenceId: occ.retryOfOccurrenceId,
-    nativeSessionId: occ.nativeSessionId,
+    nativeSessionId: resolved.sessionCreated === 'not_created' ? null : (occ.nativeSessionId ?? null),
     executionOutcome: occ.executionOutcome,
     deliveryStatus: occ.deliveryStatus,
     startedAt: occ.startedAt,
     endedAt: occ.endedAt,
+    ...(occ.terminalEvidence !== undefined ? { terminalEvidence: occ.terminalEvidence } : {}),
+    sessionCreated: resolved.sessionCreated,
+    ...(resolved.sessionNotCreatedReason !== undefined ? { sessionNotCreatedReason: resolved.sessionNotCreatedReason } : {}),
   }
+}
+
+// SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-003 — frozen disposition
+// table over persisted occurrence fields ONLY. Keep semantics-identical with
+// packages/scheduler/src/self-service/projections.js sessionDispositionOf();
+// equivalence is asserted by tests. Exported for that equivalence test only.
+export function sessionDispositionOf(record) {
+  const kind = record?.terminalEvidence?.kind
+  if (record?.state === 'failed' && kind === 'pre-start-rejection') {
+    return { sessionCreated: 'not_created', sessionNotCreatedReason: 'pre-start-rejection' }
+  }
+  if (record?.state === 'succeeded' || record?.state === 'running') return { sessionCreated: 'created' }
+  if (record?.state === 'failed' && kind === 'turn-terminal') return { sessionCreated: 'created' }
+  if (record?.state === 'admitted') return { sessionCreated: 'pending' }
+  return { sessionCreated: 'unknown' }
+}
+
+// History-only run records (ledger outside the readable boundary) carry no
+// terminalEvidence, so the table degrades conservatively: `failed` cannot
+// prove pre-start (unknown), only a plain `succeeded` reads as created —
+// with the documented canary-invoker limitation (Spec CTR-SCT-003).
+function conservativeDispositionFromOutcome(outcome) {
+  if (outcome === 'succeeded') return { sessionCreated: 'created' }
+  return { sessionCreated: 'unknown' }
 }

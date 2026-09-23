@@ -222,6 +222,10 @@ export async function invokeWithDeadline(record, job) {
     occurrenceId: record.occurrenceId,
     runId: record.runId,
     requestId: record.idempotencyKey,
+    // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-005: one-field
+    // additive plumb so the invocation evidence writer can record the job
+    // coordinate (occurrenceId/runId/requestId are already on the request).
+    jobId: job.id ?? job.jobId,
     payloadHash: record.payloadHash,
     message: job.payload.message,
     model: job.payload.model,
