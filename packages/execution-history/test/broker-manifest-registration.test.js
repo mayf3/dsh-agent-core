@@ -9,8 +9,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { DEFAULT_MANIFESTS } from '../../src/index.js'
-import { manifests } from '../../src/capabilities/execution-history.js'
+import { DEFAULT_MANIFESTS } from '../../broker/src/index.js'
+import { manifests } from '../../broker/src/capabilities/execution-history.js'
 
 test('registry: agent_session_list is registered in DEFAULT_MANIFESTS exactly once', () => {
   const registered = DEFAULT_MANIFESTS.filter((m) => m.id === 'agent_session_list')
