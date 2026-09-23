@@ -134,6 +134,57 @@ fn domain(raw: &str) -> Result<()> {
     }
     require(!inside && depth == 1, "HOST_ENVIRONMENT_SHAPE")
 }
+/// Kernel argv of a live root process (KERN_PROCARGS2).  Used ONLY for the
+/// exact journal sidecar binding — the script path argument is the object
+/// being bound, not a secret; environment values are still never retained.
+pub(super) fn argv(pid: u32) -> Result<Vec<String>> {
+    require(
+        unsafe { libc::geteuid() } == 0 && pid > 0 && pid <= i32::MAX as u32,
+        "HOST_ENVIRONMENT_IDENTITY",
+    )?;
+    let mut raw = vec![0u8; LIMIT];
+    let mut length = raw.len();
+    let mut mib = [libc::CTL_KERN, libc::KERN_PROCARGS2, pid as i32];
+    let status = unsafe {
+        libc::sysctl(
+            mib.as_mut_ptr(),
+            3,
+            raw.as_mut_ptr().cast(),
+            &mut length,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    require(status == 0 && length < LIMIT, "HOST_ENVIRONMENT_UNREADABLE")?;
+    let bytes = &raw[..length];
+    require(bytes.len() >= 8, "HOST_ENVIRONMENT_SHAPE")?;
+    let argc = i32::from_ne_bytes(bytes[..4].try_into().unwrap());
+    require((1..=4096).contains(&argc), "HOST_ENVIRONMENT_SHAPE")?;
+    let mut cursor = 4;
+    // exec_path, then padding NULs, then argc NUL-terminated arguments.
+    while cursor < bytes.len() && bytes[cursor] != 0 {
+        cursor += 1;
+    }
+    while cursor < bytes.len() && bytes[cursor] == 0 {
+        cursor += 1;
+    }
+    let mut out = Vec::new();
+    for _ in 0..argc {
+        let end = bytes[cursor..]
+            .iter()
+            .position(|b| *b == 0)
+            .ok_or_else(|| Error::new("HOST_ENVIRONMENT_SHAPE"))?
+            + cursor;
+        out.push(
+            std::str::from_utf8(&bytes[cursor..end])
+                .map_err(|_| Error::new("HOST_ENVIRONMENT_SHAPE"))?
+                .to_string(),
+        );
+        cursor = end + 1;
+    }
+    require(out.len() == argc as usize, "HOST_ENVIRONMENT_SHAPE")?;
+    Ok(out)
+}
 pub(super) fn running(pid: u32) -> Result<String> {
     require(
         unsafe { libc::geteuid() } == 0 && pid > 0 && pid <= i32::MAX as u32,
