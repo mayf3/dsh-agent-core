@@ -3,6 +3,7 @@ spec_id: AGENT_CORE_SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1
 status: accepted
 accepted_reviewed_head: 822477ab (round-2 exact-head re-audit ACCEPT / SHIP_BLOCKERS=NONE / load_bearing_gaps=0)
 review_record: round-1 (independent reviewer, 41688795) REVISE / 1 load-bearing SPEC_GAP (CTR-SCT-005 jobId premise false — request object lacks jobId; occurrence.js outside scope) + 1 SPEC_GAP (origins.user not derivable from existing index keys) + 4 NOTE/FOLLOW_UP (R5 wording, canary invoker known-limitation, census citations history.js:89→history/history-model.js:88 + runtime-evidence 3-key reality, §11 typo); frozen_blocker_union=0 BLOCKER; all fixed in r2 822477ab; round-2 mechanical re-verification of G1-G6 against diff = ACCEPT, no new blocker in changed text (V4 CTR-MUT-001 frozen semantics untouched; loader additions read-side only)
+implementation_review: implementation r1 (8070b670) independent contract-by-contract review round-1 = REVISE / frozen_blocker_union=[1 BLOCKER: CONCRETE_REGRESSION/CONTRACT_VIOLATION — scheduler-root pending-gap flush bounded by the newest-10 sweep silently dropped the session gap in rotated-occurrence/ledger-absent/over-window worlds] + 2 SPEC_GAP (real ~003A segment encoding made anomalies.idMismatch always-on for healthy scheduler sessions; CTR-SCT-003 outcome_unknown annotations not surfaced) + notes. Repair pass r2 (c85d5ff3): unbounded post-sweep gap flush + sweep-bound wording; decodeSegment before id-mismatch/coordinate derivation; terminationSettled surfaced on both projection faces (CTR-SCT-004 tail completed); exact-args rejection in listHandle; per-list truncation flags; fixtures moved to the real segment encoding; discriminating blocker regression test added. Round-2 exact-head re-audit at c85d5ff3 = ACCEPT / SHIP_BLOCKERS=NONE / load_bearing_gaps=0 (B1 closed with world-a/world-b probes incl. 12/12 over-window gaps; B2 verified on real production homes, idMismatch 2→0; no new blockers; failing-suite delta zero diff-caused; verify:structure violations confirmed base-identical pre-existing state — commit-message gate claim in c85d5ff3 corrected here).
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -180,7 +181,7 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 {
   "agentId": "<caller>",
   "sessions": [ {
-    "sessionId": "...",                  // 目录名/header id（二者不一致时按既有解析规则取 header id，并标 anomaly）
+    "sessionId": "...",                  // 目录名经 DSH 段编码解码（见上）；header id 权威（不一致才标 anomaly）
     "kind": "main | scheduler | other",  // 'main' 精确；'cron-run-' 前缀 → scheduler；其余 → other（不冒认 D-008 未核实前缀）
     "createdAtUtc": "...",               // header.createdAt（PERSISTED_EXACT；header 缺失 → null + anomaly 计数）
     "lastActiveAtUtc": "...",            // journal mtime（DERIVED_EXACT）
@@ -189,8 +190,10 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
       "inter_agent": true|false,
       "workflow_execution": true|false
     },
-    "schedulerOccurrenceIds": ["occ:..."],   // ≤10，超限 truncated 标记
-    "workflowInstanceIds":  ["..."]          // ≤10，超限 truncated 标记
+    "schedulerOccurrenceIds": ["occ:..."],        // ≤10，超限 schedulerOccurrenceIdsTruncated=true
+    "schedulerOccurrenceIdsTruncated": true|false,
+    "workflowInstanceIds":  ["..."],              // ≤10，超限 workflowInstanceIdsTruncated=true
+    "workflowInstanceIdsTruncated": true|false
   } ],
   "truncated": false,
   "nextCursor": null,                    // 按 (lastActiveAtUtc desc, sessionId) 全序的 keyset 游标
@@ -200,6 +203,10 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 
 - 排序：`lastActiveAtUtc` 倒序、同刻按 `sessionId` 字典序；单响应上限 200 条，超限
   `truncated:true` + `nextCursor`（keyset 续读，全序确定）。
+- sessionId 规范化：目录名按 DSH 段编码（canonical encoder =
+  `packages/session-history/src/dsh-compat.js encodeSegment`，`:` → `~003A` 等 `~XXXX` hex 形式）
+  **解码后**参与 header-id 比较与一切坐标派生；健康编码对永不计入 anomaly；仅解码后仍与 header id
+  不一致才计 `idMismatch` 并以 header id 为准（既有解析规则）。
 - 数据源纪律：只读 `homes/<callerAgentId>/sessions/**`；session-index 不可用时懒构建
   （既有语义）。`origins.inter_agent`/`origins.workflow_execution` 与坐标键来自既有
   session-index 抽取键；`origins.user` 由本 Spec 在 journal 坐标抽取器上加法新增键
@@ -242,7 +249,8 @@ invoker 身份标记，记 FOLLOW_UP 不阻塞本期。
 ```jsonc
 "sessionId": "cron-run-occ:... | null",     // CTR-SCT-003 列语义；not_created 恒 null
 "sessionCreated": "created | not_created | pending | unknown",
-"sessionNotCreatedReason": "pre-start-rejection"   // 仅 not_created 时存在
+"sessionNotCreatedReason": "pre-start-rejection",  // 仅 not_created 时存在
+"terminationSettled": true|false            // C-039 terminationSettlement 有无（CTR-SCT-003 unknown 行注记的落实）
 ```
 
 Auth 模型零变化（self 零 Auth；foreign/all_agents 仍需 `scheduler.audit` 精确 wire proof）；
@@ -275,7 +283,10 @@ occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）
 - journal 存在（`cron-run-<occ>` 会话文件定位成功或 turn 证据存在）：correlation `R5` 定级
   `DERIVED_EXACT`（不再输出 `JOIN_BY_NAME_CONVENTION`）。
 - journal 不存在且 CTR-SCT-003 判 `created|unknown`：输出 `CORRELATION_GAP{stage:'session_journal',
-  knownFacts}`（保留既有 gap 形态），不定级 exact。
+  knownFacts}`（保留既有 gap 形态），不定级 exact。**flush 无界**：journal sweep 有 sweep bound
+  （newest-N/caps），凡 owe session answer 的 run_record——occurrence rotation、超出 sweep window、
+  ledger-absent history-only world——其 gap 必须在 sweep 结束后统一 flush；有界 sweep 不得静默吞掉
+  SC-2 缺口。knownFacts.reason 只陈述"sweep bound 内未定位到"，不得断言 journal 不可读。
 - CTR-SCT-003 判 `not_created`：**不产生 R5 关联**，输出 disposition 行
   `{SESSION_CREATED:'NO', REASON}`。
 - invocation 行坐标匹配（CTR-SCT-005 后）作为 `knownFacts` 证据引用输出。
