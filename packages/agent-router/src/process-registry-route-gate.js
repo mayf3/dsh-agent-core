@@ -53,7 +53,14 @@ export function installStartupSlot(lifecycleSlots, agentGenerations, agentId, ge
       )
     }
   }
-  const generation = Math.max(inMemoryGeneration, floor) + 1
+  const generationBase = Math.max(inMemoryGeneration, floor)
+  if (generationBase >= Number.MAX_SAFE_INTEGER) {
+    throw Object.assign(
+      new Error(`process-registry: process generation exhausted for ${agentId} at ${generationBase} — refusing to mint an unsafe generation`),
+      { code: 'AGENT_PROCESS_GENERATION_EXHAUSTED' },
+    )
+  }
+  const generation = generationBase + 1
   agentGenerations.set(agentId, generation)
   let resolveResult
   let rejectResult
