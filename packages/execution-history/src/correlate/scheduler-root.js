@@ -22,6 +22,10 @@ export async function buildSchedulerRoot(ctx, args) {
   // CORRELATION_GAP once the session sweep below has completed.
   const pendingJournalGaps = new Map()
   const journalsFound = new Set()
+  // B1: per-occurrence authoritative routed/owning agent. A session join may
+  // only be promoted when the located journal's agent EXACTLY equals this —
+  // a foreign agent's journal can never become the SessionRef (SC-2).
+  const expectedAgents = new Map()
 
   const store = ctx.source('scheduler_store')
   if (store.status.status === 'ABSENT') {
@@ -74,6 +78,9 @@ export async function buildSchedulerRoot(ctx, args) {
     gaps.push(gap('SOURCE_ABSENT', 'scheduler_store', { reason: `occurrence ${occurrenceId} not in authority ledger (never reserved here, or store since rotated)` }))
   }
   for (const occ of occurrences) {
+    // B1: authoritative owner = occurrence owner agent, else the job's
+    // routing agent (definition-time fixed).
+    expectedAgents.set(occ.occurrenceId, occ.agentId ?? occ.ownerAgentId ?? (job ? jobRouting(job) : undefined))
     // CTR-SCT-003: the session disposition is derived ONLY from persisted
     // fields. A not_created occurrence must never expose its designated
     // session id as a coordinate (SC-1: no fabricated sessionId).
@@ -115,9 +122,13 @@ export async function buildSchedulerRoot(ctx, args) {
         ? sessionDispositionOf(ledgerOcc)
         : conservativeDispositionFromOutcome(outcome)
       if (rec.nativeRefs.sessionId !== undefined && disposition.sessionCreated !== 'not_created') {
-        pendingJournalGaps.set(rec.nativeRefs.occurrence_id ?? rec.nativeRefs.run_id, {
+        const occKey = rec.nativeRefs.occurrence_id ?? rec.nativeRefs.run_id
+        pendingJournalGaps.set(occKey, {
           runId: rec.nativeRefs.run_id, sessionId: rec.nativeRefs.sessionId,
         })
+        // B1: history-only worlds have no ledger row; the run record itself
+        // carries the routed agent (run_record.agent_id) — else unknown.
+        if (!expectedAgents.has(occKey)) expectedAgents.set(occKey, rec.data?.agent_id)
       }
       for (const wake of Array.isArray(rec.data?.result?.wake_sent) ? rec.data.result.wake_sent : []) {
         if (typeof wake.workflow_instance_id === 'string') {
@@ -139,7 +150,21 @@ export async function buildSchedulerRoot(ctx, args) {
     ? [...occurrenceIds].slice(0, 10)
     : (occurrenceId !== undefined ? [occurrenceId] : [])
   for (const occId of sessionOccurrenceIds) {
+      // B1: the routed/owning agent must be provable; without it there is no
+      // lawful exact join (and nothing to sweep for this occurrence). In
+      // ledger-absent worlds the persisted history run_record itself carries
+      // the routed agent (agent_id) — a PRIMARY_PERSISTED owner proof.
+      let expectedAgent = expectedAgents.get(occId)
+      if (expectedAgent === undefined) {
+        const histRun = history.records.find((rec) => rec.kind === 'run_record' && rec.nativeRefs.occurrence_id === occId)
+        expectedAgent = histRun?.data?.agent_id
+        if (expectedAgent !== undefined) expectedAgents.set(occId, expectedAgent)
+      }
+      if (expectedAgent === undefined) continue
       for (const entry of ctx.sessionsMatching((lookups) => lookups.byCronOccurrence(occId))) {
+        // B1: foreign-agent journals never join, even when the decoded
+        // sessionId would match the canonical form exactly.
+        if (entry.agentId !== expectedAgent) continue
         const loaded = ctx.journal(entry.agentId, entry.sessionId)
         if (loaded === null) continue
         journalsFound.add(occId)
@@ -184,7 +209,7 @@ export async function buildSchedulerRoot(ctx, args) {
     if (journalsFound.has(occId)) continue
     gaps.push(gap('CORRELATION_GAP', 'session_journal', {
       stage: 'session_journal',
-      knownFacts: { occurrenceId: occId, runId: pending.runId, designatedSessionId: pending.sessionId, reason: 'run recorded a session coordinate but no session journal was located within this query\'s sweep bound — existence unproven (SC-2, never claimed exact)' },
+      knownFacts: { occurrenceId: occId, runId: pending.runId, designatedSessionId: pending.sessionId, expectedAgentId: expectedAgents.get(occId) ?? null, reason: 'run recorded a session coordinate but no owner-matching session journal was located within this query\'s sweep bound — existence unproven (SC-2, never claimed exact)' },
     }))
   }
 

@@ -262,7 +262,126 @@ test('CTR-SCT-007 blocker regression: ledger-absent AND journal-absent world sti
   } finally { destroyFixtureRoot(fixture) }
 })
 
-// ── CTR-SCT-002 pagination face ──────────────────────────────────────────────
+// ── B1 (PR #318 review): foreign / suffix-compatible sessions never join ────
+
+test('B1: a foreign-agent journal or a suffix-compatible unrelated session can NEVER be promoted to the exact scheduler SessionRef', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // Foreign agent whose sessionId merely ENDS WITH the occurrence's final
+    // segment (the exact shape of the GitHub review counterexample), plus a
+    // same-agent decoy with a suffix-appended id.
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_evil', 'sessions', '--evil--', 'unrelated-003a05ed6629f358ff53'), { recursive: true })
+    writeFileSync(join(fixture.paths.homesRoot, 'agt_evil', 'sessions', '--evil--', 'unrelated-003a05ed6629f358ff53', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'unrelated-003a05ed6629f358ff53', createdAt: 1, cwd: '/e' }),
+    ].join('\n') + '\n')
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53X'), { recursive: true })
+    writeFileSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53X', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'cron-run-occ:003a05ed6629f358ff53X', createdAt: 1, cwd: '/w' }),
+    ].join('\n') + '\n')
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_evil/')), 'foreign agent journal never joins')
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).includes('003a05ed6629f358ff53X')), 'suffix-appended same-agent decoy never joins')
+    assert.ok(!r.timeline.some((e) => e.source === 'session_journal' && JSON.stringify(e.nativeRefs).includes('agt_evil')), 'foreign journal record never enters the trace')
+
+    // The REAL canonical session still joins exactly (owner + exact decoded id).
+    const canonical = r.correlations.find((c) => c.rule === 'R5' && c.to.nativeRef.startsWith('agt_hr/cron-run-occ~003A003a05ed6629f358ff53') && !c.to.nativeRef.includes('X'))
+    assert.ok(canonical, 'canonical owner+identity journal still joins')
+    assert.equal(canonical.strength, 'DERIVED_EXACT')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── B2 (PR #318 review): journals created after the index must be discovered ─
+
+test('B2: a journal created after the index exists is discovered by the next listing (NEW_SESSION_JOURNAL_CREATED)', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const before = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(before.ok, true)
+    const beforeIds = before.result.sessions.map((s) => s.sessionId)
+    assert.ok(!beforeIds.includes('fresh-after-index'), 'pre-condition: new session does not exist yet')
+
+    // Create a NEW journal; touch NO previously indexed journal.
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fresh-after-index'), { recursive: true })
+    writeFileSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fresh-after-index', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'fresh-after-index', createdAt: 42, cwd: '/w' }),
+    ].join('\n') + '\n')
+
+    const after = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(after.ok, true)
+    assert.ok(after.result.sessions.some((s) => s.sessionId === 'fresh-after-index'), 'new journal MUST appear')
+    // The index stays coordinate-only and rebuildable (no new privacy surface).
+    const indexFile = readFileSync(join(indexDirOf(fixture), 'sessions.idx.jsonl'), 'utf8')
+    assert.ok(!indexFile.includes('daily HR run'), 'no journal content in the index')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── F1 (PR #318 review): authoritative pagination validation in the core ────
+
+test('F1: listing core rejects invalid pagination (no clamping, no silent drop)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const base = { homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' }
+    for (const bad of [{ limit: 0 }, { limit: 201 }, { limit: 1.5 }, { limit: '10' }, { limit: null }, { cursor: 5 }, { cursor: {} }, { cursor: [] }, { cursor: '' }]) {
+      const out = listAgentSessions({ ...base, ...bad })
+      assert.equal(out.ok, false, `expected invalid_arguments for ${JSON.stringify(bad)}`)
+      assert.equal(out.code, 'invalid_arguments')
+    }
+    // Valid faces unchanged: absent, explicit null cursor, and 1..200 integers.
+    for (const good of [{}, { cursor: null }, { limit: 1 }, { limit: 200 }]) {
+      const out = listAgentSessions({ ...base, ...good })
+      assert.equal(out.ok, true, `expected ok for ${JSON.stringify(good)}`)
+    }
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── F1 (PR #318 review): trusted handler = authoritative validation boundary ─
+
+test('F1: direct parent-RPC calls to the trusted handler fail closed on invalid pagination (never clamped or dropped)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const { createExecutionHistoryRuntime } = await import('../../production-runtime/src/execution-history/runtime.js')
+    const runtime = createExecutionHistoryRuntime({
+      layout: {
+        homesRoot: fixture.paths.homesRoot,
+        controlDir: fixture.paths.controlDir,
+        historyDir: fixture.paths.historyDir,
+        jobsStore: fixture.paths.jobsStore,
+        workflowExecutionDir: fixture.paths.workflowExecutionDir,
+        evidenceLog: fixture.paths.evidenceLog,
+      },
+      credentialsFile: '/dev/null', authServiceOrigin: '', log: {},
+    })
+    const providers = new Map()
+    runtime.mount({ provide: (k, v) => providers.set(k, v) })
+    const list = providers.get('executionHistoryAccess').handlers.agent_session_list.list
+
+    const invalid = [
+      { limit: 0 }, { limit: 201 }, { limit: 1.5 }, { limit: '10' }, { limit: null },
+      { cursor: 5 }, { cursor: {} }, { cursor: [] }, { cursor: '' },
+      { unknown: 1 }, { limit: 5, other: true },
+    ]
+    for (const args of invalid) {
+      const out = await list(args, { agentId: 'agt_hr' })
+      assert.equal(out.ok, false, `expected invalid_arguments for ${JSON.stringify(args)}`)
+      assert.equal(out.error?.code, 'invalid_arguments')
+    }
+    // Valid faces: absent, null cursor, 1..200 integers — unchanged behavior.
+    for (const args of [undefined, {}, { cursor: null }, { limit: 1 }, { limit: 200 }]) {
+      const out = await list(args, { agentId: 'agt_hr' })
+      assert.equal(out.ok, true, `expected ok for ${JSON.stringify(args)}`)
+      assert.ok(Array.isArray(out.result.sessions), 'listing executed')
+    }
+    // Wrong viewer identity still fails closed.
+    const noIdentity = await list({}, {})
+    assert.equal(noIdentity.ok, false)
+    assert.equal(noIdentity.error?.code, 'forbidden_not_owner')
+  } finally { destroyFixtureRoot(fixture) }
+})
 
 test('CTR-SCT-002: keyset pagination is deterministic and exhaustive', () => {
   const fixture = buildFixtureRoot()

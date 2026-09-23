@@ -13,7 +13,7 @@
 import { existsSync, openSync, readSync, closeSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { ensureFreshSessionIndex } from './session-index.js'
+import { decodeSegment, ensureFreshSessionIndex } from './session-index.js'
 
 const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
 const HEADER_READ_BYTES = 4096
@@ -41,6 +41,16 @@ export function listAgentSessions(opts) {
   if (typeof homesRoot !== 'string' || !existsSync(homesRoot)) {
     return err('history_unavailable', 'session homes root is not readable')
   }
+  // F1 (trusted-handler parity): authoritative validation at the core too —
+  // invalid pagination input is REJECTED, never clamped or silently dropped.
+  // `null` is a present-but-wrong value for limit (an integer is required);
+  // for cursor `null` reads as absent (the §3 F1 matrix keeps the two asymmetric).
+  if (opts.cursor !== undefined && opts.cursor !== null && typeof opts.cursor !== 'string') {
+    return err('invalid_arguments', 'cursor must be a string')
+  }
+  if (opts.limit !== undefined && (!Number.isInteger(opts.limit) || opts.limit < 1 || opts.limit > 200)) {
+    return err('invalid_arguments', 'limit must be an integer in 1..200')
+  }
   const indexDir = opts.indexDir ?? join(homesRoot, '..', 'control', 'execution-history-index')
   let entries
   try {
@@ -63,7 +73,8 @@ export function listAgentSessions(opts) {
       if (splitAt > 0) cursorKey = { atMs: Number(decoded.slice(0, splitAt)), sessionId: decoded.slice(splitAt + 1) }
     } catch { cursorKey = null }
   }
-  if (opts.cursor !== undefined && opts.cursor !== '' && cursorKey === null) {
+  if (opts.cursor !== undefined && opts.cursor !== null && cursorKey === null) {
+    // Includes '' — an empty cursor is malformed, never silently treated as absent.
     return err('invalid_arguments', 'malformed cursor')
   }
 
@@ -128,7 +139,7 @@ export function listAgentSessions(opts) {
     if (atB !== atA) return atB - atA
     return a.sessionId < b.sessionId ? -1 : a.sessionId > b.sessionId ? 1 : 0
   })
-  const limit = Number.isInteger(opts.limit) && opts.limit > 0 ? Math.min(opts.limit, PAGE_LIMIT) : PAGE_LIMIT
+  const limit = opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit
   const page = rows.slice(0, limit)
   const truncated = rows.length > page.length
   let nextCursor = null
@@ -155,16 +166,11 @@ function kindOf(sessionId) {
 }
 
 /**
- * Decode one DSH session directory segment back to the native session id
- * (escape form '~XXXX' = one char with charCode 0xXXXX; canonical encoder is
- * `encodeSegment` in packages/session-history/src/dsh-compat.js, a verbatim
- * transcription of @deepseek-ai/dsh-session-persistence-jsonl format.ts).
- * Characters that are legal verbatim (dot, dash, alphanumerics) pass through.
+ * Decode one DSH session directory segment back to the native session id:
+ * moved to session-index.js (decodeSegment) so the index lookups and the
+ * listing share one implementation; re-exported for the parity tests.
  */
-function decodeSegment(segment) {
-  if (typeof segment !== 'string') return segment
-  return segment.replace(/~([0-9A-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
-}
+export { decodeSegment } from './session-index.js'
 
 /** Best-effort header read: first JSON line of the journal. */
 function readSessionHeader(file) {

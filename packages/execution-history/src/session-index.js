@@ -137,7 +137,27 @@ export function loadSessionIndex(indexDir) {
 }
 
 /**
- * Fresh index: load, verify against the live tree, rebuild on any drift.
+ * Bounded journal-tree inventory: directory walk + stat ONLY (no journal
+ * content is read). Used by `ensureFreshSessionIndex` to discover journals
+ * CREATED AFTER the index was built — a per-file drift check alone can never
+ * see them (B2 closure; the inventory is derived state, not a registry).
+ */
+function journalInventory(homesRoot, { maxFiles = 20000 } = {}) {
+  const files = new Set()
+  let truncated = false
+  for (const agentId of safeReaddir(homesRoot)) {
+    for (const session of listAgentSessionFiles(homesRoot, agentId)) {
+      if (files.size >= maxFiles) { truncated = true; break }
+      files.add(session.file)
+    }
+    if (truncated) break
+  }
+  return { files, truncated }
+}
+
+/**
+ * Fresh index: load, verify against the live tree, rebuild on any drift —
+ * including journals that appeared after the index was written (B2).
  * @returns {{ entries: object[], coverage: object, rebuilt: boolean }}
  */
 export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
@@ -150,7 +170,14 @@ export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
       try { st = statSync(entry.file) } catch { fresh = false; break }
       if (Number(st.size) !== entry.size || Number(st.mtimeMs) !== entry.mtimeMs) { fresh = false; break }
     }
-    if (fresh) return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length }, rebuilt: false }
+    if (fresh) {
+      // Drift is not the only staleness: compare against the live journal
+      // inventory so NEWLY CREATED journals are discovered too.
+      const inventory = journalInventory(homesRoot)
+      for (const entry of loaded) inventory.files.delete(entry.file)
+      if (inventory.files.size > 0 || inventory.truncated) return { ...buildSessionIndex({ homesRoot, indexDir, maxScanBytes }), rebuilt: true }
+      return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length }, rebuilt: false }
+    }
   }
   const built = buildSessionIndex({ homesRoot, indexDir, maxScanBytes })
   return { ...built, rebuilt: true }
@@ -163,13 +190,29 @@ export function indexLookups(entries) {
     byMessageId: (id) => entries.filter((e) => e.coordinates.messageIds.includes(id)),
     byCorrelation: (correlation) => entries.filter((e) => e.coordinates.interAgentCorrelations?.includes(correlation)),
     bySessionId: (sessionId) => entries.filter((e) => e.sessionId === sessionId),
+    // B1 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 closure): EXACT canonical
+    // identity only — the decoded native sessionId must equal the canonical
+    // scheduler session id `cron-run-<occurrenceId>` for the EXACT occurrence.
+    // The former suffix/final-segment fallback let an unrelated or foreign
+    // journal (e.g. `unrelated-<occBody>`) be promoted to a session join;
+    // fuzzy fallbacks never upgrade to exact (SC-2).
     byCronOccurrence: (occurrenceId) => {
-      const needle = String(occurrenceId).replace(/:/g, '~')
-      const body = String(occurrenceId).split(':').pop()
-      return entries.filter((e) => e.sessionId.includes(needle) || (body && e.sessionId.endsWith(body)))
+      const expected = `cron-run-${occurrenceId}`
+      return entries.filter((e) => decodeSegment(e.sessionId) === expected)
     },
     all: () => entries,
   }
+}
+
+/**
+ * Decode one DSH session directory segment back to the native session id
+ * (escape form '~XXXX' = one char with charCode 0xXXXX; canonical encoder is
+ * `encodeSegment` in packages/session-history/src/dsh-compat.js, a verbatim
+ * transcription of @deepseek-ai/dsh-session-persistence-jsonl format.ts).
+ */
+export function decodeSegment(segment) {
+  if (typeof segment !== 'string') return segment
+  return segment.replace(/~([0-9A-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
 }
 
 function safeReaddir(dir) {
