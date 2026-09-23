@@ -74,10 +74,10 @@ owners:
 | OCCURRENCE_ID / RUN_ID | PERSISTED_EXACT（`run:'+occ`；occurrence ledger + history events 永不删） | `occurrence-model.js:86-88`；`history-storage.js:130-143` |
 | REQUEST_ID | `=idempotencyKey=occurrenceId`（PERSISTED_EXACT，V3 §5.4） | `occurrence-model.js:198-199` |
 | TARGET_AGENT_ID | `job.agentId`（PERSISTED_EXACT，定义时定死） | `job-model.js:86-87` |
-| TARGET_SESSION_ID | `nativeSessionId='cron-run-<occ>'`（DERIVED_EXACT 命名；**pre-start rejection 也持久**） | `occurrence.js:163,311`；`history.js:89` |
+| TARGET_SESSION_ID | `nativeSessionId='cron-run-<occ>'`（DERIVED_EXACT 命名；**pre-start rejection 也持久**） | `occurrence.js:163,311`；`history/history-model.js:88` |
 | SESSION 实际存在性 | **无独立字段**；可由 `state`+`terminalEvidence.kind` 机械推导（pre-start-rejection ⇒ 未创建） | `invoker-outcome.js:78-106`；`occurrence-model.js:26-28` |
 | TURN_EXECUTION_ID / MESSAGE_ID | ABSENT（RunRecord 冻结字段集无此二者；runs.jsonl `router_admission` 行有 `reconciliationHandle`，10 MiB 截断） | `history-model.js:85-117`；`store.js:34` |
-| RECONCILIATION_HANDLE | OBSERVABLE_ONLY（runs.jsonl router_admission 行 + runtime-evidence invocation 行；**invocation 行缺 occurrenceId/jobId，无法坐标匹配**） | `occurrence.js:175-186`；`scheduler-invoker.js:25-39` |
+| RECONCILIATION_HANDLE | OBSERVABLE_ONLY（runs.jsonl router_admission 行 + runtime-evidence invocation 行；**invocation 行缺 occurrence/job 坐标，无法坐标匹配**——loader `runtime-evidence.js:10-14` 已解析 occurrenceId/jobId/requestId 三键（runId 键待加法），但生产 writer 不写这些键） | `occurrence.js:175-186`；`scheduler-invoker.js:25-39` |
 | DELIVERY_RECEIPT | `deliveryStatus`（PERSISTED_EXACT，V3 冻结） | `occurrence.js:317-322` |
 | SESSION_CREATED=NO 溯源 | pre-reserve 拒绝=`slot_accounting`/`retry_admission_failure`（10 MiB 截断 runs.jsonl + `self_ops.job_disposition` 可查）；post-reserve pre-start=`failed`+`terminalEvidence.kind='pre-start-rejection'`+RunRecord.error_code（全 durable） | `slot-accounting.js:105-123`；`diagnosis.js:111-190`；`invoker-outcome.js:78-90` |
 
@@ -149,7 +149,9 @@ owners:
   （从冻结 taxonomy `state`/`terminalEvidence.kind`/`executionOutcome` 推导，不发明新状态；
   V4 CTR-RESULT-002 字段清单为 inclusive，加法细化不改其义）。
 - **K3**（证据行加法）：runtime-evidence invocation 行补 `occurrenceId/runId/jobId/requestId`
-  （invocation 对象既有字段；loader `runtime-evidence.js:10-14` 已支持）→ scheduler↔session join 从
+  （writer seam 可见的 request 对象已持有 occurrenceId/runId/requestId；jobId 需在
+  `occurrence.js` request 构造处一字段加法；loader `runtime-evidence.js:10-14` 已解析
+  occurrenceId/jobId/requestId 三键、runId 键加法补齐）→ scheduler↔session join 从
   纯命名升级为坐标匹配 + journal 存在性证明（`DERIVED_EXACT`，非 fuzzy）。
 - **K4**（查询层语义）：scheduler-root 增 `SESSION_CREATED=NO{reason}`/`UNKNOWN` 显式 disposition；
   journal 存在时 join 定级 `DERIVED_EXACT`（确定性派生+存在性证明），仅无 journal 时保持诚实 GAP。
