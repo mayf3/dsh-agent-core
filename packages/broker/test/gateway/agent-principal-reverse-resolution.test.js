@@ -13,7 +13,7 @@ import {
   AGENT_PRINCIPAL_REVERSE_RESOLUTION_CAPABILITY_ID,
   agentPrincipalReverseResolutionManifest,
   manifests,
-} from '../src/capabilities/agent-principal-reverse-resolution.js'
+} from '../../src/capabilities/agent-principal-reverse-resolution.js'
 
 test('manifest: one capability, one read-only operation, tool name fixed (no canonical claim)', () => {
   assert.deepEqual(manifests, [agentPrincipalReverseResolutionManifest])
@@ -71,7 +71,7 @@ test('manifest: error table is the closed CTR-APR-004 taxonomy', () => {
 })
 
 test('manifest is registered in DEFAULT_MANIFESTS exactly once (ACC-APR-001 registration)', async () => {
-  const broker = await import('../src/index.js')
+  const broker = await import('../../src/index.js')
   const registered = broker.DEFAULT_MANIFESTS.filter((m) => m.id === 'agent_resolve_principal_by_agent')
   assert.equal(registered.length, 1)
   assert.equal(registered[0], agentPrincipalReverseResolutionManifest)
@@ -89,7 +89,7 @@ test('gateway wiring: applyBroker gateway mode admits the provided agentPrincipa
   const { mkdtemp, rm, writeFile } = await import('node:fs/promises')
   const { tmpdir } = await import('node:os')
   const { join } = await import('node:path')
-  const broker = await import('../src/index.js')
+  const broker = await import('../../src/index.js')
 
   // In-process auth-service token endpoint: the gateway's requiredScopes
   // grant check must succeed so the call reaches the local handler.
@@ -133,6 +133,12 @@ test('gateway wiring: applyBroker gateway mode admits the provided agentPrincipa
     mode: 'gateway',
     credentialsFile: store,
     authServiceOrigin: `http://127.0.0.1:${tokenServer.address().port}`,
+    // DSH_AGENT_CORE_MODULARITY_PHASE_A_V1: the composition owns the LOCAL
+    // provider enumeration and injects it through resolveLocalHandlers —
+    // the exact shape production compose.js uses (execute-time resolution).
+    resolveLocalHandlers: () => ({
+      ...(ctx.get('agentPrincipalReverseResolutionAccess')?.handlers ?? {}),
+    }),
   })
   const gateway = provided.brokerGateway
   assert.notEqual(gateway, undefined, 'gateway mode provides brokerGateway')

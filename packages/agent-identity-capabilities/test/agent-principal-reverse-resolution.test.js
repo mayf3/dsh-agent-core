@@ -14,8 +14,8 @@ import {
   createAgentPrincipalReverseResolutionAccess,
   mapAuthResponse,
   validateResolveByAgentArgs,
-} from '../../src/identity/agent-principal-reverse-resolution.js'
-import { AGENT_PRINCIPAL_REVERSE_RESOLUTION_CAPABILITY_ID } from '../../../broker/src/capabilities/agent-principal-reverse-resolution.js'
+} from '../src/agent-principal-reverse-resolution.js'
+import { AGENT_PRINCIPAL_REVERSE_RESOLUTION_CAPABILITY_ID } from '../src/agent-principal-reverse-resolution.js'
 
 const UUID = '0f1e2d3c-4b5a-4968-8776-65a4b3c2d1e0'
 const AGENT_ID = 'agt_blog-agent'
