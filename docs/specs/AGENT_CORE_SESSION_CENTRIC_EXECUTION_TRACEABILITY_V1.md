@@ -1,6 +1,8 @@
 ---
 spec_id: AGENT_CORE_SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1
-status: proposed
+status: accepted
+accepted_reviewed_head: 822477ab (round-2 exact-head re-audit ACCEPT / SHIP_BLOCKERS=NONE / load_bearing_gaps=0)
+review_record: round-1 (independent reviewer, 41688795) REVISE / 1 load-bearing SPEC_GAP (CTR-SCT-005 jobId premise false — request object lacks jobId; occurrence.js outside scope) + 1 SPEC_GAP (origins.user not derivable from existing index keys) + 4 NOTE/FOLLOW_UP (R5 wording, canary invoker known-limitation, census citations history.js:89→history/history-model.js:88 + runtime-evidence 3-key reality, §11 typo); frozen_blocker_union=0 BLOCKER; all fixed in r2 822477ab; round-2 mechanical re-verification of G1-G6 against diff = ACCEPT, no new blocker in changed text (V4 CTR-MUT-001 frozen semantics untouched; loader additions read-side only)
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
