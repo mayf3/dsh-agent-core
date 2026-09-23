@@ -52,6 +52,8 @@ function argValue(args, name, fallback) {
  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
  * @param {object} [processLike] - process stand-in (tests); default process.
  */
+import { applyShutdownResult } from './shutdown-result.js'
+
 export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
   const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
   const root = argValue(argv, '--root', undefined)
@@ -90,17 +92,22 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
     stopping = true
     log.log(`${signal} received — graceful stop`)
     clearInterval(keepalive)
+    let stopError
     try {
       await runtime.stop()
     } catch (error) {
+      stopError = error
       log.error(`stop failed: ${error?.message ?? error}`)
     }
-    runtime.writeEvidence({ kind: 'stopped', pid: processLike.pid, signal })
-    log.log('stopped cleanly')
-    processLike.exit(0)
+    // T67 r2: the result surface is TRUTHFUL — a failed stop is recorded as
+    // stop_failed with a non-zero exit, never as 'stopped cleanly'/exit 0
+    // (pre-r2 the catch above swallowed the failure and the result triple
+    // claimed a clean stop unconditionally).
+    applyShutdownResult({ writeEvidence: runtime.writeEvidence, log, processLike, signal, stopError })
   }
   processLike.on('SIGTERM', () => void shutdown('SIGTERM'))
   processLike.on('SIGINT', () => void shutdown('SIGINT'))
 
   return runtime
 }
+

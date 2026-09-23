@@ -134,3 +134,78 @@ test('T42+T67-fixed: result surface after drain is truthful — ledger carries z
     'drain must complete before the shutdown result is reported')
   rmSync(dir, { recursive: true, force: true })
 })
+
+// ── r2 (T42 residual closure per DAY_DSH_SCOUT_QUEUE_RECONCILIATION_20260920_V1) ──
+// Residual surfaces discovered on fresh main: (1) trackedTick let a BUSY tick
+// clobber the drain attribution (async tick returns a noop promise; inflight
+// was overwritten and instantly cleared while the real poll kept running);
+// (2) start()'s catch-up reconcile was void fire-and-forget OUTSIDE drain
+// ownership; (3) entry.js reported 'stopped cleanly'/exit 0 even when
+// runtime.stop() threw.
+
+test('T42-r2 A: busy ticks keep the drain attribution — stop() waits for the REAL poll', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-t42r2-'))
+  const timeline = []
+  const ledger = new ExecutionLedger({ dir })
+  const { engine, releasePage1, parked, timeline: tl } = buildEngine(ledger, { timeline })
+
+  // Fast interval: the FIRST tracked tick starts the real poll (drain
+  // attribution lands via trackedTick — the exact path the clobber attacks);
+  // while it is parked, subsequent ticks are BUSY.
+  engine.start({ intervalMs: 5, catchup: false })
+  await parked
+  assert.equal(tl.includes('fetch_page1_parked'), true, 'poll parked on page 1')
+
+  // Let the interval fire repeatedly against the parked poll — pre-r2 each
+  // busy tick replaced `inflight` with an instantly-settled noop promise.
+  await new Promise((r) => setTimeout(r, 40))
+
+  const drain = engine.stop()
+  let stopResolved = false
+  drain.then(() => { stopResolved = true })
+  await new Promise((r) => setTimeout(r, 25))
+  assert.equal(stopResolved, false,
+    'stop() must NOT resolve while the real poll is still parked — busy ticks must not clobber the drain attribution (pre-r2 RED: it resolved immediately)')
+
+  releasePage1()
+  await drain
+  assert.equal(tl.includes('fetch_page1_released'), true, 'the bounded drain still completes the parked page')
+  rmSync(dir, { recursive: true, force: true })
+})
+
+test('T42-r2 B: startup catch-up reconcile is drain-owned — stop() awaits it', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-t42r2b-'))
+  const timeline = []
+  const real = new ExecutionLedger({ dir })
+  let releaseReconcile
+  const reconcileParked = new Promise((r) => { releaseReconcile = r })
+  let listCalls = 0
+  const ledger = new Proxy(real, {
+    get(target, prop, receiver) {
+      if (prop === 'listActiveFresh') {
+        return async (...args) => {
+          listCalls += 1
+          if (listCalls === 1) await reconcileParked
+          return Reflect.get(target, prop, receiver).apply(target, args)
+        }
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+  })
+  const { engine } = buildEngine(ledger, { timeline })
+
+  engine.start({ intervalMs: 60_000, catchup: true })
+  await new Promise((r) => setTimeout(r, 30))
+  assert.ok(listCalls >= 1, 'startup reconcile reached the ledger')
+
+  const drain = engine.stop()
+  let stopResolved = false
+  drain.then(() => { stopResolved = true })
+  await new Promise((r) => setTimeout(r, 25))
+  assert.equal(stopResolved, false,
+    'stop() must NOT resolve while the startup reconcile is still running — catch-up is drain-owned (pre-r2 RED: fire-and-forget resolved immediately)')
+
+  releaseReconcile()
+  await drain
+  rmSync(dir, { recursive: true, force: true })
+})
