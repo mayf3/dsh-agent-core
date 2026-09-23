@@ -171,15 +171,21 @@ export async function buildSchedulerRoot(ctx, args) {
           strength: 'DERIVED_EXACT',
         })
       }
-      if (!journalsFound.has(occId)) {
-        const pending = pendingJournalGaps.get(occId)
-        if (pending !== undefined) {
-          gaps.push(gap('CORRELATION_GAP', 'session_journal', {
-            stage: 'session_journal',
-            knownFacts: { occurrenceId: occId, runId: pending.runId, designatedSessionId: pending.sessionId, reason: 'run recorded a session coordinate but no session journal is readable — existence unproven (SC-2 WEAK/ABSENT, never claimed exact)' },
-          }))
-        }
-      }
+  }
+
+  // CTR-SCT-007 (review round-1 blocker closure): the journal sweep above is
+  // bounded (newest-N occurrences, per-session caps). Every run_record that
+  // still owes a session answer but was never swept — occurrence rotation,
+  // runs beyond the sweep window, ledger-absent history-only worlds — must
+  // still emit its honest gap here; a bounded sweep must never silently
+  // swallow the SC-2 gap. (Single flush point after the sweep; journalsFound
+  // marks the proven entries.)
+  for (const [occId, pending] of pendingJournalGaps) {
+    if (journalsFound.has(occId)) continue
+    gaps.push(gap('CORRELATION_GAP', 'session_journal', {
+      stage: 'session_journal',
+      knownFacts: { occurrenceId: occId, runId: pending.runId, designatedSessionId: pending.sessionId, reason: 'run recorded a session coordinate but no session journal was located within this query\'s sweep bound — existence unproven (SC-2, never claimed exact)' },
+    }))
   }
 
   // Runtime-evidence invocation rows: included ONLY on an explicit coordinate
@@ -236,6 +242,7 @@ function summarizeOccurrence(occ, fences, disposition) {
     ...(occ.terminalEvidence !== undefined ? { terminalEvidence: occ.terminalEvidence } : {}),
     sessionCreated: resolved.sessionCreated,
     ...(resolved.sessionNotCreatedReason !== undefined ? { sessionNotCreatedReason: resolved.sessionNotCreatedReason } : {}),
+    terminationSettled: occ.terminationSettlement !== undefined,
   }
 }
 

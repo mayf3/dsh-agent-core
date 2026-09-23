@@ -73,6 +73,9 @@ export function occurrenceProjection(record, fences) {
     ...(disposition.sessionNotCreatedReason !== undefined
       ? { sessionNotCreatedReason: disposition.sessionNotCreatedReason }
       : {}),
+    // CTR-SCT-003 outcome_unknown annotation: whether a C-039 trusted
+    // termination settlement exists (fence-inactive unknown ≠ bare unknown).
+    terminationSettled: record.terminationSettlement !== undefined,
   }
 }
 

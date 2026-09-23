@@ -124,6 +124,12 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
   /** CTR-SCT-002: MY_SESSIONS — self-only, coordinate-only derived listing. */
   function listHandle() {
     return async function handle(args, trustedContext) {
+      // Exact-args discipline: only the pagination keys are admitted; the
+      // trusted handler is the validation authority (local capabilities).
+      if (args !== undefined && args !== null
+        && Object.keys(args).some((k) => k !== 'cursor' && k !== 'limit')) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'unknown argument; only cursor and limit are admitted' } }
+      }
       const outcome = listAgentSessions({
         homesRoot: layout.homesRoot,
         indexDir: join(layout.controlDir, 'execution-history-index'),

@@ -74,15 +74,18 @@ export function listAgentSessions(opts) {
     // (ms precision), so filter/sort/cursor must all live on the same grid.
     const lastActiveAtMs = Number.isFinite(entry.mtimeMs) ? Math.trunc(entry.mtimeMs) : null
     const header = readSessionHeader(entry.file)
-    let sessionId = entry.sessionId
+    // Directory names are the DSH-encoded form of the native session id
+    // (canonical encoder: packages/session-history/src/dsh-compat.js
+    // encodeSegment — ':' escapes as '~003A' etc.). Decode BEFORE any
+    // comparison or coordinate derivation so healthy encodings never count
+    // as anomalies and degraded (header-less) dirs still yield the native id.
+    const decodedDir = decodeSegment(entry.sessionId)
+    let sessionId = decodedDir
     if (header === null) {
       anomalies.headersMissing += 1
-      // Directory names encode ':' as '~' (session-journal loader encoding);
-      // best-effort decode keeps cron-run coordinates readable without a header.
-      if (typeof sessionId === 'string') sessionId = sessionId.replaceAll('~', ':')
-    } else if (header.id !== undefined && header.id !== entry.sessionId) {
-      // Existing resolution rule: the header id is authoritative; the
-      // directory-name mismatch stays visible as an anomaly count.
+    } else if (header.id !== undefined && header.id !== decodedDir) {
+      // Existing resolution rule: the header id is authoritative; a real
+      // (decode-normalized) mismatch stays visible as an anomaly count.
       anomalies.idMismatch += 1
       sessionId = header.id
     }
@@ -101,9 +104,11 @@ export function listAgentSessions(opts) {
     if (typeof sessionId === 'string' && sessionId.startsWith(CRON_RUN_PREFIX)) {
       occurrenceIds.add(sessionId.slice(CRON_RUN_PREFIX.length))
     }
+    const occCoordList = [...occurrenceIds].sort()
+    const wfCoordList = [...(coordinates.workflowInstanceIds ?? [])].sort()
     rows.push({
       sessionId,
-      kind: kindOf(entry.sessionId),
+      kind: kindOf(sessionId),
       createdAtUtc: header !== null && Number.isFinite(header.createdAt) ? new Date(header.createdAt).toISOString() : null,
       lastActiveAtUtc: lastActiveAtMs !== null ? new Date(lastActiveAtMs).toISOString() : null,
       origins: {
@@ -111,8 +116,10 @@ export function listAgentSessions(opts) {
         inter_agent: coordinates.hasInterAgent === true,
         workflow_execution: coordinates.hasWorkflowExecutionSidecar === true,
       },
-      schedulerOccurrenceIds: [...occurrenceIds].sort().slice(0, COORDINATE_LIMIT),
-      workflowInstanceIds: [...(coordinates.workflowInstanceIds ?? [])].sort().slice(0, COORDINATE_LIMIT),
+      schedulerOccurrenceIds: occCoordList.slice(0, COORDINATE_LIMIT),
+      schedulerOccurrenceIdsTruncated: occCoordList.length > COORDINATE_LIMIT,
+      workflowInstanceIds: wfCoordList.slice(0, COORDINATE_LIMIT),
+      workflowInstanceIdsTruncated: wfCoordList.length > COORDINATE_LIMIT,
     })
   }
   rows.sort((a, b) => {
@@ -145,6 +152,18 @@ function kindOf(sessionId) {
   if (sessionId === 'main') return 'main'
   if (typeof sessionId === 'string' && sessionId.startsWith(CRON_RUN_PREFIX)) return 'scheduler'
   return 'other'
+}
+
+/**
+ * Decode one DSH session directory segment back to the native session id
+ * (escape form '~XXXX' = one char with charCode 0xXXXX; canonical encoder is
+ * `encodeSegment` in packages/session-history/src/dsh-compat.js, a verbatim
+ * transcription of @deepseek-ai/dsh-session-persistence-jsonl format.ts).
+ * Characters that are legal verbatim (dot, dash, alphanumerics) pass through.
+ */
+function decodeSegment(segment) {
+  if (typeof segment !== 'string') return segment
+  return segment.replace(/~([0-9A-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
 }
 
 /** Best-effort header read: first JSON line of the journal. */
