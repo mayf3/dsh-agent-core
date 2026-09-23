@@ -281,6 +281,24 @@ test('T10 crash before the first turn: reissue after restart is safe (nothing du
   assert.ok(entry === undefined || entry.generations.size === 0, 'no durable generation was recorded for the crashed epoch')
 })
 
+test('T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn', async (t) => {
+  const dir = await makeDir(t, 'gen-safety-t11-')
+  const storeFile = join(dir, 'turn-recovery-v3.json')
+  seedDurableGeneration(storeFile, AGT_ID, Number.MAX_SAFE_INTEGER)
+  const { router, spawned } = await freshRig(t, dir, [AGT_ID], storeFile)
+  // Router construction may legitimately settle a crash-interrupted reserved
+  // record; freeze bytes only after startup recovery, immediately before the
+  // generation-allocation attempt whose side effects this test constrains.
+  const before = await readFile(storeFile, 'utf8')
+  assert.throws(() => router.ensureRunning(AGT_ID), (error) => {
+    assert.equal(error.code, 'AGENT_PROCESS_GENERATION_EXHAUSTED')
+    return true
+  })
+  assert.equal(spawned.length, 0, 'generation exhaustion must reject before processFactory/spawn')
+  assert.deepEqual(router.lifecycleSlotSnapshot(AGT_ID), { state: 'EMPTY' }, 'generation exhaustion must reject before STARTUP slot mutation')
+  assert.equal(await readFile(storeFile, 'utf8'), before, 'generation exhaustion must not rewrite durable authority')
+})
+
 test('T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges', async (t) => {
   const dir = await makeDir(t, 'gen-safety-t12-')
   const storeFile = join(dir, 'turn-recovery-v3.json')
