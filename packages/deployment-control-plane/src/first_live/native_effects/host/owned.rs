@@ -97,7 +97,7 @@ impl Owned {
                     environment::running(identity.pid)? == before_environment,
                     "HOST_ENVIRONMENT_DRIFT",
                 )?;
-            } else {
+            } else if identity.executable.as_deref() == Some("/usr/bin/sudo") {
                 let pin = ctx
                     .packet
                     .lifecycle
@@ -109,6 +109,17 @@ impl Owned {
                     pin,
                 )?;
                 signature::running_apple(identity.pid, "/usr/bin/sudo", None)?;
+            } else {
+                // Root worker descendants (the bootstrap root script and the
+                // journal sidecar run as /usr/bin/python3, which execs the
+                // CommandLineTools interpreter): the lineage membership is
+                // already kernel-parentage bound above, so here the check is
+                // that the RUNNING image is Apple's own signed interpreter.
+                let exe = identity
+                    .executable
+                    .as_deref()
+                    .ok_or_else(|| Error::new("HOST_OPERATOR_CODE"))?;
+                signature::running_apple(identity.pid, exe, None)?;
             }
         }
         ctx.check()
