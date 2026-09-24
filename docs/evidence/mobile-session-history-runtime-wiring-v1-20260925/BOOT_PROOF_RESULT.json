@@ -1,0 +1,46 @@
+{
+  "node": "v25.6.1",
+  "startedAt": "2026-09-24T23:07:14.461Z",
+  "variants": {
+    "V1_no_history_key": {
+      "historyListenerAttempted": false,
+      "historyLog": [],
+      "loopbackHealth": 200,
+      "loopbackAddress": {
+        "host": "127.0.0.1",
+        "port": 52616
+      }
+    },
+    "V2_empty_bind_host": {
+      "historyLog": [
+        "[product-api] ERROR history listener enabled but no Tailscale bind host configured; history route stays absent\n"
+      ],
+      "loopbackHealth": 200,
+      "failClosedBeforeImport": true
+    },
+    "V3_loopback_full_mount": {
+      "historyListenerAddress": "http://127.0.0.1:47878",
+      "historyLog": [
+        "[product-api] history listener listening on http://127.0.0.1:47878 (profile ready=false)\n"
+      ],
+      "historyRouteStatus": 503,
+      "historyRouteBody": {
+        "error": {
+          "code": "PRODUCT_API_AUTH_NOT_READY",
+          "message": "authentication is not ready"
+        }
+      },
+      "loopbackSurfaceHistoryStatus": 404,
+      "loopbackSurfaceHistoryBody": {
+        "error": {
+          "code": "NOT_FOUND",
+          "message": "no such endpoint: GET /v1/agents/agt_wiring_proof/sessions/main/messages"
+        }
+      },
+      "loopbackHealth": 200,
+      "productionActivation": "NONE — tmp layout, isolated loopback binds only (main server on ephemeral port 0; proof listener on fixed port 47878), no Tailscale interface, no auth config, no real agent process"
+    }
+  },
+  "result": "PASS",
+  "finishedAt": "2026-09-24T23:07:14.761Z"
+}
