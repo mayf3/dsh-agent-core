@@ -44,9 +44,9 @@ test('T2: scheduler run resolves its SessionRef — ledger disposition + journal
     assert.ok(occurrence, 'ledger occurrence surfaced')
     assert.equal(occurrence.nativeRefs.sessionId, 'cron-run-occ:003a05ed6629f358ff53', 'SessionRef exposed')
     assert.equal(occurrence.data.sessionCreated, 'unknown', 'failed without terminalEvidence stays honest-unknown')
-    const join = outcome.result.correlations.find((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/'))
-    assert.ok(join, 'session correlation present')
-    assert.equal(join.strength, 'DERIVED_EXACT', 'deterministic derivation + located journal = existence proof')
+    const hrJoin = outcome.result.correlations.find((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/'))
+    assert.ok(hrJoin, 'session correlation present')
+    assert.equal(hrJoin.strength, 'DERIVED_EXACT', 'deterministic derivation + located journal = existence proof')
 
     // OCC_ID_2: ledger says succeeded (created) but no journal exists — the
     // missing journal is a visible CORRELATION_GAP, never a silent success.
@@ -256,6 +256,27 @@ test('C3: occurrence-scoped query for a rotated occurrence still emits the sessi
 })
 
 // ── D1/D2 (GitHub fresh review @ 70bc04d0) ───────────────────────────────────
+
+test('F-A: without an independent invocation coordinate the scheduler→session join stays WEAK_NAME_JOIN (EH V1 R5 preserved)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // Journal EXISTS (owner + canonical id) but the invocation evidence rows
+    // are gone — the join is real enough to report, yet only at the weak
+    // grade: no independent persisted coordinate proves it.
+    writeFileSync(join(fixture.paths.controlDir, 'runtime-evidence.jsonl'), [
+      { kind: 'ready', pid: 1, ts: 1 },
+    ].map((r) => JSON.stringify(r)).join('\n') + '\n')
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const faJoin = outcome.result.correlations.find((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/'))
+    assert.ok(faJoin, 'the join is still reported (never silently dropped)')
+    assert.equal(faJoin.strength, 'WEAK_NAME_JOIN', 'no independent coordinate → weak grade, never exact')
+    assert.equal(faJoin.from.source, 'scheduler_store')
+  } finally { destroyFixtureRoot(fixture) }
+})
 
 test('D1: exact scheduler joins expose the NATIVE session id (decoded), never the directory encoding', async () => {
   const fixture = buildFixtureRoot()

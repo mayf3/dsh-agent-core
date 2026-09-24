@@ -173,6 +173,12 @@ export async function buildSchedulerRoot(ctx, args) {
         if (expectedAgent !== undefined) expectedAgents.set(occId, expectedAgent)
       }
       if (expectedAgent === undefined) continue
+      const coordMatched = (nativeId, dirId) => ctx.source('runtime_evidence').records.some((row) => {
+        const rowOcc = row.nativeRefs.occurrenceId ?? row.data?.occurrenceId
+        if (rowOcc !== occId) return false
+        const rowSession = row.nativeRefs.sessionId ?? row.data?.sessionId
+        return rowSession === nativeId || rowSession === dirId
+      })
       for (const entry of ctx.sessionsMatching((lookups) => lookups.byCronOccurrence(occId))) {
         // B1: foreign-agent journals never join, even when the decoded
         // sessionId would match the canonical form exactly.
@@ -180,6 +186,13 @@ export async function buildSchedulerRoot(ctx, args) {
         // D1: the join exposes the NATIVE session id (decoded), never the
         // physical directory encoding (CTR-SCT-001/007 native SessionRef).
         const nativeSessionId = decodeSegment(entry.sessionId)
+        // F-A (authority round-3 closure-3): the EXACT grade additionally
+        // needs an independent persisted coordinate — an invocation evidence
+        // row whose occurrenceId/sessionId match this join. Without it the
+        // join stays at the WEAK_NAME_JOIN grade (EH V1 R5 semantics
+        // preserved); it is never silently dropped, and never upgraded on
+        // naming alone.
+        const strength = coordMatched(nativeSessionId, entry.sessionId) ? 'DERIVED_EXACT' : 'WEAK_NAME_JOIN'
         const loaded = ctx.journal(entry.agentId, entry.sessionId)
         if (loaded === null) continue
         journalsFound.add(occId)
@@ -200,15 +213,15 @@ export async function buildSchedulerRoot(ctx, args) {
         }
         correlations.push({
           rule: 'R5',
-          // CTR-SCT-007 / D-SCT-5: the cron-run-<occ> id is a deterministic
-          // derivation from the occurrence coordinate; the located journal is
-          // the EXISTENCE PROOF, so this join is DERIVED_EXACT — no longer a
-          // weak name convention. When no journal exists the honest
-          // CORRELATION_GAP below stands instead.
+          // CTR-SCT-007 / D-SCT-5 (as amended by the round-3 corrections): the
+          // cron-run-<occ> id is a deterministic derivation; the located
+          // journal is the existence proof. F-A: the grade is DERIVED_EXACT
+          // only when an independent persisted invocation coordinate also
+          // matches; otherwise the join stays WEAK_NAME_JOIN.
           from: { source: occurrenceIds.has(occId) ? 'scheduler_store' : 'query_coordinate', nativeRef: occId },
           to: { source: 'session_journal', nativeRef: `${entry.agentId}/${nativeSessionId}` },
           evidenceRefs: [occId, nativeSessionId],
-          strength: 'DERIVED_EXACT',
+          strength,
         })
       }
   }
