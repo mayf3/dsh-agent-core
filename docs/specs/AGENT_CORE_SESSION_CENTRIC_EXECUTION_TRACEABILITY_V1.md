@@ -129,6 +129,11 @@ scheduler 域合法 reason 词表 = 既有 authority 冻结值：
 （`self_ops.job_disposition` 既有词表）；workflow 域 = `resolution_blocked{code}` / `delivery_failed{reason}`；
 ASM 域 = 既有 15 码错误表（denial/failed 行）。executionOutcome 不明时输出
 `SESSION_CREATED = UNKNOWN`（+fence 状态），不猜。
+**按链路的责任面（S2 closure）**：显式 `sessionCreated` 处置投影授权在 scheduler 读面
+（CTR-SCT-003/004/007）。workflow 与 ASM 链的等价不伪造保证由既有契约承载：workflow 的
+`resolution_blocked{code}`/`delivery_failed{reason}` 是持久处置且无 `run_delivered` 即无任何
+SessionRef 输出；ASM 的 denial/failed 行不携带 sessionId，proven receipt 之前无坐标输出——
+两者即 SC-1 在其链路上的形态，不要求新增字面 `SESSION_CREATED=NO` 投影。
 
 **SC-2 SessionRef must be bidirectionally traceable**
 从 `(agentId, sessionId)` 必须能反查 trigger/source（scheduler 坐标 / workflow 坐标 / send 坐标 /
@@ -230,6 +235,9 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   raw-text regex 匹配作为 listing 输出依据**（E2 closure：消息正文引用坐标字符串不得污染
   追溯视图），best-effort、缺失记 false/空且不报错。
   列表因此天然发现新建 journal（无索引 staleness），且不受任何 fleet cap 截断。
+  **聚合预算（S3 closure）**：扫描分两相——phase 1 仅 stat 级（readdir/lstat/realpath：confinement、
+  keyset 过滤、排序），phase 2（header + 结构化坐标扫描）只对进入当前页的行执行；单请求的内容
+  读取量与响应行数成正比（≤ limit 个文件），对大会话集重复调用的总成本有界且由 keyset 续读均摊。
 - **Confined reader（round-3 修订，A3 closure；B-B 再收紧）**：caller 子树内的每一个 journal
   文件在读取前必须通过 confinement 预检——**canonical-root binding**：解析全部路径成分（含
   中间目录 symlink）后的真实路径必须仍位于 `homes/<callerAgentId>/sessions/` 之内（把祖先目录
@@ -268,6 +276,10 @@ nativeSessionId, fences, terminationSettlement?}`（无任何写路径变化）�
 规则：`not_created` 时**任何面不得输出 sessionId**（含 execution-history 的 timeline 关联——
 不产生 R5 关联，只产生 disposition 行）；`unknown` 不猜方向。pre-reserve 从未铸造 occurrence
 的失败继续由既有 `self_ops.job_disposition`（slot 分类词表）回答，本表不重复其职责。
+late-settlement 证据补充（S1 closure）：超时后 late settlement 若收到确定性未开始证明
+（`routerEnvelope='not_admitted'` 或 `started=false`），writer 按 OCCURRENCE_OUTCOME_V3 的既有
+分类法持久 `terminalEvidence.kind='pre-start-rejection'`（非泛化 late-settlement）——本表第 4 行
+随之把该 occurrence 映为 `not_created`，未创建的 sessionId 不会被任何读面输出。
 已知局限（如实记档，F-SCT-5）：postdeploy canary invoker 的 reserved 身份不触碰 AgentProcess
 却会 terminalize `succeeded` 并持久 nativeSessionId——此类 occurrence 的投影按表输出
 `created`（忠实于 ledger 既有证据），但 session 实际不存在；execution-history scheduler-root
