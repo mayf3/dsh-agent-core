@@ -33,7 +33,12 @@ import { SOURCE, PLAIN, TARGET, DISABLED, GHOST, trusted, writeRosterFile, rig, 
 
 /** The frozen scheduler -> Router seam request contract (occurrence.js invokeWithDeadline). */
 const SEAM_REQUEST_KEYS = [
-  'agentId', 'deliveryTarget', 'lightContext', 'message', 'model', 'occurrenceId',
+  // 'jobId' joins per SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-005
+  // (one-field additive plumb so invocation evidence rows can carry the job
+  // coordinate; it is scheduler-side routing metadata, never source
+  // identity/credential material — the CROSS-AGENT-9 walk below still proves
+  // zero principal/credential/grant propagation).
+  'agentId', 'deliveryTarget', 'jobId', 'lightContext', 'message', 'model', 'occurrenceId',
   'onStart', 'payloadHash', 'requestId', 'runId', 'sessionId', 'signal', 'timeoutMs',
 ].sort()
 

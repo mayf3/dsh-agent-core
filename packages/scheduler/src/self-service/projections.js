@@ -34,7 +34,24 @@ export function publicJobWithoutMessage(job) {
   return publicJob
 }
 
+// SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-003 — frozen session
+// disposition table derived ONLY from persisted occurrence fields
+// (state + terminalEvidence.kind). Keep semantics-identical with
+// packages/execution-history/src/correlate/scheduler-root.js
+// sessionDispositionOf(); equivalence is asserted by tests.
+export function sessionDispositionOf(record) {
+  const kind = record?.terminalEvidence?.kind
+  if (record?.state === 'failed' && kind === 'pre-start-rejection') {
+    return { sessionCreated: 'not_created', sessionNotCreatedReason: 'pre-start-rejection' }
+  }
+  if (record?.state === 'succeeded' || record?.state === 'running') return { sessionCreated: 'created' }
+  if (record?.state === 'failed' && kind === 'turn-terminal') return { sessionCreated: 'created' }
+  if (record?.state === 'admitted') return { sessionCreated: 'pending' }
+  return { sessionCreated: 'unknown' }
+}
+
 export function occurrenceProjection(record, fences) {
+  const disposition = sessionDispositionOf(record)
   return {
     occurrenceId: record.occurrenceId,
     runId: record.runId,
@@ -49,6 +66,16 @@ export function occurrenceProjection(record, fences) {
     endedAt: record.endedAt,
     ...(record.lateSettlement !== undefined ? { lateSettlement: record.lateSettlement } : {}),
     fenceActive: fences?.[record.jobId] !== undefined,
+    // CTR-SCT-004 additive tail: a not_created occurrence must never expose
+    // its designated session id (SC-1: no fabricated sessionId).
+    sessionId: disposition.sessionCreated === 'not_created' ? null : (record.nativeSessionId ?? null),
+    sessionCreated: disposition.sessionCreated,
+    ...(disposition.sessionNotCreatedReason !== undefined
+      ? { sessionNotCreatedReason: disposition.sessionNotCreatedReason }
+      : {}),
+    // CTR-SCT-003 outcome_unknown annotation: whether a C-039 trusted
+    // termination settlement exists (fence-inactive unknown ≠ bare unknown).
+    terminationSettled: record.terminationSettlement !== undefined,
   }
 }
 
