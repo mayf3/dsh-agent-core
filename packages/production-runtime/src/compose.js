@@ -350,6 +350,12 @@ export async function composeProductionRuntime(options = {}) {
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
+    // MOBILE_SESSION_HISTORY_V1 / PRODUCT_API_AUTHENTICATION_V1: the
+    // dedicated history-only Tailnet listener config must reach the product
+    // api through the composition contract. Pure pass-through — the module
+    // owns default-OFF (enabled:false) and every fail-closed mount decision;
+    // an absent key keeps the listener OFF exactly as before.
+    history: productApiCfg.history,
   })
 
   const notificationIngress = mountNotificationIngressRuntime({
