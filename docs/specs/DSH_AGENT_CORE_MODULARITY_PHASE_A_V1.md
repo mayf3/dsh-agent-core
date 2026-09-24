@@ -1,6 +1,16 @@
 ---
 spec_id: DSH_AGENT_CORE_MODULARITY_PHASE_A_V1
-status: proposed
+status: accepted
+accepted_date: 2026-09-24
+accepted_by: mayf3
+accepted_reviewed_spec_commit: 283ff1f1d7f67f011afb4cbf0299a7a400ee009c
+acceptance_review_verdict: PASS
+acceptance_review: independent semantic authority review = ACCEPT / 0 blockers (local Ollama qwen3.8:27b-mtp-q4_K_M-64k, fresh context, exact reviewed proposal head 283ff1f1; durable record docs/reviews/DSH_AGENT_CORE_MODULARITY_PHASE_A_V1_INDEPENDENT_REVIEW.md)
+acceptance_authority_basis: >-
+  Owner direct mandate GOAL DSH_AGENT_CORE_MODULARITY_PHASE_A_V1_CLOSURE_FIX
+  (2026-09-24), persisted at
+  docs/reports/DSH_AGENT_CORE_MODULARITY_PHASE_A_V1_CLOSURE_FIX_MANDATE.md;
+  source SHA256 13245acaea57ba547e90b536c14b36c0af6ad0cd982868e02a6435f82ca8cf67.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
