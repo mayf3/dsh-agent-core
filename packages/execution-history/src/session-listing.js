@@ -16,8 +16,8 @@
  * (consumption ban, Spec §5).
  */
 
-import { existsSync, fstatSync, lstatSync, openSync, readSync, closeSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, fstatSync, lstatSync, openSync, readSync, closeSync, realpathSync, statSync } from 'node:fs'
+import { join, sep } from 'node:path'
 
 import { decodeSegment, extractJournalCoordinates } from './session-index.js'
 import { listAgentSessionFiles } from './loaders/session-journal.js'
@@ -81,23 +81,34 @@ export function listAgentSessions(opts) {
   // C1/C2: enumerate the CALLER'S OWN journals directly (stat + header +
   // bounded coordinate scan per file). Never touches other Agents' trees and
   // never inherits any fleet-wide cap, so the caller's listing is complete.
-  const callerRoot = existsSync(join(homesRoot, viewerAgentId, 'sessions'))
-    ? join(homesRoot, viewerAgentId)
-    : null
+  const callerSessionsRoot = join(homesRoot, viewerAgentId, 'sessions')
+  const callerRoot = existsSync(callerSessionsRoot) ? join(homesRoot, viewerAgentId) : null
+  // B-B (authority round-3 review closure): canonical-root binding — resolve
+  // EVERY path component (including intermediate directory symlinks) and
+  // require the journal's REAL path to remain inside the caller's own
+  // sessions root. An ancestor swapped for a symlink to another agent's
+  // directory fails this prefix check even though the final file itself is a
+  // plain regular file with nlink===1.
+  let callerRealRoot = null
+  try { callerRealRoot = realpathSync(callerSessionsRoot) } catch { callerRealRoot = null }
   const anomalies = { headersMissing: 0, idMismatch: 0 }
   const rows = []
   if (callerRoot !== null) {
     const maxScanBytes = opts.maxScanBytes ?? 8 * 1024 * 1024
     for (const session of listAgentSessionFiles(homesRoot, viewerAgentId)) {
+      // B-B: canonical-root binding over the fully resolved path.
+      let realFile = null
+      try { realFile = realpathSync(session.file) } catch { continue }
+      if (callerRealRoot === null || !(realFile === callerRealRoot || realFile.startsWith(callerRealRoot + sep))) continue
       // A3 (authority round-3): confined-reader gate. A symlink or hardlink
       // planted in the caller subtree must never be followed — it could make
       // this zero-Auth handler read ANOTHER agent's journal and leak its
       // coordinates as the caller's own. lstat must be a plain regular file
       // with exactly one link; the header read re-verifies device+inode.
-      const confined = confinedJournalStat(session.file)
+      const confined = confinedJournalStat(realFile)
       if (confined === null) continue
       const lastActiveAtMs = Number.isFinite(confined.mtimeMs) ? Math.trunc(confined.mtimeMs) : null
-      const header = readSessionHeader(session.file, confined)
+      const header = readSessionHeader(realFile, confined)
       // Directory names are the DSH-encoded form of the native session id
       // (canonical encoder: packages/session-history/src/dsh-compat.js
       // encodeSegment — ':' escapes as '~003A' etc.). Decode BEFORE any
@@ -125,7 +136,7 @@ export function listAgentSessions(opts) {
       }
       let coordinates = {}
       try {
-        coordinates = extractJournalCoordinates(session.file, { maxScanBytes }).coordinates
+        coordinates = extractJournalCoordinates(realFile, { maxScanBytes }).coordinates
       } catch { /* best-effort origins; listing never fails on one file */ }
       const occurrenceIds = new Set(coordinates.occurrenceIds ?? [])
       if (typeof sessionId === 'string' && sessionId.startsWith(CRON_RUN_PREFIX)) {

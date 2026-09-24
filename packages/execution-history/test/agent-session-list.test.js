@@ -14,7 +14,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, linkSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { queryExecutionTrace, listAgentSessions } from '../src/index.js'
@@ -281,6 +281,37 @@ test('A3: a symlink or hardlink planted in the caller subtree can never pull a f
     const again = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
     assert.equal(again.ok, true)
     assert.equal(statSync(victimFile).mtimeMs, victimMtime, 'victim journal untouched')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── B-B (authority round-3 review): ancestor symlink-swap cannot escape ─────
+
+test('B-B: swapping a caller session directory for a symlink to another agent\'s tree cannot leak foreign coordinates', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // The foreign victim journal lives in ANOTHER agent's sessions tree.
+    const victimDir = join(fixture.paths.homesRoot, 'agt_victim', 'sessions', '--victim--', 'stolen-main')
+    mkdirSync(victimDir, { recursive: true })
+    writeFileSync(join(victimDir, 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'stolen-main', createdAt: 7, cwd: '/v' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(8).toISOString(), data: { content: 'victim-only {"occurrenceId":"occ:aaaaaaaaaaaaaaaa"}', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+
+    // Caller has one legitimate session; then its PROJECT directory is
+    // replaced by a symlink pointing at the victim's sessions tree — the
+    // final file is a plain regular file with nlink=1, so only the
+    // canonical-root binding can stop the escape.
+    const callerProj = join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY)
+    const movedAside = join(fixture.paths.homesRoot, 'agt_hr', 'moved-aside')
+    renameSync(callerProj, movedAside)
+    symlinkSync(victimDir, callerProj)
+
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    const serialized = JSON.stringify(out.result)
+    assert.ok(!serialized.includes('stolen-main'), 'foreign session never enters the listing')
+    assert.ok(!serialized.includes('aaaaaaaaaaaaaaaa'), 'foreign coordinates never enter the listing')
+    assert.ok(!out.result.sessions.some((s) => s.sessionId === 'cron-run-occ:003a05ed6629f358ff53'), 'the symlinked-away caller sessions are gone (honest absence), not resolved through the escape hatch')
   } finally { destroyFixtureRoot(fixture) }
 })
 
