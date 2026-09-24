@@ -48,6 +48,18 @@ export const ATTEMPT_STATES = Object.freeze(['ACTIVE', 'SETTLED', 'NEEDS_REVIEW'
 /** The ONE re-entry judgment (WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002). */
 export const STALE_NO_PROGRESS_JUDGMENT = 'stale_no_progress'
 
+/**
+ * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the per-visit attempt limit.
+ * Admission-time policy only (never a file-format invariant): the fence
+ * refuses to MINT a generation above the limit; already-written files replay
+ * unchanged. Default 3, configurable via maxAttemptsPerVisit (wiring: env
+ * DSH_WORKFLOW_MAX_ATTEMPTS_PER_VISIT).
+ */
+export const DEFAULT_MAX_ATTEMPTS_PER_VISIT = 3
+
+/** The ONE escalation fact (CTR-WEC1-005): recorded at most once per visit. */
+export const ESCALATION_REQUESTED_KIND = 'escalation_requested'
+
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 
 /**
@@ -89,9 +101,15 @@ export class ExecutionLedger {
    * @param {Function} [opts.clock] - () => ms epoch (tests).
    * @param {object} [opts.log] - { log?, warn?, error? } (optional).
    * @param {object} [opts.io] - injectable durable-I/O seams (tests).
+   * @param {number} [opts.maxAttemptsPerVisit] - WORKFLOW_EXECUTION_CONTROL_V1
+   *   CTR-WEC1-004 admission policy: the fence refuses generation N+1 when
+   *   N >= maxAttemptsPerVisit (default 3, min 1).
    */
-  constructor({ dir, clock = () => Date.now(), log = {}, io = {} }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
+    if (!Number.isInteger(maxAttemptsPerVisit) || maxAttemptsPerVisit < 1) {
+      throw new TypeError(`workflow-execution: ledger maxAttemptsPerVisit must be a positive integer (got ${JSON.stringify(maxAttemptsPerVisit)})`)
+    }
     if (io.appendFileSync !== undefined && typeof io.appendFileSync !== 'function') {
       throw new TypeError('workflow-execution: io.appendFileSync must be a function when provided')
     }
@@ -102,6 +120,7 @@ export class ExecutionLedger {
     this.eventsFile = join(dir, LEDGER_EVENTS_FILE)
     this.clock = clock
     this.log = log
+    this.maxAttemptsPerVisit = maxAttemptsPerVisit
     this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
       const fd = openSync(path, 'r')
@@ -218,6 +237,15 @@ export class ExecutionLedger {
   }
 
   #appendEvent(event) {
+    // WORKFLOW_EXECUTION_CONTROL_V1: every durable line carries its
+    // workflowInstanceId when the attempt context knows it — outbound
+    // projections (forum thread resolution, traces) key on the line alone
+    // and must not depend on which event kind happens to carry identity.
+    // Additive stamping: identity-bearing events keep their own value.
+    const attempt = this.attempts.get(String(event.nodeVisitId ?? '').toLowerCase())
+    if (event.workflowInstanceId === undefined && attempt?.workflowInstanceId !== undefined) {
+      event.workflowInstanceId = attempt.workflowInstanceId
+    }
     // The event is a durable fact only once its bytes hit the disk (same
     // append + fsync discipline as the scheduler history store's 'r+' sync).
     this.#appendAndSync(`${JSON.stringify(event)}\n`)
@@ -282,6 +310,14 @@ export class ExecutionLedger {
           && existing.ownerPrincipalId === ownerPrincipalId.toLowerCase()
         if (!sameIdentity) {
           throw new Error(`workflow-execution: refusing generation ${(existing.generation ?? 1) + 1} attempt_planned for nodeVisit ${nodeVisitId.toLowerCase()} — identity triple differs from the stale-superseded attempt (corrupt feed or ledger)`)
+        }
+        // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the policy limit is
+        // enforced INSIDE the fence, so no poller, race or double trigger can
+        // mint past it. Refusal is a clean non-created outcome — the engine
+        // turns it into the one-time escalation (CTR-WEC1-005).
+        const nextGeneration = (existing.generation ?? 1) + 1
+        if (nextGeneration > this.maxAttemptsPerVisit) {
+          return { created: false, attempt: { ...existing }, cause: 'attempt_limit_reached' }
         }
       }
       // WORKFLOW_STALE_REENTRY_V1 CTR-SRE-003: a terminal attempt with
@@ -579,8 +615,75 @@ export class ExecutionLedger {
       .map((attempt) => ({ ...attempt })))
   }
 
+  /**
+   * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: record the ONE escalation
+   * fact per visit (append-only `escalation_requested` event). Idempotent:
+   * an already-escalated visit yields { committed: false } WITHOUT appending
+   * anything. Requires an existing terminal attempt — escalation rides the
+   * attempt's own terminal evidence, never an ACTIVE attempt.
+   */
+  async recordEscalationRequested({ nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
+    if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: escalation reason is required')
+    return this.mutate(() => {
+      const current = this.#attempt(nodeVisitId)
+      if (current === undefined) {
+        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — escalation rides an existing attempt`)
+      }
+      if (current.state === 'ACTIVE') {
+        throw new Error(`workflow-execution: refusing escalation_requested for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is ACTIVE`)
+      }
+      if (current.escalation !== undefined) {
+        return { committed: false, attempt: { ...current }, cause: 'already_escalated' }
+      }
+      const event = {
+        kind: ESCALATION_REQUESTED_KIND,
+        nodeVisitId: nodeVisitId.toLowerCase(),
+        // The workflowInstanceId rides the event line (not the projection):
+        // outbound projections (forum) key their thread resolution on it.
+        workflowInstanceId: current.workflowInstanceId,
+        atMs: this.clock(),
+        reason,
+        ...(Number.isInteger(attemptCount) ? { attemptCount } : {}),
+        ...(typeof lastAttemptId === 'string' ? { lastAttemptId } : {}),
+        ...(typeof dispatchIntentId === 'string' ? { dispatchIntentId } : {}),
+      }
+      this.#appendEvent(event)
+      this.#applyEvent(event)
+      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
+    })
+  }
+
+  /**
+   * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: cross-process-fresh
+   * enumeration of terminal NEEDS_REVIEW run_ended_no_submission attempts
+   * whose reconcile verdict is at least retryDelayMs old — the policy-driven
+   * continuation class (fast re-entry path, shorter than the stale clock;
+   * outcome_unknown NEVER appears here).
+   */
+  async listRunEndedCandidatesFresh(retryDelayMs, nowMs = this.clock()) {
+    if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
+      throw new TypeError('workflow-execution: listRunEndedCandidatesFresh requires a positive integer retryDelayMs')
+    }
+    return this.mutate(() => [...this.attempts.values()]
+      .filter((attempt) => attempt.state === 'NEEDS_REVIEW'
+        && attempt.judgment === 'run_ended_no_submission'
+        && Number.isInteger(attempt.reconciledAtMs)
+        && nowMs - attempt.reconciledAtMs >= retryDelayMs)
+      .map((attempt) => ({ ...attempt })))
+  }
+
   snapshot() {
     if (!this.loaded) this.load()
     return [...this.attempts.values()].map((a) => ({ ...a }))
+  }
+
+  /**
+   * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-003: cross-process-fresh read
+   * view for the trace projection — replays the file under the existing
+   * lock (same discipline as listActiveFresh) and returns the whole
+   * projection. Read-only in intent; the lock is the freshness seam.
+   */
+  async snapshotFresh() {
+    return this.mutate(() => [...this.attempts.values()].map((a) => ({ ...a })))
   }
 }

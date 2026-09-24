@@ -46,7 +46,7 @@
 
 import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
-import { STALE_NO_PROGRESS_JUDGMENT } from './ledger.js'
+import { STALE_NO_PROGRESS_JUDGMENT, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
@@ -60,6 +60,14 @@ export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
  * before any stale evaluation fires.
  */
 export const DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS = 3_600_000
+
+/**
+ * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the policy-driven
+ * continuation defaults — the per-visit attempt limit lives on the LEDGER
+ * (the fence enforces it); the retry delay gates the run_ended_no_submission
+ * fast re-entry class. outcome_unknown never enters it.
+ */
+export const DEFAULT_RETRY_DELAY_MS = 60_000
 
 /** svc-workflow's hard page cap (1..100); a FULL page means "keep sweeping". */
 export const DUE_PAGE_LIMIT = 100
@@ -88,10 +96,16 @@ export const DUE_PAGE_LIMIT = 100
  *     reconciliation record is provably no longer an active unknown
  *     (CTR-SRE-004 quiescence gate — a READ-ONLY check over the existing
  *     getTurnReconciliation / resolveCallerCorrelation seams).
+ * @param {({workflowInstanceId:string, nodeVisitId:string, attemptCount:number, lastAttemptId:string, dispatchIntentId:string, reason:string}) =>
+ *   Promise<{ok:true, escalated?:boolean, assistanceCaseId?:string}|{ok:false, code:string, detail?:string}>} [deps.escalateAttemptLimit]
+ *   - WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation seam
+ *     (svc-workflow system execution-escalation ingress). Called at most
+ *     once per visit in EFFECT — the ledger escalation fact is the
+ *     idempotency marker; a failed call is retried on a later pass.
  * @param {Function} [deps.buildInstruction] - instruction builder (tests).
  * @param {object} [deps.log]
  * @param {Function} [deps.clock]
- * @param {object} [deps.config] - { maxAdmissionsPerPoll, staleNoProgressThresholdMs }
+ * @param {object} [deps.config] - { maxAdmissionsPerPoll, staleNoProgressThresholdMs, retryDelayMs }
  */
 export function createWorkflowExecutionEngine({
   ledger,
@@ -101,6 +115,7 @@ export function createWorkflowExecutionEngine({
   getTurnReconciliation,
   resolveCallerCorrelation,
   readInstanceDetail,
+  escalateAttemptLimit: escalateAttemptLimitDep,
   buildInstruction = buildExecutionInstruction,
   log = {},
   clock = () => Date.now(),
@@ -114,6 +129,10 @@ export function createWorkflowExecutionEngine({
   if (!Number.isInteger(staleNoProgressThresholdMs) || staleNoProgressThresholdMs < 1) {
     throw new TypeError(`workflow-execution: config.staleNoProgressThresholdMs must be a positive integer (got ${JSON.stringify(config.staleNoProgressThresholdMs)})`)
   }
+  const retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS
+  if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
+    throw new TypeError(`workflow-execution: config.retryDelayMs must be a positive integer (got ${JSON.stringify(config.retryDelayMs)})`)
+  }
 
   function provenanceFor(attempt) {
     // The trusted control-plane sidecar: runtime-owned workflow execution
@@ -125,6 +144,44 @@ export function createWorkflowExecutionEngine({
       nodeVisitId: attempt.nodeVisitId,
       attemptId: attempt.attemptId,
     })
+  }
+
+  /**
+   * CTR-WEC1-005: the ONE attempt-limit escalation per visit. Calls the
+   * injected svc seam first; only a successful call records the ledger
+   * escalation fact (the idempotency marker — a failed call retries on a
+   * later pass; svc replays an already-open case as escalated:false).
+   * Never throws into admission/reconcile paths.
+   */
+  async function escalateAttemptLimit({ attempt, reason }) {
+    if (typeof escalateAttemptLimitDep !== 'function') return
+    const payload = {
+      workflowInstanceId: attempt.workflowInstanceId,
+      nodeVisitId: attempt.nodeVisitId,
+      attemptCount: attempt.dispatchCount ?? attempt.generation ?? 1,
+      lastAttemptId: attempt.attemptId,
+      dispatchIntentId: attempt.dispatchIntentId,
+      reason,
+    }
+    try {
+      const result = await escalateAttemptLimitDep(payload)
+      if (!result?.ok) {
+        log.warn?.(`workflow-execution: escalation call failed for ${attempt.nodeVisitId} (${result?.code ?? 'unknown'}) — retried on a later pass`)
+        return
+      }
+      const recorded = await ledger.recordEscalationRequested({
+        nodeVisitId: attempt.nodeVisitId,
+        reason,
+        attemptCount: payload.attemptCount,
+        lastAttemptId: payload.lastAttemptId,
+        dispatchIntentId: payload.dispatchIntentId,
+      })
+      if (recorded.committed) {
+        log.log?.(`workflow-execution: attempt limit escalated for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
+      }
+    } catch (error) {
+      log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+    }
   }
 
   /**
@@ -151,6 +208,14 @@ export function createWorkflowExecutionEngine({
       if (turnState === 'pending') {
         log.warn?.(`workflow-execution: re-entry deferred for ${previous.nodeVisitId} — superseded execution still unresolved (fence stands; C-013); rechecked next sweep`)
         return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
+      }
+      // CTR-WEC1-004: the fence now refuses generation N+1 past the attempt
+      // limit — turn the refusal into the one-time escalation.
+      if ((previous.generation ?? 1) >= (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)) {
+        if (previous.escalation === undefined) {
+          await escalateAttemptLimit({ attempt: previous, reason: 'ATTEMPTS_EXHAUSTED' })
+        }
+        return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
       }
     }
     const attemptResult = await ledger.beginAttemptIfAbsent({
@@ -215,6 +280,15 @@ export function createWorkflowExecutionEngine({
       }
     })
     if (!attemptResult.created) {
+      if (attemptResult.cause === 'attempt_limit_reached') {
+        // CTR-WEC1-004: the fence refused a past-limit mint (the engine-side
+        // pre-check missed it — e.g. a concurrent settle landed between the
+        // pre-check and the locked fence). Backstop: escalate once and leave.
+        if (attemptResult.attempt.escalation === undefined) {
+          await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+        }
+        return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
+      }
       return { action: 'already_attempted', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
     }
     const attempt = attemptResult.attempt
@@ -325,6 +399,7 @@ export function createWorkflowExecutionEngine({
             const stale = await judgeStale(attempt)
             if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
               summary.staleReentry.push(attempt.nodeVisitId)
+              await maybeEscalateAtLimit(attempt)
               continue
             }
           }
@@ -367,12 +442,43 @@ export function createWorkflowExecutionEngine({
       try {
         const stale = await judgeStale(attempt)
         if (stale.kind !== 'stale_confirmed') continue
-        if (await settleStale(attempt)) summary.staleReentry.push(attempt.nodeVisitId)
+        if (await settleStale(attempt)) {
+          summary.staleReentry.push(attempt.nodeVisitId)
+          await maybeEscalateAtLimit(attempt)
+        }
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
+    // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the run_ended_no_submission
+    // fast continuation class — the SAME positive business evidence (stale
+    // probe) after the retry DELAY (default 60s) instead of the 1h stale
+    // clock. run_outcome_unknown never appears in this enumeration; the
+    // quiescence gate still fences any re-delivery (CTR-SRE-004 untouched).
+    for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
+      try {
+        const stale = await judgeStale(attempt)
+        if (stale.kind !== 'stale_confirmed') continue
+        if (await settleStale(attempt)) {
+          summary.staleReentry.push(attempt.nodeVisitId)
+          await maybeEscalateAtLimit(attempt)
+        }
+      } catch (error) {
+        log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+      }
+    }
     return summary
+  }
+
+  /**
+   * CTR-WEC1-005: after a stale settlement lands on a visit whose settled
+   * generation has already reached the attempt limit, there is no meaningful
+   * next generation — escalate once (the ledger fact makes this idempotent;
+   * the fence backstop in admitDueIntent covers any race window).
+   */
+  async function maybeEscalateAtLimit(settledAttempt) {
+    if ((settledAttempt.generation ?? 1) < (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)) return
+    await escalateAttemptLimit({ attempt: settledAttempt, reason: 'ATTEMPTS_EXHAUSTED' })
   }
 
   /**
@@ -504,6 +610,17 @@ export function createWorkflowExecutionEngine({
     reconcileOnce,
     admitDueIntent,
     recoverAttempt,
+    /**
+     * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-006: push-first kick. ONE
+     * coalesced poll trigger — a poll already in flight or armed coalesces
+     * (kicks never stack, never bypass the single-flight tick). The poll
+     * loop remains the correctness path; a lost kick is invisible.
+     */
+    kick() {
+      if (ticking || inflight !== null) return { ok: true, coalesced: true }
+      void trackedTick()
+      return { ok: true, kicked: true }
+    },
     /** Arm the interval loop (+ one immediate reconcile catch-up). */
     start({ intervalMs = DEFAULT_POLL_INTERVAL_MS, catchup = true } = {}) {
       if (timer !== undefined) return
