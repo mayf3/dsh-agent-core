@@ -92,3 +92,35 @@ The fresh exact-head review surfaced five concrete findings that the prior inter
 | F1 | CONTRACT_VIOLATION (validation boundary) | implicit — direct parent-RPC pagination was clamped/silently dropped (`limit:0/201/1.5/"10"/null`, `cursor:5/{}/[]` all succeeded) | Trusted handler + core both fail closed with `invalid_arguments`; no clamping; direct-handler regression matrix added |
 
 Corrected gate claims: `SHIP_BLOCKERS=NONE` (above) is superseded by this record until the closure re-audit returns ACCEPT on the exact repaired head; `verify:structure` "no new violations" claim stands corrected — the prior run DID contain a goal-caused violation (B3).
+
+## §B. Closure re-audit record (PR_318_MERGE_BLOCKER_CLOSURE, 2026-09-24)
+
+Fresh independent reviewer context (new session, authored nothing under review) audited the exact repaired head:
+
+```text
+REVIEW_TARGET_HEAD       = d25ae10884bc823512a9b46b4916445dc735b0e7
+IMPLEMENTATION_BASE_HEAD = a2a53c39ea6081e77badf29fb204d413dab09fe7 (spec/session-centric-execution-traceability-v1 tip)
+G1 = PASS  accepted Spec exists in implementation base; merge-base(a2a53c39) contains spec+census; impl diff has ZERO authority-doc changes; corrections appended (original records intact; pre-repair refs preserved as tags pre-repair-pr-head/pre-repair-impl-head)
+B1 = PASS  byCronOccurrence = exact canonical only; owner-agent match (occurrence owner → job routing → history run_record agent_id); reviewer-constructed counterexample (agt_evil/unrelated-<occBody> + same-agent suffix decoy) → zero false joins, genuine canonical journal still DERIVED_EXACT; decoys proven joined at d715869e (discriminating)
+B2 = PASS  ensureFreshSessionIndex bounded stat-only inventory discovery; constructed new-untouched-journal scenario → discovered on next listing; index stays coordinate-only; no second registry
+B3 = PASS  structure verifier vs authority base: 6 violations, goal-caused = 0; broker/test back under its registered ceiling; relocated test green
+F1 = PASS  direct parent-RPC handler matrix: 11 invalid pagination inputs → all invalid_arguments; valid faces unchanged; reviewer-executed independently
+FULL_TEST_DIFF = DIFF_CAUSED_FAILURES=0 (failing-FILE set byte-identical vs authority-base worktree run; notification-ingress idempotency-recovery confirmed a load-order flake — passes 8/8 isolated on both sides)
+SHIP_BLOCKERS = NONE
+VERDICT = ACCEPT
+```
+
+GitHub-side verification status, stated honestly: the five findings (G1/B1/B2/B3/F1) originate from the GitHub Codex fresh review at the pre-repair head `d715869e` and are each closed above with discriminating evidence. A fresh GitHub Codex review at the repaired head `d25ae108` was requested (`@codex review`, 2026-09-24T00:13Z) and had not been posted at reporting time (~16 min); the Owner should treat its result as the final external check before merging. Nothing in this report rewrites the prior records — corrections are appended (§A above, `post_landing_correction` in the Spec frontmatter).
+
+Corrected delivery state:
+
+```text
+AUTHORITY_PR = #319 (spec/session-centric-execution-traceability-v1 → main; docs-only, 2 files)
+IMPLEMENTATION_PR = #318 (base = spec/session-centric-execution-traceability-v1, stacked; auto-retargets to main after #319 merges)
+IMPLEMENTATION_BASE_CONTAINS_ACCEPTED_SPEC = YES (mechanical: merge-base = authority tip a2a53c39)
+FEATURE_READY = YES
+MERGE_READY = YES (all §7 gates green; external Codex check on d25ae108 pending at report time — Owner may merge after confirming it introduces no new findings)
+SOURCE_READY_AFTER_MERGE = YES
+DEPLOYMENT_REQUIREMENT_READY = YES
+WAITING_FOR_PDC_DEPLOYMENT = YES (post-merge)
+```
