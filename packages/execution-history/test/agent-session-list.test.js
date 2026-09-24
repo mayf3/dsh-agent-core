@@ -315,6 +315,28 @@ test('B-B: swapping a caller session directory for a symlink to another agent\'s
   } finally { destroyFixtureRoot(fixture) }
 })
 
+// ── E2 (GitHub fresh review @ 70bc04d0): structured provenance, not raw text ─
+
+test('E2: a message body quoting perfectly-shaped coordinates does not fabricate listing origins or coordinates', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const FAKE_WF = '123e4567-e89b-12d3-a456-426614174000'
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'text-coords-quoter'), { recursive: true })
+    writeFileSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'text-coords-quoter', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'text-coords-quoter', createdAt: 11, cwd: '/w' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(12).toISOString(), data: { content: `reminder text citing {"workflowInstanceId":"${FAKE_WF}"} and {"occurrenceId":"occ:003a05ed6629f358ff53"}`, source: { kind: 'user' } } }),
+      JSON.stringify({ type: 'user/message', seq: 2, time: new Date(13).toISOString(), data: { content: 'ask the user', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    const row = out.result.sessions.find((s) => s.sessionId === 'text-coords-quoter')
+    assert.ok(row, 'session listed')
+    assert.equal(row.origins.user, true, 'user origin from structured message provenance')
+    assert.deepEqual(row.workflowInstanceIds, [], 'quoted workflowInstanceId in message TEXT is not provenance')
+    assert.deepEqual(row.schedulerOccurrenceIds, [], 'quoted occurrenceId in message TEXT is not a touched coordinate')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
 // ── D4 (GitHub fresh review @ 70bc04d0): coordinate-shape honesty ────────────
 
 test('D4: occurrence coordinates must match the real id shape — message text quoting a fake id is not a touched coordinate', () => {
