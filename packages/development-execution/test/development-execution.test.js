@@ -409,10 +409,17 @@ test('gateway: development_execute without a grant fails CLOSED; with stub auth 
       },
     },
   })
+  // DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 (latest-main integration): the
+  // broker is GENERIC — the composition injects the LOCAL handler map via
+  // `resolveLocalHandlers`, resolved at EXECUTE time. Same contract as
+  // production-runtime's mountBrokerGateway.
   applyBroker(ctx, {
     mode: 'gateway',
     authServiceOrigin: authOrigin,
     credentialsFile: join(devDir, 'creds.json'),
+    resolveLocalHandlers: () => ({
+      ...(ctx.get('developmentExecutionAccess')?.handlers ?? {}),
+    }),
     targets: [
       { targetId: 'svc-forum', allowedOrigin: 'http://127.0.0.1:1', audience: 'svc-forum' },
       { targetId: 'svc-workflow', allowedOrigin: 'http://127.0.0.1:1', audience: 'svc-workflow' },
