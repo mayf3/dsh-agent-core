@@ -229,6 +229,9 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   契约以此键定义为准。单响应上限 200 条，超限 `truncated:true` + `nextCursor`。
   **内容预算（S3 closure）**：单请求实际读取的 journal 字节有上限（64 MiB）——预算耗尽后剩余行
   `scanTruncated=true`、origin/坐标如实降级为空/false，绝不伪称完整；keyset 续读不重扫已消费页。
+  **live-pagination 语义（F-B closure）**：分页遍历的是**活动树**，不提供跨请求快照——页间 journal
+  活动（新会话、mtime 变化）可能使某行重复或被跳过；消费方以 `sessionId` 幂等处理，或重新从头
+  列举以获得一致快照。此语义显式声明，不承诺跨页一致性。
 - sessionId 规范化：目录名按 DSH 段编码（canonical encoder =
   `packages/session-history/src/dsh-compat.js encodeSegment`，`:` → `~003A` 等 `~XXXX` hex 形式）
   **解码后**参与 header-id 比较与一切坐标派生；健康编码对永不计入 anomaly；仅解码后仍与 header id
