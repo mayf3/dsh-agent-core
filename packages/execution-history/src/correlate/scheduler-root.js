@@ -162,6 +162,23 @@ export async function buildSchedulerRoot(ctx, args) {
     ? [...occurrenceIds].slice(0, 10)
     : (occurrenceId !== undefined ? [occurrenceId] : [])
   for (const occId of sessionOccurrenceIds) {
+      // CTR-SCT-003/007 (fresh exact-head review): a not_created occurrence
+      // emits its disposition answer ONLY — no journal search, no SessionRef,
+      // no R5 correlation — even when a canonical cron-run journal physically
+      // exists on disk. A pre-created/foreign artifact must never fabricate a
+      // session association against the ledger's not-created proof.
+      const sweepLedgerOcc = store.occurrences.find((o) => o.occurrenceId === occId)
+      if (sweepLedgerOcc !== undefined) {
+        const sweepDisposition = sessionDispositionOf(sweepLedgerOcc)
+        if (sweepDisposition.sessionCreated === 'not_created') continue
+      } else {
+        const sweepHistRun = history.records.find((rec) => rec.kind === 'run_record' && rec.nativeRefs.occurrence_id === occId)
+        if (sweepHistRun !== undefined) {
+          const sweepOutcome = sweepHistRun.data?.outcome ?? sweepHistRun.data?.status_view
+          const sweepDisposition = conservativeDispositionFromOutcome(sweepOutcome, lateEvidenceKindOf(history.records, occId))
+          if (sweepDisposition.sessionCreated === 'not_created') continue
+        }
+      }
       // B1: the routed/owning agent must be provable; without it there is no
       // lawful exact join (and nothing to sweep for this occurrence). In
       // ledger-absent worlds the persisted history run_record itself carries

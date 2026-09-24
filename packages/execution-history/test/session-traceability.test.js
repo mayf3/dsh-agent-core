@@ -107,6 +107,37 @@ test('T3: pre-start rejection → SESSION_CREATED=NO with the persisted reason; 
   } finally { destroyFixtureRoot(fixture) }
 })
 
+test('T3c: a not_created occurrence NEVER joins a canonical journal planted on disk — no SessionRef, no R5 (fresh exact-head review closure)', async () => {
+  const { fixture, OCC_PRE } = buildPreStartFixture()
+  try {
+    // Adversarial world on top of T3: a canonical cron-run journal for the
+    // rejected occurrence PHYSICALLY EXISTS in the owner's tree (pre-created
+    // / foreign artifact). The ledger's not-created proof must win: no
+    // journal search, no session record, no R5 correlation, no gap — the
+    // trace must not contradict its own authoritative disposition.
+    const readdirSync = (await import('node:fs')).readdirSync
+    const hrSessions = join(fixture.paths.homesRoot, 'agt_hr', 'sessions')
+    const projKey = readdirSync(hrSessions)[0]
+    const plantedDir = join(hrSessions, projKey, 'cron-run-occ~003A003a05ed6629aaaa')
+    mkdirSync(plantedDir, { recursive: true })
+    writeFileSync(join(plantedDir, 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'cron-run-occ:003a05ed6629aaaa', createdAt: 1758100000500, cwd: '/tmp/hr' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(1758100000510).toISOString(), data: { content: 'planted artifact', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_PRE }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(!r.timeline.some((e) => e.source === 'session_journal'), 'the planted journal never becomes a session record')
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/')), 'no R5 correlation for a not_created occurrence')
+    const occurrence = r.timeline.find((e) => e.kind === 'occurrence')
+    assert.ok(occurrence, 'occurrence surfaced')
+    assert.equal(occurrence.data.sessionCreated, 'not_created', 'the ledger disposition stands')
+    assert.ok(!r.gaps.some((g) => g.stage === 'session_journal'), 'not_created suppresses the journal gap — nothing is missing')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
 test('T3b: disposition table equivalence — scheduler projection vs execution-history core agree on the frozen mapping', () => {
   const worlds = [
     { state: 'succeeded', executionOutcome: 'succeeded', nativeSessionId: 's1' },

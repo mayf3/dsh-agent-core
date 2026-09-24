@@ -91,7 +91,18 @@ export function listAgentSessions(opts) {
   // directory fails this prefix check even though the final file itself is a
   // plain regular file with nlink===1.
   let callerRealRoot = null
-  try { callerRealRoot = realpathSync(callerSessionsRoot) } catch { callerRealRoot = null }
+  try {
+    const realHomes = realpathSync(homesRoot)
+    const realSessions = realpathSync(callerSessionsRoot)
+    // Root-substitution closure (fresh exact-head review): the sessions dir
+    // must resolve to the CALLER-OWNED expected path — never a symlink
+    // planted at the <agentId> or `sessions` level pointing into another
+    // Agent's tree. A symlinked root would make the victim tree the prefix
+    // anchor and pass every journal's containment check, leaking foreign
+    // coordinates on this zero-Auth self surface. Substitution = honest
+    // absence (empty listing), never the substituted tree.
+    if (realSessions === join(realHomes, viewerAgentId, 'sessions')) callerRealRoot = realSessions
+  } catch { callerRealRoot = null }
   const anomalies = { headersMissing: 0, idMismatch: 0 }
   const rows = []
   let candidateCount = 0

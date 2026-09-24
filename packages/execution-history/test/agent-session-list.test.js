@@ -269,8 +269,11 @@ test('A3: a symlink or hardlink planted in the caller subtree can never pull a f
     ].join('\n') + '\n')
 
     const callerDir = join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY)
-    // 1) SYMLINK planted in the caller's session directory.
-    try { symlinkSync(victimFile, join(callerDir, 'sneaky-symlink', 'session.jsonl')) } catch { /* dir first */ }
+    // 1) SYMLINK planted in the caller's session directory (the dir must
+    // exist for the symlink to be created — the earlier vacuous form swallowed
+    // the ENOENT and exercised nothing).
+    mkdirSync(join(callerDir, 'sneaky-symlink'), { recursive: true })
+    symlinkSync(victimFile, join(callerDir, 'sneaky-symlink', 'session.jsonl'))
     // 2) HARDLINK (same device, nlink=2 — a symlink is not required to escape).
     mkdirSync(join(callerDir, 'sneaky-hardlink'), { recursive: true })
     let hardlinked = false
@@ -289,6 +292,33 @@ test('A3: a symlink or hardlink planted in the caller subtree can never pull a f
     const again = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
     assert.equal(again.ok, true)
     assert.equal(statSync(victimFile).mtimeMs, victimMtime, 'victim journal untouched')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── A3b (fresh exact-head review): sessions-ROOT symlink substitution ───────
+
+test('A3b: a symlinked sessions root is honest absence — the substituted tree is never listed', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // If homes/agt_hr/sessions ITSELF is a symlink into another Agent's tree,
+    // resolving the caller root through it would make the victim tree the
+    // prefix anchor and leak every victim journal as the caller's own. The
+    // canonical-root binding must therefore REQUIRE the root to resolve to
+    // the caller-owned expected path; substitution = honest empty listing.
+    const victimSessions = join(fixture.paths.homesRoot, 'agt_victim', 'sessions')
+    mkdirSync(join(victimSessions, '--victim--', 'main'), { recursive: true })
+    writeFileSync(join(victimSessions, '--victim--', 'main', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'victim-main', createdAt: 7, cwd: '/v' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(8).toISOString(), data: { content: 'victim-only coordinate {"workflowInstanceId":"99999999-9999-4999-8999-999999999999"}', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+    const hrSessions = join(fixture.paths.homesRoot, 'agt_hr', 'sessions')
+    rmSync(hrSessions, { recursive: true, force: true })
+    symlinkSync(victimSessions, hrSessions, 'dir')
+
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    assert.deepEqual(out.result.sessions, [], 'the substituted tree is never listed')
+    assert.ok(!JSON.stringify(out.result).includes('victim'), 'no victim coordinate leak')
   } finally { destroyFixtureRoot(fixture) }
 })
 
