@@ -18,7 +18,9 @@ scope:
   - packages/broker/src/index.js (manifest registration wiring only)
   - packages/production-runtime/src/execution-history/runtime.js (handler wiring only)
   - packages/scheduler/src/self-service/projections.js (occurrence projection enrichment only)
-  - packages/scheduler/src/occurrence.js (invokeWithDeadline request: additive jobId field only)
+  - packages/scheduler/src/occurrence.js (invokeWithDeadline request: additive jobId field only;
+    applyLateSettlement terminalEvidence kind parameter per S1 — proven pre-start late evidence
+    persists terminalEvidence.kind=pre-start-rejection under the OCCURRENCE_OUTCOME_V3 taxonomy)
   - packages/production-runtime/src/scheduler-invoker.js (invocation evidence row additive fields)
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/workflow-execution-runtime.js (deliver receipt messageId plumb)
@@ -210,6 +212,8 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
     "schedulerOccurrenceIdsTruncated": true|false,
     "workflowInstanceIds":  ["..."],              // ≤10，超限 workflowInstanceIdsTruncated=true
     "workflowInstanceIdsTruncated": true|false
+    "scanTruncated": true|false                   // 单文件扫描触达字节上限时为 true——此时该行
+                                                  // origins/坐标为 best-effort 不完整（诚实降级，非事实断言）
   } ],
   "truncated": false,
   "nextCursor": null,                    // keyset 游标 = base64url("<lastActiveAtMs>:<sessionId>")
@@ -219,8 +223,12 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 }
 ```
 
-- 排序：`lastActiveAtUtc` 倒序、同刻按 `sessionId` 字典序；单响应上限 200 条，超限
-  `truncated:true` + `nextCursor`（keyset 续读，全序确定）。
+- 排序与游标键（round-3 closure，S2-followup）：全序 = `(lastActiveAtMs desc, stableDecodedId asc)`，
+  其中 `stableDecodedId` 是 **stat 级可得的解码目录 id**——phase 1 只用它过滤/排序/发游标（保证
+  续读确定性）；anomaly 行（header id 权威）在 phase 2 才解析，其输出 sessionId 可能与键不同，
+  契约以此键定义为准。单响应上限 200 条，超限 `truncated:true` + `nextCursor`。
+  **内容预算（S3 closure）**：单请求实际读取的 journal 字节有上限（64 MiB）——预算耗尽后剩余行
+  `scanTruncated=true`、origin/坐标如实降级为空/false，绝不伪称完整；keyset 续读不重扫已消费页。
 - sessionId 规范化：目录名按 DSH 段编码（canonical encoder =
   `packages/session-history/src/dsh-compat.js encodeSegment`，`:` → `~003A` 等 `~XXXX` hex 形式）
   **解码后**参与 header-id 比较与一切坐标派生；健康编码对永不计入 anomaly；仅解码后仍与 header id
