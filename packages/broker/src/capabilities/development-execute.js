@@ -28,6 +28,7 @@ export const developmentExecuteManifest = {
     { code: 'invalid_arguments', description: 'Args failed structural validation.' },
     { code: 'repo_not_authorized', description: 'The requested repo is not on the development-execution allowlist.' },
     { code: 'base_sha_unknown', description: 'The requested baseSha does not exist in the authorized repo.' },
+    { code: 'capacity_exhausted', description: 'The repo already has the maximum number of active development executions (maxWorktrees).' },
     { code: 'branch_not_permitted', description: 'The requested branch violates the repo allowlist prefixes.' },
     { code: 'config_missing', description: 'Development execution authority/backend is not configured on this deployment.' },
     { code: 'backend_unavailable', description: 'The pinned backend binary could not be verified.' },

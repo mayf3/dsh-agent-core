@@ -128,6 +128,14 @@ export class DevelopmentExecutionEngine {
     const authority = loadRepoAuthority(this.reposFile)
     const repoEntry = authorizeStart(authority, { repo, baseSha, branch })
 
+    // CTR-DES-004 capacity: concurrent worktrees per repo are bounded — a
+    // non-terminal execution occupies its worktree.
+    const activeForRepo = [...this.executions.values()]
+      .filter((e) => e.repo === repo && !TERMINAL_STATES.includes(e.state)).length
+    if (activeForRepo >= repoEntry.maxWorktrees) {
+      throw err('capacity_exhausted', `repo ${repo} already has ${activeForRepo} active development executions (maxWorktrees ${repoEntry.maxWorktrees})`)
+    }
+
     const executionId = randomUUID()
     const worktree = createWorktree({ repoPath: repoEntry.path, baseSha, worktreesRoot: this.worktreesRoot, executionId })
     const executionDir = join(this.executionsDataRoot, executionId)
@@ -135,7 +143,7 @@ export class DevelopmentExecutionEngine {
 
     this.ledger.append({
       type: 'execution_started', executionId, backend: this.backend.name,
-      repo, baseSha, branch: branch ?? null, agentId: callerAgentId, dedupeKeyHash,
+      repo, baseSha, branch: branch ?? null, worktree, agentId: callerAgentId, dedupeKeyHash,
     })
     this.executions.set(executionId, {
       executionId, events: [], backend: this.backend.name, repo, baseSha, branch: branch ?? null,
@@ -233,6 +241,14 @@ export class DevelopmentExecutionEngine {
         repo: execution.repo, worktree: execution.worktree, baseSha: execution.baseSha,
         candidateSha: execution.candidateSha ?? undefined,
         changedFiles: execution.changedFiles ?? [],
+        tests: {
+          // Observed-facts discipline (CTR-DES-002): this surface does not yet
+          // observe the backend's internal test runs — `ran` stays false until
+          // a backend adapter reports verifiable test evidence. Never inferred
+          // from a SUCCEEDED state.
+          ran: Boolean(execution.testEvidence?.ran),
+          evidenceRefs: (execution.testEvidence?.evidenceRefs ?? []).map(String),
+        },
         startedAt: execution.startedAt, terminalAt: execution.terminalAt,
         failureClass: execution.errorClass ?? undefined,
         failureDetail: execution.failureDetail ?? undefined,

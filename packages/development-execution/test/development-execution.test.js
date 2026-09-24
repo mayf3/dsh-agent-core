@@ -216,6 +216,26 @@ test('E: cancel => exactly one CANCELLED; idempotent second cancel; late exit ca
   rmSync(repo.dir, { recursive: true, force: true })
 })
 
+test('B1: worktree capacity — active executions per repo are capped (capacity_exhausted)', async () => {
+  const repo = makeFixtureRepo()
+  const { devDir } = makeRoot()
+  writeFileSync(join(devDir, 'repos.json'), JSON.stringify({
+    repos: [{ name: 'dogfood-repo', path: repo.dir, allowedBranchPrefixes: [], maxWorktrees: 1 }],
+  }))
+  const engine = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend() })
+  const first = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a')
+  await assert.rejects(
+    () => engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a'),
+    (e) => e.code === 'capacity_exhausted',
+  )
+  engine.cancel(first.executionId)
+  // after the only execution reaches terminal, capacity frees up
+  const next = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a')
+  assert.notEqual(next.executionId, first.executionId)
+  engine.cancel(next.executionId)
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
 test('G: duplicate start with same (caller, dedupeKey) => SAME execution; different key => new', async () => {
   const repo = makeFixtureRepo()
   const { engine } = makeEngine(repo)
@@ -257,6 +277,7 @@ test('F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNK
 
   const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000 })
   assert.equal(restarted.status(done1.executionId).state, 'SUCCEEDED', 'terminal history survives restart')
+  assert.equal(restarted.status(done1.executionId).worktree, engine.status(done1.executionId).worktree, 'worktree survives restart (CTR-DES-002 record fields)')
   assert.equal(restarted.status(hung.executionId).state, 'RUNNING', 'live pid untouched')
   assert.equal(restarted.status('orphan-1').state, 'OUTCOME_UNKNOWN', 'dead-pid orphan marked OUTCOME_UNKNOWN')
   restarted.cancel(hung.executionId)
