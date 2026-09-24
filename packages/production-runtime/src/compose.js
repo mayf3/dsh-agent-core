@@ -58,6 +58,7 @@ import { createAgentPrincipalReverseResolutionAccess } from './identity/agent-pr
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
@@ -485,6 +486,11 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
+  // AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: shared local coding-executor
+  // capability. Additive and agent-agnostic; refuses honestly (config_missing)
+  // until the Operator provisions dev-execution/{repos.json,backend.json}.
+  mountDevelopmentExecutionRuntime({ ctx, layout, log })
+
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
     layout,
