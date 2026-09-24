@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Agent Core Modularity Phase A authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `DSH_AGENT_CORE_MODULARITY_PHASE_A_V1` | accepted 2026-09-24; reviewed proposal head `283ff1f1`; independent semantic review ACCEPT / 0 blockers; Owner closure-fix mandate persisted | contracts; production apply remains none | bounded structural authority for the read-only identity-provider package extraction, generic composition-injected Broker LOCAL-handler seam, tracked package-root public entry / trusted-pack closure, reverse-principal wiring preservation, and Workflow shutdown-drain propagation; no Auth/schema/state/deployment redesign |
+
 ## Canonical deploy offline package-manager authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
