@@ -1,7 +1,17 @@
 ---
 spec_id: AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1
-status: proposed
+status: accepted
 date: 2026-09-24
+accepted_date: 2026-09-24
+accepted_by: mayf3
+accepted_reviewed_head: 9b7018e7284e06a738e988c22e7db3a16248e0d4
+independent_review_result: PASS
+independent_review_blockers: NONE
+acceptance_verdict: READY_FOR_ACCEPTANCE_FINALIZE
+acceptance_finalize_semantic_change: none
+acceptance_authority_basis: >-
+  Owner mandate in GPT6_LUNA_AND_REASONING_EFFORT_V1 source-closure instruction on 2026-09-24;
+  independent exact-head re-audit accepted 9b7018e7284e06a738e988c22e7db3a16248e0d4 with zero blockers.
 type: implementation-spec (NEW dormant route capability; no production apply)
 spec_kind: implementation
 authority_level: governing_spec
@@ -357,7 +367,7 @@ REAL_TURN_ACCEPTANCE_REQUIRES_OWNER_AUTH = YES
 SPEC_GOVERNANCE_MODE = AUTHOR
 AUTHORITY_ACTION = NEW
 SPEC_ID = AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1
-STATUS = proposed
+STATUS = accepted
 IMPLEMENTATION_AUTHORITY = contracts
 PRODUCTION_APPLY_AUTHORITY = none
 FROZEN_BLOCKER_UNION_CLOSED_BY_DESIGN = B1+B2+B3
@@ -369,5 +379,16 @@ PRODUCTION_CHANGE = NONE
 
 ## 9. Acceptance record
 
-(to be populated only after an independent exact-head semantic review; acceptance finalization may
-change lifecycle/provenance metadata and this record but not reviewed normative §§1–8.)
+```text
+ACCEPTED_BY = mayf3
+ACCEPTED_DATE = 2026-09-24
+ACCEPTED_REVIEWED_HEAD = 9b7018e7284e06a738e988c22e7db3a16248e0d4
+INDEPENDENT_REVIEW = ACCEPT
+INDEPENDENT_REVIEW_BLOCKERS = 0
+B1_CLOSED = YES
+B2_CLOSED = YES
+B3_CLOSED = YES
+ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
+IMPLEMENTATION_READY_TO_BEGIN = YES
+PRODUCTION_APPLY_AUTHORITY = NONE
+```
