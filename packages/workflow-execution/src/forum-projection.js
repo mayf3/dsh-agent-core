@@ -21,7 +21,7 @@
  */
 
 import { createHash } from 'node:crypto'
-import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, renameSync, openSync, readSync, fstatSync, closeSync } from 'node:fs'
 import { join } from 'node:path'
 import { LEDGER_EVENTS_FILE } from './ledger.js'
 
@@ -74,6 +74,7 @@ export function forumMessageFor(event, attempt) {
  * @param {({workflowInstanceId:string}) => Promise<{ok:true, threadId:string|null}|{ok:false, code:string}>} deps.resolveThread
  *   - canonical thread lookup by context (svc-owned binding; null = none yet).
  * @param {({threadId:string, content:string, metadata:object}) => Promise<{ok:true}|{ok:false, code:string}>} deps.postMessage
+ * @param {({threadId:string}) => Promise<{ok:true, keys:string[]}|{ok:false, code:string}>} deps.loadPostedKeys
  * @param {object} [deps.log]
  * @param {Function} [deps.clock]
  * @param {number} [deps.intervalMs]
@@ -82,13 +83,14 @@ export function createForumProjection({
   dir,
   resolveThread,
   postMessage,
+  loadPostedKeys,
   log = {},
   clock = () => Date.now(),
   intervalMs = DEFAULT_INTERVAL_MS,
 }) {
   if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: forum projection dir is required')
-  if (typeof resolveThread !== 'function' || typeof postMessage !== 'function') {
-    throw new TypeError('workflow-execution: forum projection requires resolveThread and postMessage seams')
+  if (typeof resolveThread !== 'function' || typeof postMessage !== 'function' || typeof loadPostedKeys !== 'function') {
+    throw new TypeError('workflow-execution: forum projection requires resolveThread, postMessage and loadPostedKeys seams')
   }
   const stateFile = join(dir, FORUM_PROJECTION_STATE_FILE)
   const eventsFile = join(dir, LEDGER_EVENTS_FILE)
@@ -123,20 +125,36 @@ export function createForumProjection({
    *  left for the next pass; nextOffset only ever covers COMPLETE lines. */
   function readNewEvents(byteOffset) {
     if (!existsSync(eventsFile)) return { events: [], size: byteOffset, nextOffset: byteOffset }
-    const buf = readFileSync(eventsFile)
-    const size = buf.length
-    if (size <= byteOffset) return { events: [], size, nextOffset: Math.min(byteOffset, size) }
-    const start = Math.max(byteOffset, Math.max(0, size - MAX_TAIL_BYTES))
-    const lines = buf.subarray(start).toString('utf8').split('\n')
+    const fd = openSync(eventsFile, 'r')
+    let size
+    let buf
+    try {
+      size = fstatSync(fd).size
+      if (size < byteOffset) {
+        log.warn?.('forum-projection: append-only ledger shrank; holding offset for review')
+        return { events: [], size, nextOffset: byteOffset }
+      }
+      if (size === byteOffset) return { events: [], size, nextOffset: byteOffset }
+      const length = Math.min(MAX_TAIL_BYTES, size - byteOffset)
+      buf = Buffer.allocUnsafe(length)
+      let count = 0
+      while (count < length) {
+        const n = readSync(fd, buf, count, length - count, byteOffset + count)
+        if (n === 0) break
+        count += n
+      }
+      buf = buf.subarray(0, count)
+    } finally {
+      closeSync(fd)
+    }
     const events = []
     let consumed = 0
-    for (const line of lines) {
-      if (line === '') {
-        // Interior blank line = one '\n' byte; the trailing split artifact
-        // after the final newline contributes nothing real (clamped below).
-        consumed += 1
-        continue
-      }
+    while (consumed < buf.length) {
+      const end = buf.indexOf(0x0a, consumed)
+      if (end < 0) break // hold an incomplete line for the next bounded read
+      const line = buf.subarray(consumed, end).toString('utf8')
+      const lineBytes = end - consumed + 1
+      if (line === '') { consumed += lineBytes; continue }
       let event
       try {
         event = JSON.parse(line)
@@ -144,7 +162,6 @@ export function createForumProjection({
         log.warn?.('forum-projection: stopped at an unparseable ledger line — it retries next pass')
         break
       }
-      const lineBytes = Buffer.byteLength(line, 'utf8') + 1
       events.push({
         event,
         eventKey: createHash('sha256').update(line).digest('hex'),
@@ -152,7 +169,7 @@ export function createForumProjection({
       })
       consumed += lineBytes
     }
-    return { events, size, nextOffset: Math.min(start + consumed, size) }
+    return { events, size, nextOffset: byteOffset + consumed }
   }
 
   async function pass() {
@@ -169,6 +186,7 @@ export function createForumProjection({
     let posted = 0
     let skipped = 0
     const postedKeys = new Set(state.postedKeys)
+    const remoteKeysByThread = new Map()
     let byteOffset = state.byteOffset
     for (const item of read.events) {
       if (postedKeys.has(item.eventKey)) {
@@ -205,6 +223,22 @@ export function createForumProjection({
         skipped += 1
         break
       }
+      let remoteKeys = remoteKeysByThread.get(threadId)
+      if (remoteKeys === undefined) {
+        const readback = await loadPostedKeys({ threadId })
+        if (readback?.ok !== true || !Array.isArray(readback.keys)) {
+          skipped += 1
+          break // an unknown server result cannot authorize a duplicate post
+        }
+        remoteKeys = new Set(readback.keys)
+        remoteKeysByThread.set(threadId, remoteKeys)
+      }
+      if (remoteKeys.has(item.eventKey)) {
+        postedKeys.add(item.eventKey)
+        byteOffset += item.lineBytes
+        saveState({ byteOffset, postedKeys: [...postedKeys] })
+        continue
+      }
       const posted_ = await postMessage({
         threadId,
         // kind='comment' is intrinsic to this projection: system events stay
@@ -224,11 +258,17 @@ export function createForumProjection({
         break // hold the offset; retry next pass (at-least-once)
       }
       postedKeys.add(item.eventKey)
+      remoteKeys.add(item.eventKey)
       while (postedKeys.size > POSTED_KEYS_WINDOW) {
         postedKeys.delete(postedKeys.values().next().value)
       }
       byteOffset += item.lineBytes
       posted += 1
+      saveState({ byteOffset, postedKeys: [...postedKeys] })
+    }
+    if (byteOffset !== state.byteOffset) {
+      // Complete historical or unsupported lines are deliberately skipped;
+      // persist their consumed offset even when this pass posted nothing.
       saveState({ byteOffset, postedKeys: [...postedKeys] })
     }
     return { posted, skipped }

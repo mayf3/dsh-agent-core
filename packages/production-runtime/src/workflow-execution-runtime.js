@@ -242,6 +242,28 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       const thread = items.find((t) => t?.contextType === 'workflow_instance' && t?.contextId === workflowInstanceId)
       return { ok: true, threadId: typeof thread?.id === 'string' ? thread.id : null }
     },
+    loadPostedKeys: async ({ threadId }) => {
+      if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+      const res = await gateway.execute(
+        {
+          capabilityId: 'forum_read_transcript',
+          operation: 'read',
+          args: { threadId, format: 'json' },
+        },
+        { agentId: pollerAgentId },
+      )
+      if (!res.ok) return { ok: false, code: res.error?.code ?? 'forum_transcript_failed' }
+      const transcript = res.result
+      if (transcript?.thread?.id !== threadId || !Array.isArray(transcript.messages)) {
+        return { ok: false, code: 'forum_transcript_shape' }
+      }
+      return {
+        ok: true,
+        keys: transcript.messages
+          .map((message) => message?.metadata?.eventKey)
+          .filter((key) => typeof key === 'string'),
+      }
+    },
     postMessage: async ({ threadId, content, kind, metadata }) => {
       if (!enabled) return { ok: false, code: 'poller_unconfigured' }
       const res = await gateway.execute(

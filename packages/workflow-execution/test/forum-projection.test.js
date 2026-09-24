@@ -12,7 +12,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync, readFileSync, existsSync, unlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -39,6 +39,7 @@ function fixture({ threadId = 'thr-1', postResults = [], resolveResults = [] } =
   const dir = mkdtempSync(join(tmpdir(), 'wfe-forum-'))
   seedLedger(dir)
   const calls = { resolve: [], posts: [] }
+  const confirmedKeys = new Set()
   let resolveSeq = 0
   let postSeq = 0
   const projection = createForumProjection({
@@ -50,11 +51,16 @@ function fixture({ threadId = 'thr-1', postResults = [], resolveResults = [] } =
       if (preset !== undefined) return preset
       return { ok: true, threadId }
     },
+    loadPostedKeys: async () => ({ ok: true, keys: [...confirmedKeys] }),
     postMessage: async (req) => {
       calls.posts.push(req)
       const preset = postResults[postSeq]
       postSeq += 1
-      if (preset !== undefined) return preset
+      if (preset !== undefined) {
+        if (preset.ok === true) confirmedKeys.add(req.metadata.eventKey)
+        return preset
+      }
+      confirmedKeys.add(req.metadata.eventKey)
       return { ok: true }
     },
   })
@@ -112,6 +118,7 @@ test('restart: the persisted offset + posted keys prevent re-posting the committ
     const restarted = createForumProjection({
       dir: f.dir,
       resolveThread: async () => ({ ok: true, threadId: 'thr-1' }),
+      loadPostedKeys: async () => ({ ok: true, keys: f.calls.posts.map((p) => p.metadata.eventKey) }),
       postMessage: async (req) => { f.calls.posts.push(req); return { ok: true } },
     })
     const pass = await restarted.pass()
@@ -146,10 +153,95 @@ test('poster throwing never propagates (guarded pass)', async () => {
     const projection = createForumProjection({
       dir,
       resolveThread: async () => { throw new Error('gateway exploded') },
+      loadPostedKeys: async () => ({ ok: true, keys: [] }),
       postMessage: async () => ({ ok: true }),
     })
     const result = await projection.pass()
     assert.equal(result.posted, 0)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('ledger larger than 4 MiB drains from persisted offset without starting mid-line', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-forum-large-'))
+  try {
+    const lines = Array.from({ length: 5 }, (_, i) => JSON.stringify({
+      kind: 'attempt_planned', workflowInstanceId: INSTANCE, nodeVisitId: VISIT,
+      dispatchIntentId: INTENT, atMs: i, pad: 'x'.repeat(1_200_000),
+    }))
+    writeFileSync(join(dir, LEDGER_EVENTS_FILE), `${lines.join('\n')}\n`)
+    const posts = []
+    const projection = createForumProjection({
+      dir,
+      resolveThread: async () => ({ ok: true, threadId: 'thr-1' }),
+      loadPostedKeys: async () => ({ ok: true, keys: posts.map((p) => p.metadata.eventKey) }),
+      postMessage: async (req) => { posts.push(req); return { ok: true } },
+    })
+    const first = await projection.pass()
+    const second = await projection.pass()
+    assert.equal(first.posted + second.posted, 5)
+    assert.equal(posts.length, 5)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('large historical unknown events advance offset to a later projectable event', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-forum-historical-'))
+  try {
+    const historical = JSON.stringify({ kind: 'historical_unknown', pad: 'x'.repeat(1_200_000) })
+    const live = JSON.stringify({ kind: 'attempt_planned', workflowInstanceId: INSTANCE, nodeVisitId: VISIT, dispatchIntentId: INTENT })
+    writeFileSync(join(dir, LEDGER_EVENTS_FILE), `${Array(5).fill(historical).join('\n')}\n${live}\n`)
+    const posts = []
+    const projection = createForumProjection({
+      dir,
+      resolveThread: async () => ({ ok: true, threadId: 'thr-1' }),
+      loadPostedKeys: async () => ({ ok: true, keys: posts.map((p) => p.metadata.eventKey) }),
+      postMessage: async (req) => { posts.push(req); return { ok: true } },
+    })
+    await projection.pass()
+    await projection.pass()
+    assert.equal(posts.length, 1)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('lost local state reads remote eventKeys before reposting a confirmed Forum message', async () => {
+  const f = fixture()
+  try {
+    await f.projection.pass()
+    assert.equal(f.calls.posts.length, 3)
+    unlinkSync(f.projection.stateFile)
+    const restarted = createForumProjection({
+      dir: f.dir,
+      resolveThread: async () => ({ ok: true, threadId: 'thr-1' }),
+      loadPostedKeys: async () => ({ ok: true, keys: f.calls.posts.map((p) => p.metadata.eventKey) }),
+      postMessage: async (req) => { f.calls.posts.push(req); return { ok: true } },
+    })
+    await restarted.pass()
+    assert.equal(f.calls.posts.length, 3, 'remote confirmed keys must survive local state loss')
+  } finally {
+    f.cleanup()
+  }
+})
+
+test('unavailable remote readback holds the event and does not post', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'wfe-forum-readback-'))
+  try {
+    seedLedger(dir)
+    const posts = []
+    const projection = createForumProjection({
+      dir,
+      resolveThread: async () => ({ ok: true, threadId: 'thr-1' }),
+      loadPostedKeys: async () => ({ ok: false, code: 'forum_unavailable' }),
+      postMessage: async (req) => { posts.push(req); return { ok: true } },
+    })
+    const result = await projection.pass()
+    assert.equal(result.posted, 0)
+    assert.equal(posts.length, 0)
+    assert.equal(existsSync(projection.stateFile), false)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
