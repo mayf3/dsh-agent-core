@@ -154,8 +154,10 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 - **D-SCT-2（零 Auth self 面）**：`agent_session_list` 走 scheduler self-service 同款零 Auth 模式
   （V4 CTR-AUTH-002 先例：ordinary self operations MUST perform zero token requests）；
   跨 agent 枚举面不存在（无入参即无从越权）。
-- **D-SCT-3（listing = 派生视图）**：listing 数据 100% 派生自既有 journal 文件扫描 + header +
-  既有 session-index（size/mtime 失效重扫、可整目录删除重建）；不新增任何持久存储。
+- **D-SCT-3（listing = 派生视图；round-3 修订，B-A closure）**：listing 数据 100% 派生自
+  **caller 子树直扫**（journal 文件枚举 + header + 有界坐标抽取，见 CTR-SCT-002 数据源纪律）；
+  与全局 session-index 完全解耦——listing 不构建、不读取、不刷新 fleet 索引（fleet 索引仅供
+  既有查询根使用）。不新增任何持久存储。
 - **D-SCT-4（不发明新状态）**：sessionCreated 处置词表 = `{created, not_created, pending, unknown}`，
   reason 一律取既有 taxonomy 原值（SC-1 词表），不做同义改写。
 - **D-SCT-5（关联定级以存在性证明为准）**：`cron-run-<occ>` 命名仅是确定性派生函数；只有 journal
@@ -180,8 +182,9 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   （默认键名 `operation`）并据此 dispatch——零键调用无法选中 handler。故合法调用 =
   `{operation:'list', cursor?, limit?}`（selector 由 dispatch 剥离，trusted handler 仅见
   cursor/limit）；selector 之外的业务键封闭集 = `{cursor, limit}`，任何其他键 →
-  `invalid_arguments`。`cursor` 为有限毫秒时间戳的 base64url 串或省略；`limit` 为
-  1..200 整数或省略；两者均不 clamp、不静默丢弃。
+  `invalid_arguments`。`cursor` 必须是与 `nextCursor` 相同的
+  validated tuple 格式——base64url 编码的 `<有限毫秒时间戳>:<sessionId>`（输入与输出同一格式，
+  round-3 修订，B-C），或省略；`limit` 为 1..200 整数或省略；两者均不 clamp、不静默丢弃。
 - 身份：`viewer.agentId = trustedContext.agentId`；缺失/非法 → `forbidden_not_owner`（fail closed）。
 - 输出（坐标-only，固定字段集）：
 
@@ -224,12 +227,14 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   完整列表）。`origins`/坐标键由既有 journal 坐标抽取器（含 `origins.user` 的
   source.kind='user' 加法键）在 caller 子树内直接产出，best-effort、缺失记 false/空且不报错。
   列表因此天然发现新建 journal（无索引 staleness），且不受任何 fleet cap 截断。
-- **Confined reader（round-3 修订，A3 closure）**：caller 子树内的每一个 journal 文件在读取前
-  必须通过 confinement 预检——`lstat` 必须为普通文件（symbolic link 一律拒绝）、
-  `nlink === 1`（hardlink 一律拒绝，防止把其他 Agent 的 journal 硬链进 caller 子树诱导扫描）、
-  打开后 `fstat` 的 device/inode/size 必须与预检一致（check/open TOCTOU 防护）；坐标扫描结束后
-  复核文件未发生变化。任何不满足 → 跳过该 journal（不输出其任何坐标）。测试必须含跨 Agent
-  symlink 与 hardlink 反例 fixture（§6）。
+- **Confined reader（round-3 修订，A3 closure；B-B 再收紧）**：caller 子树内的每一个 journal
+  文件在读取前必须通过 confinement 预检——**canonical-root binding**：解析全部路径成分（含
+  中间目录 symlink）后的真实路径必须仍位于 `homes/<callerAgentId>/sessions/` 之内（把祖先目录
+  换成指向其他 Agent 目录的 symlink 会因前缀绑定失败而跳过）；`lstat` 必须为普通文件
+  （symbolic link 一律拒绝）、`nlink === 1`（hardlink 一律拒绝）；打开后 `fstat` 的
+  device/inode/size 必须与预检一致（check/open TOCTOU 防护）；坐标扫描结束后复核文件未发生变化。
+  任何不满足 → 跳过该 journal（不输出其任何坐标）。测试必须含跨 Agent symlink、hardlink 与
+  祖先目录 symlink-swap 反例 fixture（§6）。
 - 错误表（封闭；round-2 修订，C4 closure）：`invalid_arguments`、`forbidden_not_owner`、
   `credential_unavailable`（gateway 在 local capability 上先加载 caller credential，可能失败——
   必须声明，防止 child relay 把真实失败降级为 invalid_arguments）、`history_unavailable`
@@ -349,8 +354,8 @@ occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）
   收据无 messageId（outcome_unknown 形态）→ 字段 absent 不伪造；业务未提交时五维判定
   `businessProgress ≠ BUSINESS_DONE`（既有 R4 断言加固）。
 - **T6 restart**：新查询上下文（模拟进程重启）从 durable 证据（attempts ledger / scheduler history
-  events / ASM audit live+.1+archive / journals）重建全部链路，结果与重启前一致；listing 依赖的
-  session-index 删除后重建等价。
+  events / ASM audit live+.1+archive / journals）重建全部链路，结果与重启前一致；listing 与
+  session-index 解耦（caller 子树直扫）——索引删除或存在均不改变 listing 结果。
 - **T7 privacy**：listing 无任何 foreign 会话行；执行既有 redaction/越权投影断言（非 owner 403、
   audit 读他者正文 redacted）。
 - **T8 no fuzzy join**：删除 session journal / 删除 invocation 坐标后，对应关联变为
