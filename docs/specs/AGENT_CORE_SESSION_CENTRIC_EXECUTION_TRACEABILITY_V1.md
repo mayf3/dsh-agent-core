@@ -224,17 +224,23 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   `homes/<callerAgentId>/sessions/**`（readdir+stat + header ≤4KiB + 每文件有界坐标扫描）。
   **绝不构建、读取或刷新全局 fleet 坐标索引**（构建它需要读其他 Agent 的 journal 内容 =
   caller 可触发的跨 Agent 扫描，违反本契约边界；其 fleet 级文件上限也会截断 caller 自己的
-  完整列表）。`origins`/坐标键由既有 journal 坐标抽取器（含 `origins.user` 的
-  source.kind='user' 加法键）在 caller 子树内直接产出，best-effort、缺失记 false/空且不报错。
+  完整列表）。`origins`/坐标键由**结构化 journal 解析**
+  （loadSessionJournal + projectJournal 的已识别事件字段：message provenance source、
+  toolCallCoordinates、workflowCoordinates）在 caller 子树内直接产出——**不接受对序列化字节的
+  raw-text regex 匹配作为 listing 输出依据**（E2 closure：消息正文引用坐标字符串不得污染
+  追溯视图），best-effort、缺失记 false/空且不报错。
   列表因此天然发现新建 journal（无索引 staleness），且不受任何 fleet cap 截断。
 - **Confined reader（round-3 修订，A3 closure；B-B 再收紧）**：caller 子树内的每一个 journal
   文件在读取前必须通过 confinement 预检——**canonical-root binding**：解析全部路径成分（含
   中间目录 symlink）后的真实路径必须仍位于 `homes/<callerAgentId>/sessions/` 之内（把祖先目录
   换成指向其他 Agent 目录的 symlink 会因前缀绑定失败而跳过）；`lstat` 必须为普通文件
   （symbolic link 一律拒绝）、`nlink === 1`（hardlink 一律拒绝）；打开后 `fstat` 的
-  device/inode/size 必须与预检一致（check/open TOCTOU 防护）；坐标扫描结束后复核文件未发生变化。
-  任何不满足 → 跳过该 journal（不输出其任何坐标）。测试必须含跨 Agent symlink、hardlink 与
-  祖先目录 symlink-swap 反例 fixture（§6）。
+  device/inode/size 必须与预检一致；最终组件以 `O_NOFOLLOW` 打开（kernel 级绑定，realpath/open
+  窗口内的最终组件 swap 直接 open 失败）；坐标扫描结束后复核文件未发生变化。任何不满足 →
+  跳过该 journal（不输出其任何坐标）。测试必须含跨 Agent symlink、hardlink 与祖先目录
+  symlink-swap 反例 fixture（§6）。已知的残余窗口：realpath 校验与 open 之间本机并发
+  ancestor-rename——当前 cooperative shared-host trust domain（Product Architecture V1 /
+  HARDENING_PROGRAM amendment 的既定威胁模型）下不作对抗性防御，记为已知限制（E1 closure）。
 - 错误表（封闭；round-2 修订，C4 closure）：`invalid_arguments`、`forbidden_not_owner`、
   `credential_unavailable`（gateway 在 local capability 上先加载 caller credential，可能失败——
   必须声明，防止 child relay 把真实失败降级为 invalid_arguments）、`history_unavailable`
