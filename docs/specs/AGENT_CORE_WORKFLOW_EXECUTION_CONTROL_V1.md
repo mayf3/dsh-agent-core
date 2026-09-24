@@ -19,15 +19,32 @@ acceptance_authority_basis: >-
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
+scope:
+  - packages/production-runtime
+  - packages/broker
+  - packages/scheduler
+governed_by:
+  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2
+  - AGENT_CORE_WORKFLOW_STALE_REENTRY_V1
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+external_authorities:
+  - repository: mayf3/svc-workflow
+    authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1
+    revision: 797b72059614ff3ee444207a26c2231b7dc5f7ab
+    relation: interoperates_with
+  - repository: mayf3/agent-forum
+    authority_id: AGENT_FORUM_WORKFLOW_INSTANCE_CONTEXT_V1
+    revision: 9734f6c5e6d378087008f4573a1efc01b00568e3
+    relation: interoperates_with
+supersedes: []
+superseded_by: null
+owners:
+  - mayf3
 production_apply_authority: none
 repo: mayf3/dsh-agent-core
 date: 2026-09-24
 candidate_base: 2a85d0659157a3bab649239158744d5222d86afe (origin/main)
 revision: r1
-governed_by:
-  - AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2 (accepted)
-  - AGENT_CORE_WORKFLOW_STALE_REENTRY_V1 (accepted)
-  - AGENT_PROCESS_LIFECYCLE_HARDENING_V3 (accepted)
 companion_specs:
   - repository: mayf3/svc-workflow
     spec_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1 (proposed, same date)
