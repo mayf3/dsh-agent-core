@@ -18,7 +18,12 @@ const RE_WF_INSTANCE = /\\?"workflowInstanceId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
 const RE_DISPATCH_INTENT = /\\?"dispatchIntentId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
 // CTR-SCT-002 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1): scheduler
 // occurrence coordinates mentioned in tool call arguments/result payloads.
-const RE_OCCURRENCE_ID = /\\?"occurrenceId\\?":\\?"(occ:[^"\\]{1,80})\\?"/g
+// D4: the value MUST be the real occurrence-id shape (`occ:` + 16 lowercase
+// hex) — a loose `occ:...` match would count ordinary message text quoting a
+// fake id (e.g. {"occurrenceId":"occ:not-a-real-run"}) as a touched
+// coordinate. (Still a bounded textual approximation on serialized bytes;
+// the exact join face is the canonical cron-run-<occ> identity, not this key.)
+const RE_OCCURRENCE_ID = /\\?"occurrenceId\\?":\\?"(occ:[0-9a-f]{16})\\?"/g
 // ASM V2 provenance: inserted[]/user-message sidecars carry correlation =
 // the SOURCE turnExecutionId ('turn:...') — the target-side anchor of every
 // inter_agent dispatch (R1/R6 reverse coordinate).
@@ -93,6 +98,9 @@ function require_fd(_file) { return true }
  * Returns {entries, coverage:{files, partialScanCount, truncatedFileCount}}.
  */
 export function buildSessionIndex({ homesRoot, indexDir, maxFiles = 4000, maxScanBytes }) {
+  // buildSessionIndex keeps its fleet-wide 4000-file cap; ensureFreshSessionIndex
+  // passes the SAME cap to its inventory walk so over-cap fleets degrade to a
+  // retained cache + honest coverage flag instead of a rebuild loop (D3).
   const entries = []
   let partialScanCount = 0
   let unreadableCount = 0
@@ -160,7 +168,7 @@ function journalInventory(homesRoot, { maxFiles = 20000 } = {}) {
  * including journals that appeared after the index was written (B2).
  * @returns {{ entries: object[], coverage: object, rebuilt: boolean }}
  */
-export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
+export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles = 4000 }) {
   const loaded = loadSessionIndex(indexDir)
   if (loaded !== null) {
     let fresh = true
@@ -172,14 +180,18 @@ export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
     }
     if (fresh) {
       // Drift is not the only staleness: compare against the live journal
-      // inventory so NEWLY CREATED journals are discovered too.
-      const inventory = journalInventory(homesRoot)
+      // inventory so NEWLY CREATED journals are discovered too. The inventory
+      // uses the SAME file cap as the builder: a fleet over the cap can never
+      // be fully indexed, so treating cap-truncation as drift would rebuild
+      // on every query (D3) — in that world the cached index is retained and
+      // the residual unknown stays an honest coverage fact, not a rebuild loop.
+      const inventory = journalInventory(homesRoot, { maxFiles })
       for (const entry of loaded) inventory.files.delete(entry.file)
-      if (inventory.files.size > 0 || inventory.truncated) return { ...buildSessionIndex({ homesRoot, indexDir, maxScanBytes }), rebuilt: true }
-      return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length }, rebuilt: false }
+      if (inventory.files.size > 0 && !inventory.truncated) return { ...buildSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles }), rebuilt: true }
+      return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length, overCap: inventory.truncated }, rebuilt: false }
     }
   }
-  const built = buildSessionIndex({ homesRoot, indexDir, maxScanBytes })
+  const built = buildSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles })
   return { ...built, rebuilt: true }
 }
 

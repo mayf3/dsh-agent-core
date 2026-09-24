@@ -289,7 +289,8 @@ test('B1: a foreign-agent journal or a suffix-compatible unrelated session can N
     assert.ok(!r.timeline.some((e) => e.source === 'session_journal' && JSON.stringify(e.nativeRefs).includes('agt_evil')), 'foreign journal record never enters the trace')
 
     // The REAL canonical session still joins exactly (owner + exact decoded id).
-    const canonical = r.correlations.find((c) => c.rule === 'R5' && c.to.nativeRef.startsWith('agt_hr/cron-run-occ~003A003a05ed6629f358ff53') && !c.to.nativeRef.includes('X'))
+    // D1: the join exposes the NATIVE session id (colon form), never the encoding.
+    const canonical = r.correlations.find((c) => c.rule === 'R5' && c.to.nativeRef === 'agt_hr/cron-run-occ:003a05ed6629f358ff53')
     assert.ok(canonical, 'canonical owner+identity journal still joins')
     assert.equal(canonical.strength, 'DERIVED_EXACT')
   } finally { destroyFixtureRoot(fixture) }
@@ -337,6 +338,72 @@ test('C1/C2: the listing scans ONLY the caller subtree — it never builds or re
     const poisoned = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
     assert.equal(poisoned.ok, true)
     assert.equal(poisoned.result.sessions.length, 2, 'caller listing unaffected by fleet index contents/cap')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── D1/D2/D4 (GitHub fresh review @ 70bc04d0): native ids, unbounded job-level
+// run_record coverage, and coordinate-shape honesty ──────────────────────────
+
+test('D1: exact scheduler joins expose the NATIVE session id (decoded), never the directory encoding', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const join = outcome.result.correlations.find((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/'))
+    assert.ok(join, 'session join present')
+    assert.equal(join.to.nativeRef, 'agt_hr/cron-run-occ:003a05ed6629f358ff53', 'native SessionRef (colon form), not the ~003A directory encoding')
+    assert.ok(join.evidenceRefs.includes('cron-run-occ:003a05ed6629f358ff53'), 'evidence refs carry the native id too')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('D2: job-level queries give a session answer to EVERY job run record — runs beyond the ledger slice are never stranded', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // A 4th run whose occurrence was rotated out of the ledger (history only,
+    // no journal) while the ledger retains 2+ occurrences for the same job.
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    const rotated = { occurrenceId: 'occ:003a05ed6629bbbb', jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1, state: 'succeeded', executionOutcome: 'succeeded', deliveryStatus: 'none', nativeSessionId: 'cron-run-occ:003a05ed6629bbbb', admittedAt: 5, updatedAtMs: 6 }
+    store.occurrences.push(rotated)
+    // keep the ledger at 2 entries for the job but hand-write a 3rd history
+    // run_record whose occurrence_id is NOT in occurrenceIds (the 4th run).
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    const runsPath = join(fixture.paths.historyDir, 'runs-202609.json')
+    const runs = JSON.parse(readFileSync(runsPath, 'utf8'))
+    runs.records.push({
+      run_id: 'run:occ:003a05ed6629cccc', occurrence_id: 'occ:003a05ed6629cccc', job_id: JOB_ID, agent_id: 'agt_hr',
+      session_id: 'cron-run-occ:003a05ed6629cccc', outcome: 'succeeded', status_view: 'succeeded',
+      delivery_status: 'none', result: { final_status: 'PASS', counters: {}, notes: '' },
+    })
+    writeFileSync(runsPath, JSON.stringify(runs, null, 2) + '\n')
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { jobId: JOB_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(r.timeline.some((e) => e.kind === 'run_record' && e.nativeRefs.occurrence_id === 'occ:003a05ed6629cccc'), 'the ledger-absent run_record is NOT stranded outside the job-level projection')
+    const gapEntry = r.gaps.find((g) => g.code === 'CORRELATION_GAP' && g.stage === 'session_journal' && g.knownFacts.occurrenceId === 'occ:003a05ed6629cccc')
+    assert.ok(gapEntry, 'the stranded run still owes (and gets) its honest session answer')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('D4: occurrence coordinates must match the real id shape — message text quoting a fake id is not a touched coordinate', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // Real journals plus one whose user message QUOTES a fake occurrence id.
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fake-occ-quoter'), { recursive: true })
+    writeFileSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fake-occ-quoter', 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'fake-occ-quoter', createdAt: 9, cwd: '/w' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(10).toISOString(), data: { content: 'see {"occurrenceId":"occ:not-a-real-run"} in text', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    const quoter = out.result.sessions.find((s) => s.sessionId === 'fake-occ-quoter')
+    assert.ok(quoter, 'session listed')
+    assert.ok(!quoter.schedulerOccurrenceIds.includes('occ:not-a-real-run'), 'fake (non-hex) id never becomes a coordinate')
+    assert.ok(quoter.schedulerOccurrenceIds.length === 0, 'no fabricated occurrence coordinates')
   } finally { destroyFixtureRoot(fixture) }
 })
 

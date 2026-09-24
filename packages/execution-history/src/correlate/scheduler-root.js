@@ -8,6 +8,7 @@
 
 import { observation, classifySendOutcome, VERDICTS } from '../rules.js'
 import { gap, correlation } from './context.js'
+import { decodeSegment } from '../session-index.js'
 import { projectForViewer } from '../redact.js'
 
 const RUN_ID_PREFIX = 'run:'
@@ -111,9 +112,14 @@ export async function buildSchedulerRoot(ctx, args) {
     // run_record — otherwise the session answer (join or honest gap) is
     // silently omitted. Sibling runs are still excluded (exact-id compare).
     const rotatedExact = occurrenceScoped && rec.kind === 'run_record' && rec.nativeRefs.occurrence_id === occurrenceId
+    // D2 (GitHub fresh review @ 70bc04d0): for JOB-LEVEL queries the job-wide
+    // run_record projection applies to EVERY job-matching run record — the
+    // newest-50 ledger slice must not strand older runs without a session
+    // answer (each still gets a join or an honest gap, never silence).
+    const jobLevelExact = rec.kind === 'run_record' && !occurrenceScoped && jobId !== undefined && rec.nativeRefs.job_id === jobId
     const matches = rotatedExact
+      || jobLevelExact
       || (rec.nativeRefs.occurrence_id !== undefined && occurrenceIds.has(rec.nativeRefs.occurrence_id))
-      || (rec.kind === 'run_record' && !occurrenceScoped && jobId !== undefined && rec.nativeRefs.job_id === jobId && occurrences.length === 0)
     if (!matches) continue
     records.push(rec)
     if (rec.kind === 'run_record') {
@@ -171,6 +177,9 @@ export async function buildSchedulerRoot(ctx, args) {
         // B1: foreign-agent journals never join, even when the decoded
         // sessionId would match the canonical form exactly.
         if (entry.agentId !== expectedAgent) continue
+        // D1: the join exposes the NATIVE session id (decoded), never the
+        // physical directory encoding (CTR-SCT-001/007 native SessionRef).
+        const nativeSessionId = decodeSegment(entry.sessionId)
         const loaded = ctx.journal(entry.agentId, entry.sessionId)
         if (loaded === null) continue
         journalsFound.add(occId)
@@ -180,7 +189,7 @@ export async function buildSchedulerRoot(ctx, args) {
           atMs: loaded.raw.events[0]?.timeMs ?? null, nativeRefs: { agentId: entry.agentId, sessionId: entry.sessionId, file: entry.file },
           dedupeKey: `journal:${entry.file}`, data: view,
         })
-        observations.push(observation('agentExecution', view.turns?.length > 0 ? VERDICTS.STARTED : VERDICTS.UNKNOWN, { ruleId: 'R5', evidenceRefs: [`${entry.agentId}/${entry.sessionId}`], note: 'cron-run session located by deterministic derivation + journal existence proof (CTR-SCT-007)' }))
+        observations.push(observation('agentExecution', view.turns?.length > 0 ? VERDICTS.STARTED : VERDICTS.UNKNOWN, { ruleId: 'R5', evidenceRefs: [`${entry.agentId}/${nativeSessionId}`], note: 'cron-run session located by deterministic derivation + journal existence proof (CTR-SCT-007)' }))
         const asmByMessage = ctx.asmRowsByMessage()
         for (const spliced of loaded.projected.spliced.slice(0, 50)) {
           for (const row of asmByMessage.get(spliced.messageId) ?? []) {
@@ -197,8 +206,8 @@ export async function buildSchedulerRoot(ctx, args) {
           // weak name convention. When no journal exists the honest
           // CORRELATION_GAP below stands instead.
           from: { source: occurrenceIds.has(occId) ? 'scheduler_store' : 'query_coordinate', nativeRef: occId },
-          to: { source: 'session_journal', nativeRef: `${entry.agentId}/${entry.sessionId}` },
-          evidenceRefs: [occId, entry.sessionId],
+          to: { source: 'session_journal', nativeRef: `${entry.agentId}/${nativeSessionId}` },
+          evidenceRefs: [occId, nativeSessionId],
           strength: 'DERIVED_EXACT',
         })
       }
