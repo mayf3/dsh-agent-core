@@ -5,12 +5,14 @@ import { spawnSync } from 'node:child_process'
 import { dirname, isAbsolute, join, normalize } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE } from './model-overrides.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from './model-overrides.js'
 
+// GPT6_LUNA_AND_REASONING_EFFORT_V1: derived from the single-source pin so the
+// migration tooling always governs exactly the accepted candidate artifact.
 const PIN = Object.freeze({
-  version: '0.2.3',
-  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
-  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
+  version: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+  sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
+  artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
 })
 // Domain constants realigned to the yanfenma unified production backend per
 // AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002 (the ONLY
