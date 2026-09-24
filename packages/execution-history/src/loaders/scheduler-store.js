@@ -10,11 +10,11 @@
 import { readFileSync, existsSync, statSync } from 'node:fs'
 
 /**
- * @returns {{ status: {status: string, reason?: string}, jobs: object[], occurrences: object[], file?: {file, size, mtimeMs} }}
+ * @returns {{ status: {status: string, reason?: string}, jobs: object[], occurrences: object[], fences: object, file?: {file, size, mtimeMs} }}
  */
 export function loadSchedulerStore({ jobsStore, maxBytes = 64 * 1024 * 1024 }) {
   if (!existsSync(jobsStore)) {
-    return { status: { status: 'ABSENT', reason: 'scheduler store absent' }, jobs: [], occurrences: [] }
+    return { status: { status: 'ABSENT', reason: 'scheduler store absent' }, jobs: [], occurrences: [], fences: {} }
   }
   let raw
   try {
@@ -22,21 +22,25 @@ export function loadSchedulerStore({ jobsStore, maxBytes = 64 * 1024 * 1024 }) {
     if (!st.isFile() || Number(st.size) > maxBytes) throw new Error('store size exceeds bound')
     raw = readFileSync(jobsStore, 'utf8')
   } catch (error) {
-    return { status: { status: 'DEGRADED', reason: `scheduler store unreadable: ${error?.message ?? error}` }, jobs: [], occurrences: [] }
+    return { status: { status: 'DEGRADED', reason: `scheduler store unreadable: ${error?.message ?? error}` }, jobs: [], occurrences: [], fences: {} }
   }
   let parsed
   try {
     parsed = JSON.parse(raw)
   } catch (error) {
-    return { status: { status: 'DEGRADED', reason: `scheduler store corrupt: ${error?.message ?? error}` }, jobs: [], occurrences: [] }
+    return { status: { status: 'DEGRADED', reason: `scheduler store corrupt: ${error?.message ?? error}` }, jobs: [], occurrences: [], fences: {} }
   }
   const jobs = Array.isArray(parsed?.jobs) ? parsed.jobs.filter((j) => j && typeof j === 'object') : []
   const occurrences = Array.isArray(parsed?.occurrences) ? parsed.occurrences.filter((o) => o && typeof o === 'object') : []
+  // CTR-SCT-003: the unresolved-unknown fence map is persisted store data —
+  // expose it (additive) so session dispositions can annotate fence state.
+  const fences = parsed?.fences && typeof parsed.fences === 'object' ? parsed.fences : {}
   const st = statSync(jobsStore)
   return {
     status: { status: 'OK' },
     jobs,
     occurrences,
+    fences,
     file: { file: jobsStore, size: Number(st.size), mtimeMs: Number(st.mtimeMs) },
   }
 }

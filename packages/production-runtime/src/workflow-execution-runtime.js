@@ -164,6 +164,12 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
         return {
           ok: true,
           sessionId: receipt.sessionId,
+          // CTR-SCT-006: pass the receipt's native messageId through to the
+          // ledger's existing run_delivered field (the receipt carries it;
+          // dropping it here was the production seam gap). The outcome_unknown
+          // branch below still records NO messageId — an unproven receipt is
+          // never fabricated.
+          ...(receipt.messageId === undefined ? {} : { messageId: receipt.messageId }),
           ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
         }
       } catch (error) {
