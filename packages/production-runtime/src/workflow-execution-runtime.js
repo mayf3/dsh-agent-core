@@ -307,8 +307,16 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       log.log(`workflow-execution: poller enabled (agent ${pollerAgentId}, due feed limit ${DUE_FEED_LIMIT})`)
     },
     stop() {
-      engine.stop()
+      // DSH_SHUTDOWN_CONTRACT (Phase A): the engine's stop() returns the
+      // bounded drain promise; compose.stop() awaits THIS method before
+      // scheduler.stop() and ctx.disposeAll(), so the drain semantics must
+      // propagate — dropping the promise made the await resolve while a poll
+      // was still in flight (late delivery into a disposed Router became
+      // reachable). WORKFLOW_EXECUTION_CONTROL_V1 (main): the forum
+      // projection loop stops with it (synchronous timer clear).
+      const draining = engine.stop()
       forumProjection.stop()
+      return draining
     },
   }
 }

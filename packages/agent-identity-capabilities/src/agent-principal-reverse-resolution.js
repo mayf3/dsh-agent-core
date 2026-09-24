@@ -1,6 +1,6 @@
 /**
- * @agent-core/production-runtime/src/identity/agent-principal-reverse-resolution.js — the
- * `agentPrincipalReverseResolutionAccess` LOCAL capability provider for
+ * @agent-core/agent-identity-capabilities/src/agent-principal-reverse-resolution.js —
+ * the `agentPrincipalReverseResolutionAccess` LOCAL capability provider for
  * agent_resolve_principal_by_agent (AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1,
  * accepted, implementation_authority: contracts).
  *
@@ -42,9 +42,14 @@
  * call freshly reads Auth and the Definition registry.
  */
 
-import {
-  AGENT_PRINCIPAL_REVERSE_RESOLUTION_CAPABILITY_ID,
-} from '../../../broker/src/capabilities/agent-principal-reverse-resolution.js'
+/**
+ * Wire capability id (also the provider handlers key — the exact id the
+ * broker manifest `agent_resolve_principal_by_agent` is registered under,
+ * frozen by CTR-APR-001). Declared here because the provider OWNS its
+ * handlers key; the broker-side manifest test pins the same literal so the
+ * two can never drift apart silently.
+ */
+export const AGENT_PRINCIPAL_REVERSE_RESOLUTION_CAPABILITY_ID = 'agent_resolve_principal_by_agent'
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 const AGENT_ID_RE = /^agt_[a-z0-9-]+$/

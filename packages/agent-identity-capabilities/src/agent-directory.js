@@ -1,5 +1,5 @@
 /**
- * @agent-core/production-runtime/src/agent-directory.js — the
+ * @agent-core/agent-identity-capabilities/src/agent-directory.js — the
  * `agentDirectoryAccess` LOCAL capability provider for agent_directory
  * (AGENT_CORE_AGENT_DIRECTORY_TOOL_V1).
  *
@@ -39,9 +39,14 @@
  * cache, no retry.
  */
 
-import {
-  AGENT_DIRECTORY_CAPABILITY_ID,
-} from '../../broker/src/capabilities/agent-directory.js'
+/**
+ * Wire capability id (also the provider handlers key — the exact id the
+ * broker manifest `agent.directory` is registered under, frozen by
+ * AGENT_CORE_AGENT_DIRECTORY_TOOL_V1 CTR-ADT-001). Declared here because the
+ * provider OWNS its handlers key; the broker-side manifest test pins the
+ * same literal so the two can never drift apart silently.
+ */
+export const AGENT_DIRECTORY_CAPABILITY_ID = 'agent.directory'
 
 /** Project one internal record ({id,name,description,disabled}) to the
  *  canonical directory entry shape ({agentId,name,description,enabled}). */
