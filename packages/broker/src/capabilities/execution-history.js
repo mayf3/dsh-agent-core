@@ -115,9 +115,10 @@ export const agentSessionListManifest = {
   // gateway performs zero token requests.
   local: true,
   errors: [
-    { code: 'invalid_arguments', description: 'Arguments violate the operation schema (list takes no arguments; only cursor/limit pagination may be supplied).' },
+    { code: 'invalid_arguments', description: 'Arguments violate the operation schema (list takes only cursor/limit pagination).' },
     { code: 'forbidden_not_owner', description: 'Trusted caller identity unavailable (fail closed).' },
-    { code: 'history_unavailable', description: 'The session homes root or coordinate index is not readable.' },
+    { code: 'credential_unavailable', description: 'No MachineClient credential is bound to the calling agent (the gateway loads it before any local capability except self_ops); never mislabeled as a bad-argument failure.' },
+    { code: 'history_unavailable', description: 'The session homes root is not readable.' },
     { code: 'unsupported_operation', description: 'The execute-time local handler is not resolvable (missing or miswired provider).' },
     { code: 'internal_error', description: 'The trusted handler failed.' },
   ],
@@ -134,7 +135,7 @@ export const agentSessionListManifest = {
         required: [],
       },
       result: { type: 'json' },
-      errors: ['invalid_arguments', 'forbidden_not_owner', 'history_unavailable', 'internal_error'],
+      errors: ['invalid_arguments', 'forbidden_not_owner', 'credential_unavailable', 'history_unavailable', 'internal_error'],
     },
   ],
 }

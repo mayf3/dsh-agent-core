@@ -14,7 +14,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { queryExecutionTrace, listAgentSessions } from '../src/index.js'
@@ -305,7 +305,7 @@ test('B2: a journal created after the index exists is discovered by the next lis
     const beforeIds = before.result.sessions.map((s) => s.sessionId)
     assert.ok(!beforeIds.includes('fresh-after-index'), 'pre-condition: new session does not exist yet')
 
-    // Create a NEW journal; touch NO previously indexed journal.
+    // Create a NEW journal; touch NO previously listed journal.
     mkdirSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fresh-after-index'), { recursive: true })
     writeFileSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'fresh-after-index', 'session.jsonl'), [
       JSON.stringify({ type: 'session', version: 0, id: 'fresh-after-index', createdAt: 42, cwd: '/w' }),
@@ -314,9 +314,66 @@ test('B2: a journal created after the index exists is discovered by the next lis
     const after = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
     assert.equal(after.ok, true)
     assert.ok(after.result.sessions.some((s) => s.sessionId === 'fresh-after-index'), 'new journal MUST appear')
-    // The index stays coordinate-only and rebuildable (no new privacy surface).
-    const indexFile = readFileSync(join(indexDirOf(fixture), 'sessions.idx.jsonl'), 'utf8')
-    assert.ok(!indexFile.includes('daily HR run'), 'no journal content in the index')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── C1/C2 (GitHub fresh review @ d25ae108): caller-scoped scan, no fleet index ─
+
+test('C1/C2: the listing scans ONLY the caller subtree — it never builds or reads the fleet-wide index and never inherits its cap', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // No index exists at all; the listing must still succeed WITHOUT creating
+    // one (a caller must not be able to trigger a fleet-wide journal scan).
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    assert.equal(out.result.sessions.length, 2, 'caller sessions enumerated completely from the caller subtree')
+    assert.ok(!existsSync(join(indexDirOf(fixture), 'sessions.idx.jsonl')), 'listing must not create the fleet-wide index file')
+
+    // Even a deliberately stale/poisoned fleet index (zero caller entries) is
+    // irrelevant: the listing enumerates the caller subtree independently, so
+    // no global cap can truncate the caller's own sessions.
+    mkdirSync(indexDirOf(fixture), { recursive: true })
+    writeFileSync(join(indexDirOf(fixture), 'sessions.idx.jsonl'), JSON.stringify({ v: 2, agentId: 'agt_other', sessionId: 'main', file: '/nonexistent', coordinates: {} }) + '\n')
+    const poisoned = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(poisoned.ok, true)
+    assert.equal(poisoned.result.sessions.length, 2, 'caller listing unaffected by fleet index contents/cap')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── C3 (GitHub fresh review @ d25ae108): rotated occurrence-scoped gap ──────
+
+test('C3: occurrence-scoped query for a rotated occurrence still emits the session answer (honest gap, never silence)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // The occurrence has rotated out of the ledger (store readable, exact
+    // history run_record present) AND its journal is deleted. The query must
+    // still answer with CORRELATION_GAP{session_journal} for that run.
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    store.occurrences = store.occurrences.filter((o) => o.occurrenceId !== OCC_ID)
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true, force: true })
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(r.timeline.some((e) => e.kind === 'run_record' && e.nativeRefs.occurrence_id === OCC_ID), 'the exact rotated run_record still surfaces')
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/')), 'no join without the journal')
+    const gapEntry = r.gaps.find((g) => g.code === 'CORRELATION_GAP' && g.stage === 'session_journal' && g.knownFacts.occurrenceId === OCC_ID)
+    assert.ok(gapEntry, 'the session gap is emitted for the rotated occurrence — never silence')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── C5 (GitHub fresh review @ d25ae108): non-finite cursor timestamps ───────
+
+test('C5: a base64url cursor decoding to a non-finite timestamp is rejected, never a repeating first page', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // base64url('NaN:main') — syntactically valid cursor, non-finite atMs.
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr', cursor: 'TmFOOm1haW4' })
+    assert.equal(out.ok, false)
+    assert.equal(out.code, 'invalid_arguments')
   } finally { destroyFixtureRoot(fixture) }
 })
 
