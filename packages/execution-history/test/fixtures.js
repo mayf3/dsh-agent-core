@@ -138,15 +138,16 @@ export function buildFixtureRoot() {
   ]
   writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), agtAEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')
 
-  // HR cron-run session (naming-convention join target).
-  mkdirSync(join(homesRoot, 'agt_hr', 'sessions', projKey, 'cron-run-occ~003a05ed6629f358ff53'), { recursive: true })
+  // HR cron-run session (naming-convention join target). Directory name uses
+  // the REAL DSH segment encoding (encodeSegment: ':' → '~003A').
+  mkdirSync(join(homesRoot, 'agt_hr', 'sessions', projKey, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true })
   const hrEvents = [
     { type: 'session', version: 0, id: 'cron-run-occ:003a05ed6629f358ff53', createdAt: T0 + 840, cwd: '/tmp/hr' },
     { type: 'user/message', seq: 1, time: new Date(T0 + 850).toISOString(), data: { content: 'daily HR run', source: { kind: 'user' } } },
     { type: 'turn/start', seq: 2, time: new Date(T0 + 851).toISOString(), data: { turn: 1 } },
     { type: 'turn/end', seq: 3, time: new Date(T0 + 970).toISOString(), data: { turn: 1, reason: { kind: 'failed' } } },
   ]
-  writeFileSync(join(homesRoot, 'agt_hr', 'sessions', projKey, 'cron-run-occ~003a05ed6629f358ff53', 'session.jsonl'), hrEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')
+  writeFileSync(join(homesRoot, 'agt_hr', 'sessions', projKey, 'cron-run-occ~003A003a05ed6629f358ff53', 'session.jsonl'), hrEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')
 
   // Foreign private session of agt_hr (redaction target).
   mkdirSync(join(homesRoot, 'agt_hr', 'sessions', projKey, 'main'), { recursive: true })

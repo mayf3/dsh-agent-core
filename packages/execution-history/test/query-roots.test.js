@@ -139,7 +139,12 @@ test('scheduler root: never-run job still answers admission facts; occurrence jo
     assert.equal(ownedJob.ok, true, 'routing agent passes ownership')
     assert.ok(ownedJob.result.timeline.some((e) => e.kind === 'job_definition'))
     assert.ok(ownedJob.result.timeline.some((e) => e.kind === 'occurrence' && e.nativeRefs.occurrence_id === OCC_ID))
-    assert.ok(ownedJob.result.gaps.some((g) => g.code === 'JOIN_BY_NAME_CONVENTION'), 'naming-join explicitly marked')
+    // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-007: the located
+    // journal is an existence proof, so the R5 session join is DERIVED_EXACT —
+    // the old JOIN_BY_NAME_CONVENTION gap is gone (vocabulary reserved for
+    // unproven leftovers, which this world is not).
+    assert.ok(!ownedJob.result.gaps.some((g) => g.code === 'JOIN_BY_NAME_CONVENTION'), 'no weak naming gap when the journal proves existence')
+    assert.ok(ownedJob.result.correlations.some((c) => c.rule === 'R5' && c.strength === 'DERIVED_EXACT'), 'session join = deterministic derivation + journal existence proof')
     const cronSession = ownedJob.result.timeline.find((e) => e.source === 'session_journal')
     assert.ok(cronSession, 'cron-run session located')
     assert.ok(ownedJob.result.correlations.some((c) => c.rule === 'R5' && c.to.nativeRef.includes('workflowInstance:22222222')), 'wake_sent → workflow instance link (R5)')
