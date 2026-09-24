@@ -167,10 +167,14 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   既有查询根使用）。不新增任何持久存储。
 - **D-SCT-4（不发明新状态）**：sessionCreated 处置词表 = `{created, not_created, pending, unknown}`，
   reason 一律取既有 taxonomy 原值（SC-1 词表），不做同义改写。
-- **D-SCT-5（关联定级以存在性证明为准）**：`cron-run-<occ>` 命名仅是确定性派生函数；只有 journal
-  / turn 证据实际存在才可定级 `DERIVED_EXACT`；命名+无证据 = `WEAK_JOIN` 显式缺口
-  （此为对既有 `JOIN_BY_NAME_CONVENTION` 行为的精化：从"一律弱键"改为"有存在性证明即精确、
-  无证明即诚实缺口"）。
+- **D-SCT-5（关联定级以存在性证明为准；T8-A 裁决修订，Owner directive 2026-09-24）**：
+  `cron-run-<occ>` 命名仅是确定性派生函数。定级 `DERIVED_EXACT` 的充分且必要条件 =
+  canonical identity（解码 sessionId === `cron-run-<occ>`）+ routed/owning agent 匹配 +
+  journal/turn 存在性证明，**三者同时成立**。invocation evidence 行是 **auxiliary**：其存在
+  或缺失既不创建也不降级该定级（T8-A）。命名/时间/suffix 相似永远不创建任何关联；
+  journal 缺失 = 诚实缺口（T8-B），foreign/suffix-compatible journal = 无关联（T8-C）。
+  （此为对 EH V1 R5 输出行为的精化裁决：weak 触发条件在新定级下不可达；见
+  post_landing_correction 的 F-A 记录与 Owner directive。）
 
 ## 4. Contracts
 
@@ -335,8 +339,9 @@ occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）
 
 ### CTR-SCT-007 — execution-history scheduler-root 关联精化
 
-- journal 存在（`cron-run-<occ>` 会话文件定位成功或 turn 证据存在）：correlation `R5` 定级
-  `DERIVED_EXACT`（不再输出 `JOIN_BY_NAME_CONVENTION`）。
+- journal 存在（`cron-run-<occ>` 会话文件定位成功或 turn 证据存在）且 owner/identity 匹配：
+  correlation `R5` 定级 `DERIVED_EXACT`（不再输出 `JOIN_BY_NAME_CONVENTION`；invocation
+  行为 auxiliary 证据——缺失不降级，T8-A）。
 - journal 不存在且 CTR-SCT-003 判 `created|unknown`：输出 `CORRELATION_GAP{stage:'session_journal',
   knownFacts}`（保留既有 gap 形态），不定级 exact。**flush 无界**：journal sweep 有 sweep bound
   （newest-N/caps），凡 owe session answer 的 run_record——occurrence rotation、超出 sweep window、
@@ -387,8 +392,13 @@ occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）
   session-index 解耦（caller 子树直扫）——索引删除或存在均不改变 listing 结果。
 - **T7 privacy**：listing 无任何 foreign 会话行；执行既有 redaction/越权投影断言（非 owner 403、
   audit 读他者正文 redacted）。
-- **T8 no fuzzy join**：删除 session journal / 删除 invocation 坐标后，对应关联变为
-  `CORRELATION_GAP`/`WEAK_JOIN` 显式缺口，判定不因时间接近而成功。
+- **T8 no fuzzy join（三案例冻结语义，T8-A/B/C）**：
+  T8-A 删除 invocation evidence 而 owner/occurrence 坐标与 canonical journal 仍在
+  → `DERIVED_EXACT` 保持（invocation 为 auxiliary，缺失不降级）；
+  T8-B 删除 canonical session journal 且无其他 durable exact SessionRef 证据
+  → `CORRELATION_GAP`（禁止 suffix/时间接近/名称相似/invocation-only fuzzy 推断恢复关联）；
+  T8-C foreign/suffix-compatible journal 存在
+  → 无 exact 关联 + `CORRELATION_GAP`（B1 closure 保持）。
 - **T9 no second authority**：consumption-ban import 图断言扩展覆盖新 listing 模块；查询输出
   不进入任何派发/恢复决策路径。
 
