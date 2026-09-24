@@ -230,6 +230,73 @@ test('B1: a foreign-agent journal or a suffix-compatible unrelated session can N
   } finally { destroyFixtureRoot(fixture) }
 })
 
+// ── G1 (security review @ acceptance head): late pre-start discriminator in history ─
+
+test('G1: a late pre-start rejection persists its discriminator in history — ledger-rotated world answers not_created, never unknown-with-session', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // The timed-out occurrence settled late with a deterministic not-started
+    // proof: the ledger row carries pre-start-rejection AND the durable
+    // late_settlement history event carries the same classification (S1/G1).
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    store.occurrences = store.occurrences.filter((o) => o.occurrenceId !== OCC_ID)
+    store.occurrences.push({
+      occurrenceId: OCC_ID, jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1,
+      state: 'failed', executionOutcome: 'failed', deliveryStatus: 'none',
+      nativeSessionId: 'cron-run-occ:003a05ed6629f358ff53',
+      terminalEvidence: { kind: 'pre-start-rejection', code: 'AGENT_NOT_FOUND' },
+      admittedAt: 1758100000000 + 5000, updatedAtMs: 1758100000000 + 5100,
+    })
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    const eventsPath = join(fixture.paths.historyDir, 'events.jsonl')
+    writeFileSync(eventsPath, readFileSync(eventsPath, 'utf8') + JSON.stringify({
+      ts: 1758100000000 + 5200, type: 'late_settlement', resolved_to: 'failed', basis: 'trusted-late-evidence',
+      note: 'invoker late proven terminal failure after timeout: not_admitted',
+      terminal_evidence: { kind: 'pre-start-rejection', detailRef: 'not_admitted' },
+      occurrence_id: OCC_ID, run_id: `run:${OCC_ID}`, job_id: JOB_ID, ended_at_ms: 1758100000000 + 5200,
+    }) + '\n')
+    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true, force: true })
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const occurrence = outcome.result.timeline.find((e) => e.kind === 'occurrence')
+    assert.ok(occurrence, 'ledger occurrence surfaced')
+    assert.equal(occurrence.data.sessionCreated, 'not_created', 'ledger discriminator answered')
+    assert.equal(occurrence.nativeRefs.sessionId, undefined, 'no sessionId for the never-created session')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('G1b: ledger-rotated late pre-start rejection answers not_created from HISTORY alone (no ledger row)', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // Full rotation: no ledger occurrence, no journal — but the durable
+    // late_settlement event carries the discriminator.
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    store.occurrences = store.occurrences.filter((o) => o.jobId !== JOB_ID)
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    const eventsPath = join(fixture.paths.historyDir, 'events.jsonl')
+    writeFileSync(eventsPath, readFileSync(eventsPath, 'utf8') + JSON.stringify({
+      ts: 1758100000000 + 6200, type: 'late_settlement', resolved_to: 'failed', basis: 'trusted-late-evidence',
+      note: 'invoker late proven terminal failure after timeout: not_admitted',
+      terminal_evidence: { kind: 'pre-start-rejection', detailRef: 'AGENT_NOT_FOUND' },
+      occurrence_id: OCC_ID, run_id: `run:${OCC_ID}`, job_id: JOB_ID, ended_at_ms: 1758100000000 + 6200,
+    }) + '\n')
+    rmSync(join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY, 'cron-run-occ~003A003a05ed6629f358ff53'), { recursive: true, force: true })
+
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_ID }, viewer: SELF_HR, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const occurrence = outcome.result.timeline.find((e) => e.kind === 'occurrence')
+    assert.ok(!occurrence, 'no ledger row — the history answer must still gate the session id')
+    assert.ok(!outcome.result.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/')), 'no session join for the never-created session')
+    assert.ok(!outcome.result.timeline.some((e) => e.source === 'session_journal'), 'no session fabricated from the rotated world')
+    assert.ok(!outcome.result.gaps.some((g) => g.stage === 'session_journal'), 'not_created suppresses even the journal gap — there is nothing missing')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
 // ── C3 (GitHub fresh review @ d25ae108): rotated occurrence-scoped gap ──────
 
 test('C3: occurrence-scoped query for a rotated occurrence still emits the session answer (honest gap, never silence)', async () => {

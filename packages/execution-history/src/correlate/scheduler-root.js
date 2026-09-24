@@ -132,7 +132,7 @@ export async function buildSchedulerRoot(ctx, args) {
       const ledgerOcc = store.occurrences.find((o) => o.occurrenceId === rec.nativeRefs.occurrence_id)
       const disposition = ledgerOcc !== undefined
         ? sessionDispositionOf(ledgerOcc)
-        : conservativeDispositionFromOutcome(outcome)
+        : conservativeDispositionFromOutcome(outcome, lateEvidenceKindOf(history.records, rec.nativeRefs.occurrence_id))
       if (rec.nativeRefs.sessionId !== undefined && disposition.sessionCreated !== 'not_created') {
         const occKey = rec.nativeRefs.occurrence_id ?? rec.nativeRefs.run_id
         pendingJournalGaps.set(occKey, {
@@ -303,11 +303,26 @@ export function sessionDispositionOf(record) {
   return { sessionCreated: 'unknown' }
 }
 
-// History-only run records (ledger outside the readable boundary) carry no
-// terminalEvidence, so the table degrades conservatively: `failed` cannot
-// prove pre-start (unknown), only a plain `succeeded` reads as created —
-// with the documented canary-invoker limitation (Spec CTR-SCT-003).
-function conservativeDispositionFromOutcome(outcome) {
+// History-only run records (ledger outside the readable boundary): the
+// durable late_settlement event carries the terminal-evidence classification
+// (S1/G1) — a proven pre-start late settlement reads as not_created even
+// without the ledger. Without such evidence the disposition degrades
+// conservatively: `failed` cannot prove pre-start (unknown), and only a plain
+// `succeeded` reads as created — with the documented canary-invoker
+// limitation (Spec CTR-SCT-003).
+function conservativeDispositionFromOutcome(outcome, lateEvidenceKind) {
+  if (lateEvidenceKind === 'pre-start-rejection') {
+    return { sessionCreated: 'not_created', sessionNotCreatedReason: 'pre-start-rejection' }
+  }
   if (outcome === 'succeeded') return { sessionCreated: 'created' }
   return { sessionCreated: 'unknown' }
+}
+
+function lateEvidenceKindOf(historyRecords, occurrenceId) {
+  for (const rec of historyRecords) {
+    if (rec.kind === 'history_late_settlement' && rec.nativeRefs.occurrence_id === occurrenceId) {
+      return rec.data?.terminal_evidence?.kind
+    }
+  }
+  return undefined
 }

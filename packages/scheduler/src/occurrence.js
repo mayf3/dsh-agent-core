@@ -429,6 +429,9 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
       resolvedTo,
       basis: 'trusted-late-evidence',
       note,
+      // S1/G1: the classification travels with the durable history so the
+      // session answer survives occurrence-ledger rotation.
+      terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
     })
   } catch (error) {
     this.log.error(`late settlement failed for ${record.occurrenceId}: ${error?.message ?? error}`)
