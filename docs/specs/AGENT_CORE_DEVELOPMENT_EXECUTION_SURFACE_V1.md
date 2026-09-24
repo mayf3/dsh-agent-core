@@ -1,7 +1,19 @@
 ---
 spec_id: AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1
 title: Development Execution Surface — shared, backend-abstracted coding-executor capability (development_execute) for any authorized agent, with system-owned execution state, repo/worktree authority, and session-centric trace correlation
-status: proposed
+status: accepted
+accepted_date: 2026-09-24
+accepted_by: mayf3
+accepted_reviewed_head: e3393e7c26fce2d058629cce136448fcf311e37b
+acceptance_authority_basis: >-
+  Owner ACCEPT via GOAL = DEVELOPMENT_EXECUTION_SURFACE_V1 closure (2026-09-24):
+  "AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1 当前 Spec 与实现方向接受" — with
+  IMPLEMENTATION_COMPLETE=YES, DOGFOOD=15/15 PASS (real codex exec, two agents),
+  INDEPENDENT_REVIEW=PASS (REVISE blockers B1-B3 fixed at the reviewed head),
+  BLOCKERS=0, CTO_SPECIFIC_PRODUCT_CODE=ZERO. This commit is the acceptance
+  lifecycle transaction ONLY: the contract body is byte-identical to the
+  reviewed head except this frontmatter. Latest-main integration (origin/main
+  beyond 4c87c9ca) is a separate merge commit on this branch.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
