@@ -257,12 +257,13 @@ test('C3: occurrence-scoped query for a rotated occurrence still emits the sessi
 
 // ── D1/D2 (GitHub fresh review @ 70bc04d0) ───────────────────────────────────
 
-test('F-A: without an independent invocation coordinate the scheduler→session join stays WEAK_NAME_JOIN (EH V1 R5 preserved)', async () => {
+test('T8-A: deleting the invocation evidence NEVER demotes the exact join — journal identity is the proof (invocation rows are auxiliary)', async () => {
   const fixture = buildFixtureRoot()
   try {
-    // Journal EXISTS (owner + canonical id) but the invocation evidence rows
-    // are gone — the join is real enough to report, yet only at the weak
-    // grade: no independent persisted coordinate proves it.
+    // Authoritative owner/occurrence coordinates and the canonical scheduler
+    // session journal still exist; ONLY the auxiliary invocation evidence is
+    // deleted. The join must remain DERIVED_EXACT — auxiliary evidence can
+    // neither create nor downgrade it (T8 frozen semantics).
     writeFileSync(join(fixture.paths.controlDir, 'runtime-evidence.jsonl'), [
       { kind: 'ready', pid: 1, ts: 1 },
     ].map((r) => JSON.stringify(r)).join('\n') + '\n')
@@ -272,8 +273,8 @@ test('F-A: without an independent invocation coordinate the scheduler→session 
     })
     assert.equal(outcome.ok, true)
     const faJoin = outcome.result.correlations.find((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/'))
-    assert.ok(faJoin, 'the join is still reported (never silently dropped)')
-    assert.equal(faJoin.strength, 'WEAK_NAME_JOIN', 'no independent coordinate → weak grade, never exact')
+    assert.ok(faJoin, 'the join is still reported')
+    assert.equal(faJoin.strength, 'DERIVED_EXACT', 'canonical identity + owner + journal existence = exact, unconditionally')
     assert.equal(faJoin.from.source, 'scheduler_store')
   } finally { destroyFixtureRoot(fixture) }
 })
