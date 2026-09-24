@@ -23,7 +23,8 @@ scope:
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/workflow-execution-runtime.js (deliver receipt messageId plumb)
   - packages/workflow-execution/src/engine.js (run_delivered messageId field pass-through only)
-  - packages/execution-history/src/session-index.js + src/loaders/session-journal.js (additive user-origin extractor key only)
+  - packages/execution-history/src/session-index.js + src/loaders/session-journal.js (extractor keys: user-origin + occurrenceIds [occ:+16hex]; decodeSegment; byCronOccurrence exact canonical identity; ensureFreshSessionIndex bounded journal-inventory discovery + shared builder cap with overCap retention — B2/D3 closures, round-2/3 corrections)
+  - packages/execution-history/src/session-listing.js (NEW: caller-subtree direct-scan listing core — C1/C2 closure, never builds/reads the fleet index)
   - packages/execution-history/src/loaders/runtime-evidence.js (additive runId coordinate key parse only)
   - packages/execution-history/src/loaders/scheduler-store.js (additive fences exposure only)
 governed_by:
@@ -175,7 +176,12 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
 
 - 注册：`packages/broker` capability 族 `execution-history` 新 manifest；
   `requiredScopes: []`（零 Auth）；`local: {resource: 'execution-history'}`；模型可见（非 infrastructure）。
-- 入参：`{}` 精确（`additionalProperties:false`，零额外键）；非空入参 → `invalid_arguments`。
+- 入参（round-3 修订，A1 closure）：Broker `buildToolDefinition` 恒注入 required selector
+  （默认键名 `operation`）并据此 dispatch——零键调用无法选中 handler。故合法调用 =
+  `{operation:'list', cursor?, limit?}`（selector 由 dispatch 剥离，trusted handler 仅见
+  cursor/limit）；selector 之外的业务键封闭集 = `{cursor, limit}`，任何其他键 →
+  `invalid_arguments`。`cursor` 为有限毫秒时间戳的 base64url 串或省略；`limit` 为
+  1..200 整数或省略；两者均不 clamp、不静默丢弃。
 - 身份：`viewer.agentId = trustedContext.agentId`；缺失/非法 → `forbidden_not_owner`（fail closed）。
 - 输出（坐标-only，固定字段集）：
 
