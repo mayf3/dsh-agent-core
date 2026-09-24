@@ -204,7 +204,9 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
     "workflowInstanceIdsTruncated": true|false
   } ],
   "truncated": false,
-  "nextCursor": null,                    // 按 (lastActiveAtUtc desc, sessionId) 全序的 keyset 游标
+  "nextCursor": null,                    // keyset 游标 = base64url("<lastActiveAtMs>:<sessionId>")
+                                         // —— 时间与 sessionId 两个分量都编码在内（round-3 修订，A4），
+                                         // 同毫秒并列时消费方按 sessionId 分量继续，绝不重复/跳过行
   "anomalies": { "headersMissing": 0, "idMismatch": 0 }   // 诚实计数，不静默
 }
 ```
@@ -222,6 +224,12 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   完整列表）。`origins`/坐标键由既有 journal 坐标抽取器（含 `origins.user` 的
   source.kind='user' 加法键）在 caller 子树内直接产出，best-effort、缺失记 false/空且不报错。
   列表因此天然发现新建 journal（无索引 staleness），且不受任何 fleet cap 截断。
+- **Confined reader（round-3 修订，A3 closure）**：caller 子树内的每一个 journal 文件在读取前
+  必须通过 confinement 预检——`lstat` 必须为普通文件（symbolic link 一律拒绝）、
+  `nlink === 1`（hardlink 一律拒绝，防止把其他 Agent 的 journal 硬链进 caller 子树诱导扫描）、
+  打开后 `fstat` 的 device/inode/size 必须与预检一致（check/open TOCTOU 防护）；坐标扫描结束后
+  复核文件未发生变化。任何不满足 → 跳过该 journal（不输出其任何坐标）。测试必须含跨 Agent
+  symlink 与 hardlink 反例 fixture（§6）。
 - 错误表（封闭；round-2 修订，C4 closure）：`invalid_arguments`、`forbidden_not_owner`、
   `credential_unavailable`（gateway 在 local capability 上先加载 caller credential，可能失败——
   必须声明，防止 child relay 把真实失败降级为 invalid_arguments）、`history_unavailable`
