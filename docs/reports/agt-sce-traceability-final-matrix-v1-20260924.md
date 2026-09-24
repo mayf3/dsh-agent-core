@@ -124,3 +124,31 @@ SOURCE_READY_AFTER_MERGE = YES
 DEPLOYMENT_REQUIREMENT_READY = YES
 WAITING_FOR_PDC_DEPLOYMENT = YES (post-merge)
 ```
+
+## §C. Round-3 closure record — GitHub fresh review @ 70bc04d0 (D1-D4) + final external check
+
+The GitHub Codex fresh review at the round-2 repaired head `70bc04d0` surfaced four further findings, all closed and re-verified:
+
+| Finding | Closure |
+|---|---|
+| D1 (P1) exact joins exposed the ENCODED directory id (`cron-run-occ~003Aabc`) as the SessionRef | `decodeSegment` applied in the sweep — `to.nativeRef`/`evidenceRefs`/observations now carry the NATIVE id (`cron-run-occ:abc`); regression asserts the colon form |
+| D2 (P1) job-level run_record projection required `occurrences.length === 0`, stranding runs beyond the newest-50 ledger slice | projection now admits EVERY job-matching run record (join or honest gap each); regression test with a ledger-absent 4th run |
+| D3 (P1) the new inventory check treated an over-cap fleet (4000 files) as permanent drift → rebuild on every query | inventory shares the builder's cap; over-cap fleets retain the cache with an honest `overCap` coverage flag |
+| D4 (P2) occurrence coordinate regex matched quoted fake ids in message text | tightened to the real shape (`occ:` + 16 lowercase hex); regression test (fake id never becomes a coordinate) |
+
+External check (the gate required by PR_318_MERGE_BLOCKER_CLOSURE): GitHub Codex fresh review triggered at final head `44529fae` — **zero inline findings** (versus 4 at `70bc04d0`, 5 at `d715869e`).
+
+Final state:
+
+```text
+AUTHORITY_PR            = #319 (spec/session-centric-execution-traceability-v1 → main; docs-only)
+AUTHORITY_ACCEPTED_HEAD = spec final reviewed state (carried at authority tip 15bfb178)
+IMPLEMENTATION_PR       = #318 (base = authority branch; auto-retargets to main after #319)
+IMPLEMENTATION_BASE_CONTAINS_ACCEPTED_SPEC = YES (merge-base = authority tip)
+FINAL_HEAD              = 44529fae7de8074e23d74abf5da443bd6c7ba7ab
+FULL_TEST_DIFF          = DIFF_CAUSED_FAILURES=0 (failing-FILE set identical to the authority base; the four alternating runner flakes — agent-router auto-recovery, notification-ingress idempotency, product-api voice-transcription (native sherpa crash), demo-server real-boot — all pass isolated and touch no diff files)
+STRUCTURE_NEW_VIOLATIONS = 0
+SHIP_BLOCKERS           = NONE (internal fresh re-audit ACCEPT + GitHub Codex fresh review clean at final head)
+FEATURE_READY           = YES
+MERGE_READY             = YES (Owner merge order: #319 then #318)
+```
