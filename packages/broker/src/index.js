@@ -158,6 +158,14 @@ export const Config = z.object({
    * (trusted control plane); tool visibility there is not authorization.
    */
   forumModeratorAgentIds: z.array(z.string()),
+  /**
+   * Gateway mode only (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 generic LOCAL
+   * handler seam): a `() => handlersByCapabilityId` function injected by the
+   * composition. The broker never sees business service names — it merges
+   * whatever the composition returns at EXECUTE time. Absent => local
+   * capabilities fail closed as unsupported_operation.
+   */
+  resolveLocalHandlers: z.any(),
 })
 
 /**
@@ -273,13 +281,14 @@ export function apply(ctx, config = {}) {
 
   // ------------------------------------------------------------- gateway
   if (mode === 'gateway') {
-    // AGENT_DEFINITION_ACCESS_V1: the control plane injects the LOCAL
-    // (in-process) capability handlers for the Agent Definition config
-    // (provided by the `agentDefinitionAccess` service, mounted by the
-    // agent-definition row). Resolved at EXECUTE time (the loader applies
-    // sibling rows concurrently, so reading the sibling service at APPLY
-    // time would race); when absent, local capabilities fail closed as
-    // unsupported — the gateway stays fully functional.
+    // DSH_AGENT_CORE_MODULARITY_PHASE_A_V1: the Broker is GENERIC. It does
+    // not enumerate business provider service names anymore — the
+    // composition injects the LOCAL handler map through
+    // `resolveLocalHandlers` (a () => handlersByCapabilityId function).
+    // Resolved at EXECUTE time (the loader applies sibling composition rows
+    // concurrently, so reading sibling services at APPLY time would race);
+    // when absent or empty, local capabilities fail closed as unsupported —
+    // the gateway stays fully functional.
     const gateway = createBrokerGateway({
       manifests,
       targets,
@@ -288,31 +297,9 @@ export function apply(ctx, config = {}) {
       // Optional L0 pre-handler denial evidence hook (R12); the composition
       // scopes it to the capabilities it records. Never alters outcomes.
       ...(config.auditDenial === undefined ? {} : { auditDenial: config.auditDenial }),
-      // LOCAL capability handlers are injected by the control-plane
-      // composition and resolved at EXECUTE time (sibling services are
-      // concurrent-loaded; reading them at APPLY time would race).
-      localHandlerResolver: () => ({
-        ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
-        ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
-        ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
-        // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
-        // generalization keeps the execute-time resolve-at-call contract
-        // (sibling rows load concurrently; reading at APPLY time would race).
-        ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
-        // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
-        // provider (read-only exact Principal -> enabled agentId).
-        ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
-        // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: LOCAL provider (read-only
-        // Agent discovery: exact reference resolve + list, Agent Definition
-        // snapshot only).
-        ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
-        // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
-        // Human projection provider; workflow.admin remains caller-bound.
-        ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
-        // AGENT_CORE_EXECUTION_HISTORY_QUERY_V1: read-only execution-history
-        // provider (self + audit tools; one query core).
-        ...(ctx.get('executionHistoryAccess')?.handlers ?? {}),
-      }),
+      ...(typeof config.resolveLocalHandlers === 'function'
+        ? { localHandlerResolver: config.resolveLocalHandlers }
+        : {}),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
     ctx.provide('brokerGateway', gateway)

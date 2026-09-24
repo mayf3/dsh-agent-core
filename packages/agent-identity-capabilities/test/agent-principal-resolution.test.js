@@ -12,8 +12,8 @@ import {
   createAgentPrincipalResolutionAccess,
   mapAuthResponse,
   validateResolveArgs,
-} from '../../src/identity/agent-principal-resolution.js'
-import { AGENT_PRINCIPAL_RESOLUTION_CAPABILITY_ID } from '../../../broker/src/capabilities/agent-principal-resolution.js'
+} from '../src/agent-principal-resolution.js'
+import { AGENT_PRINCIPAL_RESOLUTION_CAPABILITY_ID } from '../src/agent-principal-resolution.js'
 
 const UUID = '0f1e2d3c-4b5a-4968-8776-65a4b3c2d1e0'
 const AGENT_ID = 'agt_blog-agent'

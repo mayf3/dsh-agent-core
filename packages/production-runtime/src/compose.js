@@ -41,7 +41,7 @@ import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
-import { apply as applyBroker } from '../../broker/src/index.js'
+import { mountBrokerGateway } from './broker-composition.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
@@ -53,10 +53,9 @@ import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } 
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
-import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
-import { createAgentPrincipalReverseResolutionAccess } from './identity/agent-principal-reverse-resolution.js'
+// Identity capability providers via the package's TRACKED PUBLIC ENTRY (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 closure amendment): a tracked relative path closes under plain source resolution in every checkout — no untracked node_modules bridge, no manual link step. package.json exports["."] exposes the same file.
+import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
-import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
@@ -334,9 +333,10 @@ export async function composeProductionRuntime(options = {}) {
   // the send and independently granted exact-turn inspector only; a failed
   // denial append never changes the denial itself.
   const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
-  const broker = applyBroker(ctx, {
-    mode: 'gateway',
-    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE, authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
+  const broker = mountBrokerGateway({
+    ctx,
+    credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
+    authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
