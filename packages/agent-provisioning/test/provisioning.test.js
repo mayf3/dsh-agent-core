@@ -682,3 +682,90 @@ test('GPT6-P3: an out-of-vocabulary reasoningEffort fails loud (reasoning_effort
   persistOpenAICodexCredentialFile(patch, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, { reasoningEffort: 'none' })
   assert.match(readFileSync(patch, 'utf8'), /reasoning: off/)
 })
+
+// --- GPT6: pi-ai exact-artifact identity gate (ACC-G6R-002 / DEC-G6R-003) ---
+
+import { GPT6_LUNA_ROUTE_V1 } from '../src/shared-codex.js'
+
+const GPT6_PIN = {
+  plugin: GPT6_LUNA_ROUTE_V1.plugin,
+  version: GPT6_LUNA_ROUTE_V1.pluginVersion,
+  sourceCommit: GPT6_LUNA_ROUTE_V1.sourceCommit,
+  artifactSha256: GPT6_LUNA_ROUTE_V1.artifactSha256,
+  dshVersion: GPT6_LUNA_ROUTE_V1.dshVersion,
+  dshCommit: GPT6_LUNA_ROUTE_V1.dshCommit,
+}
+const GPT6_HARNESS_IDENTITY = { version: GPT6_LUNA_ROUTE_V1.dshVersion, commit: GPT6_LUNA_ROUTE_V1.dshCommit }
+const GPT6_ARTIFACT_IDENTITY = {
+  version: 1,
+  sourceCommit: GPT6_LUNA_ROUTE_V1.sourceCommit,
+  artifactSha256: GPT6_LUNA_ROUTE_V1.artifactSha256,
+}
+const GPT6_PROVISION_OPTIONS = () => ({
+  harnessIdentity: GPT6_HARNESS_IDENTITY,
+  artifactIdentity: GPT6_ARTIFACT_IDENTITY,
+  pluginInstaller(input) { fakeInstall(input) },
+})
+const PI_AI_CATALOG_FIXTURE = join(REPO, 'packages', 'agent-provisioning', 'test', 'fixtures', 'pi-ai-0.87.1-openai-codex-catalog.json')
+
+function fakePiAiInstall({ profilesRoot, version = GPT6_LUNA_ROUTE_V1.piAiVersion, catalogBytes }) {
+  const dir = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai')
+  mkdirSync(join(dir, 'dist', 'providers', 'data'), { recursive: true })
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: '@earendil-works/pi-ai', version }), 'utf8')
+  writeFileSync(
+    join(dir, 'dist', 'providers', 'data', 'openai-codex.json'),
+    catalogBytes ?? readFileSync(PI_AI_CATALOG_FIXTURE),
+  )
+}
+
+test('GPT6-P4: the committed catalog fixture IS the frozen 0.87.1 artifact bytes (self-verifying pin)', () => {
+  const digest = createHash('sha256').update(readFileSync(PI_AI_CATALOG_FIXTURE)).digest('hex')
+  assert.equal(digest, GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256)
+})
+
+test('GPT6-P5: provisioning the GPT-6 tuple without pi-ai 0.87.1 fails loud (pi_ai_identity_mismatch)', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-gpt6-no-pi-ai-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3-dshr1' })
+  assert.throws(
+    () => provisionExactProfilePlugin(home, 'agent-core-production', GPT6_PIN, GPT6_PROVISION_OPTIONS()),
+    (error) => error.code === 'pi_ai_identity_mismatch' && /\(missing\)/.test(error.message),
+  )
+})
+
+test('GPT6-P6: a wrong pi-ai version or wrong catalog bytes is refused — no clamp, no registry guess', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-gpt6-wrong-pi-ai-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3-dshr1' })
+  // vocabulary-satisfying but out-of-frozen-identity version
+  fakePiAiInstall({ profilesRoot: join(home, 'profiles'), version: '0.88.0' })
+  assert.throws(
+    () => provisionExactProfilePlugin(home, 'agent-core-production', GPT6_PIN, GPT6_PROVISION_OPTIONS()),
+    (error) => error.code === 'pi_ai_identity_mismatch' && /0\.88\.0/.test(error.message),
+  )
+  // right version, tampered catalog bytes
+  fakePiAiInstall({ profilesRoot: join(home, 'profiles'), catalogBytes: '{"tampered":true}' })
+  assert.throws(
+    () => provisionExactProfilePlugin(home, 'agent-core-production', GPT6_PIN, GPT6_PROVISION_OPTIONS()),
+    (error) => error.code === 'pi_ai_identity_mismatch' && /catalog digest/.test(error.message),
+  )
+})
+
+test('GPT6-P7: the exact 0.87.1 artifact identity provisions the GPT-6 tuple and the link is kept', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'agent-gpt6-exact-pi-ai-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const home = join(dir, 'home')
+  provisionAgentHome(home, join(dir, 'ws'), { profile: 'agent-core-production' })
+  fakeInstall({ profilesRoot: join(home, 'profiles'), plugin: 'dsh-codex', version: '0.2.3-dshr1' })
+  fakePiAiInstall({ profilesRoot: join(home, 'profiles') })
+  const result = provisionExactProfilePlugin(home, 'agent-core-production', GPT6_PIN, GPT6_PROVISION_OPTIONS())
+  assert.equal(result.version, '0.2.3-dshr1')
+  // The deployment-provided exact artifact stays in the farm (no harness
+  // clobber): the catalog that provisions is the one the gate verified.
+  const catalog = readFileSync(join(home, 'profiles', 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'providers', 'data', 'openai-codex.json'))
+  assert.equal(createHash('sha256').update(catalog).digest('hex'), GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256)
+})

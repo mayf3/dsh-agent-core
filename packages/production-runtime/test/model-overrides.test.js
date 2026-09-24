@@ -12,6 +12,7 @@ import {
   MAX_CONFIGURED_ROUTES,
   PROVIDER_ENV_ALLOWLIST,
 } from '../src/model-overrides.js'
+import { GPT6_LUNA_ROUTE_V1 } from '../../agent-provisioning/src/shared-codex.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'
@@ -59,13 +60,31 @@ const VALID = {
 test('the code constant carries ONLY pins and scope — no route tuple values (F-10)', () => {
   assert.equal(CHATGPT_SUBSCRIPTION_V1.targetAgentId, 'agt_cto-agent')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.plugin, 'dsh-codex')
-  assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3-dshr1')
+  // CTR-G6R-001/002: the V3 production pin is preserved — the GPT-6 tuple
+  // lives in its own constant and never replaces this one.
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.pluginVersion, '0.2.3')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.sourceCommit, '75d98d5b10bb926d53108e49019668c1bde2a9eb')
+  assert.equal(CHATGPT_SUBSCRIPTION_V1.artifactSha256, '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshVersion, '0.1.0-rc.8')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.dshCommit, '514ab7b0029141b88c807704764d0d3e1eea1da4')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.credentialFile, CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
   assert.equal(CHATGPT_SUBSCRIPTION_V1.provider, undefined, 'provider must come from config only')
   assert.equal(CHATGPT_SUBSCRIPTION_V1.model, undefined, 'model must come from config only')
   assert.equal(MAX_CONFIGURED_ROUTES, 4)
+})
+
+test('GPT6-0: the GPT-6 tuple constant carries the exact DEC-G6R-002/003 identity — dormant, separate from V3', () => {
+  assert.equal(GPT6_LUNA_ROUTE_V1.model, 'gpt-6-luna')
+  assert.equal(GPT6_LUNA_ROUTE_V1.plugin, 'dsh-codex')
+  assert.equal(GPT6_LUNA_ROUTE_V1.pluginVersion, '0.2.3-dshr1')
+  assert.equal(GPT6_LUNA_ROUTE_V1.sourceCommit, '42f14343e1506d7d06216d7fa580cae5161001dc')
+  assert.equal(GPT6_LUNA_ROUTE_V1.artifactSha256, '160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5')
+  // DEC-G6R-003: exact pi-ai artifact identity, not a semver range.
+  assert.equal(GPT6_LUNA_ROUTE_V1.piAiVersion, '0.87.1')
+  assert.equal(GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256, '4bb30a26d1b40e1f67c9f24891fca0ce25b030bc4cbbb529be78608cd4466fdf')
+  // DEC-G6R-004: tuple-local default; never applied to the legacy tuple.
+  assert.equal(GPT6_LUNA_ROUTE_V1.defaultReasoningEffort, 'medium')
+  assert.notEqual(GPT6_LUNA_ROUTE_V1.pluginVersion, CHATGPT_SUBSCRIPTION_V1.pluginVersion)
 })
 
 function fixture(t) {
@@ -387,71 +406,97 @@ test('providerEnv URL, key and value failures are fail-loud without secret echo'
 
 // --- GPT6_LUNA_AND_REASONING_EFFORT_V1: per-route reasoningEffort ------------
 
-test('GPT6-1: an explicit reasoningEffort on a dsh-codex subscription route loads and rides the process config', (t) => {
+const GPT6_TUPLE = Object.freeze({
+  routeKind: 'subscription',
+  provider: 'openai-codex',
+  model: GPT6_LUNA_ROUTE_V1.model,
+  plugin: GPT6_LUNA_ROUTE_V1.plugin,
+  pluginVersion: GPT6_LUNA_ROUTE_V1.pluginVersion,
+  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  credentialReadiness: 'owner-reauth-pending',
+})
+
+test('GPT6-1: an explicit reasoningEffort on the GPT-6 tuple loads and rides the process config', (t) => {
   const { file } = fixture(t)
-  const catalog = {
-    ...CATALOG,
-    luna_medium: {
-      routeKind: 'subscription',
-      provider: 'openai-codex',
-      model: 'gpt-6-luna',
-      plugin: 'dsh-codex',
-      pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
-      credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
-      credentialReadiness: 'owner-reauth-pending',
-      reasoningEffort: 'medium',
-    },
-  }
-  write(file, { version: 3, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: [] } } } })
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, luna_medium: { ...GPT6_TUPLE, reasoningEffort: 'medium' } },
+    overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: [] } } },
+  })
   const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
   const route = loaded.resolveChain(TARGET, GLOBAL).routes[0]
   assert.equal(route.processConfig.subscription.reasoningEffort, 'medium')
   assert.equal(route.processConfig.model, 'gpt-6-luna')
+  // CTR-G6R-002: the provisioned block stamps the route's OWN dshr1 identity.
+  assert.equal(route.processConfig.subscription.pluginVersion, '0.2.3-dshr1')
+  assert.equal(route.processConfig.subscription.sourceCommit, GPT6_LUNA_ROUTE_V1.sourceCommit)
+  assert.equal(route.processConfig.subscription.artifactSha256, GPT6_LUNA_ROUTE_V1.artifactSha256)
 })
 
-test('GPT6-2: reasoningEffort joins the canonical route identity — medium vs high are different routes', (t) => {
+test('GPT6-2: effective reasoningEffort joins the canonical route identity — absent GPT-6 IS medium, high is distinct', (t) => {
   const { file } = fixture(t)
-  const base = {
-    routeKind: 'subscription',
-    provider: 'openai-codex',
-    model: 'gpt-6-luna',
-    plugin: 'dsh-codex',
-    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
-    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
-    credentialReadiness: 'owner-reauth-pending',
-  }
-  const catalog = {
-    ...CATALOG,
-    luna_medium: { ...base, reasoningEffort: 'medium' },
-    luna_high: { ...base, reasoningEffort: 'high' },
-    luna_plain: { ...base },
-  }
-  write(file, { version: 3, routeCatalog: catalog, overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: ['luna_high', 'luna_plain'] } } } })
-  const routes = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
-  const [medium, high, plain] = routes
+  // CTR-G6R-003: absent and explicit medium normalize to the same effective
+  // identity, so a single catalog may not carry both (same-identity routeRefs
+  // are a malformed alias) — the equality is proven ACROSS two loads.
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, luna_medium: { ...GPT6_TUPLE, reasoningEffort: 'medium' }, luna_high: { ...GPT6_TUPLE, reasoningEffort: 'high' } },
+    overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: ['luna_high'] } } },
+  })
+  const [medium, high] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
   assert.notEqual(medium.identity, high.identity)
-  assert.notEqual(medium.identity, plain.identity)
-  assert.notEqual(high.identity, plain.identity)
-  // The identity delta is exactly the subscription reasoningEffort.
-  assert.equal(JSON.parse(medium.identity)[4], 'medium')
-  assert.equal(JSON.parse(high.identity)[4], 'high')
-  assert.equal(JSON.parse(plain.identity)[4], 'ABSENT')
+
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, luna_plain: { ...GPT6_TUPLE } },
+    overrides: { [TARGET]: { model: { primary: 'luna_plain', fallbacks: [] } } },
+  })
+  const [plain] = loadAgentModelOverrides(file, [TARGET, OTHER]).resolveChain(TARGET, GLOBAL).routes
+  // ABSENT normalizes to effective medium BEFORE identity and provisioning.
+  assert.equal(plain.identity, medium.identity)
+  assert.equal(plain.processConfig.subscription.reasoningEffort, 'medium')
+  // medium != high stays true across the loads.
+  assert.notEqual(plain.identity, high.identity)
 })
 
-test('GPT6-3: a route without reasoningEffort stays byte-compatible with the pre-change schema', (t) => {
+test('GPT6-2b: absent and explicit medium in ONE catalog is a malformed alias (same canonical identity)', (t) => {
+  const { file } = fixture(t)
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, luna_medium: { ...GPT6_TUPLE, reasoningEffort: 'medium' }, luna_plain: { ...GPT6_TUPLE } },
+    overrides: { [TARGET]: { model: { primary: 'luna_medium', fallbacks: ['luna_plain'] } } },
+  })
+  assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+    assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+    assert.match(error.message, /same canonical route identity/)
+    return true
+  })
+})
+
+test('GPT6-3: the legacy tuple keeps the exact pre-change schema, identity bytes and absent reasoning', (t) => {
   const { file } = fixture(t)
   write(file, VALID)
   const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
   const [, fallback] = loaded.resolveChain(TARGET, GLOBAL).routes
+  // CTR-G6R-001: no reasoning key anywhere on the legacy route…
   assert.equal(Object.hasOwn(fallback.processConfig.subscription, 'reasoningEffort'), false)
   assert.equal(Object.hasOwn(loaded.overrides[TARGET].routes.luna, 'reasoningEffort'), false)
+  assert.equal(fallback.processConfig.subscription.pluginVersion, '0.2.3')
+  assert.equal(fallback.processConfig.subscription.sourceCommit, CHATGPT_SUBSCRIPTION_V1.sourceCommit)
+  // …and the process reuse identity is the EXACT pre-change byte shape
+  // (no reasoning element inserted for the legacy tuple).
+  const preChangeIdentity = JSON.stringify([
+    'openai-codex', 'gpt-5.6-luna', 'dsh-codex', '0.2.3',
+    CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, 'ABSENT',
+  ])
+  assert.equal(fallback.identity, preChangeIdentity)
 })
 
 test('GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message', (t) => {
   const { file } = fixture(t)
   const bad = (reasoningEffort) => ({
     version: 3,
-    routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, reasoningEffort } },
+    routeCatalog: { ...CATALOG, gpt6: { ...GPT6_TUPLE, reasoningEffort } },
     overrides: VALID.overrides,
   })
   for (const value of ['ultra-mega', 'NONE', 'Medium', '', 'medium ', 42, null]) {
@@ -464,7 +509,7 @@ test('GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabu
   }
 })
 
-test('GPT6-5: reasoningEffort is FORBIDDEN on builtin routes and non-dsh-codex subscription routes', (t) => {
+test('GPT6-5: reasoningEffort is FORBIDDEN outside the GPT-6 tuple — builtin, non-dsh-codex, legacy tuple', (t) => {
   const { file } = fixture(t)
   // builtin carrying the field
   write(file, {
@@ -474,7 +519,7 @@ test('GPT6-5: reasoningEffort is FORBIDDEN on builtin routes and non-dsh-codex s
   })
   assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
     assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
-    assert.match(error.message, /only supported on dsh-codex subscription routes/)
+    assert.match(error.message, /only supported on the GPT-6 Luna tuple/)
     return true
   })
   // other-plugin subscription carrying the field (pluginVersion left unpinned)
@@ -485,35 +530,87 @@ test('GPT6-5: reasoningEffort is FORBIDDEN on builtin routes and non-dsh-codex s
   })
   assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
     assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
-    assert.match(error.message, /only supported on dsh-codex subscription routes/)
+    assert.match(error.message, /only supported on the GPT-6 Luna tuple/)
+    return true
+  })
+  // the legacy dsh-codex@0.2.3 tuple carrying the field (DEC-G6R-004)
+  write(file, {
+    version: 3,
+    routeCatalog: { ...CATALOG, luna: { ...CATALOG.luna, reasoningEffort: 'high' } },
+    overrides: VALID.overrides,
+  })
+  assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+    assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+    assert.match(error.message, /only supported on the GPT-6 Luna tuple/)
     return true
   })
 })
 
 test('GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity', (t) => {
   const { file } = fixture(t)
-  const base = {
-    routeKind: 'subscription',
-    provider: 'openai-codex',
-    model: 'gpt-6-luna',
-    plugin: 'dsh-codex',
-    pluginVersion: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
-    credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
-    credentialReadiness: 'owner-reauth-pending',
-  }
   write(file, {
     version: 3,
-    routeCatalog: { a: { ...base, reasoningEffort: 'low' }, b: { ...base, reasoningEffort: 'high' } },
+    routeCatalog: { a: { ...GPT6_TUPLE, reasoningEffort: 'low' }, b: { ...GPT6_TUPLE, reasoningEffort: 'high' } },
     overrides: { [TARGET]: { model: { primary: 'a', fallbacks: ['b'] } } },
   })
   const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
   assert.equal(loaded.resolveChain(TARGET, GLOBAL).routes.length, 2)
 })
 
-test('GPT6-7: the built-in default global route carries the pinned explicit default effort', () => {
-  assert.equal(CHATGPT_SUBSCRIPTION_V1.defaultRouteReasoningEffort, 'medium')
+test('GPT6-7: the built-in default global route stays the legacy V3 tuple — merge is dormant (CTR-G6R-001)', () => {
+  const route = canonicalDefaultGlobalRoute()
+  assert.equal(route.model, 'gpt-5.6-luna')
+  assert.equal(route.subscription.plugin, 'dsh-codex')
+  assert.equal(route.subscription.pluginVersion, '0.2.3')
+  assert.equal(route.subscription.sourceCommit, '75d98d5b10bb926d53108e49019668c1bde2a9eb')
+  assert.equal(route.subscription.artifactSha256, '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0')
+  assert.equal(Object.hasOwn(route.subscription, 'reasoningEffort'), false, 'no reasoning default may leak into the built-in legacy route')
+  // The zero-config passthrough resolves without reasoning, byte-equivalent
+  // to the pre-change behavior (DEC-G6R-001 dormancy).
   const loaded = loadAgentModelOverrides(join(tmpdir(), 'gpt6-missing-overrides-file.json'), [TARGET])
   const passthrough = loaded.resolveChain(OTHER, canonicalDefaultGlobalRoute()).routes[0]
-  assert.equal(passthrough.processConfig.subscription.reasoningEffort, 'medium')
   assert.equal(passthrough.processConfig.model, 'gpt-5.6-luna')
+  assert.equal(Object.hasOwn(passthrough.processConfig.subscription, 'reasoningEffort'), false)
+})
+
+test('GPT6-8: the dshr1 pin is bound to exactly one tuple — wrong pluginVersion/model pairings fail loud (ACC-G6R-005)', (t) => {
+  const { file } = fixture(t)
+  const cases = [
+    // GPT-6 model on the legacy pin.
+    { ...GPT6_TUPLE, pluginVersion: '0.2.3' },
+    // dshr1 pin with a non-GPT-6 model.
+    { ...GPT6_TUPLE, model: 'gpt-5.6-luna' },
+    // dsh-codex pin outside the accepted set.
+    { ...GPT6_TUPLE, pluginVersion: '0.3.0' },
+  ]
+  for (const [index, broken] of cases.entries()) {
+    write(file, {
+      version: 3,
+      routeCatalog: { ...CATALOG, broken: broken },
+      overrides: VALID.overrides,
+    })
+    assert.throws(() => loadAgentModelOverrides(file, [TARGET, OTHER]), (error) => {
+      assert.equal(error.code, 'AGENT_MODEL_OVERRIDE_INVALID')
+      assert.match(error.message, /pluginVersion/)
+      return true
+    }, `expected fail-loud for pairing case ${index}`)
+  }
+})
+
+test('GPT6-9: both dsh-codex pins coexist in one catalog and keep distinct identities', (t) => {
+  const { file } = fixture(t)
+  write(file, {
+    version: 3,
+    routeCatalog: {
+      ...CATALOG,
+      gpt6: { ...GPT6_TUPLE, reasoningEffort: 'medium' },
+    },
+    overrides: { [TARGET]: { model: { primary: 'luna', fallbacks: ['gpt6'] } } },
+  })
+  const loaded = loadAgentModelOverrides(file, [TARGET, OTHER])
+  const routes = loaded.resolveChain(TARGET, GLOBAL).routes
+  assert.equal(routes.length, 2)
+  assert.notEqual(routes[0].identity, routes[1].identity)
+  assert.equal(routes[0].processConfig.subscription.pluginVersion, '0.2.3')
+  assert.equal(routes[1].processConfig.subscription.pluginVersion, '0.2.3-dshr1')
 })

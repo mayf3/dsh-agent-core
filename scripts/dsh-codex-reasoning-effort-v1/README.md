@@ -28,7 +28,9 @@ existing OAuth / credential / proxy semantics.
 | NEW pluginVersion | `0.2.3-dshr1` |
 | NEW sourceCommit | `42f14343e1506d7d06216d7fa580cae5161001dc` |
 | NEW artifactSha256 | `160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5` |
-| peer @earendil-works/pi-ai | `^0.82.1` → `^0.87.1` (deployment installs 0.87.1) |
+| peer @earendil-works/pi-ai | `0.82.1` → `0.87.1` exact artifact (DEC-G6R-003; enforced by the provisioning pi_ai_identity_mismatch gate) |
+| pi-ai npm tgz sha256 | `35b4432f27cc2665f86beebb9af6a39b1251970883c3044bd8be4f4e8c731ca0` |
+| pi-ai openai-codex catalog sha256 | `4bb30a26d1b40e1f67c9f24891fca0ce25b030bc4cbbb529be78608cd4466fdf` |
 | dshVersion / dshCommit | UNCHANGED (`0.1.0-rc.8` / `514ab7b0029141b88c807704764d0d3e1eea1da4`) — harness NOT touched |
 
 The lib/ payload base equals the production-verified 0.2.3 artifact bytes

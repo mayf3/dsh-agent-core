@@ -48,7 +48,7 @@ function rig({ count = FLEET, receiptResult = 'PASS', phase = 'pre', withRoot = 
   const v2 = {
     version: 3, // switchFleetConfig requires the fleet config to be v3 already
     routeCatalog: {
-      luna: { routeKind: 'subscription', provider: 'openai-codex', model: 'gpt-5.6-luna', plugin: 'dsh-codex', pluginVersion: '0.2.3-dshr1', credentialReadiness: 'shared-cto-oauth-breakglass', credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE },
+      luna: { routeKind: 'subscription', provider: 'openai-codex', model: 'gpt-5.6-luna', plugin: 'dsh-codex', pluginVersion: '0.2.3', credentialReadiness: 'shared-cto-oauth-breakglass', credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE },
     },
     overrides: { 'agt_b-000': { model: { primary: 'luna', fallbacks: [] } } },
   }
@@ -57,7 +57,7 @@ function rig({ count = FLEET, receiptResult = 'PASS', phase = 'pre', withRoot = 
   writeFileSync(sharedPath, `${JSON.stringify(v2, null, 2)}\n`, { mode: 0o644 })
   writeFileSync(join(root, 'provenance.json'), JSON.stringify({ expectedAccountIdentity: 'acct', candidates: [] }))
 
-  const stubReceipt = `const fs=require('fs');fs.writeFileSync(process.env.AGENT_CORE_ARTIFACT_RECEIPT, JSON.stringify({version:'0.2.3-dshr1',sourceCommit:'42f14343e1506d7d06216d7fa580cae5161001dc',artifactSha256:'160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5',sourceStamp:'test'}))`
+  const stubReceipt = `const fs=require('fs');fs.writeFileSync(process.env.AGENT_CORE_ARTIFACT_RECEIPT, JSON.stringify({version:'0.2.3',sourceCommit:'75d98d5b10bb926d53108e49019668c1bde2a9eb',artifactSha256:'2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',sourceStamp:'test'}))`
   const config = {
     root,
     candidateClass: 'BOOTSTRAP_FROM_CONVERGED_SNAPSHOT',
