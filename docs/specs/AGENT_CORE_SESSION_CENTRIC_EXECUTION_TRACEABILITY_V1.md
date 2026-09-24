@@ -11,6 +11,7 @@ acceptance_review_followup: GitHub fresh review @ acceptance transaction head d8
 eh_v1_r5_refinement_ruling: OWNER DIRECTIVE 2026-09-24 (FINAL_MERGE_GATE_CLOSURE / T8-A) — the output-behavior refinement of EH V1 rule R5 (a canonical `cron-run-<occ>` journal with routed/owning-agent match and proven existence is graded DERIVED_EXACT; invocation rows are auxiliary; naming/time/suffix similarity can never create a join; journal absence yields the honest CORRELATION_GAP) is frozen by Owner decision and implemented. A whole-authority successor restructuring of AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 to restate R5 is recorded as FOLLOW_UP F-SCT-7 and is NOT required for this authority to land: EH V1's own read-facing contracts (roots, redaction, consumption ban, other rules) remain REUSE, and R5's weak trigger is unreachable under D-SCT-5's proof conditions.
 round3_correction: GitHub Codex fresh review @ repaired head 70bc04d0 (2026-09-24) surfaced four further findings, closed in the same stacked implementation lane: D1 exact scheduler joins must expose the NATIVE (decoded) session id in nativeRef/evidenceRefs — the physical directory encoding is not a SessionRef; D2 the job-level run_record projection covers EVERY job-matching run record (the newest-50 ledger slice must not strand older runs without a session answer); D3 the fleet index inventory check shares the builder's file cap (over-cap fleets retain the cache with an honest overCap flag instead of rebuilding every query); D4 occurrence coordinate keys match the real id shape (occ:+16 hex) so quoted fake ids in message text never become listing coordinates (the authoritative join face remains the canonical cron-run-<occ> identity).
 post_landing_correction: PREVIOUS_REAUDIT_INCOMPLETE=YES. NEW_EVIDENCE_SOURCE = GitHub Codex fresh review @ PR #318 exact head d715869e (2026-09-24). Fresh findings supersede the internal SHIP_BLOCKERS=NONE: G1 REPOSITORY_INVARIANT_VIOLATION/REQUIRED_GATE_FAILURE — the accepted authorizing Spec did not exist in the implementation base 2a85d065 (docs-first violated; candidate self-acceptance cannot self-authorize); B1 byCronOccurrence suffix fallback promoted a foreign/suffix-compatible journal to DERIVED_EXACT (e.g. agt_evil/unrelated-<occBody>); B2 ensureFreshSessionIndex was blind to journals CREATED after index build; B3 packages/broker/test children 21 to 22 broke the directory ceiling (prior base-identical claim was wrong — the delta was in this directory); F1 trusted list handler silently clamped/dropped invalid direct parent-RPC pagination. Closure (PR_318_MERGE_BLOCKER_CLOSURE): docs-only authority lane (this branch: census + spec at final reviewed state) lands first; implementation branch reconstructed stacked on it (base contains the accepted Spec); B1 exact canonical identity (decoded sessionId === cron-run-<occ>) + owner-agent match from occurrence/job/run_record; B2 bounded journal-inventory discovery in ensureFreshSessionIndex; B3 test moved to test/capabilities/; F1 authoritative fail-closed validation matrix. History is appended, never rewritten.
+round6_correction: Owner decision 2026-09-24 (PR_319_AUTHORITY_FINAL_CLOSURE round-6): D1=OPTION_I docs-only bounded semantics; D2=YES_NEW_EXACT_HEAD_ACCEPTANCE_REQUIRED; D0 rejected; PR #318 scope expansion NOT authorized. Trigger: fresh GitHub Codex code review @ exact final head 3393f661 finding 4093674317 (P1, history-only not_created reachability) + carried 4093549485 (P1, acceptance binding). BOUNDED REACHABILITY SEMANTICS frozen: durable fact existence ≠ current-query reachability; evidence outside the loader/query read window/capacity, truncated, degraded, or otherwise not mechanically observable MUST remain unknown/explicit GAP; writer append-only NEVER implies unbounded reader recoverability; unreachability MUST NOT be interpreted as session creation, non-creation, or absence of side effects; SessionRef is never fabricated. CTR-SCT-003 G1 history-persistence clause rewritten to bounded semantics; F-SCT-6 redefined as scheduler historical evidence reachability enhancement (bounded tail/coordinate lookup; RunRecord monthly-projection disposition persistence; other rebuildable read mechanisms without a second authority) — IMPLEMENTATION_EXPANSION=NO this round. Acceptance binding: PREVIOUS_OWNER_ACCEPTANCE_VALID_FOR_HEAD=1be36f37fa7b67b4849a8aae97aa2c30a185bedb (history preserved, never rewritten); FINAL_AUTHORITY_HAS_POST_ACCEPTANCE_SEMANTIC_DELTA=YES; FINAL_OWNER_REACCEPTANCE_REQUIRED=YES (previous binding stale_for_final_merge until Owner re-accepts the new exact head).
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -28,7 +29,8 @@ scope:
     pass-through per S1/G1 — proven pre-start late evidence persists
     terminalEvidence.kind=pre-start-rejection under the OCCURRENCE_OUTCOME_V3 taxonomy)
   - packages/scheduler/src/history/history.js (lateSettlement event: additive terminal_evidence
-    field only — events.jsonl is append-only and never truncated)
+    field only — writer-side events.jsonl is append-only and never truncated by the writer;
+    reader reachability stays bounded per CTR-SCT-003)
   - packages/production-runtime/src/scheduler-invoker.js (invocation evidence row additive fields)
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/workflow-execution-runtime.js (deliver receipt messageId plumb)
@@ -303,9 +305,14 @@ late-settlement 证据补充（S1 closure；G1 扩展至 history 持久面）：
 确定性未开始证明（`routerEnvelope='not_admitted'` 或 `started=false`），writer 按
 OCCURRENCE_OUTCOME_V3 的既有分类法持久 `terminalEvidence.kind='pre-start-rejection'`（非泛化
 late-settlement）——本表第 4 行随之把该 occurrence 映为 `not_created`，未创建的 sessionId 不会被
-任何读面输出。**history 持久面（G1 closure）**：`late_settlement` history 事件必须携带同一
-`terminal_evidence` 分类（additive 事件字段，events.jsonl 永不截断），使 occurrence-ledger
-rotation 之后 history-only 的读面仍可判 `not_created`（无该分类时保守 `unknown`）。
+任何读面输出。**history 持久面（G1 closure；有界可达语义，round-6 Owner 裁定）**：`late_settlement`
+history 事件必须携带同一 `terminal_evidence` 分类（additive 事件字段；writer 侧 append-only、不截断
+历史）。**持久存在 ≠ 当前查询必然可达**：仅当该证据在权威查询的读窗/容量边界内可机械读取时，
+history-only 读面方可据其判 `not_created`；证据超出读窗/上限、被截断、源退化（DEGRADED/truncated）
+或以其他方式不可机械观测时，结果必须保持保守 `unknown`（显式 GAP）。"证据不可达"不得解释为
+Session 已创建、未创建或无副作用；writer append-only 不蕴含 reader 无界可恢复。提升可达性
+（bounded tail/coordinate lookup、RunRecord 月度投影持久化必要 disposition 等不建立第二 authority
+的可重建读取机制）记 F-SCT-6，非本期实现范围。
 已知局限（如实记档，F-SCT-5）：postdeploy canary invoker 的 reserved 身份不触碰 AgentProcess
 却会 terminalize `succeeded` 并持久 nativeSessionId——此类 occurrence 的投影按表输出
 `created`（忠实于 ledger 既有证据），但 session 实际不存在；execution-history scheduler-root
@@ -448,12 +455,15 @@ occurrenceId/requestId/jobId`，本 Spec 加法补 `runId` 键（scope 已列）
 - F-SCT-7：AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 的 whole-authority successor 重构
   （把 R5 输出行为按 eh_v1_r5_refinement_ruling 重述）——非本 authority 落地前置（见
   eh_v1_r5_refinement_ruling）。
-- F-SCT-6（G1 后更新）：**events.jsonl 持久面已由 G1 closure 闭合**——`late_settlement` 事件
-  携带 `terminal_evidence`（additive、永不截断），execution-history 读面已消费并据此判
-  `not_created`（G1/G1b 回归测试）。本条剩余范围仅 RunRecord **月度投影面**（runs-YYYYMM.json）
-  是否镜像该分类——属 SCHEDULER_RUN_HISTORY 投影增强，需其自身授权与评审；在该面完成前，
-  读面答案由 events.jsonl 持久分类承载（SC-1 的不伪造不变量已满足：无 occurrence 行的
-  history-only 世界不输出任何 sessionCreated 行或 sessionId）。
+- F-SCT-6（round-6 Owner 裁定收敛为**可达性增强**）：writer 侧 G1 已让 `late_settlement` 事件
+  携带 `terminal_evidence`（additive）；execution-history 读面在**证据处于读取边界内**时消费该
+  分类判 `not_created`（G1/G1b 回归覆盖可达形态）。本条 = 提高 scheduler historical evidence
+  reachability 的后续增强，候选机制：bounded tail/coordinate lookup；RunRecord 月度投影
+  （runs-YYYYMM.json）持久化必要 disposition；其他不建立第二 authority 的可重建读取机制——任一
+  方案需其自身授权与评审。本轮 IMPLEMENTATION_EXPANSION=NO（不触 PR #318）。增强完成前的语义
+  即 CTR-SCT-003 的有界可达语义：读窗内 → exact 分类；读窗外/截断/退化 → 保守 `unknown`/GAP
+  （SC-1 不伪造不变量始终满足：history-only 世界不输出任何未经机械证明的 sessionCreated 行或
+  sessionId）。
 
 ## 10. 被拒绝的替代方案
 
