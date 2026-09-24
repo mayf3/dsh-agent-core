@@ -440,3 +440,45 @@ test('C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / abs
   const malformedWake = ingestSchedulerResult(block({ final_status: 'PASS', counters: {}, wake_sent: [{ target_agent_id: 'agt_b' }] }))
   assert.equal(malformedWake.result_error_code, 'INVALID_SCHEMA')
 })
+
+test('MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)', async (t) => {
+  const { layout } = await seedRuntime(t)
+
+  // Capture the product-api module's own stderr log (it writes directly to
+  // process.stderr) while composing — the deterministic signal that the
+  // history config object actually crossed the compose → applyProductApi
+  // boundary.
+  const originalStderrWrite = process.stderr.write.bind(process.stderr)
+  const lines = []
+  process.stderr.write = (chunk) => { lines.push(String(chunk)); return true }
+  const historyLog = () => lines.filter((l) => l.includes('[product-api]') && l.includes('history listener'))
+  const runtimes = []
+  t.after(async () => { process.stderr.write = originalStderrWrite; for (const r of runtimes) await r.stop() })
+
+  // Negative control: no history key → default OFF, the listener is never
+  // even attempted (no history log line at all).
+  runtimes.push(await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
+    layout,
+    productApi: { enabled: true, port: 0 },
+    notificationIngress: { enabled: false, port: 0 },
+    processFactory: (opts) => new FakeProc(opts),
+    log: silentLog,
+  }))
+  assert.equal(historyLog().length, 0, 'no history key: default OFF unchanged, no history mount attempt')
+
+  // Positive: explicit enable (with a deliberately empty bind host) reaches
+  // the module, which applies its own fail-closed decision — route stays
+  // absent, nothing bound, no session-history import attempted.
+  lines.length = 0
+  runtimes.push(await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
+    layout,
+    productApi: { enabled: true, port: 0, history: { enabled: true, host: '' } },
+    notificationIngress: { enabled: false, port: 0 },
+    processFactory: (opts) => new FakeProc(opts),
+    log: silentLog,
+  }))
+  assert.equal(historyLog().length, 1, 'history key crosses the composition contract into the product api module')
+  assert.match(historyLog()[0], /no Tailscale bind host configured; history route stays absent/, 'the module (not compose) owns the fail-closed mount decision')
+})
