@@ -53,7 +53,8 @@ import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
   forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, okrManifests,
-  agentDefinitionManifests, schedulerManifests, selfOpsManifests, agentSessionMessagingManifests,
+  agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
+  agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
   workflowHumanPrincipalProjectionManifests, executionHistoryManifests, lifeWorkbenchManifests,
 } from './capabilities/manifests.js'
@@ -90,6 +91,7 @@ export const DEFAULT_MANIFESTS = [
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...selfOpsManifests,
+  developmentExecuteManifest,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
   ...agentPrincipalReverseResolutionManifests,
@@ -295,6 +297,9 @@ export function apply(ctx, config = {}) {
         ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
         ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
         ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
+        // DEVELOPMENT_EXECUTION_SURFACE_V1: the shared local coding-executor
+        // capability (system-owned state; backend-abstracted).
+        ...(ctx.get('developmentExecutionAccess')?.handlers ?? {}),
         // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
         // generalization keeps the execute-time resolve-at-call contract
         // (sibling rows load concurrently; reading at APPLY time would race).
