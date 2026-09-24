@@ -106,7 +106,13 @@ export async function buildSchedulerRoot(ctx, args) {
   const occurrenceScoped = occurrenceId !== undefined
   const occurrenceIds = new Set(occurrences.map((o) => o.occurrenceId))
   for (const rec of history.records) {
-    const matches = (rec.nativeRefs.occurrence_id !== undefined && occurrenceIds.has(rec.nativeRefs.occurrence_id))
+    // C3 (GitHub fresh review @ d25ae108): an occurrence-scoped query whose
+    // ledger row has rotated away must STILL surface its exact history
+    // run_record — otherwise the session answer (join or honest gap) is
+    // silently omitted. Sibling runs are still excluded (exact-id compare).
+    const rotatedExact = occurrenceScoped && rec.kind === 'run_record' && rec.nativeRefs.occurrence_id === occurrenceId
+    const matches = rotatedExact
+      || (rec.nativeRefs.occurrence_id !== undefined && occurrenceIds.has(rec.nativeRefs.occurrence_id))
       || (rec.kind === 'run_record' && !occurrenceScoped && jobId !== undefined && rec.nativeRefs.job_id === jobId && occurrences.length === 0)
     if (!matches) continue
     records.push(rec)

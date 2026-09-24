@@ -7,7 +7,6 @@
  * the generic broker transport — identity travels only in the credential).
  */
 
-import { join } from 'node:path'
 
 import {
   createHttpTransport,
@@ -145,7 +144,6 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
       }
       const outcome = listAgentSessions({
         homesRoot: layout.homesRoot,
-        indexDir: join(layout.controlDir, 'execution-history-index'),
         viewerAgentId: trustedContext.agentId,
         cursor: typeof rawCursor === 'string' ? rawCursor : undefined,
         limit: rawLimit === undefined ? undefined : rawLimit,
