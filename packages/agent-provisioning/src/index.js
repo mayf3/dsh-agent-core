@@ -33,6 +33,7 @@ import {
   deploymentRootOfAgentHome,
   persistOpenAICodexCredentialFile,
   CANONICAL_DEFAULT_MODEL_ROUTE,
+  GPT6_LUNA_ROUTE_V1,
 } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
@@ -261,10 +262,18 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   // intentionally uses --legacy-peer-deps so npm cannot consult the registry;
   // close those peers against the already-pinned Harness checkout instead.
   // This also prevents npm from choosing a different published DSH version.
+  // GPT6_LUNA_AND_REASONING_EFFORT_V1 (ACC-G6R-002): @earendil-works/pi-ai is
+  // the one exception — the frozen GPT-6 artifact identity is a DEPLOYMENT-
+  // provided exact npm artifact, so a pi-ai already present in the profile
+  // farm is kept and identity-checked below instead of harness-closed.
   const packageJson = JSON.parse(readFileSync(installedPackage, 'utf8'))
   const peerNames = Object.keys(packageJson.peerDependencies ?? {})
   const harnessRoot = options.harnessRoot ?? resolveHarnessRoot()
   for (const peer of peerNames) {
+    const peerDestination = join(profilesRoot, 'node_modules', ...peer.split('/'))
+    if (peer === '@earendil-works/pi-ai' && existsSync(join(peerDestination, 'package.json'))) {
+      continue
+    }
     const candidates = [
       join(harnessRoot, 'node_modules', '.pnpm', 'node_modules', ...peer.split('/')),
       join(harnessRoot, 'apps', 'cli', 'node_modules', ...peer.split('/')),
@@ -273,7 +282,25 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
     if (source === undefined) {
       throw provisioningError('plugin_missing', `cannot close peer ${peer} for ${plugin}@${version} from pinned DSH ${harnessRoot}`)
     }
-    ensureSymlink(source, join(profilesRoot, 'node_modules', ...peer.split('/')))
+    ensureSymlink(source, peerDestination)
+  }
+  if (plugin === GPT6_LUNA_ROUTE_V1.plugin && version === GPT6_LUNA_ROUTE_V1.pluginVersion) {
+    // DEC-G6R-003: a semver range or an unverified later pi-ai build is not
+    // equivalent evidence — the exact 0.87.1 artifact (version + frozen
+    // openai-codex catalog bytes) is required before the GPT-6 tuple can
+    // serve. Fail loud, never clamp or downgrade.
+    const piAiPackageFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'package.json')
+    let piAiResolved
+    try { piAiResolved = JSON.parse(readFileSync(piAiPackageFile, 'utf8')).version } catch { piAiResolved = undefined }
+    if (piAiResolved !== GPT6_LUNA_ROUTE_V1.piAiVersion) {
+      throw provisioningError('pi_ai_identity_mismatch', `the ${plugin}@${version} tuple requires @earendil-works/pi-ai ${GPT6_LUNA_ROUTE_V1.piAiVersion} in ${join(profilesRoot, 'node_modules')}, resolved ${piAiResolved ?? '(missing)'}`)
+    }
+    const piAiCatalogFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'providers', 'data', 'openai-codex.json')
+    let piAiCatalogDigest = ''
+    try { piAiCatalogDigest = createHash('sha256').update(readFileSync(piAiCatalogFile)).digest('hex') } catch { piAiCatalogDigest = '(unreadable)' }
+    if (piAiCatalogDigest !== GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256) {
+      throw provisioningError('pi_ai_identity_mismatch', `@earendil-works/pi-ai openai-codex catalog digest ${piAiCatalogDigest} does not match the frozen ${GPT6_LUNA_ROUTE_V1.piAiVersion} artifact identity`)
+    }
   }
 
   const profilePackageFile = join(profilesRoot, profile, 'package.json')
@@ -482,7 +509,13 @@ export function provisionAgentHome(home, workspace, options = {}) {
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
-    const persistOptions = {}
+    const persistOptions = {
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: the route's per-route reasoning
+      // effort rides the SAME provisioned profile patch as the credential
+      // reference, so one spawn's provisioning output is internally
+      // consistent (plugin artifact + plugin config always from one route).
+      reasoningEffort: subscription.reasoningEffort,
+    }
     if (typeof options.deploymentRoot === 'string' && options.deploymentRoot !== '') {
       persistOptions.deploymentRoot = options.deploymentRoot
     }
