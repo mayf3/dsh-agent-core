@@ -39,7 +39,9 @@ test('CTR-SCT-002/D-SCT-2: the listing is a zero-Auth self surface with NO ident
   // Omitted requiredScopes (agent-directory precedent): the schema default is
   // [] and the gateway performs zero token requests for the self surface.
   assert.ok(!Array.isArray(manifest.requiredScopes) || manifest.requiredScopes.length === 0, 'zero token requests (self-only surface)')
-  assert.equal(manifest.local, true)
+  // CTR-SCT-002 freezes the contracted resource identity — the resource-less
+  // `local: true` form would drop the capability's declared resource binding.
+  assert.deepEqual(manifest.local, { resource: 'execution-history' })
   const list = manifest.operations.find((op) => op.name === 'list')
   assert.ok(list, 'list operation present')
   assert.deepEqual(list.arguments.required, [], 'no required arguments')

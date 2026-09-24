@@ -113,7 +113,10 @@ export const agentSessionListManifest = {
   // is no cross-agent enumeration face at all. requiredScopes is OMITTED
   // (agent-directory precedent): the schema treats omitted as [] and the
   // gateway performs zero token requests.
-  local: true,
+  // CTR-SCT-002 freezes the contracted resource identity
+  // (`local: {resource: 'execution-history'}`) — the resource-less `local:
+  // true` form would drop the capability's declared resource binding.
+  local: { resource: 'execution-history' },
   errors: [
     { code: 'invalid_arguments', description: 'Arguments violate the operation schema (list takes only cursor/limit pagination).' },
     { code: 'forbidden_not_owner', description: 'Trusted caller identity unavailable (fail closed).' },
