@@ -134,6 +134,12 @@ export function listAgentSessions(opts) {
       const idB = String(b.stableId)
       return idA < idB ? -1 : idA > idB ? 1 : 0
     })
+    // S3 (security review closure): per-request CONTENT budget (bytes of
+    // journal actually read). Once exhausted, remaining page rows are emitted
+    // with scanTruncated=true and unproven (false/empty) origin faces — an
+    // honest degradation, never a fabricated complete answer; the keyset
+    // cursor lets a later call continue from the same position.
+    let contentBudgetBytes = 64 * 1024 * 1024
     for (const { session, realFile, confined, lastActiveAtMs, stableId } of candidates.slice(0, opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit)) {
       const header = readSessionHeader(realFile, confined)
       // Directory names are the DSH-encoded form of the native session id
@@ -159,10 +165,18 @@ export function listAgentSessions(opts) {
       // traceability view. Message text is READ here for classification only
       // and never enters the output rows.
       let projected = null
+      let scanTruncated = false
       try {
-        const raw = loadSessionJournal({ file: realFile, maxFileBytes: maxScanBytes, maxRecords: 10000 })
-        if (raw.readFailed === undefined) projected = projectJournal(raw.events, { briefMaxChars: 0 })
-      } catch { projected = null }
+        if (contentBudgetBytes <= 0) {
+          scanTruncated = true
+        } else {
+          const fileBudget = Math.min(maxScanBytes, contentBudgetBytes)
+          const raw = loadSessionJournal({ file: realFile, maxFileBytes: fileBudget, maxRecords: 10000 })
+          contentBudgetBytes -= Math.min(raw.size ?? fileBudget, fileBudget)
+          scanTruncated = raw.truncated === true
+          if (raw.readFailed === undefined) projected = projectJournal(raw.events, { briefMaxChars: 0 })
+        }
+      } catch { scanTruncated = true }
       const occurrenceIds = new Set()
       const workflowInstanceIds = new Set()
       const origins = { user: false, inter_agent: false, workflow_execution: false }
@@ -203,6 +217,7 @@ export function listAgentSessions(opts) {
         schedulerOccurrenceIdsTruncated: occCoordList.length > COORDINATE_LIMIT,
         workflowInstanceIds: wfCoordList.slice(0, COORDINATE_LIMIT),
         workflowInstanceIdsTruncated: wfCoordList.length > COORDINATE_LIMIT,
+        scanTruncated,
       })
       rows[rows.length - 1]._cursorKey = `${lastActiveAtMs ?? 0}:${stableId}`
     }
