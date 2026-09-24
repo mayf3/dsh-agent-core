@@ -45,7 +45,12 @@ export function listAgentSessions(opts) {
     return err('forbidden_not_owner', 'trusted caller identity unavailable')
   }
   const homesRoot = opts.homesRoot
-  if (typeof homesRoot !== 'string' || !existsSync(homesRoot)) {
+  // Existence alone is not readability: a regular FILE at the configured
+  // path (or a traversal that cannot be stat-ed) must surface the frozen
+  // `history_unavailable` error, never a fabricated "no sessions" answer.
+  let homesStat = null
+  try { homesStat = typeof homesRoot === 'string' ? statSync(homesRoot) : null } catch { homesStat = null }
+  if (homesStat === null || !homesStat.isDirectory()) {
     return err('history_unavailable', 'session homes root is not readable')
   }
   // F1 (trusted-handler parity): authoritative validation at the core too —
@@ -106,6 +111,7 @@ export function listAgentSessions(opts) {
   const anomalies = { headersMissing: 0, idMismatch: 0 }
   const rows = []
   let candidateCount = 0
+  let unprocessedCandidates = 0
   if (callerRoot !== null) {
     const maxScanBytes = opts.maxScanBytes ?? 8 * 1024 * 1024
     // S3 (security review closure): two-phase enumeration. Phase 1 is
@@ -116,6 +122,11 @@ export function listAgentSessions(opts) {
     // content sweep.
     const candidates = []
     for (const session of listAgentSessionFiles(homesRoot, viewerAgentId)) {
+      // A3: lstat the ENUMERATED path before any resolution — resolving a
+      // symlinked session.jsonl first would erase the symlink fact and let
+      // the in-tree target pass confinement as a duplicate native session.
+      // Only a plain regular file proceeds (symlink/other → skipped).
+      try { if (!lstatSync(session.file).isFile()) continue } catch { continue }
       // B-B: canonical-root binding over the fully resolved path.
       let realFile = null
       try { realFile = realpathSync(session.file) } catch { continue }
@@ -154,7 +165,16 @@ export function listAgentSessions(opts) {
     // cursor lets a later call continue from the same position.
     const limit = opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit
     let contentBudgetBytes = 64 * 1024 * 1024
-    for (const { session, realFile, confined, lastActiveAtMs, stableId } of candidates.slice(0, limit)) {
+    // Tip-head review P2 closure: the page FILLS to `limit` from the ordered
+    // candidates — a candidate that fails its hardened open/drift re-check is
+    // skipped WITHOUT consuming a page slot, so one unreadable newest journal
+    // can no longer strand every older readable session behind an empty page
+    // with a dead cursor. Iteration stays bounded by the caller's own
+    // candidate count; the per-request content budget is unchanged (budget
+    // exhaustion degrades rows honestly, it never skips them).
+    let processedCandidates = 0
+    for (; processedCandidates < candidates.length && rows.length < limit; processedCandidates++) {
+      const { session, realFile, confined, lastActiveAtMs, stableId } = candidates[processedCandidates]
       // Internal exact-head re-audit closure: ONE hardened open per row
       // (O_NOFOLLOW + fstat dev/ino/size match against the phase-1 lstat)
       // pins the fd serving BOTH the header and the content scan. The plain
@@ -260,16 +280,23 @@ export function listAgentSessions(opts) {
       })
       rows[rows.length - 1]._cursorKey = `${lastActiveAtMs ?? 0}:${stableId}`
     }
+    unprocessedCandidates = candidates.length - processedCandidates
   }
   // Keyset honesty derives from the UN-capped stat-level population: rows is
   // already the page (content cost bounded by the response, S3), so comparing
   // rows against its own slice could never observe truncation and the listing
   // would claim false completeness for callers holding more sessions than the
-  // limit (internal exact-head re-audit blocker closure).
+  // limit (internal exact-head re-audit blocker closure). truncated stays
+  // TRUE for every candidate that did not become a row — unreadable/skipped
+  // journals are visible coverage loss (G2 governing rule), never silence.
   const page = rows
   const truncated = candidateCount > rows.length
+  // The cursor advances only when ordered candidates remain UNPROCESSED
+  // beyond the filled page — a page that exhausted its candidates ends with
+  // nextCursor=null even when truncated, so a caller never loops on a cursor
+  // that can no longer yield rows (deterministic/exhaustive keyset).
   let nextCursor = null
-  if (truncated && page.length > 0) {
+  if (unprocessedCandidates > 0 && page.length > 0) {
     // The cursor carries the STAT-level sort key (A4: both components) so
     // pages compose even when a header-resolved id differs from the dir id.
     nextCursor = Buffer.from(page[page.length - 1]._cursorKey, 'utf8').toString('base64url')

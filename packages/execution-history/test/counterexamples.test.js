@@ -204,3 +204,80 @@ test('T3c: a not_created occurrence NEVER joins a canonical journal planted on d
     assert.ok(!r.gaps.some((g) => g.stage === 'session_journal'), 'not_created suppresses the journal gap — nothing is missing')
   } finally { destroyFixtureRoot(fixture) }
 })
+
+// ── 五 tip-head review conformance closures (PR #318 @ 8e639e9a, 2026-09-24) ──
+// The four open P2 findings at the final reviewed implementation head, each a
+// conformance gap against the FROZEN CTR-SCT-002 contract text (never a
+// semantic expansion): deterministic/exhaustive keyset pagination, the frozen
+// `history_unavailable` vocabulary, the A3 symlink-skip rule, and the frozen
+// `local: {resource: 'execution-history'}` manifest identity (asserted in
+// broker-manifest-registration.test.js).
+
+import { chmodSync, symlinkSync, utimesSync } from 'node:fs'
+import { listAgentSessions } from '../src/index.js'
+
+function plantListingJournal(homesRoot, agentId, projectKey, sessionDir, id, createdAt, mtimeMs) {
+  const dir = join(homesRoot, agentId, 'sessions', projectKey, sessionDir)
+  mkdirSync(dir, { recursive: true })
+  const file = join(dir, 'session.jsonl')
+  writeFileSync(file, [
+    JSON.stringify({ type: 'session', version: 0, id, createdAt, cwd: '/x' }),
+    JSON.stringify({ type: 'user/message', seq: 1, time: new Date(createdAt + 1).toISOString(), data: { content: 'hi' }, source: { kind: 'user' } }),
+  ].join('\n') + '\n')
+  utimesSync(file, mtimeMs / 1000, mtimeMs / 1000)
+  return file
+}
+
+test('五-1 an unreadable newest journal is skipped WITHOUT consuming a page slot — older readable sessions stay reachable', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const homes = fixture.paths.homesRoot
+    const now = Date.now()
+    const newest = plantListingJournal(homes, 'agt_a', '--p--', 'cron-run-new', 'cron-run-new', now + 60_000, now + 60_000)
+    plantListingJournal(homes, 'agt_a', '--p--', 'plain-old', 'plain-old', now + 30_000, now + 30_000)
+    chmodSync(newest, 0o000)
+    try {
+      const page = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a', limit: 1 })
+      assert.equal(page.ok, true)
+      assert.equal(page.result.sessions.length, 1, 'the page fills from the next readable candidate')
+      assert.equal(page.result.sessions[0].sessionId, 'plain-old', 'the unreadable newest journal did not strand the older session behind an empty page')
+      assert.equal(page.result.truncated, true, 'the skipped journal stays visible coverage loss')
+      assert.ok(page.result.nextCursor, 'a live cursor exists while readable candidates remain behind the skipped one')
+      // The cursor composes: the next page reaches the candidates behind the
+      // unreadable one — nothing older is stranded (deterministic keyset).
+      const next = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a', limit: 1, cursor: page.result.nextCursor })
+      assert.equal(next.ok, true)
+      assert.equal(next.result.sessions.length, 1, 'the following page yields the next readable session')
+      assert.equal(next.result.sessions[0].sessionId, 'main', 'the fixture journal behind the skipped one is reachable')
+    } finally { chmodSync(newest, 0o644) }
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('五-2 a homes root that is not a readable directory is history_unavailable — never a fabricated empty listing', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const notADir = join(fixture.paths.homesRoot, 'not-a-dir')
+    writeFileSync(notADir, 'a regular file, not the homes root')
+    const out = listAgentSessions({ homesRoot: notADir, viewerAgentId: 'agt_a' })
+    assert.equal(out.ok, false)
+    assert.equal(out.code, 'history_unavailable', 'a storage/configuration outage is surfaced, not masked as "no sessions"')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('五-3 a symlinked session.jsonl is skipped before resolution — an in-tree target is never listed twice', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const homes = fixture.paths.homesRoot
+    const now = Date.now()
+    const realJournal = plantListingJournal(homes, 'agt_a', '--p--', 'solo-real', 'solo-real', now + 60_000, now + 60_000)
+    const aliasDir = join(homes, 'agt_a', 'sessions', '--p--', 'solo-alias')
+    mkdirSync(aliasDir, { recursive: true })
+    symlinkSync(realJournal, join(aliasDir, 'session.jsonl'))
+    const out = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a' })
+    assert.equal(out.ok, true)
+    const ids = out.result.sessions.map((s) => s.sessionId)
+    assert.equal(ids.filter((id) => id === 'solo-real').length, 1, 'the real journal is listed exactly once')
+    assert.ok(!ids.includes('solo-alias'), 'the symlink alias never becomes a row (A3: symlink journals are skipped, never resolved)')
+    assert.equal(out.result.anomalies.idMismatch, 0, 'the alias leaves no anomaly residue')
+  } finally { destroyFixtureRoot(fixture) }
+})
