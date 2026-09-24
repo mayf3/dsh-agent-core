@@ -23,8 +23,11 @@ scope:
   - packages/production-runtime/src/execution-history/runtime.js (handler wiring only)
   - packages/scheduler/src/self-service/projections.js (occurrence projection enrichment only)
   - packages/scheduler/src/occurrence.js (invokeWithDeadline request: additive jobId field only;
-    applyLateSettlement terminalEvidence kind parameter per S1 — proven pre-start late evidence
-    persists terminalEvidence.kind=pre-start-rejection under the OCCURRENCE_OUTCOME_V3 taxonomy)
+    applyLateSettlement terminalEvidence kind parameter + late_settlement history terminal_evidence
+    pass-through per S1/G1 — proven pre-start late evidence persists
+    terminalEvidence.kind=pre-start-rejection under the OCCURRENCE_OUTCOME_V3 taxonomy)
+  - packages/scheduler/src/history/history.js (lateSettlement event: additive terminal_evidence
+    field only — events.jsonl is append-only and never truncated)
   - packages/production-runtime/src/scheduler-invoker.js (invocation evidence row additive fields)
   - packages/production-runtime/src/compose.js (wiring only)
   - packages/production-runtime/src/workflow-execution-runtime.js (deliver receipt messageId plumb)
@@ -295,10 +298,13 @@ nativeSessionId, fences, terminationSettlement?}`（无任何写路径变化）�
 规则：`not_created` 时**任何面不得输出 sessionId**（含 execution-history 的 timeline 关联——
 不产生 R5 关联，只产生 disposition 行）；`unknown` 不猜方向。pre-reserve 从未铸造 occurrence
 的失败继续由既有 `self_ops.job_disposition`（slot 分类词表）回答，本表不重复其职责。
-late-settlement 证据补充（S1 closure）：超时后 late settlement 若收到确定性未开始证明
-（`routerEnvelope='not_admitted'` 或 `started=false`），writer 按 OCCURRENCE_OUTCOME_V3 的既有
-分类法持久 `terminalEvidence.kind='pre-start-rejection'`（非泛化 late-settlement）——本表第 4 行
-随之把该 occurrence 映为 `not_created`，未创建的 sessionId 不会被任何读面输出。
+late-settlement 证据补充（S1 closure；G1 扩展至 history 持久面）：超时后 late settlement 若收到
+确定性未开始证明（`routerEnvelope='not_admitted'` 或 `started=false`），writer 按
+OCCURRENCE_OUTCOME_V3 的既有分类法持久 `terminalEvidence.kind='pre-start-rejection'`（非泛化
+late-settlement）——本表第 4 行随之把该 occurrence 映为 `not_created`，未创建的 sessionId 不会被
+任何读面输出。**history 持久面（G1 closure）**：`late_settlement` history 事件必须携带同一
+`terminal_evidence` 分类（additive 事件字段，events.jsonl 永不截断），使 occurrence-ledger
+rotation 之后 history-only 的读面仍可判 `not_created`（无该分类时保守 `unknown`）。
 已知局限（如实记档，F-SCT-5）：postdeploy canary invoker 的 reserved 身份不触碰 AgentProcess
 却会 terminalize `succeeded` 并持久 nativeSessionId——此类 occurrence 的投影按表输出
 `created`（忠实于 ledger 既有证据），但 session 实际不存在；execution-history scheduler-root
