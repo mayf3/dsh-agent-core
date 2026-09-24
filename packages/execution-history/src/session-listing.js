@@ -173,7 +173,10 @@ export function listAgentSessions(opts) {
           const fileBudget = Math.min(maxScanBytes, contentBudgetBytes)
           const raw = loadSessionJournal({ file: realFile, maxFileBytes: fileBudget, maxRecords: 10000 })
           contentBudgetBytes -= Math.min(raw.size ?? fileBudget, fileBudget)
-          scanTruncated = raw.truncated === true
+          // G2: skipped (malformed / over-record-cap) rows are coverage loss —
+          // the EH governing rule requires visibly degraded coverage, never a
+          // silently complete answer.
+          scanTruncated = raw.truncated === true || (raw.skipped ?? 0) > 0
           if (raw.readFailed === undefined) projected = projectJournal(raw.events, { briefMaxChars: 0 })
         }
       } catch { scanTruncated = true }
