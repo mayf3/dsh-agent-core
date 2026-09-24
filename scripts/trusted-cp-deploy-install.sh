@@ -543,13 +543,13 @@ for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
 mkdir -p app/scripts/lib && cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
-# packages: src + package.json only (no tests)
+# packages: package.json + src + exact metadata-declared public root entries (no tests)
+PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
+[ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
 for pkg in "$REPO_SRC"/packages/*/; do
   name="$(basename "$pkg")"
   [ -f "$pkg/package.json" ] || continue
-  mkdir -p "app/packages/$name"
-  cp "$pkg/package.json" "app/packages/$name/package.json"
-  [ -d "$pkg/src" ] && cp -R "$pkg/src" "app/packages/$name/src"
+  "$TRUSTED_NODE" "$PACKAGE_COPY_HELPER" "$pkg" "app/packages/$name"
 done
 # bundles + profiles
 for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
