@@ -57,6 +57,10 @@ import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/sr
 import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+// Latest-main integration: BOTH wirings coexist —
+//   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
+//   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
+import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
@@ -486,6 +490,11 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
+  // AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: shared local coding-executor
+  // capability. Additive and agent-agnostic; refuses honestly (config_missing)
+  // until the Operator provisions dev-execution/{repos.json,backend.json}.
+  mountDevelopmentExecutionRuntime({ ctx, layout, log })
+
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
     layout,
