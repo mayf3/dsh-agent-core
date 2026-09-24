@@ -152,3 +152,45 @@ SHIP_BLOCKERS           = NONE (internal fresh re-audit ACCEPT + GitHub Codex fr
 FEATURE_READY           = YES
 MERGE_READY             = YES (Owner merge order: #319 then #318)
 ```
+
+## §D. Latest-main governed integration record (2026-09-25, night-session-centric-integration lane)
+
+Appended, never rewritten (records above preserved verbatim). This section closes the §C delivery
+envelope's `FINAL_SOURCE_SHA` placeholder with the actual integrated state.
+
+```text
+INTEGRATION_LANE        = integrate/session-centric-traceability-latest-main (worktree night-session-centric-integration)
+FINAL_REVIEWED_IMPLEMENTATION_HEAD = 8e639e9ad041b9901929f089422a971611dc1d74 (PR #318 head; Codex exact-head
+                          review 2026-09-24T16:48:44Z = 0×P1 + exactly 4×P2 conformance findings — the ONLY
+                          open findings at that head; all prior P1s closed in §A/§B/§C)
+MAIN_ADVANCES_INTEGRATED = 966c35d9 (PR #325 GPT6 luna route + reasoningEffort — file-disjoint from SCT scope)
+                          + 29f1f14e (PR #326 mobile session-history wiring: compose.js +6 productApiCfg.history
+                          pass-through — SCT touches NO compose region, union SCT-neutral)
+MERGES                  = ae611388 (8e639e9a ← 966c35d9, zero-conflict) + f00996e7 (← origin/main 29f1f14e,
+                          zero-conflict); union mechanically verified both times (SCT files byte-identical to
+                          the branch side; GPT6/compose files byte-identical to the main side)
+P2_CONFORMANCE_CLOSURES = 22cebb7a — TIP-P2-1 keyset page FILLS to limit (a skipped candidate no longer consumes
+                          a page slot; dead nextCursor impossible; truncated stays visible coverage loss per G2);
+                          TIP-P2-2 homes root must be a READABLE DIRECTORY → frozen history_unavailable, never a
+                          fabricated empty listing; TIP-P2-3 lstat the ENUMERATED journal path BEFORE realpath
+                          (symlinked session.jsonl skipped as itself — no duplicate native session); TIP-P2-4
+                          manifest local: {resource: 'execution-history'} per CTR-SCT-002 (spec line 202).
+                          Each bound to FROZEN contract text; ZERO semantic expansion; GOVERNING_SPEC_UNMODIFIED;
+                          discriminating tests counterexamples.test.js 五-1/2/3 (A/B verified: all 3 fail on the
+                          pre-fix src) + registration assertion flipped to the contracted shape
+INDEPENDENT_REVIEW      = ACCEPT / SHIP_BLOCKERS=NONE (fresh-context reviewer at 22cebb7a; CHECK_A..G all PASS:
+                          scope containment vs Spec frontmatter, docs/specs unmodified across all diffs, merge-seam
+                          disjointness + GPT6/SCT data-flow non-interaction, adversarial closure-correctness probe
+                          incl. loop termination/cursor honesty/unprocessedCandidates accounting, frozen-semantics
+                          regression scan, test A/B reproduction with tree restoration, structure/production-runtime
+                          honesty spot-checks)
+TESTS                   = execution-history 66/66 (+3 discriminating), scheduler 375/375, broker 486/486,
+                          workflow-execution 101/101; production-runtime failing-FILE set byte-identical to
+                          pristine main at BOTH integrated bases (DIFF_CAUSED_FAILURES=0); verify:structure
+                          violations = the 7 legacy entries identical to main (STRUCTURE_NEW_VIOLATIONS=0)
+REVIEWED_TO_FINAL_DELTA = docs-only (this section): mechanically verifiable as
+                          git diff 22cebb7a..<merge-head> -- packages/ scripts/ = empty
+FEATURE_READY           = YES
+MERGE_READY             = YES
+```
+
