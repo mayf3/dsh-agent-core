@@ -239,6 +239,11 @@ export function applyLedgerEvent(attempts, event) {
       current.phase = 'reconciled'
       current.judgment = event.judgment
       current.reason = event.reason
+      // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the reconcile verdict
+      // timestamp starts the run_ended_no_submission retry clock. Additive
+      // projection field — existing files replay unchanged and simply gain
+      // the field.
+      current.reconciledAtMs = event.atMs
       return
     case 'stale_superseded': {
       // CTR-SRE-002: the ONE re-entry marker. Source guard first — ACTIVE
@@ -254,6 +259,29 @@ export function applyLedgerEvent(attempts, event) {
       current.reason = `stale_no_progress: visit still current with workflow_state_version ${event.observedWorkflowStateVersion} unchanged since delivery`
       current.observedWorkflowStateVersion = event.observedWorkflowStateVersion
       current.staleSupersededAtMs = event.atMs
+      return
+    }
+    case 'escalation_requested': {
+      // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation fact
+      // per visit. The live writer never appends a second one (pre-check in
+      // recordEscalationRequested), so a replayed second event means a
+      // corrupt file — fail loud, never absorb.
+      if (current === undefined) {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested for unknown nodeVisit ${nodeVisitId}`)
+      }
+      if (current.escalation !== undefined) {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested twice for nodeVisit ${nodeVisitId}`)
+      }
+      if (typeof event.reason !== 'string' || event.reason === '') {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested requires a reason (nodeVisit ${nodeVisitId})`)
+      }
+      current.escalation = {
+        reason: event.reason,
+        ...(Number.isInteger(event.attemptCount) ? { attemptCount: event.attemptCount } : {}),
+        ...(typeof event.lastAttemptId === 'string' ? { lastAttemptId: event.lastAttemptId } : {}),
+        ...(typeof event.dispatchIntentId === 'string' ? { dispatchIntentId: event.dispatchIntentId } : {}),
+        atMs: event.atMs,
+      }
       return
     }
     default:
