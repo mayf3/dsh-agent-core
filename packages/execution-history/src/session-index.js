@@ -11,17 +11,28 @@ import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readFileSync, 
 
 import { listAgentSessionFiles } from './loaders/session-journal.js'
 
-export const INDEX_VERSION = 1
+export const INDEX_VERSION = 2
 
 const RE_MESSAGE_ID = /\\?"messageId\\?":\\?"([^"\\]{1,128})\\?"/g
 const RE_WF_INSTANCE = /\\?"workflowInstanceId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
 const RE_DISPATCH_INTENT = /\\?"dispatchIntentId\\?":\\?"([0-9a-fA-F-]{36})\\?"/g
+// CTR-SCT-002 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1): scheduler
+// occurrence coordinates mentioned in tool call arguments/result payloads.
+// D4: the value MUST be the real occurrence-id shape (`occ:` + 16 lowercase
+// hex) — a loose `occ:...` match would count ordinary message text quoting a
+// fake id (e.g. {"occurrenceId":"occ:not-a-real-run"}) as a touched
+// coordinate. (Still a bounded textual approximation on serialized bytes;
+// the exact join face is the canonical cron-run-<occ> identity, not this key.)
+const RE_OCCURRENCE_ID = /\\?"occurrenceId\\?":\\?"(occ:[0-9a-f]{16})\\?"/g
 // ASM V2 provenance: inserted[]/user-message sidecars carry correlation =
 // the SOURCE turnExecutionId ('turn:...') — the target-side anchor of every
 // inter_agent dispatch (R1/R6 reverse coordinate).
 const RE_CORRELATION = /\\?"correlation\\?":\\?"(turn:[^"\\]{1,160})\\?"/g
 const RE_INTER_AGENT = /"kind":"inter_agent"/
 const RE_WF_SIDECAR = /"kind":"workflow_execution"/
+// CTR-SCT-002: presence boolean for plain user-origin messages
+// (source.kind === 'user') — the origins.user listing face.
+const RE_USER_SOURCE = /"kind":"user"/
 
 function uniqueSorted(values) {
   return [...new Set(values)].sort()
@@ -54,6 +65,8 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
   for (const m of text.matchAll(RE_DISPATCH_INTENT)) dispatchIntentIds.push(m[1].toLowerCase())
   const interAgentCorrelations = []
   for (const m of text.matchAll(RE_CORRELATION)) interAgentCorrelations.push(m[1])
+  const occurrenceIds = []
+  for (const m of text.matchAll(RE_OCCURRENCE_ID)) occurrenceIds.push(m[1])
   return {
     size,
     mtimeMs: Number(st.mtimeMs),
@@ -64,6 +77,8 @@ export function extractJournalCoordinates(file, { maxScanBytes = 8 * 1024 * 1024
       workflowInstanceIds: uniqueSorted(workflowInstanceIds).slice(0, 200),
       dispatchIntentIds: uniqueSorted(dispatchIntentIds).slice(0, 200),
       interAgentCorrelations: uniqueSorted(interAgentCorrelations).slice(0, 500),
+      occurrenceIds: uniqueSorted(occurrenceIds).slice(0, 200),
+      hasUserSource: RE_USER_SOURCE.test(text),
       hasInterAgent: RE_INTER_AGENT.test(text),
       hasWorkflowExecutionSidecar: RE_WF_SIDECAR.test(text),
     },
@@ -83,6 +98,9 @@ function require_fd(_file) { return true }
  * Returns {entries, coverage:{files, partialScanCount, truncatedFileCount}}.
  */
 export function buildSessionIndex({ homesRoot, indexDir, maxFiles = 4000, maxScanBytes }) {
+  // buildSessionIndex keeps its fleet-wide 4000-file cap; ensureFreshSessionIndex
+  // passes the SAME cap to its inventory walk so over-cap fleets degrade to a
+  // retained cache + honest coverage flag instead of a rebuild loop (D3).
   const entries = []
   let partialScanCount = 0
   let unreadableCount = 0
@@ -127,10 +145,30 @@ export function loadSessionIndex(indexDir) {
 }
 
 /**
- * Fresh index: load, verify against the live tree, rebuild on any drift.
+ * Bounded journal-tree inventory: directory walk + stat ONLY (no journal
+ * content is read). Used by `ensureFreshSessionIndex` to discover journals
+ * CREATED AFTER the index was built — a per-file drift check alone can never
+ * see them (B2 closure; the inventory is derived state, not a registry).
+ */
+function journalInventory(homesRoot, { maxFiles = 20000 } = {}) {
+  const files = new Set()
+  let truncated = false
+  for (const agentId of safeReaddir(homesRoot)) {
+    for (const session of listAgentSessionFiles(homesRoot, agentId)) {
+      if (files.size >= maxFiles) { truncated = true; break }
+      files.add(session.file)
+    }
+    if (truncated) break
+  }
+  return { files, truncated }
+}
+
+/**
+ * Fresh index: load, verify against the live tree, rebuild on any drift —
+ * including journals that appeared after the index was written (B2).
  * @returns {{ entries: object[], coverage: object, rebuilt: boolean }}
  */
-export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
+export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles = 4000 }) {
   const loaded = loadSessionIndex(indexDir)
   if (loaded !== null) {
     let fresh = true
@@ -140,9 +178,20 @@ export function ensureFreshSessionIndex({ homesRoot, indexDir, maxScanBytes }) {
       try { st = statSync(entry.file) } catch { fresh = false; break }
       if (Number(st.size) !== entry.size || Number(st.mtimeMs) !== entry.mtimeMs) { fresh = false; break }
     }
-    if (fresh) return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length }, rebuilt: false }
+    if (fresh) {
+      // Drift is not the only staleness: compare against the live journal
+      // inventory so NEWLY CREATED journals are discovered too. The inventory
+      // uses the SAME file cap as the builder: a fleet over the cap can never
+      // be fully indexed, so treating cap-truncation as drift would rebuild
+      // on every query (D3) — in that world the cached index is retained and
+      // the residual unknown stays an honest coverage fact, not a rebuild loop.
+      const inventory = journalInventory(homesRoot, { maxFiles })
+      for (const entry of loaded) inventory.files.delete(entry.file)
+      if (inventory.files.size > 0 && !inventory.truncated) return { ...buildSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles }), rebuilt: true }
+      return { entries: loaded, coverage: { files: loaded.length, partialScanCount: loaded.filter((e) => e.partialScan).length, overCap: inventory.truncated }, rebuilt: false }
+    }
   }
-  const built = buildSessionIndex({ homesRoot, indexDir, maxScanBytes })
+  const built = buildSessionIndex({ homesRoot, indexDir, maxScanBytes, maxFiles })
   return { ...built, rebuilt: true }
 }
 
@@ -153,13 +202,29 @@ export function indexLookups(entries) {
     byMessageId: (id) => entries.filter((e) => e.coordinates.messageIds.includes(id)),
     byCorrelation: (correlation) => entries.filter((e) => e.coordinates.interAgentCorrelations?.includes(correlation)),
     bySessionId: (sessionId) => entries.filter((e) => e.sessionId === sessionId),
+    // B1 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 closure): EXACT canonical
+    // identity only — the decoded native sessionId must equal the canonical
+    // scheduler session id `cron-run-<occurrenceId>` for the EXACT occurrence.
+    // The former suffix/final-segment fallback let an unrelated or foreign
+    // journal (e.g. `unrelated-<occBody>`) be promoted to a session join;
+    // fuzzy fallbacks never upgrade to exact (SC-2).
     byCronOccurrence: (occurrenceId) => {
-      const needle = String(occurrenceId).replace(/:/g, '~')
-      const body = String(occurrenceId).split(':').pop()
-      return entries.filter((e) => e.sessionId.includes(needle) || (body && e.sessionId.endsWith(body)))
+      const expected = `cron-run-${occurrenceId}`
+      return entries.filter((e) => decodeSegment(e.sessionId) === expected)
     },
     all: () => entries,
   }
+}
+
+/**
+ * Decode one DSH session directory segment back to the native session id
+ * (escape form '~XXXX' = one char with charCode 0xXXXX; canonical encoder is
+ * `encodeSegment` in packages/session-history/src/dsh-compat.js, a verbatim
+ * transcription of @deepseek-ai/dsh-session-persistence-jsonl format.ts).
+ */
+export function decodeSegment(segment) {
+  if (typeof segment !== 'string') return segment
+  return segment.replace(/~([0-9A-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
 }
 
 function safeReaddir(dir) {

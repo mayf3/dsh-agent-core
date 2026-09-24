@@ -7,6 +7,7 @@
  * the generic broker transport — identity travels only in the credential).
  */
 
+
 import {
   createHttpTransport,
 } from '../../../broker/src/transport.js'
@@ -15,8 +16,9 @@ import { loadCredentialFor } from '../../../broker/src/credential-store.js'
 import {
   EXECUTION_TRACE_QUERY_CAPABILITY_ID,
   EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID,
+  AGENT_SESSION_LIST_CAPABILITY_ID,
 } from '../../../broker/src/capabilities/execution-history.js'
-import { queryExecutionTrace } from '../../../execution-history/src/index.js'
+import { listAgentSessions, queryExecutionTrace } from '../../../execution-history/src/index.js'
 
 /**
  * Synthetic single-op manifests let the generic authorized transport execute
@@ -118,12 +120,49 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
     }
   }
 
+  /** CTR-SCT-002: MY_SESSIONS — self-only, coordinate-only derived listing. */
+  function listHandle() {
+    return async function handle(args, trustedContext) {
+      // F1: the trusted LOCAL handler is the authoritative validation
+      // boundary (direct parent-RPC calls bypass manifest validation).
+      // Invalid pagination input FAILS CLOSED with invalid_arguments — it is
+      // never clamped, coerced, or silently dropped.
+      if (args !== undefined && args !== null && (typeof args !== 'object' || Array.isArray(args))) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'arguments must be an object' } }
+      }
+      const keys = Object.keys(args ?? {})
+      if (keys.some((k) => k !== 'cursor' && k !== 'limit')) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'unknown argument; only cursor and limit are admitted' } }
+      }
+      const rawCursor = args?.cursor
+      if (rawCursor !== undefined && rawCursor !== null && typeof rawCursor !== 'string') {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'cursor must be a string' } }
+      }
+      const rawLimit = args?.limit
+      if (rawLimit !== undefined && (!Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 200)) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'limit must be an integer in 1..200' } }
+      }
+      const outcome = listAgentSessions({
+        homesRoot: layout.homesRoot,
+        viewerAgentId: trustedContext.agentId,
+        cursor: typeof rawCursor === 'string' ? rawCursor : undefined,
+        limit: rawLimit === undefined ? undefined : rawLimit,
+      })
+      if (outcome.ok !== true) {
+        const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
+        return { ok: false, error: { code, detail: outcome.detail } }
+      }
+      return { ok: true, result: outcome.result }
+    }
+  }
+
   return {
     mount(ctx) {
       ctx.provide('executionHistoryAccess', {
         handlers: {
           [EXECUTION_TRACE_QUERY_CAPABILITY_ID]: { query: handleFor(false) },
           [EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID]: { query: handleFor(true) },
+          [AGENT_SESSION_LIST_CAPABILITY_ID]: { list: listHandle() },
         },
       })
     },

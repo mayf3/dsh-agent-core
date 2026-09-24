@@ -14,6 +14,9 @@ import { buildSchedulerRoot } from './correlate/scheduler-root.js'
 import { buildMessageRoot } from './correlate/message-root.js'
 import { assembleResult, renderReportText } from './report.js'
 import { jobRoutingAgent } from './loaders/scheduler-store.js'
+// CTR-SCT-002: the MY_SESSIONS listing core rides the same public entry so
+// the trusted provider imports ONE module.
+export { listAgentSessions } from './session-listing.js'
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
 const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
