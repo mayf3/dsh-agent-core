@@ -6,7 +6,9 @@
  *
  *   V1  no history key            → listener never attempted (default OFF unchanged)
  *   V2  history enabled, host ''  → module fail-closed BEFORE any import (route absent)
- *   V3  history enabled, 127.0.0.1:0 (ephemeral loopback, NOT Tailscale)
+ *   V3  history enabled, 127.0.0.1:47878 (isolated fixed loopback port, NOT
+ *       Tailscale; fixed port because the module's log prints the CONFIGURED
+ *       port, so the proof must fetch a concrete one)
  *                                 → full mount path taken; auth profile absent in the
  *                                   isolated env → listener mounts FAIL-CLOSED and every
  *                                   request answers 503 PRODUCT_API_AUTH_NOT_READY
@@ -166,7 +168,7 @@ try {
         loopbackSurfaceHistoryStatus: loopbackHistoryProbe.status,
         loopbackSurfaceHistoryBody: loopbackProbeBody,
         loopbackHealth: (await fetchLoopbackHealth(runtime)).status,
-        productionActivation: 'NONE — tmp layout, ephemeral loopback binds only, no Tailscale interface, no auth config, no real agent process',
+        productionActivation: 'NONE — tmp layout, isolated loopback binds only (main server on ephemeral port 0; proof listener on fixed port 47878), no Tailscale interface, no auth config, no real agent process',
       }
       assert.equal(res.status, 503, 'V3: listener mounted but auth profile absent → fail-closed 503')
       assert.equal(body?.error?.code, 'PRODUCT_API_AUTH_NOT_READY', 'V3: exact fail-closed error code')

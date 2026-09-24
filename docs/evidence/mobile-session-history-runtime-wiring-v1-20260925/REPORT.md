@@ -52,8 +52,9 @@ extension, compose stays WIRING/LIFECYCLE ONLY.
      fail-closed (no auth config in the isolated env): history route → 503
      `PRODUCT_API_AUTH_NOT_READY`; the main loopback surface keeps the
      history route ABSENT (404 frozen envelope); loopback `/health` 200.
-   - `productionActivation: NONE` — tmp layout, loopback binds only, no
-     Tailscale interface, no auth config, no real agent process, no
+   - `productionActivation: NONE` — tmp layout, isolated loopback binds only
+     (main server on ephemeral port 0; proof listener on fixed port 47878),
+     no Tailscale interface, no auth config, no real agent process, no
      deployment mutation.
 
 ## Explicitly out of scope (untouched)

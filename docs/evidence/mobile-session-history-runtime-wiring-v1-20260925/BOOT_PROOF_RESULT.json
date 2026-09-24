@@ -1,6 +1,6 @@
 {
   "node": "v25.6.1",
-  "startedAt": "2026-09-24T23:00:07.754Z",
+  "startedAt": "2026-09-24T23:07:14.461Z",
   "variants": {
     "V1_no_history_key": {
       "historyListenerAttempted": false,
@@ -8,7 +8,7 @@
       "loopbackHealth": 200,
       "loopbackAddress": {
         "host": "127.0.0.1",
-        "port": 51576
+        "port": 52616
       }
     },
     "V2_empty_bind_host": {
@@ -38,9 +38,9 @@
         }
       },
       "loopbackHealth": 200,
-      "productionActivation": "NONE — tmp layout, ephemeral loopback binds only, no Tailscale interface, no auth config, no real agent process"
+      "productionActivation": "NONE — tmp layout, isolated loopback binds only (main server on ephemeral port 0; proof listener on fixed port 47878), no Tailscale interface, no auth config, no real agent process"
     }
   },
   "result": "PASS",
-  "finishedAt": "2026-09-24T23:00:08.042Z"
+  "finishedAt": "2026-09-24T23:07:14.761Z"
 }
