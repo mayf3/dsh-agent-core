@@ -96,6 +96,13 @@ export function listAgentSessions(opts) {
   const rows = []
   if (callerRoot !== null) {
     const maxScanBytes = opts.maxScanBytes ?? 8 * 1024 * 1024
+    // S3 (security review closure): two-phase enumeration. Phase 1 is
+    // stat-level only (no journal content read): confinement, keyset filter
+    // and ordering. Phase 2 pays the content cost (header + structured
+    // coordinate scan) ONLY for the rows entering the page — aggregate work
+    // per request is proportional to the response, never a full-subtree
+    // content sweep.
+    const candidates = []
     for (const session of listAgentSessionFiles(homesRoot, viewerAgentId)) {
       // B-B: canonical-root binding over the fully resolved path.
       let realFile = null
@@ -109,6 +116,25 @@ export function listAgentSessions(opts) {
       const confined = confinedJournalStat(realFile)
       if (confined === null) continue
       const lastActiveAtMs = Number.isFinite(confined.mtimeMs) ? Math.trunc(confined.mtimeMs) : null
+      const stableId = decodeSegment(session.sessionId)
+      // Keyset filter on the stable stat-level identity (decoded directory id)
+      // — the same total order the cursor continues, so pages never overlap.
+      if (cursorKey !== null) {
+        const at = lastActiveAtMs ?? 0
+        const id = String(stableId)
+        if (at > cursorKey.atMs || (at === cursorKey.atMs && id <= cursorKey.sessionId)) continue
+      }
+      candidates.push({ session, realFile, confined, lastActiveAtMs, stableId })
+    }
+    candidates.sort((a, b) => {
+      const atA = a.lastActiveAtMs ?? 0
+      const atB = b.lastActiveAtMs ?? 0
+      if (atB !== atA) return atB - atA
+      const idA = String(a.stableId)
+      const idB = String(b.stableId)
+      return idA < idB ? -1 : idA > idB ? 1 : 0
+    })
+    for (const { session, realFile, confined, lastActiveAtMs, stableId } of candidates.slice(0, opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit)) {
       const header = readSessionHeader(realFile, confined)
       // Directory names are the DSH-encoded form of the native session id
       // (canonical encoder: packages/session-history/src/dsh-compat.js
@@ -124,16 +150,6 @@ export function listAgentSessions(opts) {
         // (decode-normalized) mismatch stays visible as an anomaly count.
         anomalies.idMismatch += 1
         sessionId = header.id
-      }
-      // Keyset filter on the RESOLVED identity (the same value the cursor was
-      // built from), so pages never overlap regardless of directory encoding.
-      // Sort order is (lastActiveAtMs DESC, sessionId ASC): the next page holds
-      // entries strictly AFTER the cursor — smaller atMs, or the same atMs with
-      // a greater sessionId.
-      if (cursorKey !== null) {
-        const at = lastActiveAtMs ?? 0
-        const id = String(sessionId)
-        if (at > cursorKey.atMs || (at === cursorKey.atMs && id <= cursorKey.sessionId)) continue
       }
       // E2 (authority round-3 closure-2): origin/coordinate faces come from
       // STRUCTURED journal parsing (loadSessionJournal + projectJournal —
@@ -188,22 +204,19 @@ export function listAgentSessions(opts) {
         workflowInstanceIds: wfCoordList.slice(0, COORDINATE_LIMIT),
         workflowInstanceIdsTruncated: wfCoordList.length > COORDINATE_LIMIT,
       })
+      rows[rows.length - 1]._cursorKey = `${lastActiveAtMs ?? 0}:${stableId}`
     }
   }
-  rows.sort((a, b) => {
-    const atA = Date.parse(a.lastActiveAtUtc ?? '0') || 0
-    const atB = Date.parse(b.lastActiveAtUtc ?? '0') || 0
-    if (atB !== atA) return atB - atA
-    return a.sessionId < b.sessionId ? -1 : a.sessionId > b.sessionId ? 1 : 0
-  })
   const limit = opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit
   const page = rows.slice(0, limit)
   const truncated = rows.length > page.length
   let nextCursor = null
   if (truncated && page.length > 0) {
-    const last = page[page.length - 1]
-    nextCursor = Buffer.from(`${Date.parse(last.lastActiveAtUtc ?? '0') || 0}:${last.sessionId}`, 'utf8').toString('base64url')
+    // The cursor carries the STAT-level sort key (A4: both components) so
+    // pages compose even when a header-resolved id differs from the dir id.
+    nextCursor = Buffer.from(page[page.length - 1]._cursorKey, 'utf8').toString('base64url')
   }
+  for (const row of page) delete row._cursorKey
   return {
     ok: true,
     result: {
