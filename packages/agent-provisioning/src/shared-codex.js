@@ -9,10 +9,10 @@ export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-co
  * ids the dsh-llm-pi-ai adapter forwards as `options.reasoning` and validates
  * fail-loud against the resolved model's own capability metadata
  * (UNSUPPORTED_REASONING_EFFORT) — a value a model cannot take never reaches
- * the wire. `off` (configured as `none` in agent-model-overrides.json) omits
- * the reasoning option entirely, i.e. the provider's default thinking
- * behavior; the distinct wire `effort:"none"` is not exposed by the current
- * dsh-llm seam.
+ * the wire. `off` (configured as `none` in agent-model-overrides.json) is
+ * explicit no-thinking: at the frozen wire boundary it maps to the Codex
+ * Responses `reasoning.effort:"none"` (proven by the request-boundary
+ * verifier), not an omitted reasoning option.
  */
 export const REASONING_EFFORT_VALUES = Object.freeze([
   'none',
@@ -87,6 +87,39 @@ export const CANONICAL_DEFAULT_MODEL_ROUTE = Object.freeze({
 })
 
 export const CANONICAL_DEFAULT_MODEL_ROUTE_ID = `${CANONICAL_DEFAULT_MODEL_ROUTE.provider}/${CANONICAL_DEFAULT_MODEL_ROUTE.model}`
+
+/**
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1 (AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1
+ * DEC-G6R-002/003): the ONLY new route tuple that Spec authorizes — dormant
+ * until a deployment-owned model override selects it. Identity values are the
+ * exact patched-artifact bytes; the pi-ai pair is the frozen npm artifact
+ * identity (DEC-G6R-003: a semver range or an unverified later pi-ai build is
+ * not equivalent evidence), enforced fail-loud at provisioning (ACC-G6R-002).
+ * The `dshCodexReasoningValue` mapping below is the only passthrough — no
+ * second reasoning implementation, no per-Agent branching, no effort
+ * environment channel. The V3 `gpt-5.6-luna / dsh-codex@0.2.3` production
+ * coordinates (CANONICAL_DEFAULT_MODEL_ROUTE + the CHATGPT_SUBSCRIPTION_V1
+ * pin in production-runtime) stay byte-untouched: merge alone must not
+ * change the active model.
+ */
+export const GPT6_LUNA_ROUTE_V1 = Object.freeze({
+  model: 'gpt-6-luna',
+  plugin: 'dsh-codex',
+  pluginVersion: '0.2.3-dshr1',
+  sourceCommit: '42f14343e1506d7d06216d7fa580cae5161001dc',
+  artifactSha256: '160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5',
+  dshVersion: '0.1.0-rc.8',
+  dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
+  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  piAiVersion: '0.87.1',
+  piAiOpenaiCodexCatalogSha256: '4bb30a26d1b40e1f67c9f24891fca0ce25b030bc4cbbb529be78608cd4466fdf',
+  // DEC-G6R-004: an ABSENT reasoningEffort on the GPT-6 tuple normalizes to
+  // this effective value BEFORE canonical identity and provisioning are
+  // computed, so absent and explicit medium are the same effective route. It
+  // never applies to legacy V3 Codex routes — their absent field stays
+  // absent and preserves pre-change behavior byte-for-byte.
+  defaultReasoningEffort: 'medium',
+})
 
 const PATCH_BEGIN = '# BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'
 const PATCH_END = '# END AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1'

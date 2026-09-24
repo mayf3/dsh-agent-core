@@ -10,9 +10,10 @@
  *     "routeCatalog": { "<routeRef>": { routeKind: builtin|subscription,
  *        provider, model, credentialReadiness, providerEnv?,
  *        plugin + pluginVersion (subscription ONLY — FORBIDDEN on builtin),
- *        reasoningEffort? (GPT6_LUNA_AND_REASONING_EFFORT_V1: dsh-codex
- *        subscription routes ONLY — closed REASONING_EFFORT_VALUES set,
- *        absent = provider/model default behavior) } },
+ *        reasoningEffort? (GPT6_LUNA_AND_REASONING_EFFORT_V1: the GPT-6 Luna
+ *        tuple ONLY — dsh-codex@0.2.3-dshr1 subscription routes; closed
+ *        REASONING_EFFORT_VALUES set; absent normalizes to effective medium
+ *        on that tuple and is FORBIDDEN everywhere else) } },
  *     "overrides": { "<agentId>": { "model": { "primary": <routeRef>,
  *        "fallbacks": [<routeRef>, ...] } } } }
  *
@@ -34,6 +35,7 @@ import { isIP } from 'node:net'
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
 import {
   CANONICAL_DEFAULT_MODEL_ROUTE,
+  GPT6_LUNA_ROUTE_V1,
   REASONING_EFFORT_VALUES,
 } from '../../agent-provisioning/src/shared-codex.js'
 
@@ -49,24 +51,22 @@ export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-co
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',
   plugin: 'dsh-codex',
-  pluginVersion: '0.2.3-dshr1',
-  sourceCommit: '42f14343e1506d7d06216d7fa580cae5161001dc',
-  artifactSha256: '160bbefcc8ebe8a1a2c966ec89cdc3a723c0a0ef8cb90fe121772b18970830b5',
+  pluginVersion: '0.2.3',
+  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
+  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
   dshVersion: '0.1.0-rc.8',
   dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
   credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
-  /**
-   * GPT6_LUNA_AND_REASONING_EFFORT_V1: the reasoning effort of the BUILT-IN
-   * default global route (canonicalDefaultGlobalRoute). pi-ai 0.87.x emits an
-   * explicit `reasoning.effort` on EVERY Codex request — an omitted effort
-   * defaults to `none` (no thinking), silently degrading every agent that
-   * does not carry an explicit value. The default route therefore pins
-   * medium explicitly: the closest explicit proxy for today's server-default
-   * behavior and the task-mandated default. Explicit routeCatalog entries
-   * always carry their own reasoningEffort and never read this value.
-   */
-  defaultRouteReasoningEffort: 'medium',
 })
+
+/**
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1 (CTR-G6R-001/002): the V3 production pin
+ * above is preserved byte-for-byte — the dormant GPT-6 tuple lives in
+ * GPT6_LUNA_ROUTE_V1 (agent-provisioning/shared-codex.js) and is selected
+ * ONLY by a deployment-owned model override. The loader accepts BOTH
+ * dsh-codex pins; a single global pin replacement is forbidden, and no
+ * reasoning default is injected into the legacy tuple (DEC-G6R-004).
+ */
 
 export const PROVIDER_ENV_ALLOWLIST = Object.freeze([
   'HTTP_PROXY',
@@ -256,18 +256,31 @@ function exactKeys(value, expected) {
  * different routeRefs resolving to the same canonical identity are a malformed
  * config (no alias bypass of ATTEMPTED_AT_MOST_ONCE).
  *
- * GPT6_LUNA_AND_REASONING_EFFORT_V1: the per-route reasoningEffort joins the
- * canonical form (ABSENT when unconfigured) — `gpt-6-luna + medium` and
- * `gpt-6-luna + high` are DIFFERENT routes because their requests differ.
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1: the route's EFFECTIVE reasoningEffort
+ * joins the canonical form for the GPT-6 tuple only — `gpt-6-luna + medium`
+ * and `gpt-6-luna + high` are DIFFERENT routes because their requests differ,
+ * while ABSENT and explicit medium normalize to the same effective identity
+ * (DEC-G6R-004/CTR-G6R-003). Every other route keeps the exact pre-change
+ * identity bytes (CTR-G6R-001).
  */
+function effectiveRouteReasoningEffort(route) {
+  if (route?.routeKind === 'subscription'
+      && route?.plugin === GPT6_LUNA_ROUTE_V1.plugin
+      && route?.pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion) {
+    return route.reasoningEffort ?? GPT6_LUNA_ROUTE_V1.defaultReasoningEffort
+  }
+  return route.reasoningEffort
+}
+
 function catalogCanonicalIdentity(route) {
+  const reasoningEffort = effectiveRouteReasoningEffort(route)
   return JSON.stringify([
     route.routeKind,
     route.provider,
     route.model,
     route.plugin ?? 'ABSENT',
     route.pluginVersion ?? 'ABSENT',
-    route.reasoningEffort ?? 'ABSENT',
+    ...(reasoningEffort === undefined ? [] : [reasoningEffort]),
     route.credentialFile ?? 'ABSENT',
     route.credentialReadiness,
     route.providerEnv === undefined
@@ -292,7 +305,7 @@ function makeChainRoute(routeRef, route) {
     // block; a builtin processConfig has NO subscription key, so the spawn
     // side's conditional expansion keeps it off the plugin/pin path entirely.
     ...(route.routeKind === 'subscription' ? {
-      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, route.reasoningEffort),
+      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, effectiveRouteReasoningEffort(route)),
     } : {}),
   })
   return Object.freeze({
@@ -308,15 +321,19 @@ function makeChainRoute(routeRef, route) {
  * entries and the built-in default route (DEFAULT_MODEL_ROUTING_CONFIG_V1).
  * GPT6_LUNA_AND_REASONING_EFFORT_V1: reasoningEffort rides the block so the
  * spawn's provisioning writes it into the plugin config patch — one route
- * tuple, one internally consistent provisioning output. */
+ * tuple, one internally consistent provisioning output. The stamped artifact
+ * identity is the ROUTE'S OWN pin (CTR-G6R-002): legacy routes carry the V3
+ * dsh-codex@0.2.3 identity, the GPT-6 tuple carries the exact dshr1
+ * identity; a single global stamp is forbidden. */
 function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort) {
+  const tupleIdentity = pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion ? GPT6_LUNA_ROUTE_V1 : CHATGPT_SUBSCRIPTION_V1
   return Object.freeze({
     plugin,
     pluginVersion,
-    sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
-    artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
-    dshVersion: CHATGPT_SUBSCRIPTION_V1.dshVersion,
-    dshCommit: CHATGPT_SUBSCRIPTION_V1.dshCommit,
+    sourceCommit: tupleIdentity.sourceCommit,
+    artifactSha256: tupleIdentity.artifactSha256,
+    dshVersion: tupleIdentity.dshVersion,
+    dshCommit: tupleIdentity.dshCommit,
     ...(credentialFile === undefined ? {} : { credentialFile }),
     ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
     ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
@@ -344,10 +361,6 @@ export function canonicalDefaultGlobalRoute() {
       CHATGPT_SUBSCRIPTION_V1.plugin,
       CHATGPT_SUBSCRIPTION_V1.pluginVersion,
       CHATGPT_SUBSCRIPTION_V1.credentialFile,
-      // GPT6_LUNA_AND_REASONING_EFFORT_V1: pi-ai 0.87.x defaults an omitted
-      // effort to wire `none` — the built-in default route pins medium so
-      // zero-config Agents keep thinking at the server-default level.
-      CHATGPT_SUBSCRIPTION_V1.defaultRouteReasoningEffort,
     ),
   })
 }
@@ -397,6 +410,13 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       const isOpenAICodex = route?.provider === 'openai-codex' || route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
       const hasProviderEnv = Object.hasOwn(route ?? {}, 'providerEnv')
       const hasReasoningEffort = Object.hasOwn(route ?? {}, 'reasoningEffort')
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1 (CTR-G6R-002): the loader accepts
+      // BOTH dsh-codex pins — the V3 production pin (legacy tuple) and the
+      // dormant GPT-6 tuple pin. A single global pin that makes an existing
+      // V3 config invalid is forbidden.
+      const isDshCodexSubscription = isSubscription && route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
+      const isLegacyCodexTuple = isDshCodexSubscription && route.pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion
+      const isGpt6Tuple = isDshCodexSubscription && route.pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion
       const routeKeys = [
         'credentialReadiness', 'model', 'provider', 'routeKind',
         ...(isSubscription ? ['plugin', 'pluginVersion'] : []),
@@ -418,31 +438,39 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
       if (isSubscription && /^[~^*]|[xX]$|\s\|\||\s-\s/u.test(route.pluginVersion)) {
         throw invalid(`routeCatalog.${routeRef}.pluginVersion must be an exact pin (got ${route.pluginVersion})`)
       }
-      if (isSubscription && route.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
-          && route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion) {
-        // CTR-011: dsh-codex@0.2.3 exact — a pin mismatch is a config error,
+      if (isDshCodexSubscription && !isLegacyCodexTuple && !isGpt6Tuple) {
+        // CTR-011 + CTR-G6R-002: a dsh-codex pin mismatch is a config error,
         // never a fallback trigger. Scoped to subscription routes carrying
         // the plugin (a builtin route has no plugin key at all).
-        throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} exactly)`)
+        throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or ${GPT6_LUNA_ROUTE_V1.pluginVersion} exactly, got ${JSON.stringify(route.pluginVersion)})`)
       }
       if (isOpenAICodex && (
         !isSubscription
         || route.provider !== 'openai-codex'
-        || route.plugin !== CHATGPT_SUBSCRIPTION_V1.plugin
-        || route.pluginVersion !== CHATGPT_SUBSCRIPTION_V1.pluginVersion
+        || !(isLegacyCodexTuple || isGpt6Tuple)
         || route.credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
       )) {
-        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@0.2.3 and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or @${GPT6_LUNA_ROUTE_V1.pluginVersion} and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+      }
+      if (isGpt6Tuple && route.model !== GPT6_LUNA_ROUTE_V1.model) {
+        // DEC-G6R-002: the dshr1 pin is bound to exactly one model tuple.
+        throw invalid(`routeCatalog.${routeRef}: pluginVersion ${GPT6_LUNA_ROUTE_V1.pluginVersion} is the ${GPT6_LUNA_ROUTE_V1.model} tuple pin and requires model ${GPT6_LUNA_ROUTE_V1.model} (got ${JSON.stringify(route.model)})`)
+      }
+      if (isLegacyCodexTuple && route.model === GPT6_LUNA_ROUTE_V1.model) {
+        // ACC-G6R-005: the GPT-6 tuple with the wrong pluginVersion is a
+        // negative fixture, never a valid route.
+        throw invalid(`routeCatalog.${routeRef}: model ${GPT6_LUNA_ROUTE_V1.model} requires pluginVersion ${GPT6_LUNA_ROUTE_V1.pluginVersion} (got ${JSON.stringify(route.pluginVersion)})`)
       }
       // GPT6_LUNA_AND_REASONING_EFFORT_V1: an explicit per-route reasoning
-      // effort is legal ONLY on a dsh-codex subscription route — the dsh-codex
-      // plugin config is the one provisioned passthrough seam. Any other
-      // route kind (builtin, other subscription providers) carrying the field
-      // is a config error, never an ignored hint. The value vocabulary is the
-      // closed REASONING_EFFORT_VALUES set; per-MODEL capability is enforced
-      // downstream fail-loud (dsh-llm UNSUPPORTED_REASONING_EFFORT).
-      if (hasReasoningEffort && (!isSubscription || route.plugin !== CHATGPT_SUBSCRIPTION_V1.plugin)) {
-        throw invalid(`routeCatalog.${routeRef}.reasoningEffort is only supported on ${CHATGPT_SUBSCRIPTION_V1.plugin} subscription routes (routeKind ${routeKind}${isSubscription ? ', plugin ' + JSON.stringify(route.plugin) : ''})`)
+      // effort is legal ONLY on the GPT-6 tuple — the provisioned passthrough
+      // seam of the patched dsh-codex artifact (DEC-G6R-004). Builtin routes,
+      // non-dsh-codex subscription routes and the legacy dsh-codex@0.2.3
+      // tuple carrying the field are malformed configuration and fail loud.
+      // The value vocabulary is the closed REASONING_EFFORT_VALUES set;
+      // per-MODEL capability is enforced downstream fail-loud
+      // (dsh-llm UNSUPPORTED_REASONING_EFFORT, never a clamp or fallback).
+      if (hasReasoningEffort && !isGpt6Tuple) {
+        throw invalid(`routeCatalog.${routeRef}.reasoningEffort is only supported on the GPT-6 Luna tuple (${GPT6_LUNA_ROUTE_V1.plugin}@${GPT6_LUNA_ROUTE_V1.pluginVersion} subscription routes; routeKind ${routeKind}${isSubscription ? ', plugin ' + JSON.stringify(route.plugin) + ', pluginVersion ' + JSON.stringify(route.pluginVersion) : ''})`)
       }
       if (hasReasoningEffort && !REASONING_EFFORT_VALUES.includes(route.reasoningEffort)) {
         throw invalid(`routeCatalog.${routeRef}.reasoningEffort must be one of ${REASONING_EFFORT_VALUES.join(', ')} (got ${JSON.stringify(route.reasoningEffort)})`)
