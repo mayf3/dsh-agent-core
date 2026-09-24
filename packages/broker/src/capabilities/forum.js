@@ -189,7 +189,7 @@ export const forumListThreadsManifest = withTransportErrors({
   operations: [
     {
       name: 'list',
-      description: 'List threads. Optional filters: q (text search), type, status, sort (latest|recently-updated|hot), page, limit.',
+      description: 'List threads. Optional filters: q (text search), type, status, sort (latest|recently-updated|hot), page, limit. WORKFLOW_EXECUTION_CONTROL_V1: contextType/contextId resolve the canonical workflow thread (additive; the svc API already accepts both).',
       arguments: {
         properties: {
           q: { type: 'string', description: 'Optional text search over threads.' },
@@ -198,12 +198,14 @@ export const forumListThreadsManifest = withTransportErrors({
           sort: { type: 'string', enum: ['latest', 'recently-updated', 'hot'], description: 'Sort order (default latest).' },
           page: { type: 'integer', description: 'Page number, starting at 1 (default 1).' },
           limit: { type: 'integer', description: 'Page size (default 20).' },
+          contextType: { type: 'string', description: 'Optional context type filter (e.g. workflow_instance).' },
+          contextId: { type: 'string', description: 'Optional context id filter (e.g. the workflow instance UUID).' },
         },
         required: [],
       },
       result: { type: 'json' },
       errors: ['invalid_arguments'],
-      http: { target: 'svc-forum', method: 'GET', path: '/api/threads', query: ['q', 'type', 'status', 'sort', 'page', 'limit'] },
+      http: { target: 'svc-forum', method: 'GET', path: '/api/threads', query: ['q', 'type', 'status', 'sort', 'page', 'limit', 'contextType', 'contextId'] },
     },
   ],
 })

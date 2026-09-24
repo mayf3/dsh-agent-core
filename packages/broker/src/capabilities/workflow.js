@@ -807,6 +807,69 @@ export const workflowDomainBindingReconcileManifest = withTransportErrors({
   ],
 })
 
+/**
+ * WORKFLOW_EXECUTION_CONTROL_V1 (companion svc Spec CTR-SWEC-004) — the
+ * system execution-escalation ingress. The execution runtime (poller
+ * principal, GLOBAL_SCHEDULER_READ bound server-side) reports an exhausted
+ * attempt policy so svc-workflow can open + escalate the assistance case to
+ * HUMAN_REQUIRED in one authoritative transaction. Idempotent server-side:
+ * an already-open case replays as escalated=false with the existing case id.
+ * This manifest is a RUNTIME-ONLY transport: the execution engine invokes it
+ * through the gateway as the poller principal; it is not part of any
+ * model-facing toolset.
+ */
+export const workflowExecutionEscalationManifest = withTransportErrors({
+  id: 'workflow_execution_escalation',
+  toolName: 'workflow_execution_escalation',
+  name: 'Workflow Execution Escalation',
+  description:
+    'svc-workflow system ingress: report an exhausted execution attempt policy for one node visit so a HUMAN_REQUIRED assistance case is created/escalated (REQUIRE_HUMAN — nothing force-advances). ' +
+    'Idempotent: an already-open case on the visit answers escalated=false with the existing assistanceCaseId. ' +
+    'The caller must hold the server-side GLOBAL_SCHEDULER_READ binding (403 scheduler_read_role_required otherwise).',
+  requiredScopes: ['workflow.execute'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    { code: 'scheduler_read_role_required', description: 'Caller holds no enabled GLOBAL_SCHEDULER_READ binding (HTTP 403).' },
+    { code: 'instance_not_found', description: 'Workflow instance not found (HTTP 404).' },
+    { code: 'visit_not_current', description: 'The given nodeVisitId is not the instance current visit (HTTP 409).' },
+    { code: 'instance_closed', description: 'The instance is cancelled, archived, or terminal (HTTP 409).' },
+    { code: 'invalid_reason', description: 'reason must be ATTEMPTS_EXHAUSTED or STALE_LOOP_EXHAUSTED (HTTP 422).' },
+    { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
+    { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },
+    { code: 'internal_consistency_error', description: 'Downstream internal consistency failure (HTTP 500).' },
+    { code: 'service_unavailable', description: 'Downstream storage unavailable (HTTP 503).' },
+  ],
+  operations: [
+    {
+      name: 'create',
+      description:
+        'Escalate one current node visit to HUMAN_REQUIRED. Required: workflowInstanceId, nodeVisitId, reason. Optional evidence: attemptCount, lastAttemptId, dispatchIntentId.',
+      arguments: {
+        properties: {
+          workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
+          nodeVisitId: { type: 'string', description: 'The CURRENT node visit id (UUID) to escalate.' },
+          reason: { type: 'string', enum: ['ATTEMPTS_EXHAUSTED', 'STALE_LOOP_EXHAUSTED'], description: 'Machine-readable escalation reason.' },
+          attemptCount: { type: 'integer', minimum: 1, description: 'Executed attempt count evidence (system-counted).' },
+          lastAttemptId: { type: 'string', description: 'Last attempt id evidence.' },
+          dispatchIntentId: { type: 'string', description: 'Latest dispatch intent id evidence.' },
+        },
+        required: ['workflowInstanceId', 'nodeVisitId', 'reason'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'POST',
+        path: '/internal/v1/workflow-instances/{workflowInstanceId}/execution-escalations',
+        pathParams: ['workflowInstanceId'],
+        body: ['nodeVisitId', 'reason', 'attemptCount', 'lastAttemptId', 'dispatchIntentId'],
+        idempotencyKey: true,
+      },
+    },
+  ],
+})
+
 export const manifests = [
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
@@ -821,4 +884,5 @@ export const manifests = [
   workflowDefinitionAuthoringManifest,
   workflowDispatchIntentsManifest,
   workflowWakeDispatchIntentManifest,
+  workflowExecutionEscalationManifest,
 ]
