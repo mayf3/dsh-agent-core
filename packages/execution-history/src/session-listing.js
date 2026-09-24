@@ -16,7 +16,7 @@
  * (consumption ban, Spec §5).
  */
 
-import { existsSync, openSync, readSync, closeSync, statSync } from 'node:fs'
+import { existsSync, fstatSync, lstatSync, openSync, readSync, closeSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { decodeSegment, extractJournalCoordinates } from './session-index.js'
@@ -89,8 +89,15 @@ export function listAgentSessions(opts) {
   if (callerRoot !== null) {
     const maxScanBytes = opts.maxScanBytes ?? 8 * 1024 * 1024
     for (const session of listAgentSessionFiles(homesRoot, viewerAgentId)) {
-      const lastActiveAtMs = Number.isFinite(session.mtimeMs) ? Math.trunc(session.mtimeMs) : null
-      const header = readSessionHeader(session.file)
+      // A3 (authority round-3): confined-reader gate. A symlink or hardlink
+      // planted in the caller subtree must never be followed — it could make
+      // this zero-Auth handler read ANOTHER agent's journal and leak its
+      // coordinates as the caller's own. lstat must be a plain regular file
+      // with exactly one link; the header read re-verifies device+inode.
+      const confined = confinedJournalStat(session.file)
+      if (confined === null) continue
+      const lastActiveAtMs = Number.isFinite(confined.mtimeMs) ? Math.trunc(confined.mtimeMs) : null
+      const header = readSessionHeader(session.file, confined)
       // Directory names are the DSH-encoded form of the native session id
       // (canonical encoder: packages/session-history/src/dsh-compat.js
       // encodeSegment — ':' escapes as '~003A' etc.). Decode BEFORE any
@@ -182,12 +189,31 @@ function kindOf(sessionId) {
  */
 export { decodeSegment } from './session-index.js'
 
-/** Best-effort header read: first JSON line of the journal. */
-function readSessionHeader(file) {
+/**
+ * A3 confined-reader gate: lstat (never follow) must be a plain regular file
+ * with exactly one link; returns the lstat for the open/fstat re-check.
+ */
+function confinedJournalStat(file) {
+  try {
+    const lst = lstatSync(file)
+    if (!lst.isFile() || lst.isSymbolicLink() || lst.nlink > 1) return null
+    return lst
+  } catch { return null }
+}
+
+/**
+ * Best-effort header read: first JSON line of the journal. The open/fstat
+ * device+inode check closes the check/open TOCTOU window against the A3
+ * lstat pre-check; any drift fails closed.
+ */
+function readSessionHeader(file, confined) {
   let fd
   try {
-    statSync(file)
+    if (confined === undefined) confined = confinedJournalStat(file)
+    if (confined === null) return null
     fd = openSync(file, 'r')
+    const opened = fstatSync(fd)
+    if (opened.dev !== confined.dev || opened.ino !== confined.ino || !opened.isFile()) return null
     const buffer = Buffer.allocUnsafe(HEADER_READ_BYTES)
     const n = readSync(fd, buffer, 0, buffer.length, 0)
     if (n <= 0) return null

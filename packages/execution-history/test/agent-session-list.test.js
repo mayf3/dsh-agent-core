@@ -14,7 +14,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { queryExecutionTrace, listAgentSessions } from '../src/index.js'
@@ -243,6 +243,44 @@ test('CTR-SCT-002: scheduler-kind sessions carry their occurrence coordinate; or
     const main = forHr.result.sessions.find((s) => s.sessionId === 'main')
     assert.equal(main.kind, 'main')
     assert.equal(main.origins.user, true, 'user-origin presence from the journal')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── A3 (authority round-3 review): confined reader — symlink/hardlink escape ─
+
+test('A3: a symlink or hardlink planted in the caller subtree can never pull a foreign journal into the listing', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    // The foreign victim journal lives OUTSIDE the caller subtree and is
+    // world-readable on purpose — only the confinement gate can stop the leak.
+    mkdirSync(join(fixture.paths.homesRoot, 'agt_victim', 'sessions', '--victim--', 'secret'), { recursive: true })
+    const victimFile = join(fixture.paths.homesRoot, 'agt_victim', 'sessions', '--victim--', 'secret', 'session.jsonl')
+    writeFileSync(victimFile, [
+      JSON.stringify({ type: 'session', version: 0, id: 'victim-secret', createdAt: 7, cwd: '/v' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(8).toISOString(), data: { content: 'victim-only coordinate {"workflowInstanceId":"99999999-9999-4999-8999-999999999999"}', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+
+    const callerDir = join(fixture.paths.homesRoot, 'agt_hr', 'sessions', PROJ_KEY)
+    // 1) SYMLINK planted in the caller's session directory.
+    try { symlinkSync(victimFile, join(callerDir, 'sneaky-symlink', 'session.jsonl')) } catch { /* dir first */ }
+    // 2) HARDLINK (same device, nlink=2 — a symlink is not required to escape).
+    mkdirSync(join(callerDir, 'sneaky-hardlink'), { recursive: true })
+    let hardlinked = false
+    try { linkSync(victimFile, join(callerDir, 'sneaky-hardlink', 'session.jsonl')); hardlinked = true } catch { /* cross-device */ }
+
+    const out = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(out.ok, true)
+    const serialized = JSON.stringify(out.result)
+    assert.ok(!serialized.includes('victim-secret'), 'foreign session id never enters the listing')
+    assert.ok(!serialized.includes('99999999-9999-4999-8999-999999999999'), 'foreign coordinates never enter the listing')
+    for (const row of out.result.sessions) {
+      assert.ok(row.sessionId !== 'sneaky-symlink' && row.sessionId !== 'sneaky-hardlink', 'escape-hatch entries are skipped entirely')
+    }
+    // The victim journal was never read for its content: its mtime is unchanged.
+    const victimMtime = statSync(victimFile).mtimeMs
+    const again = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr' })
+    assert.equal(again.ok, true)
+    assert.equal(statSync(victimFile).mtimeMs, victimMtime, 'victim journal untouched')
   } finally { destroyFixtureRoot(fixture) }
 })
 
