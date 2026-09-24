@@ -213,17 +213,25 @@ test('F1: direct parent-RPC calls to the trusted handler fail closed on invalid 
 test('CTR-SCT-002: keyset pagination is deterministic and exhaustive', () => {
   const fixture = buildFixtureRoot()
   try {
+    // UNCONDITIONAL (internal exact-head re-audit closure): the fixture owns
+    // exactly two sessions and the page limit is 1, so truncation MUST be
+    // reported and the cursor MUST reach the second row. The previous form
+    // guarded every pagination assertion behind `if (first.result.truncated)`,
+    // which made the whole test vacuous while the honesty flag could never
+    // fire.
     const first = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr', limit: 1 })
     assert.equal(first.ok, true)
-    if (first.result.truncated) {
-      assert.ok(typeof first.result.nextCursor === 'string' && first.result.nextCursor.length > 0)
-      const second = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr', cursor: first.result.nextCursor })
-      assert.equal(second.ok, true)
-      const firstIds = first.result.sessions.map((s) => s.sessionId)
-      const secondIds = second.result.sessions.map((s) => s.sessionId)
-      for (const id of secondIds) assert.ok(!firstIds.includes(id), 'pages never overlap')
-      assert.deepEqual([...firstIds, ...secondIds].sort(), ['cron-run-occ:003a05ed6629f358ff53', 'main'], 'pagination covers the whole owned set')
-    }
+    assert.equal(first.result.sessions.length, 1)
+    assert.equal(first.result.truncated, true, 'a 2-session owned set with limit 1 must report truncation')
+    assert.ok(typeof first.result.nextCursor === 'string' && first.result.nextCursor.length > 0)
+    const second = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr', cursor: first.result.nextCursor })
+    assert.equal(second.ok, true)
+    const firstIds = first.result.sessions.map((s) => s.sessionId)
+    const secondIds = second.result.sessions.map((s) => s.sessionId)
+    for (const id of secondIds) assert.ok(!firstIds.includes(id), 'pages never overlap')
+    assert.equal(second.result.truncated, false, 'the continuation exhausts the owned set')
+    assert.equal(second.result.nextCursor, null, 'no cursor past the end')
+    assert.deepEqual([...firstIds, ...secondIds].sort(), ['cron-run-occ:003a05ed6629f358ff53', 'main'], 'pagination covers the whole owned set')
     const badCursor = listAgentSessions({ homesRoot: fixture.paths.homesRoot, indexDir: indexDirOf(fixture), viewerAgentId: 'agt_hr', cursor: '%%%not-base64url%%%' })
     assert.equal(badCursor.ok, false)
     assert.equal(badCursor.code, 'invalid_arguments')

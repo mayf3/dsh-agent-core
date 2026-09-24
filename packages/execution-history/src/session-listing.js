@@ -94,6 +94,7 @@ export function listAgentSessions(opts) {
   try { callerRealRoot = realpathSync(callerSessionsRoot) } catch { callerRealRoot = null }
   const anomalies = { headersMissing: 0, idMismatch: 0 }
   const rows = []
+  let candidateCount = 0
   if (callerRoot !== null) {
     const maxScanBytes = opts.maxScanBytes ?? 8 * 1024 * 1024
     // S3 (security review closure): two-phase enumeration. Phase 1 is
@@ -134,14 +135,25 @@ export function listAgentSessions(opts) {
       const idB = String(b.stableId)
       return idA < idB ? -1 : idA > idB ? 1 : 0
     })
+    candidateCount = candidates.length
     // S3 (security review closure): per-request CONTENT budget (bytes of
     // journal actually read). Once exhausted, remaining page rows are emitted
     // with scanTruncated=true and unproven (false/empty) origin faces — an
     // honest degradation, never a fabricated complete answer; the keyset
     // cursor lets a later call continue from the same position.
+    const limit = opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit
     let contentBudgetBytes = 64 * 1024 * 1024
-    for (const { session, realFile, confined, lastActiveAtMs, stableId } of candidates.slice(0, opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit)) {
-      const header = readSessionHeader(realFile, confined)
+    for (const { session, realFile, confined, lastActiveAtMs, stableId } of candidates.slice(0, limit)) {
+      // Internal exact-head re-audit closure: ONE hardened open per row
+      // (O_NOFOLLOW + fstat dev/ino/size match against the phase-1 lstat)
+      // pins the fd serving BOTH the header and the content scan. The plain
+      // path re-open left the coordinate scan outside the confined reader (a
+      // final-component swap between the phase-1 check and the content open
+      // would feed foreign coordinates into the row, and a confinement-failed
+      // header open did not stop the scan). Frozen contract: 任何不满足 →
+      // 跳过该 journal（不输出其任何坐标）.
+      const opened = openConfinedJournal(realFile, confined)
+      if (opened === null) continue
       // Directory names are the DSH-encoded form of the native session id
       // (canonical encoder: packages/session-history/src/dsh-compat.js
       // encodeSegment — ':' escapes as '~003A' etc.). Decode BEFORE any
@@ -149,6 +161,7 @@ export function listAgentSessions(opts) {
       // as anomalies and degraded (header-less) dirs still yield the native id.
       const decodedDir = decodeSegment(session.sessionId)
       let sessionId = decodedDir
+      const header = readHeaderFromFd(opened.fd)
       if (header === null) {
         anomalies.headersMissing += 1
       } else if (header.id !== undefined && header.id !== decodedDir) {
@@ -171,7 +184,9 @@ export function listAgentSessions(opts) {
           scanTruncated = true
         } else {
           const fileBudget = Math.min(maxScanBytes, contentBudgetBytes)
-          const raw = loadSessionJournal({ file: realFile, maxFileBytes: fileBudget, maxRecords: 10000 })
+          // Content scan reads from the SAME confined fd — no path re-open
+          // (the fd variant never closes it; the caller owns the descriptor).
+          const raw = loadSessionJournal({ fd: opened.fd, maxFileBytes: fileBudget, maxRecords: 10000 })
           contentBudgetBytes -= Math.min(raw.size ?? fileBudget, fileBudget)
           // G2: skipped (malformed / over-record-cap) rows are coverage loss —
           // the EH governing rule requires visibly degraded coverage, never a
@@ -180,6 +195,16 @@ export function listAgentSessions(opts) {
           if (raw.readFailed === undefined) projected = projectJournal(raw.events, { briefMaxChars: 0 })
         }
       } catch { scanTruncated = true }
+      // Post-scan re-verify (frozen contract: 坐标扫描结束后复核文件未发生变化):
+      // the fd pins dev/ino; GROWTH is a live append beyond the scanned prefix
+      // (F-B live-pagination semantics — the parsed prefix stays the file's
+      // true prefix), a SHRINK means the journal changed under the scan —
+      // drift skips the row entirely, never emitting coordinates from an
+      // unverifiable read.
+      let post = null
+      try { post = fstatSync(opened.fd) } catch { post = null }
+      try { closeSync(opened.fd) } catch { /* best effort */ }
+      if (post === null || post.dev !== opened.st.dev || post.ino !== opened.st.ino || post.size < opened.st.size) continue
       const occurrenceIds = new Set()
       const workflowInstanceIds = new Set()
       const origins = { user: false, inter_agent: false, workflow_execution: false }
@@ -225,9 +250,13 @@ export function listAgentSessions(opts) {
       rows[rows.length - 1]._cursorKey = `${lastActiveAtMs ?? 0}:${stableId}`
     }
   }
-  const limit = opts.limit === undefined || opts.limit === null ? PAGE_LIMIT : opts.limit
-  const page = rows.slice(0, limit)
-  const truncated = rows.length > page.length
+  // Keyset honesty derives from the UN-capped stat-level population: rows is
+  // already the page (content cost bounded by the response, S3), so comparing
+  // rows against its own slice could never observe truncation and the listing
+  // would claim false completeness for callers holding more sessions than the
+  // limit (internal exact-head re-audit blocker closure).
+  const page = rows
+  const truncated = candidateCount > rows.length
   let nextCursor = null
   if (truncated && page.length > 0) {
     // The cursor carries the STAT-level sort key (A4: both components) so
@@ -273,21 +302,37 @@ function confinedJournalStat(file) {
 }
 
 /**
- * Best-effort header read: first JSON line of the journal. The open/fstat
- * device+inode check closes the check/open TOCTOU window against the A3
- * lstat pre-check; any drift fails closed.
+ * Confined single-open (internal exact-head re-audit closure): open with
+ * O_NOFOLLOW (final component kernel-bound — a swap in the realpath/open
+ * window fails instead of following) and verify the opened fd against the
+ * A3 phase-1 lstat: plain regular file, same device, same inode, same size
+ * (frozen contract: 打开后 fstat 的 device/inode/size 必须与预检一致).
+ * Returns { fd, st } for the row's header + content reads, or null when any
+ * confinement requirement fails (caller skips the journal entirely).
  */
-function readSessionHeader(file, confined) {
+function openConfinedJournal(file, confined) {
   let fd
   try {
-    if (confined === undefined) confined = confinedJournalStat(file)
-    if (confined === null) return null
-    // E1: O_NOFOLLOW binds the final component at the kernel level — even if
-    // the checked path is swapped for a symlink in the realpath/open window,
-    // the open fails instead of following.
     fd = openSync(file, os.constants.O_RDONLY | os.constants.O_NOFOLLOW)
-    const opened = fstatSync(fd)
-    if (opened.dev !== confined.dev || opened.ino !== confined.ino || !opened.isFile()) return null
+    const st = fstatSync(fd)
+    if (!st.isFile() || st.dev !== confined.dev || st.ino !== confined.ino || st.size !== confined.size) {
+      try { closeSync(fd) } catch { /* best effort */ }
+      return null
+    }
+    return { fd, st }
+  } catch {
+    if (fd !== undefined) { try { closeSync(fd) } catch { /* best effort */ } }
+    return null
+  }
+}
+
+/**
+ * Best-effort header read from an already-confined fd: first JSON line of
+ * the journal. A null here is a BENIGN content anomaly (empty/garbage
+ * header) — confinement failures never reach this function.
+ */
+function readHeaderFromFd(fd) {
+  try {
     const buffer = Buffer.allocUnsafe(HEADER_READ_BYTES)
     const n = readSync(fd, buffer, 0, buffer.length, 0)
     if (n <= 0) return null
@@ -297,7 +342,5 @@ function readSessionHeader(file, confined) {
     return { id: typeof parsed.id === 'string' ? parsed.id : undefined, createdAt: parsed.createdAt }
   } catch {
     return null
-  } finally {
-    if (fd !== undefined) { try { closeSync(fd) } catch { /* best effort */ } }
   }
 }
