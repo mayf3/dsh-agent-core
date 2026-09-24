@@ -294,3 +294,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1` | accepted 2026-09-16 (r4 AMENDMENT_1 joint acceptance; r3 acceptance 2026-09-15 @ `6bce155`; r4 reviewed head `5dd41e2…`, spec sha256 `b28ec501…`, Owner mayf3) | contracts; production apply controlled operation | `agent.session.send` = production canonical Agent fleet 的机械派生基线能力（G1∧G2∧G3 membership join）；lawful row family = `['agent.session.send'] ∪ P, P ⊆ {agent.session.inspect_own_dispatch}`（ENUMERATED 闭集，成员各自持有 Auth accepted authority，fleet 永不授予）；NORMALIZE=make-lawful；clause-scope supersedes AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 §6 grant 政策 |
+
+## Workflow Execution Control V1
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1` | accepted in this candidate; effective after merge | contracts; production apply none | execution trace read model, bounded continuation and escalation, push kick, Forum projection |
