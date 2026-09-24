@@ -208,13 +208,18 @@ ABSENT           无 durable 证据 —— GAP/SOURCE_ABSENT，如实输出
   `packages/session-history/src/dsh-compat.js encodeSegment`，`:` → `~003A` 等 `~XXXX` hex 形式）
   **解码后**参与 header-id 比较与一切坐标派生；健康编码对永不计入 anomaly；仅解码后仍与 header id
   不一致才计 `idMismatch` 并以 header id 为准（既有解析规则）。
-- 数据源纪律：只读 `homes/<callerAgentId>/sessions/**`；session-index 不可用时懒构建
-  （既有语义）。`origins.inter_agent`/`origins.workflow_execution` 与坐标键来自既有
-  session-index 抽取键；`origins.user` 由本 Spec 在 journal 坐标抽取器上加法新增键
-  （source.kind='user' 出现判定，镜像既有 hasInterAgent 模式；scope 已列）。
-  origins/坐标键为 best-effort，缺失记空数组/false 且不报错（不阻塞 listing 主功能）。
-- 错误表（封闭）：`invalid_arguments`、`forbidden_not_owner`、`history_unavailable`
-  （caller homes 根不可读时）。
+- 数据源纪律（round-2 修订，C1/C2 closure）：**caller 子树直读**——枚举并只读
+  `homes/<callerAgentId>/sessions/**`（readdir+stat + header ≤4KiB + 每文件有界坐标扫描）。
+  **绝不构建、读取或刷新全局 fleet 坐标索引**（构建它需要读其他 Agent 的 journal 内容 =
+  caller 可触发的跨 Agent 扫描，违反本契约边界；其 fleet 级文件上限也会截断 caller 自己的
+  完整列表）。`origins`/坐标键由既有 journal 坐标抽取器（含 `origins.user` 的
+  source.kind='user' 加法键）在 caller 子树内直接产出，best-effort、缺失记 false/空且不报错。
+  列表因此天然发现新建 journal（无索引 staleness），且不受任何 fleet cap 截断。
+- 错误表（封闭；round-2 修订，C4 closure）：`invalid_arguments`、`forbidden_not_owner`、
+  `credential_unavailable`（gateway 在 local capability 上先加载 caller credential，可能失败——
+  必须声明，防止 child relay 把真实失败降级为 invalid_arguments）、`history_unavailable`
+  （caller homes 根不可读时）。cursor 解码出的时间戳必须为有限毫秒值，否则
+  `invalid_arguments`（C5：非有限值会使 keyset 比较恒 false、首页无限重复）。
 - 隐私：输出不含任何消息正文、tool 参数/结果、模型输出；仅坐标与布尔 presence。
   输出仅供 caller 自身消费，消费禁令同非目标。
 
