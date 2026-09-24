@@ -49,6 +49,7 @@ export function loadBackendConfig(file) {
     binaryPath: document.binaryPath,
     codeHome: document.codeHome,
     minVersion: typeof document.minVersion === 'string' ? document.minVersion : null,
+    model: typeof document.model === 'string' && document.model !== '' ? document.model : null,
     timeoutMs: Number.isInteger(document.timeoutMs) && document.timeoutMs > 0 ? document.timeoutMs : 3_600_000,
   }
 }
@@ -95,14 +96,20 @@ export function backendEnv(config, env = process.env) {
   return scrubbed
 }
 
-function codexArgs({ worktree, lastMessageFile, sandbox = 'workspace-write' }) {
-  return [
+function codexArgs(config, { worktree, lastMessageFile, sandbox = 'workspace-write' }) {
+  const argv = [
     'exec', '--json',
+    // System-owned invocation: the executor's config is THIS adapter's pinned
+    // contract, never the operator's interactive ~/.codex config.toml (which
+    // may carry unsupported/interactive-only settings).
+    '--ignore-user-config',
     '-C', worktree,
     '-s', sandbox, // PINNED: writes confined to the worktree (+ temp). Never danger-full-access.
     '--skip-git-repo-check',
     '-o', lastMessageFile,
   ]
+  if (config.model !== null) argv.push('-m', config.model)
+  return argv
 }
 
 /**
@@ -113,7 +120,7 @@ function codexArgs({ worktree, lastMessageFile, sandbox = 'workspace-write' }) {
  */
 export function runCodex(config, { instruction, worktree, executionDir, resumeSessionId = null }) {
   const lastMessageFile = join(executionDir, 'last-message.txt')
-  const argv = [config.binaryPath, ...codexArgs({ worktree, lastMessageFile })]
+  const argv = [config.binaryPath, ...codexArgs(config, { worktree, lastMessageFile })]
   if (resumeSessionId !== null) argv.splice(2, 0, 'resume', resumeSessionId)
   argv.push(instruction)
 
