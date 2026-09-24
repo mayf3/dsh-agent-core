@@ -17,10 +17,11 @@
  */
 
 import { existsSync, fstatSync, lstatSync, openSync, readSync, closeSync, realpathSync, statSync } from 'node:fs'
+import os from 'node:os'
 import { join, sep } from 'node:path'
 
-import { decodeSegment, extractJournalCoordinates } from './session-index.js'
-import { listAgentSessionFiles } from './loaders/session-journal.js'
+import { decodeSegment } from './session-index.js'
+import { listAgentSessionFiles, loadSessionJournal, projectJournal } from './loaders/session-journal.js'
 
 const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
 const HEADER_READ_BYTES = 4096
@@ -134,25 +135,53 @@ export function listAgentSessions(opts) {
         const id = String(sessionId)
         if (at > cursorKey.atMs || (at === cursorKey.atMs && id <= cursorKey.sessionId)) continue
       }
-      let coordinates = {}
+      // E2 (authority round-3 closure-2): origin/coordinate faces come from
+      // STRUCTURED journal parsing (loadSessionJournal + projectJournal —
+      // recognized event fields: message provenance source and
+      // toolCallCoordinates), never from raw-text regex matches on serialized
+      // bytes: message text quoting a coordinate must not corrupt the
+      // traceability view. Message text is READ here for classification only
+      // and never enters the output rows.
+      let projected = null
       try {
-        coordinates = extractJournalCoordinates(realFile, { maxScanBytes }).coordinates
-      } catch { /* best-effort origins; listing never fails on one file */ }
-      const occurrenceIds = new Set(coordinates.occurrenceIds ?? [])
+        const raw = loadSessionJournal({ file: realFile, maxFileBytes: maxScanBytes, maxRecords: 10000 })
+        if (raw.readFailed === undefined) projected = projectJournal(raw.events, { briefMaxChars: 0 })
+      } catch { projected = null }
+      const occurrenceIds = new Set()
+      const workflowInstanceIds = new Set()
+      const origins = { user: false, inter_agent: false, workflow_execution: false }
+      if (projected !== null) {
+        for (const msg of projected.messages ?? []) {
+          const kind = msg?.source?.kind
+          if (kind === 'user') origins.user = true
+          else if (kind === 'inter_agent') origins.inter_agent = true
+          else if (kind === 'workflow_execution') {
+            origins.workflow_execution = true
+            if (typeof msg.source.workflowInstanceId === 'string') workflowInstanceIds.add(msg.source.workflowInstanceId)
+          }
+        }
+        for (const call of projected.toolCalls ?? []) {
+          if (typeof call?.coordinates?.occurrenceId === 'string') occurrenceIds.add(call.coordinates.occurrenceId)
+          if (typeof call?.coordinates?.workflowInstanceId === 'string') workflowInstanceIds.add(call.coordinates.workflowInstanceId)
+        }
+        for (const coord of projected.workflowCoordinates ?? []) {
+          if (typeof coord?.workflowInstanceId === 'string') workflowInstanceIds.add(coord.workflowInstanceId)
+        }
+      }
       if (typeof sessionId === 'string' && sessionId.startsWith(CRON_RUN_PREFIX)) {
         occurrenceIds.add(sessionId.slice(CRON_RUN_PREFIX.length))
       }
       const occCoordList = [...occurrenceIds].sort()
-      const wfCoordList = [...(coordinates.workflowInstanceIds ?? [])].sort()
+      const wfCoordList = [...workflowInstanceIds].sort()
       rows.push({
         sessionId,
         kind: kindOf(sessionId),
         createdAtUtc: header !== null && Number.isFinite(header.createdAt) ? new Date(header.createdAt).toISOString() : null,
         lastActiveAtUtc: lastActiveAtMs !== null ? new Date(lastActiveAtMs).toISOString() : null,
         origins: {
-          user: coordinates.hasUserSource === true,
-          inter_agent: coordinates.hasInterAgent === true,
-          workflow_execution: coordinates.hasWorkflowExecutionSidecar === true,
+          user: origins.user,
+          inter_agent: origins.inter_agent,
+          workflow_execution: origins.workflow_execution,
         },
         schedulerOccurrenceIds: occCoordList.slice(0, COORDINATE_LIMIT),
         schedulerOccurrenceIdsTruncated: occCoordList.length > COORDINATE_LIMIT,
@@ -222,7 +251,10 @@ function readSessionHeader(file, confined) {
   try {
     if (confined === undefined) confined = confinedJournalStat(file)
     if (confined === null) return null
-    fd = openSync(file, 'r')
+    // E1: O_NOFOLLOW binds the final component at the kernel level — even if
+    // the checked path is swapped for a symlink in the realpath/open window,
+    // the open fails instead of following.
+    fd = openSync(file, os.constants.O_RDONLY | os.constants.O_NOFOLLOW)
     const opened = fstatSync(fd)
     if (opened.dev !== confined.dev || opened.ino !== confined.ino || !opened.isFile()) return null
     const buffer = Buffer.allocUnsafe(HEADER_READ_BYTES)
