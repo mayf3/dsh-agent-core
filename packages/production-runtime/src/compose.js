@@ -58,6 +58,7 @@ import { createAgentPrincipalReverseResolutionAccess } from './identity/agent-pr
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { createAgentDirectoryAccess } from './agent-directory.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
@@ -491,6 +492,23 @@ export async function composeProductionRuntime(options = {}) {
     router,
     log,
     ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
+  })
+
+  // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the product-api
+  // /workflow-execution/* routes resolve this service at request time (the
+  // same late-binding discipline as schedulerHistory/schedulerTokenVerifier).
+  // traces = cross-process-fresh read model; kick = one coalesced poll
+  // trigger (latency only; the poll loop stays the correctness path).
+  ctx.provide('workflowExecutionAccess', {
+    traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
+      const attempts = await workflowExecution.ledger.snapshotFresh()
+      return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
+    },
+    kick: (payload) => {
+      if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
+      void payload // the kick carries no semantics; the poll re-reads svc truth
+      return workflowExecution.engine.kick()
+    },
   })
 
   const scheduler = new Scheduler({
