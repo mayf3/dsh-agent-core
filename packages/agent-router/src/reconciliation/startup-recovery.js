@@ -32,19 +32,28 @@ export const startupRecoveryMethods = {
     // Discover duplicate subjects before mutating any one record. Every scan
     // reads only bounded root-custodied bytes, including malformed bundles.
     const handles = new Map()
+    const fileHandles = new Map()
     for (const file of files) {
       try {
         const raw = JSON.parse(ownedFile(join(evidenceDir, file), 65536, io).toString('utf8'))
         const handle = raw?.subject?.reconciliationHandle
-        if (typeof handle === 'string') handles.set(handle, (handles.get(handle) ?? 0) + 1)
+        if (typeof handle === 'string') {
+          fileHandles.set(file, handle)
+          handles.set(handle, (handles.get(handle) ?? 0) + 1)
+        }
       } catch { /* verifier records the exact file error below */ }
     }
     for (const file of files) {
       try {
+        const scannedHandle = fileHandles.get(file)
+        if (scannedHandle !== undefined && handles.get(scannedHandle) > 1) {
+          audit({ file, handle: scannedHandle, status: 'rejected', reason: 'duplicate_subject_bundle' })
+          continue
+        }
         const path = join(evidenceDir, file)
         const checked = verifyQuiescenceBundle(this, path, { evidenceDir, deploymentDir, startup, io })
-        if (handles.get(checked.handle) !== 1) {
-          audit({ file, handle: checked.handle, status: 'rejected', reason: 'duplicate_subject_bundle' })
+        if (scannedHandle !== checked.handle || handles.get(checked.handle) !== 1) {
+          audit({ file, handle: checked.handle, status: 'rejected', reason: 'bundle_subject_scan_changed' })
           continue
         }
         const result = this.settleLate(checked.handle, {
