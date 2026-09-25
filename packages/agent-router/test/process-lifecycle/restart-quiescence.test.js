@@ -125,6 +125,63 @@ test('NEG-RQ-007 two bundles for one handle reject both before either can settle
   assert.deepEqual(readFileSync(fx.persistenceFile), before)
 })
 
+for (const [name, secondName, mutate, replaceDuringVerify] of [
+  ['stable differing duplicate', 'aaa.bundle.json', b => { b.recoveryCutover.startupNonce = 'different-nonce' }, false],
+  ['stable malformed duplicate', 'aaa.bundle.json', b => { b.bundleSchemaVersion = 999 }, false],
+  ['replacement collision before subject', 'aaa.bundle.json', b => { b.subject.reconciliationHandle = 'other-handle'; b.subject.turnExecutionId = 'other-handle' }, true],
+  ['replacement collision after subject', 'zzz.bundle.json', b => { b.subject.reconciliationHandle = 'other-handle'; b.subject.turnExecutionId = 'other-handle' }, true],
+]) {
+  test(`NEG-RQ-007 ${name} is batch zero-write`, t => {
+    const fx = proofFixture(cleanup => t.after(cleanup))
+    const secondPath = join(fx.evidenceDir, secondName)
+    const second = structuredClone(fx.bundle)
+    mutate(second)
+    writeFileSync(secondPath, json(second))
+    if (replaceDuringVerify) {
+      const originalStat = fx.io.stat
+      let observations = 0
+      fx.io.stat = path => {
+        if (path === secondPath && ++observations === 3) writeFileSync(secondPath, json(fx.bundle))
+        return originalStat(path)
+      }
+    }
+    const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+    const recordBefore = JSON.stringify(store.records.get(fx.handle))
+    const durableBefore = readFileSync(fx.persistenceFile)
+    const emitted = []
+    store.onTurnReconciled(event => emitted.push(event))
+    const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+      deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+    assert.deepEqual(result.map(row => row.status), ['rejected', 'rejected'], JSON.stringify(result))
+    assert.equal(JSON.stringify(store.records.get(fx.handle)), recordBefore)
+    assert.deepEqual(readFileSync(fx.persistenceFile), durableBefore)
+    assert.equal(store.activeFenceForAgent('agt_subject').handle, fx.handle)
+    assert.equal(emitted.length, 0)
+  })
+}
+
+test('NEG-RQ-007 same-subject bytes replaced during verification are zero-write', t => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  const originalStat = fx.io.stat
+  let observations = 0
+  fx.io.stat = path => {
+    if (path === fx.bundleFile && ++observations === 3) writeFileSync(fx.bundleFile, `${json(fx.bundle)}\n`)
+    return originalStat(path)
+  }
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const recordBefore = JSON.stringify(store.records.get(fx.handle))
+  const durableBefore = readFileSync(fx.persistenceFile)
+  const emitted = []
+  store.onTurnReconciled(event => emitted.push(event))
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.deepEqual(result.map(row => row.reason), ['bundle_subject_scan_changed'])
+  assert.equal(JSON.stringify(store.records.get(fx.handle)), recordBefore)
+  assert.deepEqual(readFileSync(fx.persistenceFile), durableBefore)
+  assert.equal(store.activeFenceForAgent('agt_subject').handle, fx.handle)
+  assert.equal(emitted.length, 0)
+})
+
 test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })

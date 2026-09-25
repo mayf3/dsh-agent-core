@@ -1,7 +1,7 @@
 /** Crash-restart reconciliation for the V3 durable recovery authority. */
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { ownedDirectory, ownedFile } from './quiescence-custody.js'
+import { ownedDirectory, ownedFile, sha256 } from './quiescence-custody.js'
 import { verifyQuiescenceBundle } from './quiescence-bundle.js'
 
 export const startupRecoveryMethods = {
@@ -31,38 +31,73 @@ export const startupRecoveryMethods = {
     }
     // Discover duplicate subjects before mutating any one record. Every scan
     // reads only bounded root-custodied bytes, including malformed bundles.
-    const handles = new Map()
-    const fileHandles = new Map()
-    for (const file of files) {
-      try {
-        const raw = JSON.parse(ownedFile(join(evidenceDir, file), 65536, io).toString('utf8'))
-        const handle = raw?.subject?.reconciliationHandle
-        if (typeof handle === 'string') {
-          fileHandles.set(file, handle)
-          handles.set(handle, (handles.get(handle) ?? 0) + 1)
-        }
-      } catch { /* verifier records the exact file error below */ }
+    const observed = new Map(files.map(file => [file, new Set()]))
+    const scannedDigests = new Map()
+    const changedFiles = new Set()
+    const observe = (file, handle) => {
+      if (typeof handle === 'string') observed.get(file).add(handle)
     }
     for (const file of files) {
       try {
-        const scannedHandle = fileHandles.get(file)
-        if (scannedHandle !== undefined && handles.get(scannedHandle) > 1) {
-          audit({ file, handle: scannedHandle, status: 'rejected', reason: 'duplicate_subject_bundle' })
-          continue
-        }
-        const path = join(evidenceDir, file)
-        const checked = verifyQuiescenceBundle(this, path, { evidenceDir, deploymentDir, startup, io })
-        if (scannedHandle !== checked.handle || handles.get(checked.handle) !== 1) {
-          audit({ file, handle: checked.handle, status: 'rejected', reason: 'bundle_subject_scan_changed' })
-          continue
-        }
-        const result = this.settleLate(checked.handle, {
+        const bytes = ownedFile(join(evidenceDir, file), 65536, io)
+        scannedDigests.set(file, sha256(bytes))
+        const raw = JSON.parse(bytes.toString('utf8'))
+        observe(file, raw?.subject?.reconciliationHandle)
+      } catch { /* verifier records the exact file error below */ }
+    }
+    // Complete the bounded batch before settling: a file changed between
+    // scan and verification can otherwise contaminate a later subject.
+    const checked = new Map()
+    for (const file of files) {
+      const path = join(evidenceDir, file)
+      try {
+        const proof = verifyQuiescenceBundle(this, path, { evidenceDir, deploymentDir, startup, io })
+        observe(file, proof.handle)
+        if (scannedDigests.get(file) !== proof.bundleSha256) changedFiles.add(file)
+        checked.set(file, { proof })
+      } catch (error) {
+        checked.set(file, { error })
+      }
+      try {
+        const bytes = ownedFile(path, 65536, io)
+        if (scannedDigests.get(file) !== sha256(bytes)) changedFiles.add(file)
+        const raw = JSON.parse(bytes.toString('utf8'))
+        observe(file, raw?.subject?.reconciliationHandle)
+      } catch { changedFiles.add(file) }
+    }
+    const owners = new Map()
+    const polluted = new Set()
+    for (const [file, subjects] of observed) {
+      if (subjects.size > 1 || changedFiles.has(file)) {
+        for (const handle of subjects) polluted.add(handle)
+      }
+      for (const handle of subjects) {
+        if (!owners.has(handle)) owners.set(handle, new Set())
+        owners.get(handle).add(file)
+      }
+    }
+    for (const [handle, names] of owners) if (names.size > 1) polluted.add(handle)
+    for (const file of files) {
+      const subjects = observed.get(file)
+      const handle = checked.get(file).proof?.handle ?? [...subjects][0]
+      if ([...subjects].some(subject => polluted.has(subject))) {
+        const duplicate = [...subjects].some(subject => owners.get(subject)?.size > 1)
+        audit({ file, handle, status: 'rejected', reason: duplicate ? 'duplicate_subject_bundle' : 'bundle_subject_scan_changed' })
+        continue
+      }
+      const { proof, error } = checked.get(file)
+      if (error) {
+        audit({ file, status: 'rejected', reason: error.code ?? 'proof_verification_failed' })
+        continue
+      }
+      try {
+        const result = this.settleLate(proof.handle, {
           lateOutcome: 'terminated_without_outcome',
           terminationEvidence: 'restart_quiescence_proven',
           exitObserved: false,
           restartQuiescence: true,
         })
-        audit({ file, handle: checked.handle, status: result.won ? 'settled' : 'duplicate_ignored' })
+        audit({ file, handle: proof.handle, status: result.won ? 'settled' : 'duplicate_ignored' })
       } catch (error) {
         audit({ file, status: 'rejected', reason: error.code ?? 'proof_verification_failed' })
       }
