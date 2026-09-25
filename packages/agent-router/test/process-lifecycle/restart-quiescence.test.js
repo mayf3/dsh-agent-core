@@ -260,6 +260,24 @@ test('NEG-RQ-003 transient window-lock stat failure remains sticky after recover
   assert.equal(emitted.length, 0)
 })
 
+test('NEG-RQ-018 shared window lost between settlements leaves second record untouched', t => {
+  const { fx, store, secondHandle, recordsBefore, emitted } = twoSubjectsOneWindow(t)
+  let held = true
+  fx.io.challengeWindow = (_fd, challenge) => ({ ...challenge,
+    exclusiveWindowHeld: held, launchSourcesStillInhibited: held, windowClosed: !held })
+  store.onTurnReconciled(() => { held = false })
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.deepEqual(result.map(row => row.status), ['settled', 'rejected'], JSON.stringify(result))
+  assert.equal(result[1].reason, 'window_continuity_lost')
+  assert.equal(store.activeFenceForAgent('agt_subject'), null)
+  assert.equal(JSON.stringify(store.records.get(secondHandle)), recordsBefore[1])
+  assert.equal(store.activeFenceForAgent('agt_extra').handle, secondHandle)
+  assert.equal(emitted.length, 1)
+  const reopened = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'later-epoch' })
+  assert.equal(JSON.stringify(reopened.records.get(secondHandle)), recordsBefore[1])
+})
+
 test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
