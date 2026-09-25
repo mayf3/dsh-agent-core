@@ -116,7 +116,7 @@ project 目录平级 worktrees 均无；Agent Forum 需 broker 凭据（本 sess
 HANDOFF_PATH = docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1.md
               docs/reviews/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1_INDEPENDENT_REVIEW_REQUEST.md
               (this packet)
-SPEC_SHA256  = <frozen after commit; recorded verbatim in the review request>
+SPEC_SHA256  = 023797c16c2a2b45a458c7b40f1349eaa3d3e08aac342a752c862676e7ed5a41
 BRANCH       = goal/hr-restart-lost-fence-trusted-recovery-v1 (isolated worktree,
                fresh from origin/main b4e8511c)
 NEXT_SINGLE_ACTION = dispatch INDEPENDENT semantic review per the request file;

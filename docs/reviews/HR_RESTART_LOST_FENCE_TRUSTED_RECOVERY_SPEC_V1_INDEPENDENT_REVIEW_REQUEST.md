@@ -17,7 +17,7 @@ SPEC_SHA256 = SHA256_AT_FREEZE (filled below after the freeze commit; reviewer
 OWNER_PACKET = docs/reports/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_V1_OWNER_DECISION_PACKET.md
 ```
 
-SPEC_SHA256 = `__FROZEN_SHA__`
+SPEC_SHA256 = `023797c16c2a2b45a458c7b40f1349eaa3d3e08aac342a752c862676e7ed5a41`
 
 ## Reviewer independence requirements
 
