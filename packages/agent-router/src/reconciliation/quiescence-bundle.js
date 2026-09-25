@@ -17,6 +17,10 @@ function exactKeys(value, names, code) {
 function same(a, b, code) { if (a !== b) proofReject(code) }
 function hash(value, code) { if (typeof value !== 'string' || !HASH.test(value)) proofReject(code) }
 function time(value, code) { if (!Number.isSafeInteger(value) || value < 0) proofReject(code) }
+function receiptTime(receipt, key, code) {
+  if (receipt === null || typeof receipt !== 'object' || Array.isArray(receipt)) proofReject(code)
+  time(receipt[key], code)
+}
 
 function verifyShape(bundle) {
   exactKeys(bundle, ['bundleSchemaVersion', 'subject', 'epochRetirement', 'recoveryCutover',
@@ -97,14 +101,21 @@ function verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io) {
   const inhibited = namedReceipt(evidenceDir, 'launch-sources-inhibited.json', cut.launchSourcesInhibitedReceiptSha256, io)
   const quiesced = namedReceipt(evidenceDir, 'old-tree-quiesced.json', cut.oldTreeQuiescedReceiptSha256, io)
   const authorization = namedReceipt(evidenceDir, 'launch-authorization.json', cut.launchAuthorizationReceiptSha256, io)
+  receiptTime(window, 'windowOpenedAtWallMs', 'V9_receipt_time_invalid')
+  receiptTime(inhibited, 'atWallMs', 'V9_receipt_time_invalid')
+  receiptTime(quiesced, 'atWallMs', 'V9_receipt_time_invalid')
+  receiptTime(authorization, 'authorizedStartupAtWallMs', 'V9_receipt_time_invalid')
   for (const receipt of [window, inhibited, quiesced, authorization]) {
     if (receipt?.operationId !== cut.operationId || receipt?.hostId !== cut.hostId
         || receipt?.startupNonce !== cut.startupNonce) proofReject('V9_receipt_identity_mismatch')
   }
   if (window.windowLockPath !== join(evidenceDir, 'window.lock')
       || window.windowOpenedAtWallMs !== cut.windowOpenedAtWallMs
-      || inhibited.complete !== true || inhibited.atWallMs < cut.windowOpenedAtWallMs
-      || quiesced.complete !== true || quiesced.atWallMs !== cut.oldTreeQuiescedAtWallMs) proofReject('V9_window_order_invalid')
+      || inhibited.complete !== true || quiesced.complete !== true
+      || !(cut.windowOpenedAtWallMs < inhibited.atWallMs
+        && inhibited.atWallMs < quiesced.atWallMs
+        && quiesced.atWallMs === cut.oldTreeQuiescedAtWallMs
+        && quiesced.atWallMs < cut.authorizedStartupAtWallMs)) proofReject('V9_window_order_invalid')
   const census = bundle.hostCensus
   const holders = bundle.holderCheck
   if (census.operationId !== cut.operationId || census.hostId !== cut.hostId
@@ -131,6 +142,8 @@ function verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io) {
       || Math.max(census.executedAtWallMs, holders.executedAtWallMs) >= authorization.authorizedStartupAtWallMs) proofReject('V9_launch_authorization_mismatch')
   const floor = namedReceipt(deploymentDir, 'floor-proven.json', bundle.deploymentProof.floorProvenReceiptSha256, io)
   const validator = namedReceipt(deploymentDir, 'validator-installed.json', bundle.deploymentProof.validatorInstalledReceiptSha256, io)
+  receiptTime(floor, 'provedAtWallMs', 'V10_deployment_time_invalid')
+  receiptTime(validator, 'installedAtWallMs', 'V10_deployment_time_invalid')
   if (floor.status !== 'ROUTER_RESTART_SAFETY=PROVEN' || floor.floorCommit !== '2097e4f9'
       || floor.deployedBinarySha256 !== startup.consumingBinarySha256
       || validator.deployedBinarySha256 !== startup.consumingBinarySha256
@@ -139,8 +152,12 @@ function verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io) {
       || validator.installedAtWallMs >= cut.windowOpenedAtWallMs) proofReject('V10_deployment_prerequisite_invalid')
   if (bundle.controlledStop !== null) {
     const stop = namedReceipt(evidenceDir, 'controlled-stop.json', bundle.controlledStop.receiptSha256, io)
+    receiptTime(stop, 'atWallMs', 'V7_stop_time_invalid')
     if (stop.operationId !== cut.operationId || stop.hostId !== cut.hostId
         || stop.method !== bundle.controlledStop.method || stop.atWallMs !== bundle.controlledStop.atWallMs) proofReject('V7_stop_receipt_mismatch')
+    if (!(floor.provedAtWallMs < stop.atWallMs && validator.installedAtWallMs < stop.atWallMs
+        && cut.windowOpenedAtWallMs < inhibited.atWallMs && inhibited.atWallMs < stop.atWallMs
+        && stop.atWallMs < cut.oldTreeQuiescedAtWallMs)) proofReject('V7_stop_order_invalid')
   }
 }
 
@@ -158,6 +175,12 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
       || bundle.subject.runtimeEpoch === store.runtimeEpoch
       || !store.runtimeEpochs.has(bundle.subject.runtimeEpoch)) proofReject('V4_epoch_invalid')
   const { record, alreadySettled } = verifyRecord(store, bundle)
+  time(record.createdAtWallMs, 'V9_subject_time_invalid')
+  if (!(record.createdAtWallMs < cut.windowOpenedAtWallMs)) proofReject('V9_subject_after_cut')
+  if (!alreadySettled) {
+    time(record.updatedAt, 'V9_subject_time_invalid')
+    if (!(record.updatedAt < cut.windowOpenedAtWallMs)) proofReject('V9_subject_after_cut')
+  }
   if (!alreadySettled && sha256(JSON.stringify(record)) !== cut.subjectPreimageSha256) proofReject('V9_preimage_mismatch')
   if ((bundle.controlledStop !== null) !== (startup.recoveryPlanStopsRuntime === true)) proofReject('V7_stop_plan_mismatch')
   verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io)
