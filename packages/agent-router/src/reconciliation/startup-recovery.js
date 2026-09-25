@@ -1,7 +1,7 @@
 /** Crash-restart reconciliation for the V3 durable recovery authority. */
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { ownedDirectory, ownedFile, sha256 } from './quiescence-custody.js'
+import { ownedDirectory, ownedFile, sha256, verifyCurrentWindow } from './quiescence-custody.js'
 import { verifyQuiescenceBundle } from './quiescence-bundle.js'
 
 export const startupRecoveryMethods = {
@@ -32,10 +32,19 @@ export const startupRecoveryMethods = {
     // Discover duplicate subjects before mutating any one record. Every scan
     // reads only bounded root-custodied bytes, including malformed bundles.
     const observed = new Map(files.map(file => [file, new Set()]))
+    const windows = new Map(files.map(file => [file, new Set()]))
     const scannedDigests = new Map()
     const changedFiles = new Set()
+    const failedWindows = new Set()
     const observe = (file, handle) => {
       if (typeof handle === 'string') observed.get(file).add(handle)
+    }
+    const observeWindow = (file, cut) => {
+      if (typeof cut?.operationId === 'string' && typeof cut.hostId === 'string'
+          && typeof cut.startupNonce === 'string' && typeof cut.exclusiveWindowReceiptSha256 === 'string') {
+        windows.get(file).add(JSON.stringify([cut.operationId, cut.hostId,
+          cut.startupNonce, cut.exclusiveWindowReceiptSha256]))
+      }
     }
     for (const file of files) {
       try {
@@ -43,6 +52,7 @@ export const startupRecoveryMethods = {
         scannedDigests.set(file, sha256(bytes))
         const raw = JSON.parse(bytes.toString('utf8'))
         observe(file, raw?.subject?.reconciliationHandle)
+        observeWindow(file, raw?.recoveryCutover)
       } catch { /* verifier records the exact file error below */ }
     }
     // Complete the bounded batch before settling: a file changed between
@@ -53,16 +63,21 @@ export const startupRecoveryMethods = {
       try {
         const proof = verifyQuiescenceBundle(this, path, { evidenceDir, deploymentDir, startup, io })
         observe(file, proof.handle)
+        observeWindow(file, proof.bundle.recoveryCutover)
         if (scannedDigests.get(file) !== proof.bundleSha256) changedFiles.add(file)
         checked.set(file, { proof })
       } catch (error) {
         checked.set(file, { error })
+        if (error.code?.startsWith('window_')) {
+          for (const window of windows.get(file)) failedWindows.add(window)
+        }
       }
       try {
         const bytes = ownedFile(path, 65536, io)
         if (scannedDigests.get(file) !== sha256(bytes)) changedFiles.add(file)
         const raw = JSON.parse(bytes.toString('utf8'))
         observe(file, raw?.subject?.reconciliationHandle)
+        observeWindow(file, raw?.recoveryCutover)
       } catch { changedFiles.add(file) }
     }
     const owners = new Map()
@@ -77,12 +92,28 @@ export const startupRecoveryMethods = {
       }
     }
     for (const [handle, names] of owners) if (names.size > 1) polluted.add(handle)
+    // A successful earlier challenge is not proof of continuity after the
+    // rest of the batch has run. Recheck before any record mutation and keep
+    // each observed window failure sticky for all proofs sharing that cut.
+    for (const file of files) {
+      const proof = checked.get(file).proof
+      if (!proof || [...observed.get(file)].some(subject => polluted.has(subject))) continue
+      try {
+        verifyCurrentWindow(evidenceDir, proof.bundle, startup, io)
+      } catch {
+        for (const window of windows.get(file)) failedWindows.add(window)
+      }
+    }
     for (const file of files) {
       const subjects = observed.get(file)
       const handle = checked.get(file).proof?.handle ?? [...subjects][0]
       if ([...subjects].some(subject => polluted.has(subject))) {
         const duplicate = [...subjects].some(subject => owners.get(subject)?.size > 1)
         audit({ file, handle, status: 'rejected', reason: duplicate ? 'duplicate_subject_bundle' : 'bundle_subject_scan_changed' })
+        continue
+      }
+      if ([...windows.get(file)].some(window => failedWindows.has(window))) {
+        audit({ file, handle, status: 'rejected', reason: checked.get(file).error?.code ?? 'window_continuity_lost' })
         continue
       }
       const { proof, error } = checked.get(file)

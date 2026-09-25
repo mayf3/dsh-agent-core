@@ -182,6 +182,64 @@ test('NEG-RQ-007 same-subject bytes replaced during verification are zero-write'
   assert.equal(emitted.length, 0)
 })
 
+function twoSubjectsOneWindow(t) {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  const extra = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'old-extra' })
+  const secondHandle = extra.mintTurnExecution({ agentId: 'agt_extra', processGeneration: 1, sessionId: 'main' })
+  extra.markAdmitted(secondHandle, { eventWatermarkSeq: 0, promptRequestId: 'extra-prompt',
+    deadlineAtWallMs: Date.now() + 1000 })
+  extra.markPromptWriteAttempted(secondHandle)
+  const blocked = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'extra-intermediate' })
+  const record = blocked.records.get(secondHandle)
+  const second = structuredClone(fx.bundle)
+  second.subject = { reconciliationHandle: secondHandle, turnExecutionId: secondHandle,
+    runtimeEpoch: record.runtimeEpoch, agentId: record.agentId, processGeneration: record.processGeneration }
+  second.epochRetirement.retiredEpoch = record.runtimeEpoch
+  second.recoveryCutover.subjectPreimageSha256 = createHash('sha256').update(JSON.stringify(record)).digest('hex')
+  writeFileSync(join(fx.evidenceDir, 'zzz.bundle.json'), json(second))
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const before = readFileSync(fx.persistenceFile)
+  const recordsBefore = [fx.handle, secondHandle].map(handle => JSON.stringify(store.records.get(handle)))
+  const emitted = []
+  store.onTurnReconciled(event => emitted.push(event))
+  return { fx, store, secondHandle, before, recordsBefore, emitted }
+}
+
+for (const [name, continuity] of [
+  ['lost during batch', call => call === 1],
+  ['loss followed by positive during batch', call => call !== 1],
+  ['lost after batch before settlement', call => call <= 2],
+]) {
+  test(`NEG-RQ-003 same-window ${name} rejects both cached proofs`, t => {
+    const { fx, store, secondHandle, before, recordsBefore, emitted } = twoSubjectsOneWindow(t)
+    let challenges = 0
+    fx.io.challengeWindow = (_fd, challenge) => {
+      const held = continuity(++challenges)
+      return { ...challenge, exclusiveWindowHeld: held, launchSourcesStillInhibited: held, windowClosed: !held }
+    }
+    const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+      deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+    assert.deepEqual(result.map(row => row.status), ['rejected', 'rejected'], JSON.stringify(result))
+    assert.deepEqual([fx.handle, secondHandle].map(handle => JSON.stringify(store.records.get(handle))), recordsBefore)
+    assert.deepEqual(readFileSync(fx.persistenceFile), before)
+    assert.equal(store.activeFenceForAgent('agt_subject').handle, fx.handle)
+    assert.equal(store.activeFenceForAgent('agt_extra').handle, secondHandle)
+    assert.equal(emitted.length, 0)
+  })
+}
+
+test('ACC-RQ-003 stable shared window settles both distinct subjects once', t => {
+  const { fx, store, secondHandle, emitted } = twoSubjectsOneWindow(t)
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.deepEqual(result.map(row => row.status), ['settled', 'settled'], JSON.stringify(result))
+  assert.equal(store.activeFenceForAgent('agt_subject'), null)
+  assert.equal(store.activeFenceForAgent('agt_extra'), null)
+  assert.equal(store.records.get(fx.handle).terminationEvidence, 'restart_quiescence_proven')
+  assert.equal(store.records.get(secondHandle).terminationEvidence, 'restart_quiescence_proven')
+  assert.equal(emitted.length, 2)
+})
+
 test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
