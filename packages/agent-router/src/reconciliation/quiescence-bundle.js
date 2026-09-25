@@ -79,8 +79,11 @@ function verifyRecord(store, bundle) {
   if (record?.agentId !== subject.agentId) failed.push('P3')
   if (record?.processGeneration !== subject.processGeneration) failed.push('P4')
   const alreadySettled = record?.state === 'settled'
+  const quiescenceReplay = alreadySettled && record.lateOutcome === 'terminated_without_outcome'
+    && record.terminationEvidence === 'restart_quiescence_proven'
+  if (alreadySettled && !quiescenceReplay) failed.push('P5')
   if (!alreadySettled && record?.state === undefined) failed.push('P5')
-  if (alreadySettled) {
+  if (quiescenceReplay) {
     if (failed.length) proofReject(`V8_${failed.join('_')}`)
     store.validateRestoredAuthority()
     return { record, alreadySettled }
