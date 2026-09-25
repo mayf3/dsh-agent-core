@@ -1,10 +1,66 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import test from 'node:test'
 
 import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 import { json, proofFixture } from '../helpers/restart-quiescence-fixture.js'
+
+function reseal(fx, dir, name, digestField, change) {
+  const path = join(dir, name)
+  const receipt = JSON.parse(readFileSync(path, 'utf8'))
+  change(receipt)
+  const bytes = json(receipt)
+  writeFileSync(path, bytes)
+  fx.bundle[digestField[0]][digestField[1]] = createHash('sha256').update(bytes).digest('hex')
+  writeFileSync(fx.bundleFile, json(fx.bundle))
+}
+
+function planControlledStop(fx, atWallMs) {
+  const method = 'trusted_cp_controlled_stop_v1'
+  const receipt = json({
+    operationId: fx.bundle.recoveryCutover.operationId,
+    hostId: fx.bundle.recoveryCutover.hostId,
+    method, atWallMs,
+  })
+  writeFileSync(join(fx.evidenceDir, 'controlled-stop.json'), receipt)
+  fx.bundle.controlledStop = {
+    method, receiptSha256: createHash('sha256').update(receipt).digest('hex'), atWallMs,
+  }
+  fx.startup.recoveryPlanStopsRuntime = true
+  writeFileSync(fx.bundleFile, json(fx.bundle))
+}
+
+for (const [name, mutate, reason] of [
+  ['B1 floor time missing', fx => reseal(fx, fx.deploymentDir, 'floor-proven.json', ['deploymentProof', 'floorProvenReceiptSha256'], r => { delete r.provedAtWallMs }), 'V10_deployment_time_invalid'],
+  ['B1 validator time string', fx => reseal(fx, fx.deploymentDir, 'validator-installed.json', ['deploymentProof', 'validatorInstalledReceiptSha256'], r => { r.installedAtWallMs = '90' }), 'V10_deployment_time_invalid'],
+  ['B1 inhibition time missing', fx => reseal(fx, fx.evidenceDir, 'launch-sources-inhibited.json', ['recoveryCutover', 'launchSourcesInhibitedReceiptSha256'], r => { delete r.atWallMs }), 'V9_receipt_time_invalid'],
+  ['B2 inhibition after authorization', fx => reseal(fx, fx.evidenceDir, 'launch-sources-inhibited.json', ['recoveryCutover', 'launchSourcesInhibitedReceiptSha256'], r => { r.atWallMs = fx.bundle.recoveryCutover.authorizedStartupAtWallMs + 1 }), 'V9_window_order_invalid'],
+  ['B2 quiescence before inhibition', fx => { const time = fx.bundle.recoveryCutover.windowOpenedAtWallMs + 1; fx.bundle.recoveryCutover.oldTreeQuiescedAtWallMs = time; reseal(fx, fx.evidenceDir, 'old-tree-quiesced.json', ['recoveryCutover', 'oldTreeQuiescedReceiptSha256'], r => { r.atWallMs = time }) }, 'V9_window_order_invalid'],
+  ['B2 subject history after cut', fx => { fx.bundle.recoveryCutover.windowOpenedAtWallMs = 1; writeFileSync(fx.bundleFile, json(fx.bundle)) }, 'V9_subject_after_cut'],
+  ['B2 stop before deployment proof', fx => planControlledStop(fx, fx.bundle.recoveryCutover.windowOpenedAtWallMs - 30), 'V7_stop_order_invalid'],
+]) {
+  test(`NEG-RQ reviewed ${name} rejects without settlement`, (t) => {
+    const fx = proofFixture(cleanup => t.after(cleanup))
+    mutate(fx)
+    const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+    const before = readFileSync(fx.persistenceFile)
+    const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+    assert.equal(result[0].status, 'rejected')
+    assert.equal(result[0].reason, reason)
+    assert.deepEqual(readFileSync(fx.persistenceFile), before)
+    assert.equal(store.activeFenceForAgent('agt_subject').handle, fx.handle)
+  })
+}
+
+test('ACC-RQ-007 planned stop within the prospective cut verifies without historical floor inference', (t) => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  planControlledStop(fx, fx.bundle.recoveryCutover.windowOpenedAtWallMs + 15)
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.equal(result[0].status, 'settled', JSON.stringify(result))
+})
 
 test('ACC-RQ-001 one startup bundle settles only its exact old turn, preserving unknown outcome and null exit', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))

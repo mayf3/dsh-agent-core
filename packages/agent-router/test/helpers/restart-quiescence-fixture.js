@@ -23,6 +23,7 @@ export function proofFixture(registerCleanup) {
   if (blocked.records.get(handle).failureReason !== 'runtime_restart_ownership_unavailable') throw new Error('fixture old record did not block')
   const record = blocked.records.get(handle)
   const recordDigest = sha(JSON.stringify(record))
+  const cutClock = record.updatedAt + 1000
   const operationId = 'op-rq-1'
   const hostId = 'test-host'
   const startupNonce = 'nonce-rq-1'
@@ -37,13 +38,13 @@ export function proofFixture(registerCleanup) {
     return sha(bytes)
   }
   const windowDigest = writeReceipt(evidenceDir, 'exclusive-window.json', {
-    operationId, hostId, startupNonce, windowLockPath: windowPath, windowOpenedAtWallMs: 100,
+    operationId, hostId, startupNonce, windowLockPath: windowPath, windowOpenedAtWallMs: cutClock,
   })
   const inhibitedDigest = writeReceipt(evidenceDir, 'launch-sources-inhibited.json', {
-    operationId, hostId, startupNonce, atWallMs: 110, complete: true,
+    operationId, hostId, startupNonce, atWallMs: cutClock + 10, complete: true,
   })
   const quiescedDigest = writeReceipt(evidenceDir, 'old-tree-quiesced.json', {
-    operationId, hostId, startupNonce, atWallMs: 120, complete: true,
+    operationId, hostId, startupNonce, atWallMs: cutClock + 20, complete: true,
   })
   const psOutput = 'zero old runtime processes\n'
   const lsofOutput = 'zero workspace holders\n'
@@ -51,17 +52,17 @@ export function proofFixture(registerCleanup) {
   const lsofHash = writeReceipt(evidenceDir, 'census-lsof.txt', lsofOutput.trimEnd())
   const archive = { operationId, hostId, tools: ['ps', 'lsof'], outputsSha256: [psHash, lsofHash], runtimeTreeProcessCount: 0 }
   const archiveHash = writeReceipt(evidenceDir, 'census-archive.json', archive)
-  const holderCheck = { operationId, executedAtWallMs: 135, method: 'lsof', paths: ['/tmp/subject-workspace'], openHolderCount: 0 }
+  const holderCheck = { operationId, executedAtWallMs: cutClock + 35, method: 'lsof', paths: ['/tmp/subject-workspace'], openHolderCount: 0 }
   const authorizationDigest = writeReceipt(evidenceDir, 'launch-authorization.json', {
     operationId, hostId, startupNonce, consumingBinarySha256: binary,
     archiveSha256: archiveHash, outputsSha256: [psHash, lsofHash], holderCheck,
-    authorizedStartupAtWallMs: 150,
+    authorizedStartupAtWallMs: cutClock + 50,
   })
   const floorDigest = writeReceipt(deploymentDir, 'floor-proven.json', {
-    status: 'ROUTER_RESTART_SAFETY=PROVEN', deployedBinarySha256: binary, floorCommit: '2097e4f9', provedAtWallMs: 80,
+    status: 'ROUTER_RESTART_SAFETY=PROVEN', deployedBinarySha256: binary, floorCommit: '2097e4f9', provedAtWallMs: cutClock - 20,
   })
   const validatorDigest = writeReceipt(deploymentDir, 'validator-installed.json', {
-    deployedBinarySha256: binary, evidenceKind: 'restart_quiescence_proven', installedAtWallMs: 90,
+    deployedBinarySha256: binary, evidenceKind: 'restart_quiescence_proven', installedAtWallMs: cutClock - 10,
   })
   const bundle = {
     bundleSchemaVersion: 2,
@@ -71,11 +72,11 @@ export function proofFixture(registerCleanup) {
       operationId, hostId, startupNonce, subjectPreimageSha256: recordDigest,
       exclusiveWindowReceiptSha256: windowDigest, launchSourcesInhibitedReceiptSha256: inhibitedDigest,
       oldTreeQuiescedReceiptSha256: quiescedDigest, launchAuthorizationReceiptSha256: authorizationDigest,
-      windowOpenedAtWallMs: 100, oldTreeQuiescedAtWallMs: 120, authorizedStartupAtWallMs: 150,
+      windowOpenedAtWallMs: cutClock, oldTreeQuiescedAtWallMs: cutClock + 20, authorizedStartupAtWallMs: cutClock + 50,
       consumingBinarySha256: binary,
     },
     deploymentProof: { floorProvenReceiptSha256: floorDigest, validatorInstalledReceiptSha256: validatorDigest, deployedBinarySha256: binary },
-    hostCensus: { operationId, executedAtWallMs: 130, hostId, tools: ['ps', 'lsof'], outputsSha256: [psHash, lsofHash], archiveRef: 'census-archive.json', runtimeTreeProcessCount: 0 },
+    hostCensus: { operationId, executedAtWallMs: cutClock + 30, hostId, tools: ['ps', 'lsof'], outputsSha256: [psHash, lsofHash], archiveRef: 'census-archive.json', runtimeTreeProcessCount: 0 },
     holderCheck,
     custody: { executedAs: 'root', producedBy: 'trusted_cp_recovery_evidence_collector_v1', evidenceDir },
     controlledStop: null,
