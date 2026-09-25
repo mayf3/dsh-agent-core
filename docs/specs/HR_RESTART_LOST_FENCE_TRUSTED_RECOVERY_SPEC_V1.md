@@ -3,7 +3,7 @@ spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1
 status: draft
 spec_kind: implementation
 authority_level: governing_spec_candidate
-revision: r1
+revision: r2
 revision_date: 2026-09-25
 base_revision: origin/main b4e8511c533f8fa5be2f48dd56acc16bc79dff39
 governed_by:
@@ -22,7 +22,7 @@ related_specs:
   - AGENT_CORE_LARK_UX_PHASE1_V3
 related_reports:
   - docs/reports/scheduler-terminal-proof-unknown-containment-v1.md
-  - docs/evidence/router-durable-generation-restart-safety-v1-20260921/REPORT.md
+  - docs/evidence/router-durable-generation-restart-safety-v1-20260921/PROOF_INDEX.md
 supersedes: []
 superseded_by: null
 implementation_started: NO
@@ -209,10 +209,10 @@ Reasons:
    `terminationEvidence ∈ trusted vocabulary` with settle-once CAS. A second
    field would fork the settlement authority into two winning paths and
    weaken the strongest invariant the store has.
-2. Every trusted consumer already gates on the vocabulary: scheduler-router
-   bridge `TERMINATION_EVIDENCE`, scheduler self-ops
-   `TRUSTED_TERMINATION_EVIDENCE`, durable validator. One new kind flows
-   through all of them with one-line set extensions; a new field would
+2. Six closed sets gate settlement, durable validation, scheduler-router
+   readback, scheduler occurrence authority, and self-ops diagnosis. All six
+   add the same `restart_quiescence_proven` value verbatim, without a
+   scheduler-local mapping; a new field would
    require every consumer to learn a second proof channel.
 3. Truthfulness: the new kind says exactly what was proven — quiescence of
    the runtime hosting the generation after a restart — and deliberately
@@ -224,7 +224,7 @@ Reasons:
    (`durable_store_invalid`, admission blocked) — no corruption, but the
    rollback floor must be pinned in the deployment record (RQ-007).
 
-Vocabulary disposition across the four closed sets:
+Vocabulary disposition across all six closed sets:
 
 | Set | File | Disposition |
 |---|---|---|
@@ -232,8 +232,10 @@ Vocabulary disposition across the four closed sets:
 | durable record validator | `packages/agent-router/src/reconciliation/durable-file.js` `TERMINATION_EVIDENCE` | ADD `restart_quiescence_proven` (must deploy before any producer) |
 | scheduler-router bridge | `packages/scheduler-router/src/index.js` `TERMINATION_EVIDENCE` | ADD `restart_quiescence_proven` (end-to-end convergence; see RQ-009) |
 | scheduler self-ops | `packages/scheduler/src/self-ops/invoker-outcome.js` `TRUSTED_TERMINATION_EVIDENCE` | ADD `restart_quiescence_proven` |
+| scheduler occurrence authority validator | `packages/scheduler/src/occurrence-model.js` `TERMINATION_EVIDENCE_KINDS` | ADD `restart_quiescence_proven` verbatim so the occurrence settlement remains valid |
+| scheduler self-ops diagnosis | `packages/scheduler/src/self-ops/diagnosis.js` `ROUTER_TERMINATION_EVIDENCE` | ADD `restart_quiescence_proven` verbatim so `reconcile_turn` recognizes the receipt |
 
-`exact_started_then_idle` remains absent from the two scheduler-side sets —
+`exact_started_then_idle` remains absent from the four scheduler-side sets —
 pre-existing, deliberate, and NOT changed by this Spec (no readback producer
 exists for it; delta stays minimal).
 
@@ -411,12 +413,18 @@ mechanism:
 1. **Restart-safety floor PROVEN.** The deployed binary includes the durable
    generation restart-safety floor (`highestIssuedGeneration`,
    main ≥ `2097e4f`) and `ROUTER_RESTART_SAFETY = PROVEN`
-   (docs/evidence/router-durable-generation-restart-safety-v1-20260921).
+   (committed proof-status index:
+   `docs/evidence/router-durable-generation-restart-safety-v1-20260921/PROOF_INDEX.md`).
+   This is a hard gate, not a claim of present proof: as of 2026-09-25 the fix
+   is merged to main (`2097e4f9`, with follow-up `2a85d065`) and independently
+   reviewed, but the deployed binary remains pre-floor, deployment is pending,
+   and the designated post-deploy proof location reports
+   `ROUTER_RESTART_SAFETY = PROVEN 未达成` (proofs 1–9 pending).
    Without the floor, a restart reissues generation ids and breaks both the
    store's range invariants and this mechanism's exact identity binding —
    so no recovery restart is permitted on a pre-floor binary.
 2. **Validator-before-producer ordering.** The binary that EXTENDS the
-   durable validator (RQ-00 vocabulary table) is deployed first; only then
+   durable validator (§4 vocabulary table) is deployed first; only then
    may any settlement write the new kind. Deployments go through the trusted
    control plane (TRUSTED_CP_PACK_INPUT_PROVENANCE_V1 installer,
    production-deploy.lock discipline).
@@ -443,8 +451,9 @@ successor authority would be required (this Spec does not anticipate one).
   ownership (existing, unchanged); (ii) this permanent-quiescence proof for
   retired epochs (new). Path (ii) applies ONLY to records matching RQ-004
   P1..P10.
-- The scheduler-router bridge and scheduler self-ops vocabularies add the
-  new kind so the END-TO-END path converges: after a Router-side settlement,
+- All six §4 closed sets add the same new kind verbatim. The scheduler-router
+  bridge, self-ops invoker, occurrence authority validator, and self-ops
+  diagnosis must all recognize it so the END-TO-END path converges: after a Router-side settlement,
   a late bridge readback stamps the trusted proof and the scheduler's C-039
   termination-only settlement releases the occurrence fence with business
   state still `outcome_unknown`, `retryCandidate` stays null, and a later
@@ -515,6 +524,8 @@ packages/agent-router/src/reconciliation/startup-recovery.js  (bundle consumptio
 packages/agent-router/src/index.js                            (evidence-dir cfg wiring)
 packages/scheduler-router/src/index.js                        (+1 bridge enum member)
 packages/scheduler/src/self-ops/invoker-outcome.js            (+1 enum member)
+packages/scheduler/src/occurrence-model.js                    (+1 occurrence authority enum member)
+packages/scheduler/src/self-ops/diagnosis.js                  (+1 router evidence enum member)
 packages/agent-router/test/process-lifecycle/*.test.js        (ACC-RQ/NEG-RQ suites)
 packages/scheduler/test/*.test.js                             (ACC-RQ-006 extension)
 trusted control-plane evidence collector script               (root custody producer)

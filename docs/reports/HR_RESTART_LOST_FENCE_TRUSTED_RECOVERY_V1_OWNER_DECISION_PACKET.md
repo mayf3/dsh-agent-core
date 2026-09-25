@@ -5,8 +5,9 @@
 - mode: NO_PRODUCTION_MUTATION / NO_PROTECTED_STORE_EDIT / NO_HR_SPECIAL_CASING / IMPLEMENTATION_STARTED=NO
 - candidate spec: `docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1.md`
 - frozen candidate SHA-256: recorded in §7 (filled after freeze; also in the review request)
-- base: origin/main `b4e8511c533f8fa5be2f48dd56acc16bc79dff39`, branch
-  `goal/hr-restart-lost-fence-trusted-recovery-v1` (isolated fresh worktree)
+- base: original candidate `6ea3476d2e389067e1b7e5686514116da8ce1831`
+  (itself from origin/main `b4e8511c533f8fa5be2f48dd56acc16bc79dff39`);
+  B1–B3 docs amendment in isolated worktree
 
 ## 1. Question before the Owner
 
@@ -40,8 +41,8 @@ same class: article-publisher s168, reader-simulator s30
 trusted kind `restart_quiescence_proven`，复用既有 settle-once authority。
 独立的 recovery-proof 字段/独立结算 authority 被否决——它会把 C-017 的
 single-winner 结算分裂成两条 winning path，并迫使全部 trusted consumer
-（bridge / self-ops / durable validator）学习第二套 proof 通道。
-四个 closed set 的 disposition 矩阵见 spec §4（scheduler 侧两处各 +1 行以保证
+（bridge / self-ops / occurrence authority / durable validator）学习第二套 proof 通道。
+六个 closed set 的 disposition 矩阵见 spec §4（scheduler 侧四处各 +1 行以保证
 端到端收敛；`exact_started_then_idle` 的既有缺席维持不变）。
 
 ## 3. RESTART_SAFETY_PREREQ（spec RQ-007）
@@ -49,8 +50,11 @@ single-winner 结算分裂成两条 winning path，并迫使全部 trusted consu
 任何作为本机制一部分（或其前置）的 stop/restart 之前，全部成立：
 
 1. `ROUTER_RESTART_SAFETY = PROVEN`：部署二进制含 durable generation floor
-   （`highestIssuedGeneration`，main ≥ `2097e4f`；evidence:
-   docs/evidence/router-durable-generation-restart-safety-v1-20260921）。
+   （`highestIssuedGeneration`，main ≥ `2097e4f`；proof-status index:
+   `docs/evidence/router-durable-generation-restart-safety-v1-20260921/PROOF_INDEX.md`）。
+   As of 2026-09-25 this gate is NOT satisfied: source fix merged and reviewed,
+   deployed binary pre-floor, post-deploy proofs 1–9 pending,
+   `ROUTER_RESTART_SAFETY = PROVEN 未达成`.
    无 floor 的二进制上禁止 recovery restart——generation 重发会同时破坏
    store range 不变量与本机制的 exact identity binding。
 2. validator-before-producer 顺序：先部署扩展 durable validator 的二进制，
@@ -96,31 +100,46 @@ OWNER_DECISION_Q3 (conditional, only if Q1=NO) = <REJECT reason>
 **Recommendation: Q1 = YES, Q2 = YES.** 理由：该 class 在 accepted 契约下被
 证明永久卡死（契约自己命名的机制缺失）；候选机制 truthful（termination-only、
 不伪造 child_real_exit、不猜测）、最小（一个 enum 值 + 一个 bundle 消费步 +
-两处 +1 行 set 扩展）、fail-closed 全覆盖、且与既有 settle-once/consumer
+六处 +1 行 set 扩展）、fail-closed 全覆盖、且与既有 settle-once/consumer
 体系完全同构。否决 Q1 的实际替代方案只有：永久放弃这三个 agent 的
 admission（人工重建 agent），或接受一个更弱的猜测性机制——两者都更差。
 
-## 6. Input gap — Owner recovery packet M1–M7
+## 6. Owner recovery packet M1–M7 — located and mapped
 
-要求中引用的 "current Owner recovery packet M1–M7" 在本 session 可达面内
-未找到：repo docs/、.incident-artifacts/、production worktrees、
-project 目录平级 worktrees 均无；Agent Forum 需 broker 凭据（本 session
-无 forum_* 工具，API 未认证）。本候选因此写成自包含（不依赖该 packet 的
-任何未复述约束）。**若该 packet 含额外约束（如三 agent 的处置顺序、
-某些记录必须保留 fenced），Owner 须在裁决时附上，candidate 相应修订
-（amend）后再 review。** 在此之前，本 packet 不声称已满足 M1–M7。
+The original authoring-session statement that this packet was unavailable is
+superseded by the independent review's §3 finding. The authentic Owner packet
+is `/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR_AGENT_OUTCOME_UNKNOWN_EXACT_RECOVERY_V1/OWNER_DECISION_PACKET-TRUSTED-OPERATOR-RECOVERY-20260925.md`
+(SHA-256 `42de489c4ff826fda9aca8478fd345c05cedea7f8db24a2788444b95d1c71a32`),
+also pinned by the adjacent single-record s256 binding handoff (SHA-256
+`02a12d47e1ba46863e083740b56c2b1701c4a375ff62d0ee0df630bc5b2603d2`).
+The original packet and historical commit messages are unchanged.
+
+| Owner envelope | Candidate compliance mapping |
+|---|---|
+| M1 exact tuple, one record, no sweep | RQ-004 P1–P10 handle binding; RQ-006 and NEG-RQ-010 prohibit by-agent/by-epoch entry points. |
+| M2 trusted evidence or exact live ownership, never guesswork | RQ-001–004 add one trusted permanent-quiescence evidence class under Owner acceptance; §3.3 keeps PID/time/new-generation shortcuts rejected. |
+| M3 UNKNOWN fails closed | RQ-003 V1–V8 treats UNKNOWN as invalid; zero-write and structured failure. |
+| M4 single-writer exclusivity | RQ-004/005 consume at Router startup behind the closed admission barrier with per-record preimage, restore-on-failure, and existing crash cleanup. The in-process startup window substitutes for the packet's external runner. |
+| M5 deploy first | RQ-007 keeps the PROVEN restart-safety floor a hard prerequisite; §3 above states it is currently unmet. |
+| M6 process gates | §6 deterministic selftests, RQ-005 validation plan, and §9 independent review/Owner gates precede implementation; production apply remains separate. |
+| M7 non-attribution | The mechanism issues no signal; RQ-002 controlled-stop receipt, if applicable, is not termination evidence. |
+
+This mapping is a candidate compliance assessment, not Owner acceptance. The
+independent review's B1–B3 findings require amendment, re-freeze, and delta
+re-review before Q1/Q2 can be presented.
 
 ## 7. Handoff
 
 ```text
 HANDOFF_PATH = docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1.md
-              docs/reviews/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1_INDEPENDENT_REVIEW_REQUEST.md
               (this packet)
-SPEC_SHA256  = 023797c16c2a2b45a458c7b40f1349eaa3d3e08aac342a752c862676e7ed5a41
-BRANCH       = goal/hr-restart-lost-fence-trusted-recovery-v1 (isolated worktree,
-               fresh from origin/main b4e8511c)
-NEXT_SINGLE_ACTION = dispatch INDEPENDENT semantic review per the request file;
-                     then Owner answers Q1/Q2/Q3 above.
+HISTORICAL_REVIEW_REQUEST = docs/reviews/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1_INDEPENDENT_REVIEW_REQUEST.md
+                            (targets PRIOR_SPEC_SHA256; new delta review required)
+SPEC_SHA256  = cd359661d9a850ee26cb979d994f321c42b9863092b16ae8cc3c26f96a197c9b
+PRIOR_SPEC_SHA256 = 023797c16c2a2b45a458c7b40f1349eaa3d3e08aac342a752c862676e7ed5a41
+AMENDMENT_BASE = 6ea3476d2e389067e1b7e5686514116da8ce1831
+NEXT_SINGLE_ACTION = independent B1–B3 delta review of this amended frozen SHA;
+                     only after PASS with BLOCKERS=NONE may Owner answer Q1/Q2.
 IMPLEMENTATION_STARTED = NO
 PRODUCTION_MUTATION    = NO
 ```
