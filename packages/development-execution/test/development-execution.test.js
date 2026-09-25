@@ -61,11 +61,15 @@ function writeBackendConfig(devDir, extra = {}) {
 /** FAKE backend adapter: deterministic outcomes driven by the task text. */
 function fakeBackend() {
   const spawned = []
+  const calls = [] // every run() invocation: { instruction, resumeSessionId }
+  let sessionSeq = 0
   return {
     name: 'fake',
     spawned,
+    calls,
     verify: () => ({ ok: true, version: 'fake-1' }),
-    run({ instruction, worktree, executionDir }) {
+    run({ instruction, worktree, executionDir, resumeSessionId }) {
+      calls.push({ instruction, resumeSessionId: resumeSessionId ?? null })
       const mode = instruction.split('\n')[0]
       if (mode === 'TASK_SPAWN_ERROR') {
         return { pid: 999999, done: Promise.resolve({ exitCode: null, signal: null, spawnError: 'enoent', stderrTail: [] }) }
@@ -84,6 +88,23 @@ function fakeBackend() {
           done: new Promise((resolve) => child.on('close', (exitCode, signal) => resolve({ exitCode, signal, stderrTail: [] }))),
         }
       }
+      if (mode === 'TASK_DELAYED_OK') {
+        // stays RUNNING long enough for a midrun continue to land, then exits
+        // 0 with a freshly captured (distinct) session id
+        return { pid: 999994, done: new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0, signal: null, sessionId: `s-run-${++sessionSeq}`, stderrTail: [] }), 75)) }
+      }
+      if (mode === 'TASK_NO_SESSION_OK') {
+        // exits 0 but NEVER captures a session — resume is structurally impossible
+        return { pid: 999993, done: new Promise((resolve) => setTimeout(() => resolve({ exitCode: 0, signal: null, sessionId: undefined, stderrTail: [] }), 75)) }
+      }
+      if (mode === 'STEER_HANG') {
+        const child = spawn('sleep', ['30'])
+        spawned.push(child)
+        return {
+          pid: child.pid,
+          done: new Promise((resolve) => child.on('close', (exitCode, signal) => resolve({ exitCode, signal, sessionId: `s-steer-${++sessionSeq}`, stderrTail: [] }))),
+        }
+      }
       if (mode === 'TASK_SUCCESS_COMMIT') {
         writeFileSync(join(worktree, 'feature.txt'), `feature at ${Date.now()}\n`)
         git(worktree, ['add', '-A'])
@@ -92,7 +113,7 @@ function fakeBackend() {
         return { pid: 999996, done: Promise.resolve({ exitCode: 0, signal: null, sessionId: 's-ok-' + sha.slice(0, 7), stderrTail: [] }) }
       }
       // success with NO commit (no-op completion)
-      return { pid: 999995, done: Promise.resolve({ exitCode: 0, signal: null, sessionId: 's-noop', stderrTail: [] }) }
+      return { pid: 999995, done: Promise.resolve({ exitCode: 0, signal: null, sessionId: `s-noop-${++sessionSeq}`, stderrTail: [] }) }
     },
   }
 }
@@ -282,6 +303,150 @@ test('F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNK
   assert.equal(restarted.status('orphan-1').state, 'OUTCOME_UNKNOWN', 'dead-pid orphan marked OUTCOME_UNKNOWN')
   restarted.cancel(hung.executionId)
   live.kill('SIGKILL')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+// ─── CTR-DES-001/003 continue: persisted + delivered, never a fake ack ─────
+
+test('K1: midrun continue is durably persisted and DELIVERED via resume when the run exits (no silent advisory drop)', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine, devDir } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_DELAYED_OK' }, 'agent-a')
+  const ack = await engine.continue({ executionId: started.executionId, instruction: 'also tighten the error handling' }, 'agent-a')
+  assert.equal(ack.state, 'RUNNING')
+  assert.equal(ack.accepted, 'recorded_midrun')
+  // queued and observable immediately — not silently dropped
+  assert.equal(engine.status(started.executionId).continueRequests.length, 1)
+  assert.equal(engine.status(started.executionId).continueRequests[0].instruction, 'also tighten the error handling')
+  assert.equal(engine.status(started.executionId).continueRequests[0].disposition, 'pending')
+
+  const terminal = await eventually(() => {
+    const s = engine.status(started.executionId)
+    return ['SUCCEEDED', 'FAILED', 'OUTCOME_UNKNOWN'].includes(s.state) ? engine.result(started.executionId) : null
+  })
+  assert.ok(terminal, 'reaches a terminal disposition')
+  assert.equal(terminal.receipt.terminalState, 'SUCCEEDED')
+  // delivered: exactly ONE resume call carrying the EXACT instruction and the
+  // session id captured from the first run
+  const resumes = backend.calls.filter((c) => c.resumeSessionId !== null)
+  assert.equal(resumes.length, 1, `expected exactly one resume call, got ${JSON.stringify(backend.calls)}`)
+  assert.equal(resumes[0].instruction, 'also tighten the error handling')
+  assert.match(resumes[0].resumeSessionId, /^s-run-/)
+
+  // persisted: a REPLAY-ONLY readback (fresh projection, no process memory)
+  // sees the instruction text and its delivered disposition
+  const replayed = ExecutionLedger.replay(join(devDir, 'ledger', 'executions.jsonl')).get(started.executionId)
+  const requested = replayed.events.filter((e) => e.type === 'continue_requested')
+  assert.equal(requested.length, 1)
+  assert.equal(requested[0].instruction, 'also tighten the error handling')
+  assert.equal(replayed.continueRequests[0].disposition, 'delivered')
+  // the steering window (WAITING) is genuinely reachable in the state machine
+  assert.ok(replayed.events.some((e) => e.type === 'state' && e.state === 'WAITING'), 'WAITING transition recorded')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+test('K2: run exits without a captured session => queued continue marked undelivered, backend never called (honest)', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_NO_SESSION_OK' }, 'agent-a')
+  const ack = await engine.continue({ executionId: started.executionId, instruction: 'steer me' }, 'agent-a')
+  assert.equal(ack.accepted, 'recorded_midrun')
+  const terminal = await eventually(() => {
+    const s = engine.status(started.executionId)
+    return ['SUCCEEDED', 'FAILED', 'OUTCOME_UNKNOWN'].includes(s.state) ? engine.result(started.executionId) : null
+  })
+  assert.equal(terminal.receipt.terminalState, 'SUCCEEDED')
+  assert.equal(backend.calls.filter((c) => c.resumeSessionId !== null).length, 0, 'no fabricated resume')
+  assert.equal(engine.status(started.executionId).continueRequests[0].disposition, 'undelivered')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+test('K3: cancel with queued midrun continues => CANCELLED; queued instruction never delivered afterwards', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a')
+  await engine.continue({ executionId: started.executionId, instruction: 'never delivered' }, 'agent-a')
+  const cancelled = engine.cancel(started.executionId)
+  assert.equal(cancelled.state, 'CANCELLED')
+  assert.equal(engine.status(started.executionId).continueRequests[0].disposition, 'undelivered')
+  const callsAtCancel = backend.calls.length
+  await new Promise((r) => setTimeout(r, 150))
+  assert.equal(backend.calls.length, callsAtCancel, 'no resume fired after cancel')
+  assert.equal(engine.result(started.executionId).receipt.terminalState, 'CANCELLED')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+test('K4: queued continue survives restart — replay exposes it; dead-pid recovery marks it undelivered', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine, devDir } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a')
+  await engine.continue({ executionId: started.executionId, instruction: 'queued across restart' }, 'agent-a')
+  assert.equal(engine.status(started.executionId).continueRequests[0].disposition, 'pending')
+  // owner-process death: kill the execution's real hung backend child, unobserved
+  const hungChild = backend.spawned[0]
+  const hungExit = new Promise((r) => hungChild.on('close', r))
+  hungChild.kill('SIGKILL')
+  await hungExit // pid now dead when the restarted engine probes it
+
+  const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000 })
+  const record = restarted.status(started.executionId)
+  assert.equal(record.state, 'OUTCOME_UNKNOWN', 'dead-pid non-terminal execution => OUTCOME_UNKNOWN')
+  assert.equal(record.continueRequests.length, 1, 'instruction persisted in the ledger across restart')
+  assert.equal(record.continueRequests[0].instruction, 'queued across restart')
+  assert.equal(record.continueRequests[0].disposition, 'undelivered', 'never claimed as delivered')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+test('K5: delivery (resume) run pid is persisted — cancel stops the real resume process; ledger carries it', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine, devDir } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_DELAYED_OK' }, 'agent-a')
+  await engine.continue({ executionId: started.executionId, instruction: 'STEER_HANG' }, 'agent-a')
+  // the first run exits 0 => queued continue delivered => a REAL resume run
+  const resumeChild = await eventually(() => backend.spawned.find((c) => !c.killed && c.exitCode === null) ?? backend.spawned[0])
+  assert.ok(resumeChild, 'resume run spawned a real process')
+  const withPid = await eventually(() => {
+    const s = engine.status(started.executionId)
+    return s.state === 'RUNNING' && s.pid === resumeChild.pid ? s : null
+  })
+  assert.ok(withPid, `status exposes the resume run pid (${JSON.stringify(engine.status(started.executionId))})`)
+  const cancelled = engine.cancel(started.executionId)
+  assert.equal(cancelled.state, 'CANCELLED')
+  const resumeExit = new Promise((r) => resumeChild.on('close', r))
+  await resumeExit
+  // The instruction WAS handed to the backend before cancel (delivered);
+  // cancel stops the resume PROCESS — it must not rewrite that fact.
+  assert.equal(engine.status(started.executionId).continueRequests[0].disposition, 'delivered')
+  const replayed = ExecutionLedger.replay(join(devDir, 'ledger', 'executions.jsonl')).get(started.executionId)
+  const pidLine = replayed.events.find((e) => e.type === 'state' && e.pid === resumeChild.pid)
+  assert.ok(pidLine, 'resume-run pid persisted on a state line')
+  rmSync(repo.dir, { recursive: true, force: true })
+})
+
+test('K6: repeated midrun continues deliver FIFO across sequential resume runs, then terminal', async () => {
+  const repo = makeFixtureRepo()
+  const backend = fakeBackend()
+  const { engine } = makeEngine(repo, { backend })
+  const started = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_DELAYED_OK' }, 'agent-a')
+  await engine.continue({ executionId: started.executionId, instruction: 'first steer' }, 'agent-a')
+  await engine.continue({ executionId: started.executionId, instruction: 'second steer' }, 'agent-a')
+  const terminal = await eventually(() => {
+    const s = engine.status(started.executionId)
+    return ['SUCCEEDED', 'FAILED', 'OUTCOME_UNKNOWN'].includes(s.state) ? engine.result(started.executionId) : null
+  })
+  assert.equal(terminal.receipt.terminalState, 'SUCCEEDED')
+  assert.equal(backend.calls.length, 3, `task + two resumes: ${JSON.stringify(backend.calls)}`)
+  assert.equal(backend.calls[1].instruction, 'first steer')
+  assert.equal(backend.calls[2].instruction, 'second steer')
+  assert.notEqual(backend.calls[1].resumeSessionId, null)
+  assert.equal(backend.calls[2].resumeSessionId, 's-noop-2', 'second resume chains the session captured by the first resume run')
+  const dispositions = engine.status(started.executionId).continueRequests.map((c) => c.disposition)
+  assert.deepEqual(dispositions, ['delivered', 'delivered'])
   rmSync(repo.dir, { recursive: true, force: true })
 })
 
