@@ -10,6 +10,12 @@
  * CANCELLED; duplicate start with the same (caller, dedupeKey) ⇒ the ORIGINAL
  * execution, never a second one.
  *
+ * Continue (CTR-DES-001/003): a midrun continue is durably queued in the
+ * ledger and DELIVERED to the backend via its resume capability the moment
+ * the current run exits with a captured session; a disposition that can
+ * never deliver (terminal exit, cancel, timeout, unresumable owner death)
+ * marks it `undelivered` — the ack never stands in for delivery.
+ *
  * The backend is injected (adapter contract) so hermetic tests use a fake
  * executor while production wires the pinned codex adapter.
  */
@@ -72,6 +78,7 @@ export class DevelopmentExecutionEngine {
       const pid = execution.pid
       const alive = typeof pid === 'number' ? pidAlive(pid) : false
       if (!alive) {
+        this.#failPendingContinues(id)
         this.#appendTerminal(id, 'OUTCOME_UNKNOWN', {
           errorClass: 'owner_restart_outcome_unproven',
           failureDetail: 'owning process restarted; backend outcome could not be proven',
@@ -86,11 +93,16 @@ export class DevelopmentExecutionEngine {
     return execution
   }
 
-  #appendState(executionId, state, detail) {
-    this.ledger.append({ type: 'state', executionId, state, detail })
+  #appendState(executionId, state, detail, extra = {}) {
+    // pid/sessionId carried on state lines keep the resume/steer lifecycle
+    // restart-safe: ledger replay consumes them, so cancel and orphan
+    // recovery see the process that is actually running.
+    this.ledger.append({ type: 'state', executionId, state, detail, ...extra })
     const execution = this.executions.get(executionId)
     execution.state = state
     execution.updatedAt = this.clock()
+    if (extra.pid !== undefined) execution.pid = extra.pid
+    if (extra.sessionId !== undefined) execution.sessionId = extra.sessionId
   }
 
   #appendTerminal(executionId, terminalState, fields = {}) {
@@ -104,6 +116,7 @@ export class DevelopmentExecutionEngine {
     execution.failureDetail = fields.failureDetail ?? null
     execution.evidenceRefs = fields.evidenceRefs ?? []
     execution.testEvidence = fields.testEvidence ?? null
+    if (fields.sessionId !== undefined) execution.sessionId = fields.sessionId
   }
 
   /** CTR-DES-001 start. Idempotent on (callerAgentId, dedupeKey). */
@@ -178,6 +191,7 @@ export class DevelopmentExecutionEngine {
     if (TERMINAL_STATES.includes(execution.state)) return
 
     if (outcome.spawnError !== undefined || (outcome.exitCode === null && outcome.signal === null)) {
+      this.#failPendingContinues(executionId)
       this.#appendTerminal(executionId, 'OUTCOME_UNKNOWN', {
         errorClass: 'backend_spawn_error',
         failureDetail: String(outcome.spawnError ?? 'backend process could not be started'),
@@ -187,6 +201,7 @@ export class DevelopmentExecutionEngine {
     if (outcome.signal !== null) {
       // Killed by something other than our own cancel/timeout paths (which
       // reach terminal synchronously). Unprovable outcome.
+      this.#failPendingContinues(executionId)
       this.#appendTerminal(executionId, 'OUTCOME_UNKNOWN', {
         errorClass: 'backend_killed',
         failureDetail: `backend terminated by signal ${outcome.signal}; outcome could not be proven`,
@@ -194,12 +209,29 @@ export class DevelopmentExecutionEngine {
       return
     }
     if (outcome.exitCode !== 0) {
+      this.#failPendingContinues(executionId)
       this.#appendTerminal(executionId, 'FAILED', {
         errorClass: 'backend_exit_nonzero',
         failureDetail: (outcome.stderrTail ?? []).slice(-8).join('\n').slice(0, 2000),
         sessionId: outcome.sessionId,
       })
       return
+    }
+    // Exit 0 with a queued midrun continue: this is the supported steering
+    // window (post-exit resume). Record the captured session, mark WAITING,
+    // and deliver the OLDEST queued instruction via resume — terminal
+    // classification is deferred to the resume run's own exit.
+    const hasPendingContinue = (execution.continueRequests ?? []).some((c) => c.disposition === 'pending')
+    if (hasPendingContinue) {
+      if (typeof outcome.sessionId !== 'string') {
+        // No session captured ⇒ resume is structurally impossible: say so on
+        // the ledger instead of pretending the steering happened.
+        this.#failPendingContinues(executionId)
+      } else {
+        this.#appendState(executionId, STATE.WAITING, 'backend_exit_continue_pending', { sessionId: outcome.sessionId })
+        this.#deliverNextContinue(executionId)
+        return
+      }
     }
     // Exit 0: success evidence. Candidate facts come from git, observed by
     // the adapter — never from the backend's own claims.
@@ -220,6 +252,7 @@ export class DevelopmentExecutionEngine {
     // CTR-DES-007 C: timeout is a terminal FAILED with an explicit class —
     // the backend process is killed; its outcome is never reported as success.
     try { if (typeof execution.pid === 'number') process.kill(execution.pid, 'SIGKILL') } catch { /* already gone */ }
+    this.#failPendingContinues(executionId)
     this.#appendTerminal(executionId, 'FAILED', { errorClass: 'timeout', failureDetail: `execution exceeded ${this.timeoutMs}ms` })
   }
 
@@ -263,19 +296,62 @@ export class DevelopmentExecutionEngine {
     if (typeof instruction !== 'string' || instruction.trim() === '') throw err('invalid_arguments', 'instruction is required')
     if (TERMINAL_STATES.includes(execution.state)) throw err('execution_terminal', `execution ${executionId} is ${execution.state}`)
     if (execution.state === STATE.RUNNING) {
-      // The backend is mid-run; continue is accepted and recorded as an
-      // advisory note — codex exec has no mid-run stdin contract in this
-      // revision. Honest WAITING/continue semantics arrive with the resume
-      // path (post-exit steering), which is what the adapter supports.
-      this.ledger.append({ type: 'state', executionId, state: STATE.RUNNING, detail: 'continue_requested_midrun' })
+      // CTR-DES-001/003: continue steers VIA THE BACKEND. The supported
+      // capability is post-exit resume (`codex exec resume <SESSION_ID>` —
+      // codex exec has no mid-run stdin contract), so the instruction is
+      // durably queued here and delivered by resume the moment the current
+      // run exits with a captured session. Dispositions that can never
+      // deliver mark it `undelivered` on the ledger. Never a silent advisory
+      // drop, never fabricated mid-run steering.
+      const queue = execution.continueRequests ?? (execution.continueRequests = [])
+      queue.push({ instruction, disposition: 'pending', atMs: this.clock() })
+      this.ledger.append({ type: 'continue_requested', executionId, instruction })
       return { executionId, state: execution.state, accepted: 'recorded_midrun' }
     }
     if (execution.state !== STATE.WAITING) throw err('not_continuable', `execution ${executionId} is ${execution.state}`)
     if (typeof execution.sessionId !== 'string') throw err('not_continuable', 'no backend session recorded')
-    const run = this.backend.run({ instruction, worktree: execution.worktree, executionDir: join(this.executionsDataRoot, executionId), resumeSessionId: execution.sessionId })
-    this.#appendState(executionId, STATE.RUNNING)
-    void run.done.then((outcome) => this.#onBackendExit(executionId, outcome))
+    this.#startResumeRun(executionId, instruction)
     return { executionId, state: STATE.RUNNING }
+  }
+
+  /** Shared resume lifecycle: pid persisted, timeout supervised, exit hooked. */
+  #startResumeRun(executionId, instruction) {
+    const execution = this.#execution(executionId)
+    const run = this.backend.run({ instruction, worktree: execution.worktree, executionDir: join(this.executionsDataRoot, executionId), resumeSessionId: execution.sessionId })
+    this.#appendState(executionId, STATE.RUNNING, 'continue_resume', { pid: run.pid })
+    const timer = setTimeout(() => this.#onTimeout(executionId), this.timeoutMs)
+    if (typeof timer.unref === 'function') timer.unref()
+    this.supervised.set(executionId, { timer })
+    void run.done.then((outcome) => this.#onBackendExit(executionId, outcome))
+  }
+
+  /** Deliver the OLDEST queued midrun continue via the resume capability. */
+  #deliverNextContinue(executionId) {
+    const execution = this.#execution(executionId)
+    const pending = (execution.continueRequests ?? []).find((c) => c.disposition === 'pending')
+    if (pending === undefined) return
+    if (typeof execution.sessionId !== 'string') {
+      this.#failPendingContinues(executionId)
+      this.#appendTerminal(executionId, 'OUTCOME_UNKNOWN', {
+        errorClass: 'continue_delivery_unavailable',
+        failureDetail: 'no backend session recorded; queued continue cannot be delivered',
+      })
+      return
+    }
+    this.ledger.append({ type: 'continue_delivery', executionId, instruction: pending.instruction, disposition: 'delivered' })
+    pending.disposition = 'delivered'
+    this.#startResumeRun(executionId, pending.instruction)
+  }
+
+  /** A disposition that can never deliver must say so — per queued instruction. */
+  #failPendingContinues(executionId) {
+    const execution = this.executions.get(executionId)
+    if (execution === undefined) return
+    for (const entry of execution.continueRequests ?? []) {
+      if (entry.disposition !== 'pending') continue
+      this.ledger.append({ type: 'continue_delivery', executionId, instruction: entry.instruction, disposition: 'undelivered' })
+      entry.disposition = 'undelivered'
+    }
   }
 
   /** CTR-DES-001 cancel — exactly one terminal disposition, idempotent. */
@@ -285,6 +361,7 @@ export class DevelopmentExecutionEngine {
       return { executionId, state: execution.state, cancelled: false, alreadyTerminal: true }
     }
     try { if (typeof execution.pid === 'number') process.kill(execution.pid, 'SIGKILL') } catch { /* already gone */ }
+    this.#failPendingContinues(executionId)
     this.#appendTerminal(executionId, 'CANCELLED', { errorClass: 'cancelled_by_agent' })
     return { executionId, state: STATE.CANCELLED, cancelled: true }
   }
@@ -309,6 +386,9 @@ export class DevelopmentExecutionEngine {
       errorClass: execution.errorClass ?? undefined,
       pid: execution.pid,
       sessionId: execution.sessionId ?? undefined,
+      ...(execution.continueRequests?.length
+        ? { continueRequests: execution.continueRequests.map((c) => ({ instruction: c.instruction, disposition: c.disposition, atMs: c.atMs })) }
+        : {}),
     }
   }
 }
