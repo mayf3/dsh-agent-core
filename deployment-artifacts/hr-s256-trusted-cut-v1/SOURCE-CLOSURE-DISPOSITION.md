@@ -28,6 +28,16 @@ UID from source inhibition through both censuses, the sole authorized launch,
 Router consumption and readback. If current protected facts prove a finite set
 of controllable routes, R2 already requires their manifest and inhibition;
 implementation and independent review may proceed against that exact set.
+In particular, a fresh whole-host census proving **zero processes of the
+Runtime UID** after stop, together with continuous closure of *all* launchd,
+cron, login, helper, manual, and root-writer routes that can create that UID,
+would exclude a direct same-UID manual exec during the window: there would be
+no resident same-UID actor to issue it and no remaining entry to create one.
+This is a conditional proof shape only. The existing collector tests show an
+unlisted UID-505 actor that is absent from the old-PID set; the old-PID and
+holder checks report zero while that actor remains able to exec. The current
+source manifest and any continuous denial have not been established, so the
+condition is not satisfied by this candidate.
 If a same-UID arbitrary manual exec route remains, a mandatory host execution
 policy or equivalent trusted launch gate covering it would be a new effect
 outside the accepted R2 list, which permits no application/config/plist write

@@ -12,6 +12,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location("hr_s256_collector", HERE / "collector.py")
 collector = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(collector)
+PROFILE_SPEC = importlib.util.spec_from_file_location("hr_s256_profile", HERE / "profile.py")
+profile = importlib.util.module_from_spec(PROFILE_SPEC)
+PROFILE_SPEC.loader.exec_module(profile)
 
 
 class CensusTest(unittest.TestCase):
@@ -73,6 +76,14 @@ class CensusTest(unittest.TestCase):
             collector.command_output([sys.executable, "-c",
                 "import os,time; os.write(1,b'x'*70000); time.sleep(4)"])
         self.assertLess(time.monotonic() - started, 3)
+
+    def test_unlisted_same_uid_actor_can_escape_old_pid_census_but_not_inert_profile(self):
+        # A complete old-PID census is not a complete Runtime-UID/source closure.
+        scanned, old_present = collector.parse_ps(b"456 1 505 node\n", {123})
+        self.assertEqual((scanned, old_present), (1, 0))
+        with self.assertRaisesRegex(profile.Rejected, "PROFILE_NOT_BOOTSTRAPPED"):
+            profile.production_entry({"action": profile.ACTION,
+                                      "operation_id": profile.OPERATION_ID})
 
 
 if __name__ == "__main__":
