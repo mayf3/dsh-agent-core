@@ -112,6 +112,21 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
 
+## Restart-lost fence trusted recovery amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1` | accepted lifecycle in this branch 2026-09-25; reviewed r4 head `5726f43f9c028a8967720ccaff49a054ee1423e6`; effective only after authority merge | contracts for bounded nonproduction implementation after acceptance is in the implementation base; production apply none | narrow amendment to `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` C-015/C-019/C-024: one `restart_quiescence_proven` evidence kind and prospective, root-authenticated whole-host quiescence proof consumed at Router startup for one exact restart-lost record; no business-outcome inference, replay, sweep, or historical floor fabrication |
+
+Owner mayf3 accepted r4 Q1=YES/Q2=YES on 2026-09-25 against the exact reviewed
+head and Spec SHA-256 `fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78`.
+The durable acceptance and independent-review hashes are in the Spec frontmatter.
+This lifecycle publication changes only metadata; the frozen r4 body remains
+byte-identical, including its historical candidate-stage statements. No
+implementation, production recovery, privileged collector/launcher bootstrap,
+restart, protected-store mutation, or fence clearing is authorized by this
+index entry. Final-head review and merge remain separate gates.
+
 ## agt_cto-agent model-route authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
