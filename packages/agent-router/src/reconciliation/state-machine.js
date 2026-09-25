@@ -20,6 +20,7 @@ export const TERMINATION_EVIDENCE_TYPES = Object.freeze([
   'exact_queued_removal',
   'child_real_exit',
   'cancellation_ack',
+  'restart_quiescence_proven',
 ])
 
 export const settlementMethods = {

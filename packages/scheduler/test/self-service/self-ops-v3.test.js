@@ -332,6 +332,21 @@ test('operator termination-only settlement is idempotent and self path cannot ad
   assert.equal(self.error.code, 'not_reconcilable')
 })
 
+test('RQ-009 self-ops consumes exact restart quiescence proof and preserves unknown business state', async (t) => {
+  const fx = await fixture(t)
+  const [record] = fx.occurrences
+  fx.router.get(record.occurrenceId).snapshot.terminationEvidence = 'restart_quiescence_proven'
+  const result = await fx.access.reconcileTurn(AGENT, {
+    jobId: fx.job.id, occurrenceId: record.occurrenceId, runId: record.runId,
+  })
+  assert.equal(result.ok, true)
+  const reloaded = await fx.store.loadDoc({ force: true })
+  const settled = reloaded.occurrences.find(row => row.occurrenceId === record.occurrenceId)
+  assert.equal(settled.state, 'outcome_unknown')
+  assert.equal(settled.terminationSettlement.evidenceKind, 'restart_quiescence_proven')
+  assert.equal(reloaded.fences[fx.job.id], undefined)
+})
+
 test('operator business outcome can settle after termination without changing its receipt snapshot', async (t) => {
   const fx = await fixture(t)
   const [record] = fx.occurrences
