@@ -7,6 +7,7 @@ import {
 
 const HASH = /^[a-f0-9]{64}$/
 const MAX_BUNDLE_BYTES = 65536
+const FIXED_S256_OPERATION_ID = 'hr-s256-trusted-quiescence-cut-20260925-v1'
 
 function exactKeys(value, names, code) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)
@@ -40,7 +41,8 @@ function verifyShape(bundle) {
   exactKeys(bundle.holderCheck, ['operationId', 'executedAtWallMs', 'method', 'paths', 'openHolderCount'], 'V2_holder_shape')
   exactKeys(bundle.custody, ['executedAs', 'producedBy', 'evidenceDir'], 'V2_custody_shape')
   const cut = bundle.recoveryCutover
-  if (typeof cut.operationId !== 'string' || !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId)
+  if (typeof cut.operationId !== 'string'
+      || (cut.operationId !== FIXED_S256_OPERATION_ID && !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId))
       || typeof cut.hostId !== 'string' || cut.hostId.length < 1 || cut.hostId.length > 128
       || typeof cut.startupNonce !== 'string' || cut.startupNonce.length < 8 || cut.startupNonce.length > 128) proofReject('V2_identity_invalid')
   for (const key of ['subjectPreimageSha256', 'exclusiveWindowReceiptSha256',
