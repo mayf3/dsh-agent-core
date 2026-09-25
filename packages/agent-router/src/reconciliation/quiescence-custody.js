@@ -76,7 +76,7 @@ export function namedReceipt(dir, name, digest, io = defaultEvidenceIO) {
   return ownedJson(join(dir, name), digest, io)
 }
 
-export function verifyCurrentWindow(evidenceDir, bundle, startup, io = defaultEvidenceIO) {
+function verifyCurrentWindowState(evidenceDir, bundle, startup, io) {
   const windowPath = join(evidenceDir, 'window.lock')
   const lock = io.stat(windowPath)
   if (!owned(lock, FILE_KIND) || (lock.mode & 0o077) !== 0) bad('window_lock_custody_invalid')
@@ -102,6 +102,14 @@ export function verifyCurrentWindow(evidenceDir, bundle, startup, io = defaultEv
     bad('window_challenge_mismatch')
   }
   return true
+}
+
+export function verifyCurrentWindow(evidenceDir, bundle, startup, io = defaultEvidenceIO) {
+  try { return verifyCurrentWindowState(evidenceDir, bundle, startup, io) }
+  catch (error) {
+    if (typeof error?.code === 'string' && error.code.startsWith('window_')) throw error
+    bad('window_validation_unavailable')
+  }
 }
 
 export function proofReject(code) { bad(code) }
