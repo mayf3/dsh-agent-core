@@ -29,7 +29,7 @@ const CLAIM_PHASES = new Set([
 ])
 const TERMINATION_EVIDENCE = new Set([
   'exact_terminal_then_idle', 'exact_started_then_idle', 'exact_queued_removal',
-  'child_real_exit', 'cancellation_ack',
+  'child_real_exit', 'cancellation_ack', 'restart_quiescence_proven',
 ])
 const SETTLEMENT_RESULTS = new Set([
   'completed', 'failed', 'not_admitted', 'late_completed', 'late_failed',

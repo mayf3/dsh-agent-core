@@ -10,6 +10,30 @@ import { createIngressDelivery } from '../../src/ingress-delivery.js'
 import { RECONCILIATION_CAPS } from '../../src/reconciliation/capacity.js'
 import { makeFx } from './helpers.js'
 
+test('RQ-009 new termination proof survives the real durable validator without inventing child exit', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-quiescence-kind-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const first = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'old-epoch' })
+    const handle = first.mintTurnExecution({ agentId: 'agt_exact', processGeneration: 1, sessionId: 'main' })
+    first.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'old', deadlineAtWallMs: Date.now() + 1000 })
+    first.markPromptWriteAttempted(handle)
+    const restarted = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'fresh-epoch' })
+    assert.equal(restarted.getTurnReconciliation(handle).snapshot.failureReason, 'runtime_restart_ownership_unavailable')
+    restarted.settleLate(handle, {
+      lateOutcome: 'terminated_without_outcome', terminationEvidence: 'restart_quiescence_proven', exitObserved: false,
+    })
+    const again = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'later-epoch' })
+    assert.equal(again.businessAdmissionStatus().ready, true)
+    const record = again.getTurnReconciliation(handle)
+    assert.equal(record.state, 'settled')
+    assert.equal(record.snapshot.terminationEvidence, 'restart_quiescence_proven')
+    assert.equal(record.snapshot.exitObservedAt, null)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
 test('V3 durable unknown reservation and fence survive a store reopen', () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-'))
   const persistenceFile = join(root, 'turn-recovery.json')
