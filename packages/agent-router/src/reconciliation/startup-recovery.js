@@ -1,5 +1,65 @@
 /** Crash-restart reconciliation for the V3 durable recovery authority. */
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { ownedDirectory, ownedFile } from './quiescence-custody.js'
+import { verifyQuiescenceBundle } from './quiescence-bundle.js'
+
 export const startupRecoveryMethods = {
+  consumeStartupQuiescence({ evidenceDir, deploymentDir, startup, io } = {}) {
+    if (evidenceDir === undefined || evidenceDir === null) return []
+    const results = []
+    const audit = entry => {
+      this.startupQuiescenceAudit = [...(this.startupQuiescenceAudit ?? []), entry].slice(-32)
+      results.push(entry)
+    }
+    if (this.startupBlockedReason !== null) {
+      audit({ status: 'rejected', reason: 'durable_store_invalid' })
+      return results
+    }
+    let files
+    try {
+      ownedDirectory(evidenceDir, io)
+      ownedDirectory(deploymentDir, io)
+      files = readdirSync(evidenceDir).filter(name => name.endsWith('.bundle.json')).sort()
+    } catch (error) {
+      audit({ status: 'rejected', reason: error.code ?? 'evidence_directory_unavailable' })
+      return results
+    }
+    if (files.length > 128) {
+      audit({ status: 'rejected', reason: 'bundle_directory_capacity_exceeded' })
+      return results
+    }
+    // Discover duplicate subjects before mutating any one record. Every scan
+    // reads only bounded root-custodied bytes, including malformed bundles.
+    const handles = new Map()
+    for (const file of files) {
+      try {
+        const raw = JSON.parse(ownedFile(join(evidenceDir, file), 65536, io).toString('utf8'))
+        const handle = raw?.subject?.reconciliationHandle
+        if (typeof handle === 'string') handles.set(handle, (handles.get(handle) ?? 0) + 1)
+      } catch { /* verifier records the exact file error below */ }
+    }
+    for (const file of files) {
+      try {
+        const path = join(evidenceDir, file)
+        const checked = verifyQuiescenceBundle(this, path, { evidenceDir, deploymentDir, startup, io })
+        if (handles.get(checked.handle) !== 1) {
+          audit({ file, handle: checked.handle, status: 'rejected', reason: 'duplicate_subject_bundle' })
+          continue
+        }
+        const result = this.settleLate(checked.handle, {
+          lateOutcome: 'terminated_without_outcome',
+          terminationEvidence: 'restart_quiescence_proven',
+          exitObserved: false,
+          restartQuiescence: true,
+        })
+        audit({ file, handle: checked.handle, status: result.won ? 'settled' : 'duplicate_ignored' })
+      } catch (error) {
+        audit({ file, status: 'rejected', reason: error.code ?? 'proof_verification_failed' })
+      }
+    }
+    return results
+  },
   restoreCrashInterruptedRecords() {
     let changed = false
     for (const record of this.records.values()) {

@@ -29,6 +29,7 @@ import { makeFakeChild } from './helpers/fake-child.js'
 import { apply as applyRouter } from '../src/index.js'
 import { TurnReconciliationStore } from '../src/reconciliation/store.js'
 import { readDurableRecoveryStore } from '../src/reconciliation/durable-file.js'
+import { proofFixture } from './helpers/restart-quiescence-fixture.js'
 
 const AGT_ID = 'agt_gen-safety'
 const AGT_ID_B = 'agt_gen-safety-b'
@@ -73,7 +74,7 @@ async function writeRoster(dir, agentIds) {
 }
 
 /** Router rig on a REAL persistent reconciliation store. */
-async function freshRig(t, dir, agentIds, storeFile) {
+async function freshRig(t, dir, agentIds, storeFile, routerOverrides = {}, onContext) {
   const definition = await writeRoster(dir, agentIds)
   const spawned = []
   const ctx = fakeCtx(new Map([
@@ -85,6 +86,7 @@ async function freshRig(t, dir, agentIds, storeFile) {
       resolveAgentRef: (ref) => definition.resolveAgentRef(ref),
     }],
   ]))
+  onContext?.(ctx)
   const router = applyRouter(ctx, {
     bindingsStoreFile: join(dir, `bindings-${Math.random().toString(16).slice(2)}.json`),
     defaultSessionId: 'main',
@@ -97,9 +99,68 @@ async function freshRig(t, dir, agentIds, storeFile) {
       return proc
     },
     provisionHome: () => {},
+    ...routerOverrides,
   })
   return { router, spawned, ctx }
 }
+
+test('RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody', async (t) => {
+  const fx = proofFixture(t)
+  const dir = await mkdtemp(join(tmpdir(), 'rq-router-startup-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const { router } = await freshRig(t, dir, ['agt_subject', AGT_ID], fx.persistenceFile, {
+    restartQuiescenceEvidenceDir: fx.evidenceDir,
+    restartQuiescenceDeploymentProofDir: fx.deploymentDir,
+  })
+  assert.deepEqual(router.getStartupQuiescenceAudit().map(row => row.reason), ['custody_directory_invalid'])
+  assert.equal(router.getTurnReconciliation(fx.handle).snapshot.fenceState, 'active')
+  assert.equal(router.reconciliationRuntimeStatus().businessAdmission, 'open')
+})
+
+test('RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet', async (t) => {
+  const fx = proofFixture(t)
+  const dir = await mkdtemp(join(tmpdir(), 'rq-router-fixture-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  let ctxRef
+  let sawClosedBarrier = false
+  const original = TurnReconciliationStore.prototype.consumeStartupQuiescence
+  TurnReconciliationStore.prototype.consumeStartupQuiescence = function (options) {
+    assert.equal(ctxRef.get('agentRouter'), undefined, 'business service unpublished while bundle is consumed')
+    sawClosedBarrier = true
+    return original.call(this, { ...options, io: fx.io, startup: fx.startup })
+  }
+  t.after(() => { TurnReconciliationStore.prototype.consumeStartupQuiescence = original })
+  const { router } = await freshRig(t, dir, ['agt_subject', AGT_ID], fx.persistenceFile, {
+    restartQuiescenceEvidenceDir: fx.evidenceDir,
+    restartQuiescenceDeploymentProofDir: fx.deploymentDir,
+  }, ctx => { ctxRef = ctx })
+  assert.equal(sawClosedBarrier, true)
+  assert.deepEqual(router.getStartupQuiescenceAudit().map(row => row.status), ['settled'])
+  assert.equal(router.getTurnReconciliation(fx.handle).snapshot.terminationEvidence, 'restart_quiescence_proven')
+  assert.equal(router.reconciliationRuntimeStatus().businessAdmission, 'open')
+  assert.equal(router.getTurnReconciliation(fx.handle).snapshot.fenceState, 'cleared')
+})
+
+test('RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes', async (t) => {
+  const fx = proofFixture(t)
+  const dir = await mkdtemp(join(tmpdir(), 'rq-router-inert-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const original = TurnReconciliationStore.prototype.consumeStartupQuiescence
+  TurnReconciliationStore.prototype.consumeStartupQuiescence = function (options) {
+    return original.call(this, { ...options, io: fx.io })
+  }
+  t.after(() => { TurnReconciliationStore.prototype.consumeStartupQuiescence = original })
+  const { router } = await freshRig(t, dir, ['agt_subject', AGT_ID], fx.persistenceFile, {
+    restartQuiescenceEvidenceDir: fx.evidenceDir,
+    restartQuiescenceDeploymentProofDir: fx.deploymentDir,
+  })
+  assert.deepEqual(router.getStartupQuiescenceAudit().map(row => row.reason), ['V9_startup_binding_mismatch'])
+  const record = router.getTurnReconciliation(fx.handle).snapshot
+  assert.equal(record.fenceState, 'active')
+  assert.equal(record.terminationEvidence, null)
+  assert.equal(record.initialOutcome, 'outcome_unknown')
+  assert.equal(router.reconciliationRuntimeStatus().businessAdmission, 'open')
+})
 
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
