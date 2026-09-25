@@ -35,6 +35,10 @@ class DSCandidateTest(unittest.TestCase):
                 spec = importlib.util.spec_from_file_location("hr_s256_ds_candidate", path)
                 ds = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(ds)
+            self.assertTrue(callable(ds.HR_JOURNAL.seal_intent))
+            self.assertTrue(callable(ds.HR_HANDOFF.OneLaunchHandoff))
+            intent_digest = ds.HR_JOURNAL.seal_intent("n" * 32, "a" * 64, 100)
+            self.assertEqual(ds.HR_JOURNAL.readback("intent")[1], intent_digest)
             request = {"action": ds.HR_PROFILE.ACTION,
                        "operation_id": ds.HR_PROFILE.OPERATION_ID}
             response, restart = ds.handle(json.dumps(request).encode())
