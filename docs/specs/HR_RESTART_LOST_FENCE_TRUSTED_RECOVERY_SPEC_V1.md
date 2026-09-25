@@ -3,7 +3,7 @@ spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1
 status: draft
 spec_kind: implementation
 authority_level: governing_spec_candidate
-revision: r3
+revision: r4
 revision_date: 2026-09-25
 base_revision: origin/main b4e8511c533f8fa5be2f48dd56acc16bc79dff39
 governed_by:
@@ -297,6 +297,7 @@ QuiescenceProofBundle = {
                      exclusiveWindowReceiptSha256,
                      launchSourcesInhibitedReceiptSha256,
                      oldTreeQuiescedReceiptSha256,
+                     launchAuthorizationReceiptSha256,
                      windowOpenedAtWallMs, oldTreeQuiescedAtWallMs,
                      authorizedStartupAtWallMs,
                      consumingBinarySha256 },
@@ -326,8 +327,13 @@ The bound startup nonce is unique to the ONE launch and supplied by its
 trusted root launcher to the startup consumer. `authorizedStartupAtWallMs`
 is the root launch-authorization event written after the census and
 immediately before that launcher executes the pinned binary, not a forecast
-or an operator-entered time. These are inputs; they are
-never written
+or an operator-entered time. The independently sealed, immutable launch
+authorization receipt identified by `launchAuthorizationReceiptSha256`
+records the same `operationId`, `hostId`, unique `startupNonce`, pinned
+`consumingBinarySha256`, exact census archive/output digests and the complete
+`holderCheck` fields used by this bundle. Its authorization event occurs after both
+observations and before the sole launch; the receipt is sealed before the
+final bundle and is never self-digested. These are inputs; they are never written
 into the reconciliation store. The store's own bounded caps
 (MAX_RECONCILIATION_RECORD_BYTES etc.) continue to govern the record.
 
@@ -353,8 +359,12 @@ V7  controlledStop present iff the recovery plan declared a stop/restart
 V8  record preimage predicates (RQ-004 P1..P10) all hold
 V9  current cutover: subject preimage digest matches the durable exact record;
     root-owned exclusive-window, launch-source inhibition, old-tree stop,
-    archive and one-startup receipts all digest-verify and bind the same
-    operationId, hostId, binary digest and unique startup nonce; the consuming
+    archive and launch-authorization receipts all resolve from root custody
+    and digest-verify. The launch authorization binds the same operationId,
+    hostId, unique startup nonce, pinned binary, exact census archive/output
+    digests and all `holderCheck` fields; its event follows both observations
+    and precedes the sole launch. A missing, mismatched, or unverifiable
+    `launchAuthorizationReceiptSha256` rejects with ZERO-WRITE. The consuming
     startup received that nonce from the trusted root launcher, observes its
     own fresh epoch, and verifies the exclusive window is STILL held through
     consumption. The subject record predates the cut; no old execution source
@@ -440,8 +450,9 @@ separate deployment authority establishes RQ-007 floor PROVEN + validator
    exclusive control of all Runtime launch/resumption sources on this host
 -> while admission remains fenced: capture exact durable subject preimage;
    stop/inhibit old Runtime tree; complete post-stop root census + holder check;
-   root launcher writes one nonce-bound launch authorization, seals the
-   operation-bound bundle, then executes ONE pinned fresh-epoch binary
+   root launcher independently seals one nonce-bound launch authorization
+   receipt referencing those exact proof bytes; seals the operation-bound
+   bundle with its receipt digest; then executes ONE pinned fresh-epoch binary
 -> durable store opens + schema/caps/issuance/handle validate
 -> consume evidence dir: validate each bundle (RQ-003), settle each exact
    record (RQ-004) — per-record results (settled | zero-write+reason)
@@ -462,6 +473,10 @@ its one startup nonce to the bundle, and the consumer checks live exclusive
 window ownership at consumption. The control plane must inhibit other
 automatic/manual launch paths until its authorized startup is established;
 if it cannot demonstrate that control, it must not produce a valid bundle.
+The collector/launcher and live exclusive-window verification are proposed
+privileged obligations. The production lock alone grants neither capability:
+implementation and any operation require an applicable separately accepted
+and explicitly bootstrapped control-plane authority before these effects.
 The new runtime never receives an old ownership token or old-turn replay
 instruction; its fresh epoch and the surviving old fence prevent old-turn
 admission. No source history or unrelated record is repaired.
@@ -603,7 +618,7 @@ tooling).
 | NEG-RQ-015 | forged bundle written by a non-root actor | no write path to the evidence dir; custody check V1 rejects; no runtime API accepts bundles |
 | NEG-RQ-016 | capacity pressure during settlement | existing byte-cap behavior: fail-loud, preimage restored; unresolved record never evicted (BOUNDED rule 8/13) |
 | NEG-RQ-017 | later floor proof exists but current causal cut is absent, or census precedes subject history / belongs to another host or window | V5/V9 rejects; zero-write, original fence remains active |
-| NEG-RQ-018 | old tree/holder still live, launch-source inhibition or exclusive lock not proven through consumption, wrong/reused startup nonce, or authorized-startup ordering unknown | V5/V9 rejects; zero-write, no old-turn replay |
+| NEG-RQ-018 | old tree/holder still live, launch-source inhibition or exclusive lock not proven through consumption, launch-authorization receipt missing/wrong/digest-mismatched or not bound to exact census/holder proofs, wrong/reused startup nonce, or authorized-startup ordering unknown | V5/V9 rejects; zero-write, no old-turn replay |
 | NEG-RQ-019 | deployed floor proof or new-kind validator receipt missing/mismatched/not effective before recovery stop, or durable issuance/handle identity corrupt or aliased | V10 or existing store validator rejects before settlement; no history repair, zero-write |
 
 ## 8. Implementation paths (when, and only when, accepted)
