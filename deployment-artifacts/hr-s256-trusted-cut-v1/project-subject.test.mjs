@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { closeSync, mkdtempSync, openSync, rmSync, writeFileSync } from 'node:fs'
+import { closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -31,6 +31,12 @@ test('fixed s256 projection validates durable authority and emits no private pay
   assert.match(projection.subjectPreimageSha256, /^[a-f0-9]{64}$/)
   assert.equal(JSON.stringify(projection).includes('private-prompt'), false)
   assert.throws(() => projectSubject(file), /FIXED_STORE_FD_REQUIRED/)
+  const currentEpochStore = JSON.parse(readFileSync(file, 'utf8'))
+  currentEpochStore.runtimeEpoch = projection.runtimeEpoch
+  writeFileSync(file, `${JSON.stringify(currentEpochStore)}\n`)
+  const currentEpochFd = openSync(file, 'r')
+  assert.throws(() => projectSubject(`/dev/fd/${currentEpochFd}`), /S256_P1_P10_INVALID/)
+  closeSync(currentEpochFd)
   writeFileSync(file, '{}\n')
   assert.throws(() => projectSubject(`/dev/fd/${fd}`))
 })

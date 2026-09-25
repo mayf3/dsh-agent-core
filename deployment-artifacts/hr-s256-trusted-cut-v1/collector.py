@@ -9,7 +9,9 @@ import hashlib
 import json
 import os
 import re
+import selectors
 import subprocess
+import time
 
 
 PS_COMMAND = ["/bin/ps", "-axo", "pid=,ppid=,uid=,comm="]
@@ -29,13 +31,44 @@ def require(condition, reason):
 
 def command_output(argv):
     try:
-        result = subprocess.run(argv, capture_output=True, stdin=subprocess.DEVNULL,
-                                timeout=10, env={"PATH": "/usr/bin:/bin"}, check=False)
-    except (OSError, subprocess.TimeoutExpired) as exc:
+        child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE, env={"PATH": "/usr/bin:/bin"})
+    except OSError as exc:
         raise Rejected("CENSUS_UNAVAILABLE") from exc
-    require(result.returncode == 0 and result.stderr == b""
-            and 0 < len(result.stdout) <= MAX_OUTPUT_BYTES, "CENSUS_INCOMPLETE")
-    return result.stdout
+    stdout = bytearray()
+    stderr = bytearray()
+    deadline = time.monotonic() + 10
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(child.stdout, selectors.EVENT_READ, stdout)
+            selector.register(child.stderr, selectors.EVENT_READ, stderr)
+            while selector.get_map():
+                remaining = deadline - time.monotonic()
+                require(remaining > 0, "CENSUS_TIMEOUT")
+                ready = selector.select(remaining)
+                require(bool(ready), "CENSUS_TIMEOUT")
+                for key, _ in ready:
+                    output = key.data
+                    limit = MAX_OUTPUT_BYTES if output is stdout else 4096
+                    block = os.read(key.fileobj.fileno(), min(65536, limit + 1 - len(output)))
+                    if not block:
+                        selector.unregister(key.fileobj)
+                    else:
+                        output.extend(block)
+                        require(len(output) <= limit, "CENSUS_OUTPUT_BOUND")
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, "CENSUS_TIMEOUT")
+        require(child.wait(timeout=remaining) == 0 and not stderr and bool(stdout),
+                "CENSUS_INCOMPLETE")
+        return bytes(stdout)
+    except subprocess.TimeoutExpired as exc:
+        raise Rejected("CENSUS_TIMEOUT") from exc
+    finally:
+        if child.poll() is None:
+            child.kill()
+        child.wait()
+        child.stdout.close()
+        child.stderr.close()
 
 
 def parse_ps(raw, old_pids):
@@ -61,16 +94,19 @@ def parse_lsof(raw, holder_roots):
     current_pid = None
     current_fd = None
     paths = tuple(os.path.normpath(root) for root in holder_roots)
+    require(raw.endswith(b"\0"), "LSOF_INCOMPLETE")
     for token in raw.split(b"\0"):
         token = token.strip(b"\r\n")
         if not token:
             continue
         tag, value = token[:1], token[1:]
         if tag == b"p":
+            require(current_fd is None, "LSOF_INCOMPLETE")
             require(value.isdigit() and int(value) > 0, "LSOF_PID_UNKNOWN")
             current_pid = int(value)
             current_fd = None
         elif tag == b"f":
+            require(current_fd is None, "LSOF_INCOMPLETE")
             require(current_pid is not None and bool(value), "LSOF_FD_UNKNOWN")
             current_fd = value
         elif tag == b"n":
@@ -87,9 +123,10 @@ def parse_lsof(raw, holder_roots):
             if any(normalized == root or normalized.startswith(root + "/")
                    for root in paths):
                 holders += 1
+            current_fd = None
         else:
             raise Rejected("LSOF_FIELD_UNKNOWN")
-    require(current_pid is not None and scanned > 0, "LSOF_INCOMPLETE")
+    require(current_pid is not None and current_fd is None and scanned > 0, "LSOF_INCOMPLETE")
     return scanned, holders
 
 

@@ -2,7 +2,8 @@
 
 import importlib.util
 import pathlib
-import subprocess
+import sys
+import time
 import unittest
 from unittest.mock import patch
 
@@ -15,16 +16,14 @@ SPEC.loader.exec_module(collector)
 
 class CensusTest(unittest.TestCase):
     def capture(self, ps, lsof, ps_code=0, lsof_code=0):
-        outputs = [subprocess.CompletedProcess([], ps_code, ps, b""),
-                   subprocess.CompletedProcess([], lsof_code, lsof, b"")]
+        outputs = [ps if ps_code == 0 else collector.Rejected("CENSUS_INCOMPLETE"),
+                   lsof if lsof_code == 0 else collector.Rejected("CENSUS_INCOMPLETE")]
         with patch.object(collector.os, "geteuid", return_value=0), \
-             patch.object(collector.subprocess, "run", side_effect=outputs) as run:
+             patch.object(collector, "command_output", side_effect=outputs) as run:
             result = collector.collect_whole_host({123}, ["/fixture/workspace"])
         self.assertEqual(run.call_count, 2)
         self.assertEqual(run.call_args_list[0].args[0], collector.PS_COMMAND)
         self.assertEqual(run.call_args_list[1].args[0], collector.LSOF_COMMAND)
-        self.assertEqual(run.call_args_list[0].kwargs["timeout"], 10)
-        self.assertEqual(run.call_args_list[0].kwargs["env"], {"PATH": "/usr/bin:/bin"})
         return result
 
     def test_whole_host_zero_is_normalized_without_raw_command_or_path_payload(self):
@@ -61,6 +60,19 @@ class CensusTest(unittest.TestCase):
         with patch.object(collector.os, "geteuid", return_value=0), \
              self.assertRaisesRegex(collector.Rejected, "OLD_TREE_IDENTITY_UNKNOWN"):
             collector.collect_whole_host(set(), ["/fixture/workspace"])
+
+    def test_lsof_rejects_truncated_fields_and_fd_without_name(self):
+        for raw in (b"p456\0f1\0n/fixture/other",
+                    b"p456\0f1\0n/fixture/other\0p123\0f2\0"):
+            with self.subTest(raw=raw), self.assertRaises(collector.Rejected):
+                collector.parse_lsof(raw, ["/fixture/workspace"])
+
+    def test_output_bound_interrupts_stream_before_process_exits(self):
+        started = time.monotonic()
+        with self.assertRaisesRegex(collector.Rejected, "CENSUS_OUTPUT_BOUND"):
+            collector.command_output([sys.executable, "-c",
+                "import os,time; os.write(1,b'x'*70000); time.sleep(4)"])
+        self.assertLess(time.monotonic() - started, 3)
 
 
 if __name__ == "__main__":
