@@ -115,6 +115,16 @@ export class ExecutionLedger {
         if (event.pid !== undefined) current.pid = event.pid
         if (event.sessionId !== undefined) current.sessionId = event.sessionId
       }
+      if (event.type === 'continue_requested') {
+        // Midrun continue, durably queued (CTR-DES-001/003): the instruction
+        // text is part of the state authority, so steering survives restart.
+        const queue = current.continueRequests ?? (current.continueRequests = [])
+        queue.push({ instruction: event.instruction, disposition: 'pending', atMs: event.atMs })
+      }
+      if (event.type === 'continue_delivery') {
+        const entry = (current.continueRequests ?? []).find((c) => c.disposition === 'pending' && c.instruction === event.instruction)
+        if (entry !== undefined) entry.disposition = event.disposition
+      }
       if (event.type === 'terminal') {
         current.state = event.terminalState
         current.terminalAt = event.atMs
