@@ -185,5 +185,5 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
   if ((bundle.controlledStop !== null) !== (startup.recoveryPlanStopsRuntime === true)) proofReject('V7_stop_plan_mismatch')
   verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io)
   verifyCurrentWindow(evidenceDir, bundle, startup, io)
-  return { handle: bundle.subject.reconciliationHandle, bundle, alreadySettled }
+  return { handle: bundle.subject.reconciliationHandle, bundle, bundleSha256: sha256(bytes), alreadySettled }
 }
