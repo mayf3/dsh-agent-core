@@ -40,11 +40,21 @@ Implemented and checked offline:
   launch;
 - Router V2 accepts the one R2 fixed operation ID alongside its existing
   `op-...` grammar, while an unrelated `hr-...` ID remains zero-write rejected.
+- a disconnected fixed-operation root-custody candidate now seals an intent,
+  launch authorization and pre-spawn one-launch claim with exclusive 0600
+  create, file/directory fsync and no-follow readback. Non-root fixtures verify
+  duplicate, tamper, symlink, nonce, subject and caller-field rejection;
+- a disconnected one-launch fixture passes challenge and window descriptors
+  only to one synthetic child, uses the same startup nonce and digest as the
+  sealed fixture receipt, enforces a 750 ms challenge, and rejects missing/wrong FDs, wrong
+  receipt and reuse. It does not launch the Runtime or prove host exclusion.
 
 Still required for the R2 profile; **none is supplied by this candidate**:
 
 1. Complete the fixed DS action after the current inert preflight gate, with
-   durable intent/phase journal and continuous mutation-lock ownership. The
+   a reviewed full phase journal, durable containment/readback and continuous
+   mutation-lock ownership. The disconnected intent/launch-claim primitive is
+   not a completed operation journal. The
    separate protected projection must be called only after exact source and
    receipt identities are verified. The Python fixture digest helper is not a
    production substitute for the JS projection.
@@ -58,10 +68,11 @@ Still required for the R2 profile; **none is supplied by this candidate**:
 4. Trusted floor proofs 1–9, validator-before-producer deployment receipt,
    pinned rollback floor and compatible rollback generation from protected
    sources, not caller dictionaries.
-5. Durable root custody, immutable archive/receipt hashes, before/after
-   journal, continuous exclusive window, finite stop/inhibition, single pinned
-   Runtime launch with nonce/window descriptors and authenticated Router
-   startup wiring, post-settlement readback, bounded UNKNOWN containment.
+5. Complete root archive/receipt provenance, before/after phase journal,
+   continuous exclusive window, finite stop/inhibition, single pinned Runtime
+   launch using the nonce/window descriptors, authenticated Router startup
+   wiring, post-settlement readback and bounded UNKNOWN containment. The
+   isolated FD fixture is not a deployed startup gate or launch proof.
 6. Separate r4 V9 replay-preimage provenance successor remains unaccepted and
    is outside this change. Full r4 conformance cannot be claimed.
 
