@@ -3,7 +3,7 @@ spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1
 status: draft
 spec_kind: implementation
 authority_level: governing_spec_candidate
-revision: r2
+revision: r3
 revision_date: 2026-09-25
 base_revision: origin/main b4e8511c533f8fa5be2f48dd56acc16bc79dff39
 governed_by:
@@ -45,7 +45,7 @@ out_of_scope:
 ## 0. Result
 
 ```text
-SPEC_CANDIDATE_READY = YES
+SPEC_CANDIDATE_READY = PENDING_B4_INDEPENDENT_REVIEW
 RECOMMENDED_MECHANISM = root-authenticated whole-host quiescence proof bundle,
   consumed at Router startup, settling ONE exact record as
   terminated_without_outcome + terminationEvidence=restart_quiescence_proven
@@ -119,24 +119,39 @@ today — and none may be weakened by this amendment.
 
 ## 3. Mechanism assessment
 
-### 3.1 What a completed restart can truthfully prove
+### 3.1 What a prospective recovery cutover can truthfully prove
 
-The turn executed inside the old Runtime's process tree. Termination of the
-execution follows from three durable facts, none of which involves guessing:
+The turn executed inside the old Runtime's process tree. A completed restart
+alone proves nothing. Termination of the exact execution follows only from a
+current, controlled recovery cutover with three separate facts:
 
 1. **Retired epoch.** The record's `runtimeEpoch` is durably observed
    (retained by the store — `compactRuntimeEpochs` always retains every
    record's epoch) and differs from the current runtime epoch. The current
    runtime minted a fresh epoch (`store.js` constructor) and can never adopt
    the old one.
-2. **Whole-host quiescence.** A root-authenticated census enumerates ALL
-   processes on the deployment host and finds zero members of the Runtime
-   deployment tree (wrapper, runtime entry, agent children) and zero holders
-   of the subject agents' workspace/session lock paths.
-3. **Generation floor.** With the restart-safety fix deployed
-   (`highestIssuedGeneration`), the old `(agentId, processGeneration)` can
-   never be reissued by a later runtime, so "no live member exists" cannot be
-   silently repaired by identity reuse.
+2. **Causal whole-host quiescence.** After the exact record already exists and
+   all sources capable of resuming its old execution are stopped or inhibited
+   under one exclusive root-controlled window, a root-authenticated COMPLETE
+   census enumerates all processes on the deployment host and finds zero
+   Runtime-tree members and zero relevant workspace/session holders. The
+   census is bound to this window and precedes its one authorized startup;
+   an unrelated earlier archive is insufficient.
+3. **No resumption after the cut.** Root custody maintains exclusive control
+   of launch sources through the census and authorized startup. The new
+   runtime has a fresh epoch and keeps the old record fenced until settlement;
+   it cannot resume or replay the old turn. Full C-019 identity includes the
+   epoch and handle: prior reuse of a bare generation number is neither
+   proof of termination nor an automatic identity alias. The durable store
+   must still pass its accepted validator and exact preimage checks.
+
+The restart-safety floor is a separate FORWARD deployment prerequisite:
+`ROUTER_RESTART_SAFETY = PROVEN` must hold before this recovery operation's
+stop/restart. It prevents future issuance damage. It does not establish that
+the floor held across historical restarts and is never cited as proof of
+historical non-reuse. Records such as s256 with a pre-floor intervening
+restart can be eligible only through the current cutover proof; no past
+duplicate work or business outcome is inferred.
 
 This is the same **truth class** as `child_real_exit`: it proves the exact
 execution cannot continue; it proves nothing about success/failure. It is
@@ -171,11 +186,14 @@ the strengthenings close its residual gaps:
   receipt is REQUIRED only when the recovery plan itself includes a
   stop/restart (RQ-002 `controlledStop`). This keeps the mechanism honest
   while strengthening future operations.
-- **G4 — TOCTOU.** The census proves absence at census time; the termination
-  fact occurred at/before the old runtime stopped and cannot regress (a
-  process cannot become un-exited; epoch retirement prevents identity
-  resurrection). If any census ever DOES find a live old-tree member, the
-  bundle is invalid and everything fails closed (RQ-003).
+- **G4 — causal cut and no resumption.** The census must occur inside the
+  exclusive recovery window after the subject record's possible execution
+  history and after all old execution/launch sources are quiesced. Root
+  custody inhibits their resumption until the one bound new-runtime startup.
+  The startup nonce, live window ownership, host and deployment receipts bind
+  the archive to that startup. An earlier zero-process census or an unproven
+  launch-source gap is invalid. If any census finds a live old-tree member,
+  the bundle is invalid and everything fails closed (RQ-003).
 
 **Scope assumption (hard):** single-host deployment topology. The census is
 authoritative for the deployment host only. If Agent children could ever run
@@ -246,15 +264,20 @@ exists for it; delta stays minimal).
 `restart_quiescence_proven` is trusted termination-only evidence for an exact
 unresolved `outcome_unknown` record if and only if a valid
 `QuiescenceProofBundle` (RQ-002/003) proves, for that record's exact
-`(runtimeEpoch, agentId, processGeneration, reconciliationHandle)`:
+`(runtimeEpoch, agentId, processGeneration, turnExecutionId =
+reconciliationHandle)`:
 
 1. the record's runtime epoch is durably retired (present in the store's
    epoch set and different from the consuming runtime's epoch);
 2. a root-custody complete host census found zero processes of the Runtime
    deployment tree and zero holders of the subject agents'
    workspace/session lock paths;
-3. the restart-safety prerequisite (RQ-007) held for every restart since the
-   record's epoch was current;
+3. a present, exclusive, root-controlled cutover window causally binds the
+   subject's durable preimage, stopped/inhibited old execution sources,
+   COMPLETE zero-member census, and one authorized startup with no old-turn
+   resumption or replay; the deployed restart-safety floor is independently
+   PROVEN before this recovery operation's stop/restart (RQ-007), without
+   asserting anything about pre-floor historical restarts;
 4. when the recovery plan included a stop/restart, an authenticated
    controlled-stop receipt is bound into the bundle.
 
@@ -265,15 +288,27 @@ proves success, failure, side-effect absence, or any business outcome.
 
 ```text
 QuiescenceProofBundle = {
-  bundleSchemaVersion: 1,
+  bundleSchemaVersion: 2,
   subject: { reconciliationHandle, turnExecutionId == reconciliationHandle,
              runtimeEpoch, agentId, processGeneration },        // ONE exact record
   epochRetirement: { retiredEpoch == subject.runtimeEpoch },
-  hostCensus: { executedAtWallMs, hostId,
+  recoveryCutover: { operationId, hostId, startupNonce,
+                     subjectPreimageSha256,
+                     exclusiveWindowReceiptSha256,
+                     launchSourcesInhibitedReceiptSha256,
+                     oldTreeQuiescedReceiptSha256,
+                     windowOpenedAtWallMs, oldTreeQuiescedAtWallMs,
+                     authorizedStartupAtWallMs,
+                     consumingBinarySha256 },
+  deploymentProof: { floorProvenReceiptSha256,
+                     validatorInstalledReceiptSha256,
+                     deployedBinarySha256 },
+  hostCensus: { operationId, executedAtWallMs, hostId,
                 tools: [closed enum, >= 2 independent methods],
                 outputsSha256: [..], archiveRef,
                 runtimeTreeProcessCount: 0 },
-  holderCheck: { method: closed enum, paths: [bounded <= 16],
+  holderCheck: { operationId, executedAtWallMs,
+                 method: closed enum, paths: [bounded <= 16],
                  openHolderCount: 0 },
   custody: { executedAs: 'root',
              producedBy: closed enum ['trusted_cp_recovery_evidence_collector_v1'],
@@ -285,7 +320,14 @@ MAX_BUNDLE_BYTES = 65536
 
 One bundle is bound to ONE `reconciliationHandle`. A bundle naming more than
 one subject, or a directory holding two different bundles for the same
-handle, is invalid (fail closed). Bundles are inputs; they are never written
+handle, is invalid (fail closed). The root-owned receipt references above are
+content digests of exact trusted-control-plane records, not operator claims.
+The bound startup nonce is unique to the ONE launch and supplied by its
+trusted root launcher to the startup consumer. `authorizedStartupAtWallMs`
+is the root launch-authorization event written after the census and
+immediately before that launcher executes the pinned binary, not a forecast
+or an operator-entered time. These are inputs; they are
+never written
 into the reconciliation store. The store's own bounded caps
 (MAX_RECONCILIATION_RECORD_BYTES etc.) continue to govern the record.
 
@@ -296,14 +338,33 @@ structured reject reason otherwise:
 
 ```text
 V1  file custody: root-owned, not group/world writable, <= MAX_BUNDLE_BYTES
-V2  schema: closed shape, version 1, closed enums, digest recomputation
-V3  single-subject binding: subject.reconciliationHandle == target handle
+V2  schema: closed shape, version 2, closed enums, digest recomputation
+V3  single-subject binding: subject.reconciliationHandle == target handle ==
+    subject.turnExecutionId; the durable record's projected handle/turnExecutionId
+    equality, complete canonical tuple,
+    and issuance/handle consistency pass the accepted store validator
 V4  epoch: retiredEpoch == record.runtimeEpoch != consuming runtime epoch,
     and retiredEpoch is in the store's durable epoch set
-V5  census: runtimeTreeProcessCount == 0 AND openHolderCount == 0
+V5  census: runtimeTreeProcessCount == 0 AND openHolderCount == 0;
+    both complete enumerations bind to the SAME operationId/hostId and occur
+    after oldTreeQuiescedAtWallMs, before authorizedStartupAtWallMs
 V6  custody.producedBy/executedAs within closed enums
 V7  controlledStop present iff the recovery plan declared a stop/restart
 V8  record preimage predicates (RQ-004 P1..P10) all hold
+V9  current cutover: subject preimage digest matches the durable exact record;
+    root-owned exclusive-window, launch-source inhibition, old-tree stop,
+    archive and one-startup receipts all digest-verify and bind the same
+    operationId, hostId, binary digest and unique startup nonce; the consuming
+    startup received that nonce from the trusted root launcher, observes its
+    own fresh epoch, and verifies the exclusive window is STILL held through
+    consumption. The subject record predates the cut; no old execution source
+    may resume or replay between census and consumption. Missing/UNKNOWN
+    continuity or unrelated earlier census rejects.
+V10 forward deployment: trusted deployment receipt and post-deploy proofs
+    establish ROUTER_RESTART_SAFETY=PROVEN for the actual deployed binary
+    BEFORE this operation's stop/restart; the consuming binary digest matches
+    and includes the new-kind validator BEFORE any producer write. A merged
+    source commit, proof index, or historical inference cannot satisfy V10.
 ```
 
 Any invalid element ⇒ ZERO-WRITE; the record remains exactly as before
@@ -318,7 +379,8 @@ by-agent, by-epoch, or bulk entry point. Preconditions (all must hold;
 checked against the durable record immediately before mutation):
 
 ```text
-P1  record exists for the exact handle
+P1  record exists for the exact handle; record.handle == handle and its durable
+    projection has reconciliationHandle == turnExecutionId == handle
 P2  record.runtimeEpoch == bundle.subject.runtimeEpoch (retired, != current)
 P3  record.agentId == bundle.subject.agentId
 P4  record.processGeneration == bundle.subject.processGeneration
@@ -373,22 +435,42 @@ Bundles are consumed only by the Router startup recovery path, BEFORE the
 fail-closed business-admission barrier opens (C-019 barrier discipline):
 
 ```text
-durable store opens + schema/caps validate
+separate deployment authority establishes RQ-007 floor PROVEN + validator
+-> trusted control plane acquires the one global production lock and proves
+   exclusive control of all Runtime launch/resumption sources on this host
+-> while admission remains fenced: capture exact durable subject preimage;
+   stop/inhibit old Runtime tree; complete post-stop root census + holder check;
+   root launcher writes one nonce-bound launch authorization, seals the
+   operation-bound bundle, then executes ONE pinned fresh-epoch binary
+-> durable store opens + schema/caps/issuance/handle validate
 -> consume evidence dir: validate each bundle (RQ-003), settle each exact
    record (RQ-004) — per-record results (settled | zero-write+reason)
    appended as bounded audit
 -> install remaining unresolved fences
 -> open business admission barrier
+-> trusted control plane may close the exclusive window after startup
+   consumption and readback; UNKNOWN window continuity fails the subject
+   closed rather than releasing its fence
 ```
 
 An invalid or missing bundle never blocks the fleet: the affected record
 simply remains blocked with its structured reason, and the invalid-bundle
 event fails loud in health/diagnostics (tampering indicator). A business
 prompt arriving during processing is `not_admitted` (barrier still closed).
+This window cannot be substituted with a past census: the root launcher binds
+its one startup nonce to the bundle, and the consumer checks live exclusive
+window ownership at consumption. The control plane must inhibit other
+automatic/manual launch paths until its authorized startup is established;
+if it cannot demonstrate that control, it must not produce a valid bundle.
+The new runtime never receives an old ownership token or old-turn replay
+instruction; its fresh epoch and the surviving old fence prevent old-turn
+admission. No source history or unrelated record is repaired.
 
 Any stop/restart that is part of a recovery plan may be performed only after
 the RQ-007 prerequisites validate; the plan must carry the validated
-prerequisite set in its run record.
+prerequisite set in its run record. This prospective operation cannot make
+the floor PROVEN itself. Neither its new proof nor a later deployment receipt
+claims that the floor held across prior restarts.
 
 ### RQ-006 — No falsification, no replay, no sweep
 
@@ -423,6 +505,10 @@ mechanism:
    Without the floor, a restart reissues generation ids and breaks both the
    store's range invariants and this mechanism's exact identity binding —
    so no recovery restart is permitted on a pre-floor binary.
+   This applies prospectively to the recovery operation, not retroactively
+   to every restart since the target epoch. A historically reused bare
+   generation does not select a record; malformed/overlapping durable
+   issuance or ambiguous full identity still fails the accepted validator.
 2. **Validator-before-producer ordering.** The binary that EXTENDS the
    durable validator (§4 vocabulary table) is deployed first; only then
    may any settlement write the new kind. Deployments go through the trusted
@@ -432,7 +518,10 @@ mechanism:
    is durable, rollback below the validator-extended binary fails closed at
    store load; the deployment record must pin that minimum binary.
 4. **Recovery plan prerequisites validated first** (RQ-005 last paragraph):
-   restart-safety PROVEN, lock discipline, bundle tooling availability.
+   restart-safety PROVEN, lock discipline, exclusive launch-source control,
+   bundle tooling availability. The preflight resolves actual deployed
+   binary/proof receipts before the window opens; the startup consumer
+   re-verifies their hashes, ordering, and binding under RQ-003 V9/V10.
 
 ### RQ-008 — Single-host scope assumption
 
@@ -490,6 +579,8 @@ tooling).
 | ACC-RQ-006 | RQ-009 | scheduler end-to-end: unknown occurrence + Router-settled record | bridge readback stamps proof; C-039 termination-only settlement; fence released; business state stays `outcome_unknown`; no retry minted even with retry.auto=true; later reconcile_turn = receipt zero-write |
 | ACC-RQ-007 | RQ-003/004 | preimage+cmp: inject persist failure mid-settlement | record restored to exact preimage; structured failure; no partial write |
 | ACC-RQ-008 | RQ-007 | validator ordering: old validator sees new-kind record | durable load fails closed `durable_store_invalid`, admission blocked, records intact (documented rollback floor) |
+| ACC-RQ-009 | RQ-001/003/005 | s256-shaped exact record survived an explicitly pre-floor restart; valid store, future floor PROVEN before operation, one causal exclusive cut and matching fresh startup | exact record alone settles termination-only; old business outcome remains unknown, exitObservedAt null, no replay; historical floor is not asserted |
+| ACC-RQ-010 | RQ-001/003/004 | a second record reuses bare generation 1 under another epoch while the valid bundle binds s256's full handle/epoch | only the bound s256-shaped record can settle; second record byte-identical, no by-generation selection |
 
 ## 7. Negative / security test matrix
 
@@ -511,6 +602,9 @@ tooling).
 | NEG-RQ-014 | business prompt arrives while startup bundle processing is in flight | `not_admitted`; barrier discipline holds (C-019) |
 | NEG-RQ-015 | forged bundle written by a non-root actor | no write path to the evidence dir; custody check V1 rejects; no runtime API accepts bundles |
 | NEG-RQ-016 | capacity pressure during settlement | existing byte-cap behavior: fail-loud, preimage restored; unresolved record never evicted (BOUNDED rule 8/13) |
+| NEG-RQ-017 | later floor proof exists but current causal cut is absent, or census precedes subject history / belongs to another host or window | V5/V9 rejects; zero-write, original fence remains active |
+| NEG-RQ-018 | old tree/holder still live, launch-source inhibition or exclusive lock not proven through consumption, wrong/reused startup nonce, or authorized-startup ordering unknown | V5/V9 rejects; zero-write, no old-turn replay |
+| NEG-RQ-019 | deployed floor proof or new-kind validator receipt missing/mismatched/not effective before recovery stop, or durable issuance/handle identity corrupt or aliased | V10 or existing store validator rejects before settlement; no history repair, zero-write |
 
 ## 8. Implementation paths (when, and only when, accepted)
 
@@ -528,7 +622,8 @@ packages/scheduler/src/occurrence-model.js                    (+1 occurrence aut
 packages/scheduler/src/self-ops/diagnosis.js                  (+1 router evidence enum member)
 packages/agent-router/test/process-lifecycle/*.test.js        (ACC-RQ/NEG-RQ suites)
 packages/scheduler/test/*.test.js                             (ACC-RQ-006 extension)
-trusted control-plane evidence collector script               (root custody producer)
+trusted control-plane evidence collector/launcher script      (root custody
+                                                               cutover receipts and nonce)
 ```
 
 MUST NOT change:
@@ -560,6 +655,9 @@ PRODUCTION_MUTATION     = NO
 ```text
 MECHANISM                       = startup-consumed root-authenticated whole-host
                                   quiescence proof (bundle), single-host scope
+TEMPORAL_PROOF                  = prospective exclusive stop-census-one-startup
+                                  cut; pre-floor history is allowed only with
+                                  valid present identity and this causal cut
 NEW_EVIDENCE_CLASS_REQUIRED     = YES (`restart_quiescence_proven`, 6th C-015 kind)
 SEPARATE_SETTLEMENT_AUTHORITY   = NO (rejected; forks C-017 authority)
 SETTLEMENT_KIND                 = terminated_without_outcome (termination-only)
