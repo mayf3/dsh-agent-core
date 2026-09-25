@@ -117,6 +117,7 @@ Workspace migration or production change, and `production_apply_authority` stays
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1` | accepted lifecycle in this branch 2026-09-25; reviewed r4 head `5726f43f9c028a8967720ccaff49a054ee1423e6`; effective only after authority merge | contracts for bounded nonproduction implementation after acceptance is in the implementation base; production apply none | narrow amendment to `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` C-015/C-019/C-024: one `restart_quiescence_proven` evidence kind and prospective, root-authenticated whole-host quiescence proof consumed at Router startup for one exact restart-lost record; no business-outcome inference, replay, sweep, or historical floor fabrication |
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2` | **proposed** whole-authority successor; independent exact-head review and Owner acceptance pending | none until accepted in the authority branch; production apply none | carries the complete r4 body and proposes exact external replay provenance, one nonce/one launch crash semantics, and the corresponding RQ-002..005 and acceptance changes; V1 remains accepted until the atomic lifecycle transaction |
 
 Owner mayf3 accepted r4 Q1=YES/Q2=YES on 2026-09-25 against the exact reviewed
 head and Spec SHA-256 `fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78`.
