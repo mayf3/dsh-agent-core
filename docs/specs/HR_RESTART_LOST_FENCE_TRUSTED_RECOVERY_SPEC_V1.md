@@ -1,13 +1,28 @@
 ---
 spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1
-status: draft
+status: accepted
 spec_kind: implementation
-authority_level: governing_spec_candidate
+authority_level: governing_spec
+implementation_authority: contracts
+production_apply_authority: none
 revision: r4
 revision_date: 2026-09-25
+accepted_by: mayf3
+accepted_date: 2026-09-25
+accepted_reviewed_head: 5726f43f9c028a8967720ccaff49a054ee1423e6
+accepted_reviewed_spec_sha256: fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78
+independent_review_result: PASS_READY_FOR_OWNER_ACCEPTANCE
+independent_review_record: docs/reports/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_V1_R4_INDEPENDENT_REVIEW.md
+independent_review_sha256: 0fc932ba8dc4100255ea0f4db756fcd8d5f23e62aa84e1237610d652948056b3
+owner_acceptance_record: docs/reports/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_V1_R4_OWNER_ACCEPTANCE.json
+owner_acceptance_sha256: 1575ad24f57f42e97ef612358360367f2c959a1c7e9d486b5bcea47eb132da3b
+owner_decisions: "Q1=YES; Q2=YES; nonproduction implementation only"
 base_revision: origin/main b4e8511c533f8fa5be2f48dd56acc16bc79dff39
 governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
+external_authorities: []
+owners:
+  - mayf3
 amends:
   spec: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
   scope: >-
