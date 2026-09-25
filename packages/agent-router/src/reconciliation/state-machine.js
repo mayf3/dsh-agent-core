@@ -220,6 +220,9 @@ export const settlementMethods = {
     if (!DIRECT_OUTCOMES.includes(outcome)) {
       throw new TypeError(`settleDirect: illegal outcome ${JSON.stringify(outcome)}`)
     }
+    if (terminationEvidence === 'restart_quiescence_proven') {
+      throw new TypeError('settleDirect: restart quiescence evidence is startup-only')
+    }
     const record = this.requireRecord(handle)
     if (record.state === 'settled') {
       const duplicate = (record.outcome ?? record.lateOutcome) === outcome
@@ -261,13 +264,21 @@ export const settlementMethods = {
    */
   settleLate(handle, {
     lateOutcome, outcomeEvidence = null, terminationEvidence = null,
-    finalAssistantOutput = undefined, exitObserved = false,
+    finalAssistantOutput = undefined, exitObserved = false, restartQuiescence = false,
   }) {
     if (!LATE_OUTCOMES.includes(lateOutcome)) {
       throw new TypeError(`settleLate: illegal lateOutcome ${JSON.stringify(lateOutcome)}`)
     }
     if (terminationEvidence !== null && !TERMINATION_EVIDENCE_TYPES.includes(terminationEvidence)) {
       throw new TypeError(`settleLate: illegal terminationEvidence ${JSON.stringify(terminationEvidence)}`)
+    }
+    if (terminationEvidence === 'restart_quiescence_proven' && !restartQuiescence) {
+      throw new TypeError('settleLate: restart quiescence evidence requires startup verification')
+    }
+    if (restartQuiescence && (lateOutcome !== 'terminated_without_outcome'
+        || terminationEvidence !== 'restart_quiescence_proven' || exitObserved
+        || finalAssistantOutput !== undefined)) {
+      throw new TypeError('settleLate: invalid restart quiescence settlement')
     }
     const record = this.requireRecord(handle)
     if (record.state === 'settled') {
@@ -284,6 +295,12 @@ export const settlementMethods = {
       // ordinary in-deadline completion/failure — those do not pass through
       // the late machine. Late settlement requires the unknown source first.
       throw new Error(`settleLate: handle ${handle} has no outcome_unknown source (initialOutcome=${JSON.stringify(record.initialOutcome)})`)
+    }
+    if (restartQuiescence && (record.recoveryState !== 'blocked'
+        || record.failureReason !== 'runtime_restart_ownership_unavailable'
+        || record.terminationEvidence !== null || record.exitObservedAt !== null
+        || record.fenceState !== 'active' || record.runtimeEpoch === this.runtimeEpoch)) {
+      throw new Error('settleLate: restart quiescence preimage changed')
     }
     this.mutateRecord(record, (candidate) => {
       if (exitObserved) {
@@ -318,6 +335,20 @@ export const settlementMethods = {
           truncated: finalAssistantOutput.truncated === true,
           originalBytes: finalAssistantOutput.originalBytes ?? Buffer.byteLength(String(finalAssistantOutput.text ?? ''), 'utf8'),
         }
+      }
+      if (restartQuiescence) {
+        // One mutateRecord preimage and one durable write cover settlement,
+        // registry no-live-slot proof and fence release. A persist failure
+        // restores the exact old record before any listener is notified.
+        candidate.attemptedActions = [...candidate.attemptedActions, {
+          action: 'registry_cleanup', result: 'succeeded', observedAtWallMs: Date.now(),
+          reasonCode: 'restart_quiescence_no_live_slot_old_epoch',
+        }, {
+          action: 'fence_cleanup', result: 'succeeded', observedAtWallMs: Date.now(),
+          reasonCode: 'exact_fence_cleared',
+        }].slice(-32)
+        candidate.failureReason = null
+        candidate.fenceState = 'cleared'
       }
     }, { resolveGeneration: true })
     for (const listener of this.listeners) {
