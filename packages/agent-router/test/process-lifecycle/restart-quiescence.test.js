@@ -7,7 +7,7 @@ import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 import { json, proofFixture } from '../helpers/restart-quiescence-fixture.js'
 
 test('ACC-RQ-001 one startup bundle settles only its exact old turn, preserving unknown outcome and null exit', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
   assert.deepEqual(result.map(row => row.status), ['settled'], JSON.stringify(result))
@@ -24,7 +24,7 @@ test('ACC-RQ-001 one startup bundle settles only its exact old turn, preserving 
 })
 
 test('NEG-RQ-015 new evidence kind cannot enter through ordinary settlement constructors', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   assert.throws(() => store.settleLate(fx.handle, {
     lateOutcome: 'terminated_without_outcome', terminationEvidence: 'restart_quiescence_proven',
@@ -46,7 +46,7 @@ for (const [name, damage, expected] of [
   ['host differs', fx => { fx.startup.hostId = 'foreign-host' }, 'V9_startup_binding_mismatch'],
 ]) {
   test(`NEG-RQ zero-write: ${name}`, (t) => {
-    const fx = proofFixture(t)
+    const fx = proofFixture(cleanup => t.after(cleanup))
     damage(fx)
     writeFileSync(fx.bundleFile, json(fx.bundle))
     const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
@@ -60,7 +60,7 @@ for (const [name, damage, expected] of [
 }
 
 test('NEG-RQ-007 two bundles for one handle reject both before either can settle', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   writeFileSync(join(fx.evidenceDir, 'second.bundle.json'), json(fx.bundle))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   const before = readFileSync(fx.persistenceFile)
@@ -70,7 +70,7 @@ test('NEG-RQ-007 two bundles for one handle reject both before either can settle
 })
 
 test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   const opts = { evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io }
   assert.equal(store.consumeStartupQuiescence(opts)[0].status, 'settled')
@@ -84,7 +84,7 @@ test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit o
 })
 
 test('ACC-RQ-007 persistence failure rolls the exact record back and leaves its fence active', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   const before = structuredClone(store.records.get(fx.handle))
   const original = store.persistDurable

@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { closeSync, mkdirSync, mkdtempSync, openSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -8,9 +7,9 @@ import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 const sha = value => createHash('sha256').update(value).digest('hex')
 export const json = value => `${JSON.stringify(value)}\n`
 
-export function proofFixture(t) {
+export function proofFixture(registerCleanup) {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-rq-'))
-  t.after(() => rmSync(root, { recursive: true, force: true }))
+  registerCleanup(() => rmSync(root, { recursive: true, force: true }))
   const evidenceDir = join(root, 'evidence')
   const deploymentDir = join(root, 'deployment')
   mkdirSync(evidenceDir)
@@ -21,7 +20,7 @@ export function proofFixture(t) {
   old.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'old-prompt', deadlineAtWallMs: Date.now() + 1000 })
   old.markPromptWriteAttempted(handle)
   const blocked = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'intermediate-epoch' })
-  assert.equal(blocked.records.get(handle).failureReason, 'runtime_restart_ownership_unavailable')
+  if (blocked.records.get(handle).failureReason !== 'runtime_restart_ownership_unavailable') throw new Error('fixture old record did not block')
   const record = blocked.records.get(handle)
   const recordDigest = sha(JSON.stringify(record))
   const operationId = 'op-rq-1'
@@ -31,7 +30,7 @@ export function proofFixture(t) {
   const windowPath = join(evidenceDir, 'window.lock')
   writeFileSync(windowPath, 'held\n', { mode: 0o600 })
   const windowFd = openSync(windowPath, 'r')
-  t.after(() => closeSync(windowFd))
+  registerCleanup(() => closeSync(windowFd))
   const writeReceipt = (dir, name, value) => {
     const bytes = json(value)
     writeFileSync(join(dir, name), bytes, { mode: 0o600 })

@@ -12,7 +12,7 @@ import { makeFx } from './helpers.js'
 import { proofFixture } from '../helpers/restart-quiescence-fixture.js'
 
 test('RQ-009 verified startup proof survives the real durable validator without inventing child exit', (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const restarted = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
   assert.equal(restarted.consumeStartupQuiescence({
     evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io,

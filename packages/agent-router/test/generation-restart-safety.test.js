@@ -105,7 +105,7 @@ async function freshRig(t, dir, agentIds, storeFile, routerOverrides = {}, onCon
 }
 
 test('RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody', async (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const dir = await mkdtemp(join(tmpdir(), 'rq-router-startup-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const { router } = await freshRig(t, dir, ['agt_subject', AGT_ID], fx.persistenceFile, {
@@ -118,7 +118,7 @@ test('RQ-005 Router startup consumes configured evidence before publishing its r
 })
 
 test('RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet', async (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const dir = await mkdtemp(join(tmpdir(), 'rq-router-fixture-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   let ctxRef
@@ -142,7 +142,7 @@ test('RQ-005 fixture drives real Router apply: consume before service publicatio
 })
 
 test('RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes', async (t) => {
-  const fx = proofFixture(t)
+  const fx = proofFixture(cleanup => t.after(cleanup))
   const dir = await mkdtemp(join(tmpdir(), 'rq-router-inert-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const original = TurnReconciliationStore.prototype.consumeStartupQuiescence
