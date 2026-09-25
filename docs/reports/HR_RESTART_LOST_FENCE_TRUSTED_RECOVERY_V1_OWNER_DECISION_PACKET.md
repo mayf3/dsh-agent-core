@@ -11,6 +11,9 @@
   B1–B3 plus B4 docs amendment in the same isolated worktree
 - B4 additive independent finding: `/private/tmp/hr-historical-floor-applicability-20260925/REVIEWER_FINDING.md`,
   SHA-256 `a1cc9639d6877995abfa59763b7c3400e0f4c01ec418833bd8cd1e5ff964ff1a`
+- r3 independent review: `/private/tmp/hr-historical-floor-applicability-20260925/new-revision-review/INDEPENDENT_REVIEW.md`,
+  SHA-256 `21ba22c10ec0a70f7700dc41a3b77170e2b411661485283ab5a0d88ad97e47aa`;
+  one required launch-authorization receipt reference gap, corrected in this draft
 - readiness: WITHDRAWN pending independent B4 review; no Owner acceptance
 
 ## 1. Question before the Owner
@@ -111,7 +114,7 @@ OWNER_DECISION_Q3 (conditional, only if Q1=NO) = <REJECT reason>
 ```
 
 **Recommendation withdrawn pending independent B4 review.** The r2
-recommendation did not account for s256's pre-floor restart history. This r3
+recommendation did not account for s256's pre-floor restart history. This r4
 candidate proposes prospective eligibility, but no Owner Q1/Q2 is ready to
 present until a reviewer checks the exact frozen r3 SHA with no blockers.
 Deployment proof is still pending, so no recovery operation is authorized.
@@ -138,7 +141,7 @@ The original packet and historical commit messages are unchanged.
 
 This mapping is a candidate compliance assessment, not Owner acceptance. The
 B1–B3 closure remains historical; the additive B4 finding withdraws readiness
-until this r3 cutover proof receives independent review on its exact SHA.
+until this r4 cutover proof receives independent review on its exact SHA.
 
 ## 7. Handoff
 
@@ -147,7 +150,8 @@ HANDOFF_PATH = docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1.md
               (this packet)
 HISTORICAL_REVIEW_REQUEST = docs/reviews/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1_INDEPENDENT_REVIEW_REQUEST.md
                             (targets PRIOR_R1_SPEC_SHA256; B4 delta review required)
-SPEC_SHA256  = 2c47386f444789bcc4c00342b6ce7da0723e771521412906d556be017e71f984
+SPEC_SHA256  = fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78
+PRIOR_R3_SPEC_SHA256 = 2c47386f444789bcc4c00342b6ce7da0723e771521412906d556be017e71f984
 PRIOR_R2_SPEC_SHA256 = cd359661d9a850ee26cb979d994f321c42b9863092b16ae8cc3c26f96a197c9b
 PRIOR_R1_SPEC_SHA256 = 023797c16c2a2b45a458c7b40f1349eaa3d3e08aac342a752c862676e7ed5a41
 AMENDMENT_BASE = 6ea3476d2e389067e1b7e5686514116da8ce1831
