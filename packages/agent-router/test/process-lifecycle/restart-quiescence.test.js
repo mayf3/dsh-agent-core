@@ -292,6 +292,28 @@ test('NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit o
   assert.equal(after.snapshot.audit.at(-1).kind, 'duplicate_ignored')
 })
 
+for (const [name, priorSettlement] of [
+  ['different business result', { lateOutcome: 'late_completed', outcomeEvidence: 'exact_terminal_then_idle' }],
+  ['different termination evidence', { lateOutcome: 'terminated_without_outcome', terminationEvidence: 'child_real_exit', exitObserved: true }],
+]) {
+  test(`NEG-RQ-002 settled ${name} fails V8 P5 with zero-write`, t => {
+    const fx = proofFixture(cleanup => t.after(cleanup))
+    const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+    assert.equal(store.settleLate(fx.handle, priorSettlement).won, true)
+    const recordBefore = JSON.stringify(store.records.get(fx.handle))
+    const durableBefore = readFileSync(fx.persistenceFile)
+    const emitted = []
+    store.onTurnReconciled(event => emitted.push(event))
+    const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+      deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+    assert.deepEqual(result.map(row => row.status), ['rejected'], JSON.stringify(result))
+    assert.match(result[0].reason, /^V8_.*P5/)
+    assert.equal(JSON.stringify(store.records.get(fx.handle)), recordBefore)
+    assert.deepEqual(readFileSync(fx.persistenceFile), durableBefore)
+    assert.equal(emitted.length, 0)
+  })
+}
+
 test('ACC-RQ-007 persistence failure rolls the exact record back and leaves its fence active', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
