@@ -122,6 +122,13 @@ export const startupRecoveryMethods = {
         continue
       }
       try {
+        verifyCurrentWindow(evidenceDir, proof.bundle, startup, io)
+      } catch {
+        for (const window of windows.get(file)) failedWindows.add(window)
+        audit({ file, handle: proof.handle, status: 'rejected', reason: 'window_continuity_lost' })
+        continue
+      }
+      try {
         const result = this.settleLate(proof.handle, {
           lateOutcome: 'terminated_without_outcome',
           terminationEvidence: 'restart_quiescence_proven',
