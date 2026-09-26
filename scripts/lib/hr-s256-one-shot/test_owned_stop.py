@@ -178,5 +178,82 @@ class OwnedStopTest(unittest.TestCase):
             self.assertEqual(self.process_recorder.calls, [])
 
 
+class PrivateAdmissionBoundaryTest(unittest.TestCase):
+    def test_closed_private_frame_rejects_missing_extra_and_non_admission_values(self):
+        with confine_processes(subprocess) as recorder:
+            from test_fixed_io import FixedIOTest
+            with FixedIOTest().assembled() as (ds, _, _):
+                runtime = {'generationId': 'new-runtime', 'health': 'healthy',
+                    'businessAdmission': 'open', 'blockedReason': None, 'unresolvedRecoveries': 0}
+                frame = {'operationId': ds.HR_PROFILE.OPERATION_ID, 'hostId': 'host',
+                    'startupNonce': 'nonce', 'challenge': 'b' * 32,
+                    'launchAuthorizationReceiptSha256': 'a' * 64,
+                    'reconciliationHandle': ds.HR_PROFILE.HANDLE, 'runtime': runtime}
+                validate = lambda value: ds.HR_HANDOFF.runtime_admission_view(
+                    value, 'host', 'nonce', 'a' * 64, 'b' * 32)
+                self.assertEqual(validate(frame), runtime)
+                invalid = [{**frame, 'extra': 'private'}, {**frame, 'hostId': 'other'}]
+                for key in frame:
+                    invalid.append({name: value for name, value in frame.items() if name != key})
+                for key, value in [('generationId', False), ('health', 'blocked'),
+                    ('businessAdmission', 'fail_closed'), ('blockedReason', 'blocked'),
+                    ('unresolvedRecoveries', True), ('unresolvedRecoveries', -1), ('privatePayload', 'secret')]:
+                    invalid.append({**frame, 'runtime': {**runtime, key: value}})
+                for value in invalid:
+                    with self.assertRaisesRegex(Exception, 'RUNTIME_ADMISSION_'):
+                        validate(value)
+            self.assertEqual(recorder.calls, [])
+
+    def test_wrong_owned_child_is_sticky_unknown_before_any_readback(self):
+        from types import SimpleNamespace
+        with confine_processes(subprocess) as recorder:
+            from test_fixed_io import FixedIOTest
+            with FixedIOTest().assembled() as (ds, _, _):
+                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={}):
+                    io = ds.HR_FIXED_IO.FixedIO()
+                    child = SimpleNamespace(poll=lambda: None)
+                    io._child = child
+                    with patch.object(ds.HR_REAL_OS, 'fixed_settlement_readback') as read:
+                        with self.assertRaisesRegex(Exception, 'READBACK_NO_REPLAY'):
+                            io.exact_consumption_readback(SimpleNamespace(poll=lambda: None))
+                        self.assertTrue(io._unknown)
+                        self.assertIs(io._child, child)
+                        with self.assertRaisesRegex(Exception, 'FIXED_IO_UNKNOWN'):
+                            io.exact_consumption_readback(child)
+                        read.assert_not_called()
+            self.assertEqual(recorder.calls, [])
+
+    def test_same_validated_image_generation_rejects_changed_old_missing_duplicate_header(self):
+        import hashlib
+        with confine_processes(subprocess) as recorder:
+            from test_fixed_io import FixedIOTest
+            with FixedIOTest().assembled() as (ds, root, _):
+                method = ds.HR_REAL_OS.validated_runtime_generation
+                cell = dict(zip(method.__code__.co_freevars, method.__closure__))['require_activation']
+                original = cell.cell_contents
+                cell.cell_contents = lambda: None  # Only activation; outer process deny remains.
+                try:
+                    path = Path(root) / 'disposable-current-store.json'
+                    for raw, expected, passes in [
+                        (b'{"runtimeEpoch":"new-runtime"}', None, True),
+                        (b'{"runtimeEpoch":"new-runtime"}', '0' * 64, False),
+                        (b'{"runtimeEpoch":"old-runtime"}', None, False),
+                        (b'{}', None, False),
+                        (b'{"runtimeEpoch":"old-runtime","runtimeEpoch":"new-runtime"}', None, False)]:
+                        path.write_bytes(raw)
+                        digest = expected or hashlib.sha256(raw).hexdigest()
+                        with patch.object(ds.HR_PROJECTION, 'opened_fixed_store',
+                                side_effect=lambda: (os.open(path, os.O_RDONLY), os.stat(path))), patch.object(
+                                ds.HR_JOURNAL, 'readback', return_value=({'subject': {'runtimeEpoch': 'old-runtime'}}, 'a' * 64)):
+                            if passes:
+                                self.assertEqual(method(digest), 'new-runtime')
+                            else:
+                                with self.assertRaisesRegex(Exception, 'RUNTIME_GENERATION_|PROTECTED_JSON_DUPLICATE_KEY'):
+                                    method(digest)
+                finally:
+                    cell.cell_contents = original
+            self.assertEqual(recorder.calls, [])
+
+
 if __name__ == '__main__':
     unittest.main()

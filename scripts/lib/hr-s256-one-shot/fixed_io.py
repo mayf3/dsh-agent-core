@@ -3,6 +3,7 @@ import fcntl
 import hashlib
 import json
 import os
+import secrets
 import subprocess
 import threading
 import time
@@ -26,6 +27,10 @@ class FixedIO:
         self._challenge_thread = None
         self._challenge_stop = threading.Event()
         self._startup_done = threading.Event()
+        self._runtime_admission_done = threading.Event()
+        self._runtime_admission = None
+        self._admission_challenge = None
+        self._handoff = None
         self._consumption = None
         self._startup_deadline = None
         self._unknown = False
@@ -358,60 +363,9 @@ class FixedIO:
             and handoff.used and HR_PROFILE.valid_hash(digest)
             and self._challenge_digest is None, 'AUTHENTICATED_HANDOFF_UNBOUND')
         self._challenge_digest = digest
-        deadline = self._startup_deadline
-
-        def serve():
-            try:
-                while not self._challenge_stop.is_set():
-                    HR_PROFILE.require(time.monotonic() < deadline, 'STARTUP_DEADLINE')
-                    handoff.root.settimeout(min(0.25, max(0, deadline - time.monotonic())))
-                    raw = bytearray()
-                    try:
-                        first = handoff.root.recv(1)
-                    except TimeoutError:
-                        continue
-                    HR_PROFILE.require(bool(first), 'LIVE_CHALLENGE_CLOSED')
-                    raw.extend(first)
-                    request_deadline = time.monotonic() + 0.75
-                    while not raw.endswith(b'\n'):
-                        remaining = request_deadline - time.monotonic()
-                        HR_PROFILE.require(remaining > 0 and len(raw) < 4096, 'LIVE_CHALLENGE_BOUND')
-                        handoff.root.settimeout(remaining)
-                        part = handoff.root.recv(1)
-                        HR_PROFILE.require(bool(part), 'LIVE_CHALLENGE_CLOSED')
-                        raw.extend(part)
-                    query = json.loads(raw)
-                    HR_PROFILE.require(type(query) is dict and set(query) == {
-                        'operationId', 'hostId', 'startupNonce', 'challenge'}
-                        and query['operationId'] == HR_PROFILE.OPERATION_ID
-                        and query['hostId'] == self._package['hostId']
-                        and query['startupNonce'] == self._nonce
-                        and type(query['challenge']) is str and (len(query['challenge']) == 32
-                            or query['challenge'] == 'startup-consumption-finished'),
-                        'LIVE_CHALLENGE_BINDING')
-                    self._active()
-                    self._owner.check()
-                    root, directory = HR_JOURNAL.opened_custody(False)
-                    try:
-                        self._single_bundle(directory)
-                    finally:
-                        HR_JOURNAL.close_custody(root, directory)
-                    HR_PROFILE.require(HR_INVENTORY.fixed_source_identities() == self._inventory['sources']
-                        and self._child.poll() is None, 'LIVE_SOURCE_UNKNOWN')
-                    if query['challenge'] == 'startup-consumption-finished':
-                        HR_PROFILE.require(not self._startup_done.is_set(), 'STARTUP_NOTICE_NO_REPLAY')
-                        self._startup_done.set()  # Notice is not settlement proof.
-                        continue
-                    remaining = request_deadline - time.monotonic()
-                    HR_PROFILE.require(remaining > 0, 'LIVE_CHALLENGE_BOUND')
-                    handoff.root.settimeout(remaining)
-                    handoff.root.sendall(json.dumps({**query, 'exclusiveWindowHeld': True,
-                        'launchSourcesStillInhibited': True, 'windowClosed': False},
-                        separators=(',', ':')).encode() + b'\n')
-            except BaseException:
-                if not self._challenge_stop.is_set():
-                    self._unknown = True
-        self._challenge_thread = threading.Thread(target=serve, daemon=True)
+        self._handoff = handoff
+        self._challenge_thread = threading.Thread(
+            target=HR_HANDOFF.serve_fixed_window, args=(self, handoff), daemon=True)
         self._challenge_thread.start()
 
     def startup_observation(self, child, receipt):
@@ -442,6 +396,22 @@ class FixedIO:
             self._consumption = HR_REAL_OS.fixed_settlement_readback()
             HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
                                'CONSUMPTION_STARTUP_UNAVAILABLE')
+            self._admission_challenge = secrets.token_hex(16)
+            query = {'operationId': HR_PROFILE.OPERATION_ID, 'hostId': self._package['hostId'],
+                'startupNonce': self._nonce, 'challenge': self._admission_challenge,
+                'launchAuthorizationReceiptSha256': HR_JOURNAL.readback('launch-authorization')[1],
+                'reconciliationHandle': HR_PROFILE.HANDLE}
+            self._handoff.root.settimeout(min(0.75, max(0, deadline - time.monotonic())))
+            self._handoff.root.sendall(json.dumps(query, separators=(',', ':')).encode() + b'\n')
+            while not self._runtime_admission_done.wait(timeout=0.05):
+                self._active()
+                self._owner.check()
+                HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
+                                   'RUNTIME_ADMISSION_UNAVAILABLE')
+            self._active()
+            current = HR_REAL_OS.validated_runtime_generation(self._consumption['validatedStoreSha256'])
+            HR_PROFILE.require(self._runtime_admission['generationId'] == current
+                and time.monotonic() < deadline, 'RUNTIME_GENERATION_MISMATCH')
             return dict(self._consumption)
         except BaseException:
             self._unknown = True

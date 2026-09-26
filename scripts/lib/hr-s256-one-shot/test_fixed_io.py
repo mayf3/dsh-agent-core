@@ -278,7 +278,10 @@ class FixedIOTest(unittest.TestCase):
         import threading
         import time
         from types import SimpleNamespace
-        for variant in ('closed', 'source_lost', 'window_lost', 'readback_wrong'):
+        for variant in ('closed', 'source_lost', 'window_lost', 'readback_wrong', 'admission_missing',
+                        'admission_closed', 'admission_wrong_nonce', 'admission_wrong_generation',
+                        'admission_wrong_handle', 'admission_wrong_receipt', 'admission_wrong_challenge',
+                        'admission_extra', 'admission_malformed_generation'):
             with self.subTest(variant=variant), self.assembled() as (ds, root, recorder), ExitStack() as stack:
                 os.chmod(root, 0o755)
                 from fixture_io import SyntheticFixedIO
@@ -344,7 +347,8 @@ class FixedIOTest(unittest.TestCase):
                 cell_replace(ds.HR_REAL_OS.old_runtime_membership, 'require_activation', lambda: package)
                 cell_replace(ds.HR_REAL_OS.fixed_settlement_readback, 'protected_bytes', private_bytes)
                 cell_replace(ds.HR_REAL_OS.installed_settlement_projection, 'bounded_validator_output',
-                             lambda script, fd: os.pread(fd, os.fstat(fd).st_size, 0))
+                             lambda script, fd: json.dumps({key: value for key, value in
+                                 json.loads(os.pread(fd, os.fstat(fd).st_size, 0)).items() if key != 'runtimeEpoch'}).encode())
                 cell_replace(ds.HR_FINITE_STOP.FixedStop.stop, 'command', stop_command)
                 cell_replace(ds.HR_COLLECTOR.collect_whole_host, 'command_output', observed_command)
                 cell_replace(ds.HR_COLLECTOR.collect_whole_host, 'os',
@@ -407,12 +411,35 @@ class FixedIOTest(unittest.TestCase):
                                 'fenceState': 'active' if variant == 'readback_wrong' else 'cleared',
                                 'initialOutcome': 'outcome_unknown', 'terminationEvidence': 'restart_quiescence_proven'}
                             with open(store, 'w') as file:
-                                json.dump({'subject': subject, 'settlement': settlement}, file)
+                                json.dump({'subject': subject, 'settlement': settlement, 'runtimeEpoch': 'fixture-current-runtime'}, file)
                             notice = {'operationId': ds.HR_PROFILE.OPERATION_ID, 'hostId': metadata['hostId'],
                                 'startupNonce': metadata['startupNonce'], 'challenge': 'startup-consumption-finished'}
                             os.write(channel, json.dumps(notice).encode() + b'\n')
+                            if variant not in ('admission_missing', 'readback_wrong'):
+                                raw = bytearray()
+                                while not raw.endswith(b'\n'):
+                                    import select
+                                    if not select.select([channel], [], [], 0.5)[0]: return
+                                    chunk = os.read(channel, 1)
+                                    if not chunk: return
+                                    raw.extend(chunk)
+                                query = json.loads(raw)
+                                runtime = {'generationId': 'fixture-current-runtime', 'health': 'healthy',
+                                    'businessAdmission': 'open', 'blockedReason': None, 'unresolvedRecoveries': 0}
+                                frame = {**query, 'runtime': runtime}
+                                if variant == 'admission_closed': runtime['businessAdmission'] = 'fail_closed'
+                                if variant == 'admission_wrong_generation': runtime['generationId'] = 'other-runtime'
+                                for suffix, key in [('nonce', 'startupNonce'), ('handle', 'reconciliationHandle'),
+                                                    ('receipt', 'launchAuthorizationReceiptSha256'), ('challenge', 'challenge')]:
+                                    if variant == 'admission_wrong_' + suffix: frame[key] = 'wrong'
+                                if variant == 'admission_extra': runtime['privatePayload'] = 'sensitive-fixture'
+                                if variant == 'admission_malformed_generation':
+                                    frame = {**frame, 'runtime': {**runtime, 'generationId': False}}
+                                os.write(channel, json.dumps(frame).encode() + b'\n')
+
                         except BaseException as error:
                             child.error = error
+                    io._startup_deadline = time.monotonic() + 0.7
                     child.thread = threading.Thread(target=startup)
                     child.thread.start()
                     return child
@@ -426,8 +453,10 @@ class FixedIOTest(unittest.TestCase):
                     for descriptor in child.inherited.values():
                         os.close(descriptor)
                 if variant == 'closed':
-                    self.assertTrue(result['ok'], result)
+                    self.assertTrue(result['ok'], {**result, 'notice': owned[0]._startup_done.is_set(),
+                        'runtime': owned[0]._runtime_admission, 'challenge': owned[0]._admission_challenge})
                     self.assertEqual(result['disposition'], 'CLOSED')
+                    self.assertEqual(result['runtime'], owned[0]._runtime_admission)
                     self.assertEqual(ds.HR_LIFECYCLE.snapshot()['disposition'], 'CLOSED')
                     self.assertIsNone(owned[0]._window)
                 else:
@@ -437,7 +466,7 @@ class FixedIOTest(unittest.TestCase):
                     if variant == 'readback_wrong':
                         unknown, _ = ds.HR_LIFECYCLE.readback('phase-unknown')
                         self.assertEqual(unknown['observation']['ownership']['ownedChild'], owned[0]._child_identity)
-                self.assertEqual(len(state['children']), 1 if variant in ('closed', 'readback_wrong') else 0)
+                self.assertEqual(len(state['children']), 0 if variant in ('source_lost', 'window_lost') else 1)
                 self.assertEqual(recorder.calls, [])
 
 

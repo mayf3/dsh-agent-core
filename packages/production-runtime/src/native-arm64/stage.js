@@ -83,9 +83,10 @@ export function patchHrRouterJoin(path, bytes) {
   }
   if (path === 'packages/agent-router/src/index.js') {
     const imported = "import { provisionAgentHome } from '../../agent-provisioning/src/index.js'"
-    replaceOnce(imported, imported + "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
+    replaceOnce(imported, imported + "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
     const branch = "  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {"
     replaceOnce(branch, "  const fixedStartup = getFixedStartupContext()\n  if (fixedStartup !== undefined) {\n    reconciliationStore.consumeStartupQuiescence(fixedStartup)\n    signalFixedStartupConsumptionFinished()\n  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {")
+    replaceOnce("  ctx.provide('agentRouter', service)\n", "  ctx.provide('agentRouter', service)\n  publishFixedRuntimeAdmission(service)\n")
   } else if (path === 'packages/agent-router/src/reconciliation/startup-recovery.js') {
     replaceOnce('files = readdirSync(evidenceDir).filter', 'files = (io?.readdir ?? readdirSync)(evidenceDir).filter')
   } else throw new Error('HR_ROUTER_BASE_UNKNOWN')

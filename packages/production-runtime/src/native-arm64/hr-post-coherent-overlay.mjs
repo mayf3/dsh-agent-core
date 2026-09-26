@@ -27,7 +27,7 @@ export function composeHrPostCoherentSource(base, accepted) {
   const replacements = {}
   const importAnchor = "import { provisionAgentHome } from '../../agent-provisioning/src/index.js'"
   let router = replace(base[index].toString(), importAnchor, importAnchor +
-    "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
+    "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
   const bindingAnchor = '  const bindingResolution = createBindingResolution({ agentDefinition, workspaceBootstrap, store, cfg, log })'
   router = replace(router, bindingAnchor,
     '  const fixedStartup = getFixedStartupContext()\n' +
@@ -35,6 +35,8 @@ export function composeHrPostCoherentSource(base, accepted) {
     '    reconciliationStore.consumeStartupQuiescence(fixedStartup)\n' +
     '    signalFixedStartupConsumptionFinished()\n' +
     '  }\n\n' + bindingAnchor)
+  router = replace(router, "  ctx.provide('agentRouter', service)\n",
+    "  ctx.provide('agentRouter', service)\n  publishFixedRuntimeAdmission(service)\n")
   replacements[index] = Buffer.from(router)
   const authority = accepted[startup].toString()
   const start = authority.indexOf('  consumeStartupQuiescence(')

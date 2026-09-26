@@ -37,9 +37,9 @@ function output(t) {
 test('exact542 finite stage preserves V5 ingress and all old recovery bytes', t => {
   const {replacements,base} = output(t)
   const router = replacements['packages/agent-router/src/index.js'].toString()
-  const addedImport = "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'"
+  const addedImport = "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'"
   const addedJoin = '  const fixedStartup = getFixedStartupContext()\n  if (fixedStartup !== undefined) {\n    reconciliationStore.consumeStartupQuiescence(fixedStartup)\n    signalFixedStartupConsumptionFinished()\n  }\n\n'
-  assert.equal(router.replace(addedImport,'').replace(addedJoin,''), base['packages/agent-router/src/index.js'].toString())
+  assert.equal(router.replace(addedImport,'').replace(addedJoin,'').replace("  publishFixedRuntimeAdmission(service)\n",''), base['packages/agent-router/src/index.js'].toString())
   const original = base[startup].toString().split('  restoreCrashInterruptedRecords()')[1]
   assert.equal(replacements[startup].toString().split('  restoreCrashInterruptedRecords()')[1], original)
   const durable = replacements['packages/agent-router/src/reconciliation/durable-file.js'].toString()

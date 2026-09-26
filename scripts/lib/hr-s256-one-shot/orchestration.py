@@ -167,7 +167,10 @@ def run_fixed(request, canonical_lock_fd):
                            "CLOSURE_READBACK_UNKNOWN")
         io.release_verified(window, canonical_lock_fd)
         stop_owner.close()
-        return {"ok": True, "disposition": "CLOSED", "nonproduction": True}
+        result = {"ok": True, "disposition": "CLOSED", "nonproduction": True}
+        if type(io) is HR_FIXED_IO.FixedIO:
+            result["runtime"] = dict(io._runtime_admission)  # Separate readonly H5 output, never durable proof.
+        return result
     except Exception as exc:
         # No retries, later positive restoration, release, or fence reconstruction.
         recorded = False
