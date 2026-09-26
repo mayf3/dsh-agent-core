@@ -46,6 +46,7 @@ export class AgentProcess {
     processGeneration = 1,
     deadlines,
     reconciliationStore,
+    ingressCorrelationLookup = null,
     registryIntegration = null,
   }) {
     if (typeof profile !== 'string' || profile === '') {
@@ -82,6 +83,7 @@ export class AgentProcess {
       assertPositiveSafeDeadline(field, this.deadlines[field])
     }
     this.store = reconciliationStore ?? new TurnReconciliationStore()
+    this.ingressCorrelationLookup = ingressCorrelationLookup
     this.registryIntegration = registryIntegration
 
     this.state = 'SPAWNING'

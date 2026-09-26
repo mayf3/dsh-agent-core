@@ -5,6 +5,7 @@ import {
 import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
 import { RECONCILIATION_CAPS } from './capacity.js'
+import { validatedIngressCorrelation } from './ingress-correlation.js'
 
 export const DURABLE_RECOVERY_VERSION = 3
 
@@ -57,6 +58,9 @@ function assertDurableRecord(raw) {
   for (const key of MANDATORY_RECORD_FIELDS) {
     if (!Object.hasOwn(raw, key)) throw new TypeError(`durable recovery record missing ${key}`)
   }
+  // Older V3 records omitted this optional field. Present non-null data has
+  // exactly the closed authenticated-ingress shape.
+  validatedIngressCorrelation(raw.ingressCorrelation ?? null)
   if (typeof raw.reconciliationHandle !== 'string'
       || raw.turnExecutionId !== raw.reconciliationHandle
       || raw.handle !== raw.reconciliationHandle
@@ -278,6 +282,7 @@ export function readDurableRecoveryStore(file) {
     assertDurableRecord(raw)
     if (records.has(raw.reconciliationHandle)) throw new TypeError('duplicate durable recovery handle')
     const record = structuredClone(raw)
+    record.ingressCorrelation = validatedIngressCorrelation(raw.ingressCorrelation ?? null)
     record.recoveryState = raw.state
     record.state = raw.queryState ?? (raw.state === 'settled' ? 'settled' : 'pending')
     delete record.queryState

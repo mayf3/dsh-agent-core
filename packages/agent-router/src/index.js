@@ -181,7 +181,10 @@ export function apply(ctx, config) {
   const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
   const store = new BindingStore({ storeFile })
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
-  const processFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+  const authenticatedIngressOpts = new WeakMap()
+  const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
+  const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup })
   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
     ? cfg.resolveProcessConfig
     : () => ({})
@@ -274,6 +277,7 @@ export function apply(ctx, config) {
     resolveAgentById: (agentId) => agentDefinition.getAgent(agentId),
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
+    registerAuthenticatedIngress: (opts, correlation) => authenticatedIngressOpts.set(opts, correlation),
   })
 
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
@@ -281,7 +285,7 @@ export function apply(ctx, config) {
 
   // Bind the channel ingress (feishu-connector only forwards addressed events).
   if (feishu !== undefined) {
-    feishu.setCallback(ingressDelivery.onIngress)
+    feishu.setCallback(ingressDelivery.onAuthenticatedFeishuIngress)
     log.log(`feishu channel bound; default binding -> ${bindingResolution.resolveDefaultAgent().id} + session ${cfg.defaultSessionId}`)
   } else {
     log.log('feishu channel not present; router idle (entry-agnostic domain surface ready)')
