@@ -86,7 +86,8 @@ Still required for the R2 profile; **none is supplied by this candidate**:
    continuous exclusive window, finite stop/inhibition, single pinned Runtime
    launch using the nonce/window descriptors, authenticated Router startup
    wiring, post-settlement readback and bounded UNKNOWN containment. The
-   isolated FD fixture is not a deployed startup gate or launch proof.
+   local successor gate is not installed, bound to the fixed DS action, or
+   proof of an authorized launch.
 6. Separate r4 V9 replay-preimage provenance successor remains unaccepted and
    is outside this change. Full r4 conformance cannot be claimed.
 
@@ -99,6 +100,14 @@ source manifest is present in the frozen DS v5 code. A true window/challenge
 cannot assert `launchSourcesStillInhibited=true` until this gap is resolved.
 The candidate must therefore remain inert; a test fixture claiming closure
 would not establish the production fact.
+
+The nonproduction successor entry at
+`packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs`
+now checks the inherited root-peer/window challenge before importing the
+Runtime entry. The ordinary `scripts/production-runtime.mjs` entry is
+unchanged, and the fixed DS action is still inert. Non-root surrogate tests
+prove local fail-closed behavior only; they do not prove a real root launch,
+installed source closure, or s256 recovery.
 
 No root process, live protected read, DS update, Runtime stop/start, store edit,
 fence clear, or production action was executed. The next reviewer should assess

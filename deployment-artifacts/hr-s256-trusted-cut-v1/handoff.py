@@ -42,6 +42,12 @@ def response_digest(nonce, challenge, receipt_sha256, identity):
     return hashlib.sha256(raw).hexdigest().encode()
 
 
+def approval_digest(nonce, challenge, receipt_sha256, identity):
+    raw = json.dumps(["ROOT_APPROVED", nonce, challenge, receipt_sha256, identity],
+                     separators=(",", ":")).encode()
+    return hashlib.sha256(raw).hexdigest().encode()
+
+
 def same_open_file_description(expected_fd, returned_fd, expected_identity):
     """Prove the returned regular FD shares the held window's file offset.
 
@@ -75,6 +81,7 @@ class OneLaunchHandoff:
         self.receipt_sha256 = receipt_sha256
         self.nonce = sealed_startup_nonce
         self.challenge_value = secrets.token_hex(32)
+        self.challenge_deadline = time.monotonic() + CHALLENGE_TIMEOUT
         self.taken = False
         self.used = False
 
@@ -98,7 +105,7 @@ class OneLaunchHandoff:
             "receiptSha256": self.receipt_sha256, "windowIdentity": self.window_identity},
             separators=(",", ":")).encode() + b"\n"
         require(len(frame) <= MAX_FRAME, "CHALLENGE_FRAME_BOUND")
-        deadline = time.monotonic() + CHALLENGE_TIMEOUT
+        deadline = self.challenge_deadline
         received_fds = []
         try:
             remaining = deadline - time.monotonic()
@@ -131,6 +138,14 @@ class OneLaunchHandoff:
                 os.close(fd)
         require(bytes(answer) == response_digest(self.nonce, self.challenge_value,
                 self.receipt_sha256, self.window_identity), "CHALLENGE_MISMATCH")
+        try:
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "CHALLENGE_DEADLINE")
+            self.root.settimeout(remaining)
+            self.root.sendall(approval_digest(self.nonce, self.challenge_value,
+                    self.receipt_sha256, self.window_identity))
+        except (OSError, TimeoutError) as exc:
+            raise Rejected("CHALLENGE_UNAVAILABLE") from exc
 
     def close(self):
         self.close_child_fds()
@@ -144,9 +159,12 @@ def child_prove(challenge_fd, window_fd, expected_receipt_sha256):
             and len(expected_receipt_sha256) == 64, "RECEIPT_SHA_INVALID")
     try:
         channel = socket.socket(fileno=challenge_fd)
-        channel.settimeout(CHALLENGE_TIMEOUT)
+        deadline = time.monotonic() + CHALLENGE_TIMEOUT
         raw = bytearray()
         while not raw.endswith(b"\n"):
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "CHALLENGE_DEADLINE")
+            channel.settimeout(remaining)
             block = channel.recv(1)
             require(bool(block) and len(raw) < MAX_FRAME, "CHALLENGE_FRAME_INVALID")
             raw.extend(block)
@@ -161,5 +179,15 @@ def child_prove(challenge_fd, window_fd, expected_receipt_sha256):
         sent = channel.sendmsg([answer], [(socket.SOL_SOCKET, socket.SCM_RIGHTS,
                 array.array("i", [window_fd]))])
         require(sent == len(answer), "CHALLENGE_RESPONSE_INCOMPLETE")
+        approved = bytearray()
+        while len(approved) < 64:
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "CHALLENGE_DEADLINE")
+            channel.settimeout(remaining)
+            block = channel.recv(64 - len(approved))
+            require(bool(block), "CHALLENGE_APPROVAL_MISSING")
+            approved.extend(block)
+        require(bytes(approved) == approval_digest(frame["nonce"], frame["challenge"],
+                expected_receipt_sha256, identity), "CHALLENGE_APPROVAL_INVALID")
     except (OSError, ValueError, TimeoutError) as exc:
         raise Rejected("CHALLENGE_UNAVAILABLE") from exc

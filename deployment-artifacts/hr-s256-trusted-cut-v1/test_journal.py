@@ -1,8 +1,11 @@
 """Non-root fixed-operation custody and one-launch handoff fixtures."""
 
+import array
 import importlib.util
+import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import tempfile
@@ -108,6 +111,7 @@ class FixedCustodyTest(unittest.TestCase):
             receipt_hash = journal.seal_launch_authorization(authorization(nonce))
             journal.claim_one_launch(102)
             window = os.open(Path(root) / "window.lock", os.O_RDWR | os.O_CREAT, 0o600)
+            child = None
             try:
                 gate = handoff.OneLaunchHandoff(receipt_hash, window, nonce)
                 child_fd, window_child_fd = gate.take_child_fds()
@@ -129,6 +133,46 @@ class FixedCustodyTest(unittest.TestCase):
                     gate.challenge()
                 gate.close()
             finally:
+                os.close(window)
+
+    def test_child_cannot_continue_on_response_without_parent_approval(self):
+        with tempfile.TemporaryDirectory() as root:
+            window = os.open(Path(root) / "window.lock", os.O_RDWR | os.O_CREAT, 0o600)
+            gate = handoff.OneLaunchHandoff("a" * 64, window, "n" * 32)
+            try:
+                challenge_fd, window_fd = gate.take_child_fds()
+                script = ("import importlib.util,sys; "
+                          "s=importlib.util.spec_from_file_location('handoff',sys.argv[1]); "
+                          "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+                          "m.child_prove(int(sys.argv[2]),int(sys.argv[3]),sys.argv[4])")
+                child = subprocess.Popen([sys.executable, "-c", script,
+                    str(HERE / "handoff.py"), str(challenge_fd), str(window_fd), "a" * 64],
+                    pass_fds=(challenge_fd, window_fd), stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                gate.close_child_fds()
+                frame = json.dumps({"nonce": gate.nonce,
+                    "challenge": gate.challenge_value, "receiptSha256": gate.receipt_sha256,
+                    "windowIdentity": gate.window_identity}, separators=(",", ":")).encode() + b"\n"
+                gate.root.sendall(frame)
+                answer, ancillary, _, _ = gate.root.recvmsg(64, socket.CMSG_SPACE(16))
+                self.assertEqual(len(answer), 64)
+                for level, kind, data in ancillary:
+                    if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
+                        fds = array.array("i")
+                        fds.frombytes(data[:len(data) // fds.itemsize * fds.itemsize])
+                        for fd in fds:
+                            os.close(fd)
+                gate.root.close()  # A failed root verifier issues no approval.
+                self.assertNotEqual(child.wait(timeout=2), 0)
+            finally:
+                if child is not None:
+                    if child.poll() is None:
+                        child.kill()
+                        child.wait(timeout=2)
+                    child.stderr.close()
+                gate.root.close()
+                gate.close_child_fds()
+                os.close(gate.window_parent_fd)
                 os.close(window)
 
     def test_wrong_receipt_or_missing_fd_never_authenticates(self):
