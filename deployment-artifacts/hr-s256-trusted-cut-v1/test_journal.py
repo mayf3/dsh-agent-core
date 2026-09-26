@@ -12,6 +12,8 @@ import tempfile
 import time
 import unittest
 
+from test_commitment import bytes_of, final_bundle
+
 
 HERE = Path(__file__).resolve().parent
 
@@ -50,7 +52,7 @@ class FixedCustodyTest(unittest.TestCase):
             journal.STATE_ROOT = root
             nonce = "n" * 32
             digest = "a" * 64
-            intent_hash = journal.seal_intent(nonce, digest, 100)
+            intent_hash = journal.seal_intent(nonce, digest, 97)
             self.assertEqual(journal.readback("intent")[1], intent_hash)
             op_dir = Path(root) / journal.DIRECTORY
             self.assertEqual(op_dir.stat().st_mode & 0o777, 0o700)
@@ -63,15 +65,16 @@ class FixedCustodyTest(unittest.TestCase):
             self.assertEqual(journal.readback("launch-authorization")[0]
                              ["authorization"]["holderCheck"]["paths"],
                              ["/fixture/workspace"])
-            claim_hash = journal.claim_one_launch(102)
+            journal.seal_bundle_commitment(bytes_of(final_bundle(receipt, receipt_hash)), 102)
+            claim_hash = journal.claim_one_launch(103)
             self.assertEqual(journal.readback("launch-claimed")[1], claim_hash)
             with self.assertRaises(journal.Rejected):
-                journal.claim_one_launch(103)
+                journal.claim_one_launch(104)
             restarted = load("journal")
             restarted.TEST_MODE = True
             restarted.STATE_ROOT = root
             with self.assertRaises(restarted.Rejected):
-                restarted.claim_one_launch(103)
+                restarted.claim_one_launch(104)
             with self.assertRaises(journal.Rejected):
                 journal.seal_launch_authorization(receipt)
             (op_dir / "intent.json").write_bytes(b"{}")
@@ -107,9 +110,11 @@ class FixedCustodyTest(unittest.TestCase):
             journal.TEST_MODE = True
             journal.STATE_ROOT = root
             nonce = "n" * 32
-            journal.seal_intent(nonce, "a" * 64, 100)
+            journal.seal_intent(nonce, "a" * 64, 97)
             receipt_hash = journal.seal_launch_authorization(authorization(nonce))
-            journal.claim_one_launch(102)
+            journal.seal_bundle_commitment(
+                bytes_of(final_bundle(authorization(nonce), receipt_hash)), 102)
+            journal.claim_one_launch(103)
             window = os.open(Path(root) / "window.lock", os.O_RDWR | os.O_CREAT, 0o600)
             child = None
             try:

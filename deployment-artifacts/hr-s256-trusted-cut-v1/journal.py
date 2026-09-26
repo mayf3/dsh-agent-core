@@ -16,6 +16,12 @@ HANDLE = "turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256"
 DIRECTORY = OPERATION_ID
 MAX_BYTES = 65536
 HASH = re.compile(r"^[a-f0-9]{64}$")
+COMMITMENT_FIELDS = {"receiptVersion", "operationId", "hostId", "startupNonce",
+                     "reconciliationHandle", "subject", "subjectPreimageSha256",
+                     "launchAuthorizationReceiptSha256", "bundleSha256",
+                     "bundleByteLength", "sealedAtWallMs", "producerId"}
+INDEX_FIELDS = {"version", "operationId", "reconciliationHandle", "hostId",
+                "startupNonceSha256", "bundleSha256"}
 
 
 class Rejected(Exception):
@@ -29,6 +35,22 @@ def require(ok, reason):
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+
+
+def sha256(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
+def exact(value, fields):
+    return type(value) is dict and set(value) == fields
+
+
+def unique_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        require(key not in result, "BUNDLE_DUPLICATE_FIELD")
+        result[key] = value
+    return result
 
 
 def valid_hash(value):
@@ -71,6 +93,7 @@ def valid_authorization(value, intent):
                                 "paths", "openHolderCount"}
             and holder.get("operationId") == OPERATION_ID
             and holder.get("method") == "lsof"
+            and type(holder.get("openHolderCount")) is int
             and holder.get("openHolderCount") == 0
             and type(holder["executedAtWallMs"]) is int
             and 0 <= holder["executedAtWallMs"] < value["authorizedStartupAtWallMs"]
@@ -113,8 +136,58 @@ def close_custody(root, directory):
     os.close(root)
 
 
+def readback_bundle_bytes():
+    root, directory = opened_custody(False)
+    try:
+        fd = os.open("bundle.json", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+        try:
+            before = os.fstat(fd)
+            require(stat.S_ISREG(before.st_mode)
+                    and before.st_uid == (os.geteuid() if TEST_MODE else 0)
+                    and stat.S_IMODE(before.st_mode) == 0o600
+                    and 0 < before.st_size <= MAX_BYTES, "BUNDLE_CUSTODY_INVALID")
+            raw = os.read(fd, MAX_BYTES + 1)
+            after = os.fstat(fd)
+            identity = lambda meta: (meta.st_dev, meta.st_ino, meta.st_size,
+                                     meta.st_mtime_ns, meta.st_ctime_ns)
+            require(len(raw) == before.st_size and identity(before) == identity(after),
+                    "BUNDLE_READBACK_CHANGED")
+            return raw
+        finally:
+            os.close(fd)
+    except (OSError, Rejected) as exc:
+        raise Rejected("BUNDLE_READBACK_UNKNOWN") from exc
+    finally:
+        close_custody(root, directory)
+
+
+def write_bundle_once(raw):
+    require(type(raw) is bytes and 0 < len(raw) <= MAX_BYTES,
+            "BUNDLE_SIZE_INVALID")
+    root, directory = opened_custody(True)
+    try:
+        fd = os.open("bundle.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                     os.O_NOFOLLOW, 0o600, dir_fd=directory)
+        try:
+            view = memoryview(raw)
+            while view:
+                count = os.write(fd, view)
+                require(count > 0, "BUNDLE_WRITE_UNKNOWN")
+                view = view[count:]
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.fsync(directory)
+    except (OSError, Rejected) as exc:
+        raise Rejected("BUNDLE_CREATE_UNKNOWN") from exc
+    finally:
+        close_custody(root, directory)
+    require(readback_bundle_bytes() == raw, "BUNDLE_READBACK_MISMATCH")
+
+
 def readback(kind):
-    require(kind in ("intent", "launch-authorization", "launch-claimed"),
+    require(kind in ("intent", "launch-authorization", "bundle-commitment",
+                     "live-handle-index", "launch-claimed"),
             "RECEIPT_KIND_INVALID")
     root, directory = opened_custody(False)
     try:
@@ -148,15 +221,60 @@ def readback(kind):
                     and record.get("intentSha256") == readback("intent")[1]
                     and valid_authorization(record["authorization"], readback("intent")[0]),
                     "LAUNCH_RECEIPT_INVALID")
+        elif kind == "live-handle-index":
+            authorization = readback("launch-authorization")[0]["authorization"]
+            require(exact(record, INDEX_FIELDS)
+                    and type(record["version"]) is int
+                    and record["version"] == 1
+                    and record["reconciliationHandle"] == HANDLE
+                    and record["hostId"] == authorization["hostId"]
+                    and record["startupNonceSha256"] ==
+                        sha256(authorization["startupNonce"].encode())
+                    and valid_hash(record["bundleSha256"]),
+                    "COMMITMENT_INDEX_INVALID")
+        elif kind == "bundle-commitment":
+            authorization, auth_digest = readback("launch-authorization")
+            auth = authorization["authorization"]
+            index = readback("live-handle-index")[0]
+            bundle_raw = readback_bundle_bytes()
+            require(exact(record, COMMITMENT_FIELDS)
+                    and type(record["receiptVersion"]) is int
+                    and record["receiptVersion"] == 1
+                    and record["operationId"] == OPERATION_ID
+                    and record["hostId"] == auth["hostId"]
+                    and record["startupNonce"] == auth["startupNonce"]
+                    and record["reconciliationHandle"] == HANDLE
+                    and exact(record["subject"], {"turnExecutionId",
+                        "runtimeEpoch", "agentId", "processGeneration"})
+                    and record["subject"] == {
+                        key: auth["subject"][key] for key in
+                        ("turnExecutionId", "runtimeEpoch", "agentId",
+                         "processGeneration")}
+                    and record["subjectPreimageSha256"] ==
+                        auth["subjectPreimageSha256"]
+                    and record["launchAuthorizationReceiptSha256"] == auth_digest
+                    and record["bundleSha256"] == index["bundleSha256"]
+                    and record["bundleSha256"] == sha256(bundle_raw)
+                    and type(record["bundleByteLength"]) is int
+                    and record["bundleByteLength"] == len(bundle_raw)
+                    and type(record["sealedAtWallMs"]) is int
+                    and auth["authorizedStartupAtWallMs"] <
+                        record["sealedAtWallMs"] <= (1 << 53) - 1
+                    and record["producerId"] ==
+                        "trusted root recovery control plane",
+                    "BUNDLE_COMMITMENT_INVALID")
         else:
             require(set(record) == {"version", "operationId", "phase",
-                                    "launchAuthorizationSha256", "atWallMs"}
+                                    "launchAuthorizationSha256",
+                                    "bundleCommitmentSha256", "atWallMs"}
                     and record["version"] == 1 and record["phase"] == "LAUNCH_CLAIMED"
                     and record["launchAuthorizationSha256"] ==
                         readback("launch-authorization")[1]
+                    and record["bundleCommitmentSha256"] ==
+                        readback("bundle-commitment")[1]
                     and type(record["atWallMs"]) is int and record["atWallMs"] >
-                        readback("launch-authorization")[0]["authorization"]
-                        ["authorizedStartupAtWallMs"], "LAUNCH_CLAIM_INVALID")
+                        readback("bundle-commitment")[0]["sealedAtWallMs"],
+                    "LAUNCH_CLAIM_INVALID")
         require(raw == canonical(record), "RECEIPT_CANONICAL_INVALID")
         return record, hashlib.sha256(raw).hexdigest()
     except (OSError, ValueError, UnicodeDecodeError, Rejected) as exc:
@@ -166,6 +284,8 @@ def readback(kind):
 
 
 def write_once(kind, record):
+    require(kind in ("intent", "launch-authorization", "live-handle-index",
+                     "bundle-commitment", "launch-claimed"), "RECEIPT_KIND_INVALID")
     raw = canonical(record)
     require(0 < len(raw) <= MAX_BYTES, "RECEIPT_SIZE_INVALID")
     root, directory = opened_custody(True)
@@ -212,12 +332,133 @@ def seal_launch_authorization(authorization):
         "intentSha256": readback("intent")[1], "authorization": authorization})
 
 
+def validated_final_bundle(raw, authorization, launch_digest):
+    require(type(raw) is bytes and 0 < len(raw) <= MAX_BYTES,
+            "BUNDLE_SIZE_INVALID")
+    try:
+        bundle = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_pairs,
+            parse_constant=lambda _value: reject_nonfinite())
+    except (ValueError, UnicodeDecodeError, Rejected) as exc:
+        raise Rejected("BUNDLE_SCHEMA_INVALID") from exc
+    require(exact(bundle, {"bundleSchemaVersion", "subject", "epochRetirement",
+                           "recoveryCutover", "deploymentProof", "hostCensus",
+                           "holderCheck", "custody", "controlledStop"})
+            and bundle["bundleSchemaVersion"] == 2
+            and bundle["subject"] == authorization["subject"]
+            and exact(bundle["epochRetirement"], {"retiredEpoch"})
+            and bundle["epochRetirement"]["retiredEpoch"] ==
+                authorization["subject"]["runtimeEpoch"], "BUNDLE_SUBJECT_INVALID")
+    cut = bundle["recoveryCutover"]
+    require(exact(cut, {"operationId", "hostId", "startupNonce",
+                        "subjectPreimageSha256", "exclusiveWindowReceiptSha256",
+                        "launchSourcesInhibitedReceiptSha256",
+                        "oldTreeQuiescedReceiptSha256",
+                        "launchAuthorizationReceiptSha256", "windowOpenedAtWallMs",
+                        "oldTreeQuiescedAtWallMs", "authorizedStartupAtWallMs",
+                        "consumingBinarySha256"})
+            and cut["operationId"] == OPERATION_ID
+            and cut["hostId"] == authorization["hostId"]
+            and cut["startupNonce"] == authorization["startupNonce"]
+            and cut["subjectPreimageSha256"] ==
+                authorization["subjectPreimageSha256"]
+            and cut["launchAuthorizationReceiptSha256"] == launch_digest
+            and cut["consumingBinarySha256"] ==
+                authorization["consumingBinarySha256"]
+            and all(valid_hash(cut[name]) for name in (
+                "exclusiveWindowReceiptSha256",
+                "launchSourcesInhibitedReceiptSha256",
+                "oldTreeQuiescedReceiptSha256"))
+            and all(type(cut[name]) is int and 0 <= cut[name] <= (1 << 53) - 1
+                    for name in ("windowOpenedAtWallMs", "oldTreeQuiescedAtWallMs",
+                                 "authorizedStartupAtWallMs"))
+            and cut["windowOpenedAtWallMs"] < cut["oldTreeQuiescedAtWallMs"]
+            < cut["authorizedStartupAtWallMs"]
+            == authorization["authorizedStartupAtWallMs"],
+            "BUNDLE_CUT_INVALID")
+    deployment = bundle["deploymentProof"]
+    census = bundle["hostCensus"]
+    require(exact(deployment, {"floorProvenReceiptSha256",
+                               "validatorInstalledReceiptSha256",
+                               "deployedBinarySha256"})
+            and valid_hash(deployment["floorProvenReceiptSha256"])
+            and valid_hash(deployment["validatorInstalledReceiptSha256"])
+            and deployment["deployedBinarySha256"] ==
+                authorization["consumingBinarySha256"]
+            and exact(census, {"operationId", "executedAtWallMs", "hostId",
+                               "tools", "outputsSha256", "archiveRef",
+                               "runtimeTreeProcessCount"})
+            and census["operationId"] == OPERATION_ID
+            and census["hostId"] == authorization["hostId"]
+            and census["tools"] == ["ps", "lsof"]
+            and census["outputsSha256"] == authorization["outputsSha256"]
+            and isinstance(census["archiveRef"], str)
+            and 0 < len(census["archiveRef"]) <= 512
+            and type(census["runtimeTreeProcessCount"]) is int
+            and census["runtimeTreeProcessCount"] == 0
+            and type(bundle["holderCheck"]["openHolderCount"]) is int
+            and type(census["executedAtWallMs"]) is int
+            and cut["oldTreeQuiescedAtWallMs"] < census["executedAtWallMs"]
+            < cut["authorizedStartupAtWallMs"]
+            and bundle["holderCheck"] == authorization["holderCheck"]
+            and cut["oldTreeQuiescedAtWallMs"] <
+                bundle["holderCheck"]["executedAtWallMs"]
+            < cut["authorizedStartupAtWallMs"], "BUNDLE_EVIDENCE_VALUES_INVALID")
+    custody = bundle["custody"]
+    require(exact(custody, {"executedAs", "producedBy", "evidenceDir"})
+            and custody["executedAs"] == "root"
+            and custody["producedBy"] ==
+                "trusted_cp_recovery_evidence_collector_v1"
+            and isinstance(custody["evidenceDir"], str)
+            and custody["evidenceDir"].startswith("/")
+            and len(custody["evidenceDir"]) <= 512,
+            "BUNDLE_CUSTODY_VALUES_INVALID")
+    # The controlled-stop variant and its live plan binding are not built by
+    # this disconnected increment. Reject it instead of guessing an enum.
+    require(bundle["controlledStop"] is None, "CONTROLLED_STOP_UNIMPLEMENTED")
+    return bundle
+
+
+def reject_nonfinite():
+    raise Rejected("BUNDLE_NONFINITE")
+
+
+def seal_bundle_commitment(bundle_bytes, sealed_at_wall_ms):
+    """Seal fixed final bytes + one-handle index, without launch authority."""
+    authorization, auth_digest = readback("launch-authorization")
+    auth = authorization["authorization"]
+    validated_final_bundle(bundle_bytes, auth, auth_digest)
+    require(type(sealed_at_wall_ms) is int
+            and auth["authorizedStartupAtWallMs"] < sealed_at_wall_ms
+            <= (1 << 53) - 1, "COMMITMENT_SEAL_TIME_INVALID")
+    digest = sha256(bundle_bytes)
+    index = {"version": 1, "operationId": OPERATION_ID,
+        "reconciliationHandle": HANDLE, "hostId": auth["hostId"],
+        "startupNonceSha256": sha256(auth["startupNonce"].encode()),
+        "bundleSha256": digest}
+    receipt = {"receiptVersion": 1, "operationId": OPERATION_ID,
+        "hostId": auth["hostId"], "startupNonce": auth["startupNonce"],
+        "reconciliationHandle": HANDLE,
+        "subject": {name: auth["subject"][name] for name in
+                    ("turnExecutionId", "runtimeEpoch", "agentId",
+                     "processGeneration")},
+        "subjectPreimageSha256": auth["subjectPreimageSha256"],
+        "launchAuthorizationReceiptSha256": auth_digest,
+        "bundleSha256": digest, "bundleByteLength": len(bundle_bytes),
+        "sealedAtWallMs": sealed_at_wall_ms,
+        "producerId": "trusted root recovery control plane"}
+    write_bundle_once(bundle_bytes)
+    write_once("live-handle-index", index)
+    return write_once("bundle-commitment", receipt)
+
+
 def claim_one_launch(at_wall_ms):
     """Durably consume the fixed launch before any child can be spawned."""
     receipt, digest = readback("launch-authorization")
+    commitment, commitment_digest = readback("bundle-commitment")
     require(type(at_wall_ms) is int
-            and receipt["authorization"]["authorizedStartupAtWallMs"] < at_wall_ms
+            and commitment["sealedAtWallMs"] < at_wall_ms
             <= (1 << 53) - 1, "LAUNCH_CLAIM_TIME_INVALID")
     return write_once("launch-claimed", {"version": 1, "operationId": OPERATION_ID,
         "phase": "LAUNCH_CLAIMED", "launchAuthorizationSha256": digest,
+        "bundleCommitmentSha256": commitment_digest,
         "atWallMs": at_wall_ms})
