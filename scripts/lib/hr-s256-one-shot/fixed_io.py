@@ -12,6 +12,7 @@ import time
 class FixedIO:
     def __init__(self):
         self._package = HR_REAL_OS.require_activation()  # Before any protected IO.
+        self._operation_deadline = time.monotonic() + 300  # Private lifetime bound; never serialized/caller-supplied.
         self._window = None
         self._owner = None
         self._intent = None

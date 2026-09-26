@@ -63,20 +63,39 @@ def fixed_io():
     return HR_FIXED_IO.FixedIO()
 
 
+def run_installation(io):
+    """Fixed private installation event; never a request/registry action.
+
+    The installation handler already owns intent, window and inhibited stop.
+    No input can select another target or reconstruct those capabilities.
+    """
+    if HR_MAINTENANCE.TRUSTED_INSTALLATION is None:
+        return None  # Unqualified compiled configuration: before any IO.
+    HR_PROFILE.require(type(io) is HR_FIXED_IO.FixedIO and type(io._owner) is HR_OWNED_STOP._Owner,
+                       "PRIVATE_INSTALLATION_OWNER_REQUIRED")
+    return _run_fixed({"action": HR_PROFILE.ACTION,
+                      "operation_id": HR_PROFILE.OPERATION_ID}, io._owner.canonical, io)
+
+
 def run_fixed(request, canonical_lock_fd):
+    # The ordinary cut has no installation effect.
+    return _run_fixed(request, canonical_lock_fd)
+
+
+def _run_fixed(request, canonical_lock_fd, installation_io=None):
     HR_PROFILE.validate_request(request)
     if not TEST_MODE:
         HR_REAL_OS.require_activation()
         HR_PROFILE.require(os.geteuid() == 0, "ROOT_REQUIRED")
-    io = HR_ONE_SHOT.fixed_io()
-    deadline = time.monotonic() + 300
-    window = None
-    child = None
+    io = HR_ONE_SHOT.fixed_io() if installation_io is None else installation_io
+    deadline = io._operation_deadline if type(io) is HR_FIXED_IO.FixedIO else time.monotonic() + 300
+    window = None if installation_io is None else io._window
+    child = None if installation_io is None else io._child
     sealed = False
-    intent = False
+    intent = installation_io is not None
     handoff = None
     last_ownership = None
-    stop_owner = None
+    stop_owner = None if installation_io is None else io._owner
 
     def boundary():
         nonlocal last_ownership
@@ -100,20 +119,50 @@ def run_fixed(request, canonical_lock_fd):
     try:
         HR_PROFILE.require(not receipt_exists(HR_PROFILE.OPERATION_ID),
                            "OPERATION_ALREADY_TERMINAL")
-        # Preconditions must reject before intent, inhibition or stop effects.
+        if installation_io is not None:
+            # Genuine retained capabilities, not a second lock/window/stop attempt.
+            HR_PROFILE.require(time.monotonic() < deadline, "OPERATION_DEADLINE")
+            io._active()
+            stop_owner.check()
+            HR_PROFILE.require(io._child is None and not io._launched
+                and io._stop is not None and io._stop._owner is stop_owner
+                and io._window == stop_owner.window and io._intent == stop_owner.intent_digest
+                and type(io._nonce) is str
+                and hashlib.sha256(io._nonce.encode()).hexdigest() == stop_owner.intent['nonceSha256'],
+                "PRIVATE_INSTALLATION_INTENT_UNBOUND")
+            raw = HR_REAL_OS.protected_bytes(HR_REAL_OS.Path(STATE_ROOT) /
+                HR_JOURNAL.DIRECTORY / 'launch-sources-inhibited.json')
+            observed = json.loads(raw, object_pairs_hook=HR_REAL_OS.unique_object)
+            HR_PROFILE.require(hashlib.sha256(raw).hexdigest() ==
+                io._receipts.get('launch-sources-inhibited')
+                and type(observed) is dict and set(observed) ==
+                    {'operationId', 'hostId', 'startupNonce', 'atWallMs', 'complete'}
+                and observed['operationId'] == HR_PROFILE.OPERATION_ID
+                and observed['hostId'] == io._package['hostId']
+                and observed['startupNonce'] == io._nonce and observed['complete'] is True
+                and HR_PROFILE.valid_time(observed['atWallMs'])
+                and stop_owner.opened_at < observed['atWallMs'], 'PRIVATE_INHIBITION_UNBOUND')
+            inhibited_at = observed['atWallMs']
+            HR_MAINTENANCE.promote_waiting(io)
+        # Current installed projection/inventory is freshly validated after promotion.
         projection = HR_PROJECTION.fixed_subject_projection()
         subject = normalized_subject(projection)
         prerequisites = io.preflight(projection)
-        nonce = secrets.token_hex(32)
-        HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
-        intent = True
-        if type(io) is HR_FIXED_IO.FixedIO:
-            io.bind_intent_nonce(nonce)
-        window, opened_at = io.open_fixed_window()
-        stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened_at)
-        if type(io) is HR_FIXED_IO.FixedIO:
-            io.attach_owned_stop(stop_owner)
-        inhibited_at = io.inhibit_fixed_sources()
+        if installation_io is None:
+            nonce = secrets.token_hex(32)
+            HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
+            intent = True
+            if type(io) is HR_FIXED_IO.FixedIO:
+                io.bind_intent_nonce(nonce)
+            window, opened_at = io.open_fixed_window()
+            stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened_at)
+            if type(io) is HR_FIXED_IO.FixedIO:
+                io.attach_owned_stop(stop_owner)
+            inhibited_at = io.inhibit_fixed_sources()
+        else:
+            nonce, opened_at = io._nonce, stop_owner.opened_at
+            HR_PROFILE.require(stop_owner.intent['subjectPreimageSha256'] ==
+                subject['subject_preimage_sha256'], "PRIVATE_INSTALLATION_SUBJECT_CHANGED")
         quiesced_at = io.quiesce_fixed_tree()
         boundary()
         census = HR_COLLECTOR.collect_whole_host(prerequisites["oldPids"],
@@ -142,6 +191,9 @@ def run_fixed(request, canonical_lock_fd):
         HR_JOURNAL.seal_bundle_commitment(final_bytes, io.wall_ms())
         sealed = True
         boundary()
+        if installation_io is not None:
+            HR_MAINTENANCE.handoff_waiting(io)
+            boundary()  # Original operation bound/capability after fallible installation readback.
         HR_JOURNAL.claim_one_launch(io.wall_ms())  # Persist before any possible child.
         boundary()
         handoff = HR_HANDOFF.OneLaunchHandoff(authorization_digest, window, nonce)
