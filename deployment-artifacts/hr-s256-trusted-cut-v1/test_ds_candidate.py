@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from test_commitment import authorization, bytes_of, final_bundle
+
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location("hr_s256_builder", HERE / "build_candidate.py")
@@ -38,8 +40,27 @@ class DSCandidateTest(unittest.TestCase):
             self.assertTrue(callable(ds.HR_JOURNAL.seal_intent))
             self.assertTrue(callable(ds.HR_HANDOFF.OneLaunchHandoff))
             self.assertTrue(callable(ds.HR_ARCHIVE.seal_census))
+            self.assertIs(ds.HR_LIFECYCLE.J, ds.HR_JOURNAL)
+            self.assertTrue(callable(ds.HR_LIFECYCLE.record_unknown))
             intent_digest = ds.HR_JOURNAL.seal_intent("n" * 32, "a" * 64, 100)
             self.assertEqual(ds.HR_JOURNAL.readback("intent")[1], intent_digest)
+            auth = authorization()
+            auth_digest = ds.HR_JOURNAL.seal_launch_authorization(auth)
+            bundle = final_bundle(auth, auth_digest)
+            ds.HR_JOURNAL.seal_bundle_commitment(bytes_of(bundle), 102)
+            ds.HR_JOURNAL.claim_one_launch(103)
+            observation = {"ownership": {
+                "ownedChild": {"pid": 99999, "identitySha256": "1" * 64},
+                "windowIdentity": [2, 3], "canonicalLockIdentity": [4, 5],
+                "canonicalLockOwnershipReceiptSha256": "2" * 64,
+                "launchSourcesInhibitedReceiptSha256": bundle["recoveryCutover"]
+                    ["launchSourcesInhibitedReceiptSha256"],
+                "windowHeld": True, "canonicalLockHeld": True, "sourcesInhibited": True},
+                "custodian": "fixed-DS-owner", "dispositionDeadlineWallMs": 110,
+                "reason": "STARTUP_UNAVAILABLE"}
+            ds.HR_LIFECYCLE.record_unknown(observation, 104)
+            self.assertEqual(ds.HR_LIFECYCLE.snapshot()["custodian"], "fixed-DS-owner")
+            self.assertFalse(ds.HR_LIFECYCLE.snapshot()["launchAllowed"])
             request = {"action": ds.HR_PROFILE.ACTION,
                        "operation_id": ds.HR_PROFILE.OPERATION_ID}
             response, restart = ds.handle(json.dumps(request).encode())
