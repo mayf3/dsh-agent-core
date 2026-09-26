@@ -116,7 +116,8 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1` | accepted lifecycle in this branch 2026-09-25; reviewed r4 head `5726f43f9c028a8967720ccaff49a054ee1423e6`; effective only after authority merge | contracts for bounded nonproduction implementation after acceptance is in the implementation base; production apply none | narrow amendment to `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` C-015/C-019/C-024: one `restart_quiescence_proven` evidence kind and prospective, root-authenticated whole-host quiescence proof consumed at Router startup for one exact restart-lost record; no business-outcome inference, replay, sweep, or historical floor fabrication |
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1` | superseded by V2 in this branch; historically accepted 2026-09-25 at reviewed r4 head `5726f43f9c028a8967720ccaff49a054ee1423e6` | historical bounded nonproduction contracts; production apply none | predecessor of the complete V2 successor; its r4 acceptance remains historical provenance |
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2` | accepted by mayf3 2026-09-26 against reviewed head `94eb53c48856d850a77a0d64ada6566f9fcd13d4`; effective on the authority branch after merge | bounded nonproduction implementation contracts; production apply none | carries the complete r4 body with reviewed replay/preimage provenance and one nonce/one launch crash semantics for RQ-002..005; no live read, restart, fence clear, or production recovery authority |
 
 Owner mayf3 accepted r4 Q1=YES/Q2=YES on 2026-09-25 against the exact reviewed
 head and Spec SHA-256 `fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78`.
