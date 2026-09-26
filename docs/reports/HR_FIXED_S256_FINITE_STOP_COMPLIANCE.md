@@ -1,0 +1,9 @@
+# Fixed finite stop method — nonproduction delta
+
+Parent cef11403199479ef014584f0f49b5c45919fb638. REUSE accepted R2/r4; source-only implementation. No live protected read/effect.
+
+Implemented: fixed absolute launchctl bootout/print for exactly GUI505/system Runtime routes; shared 30s unload deadline; streaming combined 65,536-byte cap; only known-owned probe child cleanup; before-effect activation/incomplete-inventory rejection; private one-attempt sticky UNKNOWN and route-resumption rejection. Embedded in pinned DS candidate without activating production action. No caller path/PID/route or retry/launch/release request added.
+
+Evidence: permanent six-case missing-module RED followed by ten-case GREEN. Cases include two-route positive, one deadline, loss then recovery still UNKNOWN, failed stop no replay, unowned child zero effect, wrong route zero spawn, real disposable subprocess stream cap/timeout cleanup, ordinary absence. Candidate2 and assembled10 remain green. Disposable IO is not host proof or child_real_exit. Route absence is a point observation; repeated positive cannot retrospectively prove continuous exclusion.
+
+Remaining: this is a route-method increment, not an assembled real H2/H3 action. Existing trusted inventory always reports unresolved LE1; real method therefore rejects before any effect even after activation. Complete source/resumption and holder scope, private owned window/canonical continuity, journaled controlled-stop receipt (current journal rejects controlledStop non-null), actual child-V9/Router context, real action binding, external bounded UNKNOWN custodian and verified release are still required. Neither empty fixture inventory nor these tests supplies those facts. This method does not terminate a borrowed Runtime PID, bootstrap a child, release lock/window, or claim sourceClosureComplete. Production entry stays PROFILE_NOT_BOOTSTRAPPED; actual invocation/install remains separately unauthorized.

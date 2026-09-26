@@ -40,6 +40,12 @@ class DSCandidateTest(unittest.TestCase):
             self.assertTrue(callable(ds.HR_JOURNAL.seal_intent))
             self.assertTrue(callable(ds.HR_HANDOFF.OneLaunchHandoff))
             self.assertTrue(callable(ds.HR_ARCHIVE.seal_census))
+            # TEST_MODE never activates the real fixed stop method or protected IO.
+            with patch.object(ds.HR_INVENTORY, "fixed_installed_inventory",
+                    side_effect=AssertionError("protected read")), patch.object(
+                    ds.HR_FINITE_STOP.subprocess, "Popen", side_effect=AssertionError("effect")):
+                with self.assertRaisesRegex(Exception, "PROFILE_NOT_BOOTSTRAPPED"):
+                    ds.HR_FINITE_STOP.FixedStop().stop()
             self.assertIs(ds.HR_LIFECYCLE.J, ds.HR_JOURNAL)
             self.assertTrue(callable(ds.HR_LIFECYCLE.record_unknown))
             intent_digest = ds.HR_JOURNAL.seal_intent("n" * 32, "a" * 64, 100)
