@@ -45,6 +45,21 @@ class FixedAssembledActionTest(unittest.TestCase):
             if owned is not None:
                 os.close(owned["canonicalFd"])
 
+    def test_projection_extra_wrong_identity_and_alias_reject_before_intent_zero_effect(self):
+        for alteration in ({"privatePayload": "sensitive-fixture"},
+                           {"reconciliationHandle": "different"},
+                           {"processGeneration": True}, {"subjectPreimageSha256": "unknown"}):
+            with self.subTest(alteration=alteration), tempfile.TemporaryDirectory() as root:
+                os.chmod(root, 0o755)
+                ds = self.assembled(root)
+                io = SyntheticFixedIO(root, ds)
+                io.projection.update(alteration)
+                response = self.run_fixture(ds, io)
+                self.assertFalse(response["ok"])
+                self.assertEqual(response["disposition"], "PRECHECK_REJECTED")
+                self.assertEqual(io.effects, [])
+                self.assertFalse((Path(root) / ds.HR_PROFILE.OPERATION_ID / "intent.json").exists())
+
     def test_missing_manifest_route_never_authorizes_or_launches_after_inhibition(self):
         with tempfile.TemporaryDirectory() as root:
             os.chmod(root, 0o755)

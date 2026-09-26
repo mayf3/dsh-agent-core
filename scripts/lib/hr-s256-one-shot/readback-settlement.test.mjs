@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fixedR2Fixture } from '../../../packages/agent-router/test/helpers/fixed-r2-consumer-fixture.js'
+import { projectSubject } from '../../../deployment-artifacts/hr-s256-trusted-cut-v1/project-subject.mjs'
 import { readSettlement } from './readback-settlement.mjs'
 
 test('actual pinned-validator readback projects only exact settled s256 and never writes', t => {
@@ -79,5 +80,43 @@ finally: os.close(store)
     input: JSON.stringify({ moduleDir: dirname(fileURLToPath(import.meta.url)), evidenceDir: fx.evidenceDir, store: fx.persistenceFile, projection }) })
   assert.equal(result.status, 0, result.stderr)
   assert.match(result.stdout, /ACTUAL_JOIN_PASS/)
+  assert.deepEqual(readFileSync(fx.persistenceFile), before)
+})
+
+
+test('actual current projector schema reaches assembled fixed action without synthetic hash alias', t => {
+  const fx = fixedR2Fixture(cleanup => t.after(cleanup))
+  const before = readFileSync(fx.persistenceFile)
+  const fd = openSync(fx.persistenceFile, 'r')
+  let projection
+  try { projection = projectSubject(`/dev/fd/${fd}`) } finally { closeSync(fd) }
+  const script = `import json,sys,tempfile,os
+from pathlib import Path
+from unittest.mock import patch
+inputs=json.load(sys.stdin);sys.path.insert(0,inputs['moduleDir'])
+from test_orchestration import FixedAssembledActionTest
+from fixture_io import SyntheticFixedIO
+case=FixedAssembledActionTest()
+with tempfile.TemporaryDirectory() as root:
+ os.chmod(root,0o755);ds=case.assembled(root);io=SyntheticFixedIO(root,ds)
+ io.projection=inputs['projection']
+ try:
+  result=case.run_fixture(ds,io)
+  assert result['ok'],result
+  intent=ds.HR_JOURNAL.readback('intent')[0]
+  assert intent['subjectPreimageSha256']==inputs['projection']['subjectPreimageSha256']
+  auth=ds.HR_JOURNAL.readback('launch-authorization')[0]['authorization']
+  assert auth['subjectPreimageSha256']==inputs['projection']['subjectPreimageSha256']
+  assert auth['subject']['runtimeEpoch']==inputs['projection']['runtimeEpoch']
+  print('ACTUAL_PROJECTION_JOIN_PASS')
+ finally:
+  case.cleanup_custody(ds)
+  if io.window is not None: os.close(io.window)
+`
+  const result = spawnSync('python3', ['-c', script], { encoding: 'utf8', timeout: 5000,
+    env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+    input: JSON.stringify({ moduleDir: dirname(fileURLToPath(import.meta.url)), projection }) })
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /ACTUAL_PROJECTION_JOIN_PASS/)
   assert.deepEqual(readFileSync(fx.persistenceFile), before)
 })

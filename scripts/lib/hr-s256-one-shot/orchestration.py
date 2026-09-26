@@ -17,6 +17,27 @@ import time
 _custody = {}
 
 
+def normalized_subject(projection):
+    """Adapt only the existing closed projector representation, without fallback."""
+    fields = {"reconciliationHandle", "turnExecutionId", "runtimeEpoch", "agentId",
+              "processGeneration", "sessionId", "createdAtWallMs", "updatedAt",
+              "subjectPreimageSha256"}
+    HR_PROFILE.require(type(projection) is dict and set(projection) == fields
+        and projection["reconciliationHandle"] == projection["turnExecutionId"] == HR_PROFILE.HANDLE
+        and projection["agentId"] == HR_PROFILE.AGENT_ID
+        and type(projection["processGeneration"]) is int and projection["processGeneration"] == 1
+        and type(projection["runtimeEpoch"]) is str and bool(projection["runtimeEpoch"])
+        and type(projection["sessionId"]) is str
+        and HR_PROFILE.valid_time(projection["createdAtWallMs"])
+        and HR_PROFILE.valid_time(projection["updatedAt"])
+        and projection["updatedAt"] >= projection["createdAtWallMs"]
+        and HR_PROFILE.valid_hash(projection["subjectPreimageSha256"]),
+        "PROJECTION_IDENTITY")
+    return {**{key: projection[key] for key in (
+        "reconciliationHandle", "turnExecutionId", "runtimeEpoch", "agentId", "processGeneration")},
+        "subject_preimage_sha256": projection["subjectPreimageSha256"]}
+
+
 def canonical_fd_owned(fd):
     """Handler-only private capability check, never an input success assertion."""
     held = _custody.get("fixed-DS-owner")
@@ -76,8 +97,9 @@ def run_fixed(request, canonical_lock_fd):
         HR_PROFILE.require(not receipt_exists(HR_PROFILE.OPERATION_ID),
                            "OPERATION_ALREADY_TERMINAL")
         # Preconditions must reject before intent, inhibition or stop effects.
-        subject = HR_PROJECTION.fixed_subject_projection()
-        prerequisites = io.preflight(subject)
+        projection = HR_PROJECTION.fixed_subject_projection()
+        subject = normalized_subject(projection)
+        prerequisites = io.preflight(projection)
         nonce = secrets.token_hex(32)
         HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
         intent = True
