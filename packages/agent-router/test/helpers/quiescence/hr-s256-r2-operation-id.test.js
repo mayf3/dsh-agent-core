@@ -4,8 +4,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import test from 'node:test'
 
-import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
-import { json, proofFixture } from '../helpers/restart-quiescence-fixture.js'
+import { TurnReconciliationStore } from '../../../src/reconciliation-store.js'
+import { json, proofFixture } from '../restart-quiescence-fixture.js'
 
 const FIXED_OPERATION_ID = 'hr-s256-trusted-quiescence-cut-20260925-v1'
 const sha = raw => createHash('sha256').update(raw).digest('hex')
