@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 
@@ -35,7 +36,8 @@ def authorization(nonce="n" * 32, digest="a" * 64):
             "outputsSha256": ["d" * 64, "e" * 64],
             "holderCheck": {"operationId": journal.OPERATION_ID,
                             "method": "lsof", "openHolderCount": 0,
-                            "executedAtWallMs": 100}}
+                            "executedAtWallMs": 100,
+                            "paths": ["/fixture/workspace"]}}
 
 
 class FixedCustodyTest(unittest.TestCase):
@@ -55,6 +57,9 @@ class FixedCustodyTest(unittest.TestCase):
             receipt = authorization(nonce, digest)
             receipt_hash = journal.seal_launch_authorization(receipt)
             self.assertEqual(journal.readback("launch-authorization")[1], receipt_hash)
+            self.assertEqual(journal.readback("launch-authorization")[0]
+                             ["authorization"]["holderCheck"]["paths"],
+                             ["/fixture/workspace"])
             claim_hash = journal.claim_one_launch(102)
             self.assertEqual(journal.readback("launch-claimed")[1], claim_hash)
             with self.assertRaises(journal.Rejected):
@@ -80,6 +85,9 @@ class FixedCustodyTest(unittest.TestCase):
                            {"subjectPreimageSha256": "b" * 64},
                            {"authorizedStartupAtWallMs": 99},
                            {"subject": {**base["subject"], "agentId": "other"}},
+                           {"holderCheck": {**base["holderCheck"],
+                                            "privatePayload": "sensitive-fixture"}},
+                           {"holderCheck": {**base["holderCheck"], "paths": []}},
                            {"callerPass": True}):
                 with self.subTest(change=change), self.assertRaises(journal.Rejected):
                     journal.seal_launch_authorization({**base, **change})
@@ -184,4 +192,90 @@ class FixedCustodyTest(unittest.TestCase):
                 gate.close()
             finally:
                 os.close(wrong)
+                os.close(window)
+
+    def test_same_inode_separate_open_file_description_is_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "window.lock"
+            window = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+            separate = os.open(path, os.O_RDWR)
+            try:
+                gate = handoff.OneLaunchHandoff("a" * 64, window, "n" * 32)
+                child_fd, _ = gate.take_child_fds()
+                script = ("import importlib.util,sys; "
+                          "s=importlib.util.spec_from_file_location('handoff',sys.argv[1]); "
+                          "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+                          "m.child_prove(int(sys.argv[2]),int(sys.argv[3]),'a'*64)")
+                child = subprocess.Popen([sys.executable, "-c", script,
+                    str(HERE / "handoff.py"), str(child_fd), str(separate)],
+                    pass_fds=(child_fd, separate), stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                gate.close_child_fds()
+                with self.assertRaises(handoff.Rejected):
+                    gate.challenge()
+                child.wait(timeout=2)
+                child.stderr.close()
+                gate.close()
+            finally:
+                os.close(separate)
+                os.close(window)
+
+    def test_challenge_socket_alone_cannot_prove_window_fd(self):
+        with tempfile.TemporaryDirectory() as root:
+            window = os.open(Path(root) / "window.lock", os.O_RDWR | os.O_CREAT, 0o600)
+            try:
+                gate = handoff.OneLaunchHandoff("a" * 64, window, "n" * 32)
+                child_fd, _ = gate.take_child_fds()
+                script = ("import json,socket,sys; "
+                          "s=socket.socket(fileno=int(sys.argv[2])); "
+                          "f=json.loads(s.makefile('rb').readline()); "
+                          "exec(open(sys.argv[1]).read().split('class OneLaunchHandoff:')[0]); "
+                          "s.sendall(response_digest(f['nonce'],f['challenge'],"
+                          "f['receiptSha256'],f['windowIdentity']))")
+                child = subprocess.Popen([sys.executable, "-c", script,
+                    str(HERE / "handoff.py"), str(child_fd)], pass_fds=(child_fd,),
+                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE)
+                gate.close_child_fds()
+                with self.assertRaises(handoff.Rejected):
+                    gate.challenge()
+                child.wait(timeout=2)
+                child.stderr.close()
+                gate.close()
+            finally:
+                os.close(window)
+
+    def test_challenge_has_one_absolute_750ms_deadline(self):
+        with tempfile.TemporaryDirectory() as root:
+            window = os.open(Path(root) / "window.lock", os.O_RDWR | os.O_CREAT, 0o600)
+            try:
+                gate = handoff.OneLaunchHandoff("a" * 64, window, "n" * 32)
+                child_fd, window_fd = gate.take_child_fds()
+                script = ("import array,importlib.util,json,socket,sys,time; "
+                          "s=importlib.util.spec_from_file_location('h',sys.argv[1]); "
+                          "h=importlib.util.module_from_spec(s); s.loader.exec_module(h); "
+                          "c=socket.socket(fileno=int(sys.argv[2])); "
+                          "f=json.loads(c.makefile('rb').readline()); "
+                          "d=h.response_digest(f['nonce'],f['challenge'],"
+                          "f['receiptSha256'],f['windowIdentity']); "
+                          "c.sendmsg([d[:1]],[(socket.SOL_SOCKET,socket.SCM_RIGHTS,"
+                          "array.array('i',[int(sys.argv[3])]))]); "
+                          "[(time.sleep(.025),c.sendall(bytes([b]))) for b in d[1:]]")
+                child = subprocess.Popen([sys.executable, "-c", script,
+                    str(HERE / "handoff.py"), str(child_fd), str(window_fd)],
+                    pass_fds=(child_fd, window_fd), stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                gate.close_child_fds()
+                started = time.monotonic()
+                try:
+                    with self.assertRaises(handoff.Rejected):
+                        gate.challenge()
+                    self.assertLess(time.monotonic() - started, 1.15)
+                finally:
+                    if child.poll() is None:
+                        child.terminate()
+                    child.wait(timeout=2)
+                    child.stderr.close()
+                    gate.close()
+            finally:
                 os.close(window)
