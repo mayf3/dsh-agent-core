@@ -55,7 +55,11 @@ class InventoryTest(unittest.TestCase):
                 "retiredEntry": {"path": module.RETIRED, "sha256": hashlib.sha256(retired).hexdigest()},
                 "routes": [{"id": "gui/505/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + module.GATED},
                            {"id": "system/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + module.GATED}]}
-            module.ROOT=root;module.APP=app;module.GUI=base/'gui.plist';module.SYSTEM=base/'system.plist';module.MANIFEST=base/'entry-manifest.json'
+            module.ROOT = root
+            module.APP = app
+            module.GUI = base / 'gui.plist'
+            module.SYSTEM = base / 'system.plist'
+            module.MANIFEST = base / 'entry-manifest.json'
             put(module.MANIFEST, json.dumps(manifest).encode())
             route = (f'<plist><dict><key>Label</key><string>ai.agent-core.runtime</string><key>ProgramArguments</key><array><string>/usr/local/libexec/agent-core/node-runtime/bin/node</string><string>{app / module.GATED}</string><string>--root</string><string>{root}</string></array></dict></plist>').encode()
             put(module.GUI, route);put(module.SYSTEM, route)
