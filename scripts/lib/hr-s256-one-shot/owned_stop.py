@@ -48,6 +48,7 @@ class _Owner:
                 'OWNED_WINDOW_TIME_UNKNOWN')
         self.opened_at = opened_at
         self._stop_claim = None
+        self.installation_io = None  # Private capability, not serialized eligibility.
         self.paths = (state_path('mutation.lock'), os.path.join(state_path(HR_JOURNAL.DIRECTORY), 'window.lock'))
         try:
             self.canonical_identity = identity(canonical_fd)

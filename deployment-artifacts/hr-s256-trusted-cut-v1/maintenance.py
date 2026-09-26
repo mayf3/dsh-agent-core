@@ -313,3 +313,34 @@ def handoff_waiting(io):
         _state['waiting'] = False
         io._unknown = True
         raise
+
+
+def qualify_installation_base(io):
+    """Installation-only PRE-image qualification, never post-MF1/LE1 proof."""
+    require(type(io) is HR_FIXED_IO.FixedIO, 'MAINTENANCE_PRIVATE_OWNER')
+    io._active()
+    p = _payload()
+    require(p is not None and _tree() == p['baseSourceSha256'], 'MAINTENANCE_BASE_CHANGED')
+    _verify_proofs()
+    scope = HR_REAL_OS.qualified_source_scope()  # Existing independently qualified finite root input.
+    HR_PROFILE.validate_entry_closure(scope['entryManifest'],
+        [source for source in scope['sources'] if source != 'fixed-DS-owner'])
+    for route, path in ROUTES.items():
+        fd = _directory(path.parent)
+        try:
+            old = _read(fd, path.name)
+            require(sha(old) == p['baseRoutes'][route], 'MAINTENANCE_ROUTE_CHANGED')
+            _route(old, p['routes'][route])
+        finally: os.close(fd)
+    require(time.monotonic() < io._operation_deadline, 'MAINTENANCE_DEADLINE')
+    return scope
+
+
+def prepromotion_stop_inventory(owner):
+    io = owner.installation_io
+    require(type(io) is HR_FIXED_IO.FixedIO and io._owner is owner,
+            'MAINTENANCE_PRIVATE_OWNER')
+    owner.check()
+    qualify_installation_base(io)
+    # Only qualification for the fixed stop. Not holder coverage, zero UID, or LE1.
+    return {'unresolvedSources': []}

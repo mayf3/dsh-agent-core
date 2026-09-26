@@ -63,6 +63,60 @@ def fixed_io():
     return HR_FIXED_IO.FixedIO()
 
 
+def run_installation_event(canonical_lock_fd):
+    """Selected only by the fixed same-DS installation bootstrap holding its lock."""
+    HR_PROFILE.require(HR_MAINTENANCE.TRUSTED_INSTALLATION is not None,
+                       'INSTALLATION_PAYLOAD_UNKNOWN')
+    io = HR_ONE_SHOT.fixed_io()  # Guard before protected IO; no caller-selected IO/target.
+    intent = False
+    entered = False
+    try:
+        HR_REAL_OS.deployed_prerequisites(io._package, io.wall_ms())
+        HR_MAINTENANCE.qualify_installation_base(io)
+        projection = HR_PROJECTION.fixed_subject_projection()
+        subject = normalized_subject(projection)
+        HR_PROFILE.require(not receipt_exists(HR_PROFILE.OPERATION_ID), 'OPERATION_ALREADY_TERMINAL')
+        io._old_pids = HR_REAL_OS.old_runtime_membership()  # Observed before stopping, never PID ownership.
+        nonce = secrets.token_hex(32)
+        HR_PROFILE.require(time.monotonic() < io._operation_deadline, 'OPERATION_DEADLINE')
+        intent = True  # Before fallible write/fsync/readback: partial intent cannot release custody.
+        HR_JOURNAL.seal_intent(nonce, subject['subject_preimage_sha256'], io.wall_ms())
+        io.bind_intent_nonce(nonce)
+        HR_PROFILE.require(time.monotonic() < io._operation_deadline, 'OPERATION_DEADLINE')
+        window, opened = io.open_fixed_window()
+        HR_OWNED_STOP.enter_handler(canonical_lock_fd)
+        entered = True
+        owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened)
+        io.attach_owned_stop(owner)
+        owner.installation_io = io  # This actual owned private object, never a boolean assertion.
+        HR_PROFILE.require(time.monotonic() < io._operation_deadline, 'OPERATION_DEADLINE')
+        io.inhibit_fixed_sources()
+        io._stop.observe()
+        HR_MAINTENANCE.qualify_installation_base(io)
+        inhibited = io.wall_ms()
+        HR_PROFILE.require(inhibited > opened, 'INHIBITION_TIME_UNKNOWN')
+        io._seal_cut('launch-sources-inhibited', {'operationId': HR_PROFILE.OPERATION_ID,
+            'hostId': io._package['hostId'], 'startupNonce': nonce,
+            'atWallMs': inhibited, 'complete': True})
+        return run_installation(io)
+    except Exception as exc:
+        reason = str(exc)
+        if re.fullmatch(r'[A-Z][A-Z0-9_]{0,63}', reason) is None:
+            reason = 'OBSERVATION_UNAVAILABLE'
+        if intent:
+            io._unknown = True
+            _custody['fixed-DS-owner'] = {'canonicalFd': canonical_lock_fd,
+                'windowFd': io._window, 'child': io._child, 'io': io,
+                'stopOwner': io._owner, 'activeDeadlineMonotonic': io._operation_deadline}
+            try: record_terminal_unknown(reason)
+            except Exception: pass  # Actual lock remains held even when durable acknowledgement fails.
+        return {'ok': False, 'error': reason, 'disposition': 'UNKNOWN' if intent else
+            'PRECHECK_REJECTED', 'nonproduction': True}
+    finally:
+        if entered:
+            HR_OWNED_STOP.leave_handler()  # Only private duplicate; original custodian FD is retained.
+
+
 def run_installation(io):
     """Fixed private installation event; never a request/registry action.
 
@@ -73,6 +127,7 @@ def run_installation(io):
         return None  # Unqualified compiled configuration: before any IO.
     HR_PROFILE.require(type(io) is HR_FIXED_IO.FixedIO and type(io._owner) is HR_OWNED_STOP._Owner,
                        "PRIVATE_INSTALLATION_OWNER_REQUIRED")
+    HR_PROFILE.require(not io._launched, "PRIVATE_INSTALLATION_NO_REPLAY")
     return _run_fixed({"action": HR_PROFILE.ACTION,
                       "operation_id": HR_PROFILE.OPERATION_ID}, io._owner.canonical, io)
 

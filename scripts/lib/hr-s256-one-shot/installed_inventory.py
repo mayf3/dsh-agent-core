@@ -185,8 +185,9 @@ def route(raw):
     require(fields.get('Label') is not None and fields['Label'].text == 'ai.agent-core.runtime'
             and args is not None and args.tag == 'array'
             and all(v.tag == 'string' for v in args), 'INVENTORY_ROUTE_UNKNOWN')
-    require([v.text for v in args] == ['/usr/local/libexec/agent-core/node-runtime/bin/node',
-        str(APP / GATED), '--root', str(ROOT)], 'INVENTORY_ROUTE_UNKNOWN')
+    fixed = ['/usr/local/libexec/agent-core/node-runtime/bin/node', str(APP / GATED)]
+    require([v.text for v in args] in (fixed, fixed + ['--root', str(ROOT)]),
+            'INVENTORY_ROUTE_UNKNOWN')  # Exact MI promoted route or existing fixed-root MF1 representation.
     env = fields.get('EnvironmentVariables')
     if env is not None:
         names = [v.text for v in list(env)[::2]]
