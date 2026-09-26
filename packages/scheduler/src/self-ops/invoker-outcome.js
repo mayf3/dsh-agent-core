@@ -26,6 +26,7 @@ export const TRUSTED_TERMINATION_EVIDENCE = new Set([
   'exact_queued_removal',
   'child_real_exit',
   'cancellation_ack',
+  'restart_quiescence_proven',
 ])
 
 export const hasTerminationProof = (outcome) => TRUSTED_TERMINATION_EVIDENCE.has(

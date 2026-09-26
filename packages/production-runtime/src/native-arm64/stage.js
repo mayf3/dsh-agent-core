@@ -3,6 +3,8 @@ import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathS
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
+import { composeHrPostCoherentSource, POST_COHERENT_HR_INPUT_PATHS, POST_COHERENT_HR_LEAF_PATHS } from './hr-post-coherent-overlay.mjs'
+export { composeHrPostCoherentSource, POST_COHERENT_HR_INPUT_PATHS, POST_COHERENT_HR_LEAF_PATHS }
 
 export const ARM_SOURCE_DELTA = Object.freeze([
   'scripts/production-runtime.mjs',
@@ -64,4 +66,88 @@ export function stageApplication({ liveRoot, candidateRoot, candidateSHA, stageR
   }
   return { sourceHead, sourceStatus, candidateSHA, stageRoot: stage, files,
     productionApply: 'HOLD', mergedAncestryVerified: false }
+}
+
+export const HR_GATED_ENTRY = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
+const HR_CHILD_PROOF = 'packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py'
+const HR_RETIRED_ENTRY = 'scripts/production-runtime.mjs'
+const HR_APP = '/usr/local/libexec/agent-core/app/'
+export const HR_RETIRED_BYTES = '#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n'
+
+/** Apply only this join to the fresh stage; never overwrite a newer Router. */
+export function patchHrRouterJoin(path, bytes) {
+  let source = bytes.toString('utf8')
+  const replaceOnce = (before, after) => {
+    if (source.split(before).length !== 2) throw new Error('HR_ROUTER_BASE_UNKNOWN')
+    source = source.replace(before, after)
+  }
+  if (path === 'packages/agent-router/src/index.js') {
+    const imported = "import { provisionAgentHome } from '../../agent-provisioning/src/index.js'"
+    replaceOnce(imported, imported + "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
+    const branch = "  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {"
+    replaceOnce(branch, "  const fixedStartup = getFixedStartupContext()\n  if (fixedStartup !== undefined) {\n    reconciliationStore.consumeStartupQuiescence(fixedStartup)\n    signalFixedStartupConsumptionFinished()\n  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {")
+    replaceOnce("  ctx.provide('agentRouter', service)\n", "  ctx.provide('agentRouter', service)\n  publishFixedRuntimeAdmission(service)\n")
+  } else if (path === 'packages/agent-router/src/reconciliation/startup-recovery.js') {
+    replaceOnce('files = readdirSync(evidenceDir).filter', 'files = (io?.readdir ?? readdirSync)(evidenceDir).filter')
+  } else throw new Error('HR_ROUTER_BASE_UNKNOWN')
+  return Buffer.from(source)
+}
+
+/** Fixed one-shot candidate only. Never reads/writes an installed plist. */
+export function stageHrOneShotApplication({ guiPlist, systemPlist, ...options }) {
+  const oldTarget = HR_APP + HR_RETIRED_ENTRY
+  const newTarget = HR_APP + HR_GATED_ENTRY
+  const routes = {}
+  for (const [name, raw] of [['gui', guiPlist], ['system', systemPlist]]) {
+    if (typeof raw !== 'string' || Buffer.byteLength(raw) > 65536 ||
+        (raw.match(/<key>ProgramArguments<\/key>/g) ?? []).length !== 1 ||
+        (raw.match(/<key>Label<\/key>\s*<string>ai\.agent-core\.runtime<\/string>/g) ?? []).length !== 1) {
+      throw new Error('HR_ROUTE_TARGET_UNKNOWN')
+    }
+    const args = raw.match(/<key>ProgramArguments<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1]
+    const strings = [...(args ?? '').matchAll(/<string>([^<]*)<\/string>/g)].map(m => m[1])
+    if (strings.length < 2 || strings[1] !== oldTarget ||
+        raw.split(oldTarget).length !== 2 || raw.includes(newTarget) ||
+        args.replace(/<string>[^<]*<\/string>/g, '').trim()) {
+      throw new Error('HR_ROUTE_TARGET_UNKNOWN')
+    }
+    // Byte-identical remainder: UID, root, environment and supervision survive.
+    routes[name] = raw.replace(oldTarget, newTarget)
+  }
+  const frozen = [HR_GATED_ENTRY, HR_CHILD_PROOF, 'packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'].map(path => ({ path,
+    bytes: execFileSync('/usr/bin/git', ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path]) }))
+  const router = 'packages/agent-router/src/index.js'
+  const current = readFileSync(join(options.liveRoot, router)).toString()
+  let joins
+  if (!current.includes('cfg.restartQuiescenceEvidenceDir')) {
+    const base = Object.fromEntries(POST_COHERENT_HR_INPUT_PATHS.map(path => [path, readFileSync(join(options.liveRoot, path))]))
+    const paths = ['packages/agent-router/src/reconciliation/startup-recovery.js', ...POST_COHERENT_HR_LEAF_PATHS]
+    const accepted = Object.fromEntries(paths.map(path => [path, execFileSync('/usr/bin/git',
+      ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path])]))
+    joins = Object.entries(composeHrPostCoherentSource(base, accepted)).map(([path, bytes]) => ({ path, bytes }))
+  } else {
+    joins = ['packages/agent-router/src/index.js', 'packages/agent-router/src/reconciliation/startup-recovery.js'].map(path => ({ path,
+      bytes: patchHrRouterJoin(path, readFileSync(join(options.liveRoot, path))) }))
+  }
+  const result = stageApplication(options)
+  const replacements = [...frozen, ...joins, { path: HR_RETIRED_ENTRY, bytes: Buffer.from(HR_RETIRED_BYTES) }]
+  for (const { path, bytes } of replacements) {
+    const prior = result.files.find(file => file.path === path)
+    const record = { path, preimageHash: prior?.preimageHash ?? null,
+      postimageExpectedHash: createHash('sha256').update(bytes).digest('hex'),
+      source: 'HR_ONE_SHOT_ENTRY_DELTA', candidateSourceSHA: options.candidateSHA,
+      whyRequired: path === HR_RETIRED_ENTRY ? 'Retire ungated entry before Router import' : 'Fixed root-custody gated entry' }
+    if (prior) result.files.splice(result.files.indexOf(prior), 1)
+    result.files.push(record)
+    mkdirSync(dirname(join(result.stageRoot, path)), { recursive: true })
+    writeFileSync(join(result.stageRoot, path), bytes)
+  }
+  const entryManifest = { version: 1,
+    operationId: 'hr-s256-trusted-quiescence-cut-20260925-v1',
+    entries: [{ path: HR_GATED_ENTRY, sha256: hash(join(result.stageRoot, HR_GATED_ENTRY)),
+      helperSha256: hash(join(result.stageRoot, HR_CHILD_PROOF)) }],
+    retiredEntry: { path: HR_RETIRED_ENTRY, sha256: hash(join(result.stageRoot, HR_RETIRED_ENTRY)) },
+    routes: [{ id: 'gui/505/ai.agent-core.runtime', target: HR_APP + HR_GATED_ENTRY },
+      { id: 'system/ai.agent-core.runtime', target: HR_APP + HR_GATED_ENTRY }] }
+  return { ...result, routes, entryManifest, sourceClosureProven: false }
 }
