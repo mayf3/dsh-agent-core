@@ -107,7 +107,7 @@ def run_fixed(request, canonical_lock_fd):
         HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
         intent = True
         window, opened_at = io.open_fixed_window()
-        stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window)
+        stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened_at)
         inhibited_at = io.inhibit_fixed_sources()
         quiesced_at = io.quiesce_fixed_tree()
         boundary()

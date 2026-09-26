@@ -29,7 +29,7 @@ class OwnedStopTest(unittest.TestCase):
                 fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 owner = None
                 try:
-                    owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window)
+                    owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window, 98)
                     yield ds, owner, lock, window, path
                 finally:
                     if owner is not None:
@@ -78,7 +78,7 @@ class OwnedStopTest(unittest.TestCase):
             borrowed = os.open(path.parent / 'other.lock', os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
             try:
                 with self.assertRaisesRegex(Exception, 'WINDOW_FD_MISMATCH|OWNED_CANONICAL_OFD_UNBOUND'):
-                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window)
+                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window, 98)
             finally:
                 os.close(borrowed)
 
@@ -87,7 +87,7 @@ class OwnedStopTest(unittest.TestCase):
             borrowed = os.open(path.parent.parent / 'mutation.lock', os.O_RDWR)
             try:
                 with self.assertRaisesRegex(Exception, 'OWNED_CANONICAL_OFD_UNBOUND'):
-                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window)
+                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window, 98)
             finally:
                 os.close(borrowed)
 
@@ -133,7 +133,7 @@ class OwnedStopTest(unittest.TestCase):
             ds.TEST_MODE = False
             with patch.object(ds.HR_JOURNAL, 'readback', side_effect=AssertionError('read')):
                 with self.assertRaisesRegex(Exception, 'PROFILE_NOT_BOOTSTRAPPED'):
-                    ds.HR_OWNED_STOP.capture_from_handler(lock, window)
+                    ds.HR_OWNED_STOP.capture_from_handler(lock, window, 98)
 
     def test_owned_real_stop_guard_and_partial_inventory_zero_command(self):
         with self.fixture() as (ds, owner, _, _, _):
@@ -163,7 +163,8 @@ class OwnedStopTest(unittest.TestCase):
             original = cell.cell_contents
             try:
                 cell.cell_contents = synthetic_command
-                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value=None), patch.object(
+                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': 'fixture-host'}), patch.object(
+                        ds.HR_REAL_OS, 'deployed_prerequisites', return_value={}), patch.object(
                         ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}):
                     before = time.monotonic()
                     stopper.stop()
