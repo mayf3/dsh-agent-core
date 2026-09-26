@@ -485,10 +485,10 @@ def phase_record(phase, at_wall_ms, previous):
 
 def claim_one_launch(at_wall_ms):
     """Durably consume the fixed launch before any child can be spawned."""
+    fresh = _fresh_claim.pop() if _fresh_claim else None
     receipt, digest = readback("launch-authorization")
     commitment, commitment_digest = readback("bundle-commitment")
-    require(_fresh_claim == [commitment_digest], "LAUNCH_CONTINUATION_UNKNOWN")
-    _fresh_claim.clear()
+    require(fresh == commitment_digest, "LAUNCH_CONTINUATION_UNKNOWN")
     _, previous = readback("phase-sealed")
     require(type(at_wall_ms) is int
             and commitment["sealedAtWallMs"] < at_wall_ms
