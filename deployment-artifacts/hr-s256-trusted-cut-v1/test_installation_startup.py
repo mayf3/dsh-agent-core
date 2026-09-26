@@ -33,6 +33,10 @@ class InstallationStartupTest(unittest.TestCase):
             if not from_serve:
                 io._intent, io._nonce = io._owner.intent_digest, 'n' * 32
             io._runtime_admission = {'syntheticOnly': True}
+            binary = 'a' * 64 if from_serve else 'b' * 64
+            if from_serve:
+                io._package = {'hostId': 'fixture-host', 'consumingBinarySha256': binary}
+                stack.enter_context(patch.object(ds.HR_REAL_OS, 'require_activation', return_value=io._package))
             owner, window = io._owner, io._window
             def protected(path):
                 self.assertTrue(str(path).startswith(str(ds.STATE_ROOT) + '/'))
@@ -55,9 +59,17 @@ class InstallationStartupTest(unittest.TestCase):
             old_app = route_cells['APP'].cell_contents
             route_cells['APP'].cell_contents = app
             stack.callback(setattr, route_cells['APP'], 'cell_contents', old_app)
+            actual_preflight = io.preflight
+            if from_serve:
+                stack.enter_context(patch.object(ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={
+                    'subjectPreimageSha256': 'a' * 64, 'unresolvedSources': [],
+                    'holderPaths': ['/fixture/workspace'], 'sources': {'fixture-source': 'b' * 64}}))
             def preflight(projection):
                 if from_serve:
                     for raw in payload['routes'].values(): ds.HR_INVENTORY.route(raw)
+                    result = actual_preflight(projection)  # Actual IO retains pre-stop old membership.
+                    self.assertEqual(result['oldPids'], {123})
+                    return result
                 return synthetic.preflight(projection)
             stack.enter_context(patch.object(io, 'preflight', side_effect=preflight))
             stack.enter_context(patch.object(io, 'wall_ms', side_effect=synthetic.wall_ms))
@@ -110,10 +122,14 @@ class InstallationStartupTest(unittest.TestCase):
                 'launchAuthorizationReceiptSha256': 'unused', 'consumingBinarySha256': 'b' * 64,
                 'challengeReceiptSha256': '4' * 64}))
             def startup(observed, receipt):
-                return {'launchAuthorizationReceiptSha256': receipt, 'consumingBinarySha256': 'b' * 64,
+                return {'launchAuthorizationReceiptSha256': receipt, 'consumingBinarySha256': binary,
                         'challengeReceiptSha256': '4' * 64}
             io.startup_observation.side_effect = startup
-            stack.enter_context(patch.object(io, 'exact_consumption_readback', side_effect=synthetic.exact_consumption_readback))
+            def readback(child):
+                value = synthetic.exact_consumption_readback(child)
+                value['validatorBinarySha256'] = binary
+                return value
+            stack.enter_context(patch.object(io, 'exact_consumption_readback', side_effect=readback))
             stack.enter_context(patch.object(io, 'verified_disposition', side_effect=synthetic.verified_disposition))
             stack.enter_context(patch.object(io, 'release_verified', side_effect=synthetic.release_verified))
             if loss is not None:
