@@ -300,10 +300,12 @@ def handoff_waiting(io):
     """No launch here: fresh readonly eligibility for existing one-use private startup."""
     require(_state['waiting'], 'MAINTENANCE_UNKNOWN_NO_REPLAY')
     try:
-        _continuity(io, time.monotonic() + 10)
+        deadline = time.monotonic() + 10
+        _continuity(io, deadline)
         payload = _payload()
         _waiting_receipt(payload)
         _verify(payload)
+        _continuity(io, deadline)  # Same original bound after every fallible readback.
         _state['waiting'] = False  # One handoff, no repeated eligibility.
     except BaseException:
         _state['waiting'] = False
