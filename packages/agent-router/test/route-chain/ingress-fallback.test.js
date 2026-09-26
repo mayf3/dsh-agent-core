@@ -135,7 +135,9 @@ class LocalProviderProcess {
 
   spawn() { return this }
   async ready() { return 0 }
-  async turn() {
+  async turn(_sessionId, _message, opts) {
+    this.seenTrustedCorrelation = this.ingressCorrelationLookup(opts)
+    this.seenClonedCorrelation = this.ingressCorrelationLookup({ ...opts })
     const routeRef = this.provider === 'zai' ? 'glm53' : 'luna'
     this.lifecycle.providerAttempt(routeRef)
     if (routeRef === 'glm53') throw this.glmFailure()
@@ -196,6 +198,7 @@ function ingress(caseId = 'safe') {
     conversationId: `oc_${caseId}`,
     messageId: `om_${caseId}`,
     sender: { openId: 'ou_local-fixture' },
+    raw: { sender: { sender_id: { open_id: 'ou_local-fixture' } } },
     text: `local ingress ${caseId}`,
   }
 }
@@ -270,6 +273,16 @@ isolatedTest('scenario 7: real onIngress path emits one Luna result and one exte
     ingressFinalizations: 1,
   })
   assert.equal(rig.processes.length, 2, 'one process generation per route; no retry')
+  for (const proc of rig.processes) {
+    assert.deepEqual(proc.seenTrustedCorrelation, {
+      channelNamespace: 'feishu',
+      channelConversationId: 'feishu:oc_safe',
+      feishuConversationId: 'oc_safe',
+      feishuMessageId: 'om_safe',
+      feishuSenderOpenId: 'ou_local-fixture',
+    }, 'ordered fallback keeps the exact trusted opts identity')
+    assert.equal(proc.seenClonedCorrelation, null, 'lookalike opts cannot claim trusted provenance')
+  }
   assert.equal(rig.feishu.replies.length, 1, 'no bypass or double delivery')
   assert.equal(rig.feishu.replies[0].text, 'luna-only-result')
   assert.equal(rig.router.bindingsSnapshot().length, 1, 'one ingress binding finalization path')
@@ -296,7 +309,14 @@ isolatedTest('scenario 7 negative carriers: unsafe, partial, incomplete, and out
       const attempts = journal.filter((entry) => entry.kind === 'route_attempt')
       const finals = journal.filter((entry) => entry.kind === 'route_chain_final')
 
-      assert.ok(result.error instanceof Error)
+      if (name === 'outcome-unknown') {
+        // The V3 recovery boundary intentionally returns a redacted outer
+        // projection, not an Error object or replay instruction.
+        assert.equal(result.failureStage, 'execution')
+        assert.equal(result.requestAdmission, 'accepted')
+      } else {
+        assert.ok(result.error instanceof Error)
+      }
       assert.equal(attempts.length, 1)
       assert.equal(attempts[0].route, 'glm53')
       assert.equal(finals.length, 1)
