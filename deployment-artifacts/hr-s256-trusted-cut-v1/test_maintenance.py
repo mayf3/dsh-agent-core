@@ -278,3 +278,42 @@ class MaintenanceTest(unittest.TestCase):
             with self.assertRaisesRegex(Exception, 'MAINTENANCE_RECEIPT_CHANGED'):
                 ds.HR_MAINTENANCE.handoff_waiting(io)
             self.assertTrue(io._unknown)
+
+    def post_readback_loss(self, loss):
+        from types import SimpleNamespace
+        with self.fixture() as (ds, io, _, _, _, _):
+            ds.HR_MAINTENANCE.promote_waiting(io)
+            owner = io._owner
+            descriptors = (owner.canonical, owner.window, owner.canonical_dup, owner.window_dup)
+            cells = dict(zip(ds.HR_MAINTENANCE.handoff_waiting.__code__.co_freevars,
+                ds.HR_MAINTENANCE.handoff_waiting.__closure__))
+            clock = [100.0]
+            original_time = cells['time'].cell_contents
+            original_verify = cells['_verify'].cell_contents
+            cells['time'].cell_contents = SimpleNamespace(monotonic=lambda: clock[0])
+            def verified_then_loss(payload):
+                original_verify(payload)
+                if loss == 'deadline': clock[0] = 111.0
+                else: io._stop._unknown = True
+            cells['_verify'].cell_contents = verified_then_loss
+            try:
+                reason = 'MAINTENANCE_DEADLINE' if loss == 'deadline' else 'STOP_UNKNOWN'
+                with self.assertRaisesRegex(Exception, reason):
+                    ds.HR_MAINTENANCE.handoff_waiting(io)
+                self.assertTrue(io._unknown)
+                self.assertFalse(ds.HR_MAINTENANCE._state['waiting'])
+                self.assertIs(io._owner, owner)
+                self.assertFalse(owner.closed)
+                self.assertEqual(descriptors, (owner.canonical, owner.window,
+                    owner.canonical_dup, owner.window_dup))
+                with self.assertRaisesRegex(Exception, 'MAINTENANCE_UNKNOWN_NO_REPLAY'):
+                    ds.HR_MAINTENANCE.handoff_waiting(io)
+            finally:
+                cells['_verify'].cell_contents = original_verify
+                cells['time'].cell_contents = original_time
+
+    def test_handoff_deadline_lost_after_verified_readback_sticky_unknown(self):
+        self.post_readback_loss('deadline')
+
+    def test_handoff_inhibition_lost_after_verified_readback_sticky_unknown(self):
+        self.post_readback_loss('inhibition')
