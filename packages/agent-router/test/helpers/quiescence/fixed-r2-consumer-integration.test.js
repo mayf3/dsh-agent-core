@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { lstatSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import test from 'node:test'
-import { fixedR2Fixture } from '../../helpers/fixed-r2-consumer-fixture.js'
+import { fixedR2Fixture } from '../fixed-r2-consumer-fixture.js'
 
 const canonical = value => {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`
