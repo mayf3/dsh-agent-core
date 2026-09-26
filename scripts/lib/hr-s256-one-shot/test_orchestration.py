@@ -43,7 +43,28 @@ class FixedAssembledActionTest(unittest.TestCase):
         if hasattr(ds.HR_ONE_SHOT, "_custody"):
             owned = ds.HR_ONE_SHOT._custody.pop("fixed-DS-owner", None)
             if owned is not None:
+                if owned.get("stopOwner") is not None:
+                    owned["stopOwner"].close()
                 os.close(owned["canonicalFd"])
+
+    def test_actual_handler_captures_and_retains_private_owned_stop_fds(self):
+        class FailedIO(SyntheticFixedIO):
+            def inhibit_fixed_sources(self):
+                raise self.ds.HR_PROFILE.Rejected('SOURCE_UNKNOWN')
+        with tempfile.TemporaryDirectory() as root:
+            os.chmod(root, 0o755)
+            ds = self.assembled(root)
+            io = FailedIO(root, ds)
+            try:
+                response = self.run_fixture(ds, io)
+                self.assertFalse(response['ok'])
+                owned = ds.HR_ONE_SHOT._custody['fixed-DS-owner']['stopOwner']
+                owned.check()
+                self.assertEqual(owned.window_identity, ds.HR_HANDOFF.window_identity(io.window))
+            finally:
+                self.cleanup_custody(ds)
+                if io.window is not None:
+                    os.close(io.window)
 
     def test_existing_controlled_stop_representation_joins_actual_handler(self):
         for variant in ('positive', 'extra', 'digest', 'host', 'order', 'missing', 'custody'):

@@ -75,10 +75,13 @@ def run_fixed(request, canonical_lock_fd):
     intent = False
     handoff = None
     last_ownership = None
+    stop_owner = None
 
     def boundary():
         nonlocal last_ownership
         HR_PROFILE.require(time.monotonic() < deadline, "OPERATION_DEADLINE")
+        if stop_owner is not None:
+            stop_owner.check()
         observed = io.observe_custody(canonical_lock_fd, window, child)
         HR_LIFECYCLE._ownership(observed, child is not None)
         lock_meta = os.fstat(canonical_lock_fd)
@@ -104,6 +107,7 @@ def run_fixed(request, canonical_lock_fd):
         HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
         intent = True
         window, opened_at = io.open_fixed_window()
+        stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window)
         inhibited_at = io.inhibit_fixed_sources()
         quiesced_at = io.quiesce_fixed_tree()
         boundary()
@@ -155,6 +159,7 @@ def run_fixed(request, canonical_lock_fd):
         HR_PROFILE.require(HR_LIFECYCLE.snapshot()["disposition"] == "CLOSED",
                            "CLOSURE_READBACK_UNKNOWN")
         io.release_verified(window, canonical_lock_fd)
+        stop_owner.close()
         return {"ok": True, "disposition": "CLOSED", "nonproduction": True}
     except Exception as exc:
         # No retries, later positive restoration, release, or fence reconstruction.
@@ -165,7 +170,7 @@ def run_fixed(request, canonical_lock_fd):
         if intent:
             # Transfer the actual owned FD before any fallible ACK/journal call.
             _custody["fixed-DS-owner"] = {"canonicalFd": canonical_lock_fd,
-                "windowFd": window, "child": child, "io": io,
+                "windowFd": window, "child": child, "io": io, "stopOwner": stop_owner,
                 "activeDeadlineMonotonic": deadline}
             try:
                 record_terminal_unknown(reason)
