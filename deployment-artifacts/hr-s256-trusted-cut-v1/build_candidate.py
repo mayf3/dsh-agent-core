@@ -86,6 +86,8 @@ def build_bytes():
                         "scripts/lib/hr-s256-one-shot/finite_stop.py")
         + scoped_source("HR_OWNED_STOP", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/owned_stop.py")
+        + scoped_source("HR_FIXED_IO", HERE.parents[1] /
+                        "scripts/lib/hr-s256-one-shot/fixed_io.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:

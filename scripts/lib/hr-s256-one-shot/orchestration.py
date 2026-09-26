@@ -1,9 +1,8 @@
-"""Fixed R2 NONPRODUCTION control flow; no installed host adapter exists here.
+"""Fixed R2 nonproduction control flow with a guarded partial fixed IO adapter.
 
-The zero-argument internal IO seam is replaced only by disposable tests. It is
-not a DS request capability and cannot bootstrap real source/window authority.
-Real DS production entry remains PROFILE_NOT_BOOTSTRAPPED. Missing installed
-finite source/holder/rollback observations are implementation gaps, not PASS.
+Real DS production entry remains PROFILE_NOT_BOOTSTRAPPED. Installed finite
+source/old-tree/custody/child observations remain explicit missing connections;
+no disposable test observation can bootstrap production authority.
 """
 
 import hashlib
@@ -61,7 +60,7 @@ def record_terminal_unknown(reason):
 
 
 def fixed_io():
-    raise HR_PROFILE.Rejected("PROFILE_NOT_BOOTSTRAPPED")
+    return HR_FIXED_IO.FixedIO()
 
 
 def run_fixed(request, canonical_lock_fd):
@@ -108,6 +107,8 @@ def run_fixed(request, canonical_lock_fd):
         intent = True
         window, opened_at = io.open_fixed_window()
         stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened_at)
+        if type(io) is HR_FIXED_IO.FixedIO:
+            io.attach_owned_stop(stop_owner)
         inhibited_at = io.inhibit_fixed_sources()
         quiesced_at = io.quiesce_fixed_tree()
         boundary()
