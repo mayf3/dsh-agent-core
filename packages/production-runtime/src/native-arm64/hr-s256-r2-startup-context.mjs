@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { fstatSync, readSync, writeSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { Socket } from 'node:net'
 
 const OP = 'hr-s256-trusted-quiescence-cut-20260925-v1'
 const EVIDENCE = `/private/var/db/agent-deploy-system/${OP}`
@@ -17,6 +18,7 @@ export const FIXED_RECEIPT_NAMES = Object.freeze([
 ])
 let installed
 let authenticatedEvidenceIO
+let admissionListenerInstalled = false
 function reject(reason) { throw Object.assign(new Error(reason), { code: reason }) }
 function fd(value) { const n = Number(value); if ((typeof value !== 'number' && !/^[0-9]+$/.test(value ?? '')) || !Number.isSafeInteger(n) || n < 3) reject('R2_DESCRIPTOR_INVALID'); return n }
 
@@ -116,7 +118,57 @@ export async function authenticateFixedStartupContext() {
   // No Router module loads until the real root/OFD/receipt proof succeeds.
   const { defaultEvidenceIO } = await import('../../../agent-router/src/reconciliation/quiescence-custody.js')
   authenticatedEvidenceIO = defaultEvidenceIO
-  installed = Object.freeze({ evidenceDir: EVIDENCE, deploymentDir: DEPLOYMENT,
+  installed = Object.freeze({ evidenceDir: EVIDENCE, deploymentDir: DEPLOYMENT, receipt: invocation.receipt,
     startup: Object.freeze({ ...startup, windowFd: invocation.windowFd, challengeFd: invocation.challengeFd }), io })
   return invocation.runtimeArgs
+}
+
+
+/** Separate ephemeral H5 frame; read the actual provided service on each request. */
+export function runtimeAdmissionProjection(query, service, binding) {
+  const keys = ['operationId', 'hostId', 'startupNonce', 'challenge',
+    'launchAuthorizationReceiptSha256', 'reconciliationHandle']
+  if (!query || typeof query !== 'object' || Object.keys(query).length !== keys.length
+      || keys.some(key => !Object.hasOwn(query, key)) || query.operationId !== OP
+      || query.hostId !== binding.hostId || query.startupNonce !== binding.startupNonce
+      || query.launchAuthorizationReceiptSha256 !== binding.receipt
+      || query.reconciliationHandle !== 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256'
+      || !/^[a-f0-9]{32}$/.test(query.challenge ?? '')) reject('R2_ADMISSION_BINDING')
+  const runtime = service.reconciliationRuntimeStatus()
+  const fields = ['generationId', 'health', 'businessAdmission', 'blockedReason', 'unresolvedRecoveries']
+  if (!runtime || typeof runtime !== 'object' || Object.keys(runtime).length !== fields.length
+      || fields.some(key => !Object.hasOwn(runtime, key))
+      || typeof runtime.generationId !== 'string' || runtime.generationId.length < 1 || runtime.generationId.length > 128
+      || !['healthy', 'blocked'].includes(runtime.health)
+      || !['open', 'fail_closed'].includes(runtime.businessAdmission)
+      || (runtime.blockedReason !== null && (typeof runtime.blockedReason !== 'string' || runtime.blockedReason.length > 128))
+      || !Number.isSafeInteger(runtime.unresolvedRecoveries) || runtime.unresolvedRecoveries < 0) reject('R2_ADMISSION_SHAPE')
+  return { ...query, runtime: { ...runtime } }
+}
+
+/** Existing authenticated socket only, after the actual Router service provision. */
+export function publishFixedRuntimeAdmission(service) {
+  if (installed === undefined) return
+  if (admissionListenerInstalled) reject('R2_ADMISSION_NO_REPLAY')
+  admissionListenerInstalled = true
+  const channel = new Socket({ fd: installed.startup.challengeFd, readable: true, writable: true })
+  let bytes = Buffer.alloc(0), used = false
+  const timer = setTimeout(() => channel.destroy(), 120000)
+  timer.unref()
+  channel.on('close', () => clearTimeout(timer))
+  channel.on('error', () => channel.destroy())
+  channel.on('data', part => {
+    try {
+      if (used || bytes.length + part.length > 4096) reject('R2_ADMISSION_NO_REPLAY')
+      bytes = Buffer.concat([bytes, part])
+      if (!bytes.includes(10)) return
+      if (bytes.at(-1) !== 10 || bytes.subarray(0, -1).includes(10)) reject('R2_ADMISSION_SHAPE')
+      used = true
+      const query = JSON.parse(bytes)
+      const frame = runtimeAdmissionProjection(query, service,
+        { ...installed.startup, receipt: installed.receipt })
+      channel.write(JSON.stringify(frame) + '\n')
+    } catch { channel.destroy() } // Root observes UNKNOWN, never a positive stub.
+  })
+  channel.unref()
 }

@@ -365,3 +365,27 @@ def observe_owned_runtime_residents(child):
     require(all(uid != 505 or pid in tree for pid, (_, uid) in rows.items()),
             'UNOWNED_RUNTIME_UID_RESIDENT')
     require(child.poll() is None, 'OWNED_STARTUP_LOST')
+
+
+def validated_runtime_generation(expected_store_sha256):
+    """Header only from the SAME validated immutable readback, not a fresh store."""
+    require_activation()
+    require(type(expected_store_sha256) is str and len(expected_store_sha256) == 64,
+            'RUNTIME_GENERATION_UNKNOWN')
+    fd, before = HR_PROJECTION.opened_fixed_store()
+    try:
+        require(0 < before.st_size <= 16 * 1024 * 1024, 'RUNTIME_GENERATION_UNKNOWN')
+        raw = os.pread(fd, before.st_size, 0)
+        require(len(raw) == before.st_size and digest(raw) == expected_store_sha256
+            and HR_PROJECTION.identity(os.fstat(fd)) == HR_PROJECTION.identity(before),
+            'RUNTIME_GENERATION_CHANGED')
+        header = json.loads(raw, object_pairs_hook=unique_object)
+        generation = header.get('runtimeEpoch') if type(header) is dict else None
+        require(type(generation) is str and 0 < len(generation) <= 128
+            and generation != HR_JOURNAL.readback('bundle-commitment')[0]['subject']['runtimeEpoch'],
+            'RUNTIME_GENERATION_UNKNOWN')
+        return generation
+    except (OSError, ValueError) as exc:
+        raise Rejected('RUNTIME_GENERATION_UNKNOWN') from exc
+    finally:
+        os.close(fd)

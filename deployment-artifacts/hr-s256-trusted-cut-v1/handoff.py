@@ -194,3 +194,89 @@ def child_prove(challenge_fd, window_fd, expected_receipt_sha256):
                 expected_receipt_sha256, identity), "CHALLENGE_APPROVAL_INVALID")
     except (OSError, ValueError, TimeoutError) as exc:
         raise Rejected("CHALLENGE_UNAVAILABLE") from exc
+
+
+def runtime_admission_view(frame, host, nonce, receipt, challenge):
+    """Separate transient H5 view; never a bundle, record or proof-frame field."""
+    require(type(frame) is dict and set(frame) == {'operationId', 'hostId', 'startupNonce',
+        'challenge', 'launchAuthorizationReceiptSha256', 'reconciliationHandle', 'runtime'}
+        and frame['operationId'] == 'hr-s256-trusted-quiescence-cut-20260925-v1'
+        and frame['hostId'] == host and frame['startupNonce'] == nonce
+        and frame['launchAuthorizationReceiptSha256'] == receipt
+        and frame['reconciliationHandle'] == 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256'
+        and type(challenge) is str and len(challenge) == 32 and frame['challenge'] == challenge, 'RUNTIME_ADMISSION_BINDING')
+    runtime = frame['runtime']
+    require(type(runtime) is dict and set(runtime) == {'generationId', 'health',
+        'businessAdmission', 'blockedReason', 'unresolvedRecoveries'}
+        and type(runtime['generationId']) is str and 0 < len(runtime['generationId']) <= 128
+        and runtime['health'] == 'healthy' and runtime['businessAdmission'] == 'open'
+        and runtime['blockedReason'] is None and type(runtime['unresolvedRecoveries']) is int
+        and runtime['unresolvedRecoveries'] >= 0, 'RUNTIME_ADMISSION_UNKNOWN')
+    return dict(runtime)
+
+
+def serve_fixed_window(io, handoff):
+    """Only the actual fixed IO's authenticated one-child socket/custody."""
+    HR_PROFILE.require(type(io) is HR_FIXED_IO.FixedIO, 'PRIVATE_RUNTIME_OWNER_REQUIRED')
+    deadline = io._startup_deadline
+    try:
+        while not io._challenge_stop.is_set():
+            HR_PROFILE.require(time.monotonic() < deadline, 'STARTUP_DEADLINE')
+            handoff.root.settimeout(min(0.25, max(0, deadline - time.monotonic())))
+            raw = bytearray()
+            try:
+                first = handoff.root.recv(1)
+            except TimeoutError:
+                continue
+            HR_PROFILE.require(bool(first), 'LIVE_CHALLENGE_CLOSED')
+            raw.extend(first)
+            request_deadline = time.monotonic() + 0.75
+            while not raw.endswith(b'\n'):
+                remaining = request_deadline - time.monotonic()
+                HR_PROFILE.require(remaining > 0 and len(raw) < 4096, 'LIVE_CHALLENGE_BOUND')
+                handoff.root.settimeout(remaining)
+                part = handoff.root.recv(1)
+                HR_PROFILE.require(bool(part), 'LIVE_CHALLENGE_CLOSED')
+                raw.extend(part)
+            query = json.loads(raw, object_pairs_hook=HR_REAL_OS.unique_object)
+            if type(query) is dict and 'runtime' in query:
+                runtime = runtime_admission_view(query, io._package['hostId'], io._nonce,
+                    HR_JOURNAL.readback('launch-authorization')[1], io._admission_challenge)
+            else:
+                runtime = None
+                HR_PROFILE.require(type(query) is dict and set(query) == {
+                    'operationId', 'hostId', 'startupNonce', 'challenge'}
+                    and query['operationId'] == HR_PROFILE.OPERATION_ID
+                    and query['hostId'] == io._package['hostId']
+                    and query['startupNonce'] == io._nonce
+                    and type(query['challenge']) is str and (len(query['challenge']) == 32
+                        or query['challenge'] == 'startup-consumption-finished'),
+                    'LIVE_CHALLENGE_BINDING')
+            io._active()
+            io._owner.check()
+            root, directory = HR_JOURNAL.opened_custody(False)
+            try:
+                io._single_bundle(directory)
+            finally:
+                HR_JOURNAL.close_custody(root, directory)
+            HR_PROFILE.require(HR_INVENTORY.fixed_source_identities() == io._inventory['sources']
+                and io._child.poll() is None, 'LIVE_SOURCE_UNKNOWN')
+            if runtime is not None:
+                HR_PROFILE.require(io._startup_done.is_set() and io._runtime_admission is None
+                    and time.monotonic() < deadline, 'RUNTIME_ADMISSION_NO_REPLAY')
+                io._runtime_admission = runtime
+                io._runtime_admission_done.set()
+                continue
+            if query['challenge'] == 'startup-consumption-finished':
+                HR_PROFILE.require(not io._startup_done.is_set(), 'STARTUP_NOTICE_NO_REPLAY')
+                io._startup_done.set()  # Notice is not settlement proof.
+                continue
+            remaining = request_deadline - time.monotonic()
+            HR_PROFILE.require(remaining > 0, 'LIVE_CHALLENGE_BOUND')
+            handoff.root.settimeout(remaining)
+            handoff.root.sendall(json.dumps({**query, 'exclusiveWindowHeld': True,
+                'launchSourcesStillInhibited': True, 'windowClosed': False},
+                separators=(',', ':')).encode() + b'\n')
+    except BaseException:
+        if not io._challenge_stop.is_set():
+            io._unknown = True
