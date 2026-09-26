@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 HELPERS = ROOT / "deployment-artifacts/hr-s256-trusted-cut-v1"
 
 

@@ -60,7 +60,7 @@ def build_bytes():
         + scoped_source("HR_ARCHIVE", HERE / "archive.py")
         + scoped_source("HR_LIFECYCLE", HERE / "lifecycle.py")
         + scoped_source("HR_ONE_SHOT", HERE.parents[1] /
-                        "scripts/hr-s256-one-shot/orchestration.py")
+                        "scripts/lib/hr-s256-one-shot/orchestration.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:

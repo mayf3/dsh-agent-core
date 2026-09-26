@@ -13,7 +13,7 @@ from unittest.mock import patch
 from fixture_io import SyntheticFixedIO
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 BUILDER = ROOT / "deployment-artifacts/hr-s256-trusted-cut-v1/build_candidate.py"
 
 
