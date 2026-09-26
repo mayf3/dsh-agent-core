@@ -65,3 +65,55 @@ export function stageApplication({ liveRoot, candidateRoot, candidateSHA, stageR
   return { sourceHead, sourceStatus, candidateSHA, stageRoot: stage, files,
     productionApply: 'HOLD', mergedAncestryVerified: false }
 }
+
+export const HR_GATED_ENTRY = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
+const HR_CHILD_PROOF = 'packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py'
+const HR_RETIRED_ENTRY = 'scripts/production-runtime.mjs'
+const HR_APP = '/usr/local/libexec/agent-core/app/'
+export const HR_RETIRED_BYTES = '#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n'
+
+/** Fixed one-shot candidate only. Never reads/writes an installed plist. */
+export function stageHrOneShotApplication({ guiPlist, systemPlist, ...options }) {
+  const oldTarget = HR_APP + HR_RETIRED_ENTRY
+  const newTarget = HR_APP + HR_GATED_ENTRY
+  const routes = {}
+  for (const [name, raw] of [['gui', guiPlist], ['system', systemPlist]]) {
+    if (typeof raw !== 'string' || Buffer.byteLength(raw) > 65536 ||
+        (raw.match(/<key>ProgramArguments<\/key>/g) ?? []).length !== 1 ||
+        (raw.match(/<key>Label<\/key>\s*<string>ai\.agent-core\.runtime<\/string>/g) ?? []).length !== 1) {
+      throw new Error('HR_ROUTE_TARGET_UNKNOWN')
+    }
+    const args = raw.match(/<key>ProgramArguments<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1]
+    const strings = [...(args ?? '').matchAll(/<string>([^<]*)<\/string>/g)].map(m => m[1])
+    if (strings.length < 2 || strings[1] !== oldTarget ||
+        raw.split(oldTarget).length !== 2 || raw.includes(newTarget) ||
+        args.replace(/<string>[^<]*<\/string>/g, '').trim()) {
+      throw new Error('HR_ROUTE_TARGET_UNKNOWN')
+    }
+    // Byte-identical remainder: UID, root, environment and supervision survive.
+    routes[name] = raw.replace(oldTarget, newTarget)
+  }
+  const frozen = [HR_GATED_ENTRY, HR_CHILD_PROOF].map(path => ({ path,
+    bytes: execFileSync('/usr/bin/git', ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path]) }))
+  const result = stageApplication(options)
+  const replacements = [...frozen, { path: HR_RETIRED_ENTRY, bytes: Buffer.from(HR_RETIRED_BYTES) }]
+  for (const { path, bytes } of replacements) {
+    const prior = result.files.find(file => file.path === path)
+    const record = { path, preimageHash: prior?.preimageHash ?? null,
+      postimageExpectedHash: createHash('sha256').update(bytes).digest('hex'),
+      source: 'HR_ONE_SHOT_ENTRY_DELTA', candidateSourceSHA: options.candidateSHA,
+      whyRequired: path === HR_RETIRED_ENTRY ? 'Retire ungated entry before Router import' : 'Fixed root-custody gated entry' }
+    if (prior) result.files.splice(result.files.indexOf(prior), 1)
+    result.files.push(record)
+    mkdirSync(dirname(join(result.stageRoot, path)), { recursive: true })
+    writeFileSync(join(result.stageRoot, path), bytes)
+  }
+  const entryManifest = { version: 1,
+    operationId: 'hr-s256-trusted-quiescence-cut-20260925-v1',
+    entries: [{ path: HR_GATED_ENTRY, sha256: hash(join(result.stageRoot, HR_GATED_ENTRY)),
+      helperSha256: hash(join(result.stageRoot, HR_CHILD_PROOF)) }],
+    retiredEntry: { path: HR_RETIRED_ENTRY, sha256: hash(join(result.stageRoot, HR_RETIRED_ENTRY)) },
+    routes: [{ id: 'gui/505/ai.agent-core.runtime', target: HR_APP + HR_GATED_ENTRY },
+      { id: 'system/ai.agent-core.runtime', target: HR_APP + HR_GATED_ENTRY }] }
+  return { ...result, routes, entryManifest, sourceClosureProven: false }
+}

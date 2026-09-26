@@ -101,7 +101,8 @@ def run_fixed(request, canonical_lock_fd):
             "oldTreeQuiescedAtWallMs": quiesced_at,
             "hostCensus": archive["hostCensus"], "holderCheck": archive["holderCheck"],
             "authorizedStartupAtWallMs": io.wall_ms(),
-            "sourceClosureComplete": True, "windowHeld": True})
+            "sourceClosureComplete": HR_PROFILE.validate_entry_closure(
+                *io.observed_entry_closure()), "windowHeld": True})
         boundary()
         authorization_digest = HR_JOURNAL.seal_launch_authorization(authorization)
         final_bytes = io.final_bundle_bytes(authorization, authorization_digest, archive,

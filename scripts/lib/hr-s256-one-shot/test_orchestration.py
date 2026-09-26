@@ -45,6 +45,24 @@ class FixedAssembledActionTest(unittest.TestCase):
             if owned is not None:
                 os.close(owned["canonicalFd"])
 
+    def test_missing_manifest_route_never_authorizes_or_launches_after_inhibition(self):
+        with tempfile.TemporaryDirectory() as root:
+            os.chmod(root, 0o755)
+            ds = self.assembled(root)
+            io = SyntheticFixedIO(root, ds)
+            original = io.observed_entry_closure
+            io.observed_entry_closure = lambda: (original()[0], original()[1][:-1])
+            try:
+                response = self.run_fixture(ds, io)
+                self.assertFalse(response["ok"])
+                self.assertIn("LAUNCH_WINDOW_OR_SOURCE_UNKNOWN", str(response))
+                self.assertIsNone(io.child)
+                self.assertFalse((Path(root) / ds.HR_PROFILE.OPERATION_ID / "launch-authorization.json").exists())
+            finally:
+                self.cleanup_custody(ds)
+                if io.window is not None:
+                    os.close(io.window)
+
     def test_actual_handler_retains_exact_lock_after_effect_unknown_and_blocks_next_request(self):
         with tempfile.TemporaryDirectory() as root:
             os.chmod(root, 0o755)
