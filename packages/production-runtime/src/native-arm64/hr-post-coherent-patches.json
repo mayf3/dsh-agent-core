@@ -1,0 +1,89 @@
+{
+  "baseSourceSha256": "542e09281bff2c199fb39017aa95b0d778e6dfafa36aeca665f321637af49fd5",
+  "baseInputs": {
+    "packages/agent-router/src/index.js": "6309233c41aecd936edbeca27fa15f0e9e0fdfaa5b3dc371df583b67e5272676",
+    "packages/agent-router/src/reconciliation/startup-recovery.js": "47e908a99e60cce062a189adba6321cc417df53882216f836987f1787af079c4",
+    "packages/agent-router/src/reconciliation/durable-file.js": "3e5ee92b2298a6d3ad3e93cbaa656bd31130e6a822f970c4cbbfc425d25881b1",
+    "packages/agent-router/src/reconciliation/state-machine.js": "df528a170cda792afdbe639211ced7f247ba72fad55a93c0c4cbfccbe6a28cbe",
+    "packages/scheduler-router/src/index.js": "3b46a4bce2253a51e10f02eec5e143a05b09386e54edc2ccfc7fe3191156dabb",
+    "packages/scheduler/src/occurrence-model.js": "441dd56ff776605e3ee615d94124211902feefe6e9eb2e1efd31763739c52302",
+    "packages/scheduler/src/self-ops/invoker-outcome.js": "0bb2c212d96142dccf55755afb464e1045b92d8171cacd36fee588c88c30f647",
+    "packages/scheduler/src/self-ops/diagnosis.js": "4038e4f88086f49bae3e367b1df669e9f874286231b50606397ba5b6c90540df"
+  },
+  "proofLeaves": {
+    "packages/agent-router/src/reconciliation/quiescence-bundle.js": "55d8e19592df7f75179b95614717a513d757f9448eaf52a1d89f9504c46156ec",
+    "packages/agent-router/src/reconciliation/quiescence-custody.js": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8",
+    "packages/agent-router/src/reconciliation/quiescence-fixed-r2.js": "779c00ac87b7d195af390a13a2d4c42a16abd8b59115a428972d82cec594ae22",
+    "packages/agent-router/src/reconciliation/quiescence-replay-preimage.js": "2fa94d14fe19660e2fa29cabaa1b8a9db9720fac1aae777ddc5414793b2db625"
+  },
+  "acceptedStartupSha256": "d48d11e4e3e3515a48d1a86a45f287d344af5ab15833362826777ed252be96ec",
+  "patches": {
+    "packages/agent-router/src/reconciliation/durable-file.js": [
+      {
+        "offset": 1400,
+        "before": "  'child_real_exit', 'cancellation_ack',\n",
+        "after": "  'child_real_exit', 'cancellation_ack', 'restart_quiescence_proven',\n"
+      }
+    ],
+    "packages/agent-router/src/reconciliation/state-machine.js": [
+      {
+        "offset": 1075,
+        "before": "",
+        "after": "  'restart_quiescence_proven',\n"
+      },
+      {
+        "offset": 10180,
+        "before": "",
+        "after": "    if (terminationEvidence === 'restart_quiescence_proven') {\n      throw new TypeError('settleDirect: restart quiescence evidence is startup-only')\n    }\n"
+      },
+      {
+        "offset": 12006,
+        "before": "    finalAssistantOutput = undefined, exitObserved = false,\n",
+        "after": "    finalAssistantOutput = undefined, exitObserved = false, restartQuiescence = false,\n"
+      },
+      {
+        "offset": 12428,
+        "before": "",
+        "after": "    }\n    if (terminationEvidence === 'restart_quiescence_proven' && !restartQuiescence) {\n      throw new TypeError('settleLate: restart quiescence evidence requires startup verification')\n    }\n    if (restartQuiescence && (lateOutcome !== 'terminated_without_outcome'\n        || terminationEvidence !== 'restart_quiescence_proven' || exitObserved\n        || finalAssistantOutput !== undefined)) {\n      throw new TypeError('settleLate: invalid restart quiescence settlement')\n"
+      },
+      {
+        "offset": 13321,
+        "before": "",
+        "after": "    }\n    if (restartQuiescence && (record.recoveryState !== 'blocked'\n        || record.failureReason !== 'runtime_restart_ownership_unavailable'\n        || record.terminationEvidence !== null || record.exitObservedAt !== null\n        || record.fenceState !== 'active' || record.runtimeEpoch === this.runtimeEpoch)) {\n      throw new Error('settleLate: restart quiescence preimage changed')\n"
+      },
+      {
+        "offset": 15092,
+        "before": "",
+        "after": "      if (restartQuiescence) {\n        // One mutateRecord preimage and one durable write cover settlement,\n        // registry no-live-slot proof and fence release. A persist failure\n        // restores the exact old record before any listener is notified.\n        candidate.attemptedActions = [...candidate.attemptedActions, {\n          action: 'registry_cleanup', result: 'succeeded', observedAtWallMs: Date.now(),\n          reasonCode: 'restart_quiescence_no_live_slot_old_epoch',\n        }, {\n          action: 'fence_cleanup', result: 'succeeded', observedAtWallMs: Date.now(),\n          reasonCode: 'exact_fence_cleared',\n        }].slice(-32)\n        candidate.failureReason = null\n        candidate.fenceState = 'cleared'\n      }\n"
+      }
+    ],
+    "packages/scheduler-router/src/index.js": [
+      {
+        "offset": 2734,
+        "before": "",
+        "after": "  'restart_quiescence_proven',\n"
+      }
+    ],
+    "packages/scheduler/src/occurrence-model.js": [
+      {
+        "offset": 1759,
+        "before": "",
+        "after": "  'restart_quiescence_proven',\n"
+      }
+    ],
+    "packages/scheduler/src/self-ops/invoker-outcome.js": [
+      {
+        "offset": 1359,
+        "before": "",
+        "after": "  'restart_quiescence_proven',\n"
+      }
+    ],
+    "packages/scheduler/src/self-ops/diagnosis.js": [
+      {
+        "offset": 1254,
+        "before": "",
+        "after": "  'restart_quiescence_proven',\n"
+      }
+    ]
+  }
+}

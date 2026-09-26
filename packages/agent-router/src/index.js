@@ -67,7 +67,7 @@
  */
 
 import z from '@deepseek-ai/schemastery'
-import { homedir } from 'node:os'
+import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
@@ -80,6 +80,7 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
+import { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -121,6 +122,10 @@ export const Config = z.object({
   /** Optional absolute V3 durable turn-recovery authority file. Production
    *  composition always supplies it; isolated legacy mounts remain in-memory. */
   reconciliationStoreFile: z.string(),
+  /** Root-custody recovery input remains inert unless separately bootstrapped
+   *  launcher descriptors and matching deployment proof are present. */
+  restartQuiescenceEvidenceDir: z.string(),
+  restartQuiescenceDeploymentProofDir: z.string(),
   // Runtime-only option (not in the schema — Config is documentation here):
   // `processFactory(opts) => proc` — per-agent process factory (test/ops
   // seam, defaults to AgentProcess). The proc must expose `spawn()`,
@@ -231,6 +236,27 @@ export function apply(ctx, config) {
       ? cfg.reconciliationStoreFile
       : null,
   })
+  const fixedStartup = getFixedStartupContext()
+  if (fixedStartup !== undefined) {
+    reconciliationStore.consumeStartupQuiescence(fixedStartup)
+    signalFixedStartupConsumptionFinished()
+  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+    // RQ-005/007 privileged launcher authority has not been bootstrapped.
+    // Environment values cannot establish its nonce, binary, or live FDs;
+    // this production composition is deliberately incapable of settlement.
+    reconciliationStore.consumeStartupQuiescence({
+      evidenceDir: cfg.restartQuiescenceEvidenceDir,
+      deploymentDir: cfg.restartQuiescenceDeploymentProofDir,
+      startup: {
+        hostId: hostname(),
+        startupNonce: undefined,
+        consumingBinarySha256: undefined,
+        windowFd: undefined,
+        challengeFd: undefined,
+        recoveryPlanStopsRuntime: undefined,
+      },
+    })
+  }
 
   const bindingResolution = createBindingResolution({ agentDefinition, workspaceBootstrap, store, cfg, log })
   const registry = createProcessRegistry({
@@ -369,6 +395,7 @@ export function apply(ctx, config) {
       }
     },
     getRecoveryDiagnostic: (handle) => reconciliationStore.recoveryDiagnostic(handle),
+    getStartupQuiescenceAudit: () => structuredClone(reconciliationStore.startupQuiescenceAudit ?? []),
     onTurnReconciled: (listener) => reconciliationStore.onTurnReconciled(listener),
     turnExecutionSnapshot: (turnExecutionId) => {
       const owner = registry.findOwningProcess(turnExecutionId)
@@ -388,6 +415,7 @@ export function apply(ctx, config) {
   // ChannelConversations, switch Agents and dispatch per the D-002 contract.
   // VALUE semantics: Cordis stores the value as-is.
   ctx.provide('agentRouter', service)
+  publishFixedRuntimeAdmission(service)
   return service
 }
 
