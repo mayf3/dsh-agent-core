@@ -59,6 +59,8 @@ def build_bytes():
         + scoped_source("HR_HANDOFF", HERE / "handoff.py")
         + scoped_source("HR_ARCHIVE", HERE / "archive.py")
         + scoped_source("HR_LIFECYCLE", HERE / "lifecycle.py")
+        + scoped_source("HR_ONE_SHOT", HERE.parents[1] /
+                        "scripts/hr-s256-one-shot/orchestration.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:
@@ -68,12 +70,15 @@ def build_bytes():
     lock_fd = mutation_lock()
     try:
         try:
+            if TEST_MODE:
+                return HR_ONE_SHOT.run_fixed(request, lock_fd)
             return HR_PROFILE.production_entry(request)
         except HR_PROFILE.Rejected as exc:
             raise Failure(str(exc)) from exc
     finally:
-        fcntl.flock(lock_fd, fcntl.LOCK_UN)
-        os.close(lock_fd)
+        if not HR_ONE_SHOT.canonical_fd_owned(lock_fd):
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            os.close(lock_fd)
 
 
 ''')
