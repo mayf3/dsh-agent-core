@@ -1,10 +1,19 @@
 ---
 spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
+accepted_by: mayf3
+accepted_date: 2026-09-26
+accepted_reviewed_head: 94eb53c48856d850a77a0d64ada6566f9fcd13d4
+accepted_reviewed_spec_sha256: 62a105cc1cc34160253b938d55637898cb1ff93d75096331d450b2fa042ee259
+independent_review_result: PASS_READY_FOR_OWNER_ACCEPTANCE
+independent_review_record: docs/reports/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_V2_INDEPENDENT_REVIEW.md
+independent_review_sha256: 57fcab985dfbc2fc553fc772db02234ca0bd61127adbdf7d9aed6f9e122c2009
+owner_acceptance_record: docs/reports/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_V2_OWNER_ACCEPTANCE.json
+owner_acceptance_sha256: 17a71f3336b27f8c2073865eaba1e75a2863ad7e4905ea99081c2110a00a20b6
 revision: v2-proposal-1
 revision_date: 2026-09-25
 source_authority: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1 r4
