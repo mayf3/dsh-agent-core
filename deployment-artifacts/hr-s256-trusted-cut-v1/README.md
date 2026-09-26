@@ -88,8 +88,9 @@ Still required for the R2 profile; **none is supplied by this candidate**:
    wiring, post-settlement readback and bounded UNKNOWN containment. The
    local successor gate is not installed, bound to the fixed DS action, or
    proof of an authorized launch.
-6. Separate r4 V9 replay-preimage provenance successor remains unaccepted and
-   is outside this change. Full r4 conformance cannot be claimed.
+6. The accepted V2 replay-preimage consumer has a separate reviewed
+   nonproduction source candidate (`f2d7ed9d`); it is not integrated into
+   this R2 producer head. Full recovery conformance cannot be claimed.
 
 The immediate exact source-closure counterexample is a same-UID direct
 `node scripts/production-runtime.mjs` launch between the post-stop census and
