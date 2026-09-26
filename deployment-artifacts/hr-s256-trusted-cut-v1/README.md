@@ -8,7 +8,8 @@ FIXED_OPERATION_ID = hr-s256-trusted-quiescence-cut-20260925-v1
 FIXED_SUBJECT = turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256
 ```
 
-Authority is the accepted r4 Spec and mayf3's R2 acceptance record (SHA-256
+Authority includes the accepted HR V2 successor, the fixed R2 replay commitment
+addendum (`4ae224d4`), and mayf3's R2 acceptance record (SHA-256
 `f3e0f4bdb813e4ee77b0213995f9e63aaba3d971d8dfce5dccbbc6da5b7a7960`).
 This directory is isolated candidate source and synthetic tests. It is **not**
 an installed DS artifact, a registered action, or a producer of valid live
@@ -60,14 +61,28 @@ Implemented and checked offline:
   for the same inode. Missing/wrong FDs, wrong receipt and reuse fail closed.
   This proves only possession of the expected open-file description in the
   fixture; DS lock ownership and host exclusion remain unproven. It does not
-  launch the Runtime.
+  launch the Runtime;
+- the create-only final bundle commitment and fixed early-phase markers now
+  precede the one-use same-process launch claim; interruption, failed readback
+  and reload never restore a launch capability;
+- the remaining fixed phase receipt projections (`STARTUP_OBSERVED`,
+  `CONSUMPTION_READBACK`, `ABANDONED`, `CLOSED`) use the existing custody and
+  commitment identity, an exact predecessor digest, bounded internal owned-child/
+  descriptor/lock/source projections, exclusive create and fsync/readback.
+  Closure/abandonment writes a permanent exact-key tombstone before its terminal
+  receipt; a torn/lost-ACK terminal remains UNKNOWN and cannot be rewritten.
+  A bounded named UNKNOWN projection retains inhibition and grants no release,
+  replay or launch permission. These shape/order helpers receive no DS request
+  data and do not authenticate observations. A projected PID is metadata, not a
+  reconstructed processRef or proof of child ownership. The real producer and
+  store readback integration are still absent.
 
 Still required for the R2 profile; **none is supplied by this candidate**:
 
 1. Complete the fixed DS action after the current inert preflight gate, with
-   a reviewed full phase journal, durable containment/readback and continuous
-   mutation-lock ownership. The disconnected intent/launch-claim primitive is
-   not a completed operation journal. The
+   authenticated owned-child/store/window observations, continuous mutation-lock
+   ownership and actual bounded containment/release wiring. The fixed phase
+   projection grammar is not a trusted producer or completed live operation. The
    separate protected projection must be called only after exact source and
    receipt identities are verified. The Python fixture digest helper is not a
    production substitute for the JS projection.
