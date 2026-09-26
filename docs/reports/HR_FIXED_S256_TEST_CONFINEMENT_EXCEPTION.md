@@ -1,0 +1,7 @@
+# Interrupted private-owner candidate: OS dispatch exception
+
+Current private-owner source/tests are a preserved UNREVIEWED interrupted snapshot, not a green candidate. During test_owned_stop_shared_unload_budget_and_no_replay, a namespace command patch did not replace the scoped closure. Synthetic activation override reached actual `/bin/launchctl bootout gui/505/ai.agent-core.runtime`; STOP_UNKNOWN returned. Raw process return code and exact invocation walltime were not saved. Host effect is UNKNOWN; no nonzero-exit zero-effect inference. Parent was immediately notified and interrupted execution. No host probe/retry/compensation followed.
+
+The subsequent mandate permits only evidence preservation and test confinement. Every process dispatch in owned-stop fixtures now hits the shared subprocess.Popen hard-deny recorder, with no default fallback. Imported TestCase duplicate discovery removed. Only test_process_confinement.py fake-recorders2/2 executed afterward; no activation-patched adapter/controller suites. Preserve frozen05ca and prior source unmodified. Product/controller resume requires parent/same-reviewer inspection of confinement; this receipt gives no host, source-closure, ownership continuity, recovery or production PASS.
+
+Evidence: artifacts/DEPLOYMENT_BACKLOG/HR-R2-OWNED-STOP-EXCEPTION-AND-CONFINEMENT-20260926-v1/EXCEPTION.json and sealed interrupted inputs/logs/diffs.
