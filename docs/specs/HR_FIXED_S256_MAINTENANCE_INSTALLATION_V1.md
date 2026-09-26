@@ -1,6 +1,6 @@
 ---
 spec_id: HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -13,7 +13,14 @@ supersedes: []
 superseded_by: null
 scope:
   - fixed s256 same-DS maintenance-installation phase only
-owner_direction: accepted 2026-09-26; exact authored Spec review/activation pending
+owner_direction: accepted 2026-09-26; exact reviewed semantics accepted by delegated technical authority
+accepted_by: assistant /root under mayf3 ordinary technical delegation
+accepted_date: 2026-09-26
+accepted_reviewed_head: 55ca8588a239040ef75a536fd84ac724c2af97eb
+accepted_reviewed_spec_sha256: 77d4f02f06ddb1a7fecbee388df760fc46be7eb98945487e2180a3076e3799bc
+independent_review_sha256: b20b5046d3a2d17f6b0cfbb1c944df72b4ee1707cd42f188c3407a192a09e9b8
+delegated_activation_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-FIXED-MAINTENANCE-INSTALLATION-DELEGATED-ACTIVATION-20260926-v1/ACTIVATION.json
+delegated_activation_sha256: f1e4af8c74c668c5c700662ef019058f312781340f8271aeba01c9fb42596bf3
 owner_acceptance_sha256: 9c6dc608e50340046a61df4e6d4e3a59e17856349c82a94f1c7dced3a91e06bf
 owner_decision_candidate_sha256: 08334543fe980f6da7b95c5ef958e0eb068b02e2ff52d2c5d58e306e5c55467b
 ---
@@ -33,8 +40,9 @@ Owner mayf3 accepted A1–A4 of the immutable decision candidate on 2026-09-26.
 That authorizes this narrow amendment, nonproduction implementation/tests and
 the same independent reviewer's changed-surface review. It authorizes NO live
 read, install, bootstrap, restart, recovery, fence clear or compiled activation.
-This proposed text needs exact-head independent review and authority activation
-before implementation relies on it; accepted direction is not source review.
+Exact text at 55ca8588 independently passed; delegated technical acceptance is
+recorded above. Authority becomes active only when this docs-only lifecycle is
+in the applicable canonical base. Implementation review remains separate.
 
 The fixed subject remains
 `turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256`, agent `agt_hr-agent`.
