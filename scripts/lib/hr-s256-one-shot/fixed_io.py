@@ -424,20 +424,24 @@ class FixedIO:
 
     def exact_consumption_readback(self, child):
         self._active()
-        HR_PROFILE.require(child is self._child and self._consumption is None,
-                           'READBACK_NO_REPLAY')
-        deadline = self._startup_deadline
-        while not self._startup_done.wait(timeout=0.1):
+        try:
+            HR_PROFILE.require(child is self._child and self._consumption is None,
+                               'READBACK_NO_REPLAY')
+            deadline = self._startup_deadline
+            while not self._startup_done.wait(timeout=0.1):
+                self._active()
+                self._owner.check()
+                HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
+                                   'CONSUMPTION_STARTUP_UNAVAILABLE')
             self._active()
             self._owner.check()
             HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
                                'CONSUMPTION_STARTUP_UNAVAILABLE')
-        self._active()
-        self._owner.check()
-        try:
-            # No caller notice, challenge answer or child exit substitutes for
-            # the actual pinned validator/current durable store readback.
+            # Keep actual observed state even if completion crosses the bound;
+            # UNKNOWN never implies the fence is active or permits a retry.
             self._consumption = HR_REAL_OS.fixed_settlement_readback()
+            HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
+                               'CONSUMPTION_STARTUP_UNAVAILABLE')
             return dict(self._consumption)
         except BaseException:
             self._unknown = True
