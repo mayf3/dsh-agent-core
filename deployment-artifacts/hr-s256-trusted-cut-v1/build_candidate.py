@@ -102,6 +102,7 @@ def _compose(raw):
         + scoped_source("HR_FIXED_IO", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/fixed_io.py")
         + scoped_source("HR_BOOTSTRAP", HERE / "bootstrap.py")
+        + scoped_source("HR_MAINTENANCE", HERE / "maintenance.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:

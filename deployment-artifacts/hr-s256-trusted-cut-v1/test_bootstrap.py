@@ -189,11 +189,17 @@ class BootstrapTest(unittest.TestCase):
                     other = Path(root) / 'unrelated.txt'
                     other.write_bytes(b'preserve')
                     target.symlink_to(other)
+                    link_identity = target.lstat()
                 else:
                     target.write_bytes(b'preserve')
                 with self.assertRaisesRegex(Exception, 'INSTALLATION_DESTINATION_EXISTS'):
                     ds.HR_BOOTSTRAP.installation_bootstrap()
-                self.assertEqual(target.read_bytes(), b'preserve')
+                if symlink:
+                    self.assertEqual(other.read_bytes(), b'preserve')  # Known disposable referent, never follow target.
+                    self.assertEqual(target.lstat(), link_identity)
+                    self.assertEqual(os.readlink(target), str(other))
+                else:
+                    self.assertEqual(target.read_bytes(), b'preserve')
                 self.assertIsNone(ds.HR_BOOTSTRAP.activation_pins())
                 receipt = json.loads(Path(root, 'receipts', ds.HR_BOOTSTRAP.INSTALLATION_ID + '.json').read_text())
                 self.assertEqual(receipt['state'], 'UNKNOWN')
