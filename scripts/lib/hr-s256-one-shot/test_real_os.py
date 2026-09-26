@@ -94,7 +94,8 @@ class FixedRealAdapterTest(unittest.TestCase):
         with tempfile.TemporaryFile() as store:
             store.write(b"disposable-store"); store.flush()
             meta = os.fstat(store.fileno())
-            subject = {"reconciliationHandle": module.HANDLE, "runtimeEpoch": "old"}
+            subject = {"reconciliationHandle": module.HANDLE, "turnExecutionId": module.HANDLE,
+                "runtimeEpoch": "old", "agentId": "agt_hr-agent", "processGeneration": 1}
             projection = {"subject": subject, "settlement": {"reconciliationHandle": module.HANDLE,
                 "queryState": "settled", "fenceState": "cleared", "initialOutcome": "outcome_unknown",
                 "terminationEvidence": "restart_quiescence_proven"}}
@@ -102,16 +103,17 @@ class FixedRealAdapterTest(unittest.TestCase):
                 opened_fixed_store=lambda: (os.dup(store.fileno()), os.fstat(store.fileno())),
                 digest_fd=lambda fd, size: hashlib.sha256(os.pread(fd, size, 0)).hexdigest(),
                 identity=lambda m: (m.st_dev, m.st_ino, m.st_size, m.st_mtime_ns))
-            journal = SimpleNamespace(readback=lambda kind: ({"subject": subject}, "fixture-sha"))
+            committed = {key: value for key, value in subject.items() if key != "reconciliationHandle"}
+            journal = SimpleNamespace(readback=lambda kind: ({"subject": committed}, "fixture-sha"))
             with patch.object(module, "require_activation", return_value={"consumingBinarySha256": "a" * 64}), patch.object(
                     module, "HR_JOURNAL", journal, create=True), patch.object(
                     module, "bounded_validator_output", return_value=json.dumps(projection).encode()):
                 result = module.installed_settlement_projection(adapter, "fixture", module.digest(b"fixture"))
                 self.assertEqual(result["subject"], subject)
-                journal.readback = lambda kind: ({"subject": {**subject, "runtimeEpoch": "different"}}, "sha")
+                journal.readback = lambda kind: ({"subject": {**committed, "runtimeEpoch": "different"}}, "sha")
                 with self.assertRaisesRegex(module.Rejected, "READBACK_SUBJECT_MISMATCH"):
                     module.installed_settlement_projection(adapter, "fixture", module.digest(b"fixture"))
-                journal.readback = lambda kind: ({"subject": subject}, "sha")
+                journal.readback = lambda kind: ({"subject": committed}, "sha")
                 def mutate(*args):
                     os.pwrite(store.fileno(), b"changed", 0)
                     return json.dumps(projection).encode()

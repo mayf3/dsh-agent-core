@@ -197,7 +197,14 @@ def installed_settlement_projection(projection_module, helper_source, expected_h
                     "initialOutcome": "outcome_unknown",
                     "terminationEvidence": "restart_quiescence_proven"},
                 "SETTLEMENT_READBACK_UNKNOWN")
-        require(projection["subject"] == HR_JOURNAL.readback("bundle-commitment")[0]["subject"],
+        committed = HR_JOURNAL.readback("bundle-commitment")[0]["subject"]
+        observed = projection["subject"]
+        fields = {"turnExecutionId", "runtimeEpoch", "agentId", "processGeneration"}
+        require(type(committed) is dict and set(committed) == fields
+                and type(observed) is dict and set(observed) == fields | {"reconciliationHandle"}
+                and observed["reconciliationHandle"] == observed["turnExecutionId"] == HANDLE
+                and type(observed["processGeneration"]) is int
+                and {key: observed[key] for key in fields} == committed,
                 "READBACK_SUBJECT_MISMATCH")
         require(projection_module.identity(os.fstat(fd)) == projection_module.identity(before)
                 and projection_module.digest_fd(fd, before.st_size) == before_digest
