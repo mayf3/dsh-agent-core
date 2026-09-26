@@ -122,6 +122,29 @@ class FixedRealAdapterTest(unittest.TestCase):
                         module.installed_settlement_projection(adapter, "fixture", module.digest(b"fixture"))
             self.assertEqual(meta.st_ino, os.fstat(store.fileno()).st_ino)
 
+    def test_fixed_uid_observation_rejects_hidden_actor_unknown_and_unbootstrapped(self):
+        module = self.load()
+        with self.assertRaisesRegex(module.Rejected, "PROFILE_NOT_BOOTSTRAPPED"):
+            module.observe_no_runtime_uid_before_launch()
+        collector_spec = importlib.util.spec_from_file_location("collector_fixture",
+            HERE.parents[2] / "deployment-artifacts/hr-s256-trusted-cut-v1/collector.py")
+        collector = importlib.util.module_from_spec(collector_spec)
+        collector_spec.loader.exec_module(collector)
+        with patch.object(module, "require_activation", return_value={}), patch.object(
+                module, "HR_COLLECTOR", collector, create=True), patch.object(
+                collector, "command_output", return_value=b"10 1 0 /fixture/safe\n"):
+            observation = module.observe_no_runtime_uid_before_launch()
+            self.assertEqual(observation["runtimeUidProcessCount"], 0)
+            self.assertEqual(observation["scannedProcessCount"], 1)
+            self.assertNotIn("sourceClosureComplete", observation)
+        for raw in (b"10 1 0 /fixture/safe\n99 1 505 /outside/old-tree/manual\n",
+                    b"10 1 0 /fixture/safe\ntruncated", b"", b"10 1 0 /safe\n10 1 0 /duplicate\n"):
+            with self.subTest(raw=raw), patch.object(module, "require_activation", return_value={}), patch.object(
+                    module, "HR_COLLECTOR", collector, create=True), patch.object(
+                    collector, "command_output", return_value=raw):
+                with self.assertRaises(module.Rejected):
+                    module.observe_no_runtime_uid_before_launch()
+
     def test_assembled_candidate_guard_refuses_before_protected_io(self):
         builder_path = HERE.parents[2] / "deployment-artifacts/hr-s256-trusted-cut-v1/build_candidate.py"
         spec = importlib.util.spec_from_file_location("builder", builder_path)

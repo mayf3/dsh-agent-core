@@ -265,3 +265,20 @@ def fixed_settlement_readback():
             os.close(fd)
         os.close(directory)
         os.close(root)
+
+
+def observe_no_runtime_uid_before_launch():
+    """Fixed post-stop observation; never a continuous or complete source proof."""
+    require_activation()  # Refuse before spawning any protected read probe.
+    try:
+        raw = HR_COLLECTOR.command_output(HR_COLLECTOR.PS_COMMAND)
+        require(type(raw) is bytes and 0 < len(raw) <= HR_COLLECTOR.MAX_OUTPUT_BYTES
+                and raw.endswith(b"\n"), "RUNTIME_UID_CENSUS_UNKNOWN")
+        scanned, _ = HR_COLLECTOR.parse_ps(raw, set())
+        uid_count = sum(int(HR_COLLECTOR.PS_ROW.fullmatch(row).group(3)) == 505
+                        for row in raw.splitlines())
+        require(uid_count == 0, "RUNTIME_UID_ACTOR_PRESENT")
+        return {"scannedProcessCount": scanned, "runtimeUidProcessCount": 0,
+                "outputSha256": digest(raw), "observedAtWallMs": time.time_ns() // 1_000_000}
+    except HR_COLLECTOR.Rejected as exc:
+        raise Rejected("RUNTIME_UID_CENSUS_UNKNOWN") from exc
