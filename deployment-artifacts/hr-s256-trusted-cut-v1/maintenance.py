@@ -226,6 +226,8 @@ def promote_waiting(io):
     _state['attempted'] = True
     p = _payload()
     deadline = time.monotonic() + 300  # Stops active execution, never releases custody.
+    if type(io) is HR_FIXED_IO.FixedIO:
+        deadline = min(deadline, io._operation_deadline)
     parent = None
     try:
         _continuity(io, deadline)
@@ -300,7 +302,7 @@ def handoff_waiting(io):
     """No launch here: fresh readonly eligibility for existing one-use private startup."""
     require(_state['waiting'], 'MAINTENANCE_UNKNOWN_NO_REPLAY')
     try:
-        deadline = time.monotonic() + 10
+        deadline = min(time.monotonic() + 10, io._operation_deadline)
         _continuity(io, deadline)
         payload = _payload()
         _waiting_receipt(payload)
