@@ -79,6 +79,10 @@ class FixedStop:
         require(observed.get('unresolvedSources') == [], 'SOURCE_CLOSURE_UNKNOWN')
         # Current real inventory always reports LE1, so this path stays ineligible.
         # Only disposable method tests supply an explicit surrogate inventory.
+        custody = globals().get('HR_JOURNAL')
+        require(custody is not None, 'INTENT_UNKNOWN')
+        intent, _ = custody.readback('intent')
+        require(intent.get('phase') == 'INTENT', 'INTENT_UNKNOWN')
         self._attempted = True
         deadline = time.monotonic() + 30
         try:

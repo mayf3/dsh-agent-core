@@ -45,6 +45,54 @@ class FixedAssembledActionTest(unittest.TestCase):
             if owned is not None:
                 os.close(owned["canonicalFd"])
 
+    def test_existing_controlled_stop_representation_joins_actual_handler(self):
+        for variant in ('positive', 'extra', 'digest', 'host', 'order', 'missing'):
+            with self.subTest(variant=variant), tempfile.TemporaryDirectory() as root:
+                class StoppedIO(SyntheticFixedIO):
+                    def quiesce_fixed_tree(self):
+                        self.stopped_at = self.wall_ms()
+                        receipt = {'operationId': self.ds.HR_PROFILE.OPERATION_ID,
+                            'hostId': 'other' if variant == 'host' else 'fixture-host',
+                            'method': 'trusted_cp_controlled_stop_v1', 'atWallMs': self.stopped_at}
+                        if variant == 'extra':
+                            receipt['privatePayload'] = 'sensitive-fixture'
+                        raw = self.commitment_fixtures.bytes_of(receipt)
+                        path = self.root / self.ds.HR_PROFILE.OPERATION_ID / 'controlled-stop.json'
+                        path.write_bytes(raw)
+                        path.chmod(0o600)
+                        self.stop_digest = self.ds.HR_JOURNAL.sha256(raw)
+                        if variant == 'missing':
+                            path.unlink()
+                        return super().quiesce_fixed_tree()
+
+                    def final_bundle_bytes(self, *args):
+                        bundle = json.loads(super().final_bundle_bytes(*args))
+                        bundle['controlledStop'] = {'method': 'trusted_cp_controlled_stop_v1',
+                            'receiptSha256': '0' * 64 if variant == 'digest' else self.stop_digest,
+                            'atWallMs': args[3] if variant == 'order' else self.stopped_at}
+                        return self.commitment_fixtures.bytes_of(bundle)
+
+                os.chmod(root, 0o755)
+                ds = self.assembled(root)
+                io = StoppedIO(root, ds)
+                try:
+                    response = self.run_fixture(ds, io)
+                    if variant == 'positive':
+                        self.assertTrue(response['ok'], response)
+                        receipt, digest = ds.HR_STOP_RECEIPT.readback()
+                        self.assertEqual(digest, io.stop_digest)
+                        self.assertEqual(receipt['atWallMs'], io.stopped_at)
+                    else:
+                        self.assertFalse(response['ok'], response)
+                        self.assertIsNone(io.child)
+                        self.assertNotIn('launch', io.effects)
+                        self.assertFalse((Path(root) / ds.HR_PROFILE.OPERATION_ID /
+                                          'bundle-commitment.json').exists())
+                finally:
+                    self.cleanup_custody(ds)
+                    if io.window is not None:
+                        os.close(io.window)
+
     def test_projection_extra_wrong_identity_and_alias_reject_before_intent_zero_effect(self):
         for alteration in ({"privatePayload": "sensitive-fixture"},
                            {"reconciliationHandle": "different"},

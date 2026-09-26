@@ -80,6 +80,8 @@ def build_bytes():
                         "scripts/lib/hr-s256-one-shot/fixed_os.py")
         + scoped_source("HR_INVENTORY", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/installed_inventory.py")
+        + scoped_source("HR_STOP_RECEIPT", HERE.parents[1] /
+                        "scripts/lib/hr-s256-one-shot/controlled_stop.py")
         + scoped_source("HR_FINITE_STOP", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/finite_stop.py")
         + '''def hr_s256_action(request):

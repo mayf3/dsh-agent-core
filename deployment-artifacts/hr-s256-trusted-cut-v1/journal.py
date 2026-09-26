@@ -432,9 +432,9 @@ def validated_final_bundle(raw, authorization, launch_digest):
             and custody["evidenceDir"].startswith("/")
             and len(custody["evidenceDir"]) <= 512,
             "BUNDLE_CUSTODY_VALUES_INVALID")
-    # The controlled-stop variant and its live plan binding are not built by
-    # this disconnected increment. Reject it instead of guessing an enum.
-    require(bundle["controlledStop"] is None, "CONTROLLED_STOP_UNIMPLEMENTED")
+    if bundle["controlledStop"] is not None:
+        require("HR_STOP_RECEIPT" in globals(), "CONTROLLED_STOP_UNIMPLEMENTED")
+        HR_STOP_RECEIPT.validate(bundle)
     return bundle
 
 

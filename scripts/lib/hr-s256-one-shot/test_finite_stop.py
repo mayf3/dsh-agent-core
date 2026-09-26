@@ -22,6 +22,7 @@ class FiniteStopTest(unittest.TestCase):
         calls = []
         answers = iter(responses or [0, 113, 0, 113, 113, 113])
         module.HR_REAL_OS = SimpleNamespace(require_activation=lambda: None)
+        module.HR_JOURNAL = SimpleNamespace(readback=lambda kind: ({'phase': 'INTENT'}, 'a' * 64))
         module.HR_INVENTORY = SimpleNamespace(fixed_installed_inventory=lambda: {
             'unresolvedSources': []})
         module.command = lambda route, verb, deadline: (calls.append((route, verb)) or next(answers))
@@ -70,6 +71,14 @@ class FiniteStopTest(unittest.TestCase):
         with self.assertRaisesRegex(module.Rejected, 'STOP_NO_REPLAY'):
             owner.stop()
         self.assertEqual(len(calls), 1)
+
+    def test_missing_intent_before_effect(self):
+        module = self.load()
+        owner, calls = self.fixture(module)
+        module.HR_JOURNAL.readback = lambda kind: (_ for _ in ()).throw(module.Rejected('INTENT_UNKNOWN'))
+        with self.assertRaisesRegex(module.Rejected, 'INTENT_UNKNOWN'):
+            owner.stop()
+        self.assertEqual(calls, [])
 
     def test_unowned_child_never_terminated(self):
         module = self.load()
