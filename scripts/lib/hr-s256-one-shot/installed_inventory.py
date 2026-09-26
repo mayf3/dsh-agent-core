@@ -13,7 +13,6 @@ ROOT = Path('/Users/authsvc/.agent-core')
 APP = Path('/usr/local/libexec/agent-core/app')
 GUI = Path('/Users/authsvc/Library/LaunchAgents/ai.agent-core.runtime.plist')
 SYSTEM = Path('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
-MANIFEST = Path('/private/var/db/agent-deploy-system/hr-s256-deployment-proof/entry-manifest.json')
 GATED = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
 HELPER = 'packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py'
 RETIRED = 'scripts/production-runtime.mjs'
@@ -205,7 +204,9 @@ def fixed_installed_inventory():
         subject = HR_PROJECTION.fixed_subject_projection()
         HR_ONE_SHOT.normalized_subject(subject)
         observed.deadline = time.monotonic() + 10  # Existing fixed projection has its own bounded preflight budget.
-        manifest = parsed(observed.file(MANIFEST, 0)[1])
+        scope = HR_REAL_OS.qualified_source_scope()
+        check(observed.deadline)
+        manifest = scope['entryManifest']
         # The MF1 manifest authenticates known entries, not whole-host completeness.
         HR_PROFILE.validate_entry_closure(manifest,
             ['gui/505/ai.agent-core.runtime', 'system/ai.agent-core.runtime', GATED])
@@ -247,6 +248,7 @@ def fixed_installed_inventory():
             'unresolvedSources': ['LE1_INSTALLED_ENTRY_AND_RESUMPTION_CLOSURE'],
             'holderCoverage': 'INSTALLED_CONFIG_AND_EXACT_SESSION_HEADERS_OBSERVED'})
         scope = HR_REAL_OS.qualified_source_scope()
+        check(observed.deadline)
         require(scope['entryManifest'] == manifest, 'SOURCE_CLOSURE_UNKNOWN')
         result['unresolvedSources'] = []
         return result
@@ -266,8 +268,10 @@ def fixed_source_identities():
     observed = Observation(time.monotonic() + 10)
     try:
         scope = HR_REAL_OS.qualified_source_scope()
-        manifest = parsed(observed.file(MANIFEST, 0)[1])
-        require(manifest == scope['entryManifest'], 'SOURCE_CLOSURE_UNKNOWN')
+        check(observed.deadline)
+        manifest = scope['entryManifest']
+        HR_PROFILE.validate_entry_closure(manifest,
+            ['gui/505/ai.agent-core.runtime', 'system/ai.agent-core.runtime', GATED])
         sources = {}
         for path, uid in ((GUI, 0), (SYSTEM, 0)):
             raw = observed.file(path, uid)[1]
@@ -281,6 +285,9 @@ def fixed_source_identities():
             require(sha(raw) == expected, 'INVENTORY_ENTRY_CHANGED')
             sources[str(APP / path)] = sha(raw)
         observed.current()
+        scope = HR_REAL_OS.qualified_source_scope()
+        check(observed.deadline)
+        require(manifest == scope['entryManifest'], 'SOURCE_CLOSURE_UNKNOWN')
         return sources
     finally:
         observed.close()
