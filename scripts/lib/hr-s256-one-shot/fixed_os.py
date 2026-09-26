@@ -100,10 +100,15 @@ def protected_json(path, expected_sha256, uid=0):
 
 def require_activation():
     # Check before protected IO. Bootstrap/install/run remain separately forbidden.
-    require(type(BOOTSTRAP_PACKAGE_SHA256) is str
-            and len(BOOTSTRAP_PACKAGE_SHA256) == 64, "PROFILE_NOT_BOOTSTRAPPED")
+    bootstrap_pin = BOOTSTRAP_PACKAGE_SHA256
+    if bootstrap_pin is None:
+        publisher = globals().get('HR_BOOTSTRAP')
+        pins = None if publisher is None else publisher.activation_pins()
+        bootstrap_pin = None if pins is None else pins["authority"]
+    require(type(bootstrap_pin) is str
+            and len(bootstrap_pin) == 64, "PROFILE_NOT_BOOTSTRAPPED")
     require(os.geteuid() == 0, "ROOT_REQUIRED")
-    package = protected_json(BOOTSTRAP_FILE, BOOTSTRAP_PACKAGE_SHA256)
+    package = protected_json(BOOTSTRAP_FILE, bootstrap_pin)
     require(type(package) is dict and package.get("operationId") == OPERATION_ID,
             "FIXED_OPERATION_MISMATCH")
     return package
@@ -292,9 +297,14 @@ SOURCE_SCOPE_FILE = Path('/private/var/db/agent-deploy-system-config/hr-s256-sou
 
 def qualified_source_scope():
     package = require_activation()
-    require(type(SOURCE_SCOPE_SHA256) is str and len(SOURCE_SCOPE_SHA256) == 64,
+    scope_pin = SOURCE_SCOPE_SHA256
+    if scope_pin is None:
+        publisher = globals().get('HR_BOOTSTRAP')
+        pins = None if publisher is None else publisher.activation_pins()
+        scope_pin = None if pins is None else pins['scope']
+    require(type(scope_pin) is str and len(scope_pin) == 64,
             'SOURCE_SCOPE_NOT_BOOTSTRAPPED')  # Before protected read.
-    scope = protected_json(SOURCE_SCOPE_FILE, SOURCE_SCOPE_SHA256)
+    scope = protected_json(SOURCE_SCOPE_FILE, scope_pin)
     require(type(scope) is dict and set(scope) == {'version', 'operationId', 'hostId',
             'entryManifest', 'sources'} and type(scope['version']) is int and scope['version'] == 1
             and scope['operationId'] == OPERATION_ID and scope['hostId'] == package['hostId'],

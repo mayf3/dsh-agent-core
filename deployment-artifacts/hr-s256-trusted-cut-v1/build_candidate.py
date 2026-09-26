@@ -36,6 +36,18 @@ def build_bytes():
     raw = BASE.read_bytes()
     if hashlib.sha256(raw).hexdigest() != BASE_SHA256:
         raise ValueError("DS_BASE_SHA256_CHANGED")
+    return _compose(raw)
+
+
+def build_current_bytes():
+    current = Path("/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/coherent-v5-ds-update-prep-20260926-v1/artdir/deployment_system.py")
+    raw = current.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != "908941f28a851d4a323be1870b6e8e9a6c29da841b7706817f0d9189557987cb":
+        raise ValueError("CURRENT_DS_BASE_SHA256_CHANGED")
+    return _compose(raw)
+
+
+def _compose(raw):
     source = raw.decode("utf-8", "strict")
     action = '"HR_S256_TRUSTED_QUIESCENCE_CUT_V1": {"action", "operation_id"},'
     source = replace_once(source,
@@ -89,6 +101,7 @@ def build_bytes():
                         "scripts/lib/hr-s256-one-shot/owned_stop.py")
         + scoped_source("HR_FIXED_IO", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/fixed_io.py")
+        + scoped_source("HR_BOOTSTRAP", HERE / "bootstrap.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:
@@ -115,4 +128,7 @@ def build_bytes():
 
 ''')
     source = replace_once(source, 'def handle(raw):\n', integration + 'def handle(raw):\n')
+    source = replace_once(source, '    os.makedirs(os.path.join(STATE_ROOT, "inbox"), exist_ok=True)\n',
+        '    os.makedirs(os.path.join(STATE_ROOT, "inbox"), exist_ok=True)\n'
+        '    HR_BOOTSTRAP.installation_bootstrap()  # Fixed install-time only; default zero-effect.\n')
     return source.encode("utf-8")
