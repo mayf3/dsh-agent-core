@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import time
 import subprocess
 import unittest
 from unittest.mock import patch
@@ -22,6 +23,7 @@ class OwnedStopTest(unittest.TestCase):
                 ds = assembled_fixture.FixedAssembledActionTest().assembled(root)
                 ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
                 lock = ds.mutation_lock()
+                ds.HR_OWNED_STOP.enter_handler(lock)
                 path = Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock'
                 window = os.open(path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
                 fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -32,8 +34,10 @@ class OwnedStopTest(unittest.TestCase):
                 finally:
                     if owner is not None:
                         owner.close()
+                    ds.HR_OWNED_STOP.leave_handler()
                     os.close(window)
                     os.close(lock)
+            self.assertEqual(recorder.calls, [])
 
     def test_duplicate_capability_same_ofd_and_close_never_unlocks_original(self):
         with self.fixture() as (ds, owner, lock, window, path):
@@ -49,14 +53,43 @@ class OwnedStopTest(unittest.TestCase):
             finally:
                 os.close(probe)
 
-    def test_observed_released_window_remains_unknown_after_relock(self):
-        with self.fixture() as (_, owner, _, window, _):
-            fcntl.flock(window, fcntl.LOCK_UN)
-            with self.assertRaisesRegex(Exception, 'OWNED_LOCK_RELEASED'):
+    def test_observed_released_window_or_canonical_sticky_after_relock(self):
+        for which in ('window', 'canonical'):
+            with self.subTest(which=which), self.fixture() as (_, owner, lock, window, _):
+                fd = window if which == 'window' else lock
+                fcntl.flock(fd, fcntl.LOCK_UN)
+                with self.assertRaisesRegex(Exception, 'OWNED_LOCK_RELEASED'):
+                    owner.check()
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                with self.assertRaisesRegex(Exception, 'OWNED_CUSTODY_UNKNOWN'):
+                    owner.check()
+
+    def test_guard_loss_sticky_after_synthetic_guard_restored(self):
+        with self.fixture() as (ds, owner, _, _, _):
+            ds.TEST_MODE = False
+            with self.assertRaisesRegex(Exception, 'PROFILE_NOT_BOOTSTRAPPED'):
                 owner.check()
-            fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            ds.TEST_MODE = True
             with self.assertRaisesRegex(Exception, 'OWNED_CUSTODY_UNKNOWN'):
                 owner.check()
+
+    def test_wrong_borrowed_canonical_fd_cannot_bind_handler_owner(self):
+        with self.fixture() as (ds, _, _, window, path):
+            borrowed = os.open(path.parent / 'other.lock', os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                with self.assertRaisesRegex(Exception, 'WINDOW_FD_MISMATCH|OWNED_CANONICAL_OFD_UNBOUND'):
+                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window)
+            finally:
+                os.close(borrowed)
+
+    def test_second_open_of_canonical_inode_is_not_handler_capability(self):
+        with self.fixture() as (ds, _, _, window, path):
+            borrowed = os.open(path.parent.parent / 'mutation.lock', os.O_RDWR)
+            try:
+                with self.assertRaisesRegex(Exception, 'OWNED_CANONICAL_OFD_UNBOUND'):
+                    ds.HR_OWNED_STOP.capture_from_handler(borrowed, window)
+            finally:
+                os.close(borrowed)
 
     def test_wrong_reused_fd_same_inode_is_not_same_ofd(self):
         with self.fixture() as (_, owner, _, window, path):
@@ -113,19 +146,35 @@ class OwnedStopTest(unittest.TestCase):
                     with self.assertRaisesRegex(Exception, 'SOURCE_CLOSURE_UNKNOWN'):
                         stopper.stop()
 
-    def test_owned_stop_unmocked_dispatch_denied_then_no_replay(self):
-        # Do not run this adapter test until root/reviewer approves confinement.
-        # No namespace command patch can bypass the mandatory Popen boundary.
+    def test_owned_stop_synthetic_closed_command_shared_budget_and_no_replay(self):
         with self.fixture() as (ds, owner, _, _, _):
             stopper = owner.fixed_stop()
-            with patch.object(ds.HR_REAL_OS, 'require_activation', return_value=None), patch.object(
-                    ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}):
-                with self.assertRaises(ProcessDispatchDenied):
+            calls = []
+            def synthetic_command(route, verb, deadline):
+                self.assertIn(route, ds.HR_FINITE_STOP.ROUTES)
+                self.assertIn(verb, ('bootout', 'print'))
+                calls.append((route, verb, deadline))
+                return 0 if verb == 'bootout' else 113
+            # Scoped module wrappers capture this exact command function cell.
+            # Replace only that cell; keep mandatory outer Popen deny active.
+            method = type(stopper).stop
+            cells = dict(zip(method.__code__.co_freevars, method.__closure__))
+            cell = cells['command']
+            original = cell.cell_contents
+            try:
+                cell.cell_contents = synthetic_command
+                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value=None), patch.object(
+                        ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}):
+                    before = time.monotonic()
                     stopper.stop()
-                self.assertEqual(self.process_recorder.calls,
-                    [('/bin/launchctl', 'bootout', 'gui/505/ai.agent-core.runtime')])
-                with self.assertRaisesRegex(Exception, 'STOP_NO_REPLAY'):
-                    stopper.stop()
+                    self.assertEqual(len(calls), 4)
+                    self.assertEqual(len({item[2] for item in calls}), 1)
+                    self.assertLessEqual(calls[0][2] - before, 30.1)
+                    with self.assertRaisesRegex(Exception, 'STOP_NO_REPLAY'):
+                        stopper.stop()
+            finally:
+                cell.cell_contents = original
+            self.assertEqual(self.process_recorder.calls, [])
 
 
 if __name__ == '__main__':

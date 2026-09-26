@@ -3,6 +3,8 @@ import fcntl
 import os
 import stat
 
+_handler_canonical = []
+
 
 class Rejected(Exception):
     pass
@@ -38,6 +40,9 @@ class _Owner:
         self.window_dup = None
         self.unknown = False
         self.closed = False
+        require(_handler_canonical
+                and HR_HANDOFF.same_open_file_description(_handler_canonical[0], canonical_fd,
+                    identity(_handler_canonical[0])), 'OWNED_CANONICAL_OFD_UNBOUND')
         self.intent, self.intent_digest = HR_JOURNAL.readback('intent')
         self.paths = (state_path('mutation.lock'), os.path.join(state_path(HR_JOURNAL.DIRECTORY), 'window.lock'))
         try:
@@ -51,9 +56,9 @@ class _Owner:
             raise
 
     def check(self):
-        guard()
         require(not self.closed and not self.unknown, 'OWNED_CUSTODY_UNKNOWN')
         try:
+            guard()
             current, digest = HR_JOURNAL.readback('intent')
             require(current == self.intent and digest == self.intent_digest, 'OWNED_INTENT_CHANGED')
             for original, duplicate, expected, path in (
@@ -98,3 +103,15 @@ class _Owner:
 def capture_from_handler(canonical_fd, window_fd):
     """Internal call immediately after this handler seals intent and owns window."""
     return _Owner(canonical_fd, window_fd)
+
+
+def enter_handler(canonical_fd):
+    """Only the fixed handler calls this immediately after mutation_lock()."""
+    guard()
+    require(not _handler_canonical, 'OWNED_HANDLER_ALREADY_BOUND')
+    _handler_canonical.append(os.dup(canonical_fd))
+
+
+def leave_handler():
+    if _handler_canonical:
+        os.close(_handler_canonical.pop())
