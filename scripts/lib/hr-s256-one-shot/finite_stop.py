@@ -84,7 +84,9 @@ class FixedStop:
                 self._owner.claim_stop(self)
             inventory = globals().get('HR_INVENTORY')
             require(inventory is not None, 'SOURCE_CLOSURE_UNKNOWN')
-            observed = inventory.fixed_installed_inventory()
+            observed = (HR_MAINTENANCE.prepromotion_stop_inventory(self._owner)
+                if self._owner is not None and self._owner.installation_io is not None
+                else inventory.fixed_installed_inventory())
             require(observed.get('unresolvedSources') == [], 'SOURCE_CLOSURE_UNKNOWN')
             # Current real inventory always reports LE1, so this path stays ineligible.
             # Only disposable method tests supply an explicit surrogate inventory.
@@ -99,6 +101,8 @@ class FixedStop:
                 require(type(host) is str and 0 < len(host) <= 128, 'STOP_HOST_UNKNOWN')
                 HR_STOP_RECEIPT.require_absent()
             deadline = time.monotonic() + 30
+            if self._owner is not None and self._owner.installation_io is not None:
+                deadline = min(deadline, self._owner.installation_io._operation_deadline)
             for route in ROUTES:
                 if self._owner is not None:
                     self._owner.check()
@@ -125,6 +129,8 @@ class FixedStop:
         activation()
         require(self._stopped and not self._unknown, 'STOP_UNKNOWN')
         deadline = time.monotonic() + 10
+        if self._owner is not None and self._owner.installation_io is not None:
+            deadline = min(deadline, self._owner.installation_io._operation_deadline)
         try:
             for route in ROUTES:
                 if self._owner is not None:

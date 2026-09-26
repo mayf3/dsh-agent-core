@@ -25,7 +25,7 @@ class MaintenanceTest(unittest.TestCase):
             self.assertEqual(recorder.calls, [])
 
     @contextmanager
-    def fixture(self):
+    def fixture(self, owned=True):
         with confine_processes(subprocess) as recorder, confined_filesystem() as filesystem:
             import test_bootstrap
             with test_bootstrap.BootstrapTest().fixture(current=True) as (ds, inputs, targets, root), ExitStack() as stack:
@@ -35,31 +35,34 @@ class MaintenanceTest(unittest.TestCase):
                 stack.enter_context(patch.object(ds.HR_BOOTSTRAP, '_parent',
                     side_effect=lambda path: os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)))
                 stack.enter_context(patch.object(os, 'geteuid', return_value=os.getuid()))
-                ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
-                lock = ds.mutation_lock()
-                ds.HR_OWNED_STOP.enter_handler(lock)
-                window = os.open(Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock',
-                                 os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
-                fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window, 98)
-                stack.callback(owner.close)
-                stack.callback(ds.HR_OWNED_STOP.leave_handler)
-                stack.callback(os.close, window)
-                stack.callback(os.close, lock)
+                if owned:
+                    ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
+                    lock = ds.mutation_lock()
+                    ds.HR_OWNED_STOP.enter_handler(lock)
+                    window = os.open(Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock',
+                                     os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+                    fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window, 98)
+                    stack.callback(owner.close)
+                    stack.callback(ds.HR_OWNED_STOP.leave_handler)
+                    stack.callback(os.close, window)
+                    stack.callback(os.close, lock)
                 stack.enter_context(patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': 'fixture-host'}))
                 stack.enter_context(patch.object(ds.HR_REAL_OS, 'deployed_prerequisites', return_value={}))
                 stack.enter_context(patch.object(ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}))
-                stop = owner.fixed_stop()
-                cell = dict(zip(type(stop).stop.__code__.co_freevars, type(stop).stop.__closure__))['command']
+                cell = dict(zip(ds.HR_FINITE_STOP.FixedStop.stop.__code__.co_freevars, ds.HR_FINITE_STOP.FixedStop.stop.__closure__))['command']
                 old = cell.cell_contents; calls = []
                 def command(route, verb, deadline):
                     calls.append((route, verb))
                     return 0 if verb == 'bootout' else 113
                 cell.cell_contents = command
                 stack.callback(setattr, cell, 'cell_contents', old)
-                stop.stop()
+                if owned:
+                    stop = owner.fixed_stop()
+                    stop.stop()
                 io = ds.HR_ONE_SHOT.fixed_io()
-                io._owner, io._stop, io._window = owner, stop, window
+                if owned:
+                    io._owner, io._stop, io._window = owner, stop, window
                 app = Path(root).resolve() / 'app'; app.mkdir(mode=0o700)
                 (app / 'scripts').mkdir(); (app / 'scripts/production-runtime.mjs').write_bytes(b'old-runtime')
                 (app / 'packages').mkdir(); (app / 'packages/keep.js').write_bytes(b'coherent-preserved')

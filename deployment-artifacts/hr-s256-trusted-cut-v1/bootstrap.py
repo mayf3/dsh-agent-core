@@ -140,10 +140,15 @@ def _publish(parent, name, raw):
     _require(_read_at(parent, name) == raw, 'INSTALLATION_OUTPUT_CHANGED')
 
 
+INSTALLATION_EVENT_OPERATION = None  # Fixed compiled selector, never environment/request input.
+
+
 def installation_bootstrap():
     """Called only at daemon initialization, never by an IPC action or request."""
     if INSTALLATION_PACKAGE_SHA256 is None and TRUSTED_ARTIFACTS is None:
         return None  # Zero protected IO, zero mutation, ordinary current DS unaffected.
+    selector = HR_BOOTSTRAP.INSTALLATION_EVENT_OPERATION
+    _require(selector is None or selector == HR_PROFILE.OPERATION_ID, 'INSTALLATION_EVENT_UNKNOWN')
     _require(not _state['attempted'], 'INSTALLATION_NO_REPLAY')
     _state['attempted'] = True
     _require(os.geteuid() == 0, 'ROOT_REQUIRED')
@@ -208,6 +213,8 @@ def installation_bootstrap():
                      'INSTALLATION_RECEIPT_UNKNOWN')
         _state['pins'] = {'authority': hashes['hr-s256-one-shot-authority.json'],
                           'scope': hashes['hr-s256-source-scope.json']}
+        if selector is not None:
+            return HR_ONE_SHOT.run_installation_event(lock)
         return dict(_state['pins'])
     except BaseException:
         _state['pins'] = None
@@ -218,4 +225,6 @@ def installation_bootstrap():
             os.close(fd)
         if receipt_parent is not None:
             os.close(receipt_parent)
-        os.close(lock)  # Publication mutex only; no runtime/child/window custody exists.
+        # A post-intent UNKNOWN transfers this exact FD; never finally-release custody.
+        if not HR_ONE_SHOT.canonical_fd_owned(lock):
+            os.close(lock)

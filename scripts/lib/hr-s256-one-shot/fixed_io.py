@@ -94,7 +94,9 @@ class FixedIO:
         paths = inventory['holderPaths']
         HR_PROFILE.require(type(paths) is list and 1 <= len(paths) <= 16,
                            'HOLDER_SCOPE_UNKNOWN')
-        old_pids = HR_REAL_OS.old_runtime_membership()
+        old_pids = (self._old_pids if self._owner is not None
+            and self._owner.installation_io is self and self._old_pids is not None
+            else HR_REAL_OS.old_runtime_membership())
         self._inventory = inventory
         self._old_pids = old_pids
         return {'hostId': self._package['hostId'],
