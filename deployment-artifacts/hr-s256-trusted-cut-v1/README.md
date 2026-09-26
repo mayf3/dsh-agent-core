@@ -47,8 +47,14 @@ Implemented and checked offline:
   archive/output, holder and binary fields are present and timestamp order is
   causal; it does **not** independently verify their root-custody source or
   launch;
-- Router V2 accepts the one R2 fixed operation ID alongside its existing
-  `op-...` grammar, while an unrelated `hr-...` ID remains zero-write rejected.
+- Router's fixed R2 startup reader resolves `bundle.json`, the closed Python
+  authorization wrapper, exact commitment/index/early-phase chain and actual
+  restored-store representation through the accepted V2 replay/preimage gate.
+  It rechecks commitment and terminal/UNKNOWN state immediately before settling.
+  Fixed operation ID alone, wrong filename/shape/nonce/phase, tamper, missing
+  claim or unknown custody never authorizes consumption. The positive actual
+  Python-journal-to-Node-store test uses explicitly synthetic root/host custody
+  and challenge observations; it is not authenticated host evidence.
 - a disconnected fixed-operation root-custody candidate now seals an intent,
   launch authorization and pre-spawn one-launch claim with exclusive 0600
   create, file/directory fsync and no-follow readback. Non-root fixtures verify
@@ -78,7 +84,7 @@ Implemented and checked offline:
   substituted. These shape/order helpers receive no DS request
   data and do not authenticate observations. A projected PID is metadata, not a
   reconstructed processRef or proof of child ownership. The real producer and
-  store readback integration are still absent.
+   authenticated host/store readback producer is still absent.
 
 Still required for the R2 profile; **none is supplied by this candidate**:
 
@@ -106,9 +112,11 @@ Still required for the R2 profile; **none is supplied by this candidate**:
    wiring, post-settlement readback and bounded UNKNOWN containment. The
    local successor gate is not installed, bound to the fixed DS action, or
    proof of an authorized launch.
-6. The accepted V2 replay-preimage consumer has a separate reviewed
-   nonproduction source candidate (`f2d7ed9d`); it is not integrated into
-   this R2 producer head. Full recovery conformance cannot be claimed.
+6. The reviewed V2 structural consumer at `577a56fd` is now integrated into
+   this fixed nonproduction reader with an adapter for the real durable-reader
+   representation (no new stored fields). Ordinary Runtime entry and the DS
+   `PROFILE_NOT_BOOTSTRAPPED` refusal remain unchanged. Full recovery
+   conformance cannot be claimed.
 
 The immediate exact source-closure counterexample is a same-UID direct
 `node scripts/production-runtime.mjs` launch between the post-stop census and
