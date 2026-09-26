@@ -63,6 +63,20 @@ def validate(bundle):
             and stop['method'] == 'trusted_cp_controlled_stop_v1'
             and j.valid_hash(stop['receiptSha256']) and type(stop['atWallMs']) is int,
             'STOP_BUNDLE_SHAPE')
+    root, directory = j.opened_custody(False)
+    named = None
+    try:
+        named = os.open(bundle['custody']['evidenceDir'],
+                        os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        left, right = os.fstat(named), os.fstat(directory)
+        require((left.st_dev, left.st_ino) == (right.st_dev, right.st_ino),
+                'STOP_RECEIPT_DIRECTORY')
+    except OSError as exc:
+        raise Rejected('STOP_RECEIPT_DIRECTORY') from exc
+    finally:
+        if named is not None:
+            os.close(named)
+        j.close_custody(root, directory)
     record, digest = readback()
     cut = bundle['recoveryCutover']
     require(digest == stop['receiptSha256'] and record['hostId'] == cut['hostId']

@@ -46,7 +46,7 @@ class FixedAssembledActionTest(unittest.TestCase):
                 os.close(owned["canonicalFd"])
 
     def test_existing_controlled_stop_representation_joins_actual_handler(self):
-        for variant in ('positive', 'extra', 'digest', 'host', 'order', 'missing'):
+        for variant in ('positive', 'extra', 'digest', 'host', 'order', 'missing', 'custody'):
             with self.subTest(variant=variant), tempfile.TemporaryDirectory() as root:
                 class StoppedIO(SyntheticFixedIO):
                     def quiesce_fixed_tree(self):
@@ -67,6 +67,8 @@ class FixedAssembledActionTest(unittest.TestCase):
 
                     def final_bundle_bytes(self, *args):
                         bundle = json.loads(super().final_bundle_bytes(*args))
+                        bundle['custody']['evidenceDir'] = ('/fixture/unbound' if variant == 'custody'
+                            else str(self.root / self.ds.HR_PROFILE.OPERATION_ID))
                         bundle['controlledStop'] = {'method': 'trusted_cp_controlled_stop_v1',
                             'receiptSha256': '0' * 64 if variant == 'digest' else self.stop_digest,
                             'atWallMs': args[3] if variant == 'order' else self.stopped_at}
