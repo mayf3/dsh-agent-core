@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Fixed HR maintenance-installation authority candidate
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1](HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1.md) | proposed exact authored text; Owner A1–A4 direction accepted 2026-09-26, independent amendment review/authority activation pending | contracts after docs-first acceptance in implementation base; production apply none | only fixed app/two-route same-DS promotion under maintained custody/inhibition, truthful INSTALLED_WAITING/UNKNOWN and existing one-use private startup handoff; no changes to cut no-app-write boundary |
+
 ## Agent Core Modularity Phase A authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
