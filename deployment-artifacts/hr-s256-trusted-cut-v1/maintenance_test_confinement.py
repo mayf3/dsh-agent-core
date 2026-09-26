@@ -20,6 +20,17 @@ class SandboxOpen:
         self.backend = backend
         self.descriptors = {}
         self.denied = []
+        self.created_aliases = {}
+
+    def created_alias(self, original, canonical, original_identity, canonical_identity):
+        original, canonical = os.path.normpath(str(original)), os.path.normpath(str(canonical))
+        if (canonical != self.sandbox or original in ('/', '/var', '/private', '/private/var')
+                or os.path.basename(original) != os.path.basename(canonical)
+                or type(original_identity) is not tuple or len(original_identity) != 2
+                or not all(type(v) is int for v in original_identity)
+                or original_identity != canonical_identity):
+            raise FilesystemDenied('SYNTHETIC_CREATED_ALIAS_IDENTITY')
+        self.created_aliases[original] = canonical
 
     def _path(self, path, dir_fd):
         if not isinstance(path, (str, bytes, os.PathLike)):
@@ -28,7 +39,11 @@ class SandboxOpen:
         if os.path.isabs(path):
             if dir_fd is not None:
                 raise FilesystemDenied('SYNTHETIC_AMBIGUOUS_DIRFD')
-            return os.path.normpath(path)
+            resolved = os.path.normpath(path)
+            for original, canonical in self.created_aliases.items():
+                if self.within(resolved, original):
+                    return canonical + resolved[len(original):]
+            return resolved
         if dir_fd not in self.descriptors:
             raise FilesystemDenied('SYNTHETIC_UNTRACKED_DIRFD')
         return os.path.normpath(os.path.join(self.descriptors[dir_fd], path))
@@ -85,6 +100,11 @@ def confined_filesystem():
             Path('/Users/yanfenma/workspace/artifacts/AGENT_CORE_DEPLOYMENT_SYSTEM_V1/ds-fixed-target-restart-successor-20260924-v5/ds-update-artifacts/deployment_system.py')]
         original_open, original_close = os.open, os.close
         guard = SandboxOpen(root, inputs, original_open)
+        # ONLY this newly created disposable root is qualified before target imports.
+        original_meta, canonical_meta = os.stat(directory.name), os.stat(root)
+        guard.created_alias(directory.name, root,
+            (original_meta.st_dev, original_meta.st_ino),
+            (canonical_meta.st_dev, canonical_meta.st_ino))
         originals = {name: getattr(os, name) for name in ('mkdir', 'unlink', 'rmdir', 'rename', 'replace')}
         file_open, io_open = builtins.open, io.open
         def file_wrapper(original):

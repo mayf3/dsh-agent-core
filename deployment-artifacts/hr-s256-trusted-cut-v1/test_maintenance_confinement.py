@@ -66,3 +66,31 @@ class ConfinementTest(unittest.TestCase):
             guard('/private/var/db/agent-deploy-system-config', os.O_RDONLY | os.O_DIRECTORY)
         self.assertEqual(calls, [])
         self.assertEqual(process_calls, [])
+
+    def test_created_same_identity_alias_cleanup_positive_only(self):
+        guard, calls = self.fixture()
+        guard.created_alias('/var/folders/hr-test', '/disposable/hr-test', (3, 7), (3, 7))
+        fd = guard('/var/folders/hr-test', os.O_RDONLY | os.O_DIRECTORY)
+        self.assertEqual(guard.descriptors[fd], '/disposable/hr-test')
+        guard('cleanup-file', os.O_WRONLY, dir_fd=fd)
+        self.assertEqual(len(calls), 2)
+        for path in ('/var/folders/other-test', '/private/var/db/agent-deploy-system-config'):
+            with self.assertRaises(FilesystemDenied): guard(path, os.O_RDONLY | os.O_DIRECTORY)
+        self.assertEqual(len(calls), 2)
+
+    def test_alias_relative_protected_and_unknown_dirfd_denied(self):
+        guard, calls = self.fixture()
+        guard.created_alias('/var/folders/hr-test', '/disposable/hr-test', (3, 7), (3, 7))
+        fd = guard('/var/folders/hr-test', os.O_RDONLY | os.O_DIRECTORY)
+        for path, dirfd in [('../../private/var/db/agent-deploy-system-config', fd),
+                            ('protected.json', 991)]:
+            with self.assertRaises(FilesystemDenied): guard(path, os.O_RDONLY, dir_fd=dirfd)
+        self.assertEqual(len(calls), 1)
+
+    def test_alias_requires_creation_identity_no_broad_roots(self):
+        guard, calls = self.fixture()
+        for original, canonical, left, right in [('/var/folders/hr-test', '/disposable/hr-test', (3,7), (3,8)),
+            ('/var', '/disposable/hr-test', (3,7), (3,7)),
+            ('/var/folders/hr-test', '/other/hr-test', (3,7), (3,7))]:
+            with self.assertRaises(FilesystemDenied): guard.created_alias(original, canonical, left, right)
+        self.assertEqual(calls, [])
