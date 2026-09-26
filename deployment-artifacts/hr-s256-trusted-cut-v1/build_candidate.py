@@ -50,8 +50,11 @@ def build_bytes():
         '        if action == HR_PROFILE.ACTION:\n'
         '            return hr_s256_action(request), None')
     projector = (HERE / "project-subject.mjs").read_text(encoding="utf-8")
+    readback = (HERE.parents[1] / "scripts/lib/hr-s256-one-shot/readback-settlement.mjs").read_text(encoding="utf-8")
     integration = ('import types\n\n'
         + f'HR_PROJECTOR_SOURCE = {projector!r}\n\n'
+        + f'HR_READBACK_HELPER_SOURCE = {readback!r}\n'
+        + f'HR_READBACK_HELPER_SHA256 = {hashlib.sha256(readback.encode()).hexdigest()!r}\n\n'
         + scoped_source("HR_PROFILE", HERE / "profile.py")
         + scoped_source("HR_COLLECTOR", HERE / "collector.py")
         + scoped_source("HR_PROJECTION", HERE / "projection.py")
@@ -61,6 +64,8 @@ def build_bytes():
         + scoped_source("HR_LIFECYCLE", HERE / "lifecycle.py")
         + scoped_source("HR_ONE_SHOT", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/orchestration.py")
+        + scoped_source("HR_REAL_OS", HERE.parents[1] /
+                        "scripts/lib/hr-s256-one-shot/fixed_os.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:
