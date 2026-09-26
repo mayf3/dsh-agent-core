@@ -71,8 +71,11 @@ Implemented and checked offline:
   descriptor/lock/source projections, exclusive create and fsync/readback.
   Closure/abandonment writes a permanent exact-key tombstone before its terminal
   receipt; a torn/lost-ACK terminal remains UNKNOWN and cannot be rewritten.
-  A bounded named UNKNOWN projection retains inhibition and grants no release,
-  replay or launch permission. These shape/order helpers receive no DS request
+  A bounded named UNKNOWN projection requires continued containment and grants
+  no release, replay or launch permission. Its nullable child and false/null held
+  observations preserve missing/lost ownership truth; they are not no-launch or
+  termination proof, and stable operation/descriptor/source references cannot be
+  substituted. These shape/order helpers receive no DS request
   data and do not authenticate observations. A projected PID is metadata, not a
   reconstructed processRef or proof of child ownership. The real producer and
   store readback integration are still absent.
