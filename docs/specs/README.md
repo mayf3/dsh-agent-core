@@ -128,6 +128,20 @@ implementation, production recovery, privileged collector/launcher bootstrap,
 restart, protected-store mutation, or fence clearing is authorized by this
 index entry. Final-head review and merge remain separate gates.
 
+## Coherent Feishu ingress to native receipt attribution amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `COHERENT_DURABLE_INGRESS_RECEIPT_ATTRIBUTION_V1` | accepted lifecycle in this branch 2026-09-26; reviewed proposed head `40a739be19883e1697decdc56e13dd1e081610ab`; effective only after authority merge | contracts for bounded nonproduction implementation after merge; production apply none | narrow additive `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` C-010/C-018/C-019 amendment for authenticated Feishu message/sender correlation in one V3 record, plus one fixed protected DS record read and root-owned hash-only evidence receipt; no public trust marker, identity substitution, replay, credential/grant effect, or change to four coherent deployment IDs |
+
+Owner mayf3 accepted the reviewed V5 direction on 2026-09-26; the exact
+attributable acceptance, proposed Spec head/file hash and independent semantic
+review are pinned in the Spec frontmatter. This docs-only lifecycle transaction
+leaves the proposed Spec body byte-identical. Candidate-stage wording in that
+body remains historical; the frontmatter and this index record the accepted
+lifecycle. Separate exact authority remains necessary for DS_UPDATE, live
+protected read, deploy, real smoke and every production mutation.
+
 ## agt_cto-agent model-route authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
