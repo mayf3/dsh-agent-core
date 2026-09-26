@@ -69,6 +69,7 @@ class FixedStop:
         self._attempted = False
         self._stopped = False
         self._unknown = False
+        self._completion = None
 
     def stop(self, *, child=None):
         activation()  # Must precede inventory reads, process inspection and effects.
@@ -77,26 +78,45 @@ class FixedStop:
         if self._owner is not None:
             self._owner.check()
         require(not self._attempted, 'STOP_NO_REPLAY')
-        inventory = globals().get('HR_INVENTORY')
-        require(inventory is not None, 'SOURCE_CLOSURE_UNKNOWN')
-        observed = inventory.fixed_installed_inventory()
-        require(observed.get('unresolvedSources') == [], 'SOURCE_CLOSURE_UNKNOWN')
-        # Current real inventory always reports LE1, so this path stays ineligible.
-        # Only disposable method tests supply an explicit surrogate inventory.
-        custody = globals().get('HR_JOURNAL')
-        require(custody is not None, 'INTENT_UNKNOWN')
-        intent, _ = custody.readback('intent')
-        require(intent.get('phase') == 'INTENT', 'INTENT_UNKNOWN')
         self._attempted = True
-        deadline = time.monotonic() + 30
         try:
+            if self._owner is not None:
+                self._owner.claim_stop(self)
+            inventory = globals().get('HR_INVENTORY')
+            require(inventory is not None, 'SOURCE_CLOSURE_UNKNOWN')
+            observed = inventory.fixed_installed_inventory()
+            require(observed.get('unresolvedSources') == [], 'SOURCE_CLOSURE_UNKNOWN')
+            # Current real inventory always reports LE1, so this path stays ineligible.
+            # Only disposable method tests supply an explicit surrogate inventory.
+            custody = globals().get('HR_JOURNAL')
+            require(custody is not None, 'INTENT_UNKNOWN')
+            intent, _ = custody.readback('intent')
+            require(intent.get('phase') == 'INTENT', 'INTENT_UNKNOWN')
+            if self._owner is not None:
+                package = HR_REAL_OS.require_activation()
+                HR_REAL_OS.deployed_prerequisites(package, self._owner.opened_at)
+                host = package.get('hostId')
+                require(type(host) is str and 0 < len(host) <= 128, 'STOP_HOST_UNKNOWN')
+                HR_STOP_RECEIPT.require_absent()
+            deadline = time.monotonic() + 30
             for route in ROUTES:
                 if self._owner is not None:
                     self._owner.check()
                 check(deadline)
                 require(command(route, 'bootout', deadline) in (0, 113), 'STOP_UNKNOWN')
                 require(command(route, 'print', deadline) == 113, 'SOURCE_RESUMED')
+            if self._owner is not None:
+                check(deadline)
+                self._owner.check()
+                completed_at = int(time.time() * 1000)
+                require(self._owner.opened_at < completed_at <= (1 << 53) - 1,
+                        'STOP_COMPLETION_TIME_UNKNOWN')
+                self._completion = (host, completed_at)
+                receipt = HR_STOP_RECEIPT.seal_completed(self)
+            else:
+                receipt = None  # Standalone TEST_MODE method fixture only.
             self._stopped = True
+            return receipt
         except BaseException:
             self._unknown = True
             raise

@@ -32,7 +32,7 @@ def identity(fd):
 
 
 class _Owner:
-    def __init__(self, canonical_fd, window_fd):
+    def __init__(self, canonical_fd, window_fd, opened_at):
         guard()  # Before protected path/intent reads or descriptor inspection.
         self.canonical = canonical_fd
         self.window = window_fd
@@ -44,6 +44,10 @@ class _Owner:
                 and HR_HANDOFF.same_open_file_description(_handler_canonical[0], canonical_fd,
                     identity(_handler_canonical[0])), 'OWNED_CANONICAL_OFD_UNBOUND')
         self.intent, self.intent_digest = HR_JOURNAL.readback('intent')
+        require(type(opened_at) is int and self.intent['atWallMs'] < opened_at <= (1 << 53) - 1,
+                'OWNED_WINDOW_TIME_UNKNOWN')
+        self.opened_at = opened_at
+        self._stop_claim = None
         self.paths = (state_path('mutation.lock'), os.path.join(state_path(HR_JOURNAL.DIRECTORY), 'window.lock'))
         try:
             self.canonical_identity = identity(canonical_fd)
@@ -86,6 +90,11 @@ class _Owner:
             raise
         # Local retained FD/lock checks do not prove LE1/source continuity.
 
+    def claim_stop(self, stopper):
+        self.check()
+        require(self._stop_claim is None, 'OWNED_STOP_NO_REPLAY')
+        self._stop_claim = stopper
+
     def fixed_stop(self):
         self.check()
         return HR_FINITE_STOP.FixedStop(_owner=self)
@@ -100,9 +109,9 @@ class _Owner:
                 setattr(self, name, None)
 
 
-def capture_from_handler(canonical_fd, window_fd):
+def capture_from_handler(canonical_fd, window_fd, opened_at):
     """Internal call immediately after this handler seals intent and owns window."""
-    return _Owner(canonical_fd, window_fd)
+    return _Owner(canonical_fd, window_fd, opened_at)
 
 
 def enter_handler(canonical_fd):

@@ -84,3 +84,57 @@ def validate(bundle):
             and cut['windowOpenedAtWallMs'] < stop['atWallMs'] < cut['oldTreeQuiescedAtWallMs'],
             'STOP_RECEIPT_BINDING')
     # Consumer V7 still independently checks floor/validator/inhibition and live plan.
+
+
+def require_absent():
+    j = journal()
+    root, directory = j.opened_custody(False)
+    try:
+        try:
+            os.stat('controlled-stop.json', dir_fd=directory, follow_symlinks=False)
+        except FileNotFoundError:
+            return
+        raise Rejected('STOP_RECEIPT_EXISTS')
+    finally:
+        j.close_custody(root, directory)
+
+
+def seal_completed(stopper):
+    """Only a completed exact owned method can consume this private continuation."""
+    require(isinstance(stopper, HR_FINITE_STOP.FixedStop)
+            and isinstance(stopper._owner, HR_OWNED_STOP._Owner)
+            and stopper._owner._stop_claim is stopper and not stopper._unknown
+            and stopper._completion is not None, 'STOP_COMPLETION_UNKNOWN')
+    stopper._owner.check()
+    host, at = stopper._completion
+    stopper._completion = None  # Consume before create; crash/write failure never retries.
+    j = journal()
+    record = {'operationId': j.OPERATION_ID, 'hostId': host,
+              'method': 'trusted_cp_controlled_stop_v1', 'atWallMs': at}
+    require(valid(record), 'STOP_RECEIPT_SHAPE')
+    raw = j.canonical(record)
+    root, directory = j.opened_custody(False)
+    fd = None
+    try:
+        fd = os.open('controlled-stop.json', os.O_WRONLY | os.O_CREAT | os.O_EXCL |
+                     os.O_NOFOLLOW, 0o600, dir_fd=directory)
+        view = memoryview(raw)
+        while view:
+            count = os.write(fd, view)
+            require(count > 0, 'STOP_RECEIPT_WRITE_UNKNOWN')
+            view = view[count:]
+        os.fsync(fd)
+        os.close(fd)
+        fd = None
+        os.fsync(directory)
+    except OSError as exc:
+        raise Rejected('STOP_RECEIPT_CREATE_UNKNOWN') from exc
+    finally:
+        if fd is not None:
+            os.close(fd)
+        j.close_custody(root, directory)
+    stopper._owner.check()
+    observed, digest = readback()
+    require(observed == record and digest == hashlib.sha256(raw).hexdigest(),
+            'STOP_RECEIPT_READBACK_UNKNOWN')
+    return {'method': record['method'], 'receiptSha256': digest, 'atWallMs': at}
