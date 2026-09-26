@@ -46,8 +46,13 @@ Implemented and checked offline:
   duplicate, tamper, symlink, nonce, subject and caller-field rejection;
 - a disconnected one-launch fixture passes challenge and window descriptors
   only to one synthetic child, uses the same startup nonce and digest as the
-  sealed fixture receipt, enforces a 750 ms challenge, and rejects missing/wrong FDs, wrong
-  receipt and reuse. It does not launch the Runtime or prove host exclusion.
+  sealed fixture receipt, enforces one absolute 750 ms challenge deadline,
+  and requires the child to return the inherited window FD through
+  `SCM_RIGHTS`. A bounded shared-offset probe rejects a separately opened FD
+  for the same inode. Missing/wrong FDs, wrong receipt and reuse fail closed.
+  This proves only possession of the expected open-file description in the
+  fixture; DS lock ownership and host exclusion remain unproven. It does not
+  launch the Runtime.
 
 Still required for the R2 profile; **none is supplied by this candidate**:
 

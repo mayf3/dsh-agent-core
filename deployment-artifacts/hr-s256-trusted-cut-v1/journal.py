@@ -63,13 +63,21 @@ def valid_authorization(value, intent):
             and isinstance(subject["runtimeEpoch"], str) and bool(subject["runtimeEpoch"])
             and type(subject["processGeneration"]) is int
             and subject["processGeneration"] == 1
+            and type(value["authorizedStartupAtWallMs"]) is int
+            and intent["atWallMs"] < value["authorizedStartupAtWallMs"]
+                <= (1 << 53) - 1
             and type(holder) is dict
+            and set(holder) == {"operationId", "executedAtWallMs", "method",
+                                "paths", "openHolderCount"}
             and holder.get("operationId") == OPERATION_ID
             and holder.get("method") == "lsof"
             and holder.get("openHolderCount") == 0
-            and type(value["authorizedStartupAtWallMs"]) is int
-            and intent["atWallMs"] < value["authorizedStartupAtWallMs"]
-                <= (1 << 53) - 1)
+            and type(holder["executedAtWallMs"]) is int
+            and 0 <= holder["executedAtWallMs"] < value["authorizedStartupAtWallMs"]
+            and type(holder["paths"]) is list
+            and 1 <= len(holder["paths"]) <= 16
+            and all(isinstance(path, str) and path.startswith("/")
+                    and len(path) <= 512 for path in holder["paths"]))
 
 
 def opened_custody(create):

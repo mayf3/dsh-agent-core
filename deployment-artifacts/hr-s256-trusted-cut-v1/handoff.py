@@ -4,12 +4,14 @@ The fixture proves inherited descriptor possession only. Installed binary
 identity, source closure, lock continuity and Router admission remain absent.
 """
 
+import array
 import hashlib
 import json
 import os
 import secrets
 import socket
 import stat
+import time
 
 
 MAX_FRAME = 512
@@ -40,6 +42,24 @@ def response_digest(nonce, challenge, receipt_sha256, identity):
     return hashlib.sha256(raw).hexdigest().encode()
 
 
+def same_open_file_description(expected_fd, returned_fd, expected_identity):
+    """Prove the returned regular FD shares the held window's file offset.
+
+    A second open of the same inode has an independent offset; an inherited
+    dup (including an SCM_RIGHTS transfer) shares the open-file description.
+    """
+    require(window_identity(returned_fd) == expected_identity, "WINDOW_FD_MISMATCH")
+    original = os.lseek(expected_fd, 0, os.SEEK_CUR)
+    returned = os.lseek(returned_fd, 0, os.SEEK_CUR)
+    probe = original + 1
+    try:
+        os.lseek(returned_fd, probe, os.SEEK_SET)
+        return os.lseek(expected_fd, 0, os.SEEK_CUR) == probe
+    finally:
+        os.lseek(returned_fd, returned, os.SEEK_SET)
+        os.lseek(expected_fd, original, os.SEEK_SET)
+
+
 class OneLaunchHandoff:
     def __init__(self, receipt_sha256, window_fd, sealed_startup_nonce):
         require(isinstance(receipt_sha256, str) and len(receipt_sha256) == 64
@@ -49,6 +69,7 @@ class OneLaunchHandoff:
                 and 16 <= len(sealed_startup_nonce) <= 128,
                 "STARTUP_NONCE_INVALID")
         self.window_identity = window_identity(window_fd)
+        self.window_parent_fd = os.dup(window_fd)
         self.window_child_fd = os.dup(window_fd)
         self.root, self.child = socket.socketpair()
         self.receipt_sha256 = receipt_sha256
@@ -77,22 +98,44 @@ class OneLaunchHandoff:
             "receiptSha256": self.receipt_sha256, "windowIdentity": self.window_identity},
             separators=(",", ":")).encode() + b"\n"
         require(len(frame) <= MAX_FRAME, "CHALLENGE_FRAME_BOUND")
+        deadline = time.monotonic() + CHALLENGE_TIMEOUT
+        received_fds = []
         try:
-            self.root.settimeout(CHALLENGE_TIMEOUT)
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "CHALLENGE_DEADLINE")
+            self.root.settimeout(remaining)
             self.root.sendall(frame)
             answer = bytearray()
             while len(answer) < 64:
-                block = self.root.recv(64 - len(answer))
+                remaining = deadline - time.monotonic()
+                require(remaining > 0, "CHALLENGE_DEADLINE")
+                self.root.settimeout(remaining)
+                block, ancillary, flags, _ = self.root.recvmsg(
+                    64 - len(answer), socket.CMSG_SPACE(4 * array.array("i").itemsize))
                 require(bool(block), "CHALLENGE_CLOSED")
+                require(not (flags & socket.MSG_CTRUNC), "CHALLENGE_FD_TRUNCATED")
+                for level, kind, data in ancillary:
+                    require(level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS,
+                            "CHALLENGE_FD_INVALID")
+                    fds = array.array("i")
+                    fds.frombytes(data[:len(data) // fds.itemsize * fds.itemsize])
+                    received_fds.extend(fds)
                 answer.extend(block)
+            require(len(received_fds) == 1
+                    and same_open_file_description(self.window_parent_fd,
+                        received_fds[0], self.window_identity), "CHALLENGE_WINDOW_FD_MISSING")
         except (OSError, TimeoutError) as exc:
             raise Rejected("CHALLENGE_UNAVAILABLE") from exc
+        finally:
+            for fd in received_fds:
+                os.close(fd)
         require(bytes(answer) == response_digest(self.nonce, self.challenge_value,
                 self.receipt_sha256, self.window_identity), "CHALLENGE_MISMATCH")
 
     def close(self):
         self.close_child_fds()
         self.root.close()
+        os.close(self.window_parent_fd)
 
 
 def child_prove(challenge_fd, window_fd, expected_receipt_sha256):
@@ -113,7 +156,10 @@ def child_prove(challenge_fd, window_fd, expected_receipt_sha256):
                 and frame.get("windowIdentity") == identity
                 and isinstance(frame.get("nonce"), str)
                 and isinstance(frame.get("challenge"), str), "CHALLENGE_BINDING_INVALID")
-        channel.sendall(response_digest(frame["nonce"], frame["challenge"],
-                                        expected_receipt_sha256, identity))
+        answer = response_digest(frame["nonce"], frame["challenge"],
+                                 expected_receipt_sha256, identity)
+        sent = channel.sendmsg([answer], [(socket.SOL_SOCKET, socket.SCM_RIGHTS,
+                array.array("i", [window_fd]))])
+        require(sent == len(answer), "CHALLENGE_RESPONSE_INCOMPLETE")
     except (OSError, ValueError, TimeoutError) as exc:
         raise Rejected("CHALLENGE_UNAVAILABLE") from exc
