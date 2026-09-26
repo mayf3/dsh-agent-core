@@ -128,6 +128,29 @@ class FixedPhaseJournalTest(unittest.TestCase):
         with self.assertRaises(journal.Rejected):
             journal.claim_one_launch(104)
 
+    def test_first_authorization_readback_failure_consumes_nonce_without_retry(self):
+        self.assert_claim_readback_failure_consumes_nonce("launch-authorization")
+
+    def test_first_commitment_readback_failure_consumes_nonce_without_retry(self):
+        self.assert_claim_readback_failure_consumes_nonce("bundle-commitment")
+
+    def assert_claim_readback_failure_consumes_nonce(self, failing_kind):
+        journal.seal_bundle_commitment(self.bundle, 102)
+        readback = journal.readback
+
+        def unavailable(kind):
+            if kind == failing_kind:
+                raise journal.Rejected("SYNTHETIC_TRANSIENT_READBACK")
+            return readback(kind)
+
+        with patch.object(journal, "readback", side_effect=unavailable):
+            with self.assertRaises(journal.Rejected):
+                journal.claim_one_launch(103)
+        with self.assertRaises(journal.Rejected):
+            journal.claim_one_launch(104)
+        self.assertFalse((self.directory / "phase-launch-attempt.json").exists())
+        self.assertFalse((self.directory / "launch-claimed.json").exists())
+
     def test_attempt_parent_hash_tamper_invalidates_claim_readback(self):
         journal.seal_bundle_commitment(self.bundle, 102)
         journal.claim_one_launch(103)
