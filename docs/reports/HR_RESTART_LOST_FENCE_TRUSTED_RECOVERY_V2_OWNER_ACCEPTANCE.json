@@ -1,0 +1,25 @@
+{
+  "authorized_scope": "bounded nonproduction implementation and tests, independent review, canonical merge preparation for replay/preimage consumer contract",
+  "decision": "ACCEPT_EXACT_HR_V2_CONSUMER_SUCCESSOR_SPEC_FOR_NONPRODUCTION_SOURCE_CONTINUATION",
+  "explicitly_not_authorized": [
+    "live read",
+    "bootstrap",
+    "restart",
+    "production recovery",
+    "fence clear",
+    "protected store mutation",
+    "old prompt replay",
+    "grant or credential change"
+  ],
+  "fixed_s256_r2_acceptance_preserved_separately": true,
+  "independent_review_path": "/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/hr-r4-successor-r2-final-independent-crosscheck-20260925-v1/INDEPENDENT_REVIEW.md",
+  "independent_review_sha256": "57fcab985dfbc2fc553fc772db02234ca0bd61127adbdf7d9aed6f9e122c2009",
+  "production_mutation_authorized": false,
+  "recorded_at_local": "2026-09-26T08:09:57.064286+08:00",
+  "requires_atomic_docs_only_lifecycle_transaction": true,
+  "review_verdict": "PASS_READY_FOR_OWNER_ACCEPTANCE",
+  "schema": "HR_V2_CONSUMER_SUCCESSOR_SPEC_OWNER_ACCEPTANCE_V1",
+  "source": "attributable Owner message in current Codex thread 01a0ad06-249f-7632-809b-961b93c3b113",
+  "spec_path": "/Users/yanfenma/.codex/worktrees/hr-replay-provenance-successor/dsh-agent-core/docs/specs/HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2.md",
+  "spec_sha256": "62a105cc1cc34160253b938d55637898cb1ff93d75096331d450b2fa042ee259"
+}

@@ -1,6 +1,6 @@
 ---
 spec_id: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -39,7 +39,7 @@ related_reports:
   - docs/reports/scheduler-terminal-proof-unknown-containment-v1.md
   - docs/evidence/router-durable-generation-restart-safety-v1-20260921/PROOF_INDEX.md
 supersedes: []
-superseded_by: null
+superseded_by: HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2
 implementation_started: NO
 production_mutation: NO
 scope:
