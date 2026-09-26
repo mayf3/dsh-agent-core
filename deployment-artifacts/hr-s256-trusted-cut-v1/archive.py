@@ -135,7 +135,7 @@ def readback():
         ps, lsof, archive_raw = [read_file(directory, name) for name in FILES]
         normalized(ps, "ps")
         normalized(lsof, "lsof")
-        archive = json.loads(archive_raw)
+        archive = json.loads(archive_raw, object_pairs_hook=unique_object)
         require(type(archive) is dict and set(archive) == {
             "operationId", "hostId", "tools", "outputsSha256",
             "runtimeTreeProcessCount", "psAtWallMs", "lsofAtWallMs"}
@@ -149,6 +149,8 @@ def readback():
             and valid_time(archive["lsofAtWallMs"])
             and archive["psAtWallMs"] <= archive["lsofAtWallMs"],
             "CENSUS_ARCHIVE_INVALID")
+        require(archive_raw == (json.dumps(archive, separators=(",", ":")) + "\n").encode(),
+                "CENSUS_ARCHIVE_NONCANONICAL")
         return {"archiveSha256": digest(archive_raw), "archive": archive}
     except (OSError, ValueError, UnicodeDecodeError, Rejected) as exc:
         raise Rejected("CENSUS_ARCHIVE_READBACK_UNKNOWN") from exc

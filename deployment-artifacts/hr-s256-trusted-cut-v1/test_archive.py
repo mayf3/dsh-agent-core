@@ -75,6 +75,38 @@ class ArchiveTest(unittest.TestCase):
             with self.assertRaises(archive.Rejected):
                 archive.readback()
 
+    def test_archive_readback_rejects_duplicate_or_noncanonical_metadata(self):
+        for change in ("duplicate-operation", "noncanonical-json",
+                       "wrong-operation", "wrong-output-digest"):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as root:
+                os.chmod(root, 0o755)
+                archive.TEST_MODE = True
+                archive.STATE_ROOT = root
+                sealed = archive.seal_census("fixture-host", census(),
+                                             ["/fixture/workspace"], 100)
+                metadata = Path(root) / archive.DIRECTORY / "census-archive.json"
+                original = metadata.read_bytes()
+                if change == "duplicate-operation":
+                    changed = original.replace(
+                        b'{"operationId":',
+                        b'{"operationId":"privatePayload=sensitive-fixture","operationId":',
+                        1)
+                elif change == "noncanonical-json":
+                    changed = original.replace(b',"hostId":', b', "hostId":', 1)
+                elif change == "wrong-operation":
+                    changed = original.replace(archive.OPERATION_ID.encode(),
+                                               b"another-operation", 1)
+                else:
+                    expected = hashlib.sha256(census()["psOutput"]).hexdigest().encode()
+                    changed = original.replace(
+                        b'"' + expected + b'"', b'"' + b'0' * 64 + b'"', 1)
+                self.assertNotEqual(changed, original)
+                self.assertEqual(archive.readback()["archiveSha256"],
+                                 sealed["archiveSha256"])
+                metadata.write_bytes(changed)
+                with self.assertRaises(archive.Rejected):
+                    archive.readback()
+
     def test_unknown_or_secret_payload_and_bad_time_are_zero_write(self):
         duplicate = (b'{"tool":"ps","scannedProcessCount":2,"oldTreeProcessCount":0,'
                      b'"rawSha256":"privatePayload=sensitive-fixture",'
