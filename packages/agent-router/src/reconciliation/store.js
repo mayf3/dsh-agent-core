@@ -43,6 +43,7 @@ import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
 import { startupRecoveryMethods } from './startup-recovery.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore } from './durable-file.js'
+import { validatedIngressCorrelation } from './ingress-correlation.js'
 
 const MANDATORY_TRANSITION_HEADROOM_BYTES = 4096
 
@@ -248,10 +249,11 @@ export class TurnReconciliationStore {
    * and any prompt bytes. Capacity is enforced fail-loud BEFORE reservation.
    * @returns {string} reconciliationHandle
    */
-  mintTurnExecution({ agentId, processGeneration, sessionId, callerCorrelation = null }) {
+  mintTurnExecution({ agentId, processGeneration, sessionId, callerCorrelation = null, ingressCorrelation = null }) {
     if (typeof agentId !== 'string' || agentId === '') throw new TypeError('mintTurnExecution: agentId required')
     if (!Number.isSafeInteger(processGeneration) || processGeneration <= 0) throw new TypeError('mintTurnExecution: processGeneration must be a positive integer')
     const correlationKey = callerCorrelation === null ? null : this.callerCorrelationKey(callerCorrelation)
+    const checkedIngress = validatedIngressCorrelation(ingressCorrelation)
     if (correlationKey !== null) {
       const existing = this.correlationIndex.get(correlationKey)
       if (existing !== undefined) {
@@ -294,6 +296,7 @@ export class TurnReconciliationStore {
       turnSeq,
       sessionId: sessionId ?? null,
       callerCorrelation: callerCorrelation === null ? null : { ...callerCorrelation },
+      ingressCorrelation: checkedIngress,
       createdAtWallMs: createdAt,
       createdAt,
       updatedAt: createdAt,

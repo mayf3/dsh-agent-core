@@ -16,6 +16,7 @@ import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation
 import { ROUTE_HOP_FAILURE_CLASSES } from './route-chain.js'
 import { fencedRejection } from './process/state-machine.js'
 import { outerFailureProjection } from './reconciliation/query.js'
+import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
 const PROVEN_NO_ADMISSION_ROUTE_FAILURES = new Set([
   ROUTE_HOP_FAILURE_CLASSES.SPAWN_FAILED_WITHOUT_CHILD,
   ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE,
@@ -57,6 +58,7 @@ function isRecoveryFenceResult(error) {
 export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
+  registerAuthenticatedIngress,
 }) {
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -83,7 +85,7 @@ export function createIngressDelivery({
    *   replyDelivery:'failed'|'unknown', partialDelivery:'possible',
    *   confirmedChunkReceipts:'unavailable', failureReceipt:object}>} result.
    */
-  async function onIngress(ingress) {
+  async function deliverIngress(ingress, authenticatedFeishu) {
     const namespace = ingressBindingNamespace(ingress)
     const evSummary = `channel=${ingress.channel ?? '(none)'} chat=${ingress.chatId} sender=${ingress.sender?.openId?.slice(0, 6)} text="${(ingress.text ?? '').slice(0, 60)}"`
     const isFeishuEntry = feishuReplyOwed(ingress)
@@ -91,6 +93,7 @@ export function createIngressDelivery({
     let binding
     let turnStarted = false
     try {
+      const trusted = authenticatedFeishu ? authenticatedFeishuFields(ingress) : null
       reconciliationStore.assertBusinessAdmissionReady?.()
       ;({ channelConversation, binding } = await resolveChannelConversation({
         channel: namespace,
@@ -120,32 +123,18 @@ export function createIngressDelivery({
       // Unified route-attempt seam (CTR-IMPL-002): the ordered route chain,
       // per-attempt journal and STOP_CHAIN policy all live in the executor —
       // this entry owns only the channel/binding resolution around it.
+      const opts = ingressTurnOpts(ingress, namespace, channelConversation.id, workspacePath, isFeishuEntry)
+      if (trusted !== null) {
+        if (typeof registerAuthenticatedIngress !== 'function') {
+          throw new TypeError('authenticated Feishu ingress registrar unavailable')
+        }
+        registerAuthenticatedIngress(opts, authenticatedCorrelation(trusted, channelConversation.id))
+      }
       turnStarted = true
       const turnResult = await routeChain.runTurnWithRouteChain(binding.activeAgentId, {
         sessionId: binding.activeSessionId,
         message: ingress.text ?? '',
-        opts: {
-          // The turn belongs to this ChannelConversation: the DSH switch tool
-          // inside the agent switches exactly this Binding.
-          bindingContext: channelConversation.id,
-          // Trusted ingress leaves are copied exactly. In particular chatId
-          // is never derived from conversationId: a thread conversation can
-          // include topic identity and is not a delivery destination.
-          // feishuSenderOpenId carries the AUTHENTICATED sender identity from
-          // the Feishu ingress metadata (never anything the prompt itself
-          // reports) — the CTR-I2-015 canary binding input.
-          ingressContext: Object.freeze({
-            channelNamespace: namespace,
-            channelConversationId: channelConversation.id,
-            feishuChatId: isFeishuEntry ? ingress.chatId : undefined,
-            feishuConversationId: isFeishuEntry ? ingress.conversationId : undefined,
-            feishuMessageId: isFeishuEntry ? ingress.messageId : undefined,
-            feishuSenderOpenId: isFeishuEntry ? ingress.sender?.openId : undefined,
-          }),
-          // The session's effective workspace cwd (per-session, NOT the
-          // process-level cwd — one Agent stays one process across workspaces).
-          cwd: workspacePath,
-        },
+        opts,
       })
       // C-010 closed envelope. `outcome_unknown` is NOT an ordinary failure:
       // the turn may still be running — surface a structured timeout error
@@ -240,6 +229,11 @@ export function createIngressDelivery({
       return { error, failureStage }
     }
   }
+
+  // Public Router route and private SDK/PolicyGate callback share delivery
+  // mechanics but never share the authority to register provenance.
+  const onIngress = (ingress) => deliverIngress(ingress, false)
+  const onAuthenticatedFeishuIngress = (ingress) => deliverIngress(ingress, true)
 
   /**
    * AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R4 — exact-allowlist validation of
@@ -496,5 +490,5 @@ export function createIngressDelivery({
     return deliveries.map(d => ({ ...d }))
   }
 
-  return { onIngress, deliver, deliveriesSnapshot }
+  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot }
 }
