@@ -121,6 +121,27 @@ def validate_census(ps_bytes, lsof_bytes, runtime_count, holder_count,
             "runtimeTreeProcessCount": 0}
 
 
+def validate_entry_closure(manifest, inhibited_sources):
+    """Internal fixed manifest/observed scope; never accepts caller PASS in request."""
+    gated = "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs"
+    retired = b'#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n'
+    expected = {"version": 1, "operationId": OPERATION_ID,
+        "entries": [{"path": gated, "sha256": HR_GATED_ENTRY_SHA256,
+                     "helperSha256": HR_CHILD_PROOF_SHA256}],
+        "retiredEntry": {"path": "scripts/production-runtime.mjs", "sha256": sha_bytes(retired)},
+        "routes": [{"id": "gui/505/ai.agent-core.runtime",
+                    "target": "/usr/local/libexec/agent-core/app/" + gated},
+                   {"id": "system/ai.agent-core.runtime",
+                    "target": "/usr/local/libexec/agent-core/app/" + gated}]}
+    sources = ["gui/505/ai.agent-core.runtime", "system/ai.agent-core.runtime", gated]
+    require(manifest == expected and type(inhibited_sources) is list
+            and len(inhibited_sources) == 3
+            and all(type(item) is str for item in inhibited_sources)
+            and sorted(inhibited_sources) == sorted(sources),
+            "LAUNCH_WINDOW_OR_SOURCE_UNKNOWN")
+    return True
+
+
 def build_authorization(cut):
     """Shape an offline launch receipt from internally verified cut observations."""
     require(type(cut) is dict and cut.get("operationId") == OPERATION_ID

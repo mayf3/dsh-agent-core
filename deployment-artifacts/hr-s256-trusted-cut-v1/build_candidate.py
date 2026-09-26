@@ -55,6 +55,8 @@ def build_bytes():
         + f'HR_PROJECTOR_SOURCE = {projector!r}\n\n'
         + f'HR_READBACK_HELPER_SOURCE = {readback!r}\n'
         + f'HR_READBACK_HELPER_SHA256 = {hashlib.sha256(readback.encode()).hexdigest()!r}\n\n'
+        + f'HR_GATED_ENTRY_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs").read_bytes()).hexdigest()!r}\n'
+        + f'HR_CHILD_PROOF_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py").read_bytes()).hexdigest()!r}\n'
         + scoped_source("HR_PROFILE", HERE / "profile.py")
         + scoped_source("HR_COLLECTOR", HERE / "collector.py")
         + scoped_source("HR_PROJECTION", HERE / "projection.py")

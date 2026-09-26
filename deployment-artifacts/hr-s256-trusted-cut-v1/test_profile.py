@@ -83,6 +83,25 @@ class FixedProfileTest(unittest.TestCase):
         with self.assertRaises(profile.Rejected):
             profile.build_authorization({**cut, "windowHeld": False})
 
+    def test_closed_entry_manifest_requires_both_routes_manual_entry_and_exact_byte_pins(self):
+        gated = "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs"
+        profile.HR_GATED_ENTRY_SHA256 = "a" * 64
+        profile.HR_CHILD_PROOF_SHA256 = "b" * 64
+        manifest = {"version": 1, "operationId": profile.OPERATION_ID,
+            "entries": [{"path": gated, "sha256": "a" * 64, "helperSha256": "b" * 64}],
+            "retiredEntry": {"path": "scripts/production-runtime.mjs",
+                "sha256": profile.sha_bytes(b'#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n')},
+            "routes": [{"id": "gui/505/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + gated},
+                       {"id": "system/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + gated}]}
+        sources = ["gui/505/ai.agent-core.runtime", "system/ai.agent-core.runtime", gated]
+        self.assertTrue(profile.validate_entry_closure(manifest, sources))
+        for bad_sources in (sources[:-1], sources[1:], sources + ["unknown-source"]):
+            with self.assertRaisesRegex(profile.Rejected, "LAUNCH_WINDOW_OR_SOURCE_UNKNOWN"):
+                profile.validate_entry_closure(manifest, bad_sources)
+        altered = {**manifest, "entries": [{**manifest["entries"][0], "sha256": "c" * 64}]}
+        with self.assertRaisesRegex(profile.Rejected, "LAUNCH_WINDOW_OR_SOURCE_UNKNOWN"):
+            profile.validate_entry_closure(altered, sources)
+
     def test_candidate_is_inert_without_a_reviewed_ds_integration(self):
         with self.assertRaises(profile.Rejected) as error:
             profile.production_entry({"action": profile.ACTION,

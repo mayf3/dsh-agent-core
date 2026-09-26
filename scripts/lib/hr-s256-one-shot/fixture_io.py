@@ -52,6 +52,18 @@ class SyntheticFixedIO:
         return {"hostId": "fixture-host", "binarySha256": "b" * 64,
                 "oldPids": {123}, "holderPaths": ["/fixture/workspace"]}
 
+    def observed_entry_closure(self):
+        # Synthetic scope only. Never an installed manifest/continuous host proof.
+        gated = "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs"
+        manifest = {"version": 1, "operationId": self.ds.HR_PROFILE.OPERATION_ID,
+            "entries": [{"path": gated, "sha256": self.ds.HR_GATED_ENTRY_SHA256,
+                         "helperSha256": self.ds.HR_CHILD_PROOF_SHA256}],
+            "retiredEntry": {"path": "scripts/production-runtime.mjs",
+                "sha256": self.ds.HR_PROFILE.sha_bytes(b'#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n')},
+            "routes": [{"id": "gui/505/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + gated},
+                       {"id": "system/ai.agent-core.runtime", "target": "/usr/local/libexec/agent-core/app/" + gated}]}
+        return manifest, ["gui/505/ai.agent-core.runtime", "system/ai.agent-core.runtime", gated]
+
     def open_fixed_window(self):
         self.effects.append("window")
         self.window = os.open(self.root / "fixture-window.lock",
