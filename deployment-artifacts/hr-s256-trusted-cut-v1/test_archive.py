@@ -76,8 +76,12 @@ class ArchiveTest(unittest.TestCase):
                 archive.readback()
 
     def test_unknown_or_secret_payload_and_bad_time_are_zero_write(self):
+        duplicate = (b'{"tool":"ps","scannedProcessCount":2,"oldTreeProcessCount":0,'
+                     b'"rawSha256":"privatePayload=sensitive-fixture",'
+                     b'"rawSha256":"' + b'a' * 64 + b'"}\n')
         for changed_census, paths, quiesced in (
                 ({**census(), "privatePayload": "sensitive-fixture"}, ["/fixture/workspace"], 100),
+                ({**census(), "psOutput": duplicate}, ["/fixture/workspace"], 100),
                 ({**census(), "lsofOutput": b"{}\n"}, ["/fixture/workspace"], 100),
                 ({**census(), "runtimeTreeProcessCount": 1}, ["/fixture/workspace"], 100),
                 (census(), [], 100),

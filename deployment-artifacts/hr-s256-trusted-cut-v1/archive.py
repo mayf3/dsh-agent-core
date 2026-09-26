@@ -35,11 +35,19 @@ def valid_time(value):
     return type(value) is int and 0 <= value <= (1 << 53) - 1
 
 
+def unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        require(key not in value, "CENSUS_OUTPUT_DUPLICATE_KEY")
+        value[key] = item
+    return value
+
+
 def normalized(raw, tool):
     require(type(raw) is bytes and 0 < len(raw) <= MAX_BYTES and raw.endswith(b"\n"),
             "CENSUS_OUTPUT_INVALID")
     try:
-        parsed = json.loads(raw)
+        parsed = json.loads(raw, object_pairs_hook=unique_object)
     except (ValueError, UnicodeDecodeError) as exc:
         raise Rejected("CENSUS_OUTPUT_INVALID") from exc
     count = "scannedProcessCount" if tool == "ps" else "scannedFileCount"
@@ -49,6 +57,8 @@ def normalized(raw, tool):
             and type(parsed[zero]) is int and parsed[zero] == 0
             and isinstance(parsed["rawSha256"], str)
             and HASH.fullmatch(parsed["rawSha256"]), "CENSUS_OUTPUT_INVALID")
+    require(raw == (json.dumps(parsed, separators=(",", ":")) + "\n").encode(),
+            "CENSUS_OUTPUT_NONCANONICAL")
     return parsed
 
 
