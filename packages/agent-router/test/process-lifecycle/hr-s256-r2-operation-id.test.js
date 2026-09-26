@@ -44,13 +44,15 @@ function operationId(fx, id) {
   writeFileSync(fx.bundleFile, json(fx.bundle))
 }
 
-test('accepted fixed R2 operation ID settles with all exact receipts bound', (t) => {
+test('fixed R2 operation ID alone cannot replace the registered fixed journal', (t) => {
   const fx = proofFixture(cleanup => t.after(cleanup))
   operationId(fx, FIXED_OPERATION_ID)
   const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const before = readFileSync(fx.persistenceFile)
   const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
     deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
-  assert.deepEqual(result.map(row => row.status), ['settled'], JSON.stringify(result))
+  assert.deepEqual(result.map(row => row.status), ['rejected'], JSON.stringify(result))
+  assert.deepEqual(readFileSync(fx.persistenceFile), before)
 })
 
 test('other unapproved non-op ID rejects with durable zero-write', (t) => {
