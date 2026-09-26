@@ -51,8 +51,18 @@ def build_bytes():
         '            return hr_s256_action(request), None')
     projector = (HERE / "project-subject.mjs").read_text(encoding="utf-8")
     readback = (HERE.parents[1] / "scripts/lib/hr-s256-one-shot/readback-settlement.mjs").read_text(encoding="utf-8")
+    inventory = (HERE.parents[1] / "scripts/lib/hr-s256-one-shot/project-inventory.mjs").read_text(encoding="utf-8")
+    inventory_sources = ["packages/agent-router/src/binding-store.js",
+        "packages/workspace-bootstrap/src/paths.js",
+        "packages/production-runtime/src/agent-session/turn-inspection.js",
+        "packages/production-runtime/src/agent-session/projection-redaction.js",
+        "packages/agent-router/src/process/provider-errors.js"]
+    inventory_pins = {path: hashlib.sha256((HERE.parents[1] / path).read_bytes()).hexdigest()
+                      for path in inventory_sources}
     integration = ('import types\n\n'
         + f'HR_PROJECTOR_SOURCE = {projector!r}\n\n'
+        + f'HR_INVENTORY_HELPER_SOURCE = {inventory!r}\n'
+        + f'HR_INVENTORY_VALIDATOR_PINS = {inventory_pins!r}\n'
         + f'HR_READBACK_HELPER_SOURCE = {readback!r}\n'
         + f'HR_READBACK_HELPER_SHA256 = {hashlib.sha256(readback.encode()).hexdigest()!r}\n\n'
         + f'HR_GATED_ENTRY_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs").read_bytes()).hexdigest()!r}\n'
@@ -68,6 +78,8 @@ def build_bytes():
                         "scripts/lib/hr-s256-one-shot/orchestration.py")
         + scoped_source("HR_REAL_OS", HERE.parents[1] /
                         "scripts/lib/hr-s256-one-shot/fixed_os.py")
+        + scoped_source("HR_INVENTORY", HERE.parents[1] /
+                        "scripts/lib/hr-s256-one-shot/installed_inventory.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:
