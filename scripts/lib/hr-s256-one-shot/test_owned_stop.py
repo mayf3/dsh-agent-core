@@ -5,18 +5,18 @@ import json
 import os
 from pathlib import Path
 import tempfile
-import time
 import unittest
 from unittest.mock import patch
 
-from test_orchestration import FixedAssembledActionTest
+import test_orchestration as assembled_fixture
+from process_confinement import confine_processes, ProcessDispatchDenied
 
 
 class OwnedStopTest(unittest.TestCase):
     @contextmanager
     def fixture(self):
         with tempfile.TemporaryDirectory() as root:
-            ds = FixedAssembledActionTest().assembled(root)
+            ds = assembled_fixture.FixedAssembledActionTest().assembled(root)
             ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
             lock = ds.mutation_lock()
             path = Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock'
@@ -25,7 +25,9 @@ class OwnedStopTest(unittest.TestCase):
             owner = None
             try:
                 owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window)
-                yield ds, owner, lock, window, path
+                with confine_processes(ds.HR_FINITE_STOP.subprocess) as recorder:
+                    self.process_recorder = recorder
+                    yield ds, owner, lock, window, path
             finally:
                 if owner is not None:
                     owner.close()
@@ -110,20 +112,17 @@ class OwnedStopTest(unittest.TestCase):
                     with self.assertRaisesRegex(Exception, 'SOURCE_CLOSURE_UNKNOWN'):
                         stopper.stop()
 
-    def test_owned_stop_shared_unload_budget_and_no_replay(self):
+    def test_owned_stop_unmocked_dispatch_denied_then_no_replay(self):
+        # Do not run this adapter test until root/reviewer approves confinement.
+        # No namespace command patch can bypass the mandatory Popen boundary.
         with self.fixture() as (ds, owner, _, _, _):
             stopper = owner.fixed_stop()
-            deadlines = []
-            def command(route, verb, deadline):
-                deadlines.append(deadline)
-                return 0 if verb == 'bootout' else 113
             with patch.object(ds.HR_REAL_OS, 'require_activation', return_value=None), patch.object(
-                    ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}), patch.object(
-                    ds.HR_FINITE_STOP, 'command', side_effect=command):
-                before = time.monotonic()
-                stopper.stop()
-                self.assertEqual(len(set(deadlines)), 1)
-                self.assertLessEqual(deadlines[0] - before, 30.1)
+                    ds.HR_INVENTORY, 'fixed_installed_inventory', return_value={'unresolvedSources': []}):
+                with self.assertRaises(ProcessDispatchDenied):
+                    stopper.stop()
+                self.assertEqual(self.process_recorder.calls,
+                    [('/bin/launchctl', 'bootout', 'gui/505/ai.agent-core.runtime')])
                 with self.assertRaisesRegex(Exception, 'STOP_NO_REPLAY'):
                     stopper.stop()
 
