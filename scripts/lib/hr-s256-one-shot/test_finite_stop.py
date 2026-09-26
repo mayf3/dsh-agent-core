@@ -19,6 +19,7 @@ class FiniteStopTest(unittest.TestCase):
         return module
 
     def fixture(self, module, responses=None):
+        module.TEST_MODE = True
         calls = []
         answers = iter(responses or [0, 113, 0, 113, 113, 113])
         module.HR_REAL_OS = SimpleNamespace(require_activation=lambda: None)

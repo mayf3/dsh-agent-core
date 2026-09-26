@@ -1,6 +1,7 @@
 """Test-only finite host double. Not an installed root adapter or evidence source."""
 
 import importlib.util
+import fcntl
 import os
 from pathlib import Path
 import subprocess
@@ -67,8 +68,9 @@ class SyntheticFixedIO:
 
     def open_fixed_window(self):
         self.effects.append("window")
-        self.window = os.open(self.root / "fixture-window.lock",
+        self.window = os.open(self.root / self.ds.HR_PROFILE.OPERATION_ID / "window.lock",
                               os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+        fcntl.flock(self.window, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return self.window, self.wall_ms()
 
     def inhibit_fixed_sources(self):

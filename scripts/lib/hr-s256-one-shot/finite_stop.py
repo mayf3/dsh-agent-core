@@ -64,7 +64,8 @@ def command(route, verb, deadline):
 
 class FixedStop:
     """One private attempt; failures permanently poison continuity for this owner."""
-    def __init__(self):
+    def __init__(self, *, _owner=None):
+        self._owner = _owner
         self._attempted = False
         self._stopped = False
         self._unknown = False
@@ -72,6 +73,9 @@ class FixedStop:
     def stop(self, *, child=None):
         activation()  # Must precede inventory reads, process inspection and effects.
         require(child is None, 'OWNED_CHILD_UNSUPPORTED')
+        require(self._owner is not None or globals().get('TEST_MODE', False), 'OWNED_CUSTODY_UNKNOWN')
+        if self._owner is not None:
+            self._owner.check()
         require(not self._attempted, 'STOP_NO_REPLAY')
         inventory = globals().get('HR_INVENTORY')
         require(inventory is not None, 'SOURCE_CLOSURE_UNKNOWN')
@@ -87,6 +91,8 @@ class FixedStop:
         deadline = time.monotonic() + 30
         try:
             for route in ROUTES:
+                if self._owner is not None:
+                    self._owner.check()
                 check(deadline)
                 require(command(route, 'bootout', deadline) in (0, 113), 'STOP_UNKNOWN')
                 require(command(route, 'print', deadline) == 113, 'SOURCE_RESUMED')
@@ -101,6 +107,8 @@ class FixedStop:
         deadline = time.monotonic() + 10
         try:
             for route in ROUTES:
+                if self._owner is not None:
+                    self._owner.check()
                 require(command(route, 'print', deadline) == 113, 'SOURCE_RESUMED')
         except BaseException:
             self._unknown = True
