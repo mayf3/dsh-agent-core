@@ -8,6 +8,7 @@ import * as staging from '../../src/native-arm64/stage.js'
 
 const gated = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
 const helper = 'packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py'
+const context = 'packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
 const fixedApp = '/usr/local/libexec/agent-core/app/'
 const oldTarget = fixedApp + 'scripts/production-runtime.mjs'
 const newTarget = fixedApp + gated
@@ -25,6 +26,9 @@ function fixture(t) {
     for (const path of staging.ARM_SOURCE_DELTA) put(dir, path, path.endsWith('admission.js') ? 'export function assertProductionArchitecture() {}' : 'import "../packages/production-runtime/src/entry.js";')
     put(dir, gated, readFileSync(new URL('../../src/native-arm64/hr-s256-r2-gated-runtime.mjs', import.meta.url)))
     put(dir, helper, readFileSync(new URL('../../src/native-arm64/hr-s256-r2-child-proof.py', import.meta.url)))
+    put(dir, context, readFileSync(new URL('../../src/native-arm64/hr-s256-r2-startup-context.mjs', import.meta.url)))
+    put(dir, 'packages/agent-router/src/index.js', "import { provisionAgentHome } from '../../agent-provisioning/src/index.js'\nif (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {\n}")
+    put(dir, 'packages/agent-router/src/reconciliation/startup-recovery.js', 'files = readdirSync(evidenceDir).filter\n')
     run(dir, 'add', '.');run(dir, 'commit', '-qm', 'base')
   }
   return { options: { liveRoot: live, candidateRoot: candidate, candidateSHA: run(candidate, 'rev-parse', 'HEAD'), stageRoot: join(root, 'stage'), guiPlist: xml('<key>KeepAlive</key><true/>'), systemPlist: xml('<key>UserName</key><string>authsvc</string>') } }

@@ -72,6 +72,24 @@ const HR_RETIRED_ENTRY = 'scripts/production-runtime.mjs'
 const HR_APP = '/usr/local/libexec/agent-core/app/'
 export const HR_RETIRED_BYTES = '#!/usr/bin/env node\nthrow new Error("HR_UNGATED_ENTRY_RETIRED");\n'
 
+/** Apply only this join to the fresh stage; never overwrite a newer Router. */
+export function patchHrRouterJoin(path, bytes) {
+  let source = bytes.toString('utf8')
+  const replaceOnce = (before, after) => {
+    if (source.split(before).length !== 2) throw new Error('HR_ROUTER_BASE_UNKNOWN')
+    source = source.replace(before, after)
+  }
+  if (path === 'packages/agent-router/src/index.js') {
+    const imported = "import { provisionAgentHome } from '../../agent-provisioning/src/index.js'"
+    replaceOnce(imported, imported + "\nimport { getFixedStartupContext, signalFixedStartupConsumptionFinished } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'")
+    const branch = "  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {"
+    replaceOnce(branch, "  const fixedStartup = getFixedStartupContext()\n  if (fixedStartup !== undefined) {\n    reconciliationStore.consumeStartupQuiescence(fixedStartup)\n    signalFixedStartupConsumptionFinished()\n  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {")
+  } else if (path === 'packages/agent-router/src/reconciliation/startup-recovery.js') {
+    replaceOnce('files = readdirSync(evidenceDir).filter', 'files = (io?.readdir ?? readdirSync)(evidenceDir).filter')
+  } else throw new Error('HR_ROUTER_BASE_UNKNOWN')
+  return Buffer.from(source)
+}
+
 /** Fixed one-shot candidate only. Never reads/writes an installed plist. */
 export function stageHrOneShotApplication({ guiPlist, systemPlist, ...options }) {
   const oldTarget = HR_APP + HR_RETIRED_ENTRY
@@ -93,10 +111,12 @@ export function stageHrOneShotApplication({ guiPlist, systemPlist, ...options })
     // Byte-identical remainder: UID, root, environment and supervision survive.
     routes[name] = raw.replace(oldTarget, newTarget)
   }
-  const frozen = [HR_GATED_ENTRY, HR_CHILD_PROOF].map(path => ({ path,
+  const frozen = [HR_GATED_ENTRY, HR_CHILD_PROOF, 'packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'].map(path => ({ path,
     bytes: execFileSync('/usr/bin/git', ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path]) }))
   const result = stageApplication(options)
-  const replacements = [...frozen, { path: HR_RETIRED_ENTRY, bytes: Buffer.from(HR_RETIRED_BYTES) }]
+  const joins = ['packages/agent-router/src/index.js', 'packages/agent-router/src/reconciliation/startup-recovery.js'].map(path => ({ path,
+    bytes: patchHrRouterJoin(path, readFileSync(join(result.stageRoot, path))) }))
+  const replacements = [...frozen, ...joins, { path: HR_RETIRED_ENTRY, bytes: Buffer.from(HR_RETIRED_BYTES) }]
   for (const { path, bytes } of replacements) {
     const prior = result.files.find(file => file.path === path)
     const record = { path, preimageHash: prior?.preimageHash ?? null,

@@ -80,6 +80,7 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
+import { getFixedStartupContext, signalFixedStartupConsumptionFinished } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -232,7 +233,11 @@ export function apply(ctx, config) {
       ? cfg.reconciliationStoreFile
       : null,
   })
-  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+  const fixedStartup = getFixedStartupContext()
+  if (fixedStartup !== undefined) {
+    reconciliationStore.consumeStartupQuiescence(fixedStartup)
+    signalFixedStartupConsumptionFinished()
+  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
     // RQ-005/007 privileged launcher authority has not been bootstrapped.
     // Environment values cannot establish its nonce, binary, or live FDs;
     // this production composition is deliberately incapable of settlement.

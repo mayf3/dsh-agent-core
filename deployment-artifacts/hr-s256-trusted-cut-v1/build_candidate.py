@@ -66,6 +66,7 @@ def build_bytes():
         + f'HR_READBACK_HELPER_SOURCE = {readback!r}\n'
         + f'HR_READBACK_HELPER_SHA256 = {hashlib.sha256(readback.encode()).hexdigest()!r}\n\n'
         + f'HR_GATED_ENTRY_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs").read_bytes()).hexdigest()!r}\n'
+        + f'HR_STARTUP_CONTEXT_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs").read_bytes()).hexdigest()!r}\n'
         + f'HR_CHILD_PROOF_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py").read_bytes()).hexdigest()!r}\n'
         + scoped_source("HR_PROFILE", HERE / "profile.py")
         + scoped_source("HR_COLLECTOR", HERE / "collector.py")
@@ -92,18 +93,18 @@ def build_bytes():
     """One fixed DS action, serialized by the existing mutation domain."""
     try:
         HR_PROFILE.validate_request(request)
-    except HR_PROFILE.Rejected as exc:
+        if not TEST_MODE:
+            HR_REAL_OS.require_activation()  # Uninstalled: before canonical/protected IO.
+    except (HR_PROFILE.Rejected, HR_REAL_OS.Rejected) as exc:
         raise Failure(str(exc)) from exc
     lock_fd = mutation_lock()
     try:
         try:
-            if TEST_MODE:
-                HR_OWNED_STOP.enter_handler(lock_fd)
-                try:
-                    return HR_ONE_SHOT.run_fixed(request, lock_fd)
-                finally:
-                    HR_OWNED_STOP.leave_handler()
-            return HR_PROFILE.production_entry(request)
+            HR_OWNED_STOP.enter_handler(lock_fd)
+            try:
+                return HR_ONE_SHOT.run_fixed(request, lock_fd)
+            finally:
+                HR_OWNED_STOP.leave_handler()
         except HR_PROFILE.Rejected as exc:
             raise Failure(str(exc)) from exc
     finally:
