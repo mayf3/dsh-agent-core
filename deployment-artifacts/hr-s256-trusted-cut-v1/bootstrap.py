@@ -162,7 +162,9 @@ def installation_bootstrap():
         expected = {'operation_id': INSTALLATION_ID, 'action': 'HR_S256_PROFILE_INSTALLATION',
             'state': 'COMMITTED', 'artifacts': hashes, 'version': VERSION}
         if existing is not None:
-            _require(existing == expected, 'INSTALLATION_UNKNOWN_NO_REPLAY')
+            _require(type(existing) is dict and type(existing.get('version')) is int
+                and existing['version'] == VERSION and existing == expected,
+                'INSTALLATION_UNKNOWN_NO_REPLAY')
             # Read-only reattachment after daemon restart; no repeated publication.
             for name, path in TARGETS.items():
                 parents[name] = _parent(path)
