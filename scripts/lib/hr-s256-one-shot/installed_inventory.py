@@ -210,14 +210,14 @@ def fixed_installed_inventory():
         HR_PROFILE.validate_entry_closure(manifest,
             ['gui/505/ai.agent-core.runtime', 'system/ai.agent-core.runtime', GATED])
         sources = {}
-        for path, uid in ((GUI, 505), (SYSTEM, 0)):
+        for path, uid in ((GUI, 0), (SYSTEM, 0)):
             raw = observed.file(path, uid)[1]
             route(raw)
             sources[str(path)] = sha(raw)
         for path, expected in ((GATED, HR_GATED_ENTRY_SHA256),
                 (HELPER, HR_CHILD_PROOF_SHA256),
                 ('packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs', HR_STARTUP_CONTEXT_SHA256), (RETIRED, manifest['retiredEntry']['sha256'])):
-            raw = observed.file(APP / path, 505)[1]
+            raw = observed.file(APP / path, 0)[1]
             require(sha(raw) == expected, 'INVENTORY_ENTRY_CHANGED')
             sources[str(APP / path)] = sha(raw)
         bindings_fd, bindings_raw = observed.file(ROOT / 'bindings/bindings.json', 505)
@@ -269,7 +269,7 @@ def fixed_source_identities():
         manifest = parsed(observed.file(MANIFEST, 0)[1])
         require(manifest == scope['entryManifest'], 'SOURCE_CLOSURE_UNKNOWN')
         sources = {}
-        for path, uid in ((GUI, 505), (SYSTEM, 0)):
+        for path, uid in ((GUI, 0), (SYSTEM, 0)):
             raw = observed.file(path, uid)[1]
             route(raw)
             sources[str(path)] = sha(raw)
@@ -277,7 +277,7 @@ def fixed_source_identities():
                 (HELPER, HR_CHILD_PROOF_SHA256),
                 ('packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs', HR_STARTUP_CONTEXT_SHA256),
                 (RETIRED, manifest['retiredEntry']['sha256'])):
-            raw = observed.file(APP / path, 505)[1]
+            raw = observed.file(APP / path, 0)[1]
             require(sha(raw) == expected, 'INVENTORY_ENTRY_CHANGED')
             sources[str(APP / path)] = sha(raw)
         observed.current()
@@ -343,7 +343,7 @@ def node_metadata(bindings_fd, primary, subject, deadline, headers=None):
 
 def derive_holders(bindings_fd, primary, subject, sessions, names, observed):
     for path, digest in HR_INVENTORY_VALIDATOR_PINS.items():
-        require(sha(observed.file(APP / path, 505)[1]) == digest, 'INVENTORY_VALIDATOR_CHANGED')
+        require(sha(observed.file(APP / path, 0)[1]) == digest, 'INVENTORY_VALIDATOR_CHANGED')
     metadata = node_metadata(bindings_fd, primary, subject, observed.deadline)
     require(set(metadata) == {'paths', 'encodedSession', 'sessionsRoot'}
             and metadata['sessionsRoot'] == str(sessions), 'HOLDER_PATH_UNKNOWN')
