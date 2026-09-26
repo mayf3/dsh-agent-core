@@ -189,3 +189,122 @@ test('V5 native prompt receipt remains separate from ingress message identity', 
   assert.equal(snapshot.ingressCorrelation.feishuMessageId, 'om_123')
   assert.equal(snapshot.messageId, 'native-receipt-1')
 })
+
+function integratedRouter(t, { failBeforePrompt = false } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), 'v5-integrated-'))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const reconciliationStoreFile = join(dir, 'turns.json')
+  const instances = []
+  const feishu = {
+    callback: null,
+    setCallback(fn) { this.callback = fn },
+    replyTargetFor: () => ({ replyTo: () => ({}) }), reply: async () => {},
+  }
+  const definition = {
+    listAgents: () => [{ id: 'agt_efficiency-agent' }, { id: 'agt_other' }],
+    getDefaultAgent: () => ({ id: 'agt_efficiency-agent' }),
+    getAgent: (id) => ({ id }),
+    resolveAgentRef: (id) => ({ id }),
+  }
+  const ctx = {
+    get: (key) => ({
+      feishu, agentDefinition: definition,
+      workspaceBootstrap: {
+        ensure: async () => {}, resolveWorkspace: () => '/tmp/ws', resolveDshHome: () => '/tmp/home',
+      },
+    })[key],
+    provide() {}, effect() {},
+  }
+  const router = applyRouter(ctx, {
+    bindingsStoreFile: join(dir, 'bindings.json'), reconciliationStoreFile,
+    defaultAgentId: 'agt_efficiency-agent', defaultSessionId: 'main',
+    agentProfile: 'standard', provisionHome() {},
+    processFactory: (options) => {
+      const proc = new AgentProcess(options)
+      instances.push(proc)
+      proc.spawn = () => {
+        proc.pid = 4242
+        proc.exit = undefined
+        proc.exitPromise = new Promise(() => {})
+        return proc
+      }
+      proc.ready = async () => { proc.state = 'READY'; return 0 }
+      // Keep real turn(), bounded queue and C-010 mint. Only the downstream
+      // child prompt I/O and terminal observation are synthetic.
+      proc.promptWrite = async (execution) => {
+        if (failBeforePrompt) throw new Error('synthetic pre-byte failure')
+        proc.store.markPromptWriteAttempted(execution.handle)
+        proc.store.markPromptReceipt(execution.handle, { messageId: 'native-receipt' })
+        execution.receiptMessageId = 'native-receipt'
+        execution.promptReceipt = 'accepted'
+        proc.store.settleDirect(execution.handle, {
+          outcome: 'completed', outcomeEvidence: 'exact_turn_end_success',
+          terminationEvidence: 'exact_terminal_then_idle',
+        })
+        execution.settled = true
+        execution.releaseQueueOwnership()
+        return { messageId: 'native-receipt' }
+      }
+      proc.awaitTerminal = async () => ({ reply: 'synthetic-result' })
+      proc.shutdown = async () => ({ code: 0, signal: null })
+      return proc
+    },
+  })
+  return {
+    router, feishu, instances,
+    records: () => {
+      const store = new TurnReconciliationStore({ runtimeEpoch: 'observer', persistenceFile: reconciliationStoreFile })
+      assert.equal(store.startupBlockedReason, null)
+      return [...store.records.values()]
+    },
+  }
+}
+
+test('V5 mounted private callback reaches real C-010 mint; public route and chain remain unbound', async (t) => {
+  const rig = integratedRouter(t)
+  const trusted = await rig.feishu.callback(INGRESS)
+  assert.equal(trusted.reply, 'synthetic-result')
+  await rig.router.route({ ...INGRESS, raw: undefined })
+  await rig.router.runTurnWithRouteChain('agt_efficiency-agent', {
+    sessionId: 'main', message: 'public chain',
+    opts: { ingressContext: { ...CORRELATION }, cwd: '/tmp/ws' },
+  })
+  const records = rig.records()
+  assert.equal(records.length, 3)
+  assert.deepEqual(records[0].ingressCorrelation, CORRELATION)
+  assert.equal(records[0].messageId, 'native-receipt')
+  assert.equal(records[1].ingressCorrelation, null)
+  assert.equal(records[2].ingressCorrelation, null)
+  assert.equal(rig.instances.length, 1, 'all three turns used one real AgentProcess queue')
+})
+
+test('V5 real C-010 mint persists trusted identity before synthetic prompt byte failure', async (t) => {
+  const rig = integratedRouter(t, { failBeforePrompt: true })
+  const result = await rig.feishu.callback(INGRESS)
+  assert.ok(result.error)
+  const records = rig.records()
+  assert.equal(records.length, 1)
+  assert.deepEqual(records[0].ingressCorrelation, CORRELATION)
+  assert.equal(records[0].promptWriteAttempted, false)
+  assert.equal(records[0].messageId, null)
+})
+
+test('V5 deliver remains unbound; duplicate private message IDs remain distinct records', async (t) => {
+  const rig = integratedRouter(t)
+  const delivered = await rig.router.deliver({
+    requestId: 'req-v5-deliver', agentId: 'agt_efficiency-agent',
+    sessionMode: 'main', message: 'ordinary delivery',
+  })
+  assert.equal(delivered.accepted, true)
+  await rig.feishu.callback(INGRESS)
+  await rig.router.resolveChannelConversation({ channel: 'feishu', externalId: 'oc_other' })
+  await rig.router.switchAgent('feishu:oc_other', 'agt_other')
+  await rig.feishu.callback({ ...INGRESS, conversationId: 'oc_other', chatId: 'oc_other' })
+  const records = rig.records()
+  assert.equal(records.length, 3)
+  const ordinary = records.find(record => record.callerCorrelation?.requestId === 'req-v5-deliver')
+  assert.equal(ordinary.ingressCorrelation, null)
+  const sameMessage = records.filter(record => record.ingressCorrelation?.feishuMessageId === 'om_123')
+  assert.equal(sameMessage.length, 2)
+  assert.deepEqual(new Set(sameMessage.map(record => record.agentId)), new Set(['agt_efficiency-agent', 'agt_other']))
+})
