@@ -38,6 +38,24 @@ class ProcessConfinementTest(unittest.TestCase):
         self.assertEqual(len(recorder.calls), 4)
         self.assertEqual(real_calls, [])
 
+    def test_outer_boundary_covers_assembly_setup_and_teardown(self):
+        real_calls = []
+        fake_stdlib = SimpleNamespace(Popen=lambda *args, **kwargs: real_calls.append(args))
+        def assembly():
+            fake_stdlib.Popen(['/fixture/assembly-attempt'])
+        def teardown():
+            fake_stdlib.Popen(['/fixture/teardown-attempt'])
+        with confine_processes(fake_stdlib) as recorder:
+            try:
+                with self.assertRaises(ProcessDispatchDenied):
+                    assembly()
+            finally:
+                with self.assertRaises(ProcessDispatchDenied):
+                    teardown()
+        self.assertEqual(real_calls, [])
+        self.assertEqual(recorder.calls,
+            [('/fixture/assembly-attempt',), ('/fixture/teardown-attempt',)])
+
 
 if __name__ == '__main__':
     unittest.main()

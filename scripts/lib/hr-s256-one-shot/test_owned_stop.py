@@ -5,34 +5,35 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
-import test_orchestration as assembled_fixture
 from process_confinement import confine_processes, ProcessDispatchDenied
 
 
 class OwnedStopTest(unittest.TestCase):
     @contextmanager
     def fixture(self):
-        with tempfile.TemporaryDirectory() as root:
-            ds = assembled_fixture.FixedAssembledActionTest().assembled(root)
-            ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
-            lock = ds.mutation_lock()
-            path = Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock'
-            window = os.open(path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
-            fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            owner = None
-            try:
-                owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window)
-                with confine_processes(ds.HR_FINITE_STOP.subprocess) as recorder:
-                    self.process_recorder = recorder
+        with confine_processes(subprocess) as recorder:
+            self.process_recorder = recorder
+            import test_orchestration as assembled_fixture
+            with tempfile.TemporaryDirectory() as root:
+                ds = assembled_fixture.FixedAssembledActionTest().assembled(root)
+                ds.HR_JOURNAL.seal_intent('n' * 32, 'a' * 64, 97)
+                lock = ds.mutation_lock()
+                path = Path(root) / ds.HR_PROFILE.OPERATION_ID / 'window.lock'
+                window = os.open(path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+                fcntl.flock(window, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                owner = None
+                try:
+                    owner = ds.HR_OWNED_STOP.capture_from_handler(lock, window)
                     yield ds, owner, lock, window, path
-            finally:
-                if owner is not None:
-                    owner.close()
-                os.close(window)
-                os.close(lock)
+                finally:
+                    if owner is not None:
+                        owner.close()
+                    os.close(window)
+                    os.close(lock)
 
     def test_duplicate_capability_same_ofd_and_close_never_unlocks_original(self):
         with self.fixture() as (ds, owner, lock, window, path):
