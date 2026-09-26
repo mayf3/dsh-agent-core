@@ -409,6 +409,9 @@ class FixedIO:
                 HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
                                    'RUNTIME_ADMISSION_UNAVAILABLE')
             self._active()
+            self._owner.check()
+            HR_PROFILE.require(time.monotonic() < deadline and child.poll() is None,
+                               'RUNTIME_ADMISSION_UNAVAILABLE')
             current = HR_REAL_OS.validated_runtime_generation(self._consumption['validatedStoreSha256'])
             HR_PROFILE.require(self._runtime_admission['generationId'] == current
                 and time.monotonic() < deadline, 'RUNTIME_GENERATION_MISMATCH')

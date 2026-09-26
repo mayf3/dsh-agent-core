@@ -223,6 +223,38 @@ class PrivateAdmissionBoundaryTest(unittest.TestCase):
                         read.assert_not_called()
             self.assertEqual(recorder.calls, [])
 
+    def test_ready_private_event_after_original_deadline_never_reads_header(self):
+        from types import SimpleNamespace
+        with confine_processes(subprocess) as recorder:
+            from test_fixed_io import FixedIOTest
+            with FixedIOTest().assembled() as (ds, _, _):
+                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': 'fixture-host'}):
+                    io = ds.HR_FIXED_IO.FixedIO()
+                    child = SimpleNamespace(poll=lambda: None)
+                    io._child = child
+                    io._owner = SimpleNamespace(check=lambda: None)
+                    io._startup_deadline = 10
+                    io._startup_done.set()
+                    io._runtime_admission_done.set()
+                    io._runtime_admission = {'generationId': 'fixture-generation'}
+                    io._handoff = SimpleNamespace(root=SimpleNamespace(settimeout=lambda t: None, sendall=lambda b: None))
+                    io._nonce = 'fixture-nonce'
+                    consumption = {'validatedStoreSha256': 'a' * 64, 'settlement': 'actual-observed'}
+                    moments = iter([9, 9, 9, 11])
+                    with patch.object(time, 'monotonic', side_effect=lambda: next(moments, 11)), patch.object(
+                            ds.HR_REAL_OS, 'fixed_settlement_readback', return_value=consumption), patch.object(
+                            ds.HR_JOURNAL, 'readback', return_value=({}, 'b' * 64)), patch.object(
+                            ds.HR_REAL_OS, 'validated_runtime_generation', return_value='fixture-generation') as header:
+                        with self.assertRaisesRegex(Exception, 'RUNTIME_ADMISSION_UNAVAILABLE|RUNTIME_GENERATION_MISMATCH'):
+                            io.exact_consumption_readback(child)
+                        header.assert_not_called()
+                    self.assertTrue(io._unknown)
+                    self.assertIs(io._child, child)
+                    self.assertEqual(io._consumption, consumption)  # Never infer fence active after observed settlement.
+                    with self.assertRaisesRegex(Exception, 'FIXED_IO_UNKNOWN'):
+                        io.exact_consumption_readback(child)
+            self.assertEqual(recorder.calls, [])
+
     def test_same_validated_image_generation_rejects_changed_old_missing_duplicate_header(self):
         import hashlib
         with confine_processes(subprocess) as recorder:
