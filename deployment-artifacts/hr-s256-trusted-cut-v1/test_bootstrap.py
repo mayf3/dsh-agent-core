@@ -40,12 +40,25 @@ class BootstrapTest(unittest.TestCase):
             self.assertEqual(recorder.calls, [])
 
     @contextmanager
-    def fixture(self):
+    def fixture(self, current=False):
         with confine_processes(subprocess) as recorder:
             import test_orchestration
             import importlib.util
             with tempfile.TemporaryDirectory() as root, ExitStack() as stack:
                 ds = test_orchestration.FixedAssembledActionTest().assembled(root)
+                if current:
+                    spec = importlib.util.spec_from_file_location('current_builder_bool_probe', ROOT /
+                        'deployment-artifacts/hr-s256-trusted-cut-v1/build_candidate.py')
+                    builder = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(builder)
+                    path = Path(root) / 'current-deployment-system.py'
+                    path.write_bytes(builder.build_current_bytes())
+                    with patch.dict(os.environ, {'DS_TEST_MODE': '1', 'DS_STATE_ROOT': root,
+                            'DS_CONFIG_DIR': root + '/config', 'DS_INSTALL_DIR': root + '/install',
+                            'DS_GEN_ROOT': root + '/gens'}):
+                        spec = importlib.util.spec_from_file_location('current_bool_probe', path)
+                        ds = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(ds)
                 # Entry manifest remains the exact profile contract, not caller PASS.
                 gated = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
                 manifest = {'version': 1, 'operationId': ds.HR_PROFILE.OPERATION_ID,
@@ -281,6 +294,27 @@ class BootstrapTest(unittest.TestCase):
                     ds.HR_REAL_OS.require_activation()
                 self.assertNotIn('floor-proven.json', seen)  # No producer or live preflight executed here.
             finally: cell.cell_contents = original
+
+    def test_current_daemon_bool_version_receipt_never_reactivates_on_reattachment(self):
+        with self.fixture(current=True) as (ds, inputs, paths, root):
+            self.assertEqual(ds.VERSION, 1)
+            ds.HR_BOOTSTRAP.installation_bootstrap()
+            path = Path(root, 'receipts', ds.HR_BOOTSTRAP.INSTALLATION_ID + '.json')
+            record = json.loads(path.read_text())
+            record['version'] = True
+            path.write_bytes(ds.canonical(record))
+            method = ds.HR_BOOTSTRAP.installation_bootstrap
+            cells = dict(zip(method.__code__.co_freevars, method.__closure__))
+            cells['_state'].cell_contents.update(attempted=False, pins=None)
+            original = cells['_publish'].cell_contents
+            cells['_publish'].cell_contents = lambda *args: self.fail('no publication during read-only reattachment')
+            try:
+                with self.assertRaisesRegex(Exception, 'INSTALLATION_UNKNOWN_NO_REPLAY'):
+                    ds.HR_BOOTSTRAP.installation_bootstrap()
+                self.assertIsNone(ds.HR_BOOTSTRAP.activation_pins())
+                self.assertEqual(json.loads(path.read_text())['version'], True)
+                for name, file in paths.items(): self.assertEqual(file.read_bytes(), inputs[name])
+            finally: cells['_publish'].cell_contents = original
 
     def test_current_ds_composition_preserves_v5_e7_and_update_function_bytes(self):
         import ast
