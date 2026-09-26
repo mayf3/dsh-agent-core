@@ -1,12 +1,21 @@
 ---
 spec_id: COHERENT_DURABLE_INGRESS_RECEIPT_ATTRIBUTION_V1
-status: proposed
+status: accepted
 spec_kind: narrow_implementation_amendment
-authority_level: candidate_governing_spec
-implementation_authority: none
+authority_level: governing_spec
+implementation_authority: contracts
+implementation_scope: bounded_nonproduction_only
 production_apply_authority: none
 date: 2026-09-26
 authoring_base_main: bed1936f990f7a2831cf55ac35716b861570f40e
+accepted_by: mayf3
+accepted_date: 2026-09-26
+accepted_reviewed_head: 40a739be19883e1697decdc56e13dd1e081610ab
+accepted_reviewed_spec_sha256: aba5b6647a00a8c377109e8759ae2e808cad15b2ec2c30cac3ccb141a677f756
+independent_review_result: PASS
+independent_review_sha256: f092f62464434414238bf15be1198e61340af50c6d3b50dfe9ac03ca6c5e8094
+final_owner_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/COHERENT-V5-OWNER-ACCEPTANCE-20260926/ACCEPTANCE.json
+final_owner_acceptance_sha256: bee8a6c3d9df6290b30207adf6522e6c2389c4af90226d216e82b1d7f53a0923
 amends:
   spec: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
   scope: >-
