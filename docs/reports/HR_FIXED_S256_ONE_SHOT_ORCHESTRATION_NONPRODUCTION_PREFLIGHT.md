@@ -42,7 +42,7 @@ accepted r4 normative body, accepted R2, current587 handoff and independent revi
 and `HR-H2-H3-ONE-SHOT-APPLICABILITY-20260926-v1/review/APPLICABILITY-RULING.md`.
 The parent explicitly authorizes this nonproduction continuation; Q1/Q2 remain YES.
 
-Minimum plan: add one fixed internal orchestration module under `scripts/hr-s256-one-shot/`
+Minimum plan: add one fixed internal orchestration module under `scripts/lib/hr-s256-one-shot/`
 and embed it in the existing pinned DS candidate. Only existing DS TEST_MODE may
 reach the internal fixed nonproduction IO seam. Neither the wire grammar nor the
 production entry accepts an adapter, path, command, callback or PASS. Tests provide
