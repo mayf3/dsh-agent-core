@@ -33,7 +33,8 @@ class SyntheticFixedIO:
         self.projection = {"reconciliationHandle": ds.HR_PROFILE.HANDLE,
             "turnExecutionId": ds.HR_PROFILE.HANDLE, "runtimeEpoch": "old-epoch",
             "agentId": "agt_hr-agent", "processGeneration": 1,
-            "subject_preimage_sha256": "a" * 64}
+            "subjectPreimageSha256": "a" * 64, "sessionId": "main",
+            "createdAtWallMs": 10, "updatedAt": 20}
         self.collector = load("collector")
         self.collector.command_output = self.command_output
         self.collector.os = type("SyntheticOS", (), {"geteuid": staticmethod(lambda: 0),
@@ -106,6 +107,7 @@ class SyntheticFixedIO:
     def final_bundle_bytes(self, auth, digest, archive, opened, quiesced):
         self.authorization = auth
         bundle = self.commitment_fixtures.final_bundle(auth, digest)
+        bundle["epochRetirement"]["retiredEpoch"] = auth["subject"]["runtimeEpoch"]
         bundle["recoveryCutover"]["windowOpenedAtWallMs"] = opened
         bundle["recoveryCutover"]["oldTreeQuiescedAtWallMs"] = quiesced
         bundle["recoveryCutover"]["authorizedStartupAtWallMs"] = auth["authorizedStartupAtWallMs"]
