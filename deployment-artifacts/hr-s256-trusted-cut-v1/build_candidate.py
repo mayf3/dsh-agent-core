@@ -96,7 +96,11 @@ def build_bytes():
     try:
         try:
             if TEST_MODE:
-                return HR_ONE_SHOT.run_fixed(request, lock_fd)
+                HR_OWNED_STOP.enter_handler(lock_fd)
+                try:
+                    return HR_ONE_SHOT.run_fixed(request, lock_fd)
+                finally:
+                    HR_OWNED_STOP.leave_handler()
             return HR_PROFILE.production_entry(request)
         except HR_PROFILE.Rejected as exc:
             raise Failure(str(exc)) from exc
