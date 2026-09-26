@@ -37,6 +37,7 @@ class DSCandidateTest(unittest.TestCase):
                 spec.loader.exec_module(ds)
             self.assertTrue(callable(ds.HR_JOURNAL.seal_intent))
             self.assertTrue(callable(ds.HR_HANDOFF.OneLaunchHandoff))
+            self.assertTrue(callable(ds.HR_ARCHIVE.seal_census))
             intent_digest = ds.HR_JOURNAL.seal_intent("n" * 32, "a" * 64, 100)
             self.assertEqual(ds.HR_JOURNAL.readback("intent")[1], intent_digest)
             request = {"action": ds.HR_PROFILE.ACTION,

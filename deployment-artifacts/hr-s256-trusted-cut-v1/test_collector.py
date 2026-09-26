@@ -35,6 +35,8 @@ class CensusTest(unittest.TestCase):
         result = self.capture(ps, lsof)
         self.assertEqual(result["runtimeTreeProcessCount"], 0)
         self.assertEqual(result["openHolderCount"], 0)
+        self.assertGreater(result["psAtWallMs"], 0)
+        self.assertGreaterEqual(result["lsofAtWallMs"], result["psAtWallMs"])
         self.assertNotIn(b"node", result["psOutput"])
         self.assertNotIn(b"/fixture/other", result["lsofOutput"])
 

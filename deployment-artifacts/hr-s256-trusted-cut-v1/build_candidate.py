@@ -57,6 +57,7 @@ def build_bytes():
         + scoped_source("HR_PROJECTION", HERE / "projection.py")
         + scoped_source("HR_JOURNAL", HERE / "journal.py")
         + scoped_source("HR_HANDOFF", HERE / "handoff.py")
+        + scoped_source("HR_ARCHIVE", HERE / "archive.py")
         + '''def hr_s256_action(request):
     """One fixed DS action, serialized by the existing mutation domain."""
     try:

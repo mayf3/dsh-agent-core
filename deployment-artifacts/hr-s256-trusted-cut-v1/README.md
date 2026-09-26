@@ -33,7 +33,15 @@ Implemented and checked offline:
   implication that caller-supplied test objects are trusted deployment proof;
 - root-required, bounded, absolute `ps` and `lsof` process execution; parser
   rejects nonzero/timeout/truncation/malformed output, old known PIDs and
-  matching holder paths, and returns only normalized secret-safe summaries;
+  matching holder paths, and returns only normalized secret-safe summaries
+  with bounded observation timestamps;
+- a disconnected root-custody census sealer writes only the fixed
+  `census-ps.txt`, `census-lsof.txt` and `census-archive.json` names with
+  exclusive create, file/directory fsync and no-follow readback. Its bounded
+  archive binds the exact normalized output digests, fixed operation, host
+  identifier and observation times, and returns consumer-shaped census and
+  holder fields. Fixture tests feed actual collector output through the
+  sealer; the host identifier and holder closure are still synthetic inputs;
 - offline authorization construction checks that required subject, preimage,
   archive/output, holder and binary fields are present and timestamp order is
   causal; it does **not** independently verify their root-custody source or
@@ -73,7 +81,8 @@ Still required for the R2 profile; **none is supplied by this candidate**:
 4. Trusted floor proofs 1–9, validator-before-producer deployment receipt,
    pinned rollback floor and compatible rollback generation from protected
    sources, not caller dictionaries.
-5. Complete root archive/receipt provenance, before/after phase journal,
+5. Complete root archive/receipt provenance from current protected installed
+   host/source/holder facts, before/after phase journal,
    continuous exclusive window, finite stop/inhibition, single pinned Runtime
    launch using the nonce/window descriptors, authenticated Router startup
    wiring, post-settlement readback and bounded UNKNOWN containment. The

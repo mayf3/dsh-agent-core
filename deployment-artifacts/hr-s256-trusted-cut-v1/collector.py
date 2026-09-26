@@ -142,7 +142,10 @@ def collect_whole_host(old_pids, holder_roots):
                     and len(path) <= 512 for path in holder_roots),
             "HOLDER_PATH_UNKNOWN")
     ps = command_output(PS_COMMAND)
+    ps_at = time.time_ns() // 1_000_000
     lsof = command_output(LSOF_COMMAND)
+    lsof_at = time.time_ns() // 1_000_000
+    require(0 < ps_at <= lsof_at <= (1 << 53) - 1, "CENSUS_TIME_UNKNOWN")
     scanned_processes, present = parse_ps(ps, old_pids)
     scanned_files, holders = parse_lsof(lsof, holder_roots)
     require(present == 0, "OLD_TREE_PRESENT")
@@ -155,4 +158,5 @@ def collect_whole_host(old_pids, holder_roots):
                        "rawSha256": hashlib.sha256(lsof).hexdigest()}
     encode = lambda obj: (json.dumps(obj, separators=(",", ":")) + "\n").encode()
     return {"runtimeTreeProcessCount": 0, "openHolderCount": 0,
-            "psOutput": encode(normalized_ps), "lsofOutput": encode(normalized_lsof)}
+            "psOutput": encode(normalized_ps), "lsofOutput": encode(normalized_lsof),
+            "psAtWallMs": ps_at, "lsofAtWallMs": lsof_at}
