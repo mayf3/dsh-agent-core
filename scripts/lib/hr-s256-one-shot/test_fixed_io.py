@@ -35,6 +35,33 @@ class FixedIOTest(unittest.TestCase):
                         os.close(held['canonicalFd'])
             self.assertEqual(recorder.calls, [])
 
+    def test_original_startup_deadline_bounds_readback_even_after_notice(self):
+        import time
+        from types import SimpleNamespace
+        for crossing in (False, True):
+            with self.subTest(crossing=crossing), self.assembled() as (ds, root, recorder):
+                with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': 'fixture-host'}):
+                    io = ds.HR_ONE_SHOT.fixed_io()
+                    child = SimpleNamespace(poll=lambda: None)
+                    io._child = child
+                    io._child_identity = {'pid': 789, 'identitySha256': 'b' * 64}
+                    io._owner = SimpleNamespace(check=lambda: None)
+                    io._startup_deadline = 10
+                    io._startup_done.set()
+                    expected = {'settlement': 'observed-disposable', 'storeReadbackReceiptSha256': 'a' * 64}
+                    with patch.object(time, 'monotonic', side_effect=[9, 11] if crossing else [11]):
+                        with patch.object(ds.HR_REAL_OS, 'fixed_settlement_readback', return_value=expected) as readback:
+                            with self.assertRaisesRegex(Exception, 'CONSUMPTION_STARTUP_UNAVAILABLE'):
+                                io.exact_consumption_readback(child)
+                            self.assertEqual(readback.call_count, 1 if crossing else 0)
+                    self.assertTrue(io._unknown)
+                    self.assertIs(io._child, child)
+                    self.assertEqual(io._child_identity['pid'], 789)
+                    with patch.object(ds.HR_REAL_OS, 'fixed_settlement_readback') as retry:
+                        with self.assertRaisesRegex(Exception, 'FIXED_IO_UNKNOWN'):
+                            io.exact_consumption_readback(child)
+                        retry.assert_not_called()
+
     def test_actual_factory_has_fixed_window_and_stop_connection(self):
         with self.assembled() as (ds, root, recorder):
             with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': 'fixture-host'}):

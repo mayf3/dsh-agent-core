@@ -3,6 +3,8 @@ import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, realpathS
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path'
+import { composeHrPostCoherentSource, POST_COHERENT_HR_INPUT_PATHS, POST_COHERENT_HR_LEAF_PATHS } from './hr-post-coherent-overlay.mjs'
+export { composeHrPostCoherentSource, POST_COHERENT_HR_INPUT_PATHS, POST_COHERENT_HR_LEAF_PATHS }
 
 export const ARM_SOURCE_DELTA = Object.freeze([
   'scripts/production-runtime.mjs',
@@ -113,9 +115,20 @@ export function stageHrOneShotApplication({ guiPlist, systemPlist, ...options })
   }
   const frozen = [HR_GATED_ENTRY, HR_CHILD_PROOF, 'packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'].map(path => ({ path,
     bytes: execFileSync('/usr/bin/git', ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path]) }))
+  const router = 'packages/agent-router/src/index.js'
+  const current = readFileSync(join(options.liveRoot, router)).toString()
+  let joins
+  if (!current.includes('cfg.restartQuiescenceEvidenceDir')) {
+    const base = Object.fromEntries(POST_COHERENT_HR_INPUT_PATHS.map(path => [path, readFileSync(join(options.liveRoot, path))]))
+    const paths = ['packages/agent-router/src/reconciliation/startup-recovery.js', ...POST_COHERENT_HR_LEAF_PATHS]
+    const accepted = Object.fromEntries(paths.map(path => [path, execFileSync('/usr/bin/git',
+      ['-C', options.candidateRoot, 'show', options.candidateSHA + ':' + path])]))
+    joins = Object.entries(composeHrPostCoherentSource(base, accepted)).map(([path, bytes]) => ({ path, bytes }))
+  } else {
+    joins = ['packages/agent-router/src/index.js', 'packages/agent-router/src/reconciliation/startup-recovery.js'].map(path => ({ path,
+      bytes: patchHrRouterJoin(path, readFileSync(join(options.liveRoot, path))) }))
+  }
   const result = stageApplication(options)
-  const joins = ['packages/agent-router/src/index.js', 'packages/agent-router/src/reconciliation/startup-recovery.js'].map(path => ({ path,
-    bytes: patchHrRouterJoin(path, readFileSync(join(result.stageRoot, path))) }))
   const replacements = [...frozen, ...joins, { path: HR_RETIRED_ENTRY, bytes: Buffer.from(HR_RETIRED_BYTES) }]
   for (const { path, bytes } of replacements) {
     const prior = result.files.find(file => file.path === path)
