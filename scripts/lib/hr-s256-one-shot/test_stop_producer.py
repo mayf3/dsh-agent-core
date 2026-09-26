@@ -196,6 +196,13 @@ class StopProducerTest(unittest.TestCase):
                 ds.HR_STOP_RECEIPT.seal_completed(stopper)
             self.assertEqual(target.read_bytes(), before)
 
+    def test_receipt_byte_cap_rejects_before_write(self):
+        with self.controller() as (ds, owner, stopper, path, calls):
+            with patch.object(ds.HR_REAL_OS, 'require_activation', return_value={'hostId': '\U0001f600' * 128}):
+                with self.assertRaisesRegex(Exception, 'STOP_RECEIPT_BOUND'):
+                    stopper.stop()
+            self.assertFalse((path.parent / 'controlled-stop.json').exists())
+
     def test_actual_bundle_join_binds_produced_receipt(self):
         with self.stopped() as (ds, owner, stopper, path, result, calls):
             bundle = {'controlledStop': result,

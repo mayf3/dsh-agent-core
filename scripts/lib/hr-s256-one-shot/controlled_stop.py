@@ -113,6 +113,7 @@ def seal_completed(stopper):
               'method': 'trusted_cp_controlled_stop_v1', 'atWallMs': at}
     require(valid(record), 'STOP_RECEIPT_SHAPE')
     raw = j.canonical(record)
+    require(0 < len(raw) <= 1024, 'STOP_RECEIPT_BOUND')
     root, directory = j.opened_custody(False)
     fd = None
     try:
