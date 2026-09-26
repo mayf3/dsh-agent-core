@@ -147,6 +147,9 @@ class OneLaunchHandoff:
         except (OSError, TimeoutError) as exc:
             raise Rejected("CHALLENGE_UNAVAILABLE") from exc
 
+        return hashlib.sha256(frame + bytes(answer) + approval_digest(self.nonce,
+            self.challenge_value, self.receipt_sha256, self.window_identity)).hexdigest()
+
     def close(self):
         self.close_child_fds()
         self.root.close()

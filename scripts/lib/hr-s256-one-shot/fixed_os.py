@@ -282,3 +282,86 @@ def observe_no_runtime_uid_before_launch():
                 "outputSha256": digest(raw), "observedAtWallMs": time.time_ns() // 1_000_000}
     except HR_COLLECTOR.Rejected as exc:
         raise Rejected("RUNTIME_UID_CENSUS_UNKNOWN") from exc
+
+# R2 explicitly permits an exact reviewed bootstrap source manifest. This is
+# the SAME root bootstrap publisher/authority, not DS request data or a PASS
+# flag. No manifest is installed or authorized by this candidate.
+SOURCE_SCOPE_SHA256 = None
+SOURCE_SCOPE_FILE = Path('/private/var/db/agent-deploy-system-config/hr-s256-source-scope.json')
+
+
+def qualified_source_scope():
+    package = require_activation()
+    require(type(SOURCE_SCOPE_SHA256) is str and len(SOURCE_SCOPE_SHA256) == 64,
+            'SOURCE_SCOPE_NOT_BOOTSTRAPPED')  # Before protected read.
+    scope = protected_json(SOURCE_SCOPE_FILE, SOURCE_SCOPE_SHA256)
+    require(type(scope) is dict and set(scope) == {'version', 'operationId', 'hostId',
+            'entryManifest', 'sources'} and type(scope['version']) is int and scope['version'] == 1
+            and scope['operationId'] == OPERATION_ID and scope['hostId'] == package['hostId'],
+            'SOURCE_CLOSURE_UNKNOWN')
+    gated = 'packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs'
+    require(type(scope['sources']) is list and len(scope['sources']) == 4
+            and sorted(scope['sources']) == sorted(['fixed-DS-owner',
+                'gui/505/ai.agent-core.runtime', 'system/ai.agent-core.runtime', gated]),
+            'SOURCE_CLOSURE_UNKNOWN')
+    HR_PROFILE.validate_entry_closure(scope['entryManifest'],
+        [value for value in scope['sources'] if value != 'fixed-DS-owner'])
+    # The pinned, reviewed bootstrap manifest is a qualified finite coverage
+    # input. Known MF1 tuples or UID-zero observations alone do not supply it.
+    # Current identity/mutable-input checks remain the installed inventory's job.
+    return scope
+
+
+def old_runtime_membership():
+    """Read-only membership, never process ownership or permission to signal.
+
+    Only the fixed system launchd root and its observed descendants are
+    eligible. An unrelated Runtime-UID resident rejects before the cut.
+    """
+    require_activation()
+    import re
+    service = HR_COLLECTOR.command_output(
+        ['/bin/launchctl', 'print', 'system/ai.agent-core.runtime'])
+    pids = re.findall(rb'^\s*pid = ([1-9][0-9]*)\s*$', service, re.MULTILINE)
+    require(len(pids) == 1, 'OLD_TREE_ROOT_UNKNOWN')
+    root_pid = int(pids[0])
+    raw = HR_COLLECTOR.command_output(HR_COLLECTOR.PS_COMMAND)
+    require(raw.endswith(b'\n'), 'OLD_TREE_OBSERVATION_UNKNOWN')
+    HR_COLLECTOR.parse_ps(raw, set())  # Reject incomplete/duplicate rows first.
+    rows = {int(match.group(1)): (int(match.group(2)), int(match.group(3)))
+            for match in (HR_COLLECTOR.PS_ROW.fullmatch(row) for row in raw.splitlines())}
+    require(root_pid in rows and rows[root_pid][1] == 505, 'OLD_TREE_ROOT_UNKNOWN')
+    tree = {root_pid}
+    while True:
+        grown = tree | {pid for pid, (parent, _) in rows.items() if parent in tree}
+        if grown == tree:
+            break
+        tree = grown
+    require(all(uid != 505 or pid in tree for pid, (_, uid) in rows.items()),
+            'UNOWNED_RUNTIME_UID_RESIDENT')
+    return tree
+
+
+def observe_owned_runtime_residents(child):
+    """Point observation joined to an internally created child capability.
+
+    The finite source inhibition remains a separate required authority. This
+    observation cannot authorize launch or turn a caller PID into ownership.
+    """
+    require_activation()
+    require(child is not None and child.poll() is None, 'OWNED_STARTUP_LOST')
+    raw = HR_COLLECTOR.command_output(HR_COLLECTOR.PS_COMMAND)
+    require(raw.endswith(b'\n'), 'RUNTIME_UID_CENSUS_UNKNOWN')
+    HR_COLLECTOR.parse_ps(raw, set())
+    rows = {int(match.group(1)): (int(match.group(2)), int(match.group(3)))
+            for match in (HR_COLLECTOR.PS_ROW.fullmatch(row) for row in raw.splitlines())}
+    require(child.pid in rows and rows[child.pid][1] == 505, 'OWNED_STARTUP_LOST')
+    tree = {child.pid}
+    while True:
+        grown = tree | {pid for pid, (parent, _) in rows.items() if parent in tree}
+        if grown == tree:
+            break
+        tree = grown
+    require(all(uid != 505 or pid in tree for pid, (_, uid) in rows.items()),
+            'UNOWNED_RUNTIME_UID_RESIDENT')
+    require(child.poll() is None, 'OWNED_STARTUP_LOST')

@@ -20,7 +20,7 @@ export const startupRecoveryMethods = {
     try {
       ownedDirectory(evidenceDir, io)
       ownedDirectory(deploymentDir, io)
-      files = readdirSync(evidenceDir).filter(name => name === 'bundle.json' || name.endsWith('.bundle.json')).sort()
+      files = (io?.readdir ?? readdirSync)(evidenceDir).filter(name => name === 'bundle.json' || name.endsWith('.bundle.json')).sort()
     } catch (error) {
       audit({ status: 'rejected', reason: error.code ?? 'evidence_directory_unavailable' })
       return results

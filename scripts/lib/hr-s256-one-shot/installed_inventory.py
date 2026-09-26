@@ -214,7 +214,8 @@ def fixed_installed_inventory():
             route(raw)
             sources[str(path)] = sha(raw)
         for path, expected in ((GATED, HR_GATED_ENTRY_SHA256),
-                (HELPER, HR_CHILD_PROOF_SHA256), (RETIRED, manifest['retiredEntry']['sha256'])):
+                (HELPER, HR_CHILD_PROOF_SHA256),
+                ('packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs', HR_STARTUP_CONTEXT_SHA256), (RETIRED, manifest['retiredEntry']['sha256'])):
             raw = observed.file(APP / path, 505)[1]
             require(sha(raw) == expected, 'INVENTORY_ENTRY_CHANGED')
             sources[str(APP / path)] = sha(raw)
@@ -244,9 +245,42 @@ def fixed_installed_inventory():
             'subjectPreimageSha256': subject['subjectPreimageSha256'],
             'unresolvedSources': ['LE1_INSTALLED_ENTRY_AND_RESUMPTION_CLOSURE'],
             'holderCoverage': 'INSTALLED_CONFIG_AND_EXACT_SESSION_HEADERS_OBSERVED'})
+        scope = HR_REAL_OS.qualified_source_scope()
+        require(scope['entryManifest'] == manifest, 'SOURCE_CLOSURE_UNKNOWN')
+        result['unresolvedSources'] = []
         return result
     except (OSError, ValueError, ET.ParseError) as exc:
         raise Rejected('INVENTORY_UNKNOWN') from exc
+    finally:
+        observed.close()
+
+
+def fixed_source_identities():
+    """Recheck only the fixed executable/control entries through consumption.
+
+    The Router record and session files may legitimately change at startup;
+    those are not substituted for the immutable source-control projection.
+    """
+    HR_REAL_OS.require_activation()
+    observed = Observation(time.monotonic() + 10)
+    try:
+        scope = HR_REAL_OS.qualified_source_scope()
+        manifest = parsed(observed.file(MANIFEST, 0)[1])
+        require(manifest == scope['entryManifest'], 'SOURCE_CLOSURE_UNKNOWN')
+        sources = {}
+        for path, uid in ((GUI, 505), (SYSTEM, 0)):
+            raw = observed.file(path, uid)[1]
+            route(raw)
+            sources[str(path)] = sha(raw)
+        for path, expected in ((GATED, HR_GATED_ENTRY_SHA256),
+                (HELPER, HR_CHILD_PROOF_SHA256),
+                ('packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs', HR_STARTUP_CONTEXT_SHA256),
+                (RETIRED, manifest['retiredEntry']['sha256'])):
+            raw = observed.file(APP / path, 505)[1]
+            require(sha(raw) == expected, 'INVENTORY_ENTRY_CHANGED')
+            sources[str(APP / path)] = sha(raw)
+        observed.current()
+        return sources
     finally:
         observed.close()
 

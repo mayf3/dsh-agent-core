@@ -65,7 +65,9 @@ def fixed_io():
 
 def run_fixed(request, canonical_lock_fd):
     HR_PROFILE.validate_request(request)
-    HR_PROFILE.require(TEST_MODE, "PROFILE_NOT_BOOTSTRAPPED")
+    if not TEST_MODE:
+        HR_REAL_OS.require_activation()
+        HR_PROFILE.require(os.geteuid() == 0, "ROOT_REQUIRED")
     io = HR_ONE_SHOT.fixed_io()
     deadline = time.monotonic() + 300
     window = None
@@ -105,6 +107,8 @@ def run_fixed(request, canonical_lock_fd):
         nonce = secrets.token_hex(32)
         HR_JOURNAL.seal_intent(nonce, subject["subject_preimage_sha256"], io.wall_ms())
         intent = True
+        if type(io) is HR_FIXED_IO.FixedIO:
+            io.bind_intent_nonce(nonce)
         window, opened_at = io.open_fixed_window()
         stop_owner = HR_OWNED_STOP.capture_from_handler(canonical_lock_fd, window, opened_at)
         if type(io) is HR_FIXED_IO.FixedIO:
@@ -144,7 +148,9 @@ def run_fixed(request, canonical_lock_fd):
         challenge_fd, window_fd = handoff.take_child_fds()
         child = io.launch_fixed(challenge_fd, window_fd, authorization_digest)
         handoff.close_child_fds()
-        handoff.challenge()  # Existing absolute 750ms and same-OFD capability check.
+        challenge_digest = handoff.challenge()  # Absolute 750ms and same-OFD check.
+        if type(io) is HR_FIXED_IO.FixedIO:
+            io.attach_authenticated_handoff(handoff, challenge_digest)
         ownership = boundary()
         startup = io.startup_observation(child, authorization_digest)
         startup["ownership"] = ownership
@@ -181,7 +187,8 @@ def run_fixed(request, canonical_lock_fd):
         if sealed:
             ownership = last_ownership
             if ownership is not None:
-                ownership = {**ownership, "ownedChild": None,
+                known_child = io._child_identity if type(io) is HR_FIXED_IO.FixedIO else None
+                ownership = {**ownership, "ownedChild": known_child,
                     "windowHeld": None, "canonicalLockHeld": None,
                     "sourcesInhibited": None}
                 try:
