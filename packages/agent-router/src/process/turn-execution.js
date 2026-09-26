@@ -222,6 +222,7 @@ export const turnExecutionMethods = {
         processGeneration: this.processGeneration,
         sessionId,
         callerCorrelation: opts?.callerCorrelation ?? null,
+        ingressCorrelation: this.ingressCorrelationLookup?.(opts) ?? null,
       })
     } catch (cause) {
       reject(envelopeCarrier('not_admitted', null, cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED', cause?.message ?? String(cause)))
