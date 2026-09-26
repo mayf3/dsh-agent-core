@@ -22,6 +22,7 @@ COMMITMENT_FIELDS = {"receiptVersion", "operationId", "hostId", "startupNonce",
                      "bundleByteLength", "sealedAtWallMs", "producerId"}
 INDEX_FIELDS = {"version", "operationId", "reconciliationHandle", "hostId",
                 "startupNonceSha256", "bundleSha256"}
+_fresh_claim = []  # Same-process continuation only; restart never retries a nonce.
 
 
 class Rejected(Exception):
@@ -187,7 +188,8 @@ def write_bundle_once(raw):
 
 def readback(kind):
     require(kind in ("intent", "launch-authorization", "bundle-commitment",
-                     "live-handle-index", "launch-claimed"),
+                     "live-handle-index", "launch-claimed", "phase-sealed",
+                     "phase-launch-attempt"),
             "RECEIPT_KIND_INVALID")
     root, directory = opened_custody(False)
     try:
@@ -268,6 +270,16 @@ def readback(kind):
                     and record["producerId"] ==
                         "trusted root recovery control plane",
                     "BUNDLE_COMMITMENT_INVALID")
+        elif kind in ("phase-sealed", "phase-launch-attempt"):
+            prior, previous = ((None, None) if kind == "phase-sealed"
+                               else readback("phase-sealed"))
+            phase = "SEALED_NOT_ATTEMPTED" if prior is None else "LAUNCH_ATTEMPT_COMMITTED"
+            require(type(record.get("version")) is int
+                    and type(record.get("atWallMs")) is int
+                    and record == phase_record(phase, record["atWallMs"], previous)
+                    and (record["atWallMs"] == readback("bundle-commitment")[0]["sealedAtWallMs"]
+                         if prior is None else prior["atWallMs"] < record["atWallMs"] <= (1 << 53) - 1),
+                    "PHASE_RECEIPT_INVALID")
         else:
             require(set(record) == {"version", "operationId", "phase",
                                     "launchAuthorizationSha256",
@@ -278,6 +290,7 @@ def readback(kind):
                         readback("launch-authorization")[1]
                     and record["bundleCommitmentSha256"] ==
                         readback("bundle-commitment")[1]
+                    and record["atWallMs"] == readback("phase-launch-attempt")[0]["atWallMs"]
                     and type(record["atWallMs"]) is int and record["atWallMs"] >
                         readback("bundle-commitment")[0]["sealedAtWallMs"],
                     "LAUNCH_CLAIM_INVALID")
@@ -291,7 +304,8 @@ def readback(kind):
 
 def write_once(kind, record):
     require(kind in ("intent", "launch-authorization", "live-handle-index",
-                     "bundle-commitment", "launch-claimed"), "RECEIPT_KIND_INVALID")
+                     "bundle-commitment", "launch-claimed", "phase-sealed",
+                     "phase-launch-attempt"), "RECEIPT_KIND_INVALID")
     raw = canonical(record)
     require(0 < len(raw) <= MAX_BYTES, "RECEIPT_SIZE_INVALID")
     root, directory = opened_custody(True)
@@ -454,16 +468,32 @@ def seal_bundle_commitment(bundle_bytes, sealed_at_wall_ms):
         "producerId": "trusted root recovery control plane"}
     write_bundle_once(bundle_bytes)
     write_once("live-handle-index", index)
-    return write_once("bundle-commitment", receipt)
+    digest = write_once("bundle-commitment", receipt)
+    write_once("phase-sealed", phase_record("SEALED_NOT_ATTEMPTED", sealed_at_wall_ms, None))
+    _fresh_claim[:] = [digest]
+    return digest
+
+
+def phase_record(phase, at_wall_ms, previous):
+    commitment, digest = readback("bundle-commitment")
+    return {"version": 1, "operationId": OPERATION_ID, "phase": phase,
+        "hostId": commitment["hostId"], "reconciliationHandle": HANDLE,
+        "startupNonceSha256": sha256(commitment["startupNonce"].encode()),
+        "bundleCommitmentSha256": digest,
+        "previousPhaseSha256": previous, "atWallMs": at_wall_ms}
 
 
 def claim_one_launch(at_wall_ms):
     """Durably consume the fixed launch before any child can be spawned."""
     receipt, digest = readback("launch-authorization")
     commitment, commitment_digest = readback("bundle-commitment")
+    require(_fresh_claim == [commitment_digest], "LAUNCH_CONTINUATION_UNKNOWN")
+    _fresh_claim.clear()
+    _, previous = readback("phase-sealed")
     require(type(at_wall_ms) is int
             and commitment["sealedAtWallMs"] < at_wall_ms
             <= (1 << 53) - 1, "LAUNCH_CLAIM_TIME_INVALID")
+    write_once("phase-launch-attempt", phase_record("LAUNCH_ATTEMPT_COMMITTED", at_wall_ms, previous))
     return write_once("launch-claimed", {"version": 1, "operationId": OPERATION_ID,
         "phase": "LAUNCH_CLAIMED", "launchAuthorizationSha256": digest,
         "bundleCommitmentSha256": commitment_digest,
