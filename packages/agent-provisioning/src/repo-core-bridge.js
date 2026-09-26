@@ -4,7 +4,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ensureSymlink } from './ensure-symlink.js'
 
-const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+/** Repo root (three levels up from src/: packages/agent-provisioning/src). */
+export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 
 /**
  * Dev-harness resolution bridge: symlink every @agent-core package into the
@@ -77,3 +78,26 @@ function repoBridgeWritable(bridgeDir) {
   }
 }
 
+
+/** Link the selected home farm and create its workspace; repository links stay deployment-owned. */
+export function provisionProfileWorkspaceLinks(home, workspace, farmLinks) {
+  // Out-of-tree plugin resolution links for this profile's composition.
+  const farm = join(home, 'profiles', 'node_modules')
+  const agentCoreFarm = join(farm, '@agent-core')
+  for (const [pkg, relTarget] of Object.entries(farmLinks)) {
+    ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
+  }
+
+  // Credential boundary validation is CHILD-TIME (DEFAULT_MODEL_ROUTING_CONFIG_V1
+  // prerequisite + AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2
+  // third-uid-denied): provisioning runs as the runtime identity (e.g. authsvc
+  // uid505), which must never — and structurally cannot — touch the canonical
+  // secret under the uid502 owner's 0700 home. The parent's job here is the
+  // credentialFile REFERENCE written into the child profile patch above; the
+  // child's dsh-codex store reader enforces the real invariants after the
+  // privilege drop (assertOwnerOnly mode 0600 + strict document validation)
+  // and fails loud before any model call. assertOAuthCredentialBoundary stays
+  // exported (re-export below) for direct ops/unit use — never invoked here.
+  mkdirSync(workspace, { recursive: true })
+  return home
+}
