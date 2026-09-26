@@ -146,6 +146,71 @@ class FixedLifecycleTest(unittest.TestCase):
             self.l.record_closed(self.release, 106)
         self.assertFalse((self.directory / "key-tombstone.json").exists())
 
+    def test_prelaunch_unknown_keeps_null_child_as_unknown_not_no_launch_proof(self):
+        self.assert_null_child_unknown_retains_every_gate(False)
+
+    def test_possible_launch_unknown_keeps_null_child_without_reconstruction(self):
+        self.assert_null_child_unknown_retains_every_gate(True)
+
+    def assert_null_child_unknown_retains_every_gate(self, attempted):
+        if attempted:
+            self.j.claim_one_launch(103)
+        unknown = {"ownership": {**self.ownership, "ownedChild": None},
+            "custodian": "fixed-DS-owner", "dispositionDeadlineWallMs": 110,
+            "reason": "READBACK_UNAVAILABLE"}
+        self.l.record_unknown(unknown, 104)
+        recorded, _ = self.l.readback("phase-unknown")
+        self.assertIsNone(recorded["observation"]["ownership"]["ownedChild"])
+        state = self.l.snapshot()
+        self.assertEqual(state["custodian"], "fixed-DS-owner")
+        self.assertEqual(state["disposition"], "UNKNOWN")
+        self.assertTrue(state["launchMayHaveOccurred"])
+        self.assertTrue(state["retainInhibition"])
+        self.assertFalse(state["launchAllowed"])
+        self.assertFalse(state["releaseAllowed"])
+        self.assertFalse((self.directory / "key-tombstone.json").exists())
+        with self.assertRaises(self.j.Rejected):
+            self.j.claim_one_launch(105)
+        no_launch = {**self.release, "ownership": unknown["ownership"],
+                     "noLaunchReceiptSha256": "f" * 64}
+        with self.assertRaises(self.j.Rejected):
+            self.l.record_abandoned(no_launch, 105)
+
+    def test_unknown_after_startup_records_lost_continuity_truth_not_permission(self):
+        self.start()
+        unknown = {"ownership": {**self.ownership, "ownedChild": None,
+            "windowHeld": False, "canonicalLockHeld": None, "sourcesInhibited": False},
+            "custodian": "fixed-DS-owner", "dispositionDeadlineWallMs": 110,
+            "reason": "CUSTODY_CONTINUITY_UNKNOWN"}
+        self.l.record_unknown(unknown, 105)
+        record, _ = self.l.readback("phase-unknown")
+        self.assertIsNone(record["observation"]["ownership"]["ownedChild"])
+        self.assertIsNone(record["observation"]["ownership"]["canonicalLockHeld"])
+        self.assertFalse(record["observation"]["ownership"]["windowHeld"])
+        self.assertFalse(record["observation"]["ownership"]["sourcesInhibited"])
+        state = self.l.snapshot()
+        self.assertEqual(state["custodian"], "fixed-DS-owner")
+        self.assertEqual(state["disposition"], "UNKNOWN")
+        self.assertTrue(state["launchMayHaveOccurred"])
+        self.assertFalse(state["launchAllowed"])
+        self.assertFalse(state["releaseAllowed"])
+        self.assertFalse((self.directory / "key-tombstone.json").exists())
+        with self.assertRaises(self.j.Rejected):
+            self.l.record_closed(self.release, 106)
+
+    def test_unknown_cannot_substitute_known_descriptor_or_source_identity(self):
+        self.start()
+        for changed in ({"windowIdentity": [20, 30]}, {"canonicalLockIdentity": [40, 50]},
+                        {"ownedChild": {"pid": 99998, "identitySha256": "1" * 64}},
+                        {"canonicalLockOwnershipReceiptSha256": "e" * 64},
+                        {"launchSourcesInhibitedReceiptSha256": "0" * 64}):
+            unknown = {"ownership": {**self.ownership, **changed},
+                "custodian": "fixed-DS-owner", "dispositionDeadlineWallMs": 110,
+                "reason": "CUSTODY_CONTINUITY_UNKNOWN"}
+            with self.subTest(changed=changed), self.assertRaises(self.j.Rejected):
+                self.l.record_unknown(unknown, 105)
+        self.assertFalse((self.directory / "phase-unknown.json").exists())
+
     def test_abandonment_requires_affirmative_no_launch_and_permanent_tombstone(self):
         no_launch = {**self.release, "ownership": {**self.ownership, "ownedChild": None},
                      "noLaunchReceiptSha256": "f" * 64}

@@ -30,18 +30,20 @@ RELEASE_FIELDS = {"ownership", "ownedChildDispositionReceiptSha256",
     "canonicalLockDispositionReceiptSha256", "businessOutcome"}
 
 
-def _ownership(value, child_required=True):
+def _ownership(value, child_required=True, unknown_child=False):
     J.require(J.exact(value, OWNERSHIP_FIELDS), "OWNERSHIP_PROJECTION_INVALID")
     child = value["ownedChild"]
     J.require((J.exact(child, {"pid", "identitySha256"})
         and type(child["pid"]) is int and child["pid"] > 0
-        and J.valid_hash(child["identitySha256"])) if child_required else child is None,
+        and J.valid_hash(child["identitySha256"]) or unknown_child and child is None)
+        if child_required else child is None,
         "OWNED_CHILD_PROJECTION_INVALID")
     for name in ("windowIdentity", "canonicalLockIdentity"):
         J.require(type(value[name]) is list and len(value[name]) == 2
             and all(type(item) is int and item >= 0 for item in value[name]),
             "DESCRIPTOR_PROJECTION_INVALID")
-    J.require(all(value[name] is True for name in
+    J.require(all((type(value[name]) is bool or value[name] is None)
+        if unknown_child else value[name] is True for name in
         ("windowHeld", "canonicalLockHeld", "sourcesInhibited"))
         and J.valid_hash(value["canonicalLockOwnershipReceiptSha256"])
         and J.valid_hash(value["launchSourcesInhibitedReceiptSha256"]),
@@ -80,12 +82,21 @@ def _observation(kind, value, previous):
             and type(value["dispositionDeadlineWallMs"]) is int
             and value["reason"] in ("READBACK_UNAVAILABLE", "STARTUP_UNAVAILABLE",
                                     "CUSTODY_CONTINUITY_UNKNOWN"), "UNKNOWN_PROJECTION_INVALID")
-    _ownership(value["ownership"], kind != "phase-abandoned")
+    # Missing child metadata in UNKNOWN is not absence, exit, or no-launch proof.
+    _ownership(value["ownership"], kind != "phase-abandoned", kind == "phase-unknown")
     J.require(value["ownership"]["launchSourcesInhibitedReceiptSha256"] ==
         bundle["recoveryCutover"]["launchSourcesInhibitedReceiptSha256"], "SOURCE_RECEIPT_MISMATCH")
     if previous["phase"] in ("STARTUP_OBSERVED", "CONSUMPTION_READBACK"):
-        J.require(value["ownership"] == previous["observation"]["ownership"],
-                  "OWNERSHIP_PROJECTION_CHANGED")
+        before = previous["observation"]["ownership"]
+        if kind == "phase-unknown":
+            stable = OWNERSHIP_FIELDS - {"ownedChild", "windowHeld",
+                                        "canonicalLockHeld", "sourcesInhibited"}
+            J.require(all(value["ownership"][name] == before[name] for name in stable)
+                and (value["ownership"]["ownedChild"] is None
+                     or value["ownership"]["ownedChild"] == before["ownedChild"]),
+                "OWNERSHIP_PROJECTION_CHANGED")
+        else:
+            J.require(value["ownership"] == before, "OWNERSHIP_PROJECTION_CHANGED")
 
 
 def _present(kind):
