@@ -19,7 +19,7 @@
  */
 
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync,
+  accessSync, constants, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpathSync,
   renameSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -422,11 +422,15 @@ export const AGENT_PROFILE_DEFS = {
  * (empirically verified: without it the per-agent composition dies at boot
  * with ERR_MODULE_NOT_FOUND for '@agent-core/workspace-bootstrap' imported by
  * agent-memory). Idempotent, additive, only touches the gitignored
- * node_modules dir.
+ * node_modules dir in writable development checkouts. Deployment owns an
+ * immutable repository's topology: provisioning only validates existing
+ * bridges there, and never creates/repairs one. Missing optional workspace
+ * packages are not dependencies merely because they exist in the source tree.
  */
 export function ensureRepoCoreBridge() {
   const bridgeDir = join(REPO, 'node_modules', '@agent-core')
-  mkdirSync(bridgeDir, { recursive: true })
+  const writable = repoBridgeWritable(bridgeDir)
+  if (writable) mkdirSync(bridgeDir, { recursive: true })
   const candidates = []
   for (const name of readdirSync(join(REPO, 'packages'))) {
     if (existsSync(join(REPO, 'packages', name, 'package.json'))) {
@@ -439,7 +443,37 @@ export function ensureRepoCoreBridge() {
     }
   }
   for (const [pkg, target] of candidates) {
-    ensureSymlink(target, join(bridgeDir, pkg))
+    const link = join(bridgeDir, pkg)
+    if (writable) {
+      ensureSymlink(target, link)
+      continue
+    }
+    let stat
+    try { stat = lstatSync(link) } catch (error) {
+      if (error?.code === 'ENOENT') continue
+      throw error
+    }
+    if (stat.isSymbolicLink()) {
+      try { if (realpathSync(link) === realpathSync(target)) continue } catch (error) {
+        if (!['ENOENT', 'ENOTDIR', 'ELOOP'].includes(error?.code)) throw error
+      }
+    }
+    throw provisioningError('repo_bridge_mismatch', `immutable repository bridge mismatch at ${link}; deployment must repair its topology`)
+  }
+}
+
+/** Check the nearest existing directory, without trying a topology write. */
+function repoBridgeWritable(bridgeDir) {
+  let parent = bridgeDir
+  for (;;) {
+    try {
+      accessSync(parent, constants.W_OK)
+      return true
+    } catch (error) {
+      if (['EACCES', 'EPERM', 'EROFS'].includes(error?.code)) return false
+      if (error?.code !== 'ENOENT' || parent === dirname(parent)) throw error
+      parent = dirname(parent)
+    }
   }
 }
 
@@ -472,7 +506,8 @@ export function provisionAgentHome(home, workspace, options = {}) {
   // activation prerequisite rather than being mutated implicitly.
   mkdirSync(home, { recursive: true, mode: 0o700 })
   // Farm links point into the repo; the repo must expose @agent-core names
-  // for transitive imports (see ensureRepoCoreBridge). Idempotent, gitignored.
+  // for transitive imports (see ensureRepoCoreBridge). Production topology
+  // is deployment-owned; this call is read-only when the repo is immutable.
   ensureRepoCoreBridge()
   const settingsSource = process.env.DSH_SETTINGS_SOURCE ?? join(homedir(), '.dsh', 'settings.yaml')
   if (!copyOnce(settingsSource, join(home, 'settings.yaml'))) {
