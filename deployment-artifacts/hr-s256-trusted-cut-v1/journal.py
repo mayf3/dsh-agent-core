@@ -209,6 +209,7 @@ def readback(kind):
         if kind == "intent":
             require(set(record) == {"version", "operationId", "phase", "subject",
                                     "subjectPreimageSha256", "nonceSha256", "atWallMs"}
+                    and type(record["version"]) is int
                     and record["version"] == 1 and record["phase"] == "INTENT"
                     and record["subject"] == HANDLE
                     and valid_hash(record["subjectPreimageSha256"])
@@ -216,7 +217,11 @@ def readback(kind):
                     and type(record["atWallMs"]) is int and record["atWallMs"] >= 0,
                     "INTENT_INVALID")
         elif kind == "launch-authorization":
-            require(record.get("phase") == "LAUNCH_AUTHORIZED"
+            require(exact(record, {"version", "operationId", "phase",
+                                   "intentSha256", "authorization"})
+                    and type(record["version"]) is int
+                    and record["version"] == 1
+                    and record["phase"] == "LAUNCH_AUTHORIZED"
                     and type(record.get("authorization")) is dict
                     and record.get("intentSha256") == readback("intent")[1]
                     and valid_authorization(record["authorization"], readback("intent")[0]),
@@ -267,6 +272,7 @@ def readback(kind):
             require(set(record) == {"version", "operationId", "phase",
                                     "launchAuthorizationSha256",
                                     "bundleCommitmentSha256", "atWallMs"}
+                    and type(record["version"]) is int
                     and record["version"] == 1 and record["phase"] == "LAUNCH_CLAIMED"
                     and record["launchAuthorizationSha256"] ==
                         readback("launch-authorization")[1]

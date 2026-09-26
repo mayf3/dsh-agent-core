@@ -158,6 +158,42 @@ class FixedCommitmentTest(unittest.TestCase):
         with self.assertRaises(journal.Rejected):
             journal.claim_one_launch(103)
 
+    def test_launch_authorization_outer_schema_and_integer_version_are_closed(self):
+        path = self.directory / "launch-authorization.json"
+        original = json.loads(path.read_bytes())
+        altered = (
+            {**original, "unexpected": "private"},
+            {key: value for key, value in original.items() if key != "intentSha256"},
+            {**original, "version": 2},
+            {**original, "version": True},
+        )
+        for record in altered:
+            path.write_bytes(bytes_of(record))
+            with self.subTest(record=record), self.assertRaises(journal.Rejected):
+                journal.readback("launch-authorization")
+        path.write_bytes(bytes_of(altered[0]))
+        changed = copy.deepcopy(self.bundle)
+        changed["recoveryCutover"]["launchAuthorizationReceiptSha256"] = journal.sha256(
+            bytes_of(altered[0]))
+        with self.assertRaises(journal.Rejected):
+            journal.seal_bundle_commitment(bytes_of(changed), 102)
+        self.assertFalse((self.directory / "bundle.json").exists())
+
+    def test_bool_version_in_antecedent_or_claim_is_not_one(self):
+        intent_path = self.directory / "intent.json"
+        original_intent = json.loads(intent_path.read_bytes())
+        intent_path.write_bytes(bytes_of({**original_intent, "version": True}))
+        with self.assertRaises(journal.Rejected):
+            journal.readback("intent")
+        intent_path.write_bytes(bytes_of(original_intent))
+        journal.seal_bundle_commitment(bytes_of(self.bundle), 102)
+        journal.claim_one_launch(103)
+        claim_path = self.directory / "launch-claimed.json"
+        original_claim = json.loads(claim_path.read_bytes())
+        claim_path.write_bytes(bytes_of({**original_claim, "version": True}))
+        with self.assertRaises(journal.Rejected):
+            journal.readback("launch-claimed")
+
     def test_bool_counts_and_noninteger_receipt_numbers_reject(self):
         for field in ("runtimeTreeProcessCount",):
             changed = copy.deepcopy(self.bundle)
