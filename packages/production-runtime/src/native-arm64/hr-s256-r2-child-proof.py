@@ -169,14 +169,61 @@ def authorization_projection(fd, digest, approved_frame, *, trusted_uid=0):
         raise Rejected('AUTHORIZATION_UNAVAILABLE') from exc
 
 
+def qualification_projection(descriptor,digest,approved_frame):
+    """Separate ephemeral original-executor context, never HR authorization."""
+    require(type(descriptor) is int and descriptor >= 3,'QUALIFICATION_DESCRIPTOR_INVALID')
+    require(type(digest) is str and len(digest) == 64
+            and all(c in '0123456789abcdef' for c in digest),'QUALIFICATION_DIGEST_INVALID')
+    try:
+        before=os.fstat(descriptor)
+        require(stat.S_ISREG(before.st_mode) and before.st_uid == 0
+                and stat.S_IMODE(before.st_mode) == 0o600 and before.st_nlink == 1
+                and 0 < before.st_size <= 2048,'QUALIFICATION_CONTEXT_CUSTODY')
+        raw=os.pread(descriptor,before.st_size,0)
+        after=os.fstat(descriptor)
+        identity=lambda m:(m.st_dev,m.st_ino,m.st_mode,m.st_uid,m.st_nlink,
+                           m.st_size,m.st_mtime_ns,m.st_ctime_ns)
+        require(identity(before) == identity(after) and len(raw) == before.st_size
+                and hashlib.sha256(raw).hexdigest() == digest,'QUALIFICATION_CONTEXT_CHANGED')
+        def unique(pairs):
+            value={}
+            for key,item in pairs:
+                require(key not in value,'QUALIFICATION_DUPLICATE_KEY')
+                value[key]=item
+            return value
+        value=json.loads(raw,object_pairs_hook=unique)
+        require(type(value) is dict and set(value) == {'role','phase',
+            'consumingBinarySha256','validatorSha256','entryManifestSha256',
+            'procedureSha256','startupNonce'}
+            and raw == json.dumps(value,sort_keys=True,separators=(',',':')).encode(),
+            'QUALIFICATION_CONTEXT_SHAPE')
+        require(value['role'] == 'original_executor_qualification'
+                and value['phase'] in ('deployment_start','restart_a','restart_b')
+                and value['procedureSha256'] ==
+                'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e',
+                'QUALIFICATION_CONTEXT_BINDING')
+        for key in ('consumingBinarySha256','validatorSha256','entryManifestSha256','startupNonce'):
+            require(type(value[key]) is str and len(value[key]) == 64
+                    and all(c in '0123456789abcdef' for c in value[key]),
+                    'QUALIFICATION_CONTEXT_IDENTITY')
+        require(type(approved_frame) is dict and value['startupNonce'] == approved_frame.get('nonce'),
+                'QUALIFICATION_CONTEXT_NONCE')
+        return value
+    except (OSError,ValueError,TypeError,KeyError) as exc:
+        raise Rejected('QUALIFICATION_CONTEXT_UNAVAILABLE') from exc
+
+
 if __name__ == "__main__":
     try:
         require((len(sys.argv) == 5 and sys.argv[1] == "--child-prove") or
-                (len(sys.argv) == 6 and sys.argv[1] == "--startup-prove"), "INVOCATION_INVALID")
+                (len(sys.argv) == 6 and sys.argv[1] in ("--startup-prove","--qualification-prove")), "INVOCATION_INVALID")
         approved = prove(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
         if sys.argv[1] == "--startup-prove":
             print(json.dumps(authorization_projection(int(sys.argv[5]), sys.argv[4], approved),
                              separators=(',', ':')))
+        if sys.argv[1] == '--qualification-prove':
+            print(json.dumps(qualification_projection(int(sys.argv[5]),sys.argv[4],approved),
+                             separators=(',',':')))
     except (Rejected, ValueError) as exc:
         print(f"[hr-s256-r2-child-proof] {exc}", file=sys.stderr)
         raise SystemExit(2) from None
