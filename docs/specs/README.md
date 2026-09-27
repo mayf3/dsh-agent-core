@@ -350,3 +350,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1` | accepted 2026-09-27 by original Deployment Agent under standing technical delegation, exact text `4a8b1871…` / review `502b35a0…` / acceptance `4aa7320c…`; effective after canonical integration | contracts; production apply none | MI-C03 and V2 V10/RQ-007 fixed original separate proof-executor private OWN-event completion; original receipts/output/trust unchanged, UNKNOWN/no seal |
+
+## Fixed original HR proof-executor qualification phase
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1` | accepted 2026-09-27 under standing delegated technical acceptance `d3b580c5…`, reviewed exact `733853df…` / `33c86498…`; effective after canonical integration | contracts; production apply none | original sealed root/FD-owned qualification-only startup on the same final whole-app; original procedure then closed proofs, unchanged subsequent HR proof-before-stop; no HR bundle/settlement/ID consumption |
