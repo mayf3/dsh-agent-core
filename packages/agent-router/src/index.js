@@ -80,7 +80,7 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
-import { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
+import { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission, qualificationReplyObserver } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -293,6 +293,7 @@ export function apply(ctx, config) {
       : {}),
   })
   const ingressDelivery = createIngressDelivery({
+    observeQualificationReply: qualificationReplyObserver(reconciliationStore),
     log,
     feishu,
     workspaceBootstrap,
@@ -415,7 +416,7 @@ export function apply(ctx, config) {
   // ChannelConversations, switch Agents and dispatch per the D-002 contract.
   // VALUE semantics: Cordis stores the value as-is.
   ctx.provide('agentRouter', service)
-  publishFixedRuntimeAdmission(service)
+  publishFixedRuntimeAdmission(service, reconciliationStore)
   return service
 }
 
