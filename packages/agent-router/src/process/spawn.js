@@ -46,7 +46,7 @@ export const spawnMethods = {
     try {
       child = spawn(program, args, {
         cwd: this.workspace,
-        env: agentEnv(this.home, this.env, this.omitEnv, this.providerEnv),
+        env: agentEnv(this.home, this.env, this.omitEnv, this.providerEnv, this.provider),
         stdio: ['pipe', 'pipe', 'pipe'],
         ...(spawnConfig.spawnUid === undefined ? {} : { uid: spawnConfig.spawnUid, gid: spawnConfig.spawnGid }),
       })
