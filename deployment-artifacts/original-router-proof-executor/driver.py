@@ -142,22 +142,44 @@ def _entry_manifest(value,binding):
 
 
 def _namespace_directory(path):
-    """Internal original fixed package namespace, never an invocation path."""
+    """Fixed original DS namespace policy; never a caller-selected trust rule."""
     require(path.startswith('/') and '..' not in path.split('/'),'ORIGINAL_NAMESPACE_UNKNOWN')
+    identity = lambda m: (m.st_dev,m.st_ino,m.st_mode,m.st_uid,m.st_gid,
+                          m.st_nlink,m.st_mtime_ns,m.st_ctime_ns)
+    def custody(meta, relative):
+        require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == 0,
+                'ORIGINAL_NAMESPACE_CUSTODY')
+        if relative == '/private/var/db/agent-deploy-system':
+            # Existing original shim DS_PARENT contract, not a group allowlist.
+            require(meta.st_gid == 80 and stat.S_IMODE(meta.st_mode) == 0o770,
+                    'ORIGINAL_DS_PARENT_CUSTODY')
+        else:
+            require(not meta.st_mode & 0o022,'ORIGINAL_NAMESPACE_CUSTODY')
     fd = os.open('/',os.O_RDONLY | os.O_DIRECTORY)
+    opened = [fd]
+    trace = []
+    complete = False
     try:
+        custody(os.fstat(fd), '/')
+        relative = ''
         for component in path.split('/')[1:]:
             if not component: continue
+            relative += '/' + component
+            before = os.stat(component,dir_fd=fd,follow_symlinks=False)
+            custody(before, relative)
             child = os.open(component,os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,dir_fd=fd)
-            os.close(fd)
+            opened.append(child)
+            require(identity(os.fstat(child)) == identity(before),'ORIGINAL_NAMESPACE_OPEN_RACE')
+            trace.append((fd,component,child,identity(before)))
             fd = child
-            meta = os.fstat(fd)
-            require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == 0
-                    and not meta.st_mode & 0o022,'ORIGINAL_NAMESPACE_CUSTODY')
+        for parent,name,child,expected in trace:
+            require(identity(os.stat(name,dir_fd=parent,follow_symlinks=False)) == expected
+                    and identity(os.fstat(child)) == expected,'ORIGINAL_NAMESPACE_CHANGED')
+        complete = True
         return fd
-    except BaseException:
-        os.close(fd)
-        raise
+    finally:
+        for item in reversed(opened[:-1] if complete else opened):
+            os.close(item)
 
 
 class FixedOriginalDriver:
