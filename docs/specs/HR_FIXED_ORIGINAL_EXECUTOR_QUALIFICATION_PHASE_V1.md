@@ -1,6 +1,6 @@
 ---
 spec_id: HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -11,6 +11,13 @@ supersedes: []
 superseded_by: null
 scope: [original separate executor fixed qualification-only private startup phase]
 base_revision: 95e56dad66fe76603ab3c85e826d2a3cb0510b66
+accepted_by: original Deployment Agent under mayf3 standing ordinary technical delegation
+accepted_date: 2026-09-27
+accepted_reviewed_head: 9622151cad2026dab59d1ead779a3d28ad1e3b85
+accepted_reviewed_spec_sha256: 733853dfd3b4b4631bc0b8fcf07034b4a2e53c23b572959c95b9594bb8a3204d
+independent_review_sha256: 33c864987221b5bea9cb668dccbc5bde9d1c5c723e5c111c30b20d70eb46c15c
+delegated_acceptance_sha256: d3b580c5a7b32fce79d38660b7ae50ddf18a2b699ee5cb364c501cffc9487b09
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-QUALIFICATION-PHASE-DELEGATED-TECHNICAL-ACCEPTANCE-20260927-v1/ACCEPTANCE.json
 ---
 
 # Original executor qualification-only private startup
