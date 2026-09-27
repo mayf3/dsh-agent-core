@@ -58,7 +58,7 @@ function isRecoveryFenceResult(error) {
 export function createIngressDelivery({
   log, feishu, workspaceBootstrap, store, reconciliationStore,
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
-  registerAuthenticatedIngress,
+  registerAuthenticatedIngress, observeQualificationReply,
 }) {
   /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
@@ -171,7 +171,8 @@ export function createIngressDelivery({
         try {
           // Reply to the originating message (in-thread automatically when
           // the ingress was a topic thread).
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
+          const replyResult = await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), reply, { ux: { rendering: 'markdown', autoMentionTriggerSender: true } })
+          if (authenticatedFeishu) observeQualificationReply?.(turnResult.reconciliationHandle, replyResult)
           log.log(`reply sent back to ${ingress.conversationId.slice(0, 12)}...`)
         } catch (error) {
           const deterministicCodes = new Set(['permission_denied', 'format_error', 'target_revoked', 'rate_limited'])
