@@ -172,6 +172,7 @@ def _sequence_owned(owner):
             owner._observed_runtimes.add(runtime)
             previous=owner._procedure_turns[-1] if owner._procedure_turns else None
             owner._procedure_turns.append(_checked_turn(value,previous,owner))
+        owner._stop_owned_child()  # Final finite qualification child, before seal.
         owner._continuity()
         return _seal_owned(owner)
     except BaseException:

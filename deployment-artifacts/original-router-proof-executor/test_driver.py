@@ -38,6 +38,58 @@ except BaseException:
     raise
 
 class Tests(unittest.TestCase):
+    def test_final_exact_owned_exit_precedes_seal_and_losses_never_retry(self):
+        scope={'__name__':'_confined_final_disposition','FixedOriginalDriver':d.FixedOriginalDriver,
+               'require':d.require,'Unknown':d.Unknown}
+        exec(compile(_procedure_source,'original-procedure.py','exec'),scope)
+        for failure in (None,'exit','custody','deadline'):
+            x=object.__new__(d.FixedOriginalDriver)
+            x._unknown=False;x._operation_deadline=100;x._startup_deadline=90
+            x._phase_started_wall_ms=1000;x._owned_children=[];x._stopped_children=set()
+            events=[]
+            class OwnedChild:
+                def __init__(self,phase):self.phase=phase;self.exited=False
+                def poll(self):return 0 if self.exited else None
+                def terminate(self):events.append('terminate:'+self.phase)
+                def wait(self,timeout):
+                    self.assert_bound=0 < timeout <= 30
+                    if self.phase=='restart_b' and failure=='exit':raise TimeoutError('owned exit unknown')
+                    self.exited=True;events.append('exit:'+self.phase);return 0
+            def launch(phase):
+                x._child=OwnedChild(phase);x._owned_children.append(x._child);events.append('launch:'+phase)
+            def continuity():
+                d.require(not x._unknown,'ORIGINAL_CUSTODY_UNKNOWN')
+                d.require(clock() < x._operation_deadline,'ORIGINAL_PROCEDURE_DEADLINE')
+                if len(getattr(x,'_procedure_turns',[]))==3 and failure=='custody':
+                    raise d.Unknown('ORIGINAL_WINDOW_CHANGED')
+            x._continuity=continuity;x._launch_phase=launch
+            x._deploy_original=lambda:launch('deployment_start');x._health_original=lambda:None
+            def completed(owner):
+                n=len(owner._procedure_turns)+1
+                return {'floor':n,'maxIssuedTurnSeq':n,'live':[],'evicted':[],'watermark':None,
+                    'turnExecutionId':'turn-'+str(n),'processGeneration':n,
+                    'nativeMessageSha256':str(n)*64,'nativeReceiptSha256':str(n)*64,'completedAtWallMs':1001}
+            scope['OBSERVER_SHA']='a'*64;scope['_completed_turn']=completed
+            scope['_owned_turn']=lambda owner,value:'runtime-'+str(value['processGeneration'])
+            def seal(owner):
+                self.assertEqual(sum(child.poll() is None for child in owner._owned_children),0)
+                events.append('seal');return 'existing-closed-proof'
+            scope['_seal_owned']=seal
+            def clock():return 101 if failure=='deadline' and len(getattr(x,'_procedure_turns',[]))==3 else 1
+            with patch.object(d.time,'monotonic',side_effect=clock):
+                if failure is None:
+                    self.assertEqual(scope['_sequence_owned'](x),'existing-closed-proof')
+                    self.assertEqual(events[-2:],['exit:restart_b','seal']);self.assertFalse(x._unknown)
+                    self.assertTrue(all(child.assert_bound for child in x._owned_children))
+                else:
+                    with self.assertRaises((d.Unknown,TimeoutError)):scope['_sequence_owned'](x)
+                    self.assertTrue(x._unknown);self.assertNotIn('seal',events)
+                    if failure in ('custody','deadline'):self.assertNotIn('terminate:restart_b',events)
+                    before=list(events)
+                    with self.assertRaises(d.Unknown):scope['_sequence_owned'](x)
+                    self.assertEqual(events,before)
+                self.assertIs(x._child,x._owned_children[-1])
+                self.assertEqual(len(x._owned_children),3)
     def test_canonical_owned_descriptor_loss_is_sticky_before_procedure_effect(self):
         from types import SimpleNamespace
         x=object.__new__(d.FixedOriginalDriver);x._unknown=False;x._operation_deadline=100
@@ -253,7 +305,7 @@ class Tests(unittest.TestCase):
         scope['_seal_owned']=seal
         self.assertEqual(len(scope['_sequence_owned'](x)),3)
         self.assertEqual(order,['deploy','native_completed_1','required_health','owned_stop','restart_a',
-            'native_completed_2','required_health','owned_stop','restart_b','native_completed_3','required_health','seal'])
+            'native_completed_2','required_health','owned_stop','restart_b','native_completed_3','required_health','owned_stop','seal'])
         self.assertFalse(x._unknown)
         # Actual event checker, not an accepted PASS boolean: duplicate turn
         # and generation cannot complete even when a callsite returns a value.
