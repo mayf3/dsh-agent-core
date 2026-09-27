@@ -83,7 +83,7 @@ export function childSpawnConfig(log = console) {
 export const AGENT_CHILD_TMPDIR = process.platform === 'darwin' ? '/private/tmp' : '/tmp'
 
 /** Base environment for one agent process (its own home, workspace as cwd). */
-export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
+export function agentEnv(home, extra = {}, omit = [], providerEnv = {}, provider) {
   const env = {
     ...process.env,
     DSH_HOME: home,
@@ -97,7 +97,12 @@ export function agentEnv(home, extra = {}, omit = [], providerEnv = {}) {
   // therefore has no recognized proxy variable at all.
   for (const name of RECOGNIZED_PROXY_ENV_KEYS) delete env[name]
   Object.assign(env, providerEnv)
-  if (env.OPENCODE_GO_API_KEY === undefined) {
+  // The already-resolved process provider owns credential roles. Codex uses
+  // its provisioned canonical OAuth reference, never the generic Go key.
+  // Remove inherited/extra/provider-injected keys as well as skipping disk.
+  if (provider === 'openai-codex') {
+    delete env.OPENCODE_GO_API_KEY
+  } else if (env.OPENCODE_GO_API_KEY === undefined) {
     const credentialFile = join(home, '.credentials.yaml')
     if (existsSync(credentialFile)) {
       const match = readFileSync(credentialFile, 'utf8').match(/^OPENCODE_GO_API_KEY:\s*"?([^"\n]+)"?/m)
