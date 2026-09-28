@@ -700,6 +700,24 @@ class Tests(unittest.TestCase):
                 owner._retain_unknown('ORIGINAL_PROCEDURE_DEADLINE')
         journal.assert_not_called();park.assert_not_called()
 
+    def test_legacy_cto_post_effect_failure_does_not_enter_admin_custodian(self):
+        owner=object.__new__(d.FixedOriginalDriver)
+        owner._unknown=False;owner._effect_started=True
+        owner._procedure_claimed=False
+        source=b'def _run_owned(owner): raise Unknown("ORIGINAL_PROCEDURE_DEADLINE")\n'
+        with patch.object(d,'QUALIFIED_ADMIN_PROCEDURE_SHA',None),\
+             patch.object(d,'QUALIFIED_OWNER_SHA','a'*64),\
+             patch.object(d,'PROCEDURE_DRIVER_SHA',hashlib.sha256(source).hexdigest()),\
+             patch.object(d,'_namespace_directory',return_value=5),\
+             patch.object(os,'open',return_value=13),\
+             patch.object(os,'close'),\
+             patch.object(d,'_descriptor_bytes',return_value=source),\
+             patch.object(owner,'_retain_unknown') as retain:
+            with self.assertRaisesRegex(d.Unknown,'ORIGINAL_PROCEDURE_DEADLINE'):
+                owner.run()
+        retain.assert_not_called()
+        self.assertTrue(owner._unknown)
+
 def tearDownModule():
     for g in reversed(_guards):g.stop()
     for g in reversed(_reporter):g.stop()

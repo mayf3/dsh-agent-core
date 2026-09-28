@@ -667,7 +667,8 @@ class FixedOriginalDriver:
             return scope['_run_admin_owned'](self)
         except BaseException as exc:
             self._unknown = True
-            if getattr(self, '_effect_started', False):
+            if (QUALIFIED_ADMIN_PROCEDURE_SHA == ADMIN_PROCEDURE_SHA
+                    and getattr(self, '_effect_started', False)):
                 reason = str(exc)
                 if re.fullmatch('[A-Z][A-Z0-9_]{0,63}', reason) is None:
                     reason = 'ORIGINAL_PROCEDURE_UNKNOWN'

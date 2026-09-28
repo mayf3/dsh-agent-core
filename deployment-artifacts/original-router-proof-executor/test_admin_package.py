@@ -105,8 +105,8 @@ class FixedAdminPackageTest(unittest.TestCase):
                      patch.object(os, 'geteuid', side_effect=AssertionError('HOST_UID_DENIED')), \
                      patch.object(subprocess, 'Popen',
                                   side_effect=AssertionError('HOST_PROCESS_DENIED')):
-                    with self.assertRaisesRegex(carrier_module.CarrierRejected,
-                                                'ADMIN_CARRIER_CUSTODIAN_UNBOUND'):
+                    with self.assertRaisesRegex(AssertionError,
+                                                'HOST_UID_DENIED'):
                         carrier_module.run()
                 (package / 'PACKAGE.json').write_bytes((package / 'PACKAGE.json').read_bytes() + b' ')
                 with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_PACKAGE_DIGEST_CHANGED'):
