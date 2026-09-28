@@ -57,13 +57,23 @@ its exact epoch, generation, turn execution ID and reconciliation handle.
 The admin path uses the existing DS peer-authenticated caller boundary
 (`getpeereid`), canonical mutation lock and one privately compiled fixed
 package/host/subject binding. Its distinct exact two-field request is
-`{"action":"HR_S256_ADMIN_EMERGENCY_CUT_V1","operation_id":"hr-s256-admin-emergency-cut-20260928-v1"}`;
+`{"action":"HR_S256_ADMIN_EMERGENCY_CUT_V1","operation_id":"hr-s256-admin-emergency-cut-20260929-6d3b45a0"}`;
 the ID must be proven unused and reserved once under the root journal before
 effect. The existing MI/R2 action and its pinned ID are never reused or
 reinterpreted. No mode, path, Agent, PID, proof, PASS, principal, credential
 or executable may be selected by the caller. The package determines this
 profile, and default/uninstalled configuration rejects before protected I/O.
 This proposal creates no generic recovery action or per-Agent reset.
+
+For this incident's one current attempt, the matching private qualification
+operation is `original-router-qualification-20260929-6d3b45a0` and its fixed
+service installation is `ds-hr-admin-private-install-20260929-6d3b45a0`.
+The earlier `hr-s256-admin-emergency-cut-20260928-v1` and associated offline
+package identifiers remain historical evidence; they confer no replay or
+alias permission. The three current IDs must each be proved unused at their
+own durable boundary before their first effect. This amendment changes only
+the incident's exact single-use IDs, not subject, caller, trust boundary,
+prerequisites, rollback, or UNKNOWN semantics.
 
 **AER-C01 — Independent admin admission.** The DS must authenticate the
 actual existing allowed caller through its kernel peer, then verify the
