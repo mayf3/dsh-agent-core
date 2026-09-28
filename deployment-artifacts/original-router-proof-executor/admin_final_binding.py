@@ -17,15 +17,18 @@ from admin_fixed_shim_publisher import ADMIN_FIXED_NAMES
 
 
 CANDIDATE_DIRECTORY = Path('/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/'
-    'HR-ADMIN-EXACT-OFFLINE-CANDIDATE-20260928-v2')
-CANDIDATE_SHA256 = 'ff079402e47fd216ce5cd241dec98b3d7066f69886ec51fae1a1940129423249'
+    'HR-ADMIN-EXACT-OFFLINE-CANDIDATE-20260929-v11')
+CANDIDATE_SHA256 = '8abc9a47b180bf0cb93e30157913d46a705ef735ec0994c61967f7814d61514b'
 FINAL_TREE_SHA = '508b4042c5b1dd718c8c0858164a32ccbee65f68486c0aec4ee27b7601234968'
 QUALIFICATION_ID = package.QUALIFICATION_ID
 CUT_OPERATION_ID = package.CUT_OPERATION_ID
 HOST_ID = package.HOST_ID
 INSTALL_OPERATION_ID = 'ds-hr-admin-private-install-20260928-v1'
 FRESH_DIRECTORY = Path('/private/var/db/agent-core-admin-final-binding-s256')
-REVIEWED_FRESH_SHA256 = None
+FIXED_ROOT_OUTPUT = FRESH_DIRECTORY / 'qualification-package'
+# Private current-operation observation. A matching hash is consistency only;
+# independent package review and Owner authority remain separate predicates.
+BOUND_FRESH_SHA256 = None
 ROOT_UID = 0
 OLD_DS_NAMES = frozenset(('deployment_system.py', 'ds_client.py', 'plist',
                            'deployment-registry.json'))
@@ -154,11 +157,11 @@ def _checked_inputs(raw):
 
 def bind(output):
     """Create a non-executable package only from independently pinned inputs."""
-    require(_hash(REVIEWED_FRESH_SHA256), 'ADMIN_BINDING_UNBOUND')
+    require(_hash(BOUND_FRESH_SHA256), 'ADMIN_BINDING_UNBOUND')
     output = Path(output)
     require(not output.exists(), 'ADMIN_BINDING_OUTPUT_EXISTS')
     raw = _read_root('FRESH.json', 8192)
-    require(sha(raw) == REVIEWED_FRESH_SHA256, 'ADMIN_BINDING_FRESH_CHANGED')
+    require(sha(raw) == BOUND_FRESH_SHA256, 'ADMIN_BINDING_FRESH_CHANGED')
     inputs = _checked_inputs(raw)
     candidate_raw = package._read(CANDIDATE_DIRECTORY, 'CANDIDATE.json', 8192)
     require(sha(candidate_raw) == CANDIDATE_SHA256, 'ADMIN_BINDING_CANDIDATE_CHANGED')
@@ -167,6 +170,17 @@ def bind(output):
             and candidate.get('finalTreeSha256') == FINAL_TREE_SHA
             and candidate.get('hostId') == HOST_ID,
             'ADMIN_BINDING_CANDIDATE_CHANGED')
+    source_pins = candidate.get('activationSourcePins')
+    require(type(source_pins) is dict and set(source_pins) == {
+            'admin_package.py', 'build_admin_private_ds_candidate.py',
+            'admin_ds_private_bootstrap.py', 'build_admin_fixed_large_shim.py',
+            'admin_fixed_shim_publisher.py', 'admin_fresh_producer.py',
+            'admin_fresh_shim_hook.py', 'compile_admin_fixed_shim.py',
+            'admin_fresh_bind_hook.py',
+            'admin_host_identity.py'}, 'ADMIN_BINDING_SOURCE_CHANGED')
+    require(all(sha(package._read(package.PACKAGE_ROOT.parent, name, 65536)) == pin
+                for name, pin in source_pins.items()),
+            'ADMIN_BINDING_SOURCE_CHANGED')
     require(TREE_SHA(CANDIDATE_DIRECTORY / 'tree') == FINAL_TREE_SHA,
             'ADMIN_BINDING_TREE_CHANGED')
     new_bytes = {name: _read_root(name, 128 << 20) for name in NEW_RUNTIME_NAMES}
@@ -246,7 +260,7 @@ def bind(output):
               'hostId': HOST_ID, 'finalTreeSha256': FINAL_TREE_SHA,
               'preimageTreeSha256': inputs['preimageTreeSha256'],
               'rollbackOperationId': inputs['rollbackOperationId'],
-              'freshEvidenceSha256': REVIEWED_FRESH_SHA256,
+              'freshEvidenceSha256': BOUND_FRESH_SHA256,
               'packageManifestSha256': sha(package_raw),
               'expectedPublisherPackageSha256': publisher_package_sha,
               'expectedPublisherFileSha256': publisher_hashes,
@@ -286,3 +300,85 @@ def bind(output):
                 'ADMIN_BINDING_OUTPUT_CHANGED')
     (output / 'OPERATION.json').write_bytes(canonical(result) + b'\n')
     return result
+
+
+def bind_fixed_root():
+    """Publish the one fixed root package; seal is written only after readback.
+
+    The existing FRESH one-use directory is the sole parent. A failed copy
+    retains its child, so a second attempt cannot silently regenerate bytes.
+    """
+    require(os.geteuid() == ROOT_UID and FIXED_ROOT_OUTPUT ==
+            FRESH_DIRECTORY / 'qualification-package',
+            'ADMIN_BINDING_ROOT_REQUIRED')
+    require(not FIXED_ROOT_OUTPUT.exists(), 'ADMIN_BINDING_NO_REPLAY')
+    parent = os.open(FRESH_DIRECTORY,
+                     os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        meta = os.fstat(parent)
+        require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == ROOT_UID
+                and stat.S_IMODE(meta.st_mode) == 0o700,
+                'ADMIN_BINDING_CUSTODY')
+        result = bind(FIXED_ROOT_OUTPUT)
+        os.chmod(FIXED_ROOT_OUTPUT, 0o700, follow_symlinks=False)
+        for name in ADMIN_FIXED_NAMES:
+            path = FIXED_ROOT_OUTPUT / name
+            require(path.is_file() and not path.is_symlink(),
+                    'ADMIN_BINDING_PUBLISH_CHANGED')
+            os.chmod(path, 0o600, follow_symlinks=False)
+            require(sha(_read_root_published(path)) ==
+                    result['expectedPublisherFileSha256'][name],
+                    'ADMIN_BINDING_PUBLISH_CHANGED')
+        seal = {'version': 1, 'installOperationId': INSTALL_OPERATION_ID,
+                'hostId': HOST_ID,
+                'freshEvidenceSha256': BOUND_FRESH_SHA256,
+                'expectedPublisherPackageSha256':
+                    result['expectedPublisherPackageSha256'],
+                'expectedPublisherFileSha256':
+                    result['expectedPublisherFileSha256'],
+                'state': 'SEALED', 'replayAllowed': False}
+        raw = canonical(seal)
+        published = os.open(FIXED_ROOT_OUTPUT,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            fd = os.open('PUBLISH-SEAL.json',
+                         os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o600, dir_fd=published)
+            try:
+                require(os.write(fd, raw) == len(raw),
+                        'ADMIN_BINDING_PUBLISH_UNKNOWN')
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            os.fsync(published)
+            require(_read_root_published(FIXED_ROOT_OUTPUT / 'PUBLISH-SEAL.json') == raw,
+                    'ADMIN_BINDING_PUBLISH_UNKNOWN')
+        finally:
+            os.close(published)
+        os.fsync(parent)
+        return seal
+    finally:
+        os.close(parent)
+
+
+def _read_root_published(path):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        before = os.fstat(fd)
+        require(stat.S_ISREG(before.st_mode) and before.st_uid == ROOT_UID
+                and stat.S_IMODE(before.st_mode) == 0o600
+                and before.st_nlink == 1 and 0 < before.st_size <= 65536,
+                'ADMIN_BINDING_PUBLISH_CHANGED')
+        raw = os.pread(fd, before.st_size + 1, 0)
+        after = os.fstat(fd)
+        named = os.stat(path, follow_symlinks=False)
+        identity = lambda m: (m.st_dev, m.st_ino, m.st_mode, m.st_uid,
+                              m.st_gid, m.st_nlink, m.st_size,
+                              m.st_mtime_ns, m.st_ctime_ns)
+        require(len(raw) == before.st_size
+                and identity(after) == identity(before)
+                and identity(named) == identity(before),
+                'ADMIN_BINDING_PUBLISH_CHANGED')
+        return raw
+    finally:
+        os.close(fd)
