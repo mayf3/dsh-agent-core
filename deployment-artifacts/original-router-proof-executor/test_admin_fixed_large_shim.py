@@ -62,6 +62,10 @@ class FixedLargeShimTest(unittest.TestCase):
             module = types.ModuleType('fixed_install')
             module.__dict__.update({'os': __import__('os'), 'time': __import__('time'),
                 'STATE_ROOT': directory, 'DS_ARTIFACTS': ('deployment_system.py',),
+                'DS_PLIST_PATH': directory,
+                'fixed_ds_mutation_lock': lambda: os.open(
+                    str(Path(directory) / 'mutation.lock'), os.O_RDWR | os.O_CREAT, 0o600),
+                'fcntl': __import__('fcntl'),
                 'DS_FIXED_LARGE_INSTALL_OPERATION_ID': 'fixed-once',
                 'DS_FIXED_LARGE_INSTALL_SHA256': 'a' * 64,
                 'DS_FIXED_LARGE_INSTALL_SIZE': 110215852,
@@ -187,6 +191,7 @@ class FixedLargeShimTest(unittest.TestCase):
             effects = []
             def read_verified(path, exact_large=None):
                 name = Path(path).name
+                if name == 'daemon.plist': name = 'plist'
                 return files[name], hashes[name]
             def atomic_write(path, raw, *args):
                 if path == str(receipt):
@@ -194,20 +199,26 @@ class FixedLargeShimTest(unittest.TestCase):
                 else:
                     effects.append(('write', path))
             fake_os = types.SimpleNamespace(**{name: getattr(os, name) for name in
-                ('path', 'makedirs')})
+                ('path', 'makedirs', 'close')})
             fake_os.path = types.SimpleNamespace(**{name: getattr(os.path, name)
                 for name in ('join', 'exists')})
-            fake_os.path.exists = lambda path: receipt.exists() if path == str(receipt) else False
+            fake_os.path.exists = lambda path: (receipt.exists() if path == str(receipt)
+                else path == str(plist))
             module = types.ModuleType('fixed_install_failure')
             module.__dict__.update({'os': fake_os, 'time': __import__('time'),
                 'STATE_ROOT': str(root), 'DS_ARTIFACTS': tuple(files),
                 'DS_FIXED_LARGE_INSTALL_OPERATION_ID': 'fixed-once',
                 'DS_FIXED_LARGE_INSTALL_SHA256': hashes['deployment_system.py'],
                 'DS_FIXED_LARGE_INSTALL_SIZE': 110215852,
-                'DS_FIXED_LARGE_ROLLBACK_SHA256': 'b' * 64,
-                'DS_FIXED_LARGE_ROLLBACK_SIZE': 110215851,
+                'DS_FIXED_LARGE_ROLLBACK_SHA256': hashes['deployment_system.py'],
+                'DS_FIXED_LARGE_ROLLBACK_SIZE': len(files['deployment_system.py']),
+                'DS_FIXED_ROLLBACK_ARTIFACTS': {name: (digest, len(files[name]))
+                    for name, digest in hashes.items()},
                 'ADMIN_FIXED_INSTALL_ID': 'fixed-once',
                 'admin_fixed_compiled': lambda: True,
+                'fixed_ds_mutation_lock': lambda: os.open(
+                    str(root / 'mutation.lock'), os.O_RDWR | os.O_CREAT, 0o600),
+                'fcntl': __import__('fcntl'),
                 'OP_ID': __import__('re').compile(r'^[a-z0-9-]+$'),
                 'Failure': Failure, 'read_verified': read_verified,
                 'receipt_path': lambda _: str(receipt),
@@ -227,6 +238,24 @@ class FixedLargeShimTest(unittest.TestCase):
                 'require': lambda ok, why: None if ok else (_ for _ in ()).throw(Failure(why))})
             exec(compile(ast.Module(body=[node], type_ignores=[]), '<fixed-install>',
                          'exec'), module.__dict__)
+            fake_os.path.exists = lambda path: receipt.exists() if path == str(receipt) else False
+            first_install = module.install_deployment_system({'operation_id': 'fixed-once',
+                'artifacts': hashes})
+            self.assertIn('ADMIN_FIXED_CURRENT_DS_MISSING', first_install['error'])
+            self.assertEqual(effects, [])
+            receipt.unlink()
+            fake_os.path.exists = lambda path: (receipt.exists() if path == str(receipt)
+                else path == str(plist))
+            pins = module.DS_FIXED_ROLLBACK_ARTIFACTS
+            for name in files:
+                module.DS_FIXED_ROLLBACK_ARTIFACTS = dict(pins,
+                    **{name: ('0' * 64, len(files[name]))})
+                changed = module.install_deployment_system({'operation_id': 'fixed-once',
+                    'artifacts': hashes})
+                self.assertIn('ADMIN_FIXED_ROLLBACK_', changed['error'])
+                self.assertEqual(effects, [])
+                receipt.unlink()
+            module.DS_FIXED_ROLLBACK_ARTIFACTS = pins
             result = module.install_deployment_system({'operation_id': 'fixed-once',
                 'artifacts': hashes})
             self.assertEqual(result['state'], 'UNKNOWN')

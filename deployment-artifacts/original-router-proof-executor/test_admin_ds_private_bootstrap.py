@@ -1,11 +1,13 @@
 """Disposable-only private installation seal/launch tests."""
 import hashlib
+import fcntl
 import importlib
 import json
 import os
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
 import types
 import unittest
 from unittest.mock import patch
@@ -92,6 +94,9 @@ class BootstrapTest(unittest.TestCase):
                 receipt.write_bytes(json.dumps(dict(committed, state='FAILED')).encode())
                 with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'SHIM_COMMIT_UNKNOWN'):
                     bootstrap._committed_install(seal)
+                with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'SHIM_COMMIT_UNKNOWN'):
+                    bootstrap.installation_bootstrap()
+                self.assertFalse(bootstrap._state['attempted'])
                 receipt.write_bytes(json.dumps(dict(committed,
                     qualificationPackageSha256='0' * 64)).encode())
                 with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'SHIM_COMMIT_UNKNOWN'):
@@ -106,6 +111,8 @@ class BootstrapTest(unittest.TestCase):
                                                 'SHIM_COMMIT_UNKNOWN'):
                         bootstrap._committed_install(seal)
                 receipt.write_bytes(json.dumps(committed).encode())
+                self.assertNotIn('launch', calls)
+                calls.clear()
                 self.assertEqual(bootstrap.installation_bootstrap()['state'], 'STARTED')
                 self.assertEqual(calls, ['lock', 'launch'])
                 self.assertEqual(json.loads((state / bootstrap.CLAIM_NAME).read_bytes())['state'],
@@ -116,6 +123,144 @@ class BootstrapTest(unittest.TestCase):
                      patch.object(subprocess, 'Popen', side_effect=AssertionError('REPLAY')):
                     with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'NO_REPLAY'):
                         bootstrap.installation_bootstrap()
+
+    def test_unknown_intent_waits_for_committed_receipt_without_consuming_attempt(self):
+        bootstrap = importlib.import_module('admin_ds_private_bootstrap')
+        unknown = json.dumps({'operation_id': bootstrap.SHIM_OPERATION_ID,
+            'action': 'INSTALL_DEPLOYMENT_SYSTEM', 'state': 'UNKNOWN',
+            'replayAllowed': False}).encode()
+        committed = json.dumps({'operation_id': bootstrap.SHIM_OPERATION_ID,
+            'action': 'INSTALL_DEPLOYMENT_SYSTEM', 'state': 'COMMITTED'}).encode()
+        seen = []
+        responses = iter([unknown, unknown, committed])
+        with patch.object(bootstrap, 'QUALIFIER_ACTIVE', True), \
+             patch.object(bootstrap, '_read_sealed', side_effect=lambda *_a, **_k:
+                          next(responses)), \
+             patch.object(bootstrap, 'installation_bootstrap', side_effect=lambda:
+                          seen.append('launch') or {'state': 'STARTED'}), \
+             patch.object(bootstrap.time, 'monotonic', side_effect=range(10)), \
+             patch.object(bootstrap.time, 'sleep', side_effect=lambda _n: seen.append('wait')):
+            self.assertEqual(bootstrap.wait_for_committed_install()['state'], 'STARTED')
+        self.assertEqual(seen, ['wait', 'wait', 'launch'])
+
+        with patch.object(bootstrap, 'QUALIFIER_ACTIVE', True), \
+             patch.object(bootstrap, '_read_sealed', return_value=unknown), \
+             patch.object(bootstrap, 'installation_bootstrap', side_effect=AssertionError('launch')), \
+             patch.object(bootstrap.time, 'monotonic', side_effect=range(0, 500, 60)), \
+             patch.object(bootstrap.time, 'sleep', return_value=None):
+            with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'TIMEOUT'):
+                bootstrap.wait_for_committed_install()
+
+        with patch.object(bootstrap, 'QUALIFIER_ACTIVE', True), \
+             patch.object(bootstrap, '_read_sealed', return_value=committed), \
+             patch.object(bootstrap, 'installation_bootstrap', side_effect=
+                          bootstrap.BootstrapRejected('ADMIN_INSTALL_LOCK_BUSY')), \
+             patch.object(bootstrap.time, 'monotonic', side_effect=range(0, 500, 60)), \
+             patch.object(bootstrap.time, 'sleep', return_value=None):
+            with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'TIMEOUT'):
+                bootstrap.wait_for_committed_install()
+
+        wrong = json.dumps({'operation_id': 'wrong',
+            'action': 'INSTALL_DEPLOYMENT_SYSTEM', 'state': 'COMMITTED'}).encode()
+        with patch.object(bootstrap, 'QUALIFIER_ACTIVE', True), \
+             patch.object(bootstrap, '_read_sealed', return_value=wrong), \
+             patch.object(bootstrap, 'installation_bootstrap', side_effect=AssertionError('launch')):
+            with self.assertRaisesRegex(bootstrap.BootstrapRejected, 'COMMIT_UNKNOWN'):
+                bootstrap.wait_for_committed_install()
+
+    def test_real_two_process_canonical_flock_handoff_rechecks_daemon(self):
+        bootstrap = importlib.import_module('admin_ds_private_bootstrap')
+        class Failure(Exception):
+            pass
+
+        class RootOS:
+            def __getattr__(self, name): return getattr(os, name)
+            def geteuid(self): return 0
+            def fchown(self, *_): return None
+            def _root(self, meta):
+                return types.SimpleNamespace(**{name: getattr(meta, name) for name in
+                    ('st_mode', 'st_gid', 'st_nlink', 'st_dev', 'st_ino', 'st_size',
+                     'st_mtime_ns', 'st_ctime_ns')}, st_uid=0)
+            def fstat(self, fd): return self._root(os.fstat(fd))
+            def stat(self, *args, **kwargs): return self._root(os.stat(*args, **kwargs))
+
+        for changed in (False, True):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                package, state, seal, receipt = self._fixture(bootstrap, root)
+                daemon = root / 'installed-deployment_system.py'
+                daemon.write_bytes((package / 'deployment_system.py').read_bytes())
+                daemon.chmod(0o555)
+                lock_path = state / 'mutation.lock'
+                ready_read, ready_write = os.pipe()
+                release_read, release_write = os.pipe()
+                child_pid = os.fork()
+                if child_pid == 0:
+                    try:
+                        os.close(ready_read); os.close(release_write)
+                        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+                        fcntl.flock(fd, fcntl.LOCK_EX)
+                        os.write(ready_write, b'R')
+                        os.read(release_read, 1)
+                        if changed:
+                            daemon.chmod(0o600)
+                            daemon.write_bytes(b'changed-daemon')
+                            daemon.chmod(0o555)
+                        fcntl.flock(fd, fcntl.LOCK_UN)
+                        os.close(fd)
+                        os._exit(0)
+                    except BaseException:
+                        os._exit(1)
+                os.close(ready_write); os.close(release_read)
+                launched = []
+                timer = None
+                try:
+                    self.assertEqual(os.read(ready_read, 1), b'R')
+                    def real_lock():
+                        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+                        try:
+                            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        except BlockingIOError as exc:
+                            os.close(fd)
+                            raise Failure('MUTATION_ALREADY_RUNNING') from exc
+                        return fd
+                    timer = threading.Timer(0.2, lambda: os.write(release_write, b'X'))
+                    timer.start()
+                    with patch.object(bootstrap, 'QUALIFIER_ACTIVE', True), \
+                         patch.object(bootstrap, 'ROOT_HOST_OBSERVER', return_value=self.HOST), \
+                         patch.object(bootstrap, 'PACKAGE_DIRECTORY', package), \
+                         patch.object(bootstrap, 'STATE_DIRECTORY', state), \
+                         patch.object(bootstrap, 'SHIM_RECEIPT', receipt), \
+                         patch.object(bootstrap, 'DAEMON', daemon), \
+                         patch.object(bootstrap, '_root_metadata', return_value=None), \
+                         patch.object(bootstrap, '_python_identity', return_value='a' * 64), \
+                         patch.object(bootstrap, 'os', RootOS()), \
+                         patch.object(bootstrap, '_parent', side_effect=lambda path:
+                            os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)), \
+                         patch.object(bootstrap, 'mutation_lock', side_effect=real_lock,
+                                      create=True), \
+                         patch.object(bootstrap, 'Failure', Failure, create=True), \
+                         patch.object(subprocess, 'Popen', side_effect=lambda *_a, **_k:
+                            launched.append('once') or types.SimpleNamespace(poll=lambda: None)), \
+                         patch.object(bootstrap, '_state', {'attempted': False, 'child': None}):
+                        if changed:
+                            with self.assertRaisesRegex(bootstrap.BootstrapRejected,
+                                                        'DAEMON_CHANGED'):
+                                bootstrap.wait_for_committed_install()
+                            self.assertEqual(launched, [])
+                            self.assertFalse((state / bootstrap.CLAIM_NAME).exists())
+                        else:
+                            self.assertEqual(bootstrap.wait_for_committed_install()['state'],
+                                             'STARTED')
+                            self.assertEqual(launched, ['once'])
+                            self.assertTrue((state / bootstrap.CLAIM_NAME).exists())
+                finally:
+                    if timer is not None: timer.join(timeout=1)
+                    try: os.write(release_write, b'X')
+                    except BrokenPipeError: pass
+                    os.close(ready_read); os.close(release_write)
+                    _, status = os.waitpid(child_pid, 0)
+                    self.assertEqual(os.waitstatus_to_exitcode(status), 0)
 
     def test_closed_seal_rejects_unknown_and_ambiguous(self):
         bootstrap = importlib.import_module('admin_ds_private_bootstrap')
