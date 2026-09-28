@@ -30,7 +30,7 @@ async function actualPhase(persistenceFile, phase, generation) {
   const fx = makeFx({ agentId: 'agt_efficiency-agent', generation,
     reconciliationStore: store,
     fixedAdminQualification: { role: 'fixed_admin_qualification', agentId: 'agt_efficiency-agent',
-      phase, hostId: '961534a5-8c94-487d-8e55-d324a54e821a',
+      phase, hostId: 'FF99ABD5-79A0-5EE0-9E0B-B62671271560',
       packageSha256: binding.entryManifestSha256,
       consumingBinarySha256: binding.consumingBinarySha256,
       startupNonce: binding.startupNonce, processGeneration: generation } })

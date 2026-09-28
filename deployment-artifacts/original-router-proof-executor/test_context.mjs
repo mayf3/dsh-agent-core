@@ -121,13 +121,13 @@ test('fixed admin private query requires real settled same-child native turn', a
     startupNonce:'b'.repeat(64)}
   const query={context:binding,challenge:'d'.repeat(32),
     deadlineMonotonicNs:String(process.hrtime.bigint()+15_000_000_000n)}
-  const handle='turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s257'
+  const handle='turn:FF99ABD5-79A0-5EE0-9E0B-B62671271560:a2:g1:s257'
   const record={handle,agentId:'agt_efficiency-agent',runtimeEpoch:'owned-runtime',
     processGeneration:3,settlementResult:'completed',fenceState:'armed',
     messageId:'actual-native-prompt-id',updatedAt:10,
     finalAssistantOutput:{originalBytes:19,text:'actual-native-reply',truncated:false}}
   const proc={processGeneration:3,fixedAdminQualification:{role:'fixed_admin_qualification',
-    agentId:'agt_efficiency-agent',phase:'restart_a',hostId:'961534a5-8c94-487d-8e55-d324a54e821a',
+    agentId:'agt_efficiency-agent',phase:'restart_a',hostId:'FF99ABD5-79A0-5EE0-9E0B-B62671271560',
     packageSha256:binding.entryManifestSha256,consumingBinarySha256:binding.consumingBinarySha256,
     startupNonce:binding.startupNonce,processGeneration:3},fixedAdminEffectAttempted:false,
     qualifyFixedTurn:async()=>({status:'completed',reconciliationHandle:handle,messageId:record.messageId,reply:'actual-native-reply'})}

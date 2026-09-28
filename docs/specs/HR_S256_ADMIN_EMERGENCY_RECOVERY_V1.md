@@ -13,11 +13,11 @@ superseded_by: null
 scope: [one fixed s256 admin-authenticated emergency recovery profile]
 accepted_by: original Deployment Agent under mayf3 standing nonproduction technical delegation
 accepted_date: 2026-09-28
-accepted_reviewed_head: 435fdd01b1024361415bd8aedb6be31b6e8cfb79
-accepted_reviewed_spec_sha256: 0e80887d4d5f1e95fbd6aeac0f62694aa18ca637a90f7c7ad42511328e3571c6
-independent_review_sha256: 0a636410486870303615df4e77eb58e65c883907a7f3e5f58d384063fd0144c1
-delegated_acceptance_sha256: a1520e2f879172c905c347313368f35aeaf7bbbdc2cea160b1be157c0b012d21
-delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-S256-ADMIN-EMERGENCY-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
+accepted_reviewed_head: ac10e9ae2e0cefe6b7acfabf4fe1d90bfa0a3b39
+accepted_reviewed_spec_sha256: 01319d7f0ede5f20ad992857b7986c14728b9333ac4ca712b4f9dc6f2a70d688
+independent_review_sha256: 7ae15f6c7d598d6aec0de14fdc732b1ace51a2628a8d83d5c367399f94a63d2a
+delegated_acceptance_sha256: afd5d4a81525dda96b8b1eef94a6897db426788f2f7b2b275bbb22218a15015c
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-ADMIN-AER-C02-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
 ---
 
 # Fixed s256 admin emergency recovery — proposal
@@ -76,8 +76,9 @@ neither requested nor used by this mode. The existing CTO/QF path remains an
 optional *separate* source of genuine qualification evidence, not a required
 or fabricated admin input.
 
-**AER-C02 — Unchanged forward safety prerequisite.** Before this mode stops
-or restarts any Runtime, the exact final consuming binary must have an
+**AER-C02 — Unchanged forward safety prerequisite.** Before the AER-C03 fixed
+HR cut inhibits, stops or restarts any Runtime, the exact final consuming
+binary must have an
 independently verified actual `ROUTER_RESTART_SAFETY=PROVEN` floor receipt,
 the accepted new-kind validator installed in that same binary before any
 producer write, and a compatible captured/admitted rollback floor. The
@@ -89,7 +90,11 @@ root proof executor's fixed admin qualification branch defined by proposed
 already completed same-final-binary receipt eligibility; otherwise it owns
 the original controlled qualification sequence with exactly one reviewed,
 tool-free, private native canary turn in each of three startup phases across
-two restarts. Actual Router durable issuance, native terminal result,
+two restarts. Those separate qualification-only restarts produce the floor;
+each remains subject to QE2-C02/C04's actual final-binary deployment,
+validator installation, current app/routes and compatible rollback, root
+custody, source inhibition and pre-effect checks. Actual Router durable
+issuance, native terminal result,
 continuous binary/child/custody and validator ordering must be observed.
 Genuinely occurring authenticated non-CTO turns may alternatively qualify,
 but their absence is not the primary path or an Owner message-ID task. The

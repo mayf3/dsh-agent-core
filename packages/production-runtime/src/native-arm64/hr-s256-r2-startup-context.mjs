@@ -375,7 +375,7 @@ export async function fixedAdminCanaryProjection(query, service, binding, store,
   const proc = await ensureFixedAdminProcess()
   before()
   const expected = { role:'fixed_admin_qualification',agentId:'agt_efficiency-agent',
-    phase:binding.phase,hostId:'961534a5-8c94-487d-8e55-d324a54e821a',
+    phase:binding.phase,hostId:'FF99ABD5-79A0-5EE0-9E0B-B62671271560',
     packageSha256:binding.entryManifestSha256,
     consumingBinarySha256:binding.consumingBinarySha256,startupNonce:binding.startupNonce,
     processGeneration:proc?.processGeneration }
