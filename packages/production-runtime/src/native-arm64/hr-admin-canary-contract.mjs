@@ -10,7 +10,7 @@ export function isFixedAdminQualification(value) {
     && Object.keys(value).sort().join(',') === [...KEYS].sort().join(',')
     && value.role === 'fixed_admin_qualification'
     && value.agentId === FIXED_ADMIN_CANARY_AGENT && PHASES.has(value.phase)
-    && value.hostId === '961534a5-8c94-487d-8e55-d324a54e821a'
+    && value.hostId === 'FF99ABD5-79A0-5EE0-9E0B-B62671271560'
     && ['packageSha256', 'consumingBinarySha256', 'startupNonce']
       .every(key => /^[a-f0-9]{64}$/.test(value[key] ?? ''))
     && Number.isSafeInteger(value.processGeneration) && value.processGeneration > 0
@@ -28,7 +28,7 @@ export function fixedAdminBindingFromRoot(context, processGeneration) {
     throw Object.assign(new Error('fixed admin root context unavailable'), { code: 'FIXED_ADMIN_ROOT_CONTEXT_INVALID' })
   }
   return Object.freeze({ role: 'fixed_admin_qualification', agentId: FIXED_ADMIN_CANARY_AGENT,
-    phase: context.phase, hostId: '961534a5-8c94-487d-8e55-d324a54e821a',
+    phase: context.phase, hostId: 'FF99ABD5-79A0-5EE0-9E0B-B62671271560',
     packageSha256: context.entryManifestSha256,
     consumingBinarySha256: context.consumingBinarySha256,
     startupNonce: context.startupNonce, processGeneration })

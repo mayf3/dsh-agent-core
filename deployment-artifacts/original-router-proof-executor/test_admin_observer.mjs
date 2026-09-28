@@ -13,7 +13,7 @@ import { makeFx } from '../../packages/agent-router/test/helpers/fake-child.js'
 const sourcePath=fileURLToPath(new URL('./admin_observation.mjs',import.meta.url))
 const source=readFileSync(sourcePath,'utf8')
 const context={role:'fixed_admin_qualification',agentId:'agt_efficiency-agent',
-  phase:'deployment_start',hostId:'961534a5-8c94-487d-8e55-d324a54e821a',
+  phase:'deployment_start',hostId:'FF99ABD5-79A0-5EE0-9E0B-B62671271560',
   packageSha256:'a'.repeat(64),consumingBinarySha256:'b'.repeat(64),
   startupNonce:'c'.repeat(64),processGeneration:1}
 

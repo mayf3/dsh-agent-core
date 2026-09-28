@@ -7,7 +7,7 @@ import { fixedAdminCanaryProjection } from '../../../production-runtime/src/nati
 
 const BINDING = Object.freeze({
   role: 'fixed_admin_qualification', agentId: 'agt_efficiency-agent', phase: 'deployment_start',
-  hostId: '961534a5-8c94-487d-8e55-d324a54e821a', packageSha256: 'a'.repeat(64),
+  hostId: 'FF99ABD5-79A0-5EE0-9E0B-B62671271560', packageSha256: 'a'.repeat(64),
   consumingBinarySha256: 'b'.repeat(64), startupNonce: 'c'.repeat(64), processGeneration: 1,
 })
 const ROOT_CONTEXT = Object.freeze({
