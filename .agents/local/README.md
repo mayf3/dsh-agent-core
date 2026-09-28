@@ -143,6 +143,23 @@ INCIDENT_RECOVERY_MUST_NOT_WAIT_FOR_OPTIONAL_GOVERNANCE_WORK = YES
 
 This does not permit blind retry, destructive repair, privilege bypass, or reinterpretation of an unknown external side effect.
 
+For an authorized recovery, keep the old `outcome_unknown` record and its
+business-side-effect uncertainty; do not replay its prompt or tools, erase it,
+or infer success or failure from termination-only evidence. Before admitting an
+explicitly new Session, Turn, or request, the exact mandate/runbook must prove
+that both the old worker and its already-dispatched tool operations are
+terminated or isolated from external effects, or that each actual write/delivery
+boundary rejects the old identity. An epoch gate that only suppresses replies
+is insufficient. If this proof is unavailable, keep the affected fence and stop.
+
+Label offline tests as mechanism evidence. Claim live recovery only after a
+fresh, explicitly new request succeeds through the authorized path with
+attributable readback; do not count an old UNKNOWN replay as that request.
+Protected-record hash forensics remain a prerequisite only for an accepted
+recovery path that requires them, not a universal prerequisite for every
+authorized recovery mode. Apply each selected path's mandatory gates without
+delaying safe recovery for optional governance work.
+
 ### Release governance is not Product Authority
 
 A rollout, canary, dogfood, or one-operation safety concern remains a Controlled-operation concern unless it creates a genuinely load-bearing long-lived Product Contract.
