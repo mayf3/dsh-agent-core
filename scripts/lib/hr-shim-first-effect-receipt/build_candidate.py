@@ -13,7 +13,7 @@ HERE = Path(__file__).resolve().parent
 BASELINE = Path('/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG'
                 '/p0-travel-terminal-readback-20260928-v14/artdir/deployment_system.py')
 OUT = Path('/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG'
-           '/hr-shim-first-effect-receipt-readback-20260929-v1')
+           '/hr-shim-first-effect-receipt-readback-20260929-v2')
 BASELINE_SHA256 = 'daeb44fc0c23a7a2949519a5d6abcc9459e38936e10bc704d85b25794f7a74d6'
 BASELINE_SIZE = 110215851
 ACTION = b'HR_SHIM_FIRST_EFFECT_RECEIPT_STATUS_V1'

@@ -21,6 +21,8 @@ _HR_METADATA = {'uid': 0, 'gid': 0, 'mode': 365, 'flags': 0,
 _HR_INTENT_KEYS = frozenset(('operationId', 'state', 'hostId', 'oldSha256',
                              'newSha256', 'oldMetadata', 'oldDsPid'))
 _HR_COMMIT_KEYS = _HR_INTENT_KEYS | {'oldPid', 'newPid', 'lockNames'}
+_HR_FILES = frozenset(('intent.json', 'committed.json',
+                       'rollback.py', 'candidate.py'))
 _HR_FLAGS = _hr_os.O_RDONLY | _hr_os.O_NOFOLLOW | _hr_os.O_CLOEXEC
 
 
@@ -89,6 +91,34 @@ def _hr_read_record(operation_fd, name, uid):
         _hr_os.close(fd)
 
 
+def _hr_entries(operation_fd, uid):
+    """Inspect at most the launched writer's four names, without file reads."""
+    observed = {}
+    with _hr_os.scandir(operation_fd) as names:
+        for entry in names:
+            name = entry.name
+            if name not in _HR_FILES or name in observed or len(observed) == 4:
+                return None
+            meta = _hr_os.stat(name, dir_fd=operation_fd,
+                               follow_symlinks=False)
+            mode = _hr_stat.S_IMODE(meta.st_mode)
+            if not _hr_stat.S_ISREG(meta.st_mode) or meta.st_uid != uid:
+                return None
+            if name in ('intent.json', 'committed.json'):
+                valid = (mode == 0o600 and meta.st_nlink == 1
+                         and 0 < meta.st_size <= 4096)
+            elif name == 'candidate.py':
+                valid = (mode == 0o400 and meta.st_nlink == 1
+                         and 0 < meta.st_size <= (16 << 20))
+            else:  # rollback.py is the launched hard link to the old 0555 shim.
+                valid = (mode == 0o555 and meta.st_nlink in (1, 2)
+                         and 0 < meta.st_size <= (16 << 20))
+            if not valid:
+                return None
+            observed[name] = _hr_identity(meta)
+    return observed
+
+
 def _hr_unique_pairs(pairs):
     row = {}
     for key, value in pairs:
@@ -151,6 +181,9 @@ def _hr_status_from_parent(parent_fd, root_uid):
                 return _hr_result()
             return _hr_result('NO_DURABLE_INTENT_OBSERVED')
         try:
+            entries = _hr_entries(operation_fd, root_uid)
+            if entries is None:
+                return _hr_result()
             intent_raw = _hr_read_record(operation_fd, 'intent.json', root_uid)
             if intent_raw is None:
                 return _hr_result()
@@ -168,6 +201,10 @@ def _hr_status_from_parent(parent_fd, root_uid):
                 selected = commit_raw
             if not _hr_check_dir(parent_fd, _HR_DIRECTORY, operation_fd,
                                  operation_identity, parent_identity):
+                return _hr_result()
+            if any(_hr_identity(_hr_os.stat(name, dir_fd=operation_fd,
+                                           follow_symlinks=False)) != identity
+                   for name, identity in entries.items()):
                 return _hr_result()
             return _hr_result(status, _hr_hashlib.sha256(selected).hexdigest())
         finally:
