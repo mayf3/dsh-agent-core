@@ -29,6 +29,7 @@ import { canonicalRouteIdentity } from './route-chain.js'
 import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
 import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
+import { FIXED_ADMIN_CANARY_AGENT, fixedAdminBindingFromRoot } from '../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
 function assertRecoveryAdmission(store, agentId) {
   store.assertBusinessAdmissionReady?.()
@@ -53,6 +54,7 @@ function restoreRecoveryFences(store) {
 export function createProcessRegistry({
   log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,
   processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,
+  fixedAdminRootContext = undefined,
 }) {
   /** agentId -> lifecycle slot (one live owner per agent). */
   const lifecycleSlots = new Map()
@@ -61,6 +63,9 @@ export function createProcessRegistry({
   /** Bounded stale-callback audit (old generation late error/exit). */
   const staleSlotAudits = []
   let disposing = false
+  const fixedAdminToken = Symbol('owned root canary startup')
+  let fixedAdminStartupClaimed = false
+  if (fixedAdminRootContext !== undefined) fixedAdminBindingFromRoot(fixedAdminRootContext,1)
 
   restoreRecoveryFences(reconciliationStore)
 
@@ -250,7 +255,12 @@ export function createProcessRegistry({
    * @param {string} agentId
    * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.
    */
-  function assertRunnable(agentId) {
+  function assertRunnable(agentId, token) {
+    if (fixedAdminRootContext !== undefined && agentId === FIXED_ADMIN_CANARY_AGENT
+        && token !== fixedAdminToken) {
+      throw Object.assign(new Error('fixed canary Agent reserved for root qualification'),
+        { code: 'FIXED_ADMIN_CANARY_PRIVATE_ONLY' })
+    }
     assertRecoveryAdmission(reconciliationStore, agentId)
     const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
@@ -265,7 +275,7 @@ export function createProcessRegistry({
    * EMPTY wins exactly one CAS(EMPTY -> STARTUP) before any async work.
    * Only READY processes are ever returned (registry exposes READY only).
    */
-  function ensureRunning(agentId) {
+  function ensureRunning(agentId, token) {
     if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
     // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous
     // and precedes every asynchronous bootstrap step, including workspace
@@ -273,11 +283,15 @@ export function createProcessRegistry({
     // async wrapper) makes the whole bootstrap a true single flight.
     try {
       assertRecoveryAdmission(reconciliationStore, agentId)
-      assertRunnable(agentId)
+      assertRunnable(agentId, token)
     } catch (error) {
       return Promise.reject(error)
     }
     const initial = lifecycleSlots.get(agentId)
+    if (token === fixedAdminToken && initial !== undefined) {
+      return Promise.reject(Object.assign(new Error('fixed canary child already exists'),
+        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))
+    }
     if (initial?.state === 'READY') {
       if (initial.processRef?.exit === undefined) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
@@ -291,8 +305,19 @@ export function createProcessRegistry({
       return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
     const entry = installStartup(agentId)
+    if (token === fixedAdminToken) entry.fixedAdminRootContext = fixedAdminRootContext
     void bootstrapStartup(agentId, entry)
     return entry.resultPromise
+  }
+
+  /** Closure held only by the authenticated startup listener, not Router service. */
+  function ensureFixedAdminProcess() {
+    if (fixedAdminRootContext === undefined || fixedAdminStartupClaimed) {
+      return Promise.reject(Object.assign(new Error('fixed canary startup unavailable'),
+        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))
+    }
+    fixedAdminStartupClaimed = true
+    return ensureRunning(FIXED_ADMIN_CANARY_AGENT, fixedAdminToken)
   }
 
   async function bootstrapStartup(agentId, entry) {
@@ -393,6 +418,9 @@ export function createProcessRegistry({
         // resolved deadline config (immutable for this process), the shared
         // Router reconciliation store and the identity-CAS slot integration.
         processGeneration: entry.generation,
+        ...(entry.fixedAdminRootContext === undefined ? {} : {
+          fixedAdminQualification: fixedAdminBindingFromRoot(entry.fixedAdminRootContext, entry.generation),
+        }),
         deadlines: deadlineConfig.perAgent(agentId),
         reconciliationStore,
         registryIntegration,
@@ -507,6 +535,7 @@ export function createProcessRegistry({
   return {
     lifecycleSlots,
     ensureRunning,
+    ensureFixedAdminProcess,
     ensureRunningForRoute: routeGate.ensureRunningForRoute,
     findOwningProcess,
     registrySnapshot,
