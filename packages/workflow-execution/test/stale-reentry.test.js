@@ -207,8 +207,10 @@ test('CASE 3b — version advanced while visit still current (assistance/human a
   try {
     await dispatchOnce(fixture)
     fixture.state.now += 61 * 60_000
-    // HUMAN_REQUIRED: assistance ops bump the version without moving the
-    // visit. Turn ended without a transition (the human path already owns it).
+    // OWNER_PENDING/HUMAN_REQUIRED: assistance ops (case open, owner
+    // resolve, explicit escalate-to-human) bump the version without moving
+    // the visit. Turn ended without a transition (the assistance path
+    // already owns it).
     fixture.mutable.turnState = () => 'settled'
     fixture.mutable.detail = () => ({ ok: true, body: fullDetail({ version: 9, visit: VISIT }) })
     const reconciled = await fixture.engine.reconcileOnce()

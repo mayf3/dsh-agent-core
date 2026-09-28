@@ -811,8 +811,9 @@ export const workflowDomainBindingReconcileManifest = withTransportErrors({
  * WORKFLOW_EXECUTION_CONTROL_V1 (companion svc Spec CTR-SWEC-004) — the
  * system execution-escalation ingress. The execution runtime (poller
  * principal, GLOBAL_SCHEDULER_READ bound server-side) reports an exhausted
- * attempt policy so svc-workflow can open + escalate the assistance case to
- * HUMAN_REQUIRED in one authoritative transaction. Idempotent server-side:
+ * attempt policy so svc-workflow can open an OWNER_PENDING assistance case
+ * in one authoritative transaction. Domain Owner then resolves it or explicitly
+ * escalates it to HUMAN_REQUIRED. Idempotent server-side:
  * an already-open case replays as escalated=false with the existing case id.
  * This manifest is a RUNTIME-ONLY transport: the execution engine invokes it
  * through the gateway as the poller principal; it is not part of any
@@ -823,7 +824,7 @@ export const workflowExecutionEscalationManifest = withTransportErrors({
   toolName: 'workflow_execution_escalation',
   name: 'Workflow Execution Escalation',
   description:
-    'svc-workflow system ingress: report an exhausted execution attempt policy for one node visit so a HUMAN_REQUIRED assistance case is created/escalated (REQUIRE_HUMAN — nothing force-advances). ' +
+    'svc-workflow system ingress: report an exhausted execution attempt policy for one node visit so an OWNER_PENDING assistance case is opened for Domain Owner attention (nothing force-advances). ' +
     'Idempotent: an already-open case on the visit answers escalated=false with the existing assistanceCaseId. ' +
     'The caller must hold the server-side GLOBAL_SCHEDULER_READ binding (403 scheduler_read_role_required otherwise).',
   requiredScopes: ['workflow.execute'],
@@ -844,7 +845,7 @@ export const workflowExecutionEscalationManifest = withTransportErrors({
     {
       name: 'create',
       description:
-        'Escalate one current node visit to HUMAN_REQUIRED. Required: workflowInstanceId, nodeVisitId, reason. Optional evidence: attemptCount, lastAttemptId, dispatchIntentId.',
+        'Open OWNER_PENDING assistance on one current node visit. Required: workflowInstanceId, nodeVisitId, reason. Optional evidence: attemptCount, lastAttemptId, dispatchIntentId.',
       arguments: {
         properties: {
           workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },

@@ -55,7 +55,7 @@ test('CTR-WEC1-002: every ledger fact class maps to its executionState', () => {
   assert.equal(executionStateFor({ ...base, state: 'NEEDS_REVIEW', phase: 'reconciled', judgment: 'delivery_unverified' }).state, 'OUTCOME_UNKNOWN')
   assert.equal(
     executionStateFor({ ...base, state: 'NEEDS_REVIEW', phase: 'reconciled', judgment: 'run_outcome_unknown', escalation: { reason: 'ATTEMPTS_EXHAUSTED', atMs: 2 } }).state,
-    'HUMAN_REQUIRED',
+    'OWNER_PENDING',
   )
   assert.equal(executionStateFor({ ...base, state: 'SETTLED', judgment: 'stale_no_progress' }).state, 'STALE_NO_PROGRESS')
   assert.equal(executionStateFor({ ...base, state: 'SETTLED', judgment: 'business_commitment_observed' }).state, 'SETTLED')
@@ -82,7 +82,7 @@ test('CTR-WEC1-001: projection groups by workflowInstanceId and exposes the atte
   assert.equal(visit.agentId, AGENT)
   assert.equal(visit.sessionId, 'main')
   assert.equal(visit.reconciliationHandle, 'turn:h')
-  assert.equal(visit.executionState, 'HUMAN_REQUIRED')
+  assert.equal(visit.executionState, 'OWNER_PENDING')
   assert.equal(visit.attemptCount, 2)
   assert.equal(visit.escalation.reason, 'ATTEMPTS_EXHAUSTED')
   assert.equal(projectExecutionTrace(attempts, { workflowInstanceId: INSTANCE, nodeVisitId: VISIT }).nodeVisits.length, 1)
@@ -175,8 +175,9 @@ test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', 
 
     // The projection surfaces the escalation fact; per the CTR-WEC1-002
     // table the SETTLED/stale chain keeps its judgment class
-    // (STALE_NO_PROGRESS) — the escalation object is the HUMAN_REQUIRED
-    // marker (a NEEDS_REVIEW chain would read HUMAN_REQUIRED).
+    // (STALE_NO_PROGRESS) — the escalation object is the OWNER_PENDING
+    // marker (a NEEDS_REVIEW chain would read OWNER_PENDING; HUMAN_REQUIRED
+    // is only an explicit svc-workflow Domain Owner action).
     const trace = projectExecutionTrace(await ledger.snapshotFresh(), { workflowInstanceId: INSTANCE })
     assert.equal(trace.nodeVisits[0].executionState, 'STALE_NO_PROGRESS')
     assert.equal(trace.nodeVisits[0].escalation.reason, 'ATTEMPTS_EXHAUSTED')

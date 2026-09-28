@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1
-title: Workflow Execution Control — execution trace read model, system-owned execution state projection, policy-driven continuation and escalation, push-first kick, forum execution-event projection
+title: Workflow Execution Control — execution trace read model, bounded continuation, Domain Owner assistance, durable owner wake, push-first kick, forum projection
 status: accepted
 accepted_date: 2026-09-24
 accepted_by: mayf3
@@ -59,14 +59,14 @@ companion_specs:
 The workflow control plane must be able to answer, from system-owned facts
 alone: which NodeVisit is dispatched to whom, at which generation, in which
 session the Run happened, whether the Run really occurred, why nothing
-completed, and when a human is required. The Agent never reports any of
-these; the system derives them. This Spec is the dsh-agent-core slice: it
-exposes the existing execution ledger as a stable read model, adds a
-deterministic execution-state projection, extends the stale-reentry
-exception with a bounded policy-driven continuation for
-`run_ended_no_submission`, escalates to svc-workflow at the attempt limit,
-accepts push-first kicks, and projects execution facts as human-readable
-forum messages. It creates NO second execution ledger and NO second
+completed, and when Domain Owner attention or an explicit human escalation
+exists. The Agent never reports any of these; the system derives them. This
+Spec is the dsh-agent-core slice: it exposes the existing execution ledger as
+a stable read model, adds a deterministic execution-state projection,
+extends the stale-reentry exception with bounded policy-driven continuation
+for `run_ended_no_submission`, opens OWNER_PENDING assistance at the attempt
+limit, durably wakes the authoritative Domain Owner, accepts push-first kicks,
+and projects execution facts as human-readable forum messages. It creates NO second execution ledger and NO second
 duplicate fence.
 
 ## 1. Frozen boundaries (inherited, untouched)
@@ -116,13 +116,16 @@ A pure projection module derives, from ledger facts only, per
 | NEEDS_REVIEW, judgment `run_ended_no_submission` | `RUN_ENDED_NO_TRANSITION` |
 | NEEDS_REVIEW, judgment `run_outcome_unknown` | `OUTCOME_UNKNOWN` |
 | NEEDS_REVIEW, judgment `delivery_unverified` / `settle_check_unavailable` / `delivery_failed` phase | `OUTCOME_UNKNOWN` |
-| NEEDS_REVIEW with recorded escalation fact | `HUMAN_REQUIRED` |
+| NEEDS_REVIEW with recorded system assistance fact | `OWNER_PENDING` |
 | terminal, judgment `stale_no_progress` | `STALE_NO_PROGRESS` |
 | terminal SETTLED, judgment `business_commitment_observed` | `SETTLED` |
 | terminal SETTLED, judgment `stale_no_progress` | `STALE_NO_PROGRESS` |
 
 `ELIGIBLE` (due, not yet attempted) is a svc-workflow activation fact and is
-deliberately NOT projected here. The projection never mutates the ledger.
+deliberately NOT projected here. `HUMAN_REQUIRED` is also NOT inferred from
+the dsh execution ledger: it exists only after an explicit Domain Owner
+assistance escalation in authoritative svc-workflow state. The projection
+never mutates the ledger.
 
 ### CTR-WEC1-003 HTTP trace surface
 
@@ -148,19 +151,24 @@ Config: `maxAttemptsPerVisit` (default 3, min 1; env
 - The fence refuses to mint `generation > maxAttemptsPerVisit`
   (`cause: 'attempt_limit_reached'`).
 
-### CTR-WEC1-005 Attempt-limit escalation
+### CTR-WEC1-005 Attempt-limit owner assistance
 
-When a visit's attempt limit is reached (a generation == maxAttempts
-attempt settles NEEDS_REVIEW, or a stale settlement finds generation ==
-maxAttempts), the engine invokes the escalation seam exactly once per visit
-(idempotent): a `workflow_execution_escalation.create` broker call
-(companion spec svc endpoint) carrying `{workflowInstanceId, nodeVisitId,
-attemptCount, lastAttemptId, dispatchIntentId, reason}`. The outcome is
-recorded in the ledger as an append-only escalation fact (idempotent per
-visit — a second escalation call for an already-escalated visit is a no-op).
-Escalation failure is logged and retried on later passes; execution state is
-never advanced by escalation failure or success — only svc-workflow's
-assistance fact and the version bump gate further business behavior.
+When a visit's attempt limit is reached (a generation == maxAttempts attempt
+settles NEEDS_REVIEW, or a stale settlement finds generation == maxAttempts),
+the engine invokes `workflow_execution_escalation.create`. Authoritative
+svc-workflow opens/replays one `OWNER_PENDING` case and returns
+`{assistanceCaseId, ownerPrincipalId, ...}`. Agent Core resolves the exact
+Principal UUID through the existing Principal→Agent authority, then delivers
+one stable Domain Owner wake using request id `wfassist-<assistanceCaseId>` and
+an `inter_agent` origin. It MUST NOT use `workflow_execution` origin, because
+the Domain Owner is an exception handler, not the original NodeVisit executor.
+
+Only after the owner wake is proven admitted (or already pending/settled under
+the same request id) is the append-only escalation fact recorded in the
+execution ledger. Resolution/wake failure is retried on a later pass; no blind
+second prompt is sent after an outcome-unknown delivery whose caller
+correlation proves admission. Domain Owner may resolve the assistance or
+explicitly escalate it to `HUMAN_REQUIRED` through svc-workflow.
 
 ### CTR-WEC1-006 Push-first kick
 
@@ -193,7 +201,7 @@ human-readable messages on the canonical workflow thread:
 - Events covered: attempt planned (dispatched to Agent X, #N), run
   delivered (session linked), run ended without transition, delivery
   failed / resolution blocked (execution blocked), stale superseded, attempt
-  limit escalation (HUMAN_REQUIRED requested), reconciled settled.
+  limit owner-attention request (OWNER_PENDING), reconciled settled.
 
 ## 3. Data model changes
 
@@ -206,8 +214,17 @@ with server-side read-before-write dedupe, never a business fact).
 
 - ADD `GET /workflow-execution/traces` (loopback product-api; CTR-WEC1-003).
 - ADD `POST /workflow-execution/kicks` (loopback product-api; CTR-WEC1-006).
+- ADD internal `POST /workflow-execution/owner-assistance-wakes` (same
+  `workflow.execute` bearer gate): closed payload
+  `{workflowInstanceId,nodeVisitId,assistanceCaseId,ownerPrincipalId,reason?}`;
+  non-2xx remains retryable for the svc durable outbox.
 - ADD broker manifest `workflow_execution_escalation` (create; target
   svc-workflow; scope `workflow.execute`) — companion svc endpoint.
+- ADD least-privilege assistance tools over existing svc-workflow APIs:
+  `workflow_assistance_read` (`workflow.read`: owner_inbox/detail) and
+  `workflow_assistance_action` (`workflow.execute`: resolve/escalate_to_human).
+  svc-workflow server-side Domain Owner bindings remain the authorization
+  authority; no new Auth scope or role is created.
 - WIDEN `forum_threads.list` manifest query list with `contextType`,
   `contextId` (additive; the svc-forum API already accepts them).
 
@@ -215,8 +232,13 @@ with server-side read-before-write dedupe, never a business fact).
 
 - Projection/state-table unit tests (all rows of the CTR-WEC1-002 table).
 - Engine policy tests: run_ended re-entry after delay (Goal Case 3),
-  limit → escalation once (Case 4), outcome_unknown never re-enters
+  limit → OWNER_PENDING fact once (Case 4), outcome_unknown never re-enters
   (Case 7), fence limit refusal, kick coalescing (Case 1/2 support),
   restart: projection recovers from replayed file (Case 9).
+- Owner-wake tests: exact Principal→Agent resolution, stable request-id dedupe,
+  lost delivery receipt with proven admission, failed resolution retryability,
+  and the closed product-api wake payload/gate.
+- Assistance broker tests: read/action scope split, existing svc routes,
+  idempotent owner actions, no model-carried authority inputs.
 - Poster tests: dedupe by eventKey, forum down = no execution effect,
   late thread appears = events eventually posted (Case 8 agent side).

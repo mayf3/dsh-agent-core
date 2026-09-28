@@ -87,6 +87,71 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
+export async function wakeDomainOwnerAssistance({
+  router,
+  principalAccess,
+  pollerAgentId,
+  workflowInstanceId,
+  nodeVisitId,
+  assistanceCaseId,
+  ownerPrincipalId,
+  reason,
+}) {
+  if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
+    return { ok: false, code: 'assistance_case_missing' }
+  }
+  if (typeof ownerPrincipalId !== 'string' || ownerPrincipalId === '') {
+    return { ok: false, code: 'owner_principal_missing' }
+  }
+  const resolved = await principalAccess.handlers.agent_resolve_principal.resolve(
+    { principalId: ownerPrincipalId },
+    { callerAgentId: pollerAgentId },
+  )
+  if (!resolved?.ok || typeof resolved.result?.agentId !== 'string') {
+    return { ok: false, code: resolved?.error?.code ?? 'owner_resolution_failed', detail: resolved?.error?.detail }
+  }
+
+  const ownerAgentId = resolved.result.agentId
+  const requestId = `wfassist-${assistanceCaseId}`
+  const correlation = `workflow-assistance:${assistanceCaseId}`
+  const existing = typeof router.resolveCallerCorrelation === 'function'
+    ? router.resolveCallerCorrelation({ requestId })
+    : undefined
+  if (existing?.state === 'pending' || existing?.state === 'settled') {
+    return { ok: true, ownerAgentId, requestId, reused: true }
+  }
+
+  const message = [
+    '[WORKFLOW_OWNER_ASSISTANCE]',
+    `Workflow ${workflowInstanceId} node visit ${nodeVisitId} is OWNER_PENDING (${reason ?? 'ATTENTION_REQUIRED'}).`,
+    `Assistance case: ${assistanceCaseId}.`,
+    'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
+    'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
+    'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
+    'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
+  ].join('\n')
+
+  try {
+    const receipt = await router.deliver(
+      { requestId, agentId: ownerAgentId, sessionMode: 'main', message },
+      { messageOrigin: Object.freeze({ kind: 'inter_agent', sourceAgentId: pollerAgentId, correlation }) },
+    )
+    return { ok: true, ownerAgentId, requestId, sessionId: receipt?.sessionId }
+  } catch (error) {
+    const after = typeof router.resolveCallerCorrelation === 'function'
+      ? router.resolveCallerCorrelation({ requestId })
+      : undefined
+    if (after?.state === 'pending' || after?.state === 'settled') {
+      return { ok: true, ownerAgentId, requestId, reused: true }
+    }
+    return {
+      ok: false,
+      code: error?.code ?? error?.status ?? 'owner_wake_failed',
+      detail: String(error?.message ?? error).slice(0, 200),
+    }
+  }
+}
+
 export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config = {} }) {
   if (ctx === undefined || layout === undefined || router === undefined || log === undefined) {
     throw new TypeError('workflow-execution-runtime: ctx, layout, router and log are required')
@@ -127,6 +192,20 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     fallback: undefined,
     name: 'retryDelayMs',
   })
+
+  const wakeOwnerAssistance = async (payload) => {
+    if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+    return wakeDomainOwnerAssistance({
+      router,
+      principalAccess,
+      pollerAgentId,
+      workflowInstanceId: payload.workflowInstanceId,
+      nodeVisitId: payload.nodeVisitId,
+      assistanceCaseId: payload.assistanceCaseId,
+      ownerPrincipalId: payload.ownerPrincipalId,
+      reason: payload.reason,
+    })
+  }
 
   const engine = createWorkflowExecutionEngine({
     ledger,
@@ -236,7 +315,23 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
         { agentId: pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'escalation_failed', detail: res.error?.detail }
-      return { ok: true, escalated: res.result?.escalated, assistanceCaseId: res.result?.assistanceCaseId }
+      const ownerWake = await wakeOwnerAssistance({
+        workflowInstanceId: payload.workflowInstanceId,
+        nodeVisitId: payload.nodeVisitId,
+        assistanceCaseId: res.result?.assistanceCaseId,
+        ownerPrincipalId: res.result?.ownerPrincipalId,
+        reason: payload.reason,
+      })
+      if (!ownerWake.ok) {
+        return { ok: false, code: ownerWake.code ?? 'owner_wake_failed', detail: ownerWake.detail }
+      }
+      return {
+        ok: true,
+        escalated: res.result?.escalated,
+        assistanceCaseId: res.result?.assistanceCaseId,
+        ownerPrincipalId: res.result?.ownerPrincipalId,
+        ownerAgentId: ownerWake.ownerAgentId,
+      }
     },
   })
 
@@ -310,6 +405,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     enabled,
     staleNoProgressThresholdMs,
     forumProjection,
+    wakeOwnerAssistance,
     /**
      * THE ONE controlled recovery operation (V2 CTR-WAE-013), surfaced as a
      * runtime-component method ONLY: the control plane (Owner/operator seam)
