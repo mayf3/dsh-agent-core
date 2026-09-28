@@ -21,6 +21,7 @@ ACTIVE = False
 CAPTURE_ID = None
 ADMISSION_ID = None
 REVIEWED_DS_SHA256 = None
+REVIEWED_OLD_SHA256 = None
 REVIEWED_NEW_SHA256 = None
 ROOT_UID = 0
 HOST_ID = EXPECTED_HOST_ID
@@ -220,6 +221,10 @@ def _write_exact(directory, name, raw):
 def produce():
     """Observe fixed current inputs and publish one immutable fresh set."""
     _require(ACTIVE and _hash(REVIEWED_DS_SHA256)
+             and type(REVIEWED_OLD_SHA256) is dict
+             and set(REVIEWED_OLD_SHA256) == set(OLD_PATHS)
+             and all(_hash(value) for value in REVIEWED_OLD_SHA256.values())
+             and REVIEWED_OLD_SHA256['deployment_system.py'] == REVIEWED_DS_SHA256
              and type(CAPTURE_ID) is str and re.fullmatch(r'[A-Za-z0-9_.-]{1,128}', CAPTURE_ID)
              and type(ADMISSION_ID) is str and re.fullmatch(r'[A-Za-z0-9_.-]{1,128}', ADMISSION_ID)
              and type(REVIEWED_NEW_SHA256) is dict
@@ -269,8 +274,8 @@ def produce():
                  and capture.get('tree_sha256') == current,
                  'ADMIN_FRESH_ROLLBACK_UNKNOWN')
         old = {name: _read_owned(path) for name, path in OLD_PATHS.items()}
-        _require(_sha(old['deployment_system.py']) == REVIEWED_DS_SHA256,
-                 'ADMIN_FRESH_DS_CHANGED')
+        _require(all(_sha(raw) == REVIEWED_OLD_SHA256[name]
+                     for name, raw in old.items()), 'ADMIN_FRESH_OLD_CHANGED')
         new = {name: (_read_staged(name) if name in OLD_PATHS
                       else _read_owned(NEW_PATHS[name])) for name in NEW_NAMES}
         _require(all(_sha(raw) == REVIEWED_NEW_SHA256[name]

@@ -12,6 +12,31 @@ from unittest.mock import patch
 
 
 class FixedLargeShimTest(unittest.TestCase):
+    def test_internal_fresh_hook_is_inert_and_factory_has_no_new_socket_action(self):
+        builder = importlib.import_module('build_admin_fixed_large_shim')
+        source = builder.build_bytes().decode()
+        self.assertIn('ADMIN_FRESH_HOOK_ACTIVE = False', source)
+        self.assertIn('target=run_admin_fresh_hook', source)
+        self.assertNotIn('"HR_ADMIN_FRESH_PREPARE_V1":', source)
+        tree = ast.parse(source)
+        factory = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+                       and n.name == '_make_admin_fresh')
+        scope = {'types': types}
+        exec(compile(ast.Module(body=[factory], type_ignores=[]),
+                     '<embedded-fresh>', 'exec'), scope)
+        binding = {'captureId': 'capture-once',
+                   'admissionId': 'admission-once',
+                   'reviewedDsSha256': 'a' * 64,
+                   'reviewedOldSha256': {'deployment_system.py': 'a' * 64},
+                   'reviewedNewSha256': {'deploy_shim.py': 'b' * 64},
+                   'shimInboxOwnerUid': 502,
+                   'reviewedStagedSize': {'deployment_system.py': 20}}
+        owner = scope['_make_admin_fresh'](binding)
+        self.assertTrue(owner.ACTIVE)
+        self.assertEqual(owner.CAPTURE_ID, 'capture-once')
+        self.assertEqual(owner.REVIEWED_NEW_SHA256['deploy_shim.py'], 'b' * 64)
+        self.assertTrue(callable(owner.produce))
+
     def test_large_ds_requires_exact_operation_new_and_rollback_pins(self):
         builder = importlib.import_module('build_admin_fixed_large_shim')
         source = builder.build_bytes().decode()
@@ -132,8 +157,8 @@ class FixedLargeShimTest(unittest.TestCase):
                  patch.object(publisher, 'ADMIN_FIXED_HOST_ID',
                               'FF99ABD5-79A0-5EE0-9E0B-B62671271560'), \
                  patch.object(publisher, 'ADMIN_FIXED_PYTHON_SHA256', 'a' * 64), \
-                 patch.object(publisher, 'ADMIN_FIXED_PACKAGE_SHA256', package_sha), \
-                 patch.object(publisher, 'ADMIN_FIXED_PACKAGE_BYTES', small), \
+                 patch.object(publisher, '_admin_fixed_root_package',
+                              return_value=(small, package_sha)), \
                  patch.object(publisher, 'ADMIN_FIXED_ROOT_HOST_OBSERVER',
                               lambda: 'FF99ABD5-79A0-5EE0-9E0B-B62671271560'), \
                  patch.object(publisher, 'os', RootOS()), \

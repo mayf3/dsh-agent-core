@@ -16,6 +16,25 @@ def digest(raw):
 
 
 class FinalBindingTests(unittest.TestCase):
+    def test_fixed_root_publishes_one_seal_after_exact_bind(self):
+        with tempfile.TemporaryDirectory(prefix='admin-fixed-bind-') as directory:
+            files, _, fresh = self._fixture(directory)
+            output = files / 'qualification-package'
+            with patch.object(binder, 'FRESH_DIRECTORY', files), \
+                 patch.object(binder, 'FIXED_ROOT_OUTPUT', output), \
+                 patch.object(binder, 'BOUND_FRESH_SHA256', digest(fresh)), \
+                 patch.object(binder, 'ROOT_UID', os.geteuid()):
+                seal = binder.bind_fixed_root()
+                self.assertEqual(seal['state'], 'SEALED')
+                self.assertEqual(seal['freshEvidenceSha256'], digest(fresh))
+                self.assertEqual(seal['expectedPublisherFileSha256']['deployment_system.py'],
+                    digest((output / 'deployment_system.py').read_bytes()))
+                self.assertEqual(binder.canonical(seal),
+                                 (output / 'PUBLISH-SEAL.json').read_bytes())
+                with self.assertRaisesRegex(binder.BindingRejected,
+                                            'ADMIN_BINDING_NO_REPLAY'):
+                    binder.bind_fixed_root()
+
     def test_default_inert_before_fresh_read(self):
         with patch.object(binder, '_read_root', side_effect=AssertionError('read')):
             with self.assertRaisesRegex(binder.BindingRejected, 'ADMIN_BINDING_UNBOUND'):
@@ -66,7 +85,7 @@ class FinalBindingTests(unittest.TestCase):
             files, _, raw = self._fixture(directory)
             output = Path(directory) / 'out'
             with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                 patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                 patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                  patch.object(binder, 'ROOT_UID', os.geteuid()):
                 result = binder.bind(output)
             self.assertTrue((output / 'PACKAGE.json').exists())
@@ -95,7 +114,7 @@ class FinalBindingTests(unittest.TestCase):
             files, _, _ = self._fixture(directory)
             output = Path(directory) / 'out'
             with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                 patch.object(binder, 'REVIEWED_FRESH_SHA256', '0' * 64), \
+                 patch.object(binder, 'BOUND_FRESH_SHA256', '0' * 64), \
                  patch.object(binder, 'ROOT_UID', os.geteuid()):
                 with self.assertRaisesRegex(binder.BindingRejected, 'ADMIN_BINDING_FRESH_CHANGED'):
                     binder.bind(output)
@@ -110,7 +129,7 @@ class FinalBindingTests(unittest.TestCase):
                 (files / 'FRESH.json').write_bytes(raw)
                 output = Path(directory) / 'out'
                 with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                     patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                     patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                      patch.object(binder, 'ROOT_UID', os.geteuid()):
                     with self.assertRaisesRegex(binder.BindingRejected, 'ADMIN_BINDING_IDENTITY'):
                         binder.bind(output)
@@ -130,7 +149,7 @@ class FinalBindingTests(unittest.TestCase):
                 return result
 
             with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                 patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                 patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                  patch.object(binder, 'ROOT_UID', os.geteuid()), \
                  patch.object(binder.shutil, 'copytree', side_effect=drift):
                 with self.assertRaisesRegex(binder.BindingRejected,
@@ -151,7 +170,7 @@ class FinalBindingTests(unittest.TestCase):
                 return original(root, name, limit)
 
             with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                 patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                 patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                  patch.object(binder, 'ROOT_UID', os.geteuid()), \
                  patch.object(binder.package, '_read', side_effect=changed):
                 with self.assertRaisesRegex(binder.BindingRejected,
@@ -171,7 +190,7 @@ class FinalBindingTests(unittest.TestCase):
                 (files / 'FRESH.json').write_bytes(raw)
                 output = Path(directory) / 'out'
                 with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                     patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                     patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                      patch.object(binder, 'ROOT_UID', os.geteuid()):
                     with self.assertRaisesRegex(binder.BindingRejected,
                                                 'ADMIN_BINDING_(ARTIFACTS|IDENTITY)'):
@@ -185,7 +204,7 @@ class FinalBindingTests(unittest.TestCase):
                 (files / name).write_bytes(b'unreviewed-change')
                 output = Path(directory) / 'out'
                 with patch.object(binder, 'FRESH_DIRECTORY', files), \
-                     patch.object(binder, 'REVIEWED_FRESH_SHA256', digest(raw)), \
+                     patch.object(binder, 'BOUND_FRESH_SHA256', digest(raw)), \
                      patch.object(binder, 'ROOT_UID', os.geteuid()):
                     with self.assertRaisesRegex(binder.BindingRejected,
                                                 'ADMIN_BINDING_(INSTALL|RUNTIME)_CHANGED'):
