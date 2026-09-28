@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -49,6 +50,25 @@ class OfflineStageTests(unittest.TestCase):
                                             'ADMIN_RESTORED_CHANGED'):
                     stage.assemble(output)
             self.assertFalse(output.exists())
+
+    def test_after_copy_validator_drift_emits_no_candidate(self):
+        original = shutil.copytree
+
+        def drift(source, destination, *args, **kwargs):
+            result = original(source, destination, *args, **kwargs)
+            if Path(destination) == output / 'tree':
+                validator = Path(destination) / stage.VALIDATOR
+                validator.write_bytes(validator.read_bytes() + b'\n// drift\n')
+            return result
+
+        with tempfile.TemporaryDirectory(prefix='admin-offline-') as directory:
+            output = Path(directory) / 'candidate'
+            with patch.object(stage.shutil, 'copytree', side_effect=drift):
+                with self.assertRaisesRegex(stage.OfflineStageRejected,
+                                            'ADMIN_FINAL_(TREE|VALIDATOR)_CHANGED'):
+                    stage.assemble(output)
+            self.assertFalse((output / 'CANDIDATE.json').exists())
+            self.assertFalse((output / 'package-inputs').exists())
 
 
 if __name__ == '__main__':

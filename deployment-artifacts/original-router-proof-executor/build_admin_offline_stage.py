@@ -20,6 +20,8 @@ ADMIN_STAGE = ARTIFACTS / 'HR-S256-ADMIN-EMERGENCY-NONPROD-SOURCE-STAGE-20260928
 RESTORED_SHA = 'd52212d987bd53ca5928cfa33c673d1133102f03d57274498a26c0e6ca1a5dad'
 SELECTIVE_SHA = '5544e0d34774d29a07b34ddb27b664344aa531207a69461ea7a10321bca3ddee'
 ADMIN_STAGE_SHA = 'ca1cae3b98f49a2144c1c49a7a199256c1008b717b9fb78f18f01b09073f9210'
+FINAL_TREE_SHA = '508b4042c5b1dd718c8c0858164a32ccbee65f68486c0aec4ee27b7601234968'
+FINAL_VALIDATOR_SHA = '539f25751b0392f17b46945e36a850dc39f965a8ae5594a364667e407f054bb3'
 HOST_JOIN = {
     'packages/production-runtime/src/native-arm64/hr-admin-canary-contract.mjs':
         ('512b9268c288edd54460c2be361460df6490153d00d513c4151afd8feb78a581',
@@ -100,12 +102,14 @@ def assemble(output, *, repo=Path(__file__).resolve().parents[2]):
     for name in PRESERVED:
         _require(_read(tree, name, 1 << 20) == _read(RESTORED, name, 1 << 20),
                  'ADMIN_ORDINARY_AGENT_CHANGED')
+    validator_sha = _sha(_read(tree, VALIDATOR, 65536))
+    _require(validator_sha == FINAL_VALIDATOR_SHA, 'ADMIN_FINAL_VALIDATOR_CHANGED')
     final_sha = _tree_sha256(tree)
+    _require(final_sha == FINAL_TREE_SHA, 'ADMIN_FINAL_TREE_CHANGED')
     package_inputs = output / 'package-inputs'
     package_inputs.mkdir()
     for field, raw in source_bytes.items():
         (package_inputs / FILES[field]).write_bytes(raw)
-    validator_sha = _sha(_read(tree, VALIDATOR, 65536))
     entry_manifest = {
         'entrySha256': SOURCE_SHA256['entrySha256'],
         'consumingBinarySha256': final_sha,
