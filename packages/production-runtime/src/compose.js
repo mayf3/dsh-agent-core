@@ -61,6 +61,7 @@ import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 //   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
 //   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
 import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
+import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
@@ -500,6 +501,11 @@ export async function composeProductionRuntime(options = {}) {
   // capability. Additive and agent-agnostic; refuses honestly (config_missing)
   // until the Operator provisions dev-execution/{repos.json,backend.json}.
   mountDevelopmentExecutionRuntime({ ctx, layout, log })
+
+  // FIXED_OPERATION_V1 candidate: fixture-only fixed-operation LOCAL surface.
+  // Mounted before workflow execution so its provenance seam is available to
+  // the deliver path.
+  mountFixedOperationRuntime({ ctx, log })
 
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
