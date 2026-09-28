@@ -57,6 +57,7 @@ import {
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
   workflowHumanPrincipalProjectionManifests, executionHistoryManifests, lifeWorkbenchManifests,
+  fixedOperationManifests,
 } from './capabilities/manifests.js'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
@@ -92,6 +93,7 @@ export const DEFAULT_MANIFESTS = [
   ...schedulerManifests,
   ...selfOpsManifests,
   developmentExecuteManifest,
+  ...fixedOperationManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
   ...agentPrincipalReverseResolutionManifests,
