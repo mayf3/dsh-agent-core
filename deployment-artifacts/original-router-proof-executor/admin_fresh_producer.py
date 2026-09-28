@@ -33,12 +33,18 @@ OLD_PATHS = {
     'deployment-registry.json': Path('/private/var/db/agent-deploy-system-config/deployment-registry.json'),
 }
 NEW_NAMES = frozenset((*OLD_PATHS, 'deploy_shim.py', 'node-runtime', 'python-runtime'))
-SHIM_INBOX = Path('/private/var/db/agent-deploy-shim/inbox') / INSTALL_OPERATION_ID
+SHIM_STATE_ROOT = Path('/private/var/db/agent-deploy-shim')
+SHIM_INBOX = SHIM_STATE_ROOT / 'inbox' / INSTALL_OPERATION_ID
+SHIM_INBOX_OWNER_UID = None
+REVIEWED_STAGED_SIZE = None
+PYTHON_PATH = Path('/usr/bin/python3')
+NODE_PATH = Path('/usr/local/libexec/agent-core/node-runtime/bin/node')
+SHIM_SCRIPT_PATH = Path('/usr/local/libexec/agent-deploy-shim/deploy_shim.py')
 NEW_PATHS = {name: SHIM_INBOX / name for name in OLD_PATHS}
 NEW_PATHS.update({
-    'deploy_shim.py': Path('/usr/local/libexec/agent-deploy-shim/deploy_shim.py'),
-    'node-runtime': Path('/usr/local/libexec/agent-core/node-runtime/bin/node'),
-    'python-runtime': Path('/usr/bin/python3'),
+    'deploy_shim.py': SHIM_SCRIPT_PATH,
+    'node-runtime': NODE_PATH,
+    'python-runtime': PYTHON_PATH,
 })
 READ_LIMIT = 128 << 20
 
@@ -80,8 +86,10 @@ def _read_owned(path):
         fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent)
         try:
             first = os.fstat(fd)
+            python_hardlink = (path == PYTHON_PATH and first.st_nlink >= 1)
             _require(stat.S_ISREG(first.st_mode) and first.st_uid == ROOT_UID
-                     and first.st_nlink == 1 and 0 < first.st_size <= READ_LIMIT
+                     and (first.st_nlink == 1 or python_hardlink)
+                     and 0 < first.st_size <= READ_LIMIT
                      and not (stat.S_IMODE(first.st_mode) & 0o022),
                      'ADMIN_FRESH_CUSTODY')
             raw = os.pread(fd, first.st_size + 1, 0)
@@ -91,11 +99,83 @@ def _read_owned(path):
                                            follow_symlinks=False)) == _identity(first)
                      and _identity(os.stat(path.parent, follow_symlinks=False)) ==
                          _identity(first_dir), 'ADMIN_FRESH_CHANGED')
+            if python_hardlink:
+                _require(type(REVIEWED_NEW_SHA256) is dict
+                         and _sha(raw) == REVIEWED_NEW_SHA256.get('python-runtime'),
+                         'ADMIN_FRESH_PYTHON_CHANGED')
             return raw
         finally:
             os.close(fd)
     finally:
         os.close(parent)
+
+
+def _read_staged(name):
+    """Read only four owner-staged bytes beneath the fixed shim inbox."""
+    _require(name in OLD_PATHS and type(SHIM_INBOX_OWNER_UID) is int
+             and SHIM_INBOX_OWNER_UID > 0
+             and SHIM_INBOX_OWNER_UID != ROOT_UID
+             and type(REVIEWED_STAGED_SIZE) is dict
+             and type(REVIEWED_STAGED_SIZE.get(name)) is int
+             and 0 < REVIEWED_STAGED_SIZE[name] <= READ_LIMIT
+             and type(REVIEWED_NEW_SHA256) is dict
+             and _hash(REVIEWED_NEW_SHA256.get(name))
+             and SHIM_INBOX == SHIM_STATE_ROOT / 'inbox' / INSTALL_OPERATION_ID,
+             'ADMIN_FRESH_STAGE_UNBOUND')
+    state = os.open(SHIM_STATE_ROOT,
+                    os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    inbox = operation = file_fd = None
+    try:
+        state_meta = os.fstat(state)
+        _require(stat.S_ISDIR(state_meta.st_mode)
+                 and state_meta.st_uid == ROOT_UID and state_meta.st_gid == 0
+                 and stat.S_IMODE(state_meta.st_mode) == 0o770,
+                 'ADMIN_FRESH_STAGE_CUSTODY')
+        inbox = os.open('inbox', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                        dir_fd=state)
+        inbox_meta = os.fstat(inbox)
+        _require(stat.S_ISDIR(inbox_meta.st_mode)
+                 and inbox_meta.st_uid == SHIM_INBOX_OWNER_UID
+                 and stat.S_IMODE(inbox_meta.st_mode) == 0o700,
+                 'ADMIN_FRESH_STAGE_CUSTODY')
+        operation = os.open(INSTALL_OPERATION_ID,
+                            os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=inbox)
+        operation_meta = os.fstat(operation)
+        _require(stat.S_ISDIR(operation_meta.st_mode)
+                 and operation_meta.st_uid == SHIM_INBOX_OWNER_UID
+                 and not stat.S_IMODE(operation_meta.st_mode) & 0o022,
+                 'ADMIN_FRESH_STAGE_CUSTODY')
+        file_fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW,
+                          dir_fd=operation)
+        file_meta = os.fstat(file_fd)
+        _require(stat.S_ISREG(file_meta.st_mode)
+                 and file_meta.st_uid == SHIM_INBOX_OWNER_UID
+                 and file_meta.st_nlink == 1
+                 and not stat.S_IMODE(file_meta.st_mode) & 0o022
+                 and file_meta.st_size == REVIEWED_STAGED_SIZE[name],
+                 'ADMIN_FRESH_STAGE_CUSTODY')
+        raw = os.pread(file_fd, file_meta.st_size + 1, 0)
+        _require(len(raw) == file_meta.st_size
+                 and _sha(raw) == REVIEWED_NEW_SHA256[name],
+                 'ADMIN_FRESH_STAGE_CHANGED')
+        for fd, parent, child, original in (
+            (file_fd, operation, name, file_meta),
+            (operation, inbox, INSTALL_OPERATION_ID, operation_meta),
+            (inbox, state, 'inbox', inbox_meta)):
+            _require(_identity(os.fstat(fd)) == _identity(original)
+                     and _identity(os.stat(child, dir_fd=parent,
+                                           follow_symlinks=False)) ==
+                         _identity(original), 'ADMIN_FRESH_STAGE_CHANGED')
+        _require(_identity(os.fstat(state)) == _identity(state_meta)
+                 and _identity(os.stat(SHIM_STATE_ROOT,
+                                       follow_symlinks=False)) ==
+                     _identity(state_meta), 'ADMIN_FRESH_STAGE_CHANGED')
+        return raw
+    finally:
+        for fd in (file_fd, operation, inbox, state):
+            if fd is not None:
+                os.close(fd)
 
 
 def _load_backend():
@@ -141,6 +221,17 @@ def produce():
              and type(ADMISSION_ID) is str and re.fullmatch(r'[A-Za-z0-9_.-]{1,128}', ADMISSION_ID)
              and type(REVIEWED_NEW_SHA256) is dict
              and set(REVIEWED_NEW_SHA256) == NEW_NAMES
+             and all(NEW_PATHS[name] == SHIM_INBOX / name
+                     for name in OLD_PATHS)
+             and NEW_PATHS['deploy_shim.py'] == SHIM_SCRIPT_PATH
+             and NEW_PATHS['node-runtime'] == NODE_PATH
+             and NEW_PATHS['python-runtime'] == PYTHON_PATH
+             and type(SHIM_INBOX_OWNER_UID) is int
+             and SHIM_INBOX_OWNER_UID > 0 and SHIM_INBOX_OWNER_UID != ROOT_UID
+             and type(REVIEWED_STAGED_SIZE) is dict
+             and set(REVIEWED_STAGED_SIZE) == set(OLD_PATHS)
+             and all(type(size) is int and 0 < size <= READ_LIMIT
+                     for size in REVIEWED_STAGED_SIZE.values())
              and set(NEW_PATHS) == NEW_NAMES
              and all(_hash(v) for v in REVIEWED_NEW_SHA256.values()),
              'ADMIN_FRESH_UNBOUND')
@@ -177,7 +268,8 @@ def produce():
         old = {name: _read_owned(path) for name, path in OLD_PATHS.items()}
         _require(_sha(old['deployment_system.py']) == REVIEWED_DS_SHA256,
                  'ADMIN_FRESH_DS_CHANGED')
-        new = {name: _read_owned(NEW_PATHS[name]) for name in NEW_NAMES}
+        new = {name: (_read_staged(name) if name in OLD_PATHS
+                      else _read_owned(NEW_PATHS[name])) for name in NEW_NAMES}
         _require(all(_sha(raw) == REVIEWED_NEW_SHA256[name]
                      for name, raw in new.items()), 'ADMIN_FRESH_NEW_CHANGED')
         _, rechecked, _ = ds.dir_tree_state(str(APP), str(APP), ['node_modules'])
@@ -195,19 +287,32 @@ def produce():
                  'reviewedShim': {'deploy_shim.py': _artifact(new['deploy_shim.py'])},
                  'newRuntime': {k: _artifact(new[k]) for k in
                                 ('deployment_system.py', 'node-runtime', 'python-runtime')}}
-        # Directory creation is the one-use durable intent. Any later error is
-        # UNKNOWN; retain the directory and reject every retry.
-        os.mkdir(FRESH_DIRECTORY, 0o700)
+        # A root-only parent makes the one-use marker non-removable by the
+        # authorized shim inbox owner. No existing DS directory is chmodded.
         parent = os.open(FRESH_DIRECTORY.parent,
                          os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
+            parent_meta = os.fstat(parent)
+            named_parent = os.stat(FRESH_DIRECTORY.parent,
+                                   follow_symlinks=False)
+            _require(stat.S_ISDIR(parent_meta.st_mode)
+                     and parent_meta.st_uid == ROOT_UID
+                     and not stat.S_IMODE(parent_meta.st_mode) & 0o022
+                     and (parent_meta.st_dev, parent_meta.st_ino) ==
+                         (named_parent.st_dev, named_parent.st_ino),
+                     'ADMIN_FRESH_PARENT_CUSTODY')
+            # Creation is the one-use durable intent. Any later error is
+            # UNKNOWN; retain this child and reject every retry.
+            os.mkdir(FRESH_DIRECTORY.name, 0o700, dir_fd=parent)
             os.fsync(parent)
         finally:
             os.close(parent)
         directory = os.open(FRESH_DIRECTORY,
                             os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
-            _require(os.fstat(directory).st_uid == ROOT_UID,
+            directory_meta = os.fstat(directory)
+            _require(directory_meta.st_uid == ROOT_UID
+                     and stat.S_IMODE(directory_meta.st_mode) == 0o700,
                      'ADMIN_FRESH_CUSTODY')
             for name, raw in sorted(new.items()):
                 _write_exact(directory, name, raw)
