@@ -25,3 +25,4 @@ export { manifests as workflowHumanPrincipalProjectionManifests } from './workfl
 export { manifests as executionHistoryManifests } from './execution-history.js'
 export { lifeWorkbenchManifests } from './life-workbench.mjs'
 export { fixedOperationManifests } from './fixed-operation.js'
+export { workflowProgressManifests } from './workflow-progress.js'

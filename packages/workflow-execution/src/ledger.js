@@ -38,6 +38,7 @@ import { dirname, join } from 'node:path'
 import { OwnerLock } from '../../scheduler/src/lock.js'
 
 import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, buildStaleSupersededEvent, terminalRefusal } from './ledger-events.js'
+import { normalizeProgressCheckpoint } from './progress.js'
 
 export const LEDGER_EVENTS_FILE = 'attempts.jsonl'
 export const LEDGER_LOCK_FILE = 'attempts.lock'
@@ -61,6 +62,8 @@ export const DEFAULT_MAX_ATTEMPTS_PER_VISIT = 3
 export const ESCALATION_REQUESTED_KIND = 'escalation_requested'
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
+const ATTEMPT_ID_RE = /^wfeat-[0-9a-f]{24}$/
 
 /**
  * Deterministic attempt id for one NodeVisit generation: stable across
@@ -362,6 +365,63 @@ export class ExecutionLedger {
   /** Record a successful Run admission (NodeVisit → Attempt → Run linkage). */
   async recordRunDelivered({ nodeVisitId, agentId, requestId, sessionId, reconciliationHandle, messageId, workflowStateVersionAtDispatch }) {
     return this.mutate(() => this.#recordRunDelivered(nodeVisitId, { agentId, requestId, sessionId, reconciliationHandle, messageId, workflowStateVersionAtDispatch }))
+  }
+
+  /**
+   * PROGRESS_CHECKPOINT_V1: append thin execution-resume metadata for the
+   * EXACT currently-delivered attempt. This is deliberately NOT a business
+   * progress signal: it never changes state/phase/judgment and therefore
+   * cannot reset stale-no-progress or trigger Workflow transitions/wakes.
+   */
+  async recordProgressCheckpoint({ nodeVisitId, attemptId, reporterAgentId, sessionId, turnExecutionId, checkpoint }) {
+    if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
+      throw new TypeError(`workflow-execution: progress nodeVisitId must be a UUID string (got ${JSON.stringify(nodeVisitId)})`)
+    }
+    if (typeof attemptId !== 'string' || !ATTEMPT_ID_RE.test(attemptId)) {
+      throw new TypeError('workflow-execution: progress attemptId must be a ledger-minted wfeat-* id')
+    }
+    if (typeof reporterAgentId !== 'string' || !AGENT_ID_RE.test(reporterAgentId)) {
+      throw new TypeError('workflow-execution: progress reporterAgentId must be an agt_* id')
+    }
+    if (sessionId !== undefined && (typeof sessionId !== 'string' || sessionId === '')) {
+      throw new TypeError('workflow-execution: progress sessionId must be a non-empty string when provided')
+    }
+    if (turnExecutionId !== undefined && (typeof turnExecutionId !== 'string' || turnExecutionId === '')) {
+      throw new TypeError('workflow-execution: progress turnExecutionId must be a non-empty string when provided')
+    }
+    const normalized = normalizeProgressCheckpoint(checkpoint)
+    return this.mutate(() => {
+      const current = this.#attempt(nodeVisitId)
+      if (current === undefined) {
+        throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — cannot record progress`)
+      }
+      if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'progress_checkpoint', nodeVisitId })
+      if (current.phase !== 'run_delivered' || current.delivered === undefined) {
+        throw new Error(`workflow-execution: progress requires an active delivered Run (phase=${current.phase})`)
+      }
+      if (current.attemptId !== attemptId) {
+        return { committed: false, cause: 'stale_attempt', attempt: { ...current } }
+      }
+      if (current.delivered.agentId !== reporterAgentId) {
+        return { committed: false, cause: 'reporter_mismatch', attempt: { ...current } }
+      }
+      if (sessionId !== undefined && current.delivered.sessionId !== sessionId) {
+        return { committed: false, cause: 'session_mismatch', attempt: { ...current } }
+      }
+      const event = {
+        kind: 'progress_checkpoint',
+        nodeVisitId: nodeVisitId.toLowerCase(),
+        attemptId,
+        reporterAgentId,
+        ...(sessionId === undefined ? {} : { sessionId }),
+        ...(turnExecutionId === undefined ? {} : { turnExecutionId }),
+        checkpoint: normalized,
+        atMs: this.clock(),
+      }
+      this.#appendEvent(event)
+      this.#applyEvent(event)
+      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
+    })
   }
 
   /** Record a failed (or never-verifiably-started) delivery: NEEDS_REVIEW.
