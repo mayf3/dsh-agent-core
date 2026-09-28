@@ -26,6 +26,7 @@ DAEMON_SHA = '908941f28a851d4a323be1870b6e8e9a6c29da841b7706817f0d9189557987cb' 
 DAEMON_DESCRIPTOR_LIMIT = 128 * (1 << 20)  # Finite reviewed-current-size ceiling; SHA must be rebound in final package.
 APP = '/usr/local/libexec/agent-core/app'
 QUALIFIED_ORIGINAL_ENTRY = None
+QUALIFIED_EXECUTING_ENTRY_FD = None  # Set only by the separately sealed root launcher.
 HANDOFF_SHA = 'b9238434fe765d45b6746543fc0d9ff09c728daecdffed6f1202426f6c72ab62'
 NODE = '/usr/local/libexec/agent-core/node-runtime/bin/node'
 NODE_SHA = 'c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b'
@@ -213,7 +214,9 @@ class FixedOriginalDriver:
         _descriptor_bytes(entry,binding.entry_sha256)
         # This executing sealed entry must be the actual admitted file, not an
         # unrelated root-owned FD. No caller-selected pathname is accepted.
-        own = os.stat(__file__,follow_symlinks=False)
+        own = (os.fstat(QUALIFIED_EXECUTING_ENTRY_FD)
+               if type(QUALIFIED_EXECUTING_ENTRY_FD) is int
+               else os.stat(__file__,follow_symlinks=False))
         admitted = os.fstat(entry)
         _root_regular(own)
         require((own.st_dev,own.st_ino) == (admitted.st_dev,admitted.st_ino),

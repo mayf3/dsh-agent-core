@@ -19,7 +19,7 @@ def _deploy_owned(owner):
     require(type(binding) is _DeploymentBinding,'ORIGINAL_DEPLOYMENT_UNBOUND')
     require(binding.final_binary_sha256 == owner._binding.consuming_binary_sha256,
             'ORIGINAL_DEPLOYMENT_BINARY_MISMATCH')
-    raw = _descriptor_bytes(owner._daemon_fd,DAEMON_SHA,1 << 20)
+    raw = _descriptor_bytes(owner._daemon_fd,DAEMON_SHA,128 * (1 << 20))
     scope = {'__name__':'_original_fixed_deployment_instance',
              '__file__':'original-pinned-deployment-system.py'}
     exec(compile(raw,scope['__file__'],'exec'),scope)
