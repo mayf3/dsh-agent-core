@@ -3,10 +3,11 @@ spec_id: HR_S256_ADMIN_EMERGENCY_RECOVERY_V1
 status: proposed
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 owners: [mayf3]
 governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
+external_authorities: []
 supersedes: []
 superseded_by: null
 scope: [one fixed s256 admin-authenticated emergency recovery profile]
