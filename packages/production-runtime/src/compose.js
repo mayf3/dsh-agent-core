@@ -57,6 +57,8 @@ import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/sr
 import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+import { mountWorkflowExecutionContextRuntime } from './workflow-execution-context-runtime.js'
+import { mountWorkflowProgressRuntime } from './workflow-progress-runtime.js'
 // Latest-main integration: BOTH wirings coexist —
 //   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
 //   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
@@ -502,9 +504,12 @@ export async function composeProductionRuntime(options = {}) {
   // until the Operator provisions dev-execution/{repos.json,backend.json}.
   mountDevelopmentExecutionRuntime({ ctx, layout, log })
 
-  // FIXED_OPERATION_V1 candidate: fixture-only fixed-operation LOCAL surface.
-  // Mounted before workflow execution so its provenance seam is available to
-  // the deliver path.
+  // Runtime-owned turn -> workflow_execution provenance mapping shared by
+  // every Workflow-scoped LOCAL capability. It is execution context only,
+  // never workflow business state.
+  mountWorkflowExecutionContextRuntime({ ctx })
+
+  // FIXED_OPERATION_V1: fixture-only fixed-operation LOCAL surface.
   mountFixedOperationRuntime({ ctx, log })
 
   const workflowExecution = mountWorkflowExecutionRuntime({
@@ -520,6 +525,8 @@ export async function composeProductionRuntime(options = {}) {
   // same late-binding discipline as schedulerHistory/schedulerTokenVerifier).
   // traces = cross-process-fresh read model; kick = one coalesced poll
   // trigger (latency only; the poll loop stays the correctness path).
+  mountWorkflowProgressRuntime({ ctx, ledger: workflowExecution.ledger, log })
+
   ctx.provide('workflowExecutionAccess', {
     traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
       const attempts = await workflowExecution.ledger.snapshotFresh()
