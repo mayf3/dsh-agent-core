@@ -138,6 +138,69 @@ class FixedAdminPackageTest(unittest.TestCase):
                 with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_PACKAGE_BINDING_INVALID'):
                     builder.compile_fixed_admin_qualification()
 
+    def test_resealed_stale_executor_and_changed_compiler_templates_reject(self):
+        builder = importlib.import_module('admin_package')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package = root / 'package'
+            package.mkdir()
+            self.disposable_package(builder, package)
+            # A newly reviewed package digest alone must not authorize an old
+            # executor byte set against this exact fixed compiler source.
+            (package / 'driver.py').write_bytes(b'stale-but-resealed-driver')
+            pins = json.loads((package / 'PACKAGE.json').read_bytes())
+            pins['entrySha256'] = hashlib.sha256((package / 'driver.py').read_bytes()).hexdigest()
+            entry = json.loads((package / 'entry-manifest.json').read_bytes())
+            entry['entrySha256'] = pins['entrySha256']
+            (package / 'entry-manifest.json').write_bytes(json.dumps(entry, sort_keys=True,
+                separators=(',', ':')).encode())
+            pins['entryManifestSha256'] = hashlib.sha256((package / 'entry-manifest.json').read_bytes()).hexdigest()
+            (package / 'PACKAGE.json').write_bytes(json.dumps(pins, sort_keys=True,
+                separators=(',', ':')).encode())
+            digest = hashlib.sha256((package / 'PACKAGE.json').read_bytes()).hexdigest()
+            with patch.object(builder, 'PACKAGE_ROOT', package), \
+                 patch.object(builder, 'REVIEWED_PACKAGE_SHA256', digest), \
+                 patch.object(subprocess, 'Popen', side_effect=AssertionError('HOST_PROCESS_DENIED')):
+                with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_PACKAGE_SOURCE_VERSION'):
+                    builder.compile_fixed_admin_qualification()
+
+            digest = self.disposable_package(builder, package)
+            (package / 'deployment.py').write_bytes(b'stale-but-resealed-deployment')
+            pins = json.loads((package / 'PACKAGE.json').read_bytes())
+            pins['deploymentDriverSha256'] = hashlib.sha256((package / 'deployment.py').read_bytes()).hexdigest()
+            (package / 'PACKAGE.json').write_bytes(json.dumps(pins, sort_keys=True,
+                separators=(',', ':')).encode())
+            digest = hashlib.sha256((package / 'PACKAGE.json').read_bytes()).hexdigest()
+            with patch.object(builder, 'PACKAGE_ROOT', package), \
+                 patch.object(builder, 'REVIEWED_PACKAGE_SHA256', digest), \
+                 patch.object(subprocess, 'Popen', side_effect=AssertionError('HOST_PROCESS_DENIED')):
+                with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_PACKAGE_SOURCE_VERSION'):
+                    builder.compile_fixed_admin_qualification()
+
+            digest = self.disposable_package(builder, package)
+            copied = root / 'compiler'
+            copied.mkdir()
+            for name in ('admin_launcher_template.py', 'admin_root_carrier_template.py'):
+                shutil.copyfile(Path(__file__).with_name(name), copied / name)
+            (copied / 'admin_launcher_template.py').write_bytes(
+                (copied / 'admin_launcher_template.py').read_bytes() + b'\n# changed')
+            with patch.object(builder, '__file__', str(copied / 'admin_package.py')), \
+                 patch.object(builder, 'PACKAGE_ROOT', package), \
+                 patch.object(builder, 'REVIEWED_PACKAGE_SHA256', digest), \
+                 patch.object(subprocess, 'Popen', side_effect=AssertionError('HOST_PROCESS_DENIED')):
+                with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_COMPILER_TEMPLATE_CHANGED'):
+                    builder.compile_fixed_admin_qualification()
+
+            shutil.copyfile(Path(__file__).with_name('admin_launcher_template.py'),
+                            copied / 'admin_launcher_template.py')
+            (copied / 'admin_root_carrier_template.py').write_bytes(
+                (copied / 'admin_root_carrier_template.py').read_bytes() + b'\n# changed')
+            with patch.object(builder, '__file__', str(copied / 'admin_package.py')), \
+                 patch.object(builder, 'PACKAGE_ROOT', package), \
+                 patch.object(builder, 'REVIEWED_PACKAGE_SHA256', digest):
+                with self.assertRaisesRegex(builder.PackageRejected, 'ADMIN_COMPILER_TEMPLATE_CHANGED'):
+                    builder.compile_fixed_admin_carrier()
+
     def test_private_deployment_uses_the_same_finite_reviewed_daemon_limit(self):
         source = Path(__file__).with_name('deployment.py').read_text()
         self.assertIn('_descriptor_bytes(owner._daemon_fd,DAEMON_SHA,128 * (1 << 20))', source)
