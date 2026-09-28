@@ -443,7 +443,7 @@ def run():
             and PINS.get('cutOperationId') ==
             'hr-s256-admin-emergency-cut-20260928-v1'
             and type(PINS.get('hostId')) is str
-            and PINS['hostId'] == '961534a5-8c94-487d-8e55-d324a54e821a'
+            and PINS['hostId'] == 'FF99ABD5-79A0-5EE0-9E0B-B62671271560'
             and all(type(PINS.get(key)) is str and re.fullmatch('[a-f0-9]{64}', PINS[key])
                 for key in ('entryManifestSha256', 'entrySha256', 'helperSha256',
                             'daemonSha256', 'pythonSha256'))
