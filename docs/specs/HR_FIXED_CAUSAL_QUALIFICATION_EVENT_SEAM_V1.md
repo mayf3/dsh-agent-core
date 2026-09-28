@@ -8,7 +8,7 @@ production_apply_authority: none
 owners: [mayf3]
 governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1]
 supersedes: []
-superseded_by: null
+superseded_by: HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2
 accepted_by: original Deployment Agent under mayf3 standing ordinary technical delegation
 accepted_date: 2026-09-27
 accepted_text_sha256: 4a8b1871af060594ba56d422aebcd65202a1f32802dea7560e53012bdcc6776d
