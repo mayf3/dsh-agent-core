@@ -4,6 +4,7 @@ There is no request action for this hook. All selectors remain compiled and
 inactive by default; the original root producer obtains the DS canonical lock
 itself after this hook's durable UNKNOWN intent.
 """
+import fcntl
 import hashlib
 import json
 import os
@@ -22,11 +23,12 @@ ADMIN_FRESH_NEW_SHA256 = None  # Six non-self artifacts; current shim comes from
 ADMIN_FRESH_STAGED_SIZE = None
 ADMIN_FRESH_OWNER_UID = None
 ADMIN_FRESH_OPERATION_ID = 'hr-admin-fresh-prep-20260928-v1'
+ADMIN_FRESH_MARKER_DIRECTORY = '/private/var/db/agent-core-admin-fresh-marker-s256'
 ADMIN_FRESH_FACTORY = None  # Embedded reviewed producer factory only.
 ADMIN_FRESH_BINDER = None  # Private same-process inert package binder only.
 
 
-def _admin_fresh_root_read(path):
+def _admin_fresh_root_read(path, limit=65536):
     """Read a fixed root file with stable descriptor and named identity."""
     parent = os.open(os.path.dirname(path),
                      os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
@@ -44,7 +46,7 @@ def _admin_fresh_root_read(path):
                     and before.st_uid == ADMIN_FRESH_ROOT_UID
                     and before.st_nlink == 1
                     and not stat.S_IMODE(before.st_mode) & 0o022
-                    and 0 < before.st_size <= 65536,
+                    and 0 < before.st_size <= limit,
                     'ADMIN_FRESH_HOOK_RECEIPT_CUSTODY')
             identity = lambda st: (st.st_dev, st.st_ino, st.st_mode, st.st_uid,
                                    st.st_gid, st.st_nlink, st.st_size,
@@ -65,9 +67,149 @@ def _admin_fresh_root_read(path):
         os.close(parent)
 
 
+def _admin_fresh_shim_read(path, expected_sha):
+    require(type(expected_sha) is str and
+            re.fullmatch('[a-f0-9]{64}', expected_sha) is not None,
+            'ADMIN_FRESH_HOOK_SHIM_CHANGED')
+    raw, digest = _admin_fresh_root_read(path, 8 << 20)
+    require(len(raw) > 65536 and digest == expected_sha,
+            'ADMIN_FRESH_HOOK_SHIM_CHANGED')
+    return raw, digest
+
+
+def _admin_fresh_marker_directory():
+    """Open the one-use marker below a non-Owner-removable root chain."""
+    path = ADMIN_FRESH_MARKER_DIRECTORY
+    require(type(path) is str and path.startswith('/') and
+            not any(part in ('', '.', '..') for part in path.split('/')[1:]),
+            'ADMIN_FRESH_HOOK_MARKER_PATH')
+    parts = path.split('/')[1:]
+    parent = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for index, name in enumerate(parts):
+            before = os.fstat(parent)
+            require(stat.S_ISDIR(before.st_mode)
+                    and before.st_uid in (0, ADMIN_FRESH_ROOT_UID)
+                    and not stat.S_IMODE(before.st_mode) & 0o022,
+                    'ADMIN_FRESH_HOOK_MARKER_CUSTODY')
+            if index == len(parts) - 1:
+                try:
+                    os.mkdir(name, 0o700, dir_fd=parent)
+                    os.fsync(parent)
+                except FileExistsError:
+                    pass
+            child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=parent)
+            named = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            held = os.fstat(child)
+            require((held.st_dev, held.st_ino, held.st_mode, held.st_uid,
+                     held.st_gid) ==
+                    (named.st_dev, named.st_ino, named.st_mode, named.st_uid,
+                     named.st_gid) and stat.S_ISDIR(held.st_mode)
+                    and held.st_uid in (0, ADMIN_FRESH_ROOT_UID)
+                    and not stat.S_IMODE(held.st_mode) & 0o022
+                    and (index != len(parts) - 1 or
+                         (held.st_uid == ADMIN_FRESH_ROOT_UID and
+                          stat.S_IMODE(held.st_mode) == 0o700))
+                    and (os.fstat(parent).st_dev, os.fstat(parent).st_ino,
+                         os.fstat(parent).st_mode, os.fstat(parent).st_uid) ==
+                        (before.st_dev, before.st_ino, before.st_mode,
+                         before.st_uid),
+                    'ADMIN_FRESH_HOOK_MARKER_CUSTODY')
+            os.close(parent)
+            parent = child
+        return parent
+    except BaseException:
+        os.close(parent)
+        raise
+
+
+def _admin_fresh_commit_marker(intent, finished):
+    parent = _admin_fresh_marker_directory()
+    try:
+        name = ADMIN_FRESH_OPERATION_ID + '.json'
+        old, _ = _admin_fresh_root_read(
+            os.path.join(ADMIN_FRESH_MARKER_DIRECTORY, name))
+        require(old == canonical(intent), 'ADMIN_FRESH_HOOK_INTENT_CHANGED')
+        pending = ADMIN_FRESH_OPERATION_ID + '.committed'
+        fd = os.open(pending, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o600, dir_fd=parent)
+        try:
+            raw = canonical(finished)
+            require(os.write(fd, raw) == len(raw),
+                    'ADMIN_FRESH_HOOK_COMMIT_UNKNOWN')
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.rename(pending, name, src_dir_fd=parent, dst_dir_fd=parent)
+        os.fsync(parent)
+        readback, _ = _admin_fresh_root_read(
+            os.path.join(ADMIN_FRESH_MARKER_DIRECTORY, name))
+        require(readback == raw, 'ADMIN_FRESH_HOOK_COMMIT_UNKNOWN')
+    finally:
+        os.close(parent)
+
+
+def _admin_fresh_service_lock():
+    parent = _admin_fresh_marker_directory()
+    try:
+        fd = os.open('service.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW,
+                     0o600, dir_fd=parent)
+        try:
+            held = os.fstat(fd)
+            named = os.stat('service.lock', dir_fd=parent, follow_symlinks=False)
+            require(stat.S_ISREG(held.st_mode)
+                    and held.st_uid == ADMIN_FRESH_ROOT_UID
+                    and stat.S_IMODE(held.st_mode) == 0o600
+                    and (held.st_dev, held.st_ino, held.st_mode,
+                         held.st_uid, held.st_gid) ==
+                        (named.st_dev, named.st_ino, named.st_mode,
+                         named.st_uid, named.st_gid),
+                    'ADMIN_FRESH_HOOK_LOCK_CUSTODY')
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return fd
+        except BaseException:
+            os.close(fd)
+            raise
+    finally:
+        os.close(parent)
+
+
+def admin_fresh_guarded_service_action(operation, request):
+    if not ADMIN_FRESH_HOOK_ACTIVE:
+        return operation(request)
+    lock = _admin_fresh_service_lock()
+    try:
+        if request.get('operation_id') == ADMIN_FRESH_SELF_UPDATE_ID:
+            parent = _admin_fresh_marker_directory()
+            try:
+                try:
+                    os.stat(ADMIN_FRESH_OPERATION_ID + '.json', dir_fd=parent,
+                            follow_symlinks=False)
+                except FileNotFoundError:
+                    pass
+                else:
+                    require(False, 'ADMIN_FRESH_HOOK_ALREADY_CONSUMED')
+            finally:
+                os.close(parent)
+        return operation(request)
+    finally:
+        os.close(lock)
+
+
 def run_admin_fresh_hook():
     if not ADMIN_FRESH_HOOK_ACTIVE:
         return None
+    require(os.geteuid() == ADMIN_FRESH_ROOT_UID and not TEST_MODE,
+            'ADMIN_FRESH_HOOK_ROOT_REQUIRED')
+    lock = _admin_fresh_service_lock()
+    try:
+        return _run_admin_fresh_hook_locked()
+    finally:
+        os.close(lock)
+
+
+def _run_admin_fresh_hook_locked():
     require(os.geteuid() == ADMIN_FRESH_ROOT_UID and not TEST_MODE,
             'ADMIN_FRESH_HOOK_ROOT_REQUIRED')
     require(type(ADMIN_FRESH_SELF_UPDATE_ID) is str
@@ -108,7 +250,10 @@ def run_admin_fresh_hook():
     update_raw, _ = _admin_fresh_root_read(update_path)
     update = json.loads(update_raw)
     installed_path = os.path.join(SERVICE_INSTALL_DIR, 'deploy_shim.py')
-    installed_raw, installed_sha = _admin_fresh_root_read(installed_path)
+    require(type(update) is dict and type(update.get('artifacts')) is dict,
+            'ADMIN_FRESH_HOOK_SELF_UPDATE_UNKNOWN')
+    installed_raw, installed_sha = _admin_fresh_shim_read(
+        installed_path, update['artifacts'].get('deploy_shim.py'))
     require(type(update) is dict
             and update.get('operation_id') == ADMIN_FRESH_SELF_UPDATE_ID
             and update.get('action') == 'SERVICE_UPDATE'
@@ -119,14 +264,12 @@ def run_admin_fresh_hook():
             and update['artifacts'].get('deploy_shim.py') == installed_sha
             and service_current().get('generation') == ADMIN_FRESH_SELF_UPDATE_ID,
             'ADMIN_FRESH_HOOK_SELF_UPDATE_UNKNOWN')
-    # The marker is an actual root-held one-use intent, not a supplied PASS.
-    # Its parent is root-only writable even though STATE_ROOT is root:admin.
-    marker_dir = os.path.dirname(receipt_path(ADMIN_FRESH_OPERATION_ID))
-    parent = os.open(marker_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    # This one-use marker cannot be displaced with STATE_ROOT/receipts.
+    parent = _admin_fresh_marker_directory()
     try:
         meta = os.fstat(parent)
         require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == ADMIN_FRESH_ROOT_UID
-                and not stat.S_IMODE(meta.st_mode) & 0o022,
+                and stat.S_IMODE(meta.st_mode) == 0o700,
                 'ADMIN_FRESH_HOOK_RECEIPT_CUSTODY')
         name = ADMIN_FRESH_OPERATION_ID + '.json'
         intent = {'operation_id': ADMIN_FRESH_OPERATION_ID,
@@ -157,10 +300,6 @@ def run_admin_fresh_hook():
     result = owner.produce()  # Acquires the DS canonical flock; never under shim lock.
     def finish(fresh_sha):
         finished = dict(intent, state='COMMITTED', freshSha256=fresh_sha)
-        write_receipt(ADMIN_FRESH_OPERATION_ID, finished)
-        readback, _ = _admin_fresh_root_read(
-            receipt_path(ADMIN_FRESH_OPERATION_ID))
-        require(readback == canonical(finished),
-                'ADMIN_FRESH_HOOK_COMMIT_UNKNOWN')
+        _admin_fresh_commit_marker(intent, finished)
         return finished
     return ADMIN_FRESH_BINDER(result, owner, finish)
