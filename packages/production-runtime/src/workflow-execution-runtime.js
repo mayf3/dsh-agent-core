@@ -93,12 +93,11 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   }
   const gateway = ctx.get('brokerGateway')
   const principalAccess = ctx.get('agentPrincipalResolutionAccess')
-  // FIXED_OPERATION_V1 candidate: when present, the deliver seam notes the
-  // trusted workflow provenance for the turn the Router reports, so that
-  // fixed_operation calls from inside an attempt resolve provenance
-  // RUNTIME-side. Absent service or receipt field => nothing is noted =>
-  // those turns fail closed inside the registry (never widened here).
-  const fixedOperationAccess = ctx.get('fixedOperationAccess')
+  // Runtime-owned Workflow execution context: the exact Router turn is bound
+  // to the trusted workflow_execution provenance at delivery time. Fixed
+  // Operations and Progress Checkpoints both resolve this mapping; model args
+  // can never mint workflow/node/attempt coordinates.
+  const workflowExecutionContextAccess = ctx.get('workflowExecutionContextAccess')
   if (gateway === undefined) throw new TypeError('workflow-execution-runtime: brokerGateway service missing — mount after applyBroker')
   if (principalAccess?.handlers?.agent_resolve_principal?.resolve === undefined) {
     throw new TypeError('workflow-execution-runtime: agentPrincipalResolutionAccess service missing — mount after its provide')
@@ -170,9 +169,14 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
         if (
           messageOrigin?.kind === 'workflow_execution'
           && typeof receipt?.turnExecutionId === 'string' && receipt.turnExecutionId !== ''
-          && typeof fixedOperationAccess?.noteWorkflowTurn === 'function'
+          && typeof workflowExecutionContextAccess?.noteWorkflowTurn === 'function'
         ) {
-          fixedOperationAccess.noteWorkflowTurn({ turnExecutionId: receipt.turnExecutionId, provenance: messageOrigin })
+          workflowExecutionContextAccess.noteWorkflowTurn({
+            turnExecutionId: receipt.turnExecutionId,
+            provenance: messageOrigin,
+            agentId,
+            sessionId: receipt.sessionId,
+          })
         }
         return {
           ok: true,
