@@ -108,6 +108,41 @@ class RootJournalTests(unittest.TestCase):
             'status': 'COMMITTED_RECEIPT_PRESENT',
             'recordSha256': hashlib.sha256(raw).hexdigest()})
 
+    def test_unsupported_transaction_record_never_reports_commit(self):
+        self.make_operation()
+        self.write_record('intent.json', intent())
+        self.write_record('committed.json', committed())
+        (self.operation / 'aborted.json').write_bytes(b'{}\n')
+        (self.operation / 'aborted.json').chmod(0o600)
+        self.assertEqual(self.observe(), {'ok': True, 'status': 'UNKNOWN',
+                                          'recordSha256': None})
+
+    def test_unsupported_transaction_record_never_reports_intent_digest(self):
+        self.make_operation()
+        self.write_record('intent.json', intent())
+        (self.operation / 'failed.json').write_bytes(b'{}\n')
+        (self.operation / 'failed.json').chmod(0o600)
+        self.assertEqual(self.observe(), {'ok': True, 'status': 'UNKNOWN',
+                                          'recordSha256': None})
+
+    def test_launched_writer_auxiliary_files_have_bounded_metadata_only(self):
+        self.make_operation()
+        self.write_record('intent.json', intent())
+        raw = self.write_record('committed.json', committed())
+        old_shim = self.parent / 'old-shim'
+        old_shim.write_bytes(b'old shim')
+        old_shim.chmod(0o555)
+        (self.operation / 'rollback.py').hardlink_to(old_shim)
+        (self.operation / 'candidate.py').write_bytes(b'new shim')
+        (self.operation / 'candidate.py').chmod(0o400)
+        self.assertEqual(self.observe(), {'ok': True,
+            'status': 'COMMITTED_RECEIPT_PRESENT',
+            'recordSha256': hashlib.sha256(raw).hexdigest()})
+        (self.operation / 'candidate.py').unlink()
+        (self.operation / 'candidate.py').symlink_to('rollback.py')
+        self.assertEqual(self.observe(), {'ok': True, 'status': 'UNKNOWN',
+                                          'recordSha256': None})
+
     def test_reader_opens_only_readonly_descriptors(self):
         self.make_operation()
         self.write_record('intent.json', intent())
@@ -219,7 +254,7 @@ class RootJournalTests(unittest.TestCase):
     def test_named_file_replacement_during_read_is_unknown(self):
         self.make_operation()
         self.write_record('intent.json', intent())
-        replacement = self.operation / 'replacement'
+        replacement = self.parent / 'replacement'
         replacement.write_bytes(encoded(intent()))
         replacement.chmod(0o600)
         real_read = os.read
