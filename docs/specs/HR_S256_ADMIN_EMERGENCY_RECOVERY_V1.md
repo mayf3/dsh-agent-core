@@ -1,6 +1,6 @@
 ---
 spec_id: HR_S256_ADMIN_EMERGENCY_RECOVERY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -11,16 +11,24 @@ external_authorities: []
 supersedes: []
 superseded_by: null
 scope: [one fixed s256 admin-authenticated emergency recovery profile]
+accepted_by: original Deployment Agent under mayf3 standing nonproduction technical delegation
+accepted_date: 2026-09-28
+accepted_reviewed_head: 435fdd01b1024361415bd8aedb6be31b6e8cfb79
+accepted_reviewed_spec_sha256: 0e80887d4d5f1e95fbd6aeac0f62694aa18ca637a90f7c7ad42511328e3571c6
+independent_review_sha256: 0a636410486870303615df4e77eb58e65c883907a7f3e5f58d384063fd0144c1
+delegated_acceptance_sha256: a1520e2f879172c905c347313368f35aeaf7bbbdc2cea160b1be157c0b012d21
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-S256-ADMIN-EMERGENCY-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
 ---
 
 # Fixed s256 admin emergency recovery — proposal
 
-This is a separate, docs-first proposed mode. It does not change the accepted
+This is a separate, docs-first accepted mode for bounded nonproduction
+implementation only. It does not change the accepted
 R4 V2 whole-host termination class, RQ-007 floor and validator prerequisite,
 closed settlement vocabulary, or the CTO-specific QF/OCB qualification path.
-It authorizes no implementation, installation, stop, protected read, fence
-clear, new HR prompt, or production operation until exact independent review,
-Owner acceptance, and an applicable canonical lifecycle make it authority.
+Its reviewed delegated technical acceptance permits implementation only after
+this lifecycle is in the applicable canonical base. It grants no installation,
+stop, protected read, fence clear, new HR prompt or production operation.
 
 ## DEVELOPMENT_PREFLIGHT
 

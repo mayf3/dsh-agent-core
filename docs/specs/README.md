@@ -362,10 +362,18 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1` | accepted 2026-09-27 by original Deployment Agent under standing technical delegation, exact text `4a8b1871…` / review `502b35a0…` / acceptance `4aa7320c…`; effective after canonical integration | contracts; production apply none | MI-C03 and V2 V10/RQ-007 fixed original separate proof-executor private OWN-event completion; original receipts/output/trust unchanged, UNKNOWN/no seal |
+| `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1` | accepted historical; superseded by V2 in this atomic lifecycle, original text/review/acceptance retained | historical only | MI-C03 and V2 V10/RQ-007 original separate proof-executor private OWN-event completion |
+| `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `4db7eb8d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | preserves CTO proof; adds one fixed root-owned tool-free native canary qualification source, passive non-CTO alternate; same closed receipts and UNKNOWN/no seal |
 
 ## Fixed original HR proof-executor qualification phase
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1` | accepted 2026-09-27 under standing delegated technical acceptance `d3b580c5…`, reviewed exact `733853df…` / `33c86498…`; effective after canonical integration | contracts; production apply none | original sealed root/FD-owned qualification-only startup on the same final whole-app; original procedure then closed proofs, unchanged subsequent HR proof-before-stop; no HR bundle/settlement/ID consumption |
+| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1` | accepted historical; superseded by V2 in this atomic lifecycle, original text/review/acceptance retained | historical only | original sealed root/FD-owned qualification-only startup and CTO Owner-turn requirement |
+| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `1261e5de…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | unchanged CTO/OCB branch plus separately eligible fixed admin canary/passive turns; one original root executor, closed receipt/phase semantics |
+
+## Fixed s256 admin emergency recovery
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_S256_ADMIN_EMERGENCY_RECOVERY_V1` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `0e80887d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | distinct peer-authenticated fixed action/ID, genuine CTO-free qualification prerequisite, one whole-host s256 cut, old effect UNKNOWN/no replay and conflict-specific restrictions |

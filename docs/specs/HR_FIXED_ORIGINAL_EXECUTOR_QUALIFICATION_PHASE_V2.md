@@ -1,6 +1,6 @@
 ---
 spec_id: HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -11,20 +11,27 @@ external_authorities: []
 supersedes: [HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1]
 superseded_by: null
 scope: [original separate executor fixed qualification-only private startup phase with CTO and fixed admin turn eligibility]
+accepted_by: original Deployment Agent under mayf3 standing nonproduction technical delegation
+accepted_date: 2026-09-28
+accepted_reviewed_head: 435fdd01b1024361415bd8aedb6be31b6e8cfb79
+accepted_reviewed_spec_sha256: 1261e5de2a4f467fa3adc242755284112143d04803d7007b88a12e3bec90e641
+independent_review_sha256: 0a636410486870303615df4e77eb58e65c883907a7f3e5f58d384063fd0144c1
+delegated_acceptance_sha256: a1520e2f879172c905c347313368f35aeaf7bbbdc2cea160b1be157c0b012d21
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-S256-ADMIN-EMERGENCY-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
 ---
 
 # Original executor qualification phase — whole-authority successor proposal
 
-This is a docs-first, whole-authority successor to accepted QF V1. It becomes
-effective only together with proposed
-`HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2` (QE2), after independent review,
-attributable Owner acceptance and one applicable canonical lifecycle. Until
-then QF V1, QE V1 and the CTO-specific OCB child amendment remain accepted;
-this proposal authorizes no implementation, deployment, root/host action,
-protected read, restart, message, receipt seal or HR recovery. The atomic
-lifecycle will mark both accepted QF V1 and QE V1 `superseded_by` their V2
-successors, update their governing index links, and leave their contract bodies
-and historical acceptance records intact. OCB V1 remains a CTO-branch child;
+This is the accepted docs-first, whole-authority successor to QF V1, bound
+atomically to accepted `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2` (QE2).
+Independent review and attributable delegated technical acceptance are pinned
+above; effectiveness requires this exact lifecycle in the applicable canonical
+base. Acceptance permits bounded nonproduction implementation only, no
+deployment, root/host action, protected read, restart, message, receipt seal
+or HR recovery. The atomic lifecycle marks both QF V1 and QE V1
+`superseded_by` their V2 successors, updates the governing index, and leaves
+their contract bodies and historical acceptance records intact. OCB V1
+remains a CTO-branch child;
 its seed, exact sender readback and OCB-C06 apply only when the original CTO
 branch is selected. OCB does not select, constrain or supply evidence for the
 new fixed admin branch.

@@ -8,7 +8,7 @@ production_apply_authority: none
 owners: [mayf3]
 governed_by: [HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1, HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1]
 supersedes: []
-superseded_by: null
+superseded_by: HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2
 scope: [original separate executor fixed qualification-only private startup phase]
 base_revision: 95e56dad66fe76603ab3c85e826d2a3cb0510b66
 accepted_by: original Deployment Agent under mayf3 standing ordinary technical delegation

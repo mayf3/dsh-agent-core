@@ -1,6 +1,6 @@
 ---
 spec_id: HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -11,19 +11,25 @@ external_authorities: []
 supersedes: [HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1]
 superseded_by: null
 scope: [fixed original separate proof-executor private causal qualification completion seam]
+accepted_by: original Deployment Agent under mayf3 standing nonproduction technical delegation
+accepted_date: 2026-09-28
+accepted_reviewed_head: 435fdd01b1024361415bd8aedb6be31b6e8cfb79
+accepted_reviewed_spec_sha256: 4db7eb8dec5a9be9bacba4d1d271dd6668eef6674982805ec9c760326d3110ff
+independent_review_sha256: 0a636410486870303615df4e77eb58e65c883907a7f3e5f58d384063fd0144c1
+delegated_acceptance_sha256: a1520e2f879172c905c347313368f35aeaf7bbbdc2cea160b1be157c0b012d21
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-S256-ADMIN-EMERGENCY-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
 ---
 
 # Fixed original-executor causal qualification — whole-authority successor proposal
 
-This is the complete successor for the accepted V1 receipt-eligibility decision.
-It must be accepted and activated **atomically** with proposed
-`HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2`: QF V1 C01/C03/C04
-otherwise still require Owner-delivered turns for every proof. QE V1 and QF
-V1 remain accepted until independent whole-authority review and one atomic
-Owner-accepted lifecycle transaction updates their `superseded_by` backlinks
-to their V2 successors and the governing index. Their accepted contract
-bodies and historical records are preserved. This document has no current code or
-production authority. It preserves V1's original CTO-qualified branch and
+This is the accepted complete successor for the V1 receipt-eligibility decision.
+Its lifecycle is atomic with
+`HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2`; the V1 predecessor
+backlinks and governing index are updated in the same docs transaction.
+The predecessor contract bodies and historical records remain intact.
+The attributable technical acceptance grants bounded nonproduction
+implementation after this lifecycle is canonical, **not** any production
+effect or current qualification proof. This document preserves V1's original CTO-qualified branch and
 adds exactly one CTO-free admin branch under the **same original separate
 root-authenticated proof executor**. Its primary proof-turn source is a new,
 fixed, tool-free private qualification canary ingress; already occurring
