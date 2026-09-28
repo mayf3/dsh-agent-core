@@ -1,0 +1,11 @@
+# HR first-effect root receipt readback — independent semantic review
+
+Date: 2026-09-29. Reviewer: independent semantic reviewer; not the Spec author.
+
+Review target: `docs/specs/HR_SHIM_FIRST_EFFECT_ROOT_RECEIPT_READBACK_V1.md`, final SHA-256 `63f84df802a172facc0feef4182b24e36fa474871420751e51e1abc801c3b25a`, on integration base `207ab24d6ef9801cf646f7944dda2c9b3c13987a` (original authoring base `fbd2e399acc44ec574b82a2edb979be6364effac`). Verdict: **PASS for final Spec semantics only**. This review recommendation does not itself confer Spec acceptance, implementation approval, production authorization, or protected host readback.
+
+The frozen blocker union from the first review had two items. Both are closed in this exact revision: the Spec now follows the launched v3 writer order (operation directory, intent, then rollback capture), classifies an empty or rollback-only directory as UNKNOWN, and requires the launched seven-field intent and ten-field committed receipt schemas before reporting a committed record. The reviewed packet manifest SHA-256 is `2c5fcc99c15b49f3c9101200457b3efef1a569176be191056e1242ecfb38f12e`; its `REQUEST.json` binds `fixed_host.py` SHA-256 `d6957a856558f901d3133c178b12b0387168877ae9abcc66cbfabaad8ea464b1` and `installer.py` SHA-256 `ebcf20834e03bbda121bc091f9956e37a3d6f2916f6f4a50926088c97526b2f8`. I compared those source files and the fixed receipt validation in `admin_fresh_shim_hook.py` with the final contract.
+
+The exact action admits only the existing Owner peer UID 502, returns a bounded status and digest without journal contents, and never grants replay or HR admission. The Spec correctly treats `DS_UPDATE` as a separate privileged installation with its own authority and leaves the cancelled first effect UNKNOWN until an independently authorized root read. No product code, installer, OS authorization dialog, or live protected journal was exercised in this review.
+
+The earlier PASS bound Spec SHA-256 `7233c08e8ba7473d5de04aa887d22835c115a59d9e7eb04c475d1bb75443d53c`. The final change only marked the Spec accepted, changed proposed wording to present-tense nonproduction scope, and replaced open questions with an acceptance-scope statement. I checked those changed sections in the final file; they do not alter the reviewed contracts or installation boundary.
