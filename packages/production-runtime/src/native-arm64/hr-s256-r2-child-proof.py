@@ -112,7 +112,8 @@ def prove(challenge_fd, window_fd, receipt_sha256, *, trusted_uid=0):
             channel.close()
 
 
-def authorization_projection(fd, digest, approved_frame, *, trusted_uid=0):
+def authorization_projection(fd, digest, approved_frame, *, trusted_uid=0,
+                             expected_operation_id='hr-s256-trusted-quiescence-cut-20260925-v1'):
     """Read an inherited immutable receipt capability after root FD approval.
 
     No path/host/nonce/PASS input can authorize this. The CLI fixes trusted_uid
@@ -141,7 +142,7 @@ def authorization_projection(fd, digest, approved_frame, *, trusted_uid=0):
         require(raw == canonical and type(value) is dict and set(value) == {
             'version', 'operationId', 'phase', 'intentSha256', 'authorization'}
             and value['version'] == 1 and value['phase'] == 'LAUNCH_AUTHORIZED'
-            and value['operationId'] == 'hr-s256-trusted-quiescence-cut-20260925-v1',
+            and value['operationId'] == expected_operation_id,
             'AUTHORIZATION_RECEIPT_INVALID')
         auth = value['authorization']
         require(type(auth) is dict and set(auth) == {'operationId', 'hostId', 'startupNonce',
@@ -197,10 +198,12 @@ def qualification_projection(descriptor,digest,approved_frame):
             'procedureSha256','startupNonce'}
             and raw == json.dumps(value,sort_keys=True,separators=(',',':')).encode(),
             'QUALIFICATION_CONTEXT_SHAPE')
-        require(value['role'] == 'original_executor_qualification'
-                and value['phase'] in ('deployment_start','restart_a','restart_b')
-                and value['procedureSha256'] ==
-                'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e',
+        require((value['role'], value['procedureSha256']) in (
+                    ('original_executor_qualification',
+                     'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e'),
+                    ('original_executor_admin_qualification',
+                     'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44'))
+                and value['phase'] in ('deployment_start','restart_a','restart_b'),
                 'QUALIFICATION_CONTEXT_BINDING')
         for key in ('consumingBinarySha256','validatorSha256','entryManifestSha256','startupNonce'):
             require(type(value[key]) is str and len(value[key]) == 64
@@ -216,11 +219,16 @@ def qualification_projection(descriptor,digest,approved_frame):
 if __name__ == "__main__":
     try:
         require((len(sys.argv) == 5 and sys.argv[1] == "--child-prove") or
-                (len(sys.argv) == 6 and sys.argv[1] in ("--startup-prove","--qualification-prove")), "INVOCATION_INVALID")
+                (len(sys.argv) == 6 and sys.argv[1] in ("--startup-prove","--startup-prove-admin",
+                                                     "--qualification-prove")), "INVOCATION_INVALID")
         approved = prove(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
         if sys.argv[1] == "--startup-prove":
             print(json.dumps(authorization_projection(int(sys.argv[5]), sys.argv[4], approved),
                              separators=(',', ':')))
+        if sys.argv[1] == "--startup-prove-admin":
+            print(json.dumps(authorization_projection(int(sys.argv[5]), sys.argv[4], approved,
+                expected_operation_id='hr-s256-admin-emergency-cut-20260928-v1'),
+                separators=(',', ':')))
         if sys.argv[1] == '--qualification-prove':
             print(json.dumps(qualification_projection(int(sys.argv[5]),sys.argv[4],approved),
                              separators=(',',':')))

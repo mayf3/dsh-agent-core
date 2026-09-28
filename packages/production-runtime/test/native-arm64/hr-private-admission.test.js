@@ -66,4 +66,13 @@ test('private request rejects wrong attempt, receipt, handle and unclosed shapes
   assert.throws(()=>runtimeAdmissionProjection(missing,service,binding),/R2_ADMISSION_BINDING/)
   assert.throws(()=>runtimeAdmissionProjection({...request(),privatePayload:'private'},service,binding),/R2_ADMISSION_BINDING/)
 })
+test('admin H5 projection binds its distinct owned operation without admitting a caller-selected ID', t=>{
+  const service=providedRuntime(t)
+  const admin='hr-s256-admin-emergency-cut-20260928-v1'
+  const fixed={...binding,operationId:admin}
+  const query={...request(),operationId:admin}
+  assert.equal(runtimeAdmissionProjection(query,service,fixed).operationId,admin)
+  assert.throws(()=>runtimeAdmissionProjection(request(),service,fixed),/R2_ADMISSION_BINDING/)
+  assert.throws(()=>runtimeAdmissionProjection(query,service,{...fixed,operationId:'arbitrary'}),/R2_ADMISSION_BINDING/)
+})
 // All process APIs remain denied through target construction and every disposer.

@@ -4,12 +4,11 @@ import {
   defaultEvidenceIO, namedReceipt, ownedFile, proofReject, sha256,
   verifyCurrentWindow,
 } from './quiescence-custody.js'
-import { resolveFixedR2Journal, FIXED_R2_OPERATION } from './quiescence-fixed-r2.js'
+import { resolveFixedR2Journal, FIXED_R2_OPERATION, FIXED_ADMIN_OPERATION } from './quiescence-fixed-r2.js'
 import { compareQuiescenceReplayPreimage } from './quiescence-replay-preimage.js'
 
 const HASH = /^[a-f0-9]{64}$/
 const MAX_BUNDLE_BYTES = 65536
-const FIXED_S256_OPERATION_ID = 'hr-s256-trusted-quiescence-cut-20260925-v1'
 
 function exactKeys(value, names, code) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)
@@ -44,7 +43,8 @@ function verifyShape(bundle) {
   exactKeys(bundle.custody, ['executedAs', 'producedBy', 'evidenceDir'], 'V2_custody_shape')
   const cut = bundle.recoveryCutover
   if (typeof cut.operationId !== 'string'
-      || (cut.operationId !== FIXED_S256_OPERATION_ID && !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId))
+      || (cut.operationId !== FIXED_R2_OPERATION && cut.operationId !== FIXED_ADMIN_OPERATION
+        && !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId))
       || typeof cut.hostId !== 'string' || cut.hostId.length < 1 || cut.hostId.length > 128
       || typeof cut.startupNonce !== 'string' || cut.startupNonce.length < 8 || cut.startupNonce.length > 128) proofReject('V2_identity_invalid')
   for (const key of ['subjectPreimageSha256', 'exclusiveWindowReceiptSha256',
@@ -174,7 +174,8 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
   try { bundle = JSON.parse(bytes.toString('utf8')) } catch { proofReject('V2_bundle_json_invalid') }
   verifyShape(bundle)
   const cut = bundle.recoveryCutover
-  if (basename(bundleFile) === 'bundle.json' && cut.operationId !== FIXED_R2_OPERATION) proofReject('V9_fixed_operation_required')
+  if (basename(bundleFile) === 'bundle.json'
+      && cut.operationId !== FIXED_R2_OPERATION && cut.operationId !== FIXED_ADMIN_OPERATION) proofReject('V9_fixed_operation_required')
   if (bundle.custody.evidenceDir !== evidenceDir || cut.hostId !== startup.hostId
       || cut.startupNonce !== startup.startupNonce
       || cut.consumingBinarySha256 !== startup.consumingBinarySha256
@@ -183,7 +184,7 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
       || bundle.subject.runtimeEpoch === store.runtimeEpoch
       || !store.runtimeEpochs.has(bundle.subject.runtimeEpoch)) proofReject('V4_epoch_invalid')
   const { record, alreadySettled } = verifyRecord(store, bundle)
-  const fixed = cut.operationId === FIXED_R2_OPERATION
+  const fixed = cut.operationId === FIXED_R2_OPERATION || cut.operationId === FIXED_ADMIN_OPERATION
     ? resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io) : null
   if (fixed) compareQuiescenceReplayPreimage({ record, bundleBytes: bytes,
     commitment: fixed.commitment, consumingRuntimeEpoch: store.runtimeEpoch,

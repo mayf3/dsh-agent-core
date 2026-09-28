@@ -56,6 +56,15 @@ function provenSourceTurnExecutionId(proc, rpcMeta) {
  */
 export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway, switchAgent }) {
   return async (method, params, rpcMeta = {}) => {
+    // QE2: a child prepared for the one fixed canary has no parent-side
+    // Broker, switch or alternate-route capability. Reject before gateway
+    // lookup or effect dispatch; forged child turn metadata grants nothing.
+    const fixedAdminProc = getProc()
+    const fixedAdminQualification = fixedAdminProc?.fixedAdminQualification
+    if (fixedAdminQualification !== null && fixedAdminQualification !== undefined) {
+      fixedAdminProc.fixedAdminEffectAttempted = true
+      return { ok: false, error: { code: 'FIXED_ADMIN_CANARY_EFFECT_DENIED' } }
+    }
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never

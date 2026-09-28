@@ -70,6 +70,7 @@ test('gated authentication joins separate root-context descriptors without HR in
       '--hr-qf-window-fd','4','--hr-qf-context-fd','5','--root','/fixed/runtime']
     assert.deepEqual(Array.from(await owned.authenticateFixedStartupContext()),['--root','/fixed/runtime'])
     assert.equal(owned.getFixedStartupContext(),undefined)
+    assert.equal(owned.hasFixedQualificationContext(),true)
     assert.equal(commands.length,1)
     assert.equal(commands[0][0],'/usr/bin/python3')
     assert.equal(commands[0][1][3],'--qualification-prove')
@@ -81,6 +82,88 @@ test('gated authentication joins separate root-context descriptors without HR in
     fs.fstatSync=denialFS.fstatSync;fs.readSync=denialFS.readSync;processes.spawnSync=denialSpawn
     syncBuiltinESMExports()
   }
+})
+
+test('gated authentication admits only the exact admin root role and procedure pair', async () => {
+  const body={role:'original_executor_admin_qualification',phase:'deployment_start',
+    consumingBinarySha256:'a'.repeat(64),validatorSha256:'c'.repeat(64),
+    entryManifestSha256:'e'.repeat(64),
+    procedureSha256:'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44',
+    startupNonce:'b'.repeat(64)}
+  const raw=Buffer.from(JSON.stringify(body,Object.keys(body).sort()))
+  const digest=crypto.createHash('sha256').update(raw).digest('hex')
+  const oldFstat=fs.fstatSync,oldRead=fs.readSync,oldSpawn=processes.spawnSync,oldArgv=process.argv
+  fs.fstatSync=()=>({uid:0,nlink:1,mode:0o100600,size:raw.length,dev:1,ino:8,mtimeMs:1,ctimeMs:1,isFile:()=>true})
+  fs.readSync=(fd,buffer,offset,length,position)=>raw.copy(buffer,offset,position,position+length)
+  processes.spawnSync=()=>({status:0,stdout:JSON.stringify(body)})
+  syncBuiltinESMExports()
+  try {
+    const owned=await memoryModule(exactSource,originalURL.href,cached)
+    process.argv=['node','gated','--hr-qf-context-sha256',digest,'--hr-qf-challenge-fd','3',
+      '--hr-qf-window-fd','4','--hr-qf-context-fd','5']
+    assert.deepEqual(Array.from(await owned.authenticateFixedStartupContext()),[])
+    assert.equal(owned.getFixedStartupContext(),undefined)
+    assert.equal(owned.hasFixedQualificationContext(),true)
+    assert.deepEqual(owned.getFixedAdminQualificationContext(),body)
+    await assert.rejects(owned.authenticateFixedStartupContext(),/NO_REPLAY/)
+    assert.deepEqual(calls,[])
+  } finally {
+    process.argv=oldArgv;fs.fstatSync=oldFstat;fs.readSync=oldRead;processes.spawnSync=oldSpawn
+    syncBuiltinESMExports()
+  }
+})
+
+test('fixed admin private query requires real settled same-child native turn', async () => {
+  const binding={role:'original_executor_admin_qualification',phase:'restart_a',
+    consumingBinarySha256:'a'.repeat(64),validatorSha256:'c'.repeat(64),
+    entryManifestSha256:'e'.repeat(64),
+    procedureSha256:'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44',
+    startupNonce:'b'.repeat(64)}
+  const query={context:binding,challenge:'d'.repeat(32),
+    deadlineMonotonicNs:String(process.hrtime.bigint()+15_000_000_000n)}
+  const handle='turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s257'
+  const record={handle,agentId:'agt_efficiency-agent',runtimeEpoch:'owned-runtime',
+    processGeneration:3,settlementResult:'completed',fenceState:'armed',
+    messageId:'actual-native-prompt-id',updatedAt:10,
+    finalAssistantOutput:{originalBytes:19,text:'actual-native-reply',truncated:false}}
+  const proc={processGeneration:3,fixedAdminQualification:{role:'fixed_admin_qualification',
+    agentId:'agt_efficiency-agent',phase:'restart_a',hostId:'961534a5-8c94-487d-8e55-d324a54e821a',
+    packageSha256:binding.entryManifestSha256,consumingBinarySha256:binding.consumingBinarySha256,
+    startupNonce:binding.startupNonce,processGeneration:3},fixedAdminEffectAttempted:false,
+    qualifyFixedTurn:async()=>({status:'completed',reconciliationHandle:handle,messageId:record.messageId,reply:'actual-native-reply'})}
+  const store={assertBusinessAdmissionReady(){},activeFenceForAgent(){return null},
+    getTurnReconciliation:()=>({state:'settled',snapshot:record})}
+  const service={reconciliationRuntimeStatus:()=>({generationId:'owned-runtime',health:'healthy',
+    businessAdmission:'open',blockedReason:null,unresolvedRecoveries:0}),
+    getTurnReconciliation:store.getTurnReconciliation}
+  const run=()=>context.fixedAdminCanaryProjection(query,service,binding,store,async()=>proc)
+  const frame=await run()
+  assert.equal(frame.handle,handle)
+  assert.equal(frame.nativeMessageSha256,crypto.createHash('sha256').update(record.messageId).digest('hex'))
+  assert.equal(frame.nativeReceiptSha256,crypto.createHash('sha256').update(`${handle}\0${record.messageId}`).digest('hex'))
+  assert.equal(frame.runtimeGeneration,'owned-runtime')
+  assert.deepEqual(calls,[])
+})
+
+test('admin private query rejects wrong phase, expired deadline and fenced store before child creation', async () => {
+  const binding={role:'original_executor_admin_qualification',phase:'restart_b',
+    consumingBinarySha256:'a'.repeat(64),validatorSha256:'c'.repeat(64),
+    entryManifestSha256:'e'.repeat(64),
+    procedureSha256:'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44',
+    startupNonce:'b'.repeat(64)}
+  const query={context:binding,challenge:'d'.repeat(32),
+    deadlineMonotonicNs:String(process.hrtime.bigint()+10_000_000_000n)}
+  let started=0,read=0
+  const service={reconciliationRuntimeStatus(){read++;throw new Error('unexpected read')}}
+  const store={assertBusinessAdmissionReady(){},activeFenceForAgent(){return 'old-unknown'}}
+  const start=async()=>{started++;throw new Error('unexpected start')}
+  for (const changed of [{...query,context:{...binding,phase:'restart_a'}},
+    {...query,deadlineMonotonicNs:'1'},query]) {
+    await assert.rejects(context.fixedAdminCanaryProjection(changed,service,binding,store,start))
+  }
+  assert.equal(started,0)
+  assert.equal(read,0)
+  assert.deepEqual(calls,[])
 })
 
 

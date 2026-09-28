@@ -37,6 +37,7 @@ import z from '@deepseek-ai/schemastery'
 
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
+import { createFixedAdminChildPolicy } from './fixed-admin-tool-free.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
@@ -64,6 +65,8 @@ export function apply(ctx) {
   // preserves its origin across delayed async work, so an RPC born in turn A
   // cannot inherit turn B merely because B is current when it reaches stdout.
   const rpcTurnContext = new AsyncLocalStorage()
+  let fixedAdminPolicy
+  let fixedAdminAttempted = false
   const exit = () => { process.exit(0) }
   const notify = (method, params) => {
     process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', method, params })}\n`)
@@ -182,6 +185,19 @@ export function apply(ctx) {
     try {
       let result
       if (method === 'initialize') {
+        // Only the parent-owned per-agent JSON-RPC pipe can deliver this
+        // private qualification context. No caller-facing Router ingress
+        // forwards it; an unavailable SDK guard/assembly hook is fatal before
+        // any canary prompt can be written.
+        if (params?.fixedAdminQualification !== undefined) {
+          if (fixedAdminAttempted) throw Object.assign(new Error('fixed admin child already attempted'), {
+            code: 'FIXED_ADMIN_CANARY_NO_REPLAY',
+          })
+          fixedAdminAttempted = true
+          const policy = createFixedAdminChildPolicy(ctx)
+          fixedAdminPolicy = policy
+          policy.arm(params.fixedAdminQualification)
+        }
         cwd = params?.cwd ?? process.cwd()
         provider = params?.provider ?? provider
         model = params?.model ?? model
@@ -192,8 +208,17 @@ export function apply(ctx) {
           route: { provider, model },
           registeredProviders,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
+          ...(fixedAdminPolicy === undefined ? {} : { fixedAdminToolPolicy: {
+            armed: fixedAdminPolicy.armed(), startupNonce: params.fixedAdminQualification.startupNonce,
+          } }),
         }
       } else if (method === 'session/prompt') {
+        if (fixedAdminAttempted && fixedAdminPolicy === undefined) {
+          throw Object.assign(new Error('fixed admin child guard unavailable'), {
+            code: 'FIXED_ADMIN_TOOL_ENFORCEMENT_UNAVAILABLE',
+          })
+        }
+        fixedAdminPolicy?.consumePrompt(params?.sessionId, params?.contentBlocks ?? [], params?.messageOrigin)
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
         // initialize-time process cwd (legacy/scheduler callers).

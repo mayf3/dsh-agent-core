@@ -19,7 +19,7 @@ def _deploy_owned(owner):
     require(type(binding) is _DeploymentBinding,'ORIGINAL_DEPLOYMENT_UNBOUND')
     require(binding.final_binary_sha256 == owner._binding.consuming_binary_sha256,
             'ORIGINAL_DEPLOYMENT_BINARY_MISMATCH')
-    raw = _descriptor_bytes(owner._daemon_fd,DAEMON_SHA,1 << 20)
+    raw = _descriptor_bytes(owner._daemon_fd,DAEMON_SHA,128 * (1 << 20))
     scope = {'__name__':'_original_fixed_deployment_instance',
              '__file__':'original-pinned-deployment-system.py'}
     exec(compile(raw,scope['__file__'],'exec'),scope)
@@ -102,6 +102,7 @@ def _deploy_owned(owner):
     scope['restart_runtime'] = qualification_start
     # Exact existing DEPLOY grammar, private fixed values only. No public
     # request is added; no installed daemon/client or E7 handler is replaced.
+    owner._effect_started = True  # No pre-effect failure may be replayed past this edge.
     result = scope['deploy']({'action':'DEPLOY','operation_id':ID + '-deploy',
         'unit':'scheduler-whole-main','artifact_tree_sha256':binding.final_binary_sha256,
         'expected_tree_sha256':binding.preimage_binary_sha256,
