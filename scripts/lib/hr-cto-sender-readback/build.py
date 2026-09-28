@@ -48,7 +48,7 @@ def main():
     select = select.replace('ROUTER_INGRESS_BUNDLE_GZIP_B64', 'HR_CTO_BUNDLE_GZIP_B64')
     addition = '\nHR_CTO_BUNDLE_SHA = '+repr(sha(bundle))+'\n'
     addition += 'HR_CTO_BUNDLE_GZIP_B64 = '+repr(base64.b64encode(gzip.compress(bundle,mtime=0)).decode())+'\n'
-    addition += select+'\n\n'+(HERE/'cto_action.py').read_text()+'\n\n'
+    addition += select+'\n\n'+(HERE/'cto_ledger.py').read_text()+'\n\n'+(HERE/'cto_action.py').read_text()+'\n\n'
     source = source.replace('def handle(raw, peer=None):', addition+'def handle(raw, peer=None):',1)
     source = source.replace('        allowed = {', '        allowed = {\n            "HR_CTO_OWNER_SENDER_HASH_READBACK_V1": {"action", "operation_id", "feishu_message_id"},',1)
     anchor = '        if action in ("P0_TRAVEL_TERMINAL_READBACK_V1","P0_TRAVEL_TERMINAL_READBACK_STATUS_V1"):'

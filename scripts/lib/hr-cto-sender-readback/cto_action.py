@@ -8,9 +8,7 @@ HR_CTO_REQUEST_SHA256 = None
 
 def hr_cto_hash_readback(request, peer, raw):
     """One fixed Owner read. Every outbound error is a bounded static code."""
-    lock_fd = None
-    custody_fds = []
-    claimed = False
+    ledger = None
     try:
         require(peer == AUTHORIZED_OWNER_UID == 502, 'PEER_UNAUTHORIZED')
 
@@ -32,57 +30,16 @@ def hr_cto_hash_readback(request, peer, raw):
         require(HR_CTO_REQUEST_SHA256 is not None, 'HR_CTO_BINDING_UNBOUND')
         request_sha = sha_bytes(canonical(request))
         require(request_sha == HR_CTO_REQUEST_SHA256, 'HR_CTO_EXACT_REQUEST_REQUIRED')
-        lock_fd = mutation_lock()
-        lock_meta = os.fstat(lock_fd)
-        root_uid = os.getuid() if TEST_MODE else 0
-        require(stat.S_ISREG(lock_meta.st_mode) and lock_meta.st_uid == root_uid
-                and lock_meta.st_nlink == 1 and not lock_meta.st_mode & 0o022,
-                'HR_CTO_LOCK_CUSTODY')
-        state_meta = os.lstat(STATE_ROOT)
-        require(stat.S_ISDIR(state_meta.st_mode) and state_meta.st_uid == root_uid,
-                'HR_CTO_STATE_CUSTODY')
-        operation_dir = os.path.join(STATE_ROOT, 'hr-cto-owner-sender-readback')
-        require(not os.path.lexists(operation_dir)
-                and not os.path.lexists(receipt_path(HR_CTO_READ_ID)),
-                'HR_CTO_OPERATION_CONSUMED')
-        # Exclusive fixed directory is itself a tombstone if crash precedes INTENT.
-        os.mkdir(operation_dir, 0o700)
-        claimed = True
-        def identity(meta):
-            return (meta.st_dev, meta.st_ino, meta.st_uid, meta.st_gid,
-                    meta.st_mode, meta.st_nlink if stat.S_ISREG(meta.st_mode) else None)
-
-        custody = []
-        for path in (STATE_ROOT, operation_dir, os.path.dirname(receipt_path(HR_CTO_READ_ID))):
-            before = os.lstat(path)
-            fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-            custody_fds.append(fd)
-            opened = os.fstat(fd)
-            require(identity(before) == identity(opened) and opened.st_uid == root_uid,
-                    'HR_CTO_CUSTODY_CHANGED')
-            if path == operation_dir:
-                require(stat.S_IMODE(opened.st_mode) == 0o700, 'HR_CTO_CUSTODY_CHANGED')
-            if path != STATE_ROOT:
-                require(not opened.st_mode & 0o022, 'HR_CTO_CUSTODY_CHANGED')
-            custody.append((path, fd, identity(opened)))
-
-        def check_custody():
-            for path, fd, pinned in custody:
-                require(identity(os.fstat(fd)) == identity(os.lstat(path)) == pinned,
-                        'HR_CTO_CUSTODY_CHANGED')
-            require(identity(os.fstat(lock_fd)) == identity(os.lstat(state_path('mutation.lock')))
-                    == identity(lock_meta), 'HR_CTO_CUSTODY_CHANGED')
-
-        check_custody()
+        ledger = HrCtoLedger()
+        ledger.__enter__()
         intent = {'action':HR_CTO_ACTION, 'agentId':'agt_cto-agent',
                   'operation_id':HR_CTO_READ_ID, 'state':'INTENT',
                   'request_sha256':request_sha}
-        atomic_write(os.path.join(operation_dir, 'intent.json'), canonical(intent), 0o600)
-        atomic_write(receipt_path(HR_CTO_READ_ID), canonical(intent), 0o600)
+        ledger.intent(intent)
         try:
-            check_custody()
+            ledger.check()
             selected = hr_cto_verified_select(message)
-            check_custody()
+            ledger.check()
             require(type(selected) is dict and set(selected) == {'projection', 'store_sha256'},
                     'HR_CTO_RESULT_INVALID')
             projection = selected['projection']
@@ -98,18 +55,18 @@ def hr_cto_hash_readback(request, peer, raw):
                         'projection':projection, 'replayAllowed':False}
             require(len(canonical(terminal)) <= 1024 and len(canonical(response)) <= 768,
                     'HR_CTO_RESPONSE_BOUND')
-            atomic_write(receipt_path(HR_CTO_READ_ID), canonical(terminal), 0o600)
-            check_custody()
+            ledger.terminal(terminal)
+            ledger.check()
             return response
         except Exception as exc:
-            check_custody()
+            ledger.check()
             known = {'ROUTER_INGRESS_NONE', 'ROUTER_INGRESS_MULTIPLE',
                      'ROUTER_INGRESS_WRONG_AGENT', 'ROUTER_INGRESS_RECEIPT_ABSENT',
                      'ROUTER_STORE_INVALID', 'HR_CTO_RESULT_INVALID', 'HR_CTO_RESPONSE_BOUND'}
             reason = str(exc) if isinstance(exc, Failure) and str(exc) in known else 'HR_CTO_READ_UNKNOWN'
             state = 'FAIL' if reason in known else 'UNKNOWN'
             terminal = {**intent, 'state':state, 'reason':reason}
-            atomic_write(receipt_path(HR_CTO_READ_ID), canonical(terminal), 0o600)
+            ledger.terminal(terminal)
             return {'ok':False, 'state':state, 'error':reason,
                     'operation_id':HR_CTO_READ_ID, 'replayAllowed':False}
     except Exception as exc:
@@ -118,11 +75,8 @@ def hr_cto_hash_readback(request, peer, raw):
                  'HR_CTO_EXACT_REQUEST_REQUIRED', 'HR_CTO_OPERATION_CONSUMED',
                  'HR_CTO_LOCK_CUSTODY', 'HR_CTO_STATE_CUSTODY', 'MUTATION_ALREADY_RUNNING'}
         reason = str(exc) if isinstance(exc, Failure) and str(exc) in known else 'HR_CTO_READ_UNKNOWN'
-        return {'ok':False, 'state':'UNKNOWN' if claimed else 'REJECTED',
+        return {'ok':False, 'state':'UNKNOWN' if ledger is not None and ledger.claimed else 'REJECTED',
                 'error':reason, 'replayAllowed':False}
     finally:
-        for fd in reversed(custody_fds):
-            os.close(fd)
-        if lock_fd is not None:
-            fcntl.flock(lock_fd, fcntl.LOCK_UN)
-            os.close(lock_fd)
+        if ledger is not None:
+            ledger.close()
