@@ -38,6 +38,9 @@ export function mountBrokerGateway({ ctx, credentialsFile, authServiceOrigin, au
       ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
       ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
       ...(ctx.get('executionHistoryAccess')?.handlers ?? {}),
+      // FIXED_OPERATION_V1: deterministic, registry-pinned LOCAL operations.
+      // Resolved at EXECUTE time like every other composition-owned provider.
+      ...(ctx.get('fixedOperationAccess')?.handlers ?? {}),
       // DEVELOPMENT_EXECUTION_SURFACE_V1: the shared local coding-executor
       // capability (system-owned state; backend-abstracted). Composition-
       // owned enumeration per Phase A — resolved at EXECUTE time like every

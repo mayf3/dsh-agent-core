@@ -1,0 +1,21 @@
+{
+  "name": "@agent-core/fixed-operation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "FIXED_OPERATION_V1 candidate vertical slice — immutable fixed-operation registry (operationKey + pinned version/hash + closed input schemas + trusted workflow-execution provenance + structured receipts). Fixture operations only.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./canonical": "./src/canonical.js",
+    "./errors": "./src/errors.js",
+    "./trusted-context": "./src/trusted-context.js",
+    "./registry": "./src/registry.js",
+    "./fixtures": "./src/fixtures.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "UNLICENSED"
+}
