@@ -17,6 +17,7 @@ import subprocess
 import sys
 import threading
 import time
+import types
 
 
 PINS = None
@@ -287,17 +288,94 @@ def _prior_qualification(window_dir, proof_dir, expected_binary):
                                          separators=(',', ':')).encode()
     require(type(result) is dict and raw == canonical(result)
             and set(result) == {'schema', 'operationId', 'state', 'workerPid',
-                                'replayAllowed', 'qualificationComplete', 'proofSha256'}
+                                'replayAllowed', 'qualificationComplete', 'proofSha256',
+                                'branch', 'sourceChainSha256'}
             and result['schema'] == 'HR_ORIGINAL_CARRIER_JOB_V1'
             and result['operationId'] == PINS['qualificationOperationId']
             and result['state'] == 'QUALIFICATION_COMPLETE'
             and type(result['workerPid']) is int and result['workerPid'] > 0
             and result['replayAllowed'] is False
             and result['qualificationComplete'] is True
+            and result['branch'] == 'fixed_admin_canary'
+            and result['sourceChainSha256'] == _source_chain()
             and result['proofSha256'] == [hashlib.sha256(canonical(value)).hexdigest()
                                          for value in (floor, validator)],
             'ADMIN_CARRIER_PRIOR_RESULT_INVALID')
     return floor, validator
+
+
+def _source_chain():
+    # Private root result binds the original fixed branch and compiled inputs;
+    # historical unbound CTO results are deliberately ineligible for reuse.
+    raw = json.dumps({'branch': 'fixed_admin_canary', 'pins': PINS,
+                      'launcherSha256': LAUNCHER_SHA}, sort_keys=True,
+                     separators=(',', ':')).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _driver_module(driver_fd):
+    # The actual pinned entry must select the admin branch before any effect.
+    meta = os.fstat(driver_fd)
+    raw = os.pread(driver_fd, meta.st_size + 1, 0)
+    require(len(raw) == meta.st_size and
+            hashlib.sha256(raw).hexdigest() == PINS['entrySha256'],
+            'ADMIN_CARRIER_CURRENT_DRIVER_CHANGED')
+    module = types.ModuleType('_admin_prior_fixed_driver')
+    module.__file__ = str(PACKAGE_DIRECTORY / 'driver.py')
+    sys.modules[module.__name__] = module
+    try:
+        exec(compile(raw, module.__file__, 'exec'), module.__dict__)
+    finally:
+        sys.modules.pop(module.__name__, None)
+    return module
+
+
+def _current_binary(module, daemon_fd):
+    # Actual original driver whole-app observer, with the pinned daemon bytes.
+    module.DAEMON_SHA = PINS['daemonSha256']
+    owner = object.__new__(module.FixedOriginalDriver)
+    owner._daemon_fd = daemon_fd
+    observed = owner._binary()
+    require(type(observed) is str and re.fullmatch('[a-f0-9]{64}', observed),
+            'ADMIN_CARRIER_CURRENT_BINARY_UNKNOWN')
+    return observed
+
+
+def _record_complete(directory, window, process, floor, validator):
+    """Commit the original root producer's exact closed proof-chain result."""
+    require(window is not None and process is not None
+            and type(process.pid) is int and process.pid > 0,
+            'ADMIN_CARRIER_COMPLETE_OWNER_UNKNOWN')
+    observed = os.stat('window.lock', dir_fd=directory, follow_symlinks=False)
+    held = os.fstat(window)
+    require(stat.S_ISREG(observed.st_mode) and observed.st_uid == 0
+            and stat.S_IMODE(observed.st_mode) == 0o600
+            and (observed.st_dev, observed.st_ino) == (held.st_dev, held.st_ino),
+            'ADMIN_CARRIER_COMPLETE_WINDOW_UNKNOWN')
+    canonical = lambda value: json.dumps(value, sort_keys=True,
+                                         separators=(',', ':')).encode()
+    value = {'schema': 'HR_ORIGINAL_CARRIER_JOB_V1',
+             'operationId': PINS['qualificationOperationId'],
+             'state': 'QUALIFICATION_COMPLETE', 'workerPid': process.pid,
+             'replayAllowed': False, 'qualificationComplete': True,
+             'branch': 'fixed_admin_canary', 'sourceChainSha256': _source_chain(),
+             'proofSha256': [hashlib.sha256(canonical(item)).hexdigest()
+                             for item in (floor, validator)]}
+    raw = canonical(value)
+    fd = os.open(RESULT_NAME, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                 0o600, dir_fd=directory)
+    try:
+        require(os.write(fd, raw) == len(raw), 'ADMIN_CARRIER_COMPLETE_SHORT_WRITE')
+        os.fsync(fd)
+        meta = os.fstat(fd)
+        require(stat.S_ISREG(meta.st_mode) and meta.st_uid == 0
+                and stat.S_IMODE(meta.st_mode) == 0o600 and meta.st_nlink == 1
+                and meta.st_size == len(raw) and os.pread(fd, len(raw) + 1, 0) == raw,
+                'ADMIN_CARRIER_COMPLETE_READBACK')
+        os.fsync(directory)
+    finally:
+        os.close(fd)
+    return value
 
 
 def _challenge(channel, window, manifest_sha, *, trusted_uid=0):
@@ -402,10 +480,13 @@ def run():
         python_dir, ancestors = _directory(Path('/usr/bin'))
         directories.extend([*ancestors, python_dir])
         fds.append(_file(python_dir, 'python3', PINS['pythonSha256'], 128 * (1 << 20)))
+        driver_module = _driver_module(fds[1])
         proof_dir, ancestors = _directory(PROOF_DIRECTORY)
         directories.extend([*ancestors, proof_dir])
         prior = _prior_qualification(window_dir, proof_dir, PINS['finalTreeSha256'])
         if prior is not None:
+            require(_current_binary(driver_module, fds[3]) == PINS['finalTreeSha256'],
+                    'ADMIN_CARRIER_CURRENT_BINARY_CHANGED')
             return prior
         # All reviewed bytes and fixed interpreter precede the one-use window.
         channel, child = socket.socketpair()
@@ -431,6 +512,8 @@ def run():
         require(validator['installedAtWallMs'] <= floor['provedAtWallMs']
                 and time.monotonic() < operation_deadline,
                 'ADMIN_CARRIER_PROOF_ORDER_UNKNOWN')
+        _record_complete(window_dir, window, process, floor, validator)
+        return floor, validator
     except BaseException as exc:
         # Once the one-use window exists, the original child may be executing
         # or retaining a canonical FD. Journal UNKNOWN, then keep this root

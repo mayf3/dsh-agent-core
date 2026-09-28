@@ -388,6 +388,8 @@ class FixedAdminPackageTest(unittest.TestCase):
                         'operationId': 'original-router-qualification-20260927-v1',
                         'state': 'QUALIFICATION_COMPLETE', 'workerPid': 123,
                         'replayAllowed': False, 'qualificationComplete': True,
+                        'branch': 'fixed_admin_canary',
+                        'sourceChainSha256': carrier._source_chain(),
                         'proofSha256': [hashlib.sha256(encode(floor)).hexdigest(),
                                         hashlib.sha256(encode(validator)).hexdigest()]}
                     (window / '.carrier-result.json').write_bytes(encode(result))
@@ -401,23 +403,44 @@ class FixedAdminPackageTest(unittest.TestCase):
                     (window / '.carrier-result.json').write_bytes(encode(result))
                     with self.assertRaises(carrier.CarrierRejected):
                         carrier._prior_qualification(window_fd, proof_fd, 'b' * 64)
+                    (window / '.carrier-result.json').write_bytes(encode({**result,
+                        'branch': 'legacy_cto'}))
+                    with self.assertRaisesRegex(carrier.CarrierRejected,
+                                                'ADMIN_CARRIER_PRIOR_RESULT_INVALID'):
+                        carrier._prior_qualification(window_fd, proof_fd, final)
+                    (window / '.carrier-result.json').write_bytes(encode(result))
+                    with patch.object(carrier, 'LAUNCHER_SHA', 'b' * 64), \
+                         self.assertRaisesRegex(carrier.CarrierRejected,
+                                                'ADMIN_CARRIER_PRIOR_RESULT_INVALID'):
+                        carrier._prior_qualification(window_fd, proof_fd, final)
             finally:
                 os.close(proof_fd); os.close(window_fd)
 
     def test_carrier_reuses_completed_root_chain_without_opening_window_or_child(self):
         carrier = importlib.import_module('admin_root_carrier_template')
         with tempfile.TemporaryDirectory() as directory:
-            package = Path(directory)
+            root = Path(directory); package = root / 'package'; package.mkdir()
+            window = root / 'window'; window.mkdir()
+            proof = root / 'proof'; proof.mkdir()
             (package / 'admin_root_carrier.py').write_bytes(b'disposable-carrier')
             scratch = package / 'fixed-input'; scratch.write_bytes(b'x')
-            floor, validator = {'status': 'ROUTER_RESTART_SAFETY=PROVEN'}, \
-                               {'evidenceKind': 'restart_quiescence_proven'}
-            original_stat, original_lstat = os.stat, Path.lstat
+            binary = 'a' * 64
+            floor = {'status': 'ROUTER_RESTART_SAFETY=PROVEN', 'floorCommit': '2097e4f9',
+                     'deployedBinarySha256': binary, 'provedAtWallMs': 120}
+            validator = {'evidenceKind': 'restart_quiescence_proven',
+                         'deployedBinarySha256': binary, 'installedAtWallMs': 110}
+            def wait(timeout):
+                for name, value in (('floor-proven.json', floor), ('validator-installed.json', validator)):
+                    path = proof / name
+                    path.write_bytes(json.dumps(value, sort_keys=True, separators=(',', ':')).encode())
+                    os.chmod(path, 0o600)
+                return 0
+            child = types.SimpleNamespace(pid=123, wait=wait)
+            original_stat, original_fstat, original_lstat = os.stat, os.fstat, Path.lstat
             def as_root(meta):
-                value = types.SimpleNamespace(**{name: getattr(meta, name) for name in
+                return types.SimpleNamespace(**{name: getattr(meta, name) for name in
                     ('st_dev', 'st_ino', 'st_mode', 'st_gid', 'st_nlink', 'st_size',
                      'st_mtime_ns', 'st_ctime_ns')}, st_uid=0)
-                return value
             with patch.object(carrier, 'PINS', {'qualificationOperationId':
                     'original-router-qualification-20260927-v1',
                     'cutOperationId': 'hr-s256-admin-emergency-cut-20260928-v1',
@@ -428,21 +451,71 @@ class FixedAdminPackageTest(unittest.TestCase):
                  patch.object(carrier, '__file__', str(package / 'admin_root_carrier.py')), \
                  patch.object(carrier.sys, 'argv', ['admin_root_carrier.py']), \
                  patch.object(carrier, 'PACKAGE_DIRECTORY', package), \
+                 patch.object(carrier, 'WINDOW_DIRECTORY', window), \
+                 patch.object(carrier, 'PROOF_DIRECTORY', proof), \
                  patch.object(carrier, '_directory', side_effect=lambda path:
-                    (os.open(package, os.O_RDONLY | os.O_DIRECTORY), [])), \
+                    (os.open(window if path == window else proof if path == proof else package,
+                             os.O_RDONLY | os.O_DIRECTORY), [])), \
                  patch.object(carrier, '_file', side_effect=lambda *args:
                     os.open(scratch, os.O_RDONLY)), \
-                 patch.object(carrier, '_prior_qualification', return_value=(floor, validator)) as prior, \
-                 patch.object(carrier, '_window', side_effect=AssertionError('WINDOW_STARTED')), \
-                 patch.object(carrier.socket, 'socketpair', side_effect=AssertionError('SOCKET_STARTED')), \
-                 patch.object(subprocess, 'Popen', side_effect=AssertionError('PROCESS_STARTED')), \
+                 patch.object(carrier, '_driver_module', return_value=types.SimpleNamespace()), \
+                 patch.object(carrier, '_challenge', return_value=None), \
+                 patch.object(carrier, '_current_binary', return_value=binary) as current_binary, \
+                 patch.object(subprocess, 'Popen', return_value=child), \
                  patch.object(os, 'geteuid', return_value=0), \
                  patch.object(os, 'stat', side_effect=lambda *a, **kw:
                     as_root(original_stat(*a, **kw))), \
+                 patch.object(os, 'fstat', side_effect=lambda fd:
+                    as_root(original_fstat(fd))), \
                  patch.object(Path, 'lstat', new=lambda self, *a, **kw:
                     as_root(original_lstat(self, *a, **kw))):
                 self.assertEqual(carrier.run(), (floor, validator))
-                prior.assert_called_once()
+                self.assertTrue((window / '.carrier-result.json').is_file())
+                result = json.loads((window / '.carrier-result.json').read_bytes())
+                self.assertEqual(result['branch'], 'fixed_admin_canary')
+                self.assertEqual(result['sourceChainSha256'], carrier._source_chain())
+                with patch.object(carrier, '_window', side_effect=AssertionError('WINDOW_STARTED')), \
+                     patch.object(carrier.socket, 'socketpair', side_effect=AssertionError('SOCKET_STARTED')), \
+                     patch.object(subprocess, 'Popen', side_effect=AssertionError('PROCESS_STARTED')):
+                    self.assertEqual(carrier.run(), (floor, validator))
+                current_binary.assert_called_once()
+                with patch.object(carrier, '_current_binary', return_value='b' * 64), \
+                     patch.object(carrier, '_window', side_effect=AssertionError('WINDOW_STARTED')):
+                    with self.assertRaisesRegex(carrier.CarrierRejected,
+                                                'ADMIN_CARRIER_CURRENT_BINARY_CHANGED'):
+                        carrier.run()
+
+    def test_prior_reuse_uses_original_driver_current_tree_observer(self):
+        carrier = importlib.import_module('admin_root_carrier_template')
+        original = importlib.import_module('driver')
+        descriptor_source = b'''def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+def tree_manifest(root, path, excluded):
+    with open(os.path.join(root, 'leaf'), 'rb') as stream:
+        data = stream.read()
+    return ([{'path': 'leaf', 'sha256': hashlib.sha256(data).hexdigest()}], [], 1, len(data))
+'''
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory); (app / 'leaf').write_bytes(b'current')
+            descriptor_path = app / 'daemon.py'
+            descriptor_path.write_bytes(descriptor_source)
+            descriptor = descriptor_path.open('rb')
+            original_fstat = os.fstat
+            def as_root(fd):
+                meta = original_fstat(fd)
+                return types.SimpleNamespace(**{name: getattr(meta, name) for name in
+                    ('st_dev', 'st_ino', 'st_mode', 'st_gid', 'st_nlink', 'st_size',
+                     'st_mtime_ns', 'st_ctime_ns')}, st_uid=0)
+            with patch.object(carrier, 'PINS', {'daemonSha256':
+                    hashlib.sha256(descriptor_source).hexdigest()}), \
+                 patch.object(original, 'APP', str(app)), \
+                 patch.object(os, 'fstat', side_effect=as_root):
+                try:
+                    first = carrier._current_binary(original, descriptor.fileno())
+                    (app / 'leaf').write_bytes(b'changed')
+                    self.assertNotEqual(first, carrier._current_binary(original, descriptor.fileno()))
+                finally:
+                    descriptor.close()
 
 
 if __name__ == '__main__':
