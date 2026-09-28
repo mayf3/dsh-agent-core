@@ -148,6 +148,16 @@ body remains historical; the frontmatter and this index record the accepted
 lifecycle. Separate exact authority remains necessary for DS_UPDATE, live
 protected read, deploy, real smoke and every production mutation.
 
+## HR CTO Owner sender exact-read child amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1](HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1.md) | proposed; independent exact-head review and separate lifecycle acceptance pending | none; production apply none | one pre-START Owner-authored CTO identity seed and one fixed CTO exact-message hash-only DS action; accepted coherent efficiency-Agent readback and QF-C03/C04 proof sequence remain unchanged |
+
+The Owner separately accepted a conditional one-off DS update and protected
+read, as pinned by this child Spec. That operation acceptance does not
+self-accept the Spec or establish the still-missing native Feishu message ID.
+
 ## agt_cto-agent model-route authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
