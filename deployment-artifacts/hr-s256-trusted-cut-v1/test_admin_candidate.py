@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from build_candidate import build_current_bytes
 from build_admin_candidate import build_admin_current_bytes
+from test_commitment import authorization, bytes_of, final_bundle
 
 
 class AdminCandidateTest(unittest.TestCase):
@@ -117,6 +118,31 @@ class AdminCandidateTest(unittest.TestCase):
                         self.assertFalse(response['ok'])
                         self.assertIsNone(restart)
             self.assertFalse((Path(root) / 'hr-s256-admin-emergency-cut-20260928-v1').exists())
+
+    def test_admin_journal_seals_only_its_own_closed_bundle_once(self):
+        candidate = ast.parse(build_admin_current_bytes().decode('utf-8'))
+        journal = next(node for node in candidate.body if isinstance(node, ast.FunctionDef)
+                       and node.name == '_make_HR_ADMIN_JOURNAL')
+        with tempfile.TemporaryDirectory() as root:
+            os.chmod(root, 0o700)
+            scope = {'types': types, 'STATE_ROOT': root, 'TEST_MODE': True}
+            exec(compile(ast.Module(body=[journal], type_ignores=[]), '<fixed-admin-journal>', 'exec'), scope)
+            module = scope['_make_HR_ADMIN_JOURNAL']()
+            auth = authorization()
+            auth['operationId'] = module.OPERATION_ID
+            auth['holderCheck']['operationId'] = module.OPERATION_ID
+            module.seal_intent(auth['startupNonce'], auth['subjectPreimageSha256'], 97)
+            launch_digest = module.seal_launch_authorization(auth)
+            bundle = final_bundle(auth, launch_digest)
+            bundle['recoveryCutover']['operationId'] = module.OPERATION_ID
+            bundle['hostCensus']['operationId'] = module.OPERATION_ID
+            digest = module.seal_bundle_commitment(bytes_of(bundle), 102)
+            self.assertEqual(module.readback('bundle-commitment')[1], digest)
+            self.assertEqual(module.readback('live-handle-index')[0]['operationId'], module.OPERATION_ID)
+            module.claim_one_launch(103)
+            with self.assertRaises(module.Rejected):
+                module.claim_one_launch(104)
+            self.assertFalse((Path(root) / 'hr-s256-trusted-quiescence-cut-20260925-v1').exists())
 
 
 if __name__ == '__main__':
