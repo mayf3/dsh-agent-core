@@ -21,11 +21,10 @@ import time
 
 PINS = None
 LAUNCHER_SHA = None
-# A reviewed root-side UNKNOWN-custody handoff must be connected before this
-# source can become an executable installed carrier. Compilation leaves it off.
-# Keep the root carrier inert until the actual launcher/driver process and
-# inherited OFD transfer have an independently reviewed isolated-process test.
-CUSTODIAN_BOUND = False
+# The checked-in source remains inert with PINS/LAUNCHER_SHA unset. A compiled
+# fixed package may use the original driver's live canonical/window/child
+# custody path; installation and actual host qualification remain separate.
+CUSTODIAN_BOUND = True
 WINDOW_DIRECTORY = Path('/private/var/db/agent-deploy-system/original-router-qualification-20260927-v1')
 PACKAGE_DIRECTORY = WINDOW_DIRECTORY / 'package'
 PROOF_DIRECTORY = Path('/private/var/db/agent-deploy-system/hr-s256-deployment-proof')
