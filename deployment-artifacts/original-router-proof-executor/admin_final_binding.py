@@ -24,7 +24,7 @@ QUALIFICATION_ID = package.QUALIFICATION_ID
 CUT_OPERATION_ID = package.CUT_OPERATION_ID
 HOST_ID = package.HOST_ID
 INSTALL_OPERATION_ID = 'ds-hr-admin-private-install-20260928-v1'
-FRESH_DIRECTORY = Path('/private/var/db/agent-deploy-system/admin-final-binding')
+FRESH_DIRECTORY = Path('/private/var/db/agent-core-admin-final-binding-s256')
 REVIEWED_FRESH_SHA256 = None
 ROOT_UID = 0
 OLD_DS_NAMES = frozenset(('deployment_system.py', 'ds_client.py', 'plist',
@@ -74,6 +74,18 @@ def _read_root(name, limit):
     """Read one fixed name under the root-held fresh-input directory."""
     require(name in FRESH_BYTE_NAMES | {'FRESH.json'}, 'ADMIN_BINDING_NAME')
     root = FRESH_DIRECTORY
+    parent = os.open(root.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        parent_meta = os.fstat(parent)
+        require(stat.S_ISDIR(parent_meta.st_mode)
+                and parent_meta.st_uid == ROOT_UID
+                and not stat.S_IMODE(parent_meta.st_mode) & 0o022,
+                'ADMIN_BINDING_PARENT_CUSTODY')
+        named = os.stat(root.parent, follow_symlinks=False)
+        require((parent_meta.st_dev, parent_meta.st_ino) ==
+                (named.st_dev, named.st_ino), 'ADMIN_BINDING_PARENT_CHANGED')
+    finally:
+        os.close(parent)
     before_dir = root.lstat()
     require(stat.S_ISDIR(before_dir.st_mode) and before_dir.st_uid == ROOT_UID
             and not stat.S_IMODE(before_dir.st_mode) & 0o077,
