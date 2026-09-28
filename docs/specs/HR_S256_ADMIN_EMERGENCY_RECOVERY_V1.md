@@ -6,7 +6,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 owners: [mayf3]
-governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
+governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2, AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
 external_authorities: []
 supersedes: []
 superseded_by: null
@@ -31,8 +31,8 @@ head `47e253bb3a7ce4e03bfbf04b29330d306a159aa8` is preserved as
 s256 execution is proven unable to continue, without making a CTO Feishu
 message ID, Owner sender hash, or three CTO proof turns prerequisites of this
 mode. `CURRENT_GAP`: the accepted fixed QF carrier binds CTO-specific
-qualification while no accepted admin-only profile defines its own entry and
-receipt eligibility. `OBSERVATION`: R4 V2 RQ-001/005/007 requires whole-host
+qualification while no accepted admin-only profile or alternate receipt
+eligibility exists. `OBSERVATION`: R4 V2 RQ-001/005/007 requires whole-host
 quiescence, actual PROVEN floor, validator-before-producer, and termination-only
 settlement; PLH V3 C-005 explicitly allows an already-issued external effect
 to remain unknown. `AUTHORITY_ACTION=NEW`, `PLAN_LEVEL=BRIEF`,
@@ -48,9 +48,11 @@ The fixed subject is the existing durable s256 record for `agt_hr-agent` and
 its exact epoch, generation, turn execution ID and reconciliation handle.
 The admin path uses the existing DS peer-authenticated caller boundary
 (`getpeereid`), canonical mutation lock and one privately compiled fixed
-package/host/subject binding. Its two-field request remains the accepted
-`HR_S256_TRUSTED_QUIESCENCE_CUT_V1` action plus one fresh, reviewed, unused
-`operation_id`; no mode, path, Agent, PID, proof, PASS, principal, credential
+package/host/subject binding. Its distinct exact two-field request is
+`{"action":"HR_S256_ADMIN_EMERGENCY_CUT_V1","operation_id":"hr-s256-admin-emergency-cut-20260928-v1"}`;
+the ID must be proven unused and reserved once under the root journal before
+effect. The existing MI/R2 action and its pinned ID are never reused or
+reinterpreted. No mode, path, Agent, PID, proof, PASS, principal, credential
 or executable may be selected by the caller. The package determines this
 profile, and default/uninstalled configuration rejects before protected I/O.
 This proposal creates no generic recovery action or per-Agent reset.
@@ -73,9 +75,25 @@ the accepted new-kind validator installed in that same binary before any
 producer write, and a compatible captured/admitted rollback floor. The
 existing closed floor/validator receipts must be read from root custody and
 causally validated, not minted from current bytes, timestamps, healthy
-status, or an admin claim. This mode does not itself perform qualification.
-If authentic eligible receipts do not exist, STOP before inhibition or child
-effect. Bypassing CTO proof does not waive R4 V2 RQ-007.
+status, or an admin claim. The alternate **producer** is the original sealed
+root proof executor's fixed admin qualification branch defined by proposed
+`HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2` QE2-C02/C03. It first checks
+already completed same-final-binary receipt eligibility; otherwise it owns
+the original controlled qualification sequence with exactly one reviewed,
+tool-free, private native canary turn in each of three startup phases across
+two restarts. Actual Router durable issuance, native terminal result,
+continuous binary/child/custody and validator ordering must be observed.
+Genuinely occurring authenticated non-CTO turns may alternatively qualify,
+but their absence is not the primary path or an Owner message-ID task. The
+canary ingress is a **new fixed trust boundary** that does not yet exist in
+the installed DS/Router. This proposal cannot be executable merely by
+setting package pins or accepting these docs; the exact private ingress,
+effect denial and readback must be separately implemented and reviewed.
+No supplied log, caller PASS, fabricated event or Feishu impersonation can
+replace them. The fixed admin cut consumes the unchanged two closed receipts
+only after the producer seals a complete eligible chain. Missing capability,
+incomplete phase or unbound actual receipt stops before the cut's inhibition
+or child effect. Bypassing CTO proof does not waive R4 V2 RQ-007.
 
 **AER-C03 — One whole-host cut, not session reset.** Under the one canonical
 root lock, the fixed owner inhibits every applicable Runtime launch/resumption
@@ -131,7 +149,7 @@ facts and the original controlled operator.
 
 | Case | Contracts | Nonproduction method | Required result / failure condition |
 |---|---|---|---|
-| AER-A01 | C01,C02 | Fixed DS private-entry fixture: peer, package, host, subject, proof and rollback variants | Only exact authenticated caller and real-equivalent receipt inputs reach preflight; wrong peer/Agent/turn, missing floor or validator, old/UNKNOWN ID, caller PASS reject before protected mutation. |
+| AER-A01 | C01,C02 | Fixed DS private-entry fixture: peer, package, host, subject, proof and rollback variants | Only exact authenticated caller and real-equivalent receipt inputs reach preflight; old R2 action/ID, wrong peer/Agent/turn, missing floor or validator, used/UNKNOWN admin ID, caller PASS reject before protected mutation. |
 | AER-A02 | C03,C04 | Hermetic old process, holder, launch-source and late Broker/Feishu-effect fixture | Nonzero/unknown census or lost window forbids startup and writes zero settlement; old external effect remains UNKNOWN without replay. A synthetic remote effect released after local cut never becomes evidence of no effect. |
 | AER-A03 | C03,C05 | Confined one-window startup/consumer/owned-Runtime join | Exact termination-only settlement and H4/H5 readback precede one NEW HR admission; duplicate launch/old reply/old tool/old rejected request cannot re-enter. |
 | AER-A04 | C04,C05 | Conflict-specific synthetic downstream readback matrix | Unresolved conflicting old operation blocks that effect in the new request; attributable terminal/non-conflict may admit one new request. Missing readback never becomes negative proof. |
@@ -142,8 +160,9 @@ facts and the original controlled operator.
 The existing R4 V2 consumer and fixed nonproduction collector/maintenance
 code may be reused only after this authority is accepted; no source edit is
 authorized by this proposal. Independent review must decide whether C02's
-authentic floor/validator availability and C04's conflict-specific downstream
-readback are sufficient for the desired incident. A positive synthetic
+new private canary trust boundary, authentic floor/validator production and
+C04's conflict-specific downstream readback are sufficient for the desired
+incident. A positive synthetic
 fixture cannot prove a current host prerequisite, that normal Agents have
 been restored, an old external effect's outcome, or one completed NEW HR
 request. Until then this mode is `NONEXECUTABLE`.
