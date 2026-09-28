@@ -626,6 +626,80 @@ class Tests(unittest.TestCase):
         with self.assertRaises(d.Unknown):
             d._context({**value,'procedureSha256':d.PROCEDURE_SHA})
 
+    def test_post_effect_unknown_keeps_real_owner_capabilities_before_park(self):
+        owner=object.__new__(d.FixedOriginalDriver)
+        owner._unknown=False;owner._effect_started=True
+        owner._window_fd=11;owner._canonical_fd=12
+        child=object();owner._child=child;owner._owned_children=[child]
+        observed=[]
+        def record(reason):
+            observed.append(('durable_unknown',reason,owner._window_fd,
+                             owner._canonical_fd,owner._child))
+        def park():
+            observed.append(('park',owner._window_fd,owner._canonical_fd,owner._child))
+            raise RuntimeError('TEST_PARK_BOUNDARY')
+        with patch.object(owner,'_record_unknown',side_effect=record,create=True), \
+             patch.object(owner,'_park_unknown',side_effect=park,create=True):
+            with self.assertRaisesRegex(RuntimeError,'TEST_PARK_BOUNDARY'):
+                owner._retain_unknown('ORIGINAL_PROCEDURE_DEADLINE')
+        self.assertTrue(owner._unknown)
+        self.assertEqual(observed,[('durable_unknown','ORIGINAL_PROCEDURE_DEADLINE',11,12,child),
+                                   ('park',11,12,child)])
+
+    def test_unknown_receipt_is_exclusive_fsynced_and_read_back(self):
+        owner=object.__new__(d.FixedOriginalDriver)
+        owner._window_fd=11
+        data={}
+        meta=types.SimpleNamespace(st_mode=0o100600,st_uid=0,st_nlink=1,
+                                   st_dev=7,st_ino=9,st_size=0)
+        opened=[];synced=[]
+        def fake_open(name,flags,mode=0o777,dir_fd=None):
+            self.assertEqual((name,mode,dir_fd),('qualification-unknown.json',0o600,5))
+            self.assertTrue(flags & os.O_EXCL and flags & os.O_NOFOLLOW)
+            opened.append(name);return 13
+        def fake_write(fd,raw):
+            self.assertEqual(fd,13);data['raw']=raw;meta.st_size=len(raw);return len(raw)
+        def fake_fstat(fd):
+            self.assertIn(fd,(11,13));return meta
+        with patch.object(d,'_namespace_directory',return_value=5),\
+             patch.object(os,'stat',return_value=meta),\
+             patch.object(os,'open',side_effect=fake_open),\
+             patch.object(os,'write',side_effect=fake_write),\
+             patch.object(os,'fstat',side_effect=fake_fstat),\
+             patch.object(os,'pread',side_effect=lambda fd,n,offset:data['raw']),\
+             patch.object(os,'fsync',side_effect=lambda fd:synced.append(fd)),\
+             patch.object(os,'close') as close:
+            digest=owner._record_unknown('ORIGINAL_PROCEDURE_DEADLINE')
+        self.assertEqual(opened,['qualification-unknown.json'])
+        self.assertEqual(synced,[13,5])
+        self.assertEqual(digest,hashlib.sha256(data['raw']).hexdigest())
+        self.assertEqual(json.loads(data['raw']),{'version':1,
+            'qualificationOperationId':d.ID,'disposition':'UNKNOWN',
+            'reason':'ORIGINAL_PROCEDURE_DEADLINE'})
+        self.assertEqual([call.args[0] for call in close.call_args_list],[13,5])
+
+    def test_unknown_journal_loss_still_retains_owned_objects(self):
+        owner=object.__new__(d.FixedOriginalDriver)
+        owner._unknown=False;owner._effect_started=True
+        owner._window_fd=11;owner._canonical_fd=12
+        child=object();owner._child=child;owner._owned_children=[child]
+        with patch.object(owner,'_record_unknown',side_effect=OSError('READBACK_LOST')),\
+             patch.object(owner,'_park_unknown',side_effect=RuntimeError('TEST_PARK_BOUNDARY')):
+            with self.assertRaisesRegex(RuntimeError,'TEST_PARK_BOUNDARY'):
+                owner._retain_unknown('ORIGINAL_PROCEDURE_DEADLINE')
+        self.assertTrue(owner._unknown)
+        self.assertIsNone(owner._unknown_receipt_sha256)
+        self.assertEqual((owner._window_fd,owner._canonical_fd,owner._child),(11,12,child))
+
+    def test_pre_effect_unknown_does_not_park_or_journal(self):
+        owner=object.__new__(d.FixedOriginalDriver)
+        owner._unknown=False;owner._effect_started=False
+        with patch.object(owner,'_record_unknown') as journal,\
+             patch.object(owner,'_park_unknown') as park:
+            with self.assertRaisesRegex(d.Unknown,'ORIGINAL_PRE_EFFECT_REJECTED'):
+                owner._retain_unknown('ORIGINAL_PROCEDURE_DEADLINE')
+        journal.assert_not_called();park.assert_not_called()
+
 def tearDownModule():
     for g in reversed(_guards):g.stop()
     for g in reversed(_reporter):g.stop()

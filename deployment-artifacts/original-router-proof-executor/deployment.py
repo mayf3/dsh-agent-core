@@ -102,6 +102,7 @@ def _deploy_owned(owner):
     scope['restart_runtime'] = qualification_start
     # Exact existing DEPLOY grammar, private fixed values only. No public
     # request is added; no installed daemon/client or E7 handler is replaced.
+    owner._effect_started = True  # No pre-effect failure may be replayed past this edge.
     result = scope['deploy']({'action':'DEPLOY','operation_id':ID + '-deploy',
         'unit':'scheduler-whole-main','artifact_tree_sha256':binding.final_binary_sha256,
         'expected_tree_sha256':binding.preimage_binary_sha256,
