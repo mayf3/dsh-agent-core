@@ -6,7 +6,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 owners: [mayf3]
-governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2, AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
+governed_by: [HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2, HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2, HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2, AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
 external_authorities: []
 supersedes: []
 superseded_by: null
