@@ -346,6 +346,104 @@ class FixedAdminPackageTest(unittest.TestCase):
         with self.assertRaisesRegex(carrier.CarrierRejected, 'ADMIN_CARRIER_PROOF_INVALID'):
             check(raw.replace(final.encode(), b'b' * 64))
 
+    def test_prior_root_proof_is_decided_before_any_new_window_or_child(self):
+        carrier = importlib.import_module('admin_root_carrier_template')
+        final = 'a' * 64
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(subprocess, 'Popen', side_effect=AssertionError('HOST_PROCESS_DENIED')):
+            root = Path(directory)
+            proof = root / 'proof'; proof.mkdir()
+            window = root / 'window'; window.mkdir()
+            proof_fd = os.open(proof, os.O_RDONLY | os.O_DIRECTORY)
+            window_fd = os.open(window, os.O_RDONLY | os.O_DIRECTORY)
+            real_stat, real_fstat = os.stat, os.fstat
+            def root_meta(meta):
+                return types.SimpleNamespace(**{name: getattr(meta, name) for name in
+                    ('st_dev', 'st_ino', 'st_mode', 'st_gid', 'st_nlink', 'st_size',
+                     'st_mtime_ns', 'st_ctime_ns')}, st_uid=0)
+            try:
+                with patch.object(os, 'stat', side_effect=lambda *a, **kw:
+                         root_meta(real_stat(*a, **kw))), \
+                     patch.object(os, 'fstat', side_effect=lambda fd:
+                         root_meta(real_fstat(fd))), \
+                     patch.object(carrier, 'PINS', {'qualificationOperationId':
+                         'original-router-qualification-20260927-v1'}):
+                    self.assertIsNone(carrier._prior_qualification(window_fd, proof_fd, final))
+                    floor = {'status': 'ROUTER_RESTART_SAFETY=PROVEN',
+                        'floorCommit': '2097e4f9', 'deployedBinarySha256': final,
+                        'provedAtWallMs': 120}
+                    validator = {'evidenceKind': 'restart_quiescence_proven',
+                        'deployedBinarySha256': final, 'installedAtWallMs': 110}
+                    encode = lambda value: json.dumps(value, sort_keys=True,
+                        separators=(',', ':')).encode()
+                    (proof / 'floor-proven.json').write_bytes(encode(floor))
+                    os.chmod(proof / 'floor-proven.json', 0o600)
+                    with self.assertRaisesRegex(carrier.CarrierRejected, 'ADMIN_CARRIER_PRIOR_INCOMPLETE'):
+                        carrier._prior_qualification(window_fd, proof_fd, final)
+                    (proof / 'validator-installed.json').write_bytes(encode(validator))
+                    os.chmod(proof / 'validator-installed.json', 0o600)
+                    with self.assertRaisesRegex(carrier.CarrierRejected, 'ADMIN_CARRIER_PRIOR_INCOMPLETE'):
+                        carrier._prior_qualification(window_fd, proof_fd, final)
+                    result = {'schema': 'HR_ORIGINAL_CARRIER_JOB_V1',
+                        'operationId': 'original-router-qualification-20260927-v1',
+                        'state': 'QUALIFICATION_COMPLETE', 'workerPid': 123,
+                        'replayAllowed': False, 'qualificationComplete': True,
+                        'proofSha256': [hashlib.sha256(encode(floor)).hexdigest(),
+                                        hashlib.sha256(encode(validator)).hexdigest()]}
+                    (window / '.carrier-result.json').write_bytes(encode(result))
+                    os.chmod(window / '.carrier-result.json', 0o600)
+                    self.assertEqual(carrier._prior_qualification(window_fd, proof_fd, final),
+                                     (floor, validator))
+                    (window / '.carrier-result.json').write_bytes(encode({**result,
+                        'proofSha256': ['0' * 64, result['proofSha256'][1]]}))
+                    with self.assertRaises(carrier.CarrierRejected):
+                        carrier._prior_qualification(window_fd, proof_fd, final)
+                    (window / '.carrier-result.json').write_bytes(encode(result))
+                    with self.assertRaises(carrier.CarrierRejected):
+                        carrier._prior_qualification(window_fd, proof_fd, 'b' * 64)
+            finally:
+                os.close(proof_fd); os.close(window_fd)
+
+    def test_carrier_reuses_completed_root_chain_without_opening_window_or_child(self):
+        carrier = importlib.import_module('admin_root_carrier_template')
+        with tempfile.TemporaryDirectory() as directory:
+            package = Path(directory)
+            (package / 'admin_root_carrier.py').write_bytes(b'disposable-carrier')
+            scratch = package / 'fixed-input'; scratch.write_bytes(b'x')
+            floor, validator = {'status': 'ROUTER_RESTART_SAFETY=PROVEN'}, \
+                               {'evidenceKind': 'restart_quiescence_proven'}
+            original_stat, original_lstat = os.stat, Path.lstat
+            def as_root(meta):
+                value = types.SimpleNamespace(**{name: getattr(meta, name) for name in
+                    ('st_dev', 'st_ino', 'st_mode', 'st_gid', 'st_nlink', 'st_size',
+                     'st_mtime_ns', 'st_ctime_ns')}, st_uid=0)
+                return value
+            with patch.object(carrier, 'PINS', {'qualificationOperationId':
+                    'original-router-qualification-20260927-v1',
+                    'cutOperationId': 'hr-s256-admin-emergency-cut-20260928-v1',
+                    'hostId': '961534a5-8c94-487d-8e55-d324a54e821a', **{key: 'a' * 64 for key in
+                    ('entryManifestSha256', 'entrySha256', 'helperSha256',
+                     'daemonSha256', 'pythonSha256', 'finalTreeSha256')}}), \
+                 patch.object(carrier, 'LAUNCHER_SHA', 'b' * 64), \
+                 patch.object(carrier, '__file__', str(package / 'admin_root_carrier.py')), \
+                 patch.object(carrier.sys, 'argv', ['admin_root_carrier.py']), \
+                 patch.object(carrier, 'PACKAGE_DIRECTORY', package), \
+                 patch.object(carrier, '_directory', side_effect=lambda path:
+                    (os.open(package, os.O_RDONLY | os.O_DIRECTORY), [])), \
+                 patch.object(carrier, '_file', side_effect=lambda *args:
+                    os.open(scratch, os.O_RDONLY)), \
+                 patch.object(carrier, '_prior_qualification', return_value=(floor, validator)) as prior, \
+                 patch.object(carrier, '_window', side_effect=AssertionError('WINDOW_STARTED')), \
+                 patch.object(carrier.socket, 'socketpair', side_effect=AssertionError('SOCKET_STARTED')), \
+                 patch.object(subprocess, 'Popen', side_effect=AssertionError('PROCESS_STARTED')), \
+                 patch.object(os, 'geteuid', return_value=0), \
+                 patch.object(os, 'stat', side_effect=lambda *a, **kw:
+                    as_root(original_stat(*a, **kw))), \
+                 patch.object(Path, 'lstat', new=lambda self, *a, **kw:
+                    as_root(original_lstat(self, *a, **kw))):
+                self.assertEqual(carrier.run(), (floor, validator))
+                prior.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()
