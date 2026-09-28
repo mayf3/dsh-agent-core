@@ -17,7 +17,7 @@ PACKAGE_ROOT = Path(__file__).with_name('admin-qualification-package')
 REVIEWED_PACKAGE_SHA256 = None
 QUALIFICATION_ID = 'original-router-qualification-20260927-v1'
 CUT_OPERATION_ID = 'hr-s256-admin-emergency-cut-20260928-v1'
-HOST_ID = '961534a5-8c94-487d-8e55-d324a54e821a'
+HOST_ID = 'FF99ABD5-79A0-5EE0-9E0B-B62671271560'
 HASH = re.compile(r'^[a-f0-9]{64}$')
 FIELDS = {'version', 'qualificationOperationId', 'cutOperationId', 'hostId', 'finalTreeSha256',
           'preimageTreeSha256', 'rollbackOperationId', 'entryManifestSha256',
@@ -44,7 +44,7 @@ SOURCE_SHA256 = {
 }
 TEMPLATE_SHA256 = {
     'admin_launcher_template.py': 'e7e3ceb7d7ad3a3768b6749af8d3dc74d8fc597f98cd1c592e2f23b321def892',
-    'admin_root_carrier_template.py': 'edb1fb8a5526edc27c52ca5fa5f80e930d653005046cd34def6a1bb2e007c451',
+    'admin_root_carrier_template.py': '2b2325fcbe76a218269160dd2b3dfe4e2015eae6e88af82ad07fa844bf8db618',
 }
 
 

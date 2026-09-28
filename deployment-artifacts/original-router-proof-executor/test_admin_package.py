@@ -444,7 +444,7 @@ class FixedAdminPackageTest(unittest.TestCase):
             with patch.object(carrier, 'PINS', {'qualificationOperationId':
                     'original-router-qualification-20260927-v1',
                     'cutOperationId': 'hr-s256-admin-emergency-cut-20260928-v1',
-                    'hostId': '961534a5-8c94-487d-8e55-d324a54e821a', **{key: 'a' * 64 for key in
+                    'hostId': 'FF99ABD5-79A0-5EE0-9E0B-B62671271560', **{key: 'a' * 64 for key in
                     ('entryManifestSha256', 'entrySha256', 'helperSha256',
                      'daemonSha256', 'pythonSha256', 'finalTreeSha256')}}), \
                  patch.object(carrier, 'LAUNCHER_SHA', 'b' * 64), \
