@@ -239,26 +239,31 @@ def installation_bootstrap():
     if not QUALIFIER_ACTIVE:
         return None  # The installed, uncompiled source never reads protected state.
     require(not _state['attempted'], 'ADMIN_INSTALL_NO_REPLAY')
-    _state['attempted'] = True
     require(os.geteuid() == 0, 'ADMIN_INSTALL_ROOT_REQUIRED')
-    seal = _binding(json.loads(_read_sealed(PACKAGE_DIRECTORY / SEAL_NAME, 8192)))
-    _committed_install(seal)  # INSTALLED_WAITING alone grants no startup.
-    require(ROOT_HOST_OBSERVER is not None and
-            ROOT_HOST_OBSERVER() == seal['hostId'], 'ADMIN_INSTALL_HOST_UNKNOWN')
-    require(_python_identity() == seal['pythonSha256'], 'ADMIN_INSTALL_PYTHON_CHANGED')
-    _root_metadata(PACKAGE_DIRECTORY.parent)
-    _root_metadata(STATE_DIRECTORY)
-    for name in FIXED_FILES:
-        raw = _read_sealed(PACKAGE_DIRECTORY / name,
-            128 * (1 << 20) if name == 'deployment_system.py' else 65536)
-        require(sha(raw) == seal['fileSha256'][name],
-                'ADMIN_INSTALL_PACKAGE_CHANGED')
-    require(sha(_read_sealed(DAEMON, 128 * (1 << 20), 0o555)) ==
-            seal['fileSha256']['deployment_system.py'],
-            'ADMIN_INSTALL_DAEMON_CHANGED')
-    lock = mutation_lock()  # Existing canonical DS mutation domain.
-    parent = package_fd = state_fd = None
     try:
+        lock = mutation_lock()  # Recheck receipt and installed bytes under this lock.
+    except Failure as exc:
+        if str(exc) == 'MUTATION_ALREADY_RUNNING':
+            raise BootstrapRejected('ADMIN_INSTALL_LOCK_BUSY') from exc
+        raise
+    state_fd = None
+    try:
+        seal = _binding(json.loads(_read_sealed(PACKAGE_DIRECTORY / SEAL_NAME, 8192)))
+        _committed_install(seal)  # INSTALLED_WAITING alone grants no startup.
+        require(ROOT_HOST_OBSERVER is not None and
+                ROOT_HOST_OBSERVER() == seal['hostId'], 'ADMIN_INSTALL_HOST_UNKNOWN')
+        require(_python_identity() == seal['pythonSha256'], 'ADMIN_INSTALL_PYTHON_CHANGED')
+        _root_metadata(PACKAGE_DIRECTORY.parent)
+        _root_metadata(STATE_DIRECTORY)
+        for name in FIXED_FILES:
+            raw = _read_sealed(PACKAGE_DIRECTORY / name,
+                128 * (1 << 20) if name == 'deployment_system.py' else 65536)
+            require(sha(raw) == seal['fileSha256'][name],
+                    'ADMIN_INSTALL_PACKAGE_CHANGED')
+        require(sha(_read_sealed(DAEMON, 128 * (1 << 20), 0o555)) ==
+                seal['fileSha256']['deployment_system.py'],
+                'ADMIN_INSTALL_DAEMON_CHANGED')
+        _state['attempted'] = True
         state_fd = _parent(STATE_DIRECTORY / CLAIM_NAME)
         try:
             os.stat(CLAIM_NAME, dir_fd=state_fd, follow_symlinks=False)
@@ -270,8 +275,7 @@ def installation_bootstrap():
             'state': 'UNKNOWN', 'packageSha256': seal['packageSha256'],
             'replayAllowed': False}))
     finally:
-        for fd in (state_fd,):
-            if fd is not None: os.close(fd)
+        if state_fd is not None: os.close(state_fd)
         fcntl.flock(lock, fcntl.LOCK_UN)
         os.close(lock)
     # The original child obtains the canonical lock itself. The durable UNKNOWN
@@ -290,9 +294,25 @@ def wait_for_committed_install():
     deadline = time.monotonic() + 120
     while time.monotonic() < deadline:
         try:
-            _read_sealed(SHIM_RECEIPT, 8192, 0o644)
+            receipt = json.loads(_read_sealed(SHIM_RECEIPT, 8192, 0o644))
         except FileNotFoundError:
             time.sleep(0.1)
             continue
-        return installation_bootstrap()
+        require(type(receipt) is dict
+                and receipt.get('operation_id') == SHIM_OPERATION_ID
+                and receipt.get('action') == 'INSTALL_DEPLOYMENT_SYSTEM',
+                'ADMIN_INSTALL_SHIM_COMMIT_UNKNOWN')
+        if receipt.get('state') == 'UNKNOWN':
+            require(receipt.get('replayAllowed') is False,
+                    'ADMIN_INSTALL_SHIM_COMMIT_UNKNOWN')
+            time.sleep(0.1)
+            continue
+        require(receipt.get('state') == 'COMMITTED',
+                'ADMIN_INSTALL_SHIM_COMMIT_UNKNOWN')
+        try:
+            return installation_bootstrap()
+        except BootstrapRejected as exc:
+            if str(exc) != 'ADMIN_INSTALL_LOCK_BUSY':
+                raise
+            time.sleep(0.1)
     raise BootstrapRejected('ADMIN_INSTALL_SHIM_COMMIT_TIMEOUT')
