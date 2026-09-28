@@ -18,7 +18,7 @@ import {
   EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID,
   AGENT_SESSION_LIST_CAPABILITY_ID,
 } from '../../../broker/src/capabilities/execution-history.js'
-import { listAgentSessions, queryExecutionTrace } from '../../../execution-history/src/index.js'
+import { listAgentSessions, queryExecutionTrace, queryWorkflowNodeHistory } from '../../../execution-history/src/index.js'
 
 /**
  * Synthetic single-op manifests let the generic authorized transport execute
@@ -94,29 +94,68 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
         root: args?.root,
         args,
         viewer,
-        paths: {
-          homesRoot: layout.homesRoot,
-          controlDir: layout.controlDir,
-          historyDir: layout.historyDir,
-          jobsStore: layout.jobsStore,
-          workflowExecutionDir: layout.workflowExecutionDir,
-          evidenceLog: layout.evidenceLog,
-          turnRecoveryStore: layout.turnRecoveryStore,
-        },
+        paths: queryPaths(),
         svcRequest,
         cursor: typeof args?.cursor === 'string' ? args.cursor : undefined,
         limit: Number.isInteger(args?.limit) ? args.limit : 200,
         view: args?.view === 'report' ? 'report' : 'structured',
       })
-      if (outcome.ok !== true) {
-        // The manifest error table is CLOSED (broker error preservation
-        // rules): an unmapped code (e.g. an unexpected library error code)
-        // must never surface as an undeclared string — map it to
-        // internal_error.
-        const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
-        return { ok: false, error: { code, detail: outcome.detail } }
+      return mapOutcome(outcome)
+    }
+  }
+
+  /** The read-boundary layout shared by every execution-history handler. */
+  function queryPaths() {
+    return {
+      homesRoot: layout.homesRoot,
+      controlDir: layout.controlDir,
+      historyDir: layout.historyDir,
+      jobsStore: layout.jobsStore,
+      workflowExecutionDir: layout.workflowExecutionDir,
+      evidenceLog: layout.evidenceLog,
+      turnRecoveryStore: layout.turnRecoveryStore,
+    }
+  }
+
+  /** The manifest error table is CLOSED (broker error preservation rules):
+   *  an unmapped code must never surface as an undeclared string. */
+  function mapOutcome(outcome) {
+    if (outcome.ok !== true) {
+      const code = KNOWN_ERROR_CODES.has(outcome.code) ? outcome.code : 'internal_error'
+      return { ok: false, error: { code, detail: outcome.detail } }
+    }
+    return { ok: true, result: outcome.result }
+  }
+
+  /**
+   * The workflow-node attempt-history index (node_history operation):
+   * (workflowInstanceId, nodeVisitId) → every ledger generation, stably
+   * sorted, coordinates only. The trusted LOCAL handler is the authoritative
+   * validation boundary (direct parent-RPC calls bypass manifest validation)
+   * and FAILS CLOSED on any unknown key — never clamps or drops.
+   */
+  function nodeHistoryHandle(audit) {
+    return async function handle(args, trustedContext) {
+      if (args === null || typeof args !== 'object' || Array.isArray(args)) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'arguments must be an object' } }
       }
-      return { ok: true, result: outcome.result }
+      const keys = Object.keys(args)
+      if (keys.some((k) => k !== 'workflowInstanceId' && k !== 'nodeVisitId')) {
+        return { ok: false, error: { code: 'invalid_arguments', detail: 'unknown argument; only workflowInstanceId and nodeVisitId are admitted' } }
+      }
+      for (const key of ['workflowInstanceId', 'nodeVisitId']) {
+        if (typeof args[key] !== 'string' || args[key] === '') {
+          return { ok: false, error: { code: 'invalid_arguments', detail: `${key} is required` } }
+        }
+      }
+      const outcome = await queryWorkflowNodeHistory({
+        workflowInstanceId: args.workflowInstanceId,
+        nodeVisitId: args.nodeVisitId,
+        viewer: { agentId: trustedContext.agentId, audit },
+        paths: queryPaths(),
+        svcRequest,
+      })
+      return mapOutcome(outcome)
     }
   }
 
@@ -160,8 +199,8 @@ export function createExecutionHistoryRuntime({ layout, credentialsFile, authSer
     mount(ctx) {
       ctx.provide('executionHistoryAccess', {
         handlers: {
-          [EXECUTION_TRACE_QUERY_CAPABILITY_ID]: { query: handleFor(false) },
-          [EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID]: { query: handleFor(true) },
+          [EXECUTION_TRACE_QUERY_CAPABILITY_ID]: { query: handleFor(false), node_history: nodeHistoryHandle(false) },
+          [EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID]: { query: handleFor(true), node_history: nodeHistoryHandle(true) },
           [AGENT_SESSION_LIST_CAPABILITY_ID]: { list: listHandle() },
         },
       })
