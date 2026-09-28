@@ -16,8 +16,13 @@ scope: [fixed original separate proof-executor private causal qualification comp
 # Fixed original-executor causal qualification — whole-authority successor proposal
 
 This is the complete successor for the accepted V1 receipt-eligibility decision.
-V1 remains accepted until independent whole-authority review and one atomic
-Owner-accepted lifecycle transaction. This document has no current code or
+It must be accepted and activated **atomically** with proposed
+`HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2`: QF V1 C01/C03/C04
+otherwise still require Owner-delivered turns for every proof. QE V1 and QF
+V1 remain accepted until independent whole-authority review and one atomic
+Owner-accepted lifecycle transaction updates their `superseded_by` backlinks
+to their V2 successors and the governing index. Their accepted contract
+bodies and historical records are preserved. This document has no current code or
 production authority. It preserves V1's original CTO-qualified branch and
 adds exactly one CTO-free admin branch under the **same original separate
 root-authenticated proof executor**. Its primary proof-turn source is a new,
@@ -46,7 +51,7 @@ The Owner's new mode direction is not itself a completed causal receipt.
 ## Contracts
 
 **QE2-C01 — Preserved original branch.** V1 QE-C01 remains a complete
-eligible path: the original separate proof executor (original Deployment
+eligible path under QF V2's unchanged CTO branch: the original separate proof executor (original Deployment
 Agent thread `01a0ad06-249f-7632-809b-961b93c3b113`) under its sealed fixed
 root entry/kernel namespace/OFD custody executes and directly observes the
 original OWNER_RUNBOOK procedure (SHA-256
