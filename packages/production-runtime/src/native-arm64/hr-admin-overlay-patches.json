@@ -1,0 +1,165 @@
+{
+  "baseSource": "HR-S256-POSTRESTORE-SELECTIVE-APP-20260928-v1/tree",
+  "candidateCommit": "c9a82b44178a1f441420a70896e310952ae29bd2",
+  "paths": {
+    "packages/agent-router/src/index.js": {
+      "baseSha256": "7d226ee58fd96cedf1a8b6a2e297a442a5ff0d7ec693a4e3a9e85be2fe55b82d",
+      "candidateSha256": "1b164bf41ffe21205025c3d1041b1ad1115d66304dac6daf055e14a289d87bb7",
+      "stageSha256": "1b164bf41ffe21205025c3d1041b1ad1115d66304dac6daf055e14a289d87bb7"
+    },
+    "packages/agent-router/src/parent-rpc-relay.js": {
+      "baseSha256": "3ad635a0431fc80660b67e617191a386b8633f0d91f5515eb29613f9d25d25ee",
+      "candidateSha256": "309149ad167fba6363413fc7e4ccbd07c869a6e9476a3753e047788f4c2e2323",
+      "stageSha256": "309149ad167fba6363413fc7e4ccbd07c869a6e9476a3753e047788f4c2e2323"
+    },
+    "packages/agent-router/src/process-registry.js": {
+      "baseSha256": "be378d99d00d6cd060f2c337613a5bd9ca53e5bd4adb7188648afe04560e7a3b",
+      "candidateSha256": "6fdb4fd402a86e576ee61e3193dd3252ce5506fc0ba1a9a3ef19828f187d5c77",
+      "patches": [
+        {
+          "before": "    lifecycleSlots,\n    ensureRunning,\n    ensureRunningForRoute: routeGate.ensureRunningForRoute,\n    findOwningProcess,\n",
+          "after": "    lifecycleSlots,\n    ensureRunning,\n    ensureFixedAdminProcess,\n    ensureRunningForRoute: routeGate.ensureRunningForRoute,\n    findOwningProcess,\n"
+        },
+        {
+          "before": "        // Router reconciliation store and the identity-CAS slot integration.\n        processGeneration: entry.generation,\n        deadlines: deadlineConfig.perAgent(agentId),\n        reconciliationStore,\n",
+          "after": "        // Router reconciliation store and the identity-CAS slot integration.\n        processGeneration: entry.generation,\n        ...(entry.fixedAdminRootContext === undefined ? {} : {\n          fixedAdminQualification: fixedAdminBindingFromRoot(entry.fixedAdminRootContext, entry.generation),\n        }),\n        deadlines: deadlineConfig.perAgent(agentId),\n        reconciliationStore,\n"
+        },
+        {
+          "before": "    void bootstrapStartup(agentId, entry)\n    return entry.resultPromise\n  }\n\n",
+          "after": "    void bootstrapStartup(agentId, entry)\n    return entry.resultPromise\n  }\n\n  /** Closure held only by the authenticated startup listener, not Router service. */\n  function ensureFixedAdminProcess() {\n    if (fixedAdminRootContext === undefined || fixedAdminStartupClaimed) {\n      return Promise.reject(Object.assign(new Error('fixed canary startup unavailable'),\n        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))\n    }\n    fixedAdminStartupClaimed = true\n    return ensureRunning(FIXED_ADMIN_CANARY_AGENT, fixedAdminToken)\n  }\n\n"
+        },
+        {
+          "before": "    }\n    const entry = installStartup(agentId)\n    void bootstrapStartup(agentId, entry)\n    return entry.resultPromise\n",
+          "after": "    }\n    const entry = installStartup(agentId)\n    if (token === fixedAdminToken) entry.fixedAdminRootContext = fixedAdminRootContext\n    void bootstrapStartup(agentId, entry)\n    return entry.resultPromise\n"
+        },
+        {
+          "before": "    }\n    const initial = lifecycleSlots.get(agentId)\n    if (initial?.state === 'READY') {\n      if (initial.processRef?.exit === undefined) {\n",
+          "after": "    }\n    const initial = lifecycleSlots.get(agentId)\n    if (token === fixedAdminToken && initial !== undefined) {\n      return Promise.reject(Object.assign(new Error('fixed canary child already exists'),\n        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))\n    }\n    if (initial?.state === 'READY') {\n      if (initial.processRef?.exit === undefined) {\n"
+        },
+        {
+          "before": "    try {\n      assertRecoveryAdmission(reconciliationStore, agentId)\n      assertRunnable(agentId)\n    } catch (error) {\n      return Promise.reject(error)\n",
+          "after": "    try {\n      assertRecoveryAdmission(reconciliationStore, agentId)\n      assertRunnable(agentId, token)\n    } catch (error) {\n      return Promise.reject(error)\n"
+        },
+        {
+          "before": "   * Only READY processes are ever returned (registry exposes READY only).\n   */\n  function ensureRunning(agentId) {\n    if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))\n    // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous\n",
+          "after": "   * Only READY processes are ever returned (registry exposes READY only).\n   */\n  function ensureRunning(agentId, token) {\n    if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))\n    // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous\n"
+        },
+        {
+          "before": "   * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.\n   */\n  function assertRunnable(agentId) {\n    assertRecoveryAdmission(reconciliationStore, agentId)\n    const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown\n",
+          "after": "   * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.\n   */\n  function assertRunnable(agentId, token) {\n    if (fixedAdminRootContext !== undefined && agentId === FIXED_ADMIN_CANARY_AGENT\n        && token !== fixedAdminToken) {\n      throw Object.assign(new Error('fixed canary Agent reserved for root qualification'),\n        { code: 'FIXED_ADMIN_CANARY_PRIVATE_ONLY' })\n    }\n    assertRecoveryAdmission(reconciliationStore, agentId)\n    const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown\n"
+        },
+        {
+          "before": "  const staleSlotAudits = []\n  let disposing = false\n\n  restoreRecoveryFences(reconciliationStore)\n",
+          "after": "  const staleSlotAudits = []\n  let disposing = false\n  const fixedAdminToken = Symbol('owned root canary startup')\n  let fixedAdminStartupClaimed = false\n  if (fixedAdminRootContext !== undefined) fixedAdminBindingFromRoot(fixedAdminRootContext,1)\n\n  restoreRecoveryFences(reconciliationStore)\n"
+        },
+        {
+          "before": "  log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,\n  processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,\n}) {\n  /** agentId -> lifecycle slot (one live owner per agent). */\n",
+          "after": "  log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,\n  processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,\n  fixedAdminRootContext = undefined,\n}) {\n  /** agentId -> lifecycle slot (one live owner per agent). */\n"
+        },
+        {
+          "before": "import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'\nimport { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'\n\nfunction assertRecoveryAdmission(store, agentId) {\n",
+          "after": "import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'\nimport { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'\nimport { FIXED_ADMIN_CANARY_AGENT, fixedAdminBindingFromRoot } from '../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'\n\nfunction assertRecoveryAdmission(store, agentId) {\n"
+        }
+      ],
+      "stageSha256": "b1c84c492e23e4abce5488fade519b73852ab1a6b83b1a28f2cbe5ba2d418b4c"
+    },
+    "packages/agent-router/src/process/agent-process.js": {
+      "baseSha256": "e923244349e6d3b6a4842685111ee621a86336a360f0345ed297b2da56b08a2d",
+      "candidateSha256": "fbf13ecc416214a1a2da877a8f9c0f8a0ac2271ccf9a21f24154f73b46093aa4",
+      "patches": [
+        {
+          "before": "        return this.initializeElapsedMs\n      } catch (error) {\n        if (error?.code === 'AGENT_PROCESS_UNAVAILABLE' || error?.code === 'AGENT_PROCESS_EXITED'\n            || error?.code === 'AGENT_PROCESS_INPUT_FROZEN' || error?.code === 'AGENT_PROCESS_PENDING_CAP') {\n",
+          "after": "        return this.initializeElapsedMs\n      } catch (error) {\n        if (error?.code === 'FIXED_ADMIN_CANARY_CHILD_UNVERIFIED') {\n          void this.fatal('fixed_admin_child_unverified')\n          throw error\n        }\n        if (error?.code === 'AGENT_PROCESS_UNAVAILABLE' || error?.code === 'AGENT_PROCESS_EXITED'\n            || error?.code === 'AGENT_PROCESS_INPUT_FROZEN' || error?.code === 'AGENT_PROCESS_PENDING_CAP') {\n"
+        },
+        {
+          "before": "          maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),\n        }, undefined, { deadlineMono: initDeadlineMono })\n        if (Array.isArray(initialized?.registeredProviders)\n            && !initialized.registeredProviders.includes(this.provider)) {\n",
+          "after": "          maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),\n        }, undefined, { deadlineMono: initDeadlineMono })\n        if (this.fixedAdminQualification !== null && (initialized?.fixedAdminToolPolicy?.armed !== true\n            || initialized.fixedAdminToolPolicy.startupNonce !== this.fixedAdminQualification.startupNonce)) {\n          throw Object.assign(new Error('fixed admin child tool enforcement not proven before prompt'), {\n            code: 'FIXED_ADMIN_CANARY_CHILD_UNVERIFIED',\n          })\n        }\n        if (Array.isArray(initialized?.registeredProviders)\n            && !initialized.registeredProviders.includes(this.provider)) {\n"
+        },
+        {
+          "before": "          maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),\n        }, undefined, { deadlineMono: initDeadlineMono })\n",
+          "after": "          maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),\n          ...(this.fixedAdminQualification === null ? {} : { fixedAdminQualification: this.fixedAdminQualification }),\n        }, undefined, { deadlineMono: initDeadlineMono })\n"
+        },
+        {
+          "before": "    }\n    this.store = reconciliationStore ?? new TurnReconciliationStore()\n    this.ingressCorrelationLookup = ingressCorrelationLookup\n    this.registryIntegration = registryIntegration\n",
+          "after": "    }\n    this.store = reconciliationStore ?? new TurnReconciliationStore()\n    if (fixedAdminQualification !== null && (!isFixedAdminQualification(fixedAdminQualification)\n        || fixedAdminQualification.agentId !== agentId\n        || fixedAdminQualification.processGeneration !== processGeneration)) {\n      throw new TypeError('AgentProcess: invalid fixed admin qualification binding')\n    }\n    this.fixedAdminQualification = fixedAdminQualification === null ? null : Object.freeze({ ...fixedAdminQualification })\n    this.fixedAdminCanaryAttempted = false\n    this.fixedAdminEffectAttempted = false\n    this.ingressCorrelationLookup = ingressCorrelationLookup\n    this.registryIntegration = registryIntegration\n"
+        },
+        {
+          "before": "    ingressCorrelationLookup = null,\n    registryIntegration = null,\n  }) {\n    if (typeof profile !== 'string' || profile === '') {\n",
+          "after": "    ingressCorrelationLookup = null,\n    registryIntegration = null,\n    fixedAdminQualification = null,\n  }) {\n    if (typeof profile !== 'string' || profile === '') {\n"
+        },
+        {
+          "before": "import { spawnMethods } from './spawn.js'\nimport { shutdownMethods } from './shutdown.js'\n\nconst sleep = (ms) => new Promise((resolve) => {\n",
+          "after": "import { spawnMethods } from './spawn.js'\nimport { shutdownMethods } from './shutdown.js'\nimport { isFixedAdminQualification } from '../../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'\n\nconst sleep = (ms) => new Promise((resolve) => {\n"
+        }
+      ],
+      "stageSha256": "8f0a10aace1cbc592fec75932f92c8ecbae7e6733ce149523ff469b0483e776e"
+    },
+    "packages/agent-router/src/process/rpc-channel.js": {
+      "baseSha256": "23810dad5218da19e67a9a3c1f13103eab8dc390e074e35ee9ed5ae4d84cb7ee",
+      "candidateSha256": "09708ca54f80314a5df78039b5425459334471c4e52e368c7001cb25c01af29a",
+      "stageSha256": "09708ca54f80314a5df78039b5425459334471c4e52e368c7001cb25c01af29a"
+    },
+    "packages/agent-router/src/process/turn-execution.js": {
+      "baseSha256": "48caeb3d1af593ecd9cc7d2e0468f3035e08b29bc02c0f7e98eeae7acfcafc4b",
+      "candidateSha256": "5bb8b3982d6c9912f3efc1ff1b7729009fa5952881e6e33575d2663fbdb35a7e",
+      "stageSha256": "5bb8b3982d6c9912f3efc1ff1b7729009fa5952881e6e33575d2663fbdb35a7e"
+    },
+    "packages/agent-router/src/reconciliation/quiescence-bundle.js": {
+      "baseSha256": "55d8e19592df7f75179b95614717a513d757f9448eaf52a1d89f9504c46156ec",
+      "candidateSha256": "539f25751b0392f17b46945e36a850dc39f965a8ae5594a364667e407f054bb3",
+      "stageSha256": "539f25751b0392f17b46945e36a850dc39f965a8ae5594a364667e407f054bb3"
+    },
+    "packages/agent-router/src/reconciliation/quiescence-fixed-r2.js": {
+      "baseSha256": "779c00ac87b7d195af390a13a2d4c42a16abd8b59115a428972d82cec594ae22",
+      "candidateSha256": "a309b4e2dbf92ad08d805e4601e042d78deea4308c1c86a81699957c2bbb9e44",
+      "stageSha256": "a309b4e2dbf92ad08d805e4601e042d78deea4308c1c86a81699957c2bbb9e44"
+    },
+    "packages/demo-server/src/fixed-admin-tool-free.js": {
+      "baseSha256": null,
+      "candidateSha256": "c360dd8c9ee8f097e802630d220a51b908403e1359298b26b1c3b77fb54cfc5a",
+      "stageSha256": "c360dd8c9ee8f097e802630d220a51b908403e1359298b26b1c3b77fb54cfc5a"
+    },
+    "packages/demo-server/src/index.js": {
+      "baseSha256": "8419964e877218cbd15dbd1dd0be51fe0ae853d3d31a36ccf518bb2a11919e89",
+      "candidateSha256": "9318b98e2de4dceaf76db641c3c4f0c75a67c053a99d7c8f0352df8953c4e5b0",
+      "patches": [
+        {
+          "before": "        }\n      } else if (method === 'session/prompt') {\n        // params.cwd = the Router-resolved effective workspace for THIS\n        // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the\n",
+          "after": "        }\n      } else if (method === 'session/prompt') {\n        if (fixedAdminAttempted && fixedAdminPolicy === undefined) {\n          throw Object.assign(new Error('fixed admin child guard unavailable'), {\n            code: 'FIXED_ADMIN_TOOL_ENFORCEMENT_UNAVAILABLE',\n          })\n        }\n        fixedAdminPolicy?.consumePrompt(params?.sessionId, params?.contentBlocks ?? [], params?.messageOrigin)\n        // params.cwd = the Router-resolved effective workspace for THIS\n        // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the\n"
+        },
+        {
+          "before": "          registeredProviders,\n          pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },\n        }\n      } else if (method === 'session/prompt') {\n",
+          "after": "          registeredProviders,\n          pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },\n          ...(fixedAdminPolicy === undefined ? {} : { fixedAdminToolPolicy: {\n            armed: fixedAdminPolicy.armed(), startupNonce: params.fixedAdminQualification.startupNonce,\n          } }),\n        }\n      } else if (method === 'session/prompt') {\n"
+        },
+        {
+          "before": "      let result\n      if (method === 'initialize') {\n        cwd = params?.cwd ?? process.cwd()\n        provider = params?.provider ?? provider\n",
+          "after": "      let result\n      if (method === 'initialize') {\n        // Only the parent-owned per-agent JSON-RPC pipe can deliver this\n        // private qualification context. No caller-facing Router ingress\n        // forwards it; an unavailable SDK guard/assembly hook is fatal before\n        // any canary prompt can be written.\n        if (params?.fixedAdminQualification !== undefined) {\n          if (fixedAdminAttempted) throw Object.assign(new Error('fixed admin child already attempted'), {\n            code: 'FIXED_ADMIN_CANARY_NO_REPLAY',\n          })\n          fixedAdminAttempted = true\n          const policy = createFixedAdminChildPolicy(ctx)\n          fixedAdminPolicy = policy\n          policy.arm(params.fixedAdminQualification)\n        }\n        cwd = params?.cwd ?? process.cwd()\n        provider = params?.provider ?? provider\n"
+        },
+        {
+          "before": "  // cannot inherit turn B merely because B is current when it reaches stdout.\n  const rpcTurnContext = new AsyncLocalStorage()\n  const exit = () => { process.exit(0) }\n  const notify = (method, params) => {\n",
+          "after": "  // cannot inherit turn B merely because B is current when it reaches stdout.\n  const rpcTurnContext = new AsyncLocalStorage()\n  let fixedAdminPolicy\n  let fixedAdminAttempted = false\n  const exit = () => { process.exit(0) }\n  const notify = (method, params) => {\n"
+        },
+        {
+          "before": "import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'\n\n",
+          "after": "import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'\nimport { createFixedAdminChildPolicy } from './fixed-admin-tool-free.js'\n\n"
+        }
+      ],
+      "stageSha256": "09d52e39663c7aa449f71b9ea625e4c041f16348a764197321ca51c68f349962"
+    },
+    "packages/production-runtime/src/native-arm64/hr-admin-canary-contract.mjs": {
+      "baseSha256": null,
+      "candidateSha256": "512b9268c288edd54460c2be361460df6490153d00d513c4151afd8feb78a581",
+      "stageSha256": "512b9268c288edd54460c2be361460df6490153d00d513c4151afd8feb78a581"
+    },
+    "packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py": {
+      "baseSha256": "f7c725f74c0926cd13e2dfc55b524f66f1fa5e69ea85d091ccbc07384fe80728",
+      "candidateSha256": "3a7d067e1791102017e12f5f2c6f85329cc04c1b3af24deb9f14330c48ebd015",
+      "stageSha256": "3a7d067e1791102017e12f5f2c6f85329cc04c1b3af24deb9f14330c48ebd015"
+    },
+    "packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs": {
+      "baseSha256": "35647c8b7bb2336576a090bb9c403fef3e85b8b057751871b3c3f87c60899500",
+      "candidateSha256": "a2cb7203f4e1e9cd16d6074e5d87c1aa31e64fda6a479f074c9d5fcc868f8cd4",
+      "stageSha256": "a2cb7203f4e1e9cd16d6074e5d87c1aa31e64fda6a479f074c9d5fcc868f8cd4"
+    }
+  }
+}

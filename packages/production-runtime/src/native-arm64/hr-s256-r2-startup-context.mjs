@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { Socket } from 'node:net'
 
 const OP = 'hr-s256-trusted-quiescence-cut-20260925-v1'
+const ADMIN_OP = 'hr-s256-admin-emergency-cut-20260928-v1'
 const EVIDENCE = `/private/var/db/agent-deploy-system/${OP}`
 const DEPLOYMENT = '/private/var/db/agent-deploy-system/hr-s256-deployment-proof'
 const HELPER = fileURLToPath(new URL('./hr-s256-r2-child-proof.py', import.meta.url))
@@ -32,7 +33,7 @@ export function parsedQualificationInvocation(argv) {
   const values = new Map(), runtimeArgs = []
   for (let i = 0; i < argv.length; i++) {
     if (!names.has(argv[i])) {
-      if (/^--hr-(qf|r2)-/.test(argv[i])) reject('QF_INVOCATION_INVALID')
+      if (/^--hr-/.test(argv[i])) reject('QF_INVOCATION_INVALID')
       runtimeArgs.push(argv[i]); continue
     }
     if (values.has(argv[i]) || i + 1 >= argv.length) reject('QF_INVOCATION_INVALID')
@@ -46,32 +47,43 @@ export function parsedQualificationInvocation(argv) {
   return { digest, challengeFd, windowFd, contextFd, runtimeArgs }
 }
 
-export function parsedStartupInvocation(argv) {
-  const names = new Set(['--hr-r2-receipt-sha256', '--hr-r2-challenge-fd', '--hr-r2-window-fd', '--hr-r2-receipt-fds'])
+function parseFixedStartupInvocation(argv, prefix, operationId) {
+  const names = new Set([`${prefix}receipt-sha256`, `${prefix}challenge-fd`,
+    `${prefix}window-fd`, `${prefix}receipt-fds`])
   const values = new Map(), runtimeArgs = []
   for (let i = 0; i < argv.length; i++) {
-    if (!names.has(argv[i])) { if (argv[i].startsWith('--hr-r2-')) reject('R2_INVOCATION_INVALID'); runtimeArgs.push(argv[i]); continue }
+    if (!names.has(argv[i])) { if (argv[i].startsWith('--hr-')) reject('R2_INVOCATION_INVALID'); runtimeArgs.push(argv[i]); continue }
     if (values.has(argv[i]) || i + 1 >= argv.length) reject('R2_INVOCATION_INVALID')
     values.set(argv[i], argv[++i])
   }
-  const receipt = values.get('--hr-r2-receipt-sha256')
+  const receipt = values.get(`${prefix}receipt-sha256`)
   if (!/^[a-f0-9]{64}$/.test(receipt ?? '') || values.size !== 4) reject('R2_INVOCATION_INVALID')
-  const challengeFd = fd(values.get('--hr-r2-challenge-fd')), windowFd = fd(values.get('--hr-r2-window-fd'))
+  const challengeFd = fd(values.get(`${prefix}challenge-fd`)), windowFd = fd(values.get(`${prefix}window-fd`))
   let descriptors
-  try { descriptors = JSON.parse(values.get('--hr-r2-receipt-fds')) } catch { reject('R2_INVOCATION_INVALID') }
+  try { descriptors = JSON.parse(values.get(`${prefix}receipt-fds`)) } catch { reject('R2_INVOCATION_INVALID') }
   // Fixed slots: two directories, nineteen receipt files, two deployment files.
   if (!Array.isArray(descriptors) || descriptors.length !== FIXED_RECEIPT_NAMES.length + 4) reject('R2_DESCRIPTOR_INVALID')
   const terminal = new Set([15, 16, 17, 18].map(n => n + 2))
   descriptors.forEach((value, index) => { if (value === -1 && terminal.has(index)) return; if (typeof value !== 'number') reject('R2_DESCRIPTOR_INVALID'); fd(value) })
   const active = [challengeFd, windowFd, ...descriptors.filter(n => n !== -1)]
   if (new Set(active).size !== active.length) reject('R2_DESCRIPTOR_INVALID')
-  return { receipt, challengeFd, windowFd, descriptors, runtimeArgs }
+  return { operationId, receipt, challengeFd, windowFd, descriptors, runtimeArgs }
+}
+
+export function parsedStartupInvocation(argv) {
+  return parseFixedStartupInvocation(argv, '--hr-r2-', OP)
+}
+
+export function parsedAdminStartupInvocation(argv) {
+  return parseFixedStartupInvocation(argv, '--hr-admin-', ADMIN_OP)
 }
 
 export function readonlyReceiptIO(invocation) {
-  const paths = new Map([[EVIDENCE, invocation.descriptors[0]], [DEPLOYMENT, invocation.descriptors[1]],
-    [`${EVIDENCE}/window.lock`, invocation.windowFd]])
-  FIXED_RECEIPT_NAMES.forEach((name, index) => paths.set(`${EVIDENCE}/${name}`, invocation.descriptors[index + 2]))
+  if (invocation.operationId !== OP && invocation.operationId !== ADMIN_OP) reject('R2_OPERATION_UNKNOWN')
+  const evidence = `/private/var/db/agent-deploy-system/${invocation.operationId}`
+  const paths = new Map([[evidence, invocation.descriptors[0]], [DEPLOYMENT, invocation.descriptors[1]],
+    [`${evidence}/window.lock`, invocation.windowFd]])
+  FIXED_RECEIPT_NAMES.forEach((name, index) => paths.set(`${evidence}/${name}`, invocation.descriptors[index + 2]))
   paths.set(`${DEPLOYMENT}/floor-proven.json`, invocation.descriptors.at(-2))
   paths.set(`${DEPLOYMENT}/validator-installed.json`, invocation.descriptors.at(-1))
   const bounded = path => {
@@ -97,7 +109,7 @@ export function readonlyReceiptIO(invocation) {
       }
       return bytes
     },
-    readdir(path) { bounded(path); if (path !== EVIDENCE) reject('R2_RECEIPT_PATH_INVALID'); return ['bundle.json'] },
+    readdir(path) { bounded(path); if (path !== evidence) reject('R2_RECEIPT_PATH_INVALID'); return ['bundle.json'] },
     challengeWindow(descriptor, query) {
       if (authenticatedEvidenceIO === undefined) reject('R2_STARTUP_PROOF_REJECTED')
       return authenticatedEvidenceIO.challengeWindow(descriptor, query)
@@ -106,12 +118,18 @@ export function readonlyReceiptIO(invocation) {
 }
 
 export function getFixedStartupContext() { return installed }
+export function hasFixedQualificationContext() { return qualification !== undefined }
+/** Private Router composition only; no service or caller-facing selector. */
+export function getFixedAdminQualificationContext() {
+  return qualification?.context.role === 'original_executor_admin_qualification'
+    ? qualification.context : undefined
+}
 
 /** Completion notice only; root independently validates the actual store. */
 export function signalFixedStartupConsumptionFinished() {
   if (installed === undefined) return
   const { hostId, startupNonce, challengeFd } = installed.startup
-  const notice = Buffer.from(JSON.stringify({ operationId: OP, hostId, startupNonce,
+  const notice = Buffer.from(JSON.stringify({ operationId: installed.operationId, hostId, startupNonce,
     challenge: 'startup-consumption-finished' }) + '\n')
   if (writeSync(challengeFd, notice) !== notice.length) reject('R2_COMPLETION_NOTICE_INCOMPLETE')
 }
@@ -119,9 +137,13 @@ export function signalFixedStartupConsumptionFinished() {
 export async function authenticateFixedStartupContext() {
   if (installed !== undefined || qualificationAttempted) reject('R2_STARTUP_CONTEXT_NO_REPLAY')
   if (process.argv.slice(2).some(arg => arg.startsWith('--hr-qf-'))) return authenticateQualificationContext()
-  const invocation = parsedStartupInvocation(process.argv.slice(2))
+  const admin = process.argv.slice(2).some(arg => arg.startsWith('--hr-admin-'))
+  const invocation = admin ? parsedAdminStartupInvocation(process.argv.slice(2))
+    : parsedStartupInvocation(process.argv.slice(2))
+  const evidence = `/private/var/db/agent-deploy-system/${invocation.operationId}`
   const authorizationFd = invocation.descriptors[3]
-  const result = spawnSync('/usr/bin/python3', ['-I', '-S', HELPER, '--startup-prove', '3', '4', invocation.receipt, '5'], {
+  const result = spawnSync('/usr/bin/python3', ['-I', '-S', HELPER,
+    admin ? '--startup-prove-admin' : '--startup-prove', '3', '4', invocation.receipt, '5'], {
     stdio: ['ignore', 'pipe', 'pipe', invocation.challengeFd, invocation.windowFd, authorizationFd],
     env: { PATH: '/usr/bin:/bin', PYTHONNOUSERSITE: '1', PYTHONDONTWRITEBYTECODE: '1' },
     timeout: 750, maxBuffer: 2048, encoding: 'utf8',
@@ -134,7 +156,7 @@ export async function authenticateFixedStartupContext() {
       || typeof startup.hostId !== 'string' || typeof startup.startupNonce !== 'string') reject('R2_STARTUP_PROOF_REJECTED')
   const io = readonlyReceiptIO(invocation)
   // Resolve and bind the passed auth FD again; no helper stdout alone is proof.
-  const raw = io.readFile(`${EVIDENCE}/launch-authorization.json`)
+  const raw = io.readFile(`${evidence}/launch-authorization.json`)
   if (createHash('sha256').update(raw).digest('hex') !== invocation.receipt) reject('R2_STARTUP_CONTEXT_MISMATCH')
   const authorization = JSON.parse(raw).authorization
   for (const name of ['hostId', 'startupNonce', 'consumingBinarySha256']) {
@@ -143,7 +165,8 @@ export async function authenticateFixedStartupContext() {
   // No Router module loads until the real root/OFD/receipt proof succeeds.
   const { defaultEvidenceIO } = await import('../../../agent-router/src/reconciliation/quiescence-custody.js')
   authenticatedEvidenceIO = defaultEvidenceIO
-  installed = Object.freeze({ evidenceDir: EVIDENCE, deploymentDir: DEPLOYMENT, receipt: invocation.receipt,
+  installed = Object.freeze({ operationId: invocation.operationId, evidenceDir: evidence,
+    deploymentDir: DEPLOYMENT, receipt: invocation.receipt,
     startup: Object.freeze({ ...startup, windowFd: invocation.windowFd, challengeFd: invocation.challengeFd }), io })
   return invocation.runtimeArgs
 }
@@ -183,9 +206,10 @@ async function authenticateQualificationContext() {
   if (!observed || Object.keys(observed).sort().join(',') !== keys.join(',')
       || !context || Object.keys(context).sort().join(',') !== keys.join(',')
       || keys.some(key => observed[key] !== context[key])
-      || context.role !== 'original_executor_qualification'
+      || ![['original_executor_qualification', 'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e'],
+        ['original_executor_admin_qualification', 'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44']]
+        .some(([role, digest]) => context.role === role && context.procedureSha256 === digest)
       || !['deployment_start', 'restart_a', 'restart_b'].includes(context.phase)
-      || context.procedureSha256 !== 'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e'
       || ['consumingBinarySha256', 'validatorSha256', 'entryManifestSha256', 'startupNonce']
         .some(key => !/^[a-f0-9]{64}$/.test(context[key] ?? ''))) reject('QF_CONTEXT_BINDING')
   if (!qualificationBytes(invocation).equals(before)) reject('QF_CONTEXT_CHANGED')
@@ -200,8 +224,10 @@ async function authenticateQualificationContext() {
 export function runtimeAdmissionProjection(query, service, binding) {
   const keys = ['operationId', 'hostId', 'startupNonce', 'challenge',
     'launchAuthorizationReceiptSha256', 'reconciliationHandle']
+  const operationId = binding?.operationId ?? OP
+  if (operationId !== OP && operationId !== ADMIN_OP) reject('R2_ADMISSION_BINDING')
   if (!query || typeof query !== 'object' || Object.keys(query).length !== keys.length
-      || keys.some(key => !Object.hasOwn(query, key)) || query.operationId !== OP
+      || keys.some(key => !Object.hasOwn(query, key)) || query.operationId !== operationId
       || query.hostId !== binding.hostId || query.startupNonce !== binding.startupNonce
       || query.launchAuthorizationReceiptSha256 !== binding.receipt
       || query.reconciliationHandle !== 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256'
@@ -219,7 +245,10 @@ export function runtimeAdmissionProjection(query, service, binding) {
 }
 
 /** Existing authenticated socket only, after the actual Router service provision. */
-export function publishFixedRuntimeAdmission(service, reconciliationStore) {
+export function publishFixedRuntimeAdmission(service, reconciliationStore, ensureFixedAdminProcess) {
+  if (qualification?.context.role === 'original_executor_admin_qualification') {
+    publishAdminQualificationRuntime(service, reconciliationStore, ensureFixedAdminProcess); return
+  }
   if (qualification !== undefined) { publishQualificationRuntime(service, reconciliationStore); return }
   if (installed === undefined) return
   if (admissionListenerInstalled) reject('R2_ADMISSION_NO_REPLAY')
@@ -239,7 +268,7 @@ export function publishFixedRuntimeAdmission(service, reconciliationStore) {
       used = true
       const query = JSON.parse(bytes)
       const frame = runtimeAdmissionProjection(query, service,
-        { ...installed.startup, receipt: installed.receipt })
+        { ...installed.startup, operationId: installed.operationId, receipt: installed.receipt })
       channel.write(JSON.stringify(frame) + '\n')
     } catch { channel.destroy() } // Root observes UNKNOWN, never a positive stub.
   })
@@ -320,6 +349,102 @@ export function qualificationReplyObserver(store) {
       qualificationReplyWaiters.get(store)?.()
     } // Read-only observer failure never sends another transport reply.
   }
+}
+
+/** One private admin canary on the authenticated qualification socket. The
+ * Router passes its privately held registry closure; a query cannot select
+ * an Agent, prompt, route, child, receipt or capability. */
+export async function fixedAdminCanaryProjection(query, service, binding, store, ensureFixedAdminProcess) {
+  const fields = ['role','phase','consumingBinarySha256','validatorSha256','entryManifestSha256','procedureSha256','startupNonce'].sort()
+  if (!binding || Object.keys(binding).sort().join(',') !== fields.join(',')
+      || binding.role !== 'original_executor_admin_qualification'
+      || binding.procedureSha256 !== 'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44'
+      || !['deployment_start','restart_a','restart_b'].includes(binding.phase)
+      || ['consumingBinarySha256','validatorSha256','entryManifestSha256','startupNonce']
+        .some(key => !/^[a-f0-9]{64}$/.test(binding[key] ?? ''))) reject('QF_ADMIN_BINDING')
+  if (!query || Object.keys(query).sort().join(',') !== 'challenge,context,deadlineMonotonicNs'
+      || !query.context || Object.keys(query.context).sort().join(',') !== fields.join(',')
+      || fields.some(key => query.context[key] !== binding[key])
+      || !/^[a-f0-9]{32}$/.test(query.challenge ?? '')
+      || !/^[0-9]{1,20}$/.test(query.deadlineMonotonicNs ?? '')) reject('QF_ADMIN_QUERY')
+  const deadline = BigInt(query.deadlineMonotonicNs)
+  const before = () => { if (process.hrtime.bigint() >= deadline) reject('QF_ADMIN_DEADLINE') }
+  before()
+  store.assertBusinessAdmissionReady()
+  if (store.activeFenceForAgent('agt_efficiency-agent') !== null) reject('QF_ADMIN_AGENT_FENCED')
+  const proc = await ensureFixedAdminProcess()
+  before()
+  const expected = { role:'fixed_admin_qualification',agentId:'agt_efficiency-agent',
+    phase:binding.phase,hostId:'961534a5-8c94-487d-8e55-d324a54e821a',
+    packageSha256:binding.entryManifestSha256,
+    consumingBinarySha256:binding.consumingBinarySha256,startupNonce:binding.startupNonce,
+    processGeneration:proc?.processGeneration }
+  if (!proc || !Number.isSafeInteger(proc.processGeneration) || proc.processGeneration < 1
+      || Object.keys(proc.fixedAdminQualification ?? {}).sort().join(',') !== Object.keys(expected).sort().join(',')
+      || Object.keys(expected).some(key => proc.fixedAdminQualification[key] !== expected[key])
+      || proc.fixedAdminEffectAttempted) reject('QF_ADMIN_CHILD_UNKNOWN')
+  const result = await proc.qualifyFixedTurn()
+  before()
+  if (proc.fixedAdminEffectAttempted || result?.status !== 'completed'
+      || typeof result.reconciliationHandle !== 'string' || !result.reconciliationHandle
+      || typeof result.messageId !== 'string' || !result.messageId
+      || typeof result.reply !== 'string' || !result.reply) reject('QF_ADMIN_COMPLETION_UNKNOWN')
+  const runtime = service.reconciliationRuntimeStatus()
+  const durable = store.getTurnReconciliation(result.reconciliationHandle)
+  const record = durable?.snapshot
+  if (!runtime || runtime.health !== 'healthy' || runtime.businessAdmission !== 'open'
+      || typeof runtime.generationId !== 'string' || !runtime.generationId
+      || durable.state !== 'settled' || !record
+      || record.handle !== result.reconciliationHandle
+      || record.agentId !== 'agt_efficiency-agent'
+      || record.runtimeEpoch !== runtime.generationId
+      || record.processGeneration !== proc.processGeneration
+      || record.settlementResult !== 'completed' || record.fenceState !== 'armed'
+      || record.messageId !== result.messageId
+      || !(record.finalAssistantOutput?.originalBytes > 0)
+      || record.finalAssistantOutput.truncated !== false
+      || record.finalAssistantOutput.text !== result.reply
+      || proc.fixedAdminEffectAttempted) reject('QF_ADMIN_DURABLE_UNKNOWN')
+  before()
+  const hash = value => createHash('sha256').update(value).digest('hex')
+  return { context:{...binding},challenge:query.challenge,
+    handle:record.handle,runtimeGeneration:runtime.generationId,
+    processGeneration:proc.processGeneration,
+    nativeMessageSha256:hash(record.messageId),
+    nativeReceiptSha256:hash(`${record.handle}\0${result.messageId}`),
+    replySha256:hash(result.reply),
+    completedAtWallMs:record.updatedAt }
+}
+
+function publishAdminQualificationRuntime(service, store, ensureFixedAdminProcess) {
+  if (admissionListenerInstalled || typeof ensureFixedAdminProcess !== 'function') reject('QF_ADMIN_LISTENER_UNAVAILABLE')
+  admissionListenerInstalled = true
+  const channel = new Socket({ fd: qualification.challengeFd, readable: true, writable: true })
+  let bytes = Buffer.alloc(0), used = false, closed = false
+  const timer = setTimeout(() => channel.destroy(), 120000)
+  timer.unref()
+  channel.on('close', () => { closed = true; clearTimeout(timer) })
+  channel.on('error', () => channel.destroy())
+  channel.on('data', async part => {
+    try {
+      if (closed || used || bytes.length + part.length > 4096) reject('QF_ADMIN_NO_REPLAY')
+      bytes = Buffer.concat([bytes, part])
+      if (!bytes.includes(10)) return
+      if (bytes.at(-1) !== 10 || bytes.subarray(0,-1).includes(10)) reject('QF_ADMIN_QUERY')
+      used = true
+      const raw = bytes.subarray(0,-1).toString('utf8')
+      const query = JSON.parse(raw)
+      const canonical = value => value && typeof value === 'object' && !Array.isArray(value)
+        ? `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(',')}}`
+        : JSON.stringify(value)
+      if (raw !== canonical(query)) reject('QF_ADMIN_QUERY')
+      const frame = await fixedAdminCanaryProjection(query, service, qualification.context,
+        store, ensureFixedAdminProcess)
+      if (closed || process.hrtime.bigint() >= BigInt(query.deadlineMonotonicNs)) reject('QF_ADMIN_DEADLINE')
+      channel.write(JSON.stringify(frame) + '\n')
+    } catch { channel.destroy() } // Root retains UNKNOWN; no retry or fallback.
+  })
+  channel.unref()
 }
 
 function publishQualificationRuntime(service, reconciliationStore) {

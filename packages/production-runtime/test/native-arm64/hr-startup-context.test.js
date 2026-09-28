@@ -34,3 +34,21 @@ test('fixed descriptor grammar is closed and receipt IO cannot select a host pat
   assert.throws(() => io.stat('/Users/authsvc/.agent-core/control/turn-recovery-v3.json'), /R2_RECEIPT_PATH_INVALID/)
   assert.throws(() => io.challengeWindow(3, {}), /R2_STARTUP_PROOF_REJECTED/)
 })
+
+test('admin startup has its own fixed receipt namespace and rejects mixed or caller paths', async () => {
+  const context = await import('../../src/native-arm64/hr-s256-r2-startup-context.mjs')
+  const descriptors = Array.from({ length: context.FIXED_RECEIPT_NAMES.length + 4 }, (_, n) => n + 5)
+  for (const index of [17, 18, 19, 20]) descriptors[index] = -1
+  const args = table => ['--hr-admin-receipt-sha256', 'a'.repeat(64), '--hr-admin-challenge-fd', '3',
+    '--hr-admin-window-fd', '4', '--hr-admin-receipt-fds', JSON.stringify(table)]
+  const parsed = context.parsedAdminStartupInvocation(args(descriptors))
+  assert.equal(parsed.operationId, 'hr-s256-admin-emergency-cut-20260928-v1')
+  assert.throws(() => context.parsedStartupInvocation(args(descriptors)), /R2_INVOCATION_INVALID/)
+  assert.throws(() => context.parsedAdminStartupInvocation([...args(descriptors),
+    '--hr-r2-receipt-sha256', 'b'.repeat(64)]), /R2_INVOCATION_INVALID/)
+  assert.throws(() => context.parsedAdminStartupInvocation([...args(descriptors),
+    '--hr-admin-evidence-dir', '/tmp/fake']), /R2_INVOCATION_INVALID/)
+  const io = context.readonlyReceiptIO(parsed)
+  assert.throws(() => io.stat('/private/var/db/agent-deploy-system/hr-s256-trusted-quiescence-cut-20260925-v1'),
+    /R2_RECEIPT_PATH_INVALID/)
+})

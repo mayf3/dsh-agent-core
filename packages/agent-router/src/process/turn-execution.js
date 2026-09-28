@@ -16,6 +16,9 @@
 import { envelopeCarrier, fencedRejection, monotonicNowMs } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
+import { FIXED_ADMIN_CANARY_TEXT } from '../../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
+
+const FIXED_ADMIN_PRIVATE_TURN = Symbol('fixed-admin-private-turn')
 
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
@@ -133,10 +136,27 @@ export class TurnExecution {
 }
 
 export const turnExecutionMethods = {
+  /** Only the authenticated Router-owned qualification path may call this on
+   * its privately held AgentProcess. No generic Router service exports it. */
+  qualifyFixedTurn() {
+    if (this.fixedAdminQualification === null || this.fixedAdminCanaryAttempted) {
+      return Promise.reject(envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_NO_REPLAY',
+        'fixed admin canary is not privately armed or was already attempted'))
+    }
+    this.fixedAdminCanaryAttempted = true
+    return this.enqueuePromptExecution('turn', 'main', FIXED_ADMIN_CANARY_TEXT,
+      { [FIXED_ADMIN_PRIVATE_TURN]: true }, this.deadlines.turnTimeoutMs).then(result => {
+      if (this.fixedAdminEffectAttempted) {
+        throw envelopeCarrier('outcome_unknown', result.reconciliationHandle,
+          'FIXED_ADMIN_CANARY_EFFECT_ATTEMPTED', 'qualified child attempted a denied effect')
+      }
+      return result
+    })
+  },
   enqueuePromptExecution(mode, sessionId, text, opts, callerBoundMs) {
     return new Promise((resolve, reject) => {
       const promptBytes = Buffer.byteLength(String(text ?? ''), 'utf8')
-      const preError = this.preAdmissionError(mode, sessionId, text, promptBytes)
+      const preError = this.preAdmissionError(mode, sessionId, text, promptBytes, opts)
       if (preError !== null) {
         reject(preError)
         return
@@ -157,7 +177,25 @@ export const turnExecutionMethods = {
   },
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
-  preAdmissionError(mode, sessionId, text, promptBytes) {
+  preAdmissionError(mode, sessionId, text, promptBytes, opts) {
+    if (this.fixedAdminQualification !== null) {
+      if (mode !== 'turn' || opts?.[FIXED_ADMIN_PRIVATE_TURN] !== true
+          || sessionId !== 'main' || text !== FIXED_ADMIN_CANARY_TEXT) {
+        return envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_PRIVATE_ONLY',
+          'qualified child admits only the one fixed private canary')
+      }
+      try {
+        this.store.assertBusinessAdmissionReady()
+        if (this.store.activeFenceForAgent(this.agentId) !== null) {
+          return envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_AGENT_FENCED',
+            'fixed canary agent has an unresolved fence')
+        }
+        this.store.assertMintCapacity(this.agentId)
+      } catch (error) {
+        return envelopeCarrier('not_admitted', null, error?.code ?? 'FIXED_ADMIN_CANARY_STORE_UNKNOWN',
+          'fixed canary durable store admission is unavailable')
+      }
+    }
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
     }
@@ -208,7 +246,7 @@ export const turnExecutionMethods = {
   async runPromptExecution(entry) {
     const { mode, sessionId, text, opts, callerBoundMs, resolve, reject } = entry
     // Re-gate at the unified session/prompt write boundary (C-013).
-    const gate = this.preAdmissionError(mode, sessionId, text, entry.promptBytes)
+    const gate = this.preAdmissionError(mode, sessionId, text, entry.promptBytes, opts)
     if (gate !== null) {
       reject(gate)
       return

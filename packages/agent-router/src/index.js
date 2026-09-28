@@ -80,7 +80,7 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
-import { getFixedStartupContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission, qualificationReplyObserver } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
+import { getFixedStartupContext, getFixedAdminQualificationContext, hasFixedQualificationContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission, qualificationReplyObserver } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -240,7 +240,8 @@ export function apply(ctx, config) {
   if (fixedStartup !== undefined) {
     reconciliationStore.consumeStartupQuiescence(fixedStartup)
     signalFixedStartupConsumptionFinished()
-  } else if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+  } else if (!hasFixedQualificationContext()
+      && typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
     // RQ-005/007 privileged launcher authority has not been bootstrapped.
     // Environment values cannot establish its nonce, binary, or live FDs;
     // this production composition is deliberately incapable of settlement.
@@ -271,6 +272,7 @@ export function apply(ctx, config) {
     provisionHome,
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
+    fixedAdminRootContext: getFixedAdminQualificationContext(),
   })
   /**
    * The unified ordered route-attempt chain executor
@@ -416,7 +418,7 @@ export function apply(ctx, config) {
   // ChannelConversations, switch Agents and dispatch per the D-002 contract.
   // VALUE semantics: Cordis stores the value as-is.
   ctx.provide('agentRouter', service)
-  publishFixedRuntimeAdmission(service, reconciliationStore)
+  publishFixedRuntimeAdmission(service, reconciliationStore, registry.ensureFixedAdminProcess)
   return service
 }
 
