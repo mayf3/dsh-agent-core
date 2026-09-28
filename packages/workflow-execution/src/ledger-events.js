@@ -35,6 +35,11 @@
  *   run_delivered       { attemptId, agentId, requestId, sessionId,
  *                         reconciliationHandle?, messageId? }
  *                       → ACTIVE phase run_delivered (the Run linkage).
+ *   progress_checkpoint { attemptId, reporterAgentId, sessionId?,
+ *                         turnExecutionId?, checkpoint }
+ *                       → execution-resume metadata ONLY. It never changes
+ *                         state/phase/judgment and never counts as workflow
+ *                         business progress or stale-no-progress evidence.
  *   delivery_failed     { attemptId, reason }
  *                       → terminal NEEDS_REVIEW for every post-invocation
  *                       class. EXCEPTION (V2 CTR-WAE-011, projection-only):
@@ -208,6 +213,33 @@ export function applyLedgerEvent(attempts, event) {
         current.workflowStateVersionAtDispatch = event.workflowStateVersionAtDispatch
       }
       return
+    case 'progress_checkpoint': {
+      if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
+      if (current.phase !== 'run_delivered' || current.delivered === undefined) {
+        throw new Error(`workflow-execution: refusing progress_checkpoint for nodeVisit ${nodeVisitId} — phase ${current.phase} is not an active delivered Run`)
+      }
+      if (event.attemptId !== current.attemptId) {
+        throw new Error(`workflow-execution: corrupt ledger — progress_checkpoint attemptId mismatch for nodeVisit ${nodeVisitId}`)
+      }
+      if (typeof event.reporterAgentId !== 'string' || event.reporterAgentId === '') {
+        throw new Error('workflow-execution: progress_checkpoint requires reporterAgentId')
+      }
+      if (event.reporterAgentId !== current.delivered.agentId) {
+        throw new Error(`workflow-execution: progress_checkpoint reporter ${event.reporterAgentId} does not own delivered Run for nodeVisit ${nodeVisitId}`)
+      }
+      if (event.checkpoint === null || typeof event.checkpoint !== 'object' || Array.isArray(event.checkpoint)) {
+        throw new Error('workflow-execution: progress_checkpoint requires checkpoint object')
+      }
+      current.latestProgressCheckpoint = {
+        checkpoint: event.checkpoint,
+        reporterAgentId: event.reporterAgentId,
+        ...(typeof event.sessionId === 'string' && event.sessionId !== '' ? { sessionId: event.sessionId } : {}),
+        ...(typeof event.turnExecutionId === 'string' && event.turnExecutionId !== '' ? { turnExecutionId: event.turnExecutionId } : {}),
+        atMs: event.atMs,
+      }
+      current.progressCheckpointCount = (current.progressCheckpointCount ?? 0) + 1
+      return
+    }
     case 'delivery_failed':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-011 (projection-only reclassification): a HISTORICAL V1
