@@ -15,6 +15,7 @@ import socket
 import stat
 import subprocess
 import sys
+import threading
 import time
 
 
@@ -22,6 +23,8 @@ PINS = None
 LAUNCHER_SHA = None
 # A reviewed root-side UNKNOWN-custody handoff must be connected before this
 # source can become an executable installed carrier. Compilation leaves it off.
+# Keep the root carrier inert until the actual launcher/driver process and
+# inherited OFD transfer have an independently reviewed isolated-process test.
 CUSTODIAN_BOUND = False
 WINDOW_DIRECTORY = Path('/private/var/db/agent-deploy-system/original-router-qualification-20260927-v1')
 PACKAGE_DIRECTORY = WINDOW_DIRECTORY / 'package'
@@ -122,6 +125,61 @@ def _window(directory):
     except BaseException:
         os.close(fd)
         raise
+
+
+def _record_unknown(directory, window, reason):
+    """One-use root journal; this says nothing about child termination."""
+    require(re.fullmatch('[A-Z][A-Z0-9_]{0,63}', reason) is not None,
+            'ADMIN_CARRIER_UNKNOWN_REASON')
+    observed = os.stat('window.lock', dir_fd=directory, follow_symlinks=False)
+    held = os.fstat(window)
+    require(stat.S_ISREG(observed.st_mode) and observed.st_uid == 0
+            and stat.S_IMODE(observed.st_mode) == 0o600
+            and (observed.st_dev, observed.st_ino) == (held.st_dev, held.st_ino),
+            'ADMIN_CARRIER_UNKNOWN_WINDOW')
+    raw = json.dumps({'version': 1,
+        'qualificationOperationId': PINS['qualificationOperationId'],
+        'disposition': 'UNKNOWN', 'reason': reason},
+        sort_keys=True, separators=(',', ':')).encode()
+    fd = None
+    try:
+        fd = os.open('qualification-unknown.json', os.O_RDWR | os.O_CREAT |
+                     os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
+        require(os.write(fd, raw) == len(raw), 'ADMIN_CARRIER_UNKNOWN_SHORT_WRITE')
+        os.fsync(fd)
+        meta = os.fstat(fd)
+        require(stat.S_ISREG(meta.st_mode) and meta.st_uid == 0
+                and stat.S_IMODE(meta.st_mode) == 0o600 and meta.st_nlink == 1
+                and meta.st_size == len(raw) and os.pread(fd, len(raw) + 1, 0) == raw,
+                'ADMIN_CARRIER_UNKNOWN_READBACK')
+        os.fsync(directory)
+        return hashlib.sha256(raw).hexdigest()
+    finally:
+        if fd is not None: os.close(fd)
+
+
+def _park_unknown(window, process):
+    # The carrier keeps its actual OFD and Popen object. It does not terminate
+    # the original driver or infer release from a timeout or a serialized PID.
+    require(window is not None, 'ADMIN_CARRIER_WINDOW_UNOWNED')
+    custody = (window, process)
+    parked = threading.Event()
+    while True:
+        try:
+            parked.wait()
+        except BaseException:
+            # A catchable interruption does not close the owned OFD/child.
+            continue
+
+
+def _retain_unknown(directory, window, process, reason):
+    # Only the still-owned window/child objects enter this path. A failed or
+    # competing journal cannot authorize cleanup or a second qualification.
+    try:
+        _record_unknown(directory, window, reason)
+    except BaseException:
+        pass
+    _park_unknown(window, process)
 
 
 def _digest(items):
@@ -252,7 +310,7 @@ def run():
             'ADMIN_CARRIER_PACKAGE_PATH')
     fds = []
     directories = []
-    channel = child = process = None
+    channel = child = process = window = None
     try:
         window_dir, ancestors = _directory(WINDOW_DIRECTORY)
         directories.extend([*ancestors, window_dir])
@@ -302,9 +360,15 @@ def run():
         require(validator['installedAtWallMs'] <= floor['provedAtWallMs']
                 and time.monotonic() < operation_deadline,
                 'ADMIN_CARRIER_PROOF_ORDER_UNKNOWN')
-    except BaseException:
-        # A launched child may still hold the exact window. Never retry the
-        # operation or remove the one-use lock after an uncertain outcome.
+    except BaseException as exc:
+        # Once the one-use window exists, the original child may be executing
+        # or retaining a canonical FD. Journal UNKNOWN, then keep this root
+        # carrier and its actual window/child objects resident. No kill/retry.
+        if window is not None:
+            reason = str(exc)
+            if re.fullmatch('[A-Z][A-Z0-9_]{0,63}', reason) is None:
+                reason = 'ADMIN_CARRIER_OUTCOME_UNKNOWN'
+            _retain_unknown(window_dir, window, process, reason)
         raise
     finally:
         if child is not None: child.close()

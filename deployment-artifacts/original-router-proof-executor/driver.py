@@ -14,6 +14,7 @@ import ast
 import time
 import subprocess
 import select
+import threading
 from dataclasses import dataclass
 
 PROCEDURE_SHA = 'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e'
@@ -21,6 +22,7 @@ ADMIN_PROCEDURE_SHA = 'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c
 ADMIN_OBSERVER_SHA = '7669ad98e12eb9ab5aee85506b402d4a073770734343d3262ecee1385f4e234c'
 QUALIFIED_ADMIN_PROCEDURE_SHA = None  # Only a separately reviewed fixed package may compile this selector.
 ID = 'original-router-qualification-20260927-v1'
+QUALIFICATION_CUSTODY_DIRECTORY = '/private/var/db/agent-deploy-system/' + ID
 PHASES = ('deployment_start', 'restart_a', 'restart_b')
 DAEMON_SHA = '908941f28a851d4a323be1870b6e8e9a6c29da841b7706817f0d9189557987cb'  # Historical offline baseline; final package must repin actual reviewed source.
 DAEMON_DESCRIPTOR_LIMIT = 128 * (1 << 20)  # Finite reviewed-current-size ceiling; SHA must be rebound in final package.
@@ -203,8 +205,66 @@ class FixedOriginalDriver:
             'QUALIFICATION_ENTRY_BINDING')
         self._binding = QUALIFIED_ORIGINAL_ENTRY
         self._unknown = True
+        self._effect_started = False
         self._admit()
         self._unknown = False
+
+    def _record_unknown(self, reason):
+        """One-use root journal; disposition is not proof of process exit."""
+        require(re.fullmatch('[A-Z][A-Z0-9_]{0,63}', reason) is not None,
+                'ORIGINAL_UNKNOWN_REASON_INVALID')
+        parent = _namespace_directory(QUALIFICATION_CUSTODY_DIRECTORY)
+        fd = None
+        try:
+            observed = os.stat('window.lock', dir_fd=parent, follow_symlinks=False)
+            held = os.fstat(self._window_fd)
+            require(stat.S_ISREG(observed.st_mode) and observed.st_uid == 0
+                    and stat.S_IMODE(observed.st_mode) == 0o600
+                    and (observed.st_dev, observed.st_ino) == (held.st_dev, held.st_ino),
+                    'ORIGINAL_UNKNOWN_WINDOW_CHANGED')
+            raw = json.dumps({'version': 1, 'qualificationOperationId': ID,
+                'disposition': 'UNKNOWN', 'reason': reason},
+                sort_keys=True, separators=(',', ':')).encode()
+            fd = os.open('qualification-unknown.json', os.O_RDWR | os.O_CREAT |
+                         os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
+            require(os.write(fd, raw) == len(raw), 'ORIGINAL_UNKNOWN_SHORT_WRITE')
+            os.fsync(fd)
+            meta = os.fstat(fd)
+            require(stat.S_ISREG(meta.st_mode) and meta.st_uid == 0
+                    and stat.S_IMODE(meta.st_mode) == 0o600
+                    and meta.st_nlink == 1 and meta.st_size == len(raw)
+                    and os.pread(fd, len(raw) + 1, 0) == raw,
+                    'ORIGINAL_UNKNOWN_READBACK')
+            os.fsync(parent)
+            return hashlib.sha256(raw).hexdigest()
+        finally:
+            if fd is not None: os.close(fd)
+            os.close(parent)
+
+    def _park_unknown(self):
+        # Passive containment in the original process. The actual canonical
+        # FD, window FD and phase Popen objects stay reachable on self; no
+        # serialized PID or receipt is treated as recovered ownership.
+        self._unknown_custody_parked = True
+        parked = threading.Event()
+        while True:
+            try:
+                parked.wait()
+            except BaseException:
+                # A catchable interruption does not release live capabilities.
+                continue
+
+    def _retain_unknown(self, reason):
+        self._unknown = True
+        require(getattr(self, '_effect_started', False), 'ORIGINAL_PRE_EFFECT_REJECTED')
+        try:
+            self._unknown_receipt_sha256 = self._record_unknown(reason)
+        except BaseException:
+            # The O_EXCL window itself still prevents replay. Keep all actual
+            # capabilities even when the terminal journal/readback is lost.
+            self._unknown_receipt_sha256 = None
+        self._park_unknown()
+        raise Unknown('ORIGINAL_UNKNOWN_CUSTODIAN_STOPPED')
 
     def _admit(self):
         challenge,window,manifest,entry,helper,daemon = _invocation(sys.argv[1:])
@@ -605,8 +665,13 @@ class FixedOriginalDriver:
             admin_raw = _descriptor_bytes(fd,ADMIN_PROCEDURE_SHA)
             exec(compile(admin_raw,'original-admin-procedure.py','exec'),scope)
             return scope['_run_admin_owned'](self)
-        except BaseException:
+        except BaseException as exc:
             self._unknown = True
+            if getattr(self, '_effect_started', False):
+                reason = str(exc)
+                if re.fullmatch('[A-Z][A-Z0-9_]{0,63}', reason) is None:
+                    reason = 'ORIGINAL_PROCEDURE_UNKNOWN'
+                self._retain_unknown(reason)
             raise
         finally:
             if fd is not None: os.close(fd)
