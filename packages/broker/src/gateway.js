@@ -295,6 +295,15 @@ export function createBrokerGateway({
       if (!validated.ok) return validated
       localArgs = validated.args
     }
+    if (manifest.id === 'fixed_operation') {
+      // Authoritative boundary (mirrors self_ops): a child can bypass its own
+      // tool mapper and call parent RPC directly, so repeat exact validation
+      // (operation selector + pinned version/hash + closed business args)
+      // before the handler runs.
+      const validated = validateInvocation(manifest, { operation, args: call?.args })
+      if (!validated.ok) return validated
+      localArgs = validated.args
+    }
 
     if (manifest.id === 'workflow_definition_authoring' && operation === 'replace_draft_graph') {
       const prepared = prepareWorkflowDraft(localArgs)
@@ -303,8 +312,11 @@ export function createBrokerGateway({
     }
 
     let credential
+    // self_ops and fixed_operation are caller-runtime-scoped LOCAL fixtures
+    // with no HTTP downstream — they never touch the credential store.
+    const credentialFreeCapability = manifest.id === 'self_ops' || manifest.id === 'fixed_operation'
     try {
-      credential = manifest.id === 'self_ops' ? undefined : loadCredentialFor(credentialsFile, agentId)
+      credential = credentialFreeCapability ? undefined : loadCredentialFor(credentialsFile, agentId)
     } catch (error) {
       // A broken credential store must never crash the parent RPC; fail the
       // call closed with the store error detail (never the secret).
@@ -312,7 +324,7 @@ export function createBrokerGateway({
       if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: error?.message ?? 'credential store error' } }
     }
-    if (credential === undefined && manifest.id !== 'self_ops') {
+    if (credential === undefined && !credentialFreeCapability) {
       log(`[broker-gateway] agent ${agentId}: no credential bound (fails closed)`)
       if (isLocal) noteDenial(manifest, operation, agentId, 'credential_unavailable')
       return { ok: false, error: { code: 'credential_unavailable', detail: `no MachineClient credential bound to agent ${agentId}` } }
