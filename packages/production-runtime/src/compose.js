@@ -537,6 +537,7 @@ export async function composeProductionRuntime(options = {}) {
       void payload // the kick carries no semantics; the poll re-reads svc truth
       return workflowExecution.engine.kick()
     },
+    ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
   })
 
   const scheduler = new Scheduler({

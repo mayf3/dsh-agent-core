@@ -177,7 +177,7 @@ export function createWorkflowExecutionEngine({
         dispatchIntentId: payload.dispatchIntentId,
       })
       if (recorded.committed) {
-        log.log?.(`workflow-execution: attempt limit escalated for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
+        log.log?.(`workflow-execution: owner assistance opened for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
       }
     } catch (error) {
       log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
