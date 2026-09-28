@@ -42,6 +42,7 @@ class FixedReadback(unittest.TestCase):
             self.ds = {'__name__':'isolated_cto_fixture', '__file__':str(self.path)}
             exec(self.code, self.ds)
         (self.root/'receipts').mkdir()
+        (self.root/'mutation.lock').touch(mode=0o644)
         self.payload = {'action':ACTION, 'operation_id':OP, 'feishu_message_id':MESSAGE}
         self.ds['HR_CTO_REQUEST_SHA256'] = sha(self.ds['canonical'](self.payload))
         self.write()
@@ -227,6 +228,55 @@ class FixedReadback(unittest.TestCase):
         self.assertFalse(result['ok'])
         self.assertNotIn('projection',result)
         self.assertEqual(json.loads((self.root/'receipts'/f'{OP}.json').read_text())['state'],'INTENT')
+
+    def test_replaced_receipt_parent_never_writes_through_symlink(self):
+        receipts=self.root/'receipts'
+        outside=self.root/'replacement-target'
+        outside.mkdir()
+        receipt_ino=receipts.stat().st_ino
+        original=os.open
+        count=[0]
+        def raced(path,flags,*args,**kwargs):
+            is_temp=bool(flags & os.O_CREAT)
+            parent_fd=kwargs.get('dir_fd')
+            is_receipt=(parent_fd is not None and os.fstat(parent_fd).st_ino==receipt_ino)
+            is_receipt=is_receipt or (isinstance(path,str) and path.startswith(str(receipts)+'/'))
+            if is_temp and is_receipt:
+                count[0]+=1
+                if count[0]==2:
+                    receipts.rename(self.root/'retained-receipts')
+                    receipts.symlink_to(outside,target_is_directory=True)
+            return original(path,flags,*args,**kwargs)
+        with patch.object(os,'open',side_effect=raced):result=self.request()
+        self.assertEqual(count[0],2)
+        self.assertFalse(result['ok'])
+        self.assertEqual(list(outside.iterdir()),[])
+
+    def test_symlink_lock_cannot_create_external_target(self):
+        lock=self.root/'mutation.lock'
+        if lock.exists():lock.unlink()
+        target=self.root/'must-not-create'
+        lock.symlink_to(target)
+        self.assertFalse(self.request()['ok'])
+        self.assertFalse(target.exists())
+
+    def test_intent_parent_swap_stops_before_protected_read(self):
+        outside=self.root/'intent-outside'
+        outside.mkdir()
+        original=os.open
+        swapped=[False]
+        def raced(path,flags,*args,**kwargs):
+            if not swapped[0] and flags & os.O_CREAT:
+                swapped[0]=True
+                ledger=self.root/'hr-cto-owner-sender-readback'
+                ledger.rename(self.root/'original-ledger')
+                ledger.symlink_to(outside,target_is_directory=True)
+            return original(path,flags,*args,**kwargs)
+        self.ds['hr_cto_verified_select']=lambda _:self.fail('READ_AFTER_LOST_INTENT')
+        with patch.object(os,'open',side_effect=raced):result=self.request()
+        self.assertTrue(swapped[0])
+        self.assertFalse(result['ok'])
+        self.assertEqual(list(outside.iterdir()),[])
 
     def test_existing_efficiency_action_preserved(self):
         self.write([ss.v3_record(1,'agt_efficiency-agent',1,1,correlation=ss.five_leaf(MESSAGE,SENDER),message_id=NATIVE)])
