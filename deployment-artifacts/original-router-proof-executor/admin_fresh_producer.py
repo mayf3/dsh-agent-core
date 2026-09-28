@@ -34,6 +34,7 @@ OLD_PATHS = {
 }
 NEW_NAMES = frozenset((*OLD_PATHS, 'deploy_shim.py', 'node-runtime', 'python-runtime'))
 SHIM_STATE_ROOT = Path('/private/var/db/agent-deploy-shim')
+SHIM_STATE_GID = 80
 SHIM_INBOX = SHIM_STATE_ROOT / 'inbox' / INSTALL_OPERATION_ID
 SHIM_INBOX_OWNER_UID = None
 REVIEWED_STAGED_SIZE = None
@@ -128,7 +129,8 @@ def _read_staged(name):
     try:
         state_meta = os.fstat(state)
         _require(stat.S_ISDIR(state_meta.st_mode)
-                 and state_meta.st_uid == ROOT_UID and state_meta.st_gid == 0
+                 and state_meta.st_uid == ROOT_UID
+                 and state_meta.st_gid == SHIM_STATE_GID
                  and stat.S_IMODE(state_meta.st_mode) == 0o770,
                  'ADMIN_FRESH_STAGE_CUSTODY')
         inbox = os.open('inbox', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
@@ -136,6 +138,7 @@ def _read_staged(name):
         inbox_meta = os.fstat(inbox)
         _require(stat.S_ISDIR(inbox_meta.st_mode)
                  and inbox_meta.st_uid == SHIM_INBOX_OWNER_UID
+                 and inbox_meta.st_gid == 0
                  and stat.S_IMODE(inbox_meta.st_mode) == 0o700,
                  'ADMIN_FRESH_STAGE_CUSTODY')
         operation = os.open(INSTALL_OPERATION_ID,

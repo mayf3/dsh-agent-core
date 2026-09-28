@@ -57,16 +57,20 @@ class FakeDS:
 
 
 class FreshProducerTests(unittest.TestCase):
-    def _staged_metadata(self, stack, owned_paths, owner_uid, root_gid_paths=()):
+    def _staged_metadata(self, stack, owned_paths, owner_uid,
+                         root_gid_paths=(), inbox_gid_paths=()):
         """Model distinct root and authorized-owner metadata without chown."""
         real_stat, real_fstat = os.stat, os.fstat
         identities = {(real_stat(path).st_dev, real_stat(path).st_ino)
                       for path in owned_paths}
         root_gid = {(real_stat(path).st_dev, real_stat(path).st_ino)
                     for path in root_gid_paths}
+        inbox_gid = {(real_stat(path).st_dev, real_stat(path).st_ino)
+                     for path in inbox_gid_paths}
+        fixed_state_gid = producer.SHIM_STATE_GID
         def converted(value):
             key = (value.st_dev, value.st_ino)
-            if key not in identities and key not in root_gid:
+            if key not in identities and key not in root_gid and key not in inbox_gid:
                 return value
             fields = ('st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_gid',
                       'st_nlink', 'st_size', 'st_mtime_ns', 'st_ctime_ns')
@@ -74,6 +78,8 @@ class FreshProducerTests(unittest.TestCase):
             if key in identities:
                 row['st_uid'] = owner_uid
             if key in root_gid:
+                row['st_gid'] = fixed_state_gid
+            if key in inbox_gid:
                 row['st_gid'] = 0
             return SimpleNamespace(**row)
         stack.enter_context(patch.object(os, 'stat',
@@ -95,7 +101,7 @@ class FreshProducerTests(unittest.TestCase):
             owner = os.geteuid() + 1
             with ExitStack() as stack:
                 self._staged_metadata(stack, (inbox, operation, staged), owner,
-                                      (state,))
+                                      (state,), (inbox,))
                 stack.enter_context(patch.object(producer, 'ROOT_UID', os.geteuid()))
                 stack.enter_context(patch.object(producer, 'SHIM_INBOX', operation))
                 stack.enter_context(patch.object(producer, 'SHIM_STATE_ROOT', state))
@@ -105,6 +111,10 @@ class FreshProducerTests(unittest.TestCase):
                 stack.enter_context(patch.object(producer, 'REVIEWED_STAGED_SIZE',
                     {'deployment_system.py': len(raw)}))
                 self.assertEqual(producer._read_staged('deployment_system.py'), raw)
+                with patch.object(producer, 'SHIM_STATE_GID', 0):
+                    with self.assertRaisesRegex(producer.FreshRejected,
+                                                'ADMIN_FRESH_STAGE_CUSTODY'):
+                        producer._read_staged('deployment_system.py')
                 with patch.object(producer, 'REVIEWED_STAGED_SIZE',
                                   {'deployment_system.py': len(raw) + 1}):
                     with self.assertRaisesRegex(producer.FreshRejected,
@@ -115,7 +125,8 @@ class FreshProducerTests(unittest.TestCase):
                                                 'ADMIN_FRESH_STAGE_CUSTODY'):
                         producer._read_staged('deployment_system.py')
             with ExitStack() as stack:
-                self._staged_metadata(stack, (inbox, operation), owner, (state,))
+                self._staged_metadata(stack, (inbox, operation), owner,
+                                      (state,), (inbox,))
                 for key, value in {
                     'ROOT_UID': os.geteuid(), 'SHIM_INBOX': operation,
                     'SHIM_STATE_ROOT': state, 'SHIM_INBOX_OWNER_UID': owner,
@@ -137,7 +148,7 @@ class FreshProducerTests(unittest.TestCase):
                 target_is_directory=True)
             owner = os.geteuid() + 1
             with ExitStack() as stack:
-                self._staged_metadata(stack, (inbox,), owner, (state,))
+                self._staged_metadata(stack, (inbox,), owner, (state,), (inbox,))
                 for key, value in {
                     'ROOT_UID': os.geteuid(), 'SHIM_STATE_ROOT': state,
                     'SHIM_INBOX': inbox / producer.INSTALL_OPERATION_ID,
@@ -204,7 +215,7 @@ class FreshProducerTests(unittest.TestCase):
                 with ExitStack() as stack:
                     self._staged_metadata(stack,
                         (inbox, staged, *(staged / name for name in producer.OLD_PATHS)),
-                        owner, (state,))
+                        owner, (state,), (inbox,))
                     for key, value in {
                         'ACTIVE': True, 'CAPTURE_ID': ds.capture,
                         'ADMISSION_ID': 'admission-fixed',
