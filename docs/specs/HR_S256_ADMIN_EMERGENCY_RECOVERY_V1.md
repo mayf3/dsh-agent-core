@@ -1,6 +1,6 @@
 ---
 spec_id: HR_S256_ADMIN_EMERGENCY_RECOVERY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -13,13 +13,11 @@ superseded_by: null
 scope: [one fixed s256 admin-authenticated emergency recovery profile]
 accepted_by: original Deployment Agent under mayf3 standing nonproduction technical delegation
 accepted_date: 2026-09-28
-# The acceptance coordinates below identify the prior accepted body; this
-# C02 wording proposal requires its own independent review and lifecycle.
-accepted_reviewed_head: 435fdd01b1024361415bd8aedb6be31b6e8cfb79
-accepted_reviewed_spec_sha256: 0e80887d4d5f1e95fbd6aeac0f62694aa18ca637a90f7c7ad42511328e3571c6
-independent_review_sha256: 0a636410486870303615df4e77eb58e65c883907a7f3e5f58d384063fd0144c1
-delegated_acceptance_sha256: a1520e2f879172c905c347313368f35aeaf7bbbdc2cea160b1be157c0b012d21
-delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-S256-ADMIN-EMERGENCY-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
+accepted_reviewed_head: ac10e9ae2e0cefe6b7acfabf4fe1d90bfa0a3b39
+accepted_reviewed_spec_sha256: 01319d7f0ede5f20ad992857b7986c14728b9333ac4ca712b4f9dc6f2a70d688
+independent_review_sha256: 7ae15f6c7d598d6aec0de14fdc732b1ace51a2628a8d83d5c367399f94a63d2a
+delegated_acceptance_sha256: afd5d4a81525dda96b8b1eef94a6897db426788f2f7b2b275bbb22218a15015c
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-ADMIN-AER-C02-DELEGATED-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
 ---
 
 # Fixed s256 admin emergency recovery — proposal
