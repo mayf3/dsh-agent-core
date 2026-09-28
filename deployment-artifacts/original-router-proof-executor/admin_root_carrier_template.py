@@ -1,0 +1,317 @@
+"""Separate original root executor carrier for one fixed admin qualification.
+
+Compilation fills the two pins. The checked-in template has no active host
+entry. A caller cannot select an action, target, proof, path, or descriptor.
+"""
+import array
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import secrets
+import socket
+import stat
+import subprocess
+import sys
+import time
+
+
+PINS = None
+LAUNCHER_SHA = None
+# A reviewed root-side UNKNOWN-custody handoff must be connected before this
+# source can become an executable installed carrier. Compilation leaves it off.
+CUSTODIAN_BOUND = False
+WINDOW_DIRECTORY = Path('/private/var/db/agent-deploy-system/original-router-qualification-20260927-v1')
+PACKAGE_DIRECTORY = WINDOW_DIRECTORY / 'package'
+PROOF_DIRECTORY = Path('/private/var/db/agent-deploy-system/hr-s256-deployment-proof')
+CHALLENGE_SECONDS = 0.75
+
+
+class CarrierRejected(Exception):
+    pass
+
+
+def require(ok, reason):
+    if not ok:
+        raise CarrierRejected(reason)
+
+
+def _directory(path):
+    require(path in (WINDOW_DIRECTORY, PACKAGE_DIRECTORY, PROOF_DIRECTORY,
+                     Path('/usr/bin'))
+            and path.is_absolute() and '..' not in path.parts,
+            'ADMIN_CARRIER_NAMESPACE')
+    opened = []
+    trace = []
+    identity = lambda m: (m.st_dev, m.st_ino, m.st_mode, m.st_uid, m.st_gid,
+                          m.st_nlink, m.st_mtime_ns, m.st_ctime_ns)
+    try:
+        fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+        opened.append(fd)
+        root = os.fstat(fd)
+        require(stat.S_ISDIR(root.st_mode) and root.st_uid == 0
+                and not stat.S_IMODE(root.st_mode) & 0o022,
+                'ADMIN_CARRIER_NAMESPACE')
+        relative = ''
+        for component in path.parts[1:]:
+            relative += '/' + component
+            before = os.stat(component, dir_fd=fd, follow_symlinks=False)
+            require(stat.S_ISDIR(before.st_mode) and before.st_uid == 0,
+                    'ADMIN_CARRIER_NAMESPACE')
+            if relative == '/private/var/db/agent-deploy-system':
+                require(before.st_gid == 80 and stat.S_IMODE(before.st_mode) == 0o770,
+                        'ADMIN_CARRIER_DS_PARENT')
+            else:
+                require(not stat.S_IMODE(before.st_mode) & 0o022,
+                        'ADMIN_CARRIER_NAMESPACE')
+            child = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                            dir_fd=fd)
+            opened.append(child)
+            require(identity(before) == identity(os.fstat(child))
+                    and identity(before) == identity(os.stat(component, dir_fd=fd,
+                                                              follow_symlinks=False)),
+                    'ADMIN_CARRIER_NAMESPACE_CHANGED')
+            trace.append((fd, component, child, identity(before)))
+            fd = child
+        for parent, component, child, expected in trace:
+            require(identity(os.stat(component, dir_fd=parent,
+                                     follow_symlinks=False)) == expected
+                    and identity(os.fstat(child)) == expected,
+                    'ADMIN_CARRIER_NAMESPACE_CHANGED')
+        return opened.pop(), opened
+    except BaseException:
+        for fd in reversed(opened): os.close(fd)
+        raise
+
+
+def _file(directory, name, expected, limit):
+    before = os.stat(name, dir_fd=directory, follow_symlinks=False)
+    require(stat.S_ISREG(before.st_mode) and before.st_uid == 0
+            and not stat.S_IMODE(before.st_mode) & 0o022
+            and before.st_nlink == 1 and 0 < before.st_size <= limit,
+            'ADMIN_CARRIER_FILE_CUSTODY')
+    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+    try:
+        opened = os.fstat(fd)
+        identity = lambda m: (m.st_dev, m.st_ino, m.st_mode, m.st_uid, m.st_gid,
+                              m.st_nlink, m.st_size, m.st_mtime_ns, m.st_ctime_ns)
+        require(identity(before) == identity(opened), 'ADMIN_CARRIER_FILE_CHANGED')
+        raw = os.pread(fd, before.st_size + 1, 0)
+        require(len(raw) == before.st_size and hashlib.sha256(raw).hexdigest() == expected
+                and identity(opened) == identity(os.fstat(fd))
+                and identity(before) == identity(os.stat(name, dir_fd=directory,
+                                                         follow_symlinks=False)),
+                'ADMIN_CARRIER_FILE_CHANGED')
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def _window(directory):
+    # This is a private original-executor namespace, never the HR cut window.
+    fd = os.open('window.lock', os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                 0o600, dir_fd=directory)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        os.fsync(fd)
+        os.fsync(directory)
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
+
+
+def _digest(items):
+    return hashlib.sha256(json.dumps(items, separators=(',', ':')).encode()).hexdigest().encode()
+
+
+def _proof(directory, name, expected_binary):
+    before = os.stat(name, dir_fd=directory, follow_symlinks=False)
+    require(stat.S_ISREG(before.st_mode) and before.st_uid == 0
+            and stat.S_IMODE(before.st_mode) == 0o600 and before.st_nlink == 1
+            and 0 < before.st_size <= 2048, 'ADMIN_CARRIER_PROOF_CUSTODY')
+    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+    try:
+        opened = os.fstat(fd)
+        identity = lambda m: (m.st_dev, m.st_ino, m.st_mode, m.st_uid, m.st_gid,
+                              m.st_nlink, m.st_size, m.st_mtime_ns, m.st_ctime_ns)
+        require(identity(before) == identity(opened), 'ADMIN_CARRIER_PROOF_CHANGED')
+        raw = os.pread(fd, before.st_size + 1, 0)
+        require(len(raw) == before.st_size and identity(opened) == identity(os.fstat(fd))
+                and identity(before) == identity(os.stat(name, dir_fd=directory,
+                                                         follow_symlinks=False)),
+                'ADMIN_CARRIER_PROOF_CHANGED')
+    finally:
+        os.close(fd)
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            require(key not in value, 'ADMIN_CARRIER_PROOF_DUPLICATE')
+            value[key] = item
+        return value
+    value = json.loads(raw, object_pairs_hook=unique)
+    require(type(value) is dict and raw == json.dumps(value, sort_keys=True,
+            separators=(',', ':')).encode() and
+            value.get('deployedBinarySha256') == expected_binary,
+            'ADMIN_CARRIER_PROOF_INVALID')
+    if name == 'floor-proven.json':
+        require(set(value) == {'status', 'floorCommit', 'deployedBinarySha256',
+                               'provedAtWallMs'} and
+                value['status'] == 'ROUTER_RESTART_SAFETY=PROVEN' and
+                value['floorCommit'] == '2097e4f9' and
+                type(value['provedAtWallMs']) is int and value['provedAtWallMs'] > 0,
+                'ADMIN_CARRIER_PROOF_INVALID')
+    else:
+        require(name == 'validator-installed.json' and
+                set(value) == {'evidenceKind', 'deployedBinarySha256',
+                               'installedAtWallMs'} and
+                value['evidenceKind'] == 'restart_quiescence_proven' and
+                type(value['installedAtWallMs']) is int and value['installedAtWallMs'] > 0,
+                'ADMIN_CARRIER_PROOF_INVALID')
+    return value
+
+
+def _challenge(channel, window, manifest_sha, *, trusted_uid=0):
+    # Root retains the original OFD; a second open of the same inode is not it.
+    meta = os.fstat(window)
+    require(stat.S_ISREG(meta.st_mode) and meta.st_uid == trusted_uid
+            and stat.S_IMODE(meta.st_mode) == 0o600 and meta.st_nlink == 1,
+            'ADMIN_CARRIER_WINDOW_CUSTODY')
+    identity = [meta.st_dev, meta.st_ino]
+    nonce, challenge = secrets.token_hex(32), secrets.token_hex(32)
+    frame = json.dumps({'nonce': nonce, 'challenge': challenge,
+                        'receiptSha256': manifest_sha, 'windowIdentity': identity},
+                       separators=(',', ':')).encode() + b'\n'
+    require(len(frame) <= 512, 'ADMIN_CARRIER_FRAME_BOUND')
+    deadline = time.monotonic() + CHALLENGE_SECONDS
+    reply_fds = []
+    try:
+        channel.settimeout(max(0, deadline - time.monotonic()))
+        channel.sendall(frame)
+        answer = bytearray()
+        while len(answer) < 64:
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, 'ADMIN_CARRIER_CHALLENGE_DEADLINE')
+            channel.settimeout(remaining)
+            block, ancillary, flags, _ = channel.recvmsg(64 - len(answer),
+                socket.CMSG_SPACE(array.array('i').itemsize))
+            require(bool(block) and not flags & socket.MSG_CTRUNC,
+                    'ADMIN_CARRIER_CHALLENGE_CLOSED')
+            for level, kind, raw in ancillary:
+                require(level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS,
+                        'ADMIN_CARRIER_CHALLENGE_FD')
+                values = array.array('i')
+                require(len(raw) % values.itemsize == 0,
+                        'ADMIN_CARRIER_CHALLENGE_FD')
+                values.frombytes(raw)
+                reply_fds.extend(values)
+            answer.extend(block)
+        require(len(reply_fds) == 1 and bytes(answer) ==
+                _digest([nonce, challenge, manifest_sha, identity]),
+                'ADMIN_CARRIER_CHALLENGE_MISMATCH')
+        returned = reply_fds[0]
+        other = os.fstat(returned)
+        require((other.st_dev, other.st_ino) == tuple(identity),
+                'ADMIN_CARRIER_WINDOW_FD')
+        old, returned_old = os.lseek(window, 0, os.SEEK_CUR), os.lseek(returned, 0, os.SEEK_CUR)
+        try:
+            os.lseek(returned, old + 1, os.SEEK_SET)
+            require(os.lseek(window, 0, os.SEEK_CUR) == old + 1,
+                    'ADMIN_CARRIER_WINDOW_OFD')
+        finally:
+            os.lseek(returned, returned_old, os.SEEK_SET)
+            os.lseek(window, old, os.SEEK_SET)
+        remaining = deadline - time.monotonic()
+        require(remaining > 0, 'ADMIN_CARRIER_CHALLENGE_DEADLINE')
+        channel.settimeout(remaining)
+        channel.sendall(_digest(['ROOT_APPROVED', nonce, challenge, manifest_sha, identity]))
+    finally:
+        for fd in reply_fds:
+            os.close(fd)
+
+
+def run():
+    require(type(PINS) is dict and PINS.get('qualificationOperationId') ==
+            'original-router-qualification-20260927-v1'
+            and PINS.get('cutOperationId') ==
+            'hr-s256-admin-emergency-cut-20260928-v1'
+            and type(PINS.get('hostId')) is str
+            and PINS['hostId'] == '961534a5-8c94-487d-8e55-d324a54e821a'
+            and all(type(PINS.get(key)) is str and re.fullmatch('[a-f0-9]{64}', PINS[key])
+                for key in ('entryManifestSha256', 'entrySha256', 'helperSha256',
+                            'daemonSha256', 'pythonSha256'))
+            and type(LAUNCHER_SHA) is str and re.fullmatch('[a-f0-9]{64}', LAUNCHER_SHA),
+            'ADMIN_CARRIER_UNBOUND')
+    require(sys.argv[1:] == [], 'ADMIN_CARRIER_INVOCATION')
+    require(CUSTODIAN_BOUND is True, 'ADMIN_CARRIER_CUSTODIAN_UNBOUND')
+    require(os.geteuid() == 0, 'ADMIN_CARRIER_ROOT_REQUIRED')
+    require(Path(__file__).parent == PACKAGE_DIRECTORY,
+            'ADMIN_CARRIER_PACKAGE_PATH')
+    fds = []
+    directories = []
+    channel = child = process = None
+    try:
+        window_dir, ancestors = _directory(WINDOW_DIRECTORY)
+        directories.extend([*ancestors, window_dir])
+        package_dir, ancestors = _directory(PACKAGE_DIRECTORY)
+        directories.extend([*ancestors, package_dir])
+        own = os.stat('admin_root_carrier.py', dir_fd=package_dir,
+                      follow_symlinks=False)
+        executing = Path(__file__).lstat()
+        require(stat.S_ISREG(own.st_mode) and own.st_uid == 0
+                and own.st_nlink == 1 and not stat.S_IMODE(own.st_mode) & 0o022
+                and (executing.st_dev, executing.st_ino) ==
+                    (own.st_dev, own.st_ino), 'ADMIN_CARRIER_ENTRY_CUSTODY')
+        for name, field, limit in (
+            ('entry-manifest.json', 'entryManifestSha256', 2048),
+            ('driver.py', 'entrySha256', 65536),
+            ('child-proof.py', 'helperSha256', 65536),
+            ('deployment_system.py', 'daemonSha256', 128 * (1 << 20)),
+        ):
+            fds.append(_file(package_dir, name, PINS[field], limit))
+        fds.append(_file(package_dir, 'admin_launcher.py', LAUNCHER_SHA, 65536))
+        python_dir, ancestors = _directory(Path('/usr/bin'))
+        directories.extend([*ancestors, python_dir])
+        fds.append(_file(python_dir, 'python3', PINS['pythonSha256'], 128 * (1 << 20)))
+        # All reviewed bytes and fixed interpreter precede the one-use window.
+        channel, child = socket.socketpair()
+        operation_deadline = time.monotonic() + 300
+        window = _window(window_dir)
+        fds.insert(0, window)
+        # Exact six descriptors; no caller field, shell, environment override,
+        # or inherited unrelated FD is admitted to the original executor.
+        child_fds = (child.fileno(), *fds[:5])
+        process = subprocess.Popen(['/usr/bin/python3', '-I', '-S', '-B',
+            str(PACKAGE_DIRECTORY / 'admin_launcher.py'),
+            '--original-qualification-fds', ','.join(map(str, child_fds))],
+            pass_fds=child_fds, close_fds=True, stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            env={'PATH': '/usr/bin:/bin', 'LANG': 'C', 'LC_ALL': 'C'})
+        child.close(); child = None
+        _challenge(channel, fds[0], PINS['entryManifestSha256'])
+        remaining = operation_deadline - time.monotonic()
+        require(remaining > 0 and process.wait(timeout=remaining) == 0,
+                'ADMIN_CARRIER_CHILD_UNKNOWN')
+        proof_dir, ancestors = _directory(PROOF_DIRECTORY)
+        directories.extend([*ancestors, proof_dir])
+        floor = _proof(proof_dir, 'floor-proven.json', PINS['finalTreeSha256'])
+        validator = _proof(proof_dir, 'validator-installed.json', PINS['finalTreeSha256'])
+        require(validator['installedAtWallMs'] <= floor['provedAtWallMs']
+                and time.monotonic() < operation_deadline,
+                'ADMIN_CARRIER_PROOF_ORDER_UNKNOWN')
+    except BaseException:
+        # A launched child may still hold the exact window. Never retry the
+        # operation or remove the one-use lock after an uncertain outcome.
+        raise
+    finally:
+        if child is not None: child.close()
+        if channel is not None: channel.close()
+        for fd in reversed(fds): os.close(fd)
+        for fd in reversed(directories): os.close(fd)
+
+
+if __name__ == '__main__':
+    run()
