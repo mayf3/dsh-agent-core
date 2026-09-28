@@ -44,7 +44,7 @@ SOURCE_SHA256 = {
 }
 TEMPLATE_SHA256 = {
     'admin_launcher_template.py': 'e7e3ceb7d7ad3a3768b6749af8d3dc74d8fc597f98cd1c592e2f23b321def892',
-    'admin_root_carrier_template.py': 'abf378162f45fba046c8ec1b50332110dcc2beecc4ca16bdd944ca797bff8a28',
+    'admin_root_carrier_template.py': 'edb1fb8a5526edc27c52ca5fa5f80e930d653005046cd34def6a1bb2e007c451',
 }
 
 

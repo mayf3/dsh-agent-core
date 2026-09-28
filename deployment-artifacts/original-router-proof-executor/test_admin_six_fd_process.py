@@ -176,6 +176,9 @@ class SixFdActualProcessTest(unittest.TestCase):
                 detail = (root / 'launcher.err').read_text() if (root / 'launcher.err').exists() else ''
                 if (root / 'carrier-unknown.txt').exists():
                     detail += ' carrier=' + (root / 'carrier-unknown.txt').read_text()
+                readable, _, _ = select.select([ready_r], [], [], 0)
+                if readable:
+                    detail += ' root=' + os.read(ready_r, 1024).decode(errors='replace')
                 self.assertTrue(marker.exists(), 'compiled child did not reach effect: ' + detail)
                 identity = json.loads(marker.read_bytes())
                 launcher_pid, phase_pid = identity['launcherPid'], identity['phasePid']
