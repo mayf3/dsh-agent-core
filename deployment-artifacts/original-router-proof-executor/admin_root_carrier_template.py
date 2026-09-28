@@ -28,6 +28,7 @@ CUSTODIAN_BOUND = True
 WINDOW_DIRECTORY = Path('/private/var/db/agent-deploy-system/original-router-qualification-20260927-v1')
 PACKAGE_DIRECTORY = WINDOW_DIRECTORY / 'package'
 PROOF_DIRECTORY = Path('/private/var/db/agent-deploy-system/hr-s256-deployment-proof')
+RESULT_NAME = '.carrier-result.json'
 CHALLENGE_SECONDS = 0.75
 
 
@@ -231,6 +232,74 @@ def _proof(directory, name, expected_binary):
     return value
 
 
+def _prior_qualification(window_dir, proof_dir, expected_binary):
+    """Read the original root producer's completed chain before a new window.
+
+    An entirely absent chain permits one qualification. Partial, malformed or
+    unbound existing evidence is UNKNOWN and cannot be overwritten or replayed.
+    """
+    names = ('floor-proven.json', 'validator-installed.json')
+    def present(directory, name):
+        try:
+            os.stat(name, dir_fd=directory, follow_symlinks=False)
+            return True
+        except FileNotFoundError:
+            return False
+        except OSError as exc:
+            raise CarrierRejected('ADMIN_CARRIER_PRIOR_UNKNOWN') from exc
+    present_proofs = [present(proof_dir, name) for name in names]
+    present_result = present(window_dir, RESULT_NAME)
+    if not any(present_proofs) and not present_result:
+        return None
+    require(all(present_proofs) and present_result,
+            'ADMIN_CARRIER_PRIOR_INCOMPLETE')
+    floor, validator = (_proof(proof_dir, name, expected_binary) for name in names)
+    require(validator['installedAtWallMs'] <= floor['provedAtWallMs'],
+            'ADMIN_CARRIER_PRIOR_ORDER_UNKNOWN')
+    before = os.stat(RESULT_NAME, dir_fd=window_dir, follow_symlinks=False)
+    require(stat.S_ISREG(before.st_mode) and before.st_uid == 0
+            and stat.S_IMODE(before.st_mode) == 0o600 and before.st_nlink == 1
+            and 0 < before.st_size <= 4096, 'ADMIN_CARRIER_PRIOR_RESULT_CUSTODY')
+    fd = os.open(RESULT_NAME, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=window_dir)
+    try:
+        opened = os.fstat(fd)
+        identity = lambda m: (m.st_dev, m.st_ino, m.st_mode, m.st_uid, m.st_gid,
+                              m.st_nlink, m.st_size, m.st_mtime_ns, m.st_ctime_ns)
+        require(identity(before) == identity(opened), 'ADMIN_CARRIER_PRIOR_RESULT_CHANGED')
+        raw = os.pread(fd, before.st_size + 1, 0)
+        require(len(raw) == before.st_size and identity(opened) == identity(os.fstat(fd))
+                and identity(before) == identity(os.stat(RESULT_NAME, dir_fd=window_dir,
+                                                        follow_symlinks=False)),
+                'ADMIN_CARRIER_PRIOR_RESULT_CHANGED')
+    finally:
+        os.close(fd)
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            require(key not in value, 'ADMIN_CARRIER_PRIOR_RESULT_INVALID')
+            value[key] = item
+        return value
+    try:
+        result = json.loads(raw, object_pairs_hook=unique)
+    except (ValueError, TypeError) as exc:
+        raise CarrierRejected('ADMIN_CARRIER_PRIOR_RESULT_INVALID') from exc
+    canonical = lambda value: json.dumps(value, sort_keys=True,
+                                         separators=(',', ':')).encode()
+    require(type(result) is dict and raw == canonical(result)
+            and set(result) == {'schema', 'operationId', 'state', 'workerPid',
+                                'replayAllowed', 'qualificationComplete', 'proofSha256'}
+            and result['schema'] == 'HR_ORIGINAL_CARRIER_JOB_V1'
+            and result['operationId'] == PINS['qualificationOperationId']
+            and result['state'] == 'QUALIFICATION_COMPLETE'
+            and type(result['workerPid']) is int and result['workerPid'] > 0
+            and result['replayAllowed'] is False
+            and result['qualificationComplete'] is True
+            and result['proofSha256'] == [hashlib.sha256(canonical(value)).hexdigest()
+                                         for value in (floor, validator)],
+            'ADMIN_CARRIER_PRIOR_RESULT_INVALID')
+    return floor, validator
+
+
 def _challenge(channel, window, manifest_sha, *, trusted_uid=0):
     # Root retains the original OFD; a second open of the same inode is not it.
     meta = os.fstat(window)
@@ -333,6 +402,11 @@ def run():
         python_dir, ancestors = _directory(Path('/usr/bin'))
         directories.extend([*ancestors, python_dir])
         fds.append(_file(python_dir, 'python3', PINS['pythonSha256'], 128 * (1 << 20)))
+        proof_dir, ancestors = _directory(PROOF_DIRECTORY)
+        directories.extend([*ancestors, proof_dir])
+        prior = _prior_qualification(window_dir, proof_dir, PINS['finalTreeSha256'])
+        if prior is not None:
+            return prior
         # All reviewed bytes and fixed interpreter precede the one-use window.
         channel, child = socket.socketpair()
         operation_deadline = time.monotonic() + 300
@@ -352,8 +426,6 @@ def run():
         remaining = operation_deadline - time.monotonic()
         require(remaining > 0 and process.wait(timeout=remaining) == 0,
                 'ADMIN_CARRIER_CHILD_UNKNOWN')
-        proof_dir, ancestors = _directory(PROOF_DIRECTORY)
-        directories.extend([*ancestors, proof_dir])
         floor = _proof(proof_dir, 'floor-proven.json', PINS['finalTreeSha256'])
         validator = _proof(proof_dir, 'validator-installed.json', PINS['finalTreeSha256'])
         require(validator['installedAtWallMs'] <= floor['provedAtWallMs']
