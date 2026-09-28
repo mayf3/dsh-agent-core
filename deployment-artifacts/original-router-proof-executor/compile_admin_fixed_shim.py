@@ -146,6 +146,27 @@ def _bundle(pins):
         names.extend(path.relative_to(root).as_posix() for path in
                      (root / subdir).rglob('*') if path.is_file())
     values = {name: package._read(root, name, 128 << 20) for name in names}
+    tree = {name[5:]: value for name, value in values.items()
+            if name.startswith('tree/')}
+    directories = {'/'.join(name.split('/')[:depth]) for name in tree
+                   for depth in range(1, len(name.split('/')))}
+    entries = [{'p': name, 's': len(value),
+                'h': hashlib.sha256(value).hexdigest()}
+               for name, value in sorted(tree.items())]
+    captured = json.dumps({'dirs': len(directories), 'entries': entries,
+                           'links': [], 'total': sum(row['s'] for row in entries)},
+                          sort_keys=True, separators=(',', ':')).encode()
+    if (hashlib.sha256(captured).hexdigest() != binder.FINAL_TREE_SHA or
+            len(tree) != len([name for name in names if name.startswith('tree/')])):
+        raise ValueError('ADMIN_SHIM_CAPTURE_CHANGED')
+    source_inputs = candidate.get('sourcePinned')
+    if (type(source_inputs) is not dict or
+            set(source_inputs) != set(package.SOURCE_SHA256) or
+            any(hashlib.sha256(values['package-inputs/' + package.FILES[field]])
+                .hexdigest() != expected for field, expected in source_inputs.items()) or
+            hashlib.sha256(values['package-inputs/entry-manifest.json'])
+                .hexdigest() != candidate.get('entryManifestSha256')):
+        raise ValueError('ADMIN_SHIM_CAPTURE_CHANGED')
     for name, expected in source_pins.items():
         source = package._read(source_root, name, 65536)
         if hashlib.sha256(source).hexdigest() != expected:
@@ -154,6 +175,9 @@ def _bundle(pins):
     for name in ('admin_final_binding.py', 'admin_launcher_template.py',
                  'admin_root_carrier_template.py'):
         values[name] = package._read(source_root, name, 65536)
+    if any(hashlib.sha256(values[name]).hexdigest() != pin
+           for name, pin in package.TEMPLATE_SHA256.items()):
+        raise ValueError('ADMIN_SHIM_CAPTURE_CHANGED')
     if hashlib.sha256(values['admin_final_binding.py']).hexdigest() != \
             pins['binderSourceSha256']:
         raise ValueError('ADMIN_SHIM_BINDER_CHANGED')

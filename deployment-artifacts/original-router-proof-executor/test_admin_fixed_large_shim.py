@@ -12,6 +12,20 @@ from unittest.mock import patch
 
 
 class FixedLargeShimTest(unittest.TestCase):
+    def test_service_update_and_rollback_use_private_hook_lock(self):
+        builder = importlib.import_module('build_admin_fixed_large_shim')
+        raw = builder.FRESH_HOOK.read_bytes()
+        with patch.object(builder, 'FRESH_HOOK_SHA256', hashlib.sha256(raw).hexdigest()):
+            source = builder.build_bytes().decode()
+        self.assertIn('admin_fresh_guarded_service_action(service_update, request)',
+                      source)
+        self.assertIn('admin_fresh_guarded_service_action(service_rollback, request)',
+                      source)
+        tree = ast.parse(source)
+        self.assertEqual(sum(isinstance(node, ast.FunctionDef) and
+                             node.name == 'admin_fresh_guarded_service_action'
+                             for node in tree.body), 1)
+
     def test_internal_fresh_hook_is_inert_and_factory_has_no_new_socket_action(self):
         builder = importlib.import_module('build_admin_fixed_large_shim')
         source = builder.build_bytes().decode()

@@ -13,6 +13,7 @@ import unittest
 from unittest.mock import patch
 
 import admin_fresh_shim_hook as hook
+import build_admin_fixed_large_shim as builder
 
 
 def canonical(value):
@@ -20,20 +21,106 @@ def canonical(value):
 
 
 class FreshShimHookTests(unittest.TestCase):
+    def test_owner_writable_marker_ancestor_refuses_before_intent(self):
+        with tempfile.TemporaryDirectory(prefix='admin-marker-custody-') as directory:
+            root = Path(directory).resolve()
+            root.chmod(0o770)
+            with patch.object(hook, 'ADMIN_FRESH_MARKER_DIRECTORY',
+                              str(root / 'one-use')), \
+                 patch.object(hook, 'ADMIN_FRESH_ROOT_UID', os.geteuid()), \
+                 patch.object(hook, 'require', lambda ok, code: None if ok else
+                              (_ for _ in ()).throw(ValueError(code)), create=True):
+                with self.assertRaisesRegex(ValueError, 'MARKER_CUSTODY'):
+                    hook._admin_fresh_marker_directory()
+            self.assertFalse((root / 'one-use').exists())
+
+    def test_displaced_receipts_cannot_resubmit_same_service_update(self):
+        with tempfile.TemporaryDirectory(prefix='admin-sticky-update-') as directory:
+            marker_dir = Path(directory).resolve() / 'one-use'
+            marker_dir.mkdir(mode=0o700)
+            (marker_dir / (hook.ADMIN_FRESH_OPERATION_ID + '.json')).write_bytes(
+                canonical({'state': 'UNKNOWN', 'replayAllowed': False}))
+            called = []
+            with patch.object(hook, 'ADMIN_FRESH_HOOK_ACTIVE', True), \
+                 patch.object(hook, 'ADMIN_FRESH_MARKER_DIRECTORY', str(marker_dir)), \
+                 patch.object(hook, 'ADMIN_FRESH_ROOT_UID', os.geteuid()), \
+                 patch.object(hook, 'ADMIN_FRESH_SELF_UPDATE_ID',
+                              'shim-hr-admin-fresh-20260928-v1'), \
+                 patch.object(hook, 'require', lambda ok, code: None if ok else
+                              (_ for _ in ()).throw(ValueError(code)), create=True):
+                with self.assertRaisesRegex(ValueError, 'ALREADY_CONSUMED'):
+                    hook.admin_fresh_guarded_service_action(
+                        lambda request: called.append(request),
+                        {'operation_id': 'shim-hr-admin-fresh-20260928-v1'})
+            self.assertEqual(called, [])
+
+    def test_service_mutation_and_hook_contend_on_same_root_lock(self):
+        with tempfile.TemporaryDirectory(prefix='admin-service-guard-') as directory:
+            marker_dir = Path(directory).resolve() / 'one-use'
+            ready_r, ready_w = os.pipe()
+            release_r, release_w = os.pipe()
+            with patch.object(hook, 'ADMIN_FRESH_MARKER_DIRECTORY', str(marker_dir)), \
+                 patch.object(hook, 'ADMIN_FRESH_ROOT_UID', os.geteuid()), \
+                 patch.object(hook, 'ADMIN_FRESH_HOOK_ACTIVE', True), \
+                 patch.object(hook, 'require', lambda ok, code: None if ok else
+                              (_ for _ in ()).throw(ValueError(code)), create=True):
+                child = os.fork()
+                if child == 0:
+                    os.close(ready_r); os.close(release_w)
+                    fd = hook._admin_fresh_service_lock()
+                    os.write(ready_w, b'held')
+                    os.read(release_r, 1)
+                    os.close(fd)
+                    os._exit(0)
+                os.close(ready_w); os.close(release_r)
+                try:
+                    self.assertEqual(os.read(ready_r, 4), b'held')
+                    calls = []
+                    with self.assertRaises(BlockingIOError):
+                        hook.admin_fresh_guarded_service_action(
+                            lambda request: calls.append(request),
+                            {'operation_id': 'other-service-operation'})
+                    self.assertEqual(calls, [])
+                    os.write(release_w, b'x')
+                    os.waitpid(child, 0)
+                    hook.admin_fresh_guarded_service_action(
+                        lambda request: calls.append(request),
+                        {'operation_id': 'other-service-operation'})
+                    self.assertEqual(len(calls), 1)
+                finally:
+                    os.close(ready_r); os.close(release_w)
+
+    def test_compiled_shim_above_receipt_bound_is_read_by_exact_hash(self):
+        raw = builder.BASE.read_bytes()
+        self.assertGreater(len(raw), 65536)
+        with tempfile.TemporaryDirectory(prefix='admin-large-shim-') as directory:
+            path = Path(directory) / 'deploy_shim.py'
+            path.write_bytes(raw)
+            with patch.object(hook, 'ADMIN_FRESH_ROOT_UID', os.geteuid()), \
+                 patch.object(hook, 'require', lambda ok, code: None if ok else
+                              (_ for _ in ()).throw(ValueError(code)), create=True):
+                observed, digest = hook._admin_fresh_shim_read(
+                    str(path), hashlib.sha256(raw).hexdigest())
+                self.assertEqual(observed, raw)
+                self.assertEqual(digest, hashlib.sha256(raw).hexdigest())
+                with self.assertRaisesRegex(ValueError, 'ADMIN_FRESH_HOOK_SHIM_CHANGED'):
+                    hook._admin_fresh_shim_read(str(path), '0' * 64)
+
     def test_two_process_canonical_lock_contention_is_sticky_unknown(self):
         """The reviewed producer's nonblocking flock cannot deadlock the hook."""
         self.assertIn('lock = ds.mutation_lock()',
                       (Path(__file__).parent / 'admin_fresh_producer.py').read_text())
         with tempfile.TemporaryDirectory(prefix='admin-fresh-flock-') as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             receipts = root / 'receipts'; receipts.mkdir(mode=0o755)
             installed = root / 'installed'; installed.mkdir()
-            shim = installed / 'deploy_shim.py'; shim.write_bytes(b'exact-shim')
+            shim_raw = builder.BASE.read_bytes()
+            shim = installed / 'deploy_shim.py'; shim.write_bytes(shim_raw)
             update_id = 'shim-hr-admin-fresh-20260928-v1'
             update = {'operation_id': update_id, 'action': 'SERVICE_UPDATE',
                       'state': 'COMMITTED', 'generation': update_id,
                       'restart': 'self', 'artifacts':
-                      {'deploy_shim.py': hashlib.sha256(b'exact-shim').hexdigest()}}
+                      {'deploy_shim.py': hashlib.sha256(shim_raw).hexdigest()}}
             (receipts / (update_id + '.json')).write_bytes(canonical(update))
             lock_path = root / 'canonical.lock'
             lock_path.touch()
@@ -50,7 +137,8 @@ class FreshShimHookTests(unittest.TestCase):
             os.close(ready_w); os.close(release_r)
             self.assertEqual(os.read(ready_r, 4), b'held')
             os.close(ready_r)
-            marker = receipts / (hook.ADMIN_FRESH_OPERATION_ID + '.json')
+            marker_dir = root / 'one-use'
+            marker = marker_dir / (hook.ADMIN_FRESH_OPERATION_ID + '.json')
             result = []
             def produce():
                 with lock_path.open('rb') as lock_file:
@@ -78,6 +166,7 @@ class FreshShimHookTests(unittest.TestCase):
                            'ADMIN_FRESH_OWNER_UID': 502,
                            'AUTHORIZED_OWNER_UID': 502, 'TEST_MODE': False,
                            'SERVICE_INSTALL_DIR': str(installed),
+                           'ADMIN_FRESH_MARKER_DIRECTORY': str(marker_dir),
                            'ADMIN_FRESH_FACTORY': lambda binding:
                                 types.SimpleNamespace(produce=produce),
                            'ADMIN_FRESH_BINDER': lambda value, owner, finish:
@@ -106,6 +195,9 @@ class FreshShimHookTests(unittest.TestCase):
                     self.assertEqual(result, [])
                     self.assertEqual(len(failures), 1)
                     os.write(release_w, b'x')
+                    receipts.rename(root / 'displaced-receipts')
+                    receipts.mkdir(mode=0o755)
+                    (receipts / (update_id + '.json')).write_bytes(canonical(update))
                     with self.assertRaises(FileExistsError):
                         hook.run_admin_fresh_hook()
                     self.assertEqual(result, [])
@@ -116,20 +208,22 @@ class FreshShimHookTests(unittest.TestCase):
     def test_inert_and_exact_self_update_before_one_durable_intent(self):
         self.assertIsNone(hook.run_admin_fresh_hook())
         with tempfile.TemporaryDirectory(prefix='admin-fresh-hook-') as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             receipts = root / 'receipts'; receipts.mkdir(mode=0o755)
             installed = root / 'installed'; installed.mkdir()
-            shim = installed / 'deploy_shim.py'; shim.write_bytes(b'exact-shim')
+            shim_raw = builder.BASE.read_bytes()
+            shim = installed / 'deploy_shim.py'; shim.write_bytes(shim_raw)
             update_id = 'shim-hr-admin-fresh-20260928-v1'
             update = {'operation_id': update_id, 'action': 'SERVICE_UPDATE',
                       'state': 'COMMITTED', 'generation': update_id,
                       'restart': 'self', 'artifacts':
-                      {'deploy_shim.py': hashlib.sha256(b'exact-shim').hexdigest()}}
+                      {'deploy_shim.py': hashlib.sha256(shim_raw).hexdigest()}}
             update_path = receipts / (update_id + '.json')
             update_path.write_bytes(canonical(update))
             calls = []
             fail_after_intent = [False]
-            marker = receipts / (hook.ADMIN_FRESH_OPERATION_ID + '.json')
+            marker_dir = root / 'one-use'
+            marker = marker_dir / (hook.ADMIN_FRESH_OPERATION_ID + '.json')
             def produce():
                 self.assertEqual(json.loads(marker.read_bytes())['state'], 'UNKNOWN')
                 calls.append('produce')
@@ -157,6 +251,7 @@ class FreshShimHookTests(unittest.TestCase):
                        'ADMIN_FRESH_OWNER_UID': 502,
                        'AUTHORIZED_OWNER_UID': 502, 'TEST_MODE': False,
                        'SERVICE_INSTALL_DIR': str(installed),
+                       'ADMIN_FRESH_MARKER_DIRECTORY': str(marker_dir),
                        'ADMIN_FRESH_FACTORY': lambda binding:
                             types.SimpleNamespace(produce=produce),
                        'ADMIN_FRESH_BINDER': lambda value, owner, finish:
@@ -180,11 +275,11 @@ class FreshShimHookTests(unittest.TestCase):
                 update['artifacts']['deploy_shim.py'] = '0' * 64
                 update_path.write_bytes(canonical(update))
                 with self.assertRaisesRegex(ValueError,
-                                            'ADMIN_FRESH_HOOK_SELF_UPDATE_UNKNOWN'):
+                                            'ADMIN_FRESH_HOOK_SHIM_CHANGED'):
                     hook.run_admin_fresh_hook()
                 self.assertFalse(marker.exists())
                 update['artifacts']['deploy_shim.py'] = hashlib.sha256(
-                    b'exact-shim').hexdigest()
+                    shim_raw).hexdigest()
                 update_path.write_bytes(canonical(update))
                 fail_after_intent[0] = True
                 with self.assertRaisesRegex(RuntimeError, 'post-intent'):

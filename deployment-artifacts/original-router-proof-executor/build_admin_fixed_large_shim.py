@@ -19,7 +19,7 @@ PUBLISHER_SHA256 = '42d0f4f1c493ef8e7b3eaed0c4a99ceac9b3db8854411f458cdccb0dee2c
 FRESH_SOURCE = Path(__file__).resolve().parent / 'admin_fresh_producer.py'
 FRESH_SOURCE_SHA256 = '5b3855c782eb9da44f4b795db849d5befc9457d510d8a7a5d79f76c06df5e9ef'
 FRESH_HOOK = Path(__file__).resolve().parent / 'admin_fresh_shim_hook.py'
-FRESH_HOOK_SHA256 = '0a99af5dc5f17f13c2f564eb71613a4339268688d40560deff13802c950b428c'
+FRESH_HOOK_SHA256 = '03cab586aca7055f3eecf776545582233b7dc9f58ce26252accf76702c1a5b10'
 BIND_HOOK = Path(__file__).resolve().parent / 'admin_fresh_bind_hook.py'
 BIND_HOOK_SHA256 = 'cc593174c23f7e632c1591f349a7713395ea7845c7537af98e54ab73ec41dc2b'
 
@@ -271,6 +271,10 @@ def build_bytes():
                    _fresh_factory_source(host_source) +
                    bind_raw.decode('utf8', 'strict') + '\n\n' + hook +
                    '\n\ndef serve():\n')
+    source = _once(source, '            response = service_update(request)\n',
+                   '            response = admin_fresh_guarded_service_action(service_update, request)\n')
+    source = _once(source, '            response = service_rollback(request)\n',
+                   '            response = admin_fresh_guarded_service_action(service_rollback, request)\n')
     source = _once(source, '    server.listen(8)\n',
         '    server.listen(8)\n'
         '    if ADMIN_FRESH_HOOK_ACTIVE:\n'
