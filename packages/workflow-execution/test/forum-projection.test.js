@@ -73,7 +73,7 @@ function fixture({ threadId = 'thr-1', postResults = [], resolveResults = [] } =
 test('forumMessageFor covers the Goal Scope G execution events', () => {
   assert.match(forumMessageFor({ kind: 'run_delivered', nodeVisitId: VISIT, agentId: 'agt_x', sessionId: 'main' }, { generation: 2 }), /Attempt #2 dispatched to Agent `agt_x`/)
   assert.match(forumMessageFor({ kind: 'reconciled', nodeVisitId: VISIT, judgment: 'run_ended_no_submission' }, { generation: 1 }), /WITHOUT a business transition/)
-  assert.match(forumMessageFor({ kind: 'escalation_requested', nodeVisitId: VISIT, reason: 'ATTEMPTS_EXHAUSTED' }), /HUMAN_REQUIRED/)
+  assert.match(forumMessageFor({ kind: 'escalation_requested', nodeVisitId: VISIT, reason: 'ATTEMPTS_EXHAUSTED' }), /OWNER_PENDING/)
   assert.equal(forumMessageFor({ kind: 'attempt_unknown_kind' }, {}), undefined)
 })
 
@@ -93,7 +93,7 @@ test('no thread yet → events hold (offset unchanged); thread appears → all e
     assert.equal(f.calls.posts.length, 3)
     assert.equal(f.calls.posts[0].content.includes('Attempt #1 planned'), true)
     assert.equal(f.calls.posts[1].content.includes("dispatched to Agent `agt_x`"), true)
-    assert.equal(f.calls.posts[2].content.includes('HUMAN_REQUIRED'), true)
+    assert.equal(f.calls.posts[2].content.includes('OWNER_PENDING'), true)
     for (const post of f.calls.posts) {
       assert.equal(post.threadId, 'thr-1')
       assert.equal(post.metadata.workflowInstanceId, INSTANCE)

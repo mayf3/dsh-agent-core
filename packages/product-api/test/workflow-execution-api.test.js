@@ -16,6 +16,8 @@ import { createStubTokenVerifier } from '../src/scheduler-auth.js'
 const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
+const CASE_ID = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e44'
+const OWNER_PRINCIPAL = '6d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 
 const OK_TOKEN = 'bearer-wfexec'
 const NOSCOPE_TOKEN = 'bearer-no-scope'
@@ -50,7 +52,7 @@ function stubRouter() {
 const stubDefinition = { listAgents: () => [] }
 
 function stubAccess() {
-  const calls = { traces: [], kicks: [] }
+  const calls = { traces: [], kicks: [], ownerWakes: [] }
   return {
     calls,
     traces: async ({ workflowInstanceId, nodeVisitId }) => {
@@ -76,6 +78,10 @@ function stubAccess() {
     kick: (payload) => {
       calls.kicks.push(payload)
       return calls.kicks.length > 1 ? { ok: true, coalesced: true } : { ok: true, kicked: true }
+    },
+    ownerAssistanceWake: async (payload) => {
+      calls.ownerWakes.push(payload)
+      return { ok: true, ...(calls.ownerWakes.length > 1 ? { reused: true } : {}) }
     },
   }
 }
@@ -197,6 +203,52 @@ test('CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; mal
 
   const get = await call(base, '/workflow-execution/kicks', { token: OK_TOKEN })
   assert.equal(get.status, 404)
+})
+
+test('owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure', async (t) => {
+  const { base, access } = await mount(t)
+  const body = {
+    workflowInstanceId: INSTANCE,
+    nodeVisitId: VISIT,
+    assistanceCaseId: CASE_ID,
+    ownerPrincipalId: OWNER_PRINCIPAL,
+    reason: 'RETURN_POLICY_EXHAUSTED',
+  }
+
+  let res = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body,
+  })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.delivered, true)
+  assert.deepEqual(access.calls.ownerWakes, [body])
+
+  res = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body,
+  })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.reused, true)
+
+  const extra = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: { ...body, principalId: OWNER_PRINCIPAL },
+  })
+  assert.equal(extra.status, 400)
+  assert.equal(extra.body.error.code, 'invalid_arguments')
+
+  const denied = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: NOSCOPE_TOKEN, method: 'POST', body,
+  })
+  assert.equal(denied.status, 403)
+
+  const failing = {
+    ...stubAccess(),
+    ownerAssistanceWake: async () => ({ ok: false, code: 'principal_disabled' }),
+  }
+  const { base: failBase } = await mount(t, { access: failing })
+  const retryable = await call(failBase, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body,
+  })
+  assert.equal(retryable.status, 503)
+  assert.equal(retryable.body.error.code, 'principal_disabled')
 })
 
 test('CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)', async (t) => {

@@ -48,7 +48,7 @@ export function forumMessageFor(event, attempt) {
     case 'stale_superseded':
       return `⏱️ Attempt #${generation} stale: no business progress observed — visit restored for re-entry`
     case 'escalation_requested':
-      return `🚨 HUMAN_REQUIRED requested for visit ${visit} (attempt limit reached, ${event.reason ?? 'ATTEMPTS_EXHAUSTED'}) — escalation recorded ${event.assistanceCaseId !== undefined ? `(case ${UUID8(event.assistanceCaseId)})` : ''}`
+      return `🧭 Domain Owner attention requested for visit ${visit} (attempt limit reached, ${event.reason ?? 'ATTEMPTS_EXHAUSTED'}) — OWNER_PENDING assistance ${event.assistanceCaseId !== undefined ? `(case ${UUID8(event.assistanceCaseId)})` : ''}`
     case 'reconciled':
       if (event.judgment === 'run_ended_no_submission') {
         return `❗ Attempt #${generation} run ended WITHOUT a business transition (visit ${visit} still current)`
