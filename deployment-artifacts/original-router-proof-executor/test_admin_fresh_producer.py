@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from contextlib import ExitStack
+from types import SimpleNamespace
 
 import admin_fresh_producer as producer
 import admin_final_binding as binder
@@ -56,29 +57,168 @@ class FakeDS:
 
 
 class FreshProducerTests(unittest.TestCase):
+    def _staged_metadata(self, stack, owned_paths, owner_uid, root_gid_paths=()):
+        """Model distinct root and authorized-owner metadata without chown."""
+        real_stat, real_fstat = os.stat, os.fstat
+        identities = {(real_stat(path).st_dev, real_stat(path).st_ino)
+                      for path in owned_paths}
+        root_gid = {(real_stat(path).st_dev, real_stat(path).st_ino)
+                    for path in root_gid_paths}
+        def converted(value):
+            key = (value.st_dev, value.st_ino)
+            if key not in identities and key not in root_gid:
+                return value
+            fields = ('st_dev', 'st_ino', 'st_mode', 'st_uid', 'st_gid',
+                      'st_nlink', 'st_size', 'st_mtime_ns', 'st_ctime_ns')
+            row = {name: getattr(value, name) for name in fields}
+            if key in identities:
+                row['st_uid'] = owner_uid
+            if key in root_gid:
+                row['st_gid'] = 0
+            return SimpleNamespace(**row)
+        stack.enter_context(patch.object(os, 'stat',
+            side_effect=lambda *args, **kw: converted(real_stat(*args, **kw))))
+        stack.enter_context(patch.object(os, 'fstat',
+            side_effect=lambda *args, **kw: converted(real_fstat(*args, **kw))))
+
+    def test_fixed_staged_owner_distinct_from_root(self):
+        with tempfile.TemporaryDirectory(prefix='admin-stage-') as directory:
+            root = Path(directory)
+            state = root / 'state'; state.mkdir(); state.chmod(0o770)
+            inbox = state / 'inbox'; inbox.mkdir(mode=0o700)
+            operation = inbox / producer.INSTALL_OPERATION_ID
+            operation.mkdir(mode=0o700)
+            staged = operation / 'deployment_system.py'
+            raw = b'exact-staged-daemon'
+            staged.write_bytes(raw)
+            staged.chmod(0o600)
+            owner = os.geteuid() + 1
+            with ExitStack() as stack:
+                self._staged_metadata(stack, (inbox, operation, staged), owner,
+                                      (state,))
+                stack.enter_context(patch.object(producer, 'ROOT_UID', os.geteuid()))
+                stack.enter_context(patch.object(producer, 'SHIM_INBOX', operation))
+                stack.enter_context(patch.object(producer, 'SHIM_STATE_ROOT', state))
+                stack.enter_context(patch.object(producer, 'SHIM_INBOX_OWNER_UID', owner))
+                stack.enter_context(patch.object(producer, 'REVIEWED_NEW_SHA256',
+                    {'deployment_system.py': sha(raw)}))
+                stack.enter_context(patch.object(producer, 'REVIEWED_STAGED_SIZE',
+                    {'deployment_system.py': len(raw)}))
+                self.assertEqual(producer._read_staged('deployment_system.py'), raw)
+                with patch.object(producer, 'REVIEWED_STAGED_SIZE',
+                                  {'deployment_system.py': len(raw) + 1}):
+                    with self.assertRaisesRegex(producer.FreshRejected,
+                                                'ADMIN_FRESH_STAGE_CUSTODY'):
+                        producer._read_staged('deployment_system.py')
+                with patch.object(producer, 'SHIM_INBOX_OWNER_UID', owner + 1):
+                    with self.assertRaisesRegex(producer.FreshRejected,
+                                                'ADMIN_FRESH_STAGE_CUSTODY'):
+                        producer._read_staged('deployment_system.py')
+            with ExitStack() as stack:
+                self._staged_metadata(stack, (inbox, operation), owner, (state,))
+                for key, value in {
+                    'ROOT_UID': os.geteuid(), 'SHIM_INBOX': operation,
+                    'SHIM_STATE_ROOT': state, 'SHIM_INBOX_OWNER_UID': owner,
+                    'REVIEWED_NEW_SHA256': {'deployment_system.py': sha(raw)},
+                    'REVIEWED_STAGED_SIZE': {'deployment_system.py': len(raw)},
+                }.items():
+                    stack.enter_context(patch.object(producer, key, value))
+                with self.assertRaisesRegex(producer.FreshRejected,
+                                            'ADMIN_FRESH_STAGE_CUSTODY'):
+                    producer._read_staged('deployment_system.py')
+
+    def test_staged_operation_alias_rejected(self):
+        with tempfile.TemporaryDirectory(prefix='admin-stage-') as directory:
+            root = Path(directory)
+            state = root / 'state'; state.mkdir(); state.chmod(0o770)
+            inbox = state / 'inbox'; inbox.mkdir(mode=0o700)
+            real = root / 'elsewhere'; real.mkdir()
+            (inbox / producer.INSTALL_OPERATION_ID).symlink_to(real,
+                target_is_directory=True)
+            owner = os.geteuid() + 1
+            with ExitStack() as stack:
+                self._staged_metadata(stack, (inbox,), owner, (state,))
+                for key, value in {
+                    'ROOT_UID': os.geteuid(), 'SHIM_STATE_ROOT': state,
+                    'SHIM_INBOX': inbox / producer.INSTALL_OPERATION_ID,
+                    'SHIM_INBOX_OWNER_UID': owner,
+                    'REVIEWED_NEW_SHA256': {'deployment_system.py': sha(b'valid')},
+                    'REVIEWED_STAGED_SIZE': {'deployment_system.py': 5},
+                }.items():
+                    stack.enter_context(patch.object(producer, key, value))
+                with self.assertRaises(OSError):
+                    producer._read_staged('deployment_system.py')
+
+    def test_fixed_python_hardlink_only_and_identity(self):
+        with tempfile.TemporaryDirectory(prefix='admin-python-') as directory:
+            root = Path(directory)
+            python = root / 'python3'; python.write_bytes(b'exact-python')
+            python.chmod(0o755)
+            os.link(python, root / 'same-inode')
+            with patch.object(producer, 'ROOT_UID', os.geteuid()), \
+                 patch.object(producer, 'PYTHON_PATH', python), \
+                 patch.object(producer, 'REVIEWED_NEW_SHA256',
+                              {'python-runtime': sha(b'exact-python')}):
+                self.assertEqual(producer._read_owned(python), b'exact-python')
+                with self.assertRaisesRegex(producer.FreshRejected,
+                                            'ADMIN_FRESH_CUSTODY'):
+                    producer._read_owned(root / 'same-inode')
+                python.write_bytes(b'wrong-bytes')
+                with self.assertRaisesRegex(producer.FreshRejected,
+                                            'ADMIN_FRESH_PYTHON_CHANGED'):
+                    producer._read_owned(python)
+                python.write_bytes(b'exact-python')
+                original = os.pread
+                def renamed(fd, count, offset):
+                    raw = original(fd, count, offset)
+                    python.rename(root / 'displaced')
+                    python.write_bytes(b'exact-python')
+                    return raw
+                with patch.object(os, 'pread', side_effect=renamed):
+                    with self.assertRaisesRegex(producer.FreshRejected,
+                                                'ADMIN_FRESH_CHANGED'):
+                        producer._read_owned(python)
+
     def _case(self, mutation=None):
         with tempfile.TemporaryDirectory(prefix='admin-fresh-') as directory:
             root = Path(directory)
             app = root / 'app'; app.mkdir()
             old = root / 'old'; old.mkdir()
-            new = root / 'new'; new.mkdir()
+            state = root / 'state'; state.mkdir(); state.chmod(0o770)
+            inbox = state / 'inbox'; inbox.mkdir(mode=0o700)
+            staged = inbox / producer.INSTALL_OPERATION_ID
+            staged.mkdir(mode=0o700)
+            other = root / 'other'; other.mkdir()
             out = root / 'fresh'
             lock = root / 'mutation.lock'; lock.write_bytes(b'')
             old_bytes = {name: ('old-' + name).encode() for name in producer.OLD_PATHS}
             new_bytes = {name: ('new-' + name).encode() for name in producer.NEW_NAMES}
             for name, raw in old_bytes.items(): (old / name).write_bytes(raw)
-            for name, raw in new_bytes.items(): (new / name).write_bytes(raw)
+            new_paths = {name: (staged if name in producer.OLD_PATHS else other) / name
+                         for name in new_bytes}
+            for name, raw in new_bytes.items(): new_paths[name].write_bytes(raw)
+            owner = os.geteuid() + 1
             ds = FakeDS(sha(b'current-app'))
             ds.lock_fd = os.open(lock, os.O_RDONLY)
             try:
                 with ExitStack() as stack:
+                    self._staged_metadata(stack,
+                        (inbox, staged, *(staged / name for name in producer.OLD_PATHS)),
+                        owner, (state,))
                     for key, value in {
                         'ACTIVE': True, 'CAPTURE_ID': ds.capture,
                         'ADMISSION_ID': 'admission-fixed',
                         'REVIEWED_DS_SHA256': sha(old_bytes['deployment_system.py']),
                         'REVIEWED_NEW_SHA256': {name: sha(raw) for name, raw in new_bytes.items()},
                         'APP': app, 'OLD_PATHS': {name: old / name for name in old_bytes},
-                        'NEW_PATHS': {name: new / name for name in new_bytes},
+                        'NEW_PATHS': new_paths,
+                        'SHIM_STATE_ROOT': state, 'SHIM_INBOX': staged,
+                        'SHIM_INBOX_OWNER_UID': owner,
+                        'REVIEWED_STAGED_SIZE': {name: len(new_bytes[name])
+                                                 for name in producer.OLD_PATHS},
+                        'PYTHON_PATH': other / 'python-runtime',
+                        'NODE_PATH': other / 'node-runtime',
+                        'SHIM_SCRIPT_PATH': other / 'deploy_shim.py',
                         'FRESH_DIRECTORY': out,
                         'ROOT_UID': os.geteuid(),
                     }.items():
@@ -98,44 +238,17 @@ class FreshProducerTests(unittest.TestCase):
                 producer.produce()
 
     def test_disposable_fixed_root_produces_closed_fresh_once(self):
-        with tempfile.TemporaryDirectory(prefix='admin-fresh-') as directory:
-            root = Path(directory)
-            app = root / 'app';app.mkdir()
-            old = root / 'old';old.mkdir()
-            new = root / 'new';new.mkdir()
-            out = root / 'fresh'
-            lock = root / 'mutation.lock';lock.write_bytes(b'')
-            old_bytes = {name: ('old-'+name).encode() for name in producer.OLD_PATHS}
-            new_bytes = {name: ('new-'+name).encode() for name in producer.NEW_NAMES}
-            for name, raw in old_bytes.items(): (old/name).write_bytes(raw)
-            for name, raw in new_bytes.items(): (new/name).write_bytes(raw)
-            ds = FakeDS(sha(b'current-app'))
-            ds.lock_fd = os.open(lock, os.O_RDONLY)
-            try:
-                with patch.object(producer, 'ACTIVE', True), \
-                     patch.object(producer, 'CAPTURE_ID', ds.capture), \
-                     patch.object(producer, 'ADMISSION_ID', 'admission-fixed'), \
-                     patch.object(producer, 'REVIEWED_DS_SHA256', sha(old_bytes['deployment_system.py'])), \
-                     patch.object(producer, 'REVIEWED_NEW_SHA256',
-                                  {name:sha(raw) for name,raw in new_bytes.items()}), \
-                     patch.object(producer, 'APP', app), \
-                     patch.object(producer, 'OLD_PATHS', {name:old/name for name in old_bytes}), \
-                     patch.object(producer, 'NEW_PATHS', {name:new/name for name in new_bytes}), \
-                     patch.object(producer, 'FRESH_DIRECTORY', out), \
-                     patch.object(producer, 'ROOT_UID', os.geteuid()), \
-                     patch.object(producer, '_load_backend', return_value=ds), \
-                     patch.object(producer, '_observe_host', return_value=producer.HOST_ID):
-                    result=producer.produce()
-                    self.assertEqual(result['preimageTreeSha256'],ds.app_sha)
-                    self.assertEqual(result['rollbackOperationId'],'admission-fixed')
-                    self.assertEqual(set(result['oldDsArtifacts']),set(old_bytes))
-                    self.assertEqual(set(result['newDsArtifacts']),set(producer.OLD_PATHS))
-                    self.assertGreaterEqual(ds.reads,2)
-                    self.assertEqual(json.loads((out/'FRESH.json').read_bytes()),result)
-                    self.assertEqual(binder._checked_inputs((out/'FRESH.json').read_bytes()), result)
-                    with self.assertRaisesRegex(producer.FreshRejected,'ADMIN_FRESH_NO_REPLAY'):
-                        producer.produce()
-            finally:os.close(ds.lock_fd)
+        for ds, root, out in self._case():
+            result = producer.produce()
+            self.assertEqual(result['preimageTreeSha256'], ds.app_sha)
+            self.assertEqual(result['rollbackOperationId'], 'admission-fixed')
+            self.assertEqual(set(result['oldDsArtifacts']), set(producer.OLD_PATHS))
+            self.assertEqual(set(result['newDsArtifacts']), set(producer.OLD_PATHS))
+            self.assertGreaterEqual(ds.reads, 2)
+            self.assertEqual(json.loads((out / 'FRESH.json').read_bytes()), result)
+            self.assertEqual(binder._checked_inputs((out / 'FRESH.json').read_bytes()), result)
+            with self.assertRaisesRegex(producer.FreshRejected, 'ADMIN_FRESH_NO_REPLAY'):
+                producer.produce()
 
     def test_conflicting_current_app_zero_output(self):
         def mutate(ds, root, stack):
@@ -158,17 +271,39 @@ class FreshProducerTests(unittest.TestCase):
 
     def test_wrong_new_digest_zero_output(self):
         def mutate(ds, root, stack):
-            (root / 'new' / 'ds_client.py').write_bytes(b'drifted')
+            path = producer.NEW_PATHS['ds_client.py']
+            path.write_bytes(b'X' * path.stat().st_size)
         for ds, root, out in self._case(mutate):
-            with self.assertRaisesRegex(producer.FreshRejected, 'ADMIN_FRESH_NEW_CHANGED'):
+            with self.assertRaisesRegex(producer.FreshRejected, 'ADMIN_FRESH_STAGE_CHANGED'):
                 producer.produce()
             self.assertFalse(out.exists())
+
+    def test_owner_writable_fresh_parent_rejects_before_marker(self):
+        def mutate(ds, root, stack):
+            root.chmod(0o770)
+        for ds, root, out in self._case(mutate):
+            with self.assertRaisesRegex(producer.FreshRejected,
+                                        'ADMIN_FRESH_PARENT_CUSTODY'):
+                producer.produce()
+            self.assertFalse(out.exists())
+
+    def test_binder_rejects_parent_changed_after_publication(self):
+        for ds, root, out in self._case():
+            producer.produce()
+            with patch.object(binder, 'ROOT_UID', os.geteuid()), \
+                 patch.object(binder, 'FRESH_DIRECTORY', out):
+                self.assertEqual(json.loads(binder._read_root('FRESH.json', 8192)),
+                                 json.loads((out / 'FRESH.json').read_bytes()))
+                root.chmod(0o770)
+                with self.assertRaisesRegex(binder.BindingRejected,
+                                            'ADMIN_BINDING_PARENT_CUSTODY'):
+                    binder._read_root('FRESH.json', 8192)
 
     def test_symlinked_old_artifact_zero_output(self):
         def mutate(ds, root, stack):
             path = root / 'old' / 'ds_client.py'
             path.unlink()
-            path.symlink_to(root / 'new' / 'ds_client.py')
+            path.symlink_to(producer.NEW_PATHS['ds_client.py'])
         for ds, root, out in self._case(mutate):
             with self.assertRaises(OSError):
                 producer.produce()
