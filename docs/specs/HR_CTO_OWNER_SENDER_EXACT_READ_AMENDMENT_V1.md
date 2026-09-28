@@ -1,14 +1,23 @@
 ---
 spec_id: HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1
-status: proposed
+status: accepted
 type: child amendment (spec-only; docs-only)
 spec_kind: narrow_implementation_amendment
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
+implementation_scope: bounded_nonproduction_only
 production_apply_authority: none
 owners: [mayf3]
 date: 2026-09-28
 authoring_base_main: ac0f0582400870edac40bf32e160d70e9ef286de
+accepted_by: assistant /root under mayf3 standing ordinary technical delegation
+accepted_date: 2026-09-28
+accepted_reviewed_head: 45c3b80836b2e5b9acd6126a517da6390aa04899
+accepted_reviewed_spec_sha256: 6a03f077bc4d4b332a476600689ff7ad8f4cebe58f80bf41aafb9e6507aa671d
+independent_review_sha256: 53150a110890a5a61b91aa8ecabd01394057b69997a262f3918c53a0a428d17f
+independent_review_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-CTO-OWNER-SENDER-SPEC-INDEPENDENT-REVIEW-20260928-v1/REVIEW.md
+delegated_acceptance_record: /Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/HR-CTO-OWNER-SENDER-SPEC-DELEGATED-LIFECYCLE-ACCEPTANCE-20260928-v1/ACCEPTANCE.json
+delegated_acceptance_sha256: 445fb49a53a770674891c7f8d2e51b7458263bbfb0fb92c4c867e26ac6a21557
 amends:
   - COHERENT_DURABLE_INGRESS_RECEIPT_ATTRIBUTION_V1
   - HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1
@@ -32,10 +41,12 @@ scope:
 
 # HR CTO Owner sender exact-read child amendment V1
 
-This is a **proposed, docs-only child amendment**. The two accepted parent Specs
-remain byte-unchanged and current. It adds one CTO-only identity-binding case to
-the accepted coherent ingress mechanism and clarifies QF-C03/C04 ordering. It
-does not retarget or generalize the existing efficiency-Agent readback.
+This is an **accepted, docs-only child amendment** in this authority branch.
+The two accepted parent Specs remain byte-unchanged and current. It adds one
+CTO-only identity-binding case to the accepted coherent ingress mechanism and
+clarifies QF-C03/C04 ordering. It does not retarget or generalize the existing
+efficiency-Agent readback. Its bounded nonproduction implementation authority
+becomes effective only after docs-first integration into the applicable base.
 
 The Owner separately accepted one narrow DS update and one protected read in
 `ACCEPTANCE.json` SHA-256
@@ -44,9 +55,10 @@ bound to `DECISION.md` SHA-256
 `41c537addb2692832d1ef47aa1e37def417a499d6d394130f0908b82d3397513`.
 That acceptance is conditional on the decision's independent review, exact
 preimage/rollback/lock, eligible subject and verified native message ID. Its
-`exactNativeMessageId` was `null` at authoring. The acceptance is not an
-independent review or lifecycle acceptance of this Spec. This draft grants no
-implementation, DS update, live read, startup or recovery authority.
+`exactNativeMessageId` was `null` at authoring. That operation acceptance alone
+did not accept this later-authored Spec; independent exact-head review and a
+separate delegated lifecycle acceptance are now recorded in the frontmatter.
+Neither record authorizes a DS update, live read, startup or recovery now.
 
 ## 1. Amendment relation and frozen boundaries
 
@@ -184,13 +196,15 @@ readback, production authorization or qualification proof.
 
 ## 4. Lifecycle and review gate
 
-Only this child Spec and its index entry are authored here. Both accepted
-parents remain byte-identical; there is no whole-Spec supersession. An
-independent reviewer must examine the exact final head and Spec SHA-256 against
-the two accepted parents, the Owner decision/acceptance hashes, the fixed
-DS/Runtime trust boundary, the seed/proof/H6 separation and the absence of any
-raw link token or source/production change. A separate explicit lifecycle
-acceptance and docs-first merge must precede implementation. Even after that
-merge, the Owner's one-off external acceptance and every OCB-C01/C05 gate are
-required before any DS update or protected read. No step in this draft proves
-the native message ID or authorizes HR startup or recovery.
+Only this child Spec and its index entry are changed. Both accepted parents
+remain byte-identical; there is no whole-Spec supersession. Independent review
+of proposed head `45c3b80836b2e5b9acd6126a517da6390aa04899` and Spec
+SHA-256 `6a03f077bc4d4b332a476600689ff7ad8f4cebe58f80bf41aafb9e6507aa671d`
+returned `PASS_FOR_DELEGATED_LIFECYCLE_ONLY`, then the separate delegated
+acceptance bound exactly those bytes. This transition changes lifecycle
+metadata and prose only; OCB-C01 through OCB-C06 remain unchanged. A final-head
+independent recheck and docs-first merge into the applicable base still precede
+bounded nonproduction implementation. Even after that merge, the Owner's
+one-off external acceptance and every OCB-C01/C05 gate are required before any
+DS update or protected read. No step in this lifecycle proves the native
+message ID or authorizes HR startup or recovery.
