@@ -33,6 +33,19 @@ FILES = {'entrySha256': 'driver.py', 'procedureSha256': 'procedure.py',
          'daemonSha256': 'deployment_system.py', 'nodeSha256': 'node-runtime',
          'pythonSha256': 'python-runtime'}
 VALIDATOR = 'packages/agent-router/src/reconciliation/quiescence-bundle.js'
+SOURCE_SHA256 = {
+    'entrySha256': '7d942d3be0cff48e077c39874674ad36fd49228c9a03366ec1ccf7727fb45e7f',
+    'procedureSha256': '69335e4ec07b71d53380e854a2cc7b43b97118a5a6c5397a34675343411c9abf',
+    'adminProcedureSha256': 'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44',
+    'deploymentDriverSha256': '447c1c1a16fc6f5cac763695d4109f16c13959bec37d24f0bd0e267f57ecea53',
+    'adminObserverSha256': '7669ad98e12eb9ab5aee85506b402d4a073770734343d3262ecee1385f4e234c',
+    'handoffSha256': 'b9238434fe765d45b6746543fc0d9ff09c728daecdffed6f1202426f6c72ab62',
+    'helperSha256': '3a7d067e1791102017e12f5f2c6f85329cc04c1b3af24deb9f14330c48ebd015',
+}
+TEMPLATE_SHA256 = {
+    'admin_launcher_template.py': 'e7e3ceb7d7ad3a3768b6749af8d3dc74d8fc597f98cd1c592e2f23b321def892',
+    'admin_root_carrier_template.py': '3d693ea3b579a5f95e39953eb4fecf70925b8f62e477900d9f60ef6c68c4bc0d',
+}
 
 
 class PackageRejected(Exception):
@@ -146,6 +159,9 @@ def compile_fixed_admin_qualification():
                                      'python-runtime') else 65536)
         require(hashlib.sha256(raw_file).hexdigest() == pins[field],
                 'ADMIN_PACKAGE_SOURCE_CHANGED')
+        if field in SOURCE_SHA256:
+            require(pins[field] == SOURCE_SHA256[field],
+                    'ADMIN_PACKAGE_SOURCE_VERSION')
     require(hashlib.sha256(_read(PACKAGE_ROOT / 'tree', VALIDATOR, 65536)).hexdigest()
             == pins['validatorSha256'], 'ADMIN_PACKAGE_VALIDATOR_CHANGED')
     require(_tree_sha256(PACKAGE_ROOT / 'tree') == pins['finalTreeSha256'],
@@ -159,7 +175,11 @@ def compile_fixed_admin_qualification():
             'helperSha256': pins['helperSha256'],
             'procedureSha256': pins['adminProcedureSha256']},
             'ADMIN_PACKAGE_ENTRY_MANIFEST_INVALID')
-    template = Path(__file__).with_name('admin_launcher_template.py').read_text()
+    name = 'admin_launcher_template.py'
+    template_bytes = _read(Path(__file__).parent, name, 65536)
+    require(hashlib.sha256(template_bytes).hexdigest() == TEMPLATE_SHA256[name],
+            'ADMIN_COMPILER_TEMPLATE_CHANGED')
+    template = template_bytes.decode('utf8')
     require(template.count('PINS = None') == 1, 'ADMIN_LAUNCHER_TEMPLATE_CHANGED')
     return template.replace('PINS = None', 'PINS = ' + repr(pins), 1).encode()
 
@@ -169,7 +189,11 @@ def compile_fixed_admin_carrier():
     # which avoids any launcher<->manifest or carrier<->launcher hash cycle.
     launcher = compile_fixed_admin_qualification()
     pins = _object(_read(PACKAGE_ROOT, 'PACKAGE.json', 8192))
-    template = Path(__file__).with_name('admin_root_carrier_template.py').read_text()
+    name = 'admin_root_carrier_template.py'
+    template_bytes = _read(Path(__file__).parent, name, 65536)
+    require(hashlib.sha256(template_bytes).hexdigest() == TEMPLATE_SHA256[name],
+            'ADMIN_COMPILER_TEMPLATE_CHANGED')
+    template = template_bytes.decode('utf8')
     require(template.count('PINS = None') == 1 and
             template.count('LAUNCHER_SHA = None') == 1,
             'ADMIN_CARRIER_TEMPLATE_CHANGED')
