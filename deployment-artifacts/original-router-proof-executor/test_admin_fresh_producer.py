@@ -220,6 +220,7 @@ class FreshProducerTests(unittest.TestCase):
                         'ACTIVE': True, 'CAPTURE_ID': ds.capture,
                         'ADMISSION_ID': 'admission-fixed',
                         'REVIEWED_DS_SHA256': sha(old_bytes['deployment_system.py']),
+                        'REVIEWED_OLD_SHA256': {name: sha(raw) for name, raw in old_bytes.items()},
                         'REVIEWED_NEW_SHA256': {name: sha(raw) for name, raw in new_bytes.items()},
                         'APP': app, 'OLD_PATHS': {name: old / name for name in old_bytes},
                         'NEW_PATHS': new_paths,

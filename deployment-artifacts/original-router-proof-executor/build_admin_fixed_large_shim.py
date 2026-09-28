@@ -6,6 +6,7 @@ one operation ID and both exact old/new daemon byte identities.
 """
 import hashlib
 from pathlib import Path
+from textwrap import indent
 
 
 BASE = Path('/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG/'
@@ -14,13 +15,57 @@ BASE_SHA256 = '5661fbd0c7fde5139b10cb1adf9546a1ce507e413d89177b821ddd683146d7f8'
 PUBLISHER = Path(__file__).resolve().parent / 'admin_fixed_shim_publisher.py'
 HOST_OBSERVER = Path(__file__).resolve().parent / 'admin_host_identity.py'
 HOST_OBSERVER_SHA256 = 'd01e60e8176e1ea7cb52c40b9cb51ef3bec56f2b1a2f1850c5a8402773afa035'
-PUBLISHER_SHA256 = 'd7f84bcce6febe47ac271e9847b967138bb00264b28449cb6c90a553207ea3e3'
+PUBLISHER_SHA256 = '42d0f4f1c493ef8e7b3eaed0c4a99ceac9b3db8854411f458cdccb0dee2c3818'
+FRESH_SOURCE = Path(__file__).resolve().parent / 'admin_fresh_producer.py'
+FRESH_SOURCE_SHA256 = '5b3855c782eb9da44f4b795db849d5befc9457d510d8a7a5d79f76c06df5e9ef'
+FRESH_HOOK = Path(__file__).resolve().parent / 'admin_fresh_shim_hook.py'
+FRESH_HOOK_SHA256 = '0a99af5dc5f17f13c2f564eb71613a4339268688d40560deff13802c950b428c'
+BIND_HOOK = Path(__file__).resolve().parent / 'admin_fresh_bind_hook.py'
+BIND_HOOK_SHA256 = 'cc593174c23f7e632c1591f349a7713395ea7845c7537af98e54ab73ec41dc2b'
 
 
 def _once(source, old, new):
     if source.count(old) != 1:
         raise ValueError('ADMIN_FIXED_SHIM_ANCHOR_CHANGED')
     return source.replace(old, new, 1)
+
+
+def _fresh_factory_source(host_source):
+    raw = FRESH_SOURCE.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != FRESH_SOURCE_SHA256:
+        raise ValueError('ADMIN_FRESH_SOURCE_CHANGED')
+    body = raw.decode('utf8', 'strict')
+    body = _once(body,
+        'from admin_host_identity import EXPECTED_HOST_ID, observe_fixed_host\n'
+        'from admin_final_binding import (QUALIFICATION_ID, CUT_OPERATION_ID,\n'
+        '    INSTALL_OPERATION_ID, FINAL_TREE_SHA, FRESH_DIRECTORY)',
+        host_source + '\n'
+        "QUALIFICATION_ID = 'original-router-qualification-20260927-v1'\n"
+        "CUT_OPERATION_ID = 'hr-s256-admin-emergency-cut-20260928-v1'\n"
+        "INSTALL_OPERATION_ID = 'ds-hr-admin-private-install-20260928-v1'\n"
+        "FINAL_TREE_SHA = '508b4042c5b1dd718c8c0858164a32ccbee65f68486c0aec4ee27b7601234968'\n"
+        "FRESH_DIRECTORY = Path('/private/var/db/agent-core-admin-final-binding-s256')")
+    for old, new in (
+        ('ACTIVE = False', 'ACTIVE = True'),
+        ('CAPTURE_ID = None', "CAPTURE_ID = binding['captureId']"),
+        ('ADMISSION_ID = None', "ADMISSION_ID = binding['admissionId']"),
+        ('REVIEWED_DS_SHA256 = None',
+         "REVIEWED_DS_SHA256 = binding['reviewedDsSha256']"),
+        ('REVIEWED_OLD_SHA256 = None',
+         "REVIEWED_OLD_SHA256 = binding['reviewedOldSha256']"),
+        ('REVIEWED_NEW_SHA256 = None',
+         "REVIEWED_NEW_SHA256 = binding['reviewedNewSha256']"),
+        ('SHIM_INBOX_OWNER_UID = None',
+         "SHIM_INBOX_OWNER_UID = binding['shimInboxOwnerUid']"),
+        ('REVIEWED_STAGED_SIZE = None',
+         "REVIEWED_STAGED_SIZE = binding['reviewedStagedSize']"),
+    ):
+        body = _once(body, old, new)
+    body = _once(body, "if __name__ == '__main__':\n    produce()\n", '')
+    return ('import types\n'
+        'def _make_admin_fresh(binding):\n'
+        + indent(body, '    ')
+        + '\n    return types.SimpleNamespace(**locals())\n\n')
 
 
 def build_bytes():
@@ -106,7 +151,8 @@ def build_bytes():
         raise ValueError('ADMIN_FIXED_HOST_OBSERVER_CHANGED')
     if hashlib.sha256(publisher_raw).hexdigest() != PUBLISHER_SHA256:
         raise ValueError('ADMIN_FIXED_PUBLISHER_CHANGED')
-    publisher = (host_raw.decode('utf8', 'strict') + '\n\n'
+    host_source = host_raw.decode('utf8', 'strict')
+    publisher = (host_source + '\n\n'
                  + publisher_raw.decode('utf8', 'strict') + '\n\n'
         'def fixed_ds_mutation_lock():\n'
         '    """Hold the canonical DS flock for one fixed installation."""\n'
@@ -209,4 +255,25 @@ def build_bytes():
         '        if fixed_lock is not None:\n'
         '            fcntl.flock(fixed_lock, fcntl.LOCK_UN)\n'
         '            os.close(fixed_lock)\n\n\ndef handle(raw):\n')
+    hook_raw = FRESH_HOOK.read_bytes()
+    if hashlib.sha256(hook_raw).hexdigest() != FRESH_HOOK_SHA256:
+        raise ValueError('ADMIN_FRESH_HOOK_CHANGED')
+    hook = hook_raw.decode('utf8', 'strict').replace(
+        'ADMIN_FRESH_FACTORY = None  # Embedded reviewed producer factory only.',
+        'ADMIN_FRESH_FACTORY = _make_admin_fresh  # Exact embedded producer.', 1)
+    hook = _once(hook,
+        'ADMIN_FRESH_BINDER = None  # Private same-process inert package binder only.',
+        'ADMIN_FRESH_BINDER = admin_bind_fresh  # Fixed post-FRESH inert binder.')
+    bind_raw = BIND_HOOK.read_bytes()
+    if hashlib.sha256(bind_raw).hexdigest() != BIND_HOOK_SHA256:
+        raise ValueError('ADMIN_FRESH_BIND_HOOK_CHANGED')
+    source = _once(source, 'def serve():\n',
+                   _fresh_factory_source(host_source) +
+                   bind_raw.decode('utf8', 'strict') + '\n\n' + hook +
+                   '\n\ndef serve():\n')
+    source = _once(source, '    server.listen(8)\n',
+        '    server.listen(8)\n'
+        '    if ADMIN_FRESH_HOOK_ACTIVE:\n'
+        '        import threading\n'
+        '        threading.Thread(target=run_admin_fresh_hook, daemon=True).start()\n')
     return source.encode('utf8')
