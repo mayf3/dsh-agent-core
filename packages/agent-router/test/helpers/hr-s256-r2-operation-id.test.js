@@ -8,6 +8,7 @@ import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 import { json, proofFixture } from './restart-quiescence-fixture.js'
 
 const FIXED_OPERATION_ID = 'hr-s256-trusted-quiescence-cut-20260925-v1'
+const ADMIN_OPERATION_ID = 'hr-s256-admin-emergency-cut-20260928-v1'
 const sha = raw => createHash('sha256').update(raw).digest('hex')
 
 function seal(path, value) {
@@ -64,5 +65,17 @@ test('other unapproved non-op ID rejects with durable zero-write', (t) => {
     deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
   assert.equal(result[0].status, 'rejected')
   assert.equal(result[0].reason, 'V2_identity_invalid')
+  assert.deepEqual(readFileSync(fx.persistenceFile), before)
+})
+
+test('admin ID is routed only to the fixed journal, never bare generic receipts', t => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  operationId(fx, ADMIN_OPERATION_ID)
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const before = readFileSync(fx.persistenceFile)
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.equal(result[0].status, 'rejected')
+  assert.equal(result[0].reason, 'V9_fixed_journal_invalid')
   assert.deepEqual(readFileSync(fx.persistenceFile), before)
 })

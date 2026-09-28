@@ -3,6 +3,7 @@ import { basename, join } from 'node:path'
 import { ownedFile, proofReject, sha256 } from './quiescence-custody.js'
 
 export const FIXED_R2_OPERATION = 'hr-s256-trusted-quiescence-cut-20260925-v1'
+export const FIXED_ADMIN_OPERATION = 'hr-s256-admin-emergency-cut-20260928-v1'
 const HANDLE = 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256'
 const HASH = /^[a-f0-9]{64}$/
 const exact = (value, names) => value !== null && typeof value === 'object'
@@ -31,9 +32,11 @@ function receipt(dir, name, io) {
 }
 
 export function resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io) {
-  require(basename(bundleFile) === 'bundle.json' && basename(evidenceDir) === FIXED_R2_OPERATION)
-  require(bytes.toString('utf8') === canonical(bundle))
   const cut = bundle.recoveryCutover
+  const operationId = cut.operationId
+  require((operationId === FIXED_R2_OPERATION || operationId === FIXED_ADMIN_OPERATION)
+    && basename(bundleFile) === 'bundle.json' && basename(evidenceDir) === operationId)
+  require(bytes.toString('utf8') === canonical(bundle))
   require(bundle.subject.reconciliationHandle === HANDLE && bundle.subject.turnExecutionId === HANDLE
     && bundle.subject.agentId === 'agt_hr-agent' && bundle.subject.processGeneration === 1)
   // Missing/denied terminal-state readback is UNKNOWN, never "absent".
@@ -52,12 +55,12 @@ export function resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io
   const preimage = cut.subjectPreimageSha256
   const i = intent.value
   require(exact(i, ['version', 'operationId', 'phase', 'subject', 'subjectPreimageSha256', 'nonceSha256', 'atWallMs'])
-    && i.version === 1 && i.phase === 'INTENT' && i.operationId === FIXED_R2_OPERATION
+    && i.version === 1 && i.phase === 'INTENT' && i.operationId === operationId
     && i.subject === HANDLE && i.subjectPreimageSha256 === preimage && i.nonceSha256 === nonceDigest
     && time(i.atWallMs) && i.atWallMs < cut.windowOpenedAtWallMs)
   const a = auth.value
   require(exact(a, ['version', 'operationId', 'phase', 'intentSha256', 'authorization'])
-    && a.version === 1 && a.operationId === FIXED_R2_OPERATION && a.phase === 'LAUNCH_AUTHORIZED'
+    && a.version === 1 && a.operationId === operationId && a.phase === 'LAUNCH_AUTHORIZED'
     && a.intentSha256 === intent.digest && auth.digest === cut.launchAuthorizationReceiptSha256)
   require(exact(a.authorization, ['operationId', 'hostId', 'startupNonce', 'subject', 'subjectPreimageSha256',
     'consumingBinarySha256', 'archiveSha256', 'outputsSha256', 'holderCheck', 'authorizedStartupAtWallMs'])
@@ -66,7 +69,7 @@ export function resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io
   const c = commitment.value
   require(exact(c, ['receiptVersion', 'operationId', 'hostId', 'startupNonce', 'reconciliationHandle', 'subject',
     'subjectPreimageSha256', 'launchAuthorizationReceiptSha256', 'bundleSha256', 'bundleByteLength', 'sealedAtWallMs', 'producerId'])
-    && c.receiptVersion === 1 && c.operationId === FIXED_R2_OPERATION && c.reconciliationHandle === HANDLE
+    && c.receiptVersion === 1 && c.operationId === operationId && c.reconciliationHandle === HANDLE
     && c.hostId === cut.hostId && c.startupNonce === cut.startupNonce && c.subjectPreimageSha256 === preimage
     && c.launchAuthorizationReceiptSha256 === auth.digest && c.bundleSha256 === sha256(bytes)
     && c.bundleByteLength === bytes.length && time(c.sealedAtWallMs)
@@ -74,21 +77,21 @@ export function resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io
     && c.producerId === 'trusted root recovery control plane')
   const x = index.value
   require(exact(x, ['version', 'operationId', 'reconciliationHandle', 'hostId', 'startupNonceSha256', 'bundleSha256'])
-    && x.version === 1 && x.operationId === FIXED_R2_OPERATION && x.reconciliationHandle === HANDLE
+    && x.version === 1 && x.operationId === operationId && x.reconciliationHandle === HANDLE
     && x.hostId === cut.hostId && x.startupNonceSha256 === nonceDigest && x.bundleSha256 === c.bundleSha256)
   for (const [entry, phase, previous] of [[sealed, 'SEALED_NOT_ATTEMPTED', null],
     [attempt, 'LAUNCH_ATTEMPT_COMMITTED', sealed.digest]]) {
     const p = entry.value
     require(exact(p, ['version', 'operationId', 'phase', 'hostId', 'reconciliationHandle',
       'startupNonceSha256', 'bundleCommitmentSha256', 'previousPhaseSha256', 'atWallMs'])
-      && p.version === 1 && p.operationId === FIXED_R2_OPERATION && p.phase === phase
+      && p.version === 1 && p.operationId === operationId && p.phase === phase
       && p.hostId === cut.hostId && p.reconciliationHandle === HANDLE && p.startupNonceSha256 === nonceDigest
       && p.bundleCommitmentSha256 === commitment.digest && p.previousPhaseSha256 === previous && time(p.atWallMs))
   }
   require(sealed.value.atWallMs === c.sealedAtWallMs && attempt.value.atWallMs > sealed.value.atWallMs)
   const q = claim.value
   require(exact(q, ['version', 'operationId', 'phase', 'launchAuthorizationSha256', 'bundleCommitmentSha256', 'atWallMs'])
-    && q.version === 1 && q.operationId === FIXED_R2_OPERATION && q.phase === 'LAUNCH_CLAIMED'
+    && q.version === 1 && q.operationId === operationId && q.phase === 'LAUNCH_CLAIMED'
     && q.launchAuthorizationSha256 === auth.digest && q.bundleCommitmentSha256 === commitment.digest
     && q.atWallMs === attempt.value.atWallMs && time(q.atWallMs)
     && HASH.test(c.bundleSha256))

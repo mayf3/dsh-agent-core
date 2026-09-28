@@ -15,6 +15,7 @@ _helper_path=_own.parents[2]/'packages/production-runtime/src/native-arm64/hr-s2
 _helper_source=_helper_path.read_bytes()
 _deployment_source=_own.with_name('deployment.py').read_bytes()
 _procedure_source=_own.with_name('procedure.py').read_bytes()
+_admin_procedure_source=_own.with_name('admin_procedure.py').read_bytes()
 for g in _reporter:g.start()
 
 def denied(*a, **k): raise AssertionError('HOST_BOUNDARY_DENIED')
@@ -411,6 +412,140 @@ class Tests(unittest.TestCase):
             x.run()
         self.assertTrue(x._unknown)
 
+    def test_admin_procedure_selection_is_compiled_and_opens_only_pinned_original_sources(self):
+        x=object.__new__(d.FixedOriginalDriver);x._unknown=False
+        opened=[];checked=[]
+        def open_fixed(name,flags,dir_fd):
+            opened.append(name)
+            self.assertEqual(dir_fd,20)
+            return 21 if name=='procedure.py' else 22
+        def source(fd,digest):
+            checked.append((fd,digest))
+            return b'def _run_admin_owned(owner): return "admin-owned"' if fd==22 \
+                else b'def _run_owned(owner): return "cto-owned"'
+        with patch.object(d,'QUALIFIED_ADMIN_PROCEDURE_SHA',d.ADMIN_PROCEDURE_SHA), \
+             patch.object(d,'_namespace_directory',return_value=20), \
+             patch.object(d,'_descriptor_bytes',side_effect=source), \
+             patch.object(os,'open',side_effect=open_fixed),patch.object(os,'close'):
+            self.assertEqual(x.run(),'admin-owned')
+        self.assertEqual(opened,['procedure.py','admin_procedure.py'])
+        self.assertEqual(checked,[(21,d.PROCEDURE_DRIVER_SHA),(22,d.ADMIN_PROCEDURE_SHA)])
+
+    def test_admin_same_child_readback_is_owned_not_a_caller_event(self):
+        x=object.__new__(d.FixedOriginalDriver);x._unknown=False
+        x._phase_query_used=False;x._phase_context={'role':'original_executor_admin_qualification'}
+        x._child=None;x._owned_children=[]
+        x._continuity=lambda:None
+        self.assertTrue(hasattr(x,'_admin_canary_and_store_readback'),
+                        'original root driver lacks fixed admin socket/store join')
+        with self.assertRaises(d.Unknown):x._admin_canary_and_store_readback()
+        self.assertTrue(x._unknown)
+
+    def test_admin_private_socket_and_independent_store_must_agree_once(self):
+        from types import SimpleNamespace
+        for changed in (False,True):
+            x=object.__new__(d.FixedOriginalDriver)
+            x._unknown=False;x._phase_query_used=False
+            x._phase_context={'role':'original_executor_admin_qualification',
+                'phase':'deployment_start','consumingBinarySha256':'a'*64,
+                'validatorSha256':'b'*64,'entryManifestSha256':'c'*64,
+                'procedureSha256':d.ADMIN_PROCEDURE_SHA,'startupNonce':'d'*64}
+            x._operation_deadline=100;x._startup_deadline=50
+            x._continuity=lambda:None
+            child=SimpleNamespace(poll=lambda:None)
+            x._child=child;x._owned_children=[child]
+            class Channel:
+                closed=False
+                def settimeout(self,timeout):assert timeout > 0
+                def sendall(self,raw):
+                    query=json.loads(raw)
+                    self.frame={'context':query['context'],'challenge':query['challenge'],
+                        'handle':'turn:owned:a2:g1:s257','runtimeGeneration':'owned',
+                        'processGeneration':1,'nativeMessageSha256':'e'*64,
+                        'nativeReceiptSha256':'f'*64,'replySha256':'a'*64,
+                        'completedAtWallMs':12}
+                    self.raw=json.dumps(self.frame,separators=(',',':')).encode()+b'\n'
+                def recv(self,n):value=self.raw[:n];self.raw=self.raw[n:];return value
+                def close(self):self.closed=True
+            channel=Channel();x._phase_handoff=SimpleNamespace(root=channel,close=channel.close)
+            reads=[]
+            def durable(frame,deadline):
+                reads.append(frame['handle'])
+                return {'floor':1,'maxIssuedTurnSeq':257,'live':[],'evicted':[],
+                    'watermark':None,'turnExecutionId':frame['handle'],
+                    'processGeneration':1,'nativeMessageSha256':'e'*64,
+                    'nativeReceiptSha256':'0'*64 if changed else 'f'*64,
+                    'replySha256':'a'*64,
+                    'completedAtWallMs':12}
+            x._admin_store_readback=durable
+            with patch.object(d.time,'monotonic',return_value=1), \
+                 patch.object(d.secrets,'token_hex',return_value='1'*32):
+                if changed:
+                    with self.assertRaisesRegex(d.Unknown,'ADMIN_STORE_FRAME_MISMATCH'):
+                        x._admin_canary_and_store_readback()
+                    self.assertTrue(x._unknown)
+                    self.assertFalse(channel.closed)
+                else:
+                    value,runtime=x._admin_canary_and_store_readback()
+                    self.assertEqual(runtime,'owned')
+                    self.assertEqual(value['turnExecutionId'],'turn:owned:a2:g1:s257')
+                    self.assertTrue(channel.closed)
+                    with self.assertRaises(d.Unknown):x._admin_canary_and_store_readback()
+                self.assertEqual(reads,['turn:owned:a2:g1:s257'])
+
+    def test_admin_original_three_phases_seal_existing_closed_receipts_after_final_exit(self):
+        scope={'__name__':'_confined_admin_procedure','FixedOriginalDriver':d.FixedOriginalDriver,
+               'require':d.require,'Unknown':d.Unknown}
+        exec(compile(_procedure_source,'original-procedure.py','exec'),scope)
+        exec(compile(_admin_procedure_source,'original-admin-procedure.py','exec'),scope)
+        x=object.__new__(d.FixedOriginalDriver)
+        x._unknown=False;x._operation_deadline=100
+        x._binding=d._EntryBinding('a'*64,'b'*64,'c'*64,'d'*64,'e'*64)
+        x._validator_installed_wall_ms=2
+        x._owned_children=[]
+        events=[];files={};claims=[]
+        class Child:
+            def __init__(self,phase):self.phase=phase;self.exited=False
+            def poll(self):return 0 if self.exited else None
+        def launch(phase):
+            x._child=Child(phase);x._owned_children.append(x._child);events.append('launch:'+phase)
+            x._phase_started_wall_ms=2
+        def stop():
+            self.assertIsNotNone(x._child)
+            self.assertFalse(x._child.exited)
+            x._child.exited=True;events.append('exit:'+x._child.phase)
+        x._deploy_original=lambda:launch('deployment_start')
+        x._launch_phase=launch;x._stop_owned_child=stop
+        x._continuity=lambda:d.require(not x._unknown,'ORIGINAL_CUSTODY_UNKNOWN')
+        x._health_original=lambda:None
+        def readback():
+            n=len(x._procedure_turns)+1
+            self.assertIsNone(x._child.poll())
+            events.append('native-store:'+str(n))
+            return ({'floor':n,'maxIssuedTurnSeq':n,'live':[],'evicted':[],
+                'watermark':None,'turnExecutionId':'turn-'+str(n),'processGeneration':n,
+                'nativeMessageSha256':str(n)*64,'nativeReceiptSha256':str(n)*64,
+                'completedAtWallMs':3},'runtime-'+str(n))
+        x._admin_canary_and_store_readback=readback
+        scope['_checked_installation']=lambda owner:None
+        scope['_namespace_directory']=lambda path:10
+        scope['_descriptor_bytes']=lambda fd,digest:files[fd]
+        def claimed(name,flags,mode,dir_fd):
+            self.assertEqual(dir_fd,10)
+            self.assertTrue(flags & os.O_EXCL)
+            claims.append(name)
+            return 10+len(claims)
+        def written(fd,raw):files[fd]=raw;return len(raw)
+        with patch.object(os,'open',side_effect=claimed),patch.object(os,'write',side_effect=written), \
+             patch.object(os,'fsync'),patch.object(os,'close'), \
+             patch.object(d.time,'time',return_value=0.01),patch.object(d.time,'monotonic',return_value=1):
+            floor,validator=scope['_run_admin_owned'](x)
+        self.assertEqual(claims,['floor-proven.json','validator-installed.json'])
+        self.assertEqual(floor['deployedBinarySha256'],'c'*64)
+        self.assertEqual(validator['deployedBinarySha256'],'c'*64)
+        self.assertEqual(events[-2:],['native-store:3','exit:restart_b'])
+        self.assertEqual(sum(child.poll() is None for child in x._owned_children),0)
+
     def test_private_deploy_actual_callsite_and_exact_request(self):
         from types import SimpleNamespace
         import json
@@ -472,6 +607,24 @@ class Tests(unittest.TestCase):
             fn=_helper['qualification_projection']
             self.assertEqual(fn(9,d.hashlib.sha256(raw).hexdigest(),{'nonce':'b'*64}),value)
             with self.assertRaises(_helper['Rejected']):fn(9,d.hashlib.sha256(raw).hexdigest(),{'nonce':'f'*64})
+
+    def test_fixed_admin_qualification_is_a_distinct_pinned_role_not_cto_relabel(self):
+        from types import SimpleNamespace
+        value={'role':'original_executor_admin_qualification','phase':'deployment_start',
+            'consumingBinarySha256':'a'*64,'validatorSha256':'c'*64,
+            'entryManifestSha256':'e'*64,'procedureSha256':d.ADMIN_PROCEDURE_SHA,
+            'startupNonce':'b'*64}
+        raw=json.dumps(value,sort_keys=True,separators=(',',':')).encode()
+        m=SimpleNamespace(st_mode=0o100600,st_uid=0,st_nlink=1,st_size=len(raw),
+                          st_dev=1,st_ino=4,st_mtime_ns=3,st_ctime_ns=4)
+        with patch.object(os,'fstat',return_value=m),patch.object(os,'pread',return_value=raw):
+            fn=_helper['qualification_projection']
+            self.assertEqual(fn(9,d.hashlib.sha256(raw).hexdigest(),{'nonce':'b'*64}),value)
+            with self.assertRaises(_helper['Rejected']):
+                fn(9,d.hashlib.sha256(raw).hexdigest(),{'nonce':'wrong'})
+        self.assertEqual(d._context(value),value)
+        with self.assertRaises(d.Unknown):
+            d._context({**value,'procedureSha256':d.PROCEDURE_SHA})
 
 def tearDownModule():
     for g in reversed(_guards):g.stop()

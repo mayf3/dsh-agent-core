@@ -13,12 +13,17 @@ import secrets
 import ast
 import time
 import subprocess
+import select
 from dataclasses import dataclass
 
 PROCEDURE_SHA = 'd8cfc5a3925c29ee843258a8077f57f4d8223f44bf697bbd24edba011753911e'
+ADMIN_PROCEDURE_SHA = 'b1a1d5e148143c5ddf43fd644cb377cf7f74a4c561354b9098d80bd8c6933d44'
+ADMIN_OBSERVER_SHA = '7669ad98e12eb9ab5aee85506b402d4a073770734343d3262ecee1385f4e234c'
+QUALIFIED_ADMIN_PROCEDURE_SHA = None  # Only a separately reviewed fixed package may compile this selector.
 ID = 'original-router-qualification-20260927-v1'
 PHASES = ('deployment_start', 'restart_a', 'restart_b')
-DAEMON_SHA = '908941f28a851d4a323be1870b6e8e9a6c29da841b7706817f0d9189557987cb'
+DAEMON_SHA = '908941f28a851d4a323be1870b6e8e9a6c29da841b7706817f0d9189557987cb'  # Historical offline baseline; final package must repin actual reviewed source.
+DAEMON_DESCRIPTOR_LIMIT = 128 * (1 << 20)  # Finite reviewed-current-size ceiling; SHA must be rebound in final package.
 APP = '/usr/local/libexec/agent-core/app'
 QUALIFIED_ORIGINAL_ENTRY = None
 HANDOFF_SHA = 'b9238434fe765d45b6746543fc0d9ff09c728daecdffed6f1202426f6c72ab62'
@@ -76,8 +81,10 @@ def _context(value):
     require(type(value) is dict and set(value) == {'role', 'phase',
         'consumingBinarySha256','validatorSha256','entryManifestSha256', 'procedureSha256', 'startupNonce'},
         'QUALIFICATION_CONTEXT_SHAPE')
-    require(value['role'] == 'original_executor_qualification'
-        and value['phase'] in PHASES and value['procedureSha256'] == PROCEDURE_SHA,
+    require((value['role'],value['procedureSha256']) in (
+        ('original_executor_qualification',PROCEDURE_SHA),
+        ('original_executor_admin_qualification',ADMIN_PROCEDURE_SHA))
+        and value['phase'] in PHASES,
         'QUALIFICATION_CONTEXT_BINDING')
     for key in ('consumingBinarySha256','validatorSha256','entryManifestSha256', 'startupNonce'):
         require(type(value[key]) is str and re.fullmatch('[a-f0-9]{64}', value[key]),
@@ -135,7 +142,8 @@ def _entry_manifest(value,binding):
     expected = {'entrySha256':binding.entry_sha256,
         'consumingBinarySha256':binding.consuming_binary_sha256,
         'validatorSha256':binding.validator_sha256,'helperSha256':binding.helper_sha256,
-        'procedureSha256':PROCEDURE_SHA}
+        'procedureSha256':ADMIN_PROCEDURE_SHA if QUALIFIED_ADMIN_PROCEDURE_SHA == ADMIN_PROCEDURE_SHA
+            else PROCEDURE_SHA}
     require(type(value) is dict and value == expected and set(value) == set(expected),
         'ORIGINAL_ENTRY_MANIFEST_MISMATCH')
     return value.copy()
@@ -185,6 +193,8 @@ def _namespace_directory(path):
 class FixedOriginalDriver:
     def __init__(self):
         # Before any filesystem/process action: a thread/euid is not admission.
+        require(QUALIFIED_ADMIN_PROCEDURE_SHA in (None,ADMIN_PROCEDURE_SHA),
+                'QUALIFICATION_BRANCH_UNBOUND')
         require(QUALIFIED_ORIGINAL_ENTRY is not None, 'QUALIFICATION_ENTRY_UNBOUND')
         require(type(QUALIFIED_ORIGINAL_ENTRY) is _EntryBinding
             and all(type(value) is str and re.fullmatch('[a-f0-9]{64}',value)
@@ -240,7 +250,7 @@ class FixedOriginalDriver:
         # Actual fixed original driver observation, not a supplied snapshot.
         # Read the retained reviewed daemon descriptor and execute only its two
         # pure manifest functions. No public dispatcher or module import runs.
-        raw = _descriptor_bytes(self._daemon_fd,DAEMON_SHA,1 << 20)
+        raw = _descriptor_bytes(self._daemon_fd,DAEMON_SHA,DAEMON_DESCRIPTOR_LIMIT)
         parsed = ast.parse(raw)
         functions = [n for n in parsed.body if isinstance(n,ast.FunctionDef)
                      and n.name in ('canonical','tree_manifest')]
@@ -252,7 +262,7 @@ class FixedOriginalDriver:
         require(not links,'QUALIFICATION_LINK_UNKNOWN')
         result = hashlib.sha256(scope['canonical']({'dirs':dirs,'entries':entries,
                                                   'links':links,'total':total})).hexdigest()
-        _descriptor_bytes(self._daemon_fd,DAEMON_SHA,1 << 20)
+        _descriptor_bytes(self._daemon_fd,DAEMON_SHA,DAEMON_DESCRIPTOR_LIMIT)
         return result
 
     def _next_context(self,phase):
@@ -274,11 +284,14 @@ class FixedOriginalDriver:
                     'CONSUMING_BINARY_CHANGED')
             # Consume once before a fallible launch; UNKNOWN cannot retry it.
             self._used_phases.add(phase)
-            return _context({'role':'original_executor_qualification','phase':phase,
+            admin = QUALIFIED_ADMIN_PROCEDURE_SHA == ADMIN_PROCEDURE_SHA
+            return _context({'role':'original_executor_admin_qualification' if admin
+                else 'original_executor_qualification','phase':phase,
                 'consumingBinarySha256':self._binding.consuming_binary_sha256,
                 'validatorSha256':self._binding.validator_sha256,
                 'entryManifestSha256':self._binding.manifest_sha256,
-                'procedureSha256':PROCEDURE_SHA,'startupNonce':secrets.token_hex(32)})
+                'procedureSha256':ADMIN_PROCEDURE_SHA if admin else PROCEDURE_SHA,
+                'startupNonce':secrets.token_hex(32)})
         except Exception:
             self._unknown = True
             raise
@@ -327,6 +340,142 @@ class FixedOriginalDriver:
         except BaseException:
             self._unknown = True
             raise
+
+    def _admin_canary_and_store_readback(self):
+        """One same-child private canary, then independent root-held durable read."""
+        require(not self._unknown,'ORIGINAL_CUSTODY_UNKNOWN')
+        try:
+            self._continuity()
+            require(self._phase_context['role'] == 'original_executor_admin_qualification'
+                    and self._child is not None
+                    and any(self._child is c for c in self._owned_children)
+                    and self._child.poll() is None,'ADMIN_CHILD_UNOWNED')
+            require(not self._phase_query_used,'ADMIN_CANARY_NO_REPLAY')
+            self._phase_query_used = True
+            deadline = min(self._operation_deadline,self._startup_deadline,time.monotonic()+15)
+            require(time.monotonic() < deadline,'ADMIN_CANARY_DEADLINE')
+            challenge = secrets.token_hex(16)
+            query = {'context':self._phase_context,'challenge':challenge,
+                     'deadlineMonotonicNs':str(int(deadline*1_000_000_000))}
+            channel = self._phase_handoff.root
+            channel.settimeout(deadline-time.monotonic())
+            channel.sendall(json.dumps(query,sort_keys=True,separators=(',',':')).encode()+b'\n')
+            raw = bytearray()
+            while not raw.endswith(b'\n'):
+                remaining = deadline-time.monotonic()
+                require(remaining > 0,'ADMIN_CANARY_DEADLINE')
+                channel.settimeout(remaining)
+                block = channel.recv(4097-len(raw))
+                require(bool(block) and len(raw)+len(block) <= 4096,'ADMIN_CANARY_FRAME_BOUND')
+                raw.extend(block)
+            require(raw.count(b'\n') == 1,'ADMIN_CANARY_FRAME_SHAPE')
+            frame = _object(bytes(raw[:-1]))
+            require(set(frame) == {'context','challenge','handle','runtimeGeneration',
+                    'processGeneration','nativeMessageSha256','nativeReceiptSha256',
+                    'completedAtWallMs','replySha256'}
+                    and frame['context'] == self._phase_context
+                    and frame['challenge'] == challenge
+                    and type(frame['handle']) is str and 0 < len(frame['handle']) <= 256
+                    and type(frame['runtimeGeneration']) is str
+                    and 0 < len(frame['runtimeGeneration']) <= 128
+                    and type(frame['processGeneration']) is int and frame['processGeneration'] > 0
+                    and type(frame['completedAtWallMs']) is int and frame['completedAtWallMs'] > 0
+                    and all(type(frame[k]) is str and re.fullmatch('[a-f0-9]{64}',frame[k])
+                        for k in ('nativeMessageSha256','nativeReceiptSha256','replySha256')),
+                    'ADMIN_CANARY_FRAME_INVALID')
+            require(time.monotonic() < deadline,'ADMIN_CANARY_DEADLINE')
+            self._continuity()
+            require(self._child.poll() is None,'ADMIN_CHILD_EXIT_UNKNOWN')
+            value = self._admin_store_readback(frame,deadline)
+            require(set(value) == {'floor','maxIssuedTurnSeq','live','evicted',
+                    'watermark','turnExecutionId','processGeneration','nativeMessageSha256',
+                    'nativeReceiptSha256','completedAtWallMs','replySha256'}
+                    and value['turnExecutionId'] == frame['handle']
+                    and all(type(value[k]) is type(frame[k]) and value[k] == frame[k]
+                        for k in ('processGeneration','nativeMessageSha256',
+                                  'nativeReceiptSha256','completedAtWallMs','replySha256')),
+                    'ADMIN_STORE_FRAME_MISMATCH')
+            require(time.monotonic() < deadline,'ADMIN_CANARY_DEADLINE')
+            self._continuity()
+            require(self._child.poll() is None,'ADMIN_CHILD_EXIT_UNKNOWN')
+            self._phase_handoff.close()
+            return {key:item for key,item in value.items() if key != 'replySha256'},frame['runtimeGeneration']
+        except BaseException:
+            self._unknown = True
+            raise
+
+    def _admin_store_readback(self,frame,deadline):
+        """Read the exact original durable file under the owned fixed descriptor."""
+        parent = script_fd = store_fd = child = None
+        directories = []
+        try:
+            self._continuity()
+            parent = _namespace_directory(os.path.dirname(__file__))
+            script_fd = os.open('admin_observation.mjs',os.O_RDONLY | os.O_NOFOLLOW,dir_fd=parent)
+            script = _descriptor_bytes(script_fd,ADMIN_OBSERVER_SHA)
+            directory = os.open('/',os.O_RDONLY | os.O_DIRECTORY)
+            directories.append(directory)
+            for index,name in enumerate(('Users','authsvc','.agent-core','control')):
+                directory = os.open(name,os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,dir_fd=directory)
+                directories.append(directory)
+                meta = os.fstat(directory)
+                require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == (0 if index == 0 else 505)
+                        and not meta.st_mode & 0o022,'ADMIN_STORE_NAMESPACE')
+            store_fd = os.open('turn-recovery-v3.json',os.O_RDONLY | os.O_NOFOLLOW,dir_fd=directory)
+            before = os.fstat(store_fd)
+            require(stat.S_ISREG(before.st_mode) and before.st_uid == 505
+                    and before.st_gid == 601 and stat.S_IMODE(before.st_mode) == 0o600
+                    and before.st_nlink == 1 and 0 < before.st_size <= 16*(1 << 20),
+                    'ADMIN_STORE_CUSTODY')
+            def identity(m):
+                return (m.st_dev,m.st_ino,m.st_mode,m.st_uid,m.st_gid,m.st_nlink,
+                        m.st_size,m.st_mtime_ns,m.st_ctime_ns)
+            def digest_store():
+                digest = hashlib.sha256()
+                offset = 0
+                while offset < before.st_size:
+                    block = os.pread(store_fd,min(65536,before.st_size-offset),offset)
+                    require(bool(block),'ADMIN_STORE_SHORT_READ')
+                    offset += len(block);digest.update(block)
+                return digest.hexdigest()
+            digest = digest_store()
+            require(time.monotonic() < deadline,'ADMIN_STORE_DEADLINE')
+            child = subprocess.Popen([NODE,'--input-type=module','-',f'/dev/fd/{store_fd}',
+                frame['handle'],frame['runtimeGeneration'],str(self._phase_started_wall_ms)],
+                pass_fds=(store_fd,),stdin=subprocess.PIPE,stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,user=505,group=601,extra_groups=[],
+                env={'PATH':'/usr/bin:/bin'})
+            child.stdin.write(script)
+            child.stdin.close()
+            output = bytearray()
+            while True:
+                remaining = deadline-time.monotonic()
+                require(remaining > 0 and select.select([child.stdout],[],[],remaining)[0],
+                        'ADMIN_STORE_DEADLINE')
+                block = os.read(child.stdout.fileno(),65537-len(output))
+                if not block: break
+                output.extend(block)
+                require(len(output) <= 65536,'ADMIN_STORE_BOUND')
+            remaining = deadline-time.monotonic()
+            require(remaining > 0 and child.wait(timeout=remaining) == 0,
+                    'ADMIN_STORE_OBSERVATION_UNKNOWN')
+            require(time.monotonic() < deadline,'ADMIN_STORE_DEADLINE')
+            require(digest_store() == digest and identity(os.fstat(store_fd)) == identity(before)
+                    and identity(os.stat('turn-recovery-v3.json',dir_fd=directory,
+                                         follow_symlinks=False)) == identity(before)
+                    and _descriptor_bytes(script_fd,ADMIN_OBSERVER_SHA) == script,
+                    'ADMIN_STORE_CHANGED')
+            self._continuity()
+            return _object(bytes(output))
+        finally:
+            if child is not None:
+                if child.poll() is None: child.kill()
+                child.wait(timeout=max(0.001,deadline-time.monotonic()))
+                child.stdout.close()
+            if store_fd is not None: os.close(store_fd)
+            for descriptor in reversed(directories): os.close(descriptor)
+            if script_fd is not None: os.close(script_fd)
+            if parent is not None: os.close(parent)
 
     def _parent_handoff_type(self):
         parent = _namespace_directory(os.path.dirname(__file__))
@@ -427,9 +576,11 @@ class FixedOriginalDriver:
         require(not self._unknown,'ORIGINAL_CUSTODY_UNKNOWN')
         parent = fd = None
         try:
-            require(type(QUALIFIED_OWNER_SHA) is str
-                    and re.fullmatch('[a-f0-9]{64}',QUALIFIED_OWNER_SHA),
-                    'ORIGINAL_OWNER_SELECTOR_UNBOUND')
+            admin = QUALIFIED_ADMIN_PROCEDURE_SHA == ADMIN_PROCEDURE_SHA
+            if not admin:
+                require(type(QUALIFIED_OWNER_SHA) is str
+                        and re.fullmatch('[a-f0-9]{64}',QUALIFIED_OWNER_SHA),
+                        'ORIGINAL_OWNER_SELECTOR_UNBOUND')
             require(type(PROCEDURE_DRIVER_SHA) is str
                     and re.fullmatch('[a-f0-9]{64}',PROCEDURE_DRIVER_SHA),
                     'ORIGINAL_PROCEDURE_SOURCE_UNBOUND')
@@ -444,7 +595,13 @@ class FixedOriginalDriver:
                 '_object':_object,'NODE':NODE,'NODE_SHA':NODE_SHA,
                 'QUALIFIED_OWNER_SHA':QUALIFIED_OWNER_SHA}
             exec(compile(raw,'original-procedure.py','exec'),scope)
-            return scope['_run_owned'](self)
+            if not admin:
+                return scope['_run_owned'](self)
+            os.close(fd)
+            fd = os.open('admin_procedure.py',os.O_RDONLY | os.O_NOFOLLOW,dir_fd=parent)
+            admin_raw = _descriptor_bytes(fd,ADMIN_PROCEDURE_SHA)
+            exec(compile(admin_raw,'original-admin-procedure.py','exec'),scope)
+            return scope['_run_admin_owned'](self)
         except BaseException:
             self._unknown = True
             raise
