@@ -1,0 +1,40 @@
+{
+  "deliveryEvent": "54b0945f-2862-5327-82c8-43640a072549",
+  "SPEC_GOVERNANCE_MODE": "PREFLIGHT",
+  "BASE_HEAD": "e8b6564ebc5327938e6544de9000d336799a7cb3",
+  "GOAL_OR_TARGET": "OCB-C01..06 fixed CTO hash-only one-use DS action",
+  "CURRENT_GAP": "No CTO action in exact offline daeb DS; official native ID remains absent",
+  "AUTHORITY_ACTION": "REUSE",
+  "PRIMARY_AUTHORITY": "HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1",
+  "authoritySha256": "74f155dec5ea7078528f403935dc44746a976e118ea1bddd33f01c7835fab5a3",
+  "AUTHORITY_ACCEPTED_IN_BASE": "YES",
+  "IMPLEMENTATION_AUTHORITY": "contracts",
+  "PLAN_LEVEL": "BRIEF",
+  "ASSURANCE_LEVEL": "CONTROLLED",
+  "ROUTE_STAGE": "IMPLEMENTATION",
+  "EXECUTION_MANDATE": "VALID bounded NONPRODUCTION only",
+  "IMPLEMENTATION_ALLOWED": "YES",
+  "OPERATION_ALLOWED": "NO",
+  "SPEC_GAP_DEPENDENCY": "NONE",
+  "OWNER_DECISION_REQUIRED": "NO",
+  "ISOLATED_WRITE_SURFACE": "/Users/yanfenma/.codex/worktrees/hr-carrier-v14-integration",
+  "EVIDENCE_NEEDED": [
+    "RED absent action",
+    "same-fd complete V3 validation and selected CTO three hashes",
+    "strict request/getpeereid",
+    "durable INTENT/terminal no replay",
+    "existing efficiency/action regression",
+    "same affected reviewer"
+  ],
+  "DONE_WHEN": "tested frozen source/update/rollback/read packets; explicitly unbound native ID and no live effect",
+  "EXPANSION_TRIGGER": "new interface/caller/secret/permission or changed protected store",
+  "NEXT_REAL_ACTION": "tests against exact offline daeb, minimal new fixed action using inherited parser/traversal, review",
+  "plan": [
+    "pin offline DS/parser and authority",
+    "TDD fixed selector lifecycle",
+    "integrate fixed dispatch/client operation packets and exact update pair",
+    "focused regression, seal, same p2 review"
+  ],
+  "livePreimageFreshlyVerified": false,
+  "missingFact": "independently verified official native Feishu message ID joined to exact Owner CTO seed; no link token retained"
+}
