@@ -116,6 +116,24 @@ export function validatePreparedHrCutBytes(bytes, { hostId = hostname(),
   })
 }
 
+/** This context is supplied only by the separately reviewed startup module
+ * after a live DS challenge. Static projection bytes never mint one. */
+export function joinLiveHrCutContext(prepared, context) {
+  if (prepared === null || context === null || typeof context !== 'object'
+      || context.operationId !== HR_CUT_OPERATION_ID
+      || context.preparedReceiptSha256 !== prepared.receiptSha256
+      || context.nonce !== prepared.receipt.nonce
+      || context.windowId !== prepared.receipt.windowId
+      || context.newRuntimeEpoch !== prepared.receipt.newRuntimeEpoch
+      || context.newSessionId !== prepared.receipt.newSessionId
+      || typeof context.assertLive !== 'function'
+      || typeof context.awaitComplete !== 'function'
+      || context.assertLive() !== true) {
+    throw new TypeError('HR cut: live trusted startup window unavailable')
+  }
+  return prepared
+}
+
 function nonWritableRootDirectory(path, exactMode = null) {
   const st = lstatSync(path)
   if (!st.isDirectory() || st.isSymbolicLink() || st.uid !== 0
@@ -126,10 +144,9 @@ function nonWritableRootDirectory(path, exactMode = null) {
   }
 }
 
-/** Hash the same pre-start durable file bytes the fixed root producer saw
- * after the old Runtime stopped. The existing store loader validates the
- * record schema next; this function never returns record contents. */
-export function readHrDurablePreimageSha256(storeFile) {
+/** Drift guard for the whole durable file during startup. This is distinct
+ * from oldRecordSha256, whose domain is the decoded exact subject record. */
+export function readHrDurableFileSha256(storeFile) {
   const fd = openSync(storeFile,
     constants.O_RDONLY | constants.O_NOFOLLOW | (constants.O_CLOEXEC ?? 0))
   try {
@@ -160,10 +177,22 @@ export function readHrDurablePreimageSha256(storeFile) {
   }
 }
 
+/** Match the existing quiescence subject-preimage domain exactly. The
+ * durable loader first validates the record; neither the full file nor a
+ * Python reserialization can substitute for this digest. */
+export function hrOldRecordSha256(record) {
+  if (record === null || typeof record !== 'object' || Array.isArray(record)
+      || record.handle !== HR_CUT_OLD_HANDLE) {
+    throw new TypeError('HR cut: exact decoded old record required')
+  }
+  return sha256(Buffer.from(JSON.stringify(record)))
+}
+
 /** No path argument, environment override, or caller-selected Agent. Absence
  * leaves historical HR fencing in force; invalidity is a bounded error for
  * the startup coordinator to report while keeping other Agents available. */
-export function readFixedPreparedHrCut() {
+export function readFixedPreparedHrCut(authenticatedStartupContext) {
+  if (authenticatedStartupContext === null || authenticatedStartupContext === undefined) return null
   try {
     for (const path of ['/usr', '/usr/local', '/usr/local/libexec']) {
       nonWritableRootDirectory(path)
@@ -192,7 +221,8 @@ export function readFixedPreparedHrCut() {
           || before.ctimeNs !== after.ctimeNs || length !== Number(before.size)) {
         throw new TypeError('HR cut projection: read drift')
       }
-      return validatePreparedHrCutBytes(buffer.subarray(0, length))
+      return joinLiveHrCutContext(validatePreparedHrCutBytes(buffer.subarray(0, length)),
+        authenticatedStartupContext)
     } finally {
       closeSync(fd)
     }
@@ -293,4 +323,32 @@ export function writeFixedHrMountAck(prepared, bindingReceipt, store, hrProcess)
     }
   } finally { closeSync(readFd) }
   return Object.freeze({ acknowledgementSha256: sha256(bytes), ...ack })
+}
+
+/** Startup remains behind the old fence until DS has durably read back the
+ * same owned-window COMPLETE. A disconnected/UNKNOWN channel cannot unlock. */
+export async function mountFixedHrCut({ prepared, context, reconciliationStore,
+  bindingStore, registry, writeAck = writeFixedHrMountAck }) {
+  joinLiveHrCutContext(prepared, context)
+  reconciliationStore.validateTrustedFreshHrLineage(prepared.cut)
+  reconciliationStore.activateTrustedFreshHrLineage(prepared.cut)
+  const binding = await bindingStore.commitFreshHrBindingCut(prepared.cut)
+  if (context.assertLive() !== true) {
+    throw new TypeError('HR cut: owned startup window lost before child start')
+  }
+  const token = reconciliationStore.issueFreshHrStartupToken(prepared.cut)
+  const child = await registry.ensureRunning(prepared.cut.agentId, token)
+  const ack = writeAck(prepared, binding, reconciliationStore, child)
+  const complete = await context.awaitComplete(ack.acknowledgementSha256)
+  if (complete?.disposition !== 'COMPLETE'
+      || complete.cutOperationId !== prepared.cut.operationId
+      || complete.preparedReceiptSha256 !== prepared.receiptSha256
+      || complete.oldFenceRetained !== true) {
+    throw new TypeError('HR cut: root COMPLETE readback invalid')
+  }
+  reconciliationStore.completeTrustedFreshHrMount(prepared.cut, {
+    processGeneration: child.processGeneration, childPid: child.pid,
+    acknowledgementSha256: ack.acknowledgementSha256,
+  })
+  return complete
 }

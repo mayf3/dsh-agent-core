@@ -14,8 +14,9 @@ const AGENT = 'agt_hr-agent'
 const NEW_SESSION = 'hr-fresh-20260929-6d3b45a0'
 const SHA = (digit) => digit.repeat(64)
 
-function oldUnknown(store, agentId = AGENT) {
-  const handle = store.mintTurnExecution({ agentId, processGeneration: 1, sessionId: 'main' })
+function oldUnknown(store, agentId = AGENT, ingressCorrelation = null) {
+  const handle = store.mintTurnExecution({ agentId, processGeneration: 1,
+    sessionId: 'main', ingressCorrelation })
   store.markAdmitted(handle, {
     eventWatermarkSeq: 0,
     promptRequestId: 'old-do-not-replay',
@@ -151,7 +152,11 @@ test('only authenticated Feishu with the durable exact Binding reaches the new l
       activeSessionId: 'old-session', workspace: null })
     const first = new TurnReconciliationStore({ runtimeEpoch: 'old-runtime',
       persistenceFile: join(dir, 'reconciliation.json') })
-    const handle = oldUnknown(first)
+    const handle = oldUnknown(first, AGENT, {
+      channelNamespace: 'feishu', channelConversationId: 'feishu:oc_hr',
+      feishuConversationId: 'oc_hr', feishuMessageId: 'om_old_request',
+      feishuSenderOpenId: 'ou_owner',
+    })
     const store = new TurnReconciliationStore({ runtimeEpoch: 'new-runtime',
       persistenceFile: join(dir, 'reconciliation.json') })
     const cut = trustedCut(handle)
@@ -178,7 +183,10 @@ test('only authenticated Feishu with the durable exact Binding reaches the new l
     })
     const ingress = { channel: 'p2p', chatId: 'oc_hr', conversationId: 'oc_hr',
       messageId: 'om_new_canary', sender: { openId: 'ou_owner' },
-      raw: { sender: { sender_id: { open_id: 'ou_owner' } } },
+      timestamp: cut.cutCommittedAtMs + 1_000,
+      raw: { sender: { sender_id: { open_id: 'ou_owner' } },
+        message: { message_id: 'om_new_canary',
+          create_time: String(cut.cutCommittedAtMs + 1_000) } },
       text: 'new harmless canary' }
     store.activateTrustedFreshHrLineage(cut)
     const before = await delivery.onAuthenticatedFeishuIngress(ingress)
@@ -189,6 +197,18 @@ test('only authenticated Feishu with the durable exact Binding reaches the new l
       acknowledgementSha256: SHA('d') })
     const publicRoute = await delivery.onIngress(ingress)
     assert.equal(publicRoute.fencedBy, handle)
+    const oldRetry = { ...ingress, messageId: 'om_old_request',
+      timestamp: cut.cutCommittedAtMs - 1_000,
+      raw: { ...ingress.raw, message: { message_id: 'om_old_request',
+        create_time: String(cut.cutCommittedAtMs - 1_000) } } }
+    const rejectedRetry = await delivery.onAuthenticatedFeishuIngress(oldRetry)
+    assert.equal(rejectedRetry.fencedBy, handle)
+    const oldIdWithFreshTimestamp = { ...oldRetry, timestamp: ingress.timestamp,
+      raw: { ...oldRetry.raw, message: { ...oldRetry.raw.message,
+        create_time: String(ingress.timestamp) } } }
+    assert.equal((await delivery.onAuthenticatedFeishuIngress(oldIdWithFreshTimestamp)).fencedBy,
+      handle, 'the durable old message ID stays rejected even with a later timestamp')
+    assert.equal(executions, 0, 'old pre-cut message cannot reach a new prompt')
     const allowed = await delivery.onAuthenticatedFeishuIngress(ingress)
     assert.equal(allowed.reply, 'HR fresh canary')
     assert.equal(executions, 1)

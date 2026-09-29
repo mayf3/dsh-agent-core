@@ -69,10 +69,10 @@
  * selection, bookmark policy), the store only persists rows.
  */
 
-import { createHash } from 'node:crypto'
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
+import { FRESH_HR_CUT_OPERATION_ID, FreshBindingMethods, validateFreshHrCutBinding } from './binding-store-fresh.js'
 
 /** Store document version; bumped only on breaking format changes. */
 export const STORE_VERSION = 1
@@ -82,10 +82,6 @@ export const CORRUPT_STORE = 'CORRUPT_STORE'
 
 /** Error code thrown for invalid input. */
 export const VALIDATION_ERROR = 'VALIDATION_ERROR'
-const FRESH_HR_AGENT_ID = 'agt_hr-agent'
-const FRESH_HR_CUT_OPERATION_ID = 'hr-fresh-lineage-cut-20260929-0d8235e7'
-const SHA256 = /^[a-f0-9]{64}$/
-const digestJson = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 
 /**
  * One Binding row: which (Agent, Session) the ChannelConversation is
@@ -147,6 +143,7 @@ export class BindingStore {
     /** @type {Map<string, Map<string, FreshSessionRow>>} agentId -> (requestId -> row) */
     this.freshSessions = new Map()
     this.freshHrCutBinding = null
+    this.cutPersistenceUnknown = false
     this.queue = Promise.resolve()
     this.load()
   }
@@ -192,35 +189,7 @@ export class BindingStore {
       })
     }
     if (document.freshHrCutBinding !== undefined) {
-      const cut = document.freshHrCutBinding
-      const keys = ['bindingCutSha256', 'channelConversationId', 'newRuntimeEpoch',
-        'newSessionId', 'oldHandle', 'oldSessionId', 'operationId',
-        'preimageSha256', 'rootReceiptSha256']
-      if (cut === null || typeof cut !== 'object' || Array.isArray(cut)
-          || Object.keys(cut).sort().join(',') !== keys.sort().join(',')
-          || cut.operationId !== FRESH_HR_CUT_OPERATION_ID
-          || typeof cut.oldHandle !== 'string' || !cut.oldHandle.startsWith('turn:')
-          || cut.oldHandle.length > 256
-          || typeof cut.newSessionId !== 'string' || cut.newSessionId === ''
-          || cut.newSessionId === cut.oldSessionId
-          || typeof cut.newRuntimeEpoch !== 'string' || cut.newRuntimeEpoch === ''
-          || typeof cut.oldSessionId !== 'string' || cut.oldSessionId === ''
-          || typeof cut.channelConversationId !== 'string'
-          || !cut.channelConversationId.startsWith('feishu:')
-          || !SHA256.test(cut.preimageSha256 ?? '')
-          || !SHA256.test(cut.rootReceiptSha256 ?? '')
-          || !SHA256.test(cut.bindingCutSha256 ?? '')
-          || digestJson({ channelConversationId: cut.channelConversationId,
-            operationId: cut.operationId, oldSessionId: cut.oldSessionId,
-            newSessionId: cut.newSessionId, newRuntimeEpoch: cut.newRuntimeEpoch,
-            oldHandle: cut.oldHandle, rootReceiptSha256: cut.rootReceiptSha256,
-            preimageSha256: cut.preimageSha256 }) !== cut.bindingCutSha256
-          || this.bindings.get(cut.channelConversationId)?.activeAgentId !== FRESH_HR_AGENT_ID
-          || this.bindings.get(cut.channelConversationId)?.activeSessionId !== cut.newSessionId) {
-        throw Object.assign(new Error('binding-store: invalid fixed HR Binding cut'),
-          { code: CORRUPT_STORE })
-      }
-      this.freshHrCutBinding = { ...cut }
+      this.freshHrCutBinding = validateFreshHrCutBinding(document.freshHrCutBinding, this.bindings)
     }
     // Optional bookmark table (absent in older documents = empty).
     if (document.lastSessions !== undefined) {
@@ -294,20 +263,26 @@ export class BindingStore {
    * = failure" is impossible). The store file is only ever replaced
    * atomically, so a failed persist cannot corrupt the on-disk document.
    */
-  enqueue(fn, readback) {
+  enqueue(fn, readback, { durable = false } = {}) {
     const run = this.queue.then(async () => {
+      if (this.cutPersistenceUnknown) {
+        throw Object.assign(new Error('binding-store: prior cut persistence outcome unknown'),
+          { code: 'HR_FRESH_BINDING_PERSIST_UNKNOWN' })
+      }
       const snapshot = this.snapshot()
       let persisted = false
       try {
         const result = await fn()
-        await this.persist()
+        await this.persist({ durable })
         persisted = true
         if (readback !== undefined) await readback(result)
         return result
       } catch (error) {
         // Once rename committed, a failed readback is UNKNOWN to this caller:
         // leave RAM matching disk and force the startup consumer to stop.
-        if (!persisted) this.restore(snapshot)
+        if (error?.code === 'HR_FRESH_BINDING_PERSIST_UNKNOWN') {
+          this.cutPersistenceUnknown = true
+        } else if (!persisted) this.restore(snapshot)
         throw error
       }
     })
@@ -335,8 +310,9 @@ export class BindingStore {
     this.freshHrCutBinding = snapshot.freshHrCutBinding
   }
 
-  /** Atomic persist: write tmp, then rename over the store file. */
-  async persist() {
+  /** The one HR cut additionally syncs the file and parent directory before
+   * success. Post-rename sync failure is UNKNOWN, never a RAM rollback. */
+  async persist({ durable = false } = {}) {
     const document = {
       version: STORE_VERSION,
       bindings: Object.fromEntries([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
@@ -354,11 +330,25 @@ export class BindingStore {
     if (this.freshHrCutBinding !== null) document.freshHrCutBinding = { ...this.freshHrCutBinding }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
+    let renamed = false
     try {
       await writeFile(tmp, `${JSON.stringify(document, null, 2)}\n`, { encoding: 'utf8' })
+      if (durable) {
+        const file = await open(tmp, 'r')
+        try { await file.sync() } finally { await file.close() }
+      }
       await rename(tmp, this.storeFile)
+      renamed = true
+      if (durable) {
+        const directory = await open(dirname(this.storeFile), 'r')
+        try { await directory.sync() } finally { await directory.close() }
+      }
     } catch (error) {
       await rm(tmp, { force: true }).catch(() => {}) // best-effort cleanup
+      if (durable && renamed) {
+        throw Object.assign(new Error('binding-store: post-rename durability unknown', { cause: error }),
+          { code: 'HR_FRESH_BINDING_PERSIST_UNKNOWN' })
+      }
       throw error
     }
   }
@@ -370,71 +360,6 @@ export class BindingStore {
    */
   get(channelConversationId) {
     return this.bindings.get(channelConversationId)
-  }
-
-  getFreshHrCutBinding() {
-    return this.freshHrCutBinding === null ? null : { ...this.freshHrCutBinding }
-  }
-
-  /** Router startup only: join a root PREPARED cut with the sole existing HR
-   * Feishu Binding under this store's native serialization lock. This method
-   * does not accept a caller-supplied chat ID or old updatedAt. The old row
-   * and its preimage digest are captured inside the same mutation transaction.
-   * The Router keeps ingress closed until this durable result is read back. */
-  commitFreshHrBindingCut(cut) {
-    if (cut?.operationId !== FRESH_HR_CUT_OPERATION_ID
-        || typeof cut.oldHandle !== 'string' || !cut.oldHandle.startsWith('turn:')
-        || cut.oldHandle.length > 256
-        || !SHA256.test(cut.rootReceiptSha256 ?? '')
-        || typeof cut.newSessionId !== 'string' || cut.newSessionId === ''
-        || typeof cut.oldSessionId !== 'string' || cut.oldSessionId === ''
-        || cut.oldSessionId === cut.newSessionId
-        || typeof cut.newRuntimeEpoch !== 'string' || cut.newRuntimeEpoch === '') {
-      throw Object.assign(new TypeError('binding-store: invalid fixed HR cut input'),
-        { code: VALIDATION_ERROR })
-    }
-    return this.enqueue(async () => {
-      if (this.freshHrCutBinding !== null) {
-        throw Object.assign(new Error('binding-store: HR cut already committed'),
-          { code: 'HR_FRESH_BINDING_CUT_ALREADY_COMMITTED' })
-      }
-      const candidates = [...this.bindings.values()].filter(row =>
-        row.channelConversationId.startsWith('feishu:') && row.activeAgentId === FRESH_HR_AGENT_ID)
-      if (candidates.length !== 1) {
-        throw Object.assign(new Error('binding-store: exactly one HR Feishu Binding required'),
-          { code: 'HR_FRESH_BINDING_AMBIGUOUS' })
-      }
-      const old = candidates[0]
-      if (old.activeSessionId !== cut.oldSessionId
-          || typeof old.updatedAt !== 'string' || old.updatedAt === '') {
-        throw Object.assign(new Error('binding-store: HR old Binding preimage mismatch'),
-          { code: 'HR_FRESH_BINDING_PREIMAGE_MISMATCH' })
-      }
-      const preimageSha256 = digestJson(old)
-      const receipt = {
-        channelConversationId: old.channelConversationId,
-        operationId: cut.operationId,
-        oldSessionId: old.activeSessionId,
-        newSessionId: cut.newSessionId,
-        newRuntimeEpoch: cut.newRuntimeEpoch,
-        oldHandle: cut.oldHandle,
-        rootReceiptSha256: cut.rootReceiptSha256,
-        preimageSha256,
-      }
-      receipt.bindingCutSha256 = digestJson(receipt)
-      this.bindings.set(old.channelConversationId, {
-        ...old, activeSessionId: cut.newSessionId, updatedAt: this.now(),
-      })
-      this.freshHrCutBinding = receipt
-      return { ...receipt }
-    }, async receipt => {
-      const onDisk = JSON.parse(readFileSync(this.storeFile, 'utf8'))
-      if (onDisk.bindings?.[receipt.channelConversationId]?.activeSessionId !== cut.newSessionId
-          || JSON.stringify(onDisk.freshHrCutBinding) !== JSON.stringify(receipt)) {
-        throw Object.assign(new Error('binding-store: HR cut post-persist readback mismatch'),
-          { code: 'HR_FRESH_BINDING_READBACK_UNKNOWN' })
-      }
-    })
   }
 
   /**
@@ -544,96 +469,10 @@ export class BindingStore {
     return rows
   }
 
-  /**
-   * Read one Delivery V0 fresh mapping: the native session owned by
-   * (agentId, requestId), or undefined when this requestId was never
-   * delivered fresh.
-   * @param {string} agentId
-   * @param {string} requestId
-   * @returns {FreshSessionRow | undefined}
-   */
-  getFreshSession(agentId, requestId) {
-    const row = this.freshSessions.get(agentId)?.get(requestId)
-    return row === undefined ? undefined : { ...row }
-  }
 
-  /**
-   * Read-or-mint the Delivery V0 fresh mapping for (agentId, requestId),
-   * atomically inside the mutation queue: two concurrent first deliveries of
-   * the same requestId can never mint two different session ids — the second
-   * caller observes the row the first one persisted. Persists only when a
-   * row is minted.
-   *
-   * @param {string} agentId - the delivering Agent (mapping namespace).
-   * @param {string} requestId - the caller's opaque delivery id.
-   * @param {(used: Set<string>) => string} mint - called ONLY on first sight
-   *   of the requestId, inside the critical section; receives the set of
-   *   session ids already in use by this agent and must return a non-empty
-   *   id outside that set (the router derives `fresh-<hash>` from the
-   *   requestId; the check guards against any collision).
-   * @param {{lineageOperationId:string}} [lineage] - Router-private fixed HR
-   *   cut marker for a mapping first minted after authenticated readiness.
-   * @returns {Promise<FreshSessionRow>} the (existing or minted) row.
-   */
-  freshSessionFor(agentId, requestId, mint, lineage = undefined) {
-    if (typeof agentId !== 'string' || agentId === ''
-        || typeof requestId !== 'string' || requestId === '') {
-      throw Object.assign(new TypeError('binding-store: freshSessionFor agentId and requestId (non-empty strings) are required'), {
-        code: VALIDATION_ERROR,
-      })
-    }
-    if (typeof mint !== 'function') {
-      throw Object.assign(new TypeError('binding-store: freshSessionFor mint(usedIds) is required'), {
-        code: VALIDATION_ERROR,
-      })
-    }
-    if (lineage !== undefined && (agentId !== 'agt_hr-agent'
-        || lineage === null || typeof lineage !== 'object' || Array.isArray(lineage)
-        || Object.keys(lineage).join(',') !== 'lineageOperationId'
-        || lineage.lineageOperationId !== FRESH_HR_CUT_OPERATION_ID)) {
-      throw Object.assign(new TypeError('binding-store: exact fresh HR lineage marker invalid'), {
-        code: VALIDATION_ERROR,
-      })
-    }
-    return this.enqueue(async () => {
-      let perRequest = this.freshSessions.get(agentId)
-      if (perRequest === undefined) {
-        perRequest = new Map()
-        this.freshSessions.set(agentId, perRequest)
-      }
-      const existing = perRequest.get(requestId)
-      if (existing !== undefined) return { ...existing }
-      const used = new Set([...perRequest.values()].map(row => row.sessionId))
-      const sessionId = mint(used)
-      if (typeof sessionId !== 'string' || sessionId === '' || used.has(sessionId)) {
-        throw Object.assign(new TypeError('binding-store: mint returned an invalid or duplicate sessionId'), {
-          code: VALIDATION_ERROR,
-        })
-      }
-      const createdAt = this.now()
-      if (lineage !== undefined && !Number.isSafeInteger(Date.parse(createdAt))) {
-        throw Object.assign(new TypeError('binding-store: fresh HR lineage creation time invalid'), {
-          code: VALIDATION_ERROR,
-        })
-      }
-      const row = { agentId, requestId, sessionId, createdAt,
-        ...(lineage === undefined ? {} : { lineageOperationId: lineage.lineageOperationId }) }
-      perRequest.set(requestId, row)
-      return { ...row }
-    })
-  }
-
-  /**
-   * Every Delivery V0 fresh mapping row (test/evidence surface). Flattened,
-   * insertion order. @returns {FreshSessionRow[]}
-   */
-  freshSessionsSnapshot() {
-    const rows = []
-    for (const [agentId, perRequest] of this.freshSessions.entries()) {
-      for (const row of perRequest.values()) {
-        rows.push({ ...row })
-      }
-    }
-    return rows
-  }
 }
+
+Object.defineProperties(BindingStore.prototype, Object.fromEntries(
+  Object.entries(Object.getOwnPropertyDescriptors(FreshBindingMethods.prototype))
+    .filter(([name]) => name !== 'constructor')
+))

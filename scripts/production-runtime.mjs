@@ -11,6 +11,14 @@ import { assertProductionArchitecture } from '../packages/production-runtime/src
 
 async function main() {
   assertProductionArchitecture()
+  // An absent or failed one-use HR cut channel must not block ordinary Agents.
+  try {
+    const { authenticateFixedHrFreshCutStartup } = await import(
+      '../packages/production-runtime/src/native-arm64/hr-fresh-lineage-startup-context.mjs')
+    await authenticateFixedHrFreshCutStartup()
+  } catch (error) {
+    process.stderr.write(`[production-runtime] HR fresh cut startup denied: ${error?.message ?? error}\n`)
+  }
   const { runProductionRuntime } = await import('../packages/production-runtime/src/entry.js')
   return runProductionRuntime()
 }
