@@ -1,0 +1,165 @@
+{
+  "schema": "PDC_INHERITANCE_ALLOWLIST_V1",
+  "acceptedV1Sha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25",
+  "deltaScope": "Maintenance-profile-only semantics plus proposed whole-successor lifecycle; semantic review required for any allowlist change",
+  "edits": [
+    {
+      "id": "DELTA-01",
+      "surface": "preamble",
+      "permittedMeaning": "Lifecycle only: V2 proposed identity, successor linkage and scope signposts; no acceptance.",
+      "v1StartLine": 2,
+      "v1EndExclusiveLine": 4,
+      "before": "spec_id: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1\nstatus: accepted\n",
+      "after": "spec_id: PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V2\nstatus: proposed\n"
+    },
+    {
+      "id": "DELTA-02",
+      "surface": "preamble",
+      "permittedMeaning": "Lifecycle only: V2 proposed identity, successor linkage and scope signposts; no acceptance.",
+      "v1StartLine": 14,
+      "v1EndExclusiveLine": 15,
+      "before": "supersedes: []\n",
+      "after": "supersedes: [PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1]\n"
+    },
+    {
+      "id": "DELTA-03",
+      "surface": "preamble",
+      "permittedMeaning": "Lifecycle only: V2 proposed identity, successor linkage and scope signposts; no acceptance.",
+      "v1StartLine": 18,
+      "v1EndExclusiveLine": 22,
+      "before": "accepted_by: mayf3\naccepted_date: 2026-09-17\naccepted_reviewed_head: 39865536ce51005f95a98473e77c2329078512c0\nindependent_review_result: PASS\n",
+      "after": "authoring_base_main: f0bbf0942752b859da445ba9f775a9061da399b3\n"
+    },
+    {
+      "id": "DELTA-04",
+      "surface": "preamble",
+      "permittedMeaning": "Lifecycle only: V2 proposed identity, successor linkage and scope signposts; no acceptance.",
+      "v1StartLine": 25,
+      "v1EndExclusiveLine": 26,
+      "before": "# Production Deployment Control Plane V1\n",
+      "after": "# Production Deployment Control Plane V2 \u2014 proposed whole-authority successor\n"
+    },
+    {
+      "id": "DELTA-05",
+      "surface": "preamble",
+      "permittedMeaning": "Lifecycle only: V2 proposed identity, successor linkage and scope signposts; no acceptance.",
+      "v1StartLine": 27,
+      "v1EndExclusiveLine": 32,
+      "before": "**ACCEPTED for implementation, tests, independent review and non-production\nverification.** Owner explicitly accepted reviewed commit `3986553` in task\n`01a0ad06-249f-7632-809b-961b93c3b113` on 2026-09-17. The lifecycle merge activates\n`implementation_authority: contracts`; production mutation, LaunchDaemon install/\nenablement, sudoers changes, bootstrap and live legacy-path cutover remain forbidden.\n",
+      "after": "**PROPOSED; docs-only; implementation and production effects are not authorized by\nthis draft.** This is the complete successor to V1, not a partial override. The\naccepted V1 remains current until exact reviewed V2 acceptance and atomic lifecycle\nintegration (V2 accepted, V1 superseded/backlink, index) land together. A review PASS\nis not acceptance. The intended implementation authority is `contracts` only after\nthat lifecycle is effective in the implementation base; production adoption still\nrequires CTR-DCP-017.\n\nThe only new behavior is the fixed `scheduler-whole-main-maintenance-v1` profile in\n\u00a79. Other profiles retain V1 decisions and contracts. Explicit changes to the\nexecutor mapping, 002/003, 007/009, 011/012 and 018 are signposted below. V1's\nsingle active deployment transaction is not silently split. No HR cut, private\nqualifier, identity seed, prompt replay or business-specific installer is added.\n"
+    },
+    {
+      "id": "DELTA-06",
+      "surface": "DEC-DCP-002",
+      "permittedMeaning": "Only named maintenance profile maps privileged backend to existing DS; general control plane unchanged.",
+      "v1StartLine": 61,
+      "v1EndExclusiveLine": 62,
+      "before": "- DEC-DCP-002: root `agent-deployd` enforces all admission and transaction decisions;\n",
+      "after": "- DEC-DCP-002: root `agent-deployd` enforces admission and transaction decisions\n  for the general control plane; \u00a79 explicitly maps only its named profile to the\n  existing peer-authenticated DS executor, with the same admission obligations;\n"
+    },
+    {
+      "id": "DELTA-07",
+      "surface": "3",
+      "permittedMeaning": "Only named profile maps existing reviewed DS interpreter/socket/caller/mutex; no global bootstrap claim.",
+      "v1StartLine": 102,
+      "v1EndExclusiveLine": 102,
+      "before": "",
+      "after": "For \u00a79 only, the separately reviewed existing DS Python/interpreter closure is\nthe fixed privileged executor, not candidate code. Its existing socket, Owner UID\nand mutation domain replace the above *backend layout* for that profile only;\n\u00a79 states exact limits and adoption proof. No new daemon or socket is installed.\nThis exception grants no candidate-supplied root execution and is not global PDC\nbootstrap, target enrollment or legacy-retirement evidence.\n\n"
+    },
+    {
+      "id": "DELTA-08",
+      "surface": "CTR-DCP-002",
+      "permittedMeaning": "Only named profile inactive receipt does not advance active generation.",
+      "v1StartLine": 139,
+      "v1EndExclusiveLine": 140,
+      "before": "Target generation identifies the daemon's installed release record, distinct from\n",
+      "after": "For \u00a79, target generation changes only after activation readback; an inactive\ninstallation has its own immutable receipt and does not change active generation.\nTarget generation otherwise identifies the daemon's installed release record, distinct from\n"
+    },
+    {
+      "id": "DELTA-09",
+      "surface": "CTR-DCP-003",
+      "permittedMeaning": "Only named profile distinct inactive publication and activation share intent/budget; no Goal completion from inactive receipt.",
+      "v1StartLine": 150,
+      "v1EndExclusiveLine": 150,
+      "before": "",
+      "after": "For \u00a79, enforce one successful inactive publication and one successful activation\nper intent; the activation materialization is a journaled step of that linked\nintent, not a fresh installation budget. An inactive receipt is not active-version\nverification or Goal completion. Other profiles use the following unchanged rule.\n"
+    },
+    {
+      "id": "DELTA-10",
+      "surface": "CTR-DCP-007",
+      "permittedMeaning": "Only named profile immutable phase units and fixed mapping; no installed capability claim.",
+      "v1StartLine": 214,
+      "v1EndExclusiveLine": 214,
+      "before": "",
+      "after": "For \u00a79, INSTALL and ACTIVATE are immutable catalog phase units, submitted by the\nexisting declarative intake. They are not caller-chosen commands, paths or new\nactors. The exact existing-DS transport mapping is fixed by \u00a79, not by runtime\nprofile plugins. Existing installed DS actions do not acquire this capability from\nthis document or a new request field.\n\n"
+    },
+    {
+      "id": "DELTA-11",
+      "surface": "CTR-DCP-009",
+      "permittedMeaning": "Only named profile two independent full transactions using DS permanent lock; whole-host exclusion retained.",
+      "v1StartLine": 228,
+      "v1EndExclusiveLine": 229,
+      "before": "The permanent root-owned mutex inode is `/var/db/agent-deployd/production.lock`;\n",
+      "after": "For \u00a79, use the existing DS mutex and bounded adoption proof in MSR-C02; do not\ncreate an alternate lock. Each of its two transactions independently satisfies\nthis contract; the inactive waiting interval owns no mutation transaction or lock.\nFor all other profiles, the permanent root-owned mutex inode is `/var/db/agent-deployd/production.lock`;\n"
+    },
+    {
+      "id": "DELTA-12",
+      "surface": "CTR-DCP-011",
+      "permittedMeaning": "Only named profile inactive state branch; only activation APPLIED, no attempt reset.",
+      "v1StartLine": 256,
+      "v1EndExclusiveLine": 256,
+      "before": "",
+      "after": "\n\u00a79 adds the explicit inactive-publication branch in MSR-C03 and linked activation\nbranch in MSR-C04. Only verified activation reaches APPLIED. No phase change, new\nrequest ID or new phase unit resets intent deduplication or failure budgets.\n"
+    },
+    {
+      "id": "DELTA-13",
+      "surface": "CTR-DCP-012",
+      "permittedMeaning": "Only named profile INSTALL omits active apply/restart; ACTIVATE fresh full transaction.",
+      "v1StartLine": 287,
+      "v1EndExclusiveLine": 287,
+      "before": "",
+      "after": "For \u00a79 INSTALL only, MSR-C03 replaces active apply/restart with root-custodied\ninactive publication and its verification, preserving the active service. ACTIVATE\nuses the full following apply/restart/readback contract with a new fresh preimage;\nan old installation-time snapshot cannot satisfy it.\n"
+    },
+    {
+      "id": "DELTA-14",
+      "surface": "CTR-DCP-018",
+      "permittedMeaning": "Only named profile retains existing DS with conflict-blocking adoption; other target retirement unchanged.",
+      "v1StartLine": 370,
+      "v1EndExclusiveLine": 371,
+      "before": "For every enrolled target, inventory and retire all canonical writer paths:\n",
+      "after": "For \u00a79, inventory and retire/conflict-block competing writers for that same target\nunder MSR-C02; the retained existing DS is its sole approved executor, not a second\nlegacy backdoor. No claim of other-target or global retirement follows.\nFor every other enrolled target, inventory and retire all canonical writer paths:\n"
+    },
+    {
+      "id": "DELTA-15",
+      "surface": "8",
+      "permittedMeaning": "Lifecycle/completion metadata only; proposed is not implementation authority.",
+      "v1StartLine": 484,
+      "v1EndExclusiveLine": 485,
+      "before": "OPEN_OWNER_DECISIONS = NONE_FOR_IMPLEMENTATION\n",
+      "after": "OPEN_OWNER_DECISIONS = EXACT_V2_ACCEPTANCE_AND_LATER_PROFILE_ADOPTION\n"
+    },
+    {
+      "id": "DELTA-16",
+      "surface": "8",
+      "permittedMeaning": "Lifecycle/completion metadata only; proposed is not implementation authority.",
+      "v1StartLine": 487,
+      "v1EndExclusiveLine": 488,
+      "before": "IMPLEMENTATION_ALLOWED_NOW = YES_AFTER_ACCEPTED_AUTHORITY_MERGE\n",
+      "after": "IMPLEMENTATION_ALLOWED_NOW = NO_PROPOSED; CONTRACTS_AFTER_EXACT_ACCEPTANCE_MERGE\n"
+    },
+    {
+      "id": "DELTA-17",
+      "surface": "8",
+      "permittedMeaning": "Lifecycle/completion metadata only; proposed is not implementation authority.",
+      "v1StartLine": 499,
+      "v1EndExclusiveLine": 499,
+      "before": "",
+      "after": "\n"
+    }
+  ],
+  "onlyNewNormativeSection": {
+    "heading": "## 9. Fixed registered-service maintenance profile",
+    "sha256": "8446ccb45d4e57059902ba119626f37d116642ca839903a904a91b789279ee88",
+    "meaning": "Only scheduler-whole-main-maintenance-v1; full-host exclusion retained; no actual adoption/implementation authority while proposed"
+  }
+}

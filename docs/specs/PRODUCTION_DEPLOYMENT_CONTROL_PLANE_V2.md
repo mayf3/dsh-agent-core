@@ -689,6 +689,40 @@ lexical `STATUS.last_receipt`, but no generic per-ID socket action; the current
 nonprivileged `scripts/lib/deployment-reuse/receipt.py` recognizes only old
 DEPLOY/ROLLBACK shapes and supplies no maintenance receipt capability.
 
+**Independent reader bootstrap prerequisite.** A new maintenance reader cannot
+prove its own installation. Before its bootstrap mutation, CTR-DCP-017 must bind
+an independently callable, already-installed updater receipt/readback mechanism:
+exact executor/client hashes and kernel caller, unique bootstrap operation ID,
+expected service preimage/candidate/rollback digests, durable terminal disposition,
+and fresh installed/loaded reader closure. The reconciliation implementation must
+predate the new reader and remain callable after a lost bootstrap ACK or updater
+restart. Its exact-ID receipt proves only that bootstrap operation's disposition;
+a matching fresh service/closure readback proves installed bytes/loaded identity,
+not INSTALL/ACTIVATE or business success. Both are required. Missing receipt,
+unknown schema/custody, inconsistent disposition or unavailable loaded closure
+remain UNKNOWN, keep phase admission disabled, and never authorize replay.
+
+**Current evidence boundary:** the installed-byte snapshot SHA
+`95dc02f87106ca9e131839e6d9843a65adcff6018bfbf47725e9241b4e80961d`
+exposes authenticated `{action: STATUS}` with PID/registry/units and lexical
+`last_receipt`; this is not exact bootstrap-operation proof or loaded-code proof.
+The existing nonprivileged `receipt.py OPERATION_ID REGISTERED_UNIT` validates
+only DEPLOY/ROLLBACK records. Neither proves installation of this new reader.
+`DS_UPDATE` is guarded by `p0_maintained_ds_update` (fixed P0 repair ID, artifact and
+maintenance eligibility); it is not generic authorization for this profile.
+No sufficient already-installed bootstrap reconciliation path is established by
+this proposal's evidence. The narrow missing prerequisite is an authorized
+existing updater's exact-operation durable receipt **and** independent current
+reader-closure readback, callable before the reader exists. Root may close this
+by pinning a genuinely existing lawful entry and its demonstrated schema/custody/
+operation binding in the exact CTR-DCP-017 adoption; STATUS alone or a successful
+socket response cannot close it. If the installed interfaces cannot supply it,
+that bounded updater/readback adaptation and its authority/adoption must be
+reviewed before bootstrap, never silently inferred from DS_UPDATE or installed
+after lost ACK. This proposal authorizes no such privileged update. Absence of
+that prerequisite blocks reader bootstrap and both phases, not ordinary existing
+DEPLOY/ROLLBACK or independently authorized HR recovery.
+
 Before the first INSTALL or ACTIVATE, the same authenticated fixed DS endpoint
 must have the CTR-DCP-007 `receipt` mapping for this profile installed, independently
 reviewed and verified under its exact adopted service/client/schema digests. It
@@ -769,7 +803,7 @@ fixed service, not different units or registry targets.
 | ACC-MSR-03 | C02,C04,C07 | F: activate installed B; I: fresh A preimage/rollback, exact receipt join, owned restart, loaded B and ordinary request/result | Only authorized B becomes active after admission proof; health-only, receipt substitution or early admission fails. |
 | ACC-MSR-04 | C03,C04,C07 | F/I: after B active, install distinct C then activate C, same service and exact phase receipts | B serves during inert C wait; activation has fresh B rollback. Changed registry/preimage/slot/policy between phases blocks, never silently installs different C. |
 | ACC-MSR-05 | C02,C04,C06,C07 | F/I: explicit rollback C→captured B, byte/metadata/service readback, genuine B request/result | Independent rollback receipt and restored B; stale snapshot, old B replay or unverified restored admission fails. |
-| ACC-MSR-06 | C03,C04,C05 | F: reader absent/wrong schema/wrong actor prevents first mutation; both phase and rollback schemas, close client before ACK; I: adopted fixed reader conformance before first mutation, then exact-ID reconciliation of genuine phase receipts including lost-response run if exercised | One publication/activation at most; duplicate/reordered/new request IDs return original disposition. Missing receipt remains UNKNOWN; missing reader cannot be repaired after mutation as a lost-ACK prerequisite; mutation replay or cross-actor receipt disclosure fails. |
+| ACC-MSR-06 | C03,C04,C05 | F: new reader self-certification, bootstrap ACK loss without independent exact-ID disposition/closure, reader absent/wrong schema/wrong actor all prevent first mutation; both phase and rollback schemas, close client before ACK; I: bootstrap reconciled through a pinned pre-existing entry before new-reader conformance and first mutation, then exact-ID reconciliation of genuine phase receipts including lost-response run if exercised | One publication/activation at most; duplicate/reordered/new request IDs return original disposition. Missing receipt remains UNKNOWN; missing reader cannot be repaired after mutation as a lost-ACK prerequisite; mutation replay or cross-actor receipt disclosure fails. |
 | ACC-MSR-07 | C02,C05,C06 | F: another independently mutable lock domain for a different enrolled target (adoption rejected), crashes before/after rename, lost lock, live/unknown owned child, disk pressure, changed rollback; I: bounded authorized fault/readback evidence when required by adoption | Retained truthful state, no new conflict/cleanup/activation; absence or deadline must not imply safety. Verified rollback only; unverifiable path quarantines. |
 | ACC-MSR-08 | C01..C07 | Docs/F: same-source/head/review and reverse contract coverage; I: exact adoption, whole B→C→B receipts plus business proof | SOURCE_READY alone never sets INSTALLED_CALLABLE/BUSINESS_ACCEPTED; old ordinary actions unchanged, HR lane untouched; any speculative production claim fails. |
 
@@ -784,3 +818,17 @@ exact CTR-DCP-017 adoption must later pin service/interpreter/client/catalog/slo
 policy, actual numeric custody, enrolled target, mutex/writer retirement and
 rollback. Merely accepting this Spec does not authorize DS_UPDATE, shim changes,
 Runtime restart, new messages or current production writes.
+
+### Focused V1 inheritance proof
+
+`docs/reports/pdc-v2-inheritance/verify.py` compares the exact accepted V1 bytes
+with this V2 and the independently reviewable `allowed-delta.json`. The finite
+allowlist enumerates exact before/after spans for lifecycle/frontmatter, the
+named-profile executor mapping and CTR-DCP-002/003/007/009/011/012/018; §9 is the
+only new normative section. Every other inherited byte, including every other
+Decision/Contract and acceptance/migration obligation, must match. The checker
+reports all five Decisions and twenty Contracts separately with hashes, checks
+reverse reconstruction, and rejects unlisted changes. A machine result binds V1,
+V2, allowlist, checker and exact Git head; it is inheritance evidence, not semantic
+acceptance or current installation evidence. Editing its allowlist requires the
+same independent affected-surface review; merely regenerating it is not a pass.
