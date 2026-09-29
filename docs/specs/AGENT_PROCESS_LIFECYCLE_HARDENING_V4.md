@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 revision: r0
 revision_date: 2026-09-29
 scope:
@@ -21,8 +21,16 @@ governed_by:
 external_authorities: []
 related_specs:
   - AGENT_CORE_LARK_UX_PHASE1_V3
-supersedes: []
+supersedes:
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V3
 superseded_by: null
+acceptance_actor: original coordinating agent acting as delegated technical maintainer
+owner_direction_source: direct user message in thread 01a0ad06-249f-7632-809b-961b93c3b113 on 2026-09-29
+owner_signed_candidate_sha: false
+accepted_reviewed_head: 1b016ed848c8e7e7513ce71880542a764fe055d7
+accepted_reviewed_spec_sha256: 30023d4b3f307b866eb483360bb00646a727a8d3ce483c95d4feb20e0bc041c9
+independent_review_sha256: b57e546e6f91b1f4ef01d41698fc02bb84282b9d1849f898cf58d4acfcef93d9
+accepted_at_utc: 2026-09-29T01:48:00Z
 owners:
   - mayf3
 date: 2026-09-29
@@ -40,13 +48,15 @@ references:
 
 # AGENT_PROCESS_LIFECYCLE_HARDENING_V4 — preserved unknown and exact fresh lineage
 
-> **Proposed docs-only whole-authority successor.** V3 remains current until
-> independent exact-head review, attributable acceptance, atomic V3/V4
-> backlink update, and merge to `main`. This file carries forward every V3
+> **Accepted docs-only whole-authority successor.** The independently reviewed
+> semantics were accepted by the delegated technical maintainer on the Owner's
+> current explicit HR direction. This lifecycle transaction becomes canonical
+> only when merged to `main`. This file carries forward every V3
 > C-001–C-026 obligation except the explicit V4 fresh-lineage branch below.
 > Historical V3 authoring/acceptance prose retained in this complete copy is
-> provenance, not a second current activation path. No product code or
-> production effect is authorized by this proposed file.
+> provenance, not a second current activation path. Product implementation
+> requires a separate exact-base preflight; this Spec alone authorizes no
+> production effect.
 
 ## 0V4. Decision, inheritance, and acceptance boundary
 
