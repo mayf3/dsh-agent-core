@@ -18,5 +18,6 @@ export { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchV
 export { buildExecutionInstruction } from './instruction.js'
 export { createWorkflowExecutionEngine, DEFAULT_POLL_INTERVAL_MS, DEFAULT_MAX_ADMISSIONS_PER_POLL, DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS, DEFAULT_RETRY_DELAY_MS, DUE_PAGE_LIMIT } from './engine.js'
 export { executionStateFor, projectExecutionTraces, projectExecutionTrace } from './projection.js'
+export { ATTENTION_STATES, ATTENTION_REASONS, projectExecutionAttention } from './attention.js'
 export { createForumProjection } from './forum-projection.js'
 export { normalizeProgressCheckpoint, PROGRESS_CHECKPOINT_LIMITS } from './progress.js'
