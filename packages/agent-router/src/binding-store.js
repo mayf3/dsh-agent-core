@@ -69,9 +69,10 @@
  * selection, bookmark policy), the store only persists rows.
  */
 
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
+import { FRESH_HR_CUT_OPERATION_ID, FreshBindingMethods, validateFreshHrCutBinding } from './binding-store-fresh.js'
 
 /** Store document version; bumped only on breaking format changes. */
 export const STORE_VERSION = 1
@@ -106,7 +107,7 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
  * mutation queue (so the read-or-mint decision is atomic); the caller never
  * sees or chooses it.
  * @typedef {{agentId:string, requestId:string, sessionId:string,
- *            createdAt:string}} FreshSessionRow
+ *            createdAt:string, lineageOperationId?:string}} FreshSessionRow
  */
 
 /**
@@ -141,6 +142,8 @@ export class BindingStore {
     this.lastSessions = new Map()
     /** @type {Map<string, Map<string, FreshSessionRow>>} agentId -> (requestId -> row) */
     this.freshSessions = new Map()
+    this.freshHrCutBinding = null
+    this.cutPersistenceUnknown = false
     this.queue = Promise.resolve()
     this.load()
   }
@@ -185,6 +188,9 @@ export class BindingStore {
         updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : this.now(),
       })
     }
+    if (document.freshHrCutBinding !== undefined) {
+      this.freshHrCutBinding = validateFreshHrCutBinding(document.freshHrCutBinding, this.bindings)
+    }
     // Optional bookmark table (absent in older documents = empty).
     if (document.lastSessions !== undefined) {
       if (typeof document.lastSessions !== 'object' || document.lastSessions === null) {
@@ -228,7 +234,10 @@ export class BindingStore {
         for (const [requestId, row] of Object.entries(perRequest)) {
           if (typeof row?.agentId !== 'string' || row.agentId === ''
               || typeof row.requestId !== 'string' || row.requestId === ''
-              || typeof row.sessionId !== 'string' || row.sessionId === '') {
+              || typeof row.sessionId !== 'string' || row.sessionId === ''
+              || (row.lineageOperationId !== undefined
+                && (agentId !== 'agt_hr-agent'
+                  || row.lineageOperationId !== FRESH_HR_CUT_OPERATION_ID))) {
             throw Object.assign(new Error(`binding-store: corrupt freshSessions entry ${JSON.stringify(agentId)}/${JSON.stringify(requestId)}`), {
               code: CORRUPT_STORE,
             })
@@ -238,6 +247,7 @@ export class BindingStore {
             requestId: row.requestId,
             sessionId: row.sessionId,
             createdAt: typeof row.createdAt === 'string' ? row.createdAt : this.now(),
+            ...(row.lineageOperationId === undefined ? {} : { lineageOperationId: row.lineageOperationId }),
           })
         }
         this.freshSessions.set(agentId, mappings)
@@ -253,15 +263,26 @@ export class BindingStore {
    * = failure" is impossible). The store file is only ever replaced
    * atomically, so a failed persist cannot corrupt the on-disk document.
    */
-  enqueue(fn) {
+  enqueue(fn, readback, { durable = false } = {}) {
     const run = this.queue.then(async () => {
+      if (this.cutPersistenceUnknown) {
+        throw Object.assign(new Error('binding-store: prior cut persistence outcome unknown'),
+          { code: 'HR_FRESH_BINDING_PERSIST_UNKNOWN' })
+      }
       const snapshot = this.snapshot()
+      let persisted = false
       try {
         const result = await fn()
-        await this.persist()
+        await this.persist({ durable })
+        persisted = true
+        if (readback !== undefined) await readback(result)
         return result
       } catch (error) {
-        this.restore(snapshot)
+        // Once rename committed, a failed readback is UNKNOWN to this caller:
+        // leave RAM matching disk and force the startup consumer to stop.
+        if (error?.code === 'HR_FRESH_BINDING_PERSIST_UNKNOWN') {
+          this.cutPersistenceUnknown = true
+        } else if (!persisted) this.restore(snapshot)
         throw error
       }
     })
@@ -277,6 +298,7 @@ export class BindingStore {
       freshSessions: new Map([...this.freshSessions.entries()].map(
         ([agentId, perRequest]) => [agentId, new Map([...perRequest.entries()].map(([rid, row]) => [rid, { ...row }]))],
       )),
+      freshHrCutBinding: this.freshHrCutBinding === null ? null : { ...this.freshHrCutBinding },
     }
   }
 
@@ -285,10 +307,12 @@ export class BindingStore {
     this.bindings = snapshot.bindings
     this.lastSessions = snapshot.lastSessions
     this.freshSessions = snapshot.freshSessions
+    this.freshHrCutBinding = snapshot.freshHrCutBinding
   }
 
-  /** Atomic persist: write tmp, then rename over the store file. */
-  async persist() {
+  /** The one HR cut additionally syncs the file and parent directory before
+   * success. Post-rename sync failure is UNKNOWN, never a RAM rollback. */
+  async persist({ durable = false } = {}) {
     const document = {
       version: STORE_VERSION,
       bindings: Object.fromEntries([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
@@ -303,13 +327,28 @@ export class BindingStore {
         [...this.freshSessions.entries()].map(([agentId, perRequest]) => [agentId, Object.fromEntries(perRequest)]),
       )
     }
+    if (this.freshHrCutBinding !== null) document.freshHrCutBinding = { ...this.freshHrCutBinding }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
+    let renamed = false
     try {
       await writeFile(tmp, `${JSON.stringify(document, null, 2)}\n`, { encoding: 'utf8' })
+      if (durable) {
+        const file = await open(tmp, 'r')
+        try { await file.sync() } finally { await file.close() }
+      }
       await rename(tmp, this.storeFile)
+      renamed = true
+      if (durable) {
+        const directory = await open(dirname(this.storeFile), 'r')
+        try { await directory.sync() } finally { await directory.close() }
+      }
     } catch (error) {
       await rm(tmp, { force: true }).catch(() => {}) // best-effort cleanup
+      if (durable && renamed) {
+        throw Object.assign(new Error('binding-store: post-rename durability unknown', { cause: error }),
+          { code: 'HR_FRESH_BINDING_PERSIST_UNKNOWN' })
+      }
       throw error
     }
   }
@@ -430,79 +469,10 @@ export class BindingStore {
     return rows
   }
 
-  /**
-   * Read one Delivery V0 fresh mapping: the native session owned by
-   * (agentId, requestId), or undefined when this requestId was never
-   * delivered fresh.
-   * @param {string} agentId
-   * @param {string} requestId
-   * @returns {FreshSessionRow | undefined}
-   */
-  getFreshSession(agentId, requestId) {
-    const row = this.freshSessions.get(agentId)?.get(requestId)
-    return row === undefined ? undefined : { ...row }
-  }
 
-  /**
-   * Read-or-mint the Delivery V0 fresh mapping for (agentId, requestId),
-   * atomically inside the mutation queue: two concurrent first deliveries of
-   * the same requestId can never mint two different session ids — the second
-   * caller observes the row the first one persisted. Persists only when a
-   * row is minted.
-   *
-   * @param {string} agentId - the delivering Agent (mapping namespace).
-   * @param {string} requestId - the caller's opaque delivery id.
-   * @param {(used: Set<string>) => string} mint - called ONLY on first sight
-   *   of the requestId, inside the critical section; receives the set of
-   *   session ids already in use by this agent and must return a non-empty
-   *   id outside that set (the router derives `fresh-<hash>` from the
-   *   requestId; the check guards against any collision).
-   * @returns {Promise<FreshSessionRow>} the (existing or minted) row.
-   */
-  freshSessionFor(agentId, requestId, mint) {
-    if (typeof agentId !== 'string' || agentId === ''
-        || typeof requestId !== 'string' || requestId === '') {
-      throw Object.assign(new TypeError('binding-store: freshSessionFor agentId and requestId (non-empty strings) are required'), {
-        code: VALIDATION_ERROR,
-      })
-    }
-    if (typeof mint !== 'function') {
-      throw Object.assign(new TypeError('binding-store: freshSessionFor mint(usedIds) is required'), {
-        code: VALIDATION_ERROR,
-      })
-    }
-    return this.enqueue(async () => {
-      let perRequest = this.freshSessions.get(agentId)
-      if (perRequest === undefined) {
-        perRequest = new Map()
-        this.freshSessions.set(agentId, perRequest)
-      }
-      const existing = perRequest.get(requestId)
-      if (existing !== undefined) return { ...existing }
-      const used = new Set([...perRequest.values()].map(row => row.sessionId))
-      const sessionId = mint(used)
-      if (typeof sessionId !== 'string' || sessionId === '' || used.has(sessionId)) {
-        throw Object.assign(new TypeError('binding-store: mint returned an invalid or duplicate sessionId'), {
-          code: VALIDATION_ERROR,
-        })
-      }
-      const row = { agentId, requestId, sessionId, createdAt: this.now() }
-      perRequest.set(requestId, row)
-      return { ...row }
-    })
-  }
-
-  /**
-   * Every Delivery V0 fresh mapping row (test/evidence surface). Flattened,
-   * insertion order. @returns {FreshSessionRow[]}
-   */
-  freshSessionsSnapshot() {
-    const rows = []
-    for (const [agentId, perRequest] of this.freshSessions.entries()) {
-      for (const row of perRequest.values()) {
-        rows.push({ ...row })
-      }
-    }
-    return rows
-  }
 }
+
+Object.defineProperties(BindingStore.prototype, Object.fromEntries(
+  Object.entries(Object.getOwnPropertyDescriptors(FreshBindingMethods.prototype))
+    .filter(([name]) => name !== 'constructor')
+))

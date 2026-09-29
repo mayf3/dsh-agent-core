@@ -13,32 +13,11 @@
  */
 import { createHash } from 'node:crypto'
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
-import { ROUTE_HOP_FAILURE_CLASSES } from './route-chain.js'
+import { classifyFailureStage, isRecoveryFenceResult } from './process/ingress-failure.js'
 import { fencedRejection } from './process/state-machine.js'
 import { outerFailureProjection } from './reconciliation/query.js'
 import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
-const PROVEN_NO_ADMISSION_ROUTE_FAILURES = new Set([
-  ROUTE_HOP_FAILURE_CLASSES.SPAWN_FAILED_WITHOUT_CHILD,
-  ROUTE_HOP_FAILURE_CLASSES.INITIALIZE_PROVIDER_UNAVAILABLE,
-  ROUTE_HOP_FAILURE_CLASSES.SESSION_CREATE_RESUME_REJECTION,
-  ROUTE_HOP_FAILURE_CLASSES.TURNQUEUE_NOT_ADMITTED,
-])
-function classifyFailureStage(error, turnStarted) {
-  if (!turnStarted) return 'admission'
-  if (error?.status === 'not_admitted' || error?.envelope === 'not_admitted') return 'admission'
-  if (error?.code === 'AGENT_ROUTE_CHAIN_DEADLINE_EXCEEDED'
-      && error?.envelope === 'chain_deadline_exceeded') return 'admission'
-  if (PROVEN_NO_ADMISSION_ROUTE_FAILURES.has(error?.routeChain?.failureClass)) return 'admission'
-  return 'execution'
-}
-function isRecoveryFenceResult(error) {
-  return error?.status === 'outcome_unknown'
-    || error?.envelope === 'outcome_unknown'
-    || error?.code === 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN'
-    || error?.code === 'AGENT_PROCESS_TURN_FENCED'
-    || error?.code === 'AGENT_PROCESS_RECOVERY_STARTUP_BLOCKED'
-    || typeof error?.fencedBy === 'string'
-}
+import { freshHrIngressState } from './fresh-hr-ingress.js'
 /**
  * Create the ingress/delivery surface bound to one router mount.
  * @param {object} deps
@@ -104,7 +83,12 @@ export function createIngressDelivery({
         workspace: ingress.workspace,
         sessionId: ingress.session,
       }))
-      const restoredFence = reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
+      // Only the authenticated Feishu entry can consume the post-cut Binding.
+      // Public route/deliver surfaces retain the historical Agent-wide fence.
+      const { bindingReady: freshHrBindingReady, fence: restoredFence } = freshHrIngressState({
+        reconciliationStore, store, binding, channelConversation, ingress,
+        authenticatedFeishu, isFeishuEntry,
+      })
       if (restoredFence !== null && restoredFence !== undefined) {
         throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
       }
@@ -124,6 +108,10 @@ export function createIngressDelivery({
       // per-attempt journal and STOP_CHAIN policy all live in the executor —
       // this entry owns only the channel/binding resolution around it.
       const opts = ingressTurnOpts(ingress, namespace, channelConversation.id, workspacePath, isFeishuEntry)
+      if (freshHrBindingReady) {
+        opts.lineageAdmissionToken = reconciliationStore.issueFreshHrAdmissionToken(
+          binding.activeAgentId, { sessionId: binding.activeSessionId })
+      }
       if (trusted !== null) {
         if (typeof registerAuthenticatedIngress !== 'function') {
           throw new TypeError('authenticated Feishu ingress registrar unavailable')

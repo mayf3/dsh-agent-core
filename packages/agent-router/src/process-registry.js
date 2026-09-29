@@ -28,12 +28,14 @@ import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
-import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
+import { convergeStartedStartup, disposeProcessSlots, failNoChildStartup, reapExitedSlot,
+  settleStartupEntry } from './process-registry-startup.js'
 import { FIXED_ADMIN_CANARY_AGENT, fixedAdminBindingFromRoot } from '../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
-function assertRecoveryAdmission(store, agentId) {
+function assertRecoveryAdmission(store, agentId, token) {
   store.assertBusinessAdmissionReady?.()
-  const fence = store.activeFenceForAgent?.(agentId)
+  const fence = typeof store.spawnFenceForAgent === 'function'
+    ? store.spawnFenceForAgent(agentId, token) : store.activeFenceForAgent?.(agentId)
   if (fence) throw Object.assign(fencedRejection(fence.handle), store.recoveryDiagnostic?.(fence.handle) ?? {})
 }
 
@@ -167,68 +169,12 @@ export function createProcessRegistry({
     return true
   }
 
-  /**
-   * C-008 no-child startup failure discipline (review F-1): any synchronous
-   * pre-spawn preparation failure (resolveWorkspace / resolveDshHome /
-   * resolveProcessConfig / provisionHome / processFactory) must atomically
-   * (a) record redacted bounded evidence, (b) reject the shared startup
-   * resultPromise EXACTLY ONCE so every current and future waiter settles
-   * in bounded time, and (c) clean the exact STARTUP slot to EMPTY through
-   * full identity CAS (slot object + state + no processRef/ownershipToken)
-   * so the next ensureRunning may retry — never the delete-then-REAP shape,
-   * never a shutdown write, never a kill, and a stale first-generation
-   * cleanup can never touch a newer generation's slot.
-   */
-  function settleStartupEntry(entry, error) {
-    if (entry.startupSettled) return false
-    entry.startupSettled = true
-    entry.rejectResult(error)
-    return true
-  }
-
   function failStartupSlotNoChild(agentId, entry, cause) {
-    // (a) bounded, redacted evidence first.
-    const evidence = redactSensitiveText(String(cause?.message ?? cause)).slice(0, 2048)
-    auditStaleSlot(`pre-spawn startup failure (no child) for agent ${agentId} generation ${entry.generation}: ${evidence}`)
-    const error = startupFailure(cause, {
-      agentId, generation: entry.generation, stage: entry.startupFailureStage ?? 'pre-spawn',
-    })
-    // (c) identity CAS: only THIS exact STARTUP entry with no processRef and
-    // no ownership token may reach EMPTY; anything else (a newer generation,
-    // REAP, READY) is untouchable — the stale path is audit-only.
-    if (lifecycleSlots.get(agentId) === entry
-        && entry.state === 'STARTUP'
-        && entry.processRef === null
-        && entry.ownershipToken === null) {
-      lifecycleSlots.delete(agentId)
-      entry.state = 'EMPTY'
-    } else {
-      auditStaleSlot(`pre-spawn cleanup ignored for agent ${agentId} generation ${entry.generation}: slot identity mismatch (stale callback)`)
-    }
-    // (b) exactly-once bounded reject of the shared startup promise.
-    settleStartupEntry(entry, error)
-    return error
+    return failNoChildStartup(lifecycleSlots, auditStaleSlot, agentId, entry, cause)
   }
 
-  /**
-   * Legacy/duck-typed reap fallback: fires only on real exit observation
-   * (exitPromise settles after the AgentProcess settlement order; injected
-   * test fakes control their own exitResolve). Idempotent with the
-   * integration-driven CAS cleanup of the real class.
-   */
   function reapOnExitPromise(agentId, proc) {
-    void proc.exitPromise?.then(() => {
-      const slot = lifecycleSlots.get(agentId)
-      if (slot === undefined || slot.processRef !== proc) return
-      if (slot.state === 'REAP') {
-        lifecycleSlots.delete(agentId)
-        slot.resolveReap?.()
-        return
-      }
-      // Observed real exit of a STARTUP/READY entry: same-task
-      // DRAINING -> EXITED cleanup is legal (C-009) — the child is gone.
-      lifecycleSlots.delete(agentId)
-    }).catch(() => {})
+    reapExitedSlot(lifecycleSlots, agentId, proc)
   }
 
   /** Find the slot-owned process that is live-tracking one handle. */
@@ -261,7 +207,7 @@ export function createProcessRegistry({
       throw Object.assign(new Error('fixed canary Agent reserved for root qualification'),
         { code: 'FIXED_ADMIN_CANARY_PRIVATE_ONLY' })
     }
-    assertRecoveryAdmission(reconciliationStore, agentId)
+    assertRecoveryAdmission(reconciliationStore, agentId, token)
     const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`agent-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
@@ -282,7 +228,7 @@ export function createProcessRegistry({
     // seeding. Returning the entry's exact resultPromise (rather than an
     // async wrapper) makes the whole bootstrap a true single flight.
     try {
-      assertRecoveryAdmission(reconciliationStore, agentId)
+      assertRecoveryAdmission(reconciliationStore, agentId, token)
       assertRunnable(agentId, token)
     } catch (error) {
       return Promise.reject(error)
