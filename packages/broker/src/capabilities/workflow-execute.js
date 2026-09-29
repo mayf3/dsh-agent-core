@@ -76,6 +76,9 @@ export const workflowExecuteManifest = withTransportErrors({
     { code: 'submission_validation_failed', description: 'Submission payload failed validation (HTTP 422).' },
     { code: 'size_limit_exceeded', description: 'Submission payload or metadata exceeds the service limit (HTTP 413).' },
     { code: 'invalid_return_references', description: 'Return transition references are invalid (HTTP 422).' },
+    // RETURN-policy limit ingress (AGENT_CORE_WORKFLOW_RETURN_POLICY_EXHAUSTED_DECLARER_V1;
+    // dictated verbatim from svc-workflow error.rs from_transition @ 5d479d8).
+    { code: 'return_policy_exhausted', description: 'RETURN policy limit reached for this edge; the loop escalates to a human (HTTP 409).' },
     { code: 'assignee_resolution_failed', description: 'Assignee resolution failed (HTTP 422).' },
     { code: 'idempotency_conflict', description: 'Idempotency key was reused with a different request (HTTP 409).' },
     { code: 'command_still_processing', description: 'The idempotent command is still processing (HTTP 425).' },

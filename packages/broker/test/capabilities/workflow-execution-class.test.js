@@ -185,3 +185,92 @@ test('WEC companion: svc class error families preserve verbatim (not_domain_owne
   await tokenServer.close()
   await workflow.close()
 })
+
+// ─── AGENT_CORE_WORKFLOW_RETURN_POLICY_EXHAUSTED_DECLARER_V1 ───────────────
+// The RETURN-limit ingress of the WEC owner-assistance feature (svc-workflow
+// error.rs from_transition @ 5d479d8: ExecuteWorkflowTransitionError::
+// ReturnPolicyExhausted) mints a deterministic 409 service code. While
+// undeclared, the mapping layer failed it closed to `http_4xx` (BROKER_ERROR_
+// PRESERVATION V1 R1) — observed by OWNER_ASSISTANCE_LOCAL_E2E_CANARY_V1
+// (docs/evidence/wec-owner-assistance-deploy-handoff-v1-20260929). These tests
+// pin the single declarer row, the verbatim end-to-end seam, and the
+// fail-closed negative.
+
+test('return-policy declarer: workflow_execute declares the 409 return_policy_exhausted service code', () => {
+  const manifest = executeManifest()
+  assert.equal(validateManifest(manifest).ok, true)
+  const row = manifest.errors.find((e) => e.code === 'return_policy_exhausted')
+  assert.ok(row, 'declared error family missing: return_policy_exhausted')
+  assert.match(row.description, /HTTP 409/)
+  // Declarer-table-only delta: the transition wire contract is untouched.
+  const op = manifest.operations.find((candidate) => candidate.name === 'transition')
+  assert.deepEqual(op.arguments.required, ['workflowInstanceId', 'transitionDefinitionId', 'expectedWorkflowStateVersion'])
+})
+
+test('return-policy declarer: svc 409 return_policy_exhausted passes through the transition seam verbatim (code/status/detail/requestId; no retry)', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-rpe-1/transitions') {
+      return svcError(res, 409, 'return_policy_exhausted', 'RETURN policy limit reached (1 returns per edge); the loop escalates to a human', 'req-rpe-409')
+    }
+    return json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const result = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-rpe-1',
+    transitionDefinitionId: 'td-back-1',
+    expectedWorkflowStateVersion: 3,
+  })
+  assert.equal(result.ok, false)
+  // Verbatim passthrough: the precise stable identity survives end-to-end;
+  // status/detail/requestId unchanged; zero broker rewriting or retry
+  // (AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1).
+  assert.equal(result.error.code, 'return_policy_exhausted')
+  assert.equal(result.error.status, 409)
+  assert.equal(result.error.detail, 'RETURN policy limit reached (1 returns per edge); the loop escalates to a human')
+  assert.equal(result.error.requestId, 'req-rpe-409')
+  // Exactly one downstream request — the refusal is terminal, never retried.
+  assert.equal(workflow.requests.length, 1)
+
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('return-policy declarer: an UNdeclared transition service code still fails closed to http_4xx', async () => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances/wf-rpe-2/transitions') {
+      return svcError(res, 409, 'some_undeclared_future_code', 'not in the declarer table', 'req-rpe-neg')
+    }
+    return json(res, 404, { error: { code: 'instance_not_found', message: 'missing' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const result = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-rpe-2',
+    transitionDefinitionId: 'td-back-2',
+    expectedWorkflowStateVersion: 4,
+  })
+  assert.equal(result.ok, false)
+  // Declaring one real code does NOT wildcard the table: undeclared service
+  // codes keep the canonical fail-closed degradation (R1/DEC-006), with the
+  // HTTP status preserved.
+  assert.equal(result.error.code, 'http_4xx')
+  assert.equal(result.error.status, 409)
+
+  await tokenServer.close()
+  await workflow.close()
+})
