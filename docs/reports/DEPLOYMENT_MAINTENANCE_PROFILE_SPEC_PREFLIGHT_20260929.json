@@ -1,0 +1,25 @@
+{
+  "event": "318b62f0-bd37-5e88-957d-64e96bc7773a",
+  "base": "f0bbf0942752b859da445ba9f775a9061da399b3",
+  "SPEC_GOVERNANCE_MODE": "AUTHOR",
+  "AUTHORITY_ACTION": "SUPERSEDE",
+  "PRIMARY_PARENT_AUTHORITY": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1",
+  "parentSha256": "c46b84ef91637a88929dd0f297bfb794ca80ee6b2719f495f90d0034aaa84e25",
+  "target": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V2",
+  "status": "proposed",
+  "PLAN_LEVEL": "BRIEF",
+  "ASSURANCE_LEVEL": "CONTROLLED",
+  "DOCS_FIRST_REQUIRED": true,
+  "IMPLEMENTATION_ALLOWED": false,
+  "OPERATION_ALLOWED": false,
+  "authorityReason": "inactive install/later activation changes inherited installation-intent and active generation semantics (002/003), state transitions (011), apply/restart (012); fixed existing DS backend also needs explicit bounded executor/mutex adaptation rather than implicit override",
+  "scope": "one fixed scheduler-whole-main profile; V1 remaining behavior retained; accepted V1 unchanged until atomic future lifecycle acceptance",
+  "mandate": "Spec authoring/governance checks/one independent semantic review only",
+  "changedSurfaces": [
+    "new proposed whole-authority V2",
+    "navigation index proposed entry",
+    "this preflight"
+  ],
+  "doneWhen": "exact proposed head with acceptance matrix, governance evidence and same p2 changed-surface review; no product implementation",
+  "nextAfterAcceptance": "bounded source/tests after accepted lifecycle in implementation base, production profile adoption separate"
+}
