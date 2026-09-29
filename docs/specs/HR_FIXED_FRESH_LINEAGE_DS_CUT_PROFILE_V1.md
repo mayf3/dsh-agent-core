@@ -1,6 +1,6 @@
 ---
 spec_id: HR_FIXED_FRESH_LINEAGE_DS_CUT_PROFILE_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -14,7 +14,7 @@ authoring_base_main: 9db8aff18ef501a869a985cdc556c2a5109cfcdc
 scope: [fixed HR source inhibition and local cut fact production through existing DS]
 ---
 
-# Fixed HR fresh-lineage DS cut — subordinate draft, not executable
+# Fixed HR fresh-lineage DS cut — bounded producer contract
 
 This profile defines only the fixed DS producer for accepted V4-C027–031.
 Canonical authority is main `9db8aff18ef501a869a985cdc556c2a5109cfcdc`, V4 SHA256
@@ -26,9 +26,9 @@ The old AER recovery/settlement route remains unchanged and is not invoked here.
 Historical s256 settlement, CTO qualification and AER's floor-production sequence
 are not prerequisites of this independent V4 branch (V4-C031). Its actual durable
 all-generation issuance floor, isolation, old-fence preservation and new consumer
-startup checks remain mandatory. While proposed, implementation is forbidden;
-accepted lifecycle in the implementation base permits only bounded nonproduction
-producer/client tests. Production installation/cut still needs Root's exact mandate.
+startup checks remain mandatory. This accepted profile permits only bounded
+nonproduction producer/client implementation and tests on an accepted descendant.
+Production installation/cut still needs Root's exact mandate.
 
 The Owner target is one fresh, unrelated, no-side-effect HR canary received,
 started, completed and replied, preferably as the same `agt_hr-agent`. Old
