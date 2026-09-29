@@ -30,7 +30,7 @@ governed_by:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0
 external_authorities:
   - repository: mayf3/dsh-agent-core
-    authority_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+    authority_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
     relation: depends_on
   - repository: mayf3/dsh-agent-core
     authority_id: AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1
@@ -46,7 +46,12 @@ references:
   - docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md (accepted; OBS-WA-008 records the canonical CTO machine identity agt_cto-agent / principal 4e5a4578-0645-4133-bd35-b80e453dfee9)
   - docs/evidence/workflow-recovery-stage-f-20260822/identity-cto.json (accepted-repo auth-service machine-identity receipt for the same pair)
   - .agents/local/README.md (accepted local governance: recovery-first; an authorized recovery keeps the outcome_unknown record honest and must prove old worker/tool termination or isolation, or keep the fence)
-  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V3.md lineage (reconciliation store, settle-once, restart recovery state machine this contract composes onto)
+  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V4.md lineage (reconciliation
+    store, settle-once, restart recovery state machine and the C-015
+    termination-evidence vocabulary this contract composes onto; V4 is the
+    accepted whole-successor that supersedes AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+    and carries that lineage bindingly — independent review round citation
+    correction, contracts C1–C5 unchanged)
 ---
 
 # AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1 — 管理员放弃卡死 Turn 的准入恢复契约
