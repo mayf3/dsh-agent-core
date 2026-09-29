@@ -74,8 +74,8 @@ import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
 import { readDurableRecoveryStore } from './reconciliation/durable-file.js'
 import { BindingStore } from './binding-store.js'
-import { readFixedPreparedHrCut, readHrDurablePreimageSha256,
-  writeFixedHrMountAck } from './fresh-hr-cut-startup.js'
+import { readFixedPreparedHrCut, readHrDurableFileSha256, hrOldRecordSha256,
+  mountFixedHrCut } from './fresh-hr-cut-startup.js'
 import { createProcessRegistry } from './process-registry.js'
 import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
@@ -83,7 +83,12 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
-import { getFixedStartupContext, getFixedAdminQualificationContext, hasFixedQualificationContext, signalFixedStartupConsumptionFinished, publishFixedRuntimeAdmission, qualificationReplyObserver } from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
+import * as startupContext from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
+import { getFixedHrFreshCutContext } from '../../production-runtime/src/native-arm64/hr-fresh-lineage-startup-context.mjs'
+
+const { getFixedStartupContext, getFixedAdminQualificationContext,
+  hasFixedQualificationContext, signalFixedStartupConsumptionFinished,
+  publishFixedRuntimeAdmission, qualificationReplyObserver } = startupContext
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -191,16 +196,15 @@ export function apply(ctx, config) {
   const recoveryFile = typeof cfg.reconciliationStoreFile === 'string'
     && cfg.reconciliationStoreFile !== '' ? cfg.reconciliationStoreFile : null
   let preparedHrCut = null
+  const liveHrStartup = getFixedHrFreshCutContext() ?? null
   // A prior Binding cut means this PREPARED receipt has already been consumed
   // by another mount. Never reuse its runtime epoch on an ordinary restart.
   if (store.getFreshHrCutBinding() === null) {
     try {
-      const candidate = readFixedPreparedHrCut()
+      const candidate = readFixedPreparedHrCut(liveHrStartup)
       if (candidate !== null) {
-        if (recoveryFile === null
-            || readHrDurablePreimageSha256(recoveryFile) !== candidate.receipt.oldRecordSha256) {
-          throw new TypeError('HR cut: durable recovery preimage drift')
-        }
+        if (recoveryFile === null) throw new TypeError('HR cut: durable recovery file unavailable')
+        const filePreimage = readHrDurableFileSha256(recoveryFile)
         const prior = readDurableRecoveryStore(recoveryFile)
         if (prior === null || prior.runtimeEpochs.has(candidate.cut.newRuntimeEpoch)
             || prior.records.get(candidate.cut.oldHandle)?.agentId !== candidate.cut.agentId
@@ -209,7 +213,9 @@ export function apply(ctx, config) {
             || prior.records.get(candidate.cut.oldHandle)?.sessionId !== candidate.cut.oldSessionId
             || prior.records.get(candidate.cut.oldHandle)?.initialOutcome !== 'outcome_unknown'
             || prior.records.get(candidate.cut.oldHandle)?.fenceState !== 'active'
-            || readHrDurablePreimageSha256(recoveryFile) !== candidate.receipt.oldRecordSha256) {
+            || hrOldRecordSha256(prior.records.get(candidate.cut.oldHandle))
+              !== candidate.receipt.oldRecordSha256
+            || readHrDurableFileSha256(recoveryFile) !== filePreimage) {
           throw new TypeError('HR cut: old durable subject or mount epoch mismatch')
         }
         preparedHrCut = candidate
@@ -309,27 +315,10 @@ export function apply(ctx, config) {
     fixedAdminRootContext: getFixedAdminQualificationContext(),
   })
   if (preparedHrCut !== null) {
-    try {
-      reconciliationStore.validateTrustedFreshHrLineage(preparedHrCut.cut)
-      // Keep HR business admission closed while the native Binding queue
-      // persists its exact session switch and the new READY child is proven.
-      reconciliationStore.activateTrustedFreshHrLineage(preparedHrCut.cut)
-      void store.commitFreshHrBindingCut(preparedHrCut.cut).then(async (bindingReceipt) => {
-        const startupToken = reconciliationStore.issueFreshHrStartupToken(preparedHrCut.cut)
-        const hrProcess = await registry.ensureRunning(preparedHrCut.cut.agentId, startupToken)
-        // A READY result is a genuine registry-owned process generation; an
-        // allocated number without a child cannot authenticate the mount.
-        const ack = writeFixedHrMountAck(preparedHrCut, bindingReceipt,
-          reconciliationStore, hrProcess)
-        reconciliationStore.completeTrustedFreshHrMount(preparedHrCut.cut, {
-          processGeneration: hrProcess.processGeneration, childPid: hrProcess.pid,
-          acknowledgementSha256: ack.acknowledgementSha256,
-        })
-        log.log(`fixed HR fresh cut mounted: ${preparedHrCut.receiptSha256}`)
-      }).catch(error => log.error(`fixed HR Binding/child/ACK denied: ${error?.message ?? error}`))
-    } catch (error) {
-      log.error(`fixed HR cut subject denied: ${error?.message ?? error}`)
-    }
+    void mountFixedHrCut({ prepared: preparedHrCut, context: liveHrStartup,
+      reconciliationStore, bindingStore: store, registry })
+      .then(() => log.log(`fixed HR fresh cut mounted: ${preparedHrCut.receiptSha256}`))
+      .catch(error => log.error(`fixed HR Binding/child/ACK denied: ${error?.message ?? error}`))
   }
   /**
    * The unified ordered route-attempt chain executor

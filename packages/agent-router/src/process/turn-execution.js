@@ -13,13 +13,12 @@
  * prompt write / terminal wait / caller-error settlement paths.
  */
 
-import { envelopeCarrier, fencedRejection, monotonicNowMs } from './state-machine.js'
+import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 import { FIXED_ADMIN_CANARY_TEXT } from '../../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
 const FIXED_ADMIN_PRIVATE_TURN = Symbol('fixed-admin-private-turn')
-
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
     this.handle = handle
@@ -178,12 +177,9 @@ export const turnExecutionMethods = {
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
-    const lineageFence = this.store.promptFenceForAgent?.(
-      this.agentId, sessionId, opts?.lineageAdmissionToken)
-    if (lineageFence) {
-      return Object.assign(fencedRejection(lineageFence.handle),
-        this.store.recoveryDiagnostic?.(lineageFence.handle) ?? {})
-    }
+    const lineageError = promptFenceError(this.store, this.agentId, sessionId,
+      opts?.lineageAdmissionToken)
+    if (lineageError) return lineageError
     if (this.fixedAdminQualification !== null) {
       if (mode !== 'turn' || opts?.[FIXED_ADMIN_PRIVATE_TURN] !== true
           || sessionId !== 'main' || text !== FIXED_ADMIN_CANARY_TEXT) {
@@ -365,12 +361,9 @@ export const turnExecutionMethods = {
   },
 
   async promptWrite(execution, sessionId, text, opts) {
-    const lineageFence = this.store.promptFenceForAgent?.(
-      this.agentId, sessionId, opts?.lineageAdmissionToken)
-    if (lineageFence) {
-      throw Object.assign(fencedRejection(lineageFence.handle),
-        this.store.recoveryDiagnostic?.(lineageFence.handle) ?? {})
-    }
+    const lineageError = promptFenceError(this.store, this.agentId, sessionId,
+      opts?.lineageAdmissionToken)
+    if (lineageError) throw lineageError
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'

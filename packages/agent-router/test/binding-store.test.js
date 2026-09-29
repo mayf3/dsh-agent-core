@@ -301,6 +301,48 @@ test('V4 private cut rejects ambiguous or mismatched old HR Binding without a wr
   assert.equal(store.getFreshHrCutBinding(), null)
 })
 
+test('V4 post-rename durability failure retains the unknown cut and blocks later writes', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await store.set(row('feishu:oc_hr', 'agt_hr-agent', 'old-session'))
+  const persist = store.persist.bind(store)
+  store.persist = async options => {
+    await persist(options)
+    if (options.durable) {
+      throw Object.assign(new Error('simulated post-rename fsync failure'),
+        { code: 'HR_FRESH_BINDING_PERSIST_UNKNOWN' })
+    }
+  }
+  const cut = { operationId: 'hr-fresh-lineage-cut-20260929-0d8235e7',
+    oldHandle: 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64), oldSessionId: 'old-session',
+    newSessionId: 'new-session', newRuntimeEpoch: 'new-epoch' }
+  await assert.rejects(store.commitFreshHrBindingCut(cut),
+    error => error.code === 'HR_FRESH_BINDING_PERSIST_UNKNOWN')
+  assert.equal(store.get('feishu:oc_hr').activeSessionId, 'new-session')
+  assert.equal(new BindingStore({ storeFile: file }).get('feishu:oc_hr').activeSessionId,
+    'new-session')
+  await assert.rejects(store.set(row('feishu:oc_other', 'agt_other', 'main')),
+    error => error.code === 'HR_FRESH_BINDING_PERSIST_UNKNOWN')
+})
+
+test('V4 historical cut marker survives a later normal switch without blocking other Agents', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await store.set(row('feishu:oc_hr', 'agt_hr-agent', 'old-session'))
+  const cut = { operationId: 'hr-fresh-lineage-cut-20260929-0d8235e7',
+    oldHandle: 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64), oldSessionId: 'old-session',
+    newSessionId: 'new-session', newRuntimeEpoch: 'new-epoch' }
+  const marker = await store.commitFreshHrBindingCut(cut)
+  await store.set(row('feishu:oc_hr', 'agt_other', 'other-session'))
+  const reloaded = new BindingStore({ storeFile: file })
+  assert.equal(reloaded.get('feishu:oc_hr').activeAgentId, 'agt_other')
+  assert.equal(reloaded.get('feishu:oc_hr').activeSessionId, 'other-session')
+  assert.deepEqual(reloaded.getFreshHrCutBinding(), marker)
+  await assert.rejects(reloaded.commitFreshHrBindingCut(cut), /already committed/)
+})
+
 // ---------------------------------------------------------------------------
 // AGENT_CORE_BINDING_WORKSPACE_V1 — Binding.workspace (stable workspaceId)
 // ---------------------------------------------------------------------------
