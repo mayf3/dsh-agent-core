@@ -59,7 +59,6 @@ function expectedProjection() {
 /** Newline framing is bounded; close or extra frames fail closed. */
 export function fixedHrFrameChannel(socket) {
   let buffer = '', closed = false, waiting = null
-  const queue = []
   function fail(error) {
     closed = true
     if (waiting !== null) {
@@ -79,7 +78,7 @@ export function fixedHrFrameChannel(socket) {
       if (end < 0) break
       const line = buffer.slice(0, end)
       buffer = buffer.slice(end + 1)
-      if (line.length === 0 || Buffer.byteLength(line) > MAX_FRAME || queue.length > 0) {
+      if (line.length === 0 || Buffer.byteLength(line) > MAX_FRAME || waiting === null) {
         fail(new TypeError('HR startup: unexpected frame'))
         socket.destroy()
         return
@@ -91,10 +90,8 @@ export function fixedHrFrameChannel(socket) {
         socket.destroy()
         return
       }
-      if (waiting !== null) {
-        waiting.resolve(frame)
-        waiting = null
-      } else queue.push(frame)
+      waiting.resolve(frame)
+      waiting = null
     }
   })
   socket.on('close', () => fail(new Error('HR startup: owned channel closed')))
@@ -103,7 +100,6 @@ export function fixedHrFrameChannel(socket) {
     live: () => !closed && !socket.destroyed,
     next() {
       if (closed) return Promise.reject(new Error('HR startup: owned channel closed'))
-      if (queue.length > 0) return Promise.resolve(queue.shift())
       if (waiting !== null) return Promise.reject(new TypeError('HR startup: concurrent read'))
       return new Promise((resolve, reject) => { waiting = { resolve, reject } })
     },
