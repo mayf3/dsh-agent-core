@@ -11,11 +11,13 @@
  *
  * Authorization source (reused, not invented): the EXISTING product-api
  * authsvc verifier seam (`schedulerTokenVerifier`, the same RS256/JWKS gate
- * as /scheduler/* and /workflow-execution/*) requiring the EXISTING fleet
- * admin scope `workflow.admin` (the same grant the runtime's own trusted
- * admin provisioning consumes). Inbound identity is NOT authority: only the
- * verifier-returned scope set decides; no request-supplied field can grant
- * reset power. The gate runs FIRST; every denial is zero-mutation.
+ * as /scheduler/* and /workflow-execution/*). The Owner-designated sole
+ * privileged authority is the exact canonical CTO principal — Principal UUID
+ * `3e2439d2-fb54-44f5-afee-77aa17c40d22` bound to canonical agentId
+ * `cto-agent` as the signed token asserts it; every other principal
+ * (including other workflow.admin holders) fails closed. Inbound identity is
+ * NOT authority: no request-supplied field can grant reset power. The gate
+ * runs FIRST; every denial is zero-mutation.
  *
  * Target scope is PINNED to agt_hr-agent: any other agentId is refused
  * before any store mutation.
@@ -36,7 +38,17 @@
  */
 
 const ADMIN_RESET_AGENT = 'agt_hr-agent'
-const ADMIN_SCOPE = 'workflow.admin'
+
+// Owner-designated sole privileged authority for HR reset/resume: the
+// existing CTO (研发总监) agent, bound EXACTLY by canonical Principal UUID +
+// canonical agentId. The authsvc-signed token is the canonical identity
+// mapping (`sub` + `agent_id` are asserted by the issuer, never caller
+// input) — any mismatch fails closed. No display names, no scope-derived
+// admin role (workflow.admin alone is explicitly NOT authority here), no
+// human-OpenID allowlist, no generalized RBAC: this is one narrow delegated
+// owner/recovery capability for exactly one operation.
+const AUTHORIZED_RESET_PRINCIPAL_ID = '3e2439d2-fb54-44f5-afee-77aa17c40d22'
+const AUTHORIZED_RESET_AGENT_ID = 'cto-agent'
 
 class HttpError extends Error {
   constructor(status, code, message) {
@@ -54,9 +66,10 @@ async function verifyAdminToken(verifier, req) {
   }
   try {
     const principal = await verifier.verify(match[1].trim())
-    const scopes = principal?.scopes instanceof Set ? principal.scopes : new Set()
-    if (!scopes.has(ADMIN_SCOPE)) {
-      throw new HttpError(403, 'forbidden', `token carries no ${ADMIN_SCOPE} scope`)
+    if (principal?.principalId !== AUTHORIZED_RESET_PRINCIPAL_ID
+        || principal?.agentId !== AUTHORIZED_RESET_AGENT_ID) {
+      throw new HttpError(403, 'forbidden',
+        'turn abandonment is reserved for the exact canonical CTO recovery principal (principal UUID + agentId must both match)')
     }
     return principal
   } catch (error) {
@@ -128,11 +141,27 @@ function readJsonBody(req) {
 }
 
 /**
- * r4130766489: a declaration is not exit evidence. If the registry still
- * identifies a live process of the target Agent, refuse with the existing
- * controlled recovery path instead of stamping over a possibly running task.
+ * r4130766489: a declaration is not exit evidence. Before any mutation the
+ * entry must establish that no identifiable execution of the target Agent is
+ * in flight — across ALL lifecycle slots, not only the READY ones that
+ * `registrySnapshot` projects. STARTUP and REAP are explicit local
+ * limitations (not drained), and a missing lifecycle-verification capability
+ * fails closed instead of defaulting to resettable.
  */
-function refuseLiveExecution(router, agentId) {
+function refuseUnDrainedExecution(router, agentId) {
+  if (typeof router.lifecycleSlotSnapshot !== 'function') {
+    throw new HttpError(503, 'liveness_verification_unavailable',
+      'agent lifecycle slot snapshot is unavailable; a reset never defaults to allowed without execution-state verification')
+  }
+  const slot = router.lifecycleSlotSnapshot(agentId) ?? { state: 'EMPTY' }
+  if (slot?.state === 'STARTUP') {
+    throw new HttpError(409, 'startup_in_progress',
+      `agent ${agentId} generation ${slot.generation} is still STARTUP (not drained); drain it via the existing controlled shutdown/startup path first — zero mutation performed`)
+  }
+  if (slot?.state === 'REAP') {
+    throw new HttpError(409, 'reaping_in_progress',
+      `agent ${agentId} generation ${slot.generation} is still REAP (real exit not settled); wait for the existing reap path to drain — zero mutation performed`)
+  }
   const live = (typeof router.registrySnapshot === 'function' ? router.registrySnapshot() : [])
     .find(entry => entry?.agentId === agentId && entry?.alive === true)
   if (live !== undefined) {
@@ -162,7 +191,7 @@ export async function handleAgentProcessAdminRequest({ req, url, router, verifie
       requireClosedBody(body, new Set(['agentId', 'declarationId']))
       const agentId = requireTargetAgent(body?.agentId)
       const declarationId = requireDeclarationId(body)
-      refuseLiveExecution(service, agentId)
+      refuseUnDrainedExecution(service, agentId)
       try {
         const result = await service.abandonPendingTurns({ agentId, declarationId })
         return { status: 200, body: { ok: true, ...result } }
