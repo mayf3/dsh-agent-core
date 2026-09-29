@@ -409,7 +409,12 @@ export function createIngressDelivery({
         throw error
       }
     }
-    const restoredFence = reconciliationStore.activeFenceForAgent?.(agent.id)
+    // HR_RESET_AND_RESUME_V1: new-request admission consults the abandonment-
+    // aware projection; the historical agent-wide fence stays queryable via
+    // activeFenceForAgent and still blocks every non-abandoned unknown.
+    const restoredFence = typeof reconciliationStore.admissionBlockerForAgent === 'function'
+      ? reconciliationStore.admissionBlockerForAgent(agent.id)
+      : reconciliationStore.activeFenceForAgent?.(agent.id)
     if (restoredFence !== null && restoredFence !== undefined) {
       throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
     }
@@ -479,5 +484,24 @@ export function createIngressDelivery({
     return deliveries.map(d => ({ ...d }))
   }
 
-  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot }
+  /**
+   * HR_RESET_AND_RESUME_V1 admin surface: the explicit, idempotent,
+   * durably persisted administrator declaration that an Agent's current
+   * stuck outcome_unknown turns are ABANDONED. It unblocks only NEW-request
+   * admission for THIS agent (same entry); the old records stay blocked +
+   * fenced + unknown forever, keep resolving their correlation entries
+   * (no-replay), and later evidence still settles those exact handles only.
+   * @param {{agentId:string, declarationId:string}} declaration
+   * @returns {{agentId:string, declarationId:string, abandonedHandles:string[]}}
+   */
+  function abandonPendingTurns(declaration) {
+    const result = reconciliationStore.declareAdminAbandonment?.(declaration)
+    if (result === undefined) {
+      throw new TypeError('agent-router: reconciliation store does not support admin abandonment')
+    }
+    log.log(`admin abandonment declared: agent ${declaration?.agentId} declaration ${declaration?.declarationId} handles [${result.abandonedHandles.join(', ')}]`)
+    return result
+  }
+
+  return { onIngress, onAuthenticatedFeishuIngress, deliver, deliveriesSnapshot, abandonPendingTurns }
 }

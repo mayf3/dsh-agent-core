@@ -401,6 +401,10 @@ export function apply(ctx, config) {
     freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */
     deliveriesSnapshot: () => ingressDelivery.deliveriesSnapshot(),
+    /** HR_RESET_AND_RESUME_V1 admin surface: explicit controlled abandonment
+     *  of an Agent's stuck outcome_unknown turns; unblocks NEW-request
+     *  admission only (records stay fenced/unknown; no replay). */
+    abandonPendingTurns: ingressDelivery.abandonPendingTurns,
     ensureRunning: registry.ensureRunning,
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */

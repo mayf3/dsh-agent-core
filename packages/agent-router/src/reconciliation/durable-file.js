@@ -93,6 +93,19 @@ function assertDurableRecord(raw) {
         && typeof answerEvidence.truncated === 'boolean'))) {
     throw new TypeError('durable recovery answer evidence is invalid')
   }
+  // Optional admin-abandonment marker (HR_RESET_AND_RESUME_V1). Absent on
+  // pre-marker records; present values are the closed declaration shape.
+  // Older binaries tolerate this field (unknown-field passthrough) and keep
+  // fencing — an unmarked record never loses its fence.
+  const abandonment = raw.adminAbandonment
+  if (abandonment !== undefined && abandonment !== null
+      && (typeof abandonment !== 'object' || Array.isArray(abandonment)
+        || Object.keys(abandonment).sort().join(',') !== ['declarationId', 'declaredAt'].sort().join(',')
+        || typeof abandonment.declarationId !== 'string' || abandonment.declarationId === ''
+        || abandonment.declarationId.length > 128
+        || !Number.isSafeInteger(abandonment.declaredAt) || abandonment.declaredAt < 0)) {
+    throw new TypeError('durable recovery abandonment declaration is invalid')
+  }
   for (const entry of raw.attemptedActions) {
     if (entry === null || typeof entry !== 'object'
         || !RECOVERY_ACTIONS.has(entry.action) || !ACTION_RESULTS.has(entry.result)
@@ -283,6 +296,7 @@ export function readDurableRecoveryStore(file) {
     if (records.has(raw.reconciliationHandle)) throw new TypeError('duplicate durable recovery handle')
     const record = structuredClone(raw)
     record.ingressCorrelation = validatedIngressCorrelation(raw.ingressCorrelation ?? null)
+    record.adminAbandonment = raw.adminAbandonment ?? null
     record.recoveryState = raw.state
     record.state = raw.queryState ?? (raw.state === 'settled' ? 'settled' : 'pending')
     delete record.queryState

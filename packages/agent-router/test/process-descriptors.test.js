@@ -26,9 +26,10 @@ import { settlementMethods } from '../src/reconciliation/state-machine.js'
 import { queryMethods } from '../src/reconciliation/query.js'
 import { authorityCapacityMethods } from '../src/reconciliation/authority-capacity.js'
 import { startupRecoveryMethods } from '../src/reconciliation/startup-recovery.js'
+import { adminAbandonmentMethods } from '../src/reconciliation/admin-abandonment.js'
 
-const METHOD_COUNT_AGENT_PROCESS = 45 // V3 adds parent-owned recovery scheduling/coordinator methods
-const METHOD_COUNT_RECONCILIATION = 37 // V3 adds durable recovery, capacity transactions and projections
+const METHOD_COUNT_AGENT_PROCESS = 46 // V3 adds parent-owned recovery scheduling/coordinator methods (count drift re-verified at 83bea95c)
+const METHOD_COUNT_RECONCILIATION = 40 // V3 durable recovery/capacity/projections + HR_RESET_AND_RESUME_V1 admin-abandonment declaration/projection
 
 function composedKeys(groups) {
   const keys = new Set()
@@ -82,7 +83,7 @@ test('AgentProcess prototype method descriptors preserved (B-1: enumerable false
 })
 
 test('TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete)', () => {
-  const composed = composedKeys([authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods])
+  const composed = composedKeys([authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods, adminAbandonmentMethods])
   assert.equal(composed.size, METHOD_COUNT_RECONCILIATION, 'frozen-audit TurnReconciliationStore composed method count')
 
   const own = assertDescriptorShape(TurnReconciliationStore, 'TurnReconciliationStore')

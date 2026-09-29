@@ -205,6 +205,7 @@ export const settlementMethods = {
       candidate.failureReason = null
       candidate.nextSafeAction = 'await_late_evidence'
       candidate.fenceState = 'active'
+      candidate.adminAbandonment = null
       candidate.reservedMandatoryBytes = Math.min(candidate.reservedMandatoryBytes ?? 0, 2048)
     })
   },

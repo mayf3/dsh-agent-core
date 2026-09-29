@@ -42,6 +42,7 @@ import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
 import { startupRecoveryMethods } from './startup-recovery.js'
+import { adminAbandonmentMethods } from './admin-abandonment.js'
 import { FreshHrLineageMethods } from './fresh-hr-lineage.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore } from './durable-file.js'
 import { validatedIngressCorrelation } from './ingress-correlation.js'
@@ -337,6 +338,7 @@ export class TurnReconciliationStore {
       failureReason: null,
       nextSafeAction: 'none',
       fenceState: 'armed',
+      adminAbandonment: null,
       reservedMandatoryBytes: MANDATORY_TRANSITION_HEADROOM_BYTES,
       bytes: 0,
     }
@@ -480,7 +482,7 @@ export class TurnReconciliationStore {
 // writable/configurable pass through unchanged and `constructor` is never
 // installed.
 const composedMethodDescriptors = {}
-for (const group of [authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods, FreshHrLineageMethods.prototype]) {
+for (const group of [authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods, adminAbandonmentMethods, FreshHrLineageMethods.prototype]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue
     composedMethodDescriptors[key] = { ...descriptor, enumerable: false }

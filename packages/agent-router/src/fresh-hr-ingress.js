@@ -30,6 +30,8 @@ export function freshHrIngressState({ reconciliationStore, store, binding,
     fence: bindingReady
       ? reconciliationStore.admissionFenceForAgent(binding.activeAgentId,
         { sessionId: binding.activeSessionId })
-      : reconciliationStore.activeFenceForAgent?.(binding.activeAgentId),
+      : typeof reconciliationStore.admissionBlockerForAgent === 'function'
+        ? reconciliationStore.admissionBlockerForAgent(binding.activeAgentId)
+        : reconciliationStore.activeFenceForAgent?.(binding.activeAgentId),
   }
 }
