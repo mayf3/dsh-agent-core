@@ -165,6 +165,31 @@ class InstallJoinTest(unittest.TestCase):
                             'operation_id': OPERATION})
         self.assertEqual(status['state'], 'COMMITTED')
 
+    def test_first_private_root_parent_fsync_failure_prevents_install(self):
+        original = self.mod._ds_fsync_dir
+        def refuse(directory):
+            if directory == str(self.root):
+                raise OSError('simulated fixed-root parent fsync failure')
+            return original(directory)
+        self.mod._ds_fsync_dir = refuse
+        result = self.call(self.packet())
+        self.assertFalse(result['ok'])
+        for name, path in self.targets.items():
+            self.assertEqual(path.read_bytes(), self.old[name])
+
+    def test_first_intent_directory_parent_fsync_failure_prevents_install(self):
+        original = self.mod._ds_fsync_dir
+        private_root = str(self.root / 'fixed-ds-install-records')
+        def refuse(directory):
+            if directory == private_root:
+                raise OSError('simulated intent parent fsync failure')
+            return original(directory)
+        self.mod._ds_fsync_dir = refuse
+        result = self.call(self.packet())
+        self.assertFalse(result['ok'])
+        for name, path in self.targets.items():
+            self.assertEqual(path.read_bytes(), self.old[name])
+
     def test_ambiguous_commit_receipt_never_rolls_back_committed_bytes(self):
         original = self.mod._ds_terminal
         def replace_then_raise(operation_id, value):
@@ -311,8 +336,11 @@ class InstallJoinTest(unittest.TestCase):
         self.assertFalse(self.call(self.packet())['ok'])
 
     def test_intent_fsync_ambiguity_stays_unknown_and_consumed(self):
-        def lose_ack(_directory):
-            raise OSError('simulated intent directory fsync error')
+        original = self.mod._ds_fsync_dir
+        def lose_ack(directory):
+            if os.path.basename(directory) == 'intents':
+                raise OSError('simulated intent directory fsync error')
+            return original(directory)
         self.mod._ds_fsync_dir = lose_ack
         result = self.call(self.packet())
         self.assertFalse(result['ok'])
