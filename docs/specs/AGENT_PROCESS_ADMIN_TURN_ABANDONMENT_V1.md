@@ -1,15 +1,15 @@
 ---
 spec_id: AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1
-status: proposed
+status: accepted
 date: 2026-09-29
-accepted_date: null
-accepted_by: null
-accepted_at: null
-accepted_reviewed_base: null
-accepted_reviewed_spec_commit: null
-accepted_reviewer_id: null
-acceptance_review_result: null
-semantic_delta_after_review: null
+accepted_date: 2026-09-29
+accepted_by: mayf3
+accepted_at: 2026-09-29T13:35:00Z
+accepted_reviewed_base: 0cb14b3706605de01496be857c9e7b325d86a730
+accepted_reviewed_spec_commit: 0cb14b3706605de01496be857c9e7b325d86a730
+accepted_reviewer_id: zcode-local-independent-spec-reviewer-r1/r2-lane/r3+r3b
+acceptance_review_result: ACCEPT (r1 ACCEPT/0; r2-lane ACCEPT/CONFORMANT; r3 REVISE/1 -> fixed -> re-review ACCEPT/0)
+semantic_delta_after_review: D6 amendment r3 (Owner-directed, reviewed in r3 + r3b); no other delta
 independent_review_result: ACCEPT (r1, pre-amendment)
 independent_reviewer_id: zcode-local-independent-spec-reviewer-r1
 independent_reviewed_head: 34f53cd7
@@ -41,7 +41,8 @@ superseded_by: null
 owners:
   - mayf3
 type: admin-recovery-entry-contract
-review_status: INDEPENDENT_REVIEW_COMPLETE_AWAITING_OWNER_ACCEPTANCE
+review_status: ACCEPTED
+acceptance_provenance: Owner directive 2026-09-29 「我要的是尽快恢复」 answering the sole pending acceptance item after the complete review trail; product decisions D1-D5 are the Owner takeover-brief words verbatim, D6 the Owner same-day directive「若仍会被拒绝，就继续解决这个实际缺口…」; recorded by the supervising session on the Owner's behalf with this provenance, nothing self-invented beyond the cited instructions
 owner_intent_provenance: direct Owner instruction 2026-09-29 (HR_RESET_AND_RESUME_V1 takeover brief — 管理员明确放弃当前卡住的旧任务后可以继续执行新任务；旧结果保留 UNKNOWN；不重放旧请求；同一幂等重置不得作用于后来任务；取消/超时/进程重启复用同一条恢复路径; plus direct Owner control directives #70/#72 2026-09-29 — entry bound to the exact canonical CTO machine identity, fail-closed lifecycle evidence gate, smallest-possible authority surface; plus direct Owner takeover-round directive 2026-09-29 — 「若仍会被拒绝，就继续解决这个实际缺口，不要把一个仍不能处理当前故障的版本报告成只等授权上线」, freezing D6: the uncollectable-evidence restart-lost class is resolvable only via the CTO's explicit risk acceptance at the authorized entry, recorded as a decision and never as evidence)
 references:
   - docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md (accepted; OBS-WA-008 records the canonical CTO machine identity agt_cto-agent / principal 4e5a4578-0645-4133-bd35-b80e453dfee9)
