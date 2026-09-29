@@ -28,32 +28,13 @@ repo: mayf3/dsh-agent-core
 base_head: 5c5f6ce6 (github/main)
 implementation_authority: contracts
 production_apply_authority: none
-scope:
-  - exactly one declarer row (code return_policy_exhausted, HTTP 409) added to
-    the workflow_execute manifest transition-family errors table (DEC-RPE-002)
-  - verbatim passthrough of that declared svc-owned code with the upstream HTTP
-    status, sanitized detail and downstream x-request-id preserved; no broker
-    rewriting, wrapping, retry, or classification (DEC-RPE-003)
-  - fail-closed degradation to http_4xx/http_5xx preserved for every other
-    undeclared service code (DEC-RPE-004)
 governed_by:
-  - AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1 (the unified
-    workflow_execute write tool whose transition-family declarer table this Spec
-    extends by exactly one svc-owned row; its FOLLOW_UP_DEBT(2) requires a spec
-    round for every declarer-table widening — this is that round)
-  - AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1 (R1: declared service codes
-    surface verbatim; undeclared codes fail closed to http_4xx — mirrored as
-    DEC-006 of AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1)
-  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1 (the owner-assistance feature slice
-    whose svc-side counterpart introduced the RETURN-limit ingress)
+  - AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+  - AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1
+  - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1
 external_authorities:
   - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1 (accepted; amendment merged
-      as PR #68, canonical main 5d479d8 — deterministic 409
-      `return_policy_exhausted` on the RETURN beyond the per-edge policy limit;
-      error.rs from_transition: `E::ReturnPolicyExhausted { limit }` ->
-      CONFLICT / code `return_policy_exhausted`; execute_transition.rs maps the
-      store variant (409, "return_policy_exhausted"))
+    authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1
     revision: 5d479d834c098c301cd11993c5682c3b7da94480
     relation: depends_on
 supersedes: []
