@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -37,7 +37,7 @@ related_specs:
   - AGENT_CORE_LARK_UX_PHASE1_V3
 supersedes:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-superseded_by: null
+superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
 owners:
   - mayf3
 date: 2026-09-18

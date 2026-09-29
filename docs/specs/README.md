@@ -113,7 +113,9 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | accepted / current | contracts | current AgentProcess lifecycle authority |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V4` | accepted / current | contracts | current AgentProcess lifecycle authority; exact fresh HR lineage while retaining old unknown history |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` | superseded | none | historical accepted AgentProcess lifecycle authority replaced by V4 |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | superseded | none | historical replaced authority |
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
