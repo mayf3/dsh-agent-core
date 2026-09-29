@@ -12,10 +12,14 @@
  * Authorization source (reused, not invented): the EXISTING product-api
  * authsvc verifier seam (`schedulerTokenVerifier`, the same RS256/JWKS gate
  * as /scheduler/* and /workflow-execution/*). The Owner-designated sole
- * privileged authority is the exact canonical CTO principal — Principal UUID
- * `3e2439d2-fb54-44f5-afee-77aa17c40d22` bound to canonical agentId
- * `cto-agent` as the signed token asserts it; every other principal
- * (including other workflow.admin holders) fails closed. Inbound identity is
+ * privileged authority is the exact canonical CTO machine identity recorded
+ * by the accepted bootstrap authority (AGENT_CORE_WORKFLOW_ADMIN_AGENT_
+ * BOOTSTRAP_V1 OBS-WA-008, corroborated by the workflow-recovery identity
+ * receipts): Principal UUID `4e5a4578-0645-4133-bd35-b80e453dfee9` bound to
+ * canonical agentId `agt_cto-agent` as the signed token asserts it; every
+ * other principal (including other workflow.admin holders AND the legacy
+ * OpenClaw-era `cto-agent` / `3e2439d2-…` pair, which originates in a
+ * historical scheduler fixture) fails closed. Inbound identity is
  * NOT authority: no request-supplied field can grant reset power. The gate
  * runs FIRST; every denial is zero-mutation.
  *
@@ -30,6 +34,16 @@
  * admission; the old records stay blocked + fenced + outcome_unknown, never
  * settled, never deleted, never replayed.
  *
+ * Review finding (EMPTY ≠ drained): after a controller restart the in-memory
+ * lifecycle registry is empty even though a durable restart-lost fence may
+ * have NO termination evidence at all. A stuck unknown fence WITHOUT durable
+ * exit/termination evidence therefore refuses fail-closed (409
+ * restart_lost_termination_evidence_unavailable, naming the accepted
+ * restart-quiescence/exact-generation recovery paths); only stuck fences
+ * bearing durable child_real_exit evidence (C-015 kind 4) — or no stuck
+ * fences at all — may proceed. A missing verification capability is 503,
+ * never a default-to-resettable.
+ *
  * Declaration budget: the durable scope registry is bounded to 32 distinct
  * declaration ids per store (never recycled; retries of existing ids always
  * remain possible). Exhaustion maps to 409 abandonment_capacity_exhausted.
@@ -40,15 +54,18 @@
 const ADMIN_RESET_AGENT = 'agt_hr-agent'
 
 // Owner-designated sole privileged authority for HR reset/resume: the
-// existing CTO (研发总监) agent, bound EXACTLY by canonical Principal UUID +
-// canonical agentId. The authsvc-signed token is the canonical identity
-// mapping (`sub` + `agent_id` are asserted by the issuer, never caller
-// input) — any mismatch fails closed. No display names, no scope-derived
-// admin role (workflow.admin alone is explicitly NOT authority here), no
-// human-OpenID allowlist, no generalized RBAC: this is one narrow delegated
-// owner/recovery capability for exactly one operation.
-const AUTHORIZED_RESET_PRINCIPAL_ID = '3e2439d2-fb54-44f5-afee-77aa17c40d22'
-const AUTHORIZED_RESET_AGENT_ID = 'cto-agent'
+// canonical current CTO (研发总监) machine identity, bound EXACTLY by the
+// accepted bootstrap authority's Principal UUID + canonical agentId. The
+// authsvc-signed token is the canonical identity mapping (`sub` + `agent_id`
+// are asserted by the issuer, never caller input) — any mismatch fails
+// closed. Exactly ONE pair is authorized: the legacy OpenClaw-era
+// `cto-agent` / `3e2439d2-…` pair (a historical scheduler-fixture identity)
+// is deliberately NOT accepted alongside it. No display names, no
+// scope-derived admin role (workflow.admin alone is explicitly NOT authority
+// here), no human-OpenID allowlist, no generalized RBAC: this is one narrow
+// delegated owner/recovery capability for exactly one operation.
+const AUTHORIZED_RESET_PRINCIPAL_ID = '4e5a4578-0645-4133-bd35-b80e453dfee9'
+const AUTHORIZED_RESET_AGENT_ID = 'agt_cto-agent'
 
 class HttpError extends Error {
   constructor(status, code, message) {
@@ -141,17 +158,24 @@ function readJsonBody(req) {
 }
 
 /**
- * r4130766489: a declaration is not exit evidence. Before any mutation the
- * entry must establish that no identifiable execution of the target Agent is
- * in flight — across ALL lifecycle slots, not only the READY ones that
- * `registrySnapshot` projects. STARTUP and REAP are explicit local
- * limitations (not drained), and a missing lifecycle-verification capability
- * fails closed instead of defaulting to resettable.
+ * r4130766489 + EMPTY-slot review finding: a declaration is not exit
+ * evidence. Before any mutation the entry must establish that no identifiable
+ * execution of the target Agent is in flight — across ALL lifecycle slots,
+ * not only the READY ones that `registrySnapshot` projects. STARTUP and REAP
+ * are explicit local limitations (not drained), a missing
+ * lifecycle-verification or termination-evidence capability fails closed
+ * instead of defaulting to resettable, and an EMPTY slot is accepted ONLY
+ * when no stuck fence lacks durable exit evidence (an empty in-memory
+ * registry after a restart is not termination evidence).
  */
 function refuseUnDrainedExecution(router, agentId) {
   if (typeof router.lifecycleSlotSnapshot !== 'function') {
     throw new HttpError(503, 'liveness_verification_unavailable',
       'agent lifecycle slot snapshot is unavailable; a reset never defaults to allowed without execution-state verification')
+  }
+  if (typeof router.stuckFenceWithoutDurableExitEvidenceForAgent !== 'function') {
+    throw new HttpError(503, 'liveness_verification_unavailable',
+      'termination-evidence verification is unavailable; a reset never defaults to allowed without durable exit evidence checks')
   }
   const slot = router.lifecycleSlotSnapshot(agentId) ?? { state: 'EMPTY' }
   if (slot?.state === 'STARTUP') {
@@ -167,6 +191,13 @@ function refuseUnDrainedExecution(router, agentId) {
   if (live !== undefined) {
     throw new HttpError(409, 'live_execution_present',
       `agent ${agentId} still has a live process (pid ${live.pid}); abandon only after the existing controlled cancel/shutdown drained it — an administrator declaration is not termination evidence`)
+  }
+  const unproven = router.stuckFenceWithoutDurableExitEvidenceForAgent(agentId)
+  if (unproven !== null && unproven !== undefined) {
+    throw new HttpError(409, 'restart_lost_termination_evidence_unavailable',
+      `agent ${agentId} still has an unsettled unknown-fence turn (${unproven.handle}) with NO durable exit/termination evidence`
+        + `${unproven.failureReason ? ` (recorded: ${unproven.failureReason})` : ''}; an EMPTY local registry after a restart is not termination evidence`
+        + ' — settle the old execution via the accepted restart-quiescence proof / exact-generation recovery path first — zero mutation performed')
   }
 }
 

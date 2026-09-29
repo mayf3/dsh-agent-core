@@ -7,14 +7,20 @@
  * worker). Pins:
  *
  *   - the authorization gate reuses the EXISTING authsvc verifier seam and
- *     the EXISTING fleet admin scope `workflow.admin` (401/403 fail-closed,
- *     permission+scope checks BEFORE any store mutation, zero mutation on
- *     every denial);
+ *     binds the EXACT canonical CTO machine identity recorded by the accepted
+ *     bootstrap authority (AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1
+ *     OBS-WA-008: agt_cto-agent / principal 4e5a4578-0645-4133-bd35-
+ *     b80e453dfee9) — 401/403 fail-closed BEFORE any store mutation, zero
+ *     mutation on every denial;
  *   - the operation target is PINNED to agt_hr-agent (any other target is
  *     refused before any mutation);
  *   - a live identifiable HR execution refuses the reset with a structured
  *     limitation (review r4130766489) instead of stamping over a possibly
  *     running task;
+ *   - an EMPTY lifecycle slot is NOT termination evidence: a stuck unknown
+ *     fence WITHOUT durable exit evidence (the restart-lost class) refuses
+ *     fail-closed; only stuck turns bearing durable child_real_exit evidence
+ *     (C-015 kind 4) or no stuck turns at all may proceed;
  *   - a legitimate admin reset unblocks the SAME HR through the SAME normal
  *     ingress path (the reset never sends anything itself);
  *   - retrying a completed declaration never adopts a later unknown;
@@ -46,6 +52,30 @@ const CTO_UUID_MISMATCH_TOKEN = 'bearer-cto-uuid-wrong-agent'
 const CTO_AGENT_MISMATCH_TOKEN = 'bearer-cto-agent-wrong-uuid'
 const USER_TOKEN = 'bearer-plain-user'
 
+// The canonical current CTO machine identity per the accepted bootstrap
+// authority (OBS-WA-008 + workflow-recovery identity receipts). The legacy
+// OpenClaw-era pair (cto-agent / 3e2439d2-…) comes from a historical
+// scheduler fixture and is NOT the agent-core canonical identity — exactly
+// one pair is authorized, never both.
+const CANONICAL_CTO_PRINCIPAL_ID = '4e5a4578-0645-4133-bd35-b80e453dfee9'
+const CANONICAL_CTO_AGENT_ID = 'agt_cto-agent'
+
+function principals() {
+  return {
+    // The Owner-designated sole privileged authority: the canonical CTO
+    // principal, bound EXACTLY as authsvc asserts it (principal UUID + agentId).
+    [CTO_TOKEN]: { principalId: CANONICAL_CTO_PRINCIPAL_ID, agentId: CANONICAL_CTO_AGENT_ID, scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    // workflow.admin alone is NOT the authority (Owner decision): a different
+    // principal holding the same scope stays denied.
+    [OTHER_WORKFLOW_ADMIN_TOKEN]: { principalId: 'p-other-admin', agentId: 'agt_other-admin', scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    // Exact-binding fail-closed probes: canonical UUID with a different
+    // agentId, and the canonical agentId with a different principal UUID.
+    [CTO_UUID_MISMATCH_TOKEN]: { principalId: CANONICAL_CTO_PRINCIPAL_ID, agentId: 'agt_impersonator', scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    [CTO_AGENT_MISMATCH_TOKEN]: { principalId: '4e5a4578-0000-4133-bd35-b80e453dfe99', agentId: CANONICAL_CTO_AGENT_ID, scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    [USER_TOKEN]: { principalId: 'p-plain', agentId: 'agt_plain', scopes: new Set(['scheduler.read']), principalType: 'agent' },
+  }
+}
+
 const FIXTURE_WORKER = fileURLToPath(new URL('../../../scripts/availability-recovery/worker.mjs', import.meta.url))
 
 function fakeCtx(services) {
@@ -63,24 +93,6 @@ function fakeCtx(services) {
         try { await dispose() } catch { /* best effort */ }
       }
     },
-  }
-}
-
-const CTO_PRINCIPAL_ID = '3e2439d2-fb54-44f5-afee-77aa17c40d22'
-
-function principals() {
-  return {
-    // The Owner-designated sole privileged authority: the canonical CTO
-    // principal, bound EXACTLY as authsvc asserts it (principal UUID + agentId).
-    [CTO_TOKEN]: { principalId: CTO_PRINCIPAL_ID, agentId: 'cto-agent', scopes: new Set(['workflow.admin']), principalType: 'agent' },
-    // workflow.admin alone is NOT the authority (Owner decision): a different
-    // principal holding the same scope stays denied.
-    [OTHER_WORKFLOW_ADMIN_TOKEN]: { principalId: 'p-other-admin', agentId: 'agt_other-admin', scopes: new Set(['workflow.admin']), principalType: 'agent' },
-    // Exact-binding fail-closed probes: canonical UUID with a different
-    // agentId, and the cto-agent id with a different principal UUID.
-    [CTO_UUID_MISMATCH_TOKEN]: { principalId: CTO_PRINCIPAL_ID, agentId: 'agt_impersonator', scopes: new Set(['workflow.admin']), principalType: 'agent' },
-    [CTO_AGENT_MISMATCH_TOKEN]: { principalId: '8e2439d2-0000-44f5-afee-77aa17c40d99', agentId: 'cto-agent', scopes: new Set(['workflow.admin']), principalType: 'agent' },
-    [USER_TOKEN]: { principalId: 'p-plain', agentId: 'agt_plain', scopes: new Set(['scheduler.read']), principalType: 'agent' },
   }
 }
 
@@ -134,6 +146,7 @@ function hrRig(root, epoch) {
   const facade = {
     abandonPendingTurns: delivery.abandonPendingTurns,
     abandonmentDeclarationsSnapshot: (agentId) => store.adminAbandonmentsForAgent(agentId),
+    stuckFenceWithoutDurableExitEvidenceForAgent: (agentId) => store.stuckFenceWithoutDurableExitEvidenceForAgent(agentId),
     registrySnapshot: () => registry.registrySnapshot(),
     lifecycleSlotSnapshot: (agentId) => registry.lifecycleSlotSnapshot(agentId),
     store,
@@ -188,6 +201,35 @@ function stuckTurn(store, agentId, { generation = 1 } = {}) {
   return handle
 }
 
+/** A stuck turn that carries durable child_real_exit evidence (C-015 kind 4). */
+function evidencedStuckTurn(store, agentId, opts = {}) {
+  const handle = stuckTurn(store, agentId, opts)
+  store.markExitObserved(handle)
+  return handle
+}
+
+/**
+ * The evidence-bearing restart class: the old execution's real exit was
+ * observed and durably recorded (child_real_exit) before the controller
+ * crash, while the registry-cleanup fence stayed active — the restart class
+ * a reset entry may serve, because accepted durable termination evidence
+ * exists even though the local registry is empty after the restart.
+ */
+function evidencedRestartRig(t, root) {
+  const persistenceFile = join(root, 'turn-recovery.json')
+  const crashed = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'admin-entry-epoch-crashed' })
+  const oldHandle = stuckTurn(crashed, HR)
+  crashed.claimRecovery(oldHandle, { operationId: 'reap-fixture', claimantRuntimeEpoch: 'admin-entry-epoch-crashed' })
+  crashed.markExitObserved(oldHandle)
+  const rig = hrRig(root, 'admin-entry-epoch-restarted')
+  const old = rig.store.records.get(oldHandle)
+  assert.equal(old?.state, 'settled', 'the observed exit settled the record as terminated_without_outcome')
+  assert.equal(old?.terminationEvidence, 'child_real_exit', 'durable exit evidence is present')
+  assert.equal(old?.fenceState, 'active', 'registry-cleanup-pending fence stays active')
+  assert.ok(rig.store.admissionBlockerForAgent(HR), 'the evidence-bearing fence still blocks admission before the reset')
+  return { rig, oldHandle }
+}
+
 /** The restart-lost class: a stuck unknown fence from a retired epoch. */
 async function restartLostRig(t, root) {
   const persistenceFile = join(root, 'turn-recovery.json')
@@ -206,7 +248,7 @@ function mutationProbe(rig) {
 
 test('admin gate: no token / wrong scope / foreign target all fail closed with ZERO store mutation', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-gate-'))
-  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { rig, oldHandle } = await evidencedRestartRig(t, root)
   const { base } = await mount(t, { routerFacade: rig })
   const post = { agentId: HR, declarationId: 'reset-gate-1' }
   const before = mutationProbe(rig)
@@ -232,7 +274,7 @@ test('admin gate: no token / wrong scope / foreign target all fail closed with Z
 
 test('legitimate admin reset through the real HTTP entry unblocks the same HR via the normal ingress', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-ok-'))
-  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { rig, oldHandle } = await evidencedRestartRig(t, root)
   const { base } = await mount(t, { routerFacade: rig })
 
   // The next ordinary message is STILL fenced before the reset.
@@ -267,7 +309,7 @@ test('legitimate admin reset through the real HTTP entry unblocks the same HR vi
 
 test('retrying a completed declaration over HTTP never adopts a later unknown turn', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-retry-'))
-  const { rig } = await restartLostRig(t, root)
+  const { rig } = await evidencedRestartRig(t, root)
   const { base } = await mount(t, { routerFacade: rig })
 
   const first = await call(base, '/agent-process/turn-abandonment', {
@@ -275,8 +317,9 @@ test('retrying a completed declaration over HTTP never adopts a later unknown tu
   })
   assert.equal(first.status, 200)
 
-  // A LATER turn becomes unknown after the declaration completed.
-  const laterHandle = stuckTurn(rig.store, HR, { generation: 1 })
+  // A LATER turn becomes unknown after the declaration completed (with its
+  // own observed exit, so the entry's evidence gate stays satisfied).
+  const laterHandle = evidencedStuckTurn(rig.store, HR, { generation: 1 })
   const retry = await call(base, '/agent-process/turn-abandonment', {
     method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: CTO_TOKEN,
   })
@@ -299,6 +342,8 @@ test('declarations survive a controller restart and stay readable at the entry',
   const persistenceFile = join(root, 'turn-recovery.json')
   const crashed = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-crashed' })
   const oldHandle = stuckTurn(crashed, HR)
+  crashed.claimRecovery(oldHandle, { operationId: 'reap-fixture', claimantRuntimeEpoch: 'epoch-crashed' })
+  crashed.markExitObserved(oldHandle)
   const first = hrRig(root, 'epoch-restarted-a')
   const { base } = await mount(t, { routerFacade: first })
   const reset = await call(base, '/agent-process/turn-abandonment', {
@@ -383,7 +428,7 @@ test('GET requires the same admin authority; the loopback /v1/message path canno
 
 test('Owner-designated sole authority: workflow.admin alone and CTO identity mismatches are all denied with ZERO mutation', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-cto-'))
-  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { rig, oldHandle } = await evidencedRestartRig(t, root)
   const { base } = await mount(t, { routerFacade: rig })
   const post = { agentId: HR, declarationId: 'reset-cto-1' }
   const before = mutationProbe(rig)
@@ -437,10 +482,24 @@ test('non-drained lifecycle slots refuse the reset: STARTUP and REAP are explici
   assert.equal(mutationProbe(rig), beforeReap, 'REAP refusal mutates nothing')
   assert.equal(rig.store.records.get(stuck).adminAbandonment ?? null, null, 'no marker over a non-drained slot')
 
-  // EMPTY slot: the operation may proceed (nothing identifiable is running).
+  // EMPTY slot, but the stuck turn carries NO durable exit evidence: an
+  // empty local registry after a restart is NOT termination evidence —
+  // fail closed instead of stamping over an unproven old execution.
   rig.lifecycleSlotSnapshot = () => ({ state: 'EMPTY' })
-  const ok = await call(base, '/agent-process/turn-abandonment', {
+  const beforeEmpty = mutationProbe(rig)
+  const unproven = await call(base, '/agent-process/turn-abandonment', {
     method: 'POST', body: { agentId: HR, declarationId: 'reset-slot-3' }, token: CTO_TOKEN,
+  })
+  assert.equal(unproven.status, 409, JSON.stringify(unproven.body))
+  assert.equal(unproven.body.error.code, 'restart_lost_termination_evidence_unavailable')
+  assert.equal(mutationProbe(rig), beforeEmpty, 'EMPTY without exit evidence mutates nothing')
+  assert.equal(rig.store.records.get(stuck).adminAbandonment ?? null, null, 'no marker over an unproven execution')
+
+  // EMPTY slot WITH durable child_real_exit evidence on the stuck turn: the
+  // old execution's real exit is proven, so the reset may proceed.
+  assert.ok(rig.store.markExitObserved(stuck), 'fixture records the observed real exit')
+  const ok = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-slot-4' }, token: CTO_TOKEN,
   })
   assert.equal(ok.status, 200, JSON.stringify(ok.body))
   assert.deepEqual(ok.body.abandonedHandles, [stuck])
@@ -450,14 +509,43 @@ test('missing lifecycle verification capability fails closed instead of defaulti
   const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-nocap-'))
   const rig = hrRig(root, 'epoch-nocap')
   stuckTurn(rig.store, HR, { generation: 1 })
-  const reduced = { ...rig }
-  delete reduced.lifecycleSlotSnapshot
-  const { base } = await mount(t, { routerFacade: reduced })
+  const { base } = await mount(t, { routerFacade: rig })
   const before = mutationProbe(rig)
-  const res = await call(base, '/agent-process/turn-abandonment', {
+  // The router service is resolved at request time, so removing a probe from
+  // the mounted facade is exactly the deployed "capability missing" state.
+  const savedSlot = rig.lifecycleSlotSnapshot
+  delete rig.lifecycleSlotSnapshot
+  const noSlot = await call(base, '/agent-process/turn-abandonment', {
     method: 'POST', body: { agentId: HR, declarationId: 'reset-nocap-1' }, token: CTO_TOKEN,
   })
-  assert.equal(res.status, 503)
-  assert.equal(res.body.error.code, 'liveness_verification_unavailable')
-  assert.equal(mutationProbe(rig), before, 'unverifiable liveness never defaults to a reset')
+  assert.equal(noSlot.status, 503)
+  assert.equal(noSlot.body.error.code, 'liveness_verification_unavailable')
+  rig.lifecycleSlotSnapshot = savedSlot
+  // The same fail-closed posture for a missing termination-evidence check:
+  // an unverifiable gate never defaults to resettable.
+  const savedEvidence = rig.stuckFenceWithoutDurableExitEvidenceForAgent
+  delete rig.stuckFenceWithoutDurableExitEvidenceForAgent
+  const noEvidence = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-nocap-2' }, token: CTO_TOKEN,
+  })
+  assert.equal(noEvidence.status, 503)
+  assert.equal(noEvidence.body.error.code, 'liveness_verification_unavailable')
+  rig.stuckFenceWithoutDurableExitEvidenceForAgent = savedEvidence
+  assert.equal(mutationProbe(rig), before, 'unverifiable gates never default to a reset')
+})
+
+test('restart-lost unknown fences without durable exit evidence refuse the entry: EMPTY is not drained', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-restartlost-'))
+  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { base } = await mount(t, { routerFacade: rig })
+  const before = mutationProbe(rig)
+  const res = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-restartlost-1' }, token: CTO_TOKEN,
+  })
+  assert.equal(res.status, 409, JSON.stringify(res.body))
+  assert.equal(res.body.error.code, 'restart_lost_termination_evidence_unavailable')
+  assert.match(res.body.error.message, /quiescence|recovery/, 'the refusal names the accepted evidence path')
+  assert.equal(mutationProbe(rig), before, 'the unproven restart-lost class mutates nothing')
+  assert.equal(rig.store.records.get(oldHandle).adminAbandonment ?? null, null, 'old record stays fenced + unmarked')
+  assert.ok(rig.store.activeFenceForAgent(HR), 'the fence stays up for the unproven class')
 })

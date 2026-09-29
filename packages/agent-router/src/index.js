@@ -408,6 +408,11 @@ export function apply(ctx, config) {
     /** HR_RESET_AND_RESUME_V1 read projection: the Agent's durable
      *  abandonment declarations (non-consuming; authenticated admin entry). */
     abandonmentDeclarationsSnapshot: (agentId) => reconciliationStore.adminAbandonmentsForAgent?.(agentId) ?? [],
+    /** HR_RESET_AND_RESUME_V1 entry-gate projection: the Agent's first stuck
+     *  fence record WITHOUT durable exit/termination evidence (restart-lost
+     *  class) — the authenticated admin entry fails closed on it, because an
+     *  EMPTY lifecycle slot after a restart is not termination evidence. */
+    stuckFenceWithoutDurableExitEvidenceForAgent: (agentId) => reconciliationStore.stuckFenceWithoutDurableExitEvidenceForAgent?.(agentId) ?? null,
     ensureRunning: registry.ensureRunning,
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */
