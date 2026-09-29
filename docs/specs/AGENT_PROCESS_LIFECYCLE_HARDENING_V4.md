@@ -2057,9 +2057,9 @@ REPLACED_V1_PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
 
 ### 12.1 Authority lifecycle
 
-This proposed V4 candidate changes no active authority. The V2→V3 transition
-in historical §0 is complete. V3 remains accepted until the distinct V4
-atomic transaction in §0V4 is reviewed, authorized and merged.
+This accepted V4 lifecycle becomes current authority on canonical merge. The
+V2→V3 transition in historical §0 is complete; the distinct V3→V4 atomic
+transaction is recorded in §0V4 and the attributable acceptance record.
 
 ### 12.2 Data migration
 
@@ -2194,6 +2194,6 @@ HR_FRESH_LINEAGE_RECOVERED = NO
 V4_REAL_E2E = NO
 OLD_UNKNOWN_RETAINED = REQUIRED_NOT_YET_PROVEN
 OLD_PROMPT_AND_EFFECT_REPLAY_COUNT = REQUIRED_ZERO_NOT_YET_PROVEN
-READY_FOR_IMPLEMENTATION = NO
-REASON = proposed V4 successor requires independent review, attributable acceptance and canonical merge
+READY_FOR_IMPLEMENTATION = CONDITIONAL_ON_CANONICAL_MERGE_AND_FRESH_PREFLIGHT
+REASON = accepted docs-only authority grants bounded implementation after exact-base preflight, not production execution
 ```
