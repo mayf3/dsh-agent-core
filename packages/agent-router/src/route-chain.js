@@ -23,6 +23,7 @@
 import { resolve } from 'node:path'
 import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
 import { monotonicNowMs } from './process/state-machine.js'
+import { authoritativeTurnEvidence, chainDeadlineError } from './process/route-chain-evidence.js'
 import {
   canaryOutcomeUnknownFixtureError, canaryQuotaFixtureError, createCanarySeam,
 } from './route-chain-canary.js'
@@ -251,13 +252,6 @@ function routeLabel(route) {
   return route?.routeRef ?? (route?.provider !== undefined ? `global:${route.provider}/${route.model}` : 'global')
 }
 
-function chainDeadlineError(agentId) {
-  return Object.assign(
-    new Error(`agent-router: route chain deadline exhausted before admission (agent ${agentId}) — STOP_CHAIN, no fallback`),
-    { code: 'AGENT_ROUTE_CHAIN_DEADLINE_EXCEEDED', envelope: 'chain_deadline_exceeded' },
-  )
-}
-
 /**
  * Create the unified chain executor. `log` = structured journal surface;
  * `ensureRunningForRoute` = registry route gate; `resolveRouteChain` =
@@ -294,28 +288,14 @@ export function createRouteChainExecutor({
     })
   }
 
-  /** Authoritative post-settlement turn evidence from the published
-   * AgentProcess surface (read-only; the store settles before the carrier
-   * rejects, so the snapshot is already final here). */
-  function authoritativeTurnEvidence(proc, error) {
-    const handle = error?.reconciliationHandle
-    if (typeof handle !== 'string' || handle === '' || typeof proc?.turnExecutionSnapshot !== 'function') {
-      return undefined
-    }
-    try {
-      return proc.turnExecutionSnapshot(handle)
-    } catch {
-      return undefined
-    }
-  }
-
   /** Bounded convergence wait: busy-mismatched or reaping slots retry inside
    * the single deadline budget (busy processes are never killed). */
-  async function acquire(agentId, route, deadlineMono) {
+  async function acquire(agentId, route, deadlineMono, lineageAdmissionToken) {
     for (;;) {
       const outcome = await ensureRunningForRoute(agentId, {
         routeIdentity: route.identity,
         processConfig: route.processConfig,
+        lineageAdmissionToken,
       })
       if (outcome.status === 'ready') return outcome.proc
       if (monotonicNowMs() >= deadlineMono) throw chainDeadlineError(agentId)
@@ -400,7 +380,7 @@ export function createRouteChainExecutor({
           // generation, zero dispatch.
           throw canaryOutcomeUnknownFixtureError(canary)
         }
-        proc = await acquire(agentId, route, deadlineMono)
+        proc = await acquire(agentId, route, deadlineMono, opts?.lineageAdmissionToken)
         if (mode === 'turn') {
           notifyDispatchOnce()
           if (observer !== null) observer.providerDispatchCount += 1
