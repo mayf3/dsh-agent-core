@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1
-status: draft
+status: proposed
 date: 2026-09-29
 accepted_date: null
 accepted_by: null
@@ -10,6 +10,11 @@ accepted_reviewed_spec_commit: null
 accepted_reviewer_id: null
 acceptance_review_result: null
 semantic_delta_after_review: null
+independent_review_result: ACCEPT
+independent_reviewer_id: zcode-local-independent-spec-reviewer-r1
+independent_reviewed_head: 34f53cd7
+independent_review_load_bearing_gaps: 0
+independent_review_non_blocking_notes: section-heading normalization at/before acceptance; status enum wording; merge gate must hold until Owner acceptance; refuseUnDrainedExecution registrySnapshot capability hardening (FOLLOW_UP)
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -35,7 +40,7 @@ superseded_by: null
 owners:
   - mayf3
 type: admin-recovery-entry-contract
-review_status: PENDING_INDEPENDENT_REVIEW
+review_status: INDEPENDENT_REVIEW_ACCEPTED_AWAITING_OWNER_ACCEPTANCE
 owner_intent_provenance: direct Owner instruction 2026-09-29 (HR_RESET_AND_RESUME_V1 takeover brief — 管理员明确放弃当前卡住的旧任务后可以继续执行新任务；旧结果保留 UNKNOWN；不重放旧请求；同一幂等重置不得作用于后来任务；取消/超时/进程重启复用同一条恢复路径; plus direct Owner control directives #70/#72 2026-09-29 — entry bound to the exact canonical CTO machine identity, fail-closed lifecycle evidence gate, smallest-possible authority surface)
 references:
   - docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md (accepted; OBS-WA-008 records the canonical CTO machine identity agt_cto-agent / principal 4e5a4578-0645-4133-bd35-b80e453dfee9)
