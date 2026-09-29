@@ -56,10 +56,24 @@ function provenSourceTurnExecutionId(proc, rpcMeta) {
  */
 export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway, switchAgent }) {
   return async (method, params, rpcMeta = {}) => {
+    // V4: old HR workers lose every parent-side effect path at the stop
+    // barrier, before either Broker gateway lookup or Binding mutation. The
+    // authenticated host cut must separately prove old process/tool exit;
+    // this gate prevents a still-draining child from starting another call.
+    const boundProc = getProc()
+    const freshHrCut = boundProc?.store?.freshHrLineage
+    if (agentId === 'agt_hr-agent'
+        && (boundProc?.state === 'DRAINING' || boundProc?.state === 'EXITED'
+          || boundProc?.exit !== undefined
+          || (freshHrCut?.agentId === agentId
+            && (boundProc?.store?.runtimeEpoch !== freshHrCut.newRuntimeEpoch
+              || boundProc?.processGeneration <= freshHrCut.oldProcessGeneration)))) {
+      return { ok: false, error: { code: 'HR_OLD_LINEAGE_EFFECT_DENIED' } }
+    }
     // QE2: a child prepared for the one fixed canary has no parent-side
     // Broker, switch or alternate-route capability. Reject before gateway
     // lookup or effect dispatch; forged child turn metadata grants nothing.
-    const fixedAdminProc = getProc()
+    const fixedAdminProc = boundProc
     const fixedAdminQualification = fixedAdminProc?.fixedAdminQualification
     if (fixedAdminQualification !== null && fixedAdminQualification !== undefined) {
       fixedAdminProc.fixedAdminEffectAttempted = true

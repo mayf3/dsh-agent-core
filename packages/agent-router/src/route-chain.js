@@ -311,11 +311,12 @@ export function createRouteChainExecutor({
 
   /** Bounded convergence wait: busy-mismatched or reaping slots retry inside
    * the single deadline budget (busy processes are never killed). */
-  async function acquire(agentId, route, deadlineMono) {
+  async function acquire(agentId, route, deadlineMono, lineageAdmissionToken) {
     for (;;) {
       const outcome = await ensureRunningForRoute(agentId, {
         routeIdentity: route.identity,
         processConfig: route.processConfig,
+        lineageAdmissionToken,
       })
       if (outcome.status === 'ready') return outcome.proc
       if (monotonicNowMs() >= deadlineMono) throw chainDeadlineError(agentId)
@@ -400,7 +401,7 @@ export function createRouteChainExecutor({
           // generation, zero dispatch.
           throw canaryOutcomeUnknownFixtureError(canary)
         }
-        proc = await acquire(agentId, route, deadlineMono)
+        proc = await acquire(agentId, route, deadlineMono, opts?.lineageAdmissionToken)
         if (mode === 'turn') {
           notifyDispatchOnce()
           if (observer !== null) observer.providerDispatchCount += 1

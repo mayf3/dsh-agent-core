@@ -104,7 +104,22 @@ export function createIngressDelivery({
         workspace: ingress.workspace,
         sessionId: ingress.session,
       }))
-      const restoredFence = reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
+      const freshHrCut = reconciliationStore.freshHrLineage?.agentId === binding.activeAgentId
+      const committedHrBinding = freshHrCut ? store.getFreshHrCutBinding?.() : null
+      const freshHrBindingReady = freshHrCut && authenticatedFeishu && isFeishuEntry
+        && committedHrBinding?.channelConversationId === channelConversation.id
+        && committedHrBinding.operationId === reconciliationStore.freshHrLineage.operationId
+        && committedHrBinding.oldHandle === reconciliationStore.freshHrLineage.oldHandle
+        && committedHrBinding.rootReceiptSha256
+          === reconciliationStore.freshHrLineage.rootReceiptSha256
+        && committedHrBinding.newRuntimeEpoch === reconciliationStore.runtimeEpoch
+        && committedHrBinding.newSessionId === binding.activeSessionId
+      // Only the authenticated Feishu entry can consume the post-cut Binding.
+      // Public route/deliver surfaces retain the historical Agent-wide fence.
+      const restoredFence = freshHrBindingReady
+        ? reconciliationStore.admissionFenceForAgent(binding.activeAgentId,
+          { sessionId: binding.activeSessionId })
+        : reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
       if (restoredFence !== null && restoredFence !== undefined) {
         throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
       }
@@ -124,6 +139,10 @@ export function createIngressDelivery({
       // per-attempt journal and STOP_CHAIN policy all live in the executor —
       // this entry owns only the channel/binding resolution around it.
       const opts = ingressTurnOpts(ingress, namespace, channelConversation.id, workspacePath, isFeishuEntry)
+      if (freshHrBindingReady) {
+        opts.lineageAdmissionToken = reconciliationStore.issueFreshHrAdmissionToken(
+          binding.activeAgentId, { sessionId: binding.activeSessionId })
+      }
       if (trusted !== null) {
         if (typeof registerAuthenticatedIngress !== 'function') {
           throw new TypeError('authenticated Feishu ingress registrar unavailable')
