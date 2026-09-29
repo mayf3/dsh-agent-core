@@ -119,8 +119,7 @@ class InstallJoinTest(unittest.TestCase):
             result = self.call(self.packet())
             self.assertFalse(result['ok'])
             self.assertIn('MUTATION_ALREADY_RUNNING', json.dumps(result))
-            self.assertFalse((self.root / 'shim-state' / 'ds-install-intents' /
-                              (OPERATION + '.json')).exists())
+            self.assertFalse(Path(self.mod._ds_intent_path(OPERATION)).exists())
             for name, path in self.targets.items():
                 self.assertEqual(path.read_bytes(), self.old[name])
         finally:
@@ -143,6 +142,28 @@ class InstallJoinTest(unittest.TestCase):
         self.assertEqual(status['ds_status_pid'], 123)
         self.assertEqual(status['artifacts'], self.packet()['artifacts'])
         self.assertFalse(self.call(self.packet())['ok'])
+
+    def test_status_rejects_terminal_mismatched_to_durable_intent(self):
+        self.assertTrue(self.call(self.packet())['ok'])
+        receipt = Path(self.mod._ds_terminal_path(OPERATION))
+        terminal = json.loads(receipt.read_text())
+        terminal['artifacts']['ds_client.py'] = '0' * 64
+        receipt.write_bytes(self.mod.canonical(terminal))
+        status = self.call({'action': 'INSTALL_DEPLOYMENT_SYSTEM_STATUS',
+                            'operation_id': OPERATION})
+        self.assertEqual(status['state'], 'UNKNOWN')
+        self.assertFalse(status['replayAllowed'])
+
+    def test_fixed_install_records_are_outside_admin_writable_shim_state(self):
+        self.assertTrue(self.call(self.packet())['ok'])
+        state = (self.root / 'shim-state').resolve()
+        intent = Path(self.mod._ds_intent_path(OPERATION)).resolve()
+        self.assertNotEqual(os.path.commonpath((state, intent)), str(state))
+        self.assertFalse((state / 'service-rollback' /
+                          ('ds-' + OPERATION)).exists())
+        status = self.call({'action': 'INSTALL_DEPLOYMENT_SYSTEM_STATUS',
+                            'operation_id': OPERATION})
+        self.assertEqual(status['state'], 'COMMITTED')
 
     def test_ambiguous_commit_receipt_never_rolls_back_committed_bytes(self):
         original = self.mod._ds_terminal
