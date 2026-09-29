@@ -95,12 +95,13 @@ export class FreshHrLineageMethods {
   }
 
   /** Historical activeFenceForAgent remains unchanged and queryable. This
-   * projection is only for new-lineage admission after a trusted cut. */
+   * projection is only for new-lineage admission after a trusted cut; admin
+   * abandonment declarations (HR_RESET_AND_RESUME_V1) are honored here too. */
   admissionFenceForAgent(agentId, { sessionId, freshMappingCreatedAt,
     freshMappingLineageOperationId } = {}) {
     const cut = this.freshHrLineage
-    if (cut === null || agentId !== cut.agentId) return this.activeFenceForAgent(agentId)
-    if (this.freshHrMount === null) return this.activeFenceForAgent(agentId)
+    if (cut === null || agentId !== cut.agentId) return this.admissionBlockerForAgent(agentId)
+    if (this.freshHrMount === null) return this.admissionBlockerForAgent(agentId)
     const mappedAt = typeof freshMappingCreatedAt === 'string'
       ? Date.parse(freshMappingCreatedAt) : freshMappingCreatedAt
     const eligible = sessionId === cut.newSessionId
@@ -109,7 +110,8 @@ export class FreshHrLineageMethods {
         && Number.isSafeInteger(mappedAt) && mappedAt > cut.cutCommittedAtMs)
     for (const record of this.records.values()) {
       if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown'
-          || record.fenceState === 'cleared') continue
+          || record.fenceState === 'cleared'
+          || (record.adminAbandonment ?? null) !== null) continue
       if (eligible && record.handle === cut.oldHandle) continue
       return record
     }
@@ -143,12 +145,13 @@ export class FreshHrLineageMethods {
 
   promptFenceForAgent(agentId, sessionId, token) {
     return this.hasFreshHrAdmissionToken(agentId, sessionId, token)
-      ? this.spawnFenceForAgent(agentId, token) : this.activeFenceForAgent(agentId)
+      ? this.spawnFenceForAgent(agentId, token) : this.admissionBlockerForAgent(agentId)
   }
 
   /** Registry may start a new generation only after the trusted cut; all
-   * new unknowns still fence the Agent and the durable generation allocator
-   * continues above the old issuance floor. */
+   * new unknowns still fence the Agent (admin abandonment declarations
+   * excepted) and the durable generation allocator continues above the old
+   * issuance floor. */
   spawnFenceForAgent(agentId, token) {
     const cut = this.freshHrLineage
     if (cut !== null && agentId === cut.agentId && this.freshHrMount === null
@@ -158,17 +161,19 @@ export class FreshHrLineageMethods {
         && token.runtimeEpoch === this.runtimeEpoch) {
       for (const record of this.records.values()) {
         if (record.agentId === agentId && record.initialOutcome === 'outcome_unknown'
-            && record.fenceState !== 'cleared' && record.handle !== cut.oldHandle) return record
+            && record.fenceState !== 'cleared' && record.handle !== cut.oldHandle
+            && (record.adminAbandonment ?? null) === null) return record
       }
       return null
     }
     if (cut === null || agentId !== cut.agentId
         || !this.hasFreshHrAdmissionToken(agentId, token?.sessionId, token)) {
-      return this.activeFenceForAgent(agentId)
+      return this.admissionBlockerForAgent(agentId)
     }
     for (const record of this.records.values()) {
       if (record.agentId === agentId && record.initialOutcome === 'outcome_unknown'
-          && record.fenceState !== 'cleared' && record.handle !== cut.oldHandle) return record
+          && record.fenceState !== 'cleared' && record.handle !== cut.oldHandle
+          && (record.adminAbandonment ?? null) === null) return record
     }
     return null
   }
