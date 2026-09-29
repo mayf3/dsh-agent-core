@@ -65,6 +65,7 @@ import { mountWorkflowProgressRuntime } from './workflow-progress-runtime.js'
 import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
 import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
+import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
@@ -531,6 +532,12 @@ export async function composeProductionRuntime(options = {}) {
     traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
       const attempts = await workflowExecution.ledger.snapshotFresh()
       return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
+    },
+    // Fleet-level attention summary: the same cross-process-fresh snapshot,
+    // selected down to the attention-worthy executionStates. Read-only.
+    attention: async () => {
+      const attempts = await workflowExecution.ledger.snapshotFresh()
+      return projectExecutionAttention(attempts)
     },
     kick: (payload) => {
       if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }

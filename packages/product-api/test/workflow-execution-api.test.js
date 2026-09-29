@@ -3,8 +3,9 @@
  * CONTROL_V1 CTR-WEC1-003/006). Same harness discipline as scheduler-api:
  * a REAL loopback server over a fake cordis ctx, an INJECTABLE stub token
  * verifier, and a stub workflowExecutionAccess service. Pins the fail-closed
- * gate, the trace read contract, and the kick contract (no payload echo,
- * kicked/coalesced both 200).
+ * gate, the trace read contract, the kick contract (no payload echo,
+ * kicked/coalesced both 200), and the execution-attention summary (zero
+ * parameters, read-only selection over the same projection, same gate).
  */
 
 import { test } from 'node:test'
@@ -52,9 +53,32 @@ function stubRouter() {
 const stubDefinition = { listAgents: () => [] }
 
 function stubAccess() {
-  const calls = { traces: [], kicks: [], ownerWakes: [] }
+  const calls = { traces: [], kicks: [], ownerWakes: [], attention: [] }
   return {
     calls,
+    attention: async () => {
+      calls.attention.push(Date.now())
+      return {
+        items: [{
+          workflowInstanceId: INSTANCE,
+          nodeVisitId: VISIT,
+          executionState: 'OUTCOME_UNKNOWN',
+          reason: 'run outcome unknown — reconciliation required; side effects possible (outcome_unknown fence)',
+          attemptId: 'wfeat-abc',
+          generation: 1,
+          attemptCount: 1,
+          startedAtMs: 1,
+          updatedAtMs: 2,
+        }],
+        counts: {
+          OUTCOME_UNKNOWN: 1,
+          OWNER_PENDING: 0,
+          RUN_ENDED_NO_TRANSITION: 0,
+          STALE_NO_PROGRESS: 0,
+          BLOCKED: 0,
+        },
+      }
+    },
     traces: async ({ workflowInstanceId, nodeVisitId }) => {
       calls.traces.push({ workflowInstanceId, nodeVisitId })
       if (workflowInstanceId !== INSTANCE) return null
@@ -255,4 +279,54 @@ test('CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest
   const { base } = await mount(t, { access: null })
   const res = await call(base, `/workflow-execution/traces?workflowInstanceId=${INSTANCE}`, { token: OK_TOKEN })
   assert.equal(res.status, 503)
+})
+
+test('attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls)', async (t) => {
+  const { base, access } = await mount(t)
+
+  const res = await call(base, '/workflow-execution/attention', { token: OK_TOKEN })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.items.length, 1)
+  assert.equal(res.body.items[0].workflowInstanceId, INSTANCE)
+  assert.equal(res.body.items[0].executionState, 'OUTCOME_UNKNOWN')
+  assert.match(res.body.items[0].reason, /outcome unknown/)
+  assert.equal(res.body.counts.OUTCOME_UNKNOWN, 1)
+  assert.equal(typeof res.body.generatedAtMs, 'number')
+  assert.equal(access.calls.attention.length, 1)
+
+  // Read-only boundary at the dispatch level: the attention read triggered
+  // no mutation-shaped seams (kicks / owner wakes / instance-scoped reads).
+  assert.deepEqual(access.calls.kicks, [])
+  assert.deepEqual(access.calls.ownerWakes, [])
+  assert.deepEqual(access.calls.traces, [])
+
+  // POST to the read surface is not a route (method boundary).
+  const post = await call(base, '/workflow-execution/attention', { token: OK_TOKEN, method: 'POST', body: {} })
+  assert.equal(post.status, 404)
+})
+
+test('attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query', async (t) => {
+  const { base } = await mount(t)
+
+  const noToken = await call(base, '/workflow-execution/attention')
+  assert.equal(noToken.status, 401)
+  assert.equal(noToken.body.error.code, 'unauthenticated')
+
+  const noScope = await call(base, '/workflow-execution/attention', { token: NOSCOPE_TOKEN })
+  assert.equal(noScope.status, 403)
+  assert.equal(noScope.body.error.code, 'forbidden')
+
+  const { base: bare } = await mount(t, { verifier: null })
+  const unconfigured = await call(bare, '/workflow-execution/attention', { token: OK_TOKEN })
+  assert.equal(unconfigured.status, 401)
+
+  const { base: strict } = await mount(t)
+  const withParams = await call(strict, '/workflow-execution/attention?workflowInstanceId=9d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e99', { token: OK_TOKEN })
+  assert.equal(withParams.status, 400)
+  assert.equal(withParams.body.error.code, 'invalid_query')
+
+  const unwired = await mount(t, { access: { traces: async () => null } })
+  const noSeam = await call(unwired.base, '/workflow-execution/attention', { token: OK_TOKEN })
+  assert.equal(noSeam.status, 503)
+  assert.equal(noSeam.body.error.code, 'not_ready')
 })

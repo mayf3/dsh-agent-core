@@ -325,7 +325,8 @@ export function apply(ctx, config = {}) {
       }
       if (url.pathname === '/workflow-execution/traces'
         || url.pathname === '/workflow-execution/kicks'
-        || url.pathname === '/workflow-execution/owner-assistance-wakes') {
+        || url.pathname === '/workflow-execution/owner-assistance-wakes'
+        || url.pathname === '/workflow-execution/attention') {
         // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the same
         // request-time resolution discipline as /scheduler/* — the access
         // service and the token verifier are provided later in the compose

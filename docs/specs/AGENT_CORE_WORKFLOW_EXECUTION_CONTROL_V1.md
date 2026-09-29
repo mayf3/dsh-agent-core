@@ -213,6 +213,9 @@ with server-side read-before-write dedupe, never a business fact).
 ## 4. API changes
 
 - ADD `GET /workflow-execution/traces` (loopback product-api; CTR-WEC1-003).
+- ADD `GET /workflow-execution/attention` (loopback product-api; same gate as
+  CTR-WEC1-003; zero-parameter read-only selection over CTR-WEC1-001/002
+  projection).
 - ADD `POST /workflow-execution/kicks` (loopback product-api; CTR-WEC1-006).
 - ADD internal `POST /workflow-execution/owner-assistance-wakes` (same
   `workflow.execute` bearer gate): closed payload

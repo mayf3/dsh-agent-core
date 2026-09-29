@@ -4,6 +4,9 @@
  *
  *   GET  /workflow-execution/traces   execution trace read model
  *                                     ?workflowInstanceId=<uuid>[&nodeVisitId=<uuid>]
+ *   GET  /workflow-execution/attention  fleet-level execution-attention summary
+ *                                     (zero parameters; read-only selection over
+ *                                     the same ledger projection; same gate)
  *   POST /workflow-execution/kicks    push-first poll trigger
  *                                     {workflowInstanceId, nodeVisitId, dispatchIntentId}
  *   POST /workflow-execution/owner-assistance-wakes
@@ -148,6 +151,21 @@ export async function handleWorkflowExecutionRequest({ req, url, access, verifie
       throw new HttpError(404, 'not_found', 'no execution attempts recorded for this workflow instance on this runtime')
     }
     return { status: 200, body: { ...trace, generatedAtMs: Date.now() } }
+  }
+
+  // Execution-attention summary: a zero-parameter, fleet-level, read-only
+  // selection over the SAME CTR-WEC1-001/002 ledger projection (attention =
+  // the frozen attention executionStates; conditions are ledger facts, never
+  // inferred). Same bearer gate and envelope discipline as CTR-WEC1-003.
+  if (req.method === 'GET' && path === '/workflow-execution/attention') {
+    const store = requireAccess(access)
+    if (typeof store.attention !== 'function') throw new HttpError(503, 'not_ready', 'attention seam is not wired')
+    const firstParam = url.searchParams.keys().next()
+    if (!firstParam.done) {
+      throw new HttpError(400, 'invalid_query', `attention is a zero-parameter summary; unexpected query parameter: ${firstParam.value}`)
+    }
+    const attention = await store.attention()
+    return { status: 200, body: { ...attention, generatedAtMs: Date.now() } }
   }
 
   if (req.method === 'POST' && path === '/workflow-execution/kicks') {
