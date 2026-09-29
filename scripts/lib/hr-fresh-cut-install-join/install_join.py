@@ -9,6 +9,41 @@ _DS_INSTALL_ORDER = ('deployment-registry.json', 'deployment_system.py',
                      'ds_client.py', 'plist')
 _DS_MODES = {'deployment_system.py': 0o555, 'ds_client.py': 0o555,
              'deployment-registry.json': 0o600, 'plist': 0o644}
+_DS_PRIVATE_ROOT = (os.path.join(os.path.dirname(STATE_ROOT),
+                                 'fixed-ds-install-records') if TEST_MODE else
+                    '/private/var/db/agent-deploy-shim-fixed-ds-install')
+
+
+def _ds_record_dir(name, create=False):
+    """Keep new proof and rollback records outside the admin-writable inbox."""
+    require(name in ('intents', 'terminals', 'rollback'),
+            'DS_RECORD_DIR_UNKNOWN')
+    parent = os.path.dirname(_DS_PRIVATE_ROOT)
+    parent_meta = os.stat(parent, follow_symlinks=False)
+    require(stat.S_ISDIR(parent_meta.st_mode) and
+            (TEST_MODE or (parent_meta.st_uid == 0 and
+             stat.S_IMODE(parent_meta.st_mode) & 0o022 == 0)),
+            'DS_RECORD_PARENT_CUSTODY')
+    if create:
+        try:
+            os.mkdir(_DS_PRIVATE_ROOT, 0o700)
+        except FileExistsError:
+            pass
+    root_meta = os.stat(_DS_PRIVATE_ROOT, follow_symlinks=False)
+    require(stat.S_ISDIR(root_meta.st_mode) and
+            stat.S_IMODE(root_meta.st_mode) == 0o700 and
+            (TEST_MODE or root_meta.st_uid == 0), 'DS_RECORD_ROOT_CUSTODY')
+    target = os.path.join(_DS_PRIVATE_ROOT, name)
+    if create:
+        try:
+            os.mkdir(target, 0o700)
+        except FileExistsError:
+            pass
+    meta = os.stat(target, follow_symlinks=False)
+    require(stat.S_ISDIR(meta.st_mode) and
+            stat.S_IMODE(meta.st_mode) == 0o700 and
+            (TEST_MODE or meta.st_uid == 0), 'DS_RECORD_DIR_CUSTODY')
+    return target
 
 
 def _ds_target(name):
@@ -103,7 +138,11 @@ def _ds_install_file(source, target, digest, limit, exact_size, mode, uid, gid):
 
 
 def _ds_intent_path(operation_id):
-    return os.path.join(STATE_ROOT, 'ds-install-intents', operation_id + '.json')
+    return os.path.join(_DS_PRIVATE_ROOT, 'intents', operation_id + '.json')
+
+
+def _ds_terminal_path(operation_id):
+    return os.path.join(_DS_PRIVATE_ROOT, 'terminals', operation_id + '.json')
 
 
 def _ds_existing_mutation_lock():
@@ -142,12 +181,7 @@ def _ds_existing_mutation_lock():
 
 
 def _ds_write_intent(operation_id, value):
-    parent = os.path.join(STATE_ROOT, 'ds-install-intents')
-    os.makedirs(parent, mode=0o700, exist_ok=True)
-    if not TEST_MODE:
-        meta = os.stat(parent, follow_symlinks=False)
-        require(stat.S_ISDIR(meta.st_mode) and meta.st_uid == 0 and
-                stat.S_IMODE(meta.st_mode) == 0o700, 'DS_INTENT_DIR_CUSTODY')
+    parent = _ds_record_dir('intents', create=True)
     path = _ds_intent_path(operation_id)
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW |
                  os.O_CLOEXEC, 0o600)
@@ -167,7 +201,9 @@ def _ds_write_intent(operation_id, value):
 def _ds_terminal(operation_id, value):
     # Unlike legacy write_receipt, terminal replacement never truncates a live
     # receipt in place. An interrupted replace leaves intent and hence UNKNOWN.
-    atomic_write(receipt_path(operation_id), canonical(value), 0o644)
+    parent = _ds_record_dir('terminals', create=True)
+    atomic_write(_ds_terminal_path(operation_id), canonical(value), 0o600)
+    _ds_fsync_dir(parent)
 
 
 def _ds_read_record(path, mode):
@@ -197,7 +233,8 @@ def install_deployment_system_status(request):
     require(type(operation_id) is str and OP_ID.fullmatch(operation_id),
             'BAD_OPERATION_ID')
     try:
-        terminal = _ds_read_record(receipt_path(operation_id), 0o644)
+        _ds_record_dir('intents')
+        terminal = _ds_read_record(_ds_terminal_path(operation_id), 0o600)
         intent = _ds_read_record(_ds_intent_path(operation_id), 0o600)
         if intent is None or intent[0].get('action') != 'INSTALL_DEPLOYMENT_SYSTEM' \
                 or intent[0].get('operation_id') != operation_id:
@@ -210,6 +247,19 @@ def install_deployment_system_status(request):
         record, receipt_sha = terminal
         state = record.get('state')
         require(state in ('COMMITTED', 'FAILED', 'UNKNOWN'), 'DS_RECEIPT_STATE')
+        require(type(record.get('artifacts')) is dict and
+                record['artifacts'] == intent[0].get('artifacts') and
+                type(record.get('expected_preimage_sha256')) is dict and
+                record['expected_preimage_sha256'] ==
+                intent[0].get('expected_preimage_sha256'),
+                'DS_RECEIPT_INTENT_MISMATCH')
+        require(record.get('rollback') in ('NOT_NEEDED', 'RESTORED', 'UNKNOWN',
+                                           'NOT_ATTEMPTED'),
+                'DS_RECEIPT_ROLLBACK')
+        if state == 'COMMITTED':
+            require(record.get('rollback') == 'NOT_NEEDED' and
+                    type(record.get('ds_status_pid')) is int and
+                    record['ds_status_pid'] > 0, 'DS_RECEIPT_COMMIT_SCHEMA')
         return {'ok': True, 'operation_id': operation_id, 'state': state,
                 'receipt_sha256': receipt_sha, 'rollback': record.get('rollback'),
                 'ds_status_pid': record.get('ds_status_pid'),
@@ -261,6 +311,7 @@ def install_deployment_system(request):
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         ds_lock_fd = _ds_existing_mutation_lock()
         require(not os.path.lexists(_ds_intent_path(operation_id)) and
+                not os.path.lexists(_ds_terminal_path(operation_id)) and
                 not os.path.lexists(receipt_path(operation_id)),
                 'OPERATION_ALREADY_CONSUMED')
         _ds_write_intent(operation_id, {
@@ -291,8 +342,7 @@ def install_deployment_system(request):
             require(DS_LABEL in plist_text and
                     os.path.join(DS_INSTALL_DIR, 'deployment_system.py') in plist_text,
                     'DS_PLIST_CONTENT_INVALID')
-            rollback_parent = os.path.join(STATE_ROOT, 'service-rollback')
-            os.makedirs(rollback_parent, exist_ok=True)
+            rollback_parent = _ds_record_dir('rollback', create=True)
             backup = os.path.join(rollback_parent, 'ds-' + operation_id)
             os.mkdir(backup, 0o700)
             for name in DS_ARTIFACTS:
