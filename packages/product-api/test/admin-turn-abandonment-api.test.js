@@ -40,9 +40,11 @@ import { TurnReconciliationStore } from '../../agent-router/src/reconciliation-s
 
 const HR = 'agt_hr-agent'
 const OTHER = 'agt_other-agent'
-const ADMIN_TOKEN = 'bearer-hr-admin'
+const CTO_TOKEN = 'bearer-cto-agent'
+const OTHER_WORKFLOW_ADMIN_TOKEN = 'bearer-other-workflow-admin'
+const CTO_UUID_MISMATCH_TOKEN = 'bearer-cto-uuid-wrong-agent'
+const CTO_AGENT_MISMATCH_TOKEN = 'bearer-cto-agent-wrong-uuid'
 const USER_TOKEN = 'bearer-plain-user'
-const NO_SCOPE_TOKEN = 'bearer-no-admin-scope'
 
 const FIXTURE_WORKER = fileURLToPath(new URL('../../../scripts/availability-recovery/worker.mjs', import.meta.url))
 
@@ -64,11 +66,21 @@ function fakeCtx(services) {
   }
 }
 
+const CTO_PRINCIPAL_ID = '3e2439d2-fb54-44f5-afee-77aa17c40d22'
+
 function principals() {
   return {
-    [ADMIN_TOKEN]: { principalId: 'p-hr-admin', agentId: null, scopes: new Set(['workflow.admin']), principalType: 'service' },
+    // The Owner-designated sole privileged authority: the canonical CTO
+    // principal, bound EXACTLY as authsvc asserts it (principal UUID + agentId).
+    [CTO_TOKEN]: { principalId: CTO_PRINCIPAL_ID, agentId: 'cto-agent', scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    // workflow.admin alone is NOT the authority (Owner decision): a different
+    // principal holding the same scope stays denied.
+    [OTHER_WORKFLOW_ADMIN_TOKEN]: { principalId: 'p-other-admin', agentId: 'agt_other-admin', scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    // Exact-binding fail-closed probes: canonical UUID with a different
+    // agentId, and the cto-agent id with a different principal UUID.
+    [CTO_UUID_MISMATCH_TOKEN]: { principalId: CTO_PRINCIPAL_ID, agentId: 'agt_impersonator', scopes: new Set(['workflow.admin']), principalType: 'agent' },
+    [CTO_AGENT_MISMATCH_TOKEN]: { principalId: '8e2439d2-0000-44f5-afee-77aa17c40d99', agentId: 'cto-agent', scopes: new Set(['workflow.admin']), principalType: 'agent' },
     [USER_TOKEN]: { principalId: 'p-plain', agentId: 'agt_plain', scopes: new Set(['scheduler.read']), principalType: 'agent' },
-    [NO_SCOPE_TOKEN]: { principalId: 'p-none', agentId: 'agt_none', scopes: new Set(['forum.read']), principalType: 'agent' },
   }
 }
 
@@ -123,6 +135,7 @@ function hrRig(root, epoch) {
     abandonPendingTurns: delivery.abandonPendingTurns,
     abandonmentDeclarationsSnapshot: (agentId) => store.adminAbandonmentsForAgent(agentId),
     registrySnapshot: () => registry.registrySnapshot(),
+    lifecycleSlotSnapshot: (agentId) => registry.lifecycleSlotSnapshot(agentId),
     store,
     delivery,
     registry,
@@ -206,13 +219,11 @@ test('admin gate: no token / wrong scope / foreign target all fail closed with Z
   assert.equal(res.status, 403)
   assert.equal(res.body.error.code, 'forbidden', 'ordinary scheduler.read user is not an administrator')
 
-  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: post, token: NO_SCOPE_TOKEN })
-  assert.equal(res.status, 403)
 
-  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: { agentId: OTHER, declarationId: 'reset-gate-1' }, token: ADMIN_TOKEN })
+  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: { agentId: OTHER, declarationId: 'reset-gate-1' }, token: CTO_TOKEN })
   assert.equal(res.status, 403, 'target outside the pinned agt_hr-agent scope is refused')
 
-  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: { agentId: HR, declarationId: 'x', extra: 1 }, token: ADMIN_TOKEN })
+  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: { agentId: HR, declarationId: 'x', extra: 1 }, token: CTO_TOKEN })
   assert.equal(res.status, 400, 'closed body: unknown fields refused')
 
   assert.equal(mutationProbe(rig), before, 'denied calls mutate nothing')
@@ -229,7 +240,7 @@ test('legitimate admin reset through the real HTTP entry unblocks the same HR vi
   assert.notEqual(fenced?.reply, 'fixture-ok', 'pre-reset ordinary message stays fenced')
 
   const reset = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: CTO_TOKEN,
   })
   assert.equal(reset.status, 200)
   assert.deepEqual(reset.body.abandonedHandles, [oldHandle])
@@ -239,7 +250,7 @@ test('legitimate admin reset through the real HTTP entry unblocks the same HR vi
   assert.equal(oldRecord.adminAbandonment?.declarationId, 'reset-entry-1', 'minimal audit / no-replay marker kept')
 
   // Declarations are readable (read-only projection).
-  const read = await call(base, `/agent-process/turn-abandonment?agentId=${encodeURIComponent(HR)}`, { token: ADMIN_TOKEN })
+  const read = await call(base, `/agent-process/turn-abandonment?agentId=${encodeURIComponent(HR)}`, { token: CTO_TOKEN })
   assert.equal(read.status, 200)
   assert.deepEqual(read.body.declarations.map(d => d.declarationId), ['reset-entry-1'])
   assert.deepEqual(read.body.declarations[0].handles, [oldHandle])
@@ -260,14 +271,14 @@ test('retrying a completed declaration over HTTP never adopts a later unknown tu
   const { base } = await mount(t, { routerFacade: rig })
 
   const first = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: CTO_TOKEN,
   })
   assert.equal(first.status, 200)
 
   // A LATER turn becomes unknown after the declaration completed.
   const laterHandle = stuckTurn(rig.store, HR, { generation: 1 })
   const retry = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-1' }, token: CTO_TOKEN,
   })
   assert.equal(retry.status, 200)
   assert.deepEqual(retry.body.abandonedHandles, [], 'retry abandons nothing new')
@@ -276,7 +287,7 @@ test('retrying a completed declaration over HTTP never adopts a later unknown tu
 
   // Only an explicit NEW declaration resets the later task.
   const second = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-2' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-entry-2' }, token: CTO_TOKEN,
   })
   assert.equal(second.status, 200)
   assert.deepEqual(second.body.abandonedHandles, [laterHandle])
@@ -291,7 +302,7 @@ test('declarations survive a controller restart and stay readable at the entry',
   const first = hrRig(root, 'epoch-restarted-a')
   const { base } = await mount(t, { routerFacade: first })
   const reset = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-restart-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-restart-1' }, token: CTO_TOKEN,
   })
   assert.equal(reset.status, 200)
   await first.close()
@@ -299,7 +310,7 @@ test('declarations survive a controller restart and stay readable at the entry',
   // Controller restart: fresh epoch, same durable file, fresh registry.
   const second = hrRig(root, 'epoch-restarted-b')
   t.after(async () => { await second.close(); rmSync(root, { recursive: true, force: true }) })
-  const read = await call(base, `/agent-process/turn-abandonment?agentId=${encodeURIComponent(HR)}`, { token: ADMIN_TOKEN })
+  const read = await call(base, `/agent-process/turn-abandonment?agentId=${encodeURIComponent(HR)}`, { token: CTO_TOKEN })
   assert.equal(read.status, 200)
   assert.deepEqual(read.body.declarations.map(d => d.declarationId), ['reset-restart-1'])
   assert.deepEqual(read.body.declarations[0].handles, [oldHandle], 'declaration scope readable after restart')
@@ -319,7 +330,7 @@ test('an identifiable live HR execution refuses the reset with a structured limi
   const stuck = stuckTurn(rig.store, HR, { generation: 2 })
   const before = mutationProbe(rig)
   const refusal = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'reset-live-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-live-1' }, token: CTO_TOKEN,
   })
   assert.equal(refusal.status, 409)
   assert.equal(refusal.body.error.code, 'live_execution_present')
@@ -334,19 +345,19 @@ test('the 32-distinct-declaration budget is a real boundary; retries of existing
   const { base } = await mount(t, { routerFacade: rig })
   for (let i = 1; i <= 32; i += 1) {
     const res = await call(base, '/agent-process/turn-abandonment', {
-      method: 'POST', body: { agentId: HR, declarationId: `budget-${i}` }, token: ADMIN_TOKEN,
+      method: 'POST', body: { agentId: HR, declarationId: `budget-${i}` }, token: CTO_TOKEN,
     })
     assert.equal(res.status, 200, `declaration ${i} of 32 accepted`)
   }
   const exhausted = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'budget-33' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'budget-33' }, token: CTO_TOKEN,
   })
   assert.equal(exhausted.status, 409)
   assert.equal(exhausted.body.error.code, 'abandonment_capacity_exhausted')
   assert.match(exhausted.body.error.message, /32/, 'exhaustion message states the exact bound')
   // No recycling: an existing id still replays idempotently.
   const retry = await call(base, '/agent-process/turn-abandonment', {
-    method: 'POST', body: { agentId: HR, declarationId: 'budget-1' }, token: ADMIN_TOKEN,
+    method: 'POST', body: { agentId: HR, declarationId: 'budget-1' }, token: CTO_TOKEN,
   })
   assert.equal(retry.status, 200)
   assert.deepEqual(retry.body.abandonedHandles, [])
@@ -368,4 +379,85 @@ test('GET requires the same admin authority; the loopback /v1/message path canno
   assert.notEqual(normal?.reply, 'fixture-ok', 'ordinary message stays a normal fenced turn, not an admin reset')
   assert.equal(rig.store.adminAbandonmentDeclarations.length, 0, 'ordinary ingress performs no abandonment')
   rmSync(root, { recursive: true, force: true })
+})
+
+test('Owner-designated sole authority: workflow.admin alone and CTO identity mismatches are all denied with ZERO mutation', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-cto-'))
+  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { base } = await mount(t, { routerFacade: rig })
+  const post = { agentId: HR, declarationId: 'reset-cto-1' }
+  const before = mutationProbe(rig)
+
+  // A different principal holding workflow.admin is NOT the authority.
+  let res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: post, token: OTHER_WORKFLOW_ADMIN_TOKEN })
+  assert.equal(res.status, 403)
+  // Canonical CTO principal UUID bound to the WRONG agentId: fail closed.
+  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: post, token: CTO_UUID_MISMATCH_TOKEN })
+  assert.equal(res.status, 403)
+  // The cto-agent id carrying a DIFFERENT principal UUID: fail closed.
+  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: post, token: CTO_AGENT_MISMATCH_TOKEN })
+  assert.equal(res.status, 403)
+  // GET is gated by the same exact binding.
+  res = await call(base, `/agent-process/turn-abandonment?agentId=${encodeURIComponent(HR)}`, { token: OTHER_WORKFLOW_ADMIN_TOKEN })
+  assert.equal(res.status, 403)
+
+  assert.equal(mutationProbe(rig), before, 'every denial mutates nothing')
+  assert.ok(rig.store.activeFenceForAgent(HR)?.handle === oldHandle, 'fence untouched')
+
+  // Only the exact canonical binding is authorized.
+  res = await call(base, '/agent-process/turn-abandonment', { method: 'POST', body: post, token: CTO_TOKEN })
+  assert.equal(res.status, 200, JSON.stringify(res.body))
+  assert.deepEqual(res.body.abandonedHandles, [oldHandle])
+})
+
+test('non-drained lifecycle slots refuse the reset: STARTUP and REAP are explicit local limitations, zero mutation', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-slots-'))
+  const rig = hrRig(root, 'epoch-slots')
+  const { base } = await mount(t, { routerFacade: rig })
+  const stuck = stuckTurn(rig.store, HR, { generation: 1 })
+
+  // STARTUP: an in-flight generation the registry has not drained.
+  rig.lifecycleSlotSnapshot = () => ({ state: 'STARTUP', generation: 7 })
+  const beforeStartup = mutationProbe(rig)
+  let res = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-slot-1' }, token: CTO_TOKEN,
+  })
+  assert.equal(res.status, 409)
+  assert.equal(res.body.error.code, 'startup_in_progress')
+  assert.equal(mutationProbe(rig), beforeStartup, 'STARTUP refusal mutates nothing')
+
+  // REAP: a generation still reaping (real exit not yet settled).
+  rig.lifecycleSlotSnapshot = () => ({ state: 'REAP', generation: 7 })
+  const beforeReap = mutationProbe(rig)
+  res = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-slot-2' }, token: CTO_TOKEN,
+  })
+  assert.equal(res.status, 409)
+  assert.equal(res.body.error.code, 'reaping_in_progress')
+  assert.equal(mutationProbe(rig), beforeReap, 'REAP refusal mutates nothing')
+  assert.equal(rig.store.records.get(stuck).adminAbandonment ?? null, null, 'no marker over a non-drained slot')
+
+  // EMPTY slot: the operation may proceed (nothing identifiable is running).
+  rig.lifecycleSlotSnapshot = () => ({ state: 'EMPTY' })
+  const ok = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-slot-3' }, token: CTO_TOKEN,
+  })
+  assert.equal(ok.status, 200, JSON.stringify(ok.body))
+  assert.deepEqual(ok.body.abandonedHandles, [stuck])
+})
+
+test('missing lifecycle verification capability fails closed instead of defaulting to resettable', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-nocap-'))
+  const rig = hrRig(root, 'epoch-nocap')
+  stuckTurn(rig.store, HR, { generation: 1 })
+  const reduced = { ...rig }
+  delete reduced.lifecycleSlotSnapshot
+  const { base } = await mount(t, { routerFacade: reduced })
+  const before = mutationProbe(rig)
+  const res = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-nocap-1' }, token: CTO_TOKEN,
+  })
+  assert.equal(res.status, 503)
+  assert.equal(res.body.error.code, 'liveness_verification_unavailable')
+  assert.equal(mutationProbe(rig), before, 'unverifiable liveness never defaults to a reset')
 })
