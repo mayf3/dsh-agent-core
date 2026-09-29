@@ -190,11 +190,12 @@ test('WEC companion: svc class error families preserve verbatim (not_domain_owne
 // The RETURN-limit ingress of the WEC owner-assistance feature (svc-workflow
 // error.rs from_transition @ 5d479d8: ExecuteWorkflowTransitionError::
 // ReturnPolicyExhausted) mints a deterministic 409 service code. While
-// undeclared, the mapping layer failed it closed to `http_4xx` (BROKER_ERROR_
-// PRESERVATION V1 R1) — observed by OWNER_ASSISTANCE_LOCAL_E2E_CANARY_V1
-// (docs/evidence/wec-owner-assistance-deploy-handoff-v1-20260929). These tests
-// pin the single declarer row, the verbatim end-to-end seam, and the
-// fail-closed negative.
+// undeclared, the mapping layer fails it closed to `http_4xx` (BROKER_ERROR_
+// PRESERVATION V1 R1); the WEC canary definition pins the expected refusal at
+// docs/evidence/wec-owner-assistance-deploy-handoff-v1-20260929/HANDOFF.md
+// §2 Entry B2, and the base-tree degradation is reproducible by running these
+// tests against base (RED). These tests pin the single declarer row, the
+// verbatim end-to-end seam, and the fail-closed negative.
 
 test('return-policy declarer: workflow_execute declares the 409 return_policy_exhausted service code', () => {
   const manifest = executeManifest()
@@ -266,8 +267,8 @@ test('return-policy declarer: an UNdeclared transition service code still fails 
   })
   assert.equal(result.ok, false)
   // Declaring one real code does NOT wildcard the table: undeclared service
-  // codes keep the canonical fail-closed degradation (R1/DEC-006), with the
-  // HTTP status preserved.
+  // codes keep the canonical fail-closed degradation (BROKER_ERROR_PRESERVATION
+  // V1 R1; mirrored as transition Spec DEC-006), with the HTTP status preserved.
   assert.equal(result.error.code, 'http_4xx')
   assert.equal(result.error.status, 409)
 
