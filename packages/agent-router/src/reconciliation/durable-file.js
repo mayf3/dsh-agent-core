@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
 import { RECONCILIATION_CAPS } from './capacity.js'
 import { validatedIngressCorrelation } from './ingress-correlation.js'
+import { MAX_ADMIN_ABANDONMENT_DECLARATIONS } from './admin-abandonment.js'
 
 export const DURABLE_RECOVERY_VERSION = 3
 
@@ -51,6 +52,36 @@ const MANDATORY_RECORD_FIELDS = [
 
 function validNullableTimestamp(value) {
   return value === null || (Number.isSafeInteger(value) && value >= 0)
+}
+
+/**
+ * Optional durable admin-abandonment scope registry (HR_RESET_AND_RESUME_V1):
+ * declarationId -> exact original operation scope, persisted BEFORE any
+ * record stamp so retries can never adopt a later task. Absent on
+ * pre-registry files (the store then reconstructs scopes from the per-record
+ * markers); present values are the closed entry shape, fail-closed.
+ */
+function assertDurableAbandonmentDeclarations(entries) {
+  if (entries === undefined) return null
+  if (!Array.isArray(entries) || entries.length > MAX_ADMIN_ABANDONMENT_DECLARATIONS) {
+    throw new TypeError('durable abandonment declaration registry is invalid')
+  }
+  const ids = new Set()
+  for (const entry of entries) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)
+        || Object.keys(entry).sort().join(',') !== ['declarationId', 'agentId', 'handles', 'declaredAt'].sort().join(',')
+        || typeof entry.declarationId !== 'string' || entry.declarationId === '' || entry.declarationId.length > 128
+        || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
+        || !Number.isSafeInteger(entry.declaredAt) || entry.declaredAt < 0
+        || !Array.isArray(entry.handles) || entry.handles.length > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
+        || entry.handles.some(handle => typeof handle !== 'string' || handle === '' || handle.length > 512)
+        || new Set(entry.handles).size !== entry.handles.length
+        || ids.has(entry.declarationId)) {
+      throw new TypeError('durable abandonment declaration entry is invalid')
+    }
+    ids.add(entry.declarationId)
+  }
+  return entries.map(entry => ({ ...entry, handles: [...entry.handles] }))
 }
 
 function assertDurableRecord(raw) {
@@ -249,6 +280,7 @@ export function serializeDurableRecoveryStore(store) {
     records: [...store.records.values()].map(durableRecord),
     issuance: encodeIssuance(store.issuance),
     correlationIndex: [...store.correlationIndex],
+    adminAbandonmentDeclarations: [...(store.adminAbandonmentDeclarations ?? [])],
   }
 }
 
@@ -317,5 +349,6 @@ export function readDurableRecoveryStore(file) {
     records,
     issuance: decodeIssuance(parsed.issuance, parsed.discriminatorSeq),
     correlationIndex,
+    adminAbandonmentDeclarations: assertDurableAbandonmentDeclarations(parsed.adminAbandonmentDeclarations),
   }
 }
