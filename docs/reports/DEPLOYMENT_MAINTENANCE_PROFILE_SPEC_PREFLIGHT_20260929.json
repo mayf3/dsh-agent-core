@@ -21,5 +21,17 @@
     "this preflight"
   ],
   "doneWhen": "exact proposed head with acceptance matrix, governance evidence and same p2 changed-surface review; no product implementation",
-  "nextAfterAcceptance": "bounded source/tests after accepted lifecycle in implementation base, production profile adoption separate"
+  "nextAfterAcceptance": "bounded source/tests after accepted lifecycle in implementation base, production profile adoption separate",
+  "revision": {
+    "event": "92bf73da-fd42-5d15-afab-2ba79643e904",
+    "parentHead": "38537bcd1ab84d585a03cfe65b780426bc8f89b7",
+    "AUTHORITY_ACTION": "AMEND",
+    "route": "AUTHORING proposed V2 only; whole-authority SUPERSEDE V1 remains pending",
+    "scope": [
+      "complete-artifact capacity and bound inventory",
+      "new fixed exact-ID receipt capability before first mutation"
+    ],
+    "IMPLEMENTATION_ALLOWED": false,
+    "OPERATION_ALLOWED": false
+  }
 }

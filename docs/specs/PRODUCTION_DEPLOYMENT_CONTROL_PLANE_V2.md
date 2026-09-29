@@ -574,8 +574,28 @@ no hardlinks, special files, external symlinks, caller-write ACLs or writable co
 closure. Ancestor/name/descriptor custody and same-opened-byte hashes are verified
 before and after publication. Reviewed internal relative links may resolve only
 inside the sealed tree; no link can name active app, receipts, secrets or staging.
-Limit each candidate to 512 MiB, 20,000 entries, depth32; overflow fails before
-publication. The inactive tree is inaccessible to Runtime505 and cannot be an
+Bound the **complete whole-app artifact**, including its required `node_modules`
+closure, to 65,536 entries, 512 MiB of logical payload bytes, and depth32. Count the
+root as one entry and every directory, regular file and link exactly once without
+following links; depth is root=0; payload bytes are the sum of regular-file sizes
+and link-target byte lengths. Never prune dependencies to satisfy a limit. Each
+immutable INSTALL unit must bind the exact complete inventory digest, artifact
+digest, measured entry count, logical byte count and maximum depth; verify those
+measurements against the candidate before publication. Drift, missing closure or
+any exceeded bound rejects the whole candidate without partial publication; a
+larger future complete artifact needs a reviewed profile revision, not a caller
+limit override.
+
+EVD-MSR-CAPACITY-01: Root's attributable read-only observation on 2026-09-29
+(delivery `92bf73da-fd42-5d15-afab-2ba79643e904`, fixed active app path) reports
+36,610 entries by `find ... -print | wc -l` and 370,264 KiB by `du -sk`. This
+falsifies the old 20,000-entry bound and supports bounded entry headroom at 65,536.
+It does not bind an immutable candidate, prove dependency completeness/depth, or
+measure logical bytes: disk allocation is not the payload-byte metric. Thus the
+exact complete artifact inventory/measurements remain required release inputs;
+no claim that this observation alone admits the current tree. The capacity fixture
+in the accompanying report covers the measured count and limit+1 rejection;
+complete dependency-preserving inventory validation is a later source test. The inactive tree is inaccessible to Runtime505 and cannot be an
 entrypoint, route, import root or worker source. Installation never starts candidate
 code or admits requests to it. Existing active B may keep serving; this is not a
 promise that the whole service has no traffic. Normal-Agent configuration remains
@@ -597,7 +617,8 @@ immutable units/intents/journal live under
 directories0700/files0600, not caller-supplied files or a new database service.
 Independent operation receipts remain in the existing DS receipts namespace;
 new private receipt fields stay0600, with only actor-scoped redacted projections
-available through `receipt`. Authenticated producer assertions and reviewed unit
+available through the required new profile `receipt` capability specified in
+MSR-C05; this is not an already installed DS action. Authenticated producer assertions and reviewed unit
 provenance are required before privileged import; UID502 alone cannot write policy,
 forge review/standing authority, allocate intent, or choose arbitrary catalog data. No plugin loader,
 root shell, new listener, sudo or password fallback.
@@ -662,8 +683,41 @@ At most one mutating attempt for each phase in this profile; an UNKNOWN phase ne
 gets another attempt via new request/unit ID. A new desired-state intent requires
 trusted changed state and proven safe disposition, not caller insistence. Lost ACK
 or closed client does not cancel, roll back, resume or replay. Read the exact
-operation receipt through the actor-scoped existing read path; reject wrong ID,
-unit/profile/registry or unstable custody. Absence, EACCES, incomplete/crash state
+operation receipt through the following **new, reviewed profile-specific readback**,
+not an assumed existing DS path. The installed DS has root-owned per-ID files and
+lexical `STATUS.last_receipt`, but no generic per-ID socket action; the current
+nonprivileged `scripts/lib/deployment-reuse/receipt.py` recognizes only old
+DEPLOY/ROLLBACK shapes and supplies no maintenance receipt capability.
+
+Before the first INSTALL or ACTIVATE, the same authenticated fixed DS endpoint
+must have the CTR-DCP-007 `receipt` mapping for this profile installed, independently
+reviewed and verified under its exact adopted service/client/schema digests. It
+accepts only request ID and exact immutable operation/catalog identifiers under
+this fixed profile; no path, command, UID, service or schema selector. Kernel peer
+and existing authenticated actor/producer scope must match the authoritative
+operation binding. Resolve only the daemon-owned per-ID journal/receipt namespace,
+with custody, nofollow and stable identity checks; never search by filename order.
+Project a bounded redacted response containing schema version, operation/unit/intent,
+profile revision, phase (INSTALL, ACTIVATE or its rollback), disposition, registry/
+policy identities, artifact digest, install-receipt linkage when applicable and
+receipt digest. Recognize `INSTALLED_INACTIVE`, activation APPLIED, rollback and
+failure/UNKNOWN dispositions without treating inactive installation as activation
+or business success. Reject wrong ID, unit/profile/registry, malformed or
+unsupported schema, cross-actor linkage and unstable custody. Receipt absence
+returns UNKNOWN even when the request was disconnected; status is not proof of
+no effect.
+
+The adoption evidence must exercise this installed readback against reviewed
+non-mutating conformance records in the private namespace covering both phase
+schemas, rollback, failure and absence (clearly tagged as fixtures, not operation
+success), plus wrong actor/ID and unknown schema negatives. The normal readback
+parser/custody/authentication path must be used; a version string or mock endpoint
+is insufficient. Such records are fixed adoption inputs, not caller-supplied
+receipts. INSTALL/ACTIVATE admission remains disabled until that evidence matches
+the exact installed reader closure. Preserve compatible readback across restart,
+service rollback and every retained receipt version; a service change that loses
+this ability is inadmissible. Lost ACK must never require replaying mutation,
+installing its reader afterward or weakening file permissions. Absence, EACCES, incomplete/crash state
 and ambiguous disposition are UNKNOWN, never no-effect evidence. Lexical
 STATUS.last_receipt is not an operation lookup. Prewrite BLOCKED remediation may
 revalidate only inside the inherited preflight bound and without inventing a new
@@ -710,12 +764,12 @@ fixed service, not different units or registry targets.
 
 | Case | Contracts | Method/environment and required evidence | Expected result; failure condition |
 |---|---|---|---|
-| ACC-MSR-01 | C01,C02 | F: slot/path/link/ACL/owner/UID/size/unknown-field negatives; I: adopted closure and Runtime505 denied traversal | Only fixed root slot and existing peer/profile admitted; any arbitrary path/caller, candidate import before activation or concurrent writer fails. |
+| ACC-MSR-01 | C01,C02 | F: full-closure inventory including node_modules, measured 36,610-entry count, 65,536 boundary and 65,537 rejection, 512 MiB+1 byte/depth33/mismatched inventory rejection, plus slot/path/link/ACL/owner/UID/unknown-field negatives; I: adopted closure and Runtime505 denied traversal | Only fixed root slot and existing peer/profile admitted; any arbitrary path/caller, candidate import before activation or concurrent writer fails. |
 | ACC-MSR-02 | C01,C03,C07 | F: A active, install B, journal/fsync fault injection and request probe; I: exact INSTALL receipt, inactive hash/custody and attributable traffic served only by A | B durable/inactive, A unchanged; inbox-only, startup, B admission, active-generation advance or APPLIED on INSTALL fails. |
 | ACC-MSR-03 | C02,C04,C07 | F: activate installed B; I: fresh A preimage/rollback, exact receipt join, owned restart, loaded B and ordinary request/result | Only authorized B becomes active after admission proof; health-only, receipt substitution or early admission fails. |
 | ACC-MSR-04 | C03,C04,C07 | F/I: after B active, install distinct C then activate C, same service and exact phase receipts | B serves during inert C wait; activation has fresh B rollback. Changed registry/preimage/slot/policy between phases blocks, never silently installs different C. |
 | ACC-MSR-05 | C02,C04,C06,C07 | F/I: explicit rollback C→captured B, byte/metadata/service readback, genuine B request/result | Independent rollback receipt and restored B; stale snapshot, old B replay or unverified restored admission fails. |
-| ACC-MSR-06 | C03,C04,C05 | F: close client after each submission before ACK; I: exact-ID actor-scoped reconciliation from real lost-response run if exercised | One publication/activation at most; duplicate/reordered/new request IDs return original disposition. Missing receipt remains UNKNOWN; retry/restart/canary replay fails. |
+| ACC-MSR-06 | C03,C04,C05 | F: reader absent/wrong schema/wrong actor prevents first mutation; both phase and rollback schemas, close client before ACK; I: adopted fixed reader conformance before first mutation, then exact-ID reconciliation of genuine phase receipts including lost-response run if exercised | One publication/activation at most; duplicate/reordered/new request IDs return original disposition. Missing receipt remains UNKNOWN; missing reader cannot be repaired after mutation as a lost-ACK prerequisite; mutation replay or cross-actor receipt disclosure fails. |
 | ACC-MSR-07 | C02,C05,C06 | F: another independently mutable lock domain for a different enrolled target (adoption rejected), crashes before/after rename, lost lock, live/unknown owned child, disk pressure, changed rollback; I: bounded authorized fault/readback evidence when required by adoption | Retained truthful state, no new conflict/cleanup/activation; absence or deadline must not imply safety. Verified rollback only; unverifiable path quarantines. |
 | ACC-MSR-08 | C01..C07 | Docs/F: same-source/head/review and reverse contract coverage; I: exact adoption, whole B→C→B receipts plus business proof | SOURCE_READY alone never sets INSTALLED_CALLABLE/BUSINESS_ACCEPTED; old ordinary actions unchanged, HR lane untouched; any speculative production claim fails. |
 
