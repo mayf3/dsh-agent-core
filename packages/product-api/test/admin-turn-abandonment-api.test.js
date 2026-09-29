@@ -362,3 +362,73 @@ test('restart-lost unknown fences without durable exit evidence refuse the entry
   assert.equal(rig.store.records.get(oldHandle).adminAbandonment ?? null, null, 'old record stays fenced + unmarked')
   assert.ok(rig.store.activeFenceForAgent(HR), 'the fence stays up for the unproven class')
 })
+
+test('explicit Owner risk acceptance admits the restart-lost class: audit kept, records stay fenced + unknown', async (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hr-admin-entry-accept-'))
+  const { rig, oldHandle } = await restartLostRig(t, root)
+  const { base } = await mount(t, { routerFacade: rig })
+  const before = mutationProbe(rig)
+
+  // Without the explicit field the unproven class still fails closed.
+  const absent = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST', body: { agentId: HR, declarationId: 'reset-accept-0' }, token: CTO_TOKEN,
+  })
+  assert.equal(absent.status, 409, JSON.stringify(absent.body))
+  assert.equal(absent.body.error.code, 'restart_lost_termination_evidence_unavailable')
+  assert.equal(mutationProbe(rig), before, 'the refusal alone mutates nothing')
+
+  // The authorized CTO explicitly accepts the unproven-termination risk
+  // (Owner decision D6): the reset proceeds for exactly this class.
+  const res = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST',
+    body: { agentId: HR, declarationId: 'reset-accept-1', acceptUnprovenTerminationRisk: true },
+    token: CTO_TOKEN,
+  })
+  assert.equal(res.status, 200, JSON.stringify(res.body))
+  assert.deepEqual(res.body.abandonedHandles, [oldHandle])
+  const record = rig.store.records.get(oldHandle)
+  assert.equal(record.initialOutcome, 'outcome_unknown', 'business result stays UNKNOWN')
+  assert.equal(record.fenceState, 'active', 'record keeps its honest fenced state')
+  assert.equal(record.exitObservedAt ?? null, null, 'no fabricated exit observation')
+  assert.equal(record.terminationEvidence ?? null, null, 'no fabricated termination evidence kind')
+  assert.ok(record.audit.some(entry => entry.kind === 'owner_risk_acceptance_unproven_termination'),
+    'the acceptance is durably recorded as an owner decision, never as evidence')
+  assert.equal(rig.store.admissionBlockerForAgent(HR), null, 'same-HR admission unblocked')
+
+  // Retry with the same id stays scope-bound: a LATER unknown is never adopted.
+  const later = stuckTurn(rig.store, HR, { generation: 1 })
+  const retry = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST',
+    body: { agentId: HR, declarationId: 'reset-accept-1', acceptUnprovenTerminationRisk: true },
+    token: CTO_TOKEN,
+  })
+  assert.equal(retry.status, 200, JSON.stringify(retry.body))
+  assert.deepEqual(retry.body.abandonedHandles, [], 'retry abandons nothing new')
+  assert.equal(rig.store.records.get(later).adminAbandonment ?? null, null, 'later task never marked by the old id')
+
+  // A non-boolean flag value is a closed-body rejection, zero mutation.
+  const beforeLoose = mutationProbe(rig)
+  const loose = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST',
+    body: { agentId: HR, declarationId: 'reset-accept-2', acceptUnprovenTerminationRisk: 'yes' },
+    token: CTO_TOKEN,
+  })
+  assert.equal(loose.status, 400, JSON.stringify(loose.body))
+  assert.equal(mutationProbe(rig), beforeLoose, 'a malformed acceptance flag mutates nothing')
+
+  // Only an explicit NEW declaration (with the same flag) resets the later turn.
+  const second = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST',
+    body: { agentId: HR, declarationId: 'reset-accept-3', acceptUnprovenTerminationRisk: true },
+    token: CTO_TOKEN,
+  })
+  assert.equal(second.status, 200, JSON.stringify(second.body))
+  assert.deepEqual(second.body.abandonedHandles, [later])
+  assert.equal(rig.store.admissionBlockerForAgent(HR), null)
+
+  // The next ordinary message completes through the normal ingress.
+  const next = await rig.request('NEW independent HR request after accepted reset')
+  assert.equal(next?.reply, 'fixture-ok', JSON.stringify(next))
+  assert.equal(next.agentId, HR)
+  assert.equal(next.sessionId, 'main')
+})

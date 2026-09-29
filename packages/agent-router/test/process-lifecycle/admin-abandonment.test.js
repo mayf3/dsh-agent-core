@@ -332,6 +332,31 @@ test('entry-gate projection: stuck fences without durable exit evidence are repo
   }
 })
 
+test('owner risk acceptance stamps an explicit audit decision and fabricates no exit evidence', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-accept-a' })
+  const handle = stuckTurn(store, HR)
+  // The restart-lost class: recovery blocked, no durable exit evidence —
+  // exactly the record class whose termination observation is uncollectable
+  // (the owning controller is gone).
+  store.markRecoveryBlocked(handle, ['live_generation_ownership'], 'runtime_restart_ownership_unavailable')
+  const result = store.declareAdminAbandonment({ agentId: HR, declarationId: 'accept-1', ownerRiskAcceptance: true })
+  assert.deepEqual(result.abandonedHandles, [handle])
+  const record = rawRecord(store, handle)
+  assert.equal(record.initialOutcome, 'outcome_unknown', 'business result stays UNKNOWN')
+  assert.equal(record.fenceState, 'active', 'record stays honestly fenced')
+  assert.equal(record.exitObservedAt ?? null, null, 'no fabricated exit observation')
+  assert.equal(record.terminationEvidence ?? null, null, 'no fabricated termination evidence kind')
+  assert.ok(record.audit.some(entry => entry.kind === 'owner_risk_acceptance_unproven_termination'),
+    'the acceptance is recorded as an explicit owner decision in the audit, never as evidence')
+  // A retry completing the same scope under the same flag keeps the decision
+  // audit; a default declaration (no flag) carries none.
+  const second = stuckTurn(store, HR, { generation: 2 })
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'accept-2' })
+  assert.equal(rawRecord(store, second).audit.some(entry => entry.kind === 'owner_risk_acceptance_unproven_termination'), false)
+  assert.throws(() => store.declareAdminAbandonment({ agentId: HR, declarationId: 'accept-3', ownerRiskAcceptance: 'yes' }),
+    TypeError, 'the acceptance flag is a strict boolean true, never a loose truthy value')
+})
+
 test('declaration scope matches the admission blocker: settled records with an active fence are abandonable', async () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-settled-'))
   const persistenceFile = join(root, 'turn-recovery.json')

@@ -10,11 +10,12 @@ accepted_reviewed_spec_commit: null
 accepted_reviewer_id: null
 acceptance_review_result: null
 semantic_delta_after_review: null
-independent_review_result: ACCEPT
+independent_review_result: ACCEPT (r1, pre-amendment)
 independent_reviewer_id: zcode-local-independent-spec-reviewer-r1
 independent_reviewed_head: 34f53cd7
 independent_review_load_bearing_gaps: 0
 independent_review_non_blocking_notes: section-heading normalization at/before acceptance; status enum wording; merge gate must hold until Owner acceptance; refuseUnDrainedExecution registrySnapshot capability hardening (FOLLOW_UP)
+amendment_r3: D6 Owner risk-acceptance channel for the uncollectable-evidence restart-lost class (C1/C2/N1/§3 aligned); AMENDMENT_REVIEW_PENDING — independent re-review required before acceptance
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -40,8 +41,8 @@ superseded_by: null
 owners:
   - mayf3
 type: admin-recovery-entry-contract
-review_status: INDEPENDENT_REVIEW_ACCEPTED_AWAITING_OWNER_ACCEPTANCE
-owner_intent_provenance: direct Owner instruction 2026-09-29 (HR_RESET_AND_RESUME_V1 takeover brief — 管理员明确放弃当前卡住的旧任务后可以继续执行新任务；旧结果保留 UNKNOWN；不重放旧请求；同一幂等重置不得作用于后来任务；取消/超时/进程重启复用同一条恢复路径; plus direct Owner control directives #70/#72 2026-09-29 — entry bound to the exact canonical CTO machine identity, fail-closed lifecycle evidence gate, smallest-possible authority surface)
+review_status: AMENDMENT_R3_PENDING_INDEPENDENT_REVIEW
+owner_intent_provenance: direct Owner instruction 2026-09-29 (HR_RESET_AND_RESUME_V1 takeover brief — 管理员明确放弃当前卡住的旧任务后可以继续执行新任务；旧结果保留 UNKNOWN；不重放旧请求；同一幂等重置不得作用于后来任务；取消/超时/进程重启复用同一条恢复路径; plus direct Owner control directives #70/#72 2026-09-29 — entry bound to the exact canonical CTO machine identity, fail-closed lifecycle evidence gate, smallest-possible authority surface; plus direct Owner takeover-round directive 2026-09-29 — 「若仍会被拒绝，就继续解决这个实际缺口，不要把一个仍不能处理当前故障的版本报告成只等授权上线」, freezing D6: the uncollectable-evidence restart-lost class is resolvable only via the CTO's explicit risk acceptance at the authorized entry, recorded as a decision and never as evidence)
 references:
   - docs/specs/AGENT_CORE_WORKFLOW_ADMIN_AGENT_BOOTSTRAP_V1.md (accepted; OBS-WA-008 records the canonical CTO machine identity agt_cto-agent / principal 4e5a4578-0645-4133-bd35-b80e453dfee9)
   - docs/evidence/workflow-recovery-stage-f-20260822/identity-cto.json (accepted-repo auth-service machine-identity receipt for the same pair)
@@ -80,10 +81,23 @@ D4. 同一重置操作以调用方提供的幂等 `declarationId` 绑定其**原
 D5. 后续取消、超时、worker 崩溃、controller 重启场景复用同一条恢复路径；
 声明与范围跨重启持久。
 
+D6.（Owner 决策，2026-09-29 接管轮）对 restart-lost 类——旧执行的终止观测
+**永远无法补采**（owning controller 已丢失：既不会有 parent 退出观测，也
+不存在可重放的 exact-generation recovery 主体）——授权入口上的 CTO 显式
+声明携带 `acceptUnprovenTerminationRisk: true` 即构成 Owner 对残余风险的
+**明确接受**（残余风险 = 旧 worker 终止未证明 + 已派发工具的服务端回声）。
+该接受作为**决策**逐记录持久审计（audit kind
+`owner_risk_acceptance_unproven_termination`），绝不伪装成终止证据：
+`exitObservedAt` / `terminationEvidence` 不动，记录保持 fenced +
+outcome_unknown + 不重放，效果仍然只作用于准入。缺省（不带该字段）保持
+fail-closed 409。可识别执行（STARTUP / REAP / 活 READY 进程）**不可**经该
+通道放行——它们有受控 cancel/shutdown 路径。
+
 ## 1. 契约
 
 C1. **入口与授权**。`POST /agent-process/turn-abandonment`（body
-`{agentId, declarationId}`，closed shape）与
+`{agentId, declarationId, acceptUnprovenTerminationRisk?}`，closed shape，
+可选字段出现时必须严格为布尔 `true`）与
 `GET /agent-process/turn-abandonment?agentId=` 挂在既有 product-api HTTP
 面，复用既有 `schedulerTokenVerifier`（authsvc RS256/JWKS）seam。每个请求
 先过授权门：验证后 principal 必须同时精确匹配 D3 的 Principal UUID 与
@@ -105,8 +119,15 @@ C2. **执行冲突门（管理员声明 ≠ 退出证据）**。任何存储改�
   `exitObservedAt` 且无 `terminationEvidence`——即重启后
   `runtime_restart_ownership_unavailable` 的 restart-lost 类），→ 409
   `restart_lost_termination_evidence_unavailable`，错误信息指名既有受控
-  restart-quiescence 证明 / exact-generation recovery 证据路径。**EMPTY
-  不是 drained**；
+  restart-quiescence 证明 / exact-generation recovery 证据路径，并提示 D6
+  的显式接受通道。**EMPTY 不是 drained**；
+  - **D6 通道**：同一 CTO 权限下，请求携带
+    `acceptUnprovenTerminationRisk: true` 时，该类放行；每个被盖标记录的
+    审计追加 `owner_risk_acceptance_unproven_termination`（决策留痕，非
+    证据伪造——`exitObservedAt`/`terminationEvidence` 不动，记录保持
+    fenced + outcome_unknown + 不重放）。可识别执行（STARTUP/REAP/活
+    READY）不经此通道放行；标志非严格 `true` → 400 零改动；证据查询能力
+    缺失时该通道同样不可用（503，绝不默认放行）；
 - 生命周期槽快照或退出证据查询能力缺失 → 503
   `liveness_verification_unavailable`，绝不默认放行。
 持久 `child_real_exit` 证据（或受控 quiescence 证明结算）存在、或不存在
@@ -140,9 +161,10 @@ C5. **重启持久**。声明、范围与放弃标记跨 controller 重启存活
 ## 2. 非目标
 
 N1. 不重建完整 PDC 或全生命周期规范；不修改、不替代 fresh-lineage V4 受控
-路径——本入口不能豁免它的证据义务：termination unproven 的旧执行仍须从该
-受控路径（restart-quiescence 证明 / exact-generation recovery）取得证据后
-才能被放弃。
+路径——证据**可补采**的旧执行（parent 退出观测、受控 quiescence 证明、
+exact-generation recovery 均可达）仍须从该受控路径取得证据后才能被放弃；
+D6 通道**只**适用于观测无法补采的 restart-lost 类，且其放行依据是 Owner
+决策留痕而非任何终止证据。
 N2. 不提供伪造退出证据、绕过身份校验或删除账本的路径；管理员声明不充当
 终止证明。
 N3. 不扩大到 `agt_hr-agent` 以外目标，不泛化为通用 RBAC 管理面，不新建
@@ -154,6 +176,11 @@ N3. 不扩大到 `agt_hr-agent` 以外目标，不泛化为通用 RBAC 管理面
   单边身份错配 / 目标越界均零改动拒绝（401/403/400）。
 - EMPTY 且无退出证据拒绝（含重启后登记为空类，零改动）；带持久
   `child_real_exit` 证据或无 stuck fence 时真实成功；能力缺失 503。
+- D6 通道：restart-lost 类缺省 409；携带严格布尔
+  `acceptUnprovenTerminationRisk: true` 时真实成功且逐记录留下
+  `owner_risk_acceptance_unproven_termination` 决策审计（退出/终止证据字段
+  保持为空、记录保持 fenced + UNKNOWN）；非布尔值 400 零改动；retry 仍受
+  原始范围绑定约束，不吸收后来任务。
 - 同 `declarationId` 重试不作用于后来任务；部分失败与重启后同一操作续作；
   32 上限真实且不回收。
 - controller crash 后：旧 worker 真实退出、旧记录保留 UNKNOWN + fenced +

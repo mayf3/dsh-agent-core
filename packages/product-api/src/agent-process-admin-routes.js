@@ -167,8 +167,20 @@ function readJsonBody(req) {
  * instead of defaulting to resettable, and an EMPTY slot is accepted ONLY
  * when no stuck fence lacks durable exit evidence (an empty in-memory
  * registry after a restart is not termination evidence).
+ *
+ * Restart-lost escape hatch (spec AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1
+ * D6, Owner decision 2026-09-29): for the restart-lost class whose
+ * termination observation is UNCOLLECTABLE (the owning controller is gone,
+ * so neither a parent exit observation nor an exact-generation recovery can
+ * ever exist), the same authorized CTO may submit
+ * `acceptUnprovenTerminationRisk: true`. That flag is an explicit OWNER RISK
+ * DECISION recorded in each stamped record's audit — never fabricated
+ * evidence: exitObservedAt/terminationEvidence stay untouched, records stay
+ * fenced + outcome_unknown + no-replay, and only admission unblocks. Without
+ * the flag the class still fails closed with 409. Identifiable executions
+ * (STARTUP/REAP/live READY) are NOT hatchable: they have a controlled path.
  */
-function refuseUnDrainedExecution(router, agentId) {
+function refuseUnDrainedExecution(router, agentId, acceptUnprovenTerminationRisk = false) {
   if (typeof router.lifecycleSlotSnapshot !== 'function') {
     throw new HttpError(503, 'liveness_verification_unavailable',
       'agent lifecycle slot snapshot is unavailable; a reset never defaults to allowed without execution-state verification')
@@ -193,11 +205,13 @@ function refuseUnDrainedExecution(router, agentId) {
       `agent ${agentId} still has a live process (pid ${live.pid}); abandon only after the existing controlled cancel/shutdown drained it — an administrator declaration is not termination evidence`)
   }
   const unproven = router.stuckFenceWithoutDurableExitEvidenceForAgent(agentId)
-  if (unproven !== null && unproven !== undefined) {
+  if (unproven !== null && unproven !== undefined && acceptUnprovenTerminationRisk !== true) {
     throw new HttpError(409, 'restart_lost_termination_evidence_unavailable',
       `agent ${agentId} still has an unsettled unknown-fence turn (${unproven.handle}) with NO durable exit/termination evidence`
         + `${unproven.failureReason ? ` (recorded: ${unproven.failureReason})` : ''}; an EMPTY local registry after a restart is not termination evidence`
-        + ' — settle the old execution via the accepted restart-quiescence proof / exact-generation recovery path first — zero mutation performed')
+        + ' — settle the old execution via the accepted restart-quiescence proof / exact-generation recovery path first, or re-submit with'
+        + ' acceptUnprovenTerminationRisk:true to record the explicit Owner risk acceptance for this uncollectable-evidence class'
+        + ' (same CTO authority; records stay fenced + outcome_unknown + no-replay) — zero mutation performed')
   }
 }
 
@@ -219,12 +233,19 @@ export async function handleAgentProcessAdminRequest({ req, url, router, verifie
     const service = requireRouter(router)
     if (req.method === 'POST') {
       const body = await readJsonBody(req)
-      requireClosedBody(body, new Set(['agentId', 'declarationId']))
+      requireClosedBody(body, new Set(['agentId', 'declarationId', 'acceptUnprovenTerminationRisk']))
       const agentId = requireTargetAgent(body?.agentId)
       const declarationId = requireDeclarationId(body)
-      refuseUnDrainedExecution(service, agentId)
+      if (body?.acceptUnprovenTerminationRisk !== undefined && body?.acceptUnprovenTerminationRisk !== true) {
+        throw new HttpError(400, 'invalid_arguments', 'acceptUnprovenTerminationRisk must be exactly true when present')
+      }
+      const acceptUnprovenTerminationRisk = body?.acceptUnprovenTerminationRisk === true
+      refuseUnDrainedExecution(service, agentId, acceptUnprovenTerminationRisk)
       try {
-        const result = await service.abandonPendingTurns({ agentId, declarationId })
+        const result = await service.abandonPendingTurns({
+          agentId, declarationId,
+          ...(acceptUnprovenTerminationRisk ? { ownerRiskAcceptance: true } : {}),
+        })
         return { status: 200, body: { ok: true, ...result } }
       } catch (error) {
         if (error?.name === 'ReconciliationCapacityError') {

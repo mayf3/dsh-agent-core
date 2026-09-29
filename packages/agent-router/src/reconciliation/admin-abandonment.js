@@ -143,14 +143,26 @@ export const adminAbandonmentMethods = {
    * NEVER adopted by a retry (it stays fenced until its own explicit
    * declaration). Already-stamped records are never restamped. Rebinding a
    * known declarationId to a different Agent fails loud.
+   *
+   * ownerRiskAcceptance (spec AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1 D6):
+   * strictly `true` | undefined. When true, every stamped record also gets a
+   * bounded audit entry recording the EXPLICIT owner decision to accept the
+   * restart-lost class whose termination observation is uncollectable (the
+   * owning controller is gone). This is an owner DECISION recorded as a
+   * decision — never termination evidence: exitObservedAt and
+   * terminationEvidence stay untouched, the record stays fenced +
+   * outcome_unknown, and only admission is unblocked.
    */
-  declareAdminAbandonment({ agentId, declarationId }) {
+  declareAdminAbandonment({ agentId, declarationId, ownerRiskAcceptance }) {
     this.assertBusinessAdmissionReady()
     if (typeof agentId !== 'string' || agentId === '') {
       throw new TypeError('declareAdminAbandonment: agentId must be a non-empty string')
     }
     if (typeof declarationId !== 'string' || declarationId === '' || declarationId.length > 128) {
       throw new TypeError('declareAdminAbandonment: declarationId must be a non-empty string of at most 128 chars')
+    }
+    if (ownerRiskAcceptance !== undefined && ownerRiskAcceptance !== true) {
+      throw new TypeError('declareAdminAbandonment: ownerRiskAcceptance must be exactly true when present')
     }
     const known = (this.adminAbandonmentDeclarations ?? [])
       .find(declaration => declaration.declarationId === declarationId)
@@ -169,6 +181,9 @@ export const adminAbandonmentMethods = {
         this.mutateRecord(record, (candidate) => {
           candidate.adminAbandonment = { declarationId, declaredAt: known.declaredAt }
         })
+        if (ownerRiskAcceptance === true) {
+          this.appendAudit(record, { kind: 'owner_risk_acceptance_unproven_termination' })
+        }
         completedHandles.push(handle)
       }
       return { agentId, declarationId, abandonedHandles: [], completedHandles, scopeHandles: [...known.handles] }
@@ -190,6 +205,9 @@ export const adminAbandonmentMethods = {
       this.mutateRecord(record, (candidate) => {
         candidate.adminAbandonment = { declarationId, declaredAt }
       })
+      if (ownerRiskAcceptance === true) {
+        this.appendAudit(record, { kind: 'owner_risk_acceptance_unproven_termination' })
+      }
     }
     return { agentId, declarationId, abandonedHandles: [...scopeHandles], completedHandles: [], scopeHandles }
   },
