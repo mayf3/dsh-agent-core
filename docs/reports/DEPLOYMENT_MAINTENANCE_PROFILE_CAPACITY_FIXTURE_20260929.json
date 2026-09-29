@@ -1,0 +1,47 @@
+{
+  "schema": "PROPOSED_CONTRACT_CAPACITY_FIXTURE_V1",
+  "productionProof": false,
+  "implementationTest": false,
+  "observation": {
+    "issuer": "Root delivery 92bf73da-fd42-5d15-afab-2ba79643e904",
+    "date": "2026-09-29",
+    "entriesIncludingRoot": 36610,
+    "diskKiB": 370264,
+    "immutableArtifactDigest": null,
+    "logicalBytes": null,
+    "maximumDepth": null
+  },
+  "limits": {
+    "entriesIncludingRoot": 65536,
+    "logicalBytes": 536870912,
+    "maximumDepth": 32
+  },
+  "cases": [
+    {
+      "entries": 36610,
+      "expectedEntryBound": "PASS_ONLY_NOT_ADMISSION"
+    },
+    {
+      "entries": 65536,
+      "expectedEntryBound": "PASS_ONLY_NOT_ADMISSION"
+    },
+    {
+      "entries": 65537,
+      "expectedEntryBound": "REJECT"
+    },
+    {
+      "logicalBytes": 536870913,
+      "expectedByteBound": "REJECT"
+    },
+    {
+      "maximumDepth": 33,
+      "expectedDepthBound": "REJECT"
+    }
+  ],
+  "futureImplementationFixtures": [
+    "complete candidate inventory with node_modules retained and exact digest/count/bytes/depth",
+    "reject changed or incomplete inventory before publication",
+    "no arbitrary caller capacity override"
+  ],
+  "limitsOfEvidence": "Arithmetic contract fixture only. No tree copied or pruned, no live read, no implementation conformance or candidate admission proved."
+}
