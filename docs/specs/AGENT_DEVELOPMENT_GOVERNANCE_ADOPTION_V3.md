@@ -166,7 +166,10 @@ Rollback follows CTR-AD3-006 and the preserved lineage; do not edit old receipts
 
 ## 13. Open questions
 
-Source PR #21 integration and local independent review/acceptance remain pending.
+Source PR #21 integration is satisfied: the exact source `6301662e18adaed88e4412394ad9bdb959d92355`
+was merged into upstream main by `d38c94dc6df8e8d8e0bfe45528dadfe5c9bf2543`
+on 2026-09-29T03:26:17Z. Source: https://github.com/mayf3/agent-development-governance/pull/21.
+Local independent final-head review and adoption acceptance remain pending.
 No unresolved question grants implementation or production authority. Future
 executor-level duplicate suppression and measured delivery improvements are not
 prerequisites of current HR recovery or this bounded governance repair.
