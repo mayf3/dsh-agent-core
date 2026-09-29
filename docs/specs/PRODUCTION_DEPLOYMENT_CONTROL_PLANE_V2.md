@@ -605,9 +605,14 @@ Use the existing permanent `/private/var/db/agent-deploy-system/mutation.lock`
 inode, with reviewed custody checks and no create/replace/unlink during operation.
 Each phase holds it from authoritative precheck through its own final receipt.
 Waiting for ACTIVATE holds no lock; no later operation can claim continuity with
-INSTALL's expired lock. Adoption must prove every overlapping app/route writer,
-including ordinary DS and any PDC/HR lane, is serialized or blocked. Unknown or
-active conflicting ownership blocks effects; priority remains with HR recovery.
+INSTALL's expired lock. Adoption must preserve the one-host mutation domain across
+ALL enrolled targets: every enrolled mutable operation, including ordinary DS and
+any PDC/HR lane, must share this actual canonical lock domain or be mechanically
+blocked for the entire adoption period. Proof limited to overlapping app/route
+writers is insufficient. If another domain can independently mutate even a
+different enrolled target, adoption is BLOCKED; this scoped backend mapping does
+not waive the whole-host invariant. Unknown or active conflicting ownership
+blocks effects; priority remains with HR recovery.
 The existing service/lock mapping is a scoped V2 exception to §§3, 009 and 018,
 not evidence that the general agent-deployd layout or global adoption exists.
 Root installation/update of this reviewed code/profile still requires one exact
@@ -711,7 +716,7 @@ fixed service, not different units or registry targets.
 | ACC-MSR-04 | C03,C04,C07 | F/I: after B active, install distinct C then activate C, same service and exact phase receipts | B serves during inert C wait; activation has fresh B rollback. Changed registry/preimage/slot/policy between phases blocks, never silently installs different C. |
 | ACC-MSR-05 | C02,C04,C06,C07 | F/I: explicit rollback C→captured B, byte/metadata/service readback, genuine B request/result | Independent rollback receipt and restored B; stale snapshot, old B replay or unverified restored admission fails. |
 | ACC-MSR-06 | C03,C04,C05 | F: close client after each submission before ACK; I: exact-ID actor-scoped reconciliation from real lost-response run if exercised | One publication/activation at most; duplicate/reordered/new request IDs return original disposition. Missing receipt remains UNKNOWN; retry/restart/canary replay fails. |
-| ACC-MSR-07 | C02,C05,C06 | F: crashes before/after rename, lost lock, live/unknown owned child, disk pressure, changed rollback; I: bounded authorized fault/readback evidence when required by adoption | Retained truthful state, no new conflict/cleanup/activation; absence or deadline must not imply safety. Verified rollback only; unverifiable path quarantines. |
+| ACC-MSR-07 | C02,C05,C06 | F: another independently mutable lock domain for a different enrolled target (adoption rejected), crashes before/after rename, lost lock, live/unknown owned child, disk pressure, changed rollback; I: bounded authorized fault/readback evidence when required by adoption | Retained truthful state, no new conflict/cleanup/activation; absence or deadline must not imply safety. Verified rollback only; unverifiable path quarantines. |
 | ACC-MSR-08 | C01..C07 | Docs/F: same-source/head/review and reverse contract coverage; I: exact adoption, whole B→C→B receipts plus business proof | SOURCE_READY alone never sets INSTALLED_CALLABLE/BUSINESS_ACCEPTED; old ordinary actions unchanged, HR lane untouched; any speculative production claim fails. |
 
 ### Exact acceptance boundary
