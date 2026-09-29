@@ -1,26 +1,11 @@
 ---
-spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V3
-status: superseded
+spec_id: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
-revision: r2
-revision_date: 2026-09-18
-amendment_ref: >-
-  r2 = C026_LARK_COEXISTENCE_AND_IMPLEMENTATION_SCOPE_AMENDMENT_V1;
-  narrows C-026 applicability to recovery/fence-domain results, preserves
-  AGENT_CORE_LARK_UX_PHASE1_V3 CTR-DISPLAY-003 for normal Lark delivery
-  results, and adds three exact implementation/test paths to §14.
-amendment_status: accepted
-amendment_reviewed_head: 5f7fa6c0d8f7e1ada5d8ece40b466a6b67fbdd1d
-amendment_reviewed_spec_sha256: df27fa4692a860520876be0e53b9cd4c0ff5b67568f1672bb144b9d8fa7a11b0
-amendment_independent_review: PASS
-amendment_accepted_by: mayf3
-amendment_accepted_date: 2026-09-18
-amendment_owner_decision: >-
-  OWNER_DECISION=ACCEPT_NARROW_AMENDMENT, review-gated; acceptance may be
-  finalized only after an independent exact-head semantic review returns
-  PASS with BLOCKERS=NONE.
+revision: r0
+revision_date: 2026-09-29
 scope:
   - AgentProcess lifecycle and readiness
   - RPC deadlines and child-exit cleanup
@@ -29,6 +14,7 @@ scope:
   - durable unknown fence and recovery operation
   - graceful shutdown and bounded process evidence
   - termination evidence seam consumed by outer callers
+  - exact fresh HR execution lineage while retaining an old unknown fence
 governed_by:
   - AGENT_CORE_HARDENING_PROGRAM_V1
   - AGENT_WORKSPACE_SESSION_MODEL_V2
@@ -36,16 +22,23 @@ external_authorities: []
 related_specs:
   - AGENT_CORE_LARK_UX_PHASE1_V3
 supersedes:
-  - AGENT_PROCESS_LIFECYCLE_HARDENING_V2
-superseded_by: AGENT_PROCESS_LIFECYCLE_HARDENING_V4
+  - AGENT_PROCESS_LIFECYCLE_HARDENING_V3
+superseded_by: null
+acceptance_actor: original coordinating agent acting as delegated technical maintainer
+owner_direction_source: direct user message in thread 01a0ad06-249f-7632-809b-961b93c3b113 on 2026-09-29
+owner_signed_candidate_sha: false
+accepted_reviewed_head: 1b016ed848c8e7e7513ce71880542a764fe055d7
+accepted_reviewed_spec_sha256: 30023d4b3f307b866eb483360bb00646a727a8d3ce483c95d4feb20e0bc041c9
+independent_review_sha256: b57e546e6f91b1f4ef01d41698fc02bb84282b9d1849f898cf58d4acfcef93d9
+accepted_at_utc: 2026-09-29T01:48:00Z
 owners:
   - mayf3
-date: 2026-09-18
+date: 2026-09-29
 repository: mayf3/dsh-agent-core
-authoring_base_main: 3c7b169a864c1e45df8b5c67333a9478138a22ee
-replaced_authority_revision: 3c7b169a864c1e45df8b5c67333a9478138a22ee
+authoring_base_main: f0bbf0942752b859da445ba9f775a9061da399b3
+replaced_authority_revision: f0bbf0942752b859da445ba9f775a9061da399b3
 references:
-  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V2.md
+  - docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V3.md
   - docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md
   - docs/specs/AGENT_CORE_LARK_UX_PHASE1_V3.md
   - docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md
@@ -53,12 +46,142 @@ references:
   - docs/investigations/AGENT_CORE_OUTCOME_UNKNOWN_PARENT_RUNTIME_RECOVERY_V1.md
 ---
 
-# AGENT_PROCESS_LIFECYCLE_HARDENING_V3 — outcome_unknown 父 Runtime 自动收敛
+# AGENT_PROCESS_LIFECYCLE_HARDENING_V4 — preserved unknown and exact fresh lineage
 
-> 状态：**proposed / docs-only candidate**。V2 仍是 current accepted authority。
-> 本候选完整承接 V2，并新增父 Runtime 自动消费 late evidence、hard-deadline exact-generation
-> REAP、durable recovery/fence state 与结构化外层诊断。未接受前不授权 implementation。
-> 本轮不改产品代码、不 merge、不部署、不重启、不执行生产 mutation。
+> **Accepted docs-only whole-authority successor.** The independently reviewed
+> semantics were accepted by the delegated technical maintainer on the Owner's
+> current explicit HR direction. This lifecycle transaction becomes canonical
+> only when merged to `main`. This file carries forward every V3
+> C-001–C-026 obligation except the explicit V4 fresh-lineage branch below.
+> Historical V3 authoring/acceptance prose retained in this complete copy is
+> provenance, not a second current activation path. Product implementation
+> requires a separate exact-base preflight; this Spec alone authorizes no
+> production effect.
+
+## 0V4. Decision, inheritance, and acceptance boundary
+
+The Owner's current incident direction permits the **old HR lineage** to remain
+`outcome_unknown` with its fence active and history retained while an unrelated
+new HR lineage is opened. This changes the scope of *new-lineage admission*,
+not the C-015/C-016 conditions for releasing or settling the old fence. V3's
+Agent-wide startup block otherwise makes that direction mechanically
+impossible. A new session string or a Router restart alone is never a cut.
+
+This V4 is a complete standalone successor: all unmodified V3 contract text
+below remains binding as V4 text; `V4-C027`–`V4-C031` and the exact amendments
+to C-013/C-016/startup below are the only semantic delta. V3's historical
+sections §0A, §0, §12.1 and §14–§16 describe their own completed V2→V3
+lifecycle, not V4 readiness. V4 acceptance is one docs-only atomic transaction:
+
+```text
+V4.status: proposed -> accepted
+V4.implementation_authority: none -> contracts
+V4.supersedes: [] -> [AGENT_PROCESS_LIFECYCLE_HARDENING_V3]
+V3.status: accepted -> superseded
+V3.superseded_by: null -> AGENT_PROCESS_LIFECYCLE_HARDENING_V4
+```
+
+The acceptance record must bind the actual Owner direction source, independent
+reviewer, reviewed semantic head and Spec SHA, final accepted head, and true
+acceptance actor. It must not claim that the Owner signed a candidate SHA unless
+the Owner did so. Only a fresh descendant of the accepted `main` may implement
+the new branch. Deployment, old worker stop, Scheduler mutation and Binding
+switch need their own exact execution mandate/receipt; acceptance alone does
+not perform them.
+
+### V4-C027 — Exact trusted cut before new-lineage admission
+
+Only one fixed HR Agent identity may consume this incident cut. Its trusted
+root/runtime control input binds `{oldAgentId, oldTurnHandle,
+oldRuntimeEpoch, oldProcessGeneration, newRuntimeEpoch, newSessionId,
+cutOperationId}` plus exact receipt digests. Neither a caller, a model, config,
+environment variables, a nickname, a new `requestId`, nor a Feishu binding
+assertion may supply or override these fields. The Router loads a durable,
+root-authenticated cut before business readiness; absent, invalid, stale,
+ambiguous or partially installed cut keeps V3 Agent-wide admission semantics.
+
+The cut producer must have completed, in one controlled host transaction:
+all old-HR Scheduler and Dispatcher future dispatch paths disabled through
+their native lock/CAS with exact readback; old Runtime/worker and already
+dispatched tool senders stopped or isolated with genuine identity/exit proof;
+old-source reactivation blocked at the actual prompt/tool dispatch boundary;
+durable new epoch/session minted once; old record identity, initial
+`outcome_unknown`, side-effect uncertainty and active fence retained. Any
+subsequent attributable late evidence remains in that old record under the
+existing settle-once rules; the cut cannot fabricate a success/failure or
+clear its fence. A generic service health check, PID absence, epoch
+string, stopped chat reply, or operator assertion is not this evidence. Already
+submitted remote effects remain UNKNOWN and are not claimed canceled.
+
+The new process generation is allocated strictly above the durable issuance
+floor of **all** old generations for that Agent. The exact Feishu
+`activeSessionId` transition and new-lineage cut must be jointly durable and
+verified behind a closed business-readiness barrier before either becomes
+admissible; there is no interval in which an old Binding can target a newly
+admitted process. Every prompt-producing entry, including
+the final AgentProcess pre-write check, revalidates the cut's lineage and
+session rather than relying only on an outer ingress or registry check.
+
+### V4-C028 — Old lineage remains fenced; only unrelated new work may enter
+
+The old exact turn, its original Session, old fresh mappings, old Scheduler
+occurrences, old request IDs and any callback carrying old generation/epoch
+remain fenced and cannot be replayed into the new lineage. A new admission is
+eligible only through the exact cut's new Session or a Router-minted fresh
+mapping created strictly after the durable cut, under the bound new runtime
+epoch. All normal provenance, identity, capacity and route checks still apply.
+The cut is not a generic fence bypass: any *new* unresolved unknown fences the
+new lineage normally. No other Agent changes admission or Binding behavior.
+
+The Feishu Binding must read back the exact new `activeSessionId` before HR
+ingress opens. A `(agentId, requestId)` mapping minted before the cut remains
+ineligible even if retried after the cut; the Router checks its stored creation
+coordinate before any route, process spawn or prompt write. Missing or
+ambiguous creation coordinates fail closed. Caller-supplied session IDs never
+substitute for that durable mapping.
+
+### V4-C029 — Old results and tools have no new-lineage write path
+
+After the cut barrier, old worker/tool RPC and old callbacks cannot submit a
+new side effect or write a new-lineage reply/result. The actual Broker, tool,
+prompt and delivery entry points reject old identity even if a late callback
+arrives. Already dispatched external effects remain UNKNOWN and are not
+retried, deleted or converted to failure/success. Historical reconciliation
+may record attributable evidence only in its old record; it may not mutate the
+new Session, Binding, turn handle, fence, or reply target.
+
+The trusted parent relay must reject every new Broker/Tool invocation from
+the old child once source isolation begins, and the downstream write/delivery
+seam must reject old execution identity after the cut. Blocking only the chat
+reply or changing an epoch label is insufficient while old tools can still
+write or send. Any effect already dispatched before the barrier remains
+UNKNOWN; this rule makes no claim to cancel it.
+
+### V4-C030 — Atomicity, rollback and no replay
+
+Cut installation is one-use and receipt-bound to current host, binary,
+Scheduler revision, worker identity, preimage and rollback. A failed or UNKNOWN
+cut cannot open admission. Rollback may restore the last business-good Runtime
+while preserving the old fence and any durable partial cut; it cannot re-enable
+old dispatch without a separate supported proof. Repeating a command with a
+new operation ID to evade UNKNOWN is forbidden. Post-cut failure returns a
+bounded diagnosis and leaves conflicting effects fenced.
+
+### V4-C031 — Acceptance
+
+Focused acceptance begins with no old termination or CTO qualification proof.
+It proves: old HR request rejected with zero prompt/tool writes; all old HR
+jobs disabled and exact worker/tool sender exit or isolation verified; new
+unrelated HR request admitted only after committed trusted cut; old late
+callback/tool rejected; old UNKNOWN and active fence unchanged; new unknown
+fences new lineage; other Agents retain their pre-cut route and availability.
+Final production acceptance additionally needs a **NEW** harmless HR message
+received, started, completed and replied to through the original business
+channel. Source tests or an installed adapter alone do not meet this criterion.
+
+> Historical V3 authoring note retained for provenance: V3 carried V2 into a
+> durable recovery model. V4's present status and acceptance route are stated
+> in §0V4 above; V3 remains current until the V4 atomic transaction is merged.
 
 ## 0A. r2 narrow amendment — C-026/Lark coexistence and exact scope
 
@@ -1041,6 +1164,12 @@ Prompt receipt wait 使用 `promptReceiptTimeoutMs` total deadline。若 deadlin
 SAME_AGENTPROCESS_NEW_TURN_ADMISSION = FORBIDDEN
 ```
 
+V4-C027–C028 permits only a *different, durably cut and isolated* HR execution
+lineage to admit an unrelated new request under the same business Agent ID.
+It never permits a second turn on the fenced old AgentProcess, nor an old
+request or Session to cross the new boundary. Without a valid committed cut,
+the Agent-wide V3 gate remains intact.
+
 Fence 必须位于统一 `session/prompt` write boundary，覆盖 `turn()`、receipt-only `deliver()`、Scheduler bridge 及任何未来业务 prompt path；不得通过绕过 turn queue 的 delivery seam 向同一 process 注入新工作。
 
 所有尚未 prompt-send 的 queued turns 必须以结构化 `AGENT_PROCESS_TURN_FENCED` reject；不得在 fence 解除后自动发送。Caller 若仍希望执行，必须在 reconciliation 后进行新的显式业务 admission；这不是自动 replay。
@@ -1091,6 +1220,12 @@ timeout -> immediately admit next turn on same AgentProcess
 #### C-016 — Unknown fence release
 
 Fence 只能由 C-015 针对 **同一 active unknown turnExecutionId** 的 termination evidence 解除。特别地，`exact_queued_removal` 必须移除该 unknown execution 本身；移除别的 queued prompt 不影响 active fence。
+
+V4 does **not** clear that old fence for fresh-lineage admission. The exact old
+turn and record remain `outcome_unknown`/active and queryable, and remain
+ineligible for replay. V4-C027–C031 define a separate new-lineage admission
+branch after proven source isolation; none of its receipts count as C-015
+termination evidence for the old turn.
 
 Operator 猜测、固定等待时长、clear stale marker 不是 proof。
 
@@ -1242,12 +1377,24 @@ C-020. If that authority is unavailable, it keeps the Agent fenced and reports
 missing evidence and the minimal operator action. A new PID, elapsed time,
 absent PID lookup or new generation never proves the old generation terminated.
 
+Under V4-C027, startup also verifies and installs the exact new-lineage cut
+*before* registry/process admission. It restores the old Agent fence in the
+historical record without treating it as a fence on the new, isolated lineage.
+Any absent or untrusted cut, old-source ambiguity, Scheduler revision drift,
+worker/tool isolation uncertainty, or new-lineage identity mismatch restores
+the Agent-wide block. A new PID/generation never supplies the cut proof.
+
 Router startup holds one fail-closed business-admission barrier until the
 durable store is open, schema/caps validate, and every unresolved Agent fence is
 installed. While open, validation or restoration is pending—or when any step
 fails—real outer ingress returns `requestAdmission=not_admitted`; process spawn
 and prompt-write deltas are zero. Health/readiness must expose the blocked
 reason. No asynchronous post-readiness fence reload is legal.
+
+For the one exact V4 HR cut, readiness additionally requires its authenticated
+receipt to be read and bound in that same startup barrier; the old fence stays
+installed and active. The barrier may open only for the new lineage. Unrelated
+Agents remain on the original readiness path.
 
 ---
 
@@ -1910,9 +2057,9 @@ REPLACED_V1_PREVIOUSLY_PASSED_ITEMS_REGRESSION = NONE
 
 ### 12.1 Authority lifecycle
 
-This proposed candidate changes no active authority. Future acceptance is the
-atomic transaction in §0. V2 remains accepted until that transaction is
-reviewed, authorized and merged.
+This accepted V4 lifecycle becomes current authority on canonical merge. The
+V2→V3 transition in historical §0 is complete; the distinct V3→V4 atomic
+transaction is recorded in §0V4 and the attributable acceptance record.
 
 ### 12.2 Data migration
 
@@ -1972,9 +2119,10 @@ Independent review verifies:
 - fault plan covers the ten required scenarios and a real outer-entry E2E;
 - docs-only scope is preserved.
 
-After review PASS, Owner finalizes the exact reviewed r2 semantic commit through
-§0A's r2-specific mechanical transaction. Implementation may begin only from a
-fresh descendant of the accepted amendment in main.
+V3's r2 review/finalization was a completed historical amendment. V4
+fresh-lineage implementation may begin only from a
+fresh descendant of V4's independently reviewed and accepted successor on
+`main`, under §0V4.
 
 Implementation scope after acceptance is limited to:
 
@@ -1988,6 +2136,8 @@ packages/agent-router/src/process/spawn.js
 packages/agent-router/src/process-registry.js
 packages/agent-router/src/ingress-delivery.js
 packages/agent-router/src/index.js
+packages/agent-router/src/parent-rpc-relay.js  # V4 old RPC effect denial
+packages/agent-router/src/binding-store.js     # only if exact mapping metadata requires it
 packages/agent-router/test/process-lifecycle/**
 packages/agent-router/test/route-chain/**
 packages/agent-router/test/helpers/fake-child.js
@@ -2002,11 +2152,21 @@ refactoring or changes to normal Lark result contracts.
 Scheduler, Lark rendering, Binding/Session, credential, generic recovery
 platform or deployment changes require re-PREFLIGHT.
 
+V4's new branch does not itself authorize a generic Scheduler or deployment
+framework. Its minimal exact HR job-disable, trusted cut producer, root receipt
+consumer, and Binding transition require their own relevant accepted authority,
+execution mandate, preimage and review before production. A test of only the
+Router consumer never establishes that host cut.
+
 ## 15. Required real E2E before Goal completion
 
-Source tests are insufficient. Before Goal completion, a controlled harmless
-Feishu ingress produces an exact `outcome_unknown` without business effects and
-proves:
+Source tests are insufficient. The following V3 historical auto-recovery E2E
+remains binding for that old mechanism when it is claimed. It is not a
+prerequisite to this V4 incident's independent new-lineage mode. For V4, the
+binding production E2E is V4-C031 and must produce a **NEW** harmless HR
+receive→start→complete→reply result while the old UNKNOWN stays unchanged.
+The historical controlled ingress produces an exact `outcome_unknown` without
+business effects and proves:
 
 ```text
 OUTCOME_UNKNOWN_OBSERVED=YES
@@ -2030,10 +2190,10 @@ claimed by this docs-only Goal.
 ```text
 SOURCE_FIX_IMPLEMENTED = NO
 DEPLOYED_FIXED = NO
-CURRENT_AGENT_RECOVERED = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
-AUTO_RECOVERY_E2E = NO
-HISTORICAL_PROMPT_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
-HISTORICAL_ANSWER_REPLAY_COUNT = UNVERIFIED_IN_THIS_AUTHORITY_ARTIFACT
-READY_FOR_IMPLEMENTATION = NO
-REASON = proposed authority requires independent review, exact-head Owner acceptance and merge
+HR_FRESH_LINEAGE_RECOVERED = NO
+V4_REAL_E2E = NO
+OLD_UNKNOWN_RETAINED = REQUIRED_NOT_YET_PROVEN
+OLD_PROMPT_AND_EFFECT_REPLAY_COUNT = REQUIRED_ZERO_NOT_YET_PROVEN
+READY_FOR_IMPLEMENTATION = CONDITIONAL_ON_CANONICAL_MERGE_AND_FRESH_PREFLIGHT
+REASON = accepted docs-only authority grants bounded implementation after exact-base preflight, not production execution
 ```
