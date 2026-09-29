@@ -19,6 +19,12 @@ ASSURANCE_LEVEL
 
 Do not rely on unrecorded chat or inaccessible author-only material.
 
+## Review scope
+
+Use `review.scope = DELTA` for receipt-only Head changes, bounded semantic repairs, or bounded relevant Base changes; still independently recheck the final Head and all invalidated dependencies. Record `scope_reason` and `impact_evidence`. Use `FULL` only for `INITIAL_REVIEW`, an identified `ACCEPTED_FULL_GATE`, or demonstrated `UNBOUNDED_IMPACT`; a new SHA alone never requires it. The complete applicable production matrix stays mandatory, but unchanged mechanisms are not rerun without invalidation. Freeze scope/gates, not the ability to identify real risks.
+
+Follow the grammar's bounded delivery cycle. Review repairs and reachable regressions; do not restart full-system research under a new candidate or packet name. Historical reviews remain evidence, not new authority. Prefer persisting recheck receipts in the PR conversation, so recording the result does not change the reviewed candidate Head.
+
 ## Passes
 
 - **Authority/route:** local ownership, exact parents/refs, one unique Authority action, explicit implementation authority, proposal boundaries, no partial supersession, mandate scope.
@@ -59,7 +65,7 @@ REQUIRED_GATE_FAILURE
 
 Every Blocker states `SOURCE`, `COUNTEREXAMPLE`, `IMPACT`, `MINIMAL_CLOSURE`. Legal sources are accepted Product Authority, accepted local governance/invariant authority, a pre-existing active machine gate, or a valid Execution Mandate.
 
-Use `SPEC_GAP`, `FOLLOW_UP`, or `TOOLING_DEBT` for non-Blockers. A load-bearing gap still makes dependent readiness false. Inaccessible required Evidence is `REQUIRED_GATE_FAILURE`; use `FALSE_EVIDENCE` only for fabrication, material distortion, or false execution claim.
+Use `SPEC_GAP`, `FOLLOW_UP`, or `TOOLING_DEBT` for non-Blockers. A load-bearing gap still makes dependent readiness false, but must carry the protocol's concrete `spec_gap_detail` diagnosis. Reviewer preference or an unproven dependency cannot silently create a new product requirement. An unresolved safety uncertainty remains a narrow pause for fact-finding, not permission to execute. An open Blocker's named `affected_readiness` boundaries must include an explicit `NO` and no `YES`; do not stop unrelated authorized work. Inaccessible required Evidence is `REQUIRED_GATE_FAILURE`; use `FALSE_EVIDENCE` only for fabrication, material distortion, or false execution claim.
 
 ## Output
 
@@ -79,6 +85,11 @@ ACCEPTANCE_COVERAGE_REVIEW = PASS | FAIL | NOT_APPLICABLE
 MANDATE_SCOPE_REVIEW = PASS | FAIL | NOT_APPLICABLE
 EVIDENCE_REVIEWABILITY = PASS | FAIL | NOT_APPLICABLE
 BASE_IMPACT = NONE | BOUNDED | RELEVANT
+REVIEW_SCOPE = NONE | DELTA | FULL
+SCOPE_REASON = <when review or recheck is required>
+IMPACT_EVIDENCE = <bound diff and dependent evidence checks>
+FULL_REVIEW_BASIS = INITIAL_REVIEW | ACCEPTED_FULL_GATE | UNBOUNDED_IMPACT
+                   # only for FULL
 BLOCKERS = <n>
 SPEC_GAPS = <n>
 FOLLOW_UPS = <n>

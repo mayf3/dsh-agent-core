@@ -1,5 +1,7 @@
 # Review Record
 
+Current structured decisions use route schema v2; legacy inspection is not a readiness result.
+
 ## Coordinates
 
 ```text
@@ -26,6 +28,11 @@ ACCEPTANCE_COVERAGE_REVIEW = PASS | FAIL | NOT_APPLICABLE
 MANDATE_SCOPE_REVIEW = PASS | FAIL | NOT_APPLICABLE
 EVIDENCE_REVIEWABILITY = PASS | FAIL | NOT_APPLICABLE
 BASE_IMPACT = NONE | BOUNDED | RELEVANT
+REVIEW_SCOPE = NONE | DELTA | FULL
+SCOPE_REASON = <when scope is DELTA or FULL>
+IMPACT_EVIDENCE = <bound diff / authority / dependency check references>
+FULL_REVIEW_BASIS = INITIAL_REVIEW | ACCEPTED_FULL_GATE | UNBOUNDED_IMPACT
+                   # only for FULL; Head movement alone is insufficient
 BLOCKERS =
 SPEC_GAPS =
 FOLLOW_UPS =
@@ -48,9 +55,26 @@ SOURCE =
 COUNTEREXAMPLE =
 IMPACT =
 MINIMAL_CLOSURE =
+AFFECTED_READINESS = <dependent implementation_allowed / merge_ready / operation_allowed>
 ```
 
 Non-Blocker kinds are `SPEC_GAP`, `FOLLOW_UP`, and `TOOLING_DEBT`. A load-bearing gap sets dependent readiness to `NOT_READY` but does not let Reviewer write a Contract.
+
+## Stopping Spec gap (only when LOAD_BEARING)
+
+Keep this diagnosis in the same record; no separate proposal is needed merely to explain a stop. Structured keys live under `spec_gap_detail`:
+
+```text
+affected_action =
+missing_decision =
+authority_search = <active authorities examined and the uncovered decision>
+counterexample = <reachable failure if that decision remains unresolved>
+impact =
+minimal_closure =
+avoidance_analysis = <can scope reduction or an existing authorized path avoid the dependency?>
+```
+
+A missing decision need not cite a nonexistent Contract. An incomplete diagnosis is not execution permission; safely pause the affected work to obtain the missing fact. Existing Blocker sources, exact authorization, and required Evidence remain binding.
 
 ## Model convergence exit (conditional)
 
