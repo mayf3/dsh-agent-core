@@ -377,3 +377,10 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `HR_S256_ADMIN_EMERGENCY_RECOVERY_V1` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `0e80887d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | distinct peer-authenticated fixed action/ID, genuine CTO-free qualification prerequisite, one whole-host s256 cut, old effect UNKNOWN/no replay and conflict-specific restrictions |
+
+## Fixed registered-service maintenance proposal
+
+[PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V2](PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V2.md)
+is a **proposed whole-authority successor**, limited to the new fixed
+`scheduler-whole-main-maintenance-v1` profile; V1 remains accepted/current.
+Independent review is not acceptance or implementation/production permission.
