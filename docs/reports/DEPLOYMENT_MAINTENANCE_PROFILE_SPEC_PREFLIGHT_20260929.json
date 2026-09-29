@@ -23,15 +23,17 @@
   "doneWhen": "exact proposed head with acceptance matrix, governance evidence and same p2 changed-surface review; no product implementation",
   "nextAfterAcceptance": "bounded source/tests after accepted lifecycle in implementation base, production profile adoption separate",
   "revision": {
-    "event": "92bf73da-fd42-5d15-afab-2ba79643e904",
-    "parentHead": "38537bcd1ab84d585a03cfe65b780426bc8f89b7",
+    "event": "350ac44a-19b7-5bea-ab37-c9ee3ec52278",
+    "parentHead": "b6f028bd1c37dbd45c2fb66f295f491d67c071ec",
     "AUTHORITY_ACTION": "AMEND",
-    "route": "AUTHORING proposed V2 only; whole-authority SUPERSEDE V1 remains pending",
+    "ROUTE_STAGE": "AUTHORITY_AUTHORING",
     "scope": [
-      "complete-artifact capacity and bound inventory",
-      "new fixed exact-ID receipt capability before first mutation"
+      "finite mechanical V1 inheritance proof",
+      "independent preinstalled bootstrap reconciliation prerequisite"
     ],
     "IMPLEMENTATION_ALLOWED": false,
-    "OPERATION_ALLOWED": false
+    "OPERATION_ALLOWED": false,
+    "missingAdoptionInput": "pre-existing authorized exact bootstrap receipt plus independent installed/loaded reader closure readback; current evidence insufficient",
+    "doneWhen": "same p2 delta review and exact-head machine proof; V2 remains proposed"
   }
 }
