@@ -27,6 +27,7 @@ def _ds_record_dir(name, create=False):
     if create:
         try:
             os.mkdir(_DS_PRIVATE_ROOT, 0o700)
+            _ds_fsync_dir(parent)
         except FileExistsError:
             pass
     root_meta = os.stat(_DS_PRIVATE_ROOT, follow_symlinks=False)
@@ -37,6 +38,7 @@ def _ds_record_dir(name, create=False):
     if create:
         try:
             os.mkdir(target, 0o700)
+            _ds_fsync_dir(_DS_PRIVATE_ROOT)
         except FileExistsError:
             pass
     meta = os.stat(target, follow_symlinks=False)
