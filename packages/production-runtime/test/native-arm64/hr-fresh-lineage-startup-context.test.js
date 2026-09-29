@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import { once } from 'node:events'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { createConnection, createServer } from 'node:net'
@@ -127,4 +128,19 @@ test('wrong secret, disconnect, or false COMPLETE cannot authorize HR admission'
   }] })
   const context = await acceptFixedHrStartupChallenge(denied.channel, expected(), 1)
   await assert.rejects(context.awaitComplete(ACK_SHA), /root COMPLETE invalid/)
+})
+
+test('unsolicited early COMPLETE in the challenge packet closes the channel', async () => {
+  const socket = new EventEmitter()
+  socket.destroyed = false
+  socket.write = () => {}
+  socket.destroy = () => { socket.destroyed = true; socket.emit('close') }
+  const channel = fixedHrFrameChannel(socket)
+  const first = channel.next()
+  socket.emit('data', Buffer.from(`${JSON.stringify(challenge())}\n${JSON.stringify({
+    schema: 'HR_FRESH_LINEAGE_COMPLETE_V1', disposition: 'COMPLETE',
+  })}\n`))
+  await first
+  assert.equal(channel.live(), false)
+  await assert.rejects(channel.next(), /owned channel closed/)
 })
