@@ -346,6 +346,29 @@ export function apply(ctx, config = {}) {
         }
         return
       }
+      if (url.pathname === '/agent-process/turn-abandonment') {
+        // HR_RESET_AND_RESUME_V1 authenticated administrator entry: the
+        // EXISTING authsvc verifier seam + the EXISTING fleet admin scope
+        // workflow.admin, pinned to agt_hr-agent. Gate first; every denial
+        // is zero-mutation. The router service is a hard inject here, but
+        // the verifier follows the same request-time resolution discipline
+        // as the gated families above.
+        try {
+          const { handleAgentProcessAdminRequest } = await import('./agent-process-admin-routes.js')
+          const { status, body } = await handleAgentProcessAdminRequest({
+            req,
+            url,
+            router,
+            verifier: ctx.get('schedulerTokenVerifier') ?? null,
+          })
+          json(res, status, body)
+        } catch (error) {
+          const status = error?.status ?? 500
+          const code = error?.code ?? 'internal'
+          json(res, status, errorBody(code, error?.message ?? 'internal error'))
+        }
+        return
+      }
       if (['GET', 'POST'].includes(req.method ?? '')) {
         json(res, 404, errorBody('NOT_FOUND', `no such endpoint: ${req.method} ${url.pathname}`))
         return

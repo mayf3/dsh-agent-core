@@ -81,6 +81,22 @@ export const adminAbandonmentMethods = {
   },
 
   /**
+   * Non-consuming read projection of the agent's durable abandonment
+   * operations (for the authenticated admin entry's GET surface).
+   */
+  adminAbandonmentsForAgent(agentId) {
+    return (this.adminAbandonmentDeclarations ?? [])
+      .filter(declaration => declaration.agentId === agentId)
+      .map(declaration => ({
+        declarationId: declaration.declarationId,
+        declaredAt: declaration.declaredAt,
+        handles: [...declaration.handles],
+        pendingHandles: declaration.handles.filter(handle => this.records.get(handle)?.state !== 'settled'),
+        settledHandles: declaration.handles.filter(handle => this.records.get(handle)?.state === 'settled'),
+      }))
+  },
+
+  /**
    * Explicit administrator abandonment of the agent's current stuck turns.
    *
    * NEW declarationId: the exact stuck scope is captured and durably
@@ -124,7 +140,7 @@ export const adminAbandonmentMethods = {
       return { agentId, declarationId, abandonedHandles: [], completedHandles, scopeHandles: [...known.handles] }
     }
     if ((this.adminAbandonmentDeclarations?.length ?? 0) >= MAX_ADMIN_ABANDONMENT_DECLARATIONS) {
-      throw new ReconciliationCapacityError('reconciliation: admin abandonment declaration budget exhausted')
+      throw new ReconciliationCapacityError(`reconciliation: admin abandonment declaration budget exhausted (${MAX_ADMIN_ABANDONMENT_DECLARATIONS} distinct declaration ids per durable store; ids are never recycled and replay protection is never traded for capacity — retries of existing declaration ids remain possible)`)
     }
     const scopeHandles = stuckAdmissionHandles(this, agentId)
     const declaredAt = Date.now()

@@ -29,7 +29,7 @@ import { startupRecoveryMethods } from '../src/reconciliation/startup-recovery.j
 import { adminAbandonmentMethods } from '../src/reconciliation/admin-abandonment.js'
 
 const METHOD_COUNT_AGENT_PROCESS = 46 // V3 adds parent-owned recovery scheduling/coordinator methods (count drift re-verified at 83bea95c)
-const METHOD_COUNT_RECONCILIATION = 40 // V3 durable recovery/capacity/projections + HR_RESET_AND_RESUME_V1 admin-abandonment declaration/projection
+const METHOD_COUNT_RECONCILIATION = 41 // V3 durable recovery/capacity/projections + HR_RESET_AND_RESUME_V1 declaration/projection/read-projection
 
 function composedKeys(groups) {
   const keys = new Set()

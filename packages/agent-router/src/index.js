@@ -405,6 +405,9 @@ export function apply(ctx, config) {
      *  of an Agent's stuck outcome_unknown turns; unblocks NEW-request
      *  admission only (records stay fenced/unknown; no replay). */
     abandonPendingTurns: ingressDelivery.abandonPendingTurns,
+    /** HR_RESET_AND_RESUME_V1 read projection: the Agent's durable
+     *  abandonment declarations (non-consuming; authenticated admin entry). */
+    abandonmentDeclarationsSnapshot: (agentId) => reconciliationStore.adminAbandonmentsForAgent?.(agentId) ?? [],
     ensureRunning: registry.ensureRunning,
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */
