@@ -179,6 +179,8 @@ NEXT_ACTION = RE_PREFLIGHT
 
 `REUSE` and unresolved `AMEND_OR_NEW_PENDING_OWNERSHIP` are invalid at the readiness boundary. `OWNER_DECISION_REQUIRED = YES` may coexist when ownership or containment requires Owner input, but it does not replace `NEXT_ACTION = RE_PREFLIGHT`. The owning Author/Owner resolves the action or removes the dependency.
 
+A structured stopping gap also records `spec_gap_detail`: `affected_action`, `missing_decision`, `authority_search`, `counterexample`, `impact`, `minimal_closure`, and `avoidance_analysis`. These are a compact dependency diagnosis in the same record, not a new Spec or approval. Explain why the current action needs the missing decision and why scope reduction or an existing authorized path does or does not avoid it. No nonexistent Contract ID is required. Missing diagnosis fails record validation but never makes uncertain work safe or authorizes proceeding. Supply the missing fact without expanding into hypothetical platform design.
+
 ## Evidence reviewability
 
 Evidence for acceptance/conformance is accessible to the independent Reviewer, reproducible in an authorized environment, or represented by a sanitized coordinate-bound receipt from a legally independent actor.
@@ -242,7 +244,9 @@ REQUIRED_GATE_FAILURE
 
 Every Blocker records `SOURCE`, `COUNTEREXAMPLE`, `IMPACT`, and `MINIMAL_CLOSURE`. Legal sources are accepted Product Authority, accepted local governance/invariant authority, a pre-existing active machine gate, or a valid Execution Mandate. Investigation preference, proposed tests, task product prose, Reviewer preference, and Review comments are not Product-Contract sources.
 
-`SPEC_GAP`, `FOLLOW_UP`, and `TOOLING_DEBT` are non-Blocker finding kinds, though a load-bearing gap still makes readiness false.
+`SPEC_GAP`, `FOLLOW_UP`, and `TOOLING_DEBT` are non-Blocker finding kinds, though a load-bearing gap still makes readiness false and needs the dependency diagnosis above. A `SPEC_GAP` finding marked `load_bearing: true` must agree with the top-level dependency classification.
+
+Current and resumed decisions use route schema v2. Every open Blocker must name dependent boundaries in `affected_readiness`: none may be `YES` and at least one must be `NO`; absent, empty, malformed, or N/A-only scope is invalid. The default validator and current JSON Schema require v2. Historical v1 records are inspected only through `validate_route(record, legacy_inspection=True)` or CLI `--legacy-inspection`, with output explicitly not valid for current readiness. This invocation option is not a record-supplied provenance flag. It neither rewrites history nor grants permission; a resumed decision creates a current v2 record with real scope and authorization.
 
 ## Candidate, Base, and acceptance
 
@@ -253,6 +257,18 @@ CURRENT_BASE_HEAD = current branch tip at impact recheck
 ```
 
 Unrelated Base movement gets a bounded conflict/authority/behavior/Evidence check, not automatic full review. Candidate semantic change, relevant authority change, affected behavior/Evidence change, or real conflict invalidates affected review.
+
+For structured movement/review records, declare:
+
+```text
+review.scope = NONE | DELTA | FULL
+review.scope_reason = bounded scope and why it is sufficient
+review.impact_evidence = exact diff / authority / dependency / evidence check references
+review.full_review_basis = INITIAL_REVIEW | ACCEPTED_FULL_GATE | UNBOUNDED_IMPACT
+                          # required only for FULL
+```
+
+`full_rereview_required` remains a compatibility field, derived from `scope == FULL`, not from Head movement. A changed candidate or relevant Base impact requires at least `DELTA`; receipt/lifecycle-only changes still require final-Head recheck. Semantic repairs invalidate affected review and require independent delta review, not reuse of an old recommendation. `FULL` requires the identified basis and bounded applicable matrix; a mere new SHA is not a basis. Unchanged legacy records without a new scope remain valid. Old movement records and stopping gaps must supply these details when resumed under this distribution; historical records are not rewritten.
 
 Acceptance additionally binds:
 
@@ -267,7 +283,7 @@ Any semantic delta invalidates the recommendation. Lifecycle-only acceptance sti
 
 ## Conformance
 
-Standard review covers affected Contracts and directly dependent invariants. Use a full matrix for controlled operations, releases, explicit full audits, or unbounded surfaces.
+Standard review covers affected Contracts and directly dependent invariants. Use a full matrix for controlled operations, releases, explicit full audits, or unbounded surfaces. Identify that complete applicable matrix against the current operation/release scope before execution; it is not automatically the entire system. Reuse unaffected evidence with an explicit coordinate/impact check. Re-run only invalidated checks and time-sensitive pre-state/authority/runtime checks required by that matrix.
 
 A Conformance Record binds exact authority revision, implementation revision, environment, evaluated time, implementation state, verification state, `conformance_result`, executed Observations, and Evidence.
 
@@ -284,6 +300,10 @@ DONE_WHEN met + EXPANSION_TRIGGER not fired = STOP
 ```
 
 Optional platform work, extra fault research, Agent availability, sunk cost, and unrequested cleanup are not progress.
+
+Resume from one current delivery record as described in the grammar's Bounded delivery loop. Freeze its accepted scope and applicable gates; new real risks still stop dependent work, while reviewer preferences do not add gates. Keep all valid blockers visible even when prioritizing one. Count unsuccessful repair/review rounds against the original delivery goal across candidate renames; at three rounds make a scope/split/authority/abandon decision, not another unbounded expansion. Continue the next authorized gated action; do not substitute another unchanged report for execution. Recovery using existing accepted mechanisms and valid controlled authorization need not wait for optional redesign.
+
+These cross-turn controls are Agent policy, not an implemented scheduler or persistent delivery ledger. The route validator checks the supplied record; it does not prove history, authorization, or that a real operation occurred.
 
 A consumer adopts exact bytes and source commit through its own local acceptance. Preparing vendored files is not acceptance. No bulk historical rewrite is required.
 

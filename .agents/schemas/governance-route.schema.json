@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:mayf3:agent-development-governance:route:v1",
-  "title": "Governance V1 route record",
+  "$id": "urn:mayf3:agent-development-governance:route:v2",
+  "title": "Current Governance route record v2",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -29,7 +29,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "task_id": {
       "type": "string",
@@ -415,8 +415,163 @@
         },
         "full_rereview_required": {
           "type": "boolean"
+        },
+        "scope": {
+          "enum": [
+            "NONE",
+            "DELTA",
+            "FULL"
+          ]
+        },
+        "scope_reason": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "impact_evidence": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "full_review_basis": {
+          "enum": [
+            "INITIAL_REVIEW",
+            "ACCEPTED_FULL_GATE",
+            "UNBOUNDED_IMPACT"
+          ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {
+                "properties": {
+                  "target_head_changed": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "target_head_changed"
+                ]
+              },
+              {
+                "properties": {
+                  "relevant_base_impact": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "relevant_base_impact"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "scope",
+              "scope_reason",
+              "impact_evidence"
+            ],
+            "properties": {
+              "scope": {
+                "enum": [
+                  "DELTA",
+                  "FULL"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "full_rereview_required": {
+                "const": true
+              }
+            },
+            "required": [
+              "full_rereview_required"
+            ]
+          },
+          "then": {
+            "required": [
+              "scope"
+            ],
+            "properties": {
+              "scope": {
+                "const": "FULL"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "FULL"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "required": [
+              "scope_reason",
+              "impact_evidence",
+              "full_review_basis"
+            ],
+            "properties": {
+              "full_rereview_required": {
+                "const": true
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "DELTA"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "required": [
+              "scope_reason",
+              "impact_evidence"
+            ],
+            "properties": {
+              "full_rereview_required": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "scope": {
+                "const": "NONE"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "properties": {
+              "full_rereview_required": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
     },
     "readiness": {
       "type": "object",
@@ -476,7 +631,173 @@
       }
     },
     "findings": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "BLOCKER",
+              "SPEC_GAP",
+              "FOLLOW_UP",
+              "TOOLING_DEBT"
+            ]
+          },
+          "load_bearing": {
+            "type": "boolean"
+          },
+          "affected_readiness": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "implementation_allowed",
+                "merge_ready",
+                "operation_allowed"
+              ]
+            },
+            "description": "Required for every current open Blocker; explicit dependent readiness boundaries. Historical schema-v1 records use a separate inspection-only invocation, not current readiness validation."
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "BLOCKER"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "required": [
+                "blocker_class",
+                "source_type",
+                "source",
+                "counterexample",
+                "impact",
+                "minimal_closure",
+                "affected_readiness"
+              ],
+              "properties": {
+                "blocker_class": {
+                  "enum": [
+                    "CONTRACT_VIOLATION",
+                    "REPOSITORY_INVARIANT_VIOLATION",
+                    "CONCRETE_REGRESSION",
+                    "SECURITY_OR_DATA_LOSS",
+                    "FALSE_EVIDENCE",
+                    "SCOPE_ESCALATION",
+                    "REQUIRED_GATE_FAILURE"
+                  ]
+                },
+                "source_type": {
+                  "enum": [
+                    "ACCEPTED_PRODUCT_AUTHORITY",
+                    "ACCEPTED_LOCAL_GOVERNANCE",
+                    "MACHINE_GATE",
+                    "EXECUTION_MANDATE"
+                  ]
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "counterexample": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "impact": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "minimal_closure": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "spec_gap_detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "affected_action",
+        "missing_decision",
+        "authority_search",
+        "counterexample",
+        "impact",
+        "minimal_closure",
+        "avoidance_analysis"
+      ],
+      "properties": {
+        "affected_action": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "missing_decision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "authority_search": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "counterexample": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "minimal_closure": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "avoidance_analysis": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "spec_gap_dependency": {
+            "const": "LOAD_BEARING"
+          }
+        },
+        "required": [
+          "spec_gap_dependency"
+        ]
+      },
+      "then": {
+        "required": [
+          "spec_gap_detail"
+        ]
+      }
+    }
+  ]
 }
