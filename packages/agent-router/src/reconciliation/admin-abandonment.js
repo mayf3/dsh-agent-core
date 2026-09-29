@@ -39,7 +39,7 @@
  * reset always unblocks what the blocker projection actually blocks.
  */
 
-import { ReconciliationCapacityError } from './capacity.js'
+import { RECONCILIATION_CAPS, ReconciliationCapacityError } from './capacity.js'
 
 /** Bounded number of durable declaration operations (closed store budget). */
 export const MAX_ADMIN_ABANDONMENT_DECLARATIONS = 32
@@ -73,6 +73,25 @@ function stuckAdmissionHandles(store, agentId) {
       && record.initialOutcome === 'outcome_unknown' && record.fenceState !== 'cleared'
       && (record.adminAbandonment ?? null) === null)
     .map(record => record.handle)
+}
+
+/**
+ * ONE atomic candidate mutation for a stamp: the abandonment marker and —
+ * under D6 — the owner-decision audit entry land in the SAME mutateRecord
+ * transaction, so a crash can never leave a stamped record without its
+ * decision audit (no authorized path could backfill it: retries skip stamped
+ * records and fresh scopes exclude them). The audit bounding replicates
+ * appendAudit's caps exactly (MAX entries / MAX bytes, auditDroppedCount).
+ */
+function stampCandidate(candidate, { declarationId, declaredAt, withAcceptance }) {
+  candidate.adminAbandonment = { declarationId, declaredAt }
+  if (withAcceptance !== true) return
+  candidate.audit.push({ kind: 'owner_risk_acceptance_unproven_termination', evidenceType: null, observedAtWallMs: Date.now() })
+  while (candidate.audit.length > RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_ENTRIES_PER_RECORD
+      || Buffer.byteLength(JSON.stringify(candidate.audit), 'utf8') > RECONCILIATION_CAPS.MAX_RECONCILIATION_AUDIT_BYTES_PER_RECORD) {
+    candidate.audit.shift()
+    candidate.auditDroppedCount = (candidate.auditDroppedCount ?? 0) + 1
+  }
 }
 
 export const adminAbandonmentMethods = {
@@ -179,11 +198,8 @@ export const adminAbandonmentMethods = {
             || record.initialOutcome !== 'outcome_unknown' || record.fenceState === 'cleared'
             || (record.adminAbandonment ?? null) !== null) continue
         this.mutateRecord(record, (candidate) => {
-          candidate.adminAbandonment = { declarationId, declaredAt: known.declaredAt }
+          stampCandidate(candidate, { declarationId, declaredAt: known.declaredAt, withAcceptance: ownerRiskAcceptance })
         })
-        if (ownerRiskAcceptance === true) {
-          this.appendAudit(record, { kind: 'owner_risk_acceptance_unproven_termination' })
-        }
         completedHandles.push(handle)
       }
       return { agentId, declarationId, abandonedHandles: [], completedHandles, scopeHandles: [...known.handles] }
@@ -203,11 +219,8 @@ export const adminAbandonmentMethods = {
     for (const handle of scopeHandles) {
       const record = this.records.get(handle)
       this.mutateRecord(record, (candidate) => {
-        candidate.adminAbandonment = { declarationId, declaredAt }
+        stampCandidate(candidate, { declarationId, declaredAt, withAcceptance: ownerRiskAcceptance })
       })
-      if (ownerRiskAcceptance === true) {
-        this.appendAudit(record, { kind: 'owner_risk_acceptance_unproven_termination' })
-      }
     }
     return { agentId, declarationId, abandonedHandles: [...scopeHandles], completedHandles: [], scopeHandles }
   },

@@ -377,6 +377,20 @@ test('explicit Owner risk acceptance admits the restart-lost class: audit kept, 
   assert.equal(absent.body.error.code, 'restart_lost_termination_evidence_unavailable')
   assert.equal(mutationProbe(rig), before, 'the refusal alone mutates nothing')
 
+  // D6 semantics: the acceptance flag NEVER admits an identifiable execution —
+  // STARTUP/REAP/live refusals precede the hatch structurally.
+  const savedSlotForProbe = rig.lifecycleSlotSnapshot
+  rig.lifecycleSlotSnapshot = () => ({ state: 'STARTUP', generation: 9 })
+  const hatchOverStartup = await call(base, '/agent-process/turn-abandonment', {
+    method: 'POST',
+    body: { agentId: HR, declarationId: 'reset-accept-startup', acceptUnprovenTerminationRisk: true },
+    token: CTO_TOKEN,
+  })
+  assert.equal(hatchOverStartup.status, 409, JSON.stringify(hatchOverStartup.body))
+  assert.equal(hatchOverStartup.body.error.code, 'startup_in_progress')
+  assert.equal(mutationProbe(rig), before, 'the flag does not stamp over an identifiable execution')
+  rig.lifecycleSlotSnapshot = savedSlotForProbe
+
   // The authorized CTO explicitly accepts the unproven-termination risk
   // (Owner decision D6): the reset proceeds for exactly this class.
   const res = await call(base, '/agent-process/turn-abandonment', {

@@ -15,7 +15,7 @@ independent_reviewer_id: zcode-local-independent-spec-reviewer-r1
 independent_reviewed_head: 34f53cd7
 independent_review_load_bearing_gaps: 0
 independent_review_non_blocking_notes: section-heading normalization at/before acceptance; status enum wording; merge gate must hold until Owner acceptance; refuseUnDrainedExecution registrySnapshot capability hardening (FOLLOW_UP)
-amendment_r3: D6 Owner risk-acceptance channel for the uncollectable-evidence restart-lost class (C1/C2/N1/§3 aligned); AMENDMENT_REVIEW_PENDING — independent re-review required before acceptance
+amendment_r3_independent_review: REVISE / LOAD_BEARING_GAPS=1 (reviewer zcode-local-independent-spec-reviewer-r3; gap = marker stamp and decision audit were two separate durable transactions, crash between them left a stamped record without its decision audit and no authorized backfill path) — FIXED: marker + owner-decision audit now land in ONE atomic mutateRecord at both stamp sites (shared stampCandidate bounding helper), plus a D6 semantic negative test (the flag never admits STARTUP/REAP/live). Re-review of the fix required before acceptance.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
