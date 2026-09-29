@@ -27,24 +27,28 @@ def _ds_record_dir(name, create=False):
     if create:
         try:
             os.mkdir(_DS_PRIVATE_ROOT, 0o700)
-            _ds_fsync_dir(parent)
         except FileExistsError:
             pass
     root_meta = os.stat(_DS_PRIVATE_ROOT, follow_symlinks=False)
     require(stat.S_ISDIR(root_meta.st_mode) and
             stat.S_IMODE(root_meta.st_mode) == 0o700 and
             (TEST_MODE or root_meta.st_uid == 0), 'DS_RECORD_ROOT_CUSTODY')
+    if create:
+        # A prior interrupted attempt may have created this directory without
+        # proving its name durable. Reconfirm the parent on every effect path.
+        _ds_fsync_dir(parent)
     target = os.path.join(_DS_PRIVATE_ROOT, name)
     if create:
         try:
             os.mkdir(target, 0o700)
-            _ds_fsync_dir(_DS_PRIVATE_ROOT)
         except FileExistsError:
             pass
     meta = os.stat(target, follow_symlinks=False)
     require(stat.S_ISDIR(meta.st_mode) and
             stat.S_IMODE(meta.st_mode) == 0o700 and
             (TEST_MODE or meta.st_uid == 0), 'DS_RECORD_DIR_CUSTODY')
+    if create:
+        _ds_fsync_dir(_DS_PRIVATE_ROOT)
     return target
 
 

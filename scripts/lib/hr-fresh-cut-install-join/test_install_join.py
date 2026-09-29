@@ -190,6 +190,33 @@ class InstallJoinTest(unittest.TestCase):
         for name, path in self.targets.items():
             self.assertEqual(path.read_bytes(), self.old[name])
 
+    def test_existing_private_root_requires_parent_fsync_before_install(self):
+        (self.root / 'fixed-ds-install-records').mkdir(mode=0o700)
+        original = self.mod._ds_fsync_dir
+        def refuse(directory):
+            if directory == str(self.root):
+                raise OSError('simulated unproven existing root')
+            return original(directory)
+        self.mod._ds_fsync_dir = refuse
+        result = self.call(self.packet())
+        self.assertFalse(result['ok'])
+        for name, path in self.targets.items():
+            self.assertEqual(path.read_bytes(), self.old[name])
+
+    def test_existing_intent_dir_requires_parent_fsync_before_install(self):
+        private_root = self.root / 'fixed-ds-install-records'
+        (private_root / 'intents').mkdir(parents=True, mode=0o700)
+        original = self.mod._ds_fsync_dir
+        def refuse(directory):
+            if directory == str(private_root):
+                raise OSError('simulated unproven existing child')
+            return original(directory)
+        self.mod._ds_fsync_dir = refuse
+        result = self.call(self.packet())
+        self.assertFalse(result['ok'])
+        for name, path in self.targets.items():
+            self.assertEqual(path.read_bytes(), self.old[name])
+
     def test_ambiguous_commit_receipt_never_rolls_back_committed_bytes(self):
         original = self.mod._ds_terminal
         def replace_then_raise(operation_id, value):
