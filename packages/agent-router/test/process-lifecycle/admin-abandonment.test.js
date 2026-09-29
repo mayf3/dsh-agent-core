@@ -144,3 +144,134 @@ test('durable validator rejects a malformed abandonment marker and accepts the c
     rmSync(root, { recursive: true, force: true })
   }
 })
+
+test('review r4130766501 regression: retrying a COMPLETED declaration never adopts a later unknown turn', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-abandon-retry' })
+  const turnA = stuckTurn(store, HR, { generation: 1 })
+  const first = store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+  assert.deepEqual(first.abandonedHandles, [turnA])
+  // A later, independent turn becomes unknown AFTER reset-1 completed.
+  const turnB = stuckTurn(store, HR, { generation: 2 })
+  const retry = store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+  assert.deepEqual(retry.abandonedHandles, [], 'retry of a completed declaration abandons nothing new')
+  assert.deepEqual(retry.scopeHandles, [turnA], 'retry stays bound to the original operation scope')
+  const recordB = rawRecord(store, turnB)
+  assert.equal(recordB.adminAbandonment ?? null, null, 'the later task is never marked by the old operation')
+  assert.equal(store.admissionBlockerForAgent(HR)?.handle, turnB, 'the later task keeps fencing admission')
+  assert.equal(rawRecord(store, turnA).adminAbandonment.declarationId, 'reset-1')
+  // Only an explicit NEW declaration may reset the later task.
+  const second = store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-2' })
+  assert.deepEqual(second.abandonedHandles, [turnB])
+  assert.equal(store.admissionBlockerForAgent(HR), null)
+})
+
+test('scope binding survives restart: retry after reopen still cannot adopt a later unknown', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-scope-restart-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-scope-a' })
+    const turnA = stuckTurn(store, HR)
+    store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-scope-b' })
+    const turnB = stuckTurn(reopened, HR, { generation: 1 })
+    const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+    assert.deepEqual(retry.abandonedHandles, [])
+    assert.deepEqual(retry.scopeHandles, [turnA], 'durable registry keeps the original scope across restarts')
+    assert.equal((rawRecord(reopened, turnB).adminAbandonment) ?? null, null)
+    assert.equal(reopened.admissionBlockerForAgent(HR)?.handle, turnB)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('partial-write recovery: retry completes exactly the registered original scope', () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-partial-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-partial-a' })
+    const turnA = stuckTurn(store, HR)
+    const declaredAt = 1700000000000
+    // Crash seam: scope registered + persisted, stamps not yet written.
+    store.adminAbandonmentDeclarations = [{
+      declarationId: 'partial-1', agentId: HR, handles: [turnA], declaredAt,
+    }]
+    store.persistDurable()
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-partial-b' })
+    assert.equal(rawRecord(reopened, turnA).adminAbandonment ?? null, null, 'stamp missing before the crash')
+    const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'partial-1' })
+    assert.deepEqual(retry.abandonedHandles, [])
+    assert.deepEqual(retry.completedHandles, [turnA], 'retry completes the original scope only')
+    assert.deepEqual(rawRecord(reopened, turnA).adminAbandonment, { declarationId: 'partial-1', declaredAt }, 'completion restamps with the ORIGINAL declaredAt')
+    assert.equal(reopened.admissionBlockerForAgent(HR), null)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('a declarationId bound to another agent fails loud and never restamps', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-abandon-xagent' })
+  const hrHandle = stuckTurn(store, HR)
+  store.declareAdminAbandonment({ agentId: HR, declarationId: 'shared-1' })
+  const otherHandle = stuckTurn(store, OTHER)
+  assert.throws(() => store.declareAdminAbandonment({ agentId: OTHER, declarationId: 'shared-1' }),
+    error => error.code === 'RECONCILIATION_DECLARATION_CONFLICT')
+  assert.equal((rawRecord(store, otherHandle).adminAbandonment) ?? null, null)
+  assert.equal(rawRecord(store, hrHandle).adminAbandonment.declarationId, 'shared-1')
+})
+
+test('marker-only reconstruction: pre-registry durable file still binds retries to the original scope', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-reconstruct-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-recon-a' })
+    const turnA = stuckTurn(store, HR)
+    store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+    // Simulate a file rewritten by a binary that predates the registry: the
+    // top-level field is dropped but per-record markers survive.
+    const fs = await import('node:fs')
+    const raw = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'))
+    delete raw.adminAbandonmentDeclarations
+    fs.writeFileSync(persistenceFile, `${JSON.stringify(raw)}\n`)
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-recon-b' })
+    const turnB = stuckTurn(reopened, HR, { generation: 1 })
+    const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
+    assert.deepEqual(retry.abandonedHandles, [])
+    assert.deepEqual(retry.scopeHandles, [turnA], 'reconstructed scope keeps the retry bound')
+    assert.equal((rawRecord(reopened, turnB).adminAbandonment) ?? null, null)
+    assert.equal(reopened.admissionBlockerForAgent(HR)?.handle, turnB)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('empty-scope declaration registers its (empty) operation: later turns are never adopted', () => {
+  const store = new TurnReconciliationStore({ runtimeEpoch: 'epoch-abandon-empty' })
+  const first = store.declareAdminAbandonment({ agentId: HR, declarationId: 'pre-1' })
+  assert.deepEqual(first.abandonedHandles, [])
+  const turnB = stuckTurn(store, HR)
+  const retry = store.declareAdminAbandonment({ agentId: HR, declarationId: 'pre-1' })
+  assert.deepEqual(retry.abandonedHandles, [])
+  assert.deepEqual(retry.scopeHandles, [])
+  assert.equal((rawRecord(store, turnB).adminAbandonment) ?? null, null)
+  assert.equal(store.admissionBlockerForAgent(HR)?.handle, turnB)
+})
+
+test('durable validator rejects a malformed scope registry fail-closed', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-registry-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-registry-a' })
+    const handle = stuckTurn(store, HR)
+    store.declareAdminAbandonment({ agentId: HR, declarationId: 'decl-registry' })
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-registry-b' })
+    assert.deepEqual(reopened.adminAbandonmentDeclarations[0].handles, [handle])
+    const fs = await import('node:fs')
+    const raw = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'))
+    raw.adminAbandonmentDeclarations[0].handles = 'not-an-array'
+    fs.writeFileSync(persistenceFile, `${JSON.stringify(raw)}\n`)
+    const rejected = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-registry-c' })
+    assert.equal(rejected.startupBlockedReason, 'durable_store_invalid', 'malformed scope registry fails the durable load closed')
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
