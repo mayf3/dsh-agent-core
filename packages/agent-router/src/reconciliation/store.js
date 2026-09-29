@@ -42,9 +42,11 @@ import { settlementMethods } from './state-machine.js'
 import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
 import { startupRecoveryMethods } from './startup-recovery.js'
-import { adminAbandonmentMethods } from './admin-abandonment.js'
+import { adminAbandonmentMethods, reconstructAdminAbandonmentDeclarations } from './admin-abandonment.js'
 import { FreshHrLineageMethods } from './fresh-hr-lineage.js'
-import { readDurableRecoveryStore, writeDurableRecoveryStore } from './durable-file.js'
+import { readDurableRecoveryStore, writeDurableRecoveryStore,
+  abandonmentDeclarationRegistryPathFor,
+  readAbandonmentDeclarationRegistry, writeAbandonmentDeclarationRegistry } from './durable-file.js'
 import { validatedIngressCorrelation } from './ingress-correlation.js'
 
 const MANDATORY_TRANSITION_HEADROOM_BYTES = 4096
@@ -67,6 +69,12 @@ export class TurnReconciliationStore {
     this.freshHrLineageTokens = new WeakSet()
     this.freshHrStartupTokens = new WeakSet()
     this.freshHrMount = null
+    /** Durable admin-abandonment operation registry (HR_RESET_AND_RESUME_V1):
+     * declarationId -> exact original scope; retries complete only that scope.
+     * Persisted in its own sibling file (never inside the recovery file, which
+     * binaries predating the registry rewrite with a fixed top-level shape). */
+    this.adminAbandonmentDeclarationsDirty = false
+    this.adminAbandonmentDeclarations = []
     /** handle -> record */
     this.records = new Map()
     /** agentId -> { discriminator, maxIssuedTurnSeq, evictedThroughTurnSeq, evictedSparseSeqs:Set, generations: Map<generation, {minSeq,maxSeq,hasUnresolved}> } */
@@ -83,15 +91,23 @@ export class TurnReconciliationStore {
     if (this.persistenceFile !== null) {
       try {
         const durable = readDurableRecoveryStore(this.persistenceFile)
+        // Registry-first from the sibling file; marker reconstruction is the
+        // fallback for stores with no registry file (per-record markers
+        // survive every durable round-trip).
+        const registry = readAbandonmentDeclarationRegistry(
+          abandonmentDeclarationRegistryPathFor(this.persistenceFile))
         if (durable !== null) {
           for (const epoch of durable.runtimeEpochs) this.runtimeEpochs.add(epoch)
           this.records = durable.records
           this.issuance = durable.issuance
           this.correlationIndex = durable.correlationIndex
           this.discriminatorSeq = durable.discriminatorSeq
+          this.adminAbandonmentDeclarations = registry
+            ?? reconstructAdminAbandonmentDeclarations(this.records)
           this.recountCapacity()
           this.restoreCrashInterruptedRecords()
         } else {
+          if (registry !== null) this.adminAbandonmentDeclarations = registry
           this.persistDurable()
         }
       } catch (error) {
@@ -171,6 +187,17 @@ export class TurnReconciliationStore {
     }
     try {
       this.compactRuntimeEpochs()
+      // The scope registry is written BEFORE the recovery file: a new
+      // declaration must be durably registered before the stamps that the
+      // recovery-file write below persists (scope-first durability), and the
+      // sibling file is the only registry location that survives an
+      // old-binary rewrite of the recovery file.
+      if (this.adminAbandonmentDeclarationsDirty) {
+        writeAbandonmentDeclarationRegistry(
+          abandonmentDeclarationRegistryPathFor(this.persistenceFile),
+          [...(this.adminAbandonmentDeclarations ?? [])])
+        this.adminAbandonmentDeclarationsDirty = false
+      }
       writeDurableRecoveryStore(this.persistenceFile, this)
     } catch (error) {
       this.startupBlockedReason = 'durable_store_unavailable'

@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
 import { RECONCILIATION_CAPS } from './capacity.js'
 import { validatedIngressCorrelation } from './ingress-correlation.js'
+import { MAX_ADMIN_ABANDONMENT_DECLARATIONS } from './admin-abandonment.js'
 
 export const DURABLE_RECOVERY_VERSION = 3
 
@@ -51,6 +52,79 @@ const MANDATORY_RECORD_FIELDS = [
 
 function validNullableTimestamp(value) {
   return value === null || (Number.isSafeInteger(value) && value >= 0)
+}
+
+/**
+ * Durable admin-abandonment scope registry (HR_RESET_AND_RESUME_V1):
+ * declarationId -> exact original operation scope, persisted BEFORE any
+ * record stamp so retries can never adopt a later task. The registry lives
+ * in its OWN sibling file next to the recovery store, NOT inside the
+ * recovery file: binaries that predate the registry rewrite the recovery
+ * file with a fixed top-level shape and would silently drop a registry
+ * stored there, stranding an unstamped scope after a rollback/reupgrade
+ * (review finding). A sibling file is never read or written by older
+ * binaries, so the scope survives every rollback. Absent registry file (or
+ * absent per-store path) => null (the store then reconstructs scopes from
+ * the per-record markers); present values are the closed entry shape,
+ * fail-closed.
+ */
+export function abandonmentDeclarationRegistryPathFor(file) {
+  return file === null || file === undefined ? null : `${file}.abandonment-declarations.json`
+}
+
+function assertDurableAbandonmentDeclarations(entries) {
+  if (entries === undefined) return null
+  if (!Array.isArray(entries) || entries.length > MAX_ADMIN_ABANDONMENT_DECLARATIONS) {
+    throw new TypeError('durable abandonment declaration registry is invalid')
+  }
+  const ids = new Set()
+  for (const entry of entries) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)
+        || Object.keys(entry).sort().join(',') !== ['declarationId', 'agentId', 'handles', 'declaredAt'].sort().join(',')
+        || typeof entry.declarationId !== 'string' || entry.declarationId === '' || entry.declarationId.length > 128
+        || typeof entry.agentId !== 'string' || entry.agentId === '' || entry.agentId.length > 256
+        || !Number.isSafeInteger(entry.declaredAt) || entry.declaredAt < 0
+        || !Array.isArray(entry.handles) || entry.handles.length > RECONCILIATION_CAPS.MAX_RECONCILIATION_RECORDS_PER_AGENT
+        || entry.handles.some(handle => typeof handle !== 'string' || handle === '' || handle.length > 512)
+        || new Set(entry.handles).size !== entry.handles.length
+        || ids.has(entry.declarationId)) {
+      throw new TypeError('durable abandonment declaration entry is invalid')
+    }
+    ids.add(entry.declarationId)
+  }
+  return entries.map(entry => ({ ...entry, handles: [...entry.handles] }))
+}
+
+/** Write the sibling scope registry atomically (same discipline as the
+ *  recovery store: temp file + fsync + rename + directory fsync). */
+export function writeAbandonmentDeclarationRegistry(file, entries) {
+  if (file === null || file === undefined) return
+  mkdirSync(dirname(file), { recursive: true })
+  const temp = `${file}.tmp-${process.pid}-${Date.now()}`
+  try {
+    writeFileSync(temp, `${JSON.stringify({ version: DURABLE_RECOVERY_VERSION, declarations: entries })}\n`,
+      { encoding: 'utf8', mode: 0o600 })
+    const fd = openSync(temp, 'r')
+    try { fsyncSync(fd) } finally { closeSync(fd) }
+    renameSync(temp, file)
+    const directoryFd = openSync(dirname(file), 'r')
+    try { fsyncSync(directoryFd) } finally { closeSync(directoryFd) }
+  } finally {
+    try { unlinkSync(temp) } catch { /* rename or cleanup already removed it */ }
+  }
+}
+
+/** Read the sibling scope registry; null when absent, fail-closed on any
+ *  malformed content (the registry authorizes retry completion scope). */
+export function readAbandonmentDeclarationRegistry(file) {
+  if (file === null || file === undefined || !existsSync(file)) return null
+  const parsed = JSON.parse(readFileSync(file, 'utf8'))
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)
+      || parsed.version !== DURABLE_RECOVERY_VERSION
+      || !Array.isArray(parsed.declarations)) {
+    throw new TypeError('durable abandonment declaration registry file is invalid')
+  }
+  return assertDurableAbandonmentDeclarations(parsed.declarations)
 }
 
 function assertDurableRecord(raw) {
