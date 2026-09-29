@@ -195,6 +195,7 @@ test('partial-write recovery: retry completes exactly the registered original sc
     store.adminAbandonmentDeclarations = [{
       declarationId: 'partial-1', agentId: HR, handles: [turnA], declaredAt,
     }]
+    store.adminAbandonmentDeclarationsDirty = true
     store.persistDurable()
     const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-partial-b' })
     assert.equal(rawRecord(reopened, turnA).adminAbandonment ?? null, null, 'stamp missing before the crash')
@@ -219,19 +220,17 @@ test('a declarationId bound to another agent fails loud and never restamps', () 
   assert.equal(rawRecord(store, hrHandle).adminAbandonment.declarationId, 'shared-1')
 })
 
-test('marker-only reconstruction: pre-registry durable file still binds retries to the original scope', async () => {
+test('marker-only reconstruction: a store with no registry file still binds retries to the marker scope', async () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-reconstruct-'))
   const persistenceFile = join(root, 'turn-recovery.json')
   try {
     const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-recon-a' })
     const turnA = stuckTurn(store, HR)
     store.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
-    // Simulate a file rewritten by a binary that predates the registry: the
-    // top-level field is dropped but per-record markers survive.
-    const fs = await import('node:fs')
-    const raw = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'))
-    delete raw.adminAbandonmentDeclarations
-    fs.writeFileSync(persistenceFile, `${JSON.stringify(raw)}\n`)
+    // Simulate a store whose registry file does not exist (pre-registry era):
+    // reconstruction falls back to the per-record markers, which survive
+    // every durable round-trip.
+    rmSync(`${persistenceFile}.abandonment-declarations.json`, { force: true })
     const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-recon-b' })
     const turnB = stuckTurn(reopened, HR, { generation: 1 })
     const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'reset-1' })
@@ -266,11 +265,93 @@ test('durable validator rejects a malformed scope registry fail-closed', async (
     const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-registry-b' })
     assert.deepEqual(reopened.adminAbandonmentDeclarations[0].handles, [handle])
     const fs = await import('node:fs')
-    const raw = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'))
-    raw.adminAbandonmentDeclarations[0].handles = 'not-an-array'
-    fs.writeFileSync(persistenceFile, `${JSON.stringify(raw)}\n`)
+    const registryFile = `${persistenceFile}.abandonment-declarations.json`
+    const raw = JSON.parse(fs.readFileSync(registryFile, 'utf8'))
+    raw.declarations[0].handles = 'not-an-array'
+    fs.writeFileSync(registryFile, `${JSON.stringify(raw)}\n`)
     const rejected = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-registry-c' })
     assert.equal(rejected.startupBlockedReason, 'durable_store_invalid', 'malformed scope registry fails the durable load closed')
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('rollback/reupgrade regression: the scope registry survives an old-binary rewrite of the recovery file', async () => {
+  // Review finding: crash between the scope persist and the stamps, then a
+  // rollback to the parent binary. The old binary rewrites the recovery file
+  // WITHOUT unknown top-level fields, so a registry stored there would be
+  // lost and the reupgrade retry could never complete the original scope
+  // (silent partial reset). The registry therefore lives in its own sibling
+  // file that old binaries never read or write.
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-rollback-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const store = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-rollback-a' })
+    const turnA = stuckTurn(store, HR)
+    const turnB = stuckTurn(store, HR, { generation: 1 })
+    store.declareAdminAbandonment({ agentId: HR, declarationId: 'rollback-1' })
+    // Crash window: turnB's stamp never reached the disk before the crash —
+    // hand-write exactly that on-disk state.
+    const fs = await import('node:fs')
+    const raw = JSON.parse(fs.readFileSync(persistenceFile, 'utf8'))
+    const recordB = raw.records.find(record => record.reconciliationHandle === turnB)
+    delete recordB.adminAbandonment
+    // And the rollback itself: the old binary rewrites the recovery file
+    // WITHOUT unknown top-level fields, dropping any registry stored there.
+    delete raw.adminAbandonmentDeclarations
+    fs.writeFileSync(persistenceFile, `${JSON.stringify(raw)}\n`)
+    // Rollback + reupgrade: the recovery file has been rewritten by the old
+    // binary (it never carries the registry); the sibling registry survives.
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-rollback-b' })
+    assert.equal(rawRecord(reopened, turnA).adminAbandonment?.declarationId, 'rollback-1')
+    assert.equal(rawRecord(reopened, turnB).adminAbandonment ?? null, null, 'crash window left turnB unstamped')
+    const retry = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'rollback-1' })
+    assert.deepEqual(retry.scopeHandles, [turnA, turnB], 'the registry still knows the FULL original scope')
+    assert.deepEqual(retry.completedHandles, [turnB], 'the retry completes exactly the unstamped remainder')
+    assert.equal(reopened.admissionBlockerForAgent(HR), null, 'no silent partial reset')
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('entry-gate projection: stuck fences without durable exit evidence are reported; observed exits are not', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-gate-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const crashed = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-gate-a' })
+    const lost = stuckTurn(crashed, HR)
+    const restarted = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-gate-b' })
+    const unproven = restarted.stuckFenceWithoutDurableExitEvidenceForAgent(HR)
+    assert.equal(unproven?.handle, lost, 'the restart-lost unknown fence has NO durable exit evidence')
+    assert.ok(restarted.markExitObserved(lost), 'fixture records the observed real exit')
+    assert.equal(restarted.stuckFenceWithoutDurableExitEvidenceForAgent(HR), null,
+      'durable child_real_exit evidence satisfies the entry gate')
+    assert.equal(restarted.stuckFenceWithoutDurableExitEvidenceForAgent('agt_unknown-agent'), null)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
+test('declaration scope matches the admission blocker: settled records with an active fence are abandonable', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'agent-core-abandonment-settled-'))
+  const persistenceFile = join(root, 'turn-recovery.json')
+  try {
+    const crashed = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-scope-settled-a' })
+    const handle = stuckTurn(crashed, HR)
+    crashed.claimRecovery(handle, { operationId: 'reap-fixture', claimantRuntimeEpoch: 'epoch-scope-settled-a' })
+    crashed.markExitObserved(handle)
+    const reopened = new TurnReconciliationStore({ persistenceFile, runtimeEpoch: 'epoch-scope-settled-b' })
+    const record = rawRecord(reopened, handle)
+    assert.equal(record.state, 'settled', 'the observed exit settled the record as terminated_without_outcome')
+    assert.equal(record.terminationEvidence, 'child_real_exit')
+    assert.equal(record.fenceState, 'active', 'registry-cleanup-pending fence stays active')
+    assert.ok(reopened.admissionBlockerForAgent(HR)?.handle === handle, 'the settled fence still blocks NEW-request admission')
+    const result = reopened.declareAdminAbandonment({ agentId: HR, declarationId: 'settled-1' })
+    assert.deepEqual(result.abandonedHandles, [handle], 'the blocker-aligned scope covers the settled fence')
+    assert.equal(reopened.admissionBlockerForAgent(HR), null, 'admission unblocked — no silent no-op reset')
+    assert.equal(record.state, 'settled', 'settlement itself is untouched by the abandonment')
+    assert.equal(record.terminationEvidence, 'child_real_exit')
+    assert.equal(record.adminAbandonment?.declarationId, 'settled-1')
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

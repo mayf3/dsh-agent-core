@@ -21,10 +21,22 @@
  * first declared) BEFORE any record is stamped. A retry of a known
  * declarationId therefore only completes records of that original scope
  * (crash-between-stamps recovery) and can never adopt a turn that appeared
- * after the operation completed. When the durable scope registry is absent
- * (pre-registry durable file, or a file rewritten by an older binary), the
- * scope is reconstructed from the per-record markers, which survive every
- * durable round-trip.
+ * after the operation completed. The registry is durably persisted in its
+ * own sibling file next to the recovery store, which binaries that predate
+ * the registry never read or write — an old-binary rewrite of the recovery
+ * file therefore cannot strand an unstamped scope (review finding: a
+ * top-level registry field inside the recovery file is silently dropped by
+ * the parent binary's fixed-shape rewrite). When the registry file is
+ * absent entirely, the scope is reconstructed from the per-record markers,
+ * which survive every durable round-trip.
+ *
+ * Scope = the admission blocker projection: a record fences NEW-request
+ * admission while its initial outcome is unknown, its fence is not cleared
+ * and it carries no abandonment marker — regardless of whether the record
+ * itself is settled (a settled terminated_without_outcome record can still
+ * fence admission while registry cleanup is pending). The captured scope
+ * and the retry completion path use exactly that predicate, so a declared
+ * reset always unblocks what the blocker projection actually blocks.
  */
 
 import { ReconciliationCapacityError } from './capacity.js'
@@ -57,7 +69,7 @@ export function reconstructAdminAbandonmentDeclarations(records) {
 
 function stuckAdmissionHandles(store, agentId) {
   return [...store.records.values()]
-    .filter(record => record.agentId === agentId && record.state !== 'settled'
+    .filter(record => record.agentId === agentId
       && record.initialOutcome === 'outcome_unknown' && record.fenceState !== 'cleared'
       && (record.adminAbandonment ?? null) === null)
     .map(record => record.handle)
@@ -97,6 +109,28 @@ export const adminAbandonmentMethods = {
   },
 
   /**
+   * Entry-gate projection (review finding: an EMPTY lifecycle slot after a
+   * controller restart is NOT termination evidence). Returns the agent's
+   * first stuck fence record that carries NO durable exit/termination
+   * evidence (no observed exit, no terminationEvidence kind): the exact
+   * restart-lost class where the old execution's termination is unproven and
+   * the authenticated admin entry must fail closed. Records bearing durable
+   * evidence (child_real_exit via a durably recorded observed exit, or an
+   * accepted quiescence-proof settlement) are NOT reported.
+   */
+  stuckFenceWithoutDurableExitEvidenceForAgent(agentId) {
+    for (const record of this.records.values()) {
+      if (record.agentId !== agentId || record.initialOutcome !== 'outcome_unknown'
+          || record.fenceState === 'cleared'
+          || (record.adminAbandonment ?? null) !== null) continue
+      if ((record.exitObservedAt ?? null) === null && (record.terminationEvidence ?? null) === null) {
+        return { handle: record.handle, failureReason: record.failureReason ?? null }
+      }
+    }
+    return null
+  },
+
+  /**
    * Explicit administrator abandonment of the agent's current stuck turns.
    *
    * NEW declarationId: the exact stuck scope is captured and durably
@@ -107,8 +141,8 @@ export const adminAbandonmentMethods = {
    * KNOWN declarationId (retry): only records of the original scope may be
    * completed — a turn that became unknown after the operation completed is
    * NEVER adopted by a retry (it stays fenced until its own explicit
-   * declaration). Already-stamped or settled records are never restamped.
-   * Rebinding a known declarationId to a different Agent fails loud.
+   * declaration). Already-stamped records are never restamped. Rebinding a
+   * known declarationId to a different Agent fails loud.
    */
   declareAdminAbandonment({ agentId, declarationId }) {
     this.assertBusinessAdmissionReady()
@@ -129,7 +163,7 @@ export const adminAbandonmentMethods = {
       const completedHandles = []
       for (const handle of known.handles) {
         const record = this.records.get(handle)
-        if (record === undefined || record.state === 'settled'
+        if (record === undefined
             || record.initialOutcome !== 'outcome_unknown' || record.fenceState === 'cleared'
             || (record.adminAbandonment ?? null) !== null) continue
         this.mutateRecord(record, (candidate) => {
@@ -149,6 +183,7 @@ export const adminAbandonmentMethods = {
     this.adminAbandonmentDeclarations = [...(this.adminAbandonmentDeclarations ?? []), {
       declarationId, agentId, handles: scopeHandles, declaredAt,
     }]
+    this.adminAbandonmentDeclarationsDirty = true
     this.persistDurable()
     for (const handle of scopeHandles) {
       const record = this.records.get(handle)
