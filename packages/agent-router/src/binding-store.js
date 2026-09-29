@@ -69,6 +69,7 @@
  * selection, bookmark policy), the store only persists rows.
  */
 
+import { createHash } from 'node:crypto'
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
@@ -81,6 +82,10 @@ export const CORRUPT_STORE = 'CORRUPT_STORE'
 
 /** Error code thrown for invalid input. */
 export const VALIDATION_ERROR = 'VALIDATION_ERROR'
+const FRESH_HR_AGENT_ID = 'agt_hr-agent'
+const FRESH_HR_CUT_OPERATION_ID = 'hr-fresh-lineage-cut-20260929-0d8235e7'
+const SHA256 = /^[a-f0-9]{64}$/
+const digestJson = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 
 /**
  * One Binding row: which (Agent, Session) the ChannelConversation is
@@ -106,7 +111,7 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
  * mutation queue (so the read-or-mint decision is atomic); the caller never
  * sees or chooses it.
  * @typedef {{agentId:string, requestId:string, sessionId:string,
- *            createdAt:string}} FreshSessionRow
+ *            createdAt:string, lineageOperationId?:string}} FreshSessionRow
  */
 
 /**
@@ -141,6 +146,7 @@ export class BindingStore {
     this.lastSessions = new Map()
     /** @type {Map<string, Map<string, FreshSessionRow>>} agentId -> (requestId -> row) */
     this.freshSessions = new Map()
+    this.freshHrCutBinding = null
     this.queue = Promise.resolve()
     this.load()
   }
@@ -185,6 +191,37 @@ export class BindingStore {
         updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : this.now(),
       })
     }
+    if (document.freshHrCutBinding !== undefined) {
+      const cut = document.freshHrCutBinding
+      const keys = ['bindingCutSha256', 'channelConversationId', 'newRuntimeEpoch',
+        'newSessionId', 'oldHandle', 'oldSessionId', 'operationId',
+        'preimageSha256', 'rootReceiptSha256']
+      if (cut === null || typeof cut !== 'object' || Array.isArray(cut)
+          || Object.keys(cut).sort().join(',') !== keys.sort().join(',')
+          || cut.operationId !== FRESH_HR_CUT_OPERATION_ID
+          || typeof cut.oldHandle !== 'string' || !cut.oldHandle.startsWith('turn:')
+          || cut.oldHandle.length > 256
+          || typeof cut.newSessionId !== 'string' || cut.newSessionId === ''
+          || cut.newSessionId === cut.oldSessionId
+          || typeof cut.newRuntimeEpoch !== 'string' || cut.newRuntimeEpoch === ''
+          || typeof cut.oldSessionId !== 'string' || cut.oldSessionId === ''
+          || typeof cut.channelConversationId !== 'string'
+          || !cut.channelConversationId.startsWith('feishu:')
+          || !SHA256.test(cut.preimageSha256 ?? '')
+          || !SHA256.test(cut.rootReceiptSha256 ?? '')
+          || !SHA256.test(cut.bindingCutSha256 ?? '')
+          || digestJson({ channelConversationId: cut.channelConversationId,
+            operationId: cut.operationId, oldSessionId: cut.oldSessionId,
+            newSessionId: cut.newSessionId, newRuntimeEpoch: cut.newRuntimeEpoch,
+            oldHandle: cut.oldHandle, rootReceiptSha256: cut.rootReceiptSha256,
+            preimageSha256: cut.preimageSha256 }) !== cut.bindingCutSha256
+          || this.bindings.get(cut.channelConversationId)?.activeAgentId !== FRESH_HR_AGENT_ID
+          || this.bindings.get(cut.channelConversationId)?.activeSessionId !== cut.newSessionId) {
+        throw Object.assign(new Error('binding-store: invalid fixed HR Binding cut'),
+          { code: CORRUPT_STORE })
+      }
+      this.freshHrCutBinding = { ...cut }
+    }
     // Optional bookmark table (absent in older documents = empty).
     if (document.lastSessions !== undefined) {
       if (typeof document.lastSessions !== 'object' || document.lastSessions === null) {
@@ -228,7 +265,10 @@ export class BindingStore {
         for (const [requestId, row] of Object.entries(perRequest)) {
           if (typeof row?.agentId !== 'string' || row.agentId === ''
               || typeof row.requestId !== 'string' || row.requestId === ''
-              || typeof row.sessionId !== 'string' || row.sessionId === '') {
+              || typeof row.sessionId !== 'string' || row.sessionId === ''
+              || (row.lineageOperationId !== undefined
+                && (agentId !== 'agt_hr-agent'
+                  || row.lineageOperationId !== FRESH_HR_CUT_OPERATION_ID))) {
             throw Object.assign(new Error(`binding-store: corrupt freshSessions entry ${JSON.stringify(agentId)}/${JSON.stringify(requestId)}`), {
               code: CORRUPT_STORE,
             })
@@ -238,6 +278,7 @@ export class BindingStore {
             requestId: row.requestId,
             sessionId: row.sessionId,
             createdAt: typeof row.createdAt === 'string' ? row.createdAt : this.now(),
+            ...(row.lineageOperationId === undefined ? {} : { lineageOperationId: row.lineageOperationId }),
           })
         }
         this.freshSessions.set(agentId, mappings)
@@ -253,15 +294,20 @@ export class BindingStore {
    * = failure" is impossible). The store file is only ever replaced
    * atomically, so a failed persist cannot corrupt the on-disk document.
    */
-  enqueue(fn) {
+  enqueue(fn, readback) {
     const run = this.queue.then(async () => {
       const snapshot = this.snapshot()
+      let persisted = false
       try {
         const result = await fn()
         await this.persist()
+        persisted = true
+        if (readback !== undefined) await readback(result)
         return result
       } catch (error) {
-        this.restore(snapshot)
+        // Once rename committed, a failed readback is UNKNOWN to this caller:
+        // leave RAM matching disk and force the startup consumer to stop.
+        if (!persisted) this.restore(snapshot)
         throw error
       }
     })
@@ -277,6 +323,7 @@ export class BindingStore {
       freshSessions: new Map([...this.freshSessions.entries()].map(
         ([agentId, perRequest]) => [agentId, new Map([...perRequest.entries()].map(([rid, row]) => [rid, { ...row }]))],
       )),
+      freshHrCutBinding: this.freshHrCutBinding === null ? null : { ...this.freshHrCutBinding },
     }
   }
 
@@ -285,6 +332,7 @@ export class BindingStore {
     this.bindings = snapshot.bindings
     this.lastSessions = snapshot.lastSessions
     this.freshSessions = snapshot.freshSessions
+    this.freshHrCutBinding = snapshot.freshHrCutBinding
   }
 
   /** Atomic persist: write tmp, then rename over the store file. */
@@ -303,6 +351,7 @@ export class BindingStore {
         [...this.freshSessions.entries()].map(([agentId, perRequest]) => [agentId, Object.fromEntries(perRequest)]),
       )
     }
+    if (this.freshHrCutBinding !== null) document.freshHrCutBinding = { ...this.freshHrCutBinding }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
     try {
@@ -321,6 +370,71 @@ export class BindingStore {
    */
   get(channelConversationId) {
     return this.bindings.get(channelConversationId)
+  }
+
+  getFreshHrCutBinding() {
+    return this.freshHrCutBinding === null ? null : { ...this.freshHrCutBinding }
+  }
+
+  /** Router startup only: join a root PREPARED cut with the sole existing HR
+   * Feishu Binding under this store's native serialization lock. This method
+   * does not accept a caller-supplied chat ID or old updatedAt. The old row
+   * and its preimage digest are captured inside the same mutation transaction.
+   * The Router keeps ingress closed until this durable result is read back. */
+  commitFreshHrBindingCut(cut) {
+    if (cut?.operationId !== FRESH_HR_CUT_OPERATION_ID
+        || typeof cut.oldHandle !== 'string' || !cut.oldHandle.startsWith('turn:')
+        || cut.oldHandle.length > 256
+        || !SHA256.test(cut.rootReceiptSha256 ?? '')
+        || typeof cut.newSessionId !== 'string' || cut.newSessionId === ''
+        || typeof cut.oldSessionId !== 'string' || cut.oldSessionId === ''
+        || cut.oldSessionId === cut.newSessionId
+        || typeof cut.newRuntimeEpoch !== 'string' || cut.newRuntimeEpoch === '') {
+      throw Object.assign(new TypeError('binding-store: invalid fixed HR cut input'),
+        { code: VALIDATION_ERROR })
+    }
+    return this.enqueue(async () => {
+      if (this.freshHrCutBinding !== null) {
+        throw Object.assign(new Error('binding-store: HR cut already committed'),
+          { code: 'HR_FRESH_BINDING_CUT_ALREADY_COMMITTED' })
+      }
+      const candidates = [...this.bindings.values()].filter(row =>
+        row.channelConversationId.startsWith('feishu:') && row.activeAgentId === FRESH_HR_AGENT_ID)
+      if (candidates.length !== 1) {
+        throw Object.assign(new Error('binding-store: exactly one HR Feishu Binding required'),
+          { code: 'HR_FRESH_BINDING_AMBIGUOUS' })
+      }
+      const old = candidates[0]
+      if (old.activeSessionId !== cut.oldSessionId
+          || typeof old.updatedAt !== 'string' || old.updatedAt === '') {
+        throw Object.assign(new Error('binding-store: HR old Binding preimage mismatch'),
+          { code: 'HR_FRESH_BINDING_PREIMAGE_MISMATCH' })
+      }
+      const preimageSha256 = digestJson(old)
+      const receipt = {
+        channelConversationId: old.channelConversationId,
+        operationId: cut.operationId,
+        oldSessionId: old.activeSessionId,
+        newSessionId: cut.newSessionId,
+        newRuntimeEpoch: cut.newRuntimeEpoch,
+        oldHandle: cut.oldHandle,
+        rootReceiptSha256: cut.rootReceiptSha256,
+        preimageSha256,
+      }
+      receipt.bindingCutSha256 = digestJson(receipt)
+      this.bindings.set(old.channelConversationId, {
+        ...old, activeSessionId: cut.newSessionId, updatedAt: this.now(),
+      })
+      this.freshHrCutBinding = receipt
+      return { ...receipt }
+    }, async receipt => {
+      const onDisk = JSON.parse(readFileSync(this.storeFile, 'utf8'))
+      if (onDisk.bindings?.[receipt.channelConversationId]?.activeSessionId !== cut.newSessionId
+          || JSON.stringify(onDisk.freshHrCutBinding) !== JSON.stringify(receipt)) {
+        throw Object.assign(new Error('binding-store: HR cut post-persist readback mismatch'),
+          { code: 'HR_FRESH_BINDING_READBACK_UNKNOWN' })
+      }
+    })
   }
 
   /**
@@ -457,9 +571,11 @@ export class BindingStore {
    *   session ids already in use by this agent and must return a non-empty
    *   id outside that set (the router derives `fresh-<hash>` from the
    *   requestId; the check guards against any collision).
+   * @param {{lineageOperationId:string}} [lineage] - Router-private fixed HR
+   *   cut marker for a mapping first minted after authenticated readiness.
    * @returns {Promise<FreshSessionRow>} the (existing or minted) row.
    */
-  freshSessionFor(agentId, requestId, mint) {
+  freshSessionFor(agentId, requestId, mint, lineage = undefined) {
     if (typeof agentId !== 'string' || agentId === ''
         || typeof requestId !== 'string' || requestId === '') {
       throw Object.assign(new TypeError('binding-store: freshSessionFor agentId and requestId (non-empty strings) are required'), {
@@ -468,6 +584,14 @@ export class BindingStore {
     }
     if (typeof mint !== 'function') {
       throw Object.assign(new TypeError('binding-store: freshSessionFor mint(usedIds) is required'), {
+        code: VALIDATION_ERROR,
+      })
+    }
+    if (lineage !== undefined && (agentId !== 'agt_hr-agent'
+        || lineage === null || typeof lineage !== 'object' || Array.isArray(lineage)
+        || Object.keys(lineage).join(',') !== 'lineageOperationId'
+        || lineage.lineageOperationId !== FRESH_HR_CUT_OPERATION_ID)) {
+      throw Object.assign(new TypeError('binding-store: exact fresh HR lineage marker invalid'), {
         code: VALIDATION_ERROR,
       })
     }
@@ -486,7 +610,14 @@ export class BindingStore {
           code: VALIDATION_ERROR,
         })
       }
-      const row = { agentId, requestId, sessionId, createdAt: this.now() }
+      const createdAt = this.now()
+      if (lineage !== undefined && !Number.isSafeInteger(Date.parse(createdAt))) {
+        throw Object.assign(new TypeError('binding-store: fresh HR lineage creation time invalid'), {
+          code: VALIDATION_ERROR,
+        })
+      }
+      const row = { agentId, requestId, sessionId, createdAt,
+        ...(lineage === undefined ? {} : { lineageOperationId: lineage.lineageOperationId }) }
       perRequest.set(requestId, row)
       return { ...row }
     })

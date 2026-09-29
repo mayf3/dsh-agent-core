@@ -239,6 +239,68 @@ test('16. freshSessionFor validation and corrupt-table fail-loud', async (t) => 
   assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
 })
 
+test('17. fresh request lineage is durable and an old request mapping cannot be rebound to a new cut', async (t) => {
+  const file = await tmpStore(t)
+  const first = new BindingStore({ storeFile: file,
+    now: () => '2026-09-29T02:00:00.000Z' })
+  const old = await first.freshSessionFor('agt_hr-agent', 'old-request', () => 'fresh-old')
+  assert.equal(old.lineageOperationId, undefined)
+  const lineageOperationId = 'hr-fresh-lineage-cut-20260929-0d8235e7'
+  const fresh = await first.freshSessionFor('agt_hr-agent', 'new-request', () => 'fresh-new', { lineageOperationId })
+  assert.equal(fresh.lineageOperationId, lineageOperationId)
+
+  const restarted = new BindingStore({ storeFile: file })
+  assert.equal(restarted.getFreshSession('agt_hr-agent', 'new-request').lineageOperationId, lineageOperationId)
+  const retryOld = await restarted.freshSessionFor('agt_hr-agent', 'old-request', () => 'fresh-should-not-mint', { lineageOperationId })
+  assert.equal(retryOld.sessionId, 'fresh-old')
+  assert.equal(retryOld.lineageOperationId, undefined)
+})
+
+test('V4 private cut atomically discovers the sole old HR Feishu Binding and durably changes its session', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file, now: () => '2026-09-29T09:00:00.000Z' })
+  await store.set(row('feishu:oc_hr', 'agt_hr-agent', 'old-hr-session'))
+  await store.set(row('feishu:oc_other', 'agt_other', 'main'))
+  const cut = {
+    operationId: 'hr-fresh-lineage-cut-20260929-0d8235e7',
+    oldHandle: 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64),
+    oldSessionId: 'old-hr-session', newSessionId: 'hr-fresh-20260929-6d3b45a0',
+    newRuntimeEpoch: 'new-runtime',
+  }
+  const receipt = await store.commitFreshHrBindingCut(cut)
+  assert.equal(receipt.channelConversationId, 'feishu:oc_hr')
+  assert.equal(receipt.oldSessionId, cut.oldSessionId)
+  assert.equal(receipt.newSessionId, cut.newSessionId)
+  assert.equal(receipt.rootReceiptSha256, cut.rootReceiptSha256)
+  assert.equal(receipt.oldHandle, cut.oldHandle)
+  assert.match(receipt.preimageSha256, /^[a-f0-9]{64}$/)
+  assert.match(receipt.bindingCutSha256, /^[a-f0-9]{64}$/)
+  assert.equal(store.get('feishu:oc_hr').activeSessionId, cut.newSessionId)
+  assert.equal(store.get('feishu:oc_other').activeSessionId, 'main')
+  const restarted = new BindingStore({ storeFile: file })
+  assert.deepEqual(restarted.getFreshHrCutBinding(), receipt)
+  await assert.rejects(store.commitFreshHrBindingCut(cut), /already committed/)
+})
+
+test('V4 private cut rejects ambiguous or mismatched old HR Binding without a write', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  const cut = {
+    operationId: 'hr-fresh-lineage-cut-20260929-0d8235e7',
+    oldHandle: 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64),
+    oldSessionId: 'old-hr-session', newSessionId: 'hr-fresh-20260929-6d3b45a0',
+    newRuntimeEpoch: 'new-runtime',
+  }
+  await store.set(row('feishu:oc_hr_1', 'agt_hr-agent', 'old-hr-session'))
+  await store.set(row('feishu:oc_hr_2', 'agt_hr-agent', 'old-hr-session'))
+  const before = await readFile(file, 'utf8')
+  await assert.rejects(store.commitFreshHrBindingCut(cut), /exactly one/)
+  assert.equal(await readFile(file, 'utf8'), before)
+  assert.equal(store.getFreshHrCutBinding(), null)
+})
+
 // ---------------------------------------------------------------------------
 // AGENT_CORE_BINDING_WORKSPACE_V1 — Binding.workspace (stable workspaceId)
 // ---------------------------------------------------------------------------

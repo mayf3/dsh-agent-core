@@ -72,7 +72,10 @@ import { join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
+import { readDurableRecoveryStore } from './reconciliation/durable-file.js'
 import { BindingStore } from './binding-store.js'
+import { readFixedPreparedHrCut, readHrDurablePreimageSha256,
+  writeFixedHrMountAck } from './fresh-hr-cut-startup.js'
 import { createProcessRegistry } from './process-registry.js'
 import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
@@ -185,6 +188,38 @@ export function apply(ctx, config) {
 
   const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
   const store = new BindingStore({ storeFile })
+  const recoveryFile = typeof cfg.reconciliationStoreFile === 'string'
+    && cfg.reconciliationStoreFile !== '' ? cfg.reconciliationStoreFile : null
+  let preparedHrCut = null
+  // A prior Binding cut means this PREPARED receipt has already been consumed
+  // by another mount. Never reuse its runtime epoch on an ordinary restart.
+  if (store.getFreshHrCutBinding() === null) {
+    try {
+      const candidate = readFixedPreparedHrCut()
+      if (candidate !== null) {
+        if (recoveryFile === null
+            || readHrDurablePreimageSha256(recoveryFile) !== candidate.receipt.oldRecordSha256) {
+          throw new TypeError('HR cut: durable recovery preimage drift')
+        }
+        const prior = readDurableRecoveryStore(recoveryFile)
+        if (prior === null || prior.runtimeEpochs.has(candidate.cut.newRuntimeEpoch)
+            || prior.records.get(candidate.cut.oldHandle)?.agentId !== candidate.cut.agentId
+            || prior.records.get(candidate.cut.oldHandle)?.runtimeEpoch !== candidate.cut.oldRuntimeEpoch
+            || prior.records.get(candidate.cut.oldHandle)?.processGeneration !== candidate.cut.oldProcessGeneration
+            || prior.records.get(candidate.cut.oldHandle)?.sessionId !== candidate.cut.oldSessionId
+            || prior.records.get(candidate.cut.oldHandle)?.initialOutcome !== 'outcome_unknown'
+            || prior.records.get(candidate.cut.oldHandle)?.fenceState !== 'active'
+            || readHrDurablePreimageSha256(recoveryFile) !== candidate.receipt.oldRecordSha256) {
+          throw new TypeError('HR cut: old durable subject or mount epoch mismatch')
+        }
+        preparedHrCut = candidate
+      }
+    } catch (error) {
+      // Keep V3 old-HR fencing and ordinary-Agent service. Projection failure
+      // is never a reason to clear the record, retry the root cut or reuse ID.
+      log.error(`fixed HR cut startup denied: ${error?.message ?? error}`)
+    }
+  }
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
@@ -232,9 +267,8 @@ export function apply(ctx, config) {
    * turn reconciliation (C-018). One store per control-plane runtime epoch.
    */
   const reconciliationStore = new TurnReconciliationStore({
-    persistenceFile: typeof cfg.reconciliationStoreFile === 'string' && cfg.reconciliationStoreFile !== ''
-      ? cfg.reconciliationStoreFile
-      : null,
+    persistenceFile: recoveryFile,
+    ...(preparedHrCut === null ? {} : { runtimeEpoch: preparedHrCut.cut.newRuntimeEpoch }),
   })
   const fixedStartup = getFixedStartupContext()
   if (fixedStartup !== undefined) {
@@ -274,6 +308,29 @@ export function apply(ctx, config) {
     getBrokerGateway: () => ctx.get('brokerGateway'),
     fixedAdminRootContext: getFixedAdminQualificationContext(),
   })
+  if (preparedHrCut !== null) {
+    try {
+      reconciliationStore.validateTrustedFreshHrLineage(preparedHrCut.cut)
+      // Keep HR business admission closed while the native Binding queue
+      // persists its exact session switch and the new READY child is proven.
+      reconciliationStore.activateTrustedFreshHrLineage(preparedHrCut.cut)
+      void store.commitFreshHrBindingCut(preparedHrCut.cut).then(async (bindingReceipt) => {
+        const startupToken = reconciliationStore.issueFreshHrStartupToken(preparedHrCut.cut)
+        const hrProcess = await registry.ensureRunning(preparedHrCut.cut.agentId, startupToken)
+        // A READY result is a genuine registry-owned process generation; an
+        // allocated number without a child cannot authenticate the mount.
+        const ack = writeFixedHrMountAck(preparedHrCut, bindingReceipt,
+          reconciliationStore, hrProcess)
+        reconciliationStore.completeTrustedFreshHrMount(preparedHrCut.cut, {
+          processGeneration: hrProcess.processGeneration, childPid: hrProcess.pid,
+          acknowledgementSha256: ack.acknowledgementSha256,
+        })
+        log.log(`fixed HR fresh cut mounted: ${preparedHrCut.receiptSha256}`)
+      }).catch(error => log.error(`fixed HR Binding/child/ACK denied: ${error?.message ?? error}`))
+    } catch (error) {
+      log.error(`fixed HR cut subject denied: ${error?.message ?? error}`)
+    }
+  }
   /**
    * The unified ordered route-attempt chain executor
    * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2 CTR-I2-005): the ONE seam

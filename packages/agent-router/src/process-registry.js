@@ -31,9 +31,10 @@ import { createRouteGate, installStartupSlot } from './process-registry-route-ga
 import { convergeStartedStartup, disposeProcessSlots, startupFailure } from './process-registry-startup.js'
 import { FIXED_ADMIN_CANARY_AGENT, fixedAdminBindingFromRoot } from '../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
-function assertRecoveryAdmission(store, agentId) {
+function assertRecoveryAdmission(store, agentId, token) {
   store.assertBusinessAdmissionReady?.()
-  const fence = store.activeFenceForAgent?.(agentId)
+  const fence = typeof store.spawnFenceForAgent === 'function'
+    ? store.spawnFenceForAgent(agentId, token) : store.activeFenceForAgent?.(agentId)
   if (fence) throw Object.assign(fencedRejection(fence.handle), store.recoveryDiagnostic?.(fence.handle) ?? {})
 }
 
@@ -261,7 +262,7 @@ export function createProcessRegistry({
       throw Object.assign(new Error('fixed canary Agent reserved for root qualification'),
         { code: 'FIXED_ADMIN_CANARY_PRIVATE_ONLY' })
     }
-    assertRecoveryAdmission(reconciliationStore, agentId)
+    assertRecoveryAdmission(reconciliationStore, agentId, token)
     const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`agent-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
@@ -282,7 +283,7 @@ export function createProcessRegistry({
     // seeding. Returning the entry's exact resultPromise (rather than an
     // async wrapper) makes the whole bootstrap a true single flight.
     try {
-      assertRecoveryAdmission(reconciliationStore, agentId)
+      assertRecoveryAdmission(reconciliationStore, agentId, token)
       assertRunnable(agentId, token)
     } catch (error) {
       return Promise.reject(error)
