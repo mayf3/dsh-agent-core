@@ -160,6 +160,39 @@ recovery path that requires them, not a universal prerequisite for every
 authorized recovery mode. Apply each selected path's mandatory gates without
 delaying safe recovery for optional governance work.
 
+### Recovery and deployment reuse handoff
+
+Apply the existing recovery-first and proportional-review rules to the actual
+execution path, not only to source readiness. For the affected incident, record
+these facts in the existing handoff/Brief; no second queue, ledger, or mandatory
+standalone report is needed:
+
+- Distinguish accepted design, source readiness, installed callable capability,
+  and live business acceptance. An offline test or merged reader is not a live
+  recovery result. Attach time/revision-bound evidence; do not invent a percentage
+  complete or call an unverified downstream path the last blocker.
+- Before investing in a new recovery component, check its end-to-end call path:
+  installed entrypoint, caller/operation scope, artifact/host constraints, result
+  query, and failure exit. Use existing authorized observations; inaccessible
+  evidence remains an explicit gap, not permission for a new protected read.
+- Separate ordinary application release, business-state recovery, and deployment
+  controller/profile changes. Prefer existing admitted mechanisms; explain a
+  concrete shared-capability gap before proposing another incident-specific
+  installer or privileged binding. Risk alone does not require a new Product Spec.
+- Keep the old business turn, bootstrap transaction, and controller update as
+  distinct evidence subjects. No journal status grants retry, a replacement ID,
+  fence clearing, or new admission; apply the selected accepted path's conditions.
+  The old business outcome may remain UNKNOWN under the recovery rule above.
+- Carry incident history and unresolved dependencies across task/PR handoffs.
+  Renaming a task does not erase failed attempts or restart an incident from zero.
+  Reuse still-valid evidence and review only affected changes; this does not
+  waive real blockers or add a new global review counter.
+
+The [HR recovery/deployment reuse handoff](../../docs/reports/HR_RECOVERY_DEPLOYMENT_REUSE_HANDOFF_20260929.md)
+records the motivating evidence and bounded follow-up objectives. Its proposed
+implementation work is not Product Authority or production authorization. It must
+not become an additional prerequisite for an already-safe authorized recovery.
+
 ### Release governance is not Product Authority
 
 A rollout, canary, dogfood, or one-operation safety concern remains a Controlled-operation concern unless it creates a genuinely load-bearing long-lived Product Contract.
