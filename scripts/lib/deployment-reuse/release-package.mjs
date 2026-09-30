@@ -187,6 +187,8 @@ function directoryDigest(root) {
   const out = []
   const walk = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (entry.name.startsWith('.') && entry.name !== '.well-known') continue
+      if (DEFAULT_EXCLUDE.has(entry.name)) continue // dependency installs inside the anchored package are re-installed per the app lockfile, not part of the anchor
       const p = join(dir, entry.name)
       if (entry.isSymbolicLink()) throw new ReleaseRefused('SYMLINK_IN_SOURCE', relative(root, p))
       if (entry.isDirectory()) walk(p)
