@@ -2,6 +2,8 @@
 
 > **For agentic workers:** 使用已有 `supervising-local-coding-agents` 管理接管和证据；实施可使用 `superpowers:executing-plans`。默认单实现者按任务推进、一次受影响面复核，不要求新建固定多 Agent 编组。复用原 Goal/PR/分支；勾选必须绑定实际结果。
 
+> **状态对账（2026-10-01，Product [#400](https://github.com/mayf3/dsh-agent-core/issues/400)）：** T0/T1 已由 PR [#374](https://github.com/mayf3/dsh-agent-core/pull/374) 执行（Product [#383](https://github.com/mayf3/dsh-agent-core/issues/383)，WAITING_OWNER；[#385](https://github.com/mayf3/dsh-agent-core/issues/385) 已关闭），T2 的 B→C→B 已非生产验证（[#393](https://github.com/mayf3/dsh-agent-core/issues/393)，CLOSED），T4 资格隔离 = PR [#392](https://github.com/mayf3/dsh-agent-core/pull/392)（[#389](https://github.com/mayf3/dsh-agent-core/issues/389)，待 Owner merge）。文末“交给本地 Agent 的第一轮边界（先只执行 T0 和 T1）”已被该执行消费，**不是现行指令**——不要按它另起第二个 T0/T1 writer。拉取与优先级权威 = Goal [#386](https://github.com/mayf3/dsh-agent-core/issues/386) / Program [#382](https://github.com/mayf3/dsh-agent-core/issues/382)；每次推进前 fresh-read 对应 Product Issue。基线 `51f47739` 是写就时快照，当前 main 已含 [#370](https://github.com/mayf3/dsh-agent-core/pull/370)（`360756e3`）。
+
 **Goal:** 保住已恢复的用户服务，把现场修复变成可重建、可发布、可回退、可重复恢复的版本，同时逐批交付既有 backlog。
 
 **Architecture:** 先完整制品和固定发布闭环，再补完整重置与候选隔离，最后按需要拆稳定接入与迁移状态存储。所有生产变更复用一个已登记的受控执行面；Workflow 业务状态仍由 svc-workflow 管理。

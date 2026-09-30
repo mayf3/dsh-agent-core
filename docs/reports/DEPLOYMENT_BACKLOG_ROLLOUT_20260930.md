@@ -6,6 +6,8 @@
 
 配套：[设计建议](AVAILABILITY_DEPLOYMENT_ROADMAP_20260930.md) · [任务 T0–T7](../superpowers/plans/2026-09-30-availability-and-backlog-rollout.md)。
 
+> **状态对账（2026-10-01，Product [#400](https://github.com/mayf3/dsh-agent-core/issues/400)）：** 本清单是 2026-09-30（基线 `51f47739`）的有来源初始盘点，**不是 live backlog 权威**；现行权威 = Program [#382](https://github.com/mayf3/dsh-agent-core/issues/382) + Goal [#386](https://github.com/mayf3/dsh-agent-core/issues/386) + 各 Epic/Product Issue。写就后的实质变化：dsh [#370](https://github.com/mayf3/dsh-agent-core/pull/370) 已并入 main `360756e3`（§2 表“仍 OPEN”过时，其生产安装/验证归 [#382](https://github.com/mayf3/dsh-agent-core/issues/382) 波次）；T0/T1 已由 PR [#374](https://github.com/mayf3/dsh-agent-core/pull/374) 执行（[#383](https://github.com/mayf3/dsh-agent-core/issues/383) WAITING_OWNER，[#385](https://github.com/mayf3/dsh-agent-core/issues/385) 关闭）；B→C→B 已验证（[#393](https://github.com/mayf3/dsh-agent-core/issues/393) CLOSED）；A5 = PR [#392](https://github.com/mayf3/dsh-agent-core/pull/392)（[#389](https://github.com/mayf3/dsh-agent-core/issues/389)）；治理采用 [#364](https://github.com/mayf3/dsh-agent-core/pull/364) 由 [#399](https://github.com/mayf3/dsh-agent-core/issues/399) 承载。§6“第一位接手 Agent 的执行指令”已被消费，不再次执行。
+
 ## 1. 找回的是原 backlog，不是另起一套工程
 
 历史部署工件定位：`/Users/yanfenma/workspace/artifacts/DEPLOYMENT_BACKLOG`。本路径来自既有交接，仅供本地执行者按 Goal 寻找原记录；本轮未读取其文件，也未确认它是完整权威清单。
