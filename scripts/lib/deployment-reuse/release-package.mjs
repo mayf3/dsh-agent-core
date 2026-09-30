@@ -134,13 +134,17 @@ function checkPackageJsonCompleteness(files, sourceRoot, exemptExcludes) {
 
 function checkModuleClosure(files, sourceRoot) {
   const known = new Set(files)
-  // deployment-artifacts/ is a frozen evidence archive (preimages/, targets/,
-  // ... snapshots of pre-fix files). It ships inside the package untouched but
-  // is not live code: its internal relative imports reference the snapshot's
+  // Frozen evidence archives ship inside the package untouched but are not
+  // live code: their internal relative imports reference the snapshot's
   // original layout and are not closure edges of this tree.
-  const archiveTop = join(sourceRoot, 'deployment-artifacts') + sep
+  //   deployment-artifacts/ — preimage/target snapshots of pre-fix files
+  //   docs/evidence/        — timestamped evidence dirs (postimages, archived
+  //                           scripts, manifests); a postimage copy of a
+  //                           source file legitimately imports siblings of
+  //                           its ORIGINAL location, not of the archive.
+  const archiveTops = [join(sourceRoot, 'deployment-artifacts') + sep, join(sourceRoot, 'docs', 'evidence') + sep]
   for (const f of files.filter((f) => /\.mjs$|\.js$/.test(f))) {
-    if (f.startsWith(archiveTop)) continue
+    if (archiveTops.some((top) => f.startsWith(top))) continue
     const code = readFileSync(f, 'utf8')
     for (const spec of extractRelativeSpecifiers(code)) {
       const target = resolveLocal(f, spec)
