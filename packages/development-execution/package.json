@@ -1,0 +1,13 @@
+{
+  "name": "@agent-core/development-execution",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Development Execution Surface ledger and runtime mount (DES): durable in-repo ledger for development-execution turns. Imported by production-runtime compose via development-execution-runtime.js and exposed read-only through the broker development-execute capability. Node built-ins only; zero external runtime dependencies.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}
