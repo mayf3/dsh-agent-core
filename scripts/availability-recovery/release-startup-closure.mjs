@@ -167,7 +167,11 @@ async function runPhase(root, run) {
       maxMode: 0o640,
       parentBoundary: root,
     },
-    globalRoute: { provider: 'closure-fixture', model: 'tool-free' },
+    // Provider identity must equal the fixture worker's registered provider
+    // (worker.mjs answers initialize with registeredProviders:
+    // ['availability-fixture']) — the ready() gate verifies the child
+    // registered the configured provider before any prompt flows.
+    globalRoute: { provider: 'availability-fixture', model: 'tool-free' },
     processFactory: (opts) => { const p = new FixtureWorkerProcess(opts); spawned.push(p); return p },
     productApi: { enabled: true, host: '127.0.0.1', port: 0 },
     notificationIngress: { enabled: true, host: '127.0.0.1', port: 0, fetchImpl: fixtureTokenFetch },
