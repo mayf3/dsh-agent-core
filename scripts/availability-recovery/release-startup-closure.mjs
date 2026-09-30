@@ -237,6 +237,10 @@ function runChild(phase, root) {
       TMPDIR: join(root, 'tmp'),
       CLOSURE_WORKSPACE_ROOT: WORKSPACE_ROOT,
       DSH_HARNESS_ROOT: process.env.DSH_HARNESS_ROOT ?? '',
+      // Production binds the running generation via this plist env (40-hex);
+      // the readiness provenance check requires it. Bind the closure run to
+      // the candidate commit under test.
+      AGENT_CORE_DEPLOYED_SHA: process.env.AGENT_CORE_DEPLOYED_SHA ?? '',
     }
     const child = spawn(process.execPath, [fileURLToPath(import.meta.url), '--phase', String(phase), '--root', root], { env, stdio: ['ignore', 'pipe', 'pipe'] })
     let out = ''
