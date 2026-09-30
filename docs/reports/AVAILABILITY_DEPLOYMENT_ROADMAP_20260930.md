@@ -6,6 +6,18 @@
 
 配套：[逐步实施计划](../superpowers/plans/2026-09-30-availability-and-backlog-rollout.md) · [部署 backlog 与上线波次](DEPLOYMENT_BACKLOG_ROLLOUT_20260930.md)。
 
+## 0. 状态对账（2026-10-01，Product [#400](https://github.com/mayf3/dsh-agent-core/issues/400)）
+
+本文是设计建议与交接证据，**不是 live backlog**。波次与任务执行状态一律以 Program [#382](https://github.com/mayf3/dsh-agent-core/issues/382)、Goal [#386](https://github.com/mayf3/dsh-agent-core/issues/386) 和对应 Product Issue 的 lifecycle 字段为权威；不要按本文任意一节推断“下一步该做什么”。
+
+本文写就（基线 `51f47739`）之后已发生的实质推进，覆盖文中相应的“待执行/仍 OPEN”表述：
+
+- T0/T1 已执行：PR [#374](https://github.com/mayf3/dsh-agent-core/pull/374)（Product [#383](https://github.com/mayf3/dsh-agent-core/issues/383)，WAITING_OWNER）；[#385](https://github.com/mayf3/dsh-agent-core/issues/385)（A2 现场映射）已关闭。
+- §12/T2 的 B→C→B 已在既有 DS 面**非生产**验证：Product [#393](https://github.com/mayf3/dsh-agent-core/issues/393)（CLOSED，DS_TEST_MODE 8/8）。
+- §7/T4 资格隔离已实现：PR [#392](https://github.com/mayf3/dsh-agent-core/pull/392)（Product [#389](https://github.com/mayf3/dsh-agent-core/issues/389)，评审 ACCEPT，待 Owner merge）。
+- dsh [#370](https://github.com/mayf3/dsh-agent-core/pull/370)（`return_policy_exhausted`）已并入 main `360756e3`；“仍 OPEN”类表述过时，其生产安装/验证归 [#382](https://github.com/mayf3/dsh-agent-core/issues/382) 波次。
+- 控制器/治理采用归 Epic [#379](https://github.com/mayf3/dsh-agent-core/issues/379)（[#364](https://github.com/mayf3/dsh-agent-core/pull/364) 的采用由 [#399](https://github.com/mayf3/dsh-agent-core/issues/399) 承载）；HR 容量线归 [#384](https://github.com/mayf3/dsh-agent-core/issues/384)。
+
 ## 1. 用户结果与证据边界
 
 目标是同一个 HR、同一个入口能持续使用；任务可取消、可恢复；部署失败不拖垮其他 Agent；普通发布不临时索取全量 root。用户已报告 HR 经新 turn、worker、模型回复和正常结算恢复，这只能作为**用户提供的恢复报告**，不是本 PR 重新验证的生产状态。
