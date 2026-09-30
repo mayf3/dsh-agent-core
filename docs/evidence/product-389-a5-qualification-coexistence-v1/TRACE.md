@@ -104,3 +104,38 @@ and the route-gate `{status:'ready', proc}` wrapper).
 - [x] reviewed against fresh current main (base `360756e3`; re-verified at commit time)
 - [x] no production deploy/restart required; later production verification → WAITING_PROD_AUTH
       with exact release/operation/canary
+
+## 6. Full-suite A/B (zero-regression proof)
+
+Same command (`npm test`, repo glob) on pristine base `360756e3` (detached worktree
+`.worktrees/a5-base`) vs branch head `40840a57`:
+
+```text
+base   360756e3: 2453 tests / 2373 pass / 66 fail
+branch 40840a57: 2460 tests / 2381 pass / 65 fail   (+7 = the new coexistence tests, all PASS)
+```
+
+Normalized failure-name diff (durations stripped): the 65-failure sets are IDENTICAL; the single
+delta is `C-IDM-007 AC-IDM-08 F-23: concurrent same-key requests` — a timing-sensitive
+concurrency test that flaked on the BASE run and passed on the branch run (run-to-run variance;
+the branch adds files only, so it cannot alter existing suites). All 65 failures are
+environment-gated (feishu-connector live SDK, macOS `say` voice, deepseek-harness checkout
+paths, subscription migration fixtures) — pre-existing on current main, owned by other surfaces.
+
+## 7. Changed-surface review record (focused)
+
+Changed surface = ONE new test file (+ evidence docs). Adversarial pass:
+
+- `proc.spawn` override = the documented harness seam (`process/spawn.js:61-65`: attach is
+  spawn's exact post-condition minus the OS child); the registry's real `spawn()` call and
+  `ownershipToken` read path stay exercised (process-registry.js:387-391).
+- Route-gate wrapper `{status:'ready', proc}` unwrapped before assertions (route-gate.js:166).
+- Factory-poll spins are bounded (`waitFor`, 500 ticks) — admission rejections fail the test,
+  never hang it.
+- Shared ONE real `TurnReconciliationStore` across both processes = the production topology
+  (one store per router mount); per-agent record isolation is asserted, not assumed.
+- Failed-canary leg additionally exercises the stronger isolation property: the canary slot
+  converges to REAP (child attached, then initialize handshake rejected) while the ordinary
+  agent's slot/turn proceeds — a fenced canary never blocks unrelated admission.
+- No production identity, path, credential, or network surface touched; all identities synthetic.
+
