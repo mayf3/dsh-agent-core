@@ -178,6 +178,24 @@ test('failure 6: declared external dependencies without a pinned lockfile refuse
   rmSync(root, { recursive: true, force: true })
 })
 
+test('frozen evidence snapshots (docs/evidence, deployment-artifacts) are not live-code closure edges', async () => {
+  const root = tmpRoot('evidence-snapshot')
+  const src = seedGoodSource(root)
+  mkdirSync(join(src, 'docs', 'evidence', 'some-case-v1', 'postimage'), { recursive: true })
+  writeFileSync(
+    join(src, 'docs', 'evidence', 'some-case-v1', 'postimage', 'transport.js'),
+    "import { helper } from '../../helper.js'\nexport const snapshot = helper\n",
+  )
+  mkdirSync(join(src, 'deployment-artifacts', 'targets'), { recursive: true })
+  writeFileSync(join(src, 'deployment-artifacts', 'targets', 'old.js'), "import { x } from '../y.js'\nexport const old = x\n")
+  const recipe = GOOD_RECIPE()
+  recipe.exclude = ['node_modules', '.git'] // keep evidence trees in the package for this case
+  const out = join(root, 'out')
+  const { manifest } = await build(src, out, recipe)
+  assert.ok(manifest.source.files.some((f) => f.path.includes('docs/evidence')), 'snapshots still ship inside the package')
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('failure 7: a lockfile that does not cover every declared dependency refuses the release', async () => {
   const root = tmpRoot('partial-lock')
   const src = seedGoodSource(root)
