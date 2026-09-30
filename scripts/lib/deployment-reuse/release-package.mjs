@@ -156,17 +156,46 @@ function checkToolchain(recipe) {
     throw new ReleaseRefused('NODE_RUNTIME_ABSENT', String(recipe?.nodeRuntime))
   }
   const nodeVersion = execFileSync(recipe.nodeRuntime, ['--version'], { encoding: 'utf8' }).trim()
+  const nodeSha256 = sha256(readFileSync(recipe.nodeRuntime))
+  let harness = null
   if (recipe.harnessRoot) {
-    let harness
-    try { harness = realpathSync(recipe.harnessRoot) } catch { throw new ReleaseRefused('HARNESS_ABSENT', String(recipe.harnessRoot)) }
-    if (!statSync(harness).isDirectory()) throw new ReleaseRefused('HARNESS_ABSENT', String(recipe.harnessRoot))
+    let harnessReal
+    try { harnessReal = realpathSync(recipe.harnessRoot) } catch { throw new ReleaseRefused('HARNESS_ABSENT', String(recipe.harnessRoot)) }
+    if (!statSync(harnessReal).isDirectory()) throw new ReleaseRefused('HARNESS_ABSENT', String(recipe.harnessRoot))
+    // The harness tree can be huge; the bounded honest anchor is the entry
+    // package (apps/cli — the directory resolveHarnessRoot keys on). Its
+    // digest plus the declared versions pin what the built artifact is
+    // resolved against; scope is recorded so it is never read as whole-tree.
+    const entryPkgDir = join(harnessReal, 'apps', 'cli')
+    if (!existsSync(join(entryPkgDir, 'package.json'))) {
+      throw new ReleaseRefused('HARNESS_ENTRY_ABSENT', join(harnessReal, 'apps', 'cli'))
+    }
+    let version = null
+    let rootVersion = null
+    try { version = JSON.parse(readFileSync(join(entryPkgDir, 'package.json'), 'utf8')).version ?? null } catch { /* recorded as null */ }
+    try { rootVersion = JSON.parse(readFileSync(join(harnessReal, 'package.json'), 'utf8')).version ?? null } catch { /* recorded as null */ }
+    harness = { root: recipe.harnessRoot, entryPackage: 'apps/cli', version, rootVersion, entryPackageDigest: directoryDigest(entryPkgDir), digestScope: 'apps/cli entry package only, not the whole harness tree' }
   }
-  return nodeVersion
+  return { nodeVersion, nodeSha256, harness }
+}
+
+function directoryDigest(root) {
+  const out = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const p = join(dir, entry.name)
+      if (entry.isSymbolicLink()) throw new ReleaseRefused('SYMLINK_IN_SOURCE', relative(root, p))
+      if (entry.isDirectory()) walk(p)
+      else if (entry.isFile()) out.push(`${relative(root, p).split(sep).join('/')}\0${sha256(readFileSync(p))}\n`)
+    }
+  }
+  walk(root)
+  return sha256(out.join(''))
 }
 
 function gitSha(sourceRoot) {
   try {
-    return execFileSync('git', ['-C', sourceRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
+    return execFileSync('git', ['-C', sourceRoot, 'rev-parse', 'HEAD'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
     return null
   }
@@ -181,6 +210,96 @@ function dependencySummary(files, sourceRoot) {
     } catch { /* non-JSON package.json would have failed completeness via parse elsewhere; keep summary best-effort */ }
   }
   return deps
+}
+
+// package-lock v3 top-level install entries: `node_modules/<pkg>` and
+// `node_modules/<scope>/<pkg>` (nested `node_modules/x/node_modules/y` keys
+// describe transitive placements and are covered by their own top-level name).
+const TOP_LEVEL_LOCK_KEY = /^node_modules\/(?:(@[^/]+)\/)?([^/]+)$/
+
+/**
+ * Extract the pinned external closure from a package-lock document. Registry
+ * deps pin by integrity; git-hosted deps pin by the commit sha embedded in
+ * the resolved URL (no integrity is invented). `link: true` entries are
+ * internal workspace members, not external pins.
+ */
+function extractDependencyClosure(lockDoc) {
+  if (lockDoc === null || typeof lockDoc !== 'object' || Array.isArray(lockDoc)) {
+    throw new ReleaseRefused('DEPENDENCY_LOCK_UNPARSABLE', 'lockfile root must be an object')
+  }
+  const resolved = {}
+  const workspaceLinks = {}
+  for (const [key, entry] of Object.entries(lockDoc.packages ?? {})) {
+    if (key === '' || entry === null || typeof entry !== 'object') continue
+    const m = TOP_LEVEL_LOCK_KEY.exec(key)
+    if (m === null) continue
+    const name = (m[1] !== undefined ? `${m[1]}/` : '') + m[2]
+    if (resolved[name] !== undefined || workspaceLinks[name] !== undefined) continue
+    if (entry.link === true) { workspaceLinks[name] = { resolved: entry.resolved ?? null }; continue }
+    const version = entry.version
+    const target = entry.resolved ?? null
+    if (typeof version !== 'string' || version === '' || target === null) {
+      throw new ReleaseRefused('DEPENDENCY_LOCK_MALFORMED', key)
+    }
+    const record = { version, resolved: target }
+    if (typeof entry.integrity === 'string' && entry.integrity !== '') record.integrity = entry.integrity
+    else if (typeof target === 'string' && target.includes('#')) record.gitCommitSha = target.slice(target.indexOf('#') + 1)
+    else throw new ReleaseRefused('DEPENDENCY_LOCK_UNPINNED', name)
+    resolved[name] = record
+  }
+  return { resolved, workspaceLinks }
+}
+
+/**
+ * The declared external dependency union across the packaged tree must be
+ * covered by an out-of-band package-lock.json (generated from the authorized
+ * registry in a clean assembly workspace). Without it the 901-file source
+ * package has no rebuildable dependency closure — exactly the T1 gap.
+ */
+function checkDependencyClosure(files, sourceRoot, recipe) {
+  const declared = dependencySummary(files, sourceRoot)
+  const declaredNames = Object.keys(declared).sort()
+  if (declaredNames.length === 0) {
+    if (recipe?.dependencies !== undefined) {
+      throw new ReleaseRefused('DEPENDENCY_LOCK_UNEXPECTED', 'recipe.dependencies provided but the tree declares no external dependencies')
+    }
+    return { declared, packageManager: null, registry: null, resolved: {}, workspaceLinks: {}, lockfile: null, lockBytes: null }
+  }
+  const dep = recipe?.dependencies
+  if (dep === null || typeof dep !== 'object' || typeof dep.lockfilePath !== 'string' || dep.lockfilePath === '') {
+    throw new ReleaseRefused('DEPENDENCY_LOCK_MISSING', `tree declares external dependencies (${declaredNames.join(', ')}); recipe.dependencies.lockfilePath (package-lock.json from the authorized registry) is required`)
+  }
+  let lockDoc
+  let lockBytes
+  try {
+    lockBytes = readFileSync(dep.lockfilePath)
+    lockDoc = JSON.parse(lockBytes.toString('utf8'))
+  } catch (error) {
+    throw new ReleaseRefused('DEPENDENCY_LOCK_UNPARSABLE', `${dep.lockfilePath}: ${error?.message ?? error}`)
+  }
+  const { resolved, workspaceLinks } = extractDependencyClosure(lockDoc)
+  const missing = declaredNames.filter((name) => resolved[name] === undefined && workspaceLinks[name] === undefined)
+  if (missing.length > 0) throw new ReleaseRefused('DEPENDENCY_LOCK_INCOMPLETE', `lockfile does not cover: ${missing.join(', ')}`)
+  return {
+    declared,
+    packageManager: dep.packageManager ?? 'npm',
+    registry: dep.registry ?? null,
+    resolved: Object.fromEntries(Object.keys(resolved).sort().map((k) => [k, resolved[k]])),
+    workspaceLinks: Object.fromEntries(Object.keys(workspaceLinks).sort().map((k) => [k, workspaceLinks[k]])),
+    lockfile: { lockfileVersion: lockDoc.lockfileVersion ?? null, sha256: sha256(lockBytes), bytes: lockBytes.length },
+    lockBytes,
+  }
+}
+
+/** includeTestTree/includeArchives are recipe-declared; contradiction with the
+ *  packaged content refuses instead of silently meaning the opposite. */
+function checkRecipeContentConsistency(files, sourceRoot, recipe) {
+  const rel = (f) => relative(sourceRoot, f).split(sep).join('/')
+  const hasTests = files.some((f) => /(^|\/)(test|tests)(\/|$)/.test(rel(f)) || /\.test\.[cm]?js$/.test(rel(f)))
+  const hasArchives = files.some((f) => rel(f).startsWith('deployment-artifacts/'))
+  if (recipe.includeTestTree === false && hasTests) throw new ReleaseRefused('INCONSISTENT_RECIPE', 'includeTestTree=false but the tree contains test files')
+  if (recipe.includeArchives === false && hasArchives) throw new ReleaseRefused('INCONSISTENT_RECIPE', 'includeArchives=false but the tree contains deployment-artifacts/')
+  return { includeTestTree: recipe.includeTestTree ?? true, includeArchives: recipe.includeArchives ?? true }
 }
 
 function configStructure(files, sourceRoot) {
@@ -205,7 +324,9 @@ export function buildRelease({ sourceRoot, recipe, outputRoot }) {
   checkSecrets(files, src)
   checkPackageJsonCompleteness(files, src, exemptExcludes)
   checkModuleClosure(files, src)
-  const nodeVersion = checkToolchain(recipe)
+  const recipeInclusion = checkRecipeContentConsistency(files, src, recipe)
+  const deps = checkDependencyClosure(files, src, recipe)
+  const toolchain = checkToolchain(recipe)
 
   const fileEntries = files.map((f) => {
     const buf = readFileSync(f)
@@ -214,14 +335,37 @@ export function buildRelease({ sourceRoot, recipe, outputRoot }) {
 
   const manifest = {
     manifestVersion: 1,
-    recipe: { name: recipe.name, exclude: [...exemptExcludes].sort(), coveredGoals: recipe.coveredGoals ?? [], compat: recipe.compat ?? {} },
-    toolchain: { node: recipe.nodeRuntime, nodeVersion, harness: recipe.harnessRoot ?? null },
+    recipe: { name: recipe.name, exclude: [...exemptExcludes].sort(), coveredGoals: recipe.coveredGoals ?? [], compat: recipe.compat ?? {}, ...recipeInclusion },
+    toolchain: { node: recipe.nodeRuntime, nodeVersion: toolchain.nodeVersion, nodeSha256: toolchain.nodeSha256, harness: toolchain.harness },
     sourceSha: gitSha(src),
     source: { files: fileEntries, fileCount: fileEntries.length, totalBytes: fileEntries.reduce((n, f) => n + f.bytes, 0) },
-    dependencies: dependencySummary(files, src),
+    dependencies: {
+      declared: deps.declared,
+      packageManager: deps.packageManager,
+      registry: deps.registry,
+      lockfile: deps.lockfile,
+      resolved: deps.resolved,
+      workspaceLinks: deps.workspaceLinks,
+      resolvedCount: Object.keys(deps.resolved).length,
+    },
+    assembly: {
+      layout: 'npm-workspaces-union',
+      steps: [
+        'copy the app/ tree as-is',
+        'npm ci --ignore-scripts inside app/ with app/package-lock.json (registry tarballs verified by sha512 integrity; git deps pinned by commit sha)',
+      ],
+      verification: [
+        'npm ci refuses lockfile/package.json drift',
+        "import('packages/production-runtime/src/entry.js') must resolve the full chain from the assembled app",
+      ],
+    },
     configStructure: configStructure(files, src),
     builtAt: new Date().toISOString(),
   }
+  const dependencyDigest = deps.lockfile === null ? null : sha256(
+    Object.entries(deps.resolved).map(([name, r]) => `${name}@${r.version}\0${r.integrity ?? `git:${r.gitCommitSha}`}\n`).sort().join(''),
+  )
+  manifest.dependencyDigest = dependencyDigest
   const artifactDigest = sha256(fileEntries.map((f) => `${f.path}\0${f.sha256}\n`).join(''))
   manifest.artifactDigest = artifactDigest
 
@@ -233,6 +377,12 @@ export function buildRelease({ sourceRoot, recipe, outputRoot }) {
     mkdirSync(dirname(dest), { recursive: true })
     writeFileSync(dest, readFileSync(f), { mode: statSync(f).mode & 0o777 })
   }
+  const generated = []
+  if (deps.lockBytes !== null) {
+    writeFileSync(join(appDir, 'package-lock.json'), deps.lockBytes)
+    generated.push({ path: 'package-lock.json', sha256: deps.lockfile.sha256, bytes: deps.lockfile.bytes })
+  }
+  manifest.generated = generated
   writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n')
   return { manifest, artifactDigest }
 }
