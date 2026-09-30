@@ -12,14 +12,25 @@
 
 ## 2. 当前在跑什么（受影响服务，只读）
 
+**Round-2 修订（同日接管续作，agent-control #97）**：round-1 把 gui 用户域 runtime 标为"HR+普通 Agent 入口"是**过度归因**。补充只读普查（plist EnvironmentVariables、监听套件、逐文件 sha256、可读名册——不读任何秘密内容）后修正：**真实飞书凭据只存在于系统域 authsvc runtime 的启动链**。服务身份不同 ≠ 消费不重叠：两个 runtime 共享同一 agent 身份命名空间（agt_hr-agent 同时在两个名册中）。
+
 | 服务 | 状态 | 加载源 | 与 main 51f47739 关系 |
 |---|---|---|---|
-| `ai.agent-core.runtime`（用户域 HR+普通 Agent，launchd running pid 1753） | 在跑 | `/Users/yanfenma/workspace/project/production-dsh-agent-core` 工作树 @ `549dace` + **未提交现网补丁**（24 M + ~57 新文件） | 落后 main ~6 周；补丁逐文件三方对比后 5 项未进 main → 已回流 |
-| `ai.agent-core.scheduler-v2`（pid 1752） | 在跑 | `dsh-agent-core-main` @ `d6d18787` | 已是 main 祖先；仅一个临时脚本脏，无源码补丁 |
-| `ai.agent-deploy-system` / `-shim`（DS/shim） | 注册 | `/usr/local/libexec/agent-deploy-{system,shim}` 安装 python | 安装→仓库映射未建立（T2 输入）；另有 root 域 `ai.agent-deployd` 同注册，实际执行器身份待 T2 证明 |
-| authsvc runtime（pid 8971） | 在跑 | 受控根 `/usr/local/libexec/agent-core/app` | **无版本 manifest**——T1 要补的洞；历史 rollback/failed 目录齐备 |
+| `ai.agent-core.runtime` **系统域**（authsvc，pid 8971；`/Library/LaunchDaemons`） | 在跑 | 受控根 `/usr/local/libexec/agent-core/app` @ 代际 `d602b592`（plist 部署 SHA，main 祖先已验证）；launcher/package.json 与当前候选**逐字节一致**，entry/compose 停在 d602b592 代 | INSTALL delta = 下一包 |
+| `ai.agent-core.runtime` **gui 用户域**（yanfenma，pid 1753；wrapper zsh 启动） | 在跑 | `/Users/yanfenma/workspace/project/production-dsh-agent-core` @ `549dace` + 未提交现网补丁 | 落后 main ~6 周；5 项回流同 round-1 |
+| `ai.agent-core.scheduler-watchdog-w1`（authsvc）/ `-w2`（**root**） | 注册（StartInterval 300，非驻留） | 同受控根 `scripts/scheduler-watchdog.mjs --role w1|w2` | 同 d602b592 代；W1 查询入口=系统域 runtime 的 `127.0.0.1:8790/health` |
+| `com.auth-service`（authsvc，pid 366，4001） | 在跑 | pinned checkout `production-auth-service-862eab3…` | BROKER_AUTH_ORIGIN + JWKS 权威；安装↔repo 映射仅到目录名（T2 输入） |
+| `ai.agent-core.scheduler-v2`（pid 1752） | 在跑 | `dsh-agent-core-main` @ `d6d18787` | main 祖先；**澄清：不是 W1 的监视对象**（W1/W2 与系统域 runtime 共享 `/Users/authsvc/.agent-core/scheduler/jobs.json`，scheduler-v2 有独立状态根） |
+| DS/shim | 注册 | `/usr/local/libexec/agent-deploy-{system,shim}` | 安装→仓库映射未建立（T2 输入，同 round-1） |
 
-读面边界：仅 launchd 元数据、plist ProgramArguments、git 元数据、目录清单、进程表；未读任何秘密内容，未做全机扫描，未对 HR 做重置或业务探测。
+**入口映射（本轮核对结论）**：
+
+- **真实 HR（飞书）**：系统域 authsvc runtime——唯一持 `FEISHU_CREDS_PATH` 的启动链（路径已记录，内容未读）；ingress 8790 / product-api 8788；子代理经 spawn helper 以 uid 502/gid 20 落地。
+- **普通 Agent**：双域共存——gui 域（8787 product-api + 8789 Tailnet history 封闭听端 + 8791 ingress；模型侧 ZAI 路由；**无 broker 凭据 env → broker 工具调用按次 fail-closed**）与系统域（broker 凭据文件 + 真飞书 + 受控子身份）。名册身份重叠消费是实锤（agt_hr-agent 双名册）。
+- **W1 查询入口**：`http://127.0.0.1:8790/health`（W1 plist 的 `SCHEDULER_HEALTH_URL` 原文）。W1 读面三件（MY_SESSIONS / Execution History / Human Attention）在安装代 d602b592 中不存在 → 维持 **INSTALL**（经同一系统域 runtime 的 product-api 8788 交付，不新增服务）。
+- 生产路由 manifest 为 **root-owned**（`SCHEDULER_ROUTING_OWNER_UID=0`、READER_GID=601、路径在 `/usr/local/libexec/agent-core/config/`）——这正是生产能通过 watchdog 父链校验的原因；macOS home 默认 ACL 使 `$HOME` 下任何路径都无法通过该校验（隔离验证时的实测合同事实，已进 T1 驱动设计）。
+
+读面边界（round-2 扩展）：round-1 的 launchd 元数据/git/目录清单/进程表之外，新增 plist EnvironmentVariables 键值、netstat/lsof 监听归属、受控根逐文件 sha256、可读名册的 id 列表。仍未读：任何秘密文件内容（key/凭据/飞书 creds 只记路径）、生产账本、全机扫描；未做 HR 重置或业务探测。
 
 ## 3. 现网补丁回流（T0 核心 checkbox）
 
@@ -67,10 +78,12 @@ toolchain：受控 node `v25.6.1`（`/usr/local/libexec/agent-core/node-runtime`
 
 环境差异排查记录（供后续不再重查）：本机 shell 代理变量触发 `compose.js` 代理 fail-closed；本机默认 node v26.7.0 ≠ `TARGET_PROXY_NODE_VERSION v25.6.1`；harness/pnpm 作用域包链接不全导致 ERR_MODULE_NOT_FOUND。均与回流补丁无关，基线复现一致。
 
-## 6. 局限与遗留
+## 6. 局限与遗留（round-2 修订）
 
-- 生产 checkout git 对象陈旧，无法解析 `51f47739`——回流以主仓对象完成，不影响结论。
-- DS/shim 安装版↔源码映射未建立（T2 输入）；`ai.agent-deployd`（root）与 DS/shim 的实际分工未证明。
-- 受控根 `app/` 无 manifest——T1 的 release-package 工具正是补此洞。
-- 用户报告的 HR 恢复未由本 agent 复测（按计划约束）；`business-verified` 列保持 user-reported。
-- production-dsh-agent-core 现场目录**未做任何修改**（只读核对），服务零影响。
+- 生产 checkout git 对象陈旧，无法解析 `51f47739`——回流以主仓对象完成，不影响结论。（round-1）
+- DS/shim 安装版↔源码映射未建立（T2 输入）；`ai.agent-deployd`（root）与 DS/shim 的实际分工未证明。（round-1）
+- 受控根 `app/` 无 manifest——T1 release-package 工具补此洞；本轮已对受控根做**逐文件摘要锚**（launcher/package.json 与当前候选逐字节一致、entry/compose 停在 d602b592 代），INSTALL/VERIFY_ONLY 判定只覆盖实际核对的服务与文件。（round-2）
+- 入口归因修正：真实飞书 HR 通道 = 系统域 authsvc runtime；gui 域 runtime 是产品/模型面且 broker 调用按次 fail-closed。**09-29/30 用户报告的 HR 恢复究竟由哪个 runtime 承载仍未验证**——不按标签归因，留 T2 以业务回执核对。（round-2）
+- W1 查询入口与 W1 读面区分：今天只有 8790/health；读面三件 INSTALL 随下一包走系统域 runtime product-api 8788。（round-2）
+- 用户报告的 HR 恢复未由本 agent 复测（按计划约束）；`business-verified` 列保持 user-reported。（round-1）
+- production-dsh-agent-core 现场目录**未做任何修改**（只读核对），服务零影响。（round-1/2 均如此）
