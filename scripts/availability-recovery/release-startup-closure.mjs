@@ -136,8 +136,6 @@ async function deliver(port, client, payload) {
 async function runPhase(root, run) {
   process.env.CLOSURE_ROOT = root
   process.env.AGENT_CORE_CREDENTIALS_FILE = join(root, 'control', 'credentials-test.json')
-  process.env.SCHEDULER_ROUTING_OWNER_UID = String(process.getuid())
-  process.env.SCHEDULER_ROUTING_READER_GID = String(process.getgid())
   const { layout } = await seedRoot(root)
   assertProductionArchitecture()
   const spawned = []
@@ -158,6 +156,17 @@ async function runPhase(root, run) {
     concurrency: 2,
     catchup: true,
     schedulerReadinessRequired: true, // the entry.js startup bar
+    // Isolated-root routing security: uid/gid/mode checks keep the production
+    // defaults; only the protected-path parent boundary is scoped to the
+    // closure root, because every macOS home directory carries the default
+    // everyone-deny-delete ACL and can never satisfy the root-anchored
+    // parent chain the watchdog validates against.
+    schedulerRoutingSecurity: {
+      expectedUid: process.getuid(),
+      allowedGids: [process.getgid()],
+      maxMode: 0o640,
+      parentBoundary: root,
+    },
     globalRoute: { provider: 'closure-fixture', model: 'tool-free' },
     processFactory: (opts) => { const p = new FixtureWorkerProcess(opts); spawned.push(p); return p },
     productApi: { enabled: true, host: '127.0.0.1', port: 0 },
