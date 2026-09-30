@@ -358,7 +358,8 @@ export function buildRelease({ sourceRoot, recipe, outputRoot }) {
       layout: 'npm-workspaces-union',
       steps: [
         'copy the app/ tree as-is',
-        'npm ci --ignore-scripts inside app/ with app/package-lock.json (registry tarballs verified by sha512 integrity; git deps pinned by commit sha)',
+        'add "workspaces": ["packages/*"] to app/package.json — the ONE generated assembly delta; without it npm ci rebuilds the tree from root deps only and silently skips member-only dependencies (the @larksuite/channel git dep gap)',
+        'npm ci --ignore-scripts inside app/ with app/package-lock.json (registry tarballs verified by sha512 integrity; git deps pinned by commit sha + integrity)',
       ],
       verification: [
         'npm ci refuses lockfile/package.json drift',
