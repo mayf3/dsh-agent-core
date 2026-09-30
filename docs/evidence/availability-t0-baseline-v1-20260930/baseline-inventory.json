@@ -1,0 +1,92 @@
+{
+  "spec": "T0 baseline inventory per docs/superpowers/plans/2026-09-30-availability-and-backlog-rollout.md (PR #373)",
+  "observedAt": "2026-09-30T15:30:00+08:00",
+  "observer": "sole takeover agent (unique-writer check passed: agent-control queue had no same-goal task; all 6 stale agent:running receipts 2026-09-29 had dead PIDs)",
+  "readScope": "launchd labels, plist ProgramArguments, git metadata, directory listings, process table; no secret file contents, no full-machine scan",
+  "services": [
+    {
+      "service": "ai.agent-core.runtime (user-domain production runtime — HR + ordinary Agents entry)",
+      "loaded": true,
+      "launchdState": "running pid 1753 since 2026-09-30 12:32:59",
+      "sourceSha": "549dace (production-dsh-agent-core checkout, branch main, PR #34 merge 2026-08-21) PLUS uncommitted live patches (24 modified, ~57 untracked source files)",
+      "sourceRoot": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+      "artifactDigest": "unverified (workspace checkout, no immutable artifact manifest)",
+      "runtimeDigest": "unverified (/usr/local/bin/node, system install; version not pinned to release)",
+      "configRevision": "wrapper agent-core-runtime-glm53-wrapper.zsh; PRODUCT_API_HISTORY_* env; secret read from file at runtime (content not read)",
+      "executionIdentity": "user yanfenma (gui domain)",
+      "stateRoot": "/Users/yanfenma/.agent-core",
+      "stateFormat": "unverified",
+      "featureEvidence": [
+        "user-reported HR recovery (per PR #373 handoff; not re-verified this run by design — no reset, no probe)",
+        "process alive and launchd reports running"
+      ],
+      "unresolvedDrift": [
+        "live tree cannot resolve main sha 51f47739 (stale git objects) — production checkout is ~6 weeks behind main",
+        "file-level three-way classification completed: 9 M-files identical to main, 9 M-file patch semantics already contained in main (symbol-level), 57 untracked files identical to main; 5 patches NOT in main -> backflowed to branch live-restore/t0-backflow-20260930 commit 1dbfb70b",
+        "self-ops.js live one-liner 'infrastructure: true' NOT backflowed: conflicts with main accepted self-ops-v3 test (self_ops must stay model-visible); no provenance; deployment of a package built from main will re-expose self_ops to the model tool list (low risk, accepted-by-main semantics)",
+        "shared-codex-migration-executable.js live hardened candidate-r2 backflowed; main's smaller pre-hardening version superseded by live"
+      ]
+    },
+    {
+      "service": "ai.agent-core.scheduler-v2",
+      "loaded": true,
+      "launchdState": "running pid 1752 (catchup 0)",
+      "sourceSha": "d6d18787 (dsh-agent-core-main checkout 2026-09-06) — verified ancestor of main 51f47739",
+      "sourceRoot": "/Users/yanfenma/workspace/project/dsh-agent-core-main",
+      "artifactDigest": "unverified",
+      "runtimeDigest": "/usr/local/libexec/agent-core/node-runtime (controlled runtime)",
+      "configRevision": "unverified",
+      "executionIdentity": "user yanfenma (gui domain)",
+      "stateRoot": "/Users/yanfenma/.agent-core-scheduler-v2",
+      "stateFormat": "unverified",
+      "featureEvidence": ["only dirty file is an untracked scratch script (scripts/gate1-serve-tmp.mjs), no source patches"],
+      "unresolvedDrift": []
+    },
+    {
+      "service": "ai.agent-deploy-system + ai.agent-deploy-shim (DS/shim privileged deploy surface)",
+      "loaded": true,
+      "launchdState": "daemons registered in /Library/LaunchDaemons (system domain)",
+      "sourceSha": "unverified (installed python under /usr/local/libexec/agent-deploy-system/deployment_system.py, /usr/local/libexec/agent-deploy-shim/deploy_shim.py; installed->repo mapping not yet established — T2 input)",
+      "artifactDigest": "unverified",
+      "runtimeDigest": "/usr/bin/python3",
+      "configRevision": "unverified",
+      "executionIdentity": "system (root domain per plist domain)",
+      "stateFormat": "unverified",
+      "featureEvidence": ["deployment-reuse receipt client exists on main (scripts/lib/deployment-reuse/receipt.py) — reuse path for T2"],
+      "unresolvedDrift": [
+        "ai.agent-deployd (root) also registered — actual executor identity for production releases not yet proven; T2 must map installed->repo before any release action"
+      ]
+    },
+    {
+      "service": "authsvc runtime (controlled install root)",
+      "loaded": true,
+      "launchdState": "running pid 8971 (catchup 0)",
+      "sourceSha": "unverified — /usr/local/libexec/agent-core/app has NO version manifest (this absence is the T1 gap)",
+      "sourceRoot": "/usr/local/libexec/agent-core/app",
+      "artifactDigest": "unverified (362M tree incl node_modules; sibling rollback/failed dirs retained: app.rollback-v7-20260918T113325Z, app.rollback-v7c-20260919T003225Z, app.failed-*)",
+      "runtimeDigest": "/usr/local/libexec/agent-core/node-runtime/bin/node (controlled)",
+      "configRevision": "unverified",
+      "executionIdentity": "user authsvc (separate service account; root /Users/authsvc/.agent-core)",
+      "stateFormat": "unverified",
+      "featureEvidence": [],
+      "unresolvedDrift": []
+    }
+  ],
+  "hrAndOrdinaryAgentBusinessRecord": "user-reported recovery accepted per handoff (PR #373); this run made no business probe and performed no reset, per plan constraint",
+  "backflowCandidate": {
+    "branch": "live-restore/t0-backflow-20260930",
+    "base": "51f477394fbab0234eae807bacd0f942ffdc22ed",
+    "commit": "1dbfb70b",
+    "worktree": "/Users/yanfenma/workspace/worktrees/t0-backflow-20260930",
+    "testResults": {
+      "toolchain": "controlled node v25.6.1 (/usr/local/libexec/agent-core/node-runtime), proxy env unset",
+      "broker": "489/489 pass",
+      "production-runtime": "157/157 pass",
+      "product-api": "93/97 pass (4 fails = real-TTS engine tests, headless by design)",
+      "preexistingEnvFailures": [
+        "agent-switch/test/switch.test.js 'registers exactly the agent_core_switch_agent tool' — harness dsh-tools schema shape differs from test expectation; identical failure on unmodified main baseline; NOT caused by backflow"
+      ]
+    }
+  },
+  "nonGoalsThisRun": ["no production deploy/restart", "no HR reset", "no full-machine census", "no secret reads", "no new permissions"]
+}
