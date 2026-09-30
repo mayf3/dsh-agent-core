@@ -1,9 +1,9 @@
 // Failure-first regression for buildRelease (T1 of the availability rollout plan).
 // The builder must refuse to publish an incomplete or unsafe package BEFORE any
 // bytes reach outputRoot; a clean rebuild must not depend on any live tree.
-import { test } from 'node:test'
+import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
@@ -25,7 +25,7 @@ function tmpRoot(label) {
 function seedGoodSource(root) {
   const src = join(root, 'src')
   mkdirSync(join(src, 'packages', 'demo'), { recursive: true })
-  writeFileSync(join(root, 'package.json'), JSON.stringify({
+  writeFileSync(join(src, 'package.json'), JSON.stringify({
     name: 'demo-core', version: '0.0.0', private: true, type: 'module',
     dependencies: { croner: '^10.0.1' },
   }))
@@ -37,13 +37,43 @@ function seedGoodSource(root) {
   return src
 }
 
-const GOOD_RECIPE = () => ({
+// Minimal honest package-lock v3 fixture: the exact shape `npm install
+// --package-lock-only` produces for the demo tree (one registry dep pinned by
+// integrity). Git-hosted deps pin by commit sha instead of integrity.
+const LOCK_FIXTURE = () => ({
+  name: 'demo-core',
+  version: '0.0.0',
+  lockfileVersion: 3,
+  requires: true,
+  packages: {
+    '': { name: 'demo-core', version: '0.0.0', dependencies: { croner: '^10.0.1' }, packageManager: 'npm' },
+    'node_modules/croner': {
+      version: '10.0.1',
+      resolved: 'https://registry.npmjs.org/croner/-/croner-10.0.1.tgz',
+      integrity: 'sha512-FIXTUREINTEGRITYVALUEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+    },
+  },
+})
+
+const LOCK_TMP_DIRS = []
+after(() => { for (const d of LOCK_TMP_DIRS) rmSync(d, { recursive: true, force: true }) })
+
+function lockfileDeps(lock = LOCK_FIXTURE()) {
+  const dir = mkdtempSync(join(tmpdir(), 'release-pkg-lock-'))
+  LOCK_TMP_DIRS.push(dir)
+  const lockfilePath = join(dir, 'package-lock.json')
+  writeFileSync(lockfilePath, `${JSON.stringify(lock, null, 2)}\n`)
+  return { packageManager: 'npm', registry: 'https://registry.npmjs.org/', lockfilePath }
+}
+
+const GOOD_RECIPE = (lock) => ({
   name: 'demo-release-v1',
   nodeRuntime: process.execPath, // present by construction
   harnessRoot: null, // optional in the minimal recipe
   exclude: ['node_modules', '.git', 'docs'],
   coveredGoals: ['demo-goal-1'],
   compat: { stateFormat: 'json-v1', rollbackTarget: 'app.rollback-demo' },
+  dependencies: lockfileDeps(lock),
 })
 
 async function build(src, outputRoot, recipe = GOOD_RECIPE()) {
@@ -132,6 +162,85 @@ test('rebuild determinism: same source built twice yields identical artifactDige
   const first = await build(src, join(root, 'out1'))
   const second = await build(src, join(root, 'out2'))
   assert.equal(second.artifactDigest, first.artifactDigest)
+  assert.equal(second.manifest.dependencyDigest, first.manifest.dependencyDigest, 'dependency closure equally deterministic')
   assert.deepEqual(second.manifest.source.files, first.manifest.source.files)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('failure 6: declared external dependencies without a pinned lockfile refuse the release', async () => {
+  const root = tmpRoot('no-lock')
+  const src = seedGoodSource(root) // root package.json declares croner
+  const recipe = GOOD_RECIPE()
+  delete recipe.dependencies
+  const out = join(root, 'out')
+  await assert.rejects(() => build(src, out, recipe), /DEPENDENCY_LOCK_MISSING/)
+  assert.equal(existsSync(out), false, 'refused build must not create output artifacts')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('failure 7: a lockfile that does not cover every declared dependency refuses the release', async () => {
+  const root = tmpRoot('partial-lock')
+  const src = seedGoodSource(root)
+  const lock = LOCK_FIXTURE()
+  delete lock.packages['node_modules/croner']
+  const out = join(root, 'out')
+  await assert.rejects(() => build(src, out, GOOD_RECIPE(lock)), /DEPENDENCY_LOCK_INCOMPLETE|croner/)
+  assert.equal(existsSync(out), false)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('dependency closure: lockfile pins version+integrity+source, ships in the package, binds dependencyDigest', async () => {
+  const root = tmpRoot('dep-closure')
+  const src = seedGoodSource(root)
+  const out = join(root, 'out')
+  const { manifest } = await build(src, out)
+  const resolved = manifest.dependencies.resolved
+  assert.equal(resolved.croner.version, '10.0.1')
+  assert.match(resolved.croner.integrity, /^sha512-/)
+  assert.match(resolved.croner.resolved, /^https:\/\/registry\.npmjs\.org\//)
+  assert.equal(manifest.dependencies.packageManager, 'npm')
+  assert.equal(manifest.dependencies.registry, 'https://registry.npmjs.org/')
+  assert.match(manifest.dependencies.lockfile.sha256, /^[0-9a-f]{64}$/)
+  assert.match(manifest.dependencyDigest, /^[0-9a-f]{64}$/)
+  // The lockfile ships inside the package so re-install is offline-deterministic.
+  const shipped = readFileSync(join(out, 'app', 'package-lock.json'))
+  assert.equal(createHash('sha256').update(shipped).digest('hex'), manifest.dependencies.lockfile.sha256)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('git-hosted dependencies pin by commit sha; no fake integrity is invented', async () => {
+  const root = tmpRoot('git-dep')
+  const src = seedGoodSource(root)
+  mkdirSync(join(src, 'packages', 'conn'), { recursive: true })
+  writeFileSync(join(src, 'packages', 'conn', 'package.json'), JSON.stringify({
+    name: 'conn', type: 'module',
+    dependencies: { '@x/channel': 'git+https://github.com/example/channel.git#abc123def4567890abcdef1234567890abcdef12' },
+  }))
+  writeFileSync(join(src, 'packages', 'conn', 'index.js'), 'export const conn = 1\n')
+  const lock = LOCK_FIXTURE()
+  lock.packages['node_modules/@x/channel'] = {
+    version: '0.1.0',
+    resolved: 'git+ssh://git@github.com/example/channel.git#abc123def4567890abcdef1234567890abcdef12',
+  }
+  const out = join(root, 'out')
+  const { manifest } = await build(src, out, GOOD_RECIPE(lock))
+  const record = manifest.dependencies.resolved['@x/channel']
+  assert.equal(record.gitCommitSha, 'abc123def4567890abcdef1234567890abcdef12')
+  assert.equal(record.integrity, undefined, 'git deps pin by commit sha; integrity must not be fabricated')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('recipe records test/archive inclusion explicitly and refuses contradiction with content', async () => {
+  const root = tmpRoot('recipe-consistency')
+  const src = seedGoodSource(root)
+  mkdirSync(join(src, 'packages', 'demo', 'test'), { recursive: true })
+  writeFileSync(join(src, 'packages', 'demo', 'test', 'demo.test.js'), "import { test } from 'node:test'\ntest('demo', () => {})\n")
+  const refused = GOOD_RECIPE()
+  refused.includeTestTree = false
+  const out = join(root, 'out')
+  await assert.rejects(() => build(src, out, refused), /INCONSISTENT_RECIPE|includeTestTree/)
+  assert.equal(existsSync(out), false)
+  const ok = await build(src, join(root, 'out2'))
+  assert.equal(ok.manifest.recipe.includeTestTree, true, 'effective inclusion recorded in the manifest recipe')
   rmSync(root, { recursive: true, force: true })
 })
