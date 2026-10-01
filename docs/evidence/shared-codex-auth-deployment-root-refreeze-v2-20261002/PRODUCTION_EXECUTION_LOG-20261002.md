@@ -304,3 +304,149 @@ packet-internal v2.1 rebind).
   preimage re-pin) → STAGE 1 (§3b + G2.5 + G2.6 all pre-restart) → restart/G4-G5 → STAGE 2
   carrier r12 → STAGE 3 acceptance → STAGE 4 cleanup, per §5; if anything fails: restore
   per §6 with RESTORE-R1 AND RESTORE-R2).
+
+---
+
+# B7 V2.2 PRODUCTION RUN — 2026-10-02 (standing delegation #386, Product #414, agent-control#195)
+
+Operator session: sess_da12ce3c-302d-46f2-b1cc-131ac4b1e626. Executed bytes: v2.2 packet
+materialized from the merged PR #423 tree at merge commit 431bcab8ec469363ed4a15f21540185d4dbb5078
+(= origin/main tip; MANIFEST.sha256 verified 12/12 OK; on-disk dir re-materialized byte-exact —
+the pre-run on-disk copy was stale v2.1-era and lacked every v2.2 rebind row; one pre-existing
+run-era append-only snapshot gen-snapshot-…-pre-restart-v21-…json kept, all packet files exact).
+DEPLOY_SRC worktree .worktrees/b7-v22-packet-repair-20261002 DETACHED from branch tip 0f7020a2
+to the packet pin HEAD b78aa30a48e00efda710b255a91e94bebdb7cec0 (tree d5fb04c96de5ea7befe130e59590db29236b71ed,
+status clean; pin→tip delta = exactly the 9 evidence-dir files, zero src).
+
+## FROZEN PACKET VERIFICATION (all exact, before any mutation)
+
+- §4 digests at the pin ALL exact: installer ad491b79…; closure gate af43b337…; fresh-child
+  canary b737d6b4…; NEW app-graph gate 6603818c…; 4 test files af364c01/5db9419b/451a57f3/2d677b2a;
+  vendored proxy-agent-negotiate 5-file manifest byte-exact. GOVERNING_SPECS_UNMODIFIED:
+  c25278e1..b78aa30a = exactly the 9 declared files; docs/specs delta = 0.
+- Offline suites at the pin: installer --selftest-provenance PASS (T1a–T8); executor --selftest
+  PASS; executor --selftest-repair PASS (echo#3 GREEN+RED; RESTORE-R1 RED/GREEN; G2.6 wiring
+  GREEN/RED fail-closed; RESTORE-R2 real-validator RED/GREEN; contract markers). Four gate
+  suites 27 tests = 0 fail (closure-resolution 9, fresh-child 4, app-graph 7, watchdog-ownership 7).
+- STAGE 2 artifacts re-verified: carrier owner-authsvc-plugin-upgrade.sh = 9f835448… (= marker
+  scriptSha256) ✓; staging dsh-codex-0.2.3-75d98d5b.tgz = d4f0d0ec… ✓; codex-deps-scopes-rc8.tgz
+  = 7c628e30… ✓; AMENDMENT_ACCEPTED.marker present (deploymentRoot=/Users/authsvc/.agent-core).
+- Custody census script 7556029d… ✓. Manifest executor row owner-router-closure-g2-g7-v22.sh =
+  7aff93eb… ✓ (manifest-verified).
+
+## STAGE 0 — PREFLIGHT: ALL PASS
+
+- 0a production-deploy.lock: NOT HELD (locks dir empty).
+- 0b-arch: live trusted node Mach-O x86_64 v25.6.1 x64; /usr/local/bin/node resolves the SAME
+  version+arch (Cellar node 25.6.1_1) → §1a anchor / §1b reuse criteria aligned.
+- 0b executor preflight: durable store loadable, 93 agents, zero overlapping ranges; live app
+  mtime Sep 29 11:58 2026 (restored preimage); runtime pid 74673 (launched 2026-10-02 03:47:04).
+- 0b-health: 8790 {"ok":true,"deliverReady":true,"authConfigured":false,"storeReady":true}.
+- 0d lineage: canonical 0600 nlink1 inode 120507344 mtime 2026-10-01T17:43:34+0800 authsvc:authsvc,
+  not a symlink, tombstone absent; file sha12 f38cd250576a (= recorded); nested expires
+  1791711814562 = 2026-10-11T09:43:34Z (= recorded KNOWN_EXPIRY) → 9.52 days runway ⇒ RATIFY.
+- 0c FRESH PREIMAGE RE-PIN: sudo rsync -a /usr/local/libexec/agent-core/
+  /usr/local/libexec/agent-core.bak-20261001T211351Z-pre-b7-v2/ (RSYNC_EXIT=0, 23G);
+  dry-run diff `rsync -ani --delete` live vs preimage = 0 lines (exact).
+- 0e custody census (7556029d…): CANONICAL_VALID=YES fresh=true tombstone=false;
+  CANONICAL_LINEAGE_REFRESH_SHA12=12616dbff17f; AUTHORITATIVE_LINEAGE_COUNT=1; 92 same-lineage
+  copies 0 foreign; NO_DUPLICATE_CREDENTIAL_PATH=PASS; YANFENMA_LINEAGE_SEPARATE=YES;
+  cross-surface hits = session transcripts only. Environment: pnpm store 1.9G intact; disk 50Gi;
+  MAIN_REPO node_modules @larksuiteoapi+croner present.
+
+## STAGE 1 — DEPLOY: ALL EXECUTOR GATES PASS (exit 0), then RESTART ADOPTION FAILED (NEW DEFECT)
+
+- `sudo bash owner-router-closure-g2-g7-v22.sh deploy` (log /tmp/b7-v22-stage1-deploy.log):
+  HEAD/tree gate PASS (b78aa30a/d5fb04c9) → §1 auto-preimage agent-core.bak-20261002-052840 →
+  §1a anchor Cellar node v25.6.1 x64 → §1b node-runtime REUSED (same v25.6.1 x64; mv-ed OUT of
+  the auto-preimage) → §2 harness closure FRESH offline build under the x64 anchor →
+  **§2c CLOSURE_RESOLUTION_GATE PASS** (NATIVE_BINDING darwin-x64 from optional-package
+  node-addon-require-builtin-darwin-x64 napi-v9; census loader 2 + apps/cli 71; RESOLVE
+  @deepseek-ai/cordis-plugin-timer + cordis) → §3 app closure packed (TOCTOU match; packed tree
+  sha256 9166b4979d3952d3…; Agent Definition PRESENT / agent-registry ABSENT; production-runtime
+  closure PRESENT) → **§3b RUNTIME_APP_GRAPH_GATE PASS** (importSettled=true timedOut=false) →
+  §4 preserved Agent Definition + credential store from the auto-preimage → §5 production root
+  provisioning (v2.2 §5b FIX B verified live: plist-pinned watchdog private state kept at gid 20,
+  EXCLUDED from the blanket pass) → §6 ownership 505/502 → spawn helper already root:wheel 4755 →
+  §8 symlink audit PASS → §9 uid-502 spot checks all DENIED →
+  **byte provenance echoes 1/4/1 hits = PASS** (DEPLOYED_SOURCE_SHA = b78aa30a fix bytes live) →
+  **G2.5 FRESH_CHILD_BOOT_CANARY PASS (ready=true pluginTreeFailed=false)** →
+  **G2.6 RUNTIME_APP_GRAPH_GATE PASS (importSettled=true timedOut=false)**. DEPLOY_RC=0.
+  Runtime pid 74673 NEVER exited through the install; health continuous.
+- **RESTART (G4) — ADOPTION FAIL-CLOSED, NEW DEFECT C**: `sudo launchctl kickstart -k
+  system/ai.agent-core.runtime` at 05:31 +0800 → the new generation FATAL-crash-looped
+  (launchd ThrottleInterval 10, spawn scheduled; 8790 down ~05:31–05:38):
+  `FATAL Error: production-runtime: invalid agent model overrides:
+  /Users/authsvc/.agent-core/agent-model-overrides.json must be {"version":3,...} (older files
+  are not converted)` at model-overrides.js:411 (loadAgentModelOverrides ← compose.js:263 ←
+  entry.js:71).
+- **Bounded defect evidence (read-only, <1 min)**: production fleet config is `version:2`
+  (92 overrides — the exact shape the carrier r12 G3 gate itself requires: "fleet config v2");
+  the OLD live tree's model-overrides.js accepts version:2 (":315 must be {\"version\":2,...}");
+  the NEW pin b78aa30a model-overrides.js:406 REQUIRES version===3 exactly (fail-loud, "older
+  files are not converted"). The packet carries NO v2→v3 config migration stage, and its own
+  STAGE 2 carrier still binds G3 to fleet config v2 — a structural contradiction inside the
+  frozen packet: the pin's runtime contract and the production/carrier config contract diverged.
+- **Coverage gap (same family as #191/#193, one layer deeper)**: §2c covers harness closure
+  arch/resolution; §3b/G2.6 cover the app-graph IMPORT (throwaway home, no config compose);
+  G2.5 covers the fresh-child plugin tree. NO gate composes the production runtime against the
+  REAL production agent-model-overrides.json before restart. Each repair unmasked the next
+  layer: #191 executor receipt → #193 pack closure → #195 config-version contract.
+- Production config file NOT mutated by the run (mtime Oct 1 18:36:29 2026 unchanged).
+
+## ROLLBACK / RESTORE PROOF (deterministic, per §6 incl. RESTORE-R1 + RESTORE-R2)
+
+- Restore per the executor contract: `rm -rf /usr/local/libexec/agent-core && mv
+  /usr/local/libexec/agent-core.bak-20261002-052840 /usr/local/libexec/agent-core`
+  (the auto-preimage consumed as the restore source, per the frozen algorithm — same as v1).
+- **RESTORE-R1 EXECUTED (mandatory: §1b reused node-runtime)**: the restored tree landed WITHOUT
+  node-runtime exactly as the contract predicts; re-materialized content-exact via
+  `rsync -a /usr/local/libexec/agent-core.bak-20261001T211351Z-pre-b7-v2/node-runtime/
+  /usr/local/libexec/agent-core/node-runtime/`; sanity v25.6.1 x64.
+- **RESTORE-R2 EXECUTED (idempotent; §5b ran)**: chgrp -R 20 on control/scheduler-watchdog +
+  control/incident-backups — verified authsvc:staff(20) 0700 before and after (v2.2 §5b had
+  already preserved the pin; R2 confirmed no drift).
+- Restored proof (ALL PASS): content diff `rsync -ani --delete` live vs STAGE 0 fresh preimage
+  = 2 lines, BOTH mtime-only (./ and .backup-meta) — CONTENT EXACT; health
+  {"ok":true,"deliverReady":true} (runtime pid 27455 booted 05:37:58 on the restored tree);
+  durable store loadable floor=3 zero overlap; lineage sha12 f38cd250576a unchanged; locks dir
+  empty; boot-canary (G2.5 standalone) PASS on the restored root; zero oauth/refresh error
+  strings in the current runtime log. Fleet downtime ≈ 7 min (05:31–05:38, single window).
+- Backups preserved untouched: agent-core.bak-20261001-174434 (禁删), -20261001T144015Z,
+  -20261001T175809Z, -20261001T211351Z (this run's fresh STAGE 0 preimage).
+
+## VERDICT
+
+```text
+PRECHECK              = PASS (claim #195 = this session; #386 standing delegation fresh-read)
+PACKET_GATES          = PASS (merge 431bcab8 on origin/main; MANIFEST 12/12; pin b78aa30a/d5fb04c9
+                        clean; §4 digests exact; GOVERNING_SPECS_UNMODIFIED; installer/executor
+                        selftests PASS; suites 0 fail)
+STAGE_0               = ALL PASS (lock free; x64=x64; durable load 93 agents; lineage
+                        12616dbff17f/f38cd250576a exact, expiry 2026-10-11 → RATIFY; fresh
+                        preimage 211351Z diff=0; custody census all PASS/YES)
+STAGE_1_INSTALLER     = ALL GATES PASS (§2c, §3b, §5b gid-20 pin, §8, §9, echoes 1/4/1)
+STAGE_1_G2_5          = PASS (ready=true pluginTreeFailed=false)
+STAGE_1_G2_6          = PASS (importSettled=true timedOut=false)
+RESTART_ADOPTION      = FAIL-CLOSED — DEFECT C: pin runtime requires overrides version:3;
+                        production fleet config is version:2 (92 overrides) and the packet's own
+                        carrier G3 binds "fleet config v2"; no migration stage exists in the
+                        packet; runtime FATAL crash-loop ~7 min; NOT environmental drift; NOT a
+                        bad install; all pre-restart gates green by construction
+ROLLBACK              = EXECUTED deterministically + RESTORE-R1 live + RESTORE-R2 idempotent;
+                        restored content-exact (2 mtime-only lines); health/durable/lineage/
+                        boot-canary verified; pid 27455 stable
+STAGE_2_3_4           = NOT REACHED (fail-closed stop; carrier NOT invoked; credentials untouched)
+FINAL_STATE           = production healthy on the restored preimage (pid 27455); #414 DONE_WHEN
+                        NOT satisfied (INSTALLED/ENABLED/BUSINESS_VERIFIED unchanged)
+NEEDS_USER            = bounded NON-PRODUCTION v2.3 repair lane: (1) reconcile the config-version
+                        contract — EITHER a separately frozen v2→v3 fleet-config migration
+                        operation for the authsvc deployment root (business config mutation with
+                        its own freeze/review/rollback; carrier G3 language must move to v3 with
+                        it) OR a source-pin reconciliation that keeps the deployed-contract
+                        version — Owner decides the direction; (2) NEW pre-cutover gate G2.7:
+                        run the installed runtime's loadAgentModelOverrides against the REAL
+                        production config before any restart (the G2.6 gap class); then re-bind
+                        packet, independent review, next standing-delegation run re-executes
+                        STAGE 0→4. The Owner feishu PONG commit gate remains ahead at STAGE 2.
+```
