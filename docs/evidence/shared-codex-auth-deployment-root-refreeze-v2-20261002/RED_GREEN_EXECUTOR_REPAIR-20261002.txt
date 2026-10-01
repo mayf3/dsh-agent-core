@@ -1,0 +1,62 @@
+RED_GREEN_EXECUTOR_REPAIR-20261002 — SHARED_CODEX_AUTH_DEPLOYMENT_ROOT_REFREEZE_V2.1
+Non-production repair lane after agent-control#191 fail-closed (Product #414, standing
+delegation #386). Hermetic /tmp fixtures only; PRODUCTION_MUTATION = NO. Recorded 2026-10-02.
+
+DEFECTS PROVEN BY #191 TERMINAL RECEIPTS (PRODUCTION_EXECUTION_LOG-20261002.md):
+  D1 (echo #3): v2 executor post-deploy byte-provenance greps
+      AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE in process-registry.js -> 0 hits at pin
+      8fc374ca AND at every reference generation since v1 (47aadec1/360756e3/d8ddf546);
+      the constant lives ONLY in process-registry-route-gate.js:52 -> deterministic abort
+      post-install, pre-G2.5 (executor 69eb0af8 exited 1 on 2026-10-02 02:12+0800).
+  D2 (restore loses node-runtime): installer §1b node-runtime REUSE mv-s node-runtime OUT
+      of the §1 auto-preimage; restore from it lands WITHOUT node-runtime once the rm -rf
+      deletes the installed tree (#191 restore-verification diff: 2418 *deleting
+      node-runtime/* lines; repaired out-of-band from the fresh STAGE 0 preimage
+      agent-core.bak-20261001T175809Z-pre-b7-v2, content-exact; runtime pid 2767 unaffected
+      via open inode; a cold boot in that window would have failed launchd).
+
+FIXES (v2.1 rebind; DEPLOY_SRC pin 8fc374ca/f60cc9e8 and ALL scripts/** bytes unchanged):
+  F1: echo #3 path corrected to process-registry-route-gate.js — echoes extracted into
+      byte_provenance_verdict() (called by deploy against $TRUSTED_APP and by
+      --selftest-repair against a fixture). Executor: 69eb0af8ca0e9ff81b833fb06de847d2adb21814208eb2d271373e60e68269d0 -> 6cabf9cd010e1aa35fc2bf014de62a9c6ae14ee621c3fbe9ae9e13a0a7f61710.
+  F2: RESTORE-R1 clause in the deploy restore contract (comment block + both fail-closed
+      die messages) and in OPERATION_PACKAGE_V2.md §6: after rm -rf live + mv newest bak
+      back, re-materialize node-runtime from the fresh STAGE 0 preimage via rsync -a COPY
+      (never a symlink, never a live node_modules patch) whenever
+      [ -x .../node-runtime/bin/node ] fails. Offline gate: --selftest-repair.
+
+== RED — frozen v2 echo block (bytes extracted verbatim from 7c0d2fe9, digest 69eb0af8ca0e9ff81b833fb06de847d2adb21814208eb2d271373e60e68269d0),
+==        run against a fixture mirroring the pin layout (route-gate carries the constant;
+==        process-registry.js exists without it — as at the pin):
+DEPLOYED_BYTES store.highestIssuedGeneration hits=1 (expect >=1)
+DEPLOYED_BYTES route-gate generationFloor hits=1 (expect >=1)
+DEPLOYED_BYTES registry floor-unavailable code hits=0 (expect >=1)
+FAIL: deployed bytes do not contain the reviewed fix
+rc=1  (= the deterministic #191 abort; reproduced hermetically)
+
+== GREEN — v2.1 executor (digest 6cabf9cd010e1aa35fc2bf014de62a9c6ae14ee621c3fbe9ae9e13a0a7f61710), byte_provenance_verdict on the SAME fixture:
+DEPLOYED_BYTES store.highestIssuedGeneration hits=1 (expect >=1)
+DEPLOYED_BYTES route-gate generationFloor hits=1 (expect >=1)
+DEPLOYED_BYTES route-gate AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE hits=1 (expect >=1)
+VERDICT = PASS (fix bytes live)
+rc=0
+
+== GREEN — v2.1 executor --selftest-repair (full, hermetic /tmp; covers both defects):
+SELFTEST_REPAIR echo#3 GREEN: verdict PASS on the fixture (route-gate carries the constant)
+SELFTEST_REPAIR echo#3 RED reproduced: stale process-registry.js grep = 0 hits on the same fixture (the v2 executor died exactly here)
+SELFTEST_REPAIR restore RED reproduced: §1b-reuse restore lands WITHOUT node-runtime (a cold boot in that window would fail launchd)
+SELFTEST_REPAIR restore GREEN: RESTORE-R1 re-materialization from the fresh STAGE 0 preimage = content-exact
+SELFTEST_REPAIR contract markers present: executor restore contract + packet §6 runbook
+SELFTEST_REPAIR_PASS (echo#3 route-gate verdict + RESTORE-R1 node-runtime re-materialization, hermetic)
+rc=0
+
+== RESTORE-R1 legs inside --selftest-repair (D2):
+  RED   (old contract: rm -rf live + mv auto-preimage back, no re-materialization):
+        §1b-reuse restore lands WITHOUT node-runtime (a cold boot in that window would fail
+        launchd) — the exact #191 restore-diff class.
+  GREEN (repaired contract: same restore + rsync -a node-runtime/ from the STAGE 0 fixture
+        preimage when the node binary is absent): content-exact vs the STAGE 0 preimage
+        (diff -r clean).
+
+EXECUTOR_DIGEST_V2      = 69eb0af8ca0e9ff81b833fb06de847d2adb21814208eb2d271373e60e68269d0
+EXECUTOR_DIGEST_V2_1    = 6cabf9cd010e1aa35fc2bf014de62a9c6ae14ee621c3fbe9ae9e13a0a7f61710

@@ -7,6 +7,26 @@
 > deploymentRoot seam authority (accepted amendment b08db324, PR #311), carrier r12 contract,
 > custody/canary definitions and preservation rules carry forward unchanged. Per the v1
 > package's own R4: the installer bytes changed ⇒ this is a NEW freeze, not an in-place patch.
+>
+> **v2.1 REBIND (2026-10-02 repair lane, after agent-control#191 fail-closed):** the #191
+> terminal receipts proved two packet-internal defects; both are repaired in this evidence
+> directory ONLY, with the DEPLOY_SRC pin 8fc374ca/f60cc9e8 and ALL scripts/** bytes
+> UNCHANGED (installer 913e4ee0, gate af43b337, canary b737d6b4 re-verified at the pin):
+> 1. Executor post-deploy byte-provenance echo #3 now greps
+>    `AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE` in `process-registry-route-gate.js` (:52).
+>    The inherited grep of `process-registry.js` returned 0 hits at the pin AND at every
+>    reference generation since v1 (47aadec1/360756e3/d8ddf546), deterministically aborting
+>    every deploy after the install and before the packet's own G2.5 fresh-child boot canary.
+> 2. §6 gains **RESTORE-R1**: the deterministic restore re-materializes node-runtime from the
+>    fresh STAGE 0 preimage whenever installer §1b reused it (§1b mv-s node-runtime OUT of the
+>    §1 auto-preimage; the rm -rf of the installed tree then deletes the only other copy —
+>    reproduced 2026-10-02, 2418 deleting lines in the #191 restore-verification diff).
+> Rollback semantics otherwise unchanged; no ad-hoc live symlinks; no live node_modules
+> patches. Offline gate: executor `--selftest-repair` (hermetic /tmp fixtures); mechanical
+> RED/GREEN evidence in `RED_GREEN_EXECUTOR_REPAIR-20261002.txt`. The next production run
+> materializes this evidence directory from the v2.1 merge commit on main while DEPLOY_SRC
+> remains a checkout at exactly 8fc374ca. Status: PREPARED(v2.1) / WAITING_PROD_EXECUTION;
+> PRODUCTION_MUTATION = NO in this lane.
 
 ## §1 Authority and context
 
@@ -89,7 +109,7 @@ GOVERNING_SPECS_UNMODIFIED: no `docs/specs/**` file changes in this pin.
 | Artifact | sha256 |
 |---|---|
 | INDEPENDENT_REVIEW_V2.md | a5039c2e4d9c8bba97d4f3a2786c34e6dfa11962abe4b61bd265f194b67637f0 |
-| owner-router-closure-g2-g7.sh (rebound executor) | 69eb0af8ca0e9ff81b833fb06de847d2adb21814208eb2d271373e60e68269d0 |
+| owner-router-closure-g2-g7.sh (rebound executor, v2.1) | 6cabf9cd010e1aa35fc2bf014de62a9c6ae14ee621c3fbe9ae9e13a0a7f61710 |
 | scripts/trusted-cp-deploy-install.sh (at pin) | 913e4ee06adca16cb3b322505f4b6aa9a86f8013dd06350f2c9dc83135182dfe |
 | scripts/lib/trusted-cp-closure-resolution-gate.mjs | af43b33739ba05c0b178f5a87347edd774866dc7395ca302ce2a2b962ffded88 |
 | scripts/lib/trusted-cp-fresh-child-boot-canary.mjs | b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802 |
@@ -97,6 +117,13 @@ GOVERNING_SPECS_UNMODIFIED: no `docs/specs/**` file changes in this pin.
 | scripts/lib/trusted-cp-fresh-child-boot-canary.test.mjs | 5db9419b802ad7ae881d338a7bee0320fa818cbc21be5b9d90cc1bbb78b8cd6e |
 | RED_GREEN_GATE-20261002.txt | 7776a91ce1fba82d98dc48b5a850ecef48a3ac1180007bc7453e8986f2905181 |
 | RED_GREEN_BOOT_CANARY-20261002.txt | a1d02377e57d14eb273760d2e2cb0a1c43ac88e08fa87cf88f4d4b372403959d |
+| RED_GREEN_EXECUTOR_REPAIR-20261002.txt (v2.1) | 751d364f39578761a51fc3f320f5535ea2545df884c66d83af720a9b85c740e0 |
+
+v2.1 rebind note: only the executor row and the added repair RED/GREEN row changed vs the v2
+table; the installer/gate/canary/test digests were re-verified byte-identical at pin
+8fc374ca on 2026-10-02 (repair lane). The executing run materializes this evidence directory
+from the v2.1 merge commit on main (MANIFEST.sha256 is the verification surface) while
+DEPLOY_SRC remains a clean checkout at exactly the pin below.
 
 Source pin: HEAD **8fc374ca8f97257b6947db291b82df5bb20acf67** (tree f60cc9e81b28d685418497f3fc1f67fe945f8703)
 — the executor's DEPLOY_SRC must be a checkout at exactly this commit (e.g.
@@ -123,7 +150,8 @@ two RED/GREEN evidence files).
      `plugin tree failed to load`. Any failure ⇒ fail-closed BEFORE any service restart or
      health handoff; restore exactly per §6 (the running runtime never left the old
      generation, so business impact of an aborted STAGE 1 is nil).
-  3. Byte provenance echoes (unchanged) → health.
+  3. Byte provenance echoes (v2.1: echo #3 path corrected to `process-registry-route-gate.js`;
+     see the v2.1 REBIND note) → health.
 - **STAGE 2 — codex closure carrier r12**: unchanged from v1 (G1 marker, three-way SHA, armed
   `--apply`, REAL PONG commit gate, `--commit`, fence clear). dsh-codex plugin tgz d4f0d0ec…
   and scopes tgz 7c628e30… remain digest-bound at
@@ -144,6 +172,26 @@ with the restore reason recorded; never bare-rmdir a held mutex (dispose-stale-d
 Canaries invariant: STOCK/CEO/CTO untouched by rollback. §2c/canary failures occur before any
 restart, so the usual case needs no restore at all (the tree was replaced, the service never
 moved) — the executor still prints the exact restore command.
+
+**RESTORE-R1 (v2.1, mandatory):** whenever the failed deploy's installer §1b REUSED
+node-runtime, the §1 auto-preimage (the newest `agent-core.bak-*`) lacks node-runtime — §1b
+mv-ed it OUT into the installed tree that the `rm -rf` then deletes. After the restore mv,
+detect and repair from the fresh STAGE 0 preimage (the STAGE 0c re-pin, verified diff=0):
+
+```bash
+[ -x /usr/local/libexec/agent-core/node-runtime/bin/node ] || \
+  rsync -a /usr/local/libexec/agent-core.bak-<STAGE0-UTC-ts>-pre-b7-v2/node-runtime/ \
+        /usr/local/libexec/agent-core/node-runtime/
+```
+
+`rsync -a` COPY from the preimage — never a symlink, never a live node_modules patch. Then
+re-verify live vs the STAGE 0 preimage (`rsync -ani --delete` → mtime-only lines at most).
+Reproduced 2026-10-02 (#191 restore): the §1b-reuse restore landed WITHOUT node-runtime (2418
+`*deleting node-runtime/*` lines in the restore-verification diff) and was repaired exactly
+this way, content-exact; the running runtime was unaffected (open inode), but a cold boot in
+that window would have failed launchd ProgramArguments. The executor carries the same clause
+in its deploy comment block and in both fail-closed die messages; `--selftest-repair` proves
+the RED (restore-without-node-runtime) and GREEN (content-exact re-materialization) hermetically.
 
 ## §7 Constraints held by the prep lane (this packet's authoring)
 
