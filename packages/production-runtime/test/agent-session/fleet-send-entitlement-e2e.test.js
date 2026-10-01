@@ -231,7 +231,7 @@ async function seedB9Runtime({ stub, agents, credentials, root, credentialsFile 
       return proc
     },
   })
-  return { runtime, procs, auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'), root: ownedRoot, credentialsFile: credentialsPath }
+  return { runtime, procs, auditFile: join(layout.controlDir, 'agent-session-messaging-audit.jsonl'), root: ownedRoot, credentialsFile: credentialsPath, agentsConfigPath: layout.agentsConfig }
 }
 
 function readAuditRows(auditFile) {
@@ -288,8 +288,8 @@ test('B9 lifecycle: canonical materialization admits, principal deactivation inv
     // client exist, credentials bound) but its fleet row is NOT materialized yet.
     'client-newborn': { clientSecret: 'newborn-secret', active: true, scopes: [] },
   })
-  const { runtime, procs, auditFile } = await seedB9Runtime({ stub, agents: [SOURCE, TARGET, NEWBORN], credentials: ENTITLED_FLEET })
-  t.after(() => runtime.stop())
+  const { runtime, procs, auditFile, root, credentialsFile, agentsConfigPath } = await seedB9Runtime({ stub, agents: [SOURCE, TARGET, NEWBORN], credentials: ENTITLED_FLEET })
+  t.after(() => runtime.stop().then(() => rmSync(root, { recursive: true, force: true })))
 
   // 1. Unmaterialized member → DENIED at the only grant authority, zero
   //    delivery bytes, and the denial is audited (L0).
@@ -301,6 +301,9 @@ test('B9 lifecycle: canonical materialization admits, principal deactivation inv
   assert.deepEqual(denialRows.map((row) => [row.kind, row.sourceAgentId, row.code]), [
     ['agent_session_send', NEWBORN, 'access_denied'],
   ])
+  // Snapshot every dsh-side entitlement-adjacent artifact: the flip to admit
+  // must come from the AUTHORITY row alone.
+  const dshArtifactsBefore = [agentsConfigPath, credentialsFile].map((path) => readFileSync(path))
 
   // 2. The canonical fleet materialization writes EXACTLY the fleet baseline
   //    row (the auth-service reconcile/birth-stamp ADD shape) — no dsh-side
@@ -311,6 +314,7 @@ test('B9 lifecycle: canonical materialization admits, principal deactivation inv
   assert.equal(admitted.result.status, 'accepted')
   assert.equal(admitted.result.targetAgentId, TARGET)
   assert.equal(admitted.result.sessionId, 'main')
+  assert.deepEqual([agentsConfigPath, credentialsFile].map((path) => readFileSync(path)), dshArtifactsBefore, 'dsh-side entitlement-adjacent artifacts untouched by the flip')
   const newbornPrompt = targetPrompts(procs).at(-1)
   assert.equal(newbornPrompt.params.contentBlocks[0].text, 'fleet baseline admitted')
   // The target Run completes (freeing the one-Run-per-session admission slot).
@@ -435,6 +439,9 @@ test('B9 flow: sender identity, receiver identity, durable receipt and reply ass
   await runtime.stop()
   const stub2 = await createFleetAuthStub(t, {
     'client-source': { clientSecret: 'source-secret', active: true, scopes: [SEND_SCOPE] },
+    // The foreign caller is ITSELF an entitled member — the refusal under
+    // test is caller-binding, never the gate.
+    'client-target': { clientSecret: 'target-secret', active: true, scopes: [SEND_SCOPE] },
   })
   runtime2 = (await seedB9Runtime({ stub: stub2, agents: [SOURCE, TARGET], root, credentialsFile })).runtime
   const lookup = await gatewayCall(runtime2, {
@@ -449,4 +456,16 @@ test('B9 flow: sender identity, receiver identity, durable receipt and reply ass
   assert.equal(lookup.result.outcome.result, 'replied')
   assert.equal(lookup.result.outcome.targetAgentId, TARGET)
   assert.equal(lookup.result.outcome.messageId, replyOutcome.messageId)
+  // Caller-bound: the retained row belongs to SOURCE — a foreign caller
+  // resolves nothing from the same anchor.
+  const foreignLookup = await gatewayCall(runtime2, {
+    agentId: TARGET,
+    sourceTurnExecutionId: 'turn:9:b9tgt:g1:s8',
+    manifest: agentSessionReconcileManifest,
+    operation: 'lookup',
+    args: { invocationCorrelation: replyOutcome.invocationCorrelation },
+  })
+  assert.equal(foreignLookup.ok, true)
+  assert.equal(foreignLookup.result.invocationCorrelationFound, false)
+  assert.equal(foreignLookup.result.outcome, null)
 })

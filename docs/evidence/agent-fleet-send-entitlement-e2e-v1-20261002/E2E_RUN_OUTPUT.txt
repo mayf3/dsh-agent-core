@@ -1,4 +1,4 @@
-[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-TIJgbb/bindings/bindings.json
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-g0LebJ/bindings/bindings.json
 [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
 [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
 [broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
@@ -6,32 +6,32 @@
 [notification-ingress] disabled; no HTTP server mounted
 [broker-gateway] agent agt_b9-newborn-agent: agent_session_send grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
 [router] [router] agent agt_b9-target-agent ready pid=424242 (1ms)
-[router] route-chain {"kind":"route_attempt","tsWallMs":1790874930194,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
-[router] route-chain {"kind":"route_chain_final","tsWallMs":1790874930194,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
-[router] deliver accepted: agent agt_b9-target-agent session main requestId 63410a7f-c581-406d-a705-... (b9-msg-1) in 63ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875588130,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875588131,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 9fd8b709-6853-43fb-99f9-... (b9-msg-1) in 58ms
 [broker-gateway] agent agt_b9-source-agent: agent_session_send grant denied: token endpoint rejected the request (status 401, error invalid_client)
 [broker-gateway] agent agt_b9-newborn-agent: agent_session_turn_inspect grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
-✔ B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate (187.195208ms)
-[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-9qBaD6/bindings/bindings.json
+✔ B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate (185.937917ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-Burdgn/bindings/bindings.json
 [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
 [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
 [broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
 [product-api] disabled; no HTTP server mounted
 [notification-ingress] disabled; no HTTP server mounted
 [router] [router] agent agt_b9-target-agent ready pid=424242 (0ms)
-[router] route-chain {"kind":"route_attempt","tsWallMs":1790874930303,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
-[router] route-chain {"kind":"route_chain_final","tsWallMs":1790874930303,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
-[router] deliver accepted: agent agt_b9-target-agent session main requestId c67a6084-bf30-49d7-84fc-... (b9-msg-1) in 45ms
-[router] route-chain {"kind":"route_attempt","tsWallMs":1790874930364,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
-[router] route-chain {"kind":"route_chain_final","tsWallMs":1790874930364,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
-[router] deliver accepted: agent agt_b9-target-agent session main requestId f119cab5-8968-4190-8e9a-... (b9-msg-2) in 41ms
-[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-9qBaD6/bindings/bindings.json
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875588243,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875588243,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 4347d257-4f58-4746-a73a-... (b9-msg-1) in 44ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875588303,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875588303,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 0d7f29b6-b6b0-4bfe-967f-... (b9-msg-2) in 41ms
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-Burdgn/bindings/bindings.json
 [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
 [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
 [broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
 [product-api] disabled; no HTTP server mounted
 [notification-ingress] disabled; no HTTP server mounted
-✔ B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart (180.5605ms)
+✔ B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart (179.906375ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -39,4 +39,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 784.102875
+ℹ duration_ms 767.91875
