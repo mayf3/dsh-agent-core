@@ -1,0 +1,32 @@
+# RED/GREEN — §5b watchdog ownership (FIX B, agent-control#193 Defect B)
+# v2.1 bytes: 913e4ee06adca16cb3b322505f4b6aa9a86f8013dd06350f2c9dc83135182dfe  (git 8fc374ca:scripts/trusted-cp-deploy-install.sh)
+# v2.2 bytes: ad491b792764afb0b43dc39af856fd2f6bf491186e1f38f1a376ee9b1aa176e9
+# operator uid=502 primary_gid=20 pinned_gid=20 damage_gid=599
+
+## [structural] v2.1 §5b blanket line (verbatim from git 8fc374ca bytes)
+827:chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
+→ the blanket -R scope CONTAINS $PROD_ROOT/control ⇒ control/scheduler-watchdog + control/incident-backups are swept (the defect)
+
+## [RED-B] v2.1 blanket block replayed on the fixture (ownership identities parameterized)
+pre:  pinned leaf gid=20 → VALIDATOR_ACCEPT
+post: pinned leaf gid=599 (blanket flipped 20→599 — the #193 live flip shape)
+validator: VALIDATOR_REJECT: unsafe incident state file
+→ RED reproduced: the restored tree's own scheduler startup readiness gate fails exactly like #193 03:41 ('unsafe incident state file')
+
+## [GREEN-B1] v2.2 §5b block replayed on the fixture (exclusion + pin assert)
+pinned leaf gid=20 (stayed 20) → VALIDATOR_ACCEPT
+sibling turn-recovery-v3.json gid=599 (non-pinned control state still receives the blanket — reader-gid 601 contract untouched)
+→ GREEN: pinned set excluded + pinned; siblings unchanged behavior
+
+## [GREEN-B2] RESTORE-R2 heals the v2.1 damage (exact restore command shape)
+damaged: pinned leaf gid=599 → VALIDATOR_REJECT: unsafe incident state file
+RESTORE-R2: pinned leaf gid=20 → VALIDATOR_ACCEPT
+
+## [structural] v2.2 installer carries the pinned-set machinery
+scheduler-watchdog mentions: 7
+893:WATCHDOG_PINNED_PRIVATE_STATE_GID=20
+772:# has not run, so no RESTORE-R2/ownership re-pin is needed).
+994:    # RESTORE-R2 (v2.2, agent-control#193 Defect B): §5b ran before this late
+
+RED_GREEN_WATCHDOG_OWNERSHIP = PASS (RED v2.1 reproduced + GREEN v2.2 exclusion/pin + RESTORE-R2 heal, real validator)
+evidence written: /tmp/red-green-ownership-4t7gGO9rFw
