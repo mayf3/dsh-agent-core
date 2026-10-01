@@ -77,6 +77,84 @@
 > `--selftest` + `--selftest-repair` PASS. Status: PREPARED(v2.2) / WAITING_PROD_EXECUTION;
 > PRODUCTION_MUTATION = NO in this lane.
 
+> **v2.3 REBIND (2026-10-02 repair lane, after agent-control#195 fail-closed at
+> restart adoption — DEFECT C):** the #195 terminal receipts proved a structural
+> contradiction INSIDE the frozen v2.2 packet: its source pin b78aa30a runtime
+> loader REQUIRES fleet config `agent-model-overrides.json` version:3
+> (fail-loud "older files are not converted" — main f222b59f, 2026-08-31), the
+> production authsvc config is version:2 (92 overrides, the ACTIVATION_V1
+> authsvc amendment b08db324 §3 preimage), and the packet's own STAGE 2 carrier
+> r12 G3 gate binds "fleet config v2" — with no v2→v3 migration stage anywhere,
+> EVERY restart of a freshly packed generation FATAL-crash-looped (8790 down
+> ~05:31–05:38 +0800) while ALL pre-restart gates were green by construction
+> (§2c = harness arch; §3b/G2.6 = import graph in a throwaway home; G2.5 =
+> plugin tree — none composes the runtime against the REAL config).
+>
+> **Governing-contract reconciliation (fresh-read this lane):** the authsvc
+> deployment config version is governed by AGENT_CORE_FLEET_SHARED_CODEX_AUTH_
+> ACTIVATION_V1 as amended by the AUTHSVC_RECONCILIATION_AMENDMENT (accepted,
+> merged b08db324/PR #311) — §3 froze "config v2 / overrides==92" as the
+> execution preimage and A3 binds carrier r12 (9f835448) whose G3 proves v2;
+> ACTIVATION_V2 (CTR-ACT2) governs the yanfenma domain ONLY (MUST NOT touch
+> /Users/authsvc/**) but its accepted pattern for this exact transition is the
+> one-time quiesce-window **v2→v3 config migration + canonical credentialFile
+> injection**; the version:3 loader requirement is main-line f222b59f, whose
+> SOLE config-visible delta is the required per-route `credentialFile`
+> (deploymentRoot-canonical store path per the d8ddf546 parameterization) —
+> which IS the amendment's own A2 "Canonical-by-deployment-root" end state.
+> v3 is therefore justified for this deployment, and a source-pin/packet
+> reconciliation that keeps v2 would fork shipped runtime source away from
+> main bytes for one deployment (a larger, permanently-diverging surface than
+> the config stage). **RECONCILIATION DIRECTION = the separately frozen exact
+> v2→v3 fleet-config migration operation as its own stage (STAGE 1M), with the
+> carrier G3 language moved to v3 (r13) WITH it.** No config rewrite is
+> improvised: the migrator performs exactly version 2→3 + canonical
+> credentialFile on openai-codex subscription routes (the accepted
+> switchFleetConfig selector), touches nothing else, validates the candidate
+> bytes under the REAL v3 loader BEFORE the atomic rename, and writes a
+> content-exact preimage backup (RESTORE-R3 source) on --execute.
+>
+> Repairs at a NEW source pin **4f14ff00 (tree 6eae0c23)** — branch
+> `svc/b7-v23-packet-repair-20261002` (base 431bcab8 = the v2.2 merge; the pin
+> commit delta is exactly the 4 declared scripts/lib files; docs/specs delta
+> = 0, GOVERNING_SPECS_UNMODIFIED):
+> 1. **G2.7 MODEL_OVERRIDES_CONFIG_GATE_V1** (`scripts/lib/trusted-cp-model-
+>    overrides-config-gate.mjs`): the INSTALLED tree's OWN loadAgentModelOverrides
+>    against the REAL production config + REAL agents.json registry, READ-ONLY,
+>    BEFORE any restart — the #195 class now fails at the gate, not at cutover.
+> 2. **STAGE 1M `cutover`** (executor v2.3, new subcommand): G2.7 → (only on
+>    the EXACT #195 v2-class error) the frozen migrator dry-run → execute →
+>    G2.7 re-verify (must PASS) → `launchctl kickstart -k` → health, as ONE
+>    atomic step (compose.js re-reads the config at every process boundary, so
+>    a separately-scheduled migration would leave a v3 file under the running
+>    v2 loader — the same FATAL class; the write→restart window must be
+>    sub-second and machine-enforced). Any OTHER G2.7 error dies with zero
+>    mutation (new defect class → investigate, never improvise).
+> 3. **RESTORE-R3** (§6): the migrator's `<config>.pre-v3-<ts>` backup is the
+>    restore source for the config after any post-migration rollback — the §6
+>    app-tree restore does NOT cover this file, and the OLD generation's v2
+>    loader cannot boot against a v3 config.
+> 4. **Carrier r13** (`owner-authsvc-plugin-upgrade-r13.sh`, digest below):
+>    G3 version predicate 2→3 + its comment/echo lines + the two selftest
+>    fixture config versions — nothing else (diff vs r12 enumerated in the
+>    file header). The accepted amendment bound r12 by SHA, so before any
+>    STAGE 2 `--apply` the Owner must RE-PLACE `AMENDMENT_ACCEPTED.marker`
+>    with `scriptSha256` = the r13 digest (G1 stays mechanically fail-closed
+>    on marker==script; STOCK/CEO/CTO canaries and the PONG commit gate are
+>    UNCHANGED).
+> RED/GREEN evidence (v2.2 bytes → the #195 FATAL reproduced; v2.3 bytes →
+> green): `RED_GREEN_FLEET_CONFIG_GATE-20261002.txt` (RED = the EXACT #195
+> FATAL line — v2 config vs pin v3 loader, gate exit 2; GREEN = the migrator's
+> output loads clean under the SAME loader with the 92-override roster
+> preserved; G2.5/G2.6 + four existing suites regression PASS at the new pin).
+> Suites at the pin: 42 tests = 41 pass / 1 skip (live seam) / 0 fail;
+> installer `--selftest-provenance` PASS (bytes unchanged from v2.2,
+> ad491b79…); executor `--selftest` + `--selftest-repair` PASS (the latter now
+> proves G2.7 RED/GREEN + STAGE-1M migration + RESTORE-R3 markers hermetically);
+> carrier r13 `--selftest` PASS (full T7/T8/T10 machinery, v3 fixtures).
+> Status: PREPARED(v2.3) / WAITING_PROD_EXECUTION; PRODUCTION_MUTATION = NO in
+> this lane.
+
 ## §1 Authority and context
 
 The v1 frozen package (source pin d8ddf546, installer sha256 dfb262b6…) was executed under
@@ -174,6 +252,31 @@ GOVERNING_SPECS_UNMODIFIED: no `docs/specs/**` file changes in this pin.
 | repair-v22-lane/red-green-app-graph.sh (generator) | 93336f90717bbd67337aaee837b2cc64da9564efcc1208b5bf620623a5287bc1 |
 | repair-v22-lane/red-green-ownership.sh (generator) | f35360a30cfed83ce885e7ff551c4d7287d1ff4a165572503098a1887ac29da1 |
 
+v2.3 rows (this rebind; historical rows above re-verified byte-identical at the
+new pin unless marked superseded):
+
+| Artifact | sha256 |
+|---|---|
+| owner-router-closure-g2-g7-v23.sh (executor, v2.3 — supersedes the -v22 file; review round-1 fixes absorbed) | 03dfacb71eb11021d2138fd2a3076b93be911b84d8cbda74bd7e0e0e3f5673df |
+| scripts/lib/trusted-cp-model-overrides-config-gate.mjs (NEW v2.3, at pin 4f14ff00) | e4a22458c4ca8c84f7ab94332bcb9f8b980b99fa7b4f12bd154760a4fe1a68b4 |
+| scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs (NEW v2.3, at pin 4f14ff00) | 379c55d414ef15791c6106dd3ca511ea160b07e7a6194239471f96c63a8248c4 |
+| scripts/lib/trusted-cp-model-overrides-config-gate.test.mjs (NEW v2.3) | 06c4f0f9184fc400f2c30abe2da576b72b105b23bc470ef35fe859a6758714c2 |
+| scripts/lib/trusted-cp-fleet-config-v2v3-migration.test.mjs (NEW v2.3) | f221a0d645c98bcddbcb9c2e4fab8cf793d998b5e4492f579f37bd40c36b03df |
+| owner-authsvc-plugin-upgrade-r13.sh (carrier r13, supersedes r12 9f835448 for STAGE 2; in docs/evidence/openai-codex-refresh-token-reused-v1-20260910/) | e9443f32a9c387f0ace5fa87863f77403ceea01b364d1f808089a1d8cee84c67 |
+| RED_GREEN_FLEET_CONFIG_GATE-20261002.txt (NEW v2.3) | bc0d0f6a6deea83113158ab37777ca7728aba88350e444a994f4eb551f719f89 |
+| repair-v23-lane/red-green-fleet-config-gate.sh (generator) | 3b9a158ac0cdd13fcfb098e64d8aa7aa8db94f69448938d733b6ebc50dfcc119 |
+| INDEPENDENT_REVIEW_V23-20261002.md (this packet's independent review, round-2 PASS @ d5883480) | 68de9c947a5eca3695f27f2e13fb1e4a5cf42cd09488b36aa2460707b6c833ba |
+
+Unchanged-by-design rows re-verified byte-identical at pin 4f14ff00:
+scripts/trusted-cp-deploy-install.sh ad491b79…; trusted-cp-closure-resolution-
+gate.mjs af43b337…; trusted-cp-fresh-child-boot-canary.mjs b737d6b4…;
+trusted-cp-runtime-app-graph-gate.mjs 6603818c…; the three v2-era test files
+af364c01…/5db9419b…/451a57f3…; trusted-cp-watchdog-ownership-guard.test.mjs
+2d677b2a…; vendored proxy-agent-negotiate 5-file manifest (3568fa0b/4ade5fad/
+56f33d23/cff70853/7b7c2579). STAGE 2 frozen artifacts unchanged: plugin tgz
+d4f0d0ec…, scopes tgz 7c628e30… (r13 consumes the SAME two tgzs; only the G3
+version predicate moved).
+
 Historical rows (unchanged bytes, re-verified 2026-10-02 at the v2.2 lane; kept in
 MANIFEST.sha256 for whole-dir coverage): INDEPENDENT_REVIEW_V2.md a5039c2e…;
 owner-router-closure-g2-g7.sh (v2.1 executor, superseded by the -v22 file) 6cabf9cd…;
@@ -198,7 +301,7 @@ docs/specs/ delta = 0 files.
   + dry-run diff = 0; custody census (fixed script 7556029d…); lineage check
   (`12616dbff17f`, expiry 2026-10-11 17:43 +0800 — FRESH_LOGIN first if approaching).
 - **STAGE 1 — deploy + mandatory pre-cutover gates (fresh-child canary + runtime app-graph)**:
-  1. `owner-router-closure-g2-g7-v22.sh deploy` (v2.2 executor): §0b pre-mutation gate →
+  1. `owner-router-closure-g2-g7-v23.sh deploy` (v2.3 executor; the v2.2 deploy semantics it inherits are unchanged): §0b pre-mutation gate →
      installer §1 auto-preimage `agent-core.bak-<ts>` → §1a/§2 closure build under the runtime
      node → **§2c closure gate (fail-closed)** → app closure (§3 now carries the vendored
      `proxy-agent-negotiate` + `packages/development-execution/src`) → **§3b
@@ -213,10 +316,21 @@ docs/specs/ delta = 0 files.
      old generation, so business impact of an aborted STAGE 1 is nil).
   3. Byte provenance echoes (v2.1: echo #3 path corrected to `process-registry-route-gate.js`;
      see the v2.1 REBIND note) → health.
-- **STAGE 2 — codex closure carrier r12**: unchanged from v1 (G1 marker, three-way SHA, armed
-  `--apply`, REAL PONG commit gate, `--commit`, fence clear). dsh-codex plugin tgz d4f0d0ec…
-  and scopes tgz 7c628e30… remain digest-bound at
-  `~/.agent-core/staging/chatgpt-subscription-provider-v1-authsvc/`.
+  4. **STAGE 1M — `owner-router-closure-g2-g7-v23.sh cutover` (v2.3, ONE atomic step, immediately
+     after deploy; NEVER scheduled separately)**: G2.7 MODEL_OVERRIDES_CONFIG_GATE_V1 (installed
+     loader vs the REAL config + REAL registry, read-only) → on the EXACT #195 v2-class error:
+     frozen v2→v3 migrator dry-run → execute (preimage backup = RESTORE-R3 source) → G2.7
+     re-verify must PASS → `launchctl kickstart -k system/ai.agent-core.runtime` → bounded health
+     loop. On any other G2.7 error: fail-closed die, zero mutation, no restart. Health-handoff
+     failure ⇒ the full §6 restore INCLUDING RESTORE-R3 (config) BEFORE the tree restore.
+- **STAGE 2 — codex closure carrier r13** (v2.3: r12 9f835448 superseded by
+  `owner-authsvc-plugin-upgrade-r13.sh` e9443f32…; G3 version predicate 2→3 moved WITH the STAGE 1M
+  migration, roster/92/store/canonical/tombstone/expiry semantics unchanged): **G0 Owner gate —
+  re-place `AMENDMENT_ACCEPTED.marker` with `scriptSha256` = the r13 digest before any `--apply`**
+  (the accepted amendment b08db324 bound r12 by SHA; G1 verifies marker==script mechanically and
+  stays fail-closed). Then unchanged from v1 (three-way SHA, armed `--apply`, REAL PONG commit
+  gate, `--commit`, fence clear). dsh-codex plugin tgz d4f0d0ec… and scopes tgz 7c628e30… remain
+  digest-bound at `~/.agent-core/staging/chatgpt-subscription-provider-v1-authsvc/`.
 - **STAGE 3 — acceptance** (#414 DONE_WHEN set, unchanged): fleet health; real **Luna canary**
   (driver call against the authsvc canonical); concurrent deliveries with zero
   `refresh_token_reused`; restart + readback; rollback + readback; **STOCK/CEO/CTO canaries**
@@ -277,6 +391,24 @@ that window would have failed launchd ProgramArguments. The executor carries the
 in its deploy comment block and in both fail-closed die messages; `--selftest-repair` proves
 the RED (restore-without-node-runtime) and GREEN (content-exact re-materialization) hermetically.
 
+**RESTORE-R3 (v2.3, mandatory whenever STAGE 1M executed the config migration and the cutover
+is rolled back):** the §6 app-tree restore (`rm -rf` + `mv`) does NOT cover the fleet config —
+`/Users/authsvc/.agent-core/agent-model-overrides.json` lives in the deployment ROOT, not the
+app tree — and the OLD generation's v2 loader cannot boot against a v3 config (fail-loud
+`version != 2`). The STAGE 1M migrator writes a content-exact preimage backup
+`<config>.pre-v3-<UTC-ts>` (mode/owner preserved) BEFORE the atomic swap and prints its path;
+restore it BEFORE restarting the old generation (root):
+
+```bash
+cp -p /Users/authsvc/.agent-core/agent-model-overrides.json.pre-v3-<ts> \
+      /Users/authsvc/.agent-core/agent-model-overrides.json
+```
+
+Then the §6 tree restore + RESTORE-R1 + RESTORE-R2 + kickstart, in that order (config first —
+the boot that follows must find a config its own loader accepts). The executor's cutover
+health-failure die message inlines the full five-step sequence. `--selftest-repair` proves the
+migration RED/GREEN pair and the backup's presence/content-exactness hermetically.
+
 ## §7 Constraints held by the prep lane (this packet's authoring)
 
 PRODUCTION_MUTATION = NO throughout: no deploy/restart/sudo/credential mutation; no live
@@ -287,10 +419,12 @@ experiments ran in disposable `/tmp` candidates. Backups: none deleted, none mut
 
 1. This packet's source pin merged to main (PR open, independent review PASS, SPEC_GATE n/a —
    no spec bytes touched, GOVERNING_SPECS_UNMODIFIED).
-2. STAGE 0→1 executed with the v2.2 gates: §2c closure gate + §3b runtime app-graph gate
+2. STAGE 0→1M executed with the v2.3 gates: §2c closure gate + §3b runtime app-graph gate
    PASS in the installer log + fresh-child boot canary (G2.5) AND app-graph gate (G2.6) PASS
-   receipts in this evidence dir.
-3. Carrier r12 applied: PONG gate committed, STOCK/CEO/CTO canaries PASS.
+   receipts + **G2.7 MODEL_OVERRIDES_CONFIG_GATE PASS on the REAL config (pre-restart) + the
+   STAGE 1M cutover receipt (migration if v2, kickstart, health PASS)** in this evidence dir.
+3. Carrier **r13** applied: Owner re-placed AMENDMENT_ACCEPTED.marker with the r13 scriptSha256;
+   PONG gate committed, STOCK/CEO/CTO canaries PASS.
 4. Fleet health `8790 ok:true/deliverReady:true`; real Luna canary PASS.
 5. Concurrent deliveries with zero `refresh_token_reused`.
 6. Restart + readback PASS; rollback + readback PASS (rollback drill may satisfy P-3 only via
