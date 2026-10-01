@@ -5,7 +5,8 @@ import { spawnSync } from 'node:child_process'
 import { dirname, isAbsolute, join, normalize } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from './model-overrides.js'
+import { CHATGPT_SUBSCRIPTION_V1 } from './model-overrides.js'
+import { canonicalOpenAICodexCredentialFileFor } from '../../agent-provisioning/src/shared-codex.js'
 
 // GPT6_LUNA_AND_REASONING_EFFORT_V1: derived from the single-source pin so the
 // migration tooling always governs exactly the accepted candidate artifact.
@@ -14,13 +15,44 @@ const PIN = Object.freeze({
   sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,
   artifactSha256: CHATGPT_SUBSCRIPTION_V1.artifactSha256,
 })
-// Domain constants realigned to the yanfenma unified production backend per
-// AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002 (the ONLY
-// implementation delta against the frozen authsvc-frame bytes, besides the
-// canonical-owner control-plane probe replacing the authsvc ACL probe).
+// B7 deploymentRoot parameterization (FLEET_SHARED_CODEX_AUTH amendment A2;
+// CTR-ACT2-002 values preserved on the yanfenma domain): the transaction's
+// domain identity is carried STRUCTURALLY by the config's own canonical
+// store path (<deploymentRoot>/shared-credentials/openai-codex/
+// .openai-codex-auth.json). The fleet-config and fence expectations derive
+// from THAT root, so a config mixing two security surfaces fails closed
+// (SHARED_CODEX_PATH_INVALID) and no domain path literal lives in this file
+// — the installer's cross-surface gate depends on that property
+// (2026-10-01 STAGE 1 incident: the frozen 2097e4f pack failed its own gate
+// on exactly these constants).
 const CANARIES = Object.freeze(['STOCK', 'CEO', 'CTO'])
-const SHARED_CONFIG_PATH = '/Users/yanfenma/.agent-core/agent-model-overrides.json'
-const FENCE_PATH = '/Users/yanfenma/.agent-core/control/shared-codex-migration-fence.json'
+const SHARED_CONFIG_TAIL = 'agent-model-overrides.json'
+const FENCE_TAIL = join('control', 'shared-codex-migration-fence.json')
+
+/**
+ * The deployment root that owns this transaction's domain constants, derived
+ * from the config's canonical credential path and validated as a
+ * canonical-shaped store of that root (the same shape rule the provisioning
+ * seam enforces).
+ */
+function deploymentRootOfCanonicalPath(canonicalCredentialPath) {
+  if (typeof canonicalCredentialPath !== 'string' || !isAbsolute(canonicalCredentialPath)) {
+    throw migrationError('SHARED_CODEX_PATH_INVALID', 'canonical credential path must be an absolute canonical store path')
+  }
+  const deploymentRoot = dirname(dirname(dirname(canonicalCredentialPath)))
+  if (canonicalCredentialPath !== canonicalOpenAICodexCredentialFileFor(deploymentRoot)) {
+    throw migrationError('SHARED_CODEX_PATH_INVALID', `canonical credential path must be <deploymentRoot>/${join('shared-credentials', 'openai-codex', '.openai-codex-auth.json')}`)
+  }
+  return deploymentRoot
+}
+
+function sharedConfigPathFor(deploymentRoot) {
+  return join(deploymentRoot, SHARED_CONFIG_TAIL)
+}
+
+function fencePathFor(deploymentRoot) {
+  return join(deploymentRoot, FENCE_TAIL)
+}
 
 function migrationError(code, message) { return Object.assign(new Error(`shared-codex-migration: ${message}`), { code }) }
 function exactObject(actual, expected) {
@@ -48,8 +80,8 @@ function runCommand(command, name, env) {
 function validateConfig(config, { allowProduction = false } = {}) {
   if (!config || typeof config !== 'object' || !isAbsolute(config.root ?? '')) throw migrationError('SHARED_CODEX_CONFIG_INVALID', 'absolute root is required')
   if (config.root === '/' && !allowProduction) throw migrationError('SHARED_CODEX_PRODUCTION_NOT_AUTHORIZED', 'production root requires explicit activation authorization')
-  if (config.canonicalCredentialPath !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE) throw migrationError('SHARED_CODEX_PATH_INVALID', 'canonical credential path is not the accepted path')
-  if (config.sharedConfigPath !== SHARED_CONFIG_PATH) throw migrationError('SHARED_CODEX_PATH_INVALID', 'fleet config path is not the production model-overrides authority')
+  const deploymentRoot = deploymentRootOfCanonicalPath(config.canonicalCredentialPath)
+  if (config.sharedConfigPath !== sharedConfigPathFor(deploymentRoot)) throw migrationError('SHARED_CODEX_PATH_INVALID', `fleet config path is not the deployment root's own model-overrides authority (${sharedConfigPathFor(deploymentRoot)})`)
   if (!exactObject(config.artifact, PIN)) throw migrationError('SHARED_CODEX_ARTIFACT_MISMATCH', 'artifact pin differs from accepted identity')
   // CTR-ACT-005: bootstrap candidate class exempts the ownerReauthCanonical
   // binding (Owner reauth is FORBIDDEN for this incident) and fail-closes on
@@ -96,7 +128,7 @@ function validateCanonical(file) {
   if ((statSync(file).mode & 0o077) !== 0) throw migrationError('SHARED_CODEX_PERMISSION_INVALID', 'canonical sensitive file must have group/world bits zero')
 }
 
-function switchFleetConfig(file) {
+function switchFleetConfig(file, canonicalCredentialFile) {
   const current = JSON.parse(readFileSync(file, 'utf8'))
   if (current?.version !== 3 || current.routeCatalog === null || typeof current.routeCatalog !== 'object') {
     throw migrationError('SHARED_CODEX_CONFIG_INVALID', 'fleet model overrides must already be schema v3')
@@ -105,15 +137,15 @@ function switchFleetConfig(file) {
   const routeCatalog = Object.fromEntries(Object.entries(current.routeCatalog).map(([name, route]) => {
     if (route?.provider !== 'openai-codex') return [name, route]
     changed += 1
-    return [name, { ...route, credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE }]
+    return [name, { ...route, credentialFile: canonicalCredentialFile }]
   }))
   if (changed === 0) throw migrationError('SHARED_CODEX_CONFIG_INVALID', 'fleet config contains no OpenAI Codex route')
   atomicJson(file, { ...current, routeCatalog }, 0o644)
 }
-function fleetConfigUsesCanonical(file) {
+function fleetConfigUsesCanonical(file, canonicalCredentialFile) {
   const config = JSON.parse(readFileSync(file, 'utf8'))
   const codexRoutes = Object.values(config?.routeCatalog ?? {}).filter((route) => route?.provider === 'openai-codex')
-  return codexRoutes.length > 0 && codexRoutes.every((route) => route.credentialFile === CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE)
+  return codexRoutes.length > 0 && codexRoutes.every((route) => route.credentialFile === canonicalCredentialFile)
 }
 
 /** Concrete filesystem/process migration path; there are no operation callbacks. */
@@ -123,7 +155,7 @@ export function executeFleetSharedCodexMigration(config, options = {}) {
   const sharedConfig = rooted(config.root, config.sharedConfigPath)
   const provenance = rooted(config.root, config.provenancePath)
   const receipt = rooted(config.root, config.artifactReceiptPath)
-  const fence = rooted(config.root, FENCE_PATH)
+  const fence = rooted(config.root, fencePathFor(deploymentRootOfCanonicalPath(config.canonicalCredentialPath)))
   const env = Object.freeze({
     AGENT_CORE_MIGRATION_ROOT: config.root, AGENT_CORE_CANONICAL_CREDENTIAL: canonical,
     AGENT_CORE_SHARED_CONFIG: sharedConfig, AGENT_CORE_ARTIFACT_RECEIPT: receipt,
@@ -151,7 +183,7 @@ export function executeFleetSharedCodexMigration(config, options = {}) {
   runCommand(config.commands.probeUid502AtomicReplace, 'uid502 atomic replace gate', env)
   runCommand(config.commands.probeCanonicalOwnerControlPlane, 'canonical-owner control-plane gate', env)
   runCommand(config.commands.probeThirdUidDenied, 'third uid denied gate', env)
-  switchFleetConfig(sharedConfig)
+  switchFleetConfig(sharedConfig, config.canonicalCredentialPath)
   runCommand(config.commands.verifyZeroPerHomeRuntimeOpens, 'verify zero per-home OAuth runtime opens', env)
   runCommand(config.commands.installPinnedArtifact, 'install exact pinned dsh-codex artifact', env)
   const installed = JSON.parse(readFileSync(receipt, 'utf8'))
@@ -167,7 +199,7 @@ export function executeFleetSharedCodexRollback(config, options = {}) {
   validateConfig(config, options)
   const canonical = rooted(config.root, config.canonicalCredentialPath)
   const sharedConfig = rooted(config.root, config.sharedConfigPath)
-  const fence = rooted(config.root, FENCE_PATH)
+  const fence = rooted(config.root, fencePathFor(deploymentRootOfCanonicalPath(config.canonicalCredentialPath)))
   const env = {
     AGENT_CORE_MIGRATION_ROOT: config.root, AGENT_CORE_CANONICAL_CREDENTIAL: canonical, AGENT_CORE_SHARED_CONFIG: sharedConfig,
   }
@@ -176,9 +208,9 @@ export function executeFleetSharedCodexRollback(config, options = {}) {
   atomicJson(fence, { version: 1, lunaDispatchQuiesced: true, refreshWritersQuiesced: true, rollback: true }, 0o600)
   validateCanonical(canonical)
   if (existsSync(`${canonical}.refresh-intent.json`)) throw migrationError('SHARED_CODEX_REAUTH_REQUIRED', 'ambiguous canonical refresh generation blocks rollback')
-  if (!fleetConfigUsesCanonical(sharedConfig)) throw migrationError('SHARED_CODEX_ROLLBACK_FORBIDDEN', 'rollback cannot restore a legacy credential source')
+  if (!fleetConfigUsesCanonical(sharedConfig, config.canonicalCredentialPath)) throw migrationError('SHARED_CODEX_ROLLBACK_FORBIDDEN', 'rollback cannot restore a legacy credential source')
   runCommand(config.commands.rollbackRuntime, 'runtime rollback retaining canonical credentials', env)
-  if (!fleetConfigUsesCanonical(sharedConfig)) throw migrationError('SHARED_CODEX_ROLLBACK_FORBIDDEN', 'rollback attempted to restore legacy rotating credentials')
+  if (!fleetConfigUsesCanonical(sharedConfig, config.canonicalCredentialPath)) throw migrationError('SHARED_CODEX_ROLLBACK_FORBIDDEN', 'rollback attempted to restore legacy rotating credentials')
   return Object.freeze({ canonicalCredentialRetained: true, legacyCredentialRollback: false })
 }
 

@@ -399,6 +399,56 @@ HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Har
 PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
 # stamp removal is owned by composed_exit_cleanup (B6: single composed EXIT trap)
 
+# ---- 0b. cross-surface contamination gate (PRE-MUTATION; B7 2026-10-01) -----
+# The 2026-10-01 STAGE 1 incident: the section-8 scan is a LATE gate — it
+# fired only AFTER the app closure had been copied into the trusted root,
+# while the deploy wrapper reported "NOTHING was deployed". This gate packs
+# the app closure into a scratch staging dir (the SAME selection rules as
+# section 3: script whitelist + trusted-app-package-copy.mjs per package +
+# bundle/profile metadata) and runs the IDENTICAL scan on it BEFORE the first
+# production mutation (the section-1 backup mv). A failure here costs
+# nothing. Section 8 remains as the post-pack re-verification of the tree
+# that was actually written.
+# B7 2026-10-01 note: the packed app closure must carry NO foreign-domain
+# path literal (FLEET_SHARED_CODEX_AUTH amendment A2 — one canonical per
+# security surface; the three credential/fence seams are deploymentRoot-
+# parameterized in source).
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: node not found in PATH (required by the pre-mutation staging pack)" >&2
+  exit 2
+fi
+PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
+[ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
+APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
+PRESCAN_STAGING="$(mktemp -d /tmp/trusted-cp-prescan-XXXXXX)"
+mkdir -p "$PRESCAN_STAGING/app/scripts" "$PRESCAN_STAGING/app/packages"
+cp "$REPO_SRC/package.json" "$PRESCAN_STAGING/app/package.json"
+for f in $APP_SCRIPTS_WHITELIST; do
+  [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" "$PRESCAN_STAGING/app/scripts/"
+done
+for pkg in "$REPO_SRC"/packages/*/; do
+  name="$(basename "$pkg")"
+  [ -f "$pkg/package.json" ] || continue
+  node "$PACKAGE_COPY_HELPER" "$pkg" "$PRESCAN_STAGING/app/packages/$name"
+done
+for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  mkdir -p "$PRESCAN_STAGING/app/$name"
+  [ -f "$d/package.json" ] && cp "$d/package.json" "$PRESCAN_STAGING/app/$name/"
+  [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "$PRESCAN_STAGING/app/$name/"
+done
+PRESCAN_HITS="$(cd "$PRESCAN_STAGING" && grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/profile-* \
+  --include='*.js' --include='*.mjs' 2>/dev/null \
+  | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
+rm -rf "$PRESCAN_STAGING"
+if [ -n "$PRESCAN_HITS" ]; then
+  echo "ERROR: 505-executed code references /Users/yanfenma (pre-mutation gate — NOTHING was mutated):" >&2
+  echo "$PRESCAN_HITS" >&2
+  exit 2
+fi
+echo "  ok: no /Users/yanfenma references in the pack source (pre-mutation gate, staging packed + scanned)"
+
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
   BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
@@ -533,19 +583,12 @@ echo "== copying Agent Core closure -> app/"
 mkdir -p app/packages app/node_modules
 cp "$REPO_SRC/package.json" app/package.json
 mkdir -p app/scripts
-for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
-         dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
-         agent-core-backup-ops.sh \
-         trusted-cp-hardening-v1-verify.mjs \
-         production-runtime.mjs production-runtime-launchd.mjs \
-         production-runtime-v1-verify.mjs \
-         production-agent-provision.mjs; do
+for f in $APP_SCRIPTS_WHITELIST; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
 mkdir -p app/scripts/lib && cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
 # packages: package.json + src + exact metadata-declared public root entries (no tests)
-PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
-[ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
+# (PACKAGE_COPY_HELPER validated by the section-0b pre-mutation gate)
 for pkg in "$REPO_SRC"/packages/*/; do
   name="$(basename "$pkg")"
   [ -f "$pkg/package.json" ] || continue
@@ -806,8 +849,20 @@ HITS="$(grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/pro
   --include='*.js' --include='*.mjs' 2>/dev/null \
   | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
 if [ -n "$HITS" ]; then
+  # B7 2026-10-01 truth fix: the identical scan now runs pre-mutation
+  # (section 0b), so reaching here means drift between the staged scan and
+  # the packed tree. This is a LATE gate: the trusted app tree WAS already
+  # written by this run. Never claim "NOTHING was deployed" — report the
+  # mutation truth and the exact restore (the documented backup-then-rebuild
+  # abort shape; the operator/owning transaction executes it).
   echo "ERROR: 505-executed code references /Users/yanfenma:" >&2
   echo "$HITS" >&2
+  echo "MUTATION TRUTH: late gate — the trusted app tree at $TRUSTED_ROOT WAS already written by this run." >&2
+  if [ -n "${BAK:-}" ]; then
+    echo "EXACT RESTORE (operator, after recording evidence): rm -rf '$TRUSTED_ROOT' && mv '$BAK' '$TRUSTED_ROOT'" >&2
+  else
+    echo "EXACT RESTORE: no pre-existing install was backed up this run (fresh install) — remove the partial tree: rm -rf '$TRUSTED_ROOT'" >&2
+  fi
   exit 2
 fi
 echo "  ok: no /Users/yanfenma references in trusted code"
