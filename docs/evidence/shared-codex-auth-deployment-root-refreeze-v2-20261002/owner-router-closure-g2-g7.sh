@@ -15,6 +15,21 @@
 #                is the gate missing on 2026-10-01 23:35, when a closure built by an arm64-host
 #                pnpm shipped without the x64 native binding and every fresh child died at
 #                plugin-tree boot (the installer's own §2c closure gate is the second, earlier net).
+# V2.1 rebind (2026-10-02 repair lane after agent-control#191 fail-closed; packet-internal
+# only — DEPLOY_SRC pin 8fc374ca/f60cc9e8, installer, and gate/canary bytes UNCHANGED):
+#   FIX 1 (defect 1 of #191): post-deploy byte-provenance echo #3 greps
+#          AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE in process-registry-route-gate.js (:52).
+#          The stale inherited grep of process-registry.js (0 hits there at this pin AND at
+#          every reference generation since the v1 pin) deterministically aborted every deploy
+#          after the install and BEFORE this executor's own G2.5 fresh-child boot canary.
+#   FIX 2 (defect 2 of #191): RESTORE-R1 — the restore contract re-materializes node-runtime
+#          from the fresh STAGE 0 preimage whenever installer §1b reused it: §1b mv-s
+#          node-runtime OUT of the §1 auto-preimage, so a restore from it can land WITHOUT
+#          node-runtime once the rm -rf deletes the installed tree (the only other copy) —
+#          reproduced 2026-10-02 (2418 deleting lines in the restore diff). Rollback semantics
+#          otherwise unchanged (rm -rf live + mv newest bak back; no symlinks, no live
+#          node_modules patches). New offline gate: --selftest-repair (hermetic /tmp fixtures,
+#          no sudo, no production access).
 # The installer itself (binding-time trusted-cp-deploy-install.sh inside DEPLOY_SRC) carries
 # the section-0b PRE-MUTATION cross-surface gate: a contamination failure now fires before
 # the backup mv, and every late failure reports mutation truth + exact restore (the 2026-10-01
@@ -35,6 +50,7 @@
 #   sudo bash owner-router-closure-g2-g7.sh close
 # Offline selftest (no sudo, no production access):
 #   bash owner-router-closure-g2-g7.sh --selftest
+#   bash owner-router-closure-g2-g7.sh --selftest-repair   (v2.1: #191 defect repairs, hermetic)
 
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -71,6 +87,24 @@ store_state_json() { # $1 = store file, $2 = agentId — prints {floor, live:[{g
     const overlap = live.some((r, i) => i > 0 && r.minSeq <= live[i - 1].maxSeq);
     console.log(JSON.stringify({ loadable: true, floor, evictedThroughGeneration: entry.evictedThroughGeneration, maxIssuedTurnSeq: entry.maxIssuedTurnSeq, live, evicted, overlappingLiveRanges: overlap }));
   ' "$DURABLE_MODULE" "$1" "$2"
+}
+
+# Byte-provenance echoes (v2.1): parameterized by app root so --selftest-repair can exercise
+# the exact deploy-time check against a hermetic fixture tree.
+byte_provenance_verdict() { # $1 = app root; prints the three DEPLOYED_BYTES lines; rc=0 iff all carry the reviewed fix
+  local APP="$1" HITS_STORE HITS_GATE HITS_REG
+  HITS_STORE=$(grep -c "highestIssuedGeneration" "$APP/packages/agent-router/src/reconciliation/store.js" 2>/dev/null); HITS_STORE=${HITS_STORE:-0}
+  HITS_GATE=$(grep -c "generationFloor" "$APP/packages/agent-router/src/process-registry-route-gate.js" 2>/dev/null); HITS_GATE=${HITS_GATE:-0}
+  # v2.1 FIX 1: AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE lives ONLY in
+  # process-registry-route-gate.js (:52) — at pin 8fc374ca AND at every reference generation
+  # since the v1 pin (47aadec1/360756e3/d8ddf546). The stale v1-inherited echo grepped
+  # process-registry.js (0 hits) and deterministically aborted every deploy post-install,
+  # pre-G2.5 (agent-control#191, 2026-10-02).
+  HITS_REG=$(grep -c "AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE" "$APP/packages/agent-router/src/process-registry-route-gate.js" 2>/dev/null); HITS_REG=${HITS_REG:-0}
+  echo "DEPLOYED_BYTES store.highestIssuedGeneration hits=$HITS_STORE (expect >=1)"
+  echo "DEPLOYED_BYTES route-gate generationFloor hits=$HITS_GATE (expect >=1)"
+  echo "DEPLOYED_BYTES route-gate AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE hits=$HITS_REG (expect >=1)"
+  [ "$HITS_STORE" -ge 1 ] && [ "$HITS_GATE" -ge 1 ] && [ "$HITS_REG" -ge 1 ]
 }
 
 case "${1:-}" in
@@ -135,24 +169,30 @@ case "${1:-}" in
     # sits in the newest agent-core.bak-*. NEVER claim "NOTHING was deployed" —
     # verify the mutation truth and restore exactly:
     #   rm -rf /usr/local/libexec/agent-core && mv <newest agent-core.bak-*> /usr/local/libexec/agent-core
+    #   RESTORE-R1 (v2.1, mandatory whenever the failed deploy's installer §1b REUSED
+    #   node-runtime): §1b mv-ed node-runtime OUT of the §1 auto-preimage (the newest bak-*),
+    #   so the restored tree can land WITHOUT node-runtime once the rm -rf deletes the
+    #   installed tree — reproduced 2026-10-02 (2418 deleting lines in the restore diff).
+    #   Detect and repair from the fresh STAGE 0 preimage (rsync -a COPY — never a symlink,
+    #   never a live node_modules patch):
+    #     [ -x /usr/local/libexec/agent-core/node-runtime/bin/node ] || \
+    #       rsync -a /usr/local/libexec/agent-core.bak-<STAGE0-UTC-ts>-pre-b7-v2/node-runtime/ \
+    #             /usr/local/libexec/agent-core/node-runtime/
+    #   Then re-verify vs the STAGE 0 preimage: rsync -ani --delete → mtime-only lines at most.
     # If the mutex was held: dispose per the documented procedure
     # (see dispose-stale-deploy-lock.sh), never bare-rmdir, never retry-past-a-held-lock.
     if ! EXPECTED_SOURCE_SHA="$EXPECTED_SHA" \
     EXPECTED_SOURCE_TREE="$EXPECTED_TREE" \
     GENERATION_LABEL_SHA="$EXPECTED_SHA" \
       bash "$DEPLOYER" "$DEPLOY_SRC" "$HARNESS_SRC" "$REPO"; then
-      die "installer exited non-zero (fail-closed). The trusted app tree MAY already be mutated by this run — check the newest agent-core.bak-* preimage and restore exactly (rm -rf live + mv BAK back) before any retry. If the mutex was held: dispose per the documented procedure (see dispose-stale-deploy-lock.sh), never bare-rmdir, never retry-past-a-held-lock."
+      die "installer exited non-zero (fail-closed). The trusted app tree MAY already be mutated by this run — check the newest agent-core.bak-* preimage and restore exactly (rm -rf live + mv BAK back; then RESTORE-R1: if §1b reused node-runtime, re-materialize node-runtime from the fresh STAGE 0 preimage — see the RESTORE-R1 block above) before any retry. If the mutex was held: dispose per the documented procedure (see dispose-stale-deploy-lock.sh), never bare-rmdir, never retry-past-a-held-lock."
     fi
     echo "### G2 post-deploy byte provenance"
-    HITS_STORE=$(grep -c "highestIssuedGeneration" "$TRUSTED_APP/packages/agent-router/src/reconciliation/store.js" 2>/dev/null); HITS_STORE=${HITS_STORE:-0}
-    HITS_GATE=$(grep -c "generationFloor" "$TRUSTED_APP/packages/agent-router/src/process-registry-route-gate.js" 2>/dev/null); HITS_GATE=${HITS_GATE:-0}
-    HITS_REG=$(grep -c "AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE" "$TRUSTED_APP/packages/agent-router/src/process-registry.js" 2>/dev/null); HITS_REG=${HITS_REG:-0}
-    echo "DEPLOYED_BYTES store.highestIssuedGeneration hits=$HITS_STORE (expect >=1)"
-    echo "DEPLOYED_BYTES route-gate generationFloor hits=$HITS_GATE (expect >=1)"
-    echo "DEPLOYED_BYTES registry floor-unavailable code hits=$HITS_REG (expect >=1)"
-    [ "$HITS_STORE" -ge 1 ] && [ "$HITS_GATE" -ge 1 ] && [ "$HITS_REG" -ge 1 ] \
-      && echo "DEPLOYED_SOURCE_SHA = $EXPECTED_SHA (fix bytes live)" \
-      || die "deployed bytes do not contain the reviewed fix"
+    if byte_provenance_verdict "$TRUSTED_APP"; then
+      echo "DEPLOYED_SOURCE_SHA = $EXPECTED_SHA (fix bytes live)"
+    else
+      die "deployed bytes do not contain the reviewed fix"
+    fi
     # ---- G2.5 (V2): FRESH_CHILD_BOOT_CANARY_V1 — fail-closed BEFORE any ----
     # service restart / health handoff. This is the gate that was missing on
     # 2026-10-01 23:35. Disposable home, no credentials, no production state;
@@ -163,7 +203,7 @@ case "${1:-}" in
     if ! "$TRUSTED_ROOT/node-runtime/bin/node" \
         "$DEPLOY_SRC/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs" \
         --trusted-root "$TRUSTED_ROOT" --timeout-ms 120000; then
-      die "fresh-child boot canary FAILED — the installed closure cannot serve agent-core-production children (2026-10-02 rollback class). Do NOT restart or adopt this generation. Restore exactly: rm -rf /usr/local/libexec/agent-core && mv \"\$(ls -d /usr/local/libexec/agent-core.bak-* | sort | tail -1)\" /usr/local/libexec/agent-core (record the restore reason). The running runtime never left the old generation, so no service impact has occurred."
+      die "fresh-child boot canary FAILED — the installed closure cannot serve agent-core-production children (2026-10-02 rollback class). Do NOT restart or adopt this generation. Restore exactly: rm -rf /usr/local/libexec/agent-core && mv \"\$(ls -d /usr/local/libexec/agent-core.bak-* | sort | tail -1)\" /usr/local/libexec/agent-core (record the restore reason; then RESTORE-R1: if §1b reused node-runtime, the auto-preimage lacks it — re-materialize node-runtime from the fresh STAGE 0 preimage, see the RESTORE-R1 block above). The running runtime never left the old generation, so no service impact has occurred."
     fi
     echo "FRESH_CHILD_BOOT_CANARY = PASS (installed tree serves fresh agent-core-production children)"
     ;;
@@ -233,5 +273,63 @@ case "${1:-}" in
     exec "$TRUSTED_ROOT/node-runtime/bin/node" \
       "$DEPLOY_SRC/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs" \
       --trusted-root "$TRUSTED_ROOT" --timeout-ms 120000 ;;
-  *) die "unknown subcommand (use preflight|deploy|boot-canary|health|snapshot|verify-restart|close|--selftest)" ;;
+  --selftest-repair) # ---- V2.1: hermetic offline proof of both #191 packet-defect repairs ----
+    # No sudo, no production access: /tmp fixtures only. Proves (1) the v2.1 echo set passes
+    # on a tree that mirrors the pin layout while the stale v2 expression still fails on it,
+    # and (2) RESTORE-R1 heals the §1b node-runtime-reuse restore case content-exactly.
+    T=$(mktemp -d /tmp/router-repair-selftest.XXXXXX) || exit 1
+    chmod 700 "$T"
+    SRC=$T/app/packages/agent-router/src
+    mkdir -p "$SRC/reconciliation"
+    printf 'module.exports.highestIssuedGeneration = 1\n' > "$SRC/reconciliation/store.js"
+    printf "const FLOOR_UNAVAILABLE = 'AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE'\nexport function generationFloor() { return null }\n" > "$SRC/process-registry-route-gate.js"
+    printf '// process-registry.js never carried the generation floor-unavailable code\n' > "$SRC/process-registry.js"
+    FAIL=0
+    if byte_provenance_verdict "$T/app" > "$T/echo-green.txt" 2>&1 \
+      && grep -q "AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE hits=[1-9]" "$T/echo-green.txt"; then
+      echo "SELFTEST_REPAIR echo#3 GREEN: verdict PASS on the fixture (route-gate carries the constant)"
+    else
+      echo "SELFTEST_REPAIR_FAIL echo#3 GREEN"; cat "$T/echo-green.txt" 2>/dev/null; FAIL=1
+    fi
+    RED_HITS=$(grep -c "AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE" "$SRC/process-registry.js" 2>/dev/null); RED_HITS=${RED_HITS:-0}
+    if [ "$RED_HITS" -eq 0 ]; then
+      echo "SELFTEST_REPAIR echo#3 RED reproduced: stale process-registry.js grep = 0 hits on the same fixture (the v2 executor died exactly here)"
+    else
+      echo "SELFTEST_REPAIR_FAIL echo#3 RED (unexpected hits=$RED_HITS)"; FAIL=1
+    fi
+    for LEG in red green; do
+      rm -rf "$T/stage0" "$T/auto" "$T/install" "$T/live"
+      cp -R "$T/app" "$T/stage0"
+      mkdir -p "$T/stage0/node-runtime/bin"
+      printf '#!/bin/node\n' > "$T/stage0/node-runtime/bin/node"; chmod 755 "$T/stage0/node-runtime/bin/node"
+      cp -R "$T/stage0" "$T/auto"
+      cp -R "$T/stage0" "$T/install"   # the failed install holds the §1b-reused node-runtime
+      rm -rf "$T/auto/node-runtime"    # §1b reuse mv-ed node-runtime OUT of the §1 auto-preimage
+      rm -rf "$T/live"; mv "$T/auto" "$T/live"   # deterministic restore (executor contract)
+      if [ "$LEG" = red ]; then
+        if [ ! -x "$T/live/node-runtime/bin/node" ]; then
+          echo "SELFTEST_REPAIR restore RED reproduced: §1b-reuse restore lands WITHOUT node-runtime (a cold boot in that window would fail launchd)"
+        else
+          echo "SELFTEST_REPAIR_FAIL restore RED"; FAIL=1
+        fi
+      else
+        [ -x "$T/live/node-runtime/bin/node" ] || rsync -a "$T/stage0/node-runtime/" "$T/live/node-runtime/"
+        if [ -x "$T/live/node-runtime/bin/node" ] && diff -r "$T/stage0" "$T/live" > /dev/null 2>&1; then
+          echo "SELFTEST_REPAIR restore GREEN: RESTORE-R1 re-materialization from the fresh STAGE 0 preimage = content-exact"
+        else
+          echo "SELFTEST_REPAIR_FAIL restore GREEN"; FAIL=1
+        fi
+      fi
+    done
+    PKG_FILE="$(cd "$(dirname "$0")" && pwd)/OPERATION_PACKAGE_V2.md"
+    if grep -q "RESTORE-R1" "$0" && grep -q "re-materialize" "$0" \
+      && [ -f "$PKG_FILE" ] && grep -q "RESTORE-R1" "$PKG_FILE" && grep -q "re-materialize" "$PKG_FILE"; then
+      echo "SELFTEST_REPAIR contract markers present: executor restore contract + packet §6 runbook"
+    else
+      echo "SELFTEST_REPAIR_FAIL contract markers (executor and packet §6 must both carry RESTORE-R1)"; FAIL=1
+    fi
+    rm -rf "$T"
+    [ "$FAIL" -eq 0 ] && echo "SELFTEST_REPAIR_PASS (echo#3 route-gate verdict + RESTORE-R1 node-runtime re-materialization, hermetic)" \
+      || { echo "SELFTEST_REPAIR_FAIL"; exit 1; } ;;
+  *) die "unknown subcommand (use preflight|deploy|boot-canary|health|snapshot|verify-restart|close|--selftest|--selftest-repair)" ;;
 esac
