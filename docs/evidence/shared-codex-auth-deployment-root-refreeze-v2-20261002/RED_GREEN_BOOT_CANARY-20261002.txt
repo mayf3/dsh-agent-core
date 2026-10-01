@@ -1,0 +1,50 @@
+# FRESH_CHILD_BOOT_CANARY_V1 — RED/GREEN (2026-10-02)
+Disposable fresh agent-core-production child boot from each candidate under its own node-runtime; throwaway home provisioned exactly like provisionAgentHome (profile copies + @agent-core farm links anchored at the candidate); no credentials; allowlisted external miss: dsh-codex (staged per-deployment-root by the shared-codex carrier — outside the harness closure).
+
+## CANARY — RED (arm64-host closure)
+| MISSING[DISALLOWED] @deepseek-ai/cordis-plugin-timer imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/cordis-plugin-hmr imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-llm imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-typert-registry imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-typert-loader imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-api-gateway imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-title imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-title-first-prompt-llm imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-user-questions imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-agent imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-agent-default-model imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-jobs-local imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-llm-retry imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-settings-file imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-credentials-local imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-llm-pi-ai imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-persistence-jsonl imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-attachment-local imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-query-sqlite imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-projection imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-session-telemetry-otel imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-subprocess-local imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-sandbox-local imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-sandbox-policy imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-bash-sandbox imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-user-approval imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-permission-presets imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-shell-env imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| MISSING[DISALLOWED] @deepseek-ai/dsh-tool-bash imported from /private/tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| ready=false pluginTreeFailed=true tailLines=40
+| FRESH_CHILD_BOOT_CANARY FAIL
+(exit non-zero — expected; first MISSING line is the canonical failure)
+
+## CANARY — GREEN (runtime-node closure)
+| ready=true pluginTreeFailed=false tailLines=4
+| FRESH_CHILD_BOOT_CANARY PASS
+(exit 0)
+
+## Binding acquisition probe — proven preimage vs failed-generation class
+$ /usr/local/libexec/agent-core/node-runtime/bin/node -e "require(.../vendor/loader/node_modules/node-addon-require-builtin).getBindingInfo()"
+PREIMAGE (live restored tree): OK optional-package darwin-x64 napi-v9 (recorded 2026-10-02)
+FRESH arm64-host closure: THROW No usable native binding found for node-addon-require-builtin-darwin-x64 (auto) — attempts: optional-package MODULE_NOT_FOUND, local-build MODULE_NOT_FOUND x2
+
+## Failed-generation record of reference
+/tmp/b7-prod-closure/child-boot-error.txt (2026-10-01 23:51, captured by the rollback operator): same ERR_MODULE_NOT_FOUND mass failure, 85+ loader entries, origin vendor/loader/lib/index.js
