@@ -239,3 +239,68 @@ bak-20261001T175809Z-pre-b7-v2). Fresh reads before authoring: #414, #191 termin
   run: re-verify pin + MANIFEST → STAGE 0→1 (installer re-runnable; fresh preimage
   bak-20261001T175809Z-pre-b7-v2 already in place; node-runtime restored) → restart/G4-G5 →
   STAGE 2 carrier r12 → STAGE 3 acceptance → STAGE 4 cleanup, per §5 unchanged).
+
+---
+
+# B7 V2.2 REPAIR LANE — 2026-10-02 (non-production; successor to #193; agent-control#194)
+
+Scope: the two directly proven packet-internal defects from the #193 adoption failure, plus
+one same-class gap the new gate itself surfaced; PRODUCTION_MUTATION = NO throughout (no
+deploy/restart/sudo/credential/data mutation, no Remote Desktop, no live symlinks or
+node_modules patches; production untouched on the restored preimage, pid 74673 healthy;
+all backups preserved untouched: bak-20261001-174434 (禁删) / bak-20261001T144015Z-pre-b7-refreeze /
+bak-20261001T175809Z-pre-b7-v2). Fresh reads before authoring: #414, #193 terminal receipts
+(comment 5939355758), #386 standing delegation, PR #422 merge c25278e1 (= origin/main),
+this directory (v2.1 packet + execution log). Because FIX A changes shipped source/pack
+closure, this is a NEW freeze at a NEW source pin per the packet's own R4 (unlike the
+packet-internal v2.1 rebind).
+
+- **FIX A (Defect A)**: `vendor/proxy-agent-negotiate/` (v1.1.0, exact bytes production ran
+  — 5-file sha256 manifest in packet §4, byte-identical to the live tree's ambient copy and
+  to a clean worktree install) carried by installer §3 AFTER the dep loop; NEW §3b
+  RUNTIME_APP_GRAPH_GATE_V1 imports the WHOLE production-runtime app graph under the trusted
+  node, throwaway home, before §4+.
+- **FIX A′ (same class, proven live by the new gate in this lane)**: packages/development-
+  execution (no package.json, relative import from production-runtime/src/development-
+  execution-runtime.js:13) was never packed; §3 now carries its src/ — the masked
+  "next failure" of every fresh pack of current main.
+- **FIX B (Defect B)**: §5b blanket `-R` scope no longer contains control/ (find-exclusion of
+  control/scheduler-watchdog + control/incident-backups); the plist-pinned group is asserted
+  explicitly (chgrp -R 20; missing dirs pre-created 505:20 0700); RESTORE-R2 in the restore
+  contract (installer §8 late-gate text + executor comment/die messages + packet §6).
+- **Executor owner-router-closure-g2-g7-v22.sh**: pin → b78aa30a/d5fb04c9; G2.6 runs the
+  app-graph gate against the installed tree after G2.5 (both fail-closed pre-restart);
+  RESTORE-R2 in all three die messages; --selftest-repair extended (G2.6 wiring RED/GREEN,
+  RESTORE-R2 real-validator RED/GREEN, v2.2 contract markers); --selftest PASS.
+- **RED/GREEN evidence** (v2.1 bytes → defect; v2.2 bytes → green):
+  RED_GREEN_RUNTIME_APP_GRAPH_GATE-20261002.txt — RED-A: exact #193 line
+  (`MISSING proxy-agent-negotiate imported from …/@larksuite/channel/node_modules/https-proxy-agent/dist/index.js`)
+  + gate FAIL on a fresh §3-shaped stage; RED-A′: development-execution gap fail-closed;
+  GREEN-A: whole-graph import PASS under the installed node-runtime (v25.6.1 x64);
+  G2.5 fresh-child canary PASS on the same stage (regression).
+  RED_GREEN_WATCHDOG_OWNERSHIP-20261002.txt — v2.1 §5b bytes (913e4ee0) replayed → pinned
+  group 20→damage → the REAL readPrivateFile(expectedGid:20) rejects `unsafe incident state
+  file` (= the #193 boot FATAL); v2.2 §5b replay → pinned set untouched at 20 (validator
+  accepts), non-pinned control state still receives the blanket (reader-gid 601 contract
+  untouched); RESTORE-R2 heals the damage; generators committed in repair-v22-lane/.
+- **Suites at the pin** (attribution corrected in the absorb commit; the packet-commit
+  message mislabeled the split): NEW gate + ownership suites 14 tests = 14 pass / 0 fail;
+  existing closure-resolution + fresh-child-canary suites 13 tests = 12 pass / 1 skip /
+  0 fail (unchanged from the frozen record); scripts/lib four-suite total 27 tests =
+  26 pass / 1 skip / 0 fail; installer --selftest-provenance PASS; fresh-pack full
+  production-runtime boot/import gate = GREEN-A above.
+- **Packet re-bind**: §0 v2.2 REBIND block; §4 table rebound (executor cc993d92…, installer
+  ad491b79… at the new pin, NEW gate lib 6603818c…, NEW tests, vendored 5-file manifest, NEW
+  RED/GREEN rows + generators; unchanged-by-design rows re-verified identical: closure gate
+  af43b337…, fresh-child canary b737d6b4…, both v2 test files af364c01…/5db9419b…;
+  historical v2/v2.1 rows kept, byte-identical); MANIFEST.sha256 11/11 OK. DEPLOY_SRC pin
+  **b78aa30a / d5fb04c9**; GOVERNING_SPECS_UNMODIFIED (c25278e1..b78aa30a = exactly the 9
+  declared files, 0 docs/specs).
+- **Status after this lane**: SOURCE=PR_READY (branch svc/b7-v22-packet-repair-20261002,
+  independent changed-surface review on the final exact head recorded as
+  INDEPENDENT_REVIEW_V22-20261002.md + in the PR) / PROD_AUTH=PREPARED (exact v2.2 packet
+  ready for the next standing-delegation production run: materialize this evidence dir from
+  the v2.2 merge commit; DEPLOY_SRC worktree detached at exactly b78aa30a → STAGE 0 (fresh
+  preimage re-pin) → STAGE 1 (§3b + G2.5 + G2.6 all pre-restart) → restart/G4-G5 → STAGE 2
+  carrier r12 → STAGE 3 acceptance → STAGE 4 cleanup, per §5; if anything fails: restore
+  per §6 with RESTORE-R1 AND RESTORE-R2).
