@@ -265,6 +265,7 @@ new pin unless marked superseded):
 | owner-authsvc-plugin-upgrade-r13.sh (carrier r13, supersedes r12 9f835448 for STAGE 2; in docs/evidence/openai-codex-refresh-token-reused-v1-20260910/) | e9443f32a9c387f0ace5fa87863f77403ceea01b364d1f808089a1d8cee84c67 |
 | RED_GREEN_FLEET_CONFIG_GATE-20261002.txt (NEW v2.3) | bc0d0f6a6deea83113158ab37777ca7728aba88350e444a994f4eb551f719f89 |
 | repair-v23-lane/red-green-fleet-config-gate.sh (generator) | 3b9a158ac0cdd13fcfb098e64d8aa7aa8db94f69448938d733b6ebc50dfcc119 |
+| INDEPENDENT_REVIEW_V23-20261002.md (this packet's independent review, round-2 PASS @ d5883480) | 68de9c947a5eca3695f27f2e13fb1e4a5cf42cd09488b36aa2460707b6c833ba |
 
 Unchanged-by-design rows re-verified byte-identical at pin 4f14ff00:
 scripts/trusted-cp-deploy-install.sh ad491b79…; trusted-cp-closure-resolution-
