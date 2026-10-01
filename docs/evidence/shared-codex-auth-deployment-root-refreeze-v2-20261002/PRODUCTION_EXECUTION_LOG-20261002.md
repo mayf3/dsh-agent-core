@@ -450,3 +450,108 @@ NEEDS_USER            = bounded NON-PRODUCTION v2.3 repair lane: (1) reconcile t
                         packet, independent review, next standing-delegation run re-executes
                         STAGE 0→4. The Owner feishu PONG commit gate remains ahead at STAGE 2.
 ```
+
+---
+
+# B7 V2.3 REPAIR LANE — 2026-10-02 (non-production; successor to #195; agent-control#196)
+
+Scope: the directly proven DEFECT C from #195 only, reconciled via the smallest reviewed path;
+PRODUCTION_MUTATION = NO throughout (no deploy/restart/sudo/credential/data mutation, no Remote
+Desktop, no live symlinks or node_modules patches; production untouched on the restored preimage,
+pid 27455 healthy; all backups preserved untouched: bak-20261001-174434 (禁删) /
+bak-20261001T144015Z / bak-20261001T175809Z / bak-20261001T211351Z). Fresh reads before authoring:
+#414 (body incl. the #195 execution + closure sweep sections), #195 terminal receipts (the log
+section above + issue record), #386 standing delegation, PR #423 merge 431bcab8 (= origin/main
+tip), agent-control#196 claim `b7-v23-packet-repair-20261002`, this directory (v2.2 packet +
+#195 run record), the accepted specs/CTR lineage (below).
+
+## FIX_C_ANALYSIS (contract lineage established from accepted authorities)
+
+- The authsvc deployment config version is governed by AGENT_CORE_FLEET_SHARED_CODEX_AUTH_
+  ACTIVATION_V1 (retained for the authsvc domain) AS AMENDED by
+  AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT (accepted
+  2026-09-21, merged b08db324 / PR #311): §3 freezes the execution preimage "fleet config v2 /
+  overrides==92 / roster bijection / canonical boundary / tombstone absent" and A3 binds carrier
+  r12 (9f835448) whose G3 hard-gate mechanically requires config v2.
+- AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 (CTR-ACT2, accepted 2026-09-05) governs the
+  yanfenma domain ONLY (explicitly MUST NOT touch /Users/authsvc/**) — but it is the accepted
+  PATTERN authority for this exact transition: one-time "v2→v3 config migration + canonical
+  credentialFile injection" in a single quiesce window.
+- The version:3 runtime requirement is main-line f222b59f (2026-08-31, "feat: provision fleet
+  shared Codex auth"): v2→v3 fail-loud bump ("older files are not converted", CTR lineage — no
+  auto conversion), whose SOLE config-visible delta is the REQUIRED per-route `credentialFile`
+  on openai-codex subscription routes — the deploymentRoot-canonical store path (d8ddf546
+  parameterization: canonicalOpenAICodexCredentialFileFor(deploymentRoot) =
+  /Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json).
+- v3 is therefore JUSTIFIED for this deployment: its one substantive config feature IS the
+  amendment's own A2 "Canonical-by-deployment-root" end state. A source-pin/packet
+  reconciliation keeping v2 would fork shipped runtime source away from main bytes for one
+  deployment (contradicting the packet's frozen-main-bytes authority and the CTR fail-loud
+  lineage; every future fresh pack would reintroduce the #195 FATAL) — a larger surface than
+  the config stage. RECONCILIATION_DIRECTION = the separately frozen exact v2→v3 migration
+  operation as its own stage (STAGE 1M), carrier G3 language moved to v3 (r13) WITH it.
+
+## Repairs (NEW source pin 4f14ff00 / tree 6eae0c23 per the packet's own R4)
+
+- **G2.7 MODEL_OVERRIDES_CONFIG_GATE_V1** (scripts/lib/trusted-cp-model-overrides-config-gate.mjs,
+  digest e4a22458…): the INSTALLED tree's OWN loadAgentModelOverrides against the REAL production
+  config + REAL agents.json registry, READ-ONLY, BEFORE any restart. Runs under the installed
+  node-runtime; file-absent = honest PASS (loader legacy-passthrough semantics); any loader
+  rejection = exit 2 with the loader's exact error verbatim.
+- **FLEET_CONFIG_V2V3_MIGRATION_V1** (scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs,
+  digest 379c55d4…): the exact frozen operation — version 2→3 + canonical credentialFile on
+  openai-codex subscription routes ONLY (the accepted switchFleetConfig selector), overrides
+  untouched, mode preserved (owner preserved as root), preimage backup <config>.pre-v3-<ts>
+  (RESTORE-R3 source), candidate validated by the REAL v3 loader BEFORE the atomic rename (zero
+  production mutation on every refusal path: wrong base version, unexpected route key incl.
+  credentialFile/reasoningEffort drift, duplicate JSON key, no codex route, or ANY loader
+  rejection), dry-run default, never restarts anything.
+- **Executor owner-router-closure-g2-g7-v23.sh** (d8565fdf…): pin → 4f14ff00/6eae0c23; NEW
+  `cutover` subcommand = STAGE 1M as ONE atomic step (G2.7 → on the EXACT #195 v2-class error:
+  migrator dry-run → execute → G2.7 re-verify must PASS → kickstart → bounded health loop; any
+  other G2.7 error dies with zero mutation; health-failure die message inlines the full
+  five-step restore incl. RESTORE-R3); --selftest-repair extended (G2.7 RED = the exact #195
+  FATAL line on a 92-override v2 fixture under the pin loader; G2.7/STAGE-1M GREEN = migrated
+  config loads clean, overrides=92, RESTORE-R3 backup present; v2.3 contract markers in executor
+  + packet); --selftest unchanged (PASS).
+- **Carrier r13** (docs/evidence/openai-codex-refresh-token-reused-v1-20260910/
+  owner-authsvc-plugin-upgrade-r13.sh, digest e9443f32…): G3 version predicate 2→3 + its comment/
+  echo lines + the two selftest fixture config versions — diff vs r12 enumerated in the file
+  header; roster/92/store/canonical/tombstone/expiry semantics UNCHANGED; r13 --selftest PASS
+  (full T7/T8/T10 machinery on v3 fixtures). AUTHORIZATION CHAIN: the accepted amendment bound
+  r12 by SHA ⇒ before any STAGE 2 --apply the Owner must RE-PLACE AMENDMENT_ACCEPTED.marker with
+  scriptSha256 = the r13 digest (G1 stays mechanically fail-closed on marker==script).
+- **RESTORE-R3** (packet §6 + executor): config restored from the migrator's preimage backup
+  BEFORE restarting the old generation after any post-migration rollback (the §6 tree restore
+  does not cover the deployment-root config; the old v2 loader cannot boot a v3 config).
+
+## RED_GREEN (RED_GREEN_FLEET_CONFIG_GATE-20261002.txt, generator in repair-v23-lane/)
+
+- RED: v2 config (deployed preimage shape, 92 luna-primary overrides, routeCatalog.luna without
+  credentialFile) vs pin v3 loader → MODEL_OVERRIDES_CONFIG_GATE_V1 exit 2 with the EXACT #195
+  FATAL line (`must be {"version":3,"routeCatalog":{...},"overrides":{...}} (older files are not
+  converted)` / AGENT_MODEL_OVERRIDE_INVALID).
+- GREEN: dry-run validates with zero mutation; --execute commits the exact delta (routesTouched
+  = [luna]; overrides 92/92; backup content-v2); the SAME loader then loads the committed config
+  clean (filePresent=true, overrides=92) — the G2.7 gate PASS state that must precede any cutover.
+- Regression at the pin: full scripts/lib six-suite set 42 tests = 41 pass / 1 skip (live-closure
+  seam, unchanged) / 0 fail — the four existing suites (closure-resolution, fresh-child canary,
+  app-graph, watchdog-ownership) all PASS unchanged (= G2.5/G2.6 machinery regression).
+
+## TESTS
+
+- Installer bytes UNCHANGED from v2.2 (ad491b79…, re-verified at the pin; --selftest-provenance
+  PASS). Suites as above. Executor --selftest + --selftest-repair PASS; carrier r13 --selftest
+  PASS; generator + RED/GREEN evidence digests bound in §4 + MANIFEST.
+
+## Status after this lane
+
+SOURCE=PR_READY (branch svc/b7-v23-packet-repair-20261002; independent changed-surface review on
+the final exact head recorded as INDEPENDENT_REVIEW_V23-20261002.md + in the PR) /
+PROD_AUTH=PREPARED (exact v2.3 packet ready for the next standing-delegation production run:
+materialize this evidence dir from the v2.3 merge commit; DEPLOY_SRC worktree detached at exactly
+4f14ff00 → STAGE 0 (fresh preimage re-pin) → STAGE 1 (§2c + §3b + G2.5 + G2.6) → STAGE 1M
+(`cutover`: G2.7 → v2→v3 migration if v2 → G2.7 → kickstart → health) → G4/G5 snapshots →
+STAGE 2 carrier r13 (Owner first re-places the marker with the r13 SHA) → STAGE 3 acceptance →
+STAGE 4 cleanup; on any failure: §6 restore with RESTORE-R1 + RESTORE-R2 + RESTORE-R3 (config
+first)). The Owner feishu PONG commit gate remains ahead at STAGE 2.

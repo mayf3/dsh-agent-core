@@ -1,0 +1,26 @@
+== RED_GREEN_FLEET_CONFIG_GATE (DEFECT C / agent-control#195) ==
+DEPLOY_SRC=/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/b7-v23-packet-repair-20261002
+PIN=4f14ff00acd0b6584d857a0c42d447da529f8cd0 TREE=6eae0c23c27109d47a102a7eb9762bbbc6b3b8ad
+-- fixture written: 92-override v2 preimage shape (routeCatalog.luna without credentialFile)
+
+== RED: v2 config vs pin v3 loader (the #195 class) ==
+RED gate rc + verdict: ok=false errorCode=AGENT_MODEL_OVERRIDE_INVALID
+RED error line: production-runtime: invalid agent model overrides: /tmp/red-green-fleet-config.eILYTT/fleet-root/agent-model-overrides.json must be {"version":3,"routeCatalog":{...},"overrides":{...}} (older files are not converted)
+RED_RC=2 (expect 2 — fail-closed BEFORE any cutover)
+RED LINE_CHECK = the exact #195 FATAL class (version-3 requirement, older files refused)
+
+== GREEN: frozen v2→v3 migration, then the SAME loader ==
+DRY_RUN_RC=0 (expect 0 — candidate validated, zero mutation)
+EXECUTE rc=0 mode=execute routesTouched=["luna"] overrides=92/92
+BACKUP=/tmp/red-green-fleet-config.eILYTT/fleet-root/agent-model-overrides.json.pre-v3-20261001T223407Z
+MIGRATION_DELTA = version 2->3 + credentialFile on luna ONLY; overrides 92 preserved; backup present(v2-content)=true
+GREEN gate verdict: ok=true filePresent=true overrides=92
+GREEN_RC=0 (expect 0)
+
+== G2.5/G2.6 + suite regression at the pin ==
+ℹ tests 42
+ℹ pass 41
+ℹ fail 0
+ℹ skipped 1
+SUITE_REGRESSION = recorded above (existing four suites unchanged + two new suites)
+RED_GREEN_FLEET_CONFIG_GATE = PASS
