@@ -256,8 +256,12 @@ export async function composeProductionRuntime(options = {}) {
   log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  // FLEET_SHARED_CODEX_AUTH amendment A2 via CTR-ACT2-001's anticipated
+  // minimal compose adjustment: the runtime's own deployment root pins the
+  // accepted shared credentialFile reference to THIS surface's canonical —
+  // a foreign domain's lineage fails closed at load.
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { deploymentRoot: layout.root })
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { deploymentRoot: layout.root })
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
