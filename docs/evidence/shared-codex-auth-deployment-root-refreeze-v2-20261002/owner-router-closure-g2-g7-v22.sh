@@ -80,9 +80,13 @@
 #   sudo bash owner-router-closure-g2-g7.sh snapshot <agentId> <label>
 #   sudo bash owner-router-closure-g2-g7.sh verify-restart <agentId> <beforeLabel> <afterLabel>
 #   sudo bash owner-router-closure-g2-g7.sh close
-# Offline selftest (no sudo, no production access):
+# Offline selftest (no sudo, no mutation):
 #   bash owner-router-closure-g2-g7.sh --selftest
-#   bash owner-router-closure-g2-g7.sh --selftest-repair   (v2.1: #191 defect repairs, hermetic)
+#     (reads the LIVE trusted app's durable-file module via store_state_json —
+#      read-only, inherited verbatim from the v2.1 executor; fails on a host
+#      without the live tree)
+#   bash owner-router-closure-g2-g7.sh --selftest-repair   (v2.1+#191 defect repairs
+#      and v2.2 G2.6/RESTORE-R2 proofs — fully hermetic: /tmp fixtures + $DEPLOY_SRC only)
 
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"

@@ -158,8 +158,8 @@ GOVERNING_SPECS_UNMODIFIED: no `docs/specs/**` file changes in this pin.
 | Artifact | sha256 |
 |---|---|
 | OPERATION_PACKAGE_V2.md (this file, v2.2) | bound in MANIFEST.sha256 |
-| INDEPENDENT_REVIEW_V22-20261002.md (v2.2 review) | see MANIFEST.sha256 |
-| owner-router-closure-g2-g7-v22.sh (executor, v2.2) | cc993d925ed7574ff51907fc1d4984107a0c3bbc8fae6573098e8ef042f231f1 |
+| INDEPENDENT_REVIEW_V22-20261002.md (v2.2 review) | 8dead616263c752f4a486aedd185bf08102ea0f8e024a5abe8720bc8cfafd9a6 |
+| owner-router-closure-g2-g7-v22.sh (executor, v2.2) | 7aff93eb81d7bd3553317a8b2fa332984fccf707f862f176a76a30d0ae30d912 |
 | scripts/trusted-cp-deploy-install.sh (at pin b78aa30a) | ad491b792764afb0b43dc39af856fd2f6bf491186e1f38f1a376ee9b1aa176e9 |
 | scripts/lib/trusted-cp-closure-resolution-gate.mjs (unchanged v2 bytes) | af43b33739ba05c0b178f5a87347edd774866dc7395ca302ce2a2b962ffded88 |
 | scripts/lib/trusted-cp-fresh-child-boot-canary.mjs (unchanged v2 bytes) | b737d6b42460383f305a741fb9d5f12babe9b1e292f933d3735d68a907447802 |
@@ -266,7 +266,8 @@ done
 
 Idempotent no-op when already correct; uid/modes untouched; never a symlink, never a live
 node_modules patch. The executor carries the same clause in its deploy comment block and in
-all three fail-closed die messages; `--selftest-repair` proves the RED (real readPrivateFile
+all three fail-closed die messages (verbatim command inlined in the two restore-path dies;
+the G2.6 die references the deploy comment block); `--selftest-repair` proves the RED (real readPrivateFile
 rejects a foreign group) and GREEN (the pin heals) hermetically against the REAL
 `private-state-io.js` validator.
 Reproduced 2026-10-02 (#191 restore): the §1b-reuse restore landed WITHOUT node-runtime (2418

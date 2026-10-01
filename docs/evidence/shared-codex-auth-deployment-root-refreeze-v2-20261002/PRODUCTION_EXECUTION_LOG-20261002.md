@@ -283,10 +283,12 @@ packet-internal v2.1 rebind).
   file` (= the #193 boot FATAL); v2.2 §5b replay → pinned set untouched at 20 (validator
   accepts), non-pinned control state still receives the blanket (reader-gid 601 contract
   untouched); RESTORE-R2 heals the damage; generators committed in repair-v22-lane/.
-- **Suites at the pin**: new gate + ownership suites 27 tests = 26 pass / 1 skip (live seam)
-  / 0 fail; existing closure-resolution + fresh-child-canary suites 12 pass / 1 skip / 0
-  fail (unchanged from the frozen record); installer --selftest-provenance PASS; fresh-pack
-  full production-runtime boot/import gate = GREEN-A above.
+- **Suites at the pin** (attribution corrected in the absorb commit; the packet-commit
+  message mislabeled the split): NEW gate + ownership suites 14 tests = 14 pass / 0 fail;
+  existing closure-resolution + fresh-child-canary suites 13 tests = 12 pass / 1 skip /
+  0 fail (unchanged from the frozen record); scripts/lib four-suite total 27 tests =
+  26 pass / 1 skip / 0 fail; installer --selftest-provenance PASS; fresh-pack full
+  production-runtime boot/import gate = GREEN-A above.
 - **Packet re-bind**: §0 v2.2 REBIND block; §4 table rebound (executor cc993d92…, installer
   ad491b79… at the new pin, NEW gate lib 6603818c…, NEW tests, vendored 5-file manifest, NEW
   RED/GREEN rows + generators; unchanged-by-design rows re-verified identical: closure gate
