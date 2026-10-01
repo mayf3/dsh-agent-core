@@ -636,6 +636,21 @@ for pkg in "$REPO_SRC"/packages/*/; do
   [ -f "$pkg/package.json" ] || continue
   "$TRUSTED_NODE" "$PACKAGE_COPY_HELPER" "$pkg" "app/packages/$name"
 done
+# v2.2 FIX A′ (proven by the §3b whole-graph import gate): some app packages
+# deliberately carry NO package.json (packages/development-execution is a
+# code-only dir consumed by production-runtime via a RELATIVE import —
+# DEVELOPMENT_EXECUTION_SURFACE_V1), so the package.json-keyed loop above skips
+# them and a fresh pack could never boot the runtime
+# (ERR_MODULE_NOT_FOUND …/packages/development-execution/src/index.js — masked
+# at agent-control#193 only because the @larksuite/channel resolution failure
+# fired earlier in the import order). Carry their src/ explicitly — same
+# package.json+src, no-tests discipline as the copy helper.
+for rel in development-execution; do
+  [ -d "$REPO_SRC/packages/$rel/src" ] || { echo "ERROR: relative-import app package missing: packages/$rel/src" >&2; exit 2; }
+  rm -rf "app/packages/$rel"
+  mkdir -p "app/packages/$rel"
+  cp -R "$REPO_SRC/packages/$rel/src" "app/packages/$rel/src"
+done
 # bundles + profiles
 for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
   [ -d "$d" ] || continue
@@ -723,6 +738,44 @@ for dep in "$MAIN_REPO"/node_modules/*/; do
 done
 [ -d "app/node_modules/@larksuiteoapi" ] && [ -d "app/node_modules/croner" ] \
   || { echo "ERROR: third-party app deps incomplete" >&2; exit 2; }
+
+# v2.2 FIX A (agent-control#193 Defect A): the production runtime's app graph
+# resolves @larksuite/channel -> its nested https-proxy-agent ->
+# proxy-agent-negotiate. That package exists in NO pack input: the §3 loop above
+# copies only MAIN_REPO/node_modules TOP-LEVEL entries and MAIN_REPO lacks this
+# one (its dev-install resolution for the leaf is broken — feishu-connector's
+# git-dep lock never recorded it), while the old live tree's top-level copy was
+# ambient legacy from an earlier era. Fresh packs therefore never carried it and
+# the production runtime FATAL'd at first boot (ERR_MODULE_NOT_FOUND, exit 2)
+# while the fresh-child canary passed. The vendored copy (exact bytes of the
+# version production ran, sha256-recorded in the operation package) is the
+# deterministic source; it lands at app/node_modules top level, where the
+# https-proxy-agent resolution walks up to. Placed AFTER the loop so the
+# vendored bytes win regardless of ambient MAIN_REPO drift.
+[ -f "$REPO_SRC/vendor/proxy-agent-negotiate/package.json" ] \
+  || { echo "ERROR: vendored proxy-agent-negotiate missing at $REPO_SRC/vendor/proxy-agent-negotiate (pin lineage violation)" >&2; exit 2; }
+rm -rf app/node_modules/proxy-agent-negotiate
+cp -RL "$REPO_SRC/vendor/proxy-agent-negotiate" app/node_modules/proxy-agent-negotiate
+
+# ---- 3b. production-runtime app-graph import gate (fail-closed, v2.2) -------
+# The fresh-child boot canary (executor G2.5) covers the harness plugin tree —
+# a fresh agent CHILD never imports the runtime app surface. agent-control#193
+# proved the gap: the packed closure passed every gate yet the runtime itself
+# died at boot on a missing transitive dep. This gate imports the EXACT boot
+# graph (packages/production-runtime/src/entry.js — compose.js statically pulls
+# feishu-connector/@larksuite/channel, broker, scheduler, product-api,
+# agent-router, agent-provisioning, …) under the trusted node, in a disposable
+# home, BEFORE any further mutation (§4+ runs only after this passes). No
+# service is started, no port bound, no production state touched. Any
+# resolution/import failure aborts the install here (documented abort shape:
+# the previous install sits in $BAK; restore = rm -rf live + mv $BAK back; §5b
+# has not run, so no RESTORE-R2/ownership re-pin is needed).
+echo "== production-runtime app-graph import gate (whole graph, disposable home)"
+"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-runtime-app-graph-gate.mjs" \
+  --app-dir "$TRUSTED_ROOT/app" --node "$TRUSTED_NODE" || {
+    echo "ERROR: runtime app-graph import gate FAILED — the packed app closure cannot boot the production runtime (agent-control#193 Defect A class). NOT cutover-ready." >&2
+    exit 2
+  }
 
 # ---- 4. control-plane home (DSH_HOME of the 505 parent) --------------------
 echo "== provisioning control-plane home -> home/"
@@ -824,11 +877,47 @@ chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
 # others may reach KNOWN paths but cannot LIST the root; every 505-private
 # subdir keeps its own 0700.
 chmod 711 "$PROD_ROOT"
-chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
-chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
+# v2.2 FIX B (agent-control#193 Defect B): the plist-pinned watchdog private
+# state (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1: SCHEDULER_INCIDENT_OWNER_GID=20
+# in the W1/W2/runtime plists; packages/scheduler/src/watchdog/private-state-io.js
+# readPrivateFile/ensurePrivateDirectory reject uid/gid mismatch fail-closed;
+# production-runtime paths.js control/scheduler-watchdog/{incidents.json,local-ops.jsonl}
+# + the durable-state incident-backups tree) must NEVER be swept by the blanket
+# ownership pass. The v2.1 blanket `chown -R 505:601 … control` flipped the
+# pinned group 20→601, and after the #193 rollback the RESTORED tree failed its
+# own scheduler startup readiness gate (`unsafe incident state file` boot FATAL,
+# 8790 down ~03:41–03:47 until the group was re-pinned). The blanket pass now
+# EXCLUDES the exact pinned set; the pin is asserted explicitly afterwards
+# (existing state: group re-asserted, uid/modes untouched; missing dir:
+# pre-created 505:20 0700 so the first boot passes its own gate).
+WATCHDOG_PINNED_PRIVATE_STATE_GID=20
+WATCHDOG_PINNED_PRIVATE_STATE_PATHS="$PROD_ROOT/control/scheduler-watchdog $PROD_ROOT/control/incident-backups"
+chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
+chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
+find "$PROD_ROOT/control" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
+  -not -path "$PROD_ROOT/control/incident-backups" \
+  -not -path "$PROD_ROOT/control/incident-backups/*" \
+  -exec chown "${AUTHSVC_UID}:${AUTHSVC_GID}" {} +
+find "$PROD_ROOT/control" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
+  -not -path "$PROD_ROOT/control/incident-backups" \
+  -not -path "$PROD_ROOT/control/incident-backups/*" \
+  -exec chmod u+rwX,go-rwx {} +
+for pinned in $WATCHDOG_PINNED_PRIVATE_STATE_PATHS; do
+  if [ -d "$pinned" ]; then
+    chgrp -R "$WATCHDOG_PINNED_PRIVATE_STATE_GID" "$pinned"
+  else
+    mkdir -p "$pinned"
+    chown "${AUTHSVC_UID}:${WATCHDOG_PINNED_PRIVATE_STATE_GID}" "$pinned"
+    chmod 700 "$pinned"
+  fi
+done
 chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
 chmod 755 "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
-echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
+echo "  production root: $PROD_ROOT (505-private control state 0700; plist-pinned watchdog private state $WATCHDOG_PINNED_PRIVATE_STATE_PATHS kept at gid $WATCHDOG_PINNED_PRIVATE_STATE_GID, excluded from the blanket pass; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
@@ -902,6 +991,11 @@ if [ -n "$HITS" ]; then
   echo "MUTATION TRUTH: late gate — the trusted app tree at $TRUSTED_ROOT WAS already written by this run." >&2
   if [ -n "${BAK:-}" ]; then
     echo "EXACT RESTORE (operator, after recording evidence): rm -rf '$TRUSTED_ROOT' && mv '$BAK' '$TRUSTED_ROOT'" >&2
+    # RESTORE-R2 (v2.2, agent-control#193 Defect B): §5b ran before this late
+    # gate — the restore must re-pin the plist-pinned watchdog private state
+    # (SCHEDULER_INCIDENT_OWNER_GID=20; v2.1-era restores left group 601 behind
+    # and the restored tree failed its own boot gate):
+    echo "RESTORE-R2 (mandatory after the restore mv): for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done" >&2
   else
     echo "EXACT RESTORE: no pre-existing install was backed up this run (fresh install) — remove the partial tree: rm -rf '$TRUSTED_ROOT'" >&2
   fi
