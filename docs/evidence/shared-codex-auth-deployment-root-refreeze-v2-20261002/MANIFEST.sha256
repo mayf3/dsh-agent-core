@@ -11,8 +11,8 @@ d3ab7b790e41b1b4d3e3afdc1b6fa4f8866348707da56a7e400a93deae2d869f  RED_GREEN_WATC
 93336f90717bbd67337aaee837b2cc64da9564efcc1208b5bf620623a5287bc1  repair-v22-lane/red-green-app-graph.sh
 f35360a30cfed83ce885e7ff551c4d7287d1ff4a165572503098a1887ac29da1  repair-v22-lane/red-green-ownership.sh
 # v2.3 rebind rows (2026-10-02 repair lane after agent-control#195 DEFECT C; source pin 4f14ff00/6eae0c23)
-85008917689ee18ee42a83ea68db76d5308d08e4eee127c402ce1a890350f239  OPERATION_PACKAGE_V2.md
-d8565fdf476c030cb8dd379310bca3e678eb4ccc8894423e97bf2473e708800a  owner-router-closure-g2-g7-v23.sh
+88cd33298921bcc41d8961f91d269f41893c1d36587d01d04b7f7b62bcae0da1  OPERATION_PACKAGE_V2.md
+03dfacb71eb11021d2138fd2a3076b93be911b84d8cbda74bd7e0e0e3f5673df  owner-router-closure-g2-g7-v23.sh
 bc0d0f6a6deea83113158ab37777ca7728aba88350e444a994f4eb551f719f89  RED_GREEN_FLEET_CONFIG_GATE-20261002.txt
 3b9a158ac0cdd13fcfb098e64d8aa7aa8db94f69448938d733b6ebc50dfcc119  repair-v23-lane/red-green-fleet-config-gate.sh
 e9443f32a9c387f0ace5fa87863f77403ceea01b364d1f808089a1d8cee84c67  ../openai-codex-refresh-token-reused-v1-20260910/owner-authsvc-plugin-upgrade-r13.sh

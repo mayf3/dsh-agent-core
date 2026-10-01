@@ -152,6 +152,20 @@ STAMP=$(date '+%Y%m%dT%H%M%S')
 
 die() { echo "FAIL: $*" >&2; exit 1; }
 
+# V2.3 (review round-1 fix): classify a G2.7 CONFIG_LOAD_FAILED error. SINGLE-quoted
+# pattern literals — the real loader line carries literal quote characters
+# (`must be {"version":3,...} (older files are not converted)`), which a
+# double-quoted case pattern silently strips and then never matches (the
+# round-1 independent-review blocker: cutover would die "UNRECOGNIZED" on the
+# exact error it exists to classify). --selftest-repair exercises this function
+# directly with the exact recorded line.
+g27_error_class() { # $1 = G2.7 error string → echoes V2_KNOWN_CLASS | OTHER_CLASS
+  case "$1" in
+    *'must be {"version":3'*'older files are not converted'*) echo V2_KNOWN_CLASS ;;
+    *) echo OTHER_CLASS ;;
+  esac
+}
+
 store_state_json() { # $1 = store file, $2 = agentId — prints {floor, live:[{gen,minSeq,maxSeq}], evicted:[[gen,maxSeq]], watermark, records} for the agent
   node --input-type=module -e '
     const { readDurableRecoveryStore } = await import(process.argv[1]);
@@ -347,10 +361,10 @@ case "${1:-}" in
       # trigger the migration. Any other loader rejection (malformed overrides,
       # unregistered agent, route schema drift) is a DIFFERENT defect class —
       # die here, mutate nothing, restart nothing (this is the #195 guarantee).
-      case "$G27_ERR" in
-        *"must be {"version":3"*"older files are not converted"*) : ;; # the known v2 preimage
-        *) die "G2.7 FAILED with an UNRECOGNIZED config error — this is not the known v2→v3 class; the migration must NOT run. No restart, no mutation. Investigate the error above (new defect class, like #191/#193/#195 each being a new layer)." ;;
-      esac
+      # (round-1 review fix: g27_error_class uses single-quoted literals —
+      # the real #195 line carries literal quote characters.)
+      G27_CLASS=$(g27_error_class "$G27_ERR")
+      [ "$G27_CLASS" = "V2_KNOWN_CLASS" ] || die "G2.7 FAILED with an UNRECOGNIZED config error (class=$G27_CLASS) — this is not the known v2→v3 class; the migration must NOT run. No restart, no mutation. Investigate the error above (new defect class, like #191/#193/#195 each being a new layer)." 
       echo "G2.7 pre = the exact #195 v2-class error → running the frozen v2→v3 migration (dry-run first)"
       echo "### STAGE 1M migration DRY-RUN"
       "$NODE_BIN" "$MIGRATE_LIB" \
@@ -600,6 +614,17 @@ case "${1:-}" in
       else
         echo "SELFTEST_REPAIR_FAIL G2.7 RED (rc=$G27_RED_RC)"; echo "$RED_OUT" | tail -3; FAIL=1
       fi
+      EXACT_195_ERR='production-runtime: invalid agent model overrides: /Users/authsvc/.agent-core/agent-model-overrides.json must be {"version":3,"routeCatalog":{...},"overrides":{...}} (older files are not converted)'
+      if [ "$(g27_error_class "$EXACT_195_ERR")" = "V2_KNOWN_CLASS" ]; then
+        echo "SELFTEST_REPAIR G2.7 classifier GREEN: the EXACT #195 FATAL line (literal quote chars) classifies V2_KNOWN_CLASS"
+      else
+        echo "SELFTEST_REPAIR_FAIL G2.7 classifier (exact #195 line must classify V2_KNOWN_CLASS — round-1 review blocker)"; FAIL=1
+      fi
+      if [ "$(g27_error_class 'production-runtime: invalid agent model overrides: override agt_x references unknown routeCatalog entry NOPE')" = "OTHER_CLASS" ]; then
+        echo "SELFTEST_REPAIR G2.7 classifier RED-side: a non-version loader error classifies OTHER_CLASS (fail-closed die, no migration)"
+      else
+        echo "SELFTEST_REPAIR_FAIL G2.7 classifier (other-class errors must NOT trigger the migration)"; FAIL=1
+      fi
       if node "$MIGRATE_LIB_V23" --config "$CX/agent-model-overrides.json" --registry "$CX/agents.json" \
         --deployment-root "$CX" \
         --model-overrides-module "$DEPLOY_SRC/packages/production-runtime/src/model-overrides.js" >/dev/null 2>&1 \
@@ -610,8 +635,9 @@ case "${1:-}" in
         GREEN_OUT=$(node "$GATE_LIB_V23" --installed-root "$DEPLOY_SRC" \
           --config "$CX/agent-model-overrides.json" --registry "$CX/agents.json" \
           --deployment-root "$CX" --json 2>&1); G27_GREEN_RC=$?
-        if [ "$G27_GREEN_RC" -eq 0 ] && echo "$GREEN_OUT" | grep -q '"overrideCount":92' \
-          && [ -f "$CX/agent-model-overrides.json.pre-v3-"* ] 2>/dev/null || ls "$CX"/agent-model-overrides.json.pre-v3-* >/dev/null 2>&1; then
+        if [ "$G27_GREEN_RC" -eq 0 ] \
+          && echo "$GREEN_OUT" | grep -q '"overrideCount": 92' \
+          && ls "$CX"/agent-model-overrides.json.pre-v3-* >/dev/null 2>&1; then
           echo "SELFTEST_REPAIR G2.7/STAGE-1M GREEN: migrated config loads clean (overrides=92), preimage backup (RESTORE-R3 source) present"
         else
           echo "SELFTEST_REPAIR_FAIL G2.7 GREEN (rc=$G27_GREEN_RC)"; echo "$GREEN_OUT" | tail -3; FAIL=1
@@ -630,7 +656,7 @@ case "${1:-}" in
       echo "SELFTEST_REPAIR_FAIL v2.3 contract markers (executor G2.7/STAGE-1M/RESTORE-R3 + packet §5/§6)"; FAIL=1
     fi
     rm -rf "$T"
-    [ "$FAIL" -eq 0 ] && echo "SELFTEST_REPAIR_PASS (echo#3 route-gate verdict + RESTORE-R1 re-materialization + G2.6 app-graph wiring + RESTORE-R2 pin heal + G2.7 config gate RED/GREEN + STAGE-1M migration + RESTORE-R3 markers, hermetic)" \
+    [ "$FAIL" -eq 0 ] && echo "SELFTEST_REPAIR_PASS (echo#3 route-gate verdict + RESTORE-R1 re-materialization + G2.6 app-graph wiring + RESTORE-R2 pin heal + G2.7 config gate RED/GREEN + #195-line classifier + STAGE-1M migration + RESTORE-R3 markers, hermetic)" \
       || { echo "SELFTEST_REPAIR_FAIL"; exit 1; } ;;
   *) die "unknown subcommand (use preflight|deploy|cutover|boot-canary|health|snapshot|verify-restart|close|--selftest|--selftest-repair)" ;;
 esac

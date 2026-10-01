@@ -257,7 +257,7 @@ new pin unless marked superseded):
 
 | Artifact | sha256 |
 |---|---|
-| owner-router-closure-g2-g7-v23.sh (executor, v2.3 — supersedes the -v22 file) | d8565fdf476c030cb8dd379310bca3e678eb4ccc8894423e97bf2473e708800a |
+| owner-router-closure-g2-g7-v23.sh (executor, v2.3 — supersedes the -v22 file; review round-1 fixes absorbed) | 03dfacb71eb11021d2138fd2a3076b93be911b84d8cbda74bd7e0e0e3f5673df |
 | scripts/lib/trusted-cp-model-overrides-config-gate.mjs (NEW v2.3, at pin 4f14ff00) | e4a22458c4ca8c84f7ab94332bcb9f8b980b99fa7b4f12bd154760a4fe1a68b4 |
 | scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs (NEW v2.3, at pin 4f14ff00) | 379c55d414ef15791c6106dd3ca511ea160b07e7a6194239471f96c63a8248c4 |
 | scripts/lib/trusted-cp-model-overrides-config-gate.test.mjs (NEW v2.3) | 06c4f0f9184fc400f2c30abe2da576b72b105b23bc470ef35fe859a6758714c2 |
@@ -300,7 +300,7 @@ docs/specs/ delta = 0 files.
   + dry-run diff = 0; custody census (fixed script 7556029d…); lineage check
   (`12616dbff17f`, expiry 2026-10-11 17:43 +0800 — FRESH_LOGIN first if approaching).
 - **STAGE 1 — deploy + mandatory pre-cutover gates (fresh-child canary + runtime app-graph)**:
-  1. `owner-router-closure-g2-g7-v22.sh deploy` (v2.2 executor): §0b pre-mutation gate →
+  1. `owner-router-closure-g2-g7-v23.sh deploy` (v2.3 executor; the v2.2 deploy semantics it inherits are unchanged): §0b pre-mutation gate →
      installer §1 auto-preimage `agent-core.bak-<ts>` → §1a/§2 closure build under the runtime
      node → **§2c closure gate (fail-closed)** → app closure (§3 now carries the vendored
      `proxy-agent-negotiate` + `packages/development-execution/src`) → **§3b
