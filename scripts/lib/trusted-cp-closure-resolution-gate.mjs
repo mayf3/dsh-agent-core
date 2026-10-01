@@ -184,7 +184,7 @@ export function runGate({ trustedRoot, platform = process.platform, arch = proce
         ' — the loader would fall back to raw import() from vendor/loader/lib/index.js and EVERY ' +
         'plugin entry fails ERR_MODULE_NOT_FOUND at fresh-child boot (2026-10-02 rollback class). ' +
         `Expected optional package node-addon-require-builtin-${suffix} to be present in the closure; ` +
-        'rebuild the closure with the runtime-arch node (installer §2a/§2 pins pnpm to it).',
+        'rebuild the closure with the runtime-arch node (installer §1a/§2 pins pnpm to it).',
       )
     } else {
       checks.push({
