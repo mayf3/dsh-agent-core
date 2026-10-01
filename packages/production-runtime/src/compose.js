@@ -558,6 +558,11 @@ export async function composeProductionRuntime(options = {}) {
     history,
     tickMs,
     concurrency,
+    // C11-R1 trusted late-outcome self-heal: the engine consults the SAME
+    // published resolveCallerCorrelation surface the self-ops consume, so an
+    // exact trusted late business outcome settles its own occurrence through
+    // the accepted V3/C-039 paths instead of waiting for a human prompt.
+    reconciliation: { resolveCallerCorrelation: (coordinates) => router.resolveCallerCorrelation(coordinates) },
     log: {
       info: (...a) => log.log(...a),
       warn: (...a) => log.warn(...a),
