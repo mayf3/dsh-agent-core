@@ -1,0 +1,28 @@
+# RED/GREEN LIVE EVIDENCE — CLOSURE_RESOLUTION_GATE_V1 + FRESH_CHILD_BOOT_CANARY_V1 (2026-10-02)
+Lane: PRODUCT #414 packaging repair after the 2026-10-02 availability rollback. All runs disposable /tmp candidates; production untouched (read-only inspection only).
+
+## Fixture construction (both from the SAME production harness source /Users/yanfenma/workspace/github/deepseek-harness @ 514ab7b0, clean, installer §2 excludes)
+- RED  = pnpm install under the INVOKING-HOST node (/opt/homebrew/bin/node, arm64)  — the pre-fix rule
+- GREEN= pnpm install under the RUNTIME node (/usr/local/Cellar/node/25.6.1_1/bin/node, x64) — the fixed rule (branch HEAD)
+- Both materialize node-runtime from the same Cellar anchor (x64) and rsync the live app closure copy (read-only).
+- Deployed runtime: /usr/local/libexec/agent-core/node-runtime/bin/node = Mach-O x86_64, process.arch=x64, modules=141.
+
+## GATE — RED (arm64-host closure under x64 runtime)
+| PASS  CLOSURE_SHAPE  /tmp/b7-red-candidate/harness/vendor/loader/lib/index.js
+| FAIL  NATIVE_BINDING  cannot acquire node-addon-require-builtin from vendor/loader: No usable native binding found for node-addon-require-builtin-darwin-x64 (auto) — loader internal import disabled → raw import() fallback → every plugin entry ERR_MODULE_NOT_FOUND at fresh-child boot (2026-10-02 rollback class).
+| PASS  CENSUS:harness/vendor/loader  2 entries alive and name-consistent
+| PASS  CENSUS:harness/apps/cli  71 entries alive and name-consistent
+| PASS  RESOLVE  @deepseek-ai/cordis-plugin-timer -> /private/tmp/b7-red-candidate/harness/vendor/timer
+| PASS  RESOLVE  @deepseek-ai/cordis -> /private/tmp/b7-red-candidate/harness/vendor/cordis
+| CLOSURE_RESOLUTION_GATE FAIL (runtime darwin-x64, expected suffix darwin-x64)
+(exit non-zero — expected)
+
+## GATE — GREEN (runtime-node closure under x64 runtime)
+| PASS  CLOSURE_SHAPE  /tmp/b7-green-candidate/harness/vendor/loader/lib/index.js
+| PASS  NATIVE_BINDING  suffix=darwin-x64 source=optional-package package=node-addon-require-builtin-darwin-x64 backend=napi abi=napi-v9
+| PASS  CENSUS:harness/vendor/loader  2 entries alive and name-consistent
+| PASS  CENSUS:harness/apps/cli  71 entries alive and name-consistent
+| PASS  RESOLVE  @deepseek-ai/cordis-plugin-timer -> /private/tmp/b7-green-candidate/harness/vendor/timer
+| PASS  RESOLVE  @deepseek-ai/cordis -> /private/tmp/b7-green-candidate/harness/vendor/cordis
+| CLOSURE_RESOLUTION_GATE PASS (runtime darwin-x64, expected suffix darwin-x64)
+(exit 0)

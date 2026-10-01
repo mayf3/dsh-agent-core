@@ -480,6 +480,31 @@ fi
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
 
+# ---- 1a. resolve the runtime node ONCE (single arch authority) -------------
+# The Node runtime this install materializes (§2b) is whatever
+# /usr/local/bin/node resolves to in the Cellar. The harness closure MUST be
+# BUILT by that same binary: pnpm selects platform-optional native packages
+# (node-addon-require-builtin-darwin-<arch> and every package following the
+# same prebuilt-optional-dependency convention) from the arch of the process
+# IT runs under — not from the tree being installed. Building the closure
+# under the invoking shell's node (e.g. an arm64 dev host) while the runtime
+# is x64 ships a closure whose native binding cannot load: the loader's
+# internal-module acquisition fails, Tree.import falls back to raw import()
+# from vendor/loader/lib/index.js, and EVERY plugin entry fails
+# ERR_MODULE_NOT_FOUND at fresh-child boot (2026-10-02 availability rollback,
+# Product #414). Pin the arch anchor here; §1b/§2/§2b all consume it.
+NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
+case "$NODE_LINK_TARGET" in
+  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
+  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
+esac
+NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
+NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
+[ -x "$NODE_CELLAR_BIN" ] || { echo "ERROR: /usr/local/bin/node does not resolve to an executable Cellar node: $NODE_CELLAR_BIN" >&2; exit 2; }
+RUNTIME_ARCH="$("$NODE_CELLAR_BIN" -p process.arch)"
+RUNTIME_NODE_VERSION="$("$NODE_CELLAR_BIN" --version)"
+echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
+
 # ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
 # The harness closure (1.5G source + offline pnpm install) and the Node
 # runtime are DEPENDENCIES of the code under test, not the code under test
@@ -502,10 +527,11 @@ if [ -n "${BAK:-}" ]; then
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
   if [ -x "$BAK/node-runtime/bin/node" ] \
-     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$(node --version)" ]; then
+     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$RUNTIME_NODE_VERSION" ] \
+     && [ "$("$BAK/node-runtime/bin/node" -p process.arch 2>/dev/null)" = "$RUNTIME_ARCH" ]; then
     mv "$BAK/node-runtime" "$TRUSTED_ROOT/node-runtime"
     REUSE_NODE=1
-    echo "  node-runtime REUSED from $BAK (same node version $(node --version))"
+    echo "  node-runtime REUSED from $BAK (same node version $RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
   fi
 fi
 
@@ -517,11 +543,14 @@ tar -C "$HARNESS_SRC" -cf - \
   --exclude='.turbo' --exclude='dist' --exclude='lib/*.tsbuildinfo' \
   . | tar -C harness -xf -
 
-echo "== pnpm install (offline, frozen, copy-import) -> harness/node_modules"
+echo "== pnpm install (offline, frozen, copy-import, runtime node $RUNTIME_NODE_VERSION arch $RUNTIME_ARCH) -> harness/node_modules"
 cd harness
 # copy-import => every file is a REAL copy owned by the install user; no
 # hardlink can point back into the 502-owned pnpm store.
-/usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
+# Executed under the runtime node anchor (§1a): platform-optional native
+# packages must be selected for the arch that will EXECUTE this closure,
+# never the invoking shell's arch (2026-10-02 rollback root cause).
+"$NODE_CELLAR_BIN" /usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
   --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
   >/tmp/trusted-cp-pnpm-install.log 2>&1 || {
     echo "ERROR: pnpm install failed; log tail:" >&2
@@ -539,13 +568,6 @@ fi
 # /usr/local/bin, the Cellar, or /Users/yanfenma.
 echo "== copying Node runtime -> node-runtime/"
 if [ "$REUSE_NODE" != "1" ]; then
-NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
-case "$NODE_LINK_TARGET" in
-  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
-  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
-esac
-NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
-NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 mkdir -p node-runtime
 cp -RL "$NODE_VERSION_DIR"/. node-runtime/
 fi
@@ -577,6 +599,26 @@ if [ "$REUSE_NODE" = "1" ]; then
 else
   echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
 fi
+
+# ---- 2c. closure-resolution gate (fail-closed) ------------------------------
+# Proves, under the EXACT trusted node, the two invariants fresh child boots
+# depend on (2026-10-02 availability rollback, Product #414):
+#   1. the loader's native internal-module binding acquires and reports the
+#      runtime's own platform suffix (without it Tree.import falls back to
+#      raw import() from vendor/loader/lib/index.js and EVERY plugin entry
+#      fails ERR_MODULE_NOT_FOUND at fresh-child boot);
+#   2. every @deepseek-ai/* package linked into the closure's resolution
+#      surfaces (vendor/loader peers + apps/cli) is alive and name-consistent.
+# Covers BOTH a freshly-built and a REUSED harness closure. Failure aborts
+# BEFORE the app closure/cutover — never deploy a tree whose fresh children
+# would die at plugin-tree boot. The end-to-end proof is the fresh-child
+# boot canary (executor STAGE 1 gate): scripts/lib/trusted-cp-fresh-child-boot-canary.mjs.
+echo "== closure-resolution gate (native binding + apps/cli census) under trusted node ($RUNTIME_ARCH)"
+"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-closure-resolution-gate.mjs" \
+  --trusted-root "$TRUSTED_ROOT" || {
+    echo "ERROR: closure-resolution gate FAILED — harness closure cannot serve fresh child boots on this runtime ($RUNTIME_ARCH). NOT cutover-ready." >&2
+    exit 2
+  }
 
 # ---- 3. app closure (Agent Core runtime surface) ---------------------------
 echo "== copying Agent Core closure -> app/"
