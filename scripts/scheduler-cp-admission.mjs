@@ -63,6 +63,16 @@ const CTX = MODE === 'selftest'
   : {
       liveRoot: '/usr/local/libexec/agent-core/app',
       storePath: '/Users/authsvc/.agent-core/scheduler/jobs.json',
+      // C11-R3 (Product #426): the planned-restart drain gate census paths —
+      // the durable turn-recovery store + the scheduler jobs store. Ordinary
+      // restarts with in-flight Router turns / admitted occurrences REFUSE
+      // before the runtime is stopped; AGENT_CORE_RESTART_DRAIN_WINDOW_MS
+      // bounds the drain wait (default 60s). Emergency restarts go through
+      // the rollback lane and receipt their boundary explicitly.
+      turnRecoveryStore: '/Users/authsvc/.agent-core/control/turn-recovery-v3.json',
+      restartDrainWindowMs: Number.isFinite(Number.parseInt(process.env.AGENT_CORE_RESTART_DRAIN_WINDOW_MS ?? '', 10))
+        && Number.parseInt(process.env.AGENT_CORE_RESTART_DRAIN_WINDOW_MS, 10) > 0
+        ? Number.parseInt(process.env.AGENT_CORE_RESTART_DRAIN_WINDOW_MS, 10) : 60_000,
       artifacts: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1/generations',
       artifactsDir: '/var/db/agent-core/deployments/SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1',
       controlBoundary: '/var/db',
@@ -286,7 +296,11 @@ function brokerBootRehearsal() {
 
 function runtimeRestart() {
   const receiptPath = join(CTX.artifactsDir, 'runtime-install-receipt.json'); const runtimeCtx = { ...CTX, runtimePriorReceipt: existsSync(receiptPath) ? readControlReceipt('runtime-install-receipt.json') : null,
-    runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt) }
+    runtimeReceipt: (receipt) => writeControlReceipt('runtime-install-receipt.json', receipt),
+    // C11-R3 (Product #426): the drain gate gets its OWN receipt slot — the
+    // single-slot install receipt must keep carrying only INSTALLING/INSTALLED
+    // generations (the rollback lane and the retry preimage check read it).
+    runtimeDrainReceipt: (receipt) => writeControlReceipt('runtime-drain-receipt.json', receipt) }
   return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
 // B3: deployment phases (operator generation, watchdog install, routing,

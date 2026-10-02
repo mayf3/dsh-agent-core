@@ -71,6 +71,7 @@ import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
+import { appendRestartBoundaryReceipt, collectRuntimeRestartCensus } from './restart-boundary.js'
 import { loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
@@ -598,14 +599,46 @@ export async function composeProductionRuntime(options = {}) {
     workflowExecution,
     writeEvidence,
     start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
-    stop: async () => {
-      // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
-      // (in-flight poll finishes, no further page) BEFORE the scheduler and
-      // the owned contexts (Router processes) are torn down — a late poll can
-      // then never deliver into a disposed Router nor outlive the result.
-      await workflowExecution.stop()
-      await scheduler.stop()
-      await ctx.disposeAll()
+    stop: async (signal) => {
+      // C11-R3 (Product #426 A4): while this (old-epoch) process is still
+      // observable, persist the exact restart-boundary receipt — quiesce_begin
+      // before the drain (previous epoch + lifecycle slots + unresolved
+      // handles + in-flight occurrences), quiesce_end after the EXISTING
+      // controlled shutdown settled what it could. Evidence only: the receipt
+      // never writes the recovery store and never stamps exit evidence.
+      const writeBoundary = (phase) => {
+        try {
+          appendRestartBoundaryReceipt({
+            boundaryLog: layout.restartBoundaryLog,
+            entry: {
+              kind: 'restart_boundary',
+              phase,
+              pid: process.pid,
+              ...(signal === undefined ? {} : { signal: String(signal) }),
+              census: collectRuntimeRestartCensus({
+                turnRecoveryStore: layout.turnRecoveryStore,
+                jobsStore: layout.jobsStore,
+                router,
+                agentIds: definition.listAgents().map((agent) => agent.id),
+              }),
+            },
+          })
+        } catch (error) {
+          writeEvidence({ kind: 'restart_boundary_error', phase, error: String(error?.message ?? error) })
+        }
+      }
+      writeBoundary('quiesce_begin')
+      try {
+        // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
+        // (in-flight poll finishes, no further page) BEFORE the scheduler and
+        // the owned contexts (Router processes) are torn down — a late poll can
+        // then never deliver into a disposed Router nor outlive the result.
+        await workflowExecution.stop()
+        await scheduler.stop()
+        await ctx.disposeAll()
+      } finally {
+        writeBoundary('quiesce_end')
+      }
     },
   }
 }
