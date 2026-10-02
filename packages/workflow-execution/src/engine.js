@@ -195,29 +195,13 @@ export function createWorkflowExecutionEngine({
    *
    * CTR-SRE-004 (r2, the quiescence gate): a generation N+1 re-plan is
    * admitted ONLY when the superseded attempt's execution is provably no
-   * longer an active unknown — the read-only turn-state lookup must not
-   * answer `pending` (C-013: SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN
+   * longer an active unknown — the read-only lookup must positively prove
+   * quiescence (C-013: SAME_AGENTPROCESS_NEW_TURN_ADMISSION=FORBIDDEN
    * while unresolved; C-015/C-016: only exact termination evidence ends an
-   * unknown). Still-pending ⇒ defer WITHOUT minting anything: the visit keeps
+   * unknown). Unproven quiescence ⇒ defer WITHOUT minting: the visit keeps
    * its restored re-entry eligibility and the sweep re-checks next poll.
    */
   async function admitDueIntent(rawIntent) {
-    const previous = ledger.get(rawIntent.nodeVisitId)
-    if (previous !== undefined && previous.state !== 'ACTIVE' && previous.judgment === STALE_NO_PROGRESS_JUDGMENT) {
-      const turnState = queryTurnState(previous)
-      if (turnState === 'pending') {
-        log.warn?.(`workflow-execution: re-entry deferred for ${previous.nodeVisitId} — superseded execution still unresolved (fence stands; C-013); rechecked next sweep`)
-        return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
-      }
-      // CTR-WEC1-004: the fence now refuses generation N+1 past the attempt
-      // limit — turn the refusal into the one-time escalation.
-      if ((previous.generation ?? 1) >= (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)) {
-        if (previous.escalation === undefined) {
-          await escalateAttemptLimit({ attempt: previous, reason: 'ATTEMPTS_EXHAUSTED' })
-        }
-        return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: previous.attemptId }
-      }
-    }
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -278,12 +262,15 @@ export function createWorkflowExecutionEngine({
           reason: `engine_error:${error?.code ?? error?.name ?? 'Error'}:${String(error?.message ?? error).slice(0, 160)}`,
         }
       }
-    })
+    }, (previous) => ['settled', 'evicted', 'restart_lost', 'never_existed'].includes(queryTurnState(previous)))
     if (!attemptResult.created) {
+      if (attemptResult.cause === 'deferred_quiescence') {
+        log.warn?.(`workflow-execution: re-entry deferred for ${attemptResult.attempt.nodeVisitId} — execution quiescence unproven (fence stands; C-013); rechecked next sweep`)
+        return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
+      }
       if (attemptResult.cause === 'attempt_limit_reached') {
-        // CTR-WEC1-004: the fence refused a past-limit mint (the engine-side
-        // pre-check missed it — e.g. a concurrent settle landed between the
-        // pre-check and the locked fence). Backstop: escalate once and leave.
+        // CTR-WEC1-004: the fresh locked fence refused a past-limit mint.
+        // Escalate once from that exact predecessor and leave.
         if (attemptResult.attempt.escalation === undefined) {
           await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
         }
@@ -431,8 +418,8 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: reconcile error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // CTR-SRE-002 second pass: terminal NEEDS_REVIEW attempts with delivered
-    // evidence (run_ended_no_submission / run_outcome_unknown / …). The
+    // CTR-SRE-002 second pass: terminal run_ended_no_submission attempts with
+    // delivered evidence; UNKNOWN stays ineligible (CTR-WEC1-004). The
     // review existed to answer "did the business commit?" — past the stale
     // threshold, the probe's positive NO (visit still current, version
     // unchanged) supersedes it. ACTIVE candidates from this enumeration were
