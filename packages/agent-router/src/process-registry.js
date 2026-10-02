@@ -30,12 +30,15 @@ import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
 import { convergeStartedStartup, disposeProcessSlots, failNoChildStartup, reapExitedSlot,
   settleStartupEntry } from './process-registry-startup.js'
-import { FIXED_ADMIN_CANARY_AGENT, fixedAdminBindingFromRoot } from '../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
-function assertRecoveryAdmission(store, agentId, token) {
+function assertRecoveryAdmission(store, agentId) {
   store.assertBusinessAdmissionReady?.()
-  const fence = typeof store.spawnFenceForAgent === 'function'
-    ? store.spawnFenceForAgent(agentId, token) : store.activeFenceForAgent?.(agentId)
+  // New-generation spawn admission consults the abandonment-aware blocker
+  // projection (it stops treating admin-abandoned records as a fence while
+  // the records stay fenced/unknown); the raw active-fence query is the
+  // fallback for stores without the projection.
+  const fence = typeof store.admissionBlockerForAgent === 'function'
+    ? store.admissionBlockerForAgent(agentId) : store.activeFenceForAgent?.(agentId)
   if (fence) throw Object.assign(fencedRejection(fence.handle), store.recoveryDiagnostic?.(fence.handle) ?? {})
 }
 
@@ -56,7 +59,6 @@ function restoreRecoveryFences(store) {
 export function createProcessRegistry({
   log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,
   processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,
-  fixedAdminRootContext = undefined,
 }) {
   /** agentId -> lifecycle slot (one live owner per agent). */
   const lifecycleSlots = new Map()
@@ -65,9 +67,6 @@ export function createProcessRegistry({
   /** Bounded stale-callback audit (old generation late error/exit). */
   const staleSlotAudits = []
   let disposing = false
-  const fixedAdminToken = Symbol('owned root canary startup')
-  let fixedAdminStartupClaimed = false
-  if (fixedAdminRootContext !== undefined) fixedAdminBindingFromRoot(fixedAdminRootContext,1)
 
   restoreRecoveryFences(reconciliationStore)
 
@@ -201,13 +200,8 @@ export function createProcessRegistry({
    * @param {string} agentId
    * @throws {Error} code `AGENT_NOT_FOUND` (unknown) or `AGENT_DISABLED`.
    */
-  function assertRunnable(agentId, token) {
-    if (fixedAdminRootContext !== undefined && agentId === FIXED_ADMIN_CANARY_AGENT
-        && token !== fixedAdminToken) {
-      throw Object.assign(new Error('fixed canary Agent reserved for root qualification'),
-        { code: 'FIXED_ADMIN_CANARY_PRIVATE_ONLY' })
-    }
-    assertRecoveryAdmission(reconciliationStore, agentId, token)
+  function assertRunnable(agentId) {
+    assertRecoveryAdmission(reconciliationStore, agentId)
     const defined = agentDefinition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`agent-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
@@ -221,23 +215,19 @@ export function createProcessRegistry({
    * EMPTY wins exactly one CAS(EMPTY -> STARTUP) before any async work.
    * Only READY processes are ever returned (registry exposes READY only).
    */
-  function ensureRunning(agentId, token) {
+  function ensureRunning(agentId) {
     if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
     // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous
     // and precedes every asynchronous bootstrap step, including workspace
     // seeding. Returning the entry's exact resultPromise (rather than an
     // async wrapper) makes the whole bootstrap a true single flight.
     try {
-      assertRecoveryAdmission(reconciliationStore, agentId, token)
-      assertRunnable(agentId, token)
+      assertRecoveryAdmission(reconciliationStore, agentId)
+      assertRunnable(agentId)
     } catch (error) {
       return Promise.reject(error)
     }
     const initial = lifecycleSlots.get(agentId)
-    if (token === fixedAdminToken && initial !== undefined) {
-      return Promise.reject(Object.assign(new Error('fixed canary child already exists'),
-        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))
-    }
     if (initial?.state === 'READY') {
       if (initial.processRef?.exit === undefined) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
@@ -251,19 +241,8 @@ export function createProcessRegistry({
       return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
     const entry = installStartup(agentId)
-    if (token === fixedAdminToken) entry.fixedAdminRootContext = fixedAdminRootContext
     void bootstrapStartup(agentId, entry)
     return entry.resultPromise
-  }
-
-  /** Closure held only by the authenticated startup listener, not Router service. */
-  function ensureFixedAdminProcess() {
-    if (fixedAdminRootContext === undefined || fixedAdminStartupClaimed) {
-      return Promise.reject(Object.assign(new Error('fixed canary startup unavailable'),
-        { code: 'FIXED_ADMIN_CANARY_NO_REPLAY' }))
-    }
-    fixedAdminStartupClaimed = true
-    return ensureRunning(FIXED_ADMIN_CANARY_AGENT, fixedAdminToken)
   }
 
   async function bootstrapStartup(agentId, entry) {
@@ -364,9 +343,6 @@ export function createProcessRegistry({
         // resolved deadline config (immutable for this process), the shared
         // Router reconciliation store and the identity-CAS slot integration.
         processGeneration: entry.generation,
-        ...(entry.fixedAdminRootContext === undefined ? {} : {
-          fixedAdminQualification: fixedAdminBindingFromRoot(entry.fixedAdminRootContext, entry.generation),
-        }),
         deadlines: deadlineConfig.perAgent(agentId),
         reconciliationStore,
         registryIntegration,
@@ -481,7 +457,6 @@ export function createProcessRegistry({
   return {
     lifecycleSlots,
     ensureRunning,
-    ensureFixedAdminProcess,
     ensureRunningForRoute: routeGate.ensureRunningForRoute,
     findOwningProcess,
     registrySnapshot,
