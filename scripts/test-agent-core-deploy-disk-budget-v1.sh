@@ -15,7 +15,11 @@
 # assertions instead of by allocating real disk.
 #
 # Frozen gate semantics under test:
-#   BUDGET_FLOOR        = max(60 GiB, 10% of the Data volume)   [env-seam overridable]
+#   BUDGET_FLOOR        = FIXED 50 GiB (53687091200) after worst-case
+#                         reservation — Data-volume size does NOT change the
+#                         floor (Owner policy 2026-10-02; supersedes the
+#                         earlier max(60 GiB, 10% Data volume) rule; the only
+#                         floor env seam is AGENT_CORE_BUDGET_FLOOR_MIN_BYTES)
 #   SIZE_CLASS          = 20 GiB (backups at/above this class count for the cap)
 #   ALLOCATION MODEL    = worst-case physical (logical byte sum); clone/sparse
 #                         discounts NOT taken (CLONE_PROOF = NONE)
@@ -44,7 +48,8 @@ ok()   { echo "  PASS: $1"; PASS=$((PASS+1)); }
 bad()  { echo "  FAIL: $1" >&2; FAIL=$((FAIL+1)); }
 
 T="$(mktemp -d /tmp/disk-budget-test.XXXXXX)"
-trap 'rm -rf "$T"' EXIT
+A9_MNT=""
+trap 'hdiutil detach "$A9_MNT" -quiet >/dev/null 2>&1; rm -rf "$T"' EXIT
 LX="$T/liblx"
 ROOT="$LX/agent-core"
 RECEIPT="$LX/agent-core-deploy-budget-receipt.json"
@@ -52,8 +57,26 @@ RECEIPT="$LX/agent-core-deploy-budget-receipt.json"
 # JSON reader (macOS python3)
 jq_get() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],"__MISSING__"))' "$1" "$2" 2>/dev/null; }
 
-# low-floor seams so ADMIT paths never depend on the host's real free disk
-SEAM_ADMIT=(AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=1048576 AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=0)
+# low-floor seams so ADMIT paths never depend on the host's real free disk.
+# (The volume-percent seam is gone: the floor is FIXED and volume-independent.)
+SEAM_ADMIT=(AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=1048576)
+
+GiB=1073741824
+vol_free_now() { df -kP "$1" | awk 'NR==2{printf "%.0f", $4*1024}'; }
+# build ROOT so that projected free_after lands ~target bytes: the sparse file
+# is sized from a LIVE measurement (calibration receipt overhead + current df),
+# so refusal/admit margins stay ~1 GiB wide — real df drift cannot flip them.
+build_fixture_for_free_after() { # $1 = target free_after bytes
+  new_live_tree
+  env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=1 "$OPS" "$ROOT" \
+    --check-budget "$ROOT.bak-20991231-235940" >/dev/null 2>&1
+  local overhead target
+  overhead="$(jq_get "$RECEIPT" LIVE_TREE_BYTES)"
+  target=$(( $(vol_free_now "$LX") - $1 - overhead ))
+  [ "$target" -lt 0 ] && target=0
+  rm -f "$ROOT/app/sparse.bin"
+  [ "$target" -gt 0 ] && mkfile -n "$target" "$ROOT/app/sparse.bin"
+}
 
 echo "== fixture: $T =="
 echo "== helper present + syntax =="
@@ -65,12 +88,12 @@ bash -n "$DEPLOY" && ok "deploy script shell-syntax valid" || bad "deploy syntax
 # static: frozen defaults + new commands exist in the helper source
 # ---------------------------------------------------------------------------
 echo "== static: frozen defaults (no env) in helper source =="
-grep -q 'BUDGET_FLOOR_MIN_BYTES_DEFAULT=64424509440' "$OPS" \
-  && ok "floor min default 60 GiB (64424509440) frozen in source" \
-  || bad "floor min default 60 GiB not found in helper source"
-grep -q 'BUDGET_FLOOR_VOLUME_PERCENT_DEFAULT=10' "$OPS" \
-  && ok "floor volume percent default 10 frozen in source" \
-  || bad "floor volume percent default 10 not found"
+grep -q 'BUDGET_FLOOR_MIN_BYTES_DEFAULT=53687091200' "$OPS" \
+  && ok "floor default FIXED 50 GiB (53687091200) frozen in source" \
+  || bad "floor default FIXED 50 GiB (53687091200) not found in helper source"
+grep -q 'BUDGET_FLOOR_VOLUME_PERCENT' "$OPS" \
+  && bad "superseded volume-percent floor term STILL PRESENT in helper source (floor must be volume-independent)" \
+  || ok "superseded volume-percent floor term absent from helper (Data-volume size cannot change the floor)"
 grep -q 'BUDGET_LARGE_CLASS_BYTES_DEFAULT=21474836480' "$OPS" \
   && ok "large-backup class default 20 GiB (21474836480) frozen in source" \
   || bad "large-backup class default 20 GiB not found"
@@ -136,44 +159,79 @@ assert len(d["retained_backups_after_projected"]) == len(d["retained_backups_bef
 PY
 
 # ===========================================================================
-echo "== G2: floor formula = max(60GiB, 10% Data volume); refusal BEFORE mutation =="
-# real defaults, but percent inflated so the floor provably exceeds real free
-# disk on ANY host (100% of volume > avail): refusal is the projected-space
-# refusal path with the DEFAULT floor-min still recorded.
-new_live_tree
-out="$(env AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=100 "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235958" 2>&1)"; rc=$?
-[ "$rc" -ne 0 ] && ok "G2 floor violated -> nonzero exit (rc=$rc)" || bad "G2 expected refusal, got exit 0"
+echo "== G2: FIXED 50 GiB floor — 49 GiB projected free refuses (default env) =="
+build_fixture_for_free_after $(( 49 * GiB ))
+out="$("$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235958" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && ok "G2 49GiB-projected-free -> refusal rc=$rc (default floor, no env)" || bad "G2 expected refusal, got exit 0"
 v="$(jq_get "$RECEIPT" verdict)"; [ "$v" = "REFUSED_DISK_BUDGET" ] \
   && ok "G2 verdict REFUSED_DISK_BUDGET" || bad "G2 verdict=$v (expected REFUSED_DISK_BUDGET)"
 [ -e "$ROOT.bak-20991231-235958" ] \
   && bad "G2 refusal happened AFTER mutation (backup exists)" \
   || ok "G2 refusal BEFORE any mutation (no backup created; live tree intact)"
 [ -f "$ROOT/.installed" ] && ok "G2 live tree untouched on refusal" || bad "G2 live tree disturbed"
-python3 - "$RECEIPT" <<'PY' && ok "G2 DISK_FREE_AFTER_RESERVATION == DISK_FREE_BEFORE - reservation(<0 floor rule)" || bad "G2 reservation arithmetic inconsistent"
+python3 - "$RECEIPT" <<'PY' && ok "G2 receipt: floor==50GiB, free_after<50GiB near 49GiB target, arithmetic consistent" || bad "G2 receipt arithmetic/floor wrong"
 import json,sys
 d=json.load(open(sys.argv[1]))
-assert d["DISK_FREE_AFTER_RESERVATION"] == d["DISK_FREE_BEFORE"] - (d["ESTIMATED_PEAK_BYTES"] - (d["DATA_VOLUME_TOTAL_BYTES"] - d["DISK_FREE_BEFORE"])), d
+assert d["DISK_BUDGET_FLOOR_BYTES"] == 53687091200, d["DISK_BUDGET_FLOOR_BYTES"]
+assert d["DATA_VOLUME_TOTAL_BYTES"] > 0, d  # volume still RECORDED, but not part of the floor
+assert d["DISK_FREE_AFTER_RESERVATION"] == d["DISK_FREE_BEFORE"] - d["LIVE_TREE_BYTES"], d
 assert d["DISK_FREE_AFTER_RESERVATION"] < d["DISK_BUDGET_FLOOR_BYTES"], d
+assert abs(d["DISK_FREE_AFTER_RESERVATION"] - 49*2**30) < 2*2**30, d  # fixture landed near the 49GiB target
 PY
 
-echo "== G2b: floor is max() of the two terms =="
-# percent term larger: floor == total*pct/100
-new_live_tree
-env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=1 AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=50 \
-  "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235957" >/dev/null 2>&1
-f="$(jq_get "$RECEIPT" DISK_BUDGET_FLOOR_BYTES)"; tot="$(jq_get "$RECEIPT" DATA_VOLUME_TOTAL_BYTES)"
-[ "$f" = "$(( tot * 50 / 100 ))" ] && ok "G2b floor == total*50% when that term dominates" \
-  || bad "G2b floor=$f expected $(( tot * 50 / 100 ))"
-# min term larger: floor == min override
-env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=999999999999 AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=0 \
-  "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235956" >/dev/null 2>&1
+echo "== G2a: >50 GiB projected free admits at the default floor (volume-independent) =="
+build_fixture_for_free_after $(( 51 * GiB ))
+out="$("$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235957" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && ok "G2a 51GiB-projected-free -> ADMITTED (default floor, no env)" || bad "G2a expected admit, rc=$rc: $out"
+python3 - "$RECEIPT" <<'PY' && ok "G2a receipt: floor==50GiB, free_after>50GiB near 51GiB target" || bad "G2a receipt wrong"
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d["verdict"] == "ADMITTED", d["verdict"]
+assert d["DISK_BUDGET_FLOOR_BYTES"] == 53687091200, d["DISK_BUDGET_FLOOR_BYTES"]
+assert d["DISK_FREE_AFTER_RESERVATION"] > d["DISK_BUDGET_FLOOR_BYTES"], d
+assert abs(d["DISK_FREE_AFTER_RESERVATION"] - 51*2**30) < 2*2**30, d
+PY
+
+echo "== G2b: floor is the FIXED term — boundary equality admits; only the MIN seam moves it =="
+# Boundary (free_after == floor) on an ISOLATED fixed-size sparse image: a
+# freshly mounted volume has no background writers, so the two df instants
+# (seam computation vs the gate's own read) cannot drift apart. On the shared
+# Data volume that race flipped a true equality into a refusal.
+IMG="$T/a9floor.dmg"; A9_MNT="$T/a9floor-mnt"
+IROOT="$A9_MNT/agent-core"; IRECEIPT="$A9_MNT/agent-core-deploy-budget-receipt.json"
+if hdiutil create -size 2g -fs JHFS+ -type SPARSE -volname a9floor "$IMG" -quiet >/dev/null 2>&1 \
+   && mkdir -p "$A9_MNT" "$IROOT/config" "$IROOT/app" \
+   && hdiutil attach -nobrowse -mountpoint "$A9_MNT" "$IMG.sparseimage" -quiet >/dev/null 2>&1; then
+  echo boundary > "$IROOT/.installed"; echo '{}' > "$IROOT/config/agents.json"
+  mkfile -n 268435456 "$IROOT/app/sparse.bin"
+  # calibration: L := gate-measured live tree bytes (floor=1 seam -> ADMIT)
+  env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=1 "$OPS" "$IROOT" --check-budget NONE >/dev/null 2>&1
+  L="$(jq_get "$IRECEIPT" LIVE_TREE_BYTES)"
+  # floor := EXACTLY the projected free of the isolated volume. The gate's own
+  # df runs BEFORE any receipt write inside a run, so this equality holds at
+  # the boundary run's df instant on a quiescent volume.
+  FLOOR_SEAM=$(( $(df -kP "$A9_MNT" | awk 'NR==2{printf "%.0f", $4*1024}') - L ))
+  out="$(env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES="$FLOOR_SEAM" "$OPS" "$IROOT" --check-budget NONE 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && ok "G2b free_after == floor -> ADMITTED (>= boundary)" || bad "G2b boundary equality refused rc=$rc: $out"
+  python3 - "$IRECEIPT" "$FLOOR_SEAM" <<'PY' && ok "G2b receipt: floor == free_after at the equality boundary, verdict ADMITTED" || bad "G2b receipt boundary mismatch"
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d["verdict"] == "ADMITTED", d["verdict"]
+assert d["DISK_BUDGET_FLOOR_BYTES"] == int(sys.argv[2]), (d["DISK_BUDGET_FLOOR_BYTES"], sys.argv[2])
+assert d["DISK_FREE_AFTER_RESERVATION"] == d["DISK_BUDGET_FLOOR_BYTES"], d
+PY
+  hdiutil detach "$A9_MNT" -quiet >/dev/null 2>&1; A9_MNT=""
+else
+  bad "G2b boundary fixture (sparse image) unavailable — the equality boundary is unproven"
+fi
+# the only floor input is the MIN seam (no max() of a volume term anymore)
+env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=999999999999 "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235955" >/dev/null 2>&1
 f="$(jq_get "$RECEIPT" DISK_BUDGET_FLOOR_BYTES)"
-[ "$f" = "999999999999" ] && ok "G2b floor == min-term when that term dominates (max semantics)" \
+[ "$f" = "999999999999" ] && ok "G2b floor == MIN seam verbatim (fixed-floor semantics)" \
   || bad "G2b floor=$f expected 999999999999"
 
 echo "== G2c: the disk-budget floor is HARD — pin exception does NOT override it =="
-new_live_tree
-out="$(env AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=100 "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235950" --pin-exception "Product #430 open pin: floor exception attempted" 2>&1)"; rc=$?
+out="$(env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=999999999999 "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235950" --pin-exception "Product #430 open pin: floor exception attempted" 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && ok "G2c floor violation refuses even WITH pin exception" || bad "G2c pin exception overrode the HARD floor"
 [ "$(jq_get "$RECEIPT" verdict)" = "REFUSED_DISK_BUDGET" ] \
   && ok "G2c verdict stays REFUSED_DISK_BUDGET" \
@@ -415,7 +473,7 @@ d=json.load(open(sys.argv[1]))
 assert d["LIVE_TREE_BYTES"] == 0, d["LIVE_TREE_BYTES"]
 assert len(d["retained_backups_after_projected"]) == len(d["retained_backups_before"]) == 0, d
 PY
-env AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=100 "$OPS" "$ROOT3" --check-budget NONE >/dev/null 2>&1; rc=$?
+env AGENT_CORE_BUDGET_FLOOR_MIN_BYTES=999999999999 "$OPS" "$ROOT3" --check-budget NONE >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && ok "G9 fresh install also floor-guarded (refusal)" || bad "G9 fresh install bypassed the floor"
 
 # ===========================================================================
