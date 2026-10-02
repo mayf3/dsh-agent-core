@@ -457,7 +457,9 @@ echo "  ok: no /Users/yanfenma references in the pack source (pre-mutation gate,
 # JSON receipt <parent>/agent-core-deploy-budget-receipt.json on every attempt:
 #   DISK_FREE_BEFORE / LIVE_TREE_BYTES / ESTIMATED_PEAK_BYTES /
 #   DISK_FREE_AFTER_RESERVATION / retained backups before+after / pin reasons.
-# Floor = max(60 GiB, 10% of the Data volume); allocation = worst-case
+# Floor = FIXED 50 GiB after worst-case reservation (Owner policy 2026-10-02;
+# supersedes the earlier max(60 GiB, 10% of Data volume) rule — the floor no
+# longer depends on Data-volume size); allocation = worst-case
 # physical (logical bytes; CLONE_PROOF = NONE); retention cap = live + max one
 # pinned known-good + max one newest immediate-rollback preimage at/above the
 # 20 GiB class — a third one is refused unless the superseded unpinned ones

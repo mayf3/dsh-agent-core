@@ -87,10 +87,12 @@
 #                              exits 0 ADMIT / 4 REFUSED_DISK_BUDGET /
 #                              5 REFUSED_RETENTION_CAP. Never creates, deletes,
 #                              or renames any backup or tree.
-#       BUDGET_FLOOR            = max(60 GiB, 10% of the Data volume holding
-#                                 ROOT's parent)  [frozen defaults; env seams
-#                                 AGENT_CORE_BUDGET_FLOOR_MIN_BYTES /
-#                                 AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT are
+#       BUDGET_FLOOR            = FIXED 50 GiB (53687091200) after worst-case
+#                                 reservation  [Owner policy 2026-10-02; the
+#                                 earlier max(60 GiB, 10% of the Data volume)
+#                                 rule is SUPERSEDED — the floor no longer
+#                                 depends on Data-volume size; env seam
+#                                 AGENT_CORE_BUDGET_FLOOR_MIN_BYTES is
 #                                 recorded in the receipt when overridden]
 #       ALLOCATION MODEL        = worst-case physical: logical byte sums; NO
 #                                 clone/sparse/compression discount (CLONE_PROOF
@@ -127,8 +129,10 @@ NORMAL_RETENTION=3
 # fixture tests and exotic hosts can adapt; ANY override is recorded verbatim
 # in the budget receipt (floor_source / size_class_source), so a production
 # receipt computed with non-frozen thresholds is loud, not silent.
-BUDGET_FLOOR_MIN_BYTES_DEFAULT=64424509440      # 60 GiB
-BUDGET_FLOOR_VOLUME_PERCENT_DEFAULT=10          # 10% of the Data volume
+# Floor is FIXED (Owner policy 2026-10-02): 50 GiB after worst-case reservation,
+# independent of Data-volume size — the superseded max(60 GiB, 10% volume) term
+# is intentionally GONE (no volume-percent seam exists anymore).
+BUDGET_FLOOR_MIN_BYTES_DEFAULT=53687091200      # 50 GiB — FIXED floor
 BUDGET_LARGE_CLASS_BYTES_DEFAULT=21474836480    # 20 GiB
 
 # guard: every function must run with a strict-ish shell
@@ -497,16 +501,14 @@ budget_census() {
 }
 
 # the effective thresholds + their provenance (defaults vs env override)
-budget_thresholds() { # prints MIN PCT CLASS MIN_SRC PCT_SRC CLASS_SRC
-  local min="${AGENT_CORE_BUDGET_FLOOR_MIN_BYTES:-}" pct="${AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT:-}" cls="${AGENT_CORE_BUDGET_LARGE_CLASS_BYTES:-}"
-  local msrc="defaults" psrc="defaults" csrc="defaults"
+budget_thresholds() { # prints MIN CLASS MIN_SRC CLASS_SRC
+  local min="${AGENT_CORE_BUDGET_FLOOR_MIN_BYTES:-}" cls="${AGENT_CORE_BUDGET_LARGE_CLASS_BYTES:-}"
+  local msrc="defaults" csrc="defaults"
   [ -n "$min" ] && msrc="env-override"
-  [ -n "$pct" ] && psrc="env-override"
   [ -n "$cls" ] && csrc="env-override"
-  printf '%s %s %s %s %s %s\n' \
+  printf '%s %s %s\n' \
     "${min:-$BUDGET_FLOOR_MIN_BYTES_DEFAULT}" \
-    "${pct:-$BUDGET_FLOOR_VOLUME_PERCENT_DEFAULT}" \
-    "${cls:-$BUDGET_LARGE_CLASS_BYTES_DEFAULT}" "$msrc" "$psrc" "$csrc"
+    "${cls:-$BUDGET_LARGE_CLASS_BYTES_DEFAULT}" "$msrc" "$csrc"
 }
 
 # do_check_budget ROOT <projected-new-backup-path|NONE> [--pin-exception <reason>]
@@ -528,14 +530,16 @@ do_check_budget() {
   parent="$(dirname "$root")"
   receipt="$parent/agent-core-deploy-budget-receipt.json"
 
-  read -r min_b pct cls msrc psrc csrc <<<"$(budget_thresholds)"
+  read -r min_b cls msrc csrc <<<"$(budget_thresholds)"
 
   local vol_total=0 vol_free=0
   read -r vol_total vol_free <<<"$(volume_stats "$parent")"
   [ -z "$vol_total" ] && vol_total=0
   [ -z "$vol_free" ] && vol_free=0
-  local floor
-  floor="$(awk -v t="$vol_total" -v m="$min_b" -v p="$pct" 'BEGIN{printf "%.0f", (m > t*p/100) ? m : t*p/100}')"
+  # FIXED floor (Owner policy 2026-10-02): floor == 50 GiB default (MIN seam),
+  # with NO volume-percent term — Data-volume size cannot change the floor.
+  # vol_total is still measured and receipted below as context only.
+  local floor="$min_b"
 
   local live_bytes=0
   [ -d "$root" ] && live_bytes="$(tree_logical_bytes "$root")"
@@ -657,7 +661,7 @@ do_check_budget() {
     printf '  "retention_cap_rule": %s,\n' "$(json_str "live + max 1 pinned known-good + max 1 newest immediate-rollback preimage, counted at/above the size class")"
     printf '  "size_class_bytes": %s,\n' "$cls"
     printf '  "size_class_source": %s,\n' "$(json_str "$csrc")"
-    printf '  "floor_source": %s,\n' "$(json_str "floor_min=$msrc floor_volume_percent=$psrc")"
+    printf '  "floor_source": %s,\n' "$(json_str "floor_min=$msrc rule=fixed-floor-no-volume-term (Owner policy 2026-10-02; supersedes max(60GiB,10% volume))")"
     printf '  "clone_semantics_proof": "NONE (worst-case physical allocation assumed; no clone semantics mechanically proven)",\n'
     printf '  "projected_new_backup_will_be_pinned_first_reliable": %s,\n' "$new_will_pin"
     printf '  "pin_exception_asserted": %s,\n' "$([ -n "$pin_exc" ] && echo true || echo false)"
