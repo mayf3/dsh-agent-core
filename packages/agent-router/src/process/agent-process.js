@@ -33,7 +33,6 @@ import { eventCorrelationMethods } from './event-correlation.js'
 import { turnExecutionMethods } from './turn-execution.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
-import { isFixedAdminQualification } from '../../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
 const sleep = (ms) => new Promise((resolve) => {
   const timer = setTimeout(resolve, ms)
@@ -49,7 +48,6 @@ export class AgentProcess {
     reconciliationStore,
     ingressCorrelationLookup = null,
     registryIntegration = null,
-    fixedAdminQualification = null,
   }) {
     if (typeof profile !== 'string' || profile === '') {
       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
@@ -85,14 +83,6 @@ export class AgentProcess {
       assertPositiveSafeDeadline(field, this.deadlines[field])
     }
     this.store = reconciliationStore ?? new TurnReconciliationStore()
-    if (fixedAdminQualification !== null && (!isFixedAdminQualification(fixedAdminQualification)
-        || fixedAdminQualification.agentId !== agentId
-        || fixedAdminQualification.processGeneration !== processGeneration)) {
-      throw new TypeError('AgentProcess: invalid fixed admin qualification binding')
-    }
-    this.fixedAdminQualification = fixedAdminQualification === null ? null : Object.freeze({ ...fixedAdminQualification })
-    this.fixedAdminCanaryAttempted = false
-    this.fixedAdminEffectAttempted = false
     this.ingressCorrelationLookup = ingressCorrelationLookup
     this.registryIntegration = registryIntegration
 
@@ -197,14 +187,7 @@ export class AgentProcess {
           provider: this.provider,
           model: this.model,
           maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),
-          ...(this.fixedAdminQualification === null ? {} : { fixedAdminQualification: this.fixedAdminQualification }),
         }, undefined, { deadlineMono: initDeadlineMono })
-        if (this.fixedAdminQualification !== null && (initialized?.fixedAdminToolPolicy?.armed !== true
-            || initialized.fixedAdminToolPolicy.startupNonce !== this.fixedAdminQualification.startupNonce)) {
-          throw Object.assign(new Error('fixed admin child tool enforcement not proven before prompt'), {
-            code: 'FIXED_ADMIN_CANARY_CHILD_UNVERIFIED',
-          })
-        }
         if (Array.isArray(initialized?.registeredProviders)
             && !initialized.registeredProviders.includes(this.provider)) {
           if (monotonicNowMs() >= initDeadlineMono) {
@@ -223,10 +206,6 @@ export class AgentProcess {
         this.log.log?.(`[router] agent ${this.agentId} ready pid=${this.pid} (${this.initializeElapsedMs}ms)`)
         return this.initializeElapsedMs
       } catch (error) {
-        if (error?.code === 'FIXED_ADMIN_CANARY_CHILD_UNVERIFIED') {
-          void this.fatal('fixed_admin_child_unverified')
-          throw error
-        }
         if (error?.code === 'AGENT_PROCESS_UNAVAILABLE' || error?.code === 'AGENT_PROCESS_EXITED'
             || error?.code === 'AGENT_PROCESS_INPUT_FROZEN' || error?.code === 'AGENT_PROCESS_PENDING_CAP') {
           // Process-level failure: fatal teardown is already running — the
