@@ -1,6 +1,8 @@
 # W0 RELEASE-SAFETY deploy disk-budget v1 — RUNBOOK (production acceptance packet)
 
-STATUS: PREPARED / WAITING_PROD_AUTH. Every command below is an OPERATOR
+STATUS: PREPARED / AUTHORIZED_STANDING-PENDING-MERGE (Owner policy
+2026-10-02: standing authority applies once the corrected source is merged
+and the exact live preflight is green). Every command below is an OPERATOR
 command for an AUTHORIZED production deploy window. Nothing here has been
 executed. This packet changes NO runtime behavior; it gates the existing
 deploy.
@@ -29,8 +31,10 @@ sudo cat /usr/local/libexec/agent-core-deploy-budget-receipt.json
 ```
 
   - `verdict: REFUSED_DISK_BUDGET` (exit 4): free space after the projected
-    reservation would fall below max(60 GiB, 10% Data volume). HARD — free
-    disk or enlarge the volume; no exception path exists.
+    reservation would fall below the FIXED 50 GiB floor (Owner policy
+    2026-10-02; supersedes max(60 GiB, 10% Data volume) — the floor does not
+    depend on Data-volume size). HARD — free disk or enlarge the volume; no
+    exception path exists.
   - `verdict: REFUSED_RETENTION_CAP` (exit 5): creating this preimage would
     exceed live + 1 pinned known-good + 1 newest immediate-rollback preimage
     (≥20 GiB class). The receipt names the EXACT eligible cleanup paths.
