@@ -1,20 +1,24 @@
 /**
  * @agent-core/development-execution — execution engine
- * (AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1 CTR-DES-002/003/007).
+ * (AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1, superseding the
+ * operational authority of AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1
+ * CTR-DES-002/003/007).
  *
- * System-owned execution state: every transition is appended to the ledger;
- * restarts replay the ledger (status/result never depend on process memory).
- * Failure matrix (CTR-DES-007): success ⇒ SUCCEEDED + candidate receipt;
- * evidenced failure ⇒ FAILED; timeout ⇒ FAILED/failureClass 'timeout';
- * unprovable crash ⇒ OUTCOME_UNKNOWN (never fabricated); cancel ⇒ exactly one
- * CANCELLED; duplicate start with the same (caller, dedupeKey) ⇒ the ORIGINAL
- * execution, never a second one.
+ * AUTHORITY CONVERGENCE (CTR-DEC-001/002, default): the Core development
+ * writer is RETIRED — agent-control is the sole development writer. The
+ * engine defaults to writerAuthorityRetired=true: start/continue/cancel
+ * refuse with `writer_authority_retired`, and the engine NEVER appends to the
+ * ledger (orphan recovery included — Core no longer declares terminal state
+ * for development workers). Ledger replay, status, and result keep serving
+ * recorded history read-only, byte-identical.
  *
- * Continue (CTR-DES-001/003): a midrun continue is durably queued in the
- * ledger and DELIVERED to the backend via its resume capability the moment
- * the current run exits with a captured session; a disposition that can
- * never deliver (terminal exit, cancel, timeout, unresumable owner death)
- * marks it `undelivered` — the ack never stands in for delivery.
+ * Historical engine semantics (retained for the read path and exercised only
+ * via the explicit hermetic-suite opt-out writerAuthorityRetired:false):
+ * every transition is appended to the ledger; restarts replay the ledger;
+ * failure matrix success⇒SUCCEEDED, evidenced failure⇒FAILED, timeout⇒FAILED/
+ * 'timeout', unprovable crash⇒OUTCOME_UNKNOWN, cancel⇒exactly one CANCELLED,
+ * duplicate (caller, dedupeKey)⇒ original execution. Midrun continue is
+ * durably queued and delivered via the backend resume capability.
  *
  * The backend is injected (adapter contract) so hermetic tests use a fake
  * executor while production wires the pinned codex adapter.
@@ -43,16 +47,23 @@ function err(code, message) { return new DevelopmentExecutionError(code, message
  * @param {string} deps.devDir - the surface's own dir
  *   (`<productionRoot>/dev-execution`); ledger, Operator config
  *   (repos.json/backend.json), worktrees, and per-execution data live here.
+ * @param {boolean} [deps.writerAuthorityRetired=true] - AUTHORITY CONVERGENCE
+ *   V1 (CTR-DEC-001): Core is no longer a development writer. Default retired:
+ *   start/continue/cancel refuse with `writer_authority_retired`, and the
+ *   engine never appends to the ledger (orphan recovery included) — status/
+ *   result keep serving recorded history read-only. The ONLY permitted opt-out
+ *   is the legacy hermetic test suite; production wiring must not pass it.
  * @param {object} [deps.backend] - injected adapter (codex adapter in
  *   production; fakes in tests): { name, verify(), run({instruction, worktree,
  *   executionDir, resumeSessionId}) -> {pid, done} } where done resolves
  *   {exitCode, signal, sessionId?, spawnError?, stderrTail?, lastMessage?}.
  */
 export class DevelopmentExecutionEngine {
-  constructor({ devDir, clock = () => Date.now(), backend, timeoutMs = 3_600_000, log = () => {} } = {}) {
+  constructor({ devDir, clock = () => Date.now(), backend, timeoutMs = 3_600_000, log = () => {}, writerAuthorityRetired = true } = {}) {
     if (typeof devDir !== 'string' || devDir === '') throw new TypeError('development-execution: devDir is required')
     this.devDir = devDir
     this.dir = devDir
+    this.writerAuthorityRetired = writerAuthorityRetired !== false
     this.ledgerDir = join(devDir, 'ledger')
     this.worktreesRoot = join(devDir, 'worktrees')
     this.executionsDataRoot = join(devDir, 'executions')
@@ -65,7 +76,12 @@ export class DevelopmentExecutionEngine {
     this.ledger = new ExecutionLedger({ dir: this.ledgerDir, clock })
     this.executions = ExecutionLedger.replay(join(this.ledgerDir, 'executions.jsonl'))
     this.supervised = new Map() // executionId -> {childDone, timer}
-    this.#recoverOrphans()
+    if (!this.writerAuthorityRetired) this.#recoverOrphans()
+  }
+
+  /** CTR-DEC-001: refuse every writer operation before any other effect. */
+  #refuseRetiredWriter(operation) {
+    throw err('writer_authority_retired', `development_execute.${operation} refused: the Core development writer authority is retired — agent-control is the sole development writer (AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1); status/result remain readable`)
   }
 
   #recoverOrphans() {
@@ -121,6 +137,7 @@ export class DevelopmentExecutionEngine {
 
   /** CTR-DES-001 start. Idempotent on (callerAgentId, dedupeKey). */
   async start({ repo, baseSha, task, branch, constraints, dedupeKey }, callerAgentId) {
+    if (this.writerAuthorityRetired) this.#refuseRetiredWriter('start')
     if (typeof callerAgentId !== 'string' || callerAgentId === '') throw err('invalid_arguments', 'caller identity missing')
     if (typeof task !== 'string' || task.trim() === '') throw err('invalid_arguments', 'task is required')
     const verify = this.backend.verify()
@@ -292,6 +309,7 @@ export class DevelopmentExecutionEngine {
 
   /** CTR-DES-001 continue — steer via the backend adapter (resume). */
   async continue({ executionId, instruction }, callerAgentId) {
+    if (this.writerAuthorityRetired) this.#refuseRetiredWriter('continue')
     const execution = this.#execution(executionId)
     if (typeof instruction !== 'string' || instruction.trim() === '') throw err('invalid_arguments', 'instruction is required')
     if (TERMINAL_STATES.includes(execution.state)) throw err('execution_terminal', `execution ${executionId} is ${execution.state}`)
@@ -356,6 +374,7 @@ export class DevelopmentExecutionEngine {
 
   /** CTR-DES-001 cancel — exactly one terminal disposition, idempotent. */
   cancel(executionId) {
+    if (this.writerAuthorityRetired) this.#refuseRetiredWriter('cancel')
     const execution = this.#execution(executionId)
     if (TERMINAL_STATES.includes(execution.state)) {
       return { executionId, state: execution.state, cancelled: false, alreadyTerminal: true }

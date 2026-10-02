@@ -1,14 +1,19 @@
 /**
  * Broker capability: `development_execute`
- * (AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1, CTR-DES-001).
+ * (AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1, superseding
+ * AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1 CTR-DES-001).
  *
  * ONE shared, agent-agnostic local tool with five operations (self_ops
- * precedent): start / status / continue / cancel / result. The backend
- * (Codex today) is invisible here — no CLI names, no argv, no credential
- * paths. Arguments are structurally closed (additionalProperties:false):
- * binaryPath / credentialPath / env / shell are unrepresentable. Execution
- * state lives in the development-execution ledger; the handler map is
- * provided by the control-plane composition (developmentExecutionAccess).
+ * precedent): start / status / continue / cancel / result. Since the
+ * authority convergence, this is a READ-ONLY compatibility surface: the Core
+ * development writer is retired — start/continue/cancel refuse with
+ * `writer_authority_retired` and agent-control is the sole development
+ * writer. The backend (Codex) is invisible here — no CLI names, no argv, no
+ * credential paths. Arguments are structurally closed
+ * (additionalProperties:false): binaryPath / credentialPath / env / shell are
+ * unrepresentable. Execution state lives in the development-execution ledger;
+ * the handler map is provided by the control-plane composition
+ * (developmentExecutionAccess).
  */
 
 const executionIdArg = { type: 'string', description: 'System execution id returned by start.' }
@@ -20,12 +25,13 @@ export const developmentExecuteManifest = {
   requiredScopes: ['development.execute'],
   name: 'Development Execute',
   description:
-    'AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: run a real coding executor on an AUTHORIZED repository inside an isolated worktree. '
-    + 'The backend executor is system-selected; you never name or invoke it. start creates an execution from (repo, baseSha, task); '
-    + 'status/result read the SYSTEM-owned execution state (never trust memory across restarts); cancel terminates exactly once. '
-    + 'The executor may only write inside its worktree; production is unreachable from this surface.',
+    'AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1: the Core development writer authority is RETIRED — '
+    + 'agent-control is the sole development writer (command admission, worktree/session identity, execution, receipts). '
+    + 'start/continue/cancel refuse with writer_authority_retired; status/result keep serving recorded execution '
+    + 'history read-only. The backend executor is system-selected; you never name or invoke it.',
   errors: [
     { code: 'invalid_arguments', description: 'Args failed structural validation.' },
+    { code: 'writer_authority_retired', description: 'The Core development writer authority is retired; agent-control is the sole development writer. status/result remain readable.' },
     { code: 'repo_not_authorized', description: 'The requested repo is not on the development-execution allowlist.' },
     { code: 'base_sha_unknown', description: 'The requested baseSha does not exist in the authorized repo.' },
     { code: 'capacity_exhausted', description: 'The repo already has the maximum number of active development executions (maxWorktrees).' },
@@ -41,7 +47,7 @@ export const developmentExecuteManifest = {
   operations: [
     {
       name: 'start',
-      description: 'Start a development execution: fresh isolated worktree at the exact baseSha, backend executor runs the task.',
+      description: 'RETIRED: refuses with writer_authority_retired — agent-control is the sole development writer.',
       arguments: {
         additionalProperties: false,
         properties: {
@@ -68,7 +74,7 @@ export const developmentExecuteManifest = {
     },
     {
       name: 'continue',
-      description: 'Steer a continuable execution with a follow-up instruction (backend adapter-mediated).',
+      description: 'RETIRED: refuses with writer_authority_retired; recorded execution history stays readable via status/result.',
       arguments: {
         additionalProperties: false,
         properties: {
@@ -81,7 +87,7 @@ export const developmentExecuteManifest = {
     },
     {
       name: 'cancel',
-      description: 'Cancel the execution; exactly one terminal disposition (idempotent).',
+      description: 'RETIRED: refuses with writer_authority_retired; process ownership belongs to the writer authority (agent-control).',
       arguments: {
         additionalProperties: false,
         properties: { executionId: executionIdArg },
