@@ -27,4 +27,12 @@ Non-blocking notes (r1): census §3.1 lineage stamp 514ab7b0 not resolvable in t
 - GAP 1: `stop_confirmed` added to the admission snapshot (verbatim restore on refusal) and explicitly cleared in the reserve-before-spawn update after successful admission; new happy-path regression `test_continued_writer_stays_running_across_next_monitor_ticks` (monitor driven past the continuation while the resumed writer is alive: stays running, no terminal receipt/label, handle retained). agent-control fix commit: "E12 r1-review fixes … closes GAP 1".
 - GAP 2: this evidence file committed; census §3.1 provenance annotation added (live-tree verification is the load-bearing evidence; the unresolvable stamp marked as reported provenance only); `accepted_reviewed_head` recorded in the spec frontmatter at r2.
 
-## Round 2 — VERDICT: (recorded after re-review below)
+## Round 2 — VERDICT: PASS / LOAD_BEARING_GAPS = 0
+
+Re-reviewed by the same independent reviewer, read-only, on fix heads:
+- dsh-agent-core `8f151ca9` (parent ba0768f2): evidence file + census provenance sentence only.
+- agent-control `b3e3750` (parent 9e695b5): controller.py +7/−1 + the new happy-path regression test only.
+
+Reviewer's own verification: GAP 1 fix re-verified against their r1 end-to-end repro — after continuation `stop_confirmed=None`, ticks with the resumed writer ALIVE keep `status=running`, no `LOCAL_AGENT_RESULT`, child handle retained ("FALSE-FAILED RECEIPT EMITTED: False"); refusal path restores stop_confirmed verbatim; suite 9/9 re-run. GAP 2 closed by process (this file + census fix); scope check clean — r1-reviewed implementation surfaces byte-untouched by the fix commits.
+
+Follow-through (non-blocking, recorded as obligation → discharged by the spec frontmatter transaction in the same integration): `accepted_reviewed_head` = dsh-agent-core `8f151ca9` (implementation content; any later docs-only commit is a lifecycle transaction with byte-identical contract content) + agent-control `b3e3750`. r1 non-blocking notes 3–5 remain open as recorded.

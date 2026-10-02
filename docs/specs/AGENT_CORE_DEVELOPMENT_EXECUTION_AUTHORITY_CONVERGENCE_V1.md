@@ -14,8 +14,15 @@ acceptance_authority_basis: >-
   read-only evidence", and B.7-B.11 (deterministic local continuation).
   Executed through the Owner's own command bus binding agent-control#218 →
   session sess_267e9d60-ad52-494f-aa18-561b984e536a. Independent
-  changed-surface review on the exact implementation head: INDEPENDENT_REVIEW
-  recorded in docs/evidence/DEV_EXECUTION_AUTHORITY_CONVERGENCE_V1-20261002/.
+  changed-surface review: r1 REVISE / 2 load-bearing gaps (P0 stop_confirmed
+  leak falsely failing live continued writers — fixed; dangling evidence
+  citation — fixed), r2 PASS / LOAD_BEARING_GAPS = 0; full trail in
+  docs/evidence/DEV_EXECUTION_AUTHORITY_CONVERGENCE_V1-20261002/
+  INDEPENDENT_REVIEW.md.
+accepted_reviewed_head: >-
+  dsh-agent-core 8f151ca9 (implementation content; later docs-only commits are
+  lifecycle transactions with byte-identical contract content) +
+  agent-control b3e375004c2e4f815f6fd846b691779f718ee59d
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
