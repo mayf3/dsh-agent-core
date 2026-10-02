@@ -91,7 +91,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
     log.log(`${signal} received — graceful stop`)
     clearInterval(keepalive)
     try {
-      await runtime.stop()
+      await runtime.stop(signal)
     } catch (error) {
       log.error(`stop failed: ${error?.message ?? error}`)
     }
