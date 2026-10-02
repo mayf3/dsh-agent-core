@@ -1,0 +1,18 @@
+# PREFLIGHT inventory probe + permission boundaries 2026-08-30T14:32:26Z
+## trusted config dir
+total 64
+-rw-------  1 authsvc  authsvc  11723 Aug 28 09:38 agent-credentials.json
+-rw-------  1 authsvc  authsvc  16402 Aug 28 09:38 agents.json
+## agents.json symlink
+/usr/local/libexec/agent-core/config/agents.json
+## homes count
+      96
+## unreadable probe bindings
+stat: /Users/authsvc/.agent-core/bindings/bindings.json: stat: Permission denied
+## unreadable probe logs
+ls: /Users/authsvc/.agent-core/logs/: Permission denied
+## unreadable probe agents.json content
+head: /usr/local/libexec/agent-core/config/agents.json: Permission denied
+
+## sudo probe
+sudo: a password is required

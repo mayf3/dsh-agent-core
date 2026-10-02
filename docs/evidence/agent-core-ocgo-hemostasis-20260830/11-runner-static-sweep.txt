@@ -1,0 +1,18 @@
+# Static sweep of runner
+--- sudo/eval/ssh/base64 occurrences (expect only comment/instruction lines) ---
+21:#   sudo bash /tmp/run-agent-core-ocgo-hemostasis-v1.sh
+129:  [ "$(id -u)" -eq 0 ] || { echo "[hemostasis-v1] FATAL: must run as root (sudo bash $0)" >&2; exit 2; }
+--- kill occurrences (expect none in runner; shims only) ---
+none
+--- rm occurrences (bounded /tmp temp files only) ---
+195:      "$H/settings.yaml" > "$H/.settings.new" && cat "$H/.settings.new" > "$H/settings.yaml" && rm -f "$H/.settings.new"
+203:rm -f /tmp/.hemostasis-agents.$$
+252:rm -f "$TMP_PLIST"
+--- launchctl scope (single label) ---
+46:LAUNCHCTL="${TEST_LAUNCHCTL:-launchctl}"
+78:    "$LAUNCHCTL" bootout "system/$LABEL" 2>/dev/null || true
+80:    "$LAUNCHCTL" bootstrap system "$PLIST" || UNRESTORED="$UNRESTORED relaunch"
+262:"$LAUNCHCTL" bootout "system/$LABEL" 2>/dev/null || say "bootout returned nonzero (job may already be down) — continuing"
+270:"$LAUNCHCTL" bootstrap system "$PLIST" || die "launchctl bootstrap failed"
+--- runner sha256 ---
+53a10c98bb80f240c09491e5644ceed2687c9672fa962bb528f4f804c92aa0bd  /private/tmp/wt-zhixue-exec/docs/evidence/agent-core-ocgo-hemostasis-20260830/runner.sh

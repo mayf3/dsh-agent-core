@@ -1,0 +1,23 @@
+# PREFLIGHT agent-model-overrides.json 2026-08-30T14:32:05Z
+stat: -rw-r--r-- authsvc:authsvc 322 bytes mtime=Aug 29 08:16:32 2026
+b9d301a7ef2e2e659357b2099d748402fcbefa4f3cab9a849a8b10a4d3708551  /Users/authsvc/.agent-core/agent-model-overrides.json
+--- content ---
+{
+  "version": 2,
+  "routeCatalog": {
+    "glm53": {
+      "routeKind": "builtin",
+      "provider": "zai",
+      "model": "glm-5.3",
+      "credentialReadiness": "zai-api-key-home"
+    }
+  },
+  "overrides": {
+    "agt_cto-agent": {
+      "model": {
+        "primary": "glm53",
+        "fallbacks": []
+      }
+    }
+  }
+}
