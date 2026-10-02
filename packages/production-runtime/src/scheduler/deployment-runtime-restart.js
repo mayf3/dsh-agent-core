@@ -5,11 +5,44 @@ import { dirname, join } from 'node:path'
 import { quiesceLaunchdServices } from './deployment-launchd.js'
 import { capturePlainFileMetadata, listFileXattrs } from './deployment-file-metadata.js'
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage, verifyReceiptedPreimage } from './deployment-durable-file.js'
+import { enforceRestartDrainGate } from './restart-drain.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)
     || !Number.isInteger(ctx.runtimeReaderGid ?? ctx.authsvcGid)) {
     throw new TypeError('runtime restart requires exact deployed SHA and authsvc ownership coordinates')
+  }
+  // C11-R3 (Product #426 A1–A3): ONE authoritative census + bounded drain
+  // BEFORE any mutation — an ordinary restart with identifiable in-flight
+  // execution refuses here, while the runtime is still running. Refusals and
+  // the A4 emergency boundary are receipted through the DEDICATED drain
+  // receipt channel (`ctx.runtimeDrainReceipt`) — never the single-slot
+  // install receipt file, whose INSTALLING/INSTALLED schema the rollback
+  // lane and the retry preimage check consume. Unarmed (no census paths) =
+  // legacy behavior.
+  let drain = null
+  try {
+    drain = enforceRestartDrainGate({
+      turnRecoveryStore: ctx.turnRecoveryStore,
+      jobsStore: ctx.storePath,
+      windowMs: ctx.restartDrainWindowMs,
+      pollMs: ctx.restartDrainPollMs,
+      acceptUndrained: ctx.acceptUndrainedRestart === true,
+      ...(ctx.restartDrainSleep === undefined ? {} : { sleep: ctx.restartDrainSleep }),
+    })
+  } catch (error) {
+    if (error?.code === 'RESTART_DRAIN_UNDRAINED' || error?.code === 'RESTART_DRAIN_CENSUS_UNAVAILABLE') {
+      ctx.runtimeDrainReceipt?.({
+        status: 'DRAIN_REFUSED', sourceSha, reason: error.code, message: error.message,
+        census: error.census ?? null, at: new Date().toISOString(),
+      })
+    }
+    throw error
+  }
+  if (drain !== null) {
+    ctx.runtimeDrainReceipt?.(drain.outcome === 'emergency_proceed'
+      ? { status: 'RESTART_BOUNDARY', sourceSha, census: drain.census, at: new Date().toISOString() }
+      : { status: 'DRAIN_OBSERVED', sourceSha, census: drain.census, drain: drain.drain, at: new Date().toISOString() })
   }
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
