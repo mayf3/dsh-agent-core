@@ -40,6 +40,12 @@
  * THIS snapshot, so reviewed bytes cannot drift: any source change to a listed
  * file fails overlay() closed and forces an explicit reviewed snapshot
  * regeneration.
+ *
+ * The embedded mechanism stays even though the embedded compose bytes are
+ * CURRENTLY byte-identical to the SOURCE_SHA tree (since the #226 refresh):
+ * it is the standing seam for the case where main's compose.js evolves on a
+ * lane outside the frozen Watchdog payload again — exactly the situation the
+ * 0bfbfb9d generation aged into (r2 reviewer note 1, absorbed comment-only).
  */
 export const WATCHDOG_PAYLOAD_SNAPSHOT = {
   base: '68008e83142bdb637c4fa61c2a65db73c64b2eb1',
@@ -70,11 +76,15 @@ export const WATCHDOG_PAYLOAD_SNAPSHOT = {
     'scripts/scheduler-watchdog.mjs': '6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522',
   },
   embedded: {
-    // packages/production-runtime/src/compose.js — the ONLY payload path whose
-    // SOURCE_SHA(main) tree bytes differ from the reviewed payload commit (main
-    // evolved compose.js on the agent-directory lane, deliberately NOT part of
-    // the frozen Watchdog payload). base64 of the reviewed bytes so ANY checkout
-    // (shallow included) resolves them; sha256(decoded) == paths[...] below.
+    // packages/production-runtime/src/compose.js — refreshed by the #226
+    // embedded-compose regeneration (2026-10-03): the bytes are now the
+    // f1853c6c-tree compose.js (sha256 cdc6d85c… below), byte-identical to
+    // main d54b8f70; the previously embedded 0bfbfb9d generation imported the
+    // removed ./identity/agent-principal-resolution.js and fail-closed the
+    // admission selftest (NARROW CLOSURE REFUSED, packet §6/§6r2). The
+    // embedded entry is kept so ANY checkout (shallow included) resolves the
+    // reviewed bytes even if main's compose.js drifts again on a lane outside
+    // the frozen Watchdog payload; sha256(decoded) == paths[...] below.
     'packages/production-runtime/src/compose.js': [
     'LyoqCiAqIEBhZ2VudC1jb3JlL3Byb2R1Y3Rpb24tcnVudGltZS9zcmMvY29tcG9zZS5qcyDigJQg',
     'dGhlIFByb2R1Y3Rpb24gUnVudGltZQogKiBjb21wb3NpdGlvbiAoUFJPRFVDVElPTl9SVU5USU1F',
