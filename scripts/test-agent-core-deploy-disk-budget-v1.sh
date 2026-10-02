@@ -186,12 +186,13 @@ out="$(env "${SEAM_ADMIT[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-
 python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RECEIPT" 2>/dev/null \
   && ok "G2d receipt stays valid JSON with quotes+backslash in reason" \
   || bad "G2d receipt corrupted by hostile reason text"
-printf 'multi\nline \"reason\"\n' > "$T/reason.txt"
-out="$(env "${SEAM_ADMIT[@]}" AGENT_CORE_BUDGET_PIN_EXCEPTION="$(cat "$T/reason.txt")" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235948" 2>&1)"
-# note: the deploy propagates the env-seam form; the helper CLI takes one arg,
-# so exercise the env path via the same --pin-exception single-arg contract
+# multi-line reason THROUGH the real carrier (the helper's --pin-exception
+# single-arg contract, which is how the deploy forwards the env seam): the
+# receipt must stay valid JSON with the raw LF deleted, never emitted raw
+MULTILINE_REASON="$(printf 'multi\nline \"reason\" with \backslash')"
+out="$(env "${SEAM_ADMIT[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235948" --pin-exception "$MULTILINE_REASON" 2>&1)"
 python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RECEIPT" 2>/dev/null \
-  && ok "G2d receipt stays valid JSON after multi-line reason attempt" \
+  && ok "G2d receipt stays valid JSON after multi-line reason (real CLI carrier)" \
   || bad "G2d receipt corrupted by multi-line reason"
 
 echo "== G2e: stricter parse — flag-like projected path is a usage error =="
