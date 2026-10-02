@@ -121,7 +121,8 @@ function fakeBackend() {
 function makeEngine(repo, { backend = fakeBackend(), timeoutMs = 5000 } = {}) {
   const { devDir } = makeRoot()
   writeReposConfig(devDir, repo)
-  const engine = new DevelopmentExecutionEngine({ devDir, backend, timeoutMs })
+  // Legacy-suite opt-out: this suite exercises the retained writer machinery (AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1 CTR-DEC-001 keeps production default retired).
+  const engine = new DevelopmentExecutionEngine({ devDir, backend, timeoutMs, writerAuthorityRetired: false })
   return { engine, devDir }
 }
 
@@ -243,7 +244,7 @@ test('B1: worktree capacity — active executions per repo are capped (capacity_
   writeFileSync(join(devDir, 'repos.json'), JSON.stringify({
     repos: [{ name: 'dogfood-repo', path: repo.dir, allowedBranchPrefixes: [], maxWorktrees: 1 }],
   }))
-  const engine = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend() })
+  const engine = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), writerAuthorityRetired: false })
   const first = await engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a')
   await assert.rejects(
     () => engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'TASK_HANG' }, 'agent-a'),
@@ -296,7 +297,7 @@ test('F: restart — terminal history re-readable; orphan RUNNING => OUTCOME_UNK
   engine.ledger.append({ type: 'execution_started', executionId: 'live-1', backend: 'fake', repo: 'dogfood-repo', baseSha: repo.baseSha, agentId: 'agent-a' })
   engine.ledger.append({ type: 'state', executionId: 'live-1', state: 'RUNNING', pid: live.pid })
 
-  const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000 })
+  const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000, writerAuthorityRetired: false })
   assert.equal(restarted.status(done1.executionId).state, 'SUCCEEDED', 'terminal history survives restart')
   assert.equal(restarted.status(done1.executionId).worktree, engine.status(done1.executionId).worktree, 'worktree survives restart (CTR-DES-002 record fields)')
   assert.equal(restarted.status(hung.executionId).state, 'RUNNING', 'live pid untouched')
@@ -392,7 +393,7 @@ test('K4: queued continue survives restart — replay exposes it; dead-pid recov
   hungChild.kill('SIGKILL')
   await hungExit // pid now dead when the restarted engine probes it
 
-  const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000 })
+  const restarted = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), timeoutMs: 5000, writerAuthorityRetired: false })
   const record = restarted.status(started.executionId)
   assert.equal(record.state, 'OUTCOME_UNKNOWN', 'dead-pid non-terminal execution => OUTCOME_UNKNOWN')
   assert.equal(record.continueRequests.length, 1, 'instruction persisted in the ledger across restart')
@@ -455,13 +456,13 @@ test('K6: repeated midrun continues deliver FIFO across sequential resume runs, 
 test('authority: unconfigured / unauthorized repo / unknown baseSha / bad branch / bad backend all refuse', async () => {
   const repo = makeFixtureRepo()
   const { devDir } = makeRoot()
-  const engine = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend() })
+  const engine = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), writerAuthorityRetired: false })
   await assert.rejects(
     () => engine.start({ repo: 'dogfood-repo', baseSha: repo.baseSha, task: 'x' }, 'agent-a'),
     (e) => e.code === 'config_missing',
   )
   writeReposConfig(devDir, repo)
-  const engine2 = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend() })
+  const engine2 = new DevelopmentExecutionEngine({ devDir, backend: fakeBackend(), writerAuthorityRetired: false })
   await assert.rejects(
     () => engine2.start({ repo: 'other-repo', baseSha: repo.baseSha, task: 'x' }, 'agent-a'),
     (e) => e.code === 'repo_not_authorized',
@@ -481,6 +482,7 @@ test('authority: unconfigured / unauthorized repo / unknown baseSha / bad branch
   const engine3 = new DevelopmentExecutionEngine({
     devDir: makeRoot().devDir,
     backend: { name: 'fake', verify: () => ({ ok: false, code: 'backend_unavailable', detail: 'nope' }), run: () => { throw new Error('never') } },
+    writerAuthorityRetired: false,
   })
   writeReposConfig(engine3.devDir, repo)
   await assert.rejects(
@@ -547,7 +549,7 @@ test('gateway: development_execute without a grant fails CLOSED; with stub auth 
   writeReposConfig(devDir, repo)
   const fake = fakeBackend()
   const { DevelopmentExecutionEngine: Engine } = await import('../src/index.js')
-  const engine = new Engine({ devDir, backend: fake })
+  const engine = new Engine({ devDir, backend: fake, writerAuthorityRetired: false })
 
   // stub auth-service: /oauth/token mints for ANY client (E2E stand-in)
   const stub = http.createServer((req, res) => {
