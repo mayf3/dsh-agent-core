@@ -339,7 +339,10 @@ export {
 } from './reconciliation.js'
 export { appendPrivateJsonl, commitIncidentState, loadIncidentState, migrateLegacyIncidentStateFiles } from './durable-state.js'
 export {
-  attemptNotificationDelivery, buildIdempotentFeishuRequest, FEISHU_IDEMPOTENCY_WINDOW_MS,
-  FEISHU_SAFE_RETRY_WINDOW_MS, deliveryRecoveryAction, feishuHistoryContainsNotification, providerIdempotencyKey,
-  recoverNotificationDelivery, retryableOutboxIntents, stableNotificationText,
+  attemptNotificationDelivery, buildIdempotentFeishuRequest, DELIVERY_PROJECTION_VERSION, deliveryRecoveryAction,
+  feishuHistoryContainsNotification, FEISHU_IDEMPOTENCY_WINDOW_MS, FEISHU_SAFE_RETRY_WINDOW_MS,
+  providerIdempotencyKey, recoverNotificationDelivery, retryableOutboxIntents, stableNotificationText,
 } from './delivery.js'
+export {
+  SUPPRESSION_CODES, annotateFindingsWithJobs, projectIncidentDelivery,
+} from './delivery-projection.js'
