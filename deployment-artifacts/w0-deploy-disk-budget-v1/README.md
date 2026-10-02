@@ -1,9 +1,12 @@
 # W0 RELEASE-SAFETY — deploy disk-budget + full-tree retention cap (Product #430)
 
-STATUS: PREPARED / WAITING_PROD_AUTH — nothing in this packet has been
-executed against production; PRODUCTION_MUTATION = NO in this lane.
+STATUS: PREPARED / AUTHORIZED_STANDING-PENDING-MERGE — nothing in this packet
+has been executed against production; PRODUCTION_MUTATION = NO in this lane.
+Under the #386 standing production authority (Owner policy 2026-10-02) this
+packet means DEPLOY NEXT once the corrected source is merged and the exact
+live preflight is green; no routine per-release Owner confirmation.
 
-## What changed (candidate 55263a09, base 15cdfc33)
+## What changed (candidate 55263a09, base 15cdfc33; floor correction base 09de835d)
 
 Additive, fail-closed admission gate on the trusted-cp/DS tree-deploy path
 (scripts/trusted-cp-deploy-install.sh), reusing the existing
@@ -27,12 +30,20 @@ platform. No Runtime/Router/Scheduler/Kernel/product-semantics change.
   when already absent; writes agent-core-cleanup-exact-receipt.json.
 - Additive `pin_reason` metadata on FIRST_RELIABLE_PIN and
   `--pin <id> [reason...]` (backward compatible).
+- Floor correction (Owner policy 2026-10-02, this packet v2): the
+  `--check-budget` floor is FIXED 50 GiB after worst-case reservation. The
+  earlier `max(60 GiB, 10% of the Data volume)` formula is SUPERSEDED and the
+  AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT seam is removed — Data-volume size
+  no longer changes the floor. Retention cap, pin protection, exact-path
+  cleanup, receipt schema shape, and all other gate semantics unchanged.
 
-## Budget formula (frozen)
+## Budget formula (frozen, Owner policy 2026-10-02)
 
 ```
-DISK_BUDGET_FLOOR   = max(60 GiB, 10% of the Data volume holding
-                           /usr/local/libexec)
+DISK_BUDGET_FLOOR   = FIXED 50 GiB (53687091200) — volume-independent; the
+                      superseded max(60 GiB, 10% of the Data volume) rule and
+                      its AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT seam are
+                      GONE
 ALLOCATION MODEL    = worst-case physical: every file's logical size rounded
                       up to its own 4 KiB block + one 4 KiB block per
                       directory; NO clone/sparse/compression discount
@@ -50,7 +61,7 @@ REFUSAL             = exit 4 REFUSED_DISK_BUDGET (HARD — the open-Product pin
 
 Env seams (defaults frozen in source; ANY override is recorded in the receipt
 as floor_source / size_class_source): AGENT_CORE_BUDGET_FLOOR_MIN_BYTES,
-AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT, AGENT_CORE_BUDGET_LARGE_CLASS_BYTES.
+AGENT_CORE_BUDGET_LARGE_CLASS_BYTES.
 
 ## Retention rule (frozen)
 
@@ -84,18 +95,24 @@ projected[]` (id/path/bytes/pinned/status/large/pin_reason each),
 `cleanup_guidance_exact_paths[]`, `cleanup_guidance_notes[]`,
 `clone_semantics_proof`, `attempt_id`, `created_at`, floor/class provenance.
 
-## Verification (measured at 55263a09)
+## Verification (measured at the floor-correction head on base 09de835d)
 
-- NEW suite scripts/test-agent-core-deploy-disk-budget-v1.sh: 75/75 PASS
-  (RED-first on pristine 15cdfc33).
+- NEW suite scripts/test-agent-core-deploy-disk-budget-v1.sh: 78/78 PASS
+  (RED-first on pristine merged 09de835d: 7 floor-rule assertions failed
+  before the source fix — 50 GiB default, volume-percent absence, 49 GiB
+  refuse, >50 GiB admit, boundary equality, MIN-seam-only, receipt floor
+  fields). Boundary equality is proven on an isolated quiescent sparse image
+  so background writes cannot race the two df instants.
 - Existing scripts/test-agent-core-backup-retention-v1.sh: 39/39 PASS
   (AC1–AC11 + review fixes intact — no frozen semantics disturbed).
-- Independent changed-surface review: round-1 REVISE (1 blocker B1 — deploy
-  passed dirname(TRUSTED_ROOT) as the helper ROOT, defeating the cap census
-  on the real path; + 9 notes) → all absorbed at 55263a09 (B1 + N1–N8;
-  N9 disposition: TAB deletion kept — raw TAB is invalid inside JSON
-  strings). Round-2 verdict recorded in
-  docs/evidence/w0-deploy-disk-budget-v1-20261002/REVIEW.md.
+- Round-1/2 history (75/75 at 55263a09): independent changed-surface review
+  round-1 REVISE (1 blocker B1 — deploy passed dirname(TRUSTED_ROOT) as the
+  helper ROOT, defeating the cap census on the real path; + 9 notes) → all
+  absorbed at 55263a09 (B1 + N1–N8; N9 disposition: TAB deletion kept — raw
+  TAB is invalid inside JSON strings). Round-2 verdict recorded in
+  docs/evidence/w0-deploy-disk-budget-v1-20261002/REVIEW.md. Floor-correction
+  changed-surface review recorded in
+  docs/evidence/w0-deploy-disk-budget-floor50g-20261002/REVIEW.md.
 
 ## Rollback compatibility
 
