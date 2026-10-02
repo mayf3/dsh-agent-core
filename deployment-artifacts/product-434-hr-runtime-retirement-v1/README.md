@@ -26,7 +26,7 @@ The merged Product #434 head — HR runtime de-specialization r1, already review
 | INTEGRATION_BASE | `d54b8f70a920398e8101c8c3630a82bc70baa391` (PR #438 base) |
 | Changed surface | 61 files, +727 / −5,126: 17 HR incident runtime modules + 21 historical operation test files deleted from the runtime import graph; ingress/spawn/prompt gates + parent-rpc stop barrier genericized with exact inert-state parity; legacy durable fields `freshHrCutBinding` / `lineageOperationId` kept as byte-stable load-only receipts |
 
-This is a **full trusted-closure generation install** (the change set is NOT inside the scheduler-watchdog overlay universe, so the overlay-only path cannot ship it). The existing release road is: `scripts/trusted-cp-deploy-install.sh` (root, provenance-pinned, production-deploy mutex) → the EXISTING controlled apply `scripts/scheduler-cp-admission.mjs --apply --source-sha <head>` — the only existing caller of the drain-gated `restartSchedulerProductionRuntime` restart and the only existing W1/W2 re-stamp surface (`watchdogInstall`) → readback.
+This is a **full trusted-closure generation install** (the change set is NOT inside the scheduler-watchdog overlay universe, so the overlay-only path cannot ship it). The existing release road is: `scripts/trusted-cp-deploy-install.sh` (root, provenance-pinned, production-deploy mutex) → ONE drain-gated restart with `AGENT_CORE_DEPLOYED_SHA` re-stamp and W1/W2 re-stamp → readback. **The restart step is a recorded BLOCKER** (RESTART_SURFACE_BLOCKER, RUNBOOK §2): the only existing caller of the restart and W1/W2 re-stamp (`scripts/scheduler-cp-admission.mjs --apply`) is generation-locked to the 2026-09 SCPR deployment and requires SCPR-operation artifacts that must not be replayed for this head; no standalone restart CLI exists at `daa4c82d`. The packet therefore freezes everything EXCEPT the restart binding and holds ALL apply steps until the Owner resolves the binding through an existing surface.
 
 ## 2. Loaded revision / installed state (fresh census 2026-10-03, metadata-only, uid 502, no secrets read)
 
@@ -56,12 +56,18 @@ Prior evidence (recorded on the exact heads, from #228/#229/#230):
 
 Fresh test-identity re-run at `daa4c82d` (this freeze, node v26.7.0, non-production; exact file set frozen):
 - Canary core suites — `agent-router/test/binding-store.test.js`, `agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js`, `agent-router/test/route-chain/parent-rpc-stop-barrier.test.js`, `agent-router/test/runtime-hygiene/no-hidden-hr-runtime-knowledge.test.js`: **35/35 pass**.
-- Drain/quiescence suites — `production-runtime/test/scheduler/restart-drain.test.js` + `agent-router/test/process-lifecycle/restart-quiescence*.test.js` (4 files): **47 tests, 46 pass, 0 fail, 1 skipped** (env-conditional); the drain observe/refuse/receipt semantics (A2/A3/A4 of the drain gate) all green.
+- Drain/quiescence suites — `production-runtime/test/scheduler/restart-drain.test.js` + `agent-router/test/process-lifecycle/restart-quiescence*.test.js` (3 files: restart-drain, restart-quiescence, restart-quiescence-salvaged): **47 tests, 46 pass, 0 fail, 1 skipped** (env-conditional); the drain observe/refuse/receipt semantics all green.
 - Generic scheduler dispatch — `scheduler/test/schedule.test.js` (cron/every/at kinds): **9/9 pass** (after routine `npm install` providing `croner`).
 - Fleet gate readback against live: see §2 (pre-apply baseline receipt).
 
 ## 5. Execution authorization
 
-- PROD_AUTH_REQUIREMENT: execution of RUNBOOK §2 requires the standing production authority (Owner-announced P0 release, `PRODUCTION_MUTATION_CONCURRENCY=1`, global production-deploy mutex) and root for the installer/restart steps. This packet freeze ran none of it.
+- PROD_AUTH_REQUIREMENT: (a) resolution of RESTART_SURFACE_BLOCKER (RUNBOOK §2) through an existing surface — Owner decision among the recorded resolution paths; (b) execution of the apply steps requires the standing production authority (Owner-announced P0 release, `PRODUCTION_MUTATION_CONCURRENCY=1`, global production-deploy mutex) and root for the installer/restart steps. This packet freeze ran none of it.
 - Post-mutation failure rule (#386 Owner policy 2026-10-02): after apply, the FIRST failed canary → immediate rollback (RUNBOOK §4) if the rollback artifact is viable; no extended in-place investigation on the production writer.
 - #434 stays open after apply until INSTALLED/ENABLED/BUSINESS_VERIFIED evidence exists; apply alone does not close it.
+
+## 6. Independent review record
+
+- Round 1 (@ freeze `61e59410`): **REVISE / BLOCKING = 6** — restart surface, package-count expectation vs installer truth, rollback tree env, canary CLI contract, §12.2 preimage bindings, old-handle read surface.
+- Round 2 (@ r2 `087debad`): **REVISE / BLOCKING = 1** — five of six mechanically verified fixed (B2/B3/B4/B5/B6 ✓ with recomputed constants); the remaining blocker deepened: the scheduler-cp controlled apply is generation-locked (hardcoded `GOAL_BASE_SHA` + SCPR artifacts dir), requires seven mandatory SCPR-operation bindings, quiesces production before its mutating phases, and its empty-plan property is not tool-enforced in apply mode.
+- Round 3 (@ r3, this commit): blocker absorbed as a frozen record — RESTART_SURFACE_BLOCKER with three Owner resolution paths and a HOLD on ALL apply steps (A1 included); rollback restart re-bound to the resolved binding; non-blocking notes absorbed (3-file test set, `BINDINGS_STORE` path frozen, census-ordering wording, quiesce-order risk note).
