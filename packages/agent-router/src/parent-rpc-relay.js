@@ -56,28 +56,16 @@ function provenSourceTurnExecutionId(proc, rpcMeta) {
  */
 export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway, switchAgent }) {
   return async (method, params, rpcMeta = {}) => {
-    // V4: old HR workers lose every parent-side effect path at the stop
-    // barrier, before either Broker gateway lookup or Binding mutation. The
-    // authenticated host cut must separately prove old process/tool exit;
-    // this gate prevents a still-draining child from starting another call.
+    // Generic stop barrier: a child that is draining, exited, or whose exit
+    // the parent has already observed loses every parent-side effect path
+    // (Broker capability call and Binding mutation) BEFORE gateway lookup or
+    // effect dispatch. This is the agent-agnostic old-worker fence: a child
+    // on the far side of the stop barrier can never start another parent-side
+    // effect, no matter which Agent it belongs to or how it was stopped.
     const boundProc = getProc()
-    const freshHrCut = boundProc?.store?.freshHrLineage
-    if (agentId === 'agt_hr-agent'
-        && (boundProc?.state === 'DRAINING' || boundProc?.state === 'EXITED'
-          || boundProc?.exit !== undefined
-          || (freshHrCut?.agentId === agentId
-            && (boundProc?.store?.runtimeEpoch !== freshHrCut.newRuntimeEpoch
-              || boundProc?.processGeneration <= freshHrCut.oldProcessGeneration)))) {
-      return { ok: false, error: { code: 'HR_OLD_LINEAGE_EFFECT_DENIED' } }
-    }
-    // QE2: a child prepared for the one fixed canary has no parent-side
-    // Broker, switch or alternate-route capability. Reject before gateway
-    // lookup or effect dispatch; forged child turn metadata grants nothing.
-    const fixedAdminProc = boundProc
-    const fixedAdminQualification = fixedAdminProc?.fixedAdminQualification
-    if (fixedAdminQualification !== null && fixedAdminQualification !== undefined) {
-      fixedAdminProc.fixedAdminEffectAttempted = true
-      return { ok: false, error: { code: 'FIXED_ADMIN_CANARY_EFFECT_DENIED' } }
+    if (boundProc?.state === 'DRAINING' || boundProc?.state === 'EXITED'
+        || boundProc?.exit !== undefined) {
+      return { ok: false, error: { code: 'PROCESS_STOP_BARRIER_EFFECT_DENIED' } }
     }
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's

@@ -176,7 +176,7 @@ export function createRouteGate({
       return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
     }
     try {
-      assertRunnable(agentId, wanted.lineageAdmissionToken)
+      assertRunnable(agentId)
     } catch (error) {
       return Promise.reject(error)
     }

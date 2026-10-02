@@ -46,10 +46,6 @@ export const rpcChannelMethods = {
       if (message.id !== undefined) {
         this.onRpcResponse(message)
       } else if (message.method === 'session.event') {
-        if (this.fixedAdminQualification !== null
-            && ['tool/call', 'command/run'].includes(message.params?.event?.type)) {
-          this.fixedAdminEffectAttempted = true
-        }
         this.onSessionEvent(message.params)
       } else if (message.method === 'session.status') {
         this.onSessionStatus(message.params)
