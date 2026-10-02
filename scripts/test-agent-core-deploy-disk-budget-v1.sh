@@ -171,6 +171,33 @@ f="$(jq_get "$RECEIPT" DISK_BUDGET_FLOOR_BYTES)"
 [ "$f" = "999999999999" ] && ok "G2b floor == min-term when that term dominates (max semantics)" \
   || bad "G2b floor=$f expected 999999999999"
 
+echo "== G2c: the disk-budget floor is HARD — pin exception does NOT override it =="
+new_live_tree
+out="$(env AGENT_CORE_BUDGET_FLOOR_VOLUME_PERCENT=100 "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235950" --pin-exception "Product #430 open pin: floor exception attempted" 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && ok "G2c floor violation refuses even WITH pin exception" || bad "G2c pin exception overrode the HARD floor"
+[ "$(jq_get "$RECEIPT" verdict)" = "REFUSED_DISK_BUDGET" ] \
+  && ok "G2c verdict stays REFUSED_DISK_BUDGET" \
+  || bad "G2c verdict=$(jq_get "$RECEIPT" verdict)"
+
+echo "== G2d: hostile pin-exception text cannot corrupt the receipt JSON =="
+new_live_tree
+out="$(env "${SEAM_ADMIT[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235949" \
+  --pin-exception 'Product "quote" \backslash both' 2>&1)"; rc=$?
+python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RECEIPT" 2>/dev/null \
+  && ok "G2d receipt stays valid JSON with quotes+backslash in reason" \
+  || bad "G2d receipt corrupted by hostile reason text"
+printf 'multi\nline \"reason\"\n' > "$T/reason.txt"
+out="$(env "${SEAM_ADMIT[@]}" AGENT_CORE_BUDGET_PIN_EXCEPTION="$(cat "$T/reason.txt")" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-235948" 2>&1)"
+# note: the deploy propagates the env-seam form; the helper CLI takes one arg,
+# so exercise the env path via the same --pin-exception single-arg contract
+python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$RECEIPT" 2>/dev/null \
+  && ok "G2d receipt stays valid JSON after multi-line reason attempt" \
+  || bad "G2d receipt corrupted by multi-line reason"
+
+echo "== G2e: stricter parse — flag-like projected path is a usage error =="
+env "${SEAM_ADMIT[@]}" "$OPS" "$ROOT" --check-budget --pin-exception x >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && ok "G2e flag-like projected path -> usage error rc=2" || bad "G2e rc=$rc (expected 2)"
+
 # ===========================================================================
 echo "== G3: worst-case physical allocation (logical bytes; no clone/sparse discount) =="
 # 50MiB SPARSE file: physical ~0, logical 50MiB. live_tree_bytes must reflect
@@ -228,6 +255,9 @@ PINB="$(seed_backup 20991230-000003 yes predeploy 1m)"
 UNPB="$(seed_backup 20991230-000004 no predeploy 1m)"
 env "${CAPENV[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-100004" >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && ok "G4d over-cap refused with pinned present" || bad "G4d expected refusal"
+[ "$(jq_get "$RECEIPT" verdict)" = "REFUSED_RETENTION_CAP" ] \
+  && ok "G4d verdict pinned to REFUSED_RETENTION_CAP" \
+  || bad "G4d verdict=$(jq_get "$RECEIPT" verdict) (wrong refusal branch)"
 guid="$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["cleanup_guidance_exact_paths"]))' "$RECEIPT" 2>/dev/null)"
 echo "$guid" | grep -q "$UNPB" && ok "G4d guidance names the unpinned backup" || bad "G4d guidance missing unpinned path"
 echo "$guid" | grep -q "$PINB" && bad "G4d guidance LEAKED the pinned path" || ok "G4d pinned backup NOT in cleanup guidance (protected)"
@@ -244,6 +274,9 @@ new_live_tree 1m
 LEG="$(seed_backup 20991230-000005 no legacy 1m)"
 env "${CAPENV[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-100006" >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && ok "G4f legacy large counts toward cap (refusal)" || bad "G4f legacy large not counted"
+[ "$(jq_get "$RECEIPT" verdict)" = "REFUSED_RETENTION_CAP" ] \
+  && ok "G4f verdict pinned to REFUSED_RETENTION_CAP" \
+  || bad "G4f verdict=$(jq_get "$RECEIPT" verdict) (wrong refusal branch)"
 guid="$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["cleanup_guidance_exact_paths"]))' "$RECEIPT" 2>/dev/null)"
 echo "$guid" | grep -q "$LEG" && bad "G4f guidance offered a LEGACY path (must stay protected)" || ok "G4f legacy path NOT in cleanup guidance"
 
@@ -252,6 +285,9 @@ new_live_tree 1m
 RU="$(seed_backup 20991230-000006 no rollback_used 1m)"
 env "${CAPENV[@]}" "$OPS" "$ROOT" --check-budget "$ROOT.bak-20991231-100007" >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && ok "G4g rollback_used large counts toward cap" || bad "G4g rollback_used not counted"
+[ "$(jq_get "$RECEIPT" verdict)" = "REFUSED_RETENTION_CAP" ] \
+  && ok "G4g verdict pinned to REFUSED_RETENTION_CAP" \
+  || bad "G4g verdict=$(jq_get "$RECEIPT" verdict) (wrong refusal branch)"
 guid="$(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["cleanup_guidance_exact_paths"]))' "$RECEIPT" 2>/dev/null)"
 echo "$guid" | grep -q "$RU" && bad "G4g guidance offered a rollback_used path (KEEP)" || ok "G4g rollback_used NOT in cleanup guidance"
 
@@ -286,6 +322,9 @@ env "${CAPENV[@]}" "$OPS" "$ROOT" --cleanup-exact "$LX/not-a-backup" >/dev/null 
 env "${CAPENV[@]}" "$OPS" "$ROOT" --cleanup-exact "$LX/agent-core.bak-*" >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && ok "G5c wildcard path refused (no wildcard cleanup)" \
   || bad "G5c wildcard path accepted!"
+[ -d "$LX/agent-core.bak-notglob" ] \
+  && ok "G5c wildcard-lookalike sibling SURVIVED the refused cleanup" \
+  || bad "G5c glob-happy cleanup deleted the wildcard-lookalike sibling"
 
 # ===========================================================================
 echo "== G6: idempotent repeated gate attempts =="
@@ -313,6 +352,12 @@ if [ -n "$LINE_BUDGET" ] && [ -n "$LINE_MV" ] && [ "$LINE_BUDGET" -lt "$LINE_MV"
 else
   bad "G7 gate/mv ordering wrong (budget='$LINE_BUDGET' mv='$LINE_MV')"
 fi
+grep -q '"\$BACKUP_OPS" "\$TRUSTED_ROOT" --check-budget' "$DEPLOY" \
+  && ok "G7 gate is anchored on ROOT=\$TRUSTED_ROOT (census/receipt correct in the real layout)" \
+  || bad "G7 gate root argument is not \$TRUSTED_ROOT (B1-class regression)"
+grep -q '"\$BACKUP_OPS" "\$TRUSTED_ROOT" --write-predecessor' "$DEPLOY" \
+  && ok "G7 --write-predecessor anchored on the same ROOT (FIRST_RELIABLE_PIN census correct)" \
+  || bad "G7 --write-predecessor root argument drifted from \$TRUSTED_ROOT"
 grep -q 'MUTATION TRUTH: NOTHING was mutated' "$DEPLOY" \
   && ok "G7 deploy refusal carries the MUTATION TRUTH line" \
   || bad "G7 MUTATION TRUTH refusal line missing"

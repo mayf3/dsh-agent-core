@@ -481,7 +481,11 @@ if [ -n "${AGENT_CORE_BUDGET_PIN_EXCEPTION:-}" ]; then
   BUDGET_PIN_ARGS=(--pin-exception "$AGENT_CORE_BUDGET_PIN_EXCEPTION")
 fi
 BUDGET_RC=0
-"$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --check-budget "$BUDGET_NEW_BAK_ARG" ${BUDGET_PIN_ARGS[@]+"${BUDGET_PIN_ARGS[@]}"} || BUDGET_RC=$?
+# ROOT = the install root itself ($TRUSTED_ROOT): the helper's frozen backup
+# convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the census glob, the
+# live-tree sizing, and the receipt location (dirname($TRUSTED_ROOT)/…) are
+# all anchored on the install root — NOT its parent.
+"$BACKUP_OPS" "$TRUSTED_ROOT" --check-budget "$BUDGET_NEW_BAK_ARG" ${BUDGET_PIN_ARGS[@]+"${BUDGET_PIN_ARGS[@]}"} || BUDGET_RC=$?
 if [ "$BUDGET_RC" -ne 0 ]; then
   echo "ERROR: DEPLOY_REFUSED_BEFORE_MUTATION — disk-budget / full-tree-retention admission gate FAILED (helper rc=$BUDGET_RC: 4=REFUSED_DISK_BUDGET 5=REFUSED_RETENTION_CAP)." >&2
   echo "MUTATION TRUTH: NOTHING was mutated — the section-1 backup mv did NOT run; the live install is untouched." >&2
@@ -511,7 +515,13 @@ if [ -e "$TRUSTED_ROOT" ]; then
   #   NOTE: this is a non-fatal best-effort — a metadata failure must not block
   #   the install.
   if [ -x "$BACKUP_OPS" ]; then
-    "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
+    # ROOT = $TRUSTED_ROOT (same root the 0c budget gate uses): the helper's
+    # backup convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the id
+    # derivation and maybe_first_pin's prior-reliable-pin census only see the
+    # real backup family when anchored on the install root. (Review B1/N2,
+    # Product #430: the pre-existing dirname-shaped call left FIRST_RELIABLE_
+    # PIN's prior-pin detection matching nothing in the real layout.)
+    "$BACKUP_OPS" "$TRUSTED_ROOT" --write-predecessor "$BAK" \
       || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
   else
     echo "  WARNING: backup-ops helper missing ($BACKUP_OPS); deployment backup will carry no retention metadata" >&2
