@@ -392,7 +392,7 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
   }
   const evidenceRef = `invoker late settlement ${JSON.stringify(lateEvidence)}`
   try {
-    const { doc } = await this.store.mutateDoc((latest) => {
+    const { doc, value } = await this.store.mutateDoc((latest) => {
       const current = findOccurrenceById(latest.occurrences, record.occurrenceId)
       if (!current || current.runId !== record.runId
         || current.state !== 'outcome_unknown' || current.lateSettlement !== undefined) return {}
@@ -411,8 +411,21 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
         terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
       })
       latest.fences = rebuildFences(latest.occurrences)
+      // The disposition must be captured BEFORE applyLateCompletion: a
+      // succeeded one-shot (deleteAfterRun) is spliced out of the job list
+      // there, and the receipt must still state its true disposition.
+      const settledJob = latest.jobs.find((entry) => entry.id === current.jobId)
+      const oneShot = settledJob?.schedule?.kind === 'at'
       applyLateCompletion(latest, current, resolvedAt)
-      return {}
+      // C11-R3 (Product #426 Owner usability invariant): the receipt fields
+      // for the evidence line — never a replay, the schedule disposition,
+      // and the recomputed future-natural next run.
+      return {
+        value: {
+          scheduleDisposition: oneShot ? 'one_shot_disabled' : 'recurring_future_natural_only',
+          nextRunAtMsAfter: settledJob?.state?.nextRunAtMs ?? null,
+        },
+      }
     })
     this.doc = doc
     await this._evidence({
@@ -425,6 +438,11 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
       note,
       evidenceRef,
       evidence: lateEvidence,
+      ...(value === undefined ? {} : {
+        replayOccurrence: false,
+        scheduleDisposition: value.scheduleDisposition,
+        nextRunAtMsAfter: value.nextRunAtMsAfter,
+      }),
     })
     await this._historyWrite('lateSettlement', {
       record: structuredClone(record),
