@@ -441,14 +441,15 @@ do_prune() {
 # it ever writes is its own receipt JSON in ROOT's parent directory.
 # ===========================================================================
 
-# worst-case physical size of a tree: logical byte sum of every regular file
-# (sparse/compressed/clone savings deliberately NOT taken — CLONE_PROOF=NONE,
-# no clone semantics are mechanically proven) + one 4 KiB block per directory.
+# worst-case physical size of a tree: every regular file's logical size
+# ROUNDED UP to its own 4 KiB allocation block (sparse/compressed/clone
+# savings deliberately NOT taken — CLONE_PROOF=NONE, no clone semantics are
+# mechanically proven) + one 4 KiB block per directory.
 tree_logical_bytes() {
   local p="$1" files dirs
   [ -d "$p" ] || { printf '0'; return 0; }
   files="$(find "$p" -type f -print0 2>/dev/null | xargs -0 stat -f %z 2>/dev/null \
-           | awk '{s+=$1} END{printf "%.0f", s+0}')"
+           | awk '{s += (int(($1+4095)/4096))*4096} END{printf "%.0f", s+0}')"
   dirs="$(find "$p" -type d 2>/dev/null | wc -l | tr -d ' ')"
   awk -v f="${files:-0}" -v d="${dirs:-0}" 'BEGIN{printf "%.0f", f + (d*4096)}'
 }
@@ -459,8 +460,11 @@ volume_stats() {
 }
 
 json_str() {
+  # control chars (incl. LF/TAB) are DELETED, never emitted raw: raw bytes
+  # <0x20 are invalid inside JSON strings, so a multi-line --pin-exception
+  # reason must not be able to corrupt the receipt
   local s
-  s="$(printf '%s' "$1" | tr -d '\010\011\013\014\015\016\017\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+  s="$(printf '%s' "$1" | tr -d '\010\011\012\013\014\015\016\017\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036\037' | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
   printf '"%s"' "$s"
 }
 
@@ -517,6 +521,9 @@ do_check_budget() {
     pin_exc="$*"
   fi
   [ -n "$projected" ] || { echo "ERROR: --check-budget needs <projected-new-backup-path|NONE>" >&2; return 2; }
+  case "$projected" in
+    --*) { echo "ERROR: --check-budget: first argument must be <projected-new-backup-path|NONE>, got '$projected'" >&2; return 2; } ;;
+  esac
   local parent receipt
   parent="$(dirname "$root")"
   receipt="$parent/agent-core-deploy-budget-receipt.json"
@@ -538,7 +545,7 @@ do_check_budget() {
   # it adds NO new allocation; the fresh allocation at peak is the NEW tree the
   # install writes (worst case: full physical copy, reuse discounts ignored).
   local new_is_large=0 new_will_pin=0
-  local census after_lines="" id bak pin st large bytes
+  local census id bak pin st large bytes
   census="$(budget_census "$root" "$cls")"
   local pin_large=0 unpin_large=0 any_reliable_pin=0
   if [ -n "$census" ]; then
