@@ -88,17 +88,17 @@ function makeExecutor(seam, routes, opts = {}) {
 const GLM = route('glm53', { provider: 'zai', model: 'glm-5.3', subscription: { plugin: 'dsh-zai', pluginVersion: '1.4.2' } })
 const LUNA = route('luna', { provider: 'openai-codex', model: 'gpt-5.6-luna', subscription: { plugin: 'dsh-codex', pluginVersion: '0.2.3' } })
 
-test('V4 private admission token crosses the route acquire and final turn without entering public route identity', async () => {
-  const token = Object.freeze({ private: true })
-  let acquiredToken
-  let turnToken
+test('private caller opts cross to the final turn without entering the route acquire identity', async () => {
+  const marker = Object.freeze({ privateControlField: true })
+  let acquiredWanted
+  let turnOpts
   const executor = createRouteChainExecutor({
     log: quietLog,
     ensureRunningForRoute: async (_agentId, wanted) => {
-      acquiredToken = wanted.lineageAdmissionToken
+      acquiredWanted = wanted
       return { status: 'ready', proc: {
         async turn(_sessionId, _message, opts) {
-          turnToken = opts.lineageAdmissionToken
+          turnOpts = opts
           return { status: 'completed', reply: 'fresh' }
         },
       } }
@@ -107,11 +107,12 @@ test('V4 private admission token crosses the route acquire and final turn withou
     resolveTurnDeadlineMs: () => 1000,
   })
   const result = await executor.runTurnWithRouteChain('agt_cto-agent', {
-    sessionId: 'fresh', message: 'harmless', opts: { lineageAdmissionToken: token },
+    sessionId: 'fresh', message: 'harmless', opts: { privateControlField: marker },
   })
   assert.equal(result.reply, 'fresh')
-  assert.equal(acquiredToken, token)
-  assert.equal(turnToken, token)
+  // Route acquire identity stays route-only; caller opts reach the turn.
+  assert.equal(acquiredWanted.privateControlField, undefined)
+  assert.equal(turnOpts.privateControlField, marker)
 })
 
 // ─── classification (parent CTR-004 whitelist / CTR-005 stop set) ─────────
