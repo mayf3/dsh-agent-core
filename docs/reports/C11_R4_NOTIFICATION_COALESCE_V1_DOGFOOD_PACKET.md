@@ -16,6 +16,9 @@
 > - `PACKET_EXACT_HEAD` = 本冻结提交（snapshot 再生成 + 本 packet；无新代码 delta）
 > - `PACKET_REFRESH_R2` = agent-control#226 embedded compose refresh（§6r2）：
 >   snapshot + 本 packet 再绑定；实现字节零改动；`PACKET_EXACT_HEAD` 随本刷新事务前移
+> - `PACKET_REFRESH_R2_HEAD`（reviewed）= `0f3043148277a457661bba178e42442b98b63c41`
+>   （独立评审 PASS / load_bearing_gaps=0，记录见 §8；其后仅 docs-only 评审记录
+>   冻结 + N1 注释吸收，零语义增量）
 > - `INDEPENDENT_REVIEW` @ `f1853c6c`：**PASS / load_bearing_gaps = 0**（记录见 §5）
 
 ## 1. 本包冻结什么
@@ -150,6 +153,35 @@ PRODUCTION_MUTATION  = NO（无 deploy/restart/sudo/凭据/raw-store/fence/UNKNO
 
 §4 生产 dogfood 的前置「§6 阻塞修复」自此满足；production apply 仍按 §4 + CTR §12.2 由
 Owner 显式授权的序列化 lane 执行（本 refresh 不构成任何生产授权）。
+
+## 8. Refresh 事务的独立 changed-surface review 记录（评审者非作者）
+
+```json
+{"reviewed_head":"0f3043148277a457661bba178e42442b98b63c41",
+ "verdict":"PASS","load_bearing_gaps":0,
+ "r1_surface":"PASS 635d4e59→0f304314 恰两文件（snapshot + 本 packet 文档），无第三文件",
+ "r2_behavior":"PASS f1853c6c→0f304314 src 面 empty diff；WATCHDOG_LIVE_ADAPTER_SHA/POST_SHA
+      与 WATCHDOG_OVERLAY_PATHS（23，含 delivery-projection.js）逐字节未动",
+ "r3_mechanical":"PASS embedded base64（611 段/34801 字节）sha256==paths digest==git show
+      f1853c6c:compose.js==git show d54b8f70:compose.js（cdc6d85c…）；模块路径
+      ./identity/agent-principal-resolution.js import 不存在（标识符
+      createAgentPrincipalResolutionAccess 属合法保留）；其余 22 路径 digest 全数吻合",
+ "r4_neutrality":"PASS admission-overlay.mjs / admission-lib.mjs / scheduler-cp-admission.mjs
+      diff=0；旧 digest e2db2d91 全仓零引用；两 packet commit 间恰一个 digest 变更、
+      零增删条目、非 base64 delta 仅头部注释",
+ "r5_doc":"PASS PACKET_REFRESH_R2/§2 r2 行/§3 三阶段历史/§6 保留原文/§6r2 闭合记录逐项吻合，
+      树内无残留『阻塞仍开』表述",
+ "r6_gates":"PASS 评审者本机复跑：deployment 两门 13/13；admission --selftest EXIT=0 零
+      REFUSED（三跑收敛，全部写入仅限自身 fixture）；delivery-projection 9/9",
+ "r7_scope":"PASS regeneration-only；remote main tip ls-remote 复核 = d54b8f70 未动；
+      历史断言（0bfbfb9d 行 56 import、b6ecc52a 移除）逐条核实",
+ "non_blocking":["N1 r1 沿袭的『embedded 是唯一与 SOURCE_SHA 树不同路径』注释已过时
+      （现两路逐字节相同）——已由本事务 comment-only 吸收，sha256 断言不受影响"]}
+```
+
+本节为 docs-only 记录冻结 + N1 注释吸收，自 reviewed head `0f304314` 起**零语义增量**
+（snapshot 数据段与全部 src 字节不动）；吸收后 head 以前移后的 `PACKET_REFRESH_R2_HEAD`
+为准，gates 于吸收提交上复跑存证。
 
 ## 7. PRODUCTION_MUTATION
 
