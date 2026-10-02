@@ -15,8 +15,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import http from 'node:http'
 
-import { DevelopmentExecutionEngine } from '../src/index.js'
-import { ExecutionLedger } from '../src/ledger.js'
+import { DevelopmentExecutionEngine } from './helpers/index.js'
+import { ExecutionLedger } from './helpers/ledger.js'
 import { developmentExecuteManifest } from '../../broker/src/capabilities/development-execute.js'
 import { DEFAULT_MANIFESTS, apply as applyBroker } from '../../broker/src/index.js'
 
@@ -534,7 +534,7 @@ test('manifest: development_execute is a closed local multi-op tool; no backend/
 test('zero-persona sweep: new packages contain no agent/persona literals', () => {
   let out = ''
   try {
-    out = execFileSync('grep', ['-ril', 'agt_cto', 'packages/development-execution/src/', 'packages/broker/src/capabilities/development-execute.js', 'packages/production-runtime/src/development-execution-runtime.js']).toString().trim()
+    out = execFileSync('grep', ['-ril', 'agt_cto', 'packages/development-execution/test/helpers/', 'packages/broker/src/capabilities/development-execute.js', 'packages/production-runtime/src/development-execution-runtime.js']).toString().trim()
   } catch {
     out = '' // grep exit 1 = no matches = PASS condition
   }
@@ -548,7 +548,7 @@ test('gateway: development_execute without a grant fails CLOSED; with stub auth 
   const { devDir } = makeRoot()
   writeReposConfig(devDir, repo)
   const fake = fakeBackend()
-  const { DevelopmentExecutionEngine: Engine } = await import('../src/index.js')
+  const { DevelopmentExecutionEngine: Engine } = await import('./helpers/index.js')
   const engine = new Engine({ devDir, backend: fake, writerAuthorityRetired: false })
 
   // stub auth-service: /oauth/token mints for ANY client (E2E stand-in)

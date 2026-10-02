@@ -17,7 +17,8 @@ import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, existsSync } from 
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { DevelopmentExecutionEngine } from '../src/index.js'
+import { DevelopmentExecutionHistory as DevelopmentExecutionEngine } from '../../production-runtime/src/execution-history/development-execution-history.js'
+import { DevelopmentExecutionEngine as LegacyDevelopmentExecutionEngine } from './helpers/index.js'
 import { developmentExecuteManifest } from '../../broker/src/capabilities/development-execute.js'
 
 function makeDevDir() {
@@ -126,7 +127,7 @@ test('explicit opt-out keeps the legacy hermetic machinery testable (never used 
     repos: [{ name: 'r', path: repoDir, allowedBranchPrefixes: [], maxWorktrees: 1 }],
   }))
   const baseSha = initGitRepo(repoDir)
-  const engine = new DevelopmentExecutionEngine({
+  const engine = new LegacyDevelopmentExecutionEngine({
     devDir,
     writerAuthorityRetired: false,
     backend: { name: 'fake', verify: () => ({ ok: true, version: 'fake' }), run: () => ({ pid: 999999, done: Promise.resolve({ exitCode: 0, signal: null, sessionId: 's-1', stderrTail: [] }) }) },

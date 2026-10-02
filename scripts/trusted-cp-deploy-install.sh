@@ -689,21 +689,6 @@ for pkg in "$REPO_SRC"/packages/*/; do
   [ -f "$pkg/package.json" ] || continue
   "$TRUSTED_NODE" "$PACKAGE_COPY_HELPER" "$pkg" "app/packages/$name"
 done
-# v2.2 FIX A′ (proven by the §3b whole-graph import gate): some app packages
-# deliberately carry NO package.json (packages/development-execution is a
-# code-only dir consumed by production-runtime via a RELATIVE import —
-# DEVELOPMENT_EXECUTION_SURFACE_V1), so the package.json-keyed loop above skips
-# them and a fresh pack could never boot the runtime
-# (ERR_MODULE_NOT_FOUND …/packages/development-execution/src/index.js — masked
-# at agent-control#193 only because the @larksuite/channel resolution failure
-# fired earlier in the import order). Carry their src/ explicitly — same
-# package.json+src, no-tests discipline as the copy helper.
-for rel in development-execution; do
-  [ -d "$REPO_SRC/packages/$rel/src" ] || { echo "ERROR: relative-import app package missing: packages/$rel/src" >&2; exit 2; }
-  rm -rf "app/packages/$rel"
-  mkdir -p "app/packages/$rel"
-  cp -R "$REPO_SRC/packages/$rel/src" "app/packages/$rel/src"
-done
 # bundles + profiles
 for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
   [ -d "$d" ] || continue
