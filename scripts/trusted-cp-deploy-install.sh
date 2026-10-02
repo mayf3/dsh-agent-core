@@ -449,9 +449,50 @@ if [ -n "$PRESCAN_HITS" ]; then
 fi
 echo "  ok: no /Users/yanfenma references in the pack source (pre-mutation gate, staging packed + scanned)"
 
+# ---- 0c. disk-budget + full-tree retention admission gate (W0, Product #430)
+# Hard admission gate BEFORE the FIRST production mutation (the section-1
+# full-root preimage mv, or the first tree write on a fresh install). Reuses
+# the AGENT_CORE_BACKUP_RETENTION_V1 filesystem helper — no new service,
+# daemon, DB, or platform. The gate is READ-ONLY over the trees and writes the
+# JSON receipt <parent>/agent-core-deploy-budget-receipt.json on every attempt:
+#   DISK_FREE_BEFORE / LIVE_TREE_BYTES / ESTIMATED_PEAK_BYTES /
+#   DISK_FREE_AFTER_RESERVATION / retained backups before+after / pin reasons.
+# Floor = max(60 GiB, 10% of the Data volume); allocation = worst-case
+# physical (logical bytes; CLONE_PROOF = NONE); retention cap = live + max one
+# pinned known-good + max one newest immediate-rollback preimage at/above the
+# 20 GiB class — a third one is refused unless the superseded unpinned ones
+# were cleaned by EXACT path (helper --cleanup-exact) or an open-Product pin
+# exception is asserted via AGENT_CORE_BUDGET_PIN_EXCEPTION (receipted; sudo
+# callers must pass it through explicitly, e.g. sudo AGENT_CORE_BUDGET_PIN_
+# EXCEPTION="..." ./scripts/trusted-cp-deploy-install.sh). Refusal is
+# fail-closed: NOTHING is mutated.
+if [ ! -x "$BACKUP_OPS" ]; then
+  echo "ERROR: backup-ops helper missing ($BACKUP_OPS); the disk-budget admission gate is unavailable — refusing to deploy (fail-closed; NOTHING mutated)" >&2
+  exit 2
+fi
+PROJECTED_BAK=""
+BUDGET_NEW_BAK_ARG="NONE"
+if [ -e "$TRUSTED_ROOT" ]; then
+  PROJECTED_BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
+  BUDGET_NEW_BAK_ARG="$PROJECTED_BAK"
+fi
+BUDGET_PIN_ARGS=()
+if [ -n "${AGENT_CORE_BUDGET_PIN_EXCEPTION:-}" ]; then
+  BUDGET_PIN_ARGS=(--pin-exception "$AGENT_CORE_BUDGET_PIN_EXCEPTION")
+fi
+BUDGET_RC=0
+"$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --check-budget "$BUDGET_NEW_BAK_ARG" ${BUDGET_PIN_ARGS[@]+"${BUDGET_PIN_ARGS[@]}"} || BUDGET_RC=$?
+if [ "$BUDGET_RC" -ne 0 ]; then
+  echo "ERROR: DEPLOY_REFUSED_BEFORE_MUTATION — disk-budget / full-tree-retention admission gate FAILED (helper rc=$BUDGET_RC: 4=REFUSED_DISK_BUDGET 5=REFUSED_RETENTION_CAP)." >&2
+  echo "MUTATION TRUTH: NOTHING was mutated — the section-1 backup mv did NOT run; the live install is untouched." >&2
+  echo "receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json (verdict + exact-path cleanup guidance inside)" >&2
+  exit 2
+fi
+echo "  ok: disk-budget + retention admission gate ADMITTED (receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json)"
+
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
-  BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
+  BAK="$PROJECTED_BAK"
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
   # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
