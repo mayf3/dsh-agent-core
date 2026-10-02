@@ -14,6 +14,8 @@
 >   （base main `d54b8f70a920398e8101c8c3630a82bc70baa391`；branch
 >   `c11-r4-notification-coalesce-v1`）
 > - `PACKET_EXACT_HEAD` = 本冻结提交（snapshot 再生成 + 本 packet；无新代码 delta）
+> - `PACKET_REFRESH_R2` = agent-control#226 embedded compose refresh（§6r2）：
+>   snapshot + 本 packet 再绑定；实现字节零改动；`PACKET_EXACT_HEAD` 随本刷新事务前移
 > - `INDEPENDENT_REVIEW` @ `f1853c6c`：**PASS / load_bearing_gaps = 0**（记录见 §5）
 
 ## 1. 本包冻结什么
@@ -50,7 +52,7 @@
 | 改动 | `scripts/scheduler-watchdog.mjs`、`watchdog/delivery.js`、`watchdog/incident-lifecycle.js`、`watchdog/index.js` | 本次实现的 4 个已列路径新摘要 |
 | 新增 | `watchdog/delivery-projection.js` | delivery.js/incident-lifecycle.js/index.js 的新 import；必须入 overlay universe，否则 narrow REFUSED |
 | 刷新 | `product-api/src/index.js`、`production-runtime/src/{entry.js,paths.js,scheduler-invoker.js}`、`scheduler/src/{occurrence-model.js,self-ops/index.js}` | **先于本包即已漂移**（main 在 0bfbfb9d 后由其他已合并 lane 演进，drift 门在 pristine main 已红）；按 §B1 语义刷新为 SOURCE_SHA=`f1853c6c` 树字节 |
-| 保持 | `production-runtime/src/compose.js`（embedded） | 冻结 payload compose 世代原样保留——见 §6 部署前阻塞 |
+| 刷新 r2 | `production-runtime/src/compose.js`（embedded） | **embedded compose 世代再生成（agent-control#226，机械 rebind）**：0bfbfb9d 世代 → `f1853c6c` 树字节（sha256 `cdc6d85c…`，与 main `d54b8f70` 逐字节相同，main tip 自分支以来未动）——闭合 §6 的 `EMBEDDED_COMPOSE_STALE_GENERATION` 部署前阻塞；实现字节零改动 |
 | 配套 | `scripts/lib/admission-lib.mjs` universe 22→23；`deployment-overlay-closure.test.js` 权威 census 22→23 | 单一 reviewed 事务 |
 
 ## 3. 验证证据（全部在本 worktree 实测，命令可重放）
@@ -67,13 +69,16 @@ repo-wide        全仓失败集与 pristine main 的差异 = deployment 两门�
                  更正：实现提交信息中「failure set identical」措辞不成立，准确表述以此为准。
 live smoke       双循环 dry-run（无路由/凭据沙箱）：incidents/outbox 零重复 transition、
                  evidence 行含投影决策、route-missing 仍 park + exit 1（fail-loud 原样）
-admission selftest = PRE-EXISTING BROKEN ON MAIN：pristine main 即红（先存 drift）；
-                 本包后再进一步、止于 §6 的 embedded compose 世代墙（见 §6，部署前必修）
+admission selftest = PASS（r2 embedded compose refresh 后整链 PASS：三跑 main() 收敛、
+                 EXIT=0，narrow walk 覆盖新 compose 全图无后续 refusal）。
+                 历史轨迹：pristine main 即红（先存 drift）→ #225 再生成后止于 §6 的
+                 embedded compose 世代墙 → #226 将 embedded compose 刷新至 f1853c6c
+                 树字节（cdc6d85c…）后闭合（见 §6r2）
 ```
 
 ## 4. Dogfood 程序（一次真实 NEW→RECOVERED 生命周期；授权后由生产 lane 执行）
 
-1. 前置：§6 阻塞修复 + CTR §12.2 既有门（implementation gates、serialization slot、
+1. 前置：§6 阻塞已由 §6r2 embedded compose refresh 闭合 + CTR §12.2 既有门（implementation gates、serialization slot、
    provenance、canary、sequential readback）全部满足；SOURCE_SHA = 本包 head。
 2. 观察一次**真实** incident（禁止合成 incident、禁止制造 outcome_unknown——CTR §12.2），
    期望用户面消息 census（对 #428 生产序列 HR v5：14 条 → 6 条）：
@@ -109,15 +114,42 @@ admission selftest = PRE-EXISTING BROKEN ON MAIN：pristine main 即红（先存
    "N8 runW2 无投影 evidence 行（先存不对称）","N9 旧记录 post-deploy transition 永远旧文本（混排）"]}
 ```
 
-## 6. 部署前阻塞（本 lane 不修，移交生产 lane / Owner）
+## 6. 部署前阻塞（#225 发现；已由 §6r2 embedded compose refresh 闭合）
 
-**EMBEDDED_COMPOSE_STALE_GENERATION**：冻结 payload 的 compose.js（payload commit `0bfbfb9d`
-世代）import `./identity/agent-principal-resolution.js`，该文件已被 main `b6ecc52a`
-（identity capability slice）移除/重构。后果：`admission --selftest` 在 NARROW CLOSURE
-REFUSED（pristine main 上 selftest 因先存 drift 同样不可用）；真实 apply 仅在 live 树仍服务该
-import 时可容忍，否则不可安装。**任何下一次 watchdog 部署前**，生产 lane 必须以 reviewed
-snapshot 再生成更新 embedded compose 世代（或确认 live 世代 pin 仍为 PRE/POST 之一）——本 lane
-无 payload 字节裁决权，未动 embedded 字节。
+**EMBEDDED_COMPOSE_STALE_GENERATION**（历史记录，#225 原文）：冻结 payload 的 compose.js
+（payload commit `0bfbfb9d` 世代）import `./identity/agent-principal-resolution.js`，该文件已被
+main `b6ecc52a`（identity capability slice）移除/重构。后果：`admission --selftest` 在 NARROW
+CLOSURE REFUSED（pristine main 上 selftest 因先存 drift 同样不可用）；真实 apply 仅在 live 树仍
+服务该 import 时可容忍，否则不可安装。本 lane 当时无 payload 字节裁决权，未动 embedded 字节，
+并将「以 reviewed snapshot 再生成更新 embedded compose 世代」显式移交下一 SAME-Product 命令。
+
+## 6r2. EMBEDDED_COMPOSE_STALE_GENERATION 闭合记录（agent-control#226，NON-PRODUCTION）
+
+Product #428 lifecycle 授权的 bounded refresh（CLAIM_TOKEN =
+`c11-r4-embedded-compose-refresh-20261002-r1`）已执行，机械事实：
+
+```text
+REGENERATED_SURFACES = scripts/lib/watchdog-payload-snapshot.mjs（embedded compose base64
+                       + paths digest + 头部再生成记录）、本 packet 文档（§2 表 r2 行、
+                       §3 证据行、本节）——仅此两文件
+NEW_EMBEDDED_BYTES   = git show f1853c6c:packages/production-runtime/src/compose.js
+                       sha256 cdc6d85cdba26f6e4f4c8decb75790414ee4da1ed074604432b45072366c7575
+                       （== main d54b8f70 树字节；remote main tip fresh 复核未动）
+MECHANISM            = 既有 watchdog 部署工具链自身的 reviewed-snapshot-regeneration 契约
+                       （overlay() B1：embedded 与 SOURCE_SHA 双路解析、digest 断言、drift
+                       fail-closed）；未手写字节、未改 target()/narrow 语义、未动
+                       WATCHDOG_LIVE_ADAPTER_*/WATCHDOG_OVERLAY_PATHS census（23 不变）
+BEHAVIOR_BYTES       = #225 实现面（scheduler-watchdog.mjs、watchdog/{delivery,
+                       delivery-projection,incident-lifecycle,index}.js）逐字节未动
+GATES_AFTER_REFRESH  = deployment-overlay-closure + deployment-incident-migration 13/13 PASS；
+                       admission --selftest PASS（EXIT=0；旧 NARROW CLOSURE REFUSED 消失，
+                       新 compose 全图 narrow walk 收敛）
+PRODUCTION_MUTATION  = NO（无 deploy/restart/sudo/凭据/raw-store/fence/UNKNOWN replay/
+                       Remote Desktop；live 世代 pin 678374d7→17e4aedd 语义未动）
+```
+
+§4 生产 dogfood 的前置「§6 阻塞修复」自此满足；production apply 仍按 §4 + CTR §12.2 由
+Owner 显式授权的序列化 lane 执行（本 refresh 不构成任何生产授权）。
 
 ## 7. PRODUCTION_MUTATION
 
