@@ -6,6 +6,8 @@ Select the shortest authorized route by classifying Product Authority, execution
 
 ## Procedure
 
+Resume an existing valid record for the same authorized request; do not recreate a full census merely because the session or packet name changed. Read only active relevant authorities and the evidence needed for the next action. A current summary is an index, not authorization. For expanding delivery, use the grammar's Bounded delivery loop and the existing Brief's conditional delivery fields.
+
 1. Bind target repository, `REVIEW_TARGET_HEAD`, `BASE_HEAD`, `CURRENT_BASE_HEAD`, Goal/target, and Current Gap.
 2. Read local precedence, exact adoption lock, Product Direction, Architecture/invariants, overlapping accepted Specs, named proposed target, and exact external authorities.
 3. Record qualified Observations; separate a Working Guess when interpretation changes routing.
@@ -102,7 +104,7 @@ NEXT_REAL_ACTION = <product-facing action | NOT_APPLICABLE>
 NEXT_ACTION = CONTINUE | STOP | RE_PREFLIGHT | OWNER_DECISION
 ```
 
-Do not start semantic implementation or mutation when the relevant readiness flag is `NO`.
+Do not start semantic implementation or mutation when the relevant readiness flag is `NO`. A `LOAD_BEARING` label needs the protocol's `spec_gap_detail` dependency diagnosis. Missing diagnosis is not permission to continue and not a reason to invent a larger product design. Scope the pause to the actual dependency and request its minimum missing fact. Once the next action's gates and authorization are satisfied, execute it rather than re-running unchanged PREFLIGHT.
 
 Hard routing effects:
 
