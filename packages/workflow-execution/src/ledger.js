@@ -255,10 +255,8 @@ export class ExecutionLedger {
   }
 
   /**
-   * THE single mutation authority: in-process FIFO -> cross-process lock ->
-   * fresh replay -> apply -> append. Replaying under the lock means a second
-   * process (or a second engine on a stale projection) converges before it
-   * mutates.
+   * THE single mutation authority: FIFO -> OwnerLock -> fresh replay -> apply
+   * -> append; every poller converges before it mutates.
    */
   async mutate(fn) {
     const run = this._queue.then(() => this.lock.runExclusive(() => {
@@ -277,22 +275,20 @@ export class ExecutionLedger {
 
   /**
    * The atomic one-attempt-per-NodeVisit fence. Creates the attempt (and
-   * appends attempt_planned) only when the NodeVisit has NO attempt yet —
-   * any existing attempt (ACTIVE, SETTLED or NEEDS_REVIEW) blocks a second
-   * one, with the single WORKFLOW_STALE_REENTRY_V1 exception: a terminal
-   * attempt with judgment 'stale_no_progress' is superseded by generation
-   * N+1 (CTR-SRE-003). This is what makes duplicate pollers / re-polls /
-   * HR + scheduler double triggers safe on the DSH side.
+   * appends attempt_planned) only for a new visit or a terminal stale attempt
+   * with positive execution proof. `canReenter` reads the fresh predecessor
+   * under OwnerLock and must return synchronous true before any new append.
    *
    * When `complete` is supplied, retain the same cross-process OwnerLock
    * through resolve/delivery and append exactly one completion event before
    * releasing it. Omitting `complete` preserves the ledger-only primitive
-   * used by focused lifecycle tests and recovery tooling.
+   * used by focused lifecycle tests and recovery tooling; stale re-entry
+   * still requires the same proof even when no delivery callback is supplied.
    *
    * @returns {Promise<{created:true, attempt:object, completion?:object}
-   *   | {created:false, attempt:object, cause:'already_attempted'}>}
+   *   | {created:false, attempt:object, cause:string}>}
    */
-  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete) {
+  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete, canReenter) {
     validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })
     if (complete !== undefined && typeof complete !== 'function') {
       throw new TypeError('workflow-execution: admission completion callback must be a function when provided')
@@ -303,11 +299,7 @@ export class ExecutionLedger {
         if (!(existing.state !== 'ACTIVE' && existing.judgment === STALE_NO_PROGRESS_JUDGMENT)) {
           return { created: false, attempt: { ...existing }, cause: 'already_attempted' }
         }
-        // CTR-SRE-003 identity pre-check BEFORE the durable append: the
-        // projection guard would refuse a mismatched replan on replay, and
-        // an append-then-refuse would mean a corrupt file. The activation is
-        // unique per visit server-side, so a mismatch means the feed itself
-        // contradicts the ledger — fail loud, never absorb.
+        // CTR-SRE-003: reject contradictory identity before any append.
         const sameIdentity = existing.dispatchIntentId === dispatchIntentId.toLowerCase()
           && existing.workflowInstanceId === workflowInstanceId.toLowerCase()
           && existing.ownerPrincipalId === ownerPrincipalId.toLowerCase()
@@ -322,6 +314,13 @@ export class ExecutionLedger {
         if (nextGeneration > this.maxAttemptsPerVisit) {
           return { created: false, attempt: { ...existing }, cause: 'attempt_limit_reached' }
         }
+        let quiescent = false
+        try {
+          const proof = typeof canReenter === 'function' ? canReenter({ ...existing }) : undefined
+          if (proof instanceof Promise) void proof.catch(() => {})
+          quiescent = proof === true
+        } catch { /* unavailable proof cannot authorize a new execution */ }
+        if (!quiescent) return { created: false, attempt: { ...existing }, cause: 'deferred_quiescence' }
       }
       // WORKFLOW_STALE_REENTRY_V1 CTR-SRE-003: a terminal attempt with
       // judgment 'stale_no_progress' is superseded by generation N+1 (the
@@ -660,7 +659,7 @@ export class ExecutionLedger {
    * WORKFLOW_STALE_REENTRY_V1: cross-process-fresh enumeration of delivered
    * attempts whose dispatch clock has exceeded the stale threshold — the
    * ACTIVE/run_delivered candidates (evaluated inside the reconcile loop)
-   * plus the terminal NEEDS_REVIEW candidates (the run-ended-without-
+   * plus terminal run_ended_no_submission candidates (the run-ended-without-
    * submission class). Fresh replay under the lock, same discipline as
    * listActiveFresh.
    */
@@ -671,7 +670,7 @@ export class ExecutionLedger {
     return this.mutate(() => [...this.attempts.values()]
       .filter((attempt) => attempt.delivered !== undefined
         && nowMs - attempt.delivered.atMs >= thresholdMs
-        && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered') || attempt.state === 'NEEDS_REVIEW'))
+        && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered') || (attempt.state === 'NEEDS_REVIEW' && attempt.judgment === 'run_ended_no_submission')))
       .map((attempt) => ({ ...attempt })))
   }
 
