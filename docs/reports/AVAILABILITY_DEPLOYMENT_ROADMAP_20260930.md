@@ -14,7 +14,7 @@
 
 - T0/T1 已执行：PR [#374](https://github.com/mayf3/dsh-agent-core/pull/374)（Product [#383](https://github.com/mayf3/dsh-agent-core/issues/383)，WAITING_OWNER）；[#385](https://github.com/mayf3/dsh-agent-core/issues/385)（A2 现场映射）已关闭。
 - §12/T2 的 B→C→B 已在既有 DS 面**非生产**验证：Product [#393](https://github.com/mayf3/dsh-agent-core/issues/393)（CLOSED，DS_TEST_MODE 8/8）。
-- §7/T4 资格隔离已实现：PR [#392](https://github.com/mayf3/dsh-agent-core/pull/392)（Product [#389](https://github.com/mayf3/dsh-agent-core/issues/389)，评审 ACCEPT，待 Owner merge）。
+- §7/T4 资格隔离已实现并已并入 main（PR [#392](https://github.com/mayf3/dsh-agent-core/pull/392) merge `1b763e46`，2026-10-02；Product [#389](https://github.com/mayf3/dsh-agent-core/issues/389) 仍 OPEN）。
 - dsh [#370](https://github.com/mayf3/dsh-agent-core/pull/370)（`return_policy_exhausted`）已并入 main `360756e3`；“仍 OPEN”类表述过时，其生产安装/验证归 [#382](https://github.com/mayf3/dsh-agent-core/issues/382) 波次。
 - 控制器/治理采用归 Epic [#379](https://github.com/mayf3/dsh-agent-core/issues/379)（[#364](https://github.com/mayf3/dsh-agent-core/pull/364) 的采用由 [#399](https://github.com/mayf3/dsh-agent-core/issues/399) 承载）；HR 容量线归 [#384](https://github.com/mayf3/dsh-agent-core/issues/384)。
 
