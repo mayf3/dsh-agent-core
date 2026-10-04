@@ -2,137 +2,12 @@
 # owner-router-closure-g2-g7-v23.sh — B7 SHARED_CODEX_DEPLOYMENT_ROOT_REFREEZE_V2.3 (2026-10-02) — DEFECT C reconciliation + MODEL_OVERRIDES_CONFIG_GATE_V1
 # Rebound copy of the v2.2 executor
 # (source: docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v22.sh).
-# V2.3 rebind (2026-10-02 repair lane after agent-control#195 fail-closed at
-# restart adoption; source pin MOVES to 4f14ff00/6eae0c23 — scripts/lib gains
-# two files, so per the packet's own R4 this is a NEW freeze):
-#   DEFECT C (#195): the pin runtime loader REQUIRES fleet config version:3
-#          (fail-loud "older files are not converted", main f222b59f
-#          2026-08-31) while the production /Users/authsvc/.agent-core/
-#          agent-model-overrides.json is version:2 (92 overrides) and the
-#          packet's own STAGE 2 carrier r12 G3 bound "fleet config v2" — no
-#          migration stage existed, so EVERY restart of a freshly packed
-#          generation FATAL-crash-looped (8790 down ~05:31–05:38 +0800). All
-#          pre-restart gates were green by construction: none composed the
-#          runtime against the REAL config.
-#   FIX C (this rebind, two halves):
-#     STAGE 1M `cutover` — the separately frozen exact v2→v3 fleet-config
-#          migration (scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs:
-#          version 2→3 + canonical credentialFile on openai-codex subscription
-#          routes ONLY; overrides untouched; mode/owner preserved; preimage
-#          backup <config>.pre-v3-<ts>; candidate validated by the REAL v3
-#          loader BEFORE the atomic rename; dry-run default) executed as ONE
-#          step with the kickstart — compose.js re-reads the config at every
-#          process boundary, so a v3 file under the still-running v2 loader is
-#          the same FATAL class and the write→restart window must stay
-#          sub-second and machine-enforced.
-#     G2.7 MODEL_OVERRIDES_CONFIG_GATE_V1
-#          (scripts/lib/trusted-cp-model-overrides-config-gate.mjs) — the
-#          installed tree's OWN loadAgentModelOverrides against the REAL
-#          production config + REAL agents.json registry, READ-ONLY, BEFORE
-#          any restart. No cutover without a G2.7 PASS on the exact bytes the
-#          restarted generation will run.
-#   RESTORE-R3 (v2.3, mandatory whenever STAGE 1M executed the migration and
-#   the cutover is rolled back): the §6 app-tree restore does NOT cover the
-#   config file, and the OLD generation's v2 loader cannot read a v3 config.
-#   After any post-migration rollback, restore the config from the migrator's
-#   preimage backup BEFORE restarting the old generation (root; exact mode/
-#   owner are in the backup):
-#     cp -p /Users/authsvc/.agent-core/agent-model-overrides.json.pre-v3-<ts> \
-#           /Users/authsvc/.agent-core/agent-model-overrides.json
-#   then the §6 tree restore + RESTORE-R1 + RESTORE-R2 + kickstart, exactly as
-#   before. The cutover's die messages inline the full sequence.
-#   STAGE 2 carrier moves to r13 (owner-authsvc-plugin-upgrade-r13.sh): G3's
-#   version predicate 2→3 WITH this migration; the Owner must RE-PLACE
-#   AMENDMENT_ACCEPTED.marker with the r13 scriptSha256 before STAGE 2 --apply
-#   (G1 stays fail-closed on marker==script).
-# V2 rebindings vs that copy:
-#   DEPLOY_SRC   = .worktrees/b7-v22-packet-repair-20261002 (clean checkout at the new pin b78aa30a)
-#   EXPECTED_SHA = 8fc374ca8f97257b6947db291b82df5bb20acf67 (closure-runtime-arch repair source: installer §1a/§2 runtime-node
-#                  closure build + §2c fail-closed closure-resolution gate; GOVERNING_SPECS_UNMODIFIED)
-#   EXPECTED_TREE= f60cc9e81b28d685418497f3fc1f67fe945f8703
-#   EVIDENCE     = this directory
-#   NEW in V2  : after the installer exits 0, `deploy` runs FRESH_CHILD_BOOT_CANARY_V1
-#                (scripts/lib/trusted-cp-fresh-child-boot-canary.mjs from DEPLOY_SRC) against the
-#                installed tree — disposable fresh agent-core-production child boot in a throwaway
-#                home, no credentials, fail-closed BEFORE any service restart/health handoff. This
-#                is the gate missing on 2026-10-01 23:35, when a closure built by an arm64-host
-#                pnpm shipped without the x64 native binding and every fresh child died at
-#                plugin-tree boot (the installer's own §2c closure gate is the second, earlier net).
-# V2.1 rebind (2026-10-02 repair lane after agent-control#191 fail-closed; packet-internal
-# only — DEPLOY_SRC pin 8fc374ca/f60cc9e8, installer, and gate/canary bytes UNCHANGED):
-#   FIX 1 (defect 1 of #191): post-deploy byte-provenance echo #3 greps
-#          AGENT_PROCESS_GENERATION_FLOOR_UNAVAILABLE in process-registry-route-gate.js (:52).
-#          The stale inherited grep of process-registry.js (0 hits there at this pin AND at
-#          every reference generation since the v1 pin) deterministically aborted every deploy
-#          after the install and BEFORE this executor's own G2.5 fresh-child boot canary.
-#   FIX 2 (defect 2 of #191): RESTORE-R1 — the restore contract re-materializes node-runtime
-#          from the fresh STAGE 0 preimage whenever installer §1b reused it: §1b mv-s
-#          node-runtime OUT of the §1 auto-preimage, so a restore from it can land WITHOUT
-#          node-runtime once the rm -rf deletes the installed tree (the only other copy) —
-#          reproduced 2026-10-02 (2418 deleting lines in the restore diff). Rollback semantics
-#          otherwise unchanged (rm -rf live + mv newest bak back; no symlinks, no live
-#          node_modules patches). New offline gate: --selftest-repair (hermetic /tmp fixtures,
-#          no sudo, no production access).
-# V2.2 rebind (2026-10-02 repair lane after agent-control#193 fail-closed at
-# adoption; source pin MOVES to b78aa30a/d5fb04c9 — this is the first v2 repair
-# that changes shipped source/pack closure, so per the packet's own R4 it is a
-# NEW freeze):
-#   FIX A (Defect A, #193): fresh pack lacked transitive dep proxy-agent-negotiate
-#          (@larksuite/channel/node_modules/https-proxy-agent imports it; no pack
-#          input carries it) → production-runtime FATAL at first boot while G2.5
-#          passed — the canary covers the plugin tree, not the runtime app graph.
-#          Repairs (in DEPLOY_SRC at the new pin): vendored proxy-agent-negotiate
-#          carried by installer §3 + NEW §3b RUNTIME_APP_GRAPH_GATE_V1 (installer
-#          side, pre-§5b) + THIS executor's G2.6 run of the same gate against the
-#          installed tree, both fail-closed before any restart.
-#   FIX A′ (same class, proven live by the new gate in the v2.2 lane):
-#          packages/development-execution (no package.json, RELATIVE import from
-#          production-runtime) was never packed — installer §3 now carries it.
-#   FIX B (Defect B, #193 restore-completion): installer §5b no longer blanket-
-#          chowns the plist-pinned watchdog private state (control/scheduler-
-#          watchdog + control/incident-backups, SCHEDULER_INCIDENT_OWNER_GID=20);
-#          RESTORE-R2 below re-pins the set after any restore.
-#   RESTORE-R2 (v2.2, mandatory whenever the failed deploy's installer reached §5b):
-#   §5b must never touch the plist-pinned watchdog private state (v2.2 installer),
-#   but any rollback from a PRE-v2.2 installed generation — or any v2.1-era §5b
-#   run — can leave group 601 on it (#193: the restored tree failed its own
-#   scheduler startup readiness gate `unsafe incident state file`, 8790 down
-#   ~03:41–03:47 until the group was re-pinned). After the restore mv (+ RESTORE-R1),
-#   re-pin deterministically (root; idempotent no-op when already correct):
-#     for p in /Users/authsvc/.agent-core/control/scheduler-watchdog \
-#              /Users/authsvc/.agent-core/control/incident-backups; do
-#       [ -d "$p" ] && chgrp -R 20 "$p"
-#     done
-#   Never a symlink, never a live node_modules patch; the app tree restore
-#   algorithm itself is unchanged.
-# The installer itself (binding-time trusted-cp-deploy-install.sh inside DEPLOY_SRC) carries
-# the section-0b PRE-MUTATION cross-surface gate: a contamination failure now fires before
-# the backup mv, and every late failure reports mutation truth + exact restore (the 2026-10-01
-# "NOTHING was deployed" false claim is fixed in both copies).
-# Owner-sudo execution script for Phase G2–G7. READ/WRITE SCOPE:
-#   - deploy  : runs the EXISTING trusted production deployment control plane (mutex,
-#               provenance, preimage/rollback contract) — no hand-edits, no file copies.
-#   - others  : strictly read-only against the durable store; verdicts + snapshots are
-#               written ONLY to this goal's evidence directory.
-# It never touches durable store content, Codex credentials, or any credential surface.
-#
-# Usage (Owner, with sudo):
-#   sudo bash owner-router-closure-g2-g7.sh preflight
-#   sudo bash owner-router-closure-g2-g7.sh deploy
-#   sudo bash owner-router-closure-g2-g7.sh cutover   (v2.3 STAGE 1M: G2.7 → v2→v3 migration if v2 → G2.7 → kickstart → health, ONE atomic step)
-#   sudo bash owner-router-closure-g2-g7.sh health
-#   sudo bash owner-router-closure-g2-g7.sh snapshot <agentId> <label>
-#   sudo bash owner-router-closure-g2-g7.sh verify-restart <agentId> <beforeLabel> <afterLabel>
-#   sudo bash owner-router-closure-g2-g7.sh close
-# Offline selftest (no sudo, no mutation):
-#   bash owner-router-closure-g2-g7.sh --selftest
-#     (reads the LIVE trusted app's durable-file module via store_state_json —
-#      read-only, inherited verbatim from the v2.1 executor; fails on a host
-#      without the live tree)
-#   bash owner-router-closure-g2-g7.sh --selftest-repair   (v2.1+#191 defect repairs,
-#      v2.2 G2.6/RESTORE-R2 proofs, and v2.3 G2.7/STAGE-1M/RESTORE-R3 proofs —
-#      fully hermetic: /tmp fixtures + $DEPLOY_SRC only)
-
+# NONPRODUCTION joint-recovery candidate: deploy/cutover are retired here.
+# The exact r13 TX owns code/config/plugin intents and recovery. Original source
+# pins below remain historical diagnostic coordinates; they authorize no deploy.
+# Snapshot/health/diagnostic commands retain their original restricted meaning.
+# B7-only apply/resume below owns the existing global mutex across r13 phases.
+# Exact acceptance/artifact bindings are still required; this is not approval.
 set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
@@ -202,7 +77,193 @@ byte_provenance_verdict() { # $1 = app root; prints the three DEPLOYED_BYTES lin
   [ "$HITS_STORE" -ge 1 ] && [ "$HITS_GATE" -ge 1 ] && [ "$HITS_REG" -ge 1 ]
 }
 
+# Fixed B7-only caller. The same mkdir namespace excludes the existing watchdog
+# deployer. The inherited flock protects explicit same-TX recovery; no PID/time
+# inference, legacy-lock takeover, routing hook, or second transaction authority.
+b7_outer() {
+  exec 3<&0
+  exec /usr/bin/python3 - "$0" "$@" <<'B7_PY'
+import fcntl, hashlib, json, os, re, signal, stat, subprocess, sys, tempfile
+from pathlib import Path
+
+def stop(reason):
+    raise RuntimeError(reason)
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def sync_dir(path):
+    fd = os.open(path, os.O_RDONLY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
+
+def checked(path, directory=False):
+    s = os.lstat(path)
+    good = stat.S_ISDIR(s.st_mode) if directory else stat.S_ISREG(s.st_mode) and s.st_nlink == 1
+    if not good or s.st_uid != os.geteuid() or stat.S_IMODE(s.st_mode) != (0o700 if directory else 0o600):
+        stop('B7_CUSTODY_REFUSED: ' + str(path))
+    expected = str(path)
+    if expected.startswith('/var/'):
+        if os.readlink('/var') != 'private/var' or str(Path('/var').resolve()) != '/private/var':
+            stop('B7_SYSTEM_ALIAS_REFUSED')
+        expected = '/private' + expected
+    if str(Path(path).resolve()) != expected: stop('B7_PATH_REFUSED')
+    return s
+
+def read_private(path, limit=65536):
+    s = checked(path)
+    if s.st_size > limit: stop('B7_RECORD_TOO_LARGE')
+    return json.loads(Path(path).read_bytes())
+
+try:
+    outer = Path(sys.argv[1]).resolve()
+    args = sys.argv[2:]
+    mode = args[0]
+    probe = mode.startswith('--b7-probe-')
+    action = mode.replace('--b7-probe-', '') if probe else mode.replace('b7-', '')
+    if len(args) != 3 or args[1] != '--transaction' or not re.fullmatch(r'tx-[A-Za-z0-9-]{1,100}', args[2]):
+        stop('B7_USAGE: b7-apply|b7-resume --transaction <exact tx-id>')
+    txid = args[2]
+    repo = outer.parents[3]
+    carrier = repo / 'docs/evidence/openai-codex-refresh-token-reused-v1-20260910/owner-authsvc-plugin-upgrade-r13.sh'
+    helper = repo / 'scripts/lib/deployment-reuse/transaction-recovery.mjs'
+    migrator = repo / 'scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs'
+    root, trusted = Path('/Users/authsvc/.agent-core'), Path('/usr/local/libexec/agent-core')
+    recovery = Path('/var/db/agent-core/authsvc-codex-migration')
+    lock = Path('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
+    if probe:
+        base = Path(os.environ['B7_PROBE_BASE'])
+        checked(base, True)
+        if not str(base).startswith(str(Path(tempfile.gettempdir()).resolve()) + '/b7-joint-test-'):
+            stop('B7_PROBE_ROOT_REFUSED')
+        root, trusted, recovery = [base / name for name in ('root', 'trusted', 'recovery')]
+        for name, path in [('ROOT', root), ('TRUSTED_ROOT', trusted), ('RECOVERY_ROOT', recovery)]:
+            if os.environ.get('TXPROBE_' + name) != str(path): stop('B7_PROBE_PATH_REFUSED')
+            checked(path, True)
+        lock = base / 'production-deploy.lock'
+    elif os.geteuid() != 0:
+        stop('B7_ROOT_REQUIRED')
+    holder, txfile = lock / 'holder', recovery / 'migration-transaction.json'
+    binding = dict(txId=txid, deploymentRoot=str(root), trustedRoot=str(trusted), recoveryRoot=str(recovery),
+                   outerPath=str(outer), outerSha256=sha(outer), carrierPath=str(carrier),
+                   carrierSha256=sha(carrier), toolSha256=sha(helper), migrationToolSha256=sha(migrator))
+    # The accepted set digest is part of the existing holder/TX identity.
+    # Resume/guard use the retained holder, never a newly selected marker.
+    if action in ('guard', 'resume') and holder.exists():
+        prior_binding = read_private(holder).get('binding', {})
+        if 'cohortSha256' in prior_binding:
+            binding['cohortSha256'] = prior_binding['cohortSha256']
+            binding['cohortToolSha256'] = sha(helper.parent / 'cohort-binding.mjs')
+            binding['cohortSupport'] = {p: sha(helper.parent / p) for p in ('cohort-runtime.mjs', 'cohort-artifacts.mjs')}
+
+    def identity(fd):
+        checked(lock, True)
+        s, opened = checked(holder), os.fstat(fd)
+        if (s.st_dev, s.st_ino, s.st_nlink) != (opened.st_dev, opened.st_ino, 1):
+            stop('B7_LOCK_IDENTITY_MISMATCH')
+        record = json.loads(os.pread(fd, s.st_size, 0))
+        if record.get('format') != 'B7_GLOBAL_HOLDER_V1' or not re.fullmatch(r'[a-f0-9]{32}', record.get('nonce', '')):
+            stop('B7_BINDING_MISMATCH: legacy or malformed holder')
+        if record.get('binding') != binding: stop('B7_BINDING_MISMATCH: tx/source/target')
+        return record
+
+    # The holder stays small. TX includes bounded per-consumer recovery evidence.
+    def tx_record(record):
+        tx = read_private(txfile, 4 * 1024 * 1024)
+        if tx.get('txId') != txid or tx.get('outer') != record:
+            stop('B7_BINDING_MISMATCH: durable transaction')
+        return tx
+
+    if action == 'guard':
+        record = identity(9)
+        # A separately opened FD must be blocked, while the inherited open-file
+        # description must already own the lock. Never LOCK_UN the shared lease.
+        other = os.open(holder, os.O_RDWR | os.O_NOFOLLOW)
+        try:
+            try: fcntl.flock(other, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError: pass
+            else: stop('B7_MUTEX_NOT_HELD')
+            fcntl.flock(9, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            identity(9)
+        finally: os.close(other)
+        print('B7_MUTEX_INHERITED', flush=True)
+        sys.exit(0)
+
+    if action not in ('apply', 'resume'): stop('B7_UNKNOWN_ACTION')
+    parent = os.lstat(lock.parent)
+    if not stat.S_ISDIR(parent.st_mode) or parent.st_uid != os.geteuid() or parent.st_mode & 0o022:
+        stop('B7_LOCK_PARENT_REFUSED')
+    if str(lock.parent.resolve()) != str(lock.parent): stop('B7_LOCK_PARENT_REFUSED')
+    if action == 'apply':
+        if not probe:
+            marker = json.loads(Path('/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/openai-codex-refresh-token-reused-v1-20260910/AMENDMENT_ACCEPTED.marker').read_bytes())
+            a = marker.get('activation', {})
+            cohort_sha = a.get('cohortSha256', '')
+            if not re.fullmatch(r'[a-f0-9]{64}', cohort_sha): stop('B7_COHORT_BINDING_REQUIRED')
+            binding['cohortSha256'] = cohort_sha
+            binding['cohortToolSha256'] = sha(helper.parent / 'cohort-binding.mjs')
+            binding['cohortSupport'] = {p: sha(helper.parent / p) for p in ('cohort-runtime.mjs', 'cohort-artifacts.mjs')}
+            if a.get('cohortToolSha256') != binding['cohortToolSha256'] or a.get('cohortSupport') != binding['cohortSupport']: stop('B7_COHORT_TOOL_UNBOUND')
+            if (marker.get('scriptSha256') != binding['carrierSha256'] or a.get('outerSha256') != binding['outerSha256']
+                    or a.get('toolSha256') != binding['toolSha256'] or a.get('migrationToolSha256') != binding['migrationToolSha256']):
+                stop('B7_ACCEPTANCE_BINDING_REQUIRED')
+            if txfile.exists() and read_private(txfile, 4 * 1024 * 1024).get('state') not in ('COMMITTED', 'ABORTED'):
+                stop('B7_PRIOR_TX_UNRESOLVED')
+        try: os.mkdir(lock, 0o700)
+        except FileExistsError: stop('B7_MUTEX_BUSY: existing lock is never disposed automatically')
+        fd = os.open(holder, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        record = dict(format='B7_GLOBAL_HOLDER_V1', nonce=os.urandom(16).hex(), binding=binding)
+        os.write(fd, (json.dumps(record) + '\n').encode()); os.fsync(fd)
+        sync_dir(lock); sync_dir(lock.parent)
+    else:
+        checked(lock, True); checked(holder)
+        fd = os.open(holder, os.O_RDWR | os.O_NOFOLLOW)
+        try: fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError: stop('B7_MUTEX_BUSY: original owner/child still holds the lease')
+        # Post-acquire path identity defeats cleanup/recreate with an old inode.
+        record = identity(fd)
+        tx_record(record)
+    if fd != 9: os.dup2(fd, 9); os.close(fd)
+    os.set_inheritable(9, True)
+    identity(9)
+    env = dict(os.environ)
+    env['B7_OUTER_ACTIVE'] = '1'  # routing hint only; the FD is the ownership proof
+    def run_carrier(op, confirmation=None):
+        identity(9)
+        flag = '--tx-child-' + op if probe else '--' + op
+        result = subprocess.run(['/bin/bash', str(carrier), flag, '--transaction', txid],
+                                input=confirmation, stdin=subprocess.DEVNULL if confirmation is None else None,
+                                env=env, pass_fds=(9,), check=False)
+        if result.returncode: stop('B7_CHILD_INCOMPLETE: same transaction retained; no apply replay')
+    def interrupted(signum, frame):
+        stop('B7_INTERRUPTED: lock/TX retained; child lease is not unlocked')
+    for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT): signal.signal(sig, interrupted)
+    if action == 'apply': run_carrier('apply')
+    tx = tx_record(record)
+    if tx['state'] not in ('COMMITTED', 'ABORTED'):
+        print('B7_AWAITING_OWNER tx=' + txid + ' state=' + tx['state'] +
+              ' — COMMIT only after real Feishu PONG, or ABORT', flush=True)
+        answer = os.fdopen(3).readline().rstrip('\n')
+        if answer not in ('COMMIT', 'ABORT'): stop('B7_DISCONNECTED_OR_UNCONFIRMED: same TX retained')
+        run_carrier(answer.lower(), b'COMMIT\n' if answer == 'COMMIT' else None)
+    # r13 owns terminal truth; do not infer completion from a shell exit or label.
+    run_carrier('verify-terminal')
+    tx_record(record); identity(9)
+    if sorted(os.listdir(lock)) != ['holder']: stop('B7_LOCK_CONTENT_UNKNOWN')
+    os.unlink(holder); os.rmdir(lock); sync_dir(lock.parent)
+    # Close only our reference. No LOCK_UN: descendants must never be unlocked.
+    os.close(9)
+    print('B7_TERMINAL_VERIFIED tx=' + txid, flush=True)
+except (Exception, KeyboardInterrupt) as error:
+    print(str(error), file=sys.stderr, flush=True)
+    sys.exit(4)
+B7_PY
+}
+
 case "${1:-}" in
+  b7-apply|b7-resume|b7-guard|--b7-probe-apply|--b7-probe-resume|--b7-probe-guard)
+    b7_outer "$@" ;;
   --selftest)
     T=$(mktemp -d /tmp/router-closure-selftest.XXXXXX) || exit 1
     chmod 700 "$T"
@@ -247,166 +308,8 @@ case "${1:-}" in
     stat -f '  live app mtime: %Sm' "$TRUSTED_APP/packages/agent-router/src/process-registry-route-gate.js"
     echo "PREFLIGHT_DONE"
     ;;
-  deploy) # ---- G2: the EXISTING controlled production deployment path, exact SHA ----
-    [ "$(id -u)" = "0" ] || die "deploy must run as root"
-    [ -f "$DEPLOYER" ] || die "deployer missing at $DEPLOYER"
-    [ -d "$DEPLOY_SRC/.git" ] || [ -d "$DEPLOY_SRC/packages" ] || die "deploy source checkout missing"
-    ACTUAL_TREE=$(git -C "$DEPLOY_SRC" rev-parse HEAD^{tree})
-    ACTUAL_HEAD=$(git -C "$DEPLOY_SRC" rev-parse HEAD)
-    [ "$ACTUAL_HEAD" = "$EXPECTED_SHA" ] || die "deploy checkout HEAD $ACTUAL_HEAD != $EXPECTED_SHA"
-    [ "$ACTUAL_TREE" = "$EXPECTED_TREE" ] || die "deploy checkout tree mismatch"
-    echo "### G2 deploy of $EXPECTED_SHA (tree $ACTUAL_TREE) via trusted control plane"
-    # The installer is fail-closed (mutex/provenance gates). A non-zero exit is
-    # fail-closed, but it does NOT imply an untouched tree: since 2026-10-01 the
-    # installer runs its cross-surface contamination scan PRE-mutation (section
-    # 0b, before the backup mv), yet any LATER failure (pack/node/hardening/
-    # late-gate drift) can leave a half-built closure while the previous install
-    # sits in the newest agent-core.bak-*. NEVER claim "NOTHING was deployed" —
-    # verify the mutation truth and restore exactly:
-    #   rm -rf /usr/local/libexec/agent-core && mv <newest agent-core.bak-*> /usr/local/libexec/agent-core
-    #   RESTORE-R1 (v2.1, mandatory whenever the failed deploy's installer §1b REUSED
-    #   node-runtime): §1b mv-ed node-runtime OUT of the §1 auto-preimage (the newest bak-*),
-    #   so the restored tree can land WITHOUT node-runtime once the rm -rf deletes the
-    #   installed tree — reproduced 2026-10-02 (2418 deleting lines in the restore diff).
-    #   Detect and repair from the fresh STAGE 0 preimage (rsync -a COPY — never a symlink,
-    #   never a live node_modules patch):
-    #     [ -x /usr/local/libexec/agent-core/node-runtime/bin/node ] || \
-    #       rsync -a /usr/local/libexec/agent-core.bak-<STAGE0-UTC-ts>-pre-b7-v2/node-runtime/ \
-    #             /usr/local/libexec/agent-core/node-runtime/
-    #   Then re-verify vs the STAGE 0 preimage: rsync -ani --delete → mtime-only lines at most.
-    #   RESTORE-R2 (v2.2, mandatory whenever the failed deploy's installer reached §5b):
-    #   for p in /Users/authsvc/.agent-core/control/scheduler-watchdog \
-    #            /Users/authsvc/.agent-core/control/incident-backups; do
-    #     [ -d "$p" ] && chgrp -R 20 "$p"
-    #   done
-    #   (plist-pinned SCHEDULER_INCIDENT_OWNER_GID=20; #193 live proof — the
-    #   restored tree failed its own boot gate until this was done at 03:46.)
-    # If the mutex was held: dispose per the documented procedure
-    # (see dispose-stale-deploy-lock.sh), never bare-rmdir, never retry-past-a-held-lock.
-    if ! EXPECTED_SOURCE_SHA="$EXPECTED_SHA" \
-    EXPECTED_SOURCE_TREE="$EXPECTED_TREE" \
-    GENERATION_LABEL_SHA="$EXPECTED_SHA" \
-      bash "$DEPLOYER" "$DEPLOY_SRC" "$HARNESS_SRC" "$REPO"; then
-      die "installer exited non-zero (fail-closed). The trusted app tree MAY already be mutated by this run — check the newest agent-core.bak-* preimage and restore exactly (rm -rf live + mv BAK back; then RESTORE-R1: if §1b reused node-runtime, re-materialize node-runtime from the fresh STAGE 0 preimage — see the RESTORE-R1 block above; then RESTORE-R2: for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done — skip if §5b never ran) before any retry. If the mutex was held: dispose per the documented procedure (see dispose-stale-deploy-lock.sh), never bare-rmdir, never retry-past-a-held-lock."
-    fi
-    echo "### G2 post-deploy byte provenance"
-    if byte_provenance_verdict "$TRUSTED_APP"; then
-      echo "DEPLOYED_SOURCE_SHA = $EXPECTED_SHA (fix bytes live)"
-    else
-      die "deployed bytes do not contain the reviewed fix"
-    fi
-    # ---- G2.5 (V2): FRESH_CHILD_BOOT_CANARY_V1 — fail-closed BEFORE any ----
-    # service restart / health handoff. This is the gate that was missing on
-    # 2026-10-01 23:35. Disposable home, no credentials, no production state;
-    # the installed tree is probed exactly as a freshly spawned
-    # agent-core-production child would resolve it.
-    TRUSTED_ROOT=$(dirname "$TRUSTED_APP")
-    echo "### G2.5 fresh-child boot canary against $TRUSTED_ROOT"
-    if ! "$TRUSTED_ROOT/node-runtime/bin/node" \
-        "$DEPLOY_SRC/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs" \
-        --trusted-root "$TRUSTED_ROOT" --timeout-ms 120000; then
-      die "fresh-child boot canary FAILED — the installed closure cannot serve agent-core-production children (2026-10-02 rollback class). Do NOT restart or adopt this generation. Restore exactly: rm -rf /usr/local/libexec/agent-core && mv \"\$(ls -d /usr/local/libexec/agent-core.bak-* | sort | tail -1)\" /usr/local/libexec/agent-core (record the restore reason; then RESTORE-R1: if §1b reused node-runtime, the auto-preimage lacks it — re-materialize node-runtime from the fresh STAGE 0 preimage, see the RESTORE-R1 block above; then RESTORE-R2: for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done — §5b ran, the pin is mandatory). The running runtime never left the old generation, so no service impact has occurred."
-    fi
-    echo "FRESH_CHILD_BOOT_CANARY = PASS (installed tree serves fresh agent-core-production children)"
-    # ---- G2.6 (V2.2): RUNTIME_APP_GRAPH_GATE_V1 — the coverage gap #193 ----
-    # proved fatal: G2.5 boots the harness plugin tree, but the production
-    # runtime's own app import graph is a different resolution surface. This
-    # gate imports the WHOLE graph (entry.js -> compose.js -> feishu-connector/
-    # @larksuite/channel/https-proxy-agent/proxy-agent-negotiate, broker,
-    # scheduler, product-api, ...) under the installed node-runtime, throwaway
-    # home, no services started — fail-closed BEFORE any restart/health handoff.
-    echo "### G2.6 production-runtime app-graph import gate against $TRUSTED_ROOT"
-    if ! "$TRUSTED_ROOT/node-runtime/bin/node" \
-        "$DEPLOY_SRC/scripts/lib/trusted-cp-runtime-app-graph-gate.mjs" \
-        --app-dir "$TRUSTED_APP" --node "$TRUSTED_ROOT/node-runtime/bin/node" --timeout-ms 120000; then
-      die "runtime app-graph import gate FAILED — the installed closure cannot boot the production runtime (agent-control#193 Defect A class: a pack input never carried a resolution surface the graph imports). Do NOT restart or adopt this generation. Restore exactly: rm -rf /usr/local/libexec/agent-core && mv \"\$(ls -d /usr/local/libexec/agent-core.bak-* | sort | tail -1)\" /usr/local/libexec/agent-core (record the restore reason; then RESTORE-R1 and RESTORE-R2 as in the blocks above — §5b ran, the pin is mandatory). The running runtime never left the old generation, so no service impact has occurred."
-    fi
-    echo "RUNTIME_APP_GRAPH_GATE = PASS (installed app closure imports the full production-runtime graph)"
-    ;;
-  cutover) # ---- V2.3 STAGE 1M: fleet-config v2→v3 migration + G2.7 + restart, ONE atomic step ----
-    # DEFECT C (#195): the restart is the adoption point — the installed v3
-    # loader composes the REAL config at boot AND at every process boundary.
-    # Order is not negotiable: G2.7 verdict FIRST (read-only), then — only on
-    # the exact known v2-class error — the frozen migration (dry-run, execute),
-    # then G2.7 AGAIN (must PASS), then the kickstart immediately. Running the
-    # migration as a separately-scheduled stage is FORBIDDEN: a v3 config under
-    # the still-running v2 loader is the same FATAL class, so the write→restart
-    # gap must stay sub-second and machine-enforced by this one subcommand.
-    [ "$(id -u)" = "0" ] || die "cutover must run as root"
-    TRUSTED_ROOT=$(dirname "$TRUSTED_APP")
-    NODE_BIN="$TRUSTED_ROOT/node-runtime/bin/node"
-    [ -x "$NODE_BIN" ] || die "installed node-runtime missing at $NODE_BIN (run deploy first; RESTORE-R1 semantics apply)"
-    PROD_ROOT=/Users/authsvc/.agent-core
-    PROD_CONFIG=$PROD_ROOT/agent-model-overrides.json
-    PROD_REGISTRY=$PROD_ROOT/agents.json
-    GATE_LIB="$DEPLOY_SRC/scripts/lib/trusted-cp-model-overrides-config-gate.mjs"
-    MIGRATE_LIB="$DEPLOY_SRC/scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs"
-    [ -f "$GATE_LIB" ] || die "G2.7 gate lib missing at $GATE_LIB"
-    [ -f "$MIGRATE_LIB" ] || die "migration lib missing at $MIGRATE_LIB"
-    g27() { # installed loader vs REAL config, READ-ONLY; emits JSON
-      "$NODE_BIN" "$GATE_LIB" \
-        --installed-root "$TRUSTED_APP" \
-        --config "$PROD_CONFIG" --registry "$PROD_REGISTRY" \
-        --deployment-root "$PROD_ROOT" --json
-    }
-    echo "### STAGE 1M cutover: G2.7 pre-check ($(date '+%F %T %z'))"
-    G27_OUT=$(g27) || true
-    echo "$G27_OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const v=JSON.parse(s);console.log(`G2.7_PRE ok=${v.ok} errorCode=${v.errorCode ?? "NONE"} overrides=${v.overrideCount}`);if(!v.ok)console.log(`G2.7_PRE error: ${v.error}`)})'
-    G27_OK=$(echo "$G27_OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{console.log(JSON.parse(s).ok===true?"YES":"NO")})')
-    G27_ERR=$(echo "$G27_OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const v=JSON.parse(s);process.stdout.write(String(v.error??""))})')
-    if [ "$G27_OK" = "YES" ]; then
-      echo "MODEL_OVERRIDES_CONFIG_GATE (G2.7 pre) = PASS — config already loads under the installed v3 loader; no migration"
-    else
-      # Fail-closed classification: ONLY the exact known v2-class error may
-      # trigger the migration. Any other loader rejection (malformed overrides,
-      # unregistered agent, route schema drift) is a DIFFERENT defect class —
-      # die here, mutate nothing, restart nothing (this is the #195 guarantee).
-      # (round-1 review fix: g27_error_class uses single-quoted literals —
-      # the real #195 line carries literal quote characters.)
-      G27_CLASS=$(g27_error_class "$G27_ERR")
-      [ "$G27_CLASS" = "V2_KNOWN_CLASS" ] || die "G2.7 FAILED with an UNRECOGNIZED config error (class=$G27_CLASS) — this is not the known v2→v3 class; the migration must NOT run. No restart, no mutation. Investigate the error above (new defect class, like #191/#193/#195 each being a new layer)." 
-      echo "G2.7 pre = the exact #195 v2-class error → running the frozen v2→v3 migration (dry-run first)"
-      echo "### STAGE 1M migration DRY-RUN"
-      "$NODE_BIN" "$MIGRATE_LIB" \
-        --config "$PROD_CONFIG" --registry "$PROD_REGISTRY" \
-        --deployment-root "$PROD_ROOT" \
-        --model-overrides-module "$TRUSTED_APP/packages/production-runtime/src/model-overrides.js" \
-      || die "migration DRY-RUN refused — the preimage is not the exact deployed v2 shape; NO mutation has occurred, NO restart. Do not improvise a config rewrite; investigate."
-      echo "### STAGE 1M migration EXECUTE (atomic; preimage backup = RESTORE-R3 source)"
-      "$NODE_BIN" "$MIGRATE_LIB" \
-        --config "$PROD_CONFIG" --registry "$PROD_REGISTRY" \
-        --deployment-root "$PROD_ROOT" \
-        --model-overrides-module "$TRUSTED_APP/packages/production-runtime/src/model-overrides.js" \
-        --execute \
-      || die "migration EXECUTE failed fail-closed — the real config is UNTOUCHED (the candidate is validated before the atomic rename); NO restart. Investigate the refusal above."
-      echo "### STAGE 1M G2.7 RE-VERIFY (must PASS before the restart)"
-      G27_OUT2=$(g27) || true
-      echo "$G27_OUT2" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const v=JSON.parse(s);console.log(`G2.7_POST ok=${v.ok} overrides=${v.overrideCount} filePresent=${v.filePresent}`)})'
-      G27_OK2=$(echo "$G27_OUT2" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{console.log(JSON.parse(s).ok===true?"YES":"NO")})')
-      [ "$G27_OK2" = "YES" ] || die "G2.7 RE-VERIFY FAILED after the migration executed — do NOT restart. Restore the config preimage (RESTORE-R3: cp -p \$(ls -d ${PROD_CONFIG}.pre-v3-* | sort | tail -1) $PROD_CONFIG) and investigate; the runtime is still the old generation."
-      echo "MODEL_OVERRIDES_CONFIG_GATE (G2.7 post-migration) = PASS — the REAL config loads under the INSTALLED loader"
-    fi
-    echo "### STAGE 1M restart adoption (kickstart, immediately after G2.7 PASS)"
-    BEFORE_PID=$(ps axww -o pid,command | grep 'production-runtime\.mjs --root /Users/authsvc' | grep -v grep | awk '{print $1}' | head -1)
-    launchctl kickstart -k system/ai.agent-core.runtime
-    HEALTH=FAIL
-    for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
-      sleep 5
-      if curl -s -m 3 http://127.0.0.1:8790/health | grep -q '"deliverReady":true'; then HEALTH=PASS; break; fi
-      echo "  health attempt $i: not ready yet"
-    done
-    AFTER_PID=$(ps axww -o pid,command | grep 'production-runtime\.mjs --root /Users/authsvc' | grep -v grep | awk '{print $1}' | head -1)
-    echo "CUTOVER runtime pid: before=$BEFORE_PID after=$AFTER_PID health=$HEALTH"
-    if [ "$HEALTH" != "PASS" ]; then
-      die "cutover health handoff FAILED — full deterministic rollback required BEFORE anything else:
-  1) RESTORE-R3 (config): cp -p \$(ls -d /Users/authsvc/.agent-core/agent-model-overrides.json.pre-v3-* | sort | tail -1) /Users/authsvc/.agent-core/agent-model-overrides.json
-     (the old v2 loader cannot read a v3 config — the config MUST go back before the old generation boots)
-  2) app tree: rm -rf /usr/local/libexec/agent-core && mv \$(ls -d /usr/local/libexec/agent-core.bak-* | sort | tail -1) /usr/local/libexec/agent-core
-  3) RESTORE-R1: if the deploy's installer §1b reused node-runtime, re-materialize it from the fresh STAGE 0 preimage (rsync -a COPY — see the deploy comment block)
-  4) RESTORE-R2: for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d "\$p" ] && chgrp -R 20 "\$p"; done
-  5) launchctl kickstart -k system/ai.agent-core.runtime  (old generation + v2 config = the restored preimage)"
-    fi
-    echo "STAGE_1M_CUTOVER = PASS (config v2→v3 migrated, G2.7 PASS on the installed loader, restart adopted, health deliverReady)"
+  deploy|cutover)
+    die "Independent install/cutover retired. Use the exact accepted r13 transaction for code/config/plugin activation and recovery; this helper has no standalone restart authority."
     ;;
   health) # ---- G3: first post-deploy health ----
     echo "### G3 post-deploy health ($(date '+%F %T %z'))"

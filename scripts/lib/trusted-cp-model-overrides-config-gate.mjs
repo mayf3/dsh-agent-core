@@ -39,7 +39,8 @@
 // READ-ONLY: the config and registry are only ever read, and only by the
 // loader itself; no file is written, no service touched, no sudo inside.
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { verifyCohort, readCohortFile } from './deployment-reuse/cohort-binding.mjs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -69,6 +70,9 @@ export function parseArgs(argv) {
     else if (a === '--deployment-root') args.deploymentRoot = argv[++i]
     else if (a === '--model-overrides-module') args.modelOverridesModule = argv[++i]
     else if (a === '--definition-module') args.definitionModule = argv[++i]
+    else if (a === '--cohort-binding') args.cohort = readCohortFile(argv[++i])
+    else if (a === '--runtime-phase') args.runtimePhase = argv[++i]
+    else if (a === '--consumer-phase') args.consumerPhase = argv[++i]
     else if (a === '--json') args.json = true
     else { usage(); process.exit(2) }
   }
@@ -129,6 +133,8 @@ export async function runGate(args) {
     const loaded = loader.loadAgentModelOverrides(args.config, registeredAgentIds, { deploymentRoot: args.deploymentRoot })
     result.filePresent = loaded.filePresent === true
     result.overrideCount = Object.keys(loaded.overrides).length
+    if (args.cohort) result.cohort = verifyCohort(args.cohort, { root: args.deploymentRoot, registrySource: registryText,
+      configSource: readFileSync(args.config, 'utf8'), phase: 'post', consumerPhase: args.consumerPhase ?? 'post', loaded, defaultGlobalRoute: loader.canonicalDefaultGlobalRoute?.(), runtimePhase: args.runtimePhase ?? 'post', runtimeRead: args.runtimeRead, candidateRoot: args.candidateRoot })
     result.ok = true
   } catch (cause) {
     result.error = cause?.message ?? String(cause)

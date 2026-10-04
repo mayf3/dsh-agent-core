@@ -224,3 +224,15 @@ export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFil
     throw error('credential_path_invalid', `failed to persist shared credentialFile in ${profilePatchFile}`)
   }
 }
+
+
+export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
+  targetAgentId: 'agt_cto-agent',
+  plugin: 'dsh-codex',
+  pluginVersion: '0.2.3',
+  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
+  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
+  dshVersion: '0.1.0-rc.8',
+  dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
+  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+})
