@@ -1,6 +1,9 @@
 ---
 spec_id: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT
-status: accepted
+status: superseded
+superseded_by: AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V2
+superseded_date: 2026-10-04
+supersession_record: https://github.com/mayf3/dsh-agent-core/pull/452
 accepted_by: mayf3
 accepted_date: 2026-09-21
 proposed_at: 2026-09-10
