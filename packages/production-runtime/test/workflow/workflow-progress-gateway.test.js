@@ -4,11 +4,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { createPluginContext } from '../src/context.js'
-import { mountBrokerGateway } from '../src/broker-composition.js'
-import { mountWorkflowExecutionContextRuntime } from '../src/workflow-execution-context-runtime.js'
-import { mountWorkflowProgressRuntime } from '../src/workflow-progress-runtime.js'
-import { ExecutionLedger, attemptIdFor } from '../../workflow-execution/src/ledger.js'
+import { createPluginContext } from '../../src/context.js'
+import { mountBrokerGateway } from '../../src/broker-composition.js'
+import { mountWorkflowExecutionContextRuntime } from '../../src/workflow-execution-context-runtime.js'
+import { mountWorkflowProgressRuntime } from '../../src/workflow-progress-runtime.js'
+import { ExecutionLedger, attemptIdFor } from '../../../workflow-execution/src/ledger.js'
 
 const INSTANCE = '11111111-1111-4111-8111-111111111111'
 const VISIT = '22222222-2222-4222-8222-222222222222'
@@ -138,8 +138,8 @@ test('real gateway rejects untrusted turn and model-carried coordinates', async 
   }
 })
 test('workflow_progress tool shape exposes no identity/provenance arguments', async () => {
-  const broker = await import('../../broker/src/registry.js')
-  const capability = await import('../../broker/src/capabilities/workflow-progress.js')
+  const broker = await import('../../../broker/src/registry.js')
+  const capability = await import('../../../broker/src/capabilities/workflow-progress.js')
   const { definition } = broker.buildToolDefinition({ manifest: capability.workflowProgressManifest, handlers: {} })
 
   assert.deepEqual(definition.parameters.operation.enum, ['checkpoint', 'read_current'])

@@ -22,8 +22,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { composeProductionRuntime } from '../src/compose.js'
-import { AGT_ID, FakeProc, seedRuntime, silentLog } from './compose-fixture.js'
+import { composeProductionRuntime } from '../../src/compose.js'
+import { AGT_ID, FakeProc, seedRuntime, silentLog } from '../compose-fixture.js'
 
 const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flash' })
 

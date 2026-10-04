@@ -21,8 +21,8 @@ import { mkdtempSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { createAgentSessionMessagingAccess, validateSendArgs } from '../src/agent-session-messaging.js'
-import { createAgentSessionMessagingAudit } from '../src/agent-session/audit.js'
+import { createAgentSessionMessagingAccess, validateSendArgs } from '../../src/agent-session-messaging.js'
+import { createAgentSessionMessagingAudit } from '../../src/agent-session/audit.js'
 
 const CALLER = 'agt_a-caller'
 const TARGET = 'agt_b-target'

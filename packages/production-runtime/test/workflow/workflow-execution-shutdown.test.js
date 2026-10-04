@@ -18,7 +18,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { mountWorkflowExecutionRuntime } from '../src/workflow-execution-runtime.js'
+import { mountWorkflowExecutionRuntime } from '../../src/workflow-execution-runtime.js'
 
 const silentLog = { log() {}, warn() {}, error() {} }
 const POLLER = 'agt_workflow-poller'

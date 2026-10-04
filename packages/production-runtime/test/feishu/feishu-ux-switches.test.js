@@ -22,8 +22,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { parseStrictBooleanEnv, resolveFeishuUxSwitches } from '../src/compose.js'
-import { renderPlist } from '../../../scripts/production-runtime-launchd.mjs'
+import { parseStrictBooleanEnv, resolveFeishuUxSwitches } from '../../src/compose.js'
+import { renderPlist } from '../../../../scripts/production-runtime-launchd.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
@@ -102,15 +102,20 @@ test('SWITCHES: an invalid value on EITHER var fails loud (first var reported)',
 // ---------------------------------------------------------------------------
 
 test('COMPOSE: switches are strictly parsed INSIDE the enabled branch and spread into the feishu mount', () => {
-  const source = readFileSync(join(HERE, '..', 'src', 'compose.js'), 'utf8')
-  const enabledBranch = source.indexOf('existsSync(feishuCredsPath)')
-  const parse = source.indexOf('resolveFeishuUxSwitches()')
-  const mountCfg = source.indexOf('...feishuUxSwitches')
-  const offWarn = source.indexOf('warnInvalidUnconfiguredFeishuEnv(')
+  // The optional-adapter admission lives in feishu-env.js (CODE_STRUCTURE_GUARDRAILS_V1
+  // focused extraction out of compose.js — audit Product #442 P1 structure repair);
+  // the pinned wiring contract is unchanged, only its host module moved.
+  const admission = readFileSync(join(HERE, '..', '..', 'src', 'feishu-env.js'), 'utf8')
+  const compose = readFileSync(join(HERE, '..', '..', 'src', 'compose.js'), 'utf8')
+  const enabledBranch = admission.indexOf('existsSync(feishuCredsPath)')
+  const parse = admission.indexOf('resolveFeishuUxSwitches()')
+  const mountCfg = admission.indexOf('...feishuUxSwitches')
+  const offWarn = admission.indexOf('warnInvalidUnconfiguredFeishuEnv(')
   assert.ok(enabledBranch >= 0 && parse > enabledBranch, 'strict parse lives in the ENABLED branch (a disabled adapter cannot fail the base path)')
-  assert.ok(mountCfg > source.indexOf('applyFeishu(ctx,'), 'parsed switches are spread into the applyFeishu config')
-  assert.ok(mountCfg < source.indexOf('feishu ingress gate wired'), 'switch config lands with the mount, before gate wiring')
+  assert.ok(mountCfg > admission.indexOf('applyFeishu(ctx,'), 'parsed switches are spread into the applyFeishu config')
   assert.ok(offWarn >= 0, 'the channel-OFF path reports invalid adapter env (observable, non-fatal)')
+  const delegated = compose.indexOf('mountConfiguredFeishuChannel({')
+  assert.ok(delegated > 0 && delegated < compose.indexOf('feishu ingress gate wired'), 'the admission composes the channel before the ingress gate wiring (mount, then gate)')
 })
 
 // ---------------------------------------------------------------------------

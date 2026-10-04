@@ -17,8 +17,8 @@ import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { resolveReplyRenderMode } from '../src/compose.js'
-import { renderPlist } from '../../../scripts/production-runtime-launchd.mjs'
+import { resolveReplyRenderMode } from '../../src/compose.js'
+import { renderPlist } from '../../../../scripts/production-runtime-launchd.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 
@@ -63,13 +63,15 @@ test('ENV: the render mode is independent of the UX mention switches', () => {
 // ---------------------------------------------------------------------------
 
 test('COMPOSE: the render mode is strictly parsed in the ENABLED branch and forwarded into the feishu mount', () => {
-  const source = readFileSync(join(HERE, '..', 'src', 'compose.js'), 'utf8')
-  const enabledBranch = source.indexOf('existsSync(feishuCredsPath)')
-  const parse = source.indexOf('resolveReplyRenderMode()')
+  // Pinned wiring contract unchanged; host module moved to feishu-env.js
+  // (CODE_STRUCTURE_GUARDRAILS_V1 extraction, audit Product #442 P1 repair).
+  const admission = readFileSync(join(HERE, '..', '..', 'src', 'feishu-env.js'), 'utf8')
+  const enabledBranch = admission.indexOf('existsSync(feishuCredsPath)')
+  const parse = admission.indexOf('resolveReplyRenderMode()')
   assert.ok(parse >= 0, 'resolveReplyRenderMode() is called')
   assert.ok(enabledBranch >= 0 && parse > enabledBranch, 'strict parse lives in the ENABLED branch (a disabled adapter cannot fail the base path)')
-  assert.ok(source.indexOf('replyRenderMode,') > source.indexOf('applyFeishu(ctx,'), 'parsed value is spread into the applyFeishu config')
-  assert.ok(source.includes('replyRenderMode=${replyRenderMode}'), 'effective value logged at mount')
+  assert.ok(admission.indexOf('replyRenderMode,') > admission.indexOf('applyFeishu(ctx,'), 'parsed value is spread into the applyFeishu config')
+  assert.ok(admission.includes('replyRenderMode=${replyRenderMode}'), 'effective value logged at mount')
 })
 
 // ---------------------------------------------------------------------------

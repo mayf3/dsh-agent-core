@@ -10,16 +10,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
-import { RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/process.js'
+import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
+import { RECOGNIZED_PROXY_ENV_KEYS } from '../../../agent-router/src/process.js'
 import {
   assertTargetProxyRuntime,
   composeProductionRuntime,
   TARGET_PROXY_NODE_VERSION,
-} from '../src/compose.js'
-import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
-import { canonicalOpenAICodexCredentialFileFor } from '../../agent-provisioning/src/shared-codex.js'
-import { resolveProductionLayout } from '../src/paths.js'
+} from '../../src/compose.js'
+import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from '../../src/model-overrides.js'
+import { canonicalOpenAICodexCredentialFileFor } from '../../../agent-provisioning/src/shared-codex.js'
+import { resolveProductionLayout } from '../../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'

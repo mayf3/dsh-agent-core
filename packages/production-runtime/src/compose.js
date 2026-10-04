@@ -78,12 +78,7 @@ import {
   wireNotificationIngressDeliveryEvidence,
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
-import {
-  resolveFeishuUxSwitches,
-  resolveProcessingReactionConfig,
-  resolveReplyRenderMode,
-  warnInvalidUnconfiguredFeishuEnv,
-} from './feishu-env.js'
+import { mountConfiguredFeishuChannel } from './feishu-env.js'
 
 // Re-exported for the existing test/compat imports (parseStrictBooleanEnv etc.).
 export {
@@ -281,54 +276,17 @@ export async function composeProductionRuntime(options = {}) {
 
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
   // offline (no fake recording seam in production); delivery-requesting
-  // jobs fail loud as not-delivered.
-  //
-  // OPTIONAL ADAPTER ADMISSION (audit Product #442): this channel is an
-  // OPTIONAL adapter, so BOTH its config validation and its module graph
-  // belong to the ENABLED branch only —
-  //   - the channel-specific supervision switches are strictly parsed HERE,
-  //     so an invalid value on an ENABLED channel still fails composition
-  //     loud (fail closed), while a disabled channel's invalid switch can
-  //     never block the unrelated base path (it warns instead — observable,
-  //     never silently dropped);
-  //   - the connector + @larksuite/channel SDK graph is loaded ONLY for an
-  //     enabled channel, so a broken/absent optional-adapter implementation
-  //     is no longer a base-boot dependency; a CONFIGURED channel whose
-  //     implementation cannot load fails loud (FEISHU_CONNECTOR_UNAVAILABLE).
-  let feishu = undefined
-  const feishuCredsPath = opts.feishuCredsPath ?? process.env.FEISHU_CREDS_PATH
-  if (typeof feishuCredsPath === 'string' && feishuCredsPath !== '' && existsSync(feishuCredsPath)) {
-    // Feishu UX switches: strict-parsed for the ENABLED channel (absent =
-    // connector defaults true/true). Any invalid value fails loud HERE.
-    const feishuUxSwitches = resolveFeishuUxSwitches()
-    // Processing reaction: definite boolean (unset/empty resolves to false —
-    // the connector default stays OFF); render mode resolves to 'markdown'.
-    const processingReactionEnabled = resolveProcessingReactionConfig()
-    const replyRenderMode = resolveReplyRenderMode()
-    let applyFeishu
-    try {
-      const connector = await import('../../feishu-connector/src/index.js')
-      applyFeishu = connector.apply
-    } catch (cause) {
-      throw Object.assign(
-        new Error(`production-runtime: feishu channel is configured but the connector module graph failed to load: ${cause?.message ?? cause}`),
-        { code: 'FEISHU_CONNECTOR_UNAVAILABLE', cause },
-      )
-    }
-    feishu = applyFeishu(ctx, {
-      enabled: true,
-      credentialsPath: feishuCredsPath,
-      // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
-      // keys are forwarded (absent = connector defaults true/true).
-      ...feishuUxSwitches,
-      processingReactionEnabled,
-      replyRenderMode,
-    })
-    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
-  } else {
-    warnInvalidUnconfiguredFeishuEnv(process.env, (message) => log.warn(message))
-    log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
-  }
+  // jobs fail loud as not-delivered. The optional-adapter admission — the
+  // channel-specific strict switches AND the connector module graph both
+  // scoped to the ENABLED branch (a disabled channel's bad env warns and
+  // never blocks the unrelated base path; an enabled channel fails closed),
+  // audit Product #442 — lives in ./feishu-env.js
+  // (mountConfiguredFeishuChannel, CODE_STRUCTURE_GUARDRAILS_V1 split).
+  const feishu = await mountConfiguredFeishuChannel({
+    ctx,
+    feishuCredsPathOverride: opts.feishuCredsPath,
+    log,
+  })
 
   const router = applyRouter(ctx, {
     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,

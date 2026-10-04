@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { wakeDomainOwnerAssistance } from '../src/workflow-execution-runtime.js'
+import { wakeDomainOwnerAssistance } from '../../src/workflow-execution-runtime.js'
 
 const OWNER_PRINCIPAL = '11111111-1111-4111-8111-111111111111'
 const CASE_ID = '22222222-2222-4222-8222-222222222222'
