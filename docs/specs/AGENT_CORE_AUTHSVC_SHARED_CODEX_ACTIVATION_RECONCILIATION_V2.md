@@ -1,24 +1,28 @@
 ---
 spec_id: AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V2
-status: proposed
+status: accepted
+accepted_by: mayf3
+accepted_date: 2026-10-04
+reviewed_head: b7060c2c37ef67b1155064fc753d502fdf025208
+acceptance_record: https://github.com/mayf3/dsh-agent-core/pull/452
 implementation_authority: contracts
 supersedes:
   - AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT
 parent_authority: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3
 production_apply_authority: none
-review_gate: independent exact-head review and explicit Owner acceptance; not accepted
+review_gate: independent exact-head review PASS; Owner accepted the reviewed head; final acceptance commit bound in PR 452
 proposal_revision: BOUNDED_COHORT_PUBLIC_PROPOSAL_V1
 operation_scope: existing Product 414 B7 deployment only
-source_preparation_authority: docs-only until accepted in implementation base
+source_preparation_authority: accepted contracts once merged into implementation base
 ---
 
-# Shared Codex activation reconciliation V2 — proposed
+# Shared Codex activation reconciliation V2 — accepted
 
 Preserve every active identity and its existing effective route while replacing duplicated legacy credential-store consumption with the existing domain-owned canonical-store mechanism. The legacy migration set is not assumed to equal the full active registry. Both sets remain exact and bounded; a smaller migration count cannot stand in for full compatibility or business acceptance.
 
-This is a complete successor proposal for the one named reconciliation amendment, carrying its A1–A4 safety obligations forward. It does not supersede the parent OAuth protocol, the other deployment domain, or routing authority. The legacy deployment token in the existing Spec identifiers is retained solely to identify that published authority; actual principals and paths are bound privately.
+This is the accepted complete successor for the one named reconciliation amendment, carrying its A1–A4 safety obligations forward. It does not supersede the parent OAuth protocol, the other deployment domain, or routing authority. The legacy deployment token in the existing Spec identifiers is retained solely to identify that published authority; actual principals and paths are bound privately.
 
-The proposal remains `proposed`. It does not authorize implementation before acceptance enters the implementation base. `production_apply_authority: none` remains true after future Spec acceptance: production still needs the existing exact operation mandate and accepted artifact/marker binding. This PR does not change predecessor metadata or record acceptance.
+Owner accepted the independently reviewed head `b7060c2c37ef67b1155064fc753d502fdf025208` on 2026-10-04 and authorized this limited docs acceptance transaction and merge. Implementation may rely on these contracts only once acceptance enters its base. `production_apply_authority: none` remains unchanged: production still needs the existing exact operation mandate and accepted artifact/marker binding. PR #452 records the final acceptance commit and the atomic predecessor lifecycle backlink; it grants no production permission.
 
 ## 1. Scope, authority, and fixed parameters
 
@@ -26,7 +30,7 @@ The bounded goal belongs to existing [Product #414](https://github.com/mayf3/dsh
 
 Public authority references:
 
-- [Predecessor reconciliation amendment](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT.md): the complete authority proposed for replacement; retained artifact, canonical-store, transaction, provisioning, and recovery obligations are restated below.
+- [Predecessor reconciliation amendment](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT.md): the complete authority replaced by this successor; retained artifact, canonical-store, transaction, provisioning, and recovery obligations are restated below.
 - [Activation V1](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1.md), especially CTR-ACT-003/004/009/010, and [Activation V2](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2.md): retain the original deployment's activation and custody boundaries.
 - [Fleet shared Codex auth V3](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3.md): canonical credentials, refresh ownership, no-copy semantics, and the retained domain authority.
 - [Default model routing config V1](DEFAULT_MODEL_ROUTING_CONFIG_V1.md): a missing per-Agent override legally inherits the effective global/default route under existing precedence. This proposal does not select new routes.
@@ -130,7 +134,7 @@ A1/A2 artifact/canonical checks feed ACC-COHORT-003/004; A3 transaction and topo
 ## 6. Docs-first acceptance and bounded delivery sequence
 
 1. Submit this complete proposed successor in the existing Product's docs-only review lane. Bind the integration base, proposal digest, actual commit/head, and independent affected-contract review. Keep the prior implementation candidate and its evidence separately; do not call this document an implemented change.
-2. The repository Owner or explicitly recorded authorized maintainer accepts the exact independently reviewed head. In that later atomic docs acceptance transaction, set the successor to accepted with provenance and mark the named predecessor superseded with the backlink. Preserve its historical body. Until then the predecessor remains active. This proposal PR performs neither acceptance nor supersession metadata changes.
+2. The repository Owner or explicitly recorded authorized maintainer accepts the exact independently reviewed head. In that later atomic docs acceptance transaction, set the successor to accepted with provenance and mark the named predecessor superseded with the backlink. Preserve its historical body. Until then the predecessor remains active. This PR performs only that authorized docs acceptance transaction; production authority remains none.
 3. Once acceptance is merged into the implementation base, the existing single writer adapts the current migrator, carrier, outer/helper bindings and affected fixtures. Do not change identity schema, route precedence, or introduce a second authority. Review only the affected contract delta and any concrete blocker union.
 4. The original operator supplies the private snapshots in section 3. Prepare source, complete artifacts, exact bindings, and a concrete operation packet. Include only necessary real writes with actor, exact target, pre/postimage, and recovery boundary. Missing necessity evidence does not justify broad permission repair.
 5. Obtain the exact production mandate and bind the accepted marker through the existing authorized path. Validate A1–A4 and sections 3–5 before the single apply attempt. Spec acceptance itself cannot update the marker, expand OS access, restart services, or send business requests.
