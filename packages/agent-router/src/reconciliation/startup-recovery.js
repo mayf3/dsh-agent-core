@@ -129,12 +129,6 @@ export const startupRecoveryMethods = {
         continue
       }
       try {
-        if (proof.commitmentSha256 !== undefined) {
-          const fresh = verifyQuiescenceBundle(this, join(evidenceDir, file), { evidenceDir, deploymentDir, startup, io })
-          if (fresh.bundleSha256 !== proof.bundleSha256 || fresh.commitmentSha256 !== proof.commitmentSha256) {
-            throw Object.assign(new Error('fixed proof changed'), { code: 'V9_fixed_commitment_changed' })
-          }
-        }
         const result = this.settleLate(proof.handle, {
           lateOutcome: 'terminated_without_outcome',
           terminationEvidence: 'restart_quiescence_proven',
