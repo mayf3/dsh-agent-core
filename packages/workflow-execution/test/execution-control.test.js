@@ -105,7 +105,7 @@ test('CTR-WEC1-004: the fence refuses a mint past maxAttemptsPerVisit (default 3
     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main' })
     await ledger.recordStaleSuperseded({ nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
     // generation 2 → deliver → stale-supersede
-    r = await ledger.beginAttemptIfAbsent(seed)
+    r = await ledger.beginAttemptIfAbsent(seed, undefined, () => true)
     assert.equal(r.created, true)
     assert.equal(r.attempt.generation, 2)
     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT, 2), sessionId: 'main' })
