@@ -90,10 +90,10 @@ test('AC2: a no-progress visit is dispatched at most maxAttempts times, then esc
       },
     })
 
-    // Ten sweeps of the identical unchanged blocker (each sweep advances the
-    // shared clock well past the 60s retry delay but stays inside the 1h
-    // stale window per step; the accumulated steps exceed it only after the
-    // cap has already refused further mints).
+    // Ten sweeps of the identical unchanged blocker. Each sweep advances the
+    // shared clock 120s: past the 60s run-ended retry delay (the fast
+    // continuation that re-enters generation N+1) yet far below the 1h stale
+    // clock — the re-entry here is fence-driven policy, never a timeout.
     const actions = []
     for (let sweep = 0; sweep < 10; sweep++) {
       const result = await engine.pollOnce()
@@ -102,8 +102,8 @@ test('AC2: a no-progress visit is dispatched at most maxAttempts times, then esc
     }
 
     const dispatched = deliveries.length
-    assert.ok(dispatched <= DEFAULT_MAX_ATTEMPTS_PER_VISIT,
-      `no-progress visit must be dispatched at most ${DEFAULT_MAX_ATTEMPTS_PER_VISIT} times, got ${dispatched}`)
+    assert.equal(dispatched, DEFAULT_MAX_ATTEMPTS_PER_VISIT,
+      `the no-progress visit is dispatched exactly maxAttempts times, got ${dispatched}`)
     assert.equal(escalations.length, 1, 'exactly ONE durable escalation')
     assert.equal(escalations[0].reason, 'ATTEMPTS_EXHAUSTED')
     assert.equal(ledger.get(VISIT).escalation?.reason, 'ATTEMPTS_EXHAUSTED')
