@@ -77,6 +77,18 @@ export class Scheduler {
     this.atCatchupGraceMs = deps.atCatchupGraceMs ?? DEFAULT_AT_CATCHUP_GRACE_MS
     this.deadlineSetTimeout = deps.deadlineSetTimeout ?? setTimeout
     this.deadlineClearTimeout = deps.deadlineClearTimeout ?? clearTimeout
+    // C11-R1 trusted late-outcome self-heal: the published Router readback
+    // surface (the SAME authority the self-ops consume). Optional — without
+    // it the engine never consults and every unknown stays exactly as
+    // fail-closed as before.
+    this.reconciliationReadback = typeof deps.reconciliation?.resolveCallerCorrelation === 'function'
+      ? deps.reconciliation.resolveCallerCorrelation
+      : null
+    this.reconcileConsultIntervalMs = Number.isFinite(deps.reconciliation?.consultIntervalMs)
+      && deps.reconciliation.consultIntervalMs >= 0
+      ? deps.reconciliation.consultIntervalMs
+      : 60_000
+    this._reconcileConsultAt = new Map()
     this.log = deps.log ?? defaultLog
     // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: optional structured-history sink.
     // Facts only — never consulted by admission (spec R-H1).
@@ -243,6 +255,12 @@ export class Scheduler {
       await this._accountEngineHalted(now)
       return 0
     }
+    // C11-R1: consult the trusted Router readback for unresolved unknowns
+    // BEFORE admission — an exact trusted late outcome settles through the
+    // accepted V3/C-039 paths and releases its fence contribution inside the
+    // same tick; zero-write classifications (live/mismatch/stale) change
+    // nothing. No consultation happens without the engine lease above.
+    await this._reconcileTrustedOutcomes({ nowMs: now })
     const candidates = []
     for (const job of this.doc.jobs) {
       try {

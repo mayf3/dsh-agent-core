@@ -217,6 +217,10 @@ async function main() {
     deliver,
     tickMs: TICK_MS,
     concurrency: CONCURRENCY,
+    // C11-R1 trusted late-outcome self-heal: same published Router readback
+    // surface the self-ops consume — exact trusted late business outcomes
+    // settle their own occurrence through the accepted V3/C-039 paths.
+    reconciliation: { resolveCallerCorrelation: (coordinates) => router.resolveCallerCorrelation(coordinates) },
     log: {
       info: (...a) => log.info(...a),
       warn: (...a) => log.warn(...a),

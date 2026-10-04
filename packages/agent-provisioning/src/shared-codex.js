@@ -1,7 +1,6 @@
 import { lstatSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join } from 'node:path'
-
-export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 
 /**
  * The closed reasoning-effort vocabulary of the dsh-codex reasoning passthrough
@@ -37,10 +36,10 @@ export function dshCodexReasoningValue(reasoningEffort) {
 const CANONICAL_CREDENTIAL_TAIL = join('shared-credentials', 'openai-codex', '.openai-codex-auth.json')
 
 /**
- * Per-deployment-root canonical store resolution. ACTIVATION_V2 CTR-ACT2-002 freezes the
- * yanfenma-domain constant above; the authsvc-domain reconciliation (FLEET_SHARED_CODEX_AUTH
- * amendment A2/A4) requires the SAME layout under that domain's own deployment root —
- * one canonical per security surface, never a cross-surface reference. Pure path math.
+ * Per-deployment-root canonical store resolution. The authsvc-domain
+ * reconciliation (FLEET_SHARED_CODEX_AUTH amendment A2/A4) requires the SAME
+ * layout under every domain's own deployment root — one canonical per
+ * security surface, never a cross-surface reference. Pure path math.
  */
 export function canonicalOpenAICodexCredentialFileFor(deploymentRoot) {
   if (typeof deploymentRoot !== 'string' || deploymentRoot === '' || !isAbsolute(deploymentRoot)) {
@@ -48,6 +47,22 @@ export function canonicalOpenAICodexCredentialFileFor(deploymentRoot) {
   }
   return join(deploymentRoot, CANONICAL_CREDENTIAL_TAIL)
 }
+
+/**
+ * The EXECUTING security surface's canonical OpenAI Codex store, derived from
+ * the default production root of the executing user (the same default the
+ * production-runtime layout freezes: `<home>/.agent-core`). On the yanfenma
+ * user domain this is byte-identical to the CTR-ACT2-002 realigned constant
+ * (`<yanfenma-home>/.agent-core/shared-credentials/openai-codex/
+ * .openai-codex-auth.json`); every other deployment domain (the authsvc fleet
+ * closure, amendment A2) resolves ITS OWN canonical under its own root. A
+ * deploymentRoot-parameterized caller (production seam) passes the runtime's
+ * `--root` explicitly — see canonicalOpenAICodexCredentialFileFor — so the
+ * executing user's home is never load-bearing there. No source file carries a
+ * foreign domain's path literal: the installer's cross-surface gate depends
+ * on that property (B7 re-freeze, 2026-10-01 incident).
+ */
+export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = canonicalOpenAICodexCredentialFileFor(join(homedir(), '.agent-core'))
 
 /**
  * The deployment root that owns an agent home: production homes live at

@@ -43,7 +43,6 @@ import { queryMethods } from './query.js'
 import { authorityCapacityMethods } from './authority-capacity.js'
 import { startupRecoveryMethods } from './startup-recovery.js'
 import { adminAbandonmentMethods, reconstructAdminAbandonmentDeclarations } from './admin-abandonment.js'
-import { FreshHrLineageMethods } from './fresh-hr-lineage.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore,
   abandonmentDeclarationRegistryPathFor,
   readAbandonmentDeclarationRegistry, writeAbandonmentDeclarationRegistry } from './durable-file.js'
@@ -62,13 +61,6 @@ export class TurnReconciliationStore {
     this.runtimeEpochs = new Set([this.runtimeEpoch])
     this.persistenceFile = persistenceFile
     this.startupBlockedReason = null
-    // Ephemeral projection of a separately authenticated, durable root cut.
-    // The cut is reauthenticated at every Router mount; never persisted into
-    // this reconciliation file and never inferred from old fence presence.
-    this.freshHrLineage = null
-    this.freshHrLineageTokens = new WeakSet()
-    this.freshHrStartupTokens = new WeakSet()
-    this.freshHrMount = null
     /** Durable admin-abandonment operation registry (HR_RESET_AND_RESUME_V1):
      * declarationId -> exact original scope; retries complete only that scope.
      * Persisted in its own sibling file (never inside the recovery file, which
@@ -509,7 +501,7 @@ export class TurnReconciliationStore {
 // writable/configurable pass through unchanged and `constructor` is never
 // installed.
 const composedMethodDescriptors = {}
-for (const group of [authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods, adminAbandonmentMethods, FreshHrLineageMethods.prototype]) {
+for (const group of [authorityCapacityMethods, settlementMethods, queryMethods, startupRecoveryMethods, adminAbandonmentMethods]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue
     composedMethodDescriptors[key] = { ...descriptor, enumerable: false }

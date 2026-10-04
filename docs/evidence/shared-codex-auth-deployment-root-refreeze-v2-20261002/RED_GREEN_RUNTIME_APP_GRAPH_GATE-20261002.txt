@@ -1,0 +1,36 @@
+# RED/GREEN — fresh-pack production-runtime app graph (FIX A, agent-control#193 Defect A + A′)
+# worktree installer: ad491b792764afb0b43dc39af856fd2f6bf491186e1f38f1a376ee9b1aa176e9
+# gate lib:           6603818cdfda528d3a607e7e0216495dcfd648e3c23b81ec5c4d4477e5b4e98b
+# node: /usr/local/libexec/agent-core/node-runtime/bin/node (v25.6.1, x64) — the installed closure's own runtime (read-only reuse)
+# harness closure: /usr/local/libexec/agent-core/harness (stamp: {"commit":"514ab7b0029141b88c807704764d0d3e1eea1da4","dirtyCount":0})
+# MAIN_REPO: /Users/yanfenma/workspace/project/dsh-agent-core (node_modules top-level entries: 47)
+# proxy-agent-negotiate in MAIN_REPO/node_modules: 0 (top-level), 0 (under @larksuite) — the pack inputs never carry it
+# vendored bytes (v2.2 FIX A source):
+#   3568fa0be646ebf28f9ead14e0c8fe3c7c6fb2bc846fc248f4161f02d7dbf423  ./dist/index.d.ts
+#   4ade5fadd6dd7bcceb0663cf631e78dedca5a2243501e53b8a6c019a32f82bc5  ./dist/index.d.ts.map
+#   56f33d231c16933054a0dddc665abdc8514d952c84fa96b245e841875d05f5e5  ./dist/index.js
+#   cff70853e95eda06a4427db41c4cd5fa93d2d794ae4198c3ab4f7468450c3f9e  ./dist/index.js.map
+#   7b7c2579ea138d20d4f7699ca78ef16c526f35168dbf694f1d47cc861b0954d4  ./package.json
+# https-proxy-agent declares: 1.1.0
+
+## [RED-A] fresh pack WITHOUT vendored proxy-agent-negotiate (the exact #193 pack shape)
+MISSING proxy-agent-negotiate imported from /private/tmp/b7v22-fp-red/app/node_modules/@larksuite/channel/node_modules/https-proxy-agent/dist/index.js
+importSettled=false timedOut=false tailLines=11
+RUNTIME_APP_GRAPH_GATE FAIL
+
+## [RED-A′] vendored dep PRESENT but packages/development-execution NOT carried (the masked next failure at current main)
+ok=False importSettled=False missing=[]
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:245:17)
+
+## [GREEN-A] fresh pack WITH v2.2 FIX A (vendored dep + development-execution carried)
+importSettled=true timedOut=false tailLines=1
+RUNTIME_APP_GRAPH_GATE PASS
+GATE_JSON_VERDICT ok=true importSettled=true missingPackages=0
+
+## [G2.5 regression] FRESH_CHILD_BOOT_CANARY_V1 on the GREEN stage (plugin tree must stay healthy)
+ready=true pluginTreeFailed=false tailLines=1
+FRESH_CHILD_BOOT_CANARY PASS
+
+RED_GREEN_RUNTIME_APP_GRAPH = PASS (RED exact #193 class + RED-A′ masked gap + GREEN whole-graph import + G2.5 regression, hermetic throwaway homes)

@@ -35,18 +35,24 @@ import { isIP } from 'node:net'
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
 import {
   CANONICAL_DEFAULT_MODEL_ROUTE,
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   GPT6_LUNA_ROUTE_V1,
   REASONING_EFFORT_VALUES,
+  canonicalOpenAICodexCredentialFileFor,
 } from '../../agent-provisioning/src/shared-codex.js'
+
+export { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE }
 
 /**
  * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
  * carry-forward). Route tuple VALUES never come from here — only exact
  * dsh-codex/Harness source identity and the canonical credential path do.
- * Canonical path realigned to the yanfenma unified production backend
- * (AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002).
+ * The canonical credential path is the EXECUTING security surface's own
+ * canonical store (agent-provisioning/shared-codex.js: CTR-ACT2-002 value on
+ * the yanfenma domain, amendment-A2 per-root resolution everywhere else); no
+ * domain path literal lives in this file — the installer's cross-surface
+ * gate depends on that property (B7 re-freeze, 2026-10-01 incident).
  */
-export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
 
 export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
   targetAgentId: 'agt_cto-agent',
@@ -368,13 +374,22 @@ export function canonicalDefaultGlobalRoute() {
 /**
  * Load the frozen V3 route chain schema. Missing file is the rollback/legacy
  * state (global env route for every agent). Malformed files fail loud.
+ * One accepted canonical credential store per load — the deployment root's
+ * OWN store (FLEET_SHARED_CODEX_AUTH amendment A2): `options.deploymentRoot`
+ * (the production seam: the runtime's `--root`) pins that root explicitly;
+ * absent, the executing surface's canonical applies. A foreign surface's
+ * lineage (or any other credentialFile) fails closed.
  * @param {string} file
  * @param {Iterable<string>} registeredAgentIds
+ * @param {{deploymentRoot?: string}} [options]
  * @returns {{filePresent:boolean, overrides:Readonly<Record<string,object>>,
  *   resolve:(agentId:string, globalRoute:object)=>object,
  *   resolveChain:(agentId:string, globalRoute:object)=>object}}
  */
-export function loadAgentModelOverrides(file, registeredAgentIds) {
+export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) {
+  const ownCanonicalCredentialFile = options.deploymentRoot === undefined
+    ? CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+    : canonicalOpenAICodexCredentialFileFor(options.deploymentRoot)
   const filePresent = existsSync(file)
   const mutableOverrides = new Map()
   if (filePresent) {
@@ -448,9 +463,9 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         !isSubscription
         || route.provider !== 'openai-codex'
         || !(isLegacyCodexTuple || isGpt6Tuple)
-        || route.credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+        || route.credentialFile !== ownCanonicalCredentialFile
       )) {
-        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or @${GPT6_LUNA_ROUTE_V1.pluginVersion} and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or @${GPT6_LUNA_ROUTE_V1.pluginVersion} and credentialFile ${ownCanonicalCredentialFile}`)
       }
       if (isGpt6Tuple && route.model !== GPT6_LUNA_ROUTE_V1.model) {
         // DEC-G6R-002: the dshr1 pin is bound to exactly one model tuple.

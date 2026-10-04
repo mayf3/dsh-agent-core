@@ -1,0 +1,34 @@
+# auth-service @ github/main 862eab3 — canonical fleet send-grant provisioning suites (run 2026-10-02)
+
+## npx tsx --test tests/oauth/fleet-send-grant.test.ts tests/oauth/fleet-send-regression.test.ts  (exit=0)
+✔ FLEET_STAMP_AGENT_CREATES_EXACT_ROW (1.606666ms)
+✔ FLEET_STAMP_IDEMPOTENT_REENTRY_IS_KEEP_WITH_NO_WRITE (0.132584ms)
+✔ FLEET_STAMP_PRESERVES_ENUMERATED_INSPECTION_SCOPE (0.085333ms)
+✔ FLEET_STAMP_NORMALIZES_STRIPS_ONLY_NON_ENUMERATED_EXTRAS (0.113167ms)
+✔ FLEET_STAMP_NORMALIZE_ADDS_SEND_PRESERVING_INSPECTION (0.086917ms)
+✔ FLEET_STAMP_SERVICE_PRINCIPAL_NEVER_STAMPED (0.069417ms)
+✔ FLEET_STAMP_AUDIENCE_ABSENT_SKIPS_WITHOUT_WRITE_OR_THROW (0.06225ms)
+✔ FLEET_STAMP_AUDIENCE_INACTIVE_SKIPS (0.049583ms)
+✔ FLEET_STAMP_MISSING_PRINCIPAL_FAILS_CLOSED (0.188125ms)
+✔ FLEET_PLAN_CLIENT_KEYED_PAIRS_AND_CENSUS (0.164417ms)
+✔ RG1_HR_dual_scope_row_reentry_unchanged_version_stable (4.284875ms)
+✔ RG2_stamp_failure_no_orphan_client_retry_returns_one_time_secret (43.035625ms)
+✔ RG3_concurrent_first_stamp_converges_single_row_no_P2002_leak (0.193959ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121.4055
+
+## npx tsx scripts/reconcile-fleet-send-grants.ts --selftest  (exit=0)
+PASS selftest:make_lawful_add_keep_normalize_multi_client add=2 keep=2 normalize=2 missing=4 agents=5
+PASS selftest:empty_fleet_zero_everything add=0 keep=0 normalize=0 missing=0 agents=0
+PASS selftest:audience_absent_still_plans_but_flags add=1 keep=0 normalize=0 missing=1 agents=1
+SELFTEST_ALL_OK
+
+## NOT RUNNABLE IN THIS CONTEXT (environmental; untouched per boundaries):
+# tests/idempotent-conformance.test.ts + tests/oauth/v1-direct.test.ts require readable .env (EACCES to this principal) and a test DB.
+# Their legs carry the accepted 2026-09-16/17 production records (T1 birth-stamp replay; DISABLE_REVOKE 401 invalid_client; reconcile apply MISSING=0).
