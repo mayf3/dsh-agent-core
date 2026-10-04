@@ -16,17 +16,17 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 
-import { writeAgentDefinition } from '../../agent-definition/src/config.js'
+import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
 import {
   composeProductionRuntime,
-} from '../src/compose.js'
+} from '../../src/compose.js'
 import {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   CHATGPT_SUBSCRIPTION_V1,
   canonicalDefaultGlobalRoute,
   loadAgentModelOverrides,
-} from '../src/model-overrides.js'
-import { resolveProductionLayout } from '../src/paths.js'
+} from '../../src/model-overrides.js'
+import { resolveProductionLayout } from '../../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
 const OTHER = 'agt_other'

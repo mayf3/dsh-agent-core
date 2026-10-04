@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 test('Feishu gate wiring precedes awaited readiness and live declaration', () => {
-  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'compose.js'), 'utf8')
+  const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'src', 'compose.js'), 'utf8')
   const wire = source.indexOf('wireV2IngressGate(feishu, router')
   const ready = source.indexOf('await feishu.ready()')
   const live = source.indexOf("log.log('feishu channel live")

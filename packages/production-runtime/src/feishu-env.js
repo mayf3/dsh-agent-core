@@ -1,7 +1,9 @@
 /**
  * @agent-core/production-runtime/src/feishu-env.js — STRICT env parsing for
  * every Feishu channel switch (extracted from compose.js verbatim:
- * CODE_STRUCTURE_GUARDRAILS_V1 file-size cap).
+ * CODE_STRUCTURE_GUARDRAILS_V1 file-size cap) plus the optional-adapter
+ * ADMISSION seam that consumes the parsed switches (same rule: focused
+ * extraction out of compose.js, behavior byte-for-byte unchanged).
  *
  * Every resolver here is strict: ONLY the exact accepted values pass, any
  * other value throws a machine-readable error. WHEN that strictness applies
@@ -10,6 +12,8 @@
  * switches are inert, so invalid values are reported via
  * warnInvalidUnconfiguredFeishuEnv without blocking the unrelated base path.
  */
+
+import { existsSync } from 'node:fs'
 
 /**
  * STRICT boolean env parsing for the Feishu UX switches: ONLY the exact
@@ -120,4 +124,71 @@ export function warnInvalidUnconfiguredFeishuEnv(env = process.env, warn = () =>
       warn(`production-runtime: feishu channel OFF — ignoring invalid adapter env [${error?.code ?? 'FEISHU_ADAPTER_ENV_INVALID'}]: ${error?.message ?? error}`)
     }
   }
+}
+
+/**
+ * Optional-adapter ADMISSION for the Feishu channel (audit Product #442;
+ * moved here from compose.js verbatim per CODE_STRUCTURE_GUARDRAILS_V1
+ * MUST_NOT_GROW focused extraction — evaluation order, error objects, log
+ * lines and mount config are unchanged).
+ *
+ * The channel is an OPTIONAL adapter, so BOTH its config validation and its
+ * module graph belong to the ENABLED branch only —
+ *   - the channel-specific supervision switches are strictly parsed HERE,
+ *     so an invalid value on an ENABLED channel still fails composition
+ *     loud (fail closed), while a disabled channel's invalid switch can
+ *     never block the unrelated base path (it warns instead — observable,
+ *     never silently dropped);
+ *   - the connector + @larksuite/channel SDK graph is loaded ONLY for an
+ *     enabled channel, so a broken/absent optional-adapter implementation
+ *     is no longer a base-boot dependency; a CONFIGURED channel whose
+ *     implementation cannot load fails loud (FEISHU_CONNECTOR_UNAVAILABLE).
+ *
+ * The channel mounts ONLY with real credentials. Absent credentials path =>
+ * honest offline (no fake recording seam in production); delivery-requesting
+ * jobs fail loud as not-delivered.
+ *
+ * @param {object} params
+ * @param {object} params.ctx - plugin context the connector mounts into.
+ * @param {string} [params.feishuCredsPathOverride] - composition-config
+ *   credentials path; defaults to env FEISHU_CREDS_PATH.
+ * @param {object} params.log - composition logger (same log/warn lines).
+ * @returns {Promise<object|undefined>} the mounted feishu handle, or
+ *   undefined when the channel stays honestly OFF.
+ */
+export async function mountConfiguredFeishuChannel({ ctx, feishuCredsPathOverride, log }) {
+  const feishuCredsPath = feishuCredsPathOverride ?? process.env.FEISHU_CREDS_PATH
+  if (typeof feishuCredsPath === 'string' && feishuCredsPath !== '' && existsSync(feishuCredsPath)) {
+    // Feishu UX switches: strict-parsed for the ENABLED channel (absent =
+    // connector defaults true/true). Any invalid value fails loud HERE.
+    const feishuUxSwitches = resolveFeishuUxSwitches()
+    // Processing reaction: definite boolean (unset/empty resolves to false —
+    // the connector default stays OFF); render mode resolves to 'markdown'.
+    const processingReactionEnabled = resolveProcessingReactionConfig()
+    const replyRenderMode = resolveReplyRenderMode()
+    let applyFeishu
+    try {
+      const connector = await import('../../feishu-connector/src/index.js')
+      applyFeishu = connector.apply
+    } catch (cause) {
+      throw Object.assign(
+        new Error(`production-runtime: feishu channel is configured but the connector module graph failed to load: ${cause?.message ?? cause}`),
+        { code: 'FEISHU_CONNECTOR_UNAVAILABLE', cause },
+      )
+    }
+    const feishu = applyFeishu(ctx, {
+      enabled: true,
+      credentialsPath: feishuCredsPath,
+      // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
+      // keys are forwarded (absent = connector defaults true/true).
+      ...feishuUxSwitches,
+      processingReactionEnabled,
+      replyRenderMode,
+    })
+    log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
+    return feishu
+  }
+  warnInvalidUnconfiguredFeishuEnv(process.env, (message) => log.warn(message))
+  log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
+  return undefined
 }

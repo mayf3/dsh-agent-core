@@ -21,7 +21,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 
-import { AGT_ID, FakeProc, seedRuntime, silentLog } from './compose-fixture.js'
+import { AGT_ID, FakeProc, seedRuntime, silentLog } from '../compose-fixture.js'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 register('./fixtures/blocks-lark-channel.mjs', pathToFileURL(HERE + '/').href)
@@ -31,7 +31,7 @@ const GLOBAL_ROUTE = Object.freeze({ provider: 'oc-go', model: 'deepseek-v4-flas
 async function compose(t, { credsPath }) {
   const { root, layout } = await seedRuntime(t)
   const spawned = []
-  const { composeProductionRuntime } = await import('../src/compose.js')
+  const { composeProductionRuntime } = await import('../../src/compose.js')
   const runtime = await composeProductionRuntime({
     globalRoute: GLOBAL_ROUTE,
     layout,
