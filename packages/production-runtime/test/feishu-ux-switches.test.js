@@ -5,11 +5,15 @@
  * production-runtime owns STRICT env parsing for the two deployment switches:
  * FEISHU_REQUIRE_MENTION_IN_GROUP / FEISHU_AUTO_MENTION_TRIGGER_SENDER accept
  * ONLY the exact strings 'true' / 'false'; every other value fails
- * composition LOUD (a typo'd supervision-unit env must never silently revert
- * admission/mention policy). Unset/empty means "not configured" — the
- * connector defaults (true/true) apply. The parsed switches are forwarded
- * into the feishu mount config, and the launchd plist generator passes both
- * variables through when the installing shell carries them.
+ * composition LOUD on an ENABLED channel (a typo'd supervision-unit env must
+ * never silently revert admission/mention policy). Unset/empty means "not
+ * configured" — the connector defaults (true/true) apply. The parsed switches
+ * are forwarded into the feishu mount config, and the launchd plist generator
+ * passes both variables through when the installing shell carries them.
+ *
+ * Audit Product #442: the strict parse runs in the ENABLED branch of the
+ * composition — a disabled channel's invalid switch value is reported as a
+ * warning and must not block the unrelated base startup path.
  */
 
 import { test } from 'node:test'
@@ -93,18 +97,20 @@ test('SWITCHES: an invalid value on EITHER var fails loud (first var reported)',
 })
 
 // ---------------------------------------------------------------------------
-// compose wiring — parsed BEFORE any mount, forwarded into the feishu mount
+// compose wiring — strict parse in the ENABLED branch, spread into the mount;
+// the channel-OFF path warns instead of failing (audit Product #442)
 // ---------------------------------------------------------------------------
 
-test('COMPOSE: switches are parsed before any component mounts and spread into the feishu mount', () => {
+test('COMPOSE: switches are strictly parsed INSIDE the enabled branch and spread into the feishu mount', () => {
   const source = readFileSync(join(HERE, '..', 'src', 'compose.js'), 'utf8')
+  const enabledBranch = source.indexOf('existsSync(feishuCredsPath)')
   const parse = source.indexOf('resolveFeishuUxSwitches()')
-  const firstMount = source.indexOf('applyBootstrap(')
   const mountCfg = source.indexOf('...feishuUxSwitches')
-  assert.ok(parse >= 0, 'resolveFeishuUxSwitches() is called')
-  assert.ok(firstMount > parse, 'strict parse runs BEFORE the first component mount (invalid env fails composition regardless of channel)')
+  const offWarn = source.indexOf('warnInvalidUnconfiguredFeishuEnv(')
+  assert.ok(enabledBranch >= 0 && parse > enabledBranch, 'strict parse lives in the ENABLED branch (a disabled adapter cannot fail the base path)')
   assert.ok(mountCfg > source.indexOf('applyFeishu(ctx,'), 'parsed switches are spread into the applyFeishu config')
   assert.ok(mountCfg < source.indexOf('feishu ingress gate wired'), 'switch config lands with the mount, before gate wiring')
+  assert.ok(offWarn >= 0, 'the channel-OFF path reports invalid adapter env (observable, non-fatal)')
 })
 
 // ---------------------------------------------------------------------------
