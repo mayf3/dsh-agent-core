@@ -170,7 +170,10 @@ test('participant-aware second-shell commit verifies 92 consumers and binds the 
     assert.equal(childApply(f).status, 0)
     installFixturePlugins(f)
     const result = spawnSync('/bin/bash', [carrier, '--tx-child-commit', '--transaction', f.c.txId], {
-      encoding: 'utf8', input: 'COMMIT\n', timeout: 40000,
+      // Same commit-capable budget as the cohort suite's outerRun: the commit's
+      // consumer-access pass hits the recorded sameProcessBulkProbe slowness, and a
+      // harness kill closes the pipes (broken-pipe exit artifact, not a verdict).
+      encoding: 'utf8', input: 'COMMIT\n', timeout: 240000, maxBuffer: 64 * 1024 * 1024,
       env: { ...process.env, TXPROBE_ROOT: f.c.root, TXPROBE_CONTROL: f.control,
         TXPROBE_RECOVERY_ROOT: f.c.recovery, TXPROBE_TRUSTED_ROOT: f.c.trusted, TXPROBE_NODE: process.execPath },
     })

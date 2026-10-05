@@ -125,10 +125,15 @@ test('bounded cross-process commit refuses missing actual canary evidence and se
 })
 
 const outer = join(repo, 'docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v23.sh')
+// The commit/verify-terminal pass runs the recorded sameProcessBulkProbe slowness
+// (release-manifest "unresolved": one node process dynamic-imports 92 homes'
+// provisioning+plugin modules; observed >90s). A harness kill closes the pipes and
+// the outer then exits 120 via broken-pipe flush — a harness artifact, never a
+// contract verdict — so the commit-capable spawns carry a realistic time/byte budget.
 function outerRun(f, mode, input = '') {
   if (mode === 'apply') runtimePhase(f, 'quiesced')
   return spawnSync('/bin/bash', [outer, `--b7-probe-${mode}`, '--transaction', f.c.txId], {
-    encoding: 'utf8', input, timeout: 40000, env: { ...process.env,
+    encoding: 'utf8', input, timeout: 240000, maxBuffer: 64 * 1024 * 1024, env: { ...process.env,
       TXPROBE_ROOT: f.c.root, TXPROBE_CONTROL: f.control,
       TXPROBE_RECOVERY_ROOT: f.c.recovery, TXPROBE_TRUSTED_ROOT: f.c.trusted,
       TXPROBE_NODE: process.execPath, B7_PROBE_BASE: f.base } })
