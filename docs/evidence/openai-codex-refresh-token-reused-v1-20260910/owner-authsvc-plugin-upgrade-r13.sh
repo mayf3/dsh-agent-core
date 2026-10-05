@@ -2,22 +2,14 @@
 # owner-authsvc-plugin-upgrade-r13.sh — r13 (v2.3 rebind of frozen r12 9f835448)
 # Goal: OPENAI_CODEX_REFRESH_TOKEN_REUSED_V1 · AUTHSVC_PLUGIN_GENERATION_RECOVERY
 #
-# r13 REBIND (2026-10-02, Product #414 B7 v2.3 repair lane, agent-control#195
-# DEFECT C; NON-PRODUCTION authoring — PRODUCTION_MUTATION=NO): the B7 v2.2
-# packet's source pin b78aa30a runtime loader REQUIRES fleet config version:3
-# (fail-loud "older files are not converted", main f222b59f 2026-08-31), and
-# the packet's STAGE 1M now migrates the authsvc fleet config v2→v3 BEFORE the
-# restart. r12's G3 hard gate (fleet config v2) would then deterministically
-# fail at STAGE 2. Per the packet's own reconciliation (OPERATION_PACKAGE_V2
-# v2.3 REBIND §0): G3's version predicate moves 2→3 WITH the migration; the
-# roster/92/store/canonical/tombstone/expiry semantics are UNCHANGED.
-# AUTHORIZATION CHAIN: the accepted amendment (b08db324) bound carrier r12 by
-# SHA; this r13 byte change therefore requires the Owner to RE-PLACE
-# AMENDMENT_ACCEPTED.marker with scriptSha256 = THIS file's sha256 before any
-# STAGE 2 --apply (G1 verifies marker==script mechanically and stays
-# fail-closed). No other r12 byte is touched: diff vs r12 = this header block,
-# the G3 version predicate + its comment/echo lines, and the two selftest
-# fixture config versions.
+# 2026-10-04 NONPRODUCTION JOINT-RECOVERY CANDIDATE (base 98295c).
+# The existing r13 TX now records code/config durable intents and immutable
+# pre/post images together with the original plugin journal. G3 checks v2 before
+# apply and v3 afterward. Rollback restores that exact pair before runtime/fence
+# completion; credentials and business state are outside the restore boundary.
+# The fixed v23 B7 caller holds the existing global mutex across both phases.
+# Exact accepted source/artifacts/carrier/marker remain required.
+# This file is not the previously frozen r13 hash and is not deployment approval.
 #
 # EXECUTION GATES (ALL must hold, else PRODUCTION_EXECUTION = FORBIDDEN):
 #   G1 amendment accepted: docs/specs amendment (ACTIVATION_V1 authsvc-domain line)
@@ -26,7 +18,7 @@
 #      75d98d5b10bb926d53108e49019668c1bde2a9eb, frozen at
 #      $FROZEN_TGZ with $FROZEN_TGZ_SHA; script verifies SHA + REQUIRED_EXPORTS
 #      (credentialFile/withOwnerReauth/shared-mode) — rejects the old broken tgz.
-#   G3 fresh reconciliation hard gate (§0): fleet config v3 (r13: moved from v2 with the packet's STAGE 1M v2→v3 config migration), overrides==92,
+#   G3 fresh reconciliation hard gate (§0): config v2 before / v3 after migration, overrides==92,
 #      roster bijection, canonical regular-file 0600 nlink1 non-symlink, no
 #      tombstone, credential unexpired, 92 per-home stores present.
 #
@@ -34,8 +26,8 @@
 #   R3#1 FREEZE_CURRENT_DONE_SET / RUNTIME_QUIESCED initialized; set -u safe.
 #   R2#2  closed topology: current -> GEN_DIR ; home/dsh-codex -> current/dsh-codex;
 #         verified by realpath + test -e after wiring.
-#   R3#3 RUNTIME_QUIESCED tracked independently: EVERY post-bootout exit path
-#         (incl. fence failure) re-bootstraps the runtime before exiting.
+#   R3#3 RUNTIME_QUIESCED tracked independently; failed exact recovery remains
+#         fenced and does not restart a mixed or unknown generation.
 #   R3#5 rollback replays done rows AND reconciles intent-only rows (covers the
 #         current-renamed and home-unlinked pre-done windows).
 #   R3#6 effective-credential mechanical proof kept AND honestly scoped: the REAL
@@ -50,7 +42,7 @@
 #   sudo bash owner-authsvc-plugin-upgrade.sh --apply      # phase 1 (armed on exit)
 #   sudo bash owner-authsvc-plugin-upgrade.sh --commit     # phase 2 after PONG passes
 #   sudo bash owner-authsvc-plugin-upgrade.sh --abort      # phase 2 alternative: roll back
-#   sudo bash owner-authsvc-plugin-upgrade.sh --rollback   # reconcile latest preimage
+#   --rollback is retired; use --abort --transaction <exact txId>
 #   bash owner-authsvc-plugin-upgrade.sh --selftest        # offline
 
 AMENDMENT_ACCEPTED_MARKER=/Users/yanfenma/workspace/project/dsh-agent-core/docs/evidence/openai-codex-refresh-token-reused-v1-20260910/AMENDMENT_ACCEPTED.marker
@@ -65,6 +57,11 @@ set -u
 export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
 NODE=/usr/local/libexec/agent-core/node-runtime/bin/node
+TRUSTED_ROOT=/usr/local/libexec/agent-core
+SOURCE_ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
+PARTICIPANT_TOOL=$SOURCE_ROOT/scripts/lib/deployment-reuse/transaction-recovery.mjs
+OUTER_TOOL=$SOURCE_ROOT/docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v23.sh
+TXPROBE_ACTIVE=0
 LABEL=ai.agent-core.runtime
 PLIST=/Library/LaunchDaemons/$LABEL.plist
 STAMP=$(date +%Y%m%d-%H%M%S)
@@ -101,6 +98,8 @@ TX_TXID=""; TX_STATE=""; TX_PREIMAGE_DIR=""; TX_GEN_DIR=""; TX_CURRENT_LINK=""
 # derived path from the TXPROBE_* values. NEVER called on production entry points.
 apply_txprobe_overrides() {
   [ "${TXPROBE_ACTIVE:-0}" = "1" ] || return 0
+  NODE=${TXPROBE_NODE:-$(command -v node)}
+  TRUSTED_ROOT=${TXPROBE_TRUSTED_ROOT:-$TRUSTED_ROOT}
   ROOT=${TXPROBE_ROOT:-$ROOT}
   CONFIG=${TXPROBE_CONFIG:-$ROOT/agent-model-overrides.json}
   HOMES=${TXPROBE_HOMES:-$ROOT/homes}
@@ -120,7 +119,15 @@ apply_txprobe_overrides() {
   COMMIT_RECEIPT=$CONTROL/codex-plugin-commit-receipt.json
   return 0
 }
-AS_USER() { if [ "$(id -u)" = "0" ]; then sudo -u authsvc "$@"; else "$@"; fi; }
+AS_USER() {
+  if [ "${TXPROBE_ACTIVE:-0}" = 1 ]; then "$@" 9<&-; return $?; fi
+  local arg args=()
+  for arg in "$@"; do
+    [ "$arg" != "$NODE" ] || arg="$TRUSTED_ROOT/node-runtime/bin/node"
+    args+=("$arg")
+  done
+  if [ "$(id -u)" = "0" ]; then sudo -u authsvc "${args[@]}" 9<&-; else "${args[@]}" 9<&-; fi
+}
 
 closure_digest() {
   ( cd "$1" && find -L "$2" -type f -print0 2>/dev/null | sort -z \
@@ -178,7 +185,7 @@ NODE_EOF
 }
 
 # ---------- rollback: orphan bytes + done rows + INTENT-ONLY rows (R3#5) ----------
-rollback_all() { # $1=preimage dir
+rollback_plugins() { # $1=preimage dir
   local dir="${1:-$PREIMAGE_DIR}"
   local manifest="$dir/manifest.json"
   local restored=0 failures=0 line agent entry kind savedAs target nm p
@@ -275,6 +282,62 @@ rollback_all() { # $1=preimage dir
   echo "ROLLBACK_COMPLETE (exact preimage restored, zero mutated homes remain)"
 }
 
+# The existing TX owns all three participants; no second recovery authority.
+participant() {
+  "$NODE" "$PARTICIPANT_TOOL" "$1" "$ROOT" "$TRUSTED_ROOT" "$RECOVERY_ROOT" "$TX_ID" "${2:-}"
+}
+select_recovery_tools() {
+  [ "$(jq -r '.activation != null' "$TX_FILE")" = true ] || return 0
+  local assets="$RECOVERY_ROOT/activation-$TX_ID" tool node expected
+  tool="$assets/tools/deployment-reuse/transaction-recovery.mjs"
+  node="$assets/old-node-runtime/bin/node"
+  [ "$(jq -r .activation.recoveryTool "$TX_FILE")" = "$tool" ] || return 1
+  [ "$(jq -r .activation.recoveryNode "$TX_FILE")" = "$node" ] || return 1
+  [ -d "$assets" ] && [ ! -L "$assets" ] || return 1
+  for p in "$assets/tools" "$assets/tools/deployment-reuse" "$assets/old-node-runtime" "$assets/old-node-runtime/bin"; do
+    [ -d "$p" ] && [ ! -L "$p" ] || return 1
+  done
+  for p in "$tool" "$node" "$assets/tools/trusted-cp-fleet-config-v2v3-migration.mjs"; do
+    [ -f "$p" ] && [ ! -L "$p" ] || return 1
+  done
+  [ "$(shasum -a 256 "$tool" | awk '{print $1}')" = "$(jq -r .activation.toolSha256 "$TX_FILE")" ] || return 1
+  [ "$(shasum -a 256 "$node" | awk '{print $1}')" = "$(jq -r .activation.recoveryNodeSha256 "$TX_FILE")" ] || return 1
+  [ "$(shasum -a 256 "$assets/tools/trusted-cp-fleet-config-v2v3-migration.mjs" | awk '{print $1}')" = "$(jq -r .activation.migrationToolSha256 "$TX_FILE")" ] || return 1
+  for p in trusted-cp-fresh-child-boot-canary.mjs trusted-cp-runtime-app-graph-gate.mjs trusted-cp-model-overrides-config-gate.mjs; do
+    [ -f "$assets/tools/$p" ] && [ ! -L "$assets/tools/$p" ] || return 1
+    [ "$(shasum -a 256 "$assets/tools/$p" | awk '{print $1}')" = "$(jq -r --arg p "$p" '.activation.gates[$p]' "$TX_FILE")" ] || return 1
+  done
+  [ "$(shasum -a 256 "$assets/tools/deployment-reuse/cohort-binding.mjs" | awk '{print $1}')" = "$(jq -r .activation.cohortToolSha256 "$TX_FILE")" ] || return 1
+  for p in cohort-runtime.mjs cohort-artifacts.mjs; do
+    [ "$(shasum -a 256 "$assets/tools/deployment-reuse/$p" | awk '{print $1}')" = "$(jq -r --arg p "$p" '.activation.cohortSupport[$p]' "$TX_FILE")" ] || return 1
+  done
+  PARTICIPANT_TOOL=$tool
+  [ "${TXPROBE_ACTIVE:-0}" = 1 ] || NODE=$node
+}
+mutation_may_exist() {
+  [ -f "$MANIFEST" ] && return 0
+  participant intent >/dev/null 2>&1
+  [ "$?" != 3 ] # validation failure is UNKNOWN, never zero mutation.
+}
+rollback_all() {
+  # The old runtime must not observe partially recovered code/config/plugin refs.
+  stop_runtime || return 1
+  if [ "$(jq -r '.activation != null' "$TX_FILE")" = true ]; then
+    participant restore || return 1
+  fi
+  if [ -f "${1:-$PREIMAGE_DIR}/manifest.json" ]; then
+    rollback_plugins "${1:-$PREIMAGE_DIR}" || return 1
+  elif [ ! -f "${1:-$PREIMAGE_DIR}/ROLLBACK_COMPLETE.marker" ]; then
+    # Only a durable absence of plugin intent proves the journal never existed.
+    participant plugin-started >/dev/null 2>&1
+    [ "$?" = 3 ] || { echo "PLUGIN_JOURNAL_MISSING — UNKNOWN"; return 1; }
+  fi
+  if [ "$(jq -r '.activation != null' "$TX_FILE")" = true ]; then
+    participant verify-plugins || return 1
+  fi
+  return 0
+}
+
 # ---------- R12: ONE shared abort transition (used by manual --abort AND auto lifecycle) ----------
 # Ordering invariant (Owner r11 ruling):
 #   recovery (no-mutation skip OR rollback_all)
@@ -282,29 +345,25 @@ rollback_all() { # $1=preimage dir
 #   → ensure_runtime_running MUST succeed
 #   → tx_save ABORTED (never before runtime is verified running)
 clear_fence_if_ours() {
-  if [ -f "$FENCE" ] && [ "$(jq -r .txId "$FENCE" 2>/dev/null)" = "$TX_TXID" ]; then
-    "$NODE" -e 'const fs=require("fs");const f=JSON.stringify({inFlight:false,clearedAt:new Date().toISOString(),txId:process.argv[1]},null,2)+"\n";fs.writeFileSync(process.argv[2],f,{mode:0o644});fs.fsyncSync(fs.openSync(process.argv[2],"r"))' "$TX_TXID" "$FENCE" 2>/dev/null || true
-  fi
+  [ -f "$FENCE" ] || return 0
+  [ "$(jq -r .txId "$FENCE")" = "$TX_ID" ] || return 1
+  "$NODE" -e 'const fs=require("fs"),path=require("path");const [id,p]=process.argv.slice(1);const t=p+".clear-"+process.pid;const m=fs.lstatSync(p);const fd=fs.openSync(t,"wx",m.mode&0o7777);if(process.getuid()===0)fs.fchownSync(fd,m.uid,m.gid);fs.fchmodSync(fd,m.mode&0o7777);fs.writeFileSync(fd,JSON.stringify({inFlight:false,txId:id,clearedAt:new Date().toISOString()}));fs.fsyncSync(fd);fs.closeSync(fd);fs.renameSync(t,p);const d=fs.openSync(path.dirname(p),"r");fs.fsyncSync(d);fs.closeSync(d)' "$TX_ID" "$FENCE"
 }
-finish_abort_terminal() { # fence → runtime (MUST succeed) → ABORTED. Returns 0 only if ABORTED saved.
-  clear_fence_if_ours
+finish_abort_terminal() {
+  # Restore availability under the fence; a failed restart keeps it in flight.
   if ! ensure_runtime_running; then
-    tx_save ABORTED_PENDING_RUNTIME_RESTORE || echo "TX_SAVE_FAIL ABORTED_PENDING_RUNTIME_RESTORE"
-    echo "RUNTIME_RESTORE_FAILED — state=ABORTED_PENDING_RUNTIME_RESTORE is re-entrant: re-run --abort --transaction $TX_TXID after fixing the runtime"
+    tx_save ABORTED_PENDING_RUNTIME_RESTORE || return 1
+    echo "RUNTIME_RESTORE_FAILED — nonterminal; retain fence and reconcile same TX"
     return 1
   fi
-  tx_save ABORTED || { echo "TX_SAVE_FAIL ABORTED — ESCALATE"; return 1; }
+  clear_fence_if_ours || { tx_save ABORTED_PENDING_FENCE_CLEAR; return 1; }
+  if [ "${TXPROBE_ACTIVE:-0}" = 1 ] && [ "${TXPROBE_ABORT_AFTER_FENCE_CLEAR:-0}" = 1 ]; then kill -KILL $$; fi
+  tx_save ABORTED || return 1
   echo "ABORT_TERMINAL state=ABORTED (runtime verified running)"
-  return 0
 }
-abort_no_mutation_transition() { # for PREPARED/QUIESCING/FENCE_CREATING/MUTATING_NO_FENCE/MUTATING_FENCED-without-journal
+abort_no_mutation_transition() {
   disarm_lifecycle
-  ensure_runtime_running || true          # best effort first (may need bootstrap)
-  clear_fence_if_ours
-  ensure_runtime_running || { tx_save ABORTED_PENDING_RUNTIME_RESTORE || true; echo "RUNTIME_RESTORE_FAILED — state=ABORTED_PENDING_RUNTIME_RESTORE (re-entrant)"; return 1; }
-  tx_save ABORTED || { echo "TX_SAVE_FAIL ABORTED — ESCALATE"; return 1; }
-  echo "NO_MUTATION_ABORT_DONE state=ABORTED"
-  return 0
+  finish_abort_terminal
 }
 
 on_lifecycle() {
@@ -320,13 +379,12 @@ on_lifecycle() {
         PREPARED|QUIESCING|FENCE_CREATING|MUTATING_NO_FENCE) tx_was_live=YES; abort_kind=NOMUT ;;
         MUTATING_FENCED)
           tx_was_live=YES
-          if [ -f "$MANIFEST" ]; then abort_kind=ROLLBACK; else abort_kind=NOMUT; fi ;;
+          if mutation_may_exist; then abort_kind=ROLLBACK; else abort_kind=NOMUT; fi ;;
         APPLIED_AWAITING_PONG) tx_was_live=YES; abort_kind=ROLLBACK ;;
       esac
     fi
     if [ "$tx_was_live" != YES ]; then
-      ensure_runtime_running || echo "RUNTIME_RESTORE_FAILED — ESCALATE"
-      echo "UPGRADE_RESULT = FAIL (no live transaction; service state verified)"
+      echo "UPGRADE_RESULT = FAIL_UNRESOLVED (transaction state unknown; no inferred service restore)"
       [ "$sig" = EXIT ] || exit 1
       return 0
     fi
@@ -351,7 +409,7 @@ on_lifecycle() {
       fi
     else
       tx_save ABORT_INCOMPLETE || echo "TX_SAVE_FAIL ABORT_INCOMPLETE"
-      ensure_runtime_running || echo "RUNTIME_RESTORE_FAILED — ESCALATE"
+      echo "Runtime remains quiesced while recovery is unresolved"
       echo "UPGRADE_RESULT = FAIL_UNRESOLVED — PARTIAL_FLEET_STATE = POSSIBLE, STOP_AND_ESCALATE"
     fi
     [ "$sig" = EXIT ] || exit 1
@@ -366,7 +424,8 @@ arm_lifecycle() { MUTATION_ARMED=YES; COMMIT_SUCCESS=NO; ROLLBACK_DONE=NO
 disarm_lifecycle() { COMMIT_SUCCESS=YES; MUTATION_ARMED=NO; trap - ERR INT TERM HUP EXIT; }
 
 stop_runtime() {
-  launchctl bootout "system/$LABEL" 2>/dev/null
+  if [ "${TXPROBE_ACTIVE:-0}" = 1 ]; then return 0; fi
+  launchctl bootout "system/$LABEL" 9<&- 2>/dev/null
   local i=0
   while [ $i -lt 15 ]; do
     pgrep -f 'production-runtime.mjs --root /Users/authsvc' >/dev/null 2>&1 || { echo "QUIESCE_OK (runtime fully stopped)"; return 0; }
@@ -375,8 +434,8 @@ stop_runtime() {
   echo "QUIESCE_FAIL runtime still alive"; return 1
 }
 bootstrap_runtime() {
-  if [ "${TXPROBE_ACTIVE:-0}" = "1" ]; then echo "(TXPROBE: bootstrap skipped in probe mode)"; return 0; fi
-  launchctl bootstrap system "$PLIST" 2>/dev/null || launchctl kickstart -k "system/$LABEL" 2>/dev/null || { echo "BOOTSTRAP_FAIL"; return 1; }
+  if [ "${TXPROBE_ACTIVE:-0}" = "1" ]; then [ "${TXPROBE_RUNTIME_FAIL:-0}" != 1 ]; return $?; fi
+  launchctl bootstrap system "$PLIST" 9<&- 2>/dev/null || launchctl kickstart -k "system/$LABEL" 9<&- 2>/dev/null || { echo "BOOTSTRAP_FAIL"; return 1; }
   local new="" i=0
   while [ $i -lt 30 ]; do
     sleep 1
@@ -389,6 +448,7 @@ bootstrap_runtime() {
   sleep 10
 }
 runtime_is_running() {
+  if [ "${TXPROBE_ACTIVE:-0}" = 1 ]; then [ "${TXPROBE_RUNTIME_FAIL:-0}" != 1 ]; return $?; fi
   pgrep -f 'production-runtime.mjs --root /Users/authsvc' >/dev/null 2>&1
 }
 ensure_runtime_running() { # R11#4: durable across processes — probe REAL state, not flags
@@ -458,22 +518,41 @@ tx_save() { # $1=state ; persists the CURRENT transaction with all absolute path
   if [ -f "$MANIFEST" ]; then manifest_sha=$(shasum -a 256 "$MANIFEST" | awk '{print $1}'); fi
   "$NODE" -e '
     const fs = require("fs")
-    const [out, rec] = process.argv.slice(1)
-    fs.writeFileSync(out, JSON.stringify(JSON.parse(rec), null, 2) + "\n", { mode: 0o600 })
+    const [out, rec, previous, pluginTgz, scopesTgz] = process.argv.slice(1)
+    const value = { ...JSON.parse(rec), pluginTgz, scopesTgz }
+    if (fs.existsSync(previous)) {
+      const prior = JSON.parse(fs.readFileSync(previous))
+      if (prior.txId === value.txId) {
+        for (const key of ["pluginTgz", "pluginTgzSha256", "scopesTgz", "scopesTgzSha256"]) {
+          if (Object.hasOwn(prior, key)) value[key] = prior[key]
+        }
+        if (Object.hasOwn(prior, "activation")) value.activation = prior.activation
+        if (prior.abortBeforeParticipant === true) value.abortBeforeParticipant = true
+        if (prior.outer) value.outer = prior.outer
+      }
+    }
+    if (process.env.B7_OUTER_ACTIVE === "1") {
+      const b = Buffer.alloc(fs.fstatSync(9).size); fs.readSync(9, b, 0, b.length, 0)
+      const outer = JSON.parse(b)
+      if (outer.binding.txId !== value.txId || (value.outer && JSON.stringify(value.outer) !== JSON.stringify(outer))) throw new Error("TX_OUTER_BINDING_MISMATCH")
+      value.outer = outer
+    }
+    fs.writeFileSync(out, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 })
     fs.fsyncSync(fs.openSync(out, "r"))
   ' "$tmp" "$(cat <<JEOF
 {"txSchema":$TX_SCHEMA_VERSION,"txId":"$TX_ID","state":"$state","scriptSha256":"$SELF_SHA",
  "stamp":"$STAMP","deploymentRoot":"$ROOT","config":"$CONFIG","genParent":"$GEN_PARENT",
  "genDir":"$GEN_DIR","currentLink":"$CURRENT_LINK","preimageDir":"$PREIMAGE_DIR",
  "manifest":"$MANIFEST","manifestSha256":"$manifest_sha","fence":"$FENCE","canonical":"$CANONICAL",
- "pluginTgz":"$FROZEN_TGZ","pluginTgzSha256":"$(cat "$FROZEN_TGZ_SHA_FILE" 2>/dev/null | awk '{print $1}')",
- "scopesTgz":"$FROZEN_SCOPES_TGZ","scopesTgzSha256":"$(cat "$FROZEN_SCOPES_TGZ_SHA_FILE" 2>/dev/null | awk '{print $1}')",
+ "pluginTgzSha256":"$(cat "$FROZEN_TGZ_SHA_FILE" 2>/dev/null | awk '{print $1}')",
+ "scopesTgzSha256":"$(cat "$FROZEN_SCOPES_TGZ_SHA_FILE" 2>/dev/null | awk '{print $1}')",
  "closureDigestsFile":"$PREIMAGE_DIR/scope-digests.txt","updatedAt":"$(date -u '+%FT%TZ')"}
 JEOF
-)" || { echo "TX_SAVE_FAIL state=$state"; rm -f "$tmp"; return 1; }
+)" "$TX_FILE" "$FROZEN_TGZ" "$FROZEN_SCOPES_TGZ" || { echo "TX_SAVE_FAIL state=$state"; rm -f "$tmp"; return 1; }
   mv "$tmp" "$TX_FILE" || { echo "TX_SAVE_FAIL move state=$state"; return 1; }
   if [ "$(id -u)" = "0" ]; then chown root:wheel "$TX_FILE"; fi
   chmod 600 "$TX_FILE"
+  "$NODE" -e 'const fs=require("fs");const fd=fs.openSync(process.argv[1],"r");fs.fsyncSync(fd);fs.closeSync(fd)' "$RECOVERY_ROOT"
 }
 
 prepare_recovery_root() { # R7#2: root-only trust domain (idempotent)
@@ -600,7 +679,7 @@ tx_load() { # $1=txId → loads TX_FILE (root-owned 0600) into TX_* globals with
     PREPARED|QUIESCING|FENCE_CREATING|MUTATING_NO_FENCE|MUTATING_FENCED) cur_state_aware=PRE ;;
     # R11#3: rollback is restoring (or has restored) the PRIOR target — the new-gen
     # requirement must not apply, or cross-process resume is rejected at load time.
-    ROLLING_BACK|ROLLBACK_APPLIED|ABORTED_PENDING_FENCE_CLEAR) cur_state_aware=PRE ;;
+    ROLLING_BACK|ROLLBACK_APPLIED|ABORTED_PENDING_FENCE_CLEAR|ABORTED_PENDING_RUNTIME_RESTORE) cur_state_aware=PRE ;;
     ABORTED|ABORT_INCOMPLETE) cur_state_aware=ANY ;;   # terminal: existence/symlink shape only
   esac
   [ "$l_current" = "$CURRENT_LINK" ] || { echo "TX_CURRENT_POSITION_MISMATCH (tx=$l_current this=$CURRENT_LINK)"; return 1; }
@@ -676,6 +755,8 @@ tx_load() { # $1=txId → loads TX_FILE (root-owned 0600) into TX_* globals with
   TX_STATE="$l_state"
   TX_PREIMAGE_DIR="$l_preimage"; TX_GEN_DIR="$l_gen"; TX_CURRENT_LINK="$l_current"
   PREIMAGE_DIR="$TX_PREIMAGE_DIR"; MANIFEST="$l_manifest"; GEN_DIR="$TX_GEN_DIR"; CURRENT_LINK="$TX_CURRENT_LINK"
+  GEN_PARENT=$(dirname "$GEN_DIR"); STAMP=$(jq -r .stamp "$TX_FILE")
+  select_recovery_tools || { echo "TX_RECOVERY_TOOLS_INVALID"; return 1; }
   echo "TX_LOADED txId=$TX_ID state=$TX_STATE (fence+paths+manifest-digest verified)"
   return 0
 }
@@ -694,6 +775,21 @@ tx_reentry_gate() { # refuses a new transaction while one is MID-FLIGHT
       echo "  --abort --transaction $txid   (rollback + restore service)"
       return 1 ;;
   esac
+}
+
+bind_accepted_artifact_paths() { # A1/A4: one accepted path pair, shared with runtime provisioning.
+  local paths
+  paths=$("$NODE" --input-type=module -e '
+    import fs from "node:fs"; import path from "node:path";
+    const a=JSON.parse(fs.readFileSync(process.argv[1],"utf8")).activation.cohort.artifacts;
+    const paths=[a.plugin.path,a.scopes.path];
+    if(paths.some(p=>typeof p!=="string"||!path.isAbsolute(p)||path.normalize(p)!==p||/[\r\n\x00]/.test(p)))process.exit(2);
+    process.stdout.write(paths.join("\n"));
+  ' "$AMENDMENT_ACCEPTED_MARKER") || return 1
+  FROZEN_TGZ=$(printf '%s\n' "$paths" | sed -n '1p')
+  FROZEN_SCOPES_TGZ=$(printf '%s\n' "$paths" | sed -n '2p')
+  FROZEN_TGZ_SHA_FILE="$FROZEN_TGZ.sha256"
+  FROZEN_SCOPES_TGZ_SHA_FILE="$FROZEN_SCOPES_TGZ.sha256"
 }
 
 check_amendment_gate() { # structured marker (R6): binds accepted spec commit (+file digest) and provisioning commit
@@ -720,11 +816,28 @@ check_amendment_gate() { # structured marker (R6): binds accepted spec commit (+
   grep -q "$prov_commit" "$EVIDENCE_DIR/accepted-provisioning-commit.txt" || { echo "G1 FAIL provisioningCommit not recorded in accepted-provisioning-commit.txt"; return 1; }
   [ "$m_schema" = "$TX_SCHEMA_VERSION" ] || { echo "G1 FAIL marker.txSchema=$m_schema expected $TX_SCHEMA_VERSION"; return 1; }
   [ "$m_script" = "$SELF_SHA" ] || { echo "G1 FAIL marker.scriptSha256 != this script (${m_script:0:12}… vs ${SELF_SHA:0:12}…)"; return 1; }
+  bind_accepted_artifact_paths || { echo "G1 FAIL accepted artifact paths invalid"; return 1; }
   local plugin_sha; plugin_sha=$(awk '{print $1}' "$FROZEN_TGZ_SHA_FILE" 2>/dev/null)
   [ "$m_plugin" = "$plugin_sha" ] || { echo "G1 FAIL marker.pluginTgzSha256 != frozen tgz sha"; return 1; }
   local scopes_sha; scopes_sha=$(awk '{print $1}' "$FROZEN_SCOPES_TGZ_SHA_FILE" 2>/dev/null)
   [ "$m_scopes" = "$scopes_sha" ] || { echo "G1 FAIL marker.scopesTgzSha256 != frozen scopes sha"; return 1; }
   [ "$m_root" = "$ROOT" ] || { echo "G1 FAIL marker.deploymentRoot != $ROOT"; return 1; }
+  [ "$(jq -r .activation.toolSha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$(shasum -a 256 "$PARTICIPANT_TOOL" | awk '{print $1}')" ] || { echo "G1 participant bytes unbound"; return 1; }
+  [ "$(jq -r .activation.migrationToolSha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$(shasum -a 256 "$SOURCE_ROOT/scripts/lib/trusted-cp-fleet-config-v2v3-migration.mjs" | awk '{print $1}')" ] || { echo "G1 migration bytes unbound"; return 1; }
+  [ "$(jq -r .activation.outerSha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$(shasum -a 256 "$OUTER_TOOL" | awk '{print $1}')" ] || { echo "G1 outer bytes unbound"; return 1; }
+  [ "$(jq -r .activation.cohortToolSha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$(shasum -a 256 "$SOURCE_ROOT/scripts/lib/deployment-reuse/cohort-binding.mjs" | awk '{print $1}')" ] || { echo "G1 cohort verifier bytes unbound"; return 1; }
+  jq -e '.activation.cohort.schema == 1 and (.activation.cohortSha256 | test("^[a-f0-9]{64}$"))' "$AMENDMENT_ACCEPTED_MARKER" >/dev/null || { echo "G1 exact cohort acceptance binding required"; return 1; }
+  [ "$(jq -r .activation.cohort.trustedRoot "$AMENDMENT_ACCEPTED_MARKER")" = "$TRUSTED_ROOT" ] || { echo "G1 trusted code target mismatch"; return 1; }
+  [ "$(jq -r .activation.cohort.artifacts.plugin.path "$AMENDMENT_ACCEPTED_MARKER")" = "$FROZEN_TGZ" ] || return 1
+  [ "$(jq -r .activation.cohort.artifacts.plugin.sha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$plugin_sha" ] || return 1
+  [ "$(jq -r .activation.cohort.artifacts.scopes.path "$AMENDMENT_ACCEPTED_MARKER")" = "$FROZEN_SCOPES_TGZ" ] || return 1
+  [ "$(jq -r .activation.cohort.artifacts.scopes.sha256 "$AMENDMENT_ACCEPTED_MARKER")" = "$scopes_sha" ] || return 1
+  [ "$(jq -r .activation.cohort.artifacts.sourceCommit "$AMENDMENT_ACCEPTED_MARKER")" = 75d98d5b10bb926d53108e49019668c1bde2a9eb ] || return 1
+  for p in cohort-runtime.mjs cohort-artifacts.mjs; do
+    [ "$(shasum -a 256 "$SOURCE_ROOT/scripts/lib/deployment-reuse/$p" | awk '{print $1}')" = "$(jq -r --arg p "$p" '.activation.cohortSupport[$p]' "$AMENDMENT_ACCEPTED_MARKER")" ] || return 1
+  done
+  EXPECTED_SOURCE_SHA=$(jq -r .activation.sourceSha "$AMENDMENT_ACCEPTED_MARKER") EXPECTED_SOURCE_TREE=$(jq -r .activation.sourceTree "$AMENDMENT_ACCEPTED_MARKER") \
+    bash "$SOURCE_ROOT/scripts/trusted-cp-deploy-install.sh" --validate-source "$SOURCE_ROOT" || return 1
   echo "G1 amendment = ACCEPTED (specHead=${spec_head:0:12}… spec-sha ok · provisioningCommit=${prov_commit:0:12}… · script/tgz/scopes/root bound)"
 }
 
@@ -770,9 +883,13 @@ check_frozen_artifact() { # G2: BOTH frozen archives (plugin + dependency scopes
 }
 
 fresh_reconciliation() { # G3 hard gate (R5#5: bijection vs authoritative registry + store census + expiry from THIS gen)
-  [ "$(jq -r .version "$CONFIG")" = "3" ] || { echo "G3 FAIL config not v3"; return 1; }
+  [ "$(jq -r .version "$CONFIG")" = "${1:-3}" ] || { echo "G3 FAIL config version mismatch"; return 1; }
+  EXPECTED_FLEET=$(jq -r ' .activation.cohort.migrationCount // 92' "$TX_FILE")
   local n; n=$(jq -r '.overrides | length' "$CONFIG")
   [ "$n" = "$EXPECTED_FLEET" ] || { echo "G3 FAIL overrides=$n (expected exactly $EXPECTED_FLEET)"; return 1; }
+  if [ "$(jq -r '.activation.cohort != null' "$TX_FILE")" = true ]; then
+    if [ "${1:-3}" = 2 ]; then participant cohort-inputs pre; else participant cohort-inputs post; fi || return 1
+  else
   # bijection vs authoritative registry (agents.json), both directions
   local reg_total in_reg_not_cfg in_cfg_not_reg
   reg_total=$(jq -r '[.agents[] | select(.disabled != true)] | length' "$ROOT/agents.json" 2>/dev/null || echo "?")
@@ -780,13 +897,14 @@ fresh_reconciliation() { # G3 hard gate (R5#5: bijection vs authoritative regist
   in_cfg_not_reg=$(comm -13 <(jq -r '[.agents[] | select(.disabled != true) | .id] | sort[]' "$ROOT/agents.json" 2>/dev/null) <(jq -r '.overrides | keys[]' "$CONFIG" | sort) | wc -l | tr -d ' ')
   echo "G3 roster: registry_active=$reg_total overrides=$n in_registry_not_overrides=$in_reg_not_cfg in_overrides_not_registry=$in_cfg_not_reg"
   [ "$in_reg_not_cfg" = "0" ] && [ "$in_cfg_not_reg" = "0" ] || { echo "G3 FAIL roster bijection"; return 1; }
+  fi
   # G3 stores: census of the REAL per-home credential stores (bridge preimage), not plugin installs
   local store_ok=0 store_bad=0 a f
   for a in $(jq -r '.overrides | keys[]' "$CONFIG"); do
     f="$HOMES/$a/.openai-codex-auth.json"
     if [ -f "$f" ] && [ ! -L "$f" ]; then store_ok=$((store_ok+1)); else store_bad=$((store_bad+1)); echo "G3_STORE_MISSING_OR_SYMLINK $a"; fi
   done
-  echo "G3 stores: present=$store_ok absent=$store_bad (92/92 expected present — bridge state)"
+  echo "G3 stores: present=$store_ok absent=$store_bad ($EXPECTED_FLEET expected present — bound legacy state)"
   [ "$store_bad" = 0 ] || { echo "G3 FAIL store census"; return 1; }
   [ -f "$CANONICAL" ] && [ ! -L "$CANONICAL" ] || { echo "G3 FAIL canonical not a regular file"; return 1; }
   [ "$(stat -f '%Sp' "$CANONICAL")" = "-rw-------" ] || { echo "G3 FAIL canonical mode"; return 1; }
@@ -795,7 +913,7 @@ fresh_reconciliation() { # G3 hard gate (R5#5: bijection vs authoritative regist
   [ ! -e "${CANONICAL}.refresh-intent.json" ] || { echo "G3 FAIL tombstone present"; return 1; }
   # expiry read from THIS build's gen (not any pre-existing install)
   local expired
-  expired=$(sudo -u authsvc "$NODE" -e "
+  expired=$(AS_USER "$NODE" -e "
     import('$GEN_DIR/dsh-codex/lib/index.js').then(async m => {
       const s = new m.OpenAICodexCredentialStore('$CANONICAL')
       const c = await s.read('openai-codex')
@@ -803,7 +921,7 @@ fresh_reconciliation() { # G3 hard gate (R5#5: bijection vs authoritative regist
     }).catch(e => console.log('unknown:' + String(e.message).slice(0,80)))
   " 2>/dev/null || echo unknown)
   [ "$expired" = "no" ] || { echo "G3 FAIL credential expired/unknown ($expired)"; return 1; }
-  echo "G3 fresh reconciliation = PASS (v3 · 92 · bijection · boundary · tombstone-absent · unexpired[from-this-gen])"
+  echo "G3 fresh reconciliation = PASS (bound legacy set · exact active set · boundary · tombstone-absent · unexpired[from-this-gen])"
 }
 
 selftest() {
@@ -1028,50 +1146,9 @@ selftest() {
     echo "SELFTEST_FAIL T9f nonce protection"; failures=1
   fi
 
-  # T10 (r8 review): SECOND SHELL runs the FULL commit/abort ENTRYPOINTS to terminal state.
-  # fixture (rebuilt fresh): applied topology + tx APPLIED_AWAITING_PONG + fence
-  local c10="$T/t10"
-  mkdir -p "$c10/control/codex-plugin-runtime/gen-x/node_modules/dsh-codex/lib" "$c10/control/codex-plugin-preimage-x" "$c10/homeA/profiles/node_modules/dsh-codex/lib" "$c10/homeA/profiles/agent-core-production" "$c10/recovery" "$c10/shared-credentials/openai-codex"
-  printf '{"version":1,"credential":{"type":"oauth","access":"fixture","refresh":"fixture","expires":9999999999999,"accountId":"fixture"}}\n' > "$c10/shared-credentials/openai-codex/.openai-codex-auth.json"; chmod 600 "$c10/shared-credentials/openai-codex/.openai-codex-auth.json"
-  printf 'good' > "$c10/control/codex-plugin-runtime/gen-x/node_modules/dsh-codex/lib/index.js"
-  printf '{"version":3,"routeCatalog":{},"overrides":{}}' > "$c10/agent-model-overrides.json"
-  printf 'llm:\n# BEGIN AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1\n- id: llm-openai-codex\n  config:\n    credentialFile: "/canon/x"\n# END AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1\n' > "$c10/homeA/profiles/agent-core-production/cordis.patch.yml"
-  GEN_BASE="$c10/control/codex-plugin-runtime"; GEN_DIR="$GEN_BASE/gen-x/node_modules"; CURRENT_LINK="$GEN_BASE/current"; PREIMAGE_DIR="$c10/control/codex-plugin-preimage-x"; MANIFEST="$PREIMAGE_DIR/manifest.json"; CONTROL="$c10/control"; RECOVERY_ROOT="$c10/recovery"; TX_FILE="$c10/recovery/migration-transaction.json"; FENCE="$c10/recovery/migration-fence.json"; LOCK_DIR="$c10/recovery/lock"; COMMIT_RECEIPT="$c10/control/codex-plugin-commit-receipt.json"; STAMP="x"; TX_ID="tx-x"; SELF_SHA="$REAL_SELF_SHA"
-  ln -sfn "$GEN_DIR" "$CURRENT_LINK"
-  ln -s "$CURRENT_LINK/dsh-codex" "$c10/homeA/profiles/node_modules/dsh-codex"
-  printf 'x' > "$MANIFEST"
-  tx_save APPLIED_AWAITING_PONG >/dev/null 2>&1 || { echo "SELFTEST_FAIL T10a tx_save"; failures=1; }
-  printf '{"txId":"tx-x","inFlight":true}\n' > "$FENCE"
-  # T10a: second shell COMMIT → terminal COMMITTED (receipt bound to tx)
-  TXPROBE_ACTIVE=1 TXPROBE_ROOT="$c10" TXPROBE_CONTROL="$c10/control" TXPROBE_GEN_BASE="$GEN_BASE" TXPROBE_CURRENT_LINK="$CURRENT_LINK" TXPROBE_HOMES="$c10" TXPROBE_CONFIG="$c10/agent-model-overrides.json" TXPROBE_CANONICAL="$c10/shared-credentials/openai-codex/.openai-codex-auth.json" TXPROBE_RECOVERY_ROOT="$c10/recovery" TXPROBE_TXID="tx-x" TXPROBE_EXPECTED_FLEET=0 bash "$0" --tx-child-commit --transaction tx-x <<< "COMMIT" > "$T/t10a.log" 2>&1
-  if jq -r .state "$TX_FILE" 2>/dev/null | grep -q COMMITTED && jq -e --arg t "tx-x" '.txId == $t' "$COMMIT_RECEIPT" >/dev/null 2>&1; then
-    echo "T10A_COMMIT_VIA_SECOND_SHELL_VERIFIED (state=COMMITTED, receipt bound)"
-  else
-    echo "SELFTEST_FAIL T10a commit: $(tail -3 "$T/t10a.log" | tr '\n' ' ')"; failures=1
-  fi
-  # T10b: second shell ABORT on a fresh MUTATING_FENCED tx → ABORTED + home restored
-  local c10b="$T/t10b"
-  mkdir -p "$c10b/control/codex-plugin-runtime/gen-y/node_modules/dsh-codex/lib" "$c10b/control/codex-plugin-preimage-y" "$c10b/homeA/profiles/node_modules/dsh-codex/lib" "$c10b/homeA/profiles/agent-core-production" "$c10b/recovery"
-  printf 'oldbuild' > "$c10b/homeA/profiles/node_modules/dsh-codex/lib/index.js"
-  mkdir -p "$c10b/homeA/profiles/node_modules/dsh-codex"   # journal will rename this away
-  printf 'oldbuild' > "$c10b/homeA/profiles/node_modules/dsh-codex/lib/index.js"
-  rm -rf "$c10b/homeA/profiles/node_modules/dsh-codex/lib" 2>/dev/null || true
-  mkdir -p "$c10b/homeA/profiles/node_modules/dsh-codex/lib"; printf 'oldbuild' > "$c10b/homeA/profiles/node_modules/dsh-codex/lib/index.js"
-  GEN_BASE="$c10b/control/codex-plugin-runtime"; GEN_DIR="$GEN_BASE/gen-y/node_modules"; CURRENT_LINK="$GEN_BASE/current"; PREIMAGE_DIR="$c10b/control/codex-plugin-preimage-y"; MANIFEST="$PREIMAGE_DIR/manifest.json"; CONTROL="$c10b/control"; RECOVERY_ROOT="$c10b/recovery"; TX_FILE="$c10b/recovery/migration-transaction.json"; FENCE="$c10b/recovery/migration-fence.json"; LOCK_DIR="$c10b/recovery/lock"; COMMIT_RECEIPT="$c10b/control/codex-plugin-commit-receipt.json"; STAMP="y"; TX_ID="tx-y"; SELF_SHA="$REAL_SELF_SHA"
-  mkdir -p "$GEN_DIR/dsh-codex/lib" "$PREIMAGE_DIR"; printf 'new' > "$GEN_DIR/dsh-codex/lib/index.js"
-  ln -sfn "$GEN_DIR" "$CURRENT_LINK"
-  ln -s "$CURRENT_LINK/dsh-codex" "$c10b/homeA/profiles/node_modules/dsh-codex"
-  : > "$MANIFEST"
-  tx_save MUTATING_FENCED >/dev/null 2>&1 || { echo "SELFTEST_FAIL T10b tx_save"; failures=1; }
-  printf '{"txId":"tx-y","inFlight":true}\n' > "$FENCE"
-  freeze_node_src > "$PREIMAGE_DIR/freeze.cjs"
-  "$NODE" "$PREIMAGE_DIR/freeze.cjs" "$c10b/homeA" "$PREIMAGE_DIR" "$CURRENT_LINK" "$GEN_DIR" >/dev/null 2>&1 || { echo "SELFTEST_FAIL T10b freeze"; failures=1; }
-  TXPROBE_ACTIVE=1 TXPROBE_ROOT="$c10b" TXPROBE_CONTROL="$c10b/control" TXPROBE_GEN_BASE="$GEN_BASE" TXPROBE_CURRENT_LINK="$CURRENT_LINK" TXPROBE_HOMES="$c10b" TXPROBE_CONFIG="$c10b/agent-model-overrides.json" TXPROBE_CANONICAL="$c10b/canon" TXPROBE_RECOVERY_ROOT="$c10b/recovery" TXPROBE_TXID="tx-y" TXPROBE_EXPECTED_FLEET=0 bash "$0" --tx-child-abort --transaction tx-y > "$T/t10b.log" 2>&1
-  if jq -r .state "$TX_FILE" 2>/dev/null | grep -q ABORTED && [ "$(cat "$c10b/homeA/profiles/node_modules/dsh-codex/lib/index.js" 2>/dev/null)" = "oldbuild" ]; then
-    echo "T10B_ABORT_VIA_SECOND_SHELL_VERIFIED (state=ABORTED, exact preimage restored, service restored)"
-  else
-    echo "SELFTEST_FAIL T10b abort: $(tail -3 "$T/t10b.log" | tr '\n' ' ')"; failures=1
-  fi
+  # T10 moved to the exact participant-aware cross-process fixtures. The obsolete
+  # plugin-only commit fixture could no longer satisfy the combined commit check.
+  "$NODE" --test "$SOURCE_ROOT/scripts/lib/deployment-reuse/transaction-recovery.test.mjs" || failures=1
 
   HOMES=$HOMES_SAVED; GEN_BASE=$GEN_BASE_SAVED; GEN_PARENT=$GEN_PARENT_SAVED; CURRENT_LINK=$CURRENT_LINK_SAVED; GEN_DIR=$GEN_DIR_SAVED; PREIMAGE_DIR=$PREIMAGE_DIR_SAVED; MANIFEST=$MANIFEST_SAVED; CONTROL=$CONTROL_SAVED
   if [ $failures -eq 0 ]; then
@@ -1080,14 +1157,29 @@ selftest() {
   rm -rf "$T"
 }
 
-gate_fail_exit() { # post-bootout failure path: ALWAYS restore service (R3#3)
+gate_fail_exit() { # Restore service only after the exact rollback is verified.
   echo "GATE_FAIL $1 → rollback + restore service"
   on_lifecycle "$1"
-  ensure_runtime_running
   exit 1
 }
 
+# No caller-set env/PID is a lock proof. Verify the inherited kernel-held FD
+# against the existing global holder and the exact fixed v23/carrier/helper bytes.
+require_deploy_mutex() {
+  if [ "${TXPROBE_ACTIVE:-0}" = 1 ] && [ "${B7_OUTER_ACTIVE:-0}" != 1 ]; then return 0; fi
+  [ "${B7_OUTER_ACTIVE:-0}" = 1 ] || { echo "DEPLOY_MUTEX_INTEGRATION_UNBOUND — fixed B7 caller required"; return 1; }
+  local mode=b7-guard
+  [ "${TXPROBE_ACTIVE:-0}" != 1 ] || mode=--b7-probe-guard
+  /bin/bash "$OUTER_TOOL" "$mode" --transaction "$TX_ID" || return 1
+}
+require_transaction_id() {
+  [ "${2:-}" = --transaction ] && [[ "${3:-}" =~ ^tx-[A-Za-z0-9-]+$ ]] || { echo "EXACT_TRANSACTION_REQUIRED"; return 1; }
+  TX_ID=$3
+}
+
 do_apply() {
+  require_transaction_id "$@" || exit 1
+  require_deploy_mutex || exit 1
   echo "### AUTHSVC PLUGIN GENERATION UPGRADE r7 · APPLY ($(date '+%F %T %z'))"
   echo "## 0. gates"
   [ "$(id -u)" = "0" ] || { echo "ABORT run with sudo"; exit 1; }
@@ -1097,6 +1189,7 @@ do_apply() {
   check_amendment_gate || { release_tx_lock; exit 1; }
   tx_reentry_gate || { release_tx_lock; exit 1; }   # R6#1: incomplete prior tx forbids a new mutation
   check_prior_upgrade_state || { release_tx_lock; exit 1; }
+  EXPECTED_FLEET=$(jq -r '.activation.cohort.migrationCount' "$AMENDMENT_ACCEPTED_MARKER")
   local n; n=$(jq -r '.overrides | length' "$CONFIG")
   echo "fleet_config_overrides=$n (v$(jq -r .version "$CONFIG"))"
   case "$CANONICAL" in /Users/yanfenma/*) echo "STOP target under /Users/yanfenma"; exit 1;; esac
@@ -1104,6 +1197,9 @@ do_apply() {
   echo "TARGET_CREDENTIAL_FILE=$CANONICAL OWNER=$(stat -f '%Su:%Sg' "$CANONICAL") MODE=$(stat -f '%Sp' "$CANONICAL")"
   echo "FRESH_RECONCILIATION preimage = temporary-bridge state (92 fresh copies of lineage 1d4278a8be53; Aug-31 generation superseded)"
   tx_save PREPARED || exit 1
+  TX_TXID=$TX_ID
+  participant prepare "$AMENDMENT_ACCEPTED_MARKER" || exit 1
+  select_recovery_tools || exit 1
   echo "TX_ID=$TX_ID (transaction persisted: PREPARED, scriptSha ${SELF_SHA:0:12}…)"
 
   echo "## 1. build versioned gen from FROZEN exact-pin artifacts (plugin + scopes)"
@@ -1124,8 +1220,10 @@ do_apply() {
   echo "$store_out"
   case "$store_out" in STORE_LOAD=PASS*) echo "AUTHSVC_PLUGIN_CAN_LOAD_TARGET_CREDENTIAL_STORE = PASS" ;; *) tx_save ABORTED; echo "AUTHSVC_PLUGIN_CAN_LOAD_TARGET_CREDENTIAL_STORE = FAIL — STOP (nothing mutated)"; exit 1 ;; esac
 
+  verify_full_consumer_access pre || { tx_save ABORTED; echo "STOP consumer access (nothing mutated)"; exit 1; }
+
   echo "## 3. G3 fresh reconciliation (hard, pre-mutation)"
-  fresh_reconciliation || { tx_save ABORTED; echo "STOP (nothing mutated)"; exit 1; }
+  fresh_reconciliation 2 || { tx_save ABORTED; echo "STOP (nothing mutated)"; exit 1; }
 
   echo "## 4. ARM → QUIESCE → durable fence (R9 state sequence)"
   mkdir -p "$PREIMAGE_DIR"
@@ -1143,6 +1241,15 @@ do_apply() {
   tx_save MUTATING_FENCED || gate_fail_exit TX_SAVE_FAIL
   echo "fence=$FENCE (durable; runtime QUIESCED; tx=MUTATING_FENCED)"
 
+  # Only immutable app/harness/node code is exchanged; home/config credentials stay live.
+  participant apply "$RECOVERY_ROOT/activation-$TX_ID/new-app/packages/production-runtime/src/model-overrides.js" || gate_fail_exit CODE_CONFIG_FAIL
+  fresh_reconciliation 3 || gate_fail_exit CONFIG_POST_FAIL
+  local tools_dir="$RECOVERY_ROOT/activation-$TX_ID/tools"
+  "$NODE" "$tools_dir/trusted-cp-fresh-child-boot-canary.mjs" --trusted-root "$TRUSTED_ROOT" --timeout-ms 120000 || gate_fail_exit FRESH_CHILD_FAIL
+  "$NODE" "$tools_dir/trusted-cp-runtime-app-graph-gate.mjs" --app-dir "$TRUSTED_ROOT/app" --node "$TRUSTED_ROOT/node-runtime/bin/node" --timeout-ms 120000 || gate_fail_exit APP_GRAPH_FAIL
+  "$NODE" "$tools_dir/trusted-cp-model-overrides-config-gate.mjs" --installed-root "$TRUSTED_ROOT/app" --config "$CONFIG" --registry "$ROOT/agents.json" --deployment-root "$ROOT" --cohort-binding "$TX_FILE" --consumer-phase code-installed --runtime-phase quiesced --json || gate_fail_exit CONFIG_GATE_FAIL
+
+  participant plugin-intent || gate_fail_exit PLUGIN_INTENT_FAIL
   echo "## 5. freeze + wire (journal; topology current->GEN_DIR, home->current/dsh-codex)"
   freeze_node_src > "$PREIMAGE_DIR/freeze.cjs"
   freeze_fail=0
@@ -1165,6 +1272,8 @@ do_apply() {
 
   echo "## 6. bootstrap runtime (controlled restart under fence)"
   bootstrap_runtime || gate_fail_exit BOOTSTRAP_FAIL
+  participant cohort-coverage || gate_fail_exit CONSUMER_COMPATIBILITY_FAIL
+  verify_full_consumer_access || gate_fail_exit CONSUMER_ACCESS_FAIL
 
   echo "## 7. 92/92 import smoke — HARD gate"
   sm_ok=0; sm_fail=0
@@ -1211,7 +1320,47 @@ do_apply() {
   echo "  FAIL → sudo bash $0 --abort --transaction $TX_ID   (full rollback + service restore)"
 }
 
+# Extend the existing AS_USER import/access check to every resolved consumer.
+# This is read-only: no provisioning call, credential read, model call or repair.
+verify_full_consumer_access() {
+  [ "$(jq -r '.activation.cohort != null' "$TX_FILE")" = true ] || return 0
+  local proof phase="${1:-post}"
+  proof=$(jq -c --arg phase "$phase" --arg candidate "$GEN_DIR/dsh-codex/lib/index.js" '.activation.cohort | {serviceUid, consumers, migrationIds, phase: $phase, candidatePlugin: $candidate}' "$TX_FILE") || return 1
+  printf '%s' "$proof" | AS_USER "$NODE" --input-type=module -e '
+    import fs from "node:fs";
+    import {pathToFileURL} from "node:url";
+    const b=JSON.parse(fs.readFileSync(0,"utf8"));
+    if(process.getuid()!==b.serviceUid)throw new Error("service identity mismatch");
+    let count=0;
+    const modules=new Map();
+    for(const [id,c] of Object.entries(b.consumers)){
+      for(const o of c[b.phase]){
+        if(o.kind==="absent")throw new Error("unprovisioned consumer "+id);
+        fs.accessSync(o.path,o.kind==="directory"?fs.constants.R_OK|fs.constants.X_OK:fs.constants.R_OK);
+      }
+      const provision=c[b.phase].find(o=>o.role==="provisioning");
+      const provisionPath=fs.realpathSync(provision.path);
+      if(!modules.has(provisionPath))modules.set(provisionPath,await import(pathToFileURL(provisionPath)));
+      const api=modules.get(provisionPath);
+      if(typeof api.provisionAgentHome!=="function"||typeof api.provisionExactProfilePlugin!=="function"||!api.AGENT_PROFILE_DEFS?.["agent-core-production"])throw new Error("provisioning module "+id);
+      if(c.route.chain.some(r=>r.provider==="openai-codex")){
+        const plugin=c[b.phase].find(o=>o.role==="plugin");
+        const real=fs.realpathSync(b.phase==="pre"&&b.migrationIds.includes(id)?b.candidatePlugin:plugin.path);
+        if(!modules.has(real))modules.set(real,await import(pathToFileURL(real)));
+        const m=modules.get(real);
+        if(!["OpenAICodexCredentialStore","loginOpenAICodex","OpenAICodexReauthRequiredError"].every(k=>typeof m[k]==="function"))throw new Error("plugin exports "+id);
+      }
+      count++;
+    }
+    console.log("CONSUMER_ACCESS_OK count="+count);
+  ' || { echo "CONSUMER_ACCESS_FAIL (active identity retained; no automatic repair)"; return 1; }
+}
+
 verify_applied_topology() { # R7#5: FULL post-apply topology re-verification (commit gate)
+  participant verify post || return 1
+  participant cohort-coverage || return 1
+  verify_full_consumer_access || return 1
+  EXPECTED_FLEET=$(jq -r '.activation.cohort.migrationCount // 92' "$TX_FILE")
   local n; n=$(jq -r '.overrides | length' "$CONFIG")
   [ "$n" = "$EXPECTED_FLEET" ] || { echo "TOPO_FAIL fleet shape ($n != $EXPECTED_FLEET)"; return 1; }
   [ -f "$CANONICAL" ] && [ ! -L "$CANONICAL" ] && [ "$(stat -f '%Sp' "$CANONICAL")" = "-rw-------" ] \
@@ -1234,10 +1383,12 @@ verify_applied_topology() { # R7#5: FULL post-apply topology re-verification (co
   else
     echo "(TXPROBE: lsof/runtime liveness checks skipped in probe mode)"
   fi
-  echo "TOPOLOGY_VERIFIED (current→GEN_DIR · 92 realpath+chain · zero per-home opens · runtime alive)"
+  echo "TOPOLOGY_VERIFIED (current→GEN_DIR · $EXPECTED_FLEET migrated realpath+chain · zero per-home opens · runtime alive)"
 }
 
 do_commit() {
+  require_transaction_id "$@" || exit 1
+  require_deploy_mutex || exit 1
   echo "### COMMIT ($(date '+%F %T %z'))"
   [ "$(id -u)" = "0" ] || [ "${TXPROBE_ACTIVE:-0}" = "1" ] || { echo "ABORT run with sudo"; exit 1; }
   [ "${2:-}" = "--transaction" ] && [ -n "${3:-}" ] || { echo "Usage: $0 --commit --transaction <txId>"; exit 1; }
@@ -1256,6 +1407,7 @@ do_commit() {
   # normal flow — it is generated only after COMMITTED). Do NOT re-run
   # confirm/topology gates — just finish.
   if [ "$TX_STATE" = "COMMITTED_PENDING_FENCE_CLEAR" ]; then
+    participant canary || { release_tx_lock; echo "CANARY_EVIDENCE_BINDING_REQUIRED"; exit 1; }
     if [ -s "$CONFIRM_AUTH" ] && jq -e --arg t "$TX_TXID" '.confirmed == "yes" and .txId == $t' "$CONFIRM_AUTH" >/dev/null 2>&1; then
       if "$NODE" -e 'const fs=require("fs");const f=JSON.stringify({inFlight:false,clearedAt:new Date().toISOString(),txId:process.argv[1]},null,2)+"\n";fs.writeFileSync(process.argv[2],f,{mode:0o644});fs.fsyncSync(fs.openSync(process.argv[2],"r"))' "$TX_TXID" "$FENCE" \
         && tx_save COMMITTED; then
@@ -1269,7 +1421,10 @@ do_commit() {
             commitComplete: "yes", at: new Date().toISOString(), txId: t.txId,
             amendment: "authsvc ACTIVATION_V1-line, accepted (structured marker verified at apply)",
             artifact: "plugin+scopes frozen tgz rebuilt from accepted commit 75d98d5b lineage; shas verified at G1/G2",
-            wiredHomes: 92, realDeliveryCanary: "PASS (Owner-confirmed)",
+            wiredHomes: t.activation?.cohort?.migrationCount ?? Object.keys(JSON.parse(fs.readFileSync(t.config)).overrides).length,
+            compatibility: t.activation?.compatibility ? { count: t.activation.compatibility.compatibilityCount,
+              cohortSha256: t.activation.cohortSha256, businessVerifiedForEveryIdentity: false } : null,
+            sourceSha: t.activation?.sourceSha, realDeliveryCanary: "PASS (Owner-confirmed)",
             genDir: t.genDir, preimageManifest: t.manifest, closureDigests: t.closureDigestsFile,
           }, null, 2) + "\n", { mode: 0o644 })
         ' "$tmp" "$TX_FILE" && mv "$tmp" "$COMMIT_RECEIPT" && chmod 644 "$COMMIT_RECEIPT"
@@ -1288,6 +1443,7 @@ do_commit() {
     return 0
   fi
   verify_applied_topology || { release_tx_lock; echo "COMMIT_GATE_FAIL — topology is not the applied state; use --abort"; exit 1; }
+  participant canary || { release_tx_lock; echo "CANARY_EVIDENCE_BINDING_REQUIRED"; exit 1; }
   if [ "$TX_STATE" != COMMITTING ]; then
     tx_save COMMITTING || { release_tx_lock; echo "TX_SAVE_FAIL COMMITTING — tx stays APPLIED_AWAITING_PONG, safe to retry"; exit 1; }
   fi
@@ -1324,7 +1480,10 @@ do_commit() {
           commitComplete: "yes", at: new Date().toISOString(), txId: t.txId,
           amendment: "authsvc ACTIVATION_V1-line, accepted (structured marker verified at apply)",
           artifact: "plugin+scopes frozen tgz rebuilt from accepted commit 75d98d5b lineage; shas verified at G1/G2",
-          wiredHomes: 92, realDeliveryCanary: "PASS (Owner-confirmed)",
+          wiredHomes: t.activation?.cohort?.migrationCount ?? Object.keys(JSON.parse(fs.readFileSync(t.config)).overrides).length,
+            compatibility: t.activation?.compatibility ? { count: t.activation.compatibility.compatibilityCount,
+              cohortSha256: t.activation.cohortSha256, businessVerifiedForEveryIdentity: false } : null,
+            sourceSha: t.activation?.sourceSha, realDeliveryCanary: "PASS (Owner-confirmed)",
           genDir: t.genDir, preimageManifest: t.manifest, closureDigests: t.closureDigestsFile,
         }, null, 2) + "\n", { mode: 0o644 })
       ' "$tmp" "$TX_FILE"
@@ -1352,6 +1511,8 @@ do_commit() {
 }
 
 do_abort() {
+  require_transaction_id "$@" || exit 1
+  require_deploy_mutex || exit 1
   echo "### ABORT → rollback + restore ($(date '+%F %T %z'))"
   [ "$(id -u)" = "0" ] || [ "${TXPROBE_ACTIVE:-0}" = "1" ] || { echo "ABORT run with sudo"; exit 1; }
   [ "${2:-}" = "--transaction" ] && [ -n "${3:-}" ] || { echo "Usage: $0 --abort --transaction <txId>"; exit 1; }
@@ -1359,11 +1520,20 @@ do_abort() {
   acquire_tx_lock || exit 1
   trap 'release_tx_lock' EXIT
   tx_load "$3" || { release_tx_lock; exit 1; }
+  local no_participant=NO intent_rc
+  if [ "$(jq -r 'has("activation")' "$TX_FILE")" = false ]; then
+    participant no-participant-abort || exit 1
+    no_participant=YES
+  else
+    participant intent >/dev/null
+    intent_rc=$?
+    [ "$intent_rc" = 0 ] || [ "$intent_rc" = 3 ] || exit 1
+  fi
   case "$TX_STATE" in
     PREPARED|QUIESCING|FENCE_CREATING|MUTATING_NO_FENCE) abort_no_mutation=YES ;;   # R10#2: nothing frozen yet
     MUTATING_FENCED)
       # freeze MAY not have started yet (journal file absent → nothing to roll back)
-      if [ ! -f "$MANIFEST" ]; then abort_no_mutation=YES; else abort_no_mutation=NO; fi ;;
+      if mutation_may_exist; then abort_no_mutation=NO; else abort_no_mutation=YES; fi ;;
     APPLIED_AWAITING_PONG|ROLLING_BACK|ROLLBACK_APPLIED) abort_no_mutation=NO ;;
     ABORTED_PENDING_FENCE_CLEAR|ABORTED_PENDING_RUNTIME_RESTORE)
       abort_no_mutation=RESUME ;;   # R12: re-entrant pending recovery
@@ -1372,7 +1542,7 @@ do_abort() {
   esac
   # R10#2 + R12: NO-MUTATION abort path — freeze never started, so there is
   # nothing to roll back. Same ordering invariant as the rollback path.
-  if [ "$abort_no_mutation" = YES ]; then
+  if [ "$abort_no_mutation" = YES ] || [ "$no_participant" = YES ]; then
     disarm_lifecycle
     if abort_no_mutation_transition; then
       release_tx_lock; trap - EXIT
@@ -1383,38 +1553,9 @@ do_abort() {
     echo "ABORT_INCOMPLETE — re-run --abort --transaction $TX_TXID after restoring the runtime"
     exit 1
   fi
-  # ABORTED_PENDING_FENCE_CLEAR resume: terminal already durable, only fence clear left.
-  if [ "$TX_STATE" = "ABORTED_PENDING_FENCE_CLEAR" ]; then
-    if [ -f "$TX_PREIMAGE_DIR/ROLLBACK_COMPLETE.marker" ]; then
-      "$NODE" -e 'const fs=require("fs");const f=JSON.stringify({inFlight:false,clearedAt:new Date().toISOString(),txId:process.argv[1]},null,2)+"\n";fs.writeFileSync(process.argv[2],f,{mode:0o644});fs.fsyncSync(fs.openSync(process.argv[2],"r"))' "$TX_TXID" "$FENCE" \
-        && tx_save ABORTED \
-        && { bootstrap_runtime || echo "BOOTSTRAP FAILED — RUNTIME MAY BE DOWN, ESCALATE IMMEDIATELY"; release_tx_lock; trap - EXIT; echo "ABORT_RESUME_DONE state=ABORTED / fence cleared"; return 0; }
-      echo "RESUME_FAILED — state stays ABORTED_PENDING_FENCE_CLEAR; re-run --abort to retry"; release_tx_lock; exit 1
-    else
-      echo "ABORT_GATE_FAIL: pending state but rollback marker missing — ESCALATE"; release_tx_lock; exit 1
-    fi
-  fi
-  if [ "$TX_STATE" != ROLLING_BACK ] && [ "$TX_STATE" != ROLLBACK_APPLIED ]; then
-    tx_save ROLLING_BACK || { release_tx_lock; echo "TX_SAVE_FAIL ROLLING_BACK — tx unchanged, safe to retry"; exit 1; }
-  fi
-  # disarm any inherited in-process trap semantics; the ROLLING_BACK state owns recovery now
+  # Every resume uses the same exact participants and runtime-before-terminal check.
+  tx_save ROLLING_BACK || { release_tx_lock; exit 1; }
   disarm_lifecycle
-  # R8#5: if a previous run already completed the rollback (manifest archived +
-  # marker present), do NOT re-run rollback_all — just finish the terminal sequence.
-  if [ -f "$TX_PREIMAGE_DIR/ROLLBACK_COMPLETE.marker" ] && [ ! -f "$TX_PREIMAGE_DIR/manifest.json" ]; then
-    echo "ROLLBACK_ALREADY_APPLIED (marker + archived manifest found) — resuming terminal sequence"
-    "$NODE" -e 'const fs=require("fs");const f=JSON.stringify({inFlight:false,clearedAt:new Date().toISOString(),txId:process.argv[1]},null,2)+"\n";fs.writeFileSync(process.argv[2],f,{mode:0o644});fs.fsyncSync(fs.openSync(process.argv[2],"r"))' "$TX_TXID" "$FENCE" 2>/dev/null || true
-    if tx_save ABORTED; then
-      bootstrap_runtime || echo "BOOTSTRAP FAILED — RUNTIME MAY BE DOWN, ESCALATE IMMEDIATELY"
-      release_tx_lock; trap - EXIT
-      echo "ABORT_DONE state=ABORTED service restored (resumed)"
-    else
-      bootstrap_runtime || echo "BOOTSTRAP FAILED — RUNTIME MAY BE DOWN, ESCALATE IMMEDIATELY"
-      echo "TX_SAVE_FAIL ABORTED — ESCALATE (manual terminal-state fix required)"
-      release_tx_lock; exit 1
-    fi
-    return 0
-  fi
   if rollback_all "$TX_PREIMAGE_DIR"; then
     tx_save ROLLBACK_APPLIED || { release_tx_lock; echo "TX_SAVE_FAIL ROLLBACK_APPLIED — ESCALATE (rollback done but state unsaved)"; exit 1; }
     if finish_abort_terminal; then
@@ -1426,7 +1567,7 @@ do_abort() {
       exit 1
     fi
   else
-    bootstrap_runtime || echo "BOOTSTRAP FAILED — RUNTIME MAY BE DOWN, ESCALATE IMMEDIATELY"
+    echo "Runtime remains quiesced while recovery is unresolved"
     tx_save ABORT_INCOMPLETE || echo "TX_SAVE_FAIL ABORT_INCOMPLETE"
     echo "PARTIAL_FLEET_STATE = POSSIBLE — STOP_AND_ESCALATE"
     release_tx_lock
@@ -1434,7 +1575,63 @@ do_abort() {
   fi
 }
 
+do_verify_terminal() {
+  require_transaction_id "$@" && require_deploy_mutex || exit 1
+  acquire_tx_lock || exit 1
+  trap 'release_tx_lock' EXIT
+  tx_load "$TX_ID" || exit 1
+  case "$TX_STATE" in
+    COMMITTED) verify_applied_topology || exit 1 ;;
+    ABORTED)
+      if [ "$(jq -r 'has("activation")' "$TX_FILE")" = false ]; then
+        participant no-participant-abort || exit 1
+      else
+        participant verify pre && participant verify-plugins || exit 1
+      fi ;;
+    *) echo "TX_NOT_TERMINAL"; exit 1 ;;
+  esac
+  participant terminal || exit 1
+  runtime_is_running || { echo "TERMINAL_RUNTIME_NOT_RUNNING"; exit 1; }
+  release_tx_lock; trap - EXIT
+  echo "TX_TERMINAL_VERIFIED"
+}
+# Mechanism fixture only: real code/config participant, synthetic runtime and
+# plugin acceptance. It never claims the production apply gates or PONG passed.
+probe_outer_apply() {
+  [ "${B7_OUTER_ACTIVE:-0}" = 1 ] || { echo "PROBE_REQUIRES_OUTER"; exit 1; }
+  require_transaction_id "$@" && require_deploy_mutex || exit 1
+  acquire_tx_lock || exit 1
+  trap 'release_tx_lock' EXIT
+  tx_load "$TX_ID" || exit 1
+  if [ "${TXPROBE_OUTER_PREPARED_ONLY:-0}" = 1 ]; then
+    [ "$TX_STATE" = PREPARED ] && tx_save PREPARED || exit 1
+    echo "PROBE_INTERRUPTED_BEFORE_PARTICIPANT"; exit 1
+  fi
+  [ "$TX_STATE" = MUTATING_FENCED ] || exit 1
+  tx_save MUTATING_FENCED || exit 1
+  if [ "${TXPROBE_OUTER_PAUSE:-0}" = 1 ]; then
+    echo "PROBE_PAUSED pid=$$"; kill -STOP $$
+  fi
+  echo "PROBE_APPLY code/config only"
+  "$NODE" --input-type=module -e '
+    import {pathToFileURL} from "node:url";
+    const [tool,root,trusted,recovery,id,loader]=process.argv.slice(2);
+    const {apply,context}=await import(pathToFileURL(tool));
+    const hooks=process.env.TXPROBE_OUTER_KILL_AFTER_CONFIG === "1"
+      ? {afterConfigSwap:()=>process.kill(process.pid,"SIGKILL")} : {};
+    await apply(context(root,trusted,recovery,id),loader,hooks);
+  ' b7-probe "$PARTICIPANT_TOOL" "$ROOT" "$TRUSTED_ROOT" "$RECOVERY_ROOT" "$TX_ID" "$SOURCE_ROOT/packages/production-runtime/src/model-overrides.js" || exit 1
+  release_tx_lock; trap - EXIT
+}
+
 case "${1:-}" in
+  --tx-child-apply)
+    TXPROBE_ACTIVE=1; apply_txprobe_overrides
+    probe_outer_apply "$@" ;;
+  --tx-child-verify-terminal)
+    TXPROBE_ACTIVE=1; apply_txprobe_overrides
+    do_verify_terminal "$@" ;;
+  --verify-terminal) do_verify_terminal "$@" ;;
   --selftest) selftest ;;
   --tx-child-probe)
     # T7 fixture driver: paths come from TXPROBE_* env; loads the tx cross-process.
@@ -1449,14 +1646,11 @@ case "${1:-}" in
     # T10b fixture driver: full abort entrypoint against TXPROBE fixture
     TXPROBE_ACTIVE=1; apply_txprobe_overrides
     do_abort "$@" ;;
-  --apply) do_apply ;;
+  --apply) do_apply "$@" ;;
   --commit) do_commit "$@" ;;
   --abort) do_abort "$@" ;;
   --rollback)
-    [ "$(id -u)" = "0" ] || { echo "ABORT run with sudo"; exit 1; }
-    latest=$(find "$CONTROL" -maxdepth 1 -type d -name "codex-plugin-preimage-*" 2>/dev/null | sort | tail -1)
-    [ -n "$latest" ] || { echo "NOTHING_TO_ROLLBACK"; exit 0; }
-    rollback_all "$latest"
-    ensure_runtime_running ;;
+    echo "Use --abort --transaction <exact-id>; latest-preimage recovery is retired"
+    exit 1 ;;
   *) echo "Usage: $0 <--apply|--commit|--abort|--rollback|--selftest>" ;;
 esac

@@ -22,11 +22,12 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync, existsSync, readdirSync, chmodSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { runMigration } from './trusted-cp-fleet-config-v2v3-migration.mjs'
+import * as migration from './trusted-cp-fleet-config-v2v3-migration.mjs'
+const { runMigration } = migration
 import { runGate } from './trusted-cp-model-overrides-config-gate.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -238,4 +239,225 @@ describe('FLEET_CONFIG_V2V3_MIGRATION_V1 hermetic fixtures', () => {
       assert.equal(readdirSync(root).filter((name) => name.includes('.v3-candidate-')).length, 0, 'candidate staged file cleaned up')
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
+})
+
+
+const registryOnlyIds = Array.from({ length: 6 }, (_, i) => `agt_extra${i}-fixture`)
+
+describe('B7 exact preimage and failure truth (isolated files only)', () => {
+  test('current98 / frozen92 is rejected before any backup or swap', async () => {
+    const root = scratch()
+    try {
+      const { configPath, registryPath } = fleetConfigFixture(root)
+      const before = readFileSync(configPath, 'utf8')
+      const registry = JSON.parse(readFileSync(registryPath, 'utf8'))
+      registry.agents.push(...registryOnlyIds.map((id) => ({ id, name: id, description: null })))
+      writeFileSync(registryPath, JSON.stringify(registry))
+      const result = await runMigration(migrationArgs(root, { execute: true }))
+      assert.equal(result.ok, false, 'a valid loader alone must not authorize registry expansion')
+      assert.equal(result.errorCode, 'FLEET_CONFIG_COHORT_DRIFT')
+      assert.deepEqual(result.registryOnly, [...registryOnlyIds].sort())
+      assert.equal(result.configReplaced, false)
+      assert.equal(result.backupPath, undefined)
+      assert.equal(readFileSync(configPath, 'utf8'), before)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  test('post-rename failure reports actual mutation and retains its exact preimage', async () => {
+    const root = scratch()
+    try {
+      const { configPath } = fleetConfigFixture(root)
+      const before = readFileSync(configPath, 'utf8')
+      const result = await runMigration(migrationArgs(root, { execute: true }), {
+        afterSwap() { throw Object.assign(new Error('injected post-swap readback failure'), { code: 'INJECTED' }) },
+      })
+      assert.equal(result.ok, false)
+      assert.equal(result.configReplaced, true)
+      assert.equal(result.errorCode, 'INJECTED')
+      assert.equal(JSON.parse(readFileSync(configPath, 'utf8')).version, 3)
+      assert.equal(readFileSync(result.backupPath, 'utf8'), before)
+      const restored = migration.restoreMigration(result)
+      assert.equal(restored.ok, true)
+      assert.equal(readFileSync(configPath, 'utf8'), before)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  test('registry changes during preparation are refused without changing config', async () => {
+    const root = scratch()
+    try {
+      const { configPath, registryPath } = fleetConfigFixture(root)
+      const before = readFileSync(configPath, 'utf8')
+      const result = await runMigration(migrationArgs(root, { execute: true }), {
+        beforeSwap() {
+          const registry = JSON.parse(readFileSync(registryPath, 'utf8'))
+          registry.agents.push({ id: 'agt_unapproved-late-agent', name: 'late', description: null })
+          writeFileSync(registryPath, JSON.stringify(registry))
+        },
+      })
+      assert.equal(result.ok, false)
+      assert.equal(result.errorCode, 'FLEET_CONFIG_PREIMAGE_CHANGED')
+      assert.equal(result.configReplaced, false)
+      assert.equal(readFileSync(configPath, 'utf8'), before)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+
+  for (const failurePoint of ['after-config-before-code', 'restart-failed']) {
+    test(`${failurePoint}: recorded config restores exactly; UNKNOWN and mutable state stay untouched`, async () => {
+      const root = scratch()
+      try {
+        const { configPath } = fleetConfigFixture(root)
+        const before = readFileSync(configPath, 'utf8')
+        const unknown = join(root, 'business-state.json')
+        const mutable = join(root, 'mutable-store-fixture.json')
+        writeFileSync(unknown, JSON.stringify({ outcome: 'UNKNOWN', effectFence: true, replayCount: 0 }))
+        writeFileSync(mutable, JSON.stringify({ revision: 2 }))
+        const receipt = await runMigration(migrationArgs(root, { execute: true }))
+        assert.equal(receipt.ok, true)
+        // Failure belongs to the caller; no service/code/plugin mutation is simulated as verified.
+        writeFileSync(`${configPath}.pre-v3-99999999T999999Z`, 'unrelated newer backup')
+        const recovered = migration.restoreMigration(receipt)
+        assert.equal(recovered.ok, true)
+        assert.equal(readFileSync(configPath, 'utf8'), before, 'use recorded backup, never latest')
+        assert.equal(statSync(configPath).mode & 0o777, 0o600)
+        assert.deepEqual(JSON.parse(readFileSync(unknown)), { outcome: 'UNKNOWN', effectFence: true, replayCount: 0 })
+        assert.deepEqual(JSON.parse(readFileSync(mutable)), { revision: 2 })
+        assert.equal(migration.restoreMigration(receipt).state, 'ALREADY_RESTORED')
+        const after = await runMigration(migrationArgs(root, { execute: false }))
+        assert.equal(after.ok, true, 'restored file is still a valid v2 preimage; this dry-run executes no work')
+      } finally { rmSync(root, { recursive: true, force: true }) }
+    })
+  }
+
+  test('foreign current config or altered backup cannot be overwritten on recovery', async () => {
+    const root = scratch()
+    try {
+      const { configPath } = fleetConfigFixture(root)
+      const receipt = await runMigration(migrationArgs(root, { execute: true }))
+      assert.equal(receipt.ok, true)
+      const committed = readFileSync(configPath, 'utf8')
+      writeFileSync(configPath, 'another writer owns this config')
+      assert.equal(migration.restoreMigration(receipt).errorCode, 'FLEET_CONFIG_RECOVERY_CONFLICT')
+      assert.equal(readFileSync(configPath, 'utf8'), 'another writer owns this config')
+      writeFileSync(configPath, committed)
+      writeFileSync(receipt.backupPath, 'tampered preimage')
+      assert.equal(migration.restoreMigration(receipt).errorCode, 'FLEET_CONFIG_BACKUP_MISMATCH')
+      assert.equal(readFileSync(configPath, 'utf8'), committed)
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+})
+
+
+test('same-size unknown roster replacement is still refused', async () => {
+  const root = scratch()
+  try {
+    const { configPath, registryPath } = fleetConfigFixture(root)
+    const before = readFileSync(configPath, 'utf8')
+    const registry = JSON.parse(readFileSync(registryPath, 'utf8'))
+    registry.agents[1].id = 'agt_unknown-replacement'
+    writeFileSync(registryPath, JSON.stringify(registry))
+    const result = await runMigration(migrationArgs(root, { execute: true }))
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'FLEET_CONFIG_COHORT_DRIFT')
+    assert.deepEqual(result.registryOnly, ['agt_unknown-replacement'])
+    assert.equal(result.configOnly.length, 1)
+    assert.equal(result.configReplaced, false)
+    assert.equal(readFileSync(configPath, 'utf8'), before)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('matching restored bytes do not conceal unexpected permission drift', async () => {
+  const root = scratch()
+  try {
+    const { configPath } = fleetConfigFixture(root)
+    const receipt = await runMigration(migrationArgs(root, { execute: true }))
+    assert.equal(migration.restoreMigration(receipt).ok, true)
+    chmodSync(configPath, 0o644)
+    const result = migration.restoreMigration(receipt)
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'FLEET_CONFIG_RECOVERY_CONFLICT')
+    assert.equal(statSync(configPath).mode & 0o777, 0o644, 'must not silently repair another writer metadata')
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('matching config/backup permission drift cannot replace recorded metadata', async () => {
+  const root = scratch()
+  try {
+    const { configPath } = fleetConfigFixture(root)
+    const receipt = await runMigration(migrationArgs(root, { execute: true }))
+    chmodSync(configPath, 0o644)
+    chmodSync(receipt.backupPath, 0o644)
+    const result = migration.restoreMigration(receipt)
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'FLEET_CONFIG_RECOVERY_CONFLICT')
+    assert.equal(JSON.parse(readFileSync(configPath)).version, 3)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('restore collision never deletes a file created by another attempt', async () => {
+  const root = scratch()
+  const now = Date.now
+  try {
+    const { configPath } = fleetConfigFixture(root)
+    const receipt = await runMigration(migrationArgs(root, { execute: true }))
+    Date.now = () => 12345678
+    const collision = `${configPath}.restore-${process.pid}-${Date.now()}`
+    writeFileSync(collision, 'other attempt owns this')
+    const result = migration.restoreMigration(receipt)
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'EEXIST')
+    assert.equal(readFileSync(collision, 'utf8'), 'other attempt owns this')
+    assert.equal(JSON.parse(readFileSync(configPath)).version, 3)
+  } finally { Date.now = now; rmSync(root, { recursive: true, force: true }) }
+})
+
+test('durable transaction intent must succeed before config replacement', async () => {
+  const root = scratch()
+  try {
+    const { configPath } = fleetConfigFixture(root)
+    const before = readFileSync(configPath)
+    const result = await runMigration(migrationArgs(root, { execute: true }), {
+      beforeReplace(receipt) {
+        assert.equal(readFileSync(receipt.backupPath).equals(before), true)
+        throw Object.assign(new Error('transaction intent persistence failed'), { code: 'INTENT_FAILED' })
+      },
+    })
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'INTENT_FAILED')
+    assert.equal(result.configReplaced, false)
+    assert.equal(readFileSync(configPath).equals(before), true)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+test('migration candidate collision preserves the foreign file and original config', async () => {
+  const root = scratch()
+  const now = Date.now
+  try {
+    const { configPath } = fleetConfigFixture(root)
+    const before = readFileSync(configPath)
+    Date.now = () => 12345678
+    const collision = join(root, `.agent-model-overrides.json.v3-candidate-${process.pid}-${Date.now()}`)
+    writeFileSync(collision, 'foreign candidate')
+    const result = await runMigration(migrationArgs(root, { execute: true }))
+    assert.equal(result.ok, false)
+    assert.equal(result.errorCode, 'EEXIST')
+    assert.equal(readFileSync(collision, 'utf8'), 'foreign candidate')
+    assert.equal(readFileSync(configPath).equals(before), true)
+  } finally { Date.now = now; rmSync(root, { recursive: true, force: true }) }
+})
+
+
+test('disabled extra definitions preserve the existing active-registry/config bijection', async () => {
+  const root = scratch()
+  try {
+    const { configPath, registryPath } = fleetConfigFixture(root)
+    const registry = JSON.parse(readFileSync(registryPath, 'utf8'))
+    registry.agents.push(...registryOnlyIds.map((id) => ({ id, name: id, description: null, disabled: true })))
+    writeFileSync(registryPath, JSON.stringify(registry))
+    const registryBefore = readFileSync(registryPath, 'utf8')
+    const result = await runMigration(migrationArgs(root, { execute: true }))
+    assert.equal(result.ok, true, result.error)
+    assert.equal(JSON.parse(readFileSync(configPath, 'utf8')).version, 3)
+    assert.equal(readFileSync(registryPath, 'utf8'), registryBefore, 'migration never disables or deletes definitions')
+    assert.equal(Object.keys(JSON.parse(readFileSync(configPath, 'utf8')).overrides).length, FLEET)
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })
