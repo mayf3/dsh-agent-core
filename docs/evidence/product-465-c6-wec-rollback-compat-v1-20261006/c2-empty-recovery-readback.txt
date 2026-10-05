@@ -1,0 +1,6 @@
+pre_recovery_fingerprint=27|0|workflow_outbox|workflow_forum_bindings|0|0
+recovery=COMMITTED
+post_recovery_fingerprint=26|0|absent|absent
+post_recovery_ledger={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26}
+readyz=200	{"status":"ready"}
+version=200	{"service":"svc-workflow","version":"0.3.1","gitSha":"f6a74001b71af106777045b596b30c3a7e99934d","gitTreeState":"clean","buildTimestamp":"2026-09-18T05:29:28Z","schemaVersion":"0022","apiContractVersion":"internal-v0"}

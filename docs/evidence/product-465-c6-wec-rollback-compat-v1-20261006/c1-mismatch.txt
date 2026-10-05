@@ -1,0 +1,6 @@
+before_fingerprint=27|0|workflow_outbox|workflow_forum_bindings|1|1
+before_row_digest=2a5f1a09a6d49cf5329178c326cb5433
+old_binary_process=ABORTED
+listener=connection-refused
+after_fingerprint=27|0|workflow_outbox|workflow_forum_bindings|1|1
+after_row_digest=2a5f1a09a6d49cf5329178c326cb5433
