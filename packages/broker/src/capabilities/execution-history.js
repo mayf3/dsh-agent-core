@@ -19,6 +19,7 @@
 
 export const EXECUTION_TRACE_QUERY_CAPABILITY_ID = 'execution_trace_query'
 export const EXECUTION_HISTORY_AUDIT_QUERY_CAPABILITY_ID = 'execution_history_audit_query'
+export const AGENT_SESSION_LIST_CAPABILITY_ID = 'agent_session_list'
 
 const baseErrors = [
   { code: 'invalid_arguments', description: 'Arguments violate the root contract (unknown root, missing root key, bad UUID/agentId, or a msg_sh1_* display id where a native messageId is required).' },
@@ -67,6 +68,30 @@ const queryOperation = (description) => ({
   errors: ['invalid_arguments'],
 })
 
+/**
+ * The workflow-node attempt-history operation: (workflowInstanceId,
+ * nodeVisitId) → every ledger generation of that node visit as a stably
+ * sorted, coordinate-only index (attemptId/generation, system execution
+ * state, agentId, SessionRef from the run_delivered receipt only, started/
+ * updated/finished, requestId/reconciliationHandle/messageId). No transcript
+ * is read; the ledger state is the system execution state, never workflow
+ * business truth. Same Auth model as the query operation on the same tool.
+ */
+const nodeHistoryOperation = (description) => ({
+  name: 'node_history',
+  description,
+  arguments: {
+    additionalProperties: false,
+    properties: {
+      workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
+      nodeVisitId: { type: 'string', description: 'Node visit id (UUID) whose full attempt history is listed.' },
+    },
+    required: ['workflowInstanceId', 'nodeVisitId'],
+  },
+  result: { type: 'json' },
+  errors: ['invalid_arguments', 'forbidden_not_owner', 'workflow_instance_not_found', 'history_unavailable'],
+})
+
 export const executionTraceQueryManifest = {
   id: EXECUTION_TRACE_QUERY_CAPABILITY_ID,
   toolName: 'execution_trace_query',
@@ -78,9 +103,14 @@ export const executionTraceQueryManifest = {
   renderErrorDetail: true,
   requiredScopes: ['execution.history.read'],
   errors: baseErrors,
-  operations: [queryOperation(
-    'Assemble one execution trace from the caller-owned records (workflow_instance | agent_session | scheduler_run | message root).',
-  )],
+  operations: [
+    queryOperation(
+      'Assemble one execution trace from the caller-owned records (workflow_instance | agent_session | scheduler_run | message root).',
+    ),
+    nodeHistoryOperation(
+      'List the FULL attempt history of one workflow node visit (workflowInstanceId + nodeVisitId): every ledger generation as a stably sorted coordinate-only entry — attemptId, generation, system execution state, delivering agentId, SessionRef (agentId, sessionId) taken only from the persisted run_delivered receipt, started/updated/finished times, and requestId/reconciliationHandle/messageId delivery coordinates. No transcripts or journals are read; the state shown is the system execution state, never workflow business truth.',
+    ),
+  ],
 }
 
 export const executionHistoryAuditQueryManifest = {
@@ -94,9 +124,57 @@ export const executionHistoryAuditQueryManifest = {
   renderErrorDetail: true,
   requiredScopes: ['execution.history.audit'],
   errors: baseErrors,
-  operations: [queryOperation(
-    'Assemble one execution trace across Agents (workflow_instance | agent_session | scheduler_run | message root).',
-  )],
+  operations: [
+    queryOperation(
+      'Assemble one execution trace across Agents (workflow_instance | agent_session | scheduler_run | message root).',
+    ),
+    nodeHistoryOperation(
+      'List the FULL attempt history of one workflow node visit across Agents (audit scope): the result shape is identical to execution_trace_query node_history; the widened reach is WHICH instances are queryable, never WHAT content is visible — the index is coordinates-only for every caller.',
+    ),
+  ],
 }
 
-export const manifests = [executionTraceQueryManifest, executionHistoryAuditQueryManifest]
+export const agentSessionListManifest = {
+  id: AGENT_SESSION_LIST_CAPABILITY_ID,
+  toolName: 'agent_session_list',
+  selector: 'operation',
+  name: 'Agent Session List',
+  description:
+    'List YOUR OWN sessions (MY_SESSIONS) as a coordinate-only view: sessionId, kind (main | scheduler | other), createdAt, lastActiveAt, origin presence (user / inter_agent / workflow_execution), and the scheduler/workflow coordinates each session touches. Sessions are keyed by (agentId, sessionId); you only ever see your own. No message content, tool bodies, or private text is included — coordinates and presence flags only. Use a returned sessionId with execution_trace_query root=agent_session to read the full trace of that session.',
+  // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-002/D-SCT-2: zero-Auth
+  // self surface (scheduler self-service precedent). Ownership comes from the
+  // trusted gateway identity — the tool takes NO identity argument, so there
+  // is no cross-agent enumeration face at all. requiredScopes is OMITTED
+  // (agent-directory precedent): the schema treats omitted as [] and the
+  // gateway performs zero token requests.
+  // CTR-SCT-002 freezes the contracted resource identity
+  // (`local: {resource: 'execution-history'}`) — the resource-less `local:
+  // true` form would drop the capability's declared resource binding.
+  local: { resource: 'execution-history' },
+  errors: [
+    { code: 'invalid_arguments', description: 'Arguments violate the operation schema (list takes only cursor/limit pagination).' },
+    { code: 'forbidden_not_owner', description: 'Trusted caller identity unavailable (fail closed).' },
+    { code: 'credential_unavailable', description: 'No MachineClient credential is bound to the calling agent (the gateway loads it before any local capability except self_ops); never mislabeled as a bad-argument failure.' },
+    { code: 'history_unavailable', description: 'The session homes root is not readable.' },
+    { code: 'unsupported_operation', description: 'The execute-time local handler is not resolvable (missing or miswired provider).' },
+    { code: 'internal_error', description: 'The trusted handler failed.' },
+  ],
+  operations: [
+    {
+      name: 'list',
+      description: 'List the calling Agent\'s own sessions, newest-first (keyset cursor for the next page).',
+      arguments: {
+        additionalProperties: false,
+        properties: {
+          cursor: { type: 'string', description: 'Opaque keyset cursor from a previous page (nextCursor).' },
+          limit: { type: 'integer', minimum: 1, maximum: 200, description: 'Page size (default/max 200).' },
+        },
+        required: [],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments', 'forbidden_not_owner', 'credential_unavailable', 'history_unavailable', 'internal_error'],
+    },
+  ],
+}
+
+export const manifests = [executionTraceQueryManifest, executionHistoryAuditQueryManifest, agentSessionListManifest]

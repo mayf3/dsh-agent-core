@@ -64,8 +64,8 @@ export function makeFakeChild({ pid = 4242 } = {}) {
   return child
 }
 
-export function makeFx({ deadlines, generation, integration, ...ctorOpts } = {}) {
-  const store = new TurnReconciliationStore()
+export function makeFx({ deadlines, generation, integration, reconciliationStore, ...ctorOpts } = {}) {
+  const store = reconciliationStore ?? new TurnReconciliationStore()
   const child = makeFakeChild()
   const slotOps = []
   const registryIntegration = {

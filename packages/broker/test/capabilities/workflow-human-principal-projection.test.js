@@ -151,6 +151,12 @@ test('gateway-mode apply resolves the projection provider at execute time', asyn
     targets,
     authServiceOrigin: await tokenServer(t, 200),
     credentialsFile: credentialStore(t),
+    // DSH_AGENT_CORE_MODULARITY_PHASE_A_V1: providers are injected through
+    // the composition-owned resolveLocalHandlers seam (the broker keeps no
+    // business service-name enumeration).
+    resolveLocalHandlers: () => ({
+      ...(services.workflowHumanPrincipalProjectionAccess?.handlers ?? {}),
+    }),
   })
   const result = await provided.brokerGateway.execute({
     capabilityId: WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_CAPABILITY_ID,

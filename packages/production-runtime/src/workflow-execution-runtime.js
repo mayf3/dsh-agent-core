@@ -39,11 +39,24 @@
  * and start() logs the honest disabled line — it never fakes liveness.
  */
 
-import { ExecutionLedger, createWorkflowExecutionEngine } from '../../workflow-execution/src/index.js'
+import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
+export const WORKFLOW_MAX_ATTEMPTS_PER_VISIT_ENV = 'DSH_WORKFLOW_MAX_ATTEMPTS_PER_VISIT'
+export const WORKFLOW_RETRY_DELAY_MS_ENV = 'DSH_WORKFLOW_RETRY_DELAY_MS'
 const DUE_FEED_LIMIT = 100 // svc-workflow hard cap (1..100)
+
+/** Positive-integer env resolution; undefined/'' → fallback, garbage → fail loud. */
+function resolvePositiveInt({ configValue, envValue, fallback, name }) {
+  const raw = configValue ?? envValue
+  if (raw === undefined || raw === '') return fallback
+  const parsed = typeof raw === 'number' ? raw : (/^\d+$/.test(String(raw).trim()) ? Number.parseInt(String(raw), 10) : NaN)
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new TypeError(`workflow-execution-runtime: ${name} must be a positive integer (got ${JSON.stringify(raw)})`)
+  }
+  return parsed
+}
 
 /**
  * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002 threshold wiring: explicit config
@@ -74,24 +87,125 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
+export async function wakeDomainOwnerAssistance({
+  router,
+  principalAccess,
+  pollerAgentId,
+  workflowInstanceId,
+  nodeVisitId,
+  assistanceCaseId,
+  ownerPrincipalId,
+  reason,
+}) {
+  if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
+    return { ok: false, code: 'assistance_case_missing' }
+  }
+  if (typeof ownerPrincipalId !== 'string' || ownerPrincipalId === '') {
+    return { ok: false, code: 'owner_principal_missing' }
+  }
+  const resolved = await principalAccess.handlers.agent_resolve_principal.resolve(
+    { principalId: ownerPrincipalId },
+    { callerAgentId: pollerAgentId },
+  )
+  if (!resolved?.ok || typeof resolved.result?.agentId !== 'string') {
+    return { ok: false, code: resolved?.error?.code ?? 'owner_resolution_failed', detail: resolved?.error?.detail }
+  }
+
+  const ownerAgentId = resolved.result.agentId
+  const requestId = `wfassist-${assistanceCaseId}`
+  const correlation = `workflow-assistance:${assistanceCaseId}`
+  const existing = typeof router.resolveCallerCorrelation === 'function'
+    ? router.resolveCallerCorrelation({ requestId })
+    : undefined
+  if (existing?.state === 'pending' || existing?.state === 'settled') {
+    return { ok: true, ownerAgentId, requestId, reused: true }
+  }
+
+  const message = [
+    '[WORKFLOW_OWNER_ASSISTANCE]',
+    `Workflow ${workflowInstanceId} node visit ${nodeVisitId} is OWNER_PENDING (${reason ?? 'ATTENTION_REQUIRED'}).`,
+    `Assistance case: ${assistanceCaseId}.`,
+    'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
+    'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
+    'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
+    'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
+  ].join('\n')
+
+  try {
+    const receipt = await router.deliver(
+      { requestId, agentId: ownerAgentId, sessionMode: 'main', message },
+      { messageOrigin: Object.freeze({ kind: 'inter_agent', sourceAgentId: pollerAgentId, correlation }) },
+    )
+    return { ok: true, ownerAgentId, requestId, sessionId: receipt?.sessionId }
+  } catch (error) {
+    const after = typeof router.resolveCallerCorrelation === 'function'
+      ? router.resolveCallerCorrelation({ requestId })
+      : undefined
+    if (after?.state === 'pending' || after?.state === 'settled') {
+      return { ok: true, ownerAgentId, requestId, reused: true }
+    }
+    return {
+      ok: false,
+      code: error?.code ?? error?.status ?? 'owner_wake_failed',
+      detail: String(error?.message ?? error).slice(0, 200),
+    }
+  }
+}
+
 export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config = {} }) {
   if (ctx === undefined || layout === undefined || router === undefined || log === undefined) {
     throw new TypeError('workflow-execution-runtime: ctx, layout, router and log are required')
   }
   const gateway = ctx.get('brokerGateway')
   const principalAccess = ctx.get('agentPrincipalResolutionAccess')
+  // Runtime-owned Workflow execution context: the exact Router turn is bound
+  // to the trusted workflow_execution provenance at delivery time. Fixed
+  // Operations and Progress Checkpoints both resolve this mapping; model args
+  // can never mint workflow/node/attempt coordinates.
+  const workflowExecutionContextAccess = ctx.get('workflowExecutionContextAccess')
   if (gateway === undefined) throw new TypeError('workflow-execution-runtime: brokerGateway service missing — mount after applyBroker')
   if (principalAccess?.handlers?.agent_resolve_principal?.resolve === undefined) {
     throw new TypeError('workflow-execution-runtime: agentPrincipalResolutionAccess service missing — mount after its provide')
   }
 
-  const ledger = new ExecutionLedger({ dir: layout.workflowExecutionDir, log })
+  const ledger = new ExecutionLedger({
+    dir: layout.workflowExecutionDir,
+    log,
+    // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the attempt limit lives on
+    // the fence itself (admission policy; replay of old files unchanged).
+    maxAttemptsPerVisit: resolvePositiveInt({
+      configValue: config.maxAttemptsPerVisit,
+      envValue: process.env[WORKFLOW_MAX_ATTEMPTS_PER_VISIT_ENV],
+      fallback: DEFAULT_MAX_ATTEMPTS_PER_VISIT,
+      name: 'maxAttemptsPerVisit',
+    }),
+  })
   const pollerAgentId = config.pollerAgentId ?? process.env[WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV]
   const enabled = typeof pollerAgentId === 'string' && pollerAgentId !== ''
   const staleNoProgressThresholdMs = resolveStaleNoProgressThresholdMs({
     configValue: config.staleNoProgressThresholdMs,
     envValue: process.env[WORKFLOW_STALE_NO_PROGRESS_MS_ENV],
   })
+  const retryDelayMs = resolvePositiveInt({
+    configValue: config.retryDelayMs,
+    envValue: process.env[WORKFLOW_RETRY_DELAY_MS_ENV],
+    fallback: undefined,
+    name: 'retryDelayMs',
+  })
+
+  const wakeOwnerAssistance = async (payload) => {
+    if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+    return wakeDomainOwnerAssistance({
+      router,
+      principalAccess,
+      pollerAgentId,
+      workflowInstanceId: payload.workflowInstanceId,
+      nodeVisitId: payload.nodeVisitId,
+      assistanceCaseId: payload.assistanceCaseId,
+      ownerPrincipalId: payload.ownerPrincipalId,
+      reason: payload.reason,
+    })
+  }
 
   const engine = createWorkflowExecutionEngine({
     ledger,
@@ -99,6 +213,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     config: {
       ...(config.maxAdmissionsPerPoll === undefined ? {} : { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll }),
       staleNoProgressThresholdMs,
+      ...(retryDelayMs === undefined ? {} : { retryDelayMs }),
     },
     // WORKFLOW_STALE_REENTRY_V1 r2: no router seam is injected — the r1
     // resolveStaleTurn pass-through was removed per independent review. The
@@ -130,9 +245,27 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     deliverRun: async ({ requestId, agentId, message, messageOrigin }) => {
       try {
         const receipt = await router.deliver({ requestId, agentId, sessionMode: 'main', message }, { messageOrigin })
+        if (
+          messageOrigin?.kind === 'workflow_execution'
+          && typeof receipt?.turnExecutionId === 'string' && receipt.turnExecutionId !== ''
+          && typeof workflowExecutionContextAccess?.noteWorkflowTurn === 'function'
+        ) {
+          workflowExecutionContextAccess.noteWorkflowTurn({
+            turnExecutionId: receipt.turnExecutionId,
+            provenance: messageOrigin,
+            agentId,
+            sessionId: receipt.sessionId,
+          })
+        }
         return {
           ok: true,
           sessionId: receipt.sessionId,
+          // CTR-SCT-006: pass the receipt's native messageId through to the
+          // ledger's existing run_delivered field (the receipt carries it;
+          // dropping it here was the production seam gap). The outcome_unknown
+          // branch below still records NO messageId — an unproven receipt is
+          // never fabricated.
+          ...(receipt.messageId === undefined ? {} : { messageId: receipt.messageId }),
           ...(receipt.reconciliationHandle === undefined ? {} : { reconciliationHandle: receipt.reconciliationHandle }),
         }
       } catch (error) {
@@ -161,6 +294,108 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'instance_detail_failed', detail: res.error?.detail }
       return { ok: true, body: res.result }
     },
+    // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation seam —
+    // svc-workflow's system execution-escalation ingress, called as the
+    // poller principal (GLOBAL_SCHEDULER_READ bound server-side).
+    escalateAttemptLimit: async (payload) => {
+      if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+      const res = await gateway.execute(
+        {
+          capabilityId: 'workflow_execution_escalation',
+          operation: 'create',
+          args: {
+            workflowInstanceId: payload.workflowInstanceId,
+            nodeVisitId: payload.nodeVisitId,
+            reason: payload.reason,
+            attemptCount: payload.attemptCount,
+            lastAttemptId: payload.lastAttemptId,
+            dispatchIntentId: payload.dispatchIntentId,
+          },
+        },
+        { agentId: pollerAgentId },
+      )
+      if (!res.ok) return { ok: false, code: res.error?.code ?? 'escalation_failed', detail: res.error?.detail }
+      const ownerWake = await wakeOwnerAssistance({
+        workflowInstanceId: payload.workflowInstanceId,
+        nodeVisitId: payload.nodeVisitId,
+        assistanceCaseId: res.result?.assistanceCaseId,
+        ownerPrincipalId: res.result?.ownerPrincipalId,
+        reason: payload.reason,
+      })
+      if (!ownerWake.ok) {
+        return { ok: false, code: ownerWake.code ?? 'owner_wake_failed', detail: ownerWake.detail }
+      }
+      return {
+        ok: true,
+        escalated: res.result?.escalated,
+        assistanceCaseId: res.result?.assistanceCaseId,
+        ownerPrincipalId: res.result?.ownerPrincipalId,
+        ownerAgentId: ownerWake.ownerAgentId,
+      }
+    },
+  })
+
+  // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-007: the forum execution-event
+  // projection. It NEVER creates threads (svc owns the canonical binding)
+  // and never touches execution decisions; disabled-honest when no poller
+  // principal is configured (the gateway needs a caller identity).
+  const forumProjection = createForumProjection({
+    dir: layout.workflowExecutionDir,
+    log,
+    resolveThread: async ({ workflowInstanceId }) => {
+      if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+      const res = await gateway.execute(
+        {
+          // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-007: the canonical-thread
+          // resolution rides the EXISTING forum_list_threads capability whose
+          // list operation this Spec widened with contextType/contextId.
+          capabilityId: 'forum_list_threads',
+          operation: 'list',
+          args: { contextType: 'workflow_instance', contextId: workflowInstanceId, limit: 1 },
+        },
+        { agentId: pollerAgentId },
+      )
+      if (!res.ok) return { ok: false, code: res.error?.code ?? 'forum_threads_failed' }
+      const items = Array.isArray(res.result?.items) ? res.result.items : []
+      const thread = items.find((t) => t?.contextType === 'workflow_instance' && t?.contextId === workflowInstanceId)
+      return { ok: true, threadId: typeof thread?.id === 'string' ? thread.id : null }
+    },
+    loadPostedKeys: async ({ threadId }) => {
+      if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+      const res = await gateway.execute(
+        {
+          capabilityId: 'forum_read_transcript',
+          operation: 'read',
+          args: { threadId, format: 'json' },
+        },
+        { agentId: pollerAgentId },
+      )
+      if (!res.ok) return { ok: false, code: res.error?.code ?? 'forum_transcript_failed' }
+      const transcript = res.result
+      if (transcript?.thread?.id !== threadId || !Array.isArray(transcript.messages)) {
+        return { ok: false, code: 'forum_transcript_shape' }
+      }
+      return {
+        ok: true,
+        keys: transcript.messages
+          .map((message) => message?.metadata?.eventKey)
+          .filter((key) => typeof key === 'string'),
+      }
+    },
+    postMessage: async ({ threadId, content, kind, metadata }) => {
+      if (!enabled) return { ok: false, code: 'poller_unconfigured' }
+      const res = await gateway.execute(
+        {
+          // CTR-WEC1-007: messages are ordinary reviewer-safe comments via
+          // the EXISTING forum_reply capability (kind=comment + metadata).
+          capabilityId: 'forum_reply',
+          operation: 'reply',
+          args: { threadId, content, kind, metadata },
+        },
+        { agentId: pollerAgentId },
+      )
+      return res.ok ? { ok: true } : { ok: false, code: res.error?.code ?? 'forum_reply_failed' }
+    },
   })
 
   return {
@@ -169,6 +404,8 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     pollerAgentId,
     enabled,
     staleNoProgressThresholdMs,
+    forumProjection,
+    wakeOwnerAssistance,
     /**
      * THE ONE controlled recovery operation (V2 CTR-WAE-013), surfaced as a
      * runtime-component method ONLY: the control plane (Owner/operator seam)
@@ -178,17 +415,27 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
      * there is no scheduling semantics around it at all.
      */
     recoverAttempt: (args) => engine.recoverAttempt(args),
-    /** Start the poll loop (no-op, honestly logged, when unconfigured). */
+    /** Start the poll loop (+ forum projection); no-op, honestly logged, when unconfigured. */
     start({ intervalMs } = {}) {
       if (!enabled) {
         log.warn(`workflow-execution: poller disabled — no ${WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV} configured (ledger at ${layout.workflowExecutionDir} stays evidence-only)`)
         return
       }
       engine.start({ ...(intervalMs === undefined ? {} : { intervalMs }) })
+      forumProjection.start()
       log.log(`workflow-execution: poller enabled (agent ${pollerAgentId}, due feed limit ${DUE_FEED_LIMIT})`)
     },
     stop() {
-      engine.stop()
+      // DSH_SHUTDOWN_CONTRACT (Phase A): the engine's stop() returns the
+      // bounded drain promise; compose.stop() awaits THIS method before
+      // scheduler.stop() and ctx.disposeAll(), so the drain semantics must
+      // propagate — dropping the promise made the await resolve while a poll
+      // was still in flight (late delivery into a disposed Router became
+      // reachable). WORKFLOW_EXECUTION_CONTROL_V1 (main): the forum
+      // projection loop stops with it (synchronous timer clear).
+      const draining = engine.stop()
+      forumProjection.stop()
+      return draining
     },
   }
 }

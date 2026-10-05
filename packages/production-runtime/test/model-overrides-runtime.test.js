@@ -18,6 +18,7 @@ import {
   TARGET_PROXY_NODE_VERSION,
 } from '../src/compose.js'
 import { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 } from '../src/model-overrides.js'
+import { canonicalOpenAICodexCredentialFileFor } from '../../agent-provisioning/src/shared-codex.js'
 import { resolveProductionLayout } from '../src/paths.js'
 
 const TARGET = CHATGPT_SUBSCRIPTION_V1.targetAgentId
@@ -35,7 +36,8 @@ const VALID_PROVIDER_ENV = Object.freeze({
  * §2 + Amendment 1 A1.2/A1.4): routeCatalog + overrides.<agentId>.model.
  * {primary, fallbacks[]}. The fixture IS the frozen initial chain tuple:
  * glm53 = builtin (plugin/pluginVersion ABSENT), luna = subscription
- * (dsh-codex@0.2.3 exact). Route CONTENT lives entirely in the config — the
+ * (dsh-codex@0.2.3 exact, the V3 production pin — CTR-G6R-001). Route
+ * CONTENT lives entirely in the config — the
  * code constant below only carries pins/scope (F-10 / ACC-014).
  */
 const CATALOG = Object.freeze({
@@ -65,6 +67,14 @@ const VALID = {
 
 function write(file, value) {
   writeFileSync(file, typeof value === 'string' ? value : JSON.stringify(value), 'utf8')
+}
+
+// FLEET_SHARED_CODEX_AUTH amendment A2: a deployment-owned catalog references
+// the deployment root's OWN canonical store, so the fixture parameterizes the
+// luna route's credentialFile per-test root (the loader pins loadAgentModel
+// Overrides to the runtime's layout.root — CTR-ACT2-001 minimal adjustment).
+function catalogFor(root) {
+  return { ...CATALOG, luna: { ...CATALOG.luna, credentialFile: canonicalOpenAICodexCredentialFileFor(root) } }
 }
 
 test('runtime gate rejects every recognized proxy key and any non-exact Node version without values', () => {
@@ -138,7 +148,7 @@ async function runtimeFixture(t, withOverride) {
     defaultAgentId: TARGET,
     agents: [{ id: TARGET, name: 'CTO' }, { id: OTHER, name: 'Other' }],
   })
-  if (withOverride) write(layout.agentModelOverrides, VALID)
+  if (withOverride) write(layout.agentModelOverrides, { ...VALID, routeCatalog: catalogFor(layout.root) })
   const spawned = []
   const provisioned = []
   const runtime = await composeProductionRuntime({
@@ -181,7 +191,7 @@ test('target-only rollback rewrites the config file; non-target PID and route un
   // Proxy-only rollback: remove providerEnv from the primary's catalog entry.
   write(layout.agentModelOverrides, {
     version: 3,
-    routeCatalog: { ...CATALOG, glm53: { ...CATALOG.glm53, providerEnv: VALID_PROVIDER_ENV } },
+    routeCatalog: { ...catalogFor(layout.root), glm53: { ...CATALOG.glm53, providerEnv: VALID_PROVIDER_ENV } },
     overrides: VALID.overrides,
   })
   await targetBefore.shutdown()

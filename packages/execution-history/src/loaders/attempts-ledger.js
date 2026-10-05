@@ -14,12 +14,21 @@ export function attemptsLedgerFile(workflowExecutionDir) {
 
 function toRecord(row, line) {
   const refs = {}
-  for (const key of ['attemptId', 'nodeVisitId', 'dispatchIntentId', 'workflowInstanceId', 'ownerPrincipalId', 'agentId', 'requestId', 'sessionId', 'messageId', 'reconciliationHandle']) {
+  for (const key of ['attemptId', 'nodeVisitId', 'dispatchIntentId', 'workflowInstanceId', 'ownerPrincipalId', 'agentId', 'reporterAgentId', 'requestId', 'sessionId', 'turnExecutionId', 'messageId', 'reconciliationHandle']) {
     if (typeof row[key] === 'string' && row[key] !== '') refs[key] = row[key]
   }
   // Real producer rows carry atMs (ledger.js clock seam); ts kept for
   // forward-compat with any older/foreign writer.
   const atMs = Number.isFinite(row.atMs) ? row.atMs : Number.isFinite(row.ts) ? row.ts : null
+  // PROGRESS_CHECKPOINT_V1: the append-only ledger may contain thin resume
+  // text, but execution-history is a coordinate/audit surface. Never copy the
+  // checkpoint body into generic history results; only retain that a bounded
+  // checkpoint fact existed and its trusted coordinates.
+  let data = row
+  if (row.kind === 'progress_checkpoint') {
+    const { checkpoint: _privateCheckpoint, ...coordinateData } = row
+    data = { ...coordinateData, checkpointPresent: true }
+  }
   return {
     source: 'attempts_ledger',
     kind: `attempt_${row.kind ?? 'unknown'}`,
@@ -28,7 +37,7 @@ function toRecord(row, line) {
     atMs,
     nativeRefs: refs,
     dedupeKey: line.sha256,
-    data: row,
+    data,
   }
 }
 

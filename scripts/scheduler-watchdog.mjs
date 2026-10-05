@@ -213,9 +213,10 @@ function evidenceAgeMs(nowMs) {
 
 async function processIncidentNotifications(findings, { nowMs, role, doc = { jobs: [] } }) {
   const {
-    bindNotificationDelivery, commitIncidentState, loadIncidentState, markNotificationDelivery, providerIdempotencyKey,
-    readProtectedRoutingManifest, recoverNotificationDelivery, resolveNotificationRoute, retryableOutboxIntents,
-    stableNotificationText, updateAlertState, validateIncidentDeliveryBindings,
+    annotateFindingsWithJobs, bindNotificationDelivery, commitIncidentState, loadIncidentState, markNotificationDelivery,
+    projectIncidentDelivery, providerIdempotencyKey, readProtectedRoutingManifest, recoverNotificationDelivery,
+    resolveNotificationRoute, retryableOutboxIntents, stableNotificationText, updateAlertState,
+    validateIncidentDeliveryBindings,
   } = await import('../packages/scheduler/src/watchdog/index.js')
   const incidentOwnership = {
     expectedUid: Number(process.env.SCHEDULER_INCIDENT_OWNER_UID ?? process.getuid?.()),
@@ -225,13 +226,20 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
   const ownsIncident = role === 'w2'
     ? (record) => record.stableSubjectId === 'watchdog:w1'
     : (record) => record.stableSubjectId !== 'watchdog:w1'
-  const transition = updateAlertState(loaded.state, findings, { nowMs, ownsIncident, producer: role })
+  const transition = updateAlertState(loaded.state, annotateFindingsWithJobs(findings, doc.jobs), { nowMs, ownsIncident, producer: role })
   let persisted = commitIncidentState(INCIDENT_STATE_FILE, transition.state, { expectedHash: loaded.hash, ...incidentOwnership })
   const retryable = retryableOutboxIntents(transition.state, { producer: role })
-  if (retryable.length === 0) return { outcome: 'suppressed_or_healthy', transition }
+  // External delivery projection (Product #428): re-read current truth from the
+  // durable incident store, correlate causal windows and coalesce same-occurrence
+  // pairs. Suppressed intents stay durable evidence-only; decisions are a pure
+  // function of committed state, so restart/replay never changes an outcome.
+  const projection = projectIncidentDelivery(transition.state, retryable)
+  if (projection.deliverable.length === 0) {
+    return { outcome: 'suppressed_or_healthy', transition, projection }
+  }
   let outcome = 'feishu_sent'
   let currentState = transition.state
-  for (const intent of retryable) {
+  for (const intent of projection.deliverable) {
     const notification = {
       fingerprint: intent.incident.rootIdentity,
       kind: intent.transitionKind === 'OPEN' ? 'new'
@@ -315,7 +323,7 @@ async function processIncidentNotifications(findings, { nowMs, role, doc = { job
       }
     }
   }
-  return { outcome, transition }
+  return { outcome, transition, projection }
 }
 
 async function runW1(nowMs) {
@@ -404,7 +412,13 @@ async function runW1(nowMs) {
     notifications: processed.transition.notifications.map((n) => ({ rootIdentity: n.fingerprint, kind: n.kind, notificationKey: n.notificationKey })),
     desiredStateSha256: desiredSha256,
   })
-  writeEvidence({ kind: 'w1_incident_delivery', count: processed.transition.notifications.length, outcome: processed.outcome })
+  writeEvidence({
+    kind: 'w1_incident_delivery', count: processed.transition.notifications.length, outcome: processed.outcome,
+    userFacingCount: processed.projection?.deliverable.length ?? 0,
+    deliveredNotificationKeys: (processed.projection?.deliverable ?? []).map((intent) => intent.notificationKey),
+    suppressedNotifications: (processed.projection?.suppressed ?? []).map(({ notificationKey, code, rootIdentity, transitionKind }) => (
+      { notificationKey, code, rootIdentity, transitionKind })),
+  })
   return processed.outcome
 }
 

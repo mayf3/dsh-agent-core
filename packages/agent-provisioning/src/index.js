@@ -19,23 +19,24 @@
  */
 
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync,
-  renameSync, rmSync, symlinkSync, writeFileSync,
+  copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync,
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import {
   assertSameDomainCredentialFile,
   canonicalOpenAICodexCredentialFileFor,
   deploymentRootOfAgentHome,
   persistOpenAICodexCredentialFile,
   CANONICAL_DEFAULT_MODEL_ROUTE,
+  GPT6_LUNA_ROUTE_V1,
 } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
+import { REPO, ensureRepoCoreBridge, provisionProfileWorkspaceLinks } from './repo-core-bridge.js'
+export { REPO, ensureRepoCoreBridge }
 
 export {
   assertOAuthCredentialBoundary,
@@ -45,9 +46,6 @@ export {
   CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   persistOpenAICodexCredentialFile,
 } from './shared-codex.js'
-
-/** Repo root (three levels up from src/: packages/agent-provisioning/src). */
-export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
 
 /**
  * Resolve the deepseek-harness checkout (the `dsh` CLI the Router spawns
@@ -261,10 +259,18 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   // intentionally uses --legacy-peer-deps so npm cannot consult the registry;
   // close those peers against the already-pinned Harness checkout instead.
   // This also prevents npm from choosing a different published DSH version.
+  // GPT6_LUNA_AND_REASONING_EFFORT_V1 (ACC-G6R-002): @earendil-works/pi-ai is
+  // the one exception — the frozen GPT-6 artifact identity is a DEPLOYMENT-
+  // provided exact npm artifact, so a pi-ai already present in the profile
+  // farm is kept and identity-checked below instead of harness-closed.
   const packageJson = JSON.parse(readFileSync(installedPackage, 'utf8'))
   const peerNames = Object.keys(packageJson.peerDependencies ?? {})
   const harnessRoot = options.harnessRoot ?? resolveHarnessRoot()
   for (const peer of peerNames) {
+    const peerDestination = join(profilesRoot, 'node_modules', ...peer.split('/'))
+    if (peer === '@earendil-works/pi-ai' && existsSync(join(peerDestination, 'package.json'))) {
+      continue
+    }
     const candidates = [
       join(harnessRoot, 'node_modules', '.pnpm', 'node_modules', ...peer.split('/')),
       join(harnessRoot, 'apps', 'cli', 'node_modules', ...peer.split('/')),
@@ -273,7 +279,25 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
     if (source === undefined) {
       throw provisioningError('plugin_missing', `cannot close peer ${peer} for ${plugin}@${version} from pinned DSH ${harnessRoot}`)
     }
-    ensureSymlink(source, join(profilesRoot, 'node_modules', ...peer.split('/')))
+    ensureSymlink(source, peerDestination)
+  }
+  if (plugin === GPT6_LUNA_ROUTE_V1.plugin && version === GPT6_LUNA_ROUTE_V1.pluginVersion) {
+    // DEC-G6R-003: a semver range or an unverified later pi-ai build is not
+    // equivalent evidence — the exact 0.87.1 artifact (version + frozen
+    // openai-codex catalog bytes) is required before the GPT-6 tuple can
+    // serve. Fail loud, never clamp or downgrade.
+    const piAiPackageFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'package.json')
+    let piAiResolved
+    try { piAiResolved = JSON.parse(readFileSync(piAiPackageFile, 'utf8')).version } catch { piAiResolved = undefined }
+    if (piAiResolved !== GPT6_LUNA_ROUTE_V1.piAiVersion) {
+      throw provisioningError('pi_ai_identity_mismatch', `the ${plugin}@${version} tuple requires @earendil-works/pi-ai ${GPT6_LUNA_ROUTE_V1.piAiVersion} in ${join(profilesRoot, 'node_modules')}, resolved ${piAiResolved ?? '(missing)'}`)
+    }
+    const piAiCatalogFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'providers', 'data', 'openai-codex.json')
+    let piAiCatalogDigest = ''
+    try { piAiCatalogDigest = createHash('sha256').update(readFileSync(piAiCatalogFile)).digest('hex') } catch { piAiCatalogDigest = '(unreadable)' }
+    if (piAiCatalogDigest !== GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256) {
+      throw provisioningError('pi_ai_identity_mismatch', `@earendil-works/pi-ai openai-codex catalog digest ${piAiCatalogDigest} does not match the frozen ${GPT6_LUNA_ROUTE_V1.piAiVersion} artifact identity`)
+    }
   }
 
   const profilePackageFile = join(profilesRoot, profile, 'package.json')
@@ -383,40 +407,6 @@ export const AGENT_PROFILE_DEFS = {
 }
 
 /**
- * Dev-harness resolution bridge: symlink every @agent-core package into the
- * REPO's own `node_modules/@agent-core`, mirroring the existing @deepseek-ai
- * bridge (scripts/install-integration.mjs "dev resolution bridge").
- *
- * WHY: the per-home plugin farm (<home>/profiles/node_modules/@agent-core)
- * is symlinked INTO the repo, and Node's ESM resolver walks the REAL path of
- * the importing module. A package loaded through the farm therefore resolves
- * its transitive `@agent-core/*` imports from the REPO — which fails unless
- * the repo itself exposes the same names. The bridge closes exactly that gap
- * (empirically verified: without it the per-agent composition dies at boot
- * with ERR_MODULE_NOT_FOUND for '@agent-core/workspace-bootstrap' imported by
- * agent-memory). Idempotent, additive, only touches the gitignored
- * node_modules dir.
- */
-export function ensureRepoCoreBridge() {
-  const bridgeDir = join(REPO, 'node_modules', '@agent-core')
-  mkdirSync(bridgeDir, { recursive: true })
-  const candidates = []
-  for (const name of readdirSync(join(REPO, 'packages'))) {
-    if (existsSync(join(REPO, 'packages', name, 'package.json'))) {
-      candidates.push([name, join(REPO, 'packages', name)])
-    }
-  }
-  for (const name of readdirSync(REPO)) {
-    if (name.startsWith('bundle-') && existsSync(join(REPO, name, 'package.json'))) {
-      candidates.push([name, join(REPO, name)])
-    }
-  }
-  for (const [pkg, target] of candidates) {
-    ensureSymlink(target, join(bridgeDir, pkg))
-  }
-}
-
-/**
  * Provision one agent home (idempotent). Returns the resolved home path.
  * The profile is REQUIRED and must be a known AGENT_PROFILE_DEFS entry — a
  * production spawn must never silently fall back to a default composition.
@@ -445,7 +435,8 @@ export function provisionAgentHome(home, workspace, options = {}) {
   // activation prerequisite rather than being mutated implicitly.
   mkdirSync(home, { recursive: true, mode: 0o700 })
   // Farm links point into the repo; the repo must expose @agent-core names
-  // for transitive imports (see ensureRepoCoreBridge). Idempotent, gitignored.
+  // for transitive imports (see ensureRepoCoreBridge). Production topology
+  // is deployment-owned; this call is read-only when the repo is immutable.
   ensureRepoCoreBridge()
   const settingsSource = process.env.DSH_SETTINGS_SOURCE ?? join(homedir(), '.dsh', 'settings.yaml')
   if (!copyOnce(settingsSource, join(home, 'settings.yaml'))) {
@@ -482,7 +473,13 @@ export function provisionAgentHome(home, workspace, options = {}) {
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
-    const persistOptions = {}
+    const persistOptions = {
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: the route's per-route reasoning
+      // effort rides the SAME provisioned profile patch as the credential
+      // reference, so one spawn's provisioning output is internally
+      // consistent (plugin artifact + plugin config always from one route).
+      reasoningEffort: subscription.reasoningEffort,
+    }
     if (typeof options.deploymentRoot === 'string' && options.deploymentRoot !== '') {
       persistOptions.deploymentRoot = options.deploymentRoot
     }
@@ -490,23 +487,5 @@ export function provisionAgentHome(home, workspace, options = {}) {
     persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile, persistOptions)
   }
 
-  // Out-of-tree plugin resolution links for this profile's composition.
-  const farm = join(home, 'profiles', 'node_modules')
-  const agentCoreFarm = join(farm, '@agent-core')
-  for (const [pkg, relTarget] of Object.entries(def.farmLinks)) {
-    ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
-  }
-
-  // Credential boundary validation is CHILD-TIME (DEFAULT_MODEL_ROUTING_CONFIG_V1
-  // prerequisite + AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2
-  // third-uid-denied): provisioning runs as the runtime identity (e.g. authsvc
-  // uid505), which must never — and structurally cannot — touch the canonical
-  // secret under the uid502 owner's 0700 home. The parent's job here is the
-  // credentialFile REFERENCE written into the child profile patch above; the
-  // child's dsh-codex store reader enforces the real invariants after the
-  // privilege drop (assertOwnerOnly mode 0600 + strict document validation)
-  // and fails loud before any model call. assertOAuthCredentialBoundary stays
-  // exported (re-export below) for direct ops/unit use — never invoked here.
-  mkdirSync(workspace, { recursive: true })
-  return home
+  return provisionProfileWorkspaceLinks(home, workspace, def.farmLinks)
 }

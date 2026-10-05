@@ -13,7 +13,7 @@
  * prompt write / terminal wait / caller-error settlement paths.
  */
 
-import { envelopeCarrier, fencedRejection, monotonicNowMs } from './state-machine.js'
+import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
@@ -136,7 +136,7 @@ export const turnExecutionMethods = {
   enqueuePromptExecution(mode, sessionId, text, opts, callerBoundMs) {
     return new Promise((resolve, reject) => {
       const promptBytes = Buffer.byteLength(String(text ?? ''), 'utf8')
-      const preError = this.preAdmissionError(mode, sessionId, text, promptBytes)
+      const preError = this.preAdmissionError(mode, sessionId, text, promptBytes, opts)
       if (preError !== null) {
         reject(preError)
         return
@@ -157,7 +157,9 @@ export const turnExecutionMethods = {
   },
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
-  preAdmissionError(mode, sessionId, text, promptBytes) {
+  preAdmissionError(mode, sessionId, text, promptBytes, opts) {
+    const lineageError = promptFenceError(this.store, this.agentId)
+    if (lineageError) return lineageError
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
     }
@@ -208,7 +210,7 @@ export const turnExecutionMethods = {
   async runPromptExecution(entry) {
     const { mode, sessionId, text, opts, callerBoundMs, resolve, reject } = entry
     // Re-gate at the unified session/prompt write boundary (C-013).
-    const gate = this.preAdmissionError(mode, sessionId, text, entry.promptBytes)
+    const gate = this.preAdmissionError(mode, sessionId, text, entry.promptBytes, opts)
     if (gate !== null) {
       reject(gate)
       return
@@ -222,6 +224,7 @@ export const turnExecutionMethods = {
         processGeneration: this.processGeneration,
         sessionId,
         callerCorrelation: opts?.callerCorrelation ?? null,
+        ingressCorrelation: this.ingressCorrelationLookup?.(opts) ?? null,
       })
     } catch (cause) {
       reject(envelopeCarrier('not_admitted', null, cause?.code ?? 'RECONCILIATION_CAPACITY_EXHAUSTED', cause?.message ?? String(cause)))
@@ -320,6 +323,8 @@ export const turnExecutionMethods = {
   },
 
   async promptWrite(execution, sessionId, text, opts) {
+    const lineageError = promptFenceError(this.store, this.agentId)
+    if (lineageError) throw lineageError
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'

@@ -23,6 +23,7 @@
 import { resolve } from 'node:path'
 import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
 import { monotonicNowMs } from './process/state-machine.js'
+import { authoritativeTurnEvidence, chainDeadlineError } from './process/route-chain-evidence.js'
 import {
   canaryOutcomeUnknownFixtureError, canaryQuotaFixtureError, createCanarySeam,
 } from './route-chain-canary.js'
@@ -127,7 +128,19 @@ function terminalQuotaEvidenceProven(error, turnEvidence) {
     && evidence.transportTimeout === false
 }
 
-/** Reuse identity, with ABSENT normalization; CTR-I2-003 composes this. */
+/**
+ * Reuse identity, with ABSENT normalization; CTR-I2-003 composes this.
+ *
+ * GPT6_LUNA_AND_REASONING_EFFORT_V1: the subscription block's EFFECTIVE
+ * reasoningEffort joins the identity when present — two GPT-6 routes
+ * differing only in effort produce different requests and therefore must
+ * never reuse one another's process (the reuse gate compares this string).
+ * The element is omitted entirely when unconfigured, so legacy subscription
+ * routes and subscription-free routes keep the EXACT pre-change identity
+ * bytes (CTR-G6R-001); on the GPT-6 tuple the absent field normalizes to
+ * effective medium upstream of this function (DEC-G6R-004), so the tuple
+ * always carries the element.
+ */
 export function canonicalRouteIdentity(processConfig = {}) {
   const subscription = processConfig.subscription
   const providerEnv = processConfig.providerEnv
@@ -136,6 +149,7 @@ export function canonicalRouteIdentity(processConfig = {}) {
     processConfig.model ?? null,
     subscription?.plugin ?? null,
     subscription?.pluginVersion ?? null,
+    ...(subscription?.reasoningEffort === undefined ? [] : [subscription.reasoningEffort]),
     subscription?.credentialFile === undefined ? 'ABSENT' : resolve(subscription.credentialFile),
     providerEnv === undefined
       ? 'ABSENT'
@@ -238,13 +252,6 @@ function routeLabel(route) {
   return route?.routeRef ?? (route?.provider !== undefined ? `global:${route.provider}/${route.model}` : 'global')
 }
 
-function chainDeadlineError(agentId) {
-  return Object.assign(
-    new Error(`agent-router: route chain deadline exhausted before admission (agent ${agentId}) — STOP_CHAIN, no fallback`),
-    { code: 'AGENT_ROUTE_CHAIN_DEADLINE_EXCEEDED', envelope: 'chain_deadline_exceeded' },
-  )
-}
-
 /**
  * Create the unified chain executor. `log` = structured journal surface;
  * `ensureRunningForRoute` = registry route gate; `resolveRouteChain` =
@@ -279,21 +286,6 @@ export function createRouteChainExecutor({
       chainId: 'single-route',
       routes: Object.freeze([Object.freeze({ routeRef: null, identity: undefined, processConfig: undefined })]),
     })
-  }
-
-  /** Authoritative post-settlement turn evidence from the published
-   * AgentProcess surface (read-only; the store settles before the carrier
-   * rejects, so the snapshot is already final here). */
-  function authoritativeTurnEvidence(proc, error) {
-    const handle = error?.reconciliationHandle
-    if (typeof handle !== 'string' || handle === '' || typeof proc?.turnExecutionSnapshot !== 'function') {
-      return undefined
-    }
-    try {
-      return proc.turnExecutionSnapshot(handle)
-    } catch {
-      return undefined
-    }
   }
 
   /** Bounded convergence wait: busy-mismatched or reaping slots retry inside

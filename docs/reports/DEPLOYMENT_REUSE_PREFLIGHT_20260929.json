@@ -1,0 +1,25 @@
+{
+  "event": "f34f9784-23d8-5ec9-94d0-dc7360e596a2",
+  "base": "3123943165d118038f23a20c234b5205faa9c990",
+  "AUTHORITY_ACTION": "REUSE",
+  "PRIMARY_AUTHORITY": "PRODUCTION_DEPLOYMENT_CONTROL_PLANE_V1 DEC-DCP-004/005",
+  "PLAN_LEVEL": "BRIEF",
+  "ASSURANCE_LEVEL": "CONTROLLED",
+  "IMPLEMENTATION_ALLOWED": true,
+  "OPERATION_ALLOWED": false,
+  "scope": "nonprivileged exact per-ID receipt observation plus isolated installed-byte B-C-B/disconnected client verification",
+  "readMandate": "user explicitly requests installed source/status/registry and existing receipts; no protected HR content",
+  "writer": "same DS author; new scripts/lib/deployment-reuse files only",
+  "forbidden": [
+    "DS/shim/HR source edits",
+    "sudo",
+    "production DEPLOY/ROLLBACK",
+    "HR activation"
+  ],
+  "plan": [
+    "receipt adapter negative tests then bounded nofollow read",
+    "temporary daemon from exact installed bytes; B then disconnected C then rollbackB",
+    "classify maintenance capability separately; same affected reviewer"
+  ],
+  "noReplay": "missing receipt UNKNOWN, never retry/zero-effect proof"
+}
