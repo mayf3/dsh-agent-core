@@ -37,8 +37,9 @@
 // Atomicity contract (packet §5 STAGE 1M): the executor runs migrate →
 // G2.7 re-verify → kickstart as ONE step, because compose.js re-reads the
 // config at every process boundary — a v3 file under the still-running v2
-// loader is the same FATAL class, so the write→restart window must stay
-// sub-second and machine-enforced. This tool never restarts anything.
+// loader is the same FATAL class, so the caller must prove dispatch/refresh quiescence and keep its durable fence
+// until a compatible generation is restored or verified. Speed is not atomicity.
+// This tool never restarts anything or clears a fence.
 //
 // Usage (default is DRY-RUN — prints the exact semantic delta, validates the
 // candidate against the real loader from a temp dir, mutates nothing):
@@ -48,16 +49,17 @@
 //   ... same + --execute     # backup + atomic swap of the validated candidate
 //
 // Exit: 0 = dry-run validated / execute committed; 2 = refused or failed
-// (zero production mutation in every refusal path).
+// (pre-swap refusals do not replace config; failures after swap report configReplaced).
 
 import {
-  chownSync, closeSync, existsSync, fsyncSync, mkdtempSync, openSync, readFileSync,
-  renameSync, rmSync, statSync, writeFileSync,
+  closeSync, existsSync, fchmodSync, fchownSync, fsyncSync, mkdtempSync, openSync, readFileSync,
+  renameSync, rmSync, lstatSync, writeFileSync,
 } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { verifyCohort, readCohortFile } from './deployment-reuse/cohort-binding.mjs'
 
 // The deployed v2 base's route key universe (65f0b75d-era loader, the runtime
 // the authsvc deployment runs today). Anything outside it — including v3-only
@@ -93,6 +95,7 @@ export function parseArgs(argv) {
     else if (a === '--registry') args.registry = argv[++i]
     else if (a === '--deployment-root') args.deploymentRoot = argv[++i]
     else if (a === '--model-overrides-module') args.modelOverridesModule = argv[++i]
+    else if (a === '--cohort-binding') args.cohort = readCohortFile(argv[++i])
     else if (a === '--execute') args.execute = true
     else if (a === '--json') args.json = true
     else { usage(); process.exit(2) }
@@ -190,37 +193,42 @@ function exactKeys(object, keys) {
 }
 
 function fsyncDir(dir) {
-  try {
-    const fd = openSync(dir, 'r')
-    try { fsyncSync(fd) } finally { closeSync(fd) }
-  } catch { /* best-effort directory fsync */ }
+  const fd = openSync(dir, 'r')
+  try { fsyncSync(fd) } finally { closeSync(fd) }
 }
 
 function isRoot() {
   return typeof process.getuid === 'function' && process.getuid() === 0
 }
 
-/** Write `content` with an exact mode; ownership preserved when root. */
+/** Exclusively create the candidate, preserving its original metadata. */
 function writeWithMode(file, content, mode, stat) {
-  const fd = openSync(file, 'w', mode)
-  try {
-    writeFileSync(fd, content)
-    fsyncSync(fd)
-    if (isRoot() && stat) chownSync(file, stat.uid, stat.gid)
-  } finally { closeSync(fd) }
+  writeExclusive(file, content, { uid: stat.uid, gid: stat.gid, mode })
 }
 
 /** Content-exact copy preserving mode (and owner when root). */
 function copyPreserving(src, dest, stat) {
-  const fd = openSync(dest, 'w', stat.mode & 0o7777)
+  writeExclusive(dest, readFileSync(src), stat)
+}
+
+function writeExclusive(dest, bytes, stat) {
+  const fd = openSync(dest, 'wx', stat.mode & 0o7777)
   try {
-    writeFileSync(fd, readFileSync(src))
+    writeFileSync(fd, bytes)
+    if (isRoot()) fchownSync(fd, stat.uid, stat.gid)
+    fchmodSync(fd, stat.mode & 0o7777)
     fsyncSync(fd)
-    if (isRoot()) chownSync(dest, stat.uid, stat.gid)
+  } catch (cause) {
+    rmSync(dest, { force: true }) // open succeeded: this invocation owns the file.
+    throw cause
   } finally { closeSync(fd) }
 }
 
-export async function runMigration(args) {
+function metadata(stat) {
+  return { uid: stat.uid, gid: stat.gid, mode: stat.mode & 0o7777 }
+}
+
+export async function runMigration(args, hooks = {}) {
   const result = {
     operation: 'FLEET_CONFIG_V2V3_MIGRATION_V1',
     mode: args.execute ? 'execute' : 'dry-run',
@@ -229,6 +237,7 @@ export async function runMigration(args) {
     deploymentRoot: args.deploymentRoot,
     modelOverridesModule: resolve(args.modelOverridesModule),
     ok: false,
+    configReplaced: false,
     preSha256: undefined,
     postSha256: undefined,
     backupPath: undefined,
@@ -240,6 +249,7 @@ export async function runMigration(args) {
     errorCode: undefined,
   }
   let candidatePath
+  let candidateOwned = false
   let validationHome
   try {
     if (!existsSync(args.config)) throw migrationError('FLEET_CONFIG_MISSING', `fleet config not found: ${args.config}`)
@@ -253,13 +263,16 @@ export async function runMigration(args) {
     const canonicalFile = provisioning.canonicalOpenAICodexCredentialFileFor(args.deploymentRoot)
     const definitionModule = join(dirname(args.modelOverridesModule), '../../agent-definition/src/definition.js')
     const definitionMod = await import(pathToFileURL(definitionModule).href)
-    const registeredAgentIds = Object.freeze(
-      definitionMod.parseDefinition(readFileSync(args.registry, 'utf8'), { source: args.registry }).agents.map((agent) => agent.id),
-    )
+    const registrySource = readFileSync(args.registry, 'utf8')
+    const definition = definitionMod.parseDefinition(registrySource, { source: args.registry })
+    const registeredAgentIds = Object.freeze(definition.agents.map((agent) => agent.id))
+    const activeAgentIds = definition.agents.filter((agent) => !agent.disabled).map((agent) => agent.id)
+    result.registrySha256 = digest(registrySource)
 
+    const stat = lstatSync(args.config)
+    if (!stat.isFile() || stat.nlink !== 1) throw migrationError('FLEET_CONFIG_NOT_A_FILE', `not a regular single-link file: ${args.config}`)
+    result.preMetadata = metadata(stat)
     const source = readFileSync(args.config, 'utf8')
-    const stat = statSync(args.config)
-    if (!stat.isFile()) throw migrationError('FLEET_CONFIG_NOT_A_FILE', `not a regular file: ${args.config}`)
     result.preSha256 = createHash('sha256').update(source).digest('hex')
     assertNoDuplicateJsonKeys(source)
     const parsed = JSON.parse(source)
@@ -276,6 +289,12 @@ export async function runMigration(args) {
       throw migrationError('FLEET_CONFIG_BASE_SHAPE_INVALID', 'routeCatalog and overrides must be plain objects')
     }
     result.overridesBefore = Object.keys(parsed.overrides).length
+    const frozenIds = Object.keys(parsed.overrides)
+    result.registryOnly = activeAgentIds.filter((id) => !frozenIds.includes(id)).sort()
+    result.configOnly = frozenIds.filter((id) => !activeAgentIds.includes(id)).sort()
+    if (!args.cohort && (result.registryOnly.length || result.configOnly.length)) {
+      throw migrationError('FLEET_CONFIG_COHORT_DRIFT', 'active registry and frozen config cohort differ; no automatic expansion, exclusion or identity changes')
+    }
     if (result.overridesBefore === 0) throw migrationError('FLEET_CONFIG_EMPTY_OVERRIDES', 'overrides is empty — not the deployed fleet-config preimage shape')
     for (const [ref, route] of Object.entries(parsed.routeCatalog)) {
       if (route === null || typeof route !== 'object' || Array.isArray(route)) {
@@ -312,6 +331,7 @@ export async function runMigration(args) {
       throw migrationError('FLEET_CONFIG_OVERRIDES_DRIFT', 'internal: overrides cardinality changed during transform')
     }
     const serialized = `${JSON.stringify(candidate, null, 2)}\n`
+    if (args.cohort && digest(serialized) !== args.cohort.configPostSha256) throw migrationError('FLEET_CONFIG_COHORT_BINDING_INVALID', 'bound postimage differs')
     result.postSha256 = createHash('sha256').update(serialized).digest('hex')
 
     // ---- validate the EXACT candidate bytes under the REAL v3 loader ----
@@ -323,7 +343,9 @@ export async function runMigration(args) {
       : join(validationHome, 'agent-model-overrides.json')
     try {
       writeWithMode(candidatePath, serialized, stat.mode & 0o7777, stat)
+      candidateOwned = true
       const loaded = loader.loadAgentModelOverrides(candidatePath, registeredAgentIds, { deploymentRoot: args.deploymentRoot })
+      if (args.cohort) result.cohort = verifyCohort(args.cohort, { root: args.deploymentRoot, registrySource, configSource: source, loaded, defaultGlobalRoute: loader.canonicalDefaultGlobalRoute?.(), runtimePhase: args.runtimePhase ?? 'pre', runtimeRead: args.runtimeRead, candidateRoot: args.candidateRoot })
       result.validatedUnder = result.modelOverridesModule
       const validatedCount = Object.keys(loaded.overrides).length
       if (validatedCount !== result.overridesBefore) {
@@ -333,6 +355,14 @@ export async function runMigration(args) {
         result.ok = true
         return result
       }
+      // The existing transaction/fence owns exclusivity. Detect changed inputs too.
+      hooks.beforeSwap?.()
+      if (args.cohort) verifyCohort(args.cohort, { root: args.deploymentRoot, registrySource: readFileSync(args.registry, 'utf8'), configSource: readFileSync(args.config, 'utf8'), loaded, defaultGlobalRoute: loader.canonicalDefaultGlobalRoute?.(), runtimePhase: args.runtimePhase ?? 'pre', runtimeRead: args.runtimeRead, candidateRoot: args.candidateRoot })
+      if (digest(readFileSync(args.config)) !== result.preSha256
+        || digest(readFileSync(args.registry)) !== result.registrySha256
+        || JSON.stringify(metadata(lstatSync(args.config))) !== JSON.stringify(result.preMetadata)) {
+        throw migrationError('FLEET_CONFIG_PREIMAGE_CHANGED', 'config or registry changed after validation; refuse this attempt')
+      }
       // ---- execute: backup, then atomic swap of the VALIDATED bytes ----
       const stamp = `${new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '')}Z`
       const backupPath = `${args.config}.pre-v3-${stamp}`
@@ -340,8 +370,12 @@ export async function runMigration(args) {
       if (createHash('sha256').update(readFileSync(backupPath)).digest('hex') !== result.preSha256) {
         throw migrationError('FLEET_CONFIG_BACKUP_MISMATCH', 'backup content differs from preimage — refusing to swap')
       }
+      fsyncDir(dirname(args.config))
       result.backupPath = backupPath
+      hooks.beforeReplace?.({ ...result }) // Owning TX must fsync intent before rename.
       renameSync(candidatePath, args.config)
+      result.configReplaced = true
+      hooks.afterSwap?.()
       fsyncDir(dirname(args.config))
       // Post-swap readback: the REAL config file must now load clean.
       const reloaded = loader.loadAgentModelOverrides(args.config, registeredAgentIds, { deploymentRoot: args.deploymentRoot })
@@ -351,13 +385,69 @@ export async function runMigration(args) {
       result.ok = true
       return result
     } finally {
-      if (args.execute && !result.ok && existsSync(candidatePath)) rmSync(candidatePath, { force: true })
+      if (args.execute && candidateOwned && !result.ok && existsSync(candidatePath)) rmSync(candidatePath, { force: true })
       if (!args.execute && validationHome) rmSync(validationHome, { recursive: true, force: true })
     }
   } catch (cause) {
     result.error = cause?.message ?? String(cause)
     result.errorCode = cause?.code
     return result
+  }
+}
+
+
+function digest(value) {
+  return createHash('sha256').update(value).digest('hex')
+}
+
+/** Restore ONLY the exact config pair recorded by this migration, never credential/state files.
+ * The owning quiesced transaction supplies the authentic receipt and owns code/plugin recovery.
+ * A conflict is UNKNOWN to this helper: it must not guess a backup, replay work or clear fences.
+ */
+export function restoreMigration(receipt) {
+  let temporary
+  let temporaryOwned = false
+  try {
+    if (receipt?.operation !== 'FLEET_CONFIG_V2V3_MIGRATION_V1'
+      || receipt.mode !== 'execute' || receipt.configReplaced !== true) {
+      throw migrationError('FLEET_CONFIG_RECOVERY_RECEIPT_INVALID', 'no recorded config swap to recover')
+    }
+    const { config, backupPath, preSha256, postSha256, preMetadata } = receipt
+    if (typeof config !== 'string' || !isAbsolute(config)
+      || typeof backupPath !== 'string' || !isAbsolute(backupPath)
+      || dirname(backupPath) !== dirname(config) || !backupPath.startsWith(`${config}.pre-v3-`)
+      || !/^[a-f0-9]{64}$/.test(preSha256) || !/^[a-f0-9]{64}$/.test(postSha256)
+      || !['uid', 'gid', 'mode'].every((key) => Number.isInteger(preMetadata?.[key]) && preMetadata[key] >= 0)
+      || preMetadata.mode > 0o7777) {
+      throw migrationError('FLEET_CONFIG_RECOVERY_RECEIPT_INVALID', 'invalid exact config/preimage binding')
+    }
+    const original = lstatSync(backupPath)
+    const current = lstatSync(config)
+    if (!original.isFile() || original.nlink !== 1 || !current.isFile() || current.nlink !== 1) {
+      throw migrationError('FLEET_CONFIG_RECOVERY_RECEIPT_INVALID', 'config and backup must be regular single-link files')
+    }
+    const bytes = readFileSync(backupPath)
+    if (digest(bytes) !== preSha256) throw migrationError('FLEET_CONFIG_BACKUP_MISMATCH', 'recorded preimage digest mismatch')
+    if (![original, current].every((stat) => Object.entries(preMetadata).every(([key, value]) => metadata(stat)[key] === value))) {
+      throw migrationError('FLEET_CONFIG_RECOVERY_CONFLICT', 'config/backup metadata differs from the recorded preimage; retain fence')
+    }
+    const actual = digest(readFileSync(config))
+    if (actual === preSha256) return { ok: true, state: 'ALREADY_RESTORED', config }
+    if (actual !== postSha256) throw migrationError('FLEET_CONFIG_RECOVERY_CONFLICT', 'config differs from both recorded generations; retain fence and reconcile')
+    temporary = `${config}.restore-${process.pid}-${Date.now()}`
+    writeExclusive(temporary, bytes, preMetadata)
+    temporaryOwned = true
+    renameSync(temporary, config)
+    fsyncDir(dirname(config))
+    if (digest(readFileSync(config)) !== preSha256
+      || Object.entries(preMetadata).some(([key, value]) => metadata(lstatSync(config))[key] !== value)) {
+      throw migrationError('FLEET_CONFIG_RECOVERY_CONFLICT', 'restore readback differs; retain fence')
+    }
+    return { ok: true, state: 'RESTORED', config }
+  } catch (cause) {
+    return { ok: false, state: 'UNRESOLVED', errorCode: cause?.code, error: cause?.message ?? String(cause) }
+  } finally {
+    if (temporaryOwned && existsSync(temporary)) rmSync(temporary, { force: true })
   }
 }
 
@@ -374,7 +464,8 @@ async function main() {
       if (result.backupPath) process.stdout.write(`  BACKUP=${result.backupPath} (RESTORE-R3 source — restore this before restarting the OLD generation after any rollback)\n`)
       process.stdout.write(`  RESULT=${result.mode === 'execute' ? 'COMMITTED' : 'DRY_RUN_VALIDATED'}\n`)
     } else {
-      process.stdout.write(`  REFUSED code=${result.errorCode ?? 'NONE'}\n  ${result.error}\n`)
+      process.stdout.write(`  FAILED code=${result.errorCode ?? 'NONE'} configReplaced=${result.configReplaced}\n  ${result.error}\n`)
+      if (result.backupPath) process.stdout.write(`  BACKUP=${result.backupPath} preSha256=${result.preSha256} postSha256=${result.postSha256}\n`)
     }
   }
   process.exit(result.ok ? 0 : 2)

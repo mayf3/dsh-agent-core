@@ -11,7 +11,8 @@
  * subscription carry + legacy two-field shape preservation.
  */
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
@@ -87,10 +88,11 @@ function withRouteEnv(t, value) {
   })
 }
 
-async function runtimeFixture(t, { globalRoute, overrides } = {}) {
+async function runtimeFixture(t, { globalRoute, overrides, artifactSetup } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'default-route-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   const layout = resolveProductionLayout(root)
+  if (artifactSetup) artifactSetup(root)
   mkdirSync(join(root, 'scheduler'), { recursive: true })
   await writeAgentDefinition(layout.agentsConfig, {
     defaultAgentId: TARGET,
@@ -110,7 +112,7 @@ async function runtimeFixture(t, { globalRoute, overrides } = {}) {
     log: { log: (line) => lines.push(line), warn() {}, error() {} },
   })
   t.after(() => runtime.stop())
-  return { runtime, spawned, provisioned, lines }
+  return { runtime, spawned, provisioned, lines, root }
 }
 
 function globalRouteSourceLine(lines) {
@@ -191,4 +193,25 @@ test('A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep t
   assert.equal(provisioned[0].options.subscription, undefined, 'oc-go builtin route stays off the plugin path')
   assert.deepEqual({ provider: spawned[1].provider, model: spawned[1].model }, CANONICAL)
   assert.equal(provisioned[1].options.subscription?.plugin, CHATGPT_SUBSCRIPTION_V1.plugin)
+})
+
+
+test('composition freezes the own-domain artifact and refuses drift before the next process boundary', async t => {
+  withRouteEnv(t, undefined)
+  const keys = ['DSH_CODEX_PACKAGE_TARBALL', 'DSH_CODEX_SOURCE_STAMP']
+  const previous = keys.map(key => process.env[key])
+  t.after(() => keys.forEach((key, i) => { if (previous[i] === undefined) delete process.env[key]; else process.env[key] = previous[i] }))
+  const digest = createHash('sha256').update('synthetic immutable artifact').digest('hex')
+  const f = await runtimeFixture(t, { artifactSetup(root) {
+    const archive = join(root, 'package.tgz'), stamp = join(root, 'source-stamp.json')
+    writeFileSync(archive, 'synthetic immutable artifact', { mode: 0o600 })
+    writeFileSync(stamp, JSON.stringify({ version: 2, deploymentRoot: root, sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit, artifactSha256: digest }), { mode: 0o600 })
+    process.env.DSH_CODEX_PACKAGE_TARBALL = archive; process.env.DSH_CODEX_SOURCE_STAMP = stamp
+  } })
+  await f.runtime.router.ensureRunning(OTHER)
+  assert.equal(f.provisioned[0].options.subscription.artifactSha256, digest)
+  assert.equal(f.provisioned[0].options.subscription.artifactBinding.deploymentRoot, f.root)
+  appendFileSync(join(f.root, 'source-stamp.json'), '\n')
+  await assert.rejects(() => f.runtime.router.ensureRunning(TARGET), /deployment artifact/)
+  assert.equal(f.spawned.length, 1, 'no process is created after frozen input drift')
 })

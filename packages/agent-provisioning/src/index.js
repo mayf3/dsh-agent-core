@@ -19,10 +19,9 @@
  */
 
 import {
-  copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync,
+  copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync,
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 import {
@@ -31,9 +30,8 @@ import {
   deploymentRootOfAgentHome,
   persistOpenAICodexCredentialFile,
   CANONICAL_DEFAULT_MODEL_ROUTE,
-  GPT6_LUNA_ROUTE_V1,
 } from './shared-codex.js'
-import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact } from './plugin-artifact.js'
+import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact, verifyPluginInputs, resolvePluginPeerLinks } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
 import { REPO, ensureRepoCoreBridge, provisionProfileWorkspaceLinks } from './repo-core-bridge.js'
 export { REPO, ensureRepoCoreBridge }
@@ -154,9 +152,29 @@ function atomicWriteJson(file, value) {
   renameSync(temp, file)
 }
 
-function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact }) {
+function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact, artifactBinding }) {
   if (packageArtifact !== undefined && (!isAbsolute(packageArtifact) || !existsSync(packageArtifact))) {
     throw provisioningError('plugin_missing', `local package artifact must be an existing absolute path: ${packageArtifact}`)
+  }
+  if (artifactBinding) {
+    // The domain-bound artifact is already the complete accepted payload.
+    // npm prunes its unbundled dependencies; retain the exact archive instead.
+    const installedRoot = join(profilesRoot, 'node_modules', plugin)
+    mkdirSync(dirname(installedRoot), { recursive: true })
+    const scratch = mkdtempSync(join(dirname(installedRoot), '.exact-artifact-'))
+    try {
+      const unpack = spawnSync('/usr/bin/tar', ['-xzf', packageArtifact, '-C', scratch], { encoding: 'utf8' })
+      const payload = join(scratch, 'package')
+      if (unpack.status !== 0 || !existsSync(payload) || !lstatSync(payload).isDirectory()
+        || !installedArtifactMatches(payload, packageArtifact)) {
+        throw provisioningError('plugin_artifact_mismatch', `cannot unpack exact ${plugin}@${version} payload`)
+      }
+      const manifest = JSON.parse(readFileSync(join(payload, 'package.json'), 'utf8'))
+      if (manifest.name !== plugin || manifest.version !== version) throw provisioningError('plugin_version_mismatch', 'archive package name/version differs')
+      rmSync(installedRoot, { recursive: true, force: true })
+      renameSync(payload, installedRoot)
+    } finally { rmSync(scratch, { recursive: true, force: true }) }
+    return
   }
   const result = spawnSync('npm', [
     'install', '--prefix', profilesRoot, '--no-save', '--no-package-lock', '--ignore-scripts',
@@ -171,63 +189,20 @@ function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact
   }
 }
 
+// Read-only: shares precisely the normal provisioning input checks.
+export function verifyPluginProvisioningInputs(requirement, options = {}) {
+  return verifyPluginInputs(requirement, options, readHarnessIdentity)
+}
+
 /**
  * Install/verify one exact external bundle in this Agent's own profile farm.
  * The shared repo profile is never touched. Tests inject `pluginInstaller`
  * so ordinary automation has no npm-registry dependency.
  */
 export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {
-  const { plugin, version, sourceCommit, artifactSha256, dshVersion, dshCommit } = requirement ?? {}
-  for (const [field, value] of Object.entries({ plugin, version, sourceCommit, artifactSha256, dshVersion, dshCommit })) {
-    if (typeof value !== 'string' || value === '') {
-      throw provisioningError('plugin_provisioning_invalid', `${field} must be a non-empty exact value`)
-    }
-  }
-  if (/^[~^*]|[xX]$|\s\|\||\s-\s/u.test(version)) {
-    throw provisioningError('plugin_version_mismatch', `plugin version must be exact (got ${version})`)
-  }
-  if (!/^[0-9a-f]{40}$/u.test(sourceCommit)) {
-    throw provisioningError('plugin_source_mismatch', `plugin sourceCommit must be 40-character lowercase hex`)
-  }
-  if (!/^[0-9a-f]{64}$/u.test(artifactSha256)) {
-    throw provisioningError('plugin_artifact_mismatch', `plugin artifactSha256 must be 64-character lowercase hex`)
-  }
-
+  verifyPluginProvisioningInputs(requirement, { ...options, deploymentRoot: deploymentRootOfAgentHome(home) })
+  const { plugin, version, sourceCommit, artifactSha256, dshVersion } = requirement
   const injectedArtifactIdentity = options.artifactIdentity
-  if (injectedArtifactIdentity === undefined) {
-    const packageArtifact = options.packageArtifact
-    const sourceStamp = options.sourceStamp
-    if (!isAbsolute(packageArtifact ?? '') || !existsSync(packageArtifact)) {
-      throw provisioningError('plugin_artifact_mismatch', `exact local package artifact is required for modified ${plugin}@${version}`)
-    }
-    if (!isAbsolute(sourceStamp ?? '') || !existsSync(sourceStamp)) {
-      throw provisioningError('plugin_source_mismatch', `exact absolute source stamp is required for modified ${plugin}@${version}`)
-    }
-    const actualDigest = createHash('sha256').update(readFileSync(packageArtifact)).digest('hex')
-    if (actualDigest !== artifactSha256) {
-      throw provisioningError('plugin_artifact_mismatch', `artifact digest does not match the accepted ${plugin}@${version} candidate`)
-    }
-    let stamp
-    try {
-      stamp = JSON.parse(readFileSync(sourceStamp, 'utf8'))
-    } catch (cause) {
-      throw provisioningError('plugin_source_mismatch', `cannot read exact source stamp for ${plugin}@${version}`, cause)
-    }
-    if (!exactObject(stamp, { version: 1, sourceCommit, artifactSha256 })) {
-      throw provisioningError('plugin_source_mismatch', `source stamp does not match the accepted ${plugin}@${version} candidate`)
-    }
-  } else if (!exactObject(injectedArtifactIdentity, { version: 1, sourceCommit, artifactSha256 })) {
-    throw provisioningError('plugin_source_mismatch', `injected artifact identity does not match the accepted ${plugin}@${version} candidate`)
-  }
-
-  const identity = options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot)
-  if (identity.version !== dshVersion) {
-    throw provisioningError('dsh_version_mismatch', `expected DSH ${dshVersion}, resolved ${identity.version ?? '(missing)'}`)
-  }
-  if (identity.commit !== dshCommit) {
-    throw provisioningError('dsh_commit_mismatch', `expected DSH commit ${dshCommit}, resolved ${identity.commit ?? '(missing)'}`)
-  }
-
   const artifactIdentity = { version: 1, sourceCommit, artifactSha256 }
   const profilesRoot = join(home, 'profiles')
   const installedRoot = join(profilesRoot, 'node_modules', plugin)
@@ -240,12 +215,13 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   if (!installedArtifactMatches(installedRoot, options.packageArtifact, artifactIdentity)) {
     rmSync(installedRoot, { recursive: true, force: true })
     const installer = options.pluginInstaller ?? defaultPluginInstaller
-    installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact })
+    installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact, artifactBinding: requirement.artifactBinding })
     if (injectedArtifactIdentity !== undefined && existsSync(installedRoot)) stampInstalledArtifact(installedRoot, artifactIdentity)
   }
   if (!existsSync(installedPackage)) {
     throw provisioningError('plugin_missing', `${plugin}@${version} is not resolvable from ${profilesRoot}/node_modules`)
   }
+  if (requirement.artifactBinding && JSON.parse(readFileSync(installedPackage, 'utf8')).name !== plugin) throw provisioningError('plugin_version_mismatch', 'installed archive package name differs')
   const installedVersion = installedPluginVersion(installedPackage)
   if (installedVersion !== version) {
     throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
@@ -264,41 +240,8 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   // provided exact npm artifact, so a pi-ai already present in the profile
   // farm is kept and identity-checked below instead of harness-closed.
   const packageJson = JSON.parse(readFileSync(installedPackage, 'utf8'))
-  const peerNames = Object.keys(packageJson.peerDependencies ?? {})
   const harnessRoot = options.harnessRoot ?? resolveHarnessRoot()
-  for (const peer of peerNames) {
-    const peerDestination = join(profilesRoot, 'node_modules', ...peer.split('/'))
-    if (peer === '@earendil-works/pi-ai' && existsSync(join(peerDestination, 'package.json'))) {
-      continue
-    }
-    const candidates = [
-      join(harnessRoot, 'node_modules', '.pnpm', 'node_modules', ...peer.split('/')),
-      join(harnessRoot, 'apps', 'cli', 'node_modules', ...peer.split('/')),
-    ]
-    const source = candidates.find((candidate) => existsSync(candidate))
-    if (source === undefined) {
-      throw provisioningError('plugin_missing', `cannot close peer ${peer} for ${plugin}@${version} from pinned DSH ${harnessRoot}`)
-    }
-    ensureSymlink(source, peerDestination)
-  }
-  if (plugin === GPT6_LUNA_ROUTE_V1.plugin && version === GPT6_LUNA_ROUTE_V1.pluginVersion) {
-    // DEC-G6R-003: a semver range or an unverified later pi-ai build is not
-    // equivalent evidence — the exact 0.87.1 artifact (version + frozen
-    // openai-codex catalog bytes) is required before the GPT-6 tuple can
-    // serve. Fail loud, never clamp or downgrade.
-    const piAiPackageFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'package.json')
-    let piAiResolved
-    try { piAiResolved = JSON.parse(readFileSync(piAiPackageFile, 'utf8')).version } catch { piAiResolved = undefined }
-    if (piAiResolved !== GPT6_LUNA_ROUTE_V1.piAiVersion) {
-      throw provisioningError('pi_ai_identity_mismatch', `the ${plugin}@${version} tuple requires @earendil-works/pi-ai ${GPT6_LUNA_ROUTE_V1.piAiVersion} in ${join(profilesRoot, 'node_modules')}, resolved ${piAiResolved ?? '(missing)'}`)
-    }
-    const piAiCatalogFile = join(profilesRoot, 'node_modules', '@earendil-works', 'pi-ai', 'dist', 'providers', 'data', 'openai-codex.json')
-    let piAiCatalogDigest = ''
-    try { piAiCatalogDigest = createHash('sha256').update(readFileSync(piAiCatalogFile)).digest('hex') } catch { piAiCatalogDigest = '(unreadable)' }
-    if (piAiCatalogDigest !== GPT6_LUNA_ROUTE_V1.piAiOpenaiCodexCatalogSha256) {
-      throw provisioningError('pi_ai_identity_mismatch', `@earendil-works/pi-ai openai-codex catalog digest ${piAiCatalogDigest} does not match the frozen ${GPT6_LUNA_ROUTE_V1.piAiVersion} artifact identity`)
-    }
-  }
+  for (const { source, destination } of resolvePluginPeerLinks(packageJson, profilesRoot, harnessRoot, { plugin, version, dshVersion })) ensureSymlink(source, destination)
 
   const profilePackageFile = join(profilesRoot, profile, 'package.json')
   const profilePackage = JSON.parse(readFileSync(profilePackageFile, 'utf8'))
@@ -311,14 +254,6 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
     atomicWriteJson(profilePackageFile, profilePackage)
   }
   return { plugin, version, installedPackage, profilePackageFile }
-}
-
-function exactObject(value, expected) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
-  const keys = Object.keys(value).sort()
-  const expectedKeys = Object.keys(expected).sort()
-  return keys.length === expectedKeys.length
-    && keys.every((key, index) => key === expectedKeys[index] && value[key] === expected[key])
 }
 
 /** Copy a file when the source exists; never overwrite an existing target. */
@@ -430,6 +365,12 @@ export function provisionAgentHome(home, workspace, options = {}) {
   if (def === undefined) {
     throw new Error(`provisionAgentHome: unknown agent profile ${JSON.stringify(profile)} (known: ${Object.keys(AGENT_PROFILE_DEFS).join(', ')})`)
   }
+  // Validate the domain binding before any home/profile/seed side effect.
+  const bound = options.subscription
+  if (bound?.artifactBinding) verifyPluginProvisioningInputs({ ...bound, version: bound.pluginVersion }, {
+    ...options, packageArtifact: bound.packageArtifact, sourceStamp: bound.sourceStamp,
+    deploymentRoot: deploymentRootOfAgentHome(home),
+  })
   // A freshly provisioned Agent-owned home starts private. Existing homes are
   // never chmodded here: an operator-owned 0755 home remains a fail-loud
   // activation prerequisite rather than being mutated implicitly.
@@ -463,6 +404,7 @@ export function provisionAgentHome(home, workspace, options = {}) {
       version: subscription.pluginVersion,
       sourceCommit: subscription.sourceCommit,
       artifactSha256: subscription.artifactSha256,
+      ...(subscription.artifactBinding === undefined ? {} : { artifactBinding: subscription.artifactBinding }),
       dshVersion: subscription.dshVersion,
       dshCommit: subscription.dshCommit,
     }, {

@@ -71,7 +71,7 @@ import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
 import { appendRestartBoundaryReceipt, collectRuntimeRestartCensus } from './restart-boundary.js'
-import { loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
+import { loadAgentModelOverrides, canonicalDefaultGlobalRoute, createModelArtifactContext } from './model-overrides.js'
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
   mountNotificationIngressRuntime,
@@ -246,6 +246,7 @@ export async function composeProductionRuntime(options = {}) {
   // never reads the file or learns provider/model rules.
   // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
   // canonical built-in default (GPT Luna as a complete subscription route).
+  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
   const globalRouteSource = opts.globalRoute !== undefined
     ? 'composition_config'
     : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
@@ -256,16 +257,15 @@ export async function composeProductionRuntime(options = {}) {
       provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
       model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
     }
-    : canonicalDefaultGlobalRoute()))
+    : canonicalDefaultGlobalRoute(modelLoadOptions)))
   log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  // FLEET_SHARED_CODEX_AUTH amendment A2 via CTR-ACT2-001's anticipated
-  // minimal compose adjustment: the runtime's own deployment root pins the
-  // accepted shared credentialFile reference to THIS surface's canonical —
-  // a foreign domain's lineage fails closed at load.
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { deploymentRoot: layout.root })
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, { deploymentRoot: layout.root })
+  // Reconciliation A2/A4: the runtime root binds its own credential and
+  // immutable artifact identity at startup and subsequent process boundaries.
+  // A foreign domain or changed artifact fails closed at load.
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
