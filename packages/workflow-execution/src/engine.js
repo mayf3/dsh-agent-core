@@ -428,6 +428,7 @@ export function createWorkflowExecutionEngine({
   let ticking = false
   let stopped = false
   let inflight = null
+  let startupReconcile = null
   async function tick() {
     if (ticking) return
     ticking = true
@@ -443,6 +444,12 @@ export function createWorkflowExecutionEngine({
     }
   }
   function trackedTick() {
+    // T42 r2: a busy tick starts NO work — the previous poll still owns the
+    // drain. Return the active drain promise instead of letting this no-op
+    // tick clobber (and instantly clear) the attribution: pre-r2, inflight
+    // was overwritten with the busy no-op promise, stop() saw nothing
+    // running, and the real poll continued unsupervised past shutdown.
+    if (ticking) return inflight ?? Promise.resolve()
     const running = tick()
     inflight = running
     return running.finally(() => { if (inflight === running) inflight = null })
@@ -473,7 +480,13 @@ export function createWorkflowExecutionEngine({
     /** Arm the interval loop (+ one immediate reconcile catch-up). */
     start({ intervalMs = DEFAULT_POLL_INTERVAL_MS, catchup = true } = {}) {
       if (timer !== undefined) return
-      if (catchup) void reconcileOnce().catch((error) => log.error?.(`workflow-execution: startup reconcile failed: ${error?.message ?? error}`))
+      if (catchup) {
+        // T42 r2: the startup reconcile is drain-owned like any poll pass —
+        // tracked so stop() awaits it (pre-r2 it was void fire-and-forget
+        // outside drain ownership).
+        startupReconcile = reconcileOnce().catch((error) => log.error?.(`workflow-execution: startup reconcile failed: ${error?.message ?? error}`))
+        startupReconcile.finally(() => { startupReconcile = null })
+      }
       timer = setInterval(() => { void trackedTick() }, intervalMs)
       timer.unref?.()
       log.log?.(`workflow-execution: poll loop armed (intervalMs=${intervalMs})`)
@@ -484,9 +497,13 @@ export function createWorkflowExecutionEngine({
         timer = undefined
       }
       stopped = true
-      // DSH_SHUTDOWN_CONTRACT: await in-flight work; stopped prevents further page fetches.
-      const draining = inflight
-      if (draining) return draining.catch(() => {})
+      // Bounded drain (CTR — DSH_SHUTDOWN_CONTRACT; r2 per T42): await every
+      // outstanding engine operation — the active poll pass AND the startup
+      // reconcile (previously void fire-and-forget outside drain ownership).
+      // Without either this resolves immediately. Callers that await stop()
+      // get a truthful "nothing is still running" result.
+      const draining = [inflight, startupReconcile].filter(Boolean)
+      if (draining.length) return Promise.all(draining.map((p) => p.catch(() => {})))
       return Promise.resolve()
     },
     snapshot: () => ledger.snapshot(),
