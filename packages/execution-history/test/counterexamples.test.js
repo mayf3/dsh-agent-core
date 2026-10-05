@@ -11,7 +11,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -79,10 +79,13 @@ test('二-1 an occurrence-scoped query never mixes sibling runs when the authori
     // the coordinate-less row.
     const invocationRefs = r.timeline.filter((e) => e.kind === 'evidence_invocation').map((e) => e.nativeRefs.occurrenceId ?? e.data?.occurrenceId)
     assert.deepEqual(invocationRefs, [OCC_ID])
-    // The naming join is honestly weak and its FROM side is the query
-    // coordinate (not an observed store row).
-    const r5Join = r.correlations.find((c) => c.rule === 'R5')
-    assert.equal(r5Join?.strength, 'WEAK_NAME_JOIN')
+    // CTR-SCT-007: the join is DERIVED_EXACT only because the journal itself
+    // was located (existence proof); the ledger-absent world keeps the FROM
+    // side honest — the query coordinate, not an observed store row.
+    // (Locate the SESSION join specifically: the run_record's wake_sent links
+    // are also rule R5 but carry no session strength.)
+    const r5Join = r.correlations.find((c) => c.rule === 'R5' && String(c.to?.nativeRef).startsWith('agt_hr/'))
+    assert.equal(r5Join?.strength, 'DERIVED_EXACT')
     assert.equal(r5Join?.from?.source, 'query_coordinate')
   } finally { destroyFixtureRoot(fixture) }
 })
@@ -150,4 +153,131 @@ test('三-2 loss is claimed only when structurally provable: rotations visible +
   const withArchive = await messageProbe(auditWorld({ withLive: true, withDot1: true, withArchive: true }))
   assert.ok(!withArchive.gaps.some((g) => g.code === 'RETENTION_LOSS_PRE_V1'), 'with an archive, a plain miss is a correlation gap, not a loss claim')
   assert.ok(withArchive.gaps.some((g) => g.code === 'CORRELATION_GAP' && g.stage === 'asm_audit'))
+})
+
+// ── T3c (fresh exact-head review): not_created never joins a planted journal ─
+
+test('T3c: a not_created occurrence NEVER joins a canonical journal planted on disk — no SessionRef, no R5', async () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const OCC_PRE = 'occ:003a05ed6629aaaa'
+    const store = JSON.parse(readFileSync(fixture.paths.jobsStore, 'utf8'))
+    store.occurrences.push({
+      occurrenceId: OCC_PRE, jobId: JOB_ID, agentId: 'agt_hr', scheduleRevision: 1,
+      state: 'failed', executionOutcome: 'failed', deliveryStatus: 'none',
+      nativeSessionId: 'cron-run-occ:003a05ed6629aaaa',
+      terminalEvidence: { kind: 'pre-start-rejection', code: 'AGENT_NOT_FOUND' },
+      admittedAt: 1758100000000 + 3000, updatedAtMs: 1758100000000 + 3100,
+    })
+    writeFileSync(fixture.paths.jobsStore, JSON.stringify(store))
+    const runsPath = join(fixture.paths.historyDir, 'runs-202609.json')
+    const runs = JSON.parse(readFileSync(runsPath, 'utf8'))
+    runs.records.push({
+      run_id: `run:${OCC_PRE}`, occurrence_id: OCC_PRE, job_id: JOB_ID, agent_id: 'agt_hr',
+      session_id: 'cron-run-occ:003a05ed6629aaaa', outcome: 'failed', status_view: 'failed',
+      error_code: 'AGENT_NOT_FOUND', delivery_status: 'none',
+      result: { final_status: 'FAIL', counters: {}, notes: '' },
+    })
+    writeFileSync(runsPath, JSON.stringify(runs, null, 2) + '\n')
+    // Adversarial world: a canonical cron-run journal for the rejected
+    // occurrence PHYSICALLY EXISTS in the owner's tree (pre-created / foreign
+    // artifact). The ledger's not-created proof must win: no journal search,
+    // no session record, no R5 — the trace never contradicts its own
+    // authoritative disposition (CTR-SCT-003/007).
+    const hrSessions = join(fixture.paths.homesRoot, 'agt_hr', 'sessions')
+    const plantedDir = join(hrSessions, readdirSync(hrSessions)[0], 'cron-run-occ~003A003a05ed6629aaaa')
+    mkdirSync(plantedDir, { recursive: true })
+    writeFileSync(join(plantedDir, 'session.jsonl'), [
+      JSON.stringify({ type: 'session', version: 0, id: 'cron-run-occ:003a05ed6629aaaa', createdAt: 1758100000500, cwd: '/tmp/hr' }),
+      JSON.stringify({ type: 'user/message', seq: 1, time: new Date(1758100000510).toISOString(), data: { content: 'planted artifact', source: { kind: 'user' } } }),
+    ].join('\n') + '\n')
+    const outcome = await queryExecutionTrace({
+      root: 'scheduler_run', args: { occurrenceId: OCC_PRE }, viewer: { agentId: 'agt_hr', audit: false }, paths: fixture.paths,
+    })
+    assert.equal(outcome.ok, true)
+    const r = outcome.result
+    assert.ok(!r.timeline.some((e) => e.source === 'session_journal'), 'the planted journal never becomes a session record')
+    assert.ok(!r.correlations.some((c) => c.rule === 'R5' && String(c.to.nativeRef).startsWith('agt_hr/')), 'no R5 correlation for a not_created occurrence')
+    const occurrence = r.timeline.find((e) => e.kind === 'occurrence')
+    assert.ok(occurrence, 'occurrence surfaced')
+    assert.equal(occurrence.data.sessionCreated, 'not_created', 'the ledger disposition stands')
+    assert.ok(!r.gaps.some((g) => g.stage === 'session_journal'), 'not_created suppresses the journal gap — nothing is missing')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+// ── 五 tip-head review conformance closures (PR #318 @ 8e639e9a, 2026-09-24) ──
+// The four open P2 findings at the final reviewed implementation head, each a
+// conformance gap against the FROZEN CTR-SCT-002 contract text (never a
+// semantic expansion): deterministic/exhaustive keyset pagination, the frozen
+// `history_unavailable` vocabulary, the A3 symlink-skip rule, and the frozen
+// `local: {resource: 'execution-history'}` manifest identity (asserted in
+// broker-manifest-registration.test.js).
+
+import { chmodSync, symlinkSync, utimesSync } from 'node:fs'
+import { listAgentSessions } from '../src/index.js'
+
+function plantListingJournal(homesRoot, agentId, projectKey, sessionDir, id, createdAt, mtimeMs) {
+  const dir = join(homesRoot, agentId, 'sessions', projectKey, sessionDir)
+  mkdirSync(dir, { recursive: true })
+  const file = join(dir, 'session.jsonl')
+  writeFileSync(file, [
+    JSON.stringify({ type: 'session', version: 0, id, createdAt, cwd: '/x' }),
+    JSON.stringify({ type: 'user/message', seq: 1, time: new Date(createdAt + 1).toISOString(), data: { content: 'hi' }, source: { kind: 'user' } }),
+  ].join('\n') + '\n')
+  utimesSync(file, mtimeMs / 1000, mtimeMs / 1000)
+  return file
+}
+
+test('五-1 an unreadable newest journal is skipped WITHOUT consuming a page slot — older readable sessions stay reachable', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const homes = fixture.paths.homesRoot
+    const now = Date.now()
+    const newest = plantListingJournal(homes, 'agt_a', '--p--', 'cron-run-new', 'cron-run-new', now + 60_000, now + 60_000)
+    plantListingJournal(homes, 'agt_a', '--p--', 'plain-old', 'plain-old', now + 30_000, now + 30_000)
+    chmodSync(newest, 0o000)
+    try {
+      const page = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a', limit: 1 })
+      assert.equal(page.ok, true)
+      assert.equal(page.result.sessions.length, 1, 'the page fills from the next readable candidate')
+      assert.equal(page.result.sessions[0].sessionId, 'plain-old', 'the unreadable newest journal did not strand the older session behind an empty page')
+      assert.equal(page.result.truncated, true, 'the skipped journal stays visible coverage loss')
+      assert.ok(page.result.nextCursor, 'a live cursor exists while readable candidates remain behind the skipped one')
+      // The cursor composes: the next page reaches the candidates behind the
+      // unreadable one — nothing older is stranded (deterministic keyset).
+      const next = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a', limit: 1, cursor: page.result.nextCursor })
+      assert.equal(next.ok, true)
+      assert.equal(next.result.sessions.length, 1, 'the following page yields the next readable session')
+      assert.equal(next.result.sessions[0].sessionId, 'main', 'the fixture journal behind the skipped one is reachable')
+    } finally { chmodSync(newest, 0o644) }
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('五-2 a homes root that is not a readable directory is history_unavailable — never a fabricated empty listing', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const notADir = join(fixture.paths.homesRoot, 'not-a-dir')
+    writeFileSync(notADir, 'a regular file, not the homes root')
+    const out = listAgentSessions({ homesRoot: notADir, viewerAgentId: 'agt_a' })
+    assert.equal(out.ok, false)
+    assert.equal(out.code, 'history_unavailable', 'a storage/configuration outage is surfaced, not masked as "no sessions"')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('五-3 a symlinked session.jsonl is skipped before resolution — an in-tree target is never listed twice', () => {
+  const fixture = buildFixtureRoot()
+  try {
+    const homes = fixture.paths.homesRoot
+    const now = Date.now()
+    const realJournal = plantListingJournal(homes, 'agt_a', '--p--', 'solo-real', 'solo-real', now + 60_000, now + 60_000)
+    const aliasDir = join(homes, 'agt_a', 'sessions', '--p--', 'solo-alias')
+    mkdirSync(aliasDir, { recursive: true })
+    symlinkSync(realJournal, join(aliasDir, 'session.jsonl'))
+    const out = listAgentSessions({ homesRoot: homes, viewerAgentId: 'agt_a' })
+    assert.equal(out.ok, true)
+    const ids = out.result.sessions.map((s) => s.sessionId)
+    assert.equal(ids.filter((id) => id === 'solo-real').length, 1, 'the real journal is listed exactly once')
+    assert.ok(!ids.includes('solo-alias'), 'the symlink alias never becomes a row (A3: symlink journals are skipped, never resolved)')
+    assert.equal(out.result.anomalies.idMismatch, 0, 'the alias leaves no anomaly residue')
+  } finally { destroyFixtureRoot(fixture) }
 })

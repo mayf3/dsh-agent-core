@@ -100,11 +100,13 @@ export function resolveProductionLayout(rootInput) {
     schedulerIncidentState: join(root, 'control', 'scheduler-watchdog', 'incidents.json'),
     schedulerLocalOpsSink: join(root, 'control', 'scheduler-watchdog', 'local-ops.jsonl'),
     workflowExecutionDir: join(root, 'workflow-execution'),
+    developmentExecutionDir: join(root, 'dev-execution'),
     workspacesRoot: join(root, 'workspaces'),
     homesRoot: join(root, 'homes'),
     controlDir: join(root, 'control'),
     turnRecoveryStore: join(root, 'control', 'turn-recovery-v3.json'),
     evidenceLog: join(root, 'control', 'runtime-evidence.jsonl'),
+    restartBoundaryLog: join(root, 'control', 'restart-boundary.jsonl'),
     logsDir: join(root, 'logs'),
   }
 }

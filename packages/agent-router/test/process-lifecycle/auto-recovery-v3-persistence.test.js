@@ -9,6 +9,21 @@ import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
 import { createIngressDelivery } from '../../src/ingress-delivery.js'
 import { RECONCILIATION_CAPS } from '../../src/reconciliation/capacity.js'
 import { makeFx } from './helpers.js'
+import { proofFixture } from '../helpers/restart-quiescence-fixture.js'
+
+test('RQ-009 verified startup proof survives the real durable validator without inventing child exit', (t) => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  const restarted = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  assert.equal(restarted.consumeStartupQuiescence({
+    evidenceDir: fx.evidenceDir, deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io,
+  })[0].status, 'settled')
+  const again = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'later-epoch' })
+  assert.equal(again.businessAdmissionStatus().ready, true)
+  const record = again.getTurnReconciliation(fx.handle)
+  assert.equal(record.state, 'settled')
+  assert.equal(record.snapshot.terminationEvidence, 'restart_quiescence_proven')
+  assert.equal(record.snapshot.exitObservedAt, null)
+})
 
 test('V3 durable unknown reservation and fence survive a store reopen', () => {
   const root = mkdtempSync(join(tmpdir(), 'agent-core-recovery-v3-'))

@@ -26,6 +26,7 @@ const ROUTER_DISPOSITIONS = new Set([
 ])
 const ROUTER_TERMINATION_EVIDENCE = new Set([
   'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',
+  'restart_quiescence_proven',
 ])
 
 export function opaqueDenied() {

@@ -42,6 +42,15 @@ export function fencedRejection(fenceHandle) {
     `agent ${fenceHandle === undefined ? 'process' : 'process'} has an unresolved outcome_unknown turn; new prompt admission is forbidden until termination is proven`, { fencedBy: fenceHandle ?? null })
 }
 
+/** Final prompt and queue gates share the same admission-blocker check. */
+export function promptFenceError(store, agentId) {
+  const fence = typeof store.admissionBlockerForAgent === 'function'
+    ? store.admissionBlockerForAgent(agentId) : store.activeFenceForAgent?.(agentId)
+  return fence
+    ? Object.assign(fencedRejection(fence.handle), store.recoveryDiagnostic?.(fence.handle) ?? {})
+    : null
+}
+
 export function assertPositiveSafeDeadline(field, value) {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value <= 0) {
     throw new Error(`AgentProcess: deadline ${field} must be a positive safe integer (got ${JSON.stringify(value)}) — validated fail-loud before spawn`)

@@ -28,7 +28,8 @@
  * declared because the resource is consulted only for the grant check.
  *
  * The manifest is PURE DATA; the classification lives in the TRUSTED
- * handler (packages/production-runtime/src/agent-directory.js), which is
+ * handler (packages/agent-identity-capabilities/src/agent-directory.js),
+ * which is
  * the validation authority — the gateway performs no argument-schema
  * re-validation for local non-scheduler capabilities, so the schemas here
  * are the model-facing hint plus defense-in-depth (`additionalProperties:

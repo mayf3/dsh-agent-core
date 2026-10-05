@@ -276,7 +276,7 @@ export class HistoryStore {
   }
 
   /** late_settlement — trusted late evidence or operator reconcile. */
-  async lateSettlement({ record, resolvedTo, basis, note, operatorIdentity }) {
+  async lateSettlement({ record, resolvedTo, basis, note, operatorIdentity, terminalEvidence }) {
     if (!record?.occurrenceId) throw new TypeError('HistoryStore.lateSettlement: record identity is required')
     if (resolvedTo !== 'succeeded' && resolvedTo !== 'failed') {
       throw new TypeError('HistoryStore.lateSettlement: resolvedTo must be succeeded|failed')
@@ -287,6 +287,11 @@ export class HistoryStore {
         ts, type: 'late_settlement', resolved_to: resolvedTo, basis,
         note: truncateError(note),
         operator_username: operatorIdentity?.username ?? null,
+        // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 (S1/G1): persist the
+        // terminal-evidence classification (e.g. pre-start-rejection when the
+        // late result proves the turn never started) so the durable history
+        // answer survives occurrence-ledger rotation.
+        terminal_evidence: terminalEvidence ?? null,
         occurrence_id: record.occurrenceId, run_id: record.runId, job_id: record.jobId,
         ended_at_ms: ts,
       })

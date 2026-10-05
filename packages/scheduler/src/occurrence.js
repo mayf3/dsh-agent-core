@@ -24,6 +24,8 @@ import {
   hasTerminationProof,
   TIMEOUT_ERROR_TEXT,
 } from './self-ops/invoker-outcome.js'
+import { classifyRouter, requestIdFor } from './self-ops/diagnosis.js'
+import { dispatchReconciliation, RECONCILIATION_RESULTS } from './watchdog/reconciliation.js'
 
 export { TIMEOUT_ERROR_TEXT }
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
@@ -222,6 +224,10 @@ export async function invokeWithDeadline(record, job) {
     occurrenceId: record.occurrenceId,
     runId: record.runId,
     requestId: record.idempotencyKey,
+    // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-005: one-field
+    // additive plumb so the invocation evidence writer can record the job
+    // coordinate (occurrenceId/runId/requestId are already on the request).
+    jobId: job.id ?? job.jobId,
     payloadHash: record.payloadHash,
     message: job.payload.message,
     model: job.payload.model,
@@ -350,11 +356,18 @@ export async function watchLateSettlement(record, invocationPromise) {
         || outcome.routerEnvelope === 'not_admitted'
         || hasTerminationProof(outcome))
     if (provenFailure) {
+      // S1 (SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 closure): a late result
+      // proving the turn NEVER STARTED is a proven pre-start terminal
+      // rejection in the OCCURRENCE_OUTCOME_V3 taxonomy — it must be recorded
+      // as such, not as a generic late-settlement, so session projections can
+      // suppress the never-created session id (SC-1).
+      const provenPreStart = outcome.routerEnvelope === 'not_admitted' || outcome.started === false
       await this._applyLateSettlement(
         record,
         'failed',
         `invoker late proven terminal failure after timeout: ${outcome.error ?? ''}`,
         outcome,
+        provenPreStart ? 'pre-start-rejection' : 'late-settlement',
       )
     }
   } catch {
@@ -368,7 +381,7 @@ export async function watchLateSettlement(record, invocationPromise) {
  * recognition, the C-004 envelope classification and the settlement writer).
  */
 
-export async function applyLateSettlement(record, resolvedTo, note, outcome = {}) {
+export async function applyLateSettlement(record, resolvedTo, note, outcome = {}, terminalEvidenceKind = 'late-settlement') {
   const resolvedAt = this.nowMs()
   const lateEvidence = {
     requestId: record.idempotencyKey,
@@ -379,7 +392,7 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
   }
   const evidenceRef = `invoker late settlement ${JSON.stringify(lateEvidence)}`
   try {
-    const { doc } = await this.store.mutateDoc((latest) => {
+    const { doc, value } = await this.store.mutateDoc((latest) => {
       const current = findOccurrenceById(latest.occurrences, record.occurrenceId)
       if (!current || current.runId !== record.runId
         || current.state !== 'outcome_unknown' || current.lateSettlement !== undefined) return {}
@@ -395,11 +408,24 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
           basis: 'trusted-late-evidence',
           evidenceRef,
         },
-        terminalEvidence: { kind: 'late-settlement', detailRef: note },
+        terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
       })
       latest.fences = rebuildFences(latest.occurrences)
+      // The disposition must be captured BEFORE applyLateCompletion: a
+      // succeeded one-shot (deleteAfterRun) is spliced out of the job list
+      // there, and the receipt must still state its true disposition.
+      const settledJob = latest.jobs.find((entry) => entry.id === current.jobId)
+      const oneShot = settledJob?.schedule?.kind === 'at'
       applyLateCompletion(latest, current, resolvedAt)
-      return {}
+      // C11-R3 (Product #426 Owner usability invariant): the receipt fields
+      // for the evidence line — never a replay, the schedule disposition,
+      // and the recomputed future-natural next run.
+      return {
+        value: {
+          scheduleDisposition: oneShot ? 'one_shot_disabled' : 'recurring_future_natural_only',
+          nextRunAtMsAfter: settledJob?.state?.nextRunAtMs ?? null,
+        },
+      }
     })
     this.doc = doc
     await this._evidence({
@@ -412,16 +438,109 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
       note,
       evidenceRef,
       evidence: lateEvidence,
+      ...(value === undefined ? {} : {
+        replayOccurrence: false,
+        scheduleDisposition: value.scheduleDisposition,
+        nextRunAtMsAfter: value.nextRunAtMsAfter,
+      }),
     })
     await this._historyWrite('lateSettlement', {
       record: structuredClone(record),
       resolvedTo,
       basis: 'trusted-late-evidence',
       note,
+      // S1/G1: the classification travels with the durable history so the
+      // session answer survives occurrence-ledger rotation.
+      terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
     })
   } catch (error) {
     this.log.error(`late settlement failed for ${record.occurrenceId}: ${error?.message ?? error}`)
   }
+}
+
+/**
+ * C11-R1 (Product #417): the production call site of the accepted
+ * CTR-RECON-001 settlement dispatch (SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_
+ * OCCURRENCE_RECOVERY_V1). The periodic tick consults the same published
+ * `resolveCallerCorrelation` surface the self-ops consume for every
+ * unresolved unknown in the ledger, builds the exact trusted evidence, and
+ * lets dispatchReconciliation route it in its fixed order: a trusted exact
+ * late business outcome settles through the V3 trusted-late-evidence late
+ * settlement, a trusted termination-only readback through the C-039 engine
+ * settlement; live or quarantined evidence stays zero-write. Consults are
+ * rate-limited per occurrence in memory (per engine session — a restart
+ * re-consults, which the settle-once mutations make idempotent).
+ */
+export async function reconcileTrustedReadbacks({ nowMs = this.nowMs() } = {}) {
+  const resolveCallerCorrelation = this.reconciliationReadback
+  if (typeof resolveCallerCorrelation !== 'function') return []
+  const jobs = new Set(this.doc.jobs.map((job) => job.id))
+  const unknowns = this.doc.occurrences
+    .filter((record) => isUnresolvedUnknown(record) && jobs.has(record.jobId))
+    .sort((a, b) => (a.admittedAt ?? 0) - (b.admittedAt ?? 0))
+  for (const [occurrenceId, consultedAt] of this._reconcileConsultAt) {
+    if (nowMs - consultedAt >= this.reconcileConsultIntervalMs) this._reconcileConsultAt.delete(occurrenceId)
+  }
+  const settled = []
+  for (const record of unknowns) {
+    if (settled.length >= 20) break
+    const lastConsultedAt = this._reconcileConsultAt.get(record.occurrenceId)
+    if (lastConsultedAt !== undefined && nowMs - lastConsultedAt < this.reconcileConsultIntervalMs) continue
+    this._reconcileConsultAt.set(record.occurrenceId, nowMs)
+    const outcome = await settleFromReadback(this, record, resolveCallerCorrelation, nowMs)
+    if (outcome !== null) settled.push({ occurrenceId: record.occurrenceId, jobId: record.jobId, ...outcome })
+  }
+  return settled
+}
+
+/** One trusted readback → CTR-RECON-001 dispatch for one exact occurrence. */
+async function settleFromReadback(engine, record, resolveCallerCorrelation, nowMs) {
+  const requestId = requestIdFor(record)
+  let readbackResult
+  try {
+    readbackResult = await resolveCallerCorrelation({
+      occurrenceId: record.occurrenceId,
+      runId: record.runId,
+      requestId,
+    })
+  } catch (error) {
+    engine.log.warn(`reconciliation readback failed for ${record.occurrenceId}: ${error?.message ?? error} — zero-write`)
+    return null
+  }
+  // The exact trusted classification the self-ops use, against the
+  // occurrence's own owner identity — never a caller-supplied one.
+  const classified = classifyRouter(readbackResult, record, record.ownerAgentId)
+  const identity = { jobId: record.jobId, occurrenceId: record.occurrenceId, runId: record.runId, epoch: requestId }
+  const exact = (value) => ({ trusted: true, fresh: true, source: 'router-current-readback', ...identity, observedAt: nowMs, ...value })
+  const evidence = classified.disposition === 'late_completed' ? { identity, businessOutcome: exact({ status: 'succeeded' }) }
+    : classified.disposition === 'late_failed' ? { identity, businessOutcome: exact({ status: 'failed' }) }
+      : classified.disposition === 'terminated_without_outcome' ? { identity, termination: exact({ terminated: true }) }
+        : classified.disposition === 'pending' ? { identity, live: exact({ live: true }) }
+          : { identity }
+  const dispatched = await dispatchReconciliation({
+    evidence,
+    nowMs,
+    settleBusiness: async ({ classification }) => {
+      await engine._applyLateSettlement(
+        record,
+        classification === RECONCILIATION_RESULTS.RECONCILED_SUCCESS ? 'succeeded' : 'failed',
+        `trusted router readback: exact late business outcome (${classified.disposition})`,
+        { reconciliationHandle: classified.handle, evidence: { source: 'router-current-readback' } },
+      )
+    },
+    settleTermination: async () => {
+      // The same accepted proof shape the bridge stamps from this readback
+      // surface (source 'router_disposition_readback' + trusted evidence
+      // kind) — applyTrustedTermination re-recognizes it, settle-once.
+      await engine._applyTrustedTermination(record, {
+        reconciliationHandle: classified.handle,
+        evidence: { source: 'router_disposition_readback', terminationEvidence: classified.snapshot?.terminationEvidence },
+      })
+    },
+  })
+  if (dispatched.path === 'business-outcome') return { classification: dispatched.classification }
+  if (dispatched.path === 'termination-only') return { classification: 'TERMINATION_ONLY_SETTLED' }
+  return null
 }
 
 export async function appendOccurrenceEvidence(event) {
@@ -474,6 +593,7 @@ export const occurrenceEngineMethods = {
   _watchLateSettlement: watchLateSettlement,
   _applyLateSettlement: applyLateSettlement,
   _applyTrustedTermination: applyTrustedTermination,
+  _reconcileTrustedOutcomes: reconcileTrustedReadbacks,
   _evidence: appendOccurrenceEvidence,
   _historyWrite: writeToHistory,
   _writeTerminalHistory: writeTerminalToHistory,

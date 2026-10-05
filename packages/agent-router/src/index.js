@@ -67,7 +67,7 @@
  */
 
 import z from '@deepseek-ai/schemastery'
-import { homedir } from 'node:os'
+import { homedir, hostname } from 'node:os'
 import { join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
@@ -121,6 +121,10 @@ export const Config = z.object({
   /** Optional absolute V3 durable turn-recovery authority file. Production
    *  composition always supplies it; isolated legacy mounts remain in-memory. */
   reconciliationStoreFile: z.string(),
+  /** Root-custody recovery input remains inert unless separately bootstrapped
+   *  launcher descriptors and matching deployment proof are present. */
+  restartQuiescenceEvidenceDir: z.string(),
+  restartQuiescenceDeploymentProofDir: z.string(),
   // Runtime-only option (not in the schema — Config is documentation here):
   // `processFactory(opts) => proc` — per-agent process factory (test/ops
   // seam, defaults to AgentProcess). The proc must expose `spawn()`,
@@ -180,8 +184,13 @@ export function apply(ctx, config) {
 
   const storeFile = cfg.bindingsStoreFile ?? defaultBindingsStoreFile()
   const store = new BindingStore({ storeFile })
+  const recoveryFile = typeof cfg.reconciliationStoreFile === 'string'
+    && cfg.reconciliationStoreFile !== '' ? cfg.reconciliationStoreFile : null
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
-  const processFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+  const authenticatedIngressOpts = new WeakMap()
+  const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
+  const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup })
   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
     ? cfg.resolveProcessConfig
     : () => ({})
@@ -223,11 +232,25 @@ export function apply(ctx, config) {
    * The Router reconciliation store — the SINGLE query authority for late
    * turn reconciliation (C-018). One store per control-plane runtime epoch.
    */
-  const reconciliationStore = new TurnReconciliationStore({
-    persistenceFile: typeof cfg.reconciliationStoreFile === 'string' && cfg.reconciliationStoreFile !== ''
-      ? cfg.reconciliationStoreFile
-      : null,
-  })
+  const reconciliationStore = new TurnReconciliationStore({ persistenceFile: recoveryFile })
+  // RQ-005/007: privileged launcher authority has not been bootstrapped in a
+  // plain-process startup. Environment values cannot establish its nonce,
+  // binary, or live FDs; this production composition is deliberately
+  // incapable of settlement while the configured evidence directory exists.
+  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+    reconciliationStore.consumeStartupQuiescence({
+      evidenceDir: cfg.restartQuiescenceEvidenceDir,
+      deploymentDir: cfg.restartQuiescenceDeploymentProofDir,
+      startup: {
+        hostId: hostname(),
+        startupNonce: undefined,
+        consumingBinarySha256: undefined,
+        windowFd: undefined,
+        challengeFd: undefined,
+        recoveryPlanStopsRuntime: undefined,
+      },
+    })
+  }
 
   const bindingResolution = createBindingResolution({ agentDefinition, workspaceBootstrap, store, cfg, log })
   const registry = createProcessRegistry({
@@ -274,6 +297,7 @@ export function apply(ctx, config) {
     resolveAgentById: (agentId) => agentDefinition.getAgent(agentId),
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
     resolveEffectiveWorkspace: bindingResolution.resolveEffectiveWorkspace,
+    registerAuthenticatedIngress: (opts, correlation) => authenticatedIngressOpts.set(opts, correlation),
   })
 
   log.log(`binding store loaded: ${store.list().length} binding(s) from ${storeFile}`)
@@ -281,7 +305,7 @@ export function apply(ctx, config) {
 
   // Bind the channel ingress (feishu-connector only forwards addressed events).
   if (feishu !== undefined) {
-    feishu.setCallback(ingressDelivery.onIngress)
+    feishu.setCallback(ingressDelivery.onAuthenticatedFeishuIngress)
     log.log(`feishu channel bound; default binding -> ${bindingResolution.resolveDefaultAgent().id} + session ${cfg.defaultSessionId}`)
   } else {
     log.log('feishu channel not present; router idle (entry-agnostic domain surface ready)')
@@ -322,6 +346,18 @@ export function apply(ctx, config) {
     freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */
     deliveriesSnapshot: () => ingressDelivery.deliveriesSnapshot(),
+    /** HR_RESET_AND_RESUME_V1 admin surface: explicit controlled abandonment
+     *  of an Agent's stuck outcome_unknown turns; unblocks NEW-request
+     *  admission only (records stay fenced/unknown; no replay). */
+    abandonPendingTurns: ingressDelivery.abandonPendingTurns,
+    /** HR_RESET_AND_RESUME_V1 read projection: the Agent's durable
+     *  abandonment declarations (non-consuming; authenticated admin entry). */
+    abandonmentDeclarationsSnapshot: (agentId) => reconciliationStore.adminAbandonmentsForAgent?.(agentId) ?? [],
+    /** HR_RESET_AND_RESUME_V1 entry-gate projection: the Agent's first stuck
+     *  fence record WITHOUT durable exit/termination evidence (restart-lost
+     *  class) — the authenticated admin entry fails closed on it, because an
+     *  EMPTY lifecycle slot after a restart is not termination evidence. */
+    stuckFenceWithoutDurableExitEvidenceForAgent: (agentId) => reconciliationStore.stuckFenceWithoutDurableExitEvidenceForAgent?.(agentId) ?? null,
     ensureRunning: registry.ensureRunning,
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */
@@ -365,6 +401,7 @@ export function apply(ctx, config) {
       }
     },
     getRecoveryDiagnostic: (handle) => reconciliationStore.recoveryDiagnostic(handle),
+    getStartupQuiescenceAudit: () => structuredClone(reconciliationStore.startupQuiescenceAudit ?? []),
     onTurnReconciled: (listener) => reconciliationStore.onTurnReconciled(listener),
     turnExecutionSnapshot: (turnExecutionId) => {
       const owner = registry.findOwningProcess(turnExecutionId)

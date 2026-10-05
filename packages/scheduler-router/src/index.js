@@ -48,6 +48,7 @@ const TERMINATION_EVIDENCE = new Set([
   'exact_queued_removal',
   'child_real_exit',
   'cancellation_ack',
+  'restart_quiescence_proven',
 ])
 
 /** Parse an opaque scheduler delivery target `job.delivery.to` into a Feishu chat id. */

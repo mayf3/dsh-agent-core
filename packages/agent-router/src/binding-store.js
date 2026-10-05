@@ -58,6 +58,12 @@
  * channel conversations), is optional in the document (absent = empty
  * table) and needs no format version bump.
  *
+ * `freshHrCutBinding` (optional top-level field) is LEGACY DURABLE BYTES: a
+ * completed historical lineage-cut receipt written by a retired runtime.
+ * The generic runtime keeps it loadable, integrity-checked (closed key set,
+ * self-digest, referenced-conversation existence) and byte-stable across
+ * persists; it never acts on its values and no code path writes a new one.
+ *
  * One row per (agentId, requestId): the first `fresh` delivery of a
  * requestId mints its session id (atomically, inside the mutation queue —
  * two concurrent first deliveries of the same requestId converge on ONE
@@ -69,7 +75,8 @@
  * selection, bookmark policy), the store only persists rows.
  */
 
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, rename, rm, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute } from 'node:path'
 
@@ -81,6 +88,51 @@ export const CORRUPT_STORE = 'CORRUPT_STORE'
 
 /** Error code thrown for invalid input. */
 export const VALIDATION_ERROR = 'VALIDATION_ERROR'
+
+const SHA256 = /^[a-f0-9]{64}$/
+const digestJson = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
+
+/**
+ * Legacy durable cut-binding compatibility (structural only). One completed
+ * historical lineage-cut operation left a `freshHrCutBinding` receipt and
+ * possibly `lineageOperationId` markers inside already-deployed store files.
+ * The runtime that wrote them is retired; this loader keeps the bytes
+ * loadable, integrity-checked and byte-stable across future persists WITHOUT
+ * knowing the incident's identities: the closed key set, string grammars,
+ * self-digest and the referenced-conversation integrity check are enforced,
+ * and any drift still fails the store load loud (CORRUPT_STORE). The values
+ * themselves (agent id, operation id, handles) are opaque here.
+ */
+function validateLegacyFreshCutBinding(suppliedCut, bindings) {
+  const cut = suppliedCut
+  const keys = ['bindingCutSha256', 'channelConversationId', 'newRuntimeEpoch',
+    'newSessionId', 'oldHandle', 'oldSessionId', 'operationId',
+    'preimageSha256', 'rootReceiptSha256']
+  if (cut === null || typeof cut !== 'object' || Array.isArray(cut)
+      || Object.keys(cut).sort().join(',') !== keys.sort().join(',')
+      || typeof cut.operationId !== 'string' || cut.operationId === ''
+      || typeof cut.oldHandle !== 'string' || !cut.oldHandle.startsWith('turn:')
+      || cut.oldHandle.length > 256
+      || typeof cut.newSessionId !== 'string' || cut.newSessionId === ''
+      || cut.newSessionId === cut.oldSessionId
+      || typeof cut.newRuntimeEpoch !== 'string' || cut.newRuntimeEpoch === ''
+      || typeof cut.oldSessionId !== 'string' || cut.oldSessionId === ''
+      || typeof cut.channelConversationId !== 'string'
+      || !cut.channelConversationId.startsWith('feishu:')
+      || !SHA256.test(cut.preimageSha256 ?? '')
+      || !SHA256.test(cut.rootReceiptSha256 ?? '')
+      || !SHA256.test(cut.bindingCutSha256 ?? '')
+      || digestJson({ channelConversationId: cut.channelConversationId,
+        operationId: cut.operationId, oldSessionId: cut.oldSessionId,
+        newSessionId: cut.newSessionId, newRuntimeEpoch: cut.newRuntimeEpoch,
+        oldHandle: cut.oldHandle, rootReceiptSha256: cut.rootReceiptSha256,
+        preimageSha256: cut.preimageSha256 }) !== cut.bindingCutSha256
+      || !bindings.has(cut.channelConversationId)) {
+    throw Object.assign(new Error('binding-store: invalid legacy Binding cut'),
+      { code: CORRUPT_STORE })
+  }
+  return { ...cut }
+}
 
 /**
  * One Binding row: which (Agent, Session) the ChannelConversation is
@@ -104,9 +156,11 @@ export const VALIDATION_ERROR = 'VALIDATION_ERROR'
  * One Delivery V0 fresh mapping: which native session a (agentId, requestId)
  * pair owns. The session id is minted by the router inside the store's
  * mutation queue (so the read-or-mint decision is atomic); the caller never
- * sees or chooses it.
+ * sees or chooses it. `lineageOperationId` is a legacy opaque marker that
+ * only loads from (and round-trips to) already-deployed store files; the
+ * runtime that minted such rows is retired and no current path creates one.
  * @typedef {{agentId:string, requestId:string, sessionId:string,
- *            createdAt:string}} FreshSessionRow
+ *            createdAt:string, lineageOperationId?:string}} FreshSessionRow
  */
 
 /**
@@ -141,6 +195,9 @@ export class BindingStore {
     this.lastSessions = new Map()
     /** @type {Map<string, Map<string, FreshSessionRow>>} agentId -> (requestId -> row) */
     this.freshSessions = new Map()
+    /** Legacy durable cut receipt (structural bytes; no runtime consumer). */
+    this.legacyFreshCutBinding = null
+    this.durablePersistUnknown = false
     this.queue = Promise.resolve()
     this.load()
   }
@@ -185,6 +242,9 @@ export class BindingStore {
         updatedAt: typeof row.updatedAt === 'string' ? row.updatedAt : this.now(),
       })
     }
+    if (document.freshHrCutBinding !== undefined) {
+      this.legacyFreshCutBinding = validateLegacyFreshCutBinding(document.freshHrCutBinding, this.bindings)
+    }
     // Optional bookmark table (absent in older documents = empty).
     if (document.lastSessions !== undefined) {
       if (typeof document.lastSessions !== 'object' || document.lastSessions === null) {
@@ -228,7 +288,10 @@ export class BindingStore {
         for (const [requestId, row] of Object.entries(perRequest)) {
           if (typeof row?.agentId !== 'string' || row.agentId === ''
               || typeof row.requestId !== 'string' || row.requestId === ''
-              || typeof row.sessionId !== 'string' || row.sessionId === '') {
+              || typeof row.sessionId !== 'string' || row.sessionId === ''
+              || (row.lineageOperationId !== undefined
+                && (typeof row.lineageOperationId !== 'string'
+                  || row.lineageOperationId === '' || row.lineageOperationId.length > 256))) {
             throw Object.assign(new Error(`binding-store: corrupt freshSessions entry ${JSON.stringify(agentId)}/${JSON.stringify(requestId)}`), {
               code: CORRUPT_STORE,
             })
@@ -238,6 +301,7 @@ export class BindingStore {
             requestId: row.requestId,
             sessionId: row.sessionId,
             createdAt: typeof row.createdAt === 'string' ? row.createdAt : this.now(),
+            ...(row.lineageOperationId === undefined ? {} : { lineageOperationId: row.lineageOperationId }),
           })
         }
         this.freshSessions.set(agentId, mappings)
@@ -253,15 +317,26 @@ export class BindingStore {
    * = failure" is impossible). The store file is only ever replaced
    * atomically, so a failed persist cannot corrupt the on-disk document.
    */
-  enqueue(fn) {
+  enqueue(fn, readback, { durable = false } = {}) {
     const run = this.queue.then(async () => {
+      if (this.durablePersistUnknown) {
+        throw Object.assign(new Error('binding-store: prior durable persist outcome unknown'),
+          { code: 'BINDING_STORE_PERSIST_UNKNOWN' })
+      }
       const snapshot = this.snapshot()
+      let persisted = false
       try {
         const result = await fn()
-        await this.persist()
+        await this.persist({ durable })
+        persisted = true
+        if (readback !== undefined) await readback(result)
         return result
       } catch (error) {
-        this.restore(snapshot)
+        // Once rename committed, a failed readback is UNKNOWN to this caller:
+        // leave RAM matching disk and force the startup consumer to stop.
+        if (error?.code === 'BINDING_STORE_PERSIST_UNKNOWN') {
+          this.durablePersistUnknown = true
+        } else if (!persisted) this.restore(snapshot)
         throw error
       }
     })
@@ -277,6 +352,7 @@ export class BindingStore {
       freshSessions: new Map([...this.freshSessions.entries()].map(
         ([agentId, perRequest]) => [agentId, new Map([...perRequest.entries()].map(([rid, row]) => [rid, { ...row }]))],
       )),
+      legacyFreshCutBinding: this.legacyFreshCutBinding === null ? null : { ...this.legacyFreshCutBinding },
     }
   }
 
@@ -285,10 +361,12 @@ export class BindingStore {
     this.bindings = snapshot.bindings
     this.lastSessions = snapshot.lastSessions
     this.freshSessions = snapshot.freshSessions
+    this.legacyFreshCutBinding = snapshot.legacyFreshCutBinding
   }
 
-  /** Atomic persist: write tmp, then rename over the store file. */
-  async persist() {
+  /** A durable persist syncs the file and parent directory before success.
+   * Post-rename sync failure is UNKNOWN, never a RAM rollback. */
+  async persist({ durable = false } = {}) {
     const document = {
       version: STORE_VERSION,
       bindings: Object.fromEntries([...this.bindings.entries()].map(([id, row]) => [id, { ...row }])),
@@ -303,13 +381,28 @@ export class BindingStore {
         [...this.freshSessions.entries()].map(([agentId, perRequest]) => [agentId, Object.fromEntries(perRequest)]),
       )
     }
+    if (this.legacyFreshCutBinding !== null) document.freshHrCutBinding = { ...this.legacyFreshCutBinding }
     await mkdir(dirname(this.storeFile), { recursive: true })
     const tmp = `${this.storeFile}.tmp`
+    let renamed = false
     try {
       await writeFile(tmp, `${JSON.stringify(document, null, 2)}\n`, { encoding: 'utf8' })
+      if (durable) {
+        const file = await open(tmp, 'r')
+        try { await file.sync() } finally { await file.close() }
+      }
       await rename(tmp, this.storeFile)
+      renamed = true
+      if (durable) {
+        const directory = await open(dirname(this.storeFile), 'r')
+        try { await directory.sync() } finally { await directory.close() }
+      }
     } catch (error) {
       await rm(tmp, { force: true }).catch(() => {}) // best-effort cleanup
+      if (durable && renamed) {
+        throw Object.assign(new Error('binding-store: post-rename durability unknown', { cause: error }),
+          { code: 'BINDING_STORE_PERSIST_UNKNOWN' })
+      }
       throw error
     }
   }
@@ -486,7 +579,8 @@ export class BindingStore {
           code: VALIDATION_ERROR,
         })
       }
-      const row = { agentId, requestId, sessionId, createdAt: this.now() }
+      const createdAt = this.now()
+      const row = { agentId, requestId, sessionId, createdAt }
       perRequest.set(requestId, row)
       return { ...row }
     })
@@ -505,4 +599,16 @@ export class BindingStore {
     }
     return rows
   }
+
+  /**
+   * Legacy durable cut receipt reader (test/evidence surface). The retired
+   * writer is gone; a completed historical cut's receipt stays loadable,
+   * integrity-checked and byte-stable here, with its values opaque.
+   * @returns {object | null}
+   */
+  getLegacyFreshCutBinding() {
+    return this.legacyFreshCutBinding === null ? null : { ...this.legacyFreshCutBinding }
+  }
+
+
 }

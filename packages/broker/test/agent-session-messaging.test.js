@@ -223,6 +223,20 @@ test('BROKER_RPC_METHOD stays in lockstep between relay and router', () => {
 
 // ------------------------------------------- gateway resolver + L0 hook
 
+/**
+ * DSH_AGENT_CORE_MODULARITY_PHASE_A_V1: the broker no longer enumerates
+ * business provider services — gateway-mode tests inject their providers
+ * through the composition-owned resolveLocalHandlers seam, exactly like
+ * production compose.js does.
+ */
+function resolverFor(services) {
+  return () => {
+    const handlers = {}
+    for (const [, service] of services) Object.assign(handlers, service?.handlers ?? {})
+    return handlers
+  }
+}
+
 /** Minimal cordis-shaped ctx stub for the broker gateway-mode apply(). */
 function fakeCtx(services) {
   const provided = {}
@@ -303,7 +317,11 @@ test('gateway: the resolver closure admits agentSessionMessagingAccess (F9) and 
   const ctx = fakeCtx(services)
   const credentialsFile = tempCredentialStore({ agentIds: ['agt_a-caller'], t })
   const authServiceOrigin = await stubAuthServer(t, 'grant')
-  const { gateway } = applyBroker(ctx, gatewayModeConfig({ credentialsFile, authServiceOrigin }))
+  const { gateway } = applyBroker(ctx, gatewayModeConfig({
+    resolveLocalHandlers: resolverFor(services),
+    credentialsFile,
+    authServiceOrigin,
+  }))
   assert.notEqual(ctx.provided.brokerGateway, undefined)
 
   const envelope = await gateway.execute(
@@ -342,6 +360,7 @@ test('gateway: a credential denial fires the L0 hook without changing the denial
   const credentialsFile = tempCredentialStore({ agentIds: ['agt_other-agent'], t })
   const authServiceOrigin = await stubAuthServer(t, 'grant')
   const { gateway } = applyBroker(ctx, gatewayModeConfig({
+    resolveLocalHandlers: resolverFor(services),
     auditDenial: (info) => denials.push(info),
     credentialsFile,
     authServiceOrigin,
@@ -365,7 +384,11 @@ test('gateway: inspection grant denial happens before the read-only handler', as
   const ctx = fakeCtx(services)
   const credentialsFile = tempCredentialStore({ agentIds: ['agt_a-caller'], t })
   const authServiceOrigin = await stubAuthServer(t, 'deny')
-  const { gateway } = applyBroker(ctx, gatewayModeConfig({ credentialsFile, authServiceOrigin }))
+  const { gateway } = applyBroker(ctx, gatewayModeConfig({
+    resolveLocalHandlers: resolverFor(services),
+    credentialsFile,
+    authServiceOrigin,
+  }))
   const envelope = await gateway.execute(
     { capabilityId: 'agent_session_turn_inspect', operation: 'inspect', args: TRACE },
     { agentId: 'agt_a-caller' },

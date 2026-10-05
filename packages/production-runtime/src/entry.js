@@ -20,17 +20,17 @@
  *   PRODUCTION_RUNTIME_ROOT   persistent root (default ~/.agent-core)
  *   FEISHU_CREDS_PATH         feishu credentials (channel OFF without it)
  *   FEISHU_REQUIRE_MENTION_IN_GROUP    'true'|'false' only (default true);
- *                             invalid values fail startup loud
  *   FEISHU_AUTO_MENTION_TRIGGER_SENDER 'true'|'false' only (default true);
- *                             invalid values fail startup loud
  *   FEISHU_PROCESSING_REACTION_ENABLED 'true'|'false' only (unset/empty =
- *                             false, the connector default); any other value
- *                             fails startup loud
- *                             (FEISHU_PROCESSING_REACTION_INVALID)
+ *                             false, the connector default)
  *   FEISHU_REPLY_RENDER_MODE   'markdown'|'card' only (unset/empty =
- *                             markdown, the byte-identical default); any
- *                             other value fails startup loud
- *                             (FEISHU_REPLY_RENDER_MODE_INVALID)
+ *                             markdown, the byte-identical default)
+ *                             (audit Product #442: these four configure ONLY
+ *                             the optional Feishu adapter — with the channel
+ *                             CONFIGURED an invalid value fails startup loud
+ *                             (fail closed); with the channel OFF an invalid
+ *                             value is warned and does not block the base
+ *                             startup path)
  *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   model route for spawned agents
  *   AGENT_CORE_CREDENTIALS_FILE / BROKER_AUTH_ORIGIN   Trusted CP seam
  *
@@ -94,7 +94,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
     clearInterval(keepalive)
     let stopError
     try {
-      await runtime.stop()
+      await runtime.stop(signal)
     } catch (error) {
       stopError = error
       log.error(`stop failed: ${error?.message ?? error}`)

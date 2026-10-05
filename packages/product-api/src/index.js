@@ -323,6 +323,53 @@ export function apply(ctx, config = {}) {
         }
         return
       }
+      if (url.pathname === '/workflow-execution/traces'
+        || url.pathname === '/workflow-execution/kicks'
+        || url.pathname === '/workflow-execution/owner-assistance-wakes'
+        || url.pathname === '/workflow-execution/attention') {
+        // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the same
+        // request-time resolution discipline as /scheduler/* — the access
+        // service and the token verifier are provided later in the compose
+        // sequence than product-api is mounted.
+        try {
+          const { handleWorkflowExecutionRequest } = await import('./workflow-execution-routes.js')
+          const { status, body } = await handleWorkflowExecutionRequest({
+            req,
+            url,
+            access: ctx.get('workflowExecutionAccess') ?? null,
+            verifier: ctx.get('schedulerTokenVerifier') ?? null,
+          })
+          json(res, status, body)
+        } catch (error) {
+          const status = error?.status ?? 500
+          const code = error?.code ?? 'internal'
+          json(res, status, errorBody(code, error?.message ?? 'internal error'))
+        }
+        return
+      }
+      if (url.pathname === '/agent-process/turn-abandonment') {
+        // HR_RESET_AND_RESUME_V1 authenticated administrator entry: the
+        // EXISTING authsvc verifier seam + the EXISTING fleet admin scope
+        // workflow.admin, pinned to agt_hr-agent. Gate first; every denial
+        // is zero-mutation. The router service is a hard inject here, but
+        // the verifier follows the same request-time resolution discipline
+        // as the gated families above.
+        try {
+          const { handleAgentProcessAdminRequest } = await import('./agent-process-admin-routes.js')
+          const { status, body } = await handleAgentProcessAdminRequest({
+            req,
+            url,
+            router,
+            verifier: ctx.get('schedulerTokenVerifier') ?? null,
+          })
+          json(res, status, body)
+        } catch (error) {
+          const status = error?.status ?? 500
+          const code = error?.code ?? 'internal'
+          json(res, status, errorBody(code, error?.message ?? 'internal error'))
+        }
+        return
+      }
       if (['GET', 'POST'].includes(req.method ?? '')) {
         json(res, 404, errorBody('NOT_FOUND', `no such endpoint: ${req.method} ${url.pathname}`))
         return

@@ -1,0 +1,12 @@
+{
+  "name": "@agent-core/agent-identity-capabilities",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Agent Identity read-only Broker capability providers (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1): Principal -> Agent resolution, Agent -> Principal reverse resolution, and the Agent Directory \u2014 the business implementations behind the agentPrincipalResolutionAccess / agentPrincipalReverseResolutionAccess / agentDirectoryAccess LOCAL capability services. Trusted-seam only: caller identity, tokens and Auth origin are runtime-derived, never tool arguments.",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "license": "UNLICENSED"
+}

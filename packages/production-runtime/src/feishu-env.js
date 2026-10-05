@@ -1,11 +1,14 @@
 /**
  * @agent-core/production-runtime/src/feishu-env.js — STRICT env parsing for
  * every Feishu channel switch (extracted from compose.js verbatim:
- * CODE_STRUCTURE_GUARDRAILS_V1 file-size cap; behavior byte-identical).
+ * CODE_STRUCTURE_GUARDRAILS_V1 file-size cap).
  *
- * Every resolver here is parsed BEFORE any component mounts so an invalid
- * supervision-unit env fails composition LOUD regardless of whether the
- * Feishu channel is even configured.
+ * Every resolver here is strict: ONLY the exact accepted values pass, any
+ * other value throws a machine-readable error. WHEN that strictness applies
+ * is the composition's decision (audit Product #442): the ENABLED channel
+ * parses these resolvers and fails composition LOUD; the DISABLED channel's
+ * switches are inert, so invalid values are reported via
+ * warnInvalidUnconfiguredFeishuEnv without blocking the unrelated base path.
  */
 
 /**
@@ -34,8 +37,10 @@ export function parseStrictBooleanEnv(env, key) {
 
 /**
  * Resolve both Feishu UX switches from env (FEISHU_REQUIRE_MENTION_IN_GROUP /
- * FEISHU_AUTO_MENTION_TRIGGER_SENDER). Parsed BEFORE any mount so an invalid
- * value fails composition regardless of whether the channel is configured.
+ * FEISHU_AUTO_MENTION_TRIGGER_SENDER). Called by the composition for the
+ * ENABLED channel only — an invalid value fails composition loud there;
+ * with the channel OFF the composition routes the same strictness through
+ * warnInvalidUnconfiguredFeishuEnv instead (audit Product #442).
  *
  * @param {object} [env] - env map (default process.env).
  * @returns {{requireMentionInGroup?:boolean, autoMentionTriggerSender?:boolean}}
@@ -93,4 +98,26 @@ export function resolveReplyRenderMode(env = process.env) {
     new Error(`production-runtime: FEISHU_REPLY_RENDER_MODE must be 'markdown' or 'card' (got ${JSON.stringify(raw)})`),
     { code: 'FEISHU_REPLY_RENDER_MODE_INVALID' },
   )
+}
+
+/**
+ * Channel-OFF observability (audit Product #442): with the adapter DISABLED
+ * the channel-specific switches configure nothing, so an invalid value must
+ * be REPORTED — one warn line per strict error, code included — instead of
+ * failing the whole composition. The misconfiguration stays visible; the
+ * unrelated base path stays up. The ENABLED branch never routes through
+ * here: it parses the same resolvers strictly and fails loud.
+ */
+export function warnInvalidUnconfiguredFeishuEnv(env = process.env, warn = () => {}) {
+  const probes = [
+    () => parseStrictBooleanEnv(env, 'FEISHU_REQUIRE_MENTION_IN_GROUP'),
+    () => parseStrictBooleanEnv(env, 'FEISHU_AUTO_MENTION_TRIGGER_SENDER'),
+    () => resolveProcessingReactionConfig(env),
+    () => resolveReplyRenderMode(env),
+  ]
+  for (const probe of probes) {
+    try { probe() } catch (error) {
+      warn(`production-runtime: feishu channel OFF — ignoring invalid adapter env [${error?.code ?? 'FEISHU_ADAPTER_ENV_INVALID'}]: ${error?.message ?? error}`)
+    }
+  }
 }

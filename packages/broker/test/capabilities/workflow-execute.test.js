@@ -23,6 +23,7 @@ const readManifestIds = () =>
 const nonInstanceExecutionWriteFamilies = [
   'workflow_definition_authoring',
   'workflow_wake_dispatch_intent',
+  'workflow_execution_escalation',
   'workflow_domain_admin',
   'workflow_domain_members',
   'workflow_domain_binding_reconcile',
@@ -53,6 +54,7 @@ test('workflow_execute is the only instance-execution write tool; workflow_trans
     'workflow_domain_binding_reconcile',
     'workflow_definition_authoring',
     'workflow_wake_dispatch_intent',
+    'workflow_execution_escalation',
   ])
   assert.deepEqual(
     writes.filter((m) => !nonInstanceExecutionWriteFamilies.includes(m.id)).map((m) => m.id),

@@ -74,6 +74,8 @@ export const queryMethods = {
       agentId: record.agentId,
       processGeneration: record.processGeneration,
       callerCorrelation: record.callerCorrelation === null ? null : { ...record.callerCorrelation },
+      ingressCorrelation: record.ingressCorrelation === null || record.ingressCorrelation === undefined
+        ? null : { ...record.ingressCorrelation },
       sessionId: record.sessionId,
       eventWatermarkSeq: record.eventWatermarkSeq,
       promptRequestId: record.promptRequestId,

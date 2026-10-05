@@ -1,0 +1,86 @@
+diff --git a/package.json b/package.json
+index 3f6a3c1..babe7b1 100644
+--- a/package.json
++++ b/package.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "dsh-codex",
+   "description": "ChatGPT OAuth, Codex models, search, read_image URL support, and gpt-image-2 generation for DeepSeek Harness",
+-  "version": "0.2.3",
++  "version": "0.2.3-dshr1",
+   "publishConfig": {
+     "access": "public",
+     "registry": "https://registry.npmjs.org/"
+@@ -67,7 +67,7 @@
+     }
+   },
+   "peerDependencies": {
+-    "@earendil-works/pi-ai": "^0.82.1",
++    "@earendil-works/pi-ai": "^0.87.1",
+     "@deepseek-ai/cordis": "^4.0.1-rc.1",
+     "@deepseek-ai/dsh-agent": "*",
+     "@deepseek-ai/dsh-atomic-write": "*",
+@@ -88,7 +88,7 @@
+     "react-dom": "^18.2.0"
+   },
+   "devDependencies": {
+-    "@earendil-works/pi-ai": "0.82.1",
++    "@earendil-works/pi-ai": "0.87.1",
+     "@deepseek-ai/cordis": "^4.0.1",
+     "@deepseek-ai/cordis-plugin-include": "1.0.6",
+     "@deepseek-ai/cordis-plugin-loader": "1.0.2",
+diff --git a/src/adapter.ts b/src/adapter.ts
+index d8487e1..b3e6b05 100644
+--- a/src/adapter.ts
++++ b/src/adapter.ts
+@@ -71,6 +71,7 @@ export function createOpenAICodexAdapter(
+   credentials: OpenAICodexCredentialStore,
+   resolveAttachments: () => AttachmentStore | undefined,
+   responsePreferences: () => ResponseApiPreferences,
++  reasoning?: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max',
+ ): PiAiAdapter {
+   const provider = openaiCodexProvider()
+   const responses = new OpenAICodexResponseRuntime(responsePreferences)
+@@ -79,6 +80,7 @@ export function createOpenAICodexAdapter(
+     displayName: 'OpenAI Codex',
+     streamIdleTimeoutMs: OPENAI_CODEX_STREAM_IDLE_TIMEOUT_MS,
+     retryPolicy: resolveRetryPolicy(undefined, 'dsh-openai-codex retryPolicy'),
++    ...(reasoning === undefined ? {} : { reasoning }),
+     configuredMaxTokens: new Map(),
+     piProvider: responses.wrap(requestProvider(provider)),
+   }]])
+diff --git a/src/index.ts b/src/index.ts
+index 46cec67..479ed08 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -105,6 +105,14 @@ export const inject = ['llm', 'web']
+ export interface Config {
+   /** Explicit OAuth document path for a shared credential serialization domain. */
+   credentialFile?: string
++  /**
++   * Provider-profile default reasoning effort for the openai-codex route,
++   * forwarded as the profile's `reasoning` field of the generic dsh-llm-pi-ai
++   * adapter (validated fail-loud per request against the resolved model's own
++   * capability metadata). `off` omits the reasoning option entirely, i.e. the
++   * provider's default thinking behavior.
++   */
++  reasoning?: 'off' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+   /** Model used for auxiliary standalone searches. */
+   searchModel?: string
+   /** Cached, indexed, or live web access. */
+@@ -125,6 +133,7 @@ export interface Config {
+ 
+ export const Config: z<Config> = z.object({
+   credentialFile: z.string(),
++  reasoning: z.union(['off', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] as const),
+   searchModel: z.string().default(DEFAULT_OPENAI_CODEX_SEARCH_MODEL),
+   searchMode: z.union(['cached', 'indexed', 'live'] as const).default(DEFAULT_OPENAI_CODEX_SEARCH_MODE),
+   searchContextSize: z.union(['low', 'medium', 'high'] as const).default(DEFAULT_OPENAI_CODEX_SEARCH_CONTEXT_SIZE),
+@@ -160,6 +169,7 @@ export function apply(ctx: Context, config: Config): void {
+       credentials,
+       () => ctx.get('attachments'),
+       () => imageTools.responseApiSnapshot(),
++      config.reasoning,
+     ),
+   )
+   ctx.web.registerSearchProvider(new OpenAICodexSearchProvider({

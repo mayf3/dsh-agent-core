@@ -9,7 +9,9 @@ import { readJsonlFile } from './lines.js'
 
 function toRecord(row, line) {
   const refs = {}
-  for (const key of ['sessionId', 'reconciliationHandle', 'requestId', 'occurrenceId', 'jobId']) {
+  // CTR-SCT-005: runId joins the coordinate keys once the invocation writer
+  // persists it (writer-side additive fields).
+  for (const key of ['sessionId', 'reconciliationHandle', 'requestId', 'occurrenceId', 'jobId', 'runId']) {
     if (typeof row[key] === 'string' && row[key] !== '') refs[key] = row[key]
   }
   return {

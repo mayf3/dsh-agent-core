@@ -7,7 +7,7 @@
  */
 
 import { join } from 'node:path'
-import { readdirSync, statSync, existsSync, openSync, readSync, closeSync } from 'node:fs'
+import { readdirSync, statSync, existsSync, fstatSync, openSync, readSync, closeSync } from 'node:fs'
 
 export const SESSION_FILE_NAME = 'session.jsonl'
 
@@ -71,13 +71,19 @@ const EVENT_TYPE_RE = /^[a-z]+[a-z0-9]*([/.][a-z0-9-]+)*$/
  * {lineNo, seq, timeMs, type, data}; oversized/corrupt lines degrade; an
  * unreadable file (EACCES, vanished, I/O error) returns readFailed — never a
  * throw (§2 fail-soft per source; T5's named 0700 case).
+ *
+ * `fd` (additive, session-listing confined-reader closure): read from an
+ * ALREADY-VERIFIED file descriptor instead of re-opening by path — the
+ * listing pins one O_NOFOLLOW fd per row and serves header AND content scan
+ * from it, so no unconfined path open exists on this read face. The caller
+ * owns the fd (never closed here); `file` is ignored when `fd` is given.
  */
-export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRecords = 10_000, maxRecordBytes = 1024 * 1024 }) {
+export function loadSessionJournal({ file, fd, maxFileBytes = 8 * 1024 * 1024, maxRecords = 10_000, maxRecordBytes = 1024 * 1024 }) {
   let st
   try {
-    st = statSync(file)
+    st = fd !== undefined ? fstatSync(fd) : statSync(file)
   } catch (error) {
-    if (error?.code === 'ENOENT') return { absent: true, events: [], skipped: 0, truncated: false, size: 0, mtimeMs: 0 }
+    if (fd === undefined && error?.code === 'ENOENT') return { absent: true, events: [], skipped: 0, truncated: false, size: 0, mtimeMs: 0 }
     return { absent: false, readFailed: String(error?.message ?? error), events: [], skipped: 0, truncated: true, size: 0, mtimeMs: 0 }
   }
   const size = Number(st.size)
@@ -86,8 +92,7 @@ export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRe
   let truncated = scanBytes < size
   let text = ''
   try {
-    const fd = openSync(file, 'r')
-    try {
+    if (fd !== undefined) {
       const buffer = Buffer.allocUnsafe(Math.max(0, scanBytes))
       let off = 0
       while (off < buffer.length) {
@@ -96,7 +101,19 @@ export function loadSessionJournal({ file, maxFileBytes = 8 * 1024 * 1024, maxRe
         off += n
       }
       text = buffer.subarray(0, off).toString('utf8')
-    } finally { closeSync(fd) }
+    } else {
+      const own = openSync(file, 'r')
+      try {
+        const buffer = Buffer.allocUnsafe(Math.max(0, scanBytes))
+        let off = 0
+        while (off < buffer.length) {
+          const n = readSync(own, buffer, off, buffer.length - off, off)
+          if (n === 0) break
+          off += n
+        }
+        text = buffer.subarray(0, off).toString('utf8')
+      } finally { closeSync(own) }
+    }
   } catch (error) {
     return { absent: false, readFailed: String(error?.message ?? error), events: [], skipped: 0, truncated: true, size, mtimeMs }
   }

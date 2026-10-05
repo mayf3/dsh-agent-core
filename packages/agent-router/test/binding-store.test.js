@@ -12,6 +12,7 @@
  */
 
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -237,6 +238,164 @@ test('16. freshSessionFor validation and corrupt-table fail-loud', async (t) => 
   doc.freshSessions.agt_a['req-1'].sessionId = ''
   await writeFile(file, JSON.stringify(doc))
   assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
+})
+
+test('17. fresh request mapping is durable and restarts keep resolving the same session', async (t) => {
+  const file = await tmpStore(t)
+  const first = new BindingStore({ storeFile: file,
+    now: () => '2026-09-29T02:00:00.000Z' })
+  const firstRow = await first.freshSessionFor('agt_subject', 'req-1', () => 'fresh-1')
+  assert.equal(firstRow.lineageOperationId, undefined)
+  const restarted = new BindingStore({ storeFile: file })
+  assert.equal(restarted.getFreshSession('agt_subject', 'req-1').sessionId, 'fresh-1')
+  const retry = await restarted.freshSessionFor('agt_subject', 'req-1', () => 'fresh-should-not-mint')
+  assert.equal(retry.sessionId, 'fresh-1')
+})
+
+test('17b. legacy lineage-marked fresh rows load byte-stable across restart and persist', async (t) => {
+  const file = await tmpStore(t)
+  // Hand-written legacy document: a row shape minted by the retired cut-era
+  // runtime. The generic loader must accept the opaque marker (any agent,
+  // any operation string) and round-trip it without acting on it.
+  const doc = {
+    version: 1,
+    bindings: { 'feishu:legacy': { channelConversationId: 'feishu:legacy',
+      activeAgentId: 'agt_legacy_subject', activeSessionId: 'fresh-legacy',
+      workspace: null, updatedAt: '2026-09-29T00:00:00.000Z' } },
+    freshSessions: { agt_legacy_subject: { 'legacy-request': {
+      agentId: 'agt_legacy_subject', requestId: 'legacy-request',
+      sessionId: 'fresh-legacy', createdAt: '2026-09-29T00:00:00.000Z',
+      lineageOperationId: 'legacy-cut-op-20260929' } } },
+  }
+  await writeFile(file, JSON.stringify(doc))
+  const store = new BindingStore({ storeFile: file })
+  const loaded = store.getFreshSession('agt_legacy_subject', 'legacy-request')
+  assert.equal(loaded.lineageOperationId, 'legacy-cut-op-20260929')
+  await store.setLastSession('feishu:legacy', 'agt_other', 'main')
+  const reloaded = new BindingStore({ storeFile: file })
+  assert.equal(reloaded.getFreshSession('agt_legacy_subject', 'legacy-request').lineageOperationId,
+    'legacy-cut-op-20260929')
+  // A legacy marker on a row must never be rewritten or dropped by normal use.
+  const after = JSON.parse(await readFile(file, 'utf8'))
+  assert.equal(after.freshSessions.agt_legacy_subject['legacy-request'].lineageOperationId,
+    'legacy-cut-op-20260929')
+})
+
+test('17c. legacy fresh row with a malformed marker fails the store load loud', async (t) => {
+  const file = await tmpStore(t)
+  const doc = {
+    version: 1,
+    bindings: {},
+    freshSessions: { agt_legacy_subject: { 'legacy-request': {
+      agentId: 'agt_legacy_subject', requestId: 'legacy-request',
+      sessionId: 'fresh-legacy', createdAt: '2026-09-29T00:00:00.000Z',
+      lineageOperationId: '' } } },
+  }
+  await writeFile(file, JSON.stringify(doc))
+  assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
+})
+
+test('legacy durable cut receipt loads, round-trips byte-stable, and stays queryable across normal writes', async (t) => {
+  const file = await tmpStore(t)
+  const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
+  await new BindingStore({ storeFile: file }).set(row('feishu:oc_legacy', 'agt_legacy_subject', 'old-session'))
+  const receipt = {
+    channelConversationId: 'feishu:oc_legacy',
+    operationId: 'legacy-cut-op-20260929',
+    oldSessionId: 'old-session', newSessionId: 'legacy-new-session',
+    newRuntimeEpoch: 'legacy-new-epoch',
+    oldHandle: 'turn:legacy-epoch:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64),
+  }
+  receipt.preimageSha256 = digest('preimage-bytes')
+  receipt.bindingCutSha256 = digest({
+    channelConversationId: receipt.channelConversationId,
+    operationId: receipt.operationId, oldSessionId: receipt.oldSessionId,
+    newSessionId: receipt.newSessionId, newRuntimeEpoch: receipt.newRuntimeEpoch,
+    oldHandle: receipt.oldHandle, rootReceiptSha256: receipt.rootReceiptSha256,
+    preimageSha256: receipt.preimageSha256 })
+  const doc = JSON.parse(await readFile(file, 'utf8'))
+  doc.freshHrCutBinding = receipt
+  await writeFile(file, JSON.stringify(doc))
+  const store = new BindingStore({ storeFile: file })
+  assert.deepEqual(store.getLegacyFreshCutBinding(), receipt)
+  // Normal operation (another switch) must keep the legacy bytes byte-stable.
+  await store.set(row('feishu:oc_legacy', 'agt_other', 'other-session'))
+  const after = JSON.parse(await readFile(file, 'utf8'))
+  assert.deepEqual(after.freshHrCutBinding, receipt)
+  const reloaded = new BindingStore({ storeFile: file })
+  assert.equal(reloaded.get('feishu:oc_legacy').activeAgentId, 'agt_other')
+  assert.deepEqual(reloaded.getLegacyFreshCutBinding(), receipt)
+})
+
+test('legacy durable cut receipt drift fails the store load loud (fail-closed compat)', async (t) => {
+  const file = await tmpStore(t)
+  const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
+  await new BindingStore({ storeFile: file }).set(row('feishu:oc_legacy', 'agt_legacy_subject', 'old-session'))
+  const receipt = {
+    channelConversationId: 'feishu:oc_legacy',
+    operationId: 'legacy-cut-op-20260929',
+    oldSessionId: 'old-session', newSessionId: 'legacy-new-session',
+    newRuntimeEpoch: 'legacy-new-epoch',
+    oldHandle: 'turn:legacy-epoch:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64),
+    preimageSha256: 'b'.repeat(64),
+  }
+  receipt.bindingCutSha256 = digest({
+    channelConversationId: receipt.channelConversationId,
+    operationId: receipt.operationId, oldSessionId: receipt.oldSessionId,
+    newSessionId: receipt.newSessionId, newRuntimeEpoch: receipt.newRuntimeEpoch,
+    oldHandle: receipt.oldHandle, rootReceiptSha256: receipt.rootReceiptSha256,
+    preimageSha256: receipt.preimageSha256 })
+  const doc = JSON.parse(await readFile(file, 'utf8'))
+  // Tamper with a digest without recomputing the receipt self-digest.
+  doc.freshHrCutBinding = { ...receipt, preimageSha256: 'c'.repeat(64) }
+  await writeFile(file, JSON.stringify(doc))
+  assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
+})
+
+test('legacy durable cut receipt referencing a missing conversation fails the load loud', async (t) => {
+  const file = await tmpStore(t)
+  const digest = value => createHash('sha256').update(JSON.stringify(value)).digest('hex')
+  const receipt = {
+    channelConversationId: 'feishu:missing',
+    operationId: 'legacy-cut-op-20260929',
+    oldSessionId: 'old-session', newSessionId: 'legacy-new-session',
+    newRuntimeEpoch: 'legacy-new-epoch',
+    oldHandle: 'turn:legacy-epoch:a2:g1:s256',
+    rootReceiptSha256: 'a'.repeat(64),
+    preimageSha256: 'b'.repeat(64),
+  }
+  receipt.bindingCutSha256 = digest({
+    channelConversationId: receipt.channelConversationId,
+    operationId: receipt.operationId, oldSessionId: receipt.oldSessionId,
+    newSessionId: receipt.newSessionId, newRuntimeEpoch: receipt.newRuntimeEpoch,
+    oldHandle: receipt.oldHandle, rootReceiptSha256: receipt.rootReceiptSha256,
+    preimageSha256: receipt.preimageSha256 })
+  await writeFile(file, JSON.stringify({ version: 1, bindings: {}, freshHrCutBinding: receipt }))
+  assert.throws(() => new BindingStore({ storeFile: file }), (e) => e.code === CORRUPT_STORE)
+})
+
+test('post-rename durability failure poisons the store for later writes (sticky unknown)', async (t) => {
+  const file = await tmpStore(t)
+  const store = new BindingStore({ storeFile: file })
+  await store.set(row('feishu:oc_a', 'agt_a', 'old-session'))
+  const persist = store.persist.bind(store)
+  store.persist = async options => {
+    await persist(options)
+    if (options.durable) {
+      throw Object.assign(new Error('simulated post-rename fsync failure'),
+        { code: 'BINDING_STORE_PERSIST_UNKNOWN' })
+    }
+  }
+  await assert.rejects(
+    store.enqueue(async () => 'unused', async () => {
+      throw Object.assign(new Error('simulated readback mismatch'),
+        { code: 'BINDING_STORE_PERSIST_UNKNOWN' })
+    }, { durable: true }),
+    error => error.code === 'BINDING_STORE_PERSIST_UNKNOWN')
+  await assert.rejects(store.set(row('feishu:oc_other', 'agt_other', 'main')),
+    error => error.code === 'BINDING_STORE_PERSIST_UNKNOWN')
 })
 
 // ---------------------------------------------------------------------------

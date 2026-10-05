@@ -29,6 +29,7 @@ export const TERMINAL_EVIDENCE_KINDS = new Set([
 export const TERMINATION_EVIDENCE_KINDS = new Set([
   'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',
   'operator-trusted-evidence',
+  'restart_quiescence_proven',
 ])
 export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator'])
 export const SCHEDULE_DISPOSITIONS = new Set(['recurring_future_natural_only', 'one_shot_disabled'])

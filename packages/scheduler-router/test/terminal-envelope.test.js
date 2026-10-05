@@ -109,6 +109,26 @@ test('TERMINATION_ONLY: outcome_unknown + trusted router readback (child_real_ex
   assert.equal(outcome.reconciliationHandle, 'turn:exit1')
 })
 
+test('RQ-009 bridge carries restart quiescence proof while business outcome stays unknown', async () => {
+  const request = REQUEST()
+  const unknown = Object.assign(new Error('old turn outcome unknown'), {
+    status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:old',
+  })
+  const correlationResult = {
+    state: 'settled', handle: 'turn:old', snapshot: {
+      agentId: request.agentId,
+      callerCorrelation: { occurrenceId: request.occurrenceId, runId: request.runId, requestId: request.requestId },
+      lateOutcome: 'terminated_without_outcome', terminationEvidence: 'restart_quiescence_proven',
+    },
+  }
+  const invokeAgent = createRouterInvoker(fakeRouter({ proc: fakeProc({ turnError: unknown }), correlationResult }))
+  const result = await invokeAgent(request)
+  assert.equal(result.status, 'outcome_unknown')
+  assert.deepEqual(result.evidence, {
+    terminationEvidence: 'restart_quiescence_proven', source: 'router_disposition_readback',
+  })
+})
+
 test('FAIL_CLOSED: outcome_unknown with a live (pending) router disposition stays outcome_unknown', async () => {
   const unknown = Object.assign(new Error('turn passed its deadline without termination proof'), {
     status: 'outcome_unknown', envelope: 'outcome_unknown', reconciliationHandle: 'turn:live',

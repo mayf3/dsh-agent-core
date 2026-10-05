@@ -14,12 +14,18 @@ export async function mountSchedulerHistoryRuntime({ ctx, layout, schedulerAuth,
   await history.ensureLoaded()
   ctx.provide('schedulerHistory', history)
 
+  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 R8 gate seam, live WEC parity: the
+  // verifier exists only when the full auth triple is configured. Partial
+  // config stays unconfigured (null = the product-api gate 401s every
+  // scheduler request, fail-closed) instead of throwing here at mount.
   const jwksUrl = schedulerAuth?.jwksUrl ?? env.SCHEDULER_AUTH_JWKS_URL
-  ctx.provide('schedulerTokenVerifier', jwksUrl
+  const issuer = schedulerAuth?.issuer ?? env.SCHEDULER_AUTH_ISSUER
+  const audience = schedulerAuth?.audience ?? env.SCHEDULER_AUTH_AUDIENCE
+  ctx.provide('schedulerTokenVerifier', jwksUrl && issuer && audience
     ? createJwksTokenVerifier({
         jwksUrl,
-        issuer: schedulerAuth?.issuer ?? env.SCHEDULER_AUTH_ISSUER,
-        audience: schedulerAuth?.audience ?? env.SCHEDULER_AUTH_AUDIENCE,
+        issuer,
+        audience,
         log: { warn: (...args) => log.warn('[scheduler-auth]', ...args) },
       })
     : null)

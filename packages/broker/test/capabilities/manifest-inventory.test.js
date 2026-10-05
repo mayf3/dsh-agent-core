@@ -12,9 +12,9 @@ import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 // Includes the exact Human projection LOCAL capability from
 // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0.
 
-test('schema: all 22 bounded inventory manifests validate', () => {
+test('schema: all 23 bounded inventory manifests validate', () => {
   const all = [...forumManifests, ...workflowManifests, ...workflowHumanPrincipalProjectionManifests, ...okrManifests]
-  assert.equal(all.length, 22)
+  assert.equal(all.length, 23)
   for (const manifest of all) {
     const res = validateManifest(manifest)
     assert.equal(res.ok, true, `${manifest.id}: ${res.errors?.join('; ')}`)

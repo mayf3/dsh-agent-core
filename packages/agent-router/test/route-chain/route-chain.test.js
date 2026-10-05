@@ -88,6 +88,33 @@ function makeExecutor(seam, routes, opts = {}) {
 const GLM = route('glm53', { provider: 'zai', model: 'glm-5.3', subscription: { plugin: 'dsh-zai', pluginVersion: '1.4.2' } })
 const LUNA = route('luna', { provider: 'openai-codex', model: 'gpt-5.6-luna', subscription: { plugin: 'dsh-codex', pluginVersion: '0.2.3' } })
 
+test('private caller opts cross to the final turn without entering the route acquire identity', async () => {
+  const marker = Object.freeze({ privateControlField: true })
+  let acquiredWanted
+  let turnOpts
+  const executor = createRouteChainExecutor({
+    log: quietLog,
+    ensureRunningForRoute: async (_agentId, wanted) => {
+      acquiredWanted = wanted
+      return { status: 'ready', proc: {
+        async turn(_sessionId, _message, opts) {
+          turnOpts = opts
+          return { status: 'completed', reply: 'fresh' }
+        },
+      } }
+    },
+    resolveRouteChain: () => snapshot(GLM),
+    resolveTurnDeadlineMs: () => 1000,
+  })
+  const result = await executor.runTurnWithRouteChain('agt_cto-agent', {
+    sessionId: 'fresh', message: 'harmless', opts: { privateControlField: marker },
+  })
+  assert.equal(result.reply, 'fresh')
+  // Route acquire identity stays route-only; caller opts reach the turn.
+  assert.equal(acquiredWanted.privateControlField, undefined)
+  assert.equal(turnOpts.privateControlField, marker)
+})
+
 // ─── classification (parent CTR-004 whitelist / CTR-005 stop set) ─────────
 
 test('classification: the four whitelisted proven-no-admission classes hop', () => {

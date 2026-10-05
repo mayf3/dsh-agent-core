@@ -399,9 +399,106 @@ HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Har
 PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
 # stamp removal is owned by composed_exit_cleanup (B6: single composed EXIT trap)
 
+# ---- 0b. cross-surface contamination gate (PRE-MUTATION; B7 2026-10-01) -----
+# The 2026-10-01 STAGE 1 incident: the section-8 scan is a LATE gate — it
+# fired only AFTER the app closure had been copied into the trusted root,
+# while the deploy wrapper reported "NOTHING was deployed". This gate packs
+# the app closure into a scratch staging dir (the SAME selection rules as
+# section 3: script whitelist + trusted-app-package-copy.mjs per package +
+# bundle/profile metadata) and runs the IDENTICAL scan on it BEFORE the first
+# production mutation (the section-1 backup mv). A failure here costs
+# nothing. Section 8 remains as the post-pack re-verification of the tree
+# that was actually written.
+# B7 2026-10-01 note: the packed app closure must carry NO foreign-domain
+# path literal (FLEET_SHARED_CODEX_AUTH amendment A2 — one canonical per
+# security surface; the three credential/fence seams are deploymentRoot-
+# parameterized in source).
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: node not found in PATH (required by the pre-mutation staging pack)" >&2
+  exit 2
+fi
+PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
+[ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
+APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
+PRESCAN_STAGING="$(mktemp -d /tmp/trusted-cp-prescan-XXXXXX)"
+mkdir -p "$PRESCAN_STAGING/app/scripts" "$PRESCAN_STAGING/app/packages"
+cp "$REPO_SRC/package.json" "$PRESCAN_STAGING/app/package.json"
+for f in $APP_SCRIPTS_WHITELIST; do
+  [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" "$PRESCAN_STAGING/app/scripts/"
+done
+for pkg in "$REPO_SRC"/packages/*/; do
+  name="$(basename "$pkg")"
+  [ -f "$pkg/package.json" ] || continue
+  node "$PACKAGE_COPY_HELPER" "$pkg" "$PRESCAN_STAGING/app/packages/$name"
+done
+for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  mkdir -p "$PRESCAN_STAGING/app/$name"
+  [ -f "$d/package.json" ] && cp "$d/package.json" "$PRESCAN_STAGING/app/$name/"
+  [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "$PRESCAN_STAGING/app/$name/"
+done
+PRESCAN_HITS="$(cd "$PRESCAN_STAGING" && grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/profile-* \
+  --include='*.js' --include='*.mjs' 2>/dev/null \
+  | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
+rm -rf "$PRESCAN_STAGING"
+if [ -n "$PRESCAN_HITS" ]; then
+  echo "ERROR: 505-executed code references /Users/yanfenma (pre-mutation gate — NOTHING was mutated):" >&2
+  echo "$PRESCAN_HITS" >&2
+  exit 2
+fi
+echo "  ok: no /Users/yanfenma references in the pack source (pre-mutation gate, staging packed + scanned)"
+
+# ---- 0c. disk-budget + full-tree retention admission gate (W0, Product #430)
+# Hard admission gate BEFORE the FIRST production mutation (the section-1
+# full-root preimage mv, or the first tree write on a fresh install). Reuses
+# the AGENT_CORE_BACKUP_RETENTION_V1 filesystem helper — no new service,
+# daemon, DB, or platform. The gate is READ-ONLY over the trees and writes the
+# JSON receipt <parent>/agent-core-deploy-budget-receipt.json on every attempt:
+#   DISK_FREE_BEFORE / LIVE_TREE_BYTES / ESTIMATED_PEAK_BYTES /
+#   DISK_FREE_AFTER_RESERVATION / retained backups before+after / pin reasons.
+# Floor = FIXED 50 GiB after worst-case reservation (Owner policy 2026-10-02;
+# supersedes the earlier max(60 GiB, 10% of Data volume) rule — the floor no
+# longer depends on Data-volume size); allocation = worst-case
+# physical (logical bytes; CLONE_PROOF = NONE); retention cap = live + max one
+# pinned known-good + max one newest immediate-rollback preimage at/above the
+# 20 GiB class — a third one is refused unless the superseded unpinned ones
+# were cleaned by EXACT path (helper --cleanup-exact) or an open-Product pin
+# exception is asserted via AGENT_CORE_BUDGET_PIN_EXCEPTION (receipted; sudo
+# callers must pass it through explicitly, e.g. sudo AGENT_CORE_BUDGET_PIN_
+# EXCEPTION="..." ./scripts/trusted-cp-deploy-install.sh). Refusal is
+# fail-closed: NOTHING is mutated.
+if [ ! -x "$BACKUP_OPS" ]; then
+  echo "ERROR: backup-ops helper missing ($BACKUP_OPS); the disk-budget admission gate is unavailable — refusing to deploy (fail-closed; NOTHING mutated)" >&2
+  exit 2
+fi
+PROJECTED_BAK=""
+BUDGET_NEW_BAK_ARG="NONE"
+if [ -e "$TRUSTED_ROOT" ]; then
+  PROJECTED_BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
+  BUDGET_NEW_BAK_ARG="$PROJECTED_BAK"
+fi
+BUDGET_PIN_ARGS=()
+if [ -n "${AGENT_CORE_BUDGET_PIN_EXCEPTION:-}" ]; then
+  BUDGET_PIN_ARGS=(--pin-exception "$AGENT_CORE_BUDGET_PIN_EXCEPTION")
+fi
+BUDGET_RC=0
+# ROOT = the install root itself ($TRUSTED_ROOT): the helper's frozen backup
+# convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the census glob, the
+# live-tree sizing, and the receipt location (dirname($TRUSTED_ROOT)/…) are
+# all anchored on the install root — NOT its parent.
+"$BACKUP_OPS" "$TRUSTED_ROOT" --check-budget "$BUDGET_NEW_BAK_ARG" ${BUDGET_PIN_ARGS[@]+"${BUDGET_PIN_ARGS[@]}"} || BUDGET_RC=$?
+if [ "$BUDGET_RC" -ne 0 ]; then
+  echo "ERROR: DEPLOY_REFUSED_BEFORE_MUTATION — disk-budget / full-tree-retention admission gate FAILED (helper rc=$BUDGET_RC: 4=REFUSED_DISK_BUDGET 5=REFUSED_RETENTION_CAP)." >&2
+  echo "MUTATION TRUTH: NOTHING was mutated — the section-1 backup mv did NOT run; the live install is untouched." >&2
+  echo "receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json (verdict + exact-path cleanup guidance inside)" >&2
+  exit 2
+fi
+echo "  ok: disk-budget + retention admission gate ADMITTED (receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json)"
+
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
-  BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
+  BAK="$PROJECTED_BAK"
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
   # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
@@ -420,7 +517,13 @@ if [ -e "$TRUSTED_ROOT" ]; then
   #   NOTE: this is a non-fatal best-effort — a metadata failure must not block
   #   the install.
   if [ -x "$BACKUP_OPS" ]; then
-    "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
+    # ROOT = $TRUSTED_ROOT (same root the 0c budget gate uses): the helper's
+    # backup convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the id
+    # derivation and maybe_first_pin's prior-reliable-pin census only see the
+    # real backup family when anchored on the install root. (Review B1/N2,
+    # Product #430: the pre-existing dirname-shaped call left FIRST_RELIABLE_
+    # PIN's prior-pin detection matching nothing in the real layout.)
+    "$BACKUP_OPS" "$TRUSTED_ROOT" --write-predecessor "$BAK" \
       || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
   else
     echo "  WARNING: backup-ops helper missing ($BACKUP_OPS); deployment backup will carry no retention metadata" >&2
@@ -429,6 +532,31 @@ fi
 
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
+
+# ---- 1a. resolve the runtime node ONCE (single arch authority) -------------
+# The Node runtime this install materializes (§2b) is whatever
+# /usr/local/bin/node resolves to in the Cellar. The harness closure MUST be
+# BUILT by that same binary: pnpm selects platform-optional native packages
+# (node-addon-require-builtin-darwin-<arch> and every package following the
+# same prebuilt-optional-dependency convention) from the arch of the process
+# IT runs under — not from the tree being installed. Building the closure
+# under the invoking shell's node (e.g. an arm64 dev host) while the runtime
+# is x64 ships a closure whose native binding cannot load: the loader's
+# internal-module acquisition fails, Tree.import falls back to raw import()
+# from vendor/loader/lib/index.js, and EVERY plugin entry fails
+# ERR_MODULE_NOT_FOUND at fresh-child boot (2026-10-02 availability rollback,
+# Product #414). Pin the arch anchor here; §1b/§2/§2b all consume it.
+NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
+case "$NODE_LINK_TARGET" in
+  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
+  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
+esac
+NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
+NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
+[ -x "$NODE_CELLAR_BIN" ] || { echo "ERROR: /usr/local/bin/node does not resolve to an executable Cellar node: $NODE_CELLAR_BIN" >&2; exit 2; }
+RUNTIME_ARCH="$("$NODE_CELLAR_BIN" -p process.arch)"
+RUNTIME_NODE_VERSION="$("$NODE_CELLAR_BIN" --version)"
+echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
 
 # ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
 # The harness closure (1.5G source + offline pnpm install) and the Node
@@ -452,10 +580,11 @@ if [ -n "${BAK:-}" ]; then
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
   if [ -x "$BAK/node-runtime/bin/node" ] \
-     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$(node --version)" ]; then
+     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$RUNTIME_NODE_VERSION" ] \
+     && [ "$("$BAK/node-runtime/bin/node" -p process.arch 2>/dev/null)" = "$RUNTIME_ARCH" ]; then
     mv "$BAK/node-runtime" "$TRUSTED_ROOT/node-runtime"
     REUSE_NODE=1
-    echo "  node-runtime REUSED from $BAK (same node version $(node --version))"
+    echo "  node-runtime REUSED from $BAK (same node version $RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
   fi
 fi
 
@@ -467,11 +596,14 @@ tar -C "$HARNESS_SRC" -cf - \
   --exclude='.turbo' --exclude='dist' --exclude='lib/*.tsbuildinfo' \
   . | tar -C harness -xf -
 
-echo "== pnpm install (offline, frozen, copy-import) -> harness/node_modules"
+echo "== pnpm install (offline, frozen, copy-import, runtime node $RUNTIME_NODE_VERSION arch $RUNTIME_ARCH) -> harness/node_modules"
 cd harness
 # copy-import => every file is a REAL copy owned by the install user; no
 # hardlink can point back into the 502-owned pnpm store.
-/usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
+# Executed under the runtime node anchor (§1a): platform-optional native
+# packages must be selected for the arch that will EXECUTE this closure,
+# never the invoking shell's arch (2026-10-02 rollback root cause).
+"$NODE_CELLAR_BIN" /usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
   --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
   >/tmp/trusted-cp-pnpm-install.log 2>&1 || {
     echo "ERROR: pnpm install failed; log tail:" >&2
@@ -489,13 +621,6 @@ fi
 # /usr/local/bin, the Cellar, or /Users/yanfenma.
 echo "== copying Node runtime -> node-runtime/"
 if [ "$REUSE_NODE" != "1" ]; then
-NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
-case "$NODE_LINK_TARGET" in
-  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
-  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
-esac
-NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
-NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 mkdir -p node-runtime
 cp -RL "$NODE_VERSION_DIR"/. node-runtime/
 fi
@@ -528,28 +653,56 @@ else
   echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
 fi
 
+# ---- 2c. closure-resolution gate (fail-closed) ------------------------------
+# Proves, under the EXACT trusted node, the two invariants fresh child boots
+# depend on (2026-10-02 availability rollback, Product #414):
+#   1. the loader's native internal-module binding acquires and reports the
+#      runtime's own platform suffix (without it Tree.import falls back to
+#      raw import() from vendor/loader/lib/index.js and EVERY plugin entry
+#      fails ERR_MODULE_NOT_FOUND at fresh-child boot);
+#   2. every @deepseek-ai/* package linked into the closure's resolution
+#      surfaces (vendor/loader peers + apps/cli) is alive and name-consistent.
+# Covers BOTH a freshly-built and a REUSED harness closure. Failure aborts
+# BEFORE the app closure/cutover — never deploy a tree whose fresh children
+# would die at plugin-tree boot. The end-to-end proof is the fresh-child
+# boot canary (executor STAGE 1 gate): scripts/lib/trusted-cp-fresh-child-boot-canary.mjs.
+echo "== closure-resolution gate (native binding + apps/cli census) under trusted node ($RUNTIME_ARCH)"
+"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-closure-resolution-gate.mjs" \
+  --trusted-root "$TRUSTED_ROOT" || {
+    echo "ERROR: closure-resolution gate FAILED — harness closure cannot serve fresh child boots on this runtime ($RUNTIME_ARCH). NOT cutover-ready." >&2
+    exit 2
+  }
+
 # ---- 3. app closure (Agent Core runtime surface) ---------------------------
 echo "== copying Agent Core closure -> app/"
 mkdir -p app/packages app/node_modules
 cp "$REPO_SRC/package.json" app/package.json
 mkdir -p app/scripts
-for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
-         dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
-         agent-core-backup-ops.sh \
-         trusted-cp-hardening-v1-verify.mjs \
-         production-runtime.mjs production-runtime-launchd.mjs \
-         production-runtime-v1-verify.mjs \
-         production-agent-provision.mjs; do
+for f in $APP_SCRIPTS_WHITELIST; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
 mkdir -p app/scripts/lib && cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
-# packages: src + package.json only (no tests)
+# packages: package.json + src + exact metadata-declared public root entries (no tests)
+# (PACKAGE_COPY_HELPER validated by the section-0b pre-mutation gate)
 for pkg in "$REPO_SRC"/packages/*/; do
   name="$(basename "$pkg")"
   [ -f "$pkg/package.json" ] || continue
-  mkdir -p "app/packages/$name"
-  cp "$pkg/package.json" "app/packages/$name/package.json"
-  [ -d "$pkg/src" ] && cp -R "$pkg/src" "app/packages/$name/src"
+  "$TRUSTED_NODE" "$PACKAGE_COPY_HELPER" "$pkg" "app/packages/$name"
+done
+# v2.2 FIX A′ (proven by the §3b whole-graph import gate): some app packages
+# deliberately carry NO package.json (packages/development-execution is a
+# code-only dir consumed by production-runtime via a RELATIVE import —
+# DEVELOPMENT_EXECUTION_SURFACE_V1), so the package.json-keyed loop above skips
+# them and a fresh pack could never boot the runtime
+# (ERR_MODULE_NOT_FOUND …/packages/development-execution/src/index.js — masked
+# at agent-control#193 only because the @larksuite/channel resolution failure
+# fired earlier in the import order). Carry their src/ explicitly — same
+# package.json+src, no-tests discipline as the copy helper.
+for rel in development-execution; do
+  [ -d "$REPO_SRC/packages/$rel/src" ] || { echo "ERROR: relative-import app package missing: packages/$rel/src" >&2; exit 2; }
+  rm -rf "app/packages/$rel"
+  mkdir -p "app/packages/$rel"
+  cp -R "$REPO_SRC/packages/$rel/src" "app/packages/$rel/src"
 done
 # bundles + profiles
 for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
@@ -638,6 +791,44 @@ for dep in "$MAIN_REPO"/node_modules/*/; do
 done
 [ -d "app/node_modules/@larksuiteoapi" ] && [ -d "app/node_modules/croner" ] \
   || { echo "ERROR: third-party app deps incomplete" >&2; exit 2; }
+
+# v2.2 FIX A (agent-control#193 Defect A): the production runtime's app graph
+# resolves @larksuite/channel -> its nested https-proxy-agent ->
+# proxy-agent-negotiate. That package exists in NO pack input: the §3 loop above
+# copies only MAIN_REPO/node_modules TOP-LEVEL entries and MAIN_REPO lacks this
+# one (its dev-install resolution for the leaf is broken — feishu-connector's
+# git-dep lock never recorded it), while the old live tree's top-level copy was
+# ambient legacy from an earlier era. Fresh packs therefore never carried it and
+# the production runtime FATAL'd at first boot (ERR_MODULE_NOT_FOUND, exit 2)
+# while the fresh-child canary passed. The vendored copy (exact bytes of the
+# version production ran, sha256-recorded in the operation package) is the
+# deterministic source; it lands at app/node_modules top level, where the
+# https-proxy-agent resolution walks up to. Placed AFTER the loop so the
+# vendored bytes win regardless of ambient MAIN_REPO drift.
+[ -f "$REPO_SRC/vendor/proxy-agent-negotiate/package.json" ] \
+  || { echo "ERROR: vendored proxy-agent-negotiate missing at $REPO_SRC/vendor/proxy-agent-negotiate (pin lineage violation)" >&2; exit 2; }
+rm -rf app/node_modules/proxy-agent-negotiate
+cp -RL "$REPO_SRC/vendor/proxy-agent-negotiate" app/node_modules/proxy-agent-negotiate
+
+# ---- 3b. production-runtime app-graph import gate (fail-closed, v2.2) -------
+# The fresh-child boot canary (executor G2.5) covers the harness plugin tree —
+# a fresh agent CHILD never imports the runtime app surface. agent-control#193
+# proved the gap: the packed closure passed every gate yet the runtime itself
+# died at boot on a missing transitive dep. This gate imports the EXACT boot
+# graph (packages/production-runtime/src/entry.js — compose.js statically pulls
+# feishu-connector/@larksuite/channel, broker, scheduler, product-api,
+# agent-router, agent-provisioning, …) under the trusted node, in a disposable
+# home, BEFORE any further mutation (§4+ runs only after this passes). No
+# service is started, no port bound, no production state touched. Any
+# resolution/import failure aborts the install here (documented abort shape:
+# the previous install sits in $BAK; restore = rm -rf live + mv $BAK back; §5b
+# has not run, so no RESTORE-R2/ownership re-pin is needed).
+echo "== production-runtime app-graph import gate (whole graph, disposable home)"
+"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-runtime-app-graph-gate.mjs" \
+  --app-dir "$TRUSTED_ROOT/app" --node "$TRUSTED_NODE" || {
+    echo "ERROR: runtime app-graph import gate FAILED — the packed app closure cannot boot the production runtime (agent-control#193 Defect A class). NOT cutover-ready." >&2
+    exit 2
+  }
 
 # ---- 4. control-plane home (DSH_HOME of the 505 parent) --------------------
 echo "== provisioning control-plane home -> home/"
@@ -739,11 +930,47 @@ chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
 # others may reach KNOWN paths but cannot LIST the root; every 505-private
 # subdir keeps its own 0700.
 chmod 711 "$PROD_ROOT"
-chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
-chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
+# v2.2 FIX B (agent-control#193 Defect B): the plist-pinned watchdog private
+# state (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1: SCHEDULER_INCIDENT_OWNER_GID=20
+# in the W1/W2/runtime plists; packages/scheduler/src/watchdog/private-state-io.js
+# readPrivateFile/ensurePrivateDirectory reject uid/gid mismatch fail-closed;
+# production-runtime paths.js control/scheduler-watchdog/{incidents.json,local-ops.jsonl}
+# + the durable-state incident-backups tree) must NEVER be swept by the blanket
+# ownership pass. The v2.1 blanket `chown -R 505:601 … control` flipped the
+# pinned group 20→601, and after the #193 rollback the RESTORED tree failed its
+# own scheduler startup readiness gate (`unsafe incident state file` boot FATAL,
+# 8790 down ~03:41–03:47 until the group was re-pinned). The blanket pass now
+# EXCLUDES the exact pinned set; the pin is asserted explicitly afterwards
+# (existing state: group re-asserted, uid/modes untouched; missing dir:
+# pre-created 505:20 0700 so the first boot passes its own gate).
+WATCHDOG_PINNED_PRIVATE_STATE_GID=20
+WATCHDOG_PINNED_PRIVATE_STATE_PATHS="$PROD_ROOT/control/scheduler-watchdog $PROD_ROOT/control/incident-backups"
+chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
+chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
+find "$PROD_ROOT/control" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
+  -not -path "$PROD_ROOT/control/incident-backups" \
+  -not -path "$PROD_ROOT/control/incident-backups/*" \
+  -exec chown "${AUTHSVC_UID}:${AUTHSVC_GID}" {} +
+find "$PROD_ROOT/control" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
+  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
+  -not -path "$PROD_ROOT/control/incident-backups" \
+  -not -path "$PROD_ROOT/control/incident-backups/*" \
+  -exec chmod u+rwX,go-rwx {} +
+for pinned in $WATCHDOG_PINNED_PRIVATE_STATE_PATHS; do
+  if [ -d "$pinned" ]; then
+    chgrp -R "$WATCHDOG_PINNED_PRIVATE_STATE_GID" "$pinned"
+  else
+    mkdir -p "$pinned"
+    chown "${AUTHSVC_UID}:${WATCHDOG_PINNED_PRIVATE_STATE_GID}" "$pinned"
+    chmod 700 "$pinned"
+  fi
+done
 chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
 chmod 755 "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
-echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
+echo "  production root: $PROD_ROOT (505-private control state 0700; plist-pinned watchdog private state $WATCHDOG_PINNED_PRIVATE_STATE_PATHS kept at gid $WATCHDOG_PINNED_PRIVATE_STATE_GID, excluded from the blanket pass; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
@@ -806,8 +1033,25 @@ HITS="$(grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/pro
   --include='*.js' --include='*.mjs' 2>/dev/null \
   | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
 if [ -n "$HITS" ]; then
+  # B7 2026-10-01 truth fix: the identical scan now runs pre-mutation
+  # (section 0b), so reaching here means drift between the staged scan and
+  # the packed tree. This is a LATE gate: the trusted app tree WAS already
+  # written by this run. Never claim "NOTHING was deployed" — report the
+  # mutation truth and the exact restore (the documented backup-then-rebuild
+  # abort shape; the operator/owning transaction executes it).
   echo "ERROR: 505-executed code references /Users/yanfenma:" >&2
   echo "$HITS" >&2
+  echo "MUTATION TRUTH: late gate — the trusted app tree at $TRUSTED_ROOT WAS already written by this run." >&2
+  if [ -n "${BAK:-}" ]; then
+    echo "EXACT RESTORE (operator, after recording evidence): rm -rf '$TRUSTED_ROOT' && mv '$BAK' '$TRUSTED_ROOT'" >&2
+    # RESTORE-R2 (v2.2, agent-control#193 Defect B): §5b ran before this late
+    # gate — the restore must re-pin the plist-pinned watchdog private state
+    # (SCHEDULER_INCIDENT_OWNER_GID=20; v2.1-era restores left group 601 behind
+    # and the restored tree failed its own boot gate):
+    echo "RESTORE-R2 (mandatory after the restore mv): for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done" >&2
+  else
+    echo "EXACT RESTORE: no pre-existing install was backed up this run (fresh install) — remove the partial tree: rm -rf '$TRUSTED_ROOT'" >&2
+  fi
   exit 2
 fi
 echo "  ok: no /Users/yanfenma references in trusted code"

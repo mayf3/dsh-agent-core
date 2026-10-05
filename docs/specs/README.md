@@ -31,6 +31,18 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Fixed HR maintenance-installation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1](HR_FIXED_S256_MAINTENANCE_INSTALLATION_V1.md) | accepted lifecycle; reviewed 55ca8588, Owner A1–A4 scope and delegated exact semantics accepted 2026-09-26; effective after canonical docs merge | contracts after docs-first acceptance in implementation base; production apply none | only fixed app/two-route same-DS promotion under maintained custody/inhibition, truthful INSTALLED_WAITING/UNKNOWN and existing one-use private startup handoff; no changes to cut no-app-write boundary |
+
+## Agent Core Modularity Phase A authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `DSH_AGENT_CORE_MODULARITY_PHASE_A_V1` | accepted 2026-09-24; reviewed proposal head `283ff1f1`; independent semantic review ACCEPT / 0 blockers; Owner closure-fix mandate persisted | contracts; production apply remains none | bounded structural authority for the read-only identity-provider package extraction, generic composition-injected Broker LOCAL-handler seam, tracked package-root public entry / trusted-pack closure, reverse-principal wiring preservation, and Workflow shutdown-drain propagation; no Auth/schema/state/deployment redesign |
+
 ## Canonical deploy offline package-manager authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
@@ -101,10 +113,55 @@ Workspace migration or production change, and `production_apply_authority` stays
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | accepted / current | contracts | current AgentProcess lifecycle authority |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V4` | accepted / current | contracts | current AgentProcess lifecycle authority; exact fresh HR lineage while retaining old unknown history |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` | superseded | none | historical accepted AgentProcess lifecycle authority replaced by V4 |
+| `AGENT_PROCESS_LIFECYCLE_HARDENING_V2` | superseded | none | historical replaced authority |
 | `AGENT_PROCESS_LIFECYCLE_HARDENING_V1` | superseded | none | historical replaced authority |
 
 `accepted / current` plus `implementation_authority: contracts` means bounded Contracts may authorize a later implementation only after its exact-base preflight and compliance gates pass. It does **not** mean implementation is complete, production is deployed, or an implementation PR has automatic merge authority.
+
+## Restart-lost fence trusted recovery amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V1` | superseded by V2 in this branch; historically accepted 2026-09-25 at reviewed r4 head `5726f43f9c028a8967720ccaff49a054ee1423e6` | historical bounded nonproduction contracts; production apply none | predecessor of the complete V2 successor; its r4 acceptance remains historical provenance |
+| `HR_RESTART_LOST_FENCE_TRUSTED_RECOVERY_SPEC_V2` | accepted by mayf3 2026-09-26 against reviewed head `94eb53c48856d850a77a0d64ada6566f9fcd13d4`; effective on the authority branch after merge | bounded nonproduction implementation contracts; production apply none | carries the complete r4 body with reviewed replay/preimage provenance and one nonce/one launch crash semantics for RQ-002..005; no live read, restart, fence clear, or production recovery authority |
+
+Owner mayf3 accepted r4 Q1=YES/Q2=YES on 2026-09-25 against the exact reviewed
+head and Spec SHA-256 `fb5a5f825900b4c77ff681283cb51b5f914f449adda6789949f39dffeb60ad78`.
+The durable acceptance and independent-review hashes are in the Spec frontmatter.
+This lifecycle publication changes only metadata; the frozen r4 body remains
+byte-identical, including its historical candidate-stage statements. No
+implementation, production recovery, privileged collector/launcher bootstrap,
+restart, protected-store mutation, or fence clearing is authorized by this
+index entry. Final-head review and merge remain separate gates.
+
+## Coherent Feishu ingress to native receipt attribution amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `COHERENT_DURABLE_INGRESS_RECEIPT_ATTRIBUTION_V1` | accepted lifecycle in this branch 2026-09-26; reviewed proposed head `40a739be19883e1697decdc56e13dd1e081610ab`; effective only after authority merge | contracts for bounded nonproduction implementation after merge; production apply none | narrow additive `AGENT_PROCESS_LIFECYCLE_HARDENING_V3` C-010/C-018/C-019 amendment for authenticated Feishu message/sender correlation in one V3 record, plus one fixed protected DS record read and root-owned hash-only evidence receipt; no public trust marker, identity substitution, replay, credential/grant effect, or change to four coherent deployment IDs |
+
+Owner mayf3 accepted the reviewed V5 direction on 2026-09-26; the exact
+attributable acceptance, proposed Spec head/file hash and independent semantic
+review are pinned in the Spec frontmatter. This docs-only lifecycle transaction
+leaves the proposed Spec body byte-identical. Candidate-stage wording in that
+body remains historical; the frontmatter and this index record the accepted
+lifecycle. Separate exact authority remains necessary for DS_UPDATE, live
+protected read, deploy, real smoke and every production mutation.
+
+## HR CTO Owner sender exact-read child amendment
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1](HR_CTO_OWNER_SENDER_EXACT_READ_AMENDMENT_V1.md) | accepted by delegated technical authority against reviewed proposed head `45c3b808` and Spec SHA-256 `6a03f077…671d`; final-head review and docs-first merge pending | bounded nonproduction contracts after merge; production apply none | one pre-START Owner-authored CTO identity seed and one fixed CTO exact-message hash-only DS action; accepted coherent efficiency-Agent readback and QF-C03/C04 proof sequence remain unchanged |
+
+The Owner separately accepted a conditional one-off DS update and protected
+read, as pinned by this child Spec. Independent review SHA-256 `53150a11…28d17f`
+and delegated lifecycle acceptance SHA-256 `445fb49a…a21557` now accept the
+exact child Spec for bounded implementation after merge. Neither lifecycle nor
+operation acceptance establishes the still-missing native Feishu message ID or
+permits a production DS update/read now.
 
 ## agt_cto-agent model-route authority
 
@@ -112,6 +169,7 @@ Workspace migration or production change, and `production_apply_authority` stays
 |---|---|---|---|
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` in PR #179 / remains effective on current main until merge | historical contracts only after successor merge | fleet-shared Codex authority whose trust-domain coordinates were frozen against the authsvc domain; protocol semantics carried forward verbatim into V3 |
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` | accepted lifecycle in PR #179 / effective on merge into main | contracts (production apply remains none; activation executes under ACTIVATION_V2 gates) | accepted whole-authority successor of V2: trust-domain realignment ONLY — canonical store `/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json`, same-uid (502) permission model for the actual unified production backend (127.0.0.1:8787, 88-agent registry), LEGACY_CONVERGED_BOOTSTRAP not selected (ONE_CANONICAL_OWNER_REAUTH mode), all 17 protocol contracts carried forward |
+| `AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1` | accepted 2026-09-24 at reviewed head `9b7018e7`; dormant until separate deployment | contracts (production apply none) | NEW additive GPT-6 Luna route capability: exact `openai-codex/gpt-6-luna`, tuple-local `reasoningEffort`, exact dsh-codex/pi-ai artifact identities; V3 legacy `gpt-5.6-luna/dsh-codex@0.2.3` behavior remains unchanged |
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2` in PR #150 / remains effective on current main until merge | historical contracts only after successor merge | historical fleet-shared Codex authority; reciprocal backlink points to the converged-bootstrap successor |
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` | accepted lifecycle in PR #179 / effective on merge into main | activation/deployment authority (production apply separately gated: pre-apply audit + fresh gates + PRODUCTION_MUTATION_CONCURRENCY = 1) | accepted whole-authority successor of ACTIVATION_V1: activation moved to the yanfenma-domain unified backend (fresh preimage domain: checkout 549dace lineage, registry 88, config v2); bounded Luna enablement agt_stock_agent + agt_ceo-agent (+ CTO migration case); ONE_CANONICAL_OWNER_REAUTH; execution order aligned to the carried-forward runner |
 | `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1` | superseded by `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2` in PR #179 / remains the authority for the authsvc domain's own future use | historical for the yanfenma domain; superseded as CURRENT production activation | authsvc/92-fleet activation authority; reciprocal backlink points to the domain-realigned successor |
@@ -294,3 +352,30 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_CANONICAL_AGENT_FLEET_SEND_POLICY_V1` | accepted 2026-09-16 (r4 AMENDMENT_1 joint acceptance; r3 acceptance 2026-09-15 @ `6bce155`; r4 reviewed head `5dd41e2…`, spec sha256 `b28ec501…`, Owner mayf3) | contracts; production apply controlled operation | `agent.session.send` = production canonical Agent fleet 的机械派生基线能力（G1∧G2∧G3 membership join）；lawful row family = `['agent.session.send'] ∪ P, P ⊆ {agent.session.inspect_own_dispatch}`（ENUMERATED 闭集，成员各自持有 Auth accepted authority，fleet 永不授予）；NORMALIZE=make-lawful；clause-scope supersedes AGENT_SESSION_SEND_STANDALONE_DEPLOYMENT_AUTHORITY_V1 §6 grant 政策 |
+
+## Workflow Execution Control V1
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1` | accepted in this candidate; effective after merge | contracts; production apply none | execution trace read model, bounded continuation and escalation, push kick, Forum projection |
+| `AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1` | accepted 2026-09-24 at reviewed head `e3393e7c`; pending latest-main integration | contracts (production apply none) | shared backend-abstracted development_execute: system-owned execution ledger, repo/worktree authority, codex exec adapter (workspace-write, CODEX_HOME operator credential), failure matrix A-G |
+
+## Fixed HR causal qualification completion seam
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V1` | accepted historical; superseded by V2 in this atomic lifecycle, original text/review/acceptance retained | historical only | MI-C03 and V2 V10/RQ-007 original separate proof-executor private OWN-event completion |
+| `HR_FIXED_CAUSAL_QUALIFICATION_EVENT_SEAM_V2` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `4db7eb8d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | preserves CTO proof; adds one fixed root-owned tool-free native canary qualification source, passive non-CTO alternate; same closed receipts and UNKNOWN/no seal |
+
+## Fixed original HR proof-executor qualification phase
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V1` | accepted historical; superseded by V2 in this atomic lifecycle, original text/review/acceptance retained | historical only | original sealed root/FD-owned qualification-only startup and CTO Owner-turn requirement |
+| `HR_FIXED_ORIGINAL_EXECUTOR_QUALIFICATION_PHASE_V2` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `1261e5de…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | unchanged CTO/OCB branch plus separately eligible fixed admin canary/passive turns; one original root executor, closed receipt/phase semantics |
+
+## Fixed s256 admin emergency recovery
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| `HR_S256_ADMIN_EMERGENCY_RECOVERY_V1` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `0e80887d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | distinct peer-authenticated fixed action/ID, genuine CTO-free qualification prerequisite, one whole-host s256 cut, old effect UNKNOWN/no replay and conflict-specific restrictions |

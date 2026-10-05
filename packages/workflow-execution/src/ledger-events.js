@@ -35,6 +35,11 @@
  *   run_delivered       { attemptId, agentId, requestId, sessionId,
  *                         reconciliationHandle?, messageId? }
  *                       → ACTIVE phase run_delivered (the Run linkage).
+ *   progress_checkpoint { attemptId, reporterAgentId, sessionId?,
+ *                         turnExecutionId?, checkpoint }
+ *                       → execution-resume metadata ONLY. It never changes
+ *                         state/phase/judgment and never counts as workflow
+ *                         business progress or stale-no-progress evidence.
  *   delivery_failed     { attemptId, reason }
  *                       → terminal NEEDS_REVIEW for every post-invocation
  *                       class. EXCEPTION (V2 CTR-WAE-011, projection-only):
@@ -208,6 +213,33 @@ export function applyLedgerEvent(attempts, event) {
         current.workflowStateVersionAtDispatch = event.workflowStateVersionAtDispatch
       }
       return
+    case 'progress_checkpoint': {
+      if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
+      if (current.phase !== 'run_delivered' || current.delivered === undefined) {
+        throw new Error(`workflow-execution: refusing progress_checkpoint for nodeVisit ${nodeVisitId} — phase ${current.phase} is not an active delivered Run`)
+      }
+      if (event.attemptId !== current.attemptId) {
+        throw new Error(`workflow-execution: corrupt ledger — progress_checkpoint attemptId mismatch for nodeVisit ${nodeVisitId}`)
+      }
+      if (typeof event.reporterAgentId !== 'string' || event.reporterAgentId === '') {
+        throw new Error('workflow-execution: progress_checkpoint requires reporterAgentId')
+      }
+      if (event.reporterAgentId !== current.delivered.agentId) {
+        throw new Error(`workflow-execution: progress_checkpoint reporter ${event.reporterAgentId} does not own delivered Run for nodeVisit ${nodeVisitId}`)
+      }
+      if (event.checkpoint === null || typeof event.checkpoint !== 'object' || Array.isArray(event.checkpoint)) {
+        throw new Error('workflow-execution: progress_checkpoint requires checkpoint object')
+      }
+      current.latestProgressCheckpoint = {
+        checkpoint: event.checkpoint,
+        reporterAgentId: event.reporterAgentId,
+        ...(typeof event.sessionId === 'string' && event.sessionId !== '' ? { sessionId: event.sessionId } : {}),
+        ...(typeof event.turnExecutionId === 'string' && event.turnExecutionId !== '' ? { turnExecutionId: event.turnExecutionId } : {}),
+        atMs: event.atMs,
+      }
+      current.progressCheckpointCount = (current.progressCheckpointCount ?? 0) + 1
+      return
+    }
     case 'delivery_failed':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-011 (projection-only reclassification): a HISTORICAL V1
@@ -239,6 +271,11 @@ export function applyLedgerEvent(attempts, event) {
       current.phase = 'reconciled'
       current.judgment = event.judgment
       current.reason = event.reason
+      // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the reconcile verdict
+      // timestamp starts the run_ended_no_submission retry clock. Additive
+      // projection field — existing files replay unchanged and simply gain
+      // the field.
+      current.reconciledAtMs = event.atMs
       return
     case 'stale_superseded': {
       // CTR-SRE-002: the ONE re-entry marker. Source guard first — ACTIVE
@@ -254,6 +291,29 @@ export function applyLedgerEvent(attempts, event) {
       current.reason = `stale_no_progress: visit still current with workflow_state_version ${event.observedWorkflowStateVersion} unchanged since delivery`
       current.observedWorkflowStateVersion = event.observedWorkflowStateVersion
       current.staleSupersededAtMs = event.atMs
+      return
+    }
+    case 'escalation_requested': {
+      // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation fact
+      // per visit. The live writer never appends a second one (pre-check in
+      // recordEscalationRequested), so a replayed second event means a
+      // corrupt file — fail loud, never absorb.
+      if (current === undefined) {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested for unknown nodeVisit ${nodeVisitId}`)
+      }
+      if (current.escalation !== undefined) {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested twice for nodeVisit ${nodeVisitId}`)
+      }
+      if (typeof event.reason !== 'string' || event.reason === '') {
+        throw new Error(`workflow-execution: corrupt ledger — escalation_requested requires a reason (nodeVisit ${nodeVisitId})`)
+      }
+      current.escalation = {
+        reason: event.reason,
+        ...(Number.isInteger(event.attemptCount) ? { attemptCount: event.attemptCount } : {}),
+        ...(typeof event.lastAttemptId === 'string' ? { lastAttemptId: event.lastAttemptId } : {}),
+        ...(typeof event.dispatchIntentId === 'string' ? { dispatchIntentId: event.dispatchIntentId } : {}),
+        atMs: event.atMs,
+      }
       return
     }
     default:

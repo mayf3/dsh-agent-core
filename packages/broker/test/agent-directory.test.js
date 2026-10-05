@@ -35,7 +35,7 @@ import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { createRelayHandlers } from '../src/relay.js'
 import { createBrokerGateway } from '../src/gateway.js'
 import { buildToolDefinition } from '../src/registry.js'
-import { createAgentDirectoryAccess } from '../../production-runtime/src/agent-directory.js'
+import { createAgentDirectoryAccess } from '../../agent-identity-capabilities/index.js'
 
 const CALLER = 'agt_dir-caller-agent'
 

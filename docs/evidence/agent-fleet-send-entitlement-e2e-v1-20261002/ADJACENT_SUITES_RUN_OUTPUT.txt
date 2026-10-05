@@ -1,0 +1,246 @@
+[broker] forum moderator pack: 0 tools (forumModeratorAgentIds not configured)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+✔ manifest grammar: valid LOCAL capability with the R1 identity block (6.627833ms)
+✔ manifest declares exactly the closed §5 taxonomy, per operation too (0.15025ms)
+✔ model-visible arguments are exactly the three R2 fields (0.647542ms)
+✔ the model-facing schema physically excludes every R2-forbidden field (4.523917ms)
+✔ DEFAULT_MANIFESTS registers agent_session_send exactly once (1.1065ms)
+✔ inspection is a separate read-only capability and grant (4.831834ms)
+✔ LOCAL manifest operations get child relay handlers that unwrap the parent envelope (G8) (5.983666ms)
+✔ LOCAL relay preserves structured parent failures through the child invoke mapping (2.297ms)
+✔ LOCAL relay maps an unusable send+lookup response to parent_rpc_ambiguous without replay (6.32775ms)
+✔ lost/unusable parent response reconciles once with the exact V2 trace and zero resend (8.8995ms)
+✔ legacy/unproven reconcile evidence returns the exact unavailable trace variant (8.008959ms)
+✔ reconcile manifest is gateway-only infrastructure with the carried send grant (1.08625ms)
+✔ session-send declared failure render preserves sanitized diagnostic detail (18.334584ms)
+✔ BROKER_RPC_METHOD stays in lockstep between relay and router (0.131666ms)
+✔ infrastructure reconcile remains gateway-executable but is absent from the model inventory (17.713416ms)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[broker-gateway] agent agt_a-caller: no credential bound (fails closed)
+✔ gateway: the resolver closure admits agentSessionMessagingAccess (F9) and freezes the trusted caller (113.550791ms)
+✔ gateway: a missing provider fails closed unsupported_operation and fires the L0 hook (R12) (1.237041ms)
+✔ gateway: a credential denial fires the L0 hook without changing the denial (5.555916ms)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[broker-gateway] agent agt_a-caller: agent_session_turn_inspect grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[broker-gateway] auditDenial hook failed for agent_session_send.send: audit sink down
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+✔ gateway: inspection grant denial happens before the read-only handler (21.379875ms)
+✔ gateway: a broken audit sink never changes the denial outcome (0.878167ms)
+✔ gateway: the L0 hook is not invoked for non-local capabilities (0.246458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-idN7hP/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-idN7hP/workspaces/agt_dir-e2e-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589211,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589211,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_dir-e2e-target-agent session main requestId 85865c2a-c5ae-4fbf-a045-... (d9781dcb-84f7-44c7-969e-dd544ebd257d) in 30ms
+✔ ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main (161.646834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-G20HZw/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: unknown name → not_found and ZERO deliveries anywhere (73.64375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-UwCHdB/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries (67.4645ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-wsHL9V/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E disabled target: resolves enabled:false (existence truth) and the send is refused (78.001375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-3F7I9v/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E list: the full composed stack lists both agents in directory shape (93.4325ms)
+✔ R2: the exact three fields accept boundary values (2.311584ms)
+✔ R2: byte-length, NUL, grammar, and range violations reject with invalid_arguments detail (0.40475ms)
+✔ R3: a missing or stale source-turn proof fails BEFORE Router delivery (6.818291ms)
+✔ R3: self-send is rejected before delivery and before any audit intent (5.150958ms)
+✔ R3/R4: a trusted legal opaque source id with underscores is preserved exactly (5.191666ms)
+✔ R3/R4: one deliver carries the frozen inter_agent messageOrigin built from trusted context (11.200625ms)
+✔ R12: authoritative argument validation denial writes one L0 row and zero deliveries (0.902792ms)
+✔ R12: intent row precedes delivery; outcome row follows the receipt (3.735125ms)
+✔ R12: an intent append failure returns internal_error with ZERO Router deliveries (0.790083ms)
+✔ R12: first coordinate append failure after receipt is honest outcome_unknown and never redelivers (6.867542ms)
+✔ R12: later wait-outcome audit degradation preserves the already-retained trace success (2.442375ms)
+✔ R8: the exact Run completing in time returns exactly one replied with the full text (6.35025ms)
+✔ R8: reply-wait timeout returns {status:timeout} and never cancels or replays (5.06925ms)
+✔ R8: the reply deadline starts AT the receipt (pre-receipt queue time excluded) (4.951166ms)
+✔ R8: failed / no_output / truncated / outcome_unknown never become success (21.943417ms)
+✔ deliver failures map to exact §5 classes and never retry (13.348083ms)
+✔ a malformed post-acceptance receipt is outcome_unknown, never not-delivered (3.298833ms)
+✔ wait mode without a reconciliation handle returns honest outcome_unknown (0.911125ms)
+✔ inspection handler forwards only args and the gateway-frozen caller to the read-only seam (0.366458ms)
+✔ reconcile lookup is caller-bound, reads live + .1, and returns retained V2 coordinate evidence (7.333ms)
+✔ the provider requires the full Router reconciliation seam (0.371709ms)
+✔ rotation archives the outgoing generation before the .1 rename (no loss window) (116.33375ms)
+✔ checkpoint resets at rename: the new generation is never sliced by a stale offset (163.2925ms)
+✔ archive failure keeps rotation running, reports once, send path unaffected (10.50025ms)
+✔ stale checkpoint from a previous generation is detected as 0 — no silent interval misalignment (222.795166ms)
+✔ archive failure payload carries bytesAttempted (§6.4 ASM_ARCHIVE_APPEND_FAILED{bytesAttempted}) (61.81375ms)
+✔ checkpoint reset failure after a successful rename reports ASM_ARCHIVE_CHECKPOINT_RESET_FAILED and never corrupts the next generation (541.087125ms)
+✔ reconcile window unchanged: findInvocation reads exactly live + .1, never the archive (254.298333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-RvutJi/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[broker-gateway] agent agt_b9-newborn-agent: agent_session_send grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
+[router] [router] agent agt_b9-target-agent ready pid=424242 (2ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589232,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589232,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 3fa3ef7f-65d1-4810-88c8-... (b9-msg-1) in 92ms
+[broker-gateway] agent agt_b9-source-agent: agent_session_send grant denied: token endpoint rejected the request (status 401, error invalid_client)
+[broker-gateway] agent agt_b9-newborn-agent: agent_session_turn_inspect grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
+✔ B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate (283.847917ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-pihHCd/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] [router] agent agt_b9-target-agent ready pid=424242 (0ms)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589456,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589457,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 33980c34-4718-45c5-b1b1-... (b9-msg-1) in 86ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589566,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589566,"routeChainId":"chain-agt_b9-target-agent-df58fa0d488989fb","agentId":"agt_b9-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_b9-target-agent session main requestId 8a781921-b50c-4077-9055-... (b9-msg-2) in 73ms
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/b9-fleet-e2e-pihHCd/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart (339.270292ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-tNKoeN/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-tNKoeN/workspaces/agt_a2a-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589225,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589225,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId 31dd7bc2-33bf-44e8-87b2-... (ba77be75-6de0-427b-b8cf-fe37f612d7f3) in 27ms
+✔ Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact (166.230292ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-toVXYH/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-toVXYH/workspaces/agt_a2a-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589367,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589367,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId 780eed1e-4892-491a-87f7-... (be485b53-2f29-4f99-ace4-095d54393128) in 45ms
+✔ ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact (199.920875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-g8pnlw/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-g8pnlw/workspaces/agt_a2a-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589555,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589555,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId fd4f9da1-5350-4de0-b09c-... (db56da22-cea9-4607-9b56-8fb7294d8013) in 35ms
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589566,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589566,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId d07482ef-0624-47a1-9165-... (a3ffd07c-e195-47cf-947e-d93601344540) in 1ms
+✔ Case A: the existing main is reused — same process, two sends, two Runs (155.87475ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-Lkl0RV/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-Lkl0RV/workspaces/agt_a2a-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589668,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589668,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875589668,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875589668,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId 2cb421cc-218a-4291-bee1-... (b45784d0-d644-423e-8ca3-9047d959d8f8) in 13ms
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId 59a08691-b7c5-4642-8fa3-... (70d43505-9494-47e1-bc76-975749b375cc) in 10ms
+✔ Case B: concurrent first sends to an absent main share ONE startup generation (87.469083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-LqIIpn/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[broker-gateway] agent agt_stock_agent: agent_session_send grant denied: token endpoint rejected the request (status 403, error insufficient_scope)
+✔ Case F: an unauthorized sender is access_denied with zero target deliveries (58.595667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-tf-TwQsOL/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[broker-gateway] agent agt_stock_agent: agent_session_send grant denied: token endpoint unreachable
+✔ Case F (F23): a grant-check transport outage is transport_failure, never access_denied (57.071625ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-7xCLDe/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ disabled target is target_disabled with zero target process or prompt (61.233708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-Ihlxfw/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ Case G: model-supplied identity fields are rejected before any delivery (53.525584ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-x1qxW3/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 46 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/a2a-int-x1qxW3/workspaces/agt_a2a-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1790875590002,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1790875590002,"routeChainId":"chain-agt_a2a-target-agent-df58fa0d488989fb","agentId":"agt_a2a-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_a2a-target-agent session main requestId d61074d0-37bc-46de-9b0d-... (fcf7dada-bb60-48fe-ac5c-fa513d451d71) in 18ms
+✔ R12: L0 rows never carry business detail; the target reply never reaches the audit file (105.904291ms)
+✔ exact argument closure and DSH path encoding reject path interpretation (2.612708ms)
+✔ audit eligibility scans .1 then live to EOF, groups one request, and makes negatives identical (2.9275ms)
+✔ audit append preflights the serialized row and keeps live bytes at or below N (20.787792ms)
+✔ audit generations enforce the exact byte cap and ambiguous dispatch ownership fails closed (37.681917ms)
+✔ exact turn projection has frozen schema/order and excludes adjacent/reasoning/replay/usage/chunks (8.611125ms)
+✔ accepted-not-started, running, failed, ambiguous and foreign durable provenance are honest (9.608291ms)
+✔ messages, tool arguments/results and final response redact filesystem paths and environment (1.862167ms)
+✔ full inspection reads both audit generations and exactly one selected artifact (12.990208ms)
+✔ ACC-ASM2-007 committed fixture resolves only the middle Workflow-read turn (12.605125ms)
+✔ missing/foreign audit coordinate performs no Session read and uses byte-identical error (23.640041ms)
+✔ ACC-ASM2-004 negative coordinates have identical bounded work and coarse latency (343.471625ms)
+ℹ bounded negative-path timing {"missing":{"p50Ms":2.097249999999974,"p95Ms":4.430874999999958},"foreign":{"p50Ms":2.1807919999999967,"p95Ms":4.510791999999981},"wrong_session":{"p50Ms":2.1055000000000064,"p95Ms":4.381916999999987},"unsupported":{"p50Ms":2.1585830000000215,"p95Ms":4.380416999999966}}
+✔ Session resource bounds fail closed without partial results (47.997125ms)
+✔ exact Session record, record-count and artifact-byte boundaries remain readable (79.417334ms)
+✔ response truncation is deterministic, whole-record and under the byte cap (19.69825ms)
+ℹ tests 79
+ℹ suites 0
+ℹ pass 79
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1593.651208
