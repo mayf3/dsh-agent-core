@@ -1,7 +1,7 @@
 # Development Grammar V1
 
 ```text
-GRAMMAR_VERSION = 1.1.0
+GRAMMAR_VERSION = 2.0.0-rc.1
 GOVERNING_AUTHORITY = AGENT_DEVELOPMENT_GOVERNANCE_V1
 STATUS = accepted
 ENFORCEMENT_LEVEL = manual_policy_plus_deterministic_integrity
@@ -20,7 +20,7 @@ For an ordinary task, load only:
 3. directly relevant accepted authorities;
 4. the Spec-governance router and one selected mode.
 
-Do not preload every protocol, template, rationale, prior review, or example.
+Do not preload every protocol, template, rationale, prior review, or example. Resume from the existing current task/release record and its directly referenced active authorities and Evidence. Read historical records only to resolve a specific provenance or dependency question; their age or filename does not determine authority. Keep historical evidence readable without loading it as the control plane.
 
 ## Minimum loop
 
@@ -177,6 +177,8 @@ NEXT_ACTION = RE_PREFLIGHT
 
 `REUSE` and `AMEND_OR_NEW_PENDING_OWNERSHIP` cannot cross this readiness boundary. `OWNER_DECISION_REQUIRED = YES` may record that the re-PREFLIGHT needs an Owner decision, but `OWNER_DECISION` cannot replace the required `RE_PREFLIGHT` route result.
 
+A stopping gap needs a concrete diagnosis in the existing record: the affected action, missing long-lived decision, authority inventory searched, reachable counterexample, impact, minimum closure, and whether removing the dependency or using an already-authorized bounded path avoids it. A missing decision cannot cite its own nonexistent Contract; it must demonstrate the dependency instead. An invalid or incomplete diagnosis does not grant execution permission: retain a safe pause on genuinely uncertain affected work, request only the missing fact, and do not launch speculative redesign.
+
 Required Evidence must be accessible to the designated independent Reviewer, reproducible in an authorized environment, or represented by a sanitized coordinate-bound receipt from a legally independent actor.
 
 ```text
@@ -228,7 +230,7 @@ BASE_HEAD = integration snapshot used for review
 CURRENT_BASE_HEAD = current branch tip at impact recheck
 ```
 
-Unrelated Base movement is not candidate-Head drift. Re-review only when candidate semantics, relevant authority, affected behavior/Evidence, or a real conflict changes.
+Unrelated Base movement is not candidate-Head drift. Re-review affected semantics only when candidate semantics, relevant authority, affected behavior/Evidence, or a real conflict changes. A receipt-only or lifecycle-only Head change still gets independent final-Head delta recheck, not automatic full review. A bounded semantic repair gets independent delta review of that repair and invalidated dependencies. Full review needs an initial review, an identified accepted full-review gate, or demonstrated unbounded impact; a new SHA is not a sufficient reason.
 
 A Blocker uses one class:
 
@@ -242,7 +244,9 @@ SCOPE_ESCALATION
 REQUIRED_GATE_FAILURE
 ```
 
-Every Blocker states `SOURCE`, `COUNTEREXAMPLE`, `IMPACT`, and `MINIMAL_CLOSURE`. Legal sources are active accepted Product Authority, accepted local governance/invariant authority, a pre-existing active machine gate, or a valid Execution Mandate. Investigation, proposed tests, task product prose, Reviewer preference, and Review comments are not Product-Contract sources.
+Every Blocker states `SOURCE`, `COUNTEREXAMPLE`, `IMPACT`, and `MINIMAL_CLOSURE`. Name the affected readiness boundaries; an open Blocker requires at least one of them to be `NO` and none to be `YES`. Unrelated authorized work may continue. A load-bearing `SPEC_GAP` is a separate finding type but not an exemption from justifying a stop. Legal sources are active accepted Product Authority, accepted local governance/invariant authority, a pre-existing active machine gate, or a valid Execution Mandate. Investigation, proposed tests, task product prose, Reviewer preference, and Review comments are not Product-Contract sources.
+
+Current or resumed decisions use route `schema_version: 2` and every open Blocker names `affected_readiness`. The default validator rejects schema-v1 input. Historical schema-v1 findings may be viewed with the explicit `--legacy-inspection` mode, which preserves their structural semantics without inventing a global stop and never certifies current readiness. History is not rewritten; a current decision is a new v2 record with its real scope and applicable authority.
 
 Other findings are `SPEC_GAP`, `FOLLOW_UP`, or `TOOLING_DEBT`. Tooling debt blocks a product only when it causes false pass, harms non-test data, hides a concrete security/data-loss failure, or is itself an accepted deliverable.
 
@@ -273,9 +277,21 @@ Optional platform work, extra fault research, Agent availability, sunk effort, a
 
 A Conformance Record binds exact Product Authority revision, implementation revision, environment, evaluation time, implementation state, verification state, `conformance_result`, executed Observations, and Evidence relations.
 
-Standard review covers affected Contracts and directly dependent accepted invariants. Controlled operations, releases, explicit full audits, and unbounded surfaces use the complete applicable matrix. A prior mechanism is not rerun unless the new change invalidates it.
+Standard review covers affected Contracts and directly dependent accepted invariants. Controlled operations, releases, explicit full audits, and unbounded surfaces use the complete applicable matrix. The complete applicable matrix is complete for the bounded release/operation, not every Contract in every reachable repository. Identify its scope before execution. A prior mechanism is not rerun unless the new change invalidates it. Rebind unaffected evidence through an explicit impact check; never copy an old `VERIFIED` claim onto changed coordinates. Fresh runtime/authority/pre-state checks remain fresh where the applicable gate requires them.
 
 `VERIFIED` applies only to the exact bound tuple and is never a permanent property of a Spec.
+
+## Bounded delivery loop
+
+Use one current Brief, task, PR, or release record, not a new control-plane document. It references the accepted scope, applicable gates, actual authorization, valid blockers, last real action, and next executable action; a status field never creates authority.
+
+Freeze the acceptance scope and applicable gates for that delivery. Reviewers may expose violations and genuinely missing dependencies, not silently add product requirements. Newly discovered concrete security/data-loss risks, missing authority, false Evidence, required-gate failures, and business/runtime canary failures still stop affected work. Optional hardening remains follow-up debt. Changing the accepted scope or gates needs the owning authority's explicit disposition, not a review preference.
+
+Retain review/repair history against the original business outcome, not proposal filenames or candidate names. Suggested working pattern: one initial review, a consolidated repair pass, then affected delta review. Repeated work without new evidence is a reason to reassess scope, split optional work, or try a simpler authorized path. This is diagnostic guidance, not a numeric cutoff, new acceptance gate, or reason to forbid an otherwise authorized repair. Any task-specific budget comes from its applicable authorization; existing Blockers, Done When, and Expansion Trigger remain controlling.
+
+When the next action is within current authorization and its required gates pass, perform it rather than producing another unchanged ready packet. If it is blocked, report that action, the failed prerequisite, its owner, and the minimum fix. Do not try a known unsafe or unauthorized action merely to obtain an error. No new observation means no new recursive review or authority-reconciliation cycle. Report real waiting states as waiting; a child review task's completion is not delivery of the business outcome.
+
+During an incident, prefer an existing accepted recovery path with a valid mandate, abort/rollback controls, and receipts. Separate optional generalized recovery hardening. Incident status never authorizes blind retry, fence removal, privilege bypass, or a second Run while external effects remain unknown.
 
 ## Adoption and history
 
