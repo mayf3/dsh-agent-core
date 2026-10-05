@@ -10,7 +10,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from '../src/agent-session-reply-wait.js'
+import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from '../../src/agent-session-reply-wait.js'
 
 function fakeTimer() {
   const pending = []
