@@ -385,7 +385,10 @@ export async function composeProductionRuntime(options = {}) {
   // byte-identically (zero default production behavior change). The broker
   // gateway is mounted below (mountBrokerGateway); the seam resolves it
   // lazily per command via ctx so wiring order never depends on mount order.
-  if (feishu !== undefined && isStrictTruthyEnv(process.env[HUMAN_WORK_ITEM_INGRESS_ENABLED_ENV])) {
+  if (isStrictTruthyEnv(process.env[HUMAN_WORK_ITEM_INGRESS_ENABLED_ENV])) {
+    if (feishu === undefined) {
+      throw new Error('production-runtime: HUMAN_WORK_ITEM_INGRESS_ENABLED requires the Feishu channel (FEISHU_CREDS_PATH) — fail loud, never silently unmapped')
+    }
     const principalsFile = process.env[HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE_ENV]
     if (typeof principalsFile !== 'string' || principalsFile === '') {
       throw new Error('production-runtime: HUMAN_WORK_ITEM_INGRESS_ENABLED requires HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE (fail loud — an authorization allowlist must never be silently absent)')
