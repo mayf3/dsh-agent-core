@@ -22,6 +22,18 @@
  *   today (auth-service MachinePrincipal enum is agent|service; svc-workflow
  *   Auth V1 verifier admits principal_type=agent only) — see ROOT_GAP doc.
  *
+ *   DURABILITY (parent-review repair): the canonical-result audit row is
+ *   persisted BEFORE any Feishu reply attempt, so a reply failure can never
+ *   erase or misclassify a known canonical success. Reply-delivery failures
+ *   are recorded as linked `human_work_item_reply_failure` rows; audit-sink
+ *   failures are returned (never swallowed) and surfaced truthfully in log
+ *   + the user reply — never rendered as a transition failure. Every row
+ *   carries unambiguous provenance: humanPrincipalId (REQUIRED allowlist
+ *   binding; provenance metadata only, never a workflow input),
+ *   executorAgentId (the canonical actor), the original Feishu messageId,
+ *   a commandId linking the row family, and — on transition rows — the
+ *   canonical receipt / source-visit linkage.
+ *
  *   This module keeps ZERO state: no work-item numbering, no session, no
  *   dedup store (bridge owns message dedup; the server owns CAS/receipts).
  */
@@ -125,8 +137,10 @@ export function loadPrincipalBindings(file) {
     if (typeof executorAgentId !== 'string' || executorAgentId.length === 0) {
       return { ok: false, error: 'principal entry missing executorAgentId' }
     }
-    if (entry.humanPrincipalId !== undefined && typeof entry.humanPrincipalId !== 'string') {
-      return { ok: false, error: 'humanPrincipalId must be a string when present' }
+    // REQUIRED: without a bound human principal the durable audit trail would
+    // carry only a redacted openId prefix — not unambiguous human provenance.
+    if (typeof entry.humanPrincipalId !== 'string' || entry.humanPrincipalId.length === 0) {
+      return { ok: false, error: 'principal entry missing humanPrincipalId (unambiguous durable human provenance is required)' }
     }
     if (bindings.has(feishuOpenId)) return { ok: false, error: `duplicate feishuOpenId ${JSON.stringify(feishuOpenId.slice(0, 6))}` }
     // One executor identity per human: a shared executor would merge two
@@ -137,7 +151,7 @@ export function loadPrincipalBindings(file) {
     executorAgents.add(executorAgentId)
     bindings.set(feishuOpenId, {
       executorAgentId,
-      ...(entry.humanPrincipalId === undefined ? {} : { humanPrincipalId: entry.humanPrincipalId }),
+      humanPrincipalId: entry.humanPrincipalId,
     })
   }
   return { ok: true, bindings }
@@ -212,11 +226,22 @@ export function createHumanWorkItemIngressHandler({
   log = () => {},
   now = () => Date.now(),
 }) {
+  let commandSeq = 0
+
+  // Returns true when the row was durably written; a sink that throws OR
+  // reports {ok:false} is a FAILED write — logged, never swallowed, so the
+  // caller can disclose the provenance gap truthfully.
   const auditRow = (entry) => {
     try {
-      audit({ kind: 'human_work_item_command', ts: now(), ...entry })
+      const res = audit({ kind: 'human_work_item_command', ts: now(), ...entry })
+      if (res && typeof res === 'object' && res.ok === false) {
+        log(`human-work-item audit write failed: ${res.error ?? 'unknown audit error'}`)
+        return false
+      }
+      return true
     } catch (error) {
       log(`human-work-item audit write failed: ${error?.message ?? error}`)
+      return false
     }
   }
 
@@ -228,29 +253,58 @@ export function createHumanWorkItemIngressHandler({
     await reply(replyTargetFor(ingress).replyTo(ingress.messageId), text)
   }
 
-  async function runQuery(ingress, binding) {
+  // Delivery is isolated: a reply failure appends a linked reply_failure row
+  // and is NEVER allowed to propagate into the command outcome path.
+  const deliver = async (ingress, text, { base, action, workflowInstanceId } = {}) => {
+    try {
+      await send(ingress, text)
+      return true
+    } catch (error) {
+      const message = String(error?.message ?? error).slice(0, 500)
+      log(`human-work-item reply delivery failed: ${message}`)
+      auditRow({
+        kind: 'human_work_item_reply_failure',
+        ...(base ?? {}),
+        ...(action === undefined ? {} : { action }),
+        ...(workflowInstanceId === undefined ? {} : { workflowInstanceId }),
+        error: message,
+      })
+      return false
+    }
+  }
+
+  // Truthful disclosure when this interaction's own audit row could not be
+  // persisted — appended to the reply, never rendered as a transition failure.
+  const withAuditDisclosure = (text, auditOk) =>
+    auditOk ? text : `${text}\n⚠️ audit write failed — this interaction was NOT durably recorded locally`
+
+  async function runQuery(ingress, binding, base) {
     const res = await gateway.execute(
       { capabilityId: 'workflow_my_tasks', operation: 'list', args: { limit: 10 } },
       { agentId: binding.executorAgentId },
     )
     if (!res?.ok) {
       const code = res?.error?.code ?? 'unknown_error'
-      await send(ingress, `⛔ /work query failed: ${code}`)
-      auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: 'query', outcome: 'error', code })
+      const auditOk = auditRow({ ...base, action: 'query', outcome: 'error', code })
+      await deliver(ingress, withAuditDisclosure(`⛔ /work query failed: ${code}`, auditOk), { base, action: 'query' })
       return
     }
     const items = Array.isArray(res.result?.items) ? res.result.items : []
     if (items.length === 0) {
-      await send(ingress, 'No pending work items assigned to you.')
-      auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: 'query', outcome: 'executed' })
+      const auditOk = auditRow({ ...base, action: 'query', outcome: 'executed' })
+      await deliver(ingress, withAuditDisclosure('No pending work items assigned to you.', auditOk), { base, action: 'query' })
       return
     }
     const lines = items.map(instanceLine).filter((line) => line !== null)
-    await send(ingress, [`You have ${items.length} pending work item(s):`, ...lines, '', USAGE_TEXT].join('\n'))
-    auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: 'query', outcome: 'executed', count: items.length })
+    const auditOk = auditRow({ ...base, action: 'query', outcome: 'executed', count: items.length })
+    await deliver(
+      ingress,
+      withAuditDisclosure([`You have ${items.length} pending work item(s):`, ...lines, '', USAGE_TEXT].join('\n'), auditOk),
+      { base, action: 'query' },
+    )
   }
 
-  async function runTransition(ingress, binding, command) {
+  async function runTransition(ingress, binding, command, base) {
     const { workflowInstanceId } = command
     const detailRes = await gateway.execute(
       { capabilityId: 'workflow_instance_detail', operation: 'read', args: { workflowInstanceId } },
@@ -258,20 +312,20 @@ export function createHumanWorkItemIngressHandler({
     )
     if (!detailRes?.ok) {
       const code = detailRes?.error?.code ?? 'unknown_error'
-      await send(ingress, `⛔ /work ${command.action} failed: ${code}`)
-      auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action, workflowInstanceId, outcome: 'error', code })
+      const auditOk = auditRow({ ...base, action: command.action, workflowInstanceId, outcome: 'error', code })
+      await deliver(ingress, withAuditDisclosure(`⛔ /work ${command.action} failed: ${code}`, auditOk), { base, action: command.action, workflowInstanceId })
       return
     }
     const detail = detailRes.result?.visibility === 'full' ? detailRes.result.detail : null
     if (detail === null) {
-      await send(ingress, `⛔ /work ${command.action} failed: instance is not fully visible to the executor principal`)
-      auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action, workflowInstanceId, outcome: 'error', code: 'not_visible' })
+      const auditOk = auditRow({ ...base, action: command.action, workflowInstanceId, outcome: 'error', code: 'not_visible' })
+      await deliver(ingress, withAuditDisclosure(`⛔ /work ${command.action} failed: instance is not fully visible to the executor principal`, auditOk), { base, action: command.action, workflowInstanceId })
       return
     }
     const picked = selectTransition(detail, command.action, command.transitionKey)
     if (!picked.ok) {
-      await send(ingress, picked.reply)
-      auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action, workflowInstanceId, outcome: 'refused' })
+      const auditOk = auditRow({ ...base, action: command.action, workflowInstanceId, outcome: 'refused' })
+      await deliver(ingress, withAuditDisclosure(picked.reply, auditOk), { base, action: command.action, workflowInstanceId })
       return
     }
     const transition = picked.transition
@@ -293,24 +347,36 @@ export function createHumanWorkItemIngressHandler({
     )
     if (!res?.ok) {
       const code = res?.error?.code ?? 'unknown_error'
-      await send(ingress, `⛔ /work ${command.action} failed: ${code}`)
-      auditRow({
-        openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action,
-        workflowInstanceId, transitionId: transition.transition_id, outcome: 'error', code,
+      const auditOk = auditRow({
+        ...base, action: command.action, workflowInstanceId, transitionId: transition.transition_id,
+        outcome: 'error', code,
       })
+      await deliver(ingress, withAuditDisclosure(`⛔ /work ${command.action} failed: ${code}`, auditOk), { base, action: command.action, workflowInstanceId })
       return
     }
     const receipt = res.result ?? {}
     const verb = command.action === 'reject' ? 'rejected' : 'completed'
-    await send(ingress, [
-      `✅ ${verb} ${workflowInstanceId} (${transition.display_name}).`,
-      `stateVersion ${receipt.workflowStateVersion} · event ${receipt.eventSequence} · sourceVisit ${receipt.sourceNodeVisitId}`,
-    ].join('\n'))
-    auditRow({
-      openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action,
-      workflowInstanceId, transitionId: transition.transition_id, outcome: 'executed',
+    // DURABILITY ORDER: the canonical receipt row is persisted BEFORE any
+    // reply attempt — a reply failure can never erase or misclassify a known
+    // canonical success.
+    const auditOk = auditRow({
+      ...base, action: command.action, workflowInstanceId, transitionId: transition.transition_id,
+      outcome: 'executed',
       eventSequence: receipt.eventSequence, workflowStateVersion: receipt.workflowStateVersion,
+      sourceNodeVisitId: receipt.sourceNodeVisitId, currentNodeVisitId: receipt.currentNodeVisitId,
+      ...(receipt.submissionId === undefined || receipt.submissionId === null ? {} : { submissionId: receipt.submissionId }),
+      ...(receipt.currentContextRevisionId === undefined || receipt.currentContextRevisionId === null ? {} : { currentContextRevisionId: receipt.currentContextRevisionId }),
+      // canonical submission linkage for reject (what was submitted upstream)
+      ...(command.action === 'reject' ? { reasonCode: 'HUMAN_REJECT', rootCauseNodeVisitId: detail.current_node_visit_id } : {}),
     })
+    await deliver(
+      ingress,
+      withAuditDisclosure([
+        `✅ ${verb} ${workflowInstanceId} (${transition.display_name}).`,
+        `stateVersion ${receipt.workflowStateVersion} · event ${receipt.eventSequence} · sourceVisit ${receipt.sourceNodeVisitId}`,
+      ].join('\n'), auditOk),
+      { base, action: command.action, workflowInstanceId },
+    )
   }
 
   return async function handleIngress(ingress) {
@@ -322,38 +388,55 @@ export function createHumanWorkItemIngressHandler({
     const binding = bindings.get(ingress.sender?.openId)
     if (binding === undefined) return false
 
-    log(`human-work-item ingress: action=${command.action} sender=${ingress.sender?.openId?.slice(0, 6)}`)
+    const commandId = `hwic_${now().toString(36)}_${(commandSeq += 1).toString(36)}`
+    const base = {
+      commandId,
+      openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '',
+      channel: ingress.channel,
+      humanPrincipalId: binding.humanPrincipalId,
+      executorAgentId: binding.executorAgentId,
+      originalMessageId: ingress.messageId,
+    }
+    log(`human-work-item ingress: action=${command.action} commandId=${commandId} sender=${base.openIdPrefix}`)
     try {
       if (command.action === 'usage' || command.action === 'help') {
-        await send(ingress, `Human work item commands — ${command.action === 'usage' ? 'malformed command' : 'usage'}:\n${USAGE_TEXT}`)
-        auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action, outcome: 'executed' })
+        const auditOk = auditRow({ ...base, action: command.action, outcome: 'executed' })
+        await deliver(
+          ingress,
+          withAuditDisclosure(`Human work item commands — ${command.action === 'usage' ? 'malformed command' : 'usage'}:\n${USAGE_TEXT}`, auditOk),
+          { base, action: command.action },
+        )
       } else if (command.action === 'query') {
-        await runQuery(ingress, binding)
+        await runQuery(ingress, binding, base)
       } else {
-        await runTransition(ingress, binding, command)
+        await runTransition(ingress, binding, command, base)
       }
     } catch (error) {
+      // Only genuinely UNRESOLVED failures land here (e.g. a gateway
+      // transport throw): the canonical outcome is unknown, recorded as
+      // such — never as a decided transition failure. The audit row is
+      // written BEFORE the reply attempt so a second delivery failure
+      // cannot skip it.
       log(`human-work-item handler error: ${error?.message ?? error}`)
-      try {
-        await send(ingress, '⛔ /work failed: internal_error')
-        auditRow({ openIdPrefix: ingress.sender?.openId?.slice(0, 6) ?? '', channel: ingress.channel, action: command.action, outcome: 'error', code: 'internal_error' })
-      } catch {
-        // reply already failed; nothing else to do — the bridge/SDK owns delivery retries.
-      }
+      const auditOk = auditRow({ ...base, action: command.action, outcome: 'error', code: 'internal_error', canonicalOutcome: 'unresolved' })
+      await deliver(ingress, withAuditDisclosure('⛔ /work failed: internal_error', auditOk), { base, action: command.action })
     }
     return true
   }
 }
 
-/** Best-effort closed JSONL audit sink (same discipline as compose writeEvidence). */
-function createAuditAppender(auditFile, log) {
+/** Closed JSONL audit sink (same discipline as compose writeEvidence).
+ * Returns {ok:false, error} instead of swallowing — the handler surfaces
+ * audit-write failures truthfully (log + reply disclosure). */
+function createAuditAppender(auditFile) {
   return (entry) => {
     try {
       mkdirSync(dirname(auditFile), { recursive: true })
       appendFileSync(auditFile, `${JSON.stringify(entry)}\n`)
     } catch (error) {
-      log(`human-work-item audit sink write failed: ${error?.message ?? error}`)
+      return { ok: false, error: error?.message ?? String(error) }
     }
+    return { ok: true }
   }
 }
 
@@ -384,7 +467,7 @@ export function wireHumanWorkItemIngress({
     gateway,
     reply: (target, text) => feishu.reply(target, text),
     replyTargetFor: (ingress) => feishu.replyTargetFor(ingress),
-    audit: createAuditAppender(auditFile, log),
+    audit: createAuditAppender(auditFile),
     fallThrough: null,
     log,
   })
