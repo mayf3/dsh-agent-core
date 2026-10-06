@@ -33,9 +33,17 @@
  *                  canonical attempts resolved by server CAS/receipts.
  *   STALE/INVALID  stale version / terminal / foreign instance surface the
  *                  verbatim stable code and never retry.
- *   PROVENANCE     one closed, secret-free JSONL audit row per handled
- *                  command (6-char open_id prefix) + canonical receipt ids in
- *                  the success reply.
+ *   PROVENANCE     one closed, secret-free JSONL command row per handled
+ *                  command carrying unambiguous identity (humanPrincipalId,
+ *                  executorAgentId, original messageId) + canonical receipt /
+ *                  source-visit linkage + commandId. openId persists only as
+ *                  a redacted 6-char prefix.
+ *   DURABILITY     the canonical result row is persisted BEFORE the Feishu
+ *                  reply, so a delivery failure can never erase or
+ *                  misclassify it; reply-delivery and audit-sink failures are
+ *                  recorded truthfully (never rendered as transition
+ *                  failures); a duplicate retry after a lost reply resolves
+ *                  from fresh server state (CAS), never seam-side state.
  *   ZERO EFFECTS   feature OFF by default; unauthorized senders' `/work`
  *                  messages reach the Router untouched; non-p2p is never
  *                  consumed; explicit misconfiguration fails loud.
@@ -171,17 +179,21 @@ function fakeGateway(script = {}) {
   }
 }
 
-/** Fake feishu reply surface — mirrors the REAL contract's failure mode:
+/** Fake feishu reply surface — mirrors the REAL contract's failure modes:
  * the connector's replyTargetToSdkSend throws on a kind-less ReplyTarget
- * (core.js:441), so a target without a resolved replyTo(messageId) throws. */
-function fakeFeishu() {
+ * (core.js:441), so a target without a resolved replyTo(messageId) throws;
+ * `failAll` simulates a broken reply channel (every send throws). */
+function fakeFeishu({ failAll = false } = {}) {
   const receipts = []
-  return {
+  const surface = {
     receipts,
+    attempts: 0,
     reply: async (target, text) => {
+      surface.attempts += 1
       if (typeof target?.messageId !== 'string' || target.messageId.length === 0) {
         throw new Error('unknown ReplyTarget kind "undefined" (missing replyTo)')
       }
+      if (failAll) throw new Error('simulated channel delivery failure')
       receipts.push({ target, text })
     },
     replyTargetFor: (ingress) => ({
@@ -189,10 +201,13 @@ function fakeFeishu() {
       replyTo(messageId) { this.messageId = messageId; return this },
     }),
   }
+  return surface
 }
 
-/** Handler rig: allowlisted sender, fake edges, recorded fall-through. */
-async function rig({ bindings, gateway = fakeGateway(), now = () => 1_700_000_000_000 } = {}) {
+/** Handler rig: allowlisted sender, fake edges, recorded fall-through.
+ * auditMode: 'collect' (default) records rows; 'throw' / 'okfalse' simulate
+ * the two REAL audit-sink failure modes (appender throws / returns {ok:false}). */
+async function rig({ bindings, gateway = fakeGateway(), now = () => 1_700_000_000_000, auditMode = 'collect', replyMode = 'ok' } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'g5-ingress-'))
   const bindingsFile = join(dir, 'human-work-item-principals.json')
   const auditFile = join(dir, 'control', 'human-work-item-audit.jsonl')
@@ -203,15 +218,22 @@ async function rig({ bindings, gateway = fakeGateway(), now = () => 1_700_000_00
 
   const loaded = loadPrincipalBindings(bindingsFile)
   assert.equal(loaded.ok, true)
-  const feishu = fakeFeishu()
+  const feishu = fakeFeishu({ failAll: replyMode === 'fail-all' })
   const auditRows = []
+  const logs = []
+  const auditSink = auditMode === 'throw'
+    ? () => { throw new Error('simulated audit sink failure') }
+    : auditMode === 'okfalse'
+      ? () => ({ ok: false, error: 'simulated audit sink refusal' })
+      : (entry) => { auditRows.push(entry) }
   const fallThrough = []
   const pureHandler = createHumanWorkItemIngressHandler({
     bindings: loaded.bindings,
     gateway,
     reply: feishu.reply,
     replyTargetFor: feishu.replyTargetFor,
-    audit: (entry) => { auditRows.push(entry) },
+    audit: auditSink,
+    log: (message) => { logs.push(message) },
     now,
   })
   // Mirror the wire wrapper exactly: unconsumed ingress goes to the
@@ -222,7 +244,7 @@ async function rig({ bindings, gateway = fakeGateway(), now = () => 1_700_000_00
     return handled
   }
   return {
-    dir, bindingsFile, auditFile, loaded, feishu, auditRows, fallThrough, handler, gateway,
+    dir, bindingsFile, auditFile, loaded, feishu, auditRows, logs, fallThrough, handler, gateway,
     cleanup: () => rm(dir, { recursive: true, force: true }),
   }
 }
@@ -350,6 +372,10 @@ test('I2. loader: rejects wrong version, duplicates, missing fields, junk', asyn
     { version: 2, principals: [] },
     { version: 1, principals: [{ feishuOpenId: OPEN_ID }] },
     { version: 1, principals: [{ executorAgentId: EXECUTOR_AGENT_ID }] },
+    // humanPrincipalId is REQUIRED durable provenance — a binding without an
+    // unambiguous human principal would leave only a redacted openId prefix.
+    { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID }] },
+    { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID, humanPrincipalId: '' }] },
     { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: 'x' }, { feishuOpenId: OPEN_ID, executorAgentId: 'y' }] },
     { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: 'shared' }, { feishuOpenId: 'ou_other_000000000000000000000000000000', executorAgentId: 'shared' }] },
     { version: 1, principals: 'all-of-them' },
@@ -370,8 +396,11 @@ test('I3. executor identity travels ONLY via gateway context agentId — never c
   t.after(r.cleanup)
   await r.handler(p2pEvent('/work query'))
   assert.equal(r.gateway.calls[0].context.agentId, EXECUTOR_AGENT_ID)
-  assert.equal(JSON.stringify(r.gateway.calls[0].call).includes(EXECUTOR_AGENT_ID), false,
+  const serializedCall = JSON.stringify(r.gateway.calls[0].call)
+  assert.equal(serializedCall.includes(EXECUTOR_AGENT_ID), false,
     'agentId must never appear inside the model-visible call payload')
+  assert.equal(serializedCall.includes(HUMAN_PRINCIPAL_ID), false,
+    'humanPrincipalId is durable provenance metadata — never a workflow input')
 })
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -654,6 +683,123 @@ test('P2. failures audit with outcome=error + verbatim code; fall-through never 
   assert.equal(r.auditRows.length, before, 'fall-through is invisible to the audit trail')
 })
 
+test('P3. provenance rows carry unambiguous identity + canonical linkage — not only a 6-char openId prefix', async (t) => {
+  const g = fakeGateway({
+    'workflow_instance_detail:read': [{ ok: true, result: detailFull() }],
+    'workflow_execute:transition': [{ ok: true, result: transitionReceipt() }],
+  })
+  const r = await rig({ gateway: g })
+  t.after(r.cleanup)
+  await r.handler(p2pEvent(`/work reject ${INSTANCE_ID} requirements changed`, { messageId: 'om_p3' }))
+  const receipt = transitionReceipt()
+  const successRow = r.auditRows.find((row) => row.outcome === 'executed')
+  assert.equal(successRow.kind, 'human_work_item_command')
+  assert.equal(successRow.humanPrincipalId, HUMAN_PRINCIPAL_ID, 'durable HUMAN principal identity from the allowlist binding')
+  assert.equal(successRow.executorAgentId, EXECUTOR_AGENT_ID, 'canonical ACTOR principal identity')
+  assert.equal(successRow.originalMessageId, 'om_p3', 'original Feishu message linkage')
+  assert.ok(typeof successRow.commandId === 'string' && successRow.commandId.length > 0, 'commandId links the row family')
+  assert.equal(successRow.sourceNodeVisitId, receipt.sourceNodeVisitId, 'source visit linkage from the canonical receipt')
+  assert.equal(successRow.currentNodeVisitId, receipt.currentNodeVisitId, 'post-transition visit linkage')
+  assert.equal(successRow.eventSequence, receipt.eventSequence)
+  assert.equal(successRow.workflowStateVersion, receipt.workflowStateVersion)
+  assert.equal(successRow.reasonCode, 'HUMAN_REJECT', 'canonical submission linkage for reject')
+  assert.equal(successRow.rootCauseNodeVisitId, VISIT_ID, 'canonical root-cause visit linkage')
+  assert.ok(successRow.openIdPrefix.length <= 6, 'openId stays redacted')
+  assert.equal(JSON.stringify(successRow).includes(OPEN_ID), false, 'full openId still never persisted')
+  assert.equal(JSON.stringify(successRow).includes('clientSecret'), false)
+})
+
+test('P4. error and delivery-failure rows carry the same unambiguous identity fields', async (t) => {
+  const g = fakeGateway({
+    'workflow_instance_detail:read': [{ ok: true, result: detailFull() }],
+    'workflow_execute:transition': [svcError('workflow_state_version_conflict', 409)],
+  })
+  const r = await rig({ gateway: g, replyMode: 'fail-all' })
+  t.after(r.cleanup)
+  await r.handler(p2pEvent(`/work complete ${INSTANCE_ID}`, { messageId: 'om_p4' }))
+  assert.ok(r.auditRows.length >= 2, 'both the command outcome and the delivery failure are recorded')
+  for (const row of r.auditRows) {
+    assert.equal(row.humanPrincipalId, HUMAN_PRINCIPAL_ID, `identity on ${row.kind}`)
+    assert.equal(row.executorAgentId, EXECUTOR_AGENT_ID, `identity on ${row.kind}`)
+    assert.equal(row.originalMessageId, 'om_p4', `message linkage on ${row.kind}`)
+    assert.ok(typeof row.commandId === 'string' && row.commandId.length > 0, `commandId on ${row.kind}`)
+  }
+  assert.ok(r.auditRows.some((row) => row.kind === 'human_work_item_command' && row.outcome === 'error' && row.code === 'workflow_state_version_conflict'))
+  assert.ok(r.auditRows.some((row) => row.kind === 'human_work_item_reply_failure'))
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// 9b. Canonical-result durability vs delivery/audit failure (parent-review
+//     gaps: a Feishu reply failure must never erase or misclassify a KNOWN
+//     canonical success, and audit-sink failure must surface truthfully).
+// ───────────────────────────────────────────────────────────────────────────
+
+test('DR1. canonical transition success + reply delivery failure → success receipt row STILL persisted; never misclassified internal_error', async (t) => {
+  const g = fakeGateway({
+    'workflow_instance_detail:read': [{ ok: true, result: detailFull() }],
+    'workflow_execute:transition': [{ ok: true, result: transitionReceipt() }],
+  })
+  const r = await rig({ gateway: g, replyMode: 'fail-all' })
+  t.after(r.cleanup)
+  const handled = await r.handler(p2pEvent(`/work complete ${INSTANCE_ID}`, { messageId: 'om_dr1' }))
+  assert.equal(handled, true)
+  assert.ok(r.feishu.attempts >= 1, 'the reply was genuinely attempted (failure injection is live)')
+  const successRow = r.auditRows.find((row) => row.kind === 'human_work_item_command' && row.outcome === 'executed')
+  assert.ok(successRow, 'canonical success receipt persisted despite the reply failure')
+  assert.equal(successRow.eventSequence, transitionReceipt().eventSequence)
+  assert.equal(successRow.workflowStateVersion, transitionReceipt().workflowStateVersion)
+  assert.equal(successRow.originalMessageId, 'om_dr1')
+  assert.equal(r.auditRows.some((row) => row.code === 'internal_error'), false,
+    'a KNOWN canonical success is never reported as internal_error')
+  const deliveryRow = r.auditRows.find((row) => row.kind === 'human_work_item_reply_failure')
+  assert.ok(deliveryRow, 'reply delivery failure recorded truthfully')
+  assert.equal(deliveryRow.commandId, successRow.commandId,
+    'delivery failure is linked to its success receipt row by commandId')
+})
+
+test('DR2. audit-sink failure on canonical success → surfaced truthfully (log + reply disclosure); canonical result NOT rendered as failed', async (t) => {
+  for (const auditMode of ['throw', 'okfalse']) {
+    const g = fakeGateway({
+      'workflow_instance_detail:read': [{ ok: true, result: detailFull() }],
+      'workflow_execute:transition': [{ ok: true, result: transitionReceipt() }],
+    })
+    const r = await rig({ gateway: g, auditMode })
+    t.after(r.cleanup)
+    const handled = await r.handler(p2pEvent(`/work complete ${INSTANCE_ID}`, { messageId: 'om_dr2' }))
+    assert.equal(handled, true, auditMode)
+    assert.match(r.feishu.receipts[0].text, /completed/i, `${auditMode}: user still told the canonical truth`)
+    assert.match(r.feishu.receipts[0].text, /audit write failed/i, `${auditMode}: reply discloses the audit failure`)
+    assert.equal(/⛔/.test(r.feishu.receipts[0].text), false, `${auditMode}: canonical success never rendered as a failure`)
+    assert.ok(r.logs.some((line) => /audit write failed/i.test(line)), `${auditMode}: audit failure surfaced in the log`)
+  }
+})
+
+test('DR3. duplicate complete after a reply-failure success → retry resolved truthfully from server state; original receipt row intact', async (t) => {
+  const advanced = detailFull()
+  advanced.detail.outgoing_transitions = advanced.detail.outgoing_transitions.map((tr) => ({
+    ...tr, executable_for_actor: false, blocked_reason: null,
+  }))
+  const g = fakeGateway({
+    'workflow_instance_detail:read': [{ ok: true, result: detailFull() }, { ok: true, result: advanced }],
+    'workflow_execute:transition': [{ ok: true, result: transitionReceipt() }],
+  })
+  const r = await rig({ gateway: g, replyMode: 'fail-all' })
+  t.after(r.cleanup)
+  await r.handler(p2pEvent(`/work complete ${INSTANCE_ID}`, { messageId: 'om_first' }))
+  await r.handler(p2pEvent(`/work complete ${INSTANCE_ID}`, { messageId: 'om_retry' }))
+  const commandRows = r.auditRows.filter((row) => row.kind === 'human_work_item_command')
+  const executedRows = commandRows.filter((row) => row.outcome === 'executed')
+  assert.equal(executedRows.length, 1, 'exactly one canonical success — the retry did NOT double-execute')
+  assert.equal(executedRows[0].originalMessageId, 'om_first')
+  const retryRow = commandRows.at(-1)
+  assert.equal(retryRow.originalMessageId, 'om_retry')
+  assert.equal(retryRow.outcome, 'refused', 'retry refused from the FRESH server state (already advanced)')
+  assert.equal(r.auditRows.some((row) => row.code === 'internal_error'), false,
+    'neither the lost reply nor the retry is misclassified as internal_error')
+  assert.equal(r.auditRows.filter((row) => row.kind === 'human_work_item_reply_failure').length, 2,
+    'both undelivered replies are recorded as delivery failures')
+})
+
 // ───────────────────────────────────────────────────────────────────────────
 // 10. Zero unintended production effects (wiring + defaults).
 // ───────────────────────────────────────────────────────────────────────────
@@ -692,7 +838,7 @@ test('Z3. wire: enabled + explicit wiring → wrapper falls through to routeAuth
   const principalsFile = join(dir, 'p.json')
   await writeFile(principalsFile, JSON.stringify({
     version: 1,
-    principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID }],
+    principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID, humanPrincipalId: HUMAN_PRINCIPAL_ID }],
   }), 'utf8')
 
   const installed = []
@@ -752,7 +898,7 @@ test('Z5. audit rows are durably appended to the JSONL sink and parse back', asy
   const principalsFile = join(dir, 'p.json')
   await writeFile(principalsFile, JSON.stringify({
     version: 1,
-    principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID }],
+    principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID, humanPrincipalId: HUMAN_PRINCIPAL_ID }],
   }), 'utf8')
   const installed = []
   const replySurface = fakeFeishu()
@@ -773,4 +919,36 @@ test('Z5. audit rows are durably appended to the JSONL sink and parse back', asy
   assert.equal(rows[0].kind, 'human_work_item_command')
   assert.equal(rows[0].action, 'query')
   assert.equal(rows[0].outcome, 'executed')
+  assert.equal(rows[0].humanPrincipalId, HUMAN_PRINCIPAL_ID)
+})
+
+test('Z6. real audit-sink failure is returned (not swallowed) and surfaced in the reply — canonical truth intact', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'g5-audit-broken-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  // The audit file lives UNDER a regular file — every append fails (ENOTDIR).
+  const blocker = join(dir, 'blocker')
+  await writeFile(blocker, 'not a directory', 'utf8')
+  const auditFile = join(blocker, 'human-work-item-audit.jsonl')
+  const principalsFile = join(dir, 'p.json')
+  await writeFile(principalsFile, JSON.stringify({
+    version: 1,
+    principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID, humanPrincipalId: HUMAN_PRINCIPAL_ID }],
+  }), 'utf8')
+  const installed = []
+  const replySurface = fakeFeishu()
+  const feishu = {
+    setCallback: (fn) => { installed.push(fn) },
+    reply: replySurface.reply,
+    replyTargetFor: replySurface.replyTargetFor,
+  }
+  const gateway = fakeGateway({ 'workflow_my_tasks:list': [{ ok: true, result: { items: [], next_cursor: null } }] })
+  const logs = []
+  wireHumanWorkItemIngress({
+    feishu, router: { routeAuthenticated: async () => {} }, gateway,
+    principalsFile, auditFile, enabled: true, log: (message) => { logs.push(message) },
+  })
+  assert.equal(await installed[0](p2pEvent('/work query', { messageId: 'om_z6' })), true)
+  assert.match(replySurface.receipts[0].text, /no pending work items/i, 'canonical query answer still delivered')
+  assert.match(replySurface.receipts[0].text, /audit write failed/i, 'reply truthfully discloses the provenance gap')
+  assert.ok(logs.some((line) => /audit write failed/i.test(line)), 'log surfaces the sink failure')
 })
