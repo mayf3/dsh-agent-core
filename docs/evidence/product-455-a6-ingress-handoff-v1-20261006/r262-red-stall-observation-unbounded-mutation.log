@@ -1,0 +1,23 @@
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-OCzKCW/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50677 (deliverReady=true storeReady=true)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791250566928,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791250566928,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-a6-restart-handoff... (msg-1) in 20ms
+✔ A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface (178.858708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-fDovub/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50680 (deliverReady=true storeReady=true)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-fDovub/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50682 (deliverReady=true storeReady=true)
+STILL_RUNNING_AT_45s — killing (bounded observation: unbounded replay path stalled under RED mutation, consistent with the 300000ms Router deadline, NOT a prompt failure)
