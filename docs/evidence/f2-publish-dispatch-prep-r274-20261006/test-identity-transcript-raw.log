@@ -1,0 +1,60 @@
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `tokio::io::AsyncWriteExt`
+  --> tests/common/mod.rs:29:5
+   |
+29 | use tokio::io::AsyncWriteExt;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `workflow_instance_id` is never read
+   --> tests/29_dispatch_intent_keyset.rs:263:5
+    |
+261 | struct SeededIntent {
+    |        ------------ field in this struct
+262 |     dispatch_intent_id: Uuid,
+263 |     workflow_instance_id: Uuid,
+    |     ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `svc-workflow` (test "29_dispatch_intent_keyset") generated 1 warning
+warning: `svc-workflow` (test "37_authoring_loop_e2e") generated 2 warnings (run `cargo fix --test "37_authoring_loop_e2e" -p svc-workflow` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 39.00s
+     Running tests/28_visit_activation_v1.rs (target/debug/deps/28_visit_activation_v1-22a7b331b42557b5)
+
+running 9 tests
+test activation_facts_are_immutable ... ok
+test agent_owned_entry_creates_due_dispatch_intent ... ok
+test cancel_closes_and_archive_fails_on_active_activation ... ok
+test due_read_gate_and_projection ... ok
+test human_owned_entry_creates_human_work_item ... ok
+test legacy_protection_and_v1_command_guards ... ok
+test service_owner_fails_closed ... ok
+test transition_closes_and_creates_activations ... ok
+test wake_applies_and_noops ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.18s
+
+     Running tests/29_dispatch_intent_keyset.rs (target/debug/deps/29_dispatch_intent_keyset-06026b45fe3e8b93)
+
+running 6 tests
+test acc_dkc_001_no_cursor_unchanged ... ok
+test acc_dkc_002_exhaustion_walk ... ok
+test acc_dkc_003_tie_break_by_activation_id ... ok
+test acc_dkc_004_cursor_validation ... ok
+test acc_dkc_005_starvation_proof ... ok
+test acc_dkc_006_role_gate_with_cursor ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 15.41s
+
+     Running tests/37_authoring_loop_e2e.rs (target/debug/deps/37_authoring_loop_e2e-01f4dc6d75d718c7)
+
+running 4 tests
+test instance_pins_the_published_version_it_was_created_from ... ok
+test invalid_graph_returns_actionable_errors_without_partial_state ... ok
+test published_version_identity_is_stable ... ok
+test valid_definition_authors_publishes_and_instantiates ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.42s
+
+EXIT=0
