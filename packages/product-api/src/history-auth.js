@@ -227,7 +227,11 @@ export function createNodeHttpWhoIsTransport() {
           resolveRequest(value)
         }
       }
-      const request = http.request({ socketPath, path, method: 'GET' }, (response) => {
+      const request = http.request({ socketPath, path, method: 'GET',
+				// tailscaled LocalAPI validates the Host header against its socket name
+				// (standalone tailscaled 1.94 on this host rejects Host: localhost) — send
+				// the socket basename, mirroring the official client behavior.
+				headers: { host: 'local-' + socketPath.split('/').pop() }, }, (response) => {
         const chunks = []
         let size = 0
         response.on('data', (chunk) => {

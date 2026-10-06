@@ -1,0 +1,177 @@
+{
+  "spec": "T0 baseline inventory per docs/superpowers/plans/2026-09-30-availability-and-backlog-rollout.md (PR #373)",
+  "observedAt": "2026-09-30T15:30:00+08:00 (round 1); revised 2026-09-30T18:20:00+08:00 (round 2 — entry mapping correction + system-domain/W1/W2/auth-service census)",
+  "observer": "round 1: sole takeover agent (unique-writer check passed; 6 stale agent:running receipts had dead PIDs). round 2: same sole writer continuing under agent-control issue #97 (controller status receipt names the session pid; original T0/T1 author's final commit 5701d165 + PR body confirmed terminal before takeover)",
+  "readScope": "launchd labels, plists (ProgramArguments + EnvironmentVariables), git metadata, directory listings, process table, listening sockets (netstat/lsof for own-user named; netstat for port existence), per-file sha256 digests, readable roster config (ids only); no secret file contents (key files/credential stores/Feishu creds opened NEVER — paths recorded only), no full-machine scan, no production ledger reads",
+  "entryMapping": {
+    "note": "Round-1 revision: the user-domain (gui) runtime is NOT the single production target for all business, and different service identities do NOT imply disjoint consumption. Shared identity namespace and shared stores cross service boundaries.",
+    "realHrFeishuEntry": {
+      "service": "ai.agent-core.runtime — SYSTEM launchd domain (UserName authsvc), pid 8971",
+      "listeningPorts": { "notificationIngress": "127.0.0.1:8790", "productApi": "127.0.0.1:8788" },
+      "processIdentity": "authsvc; agent children spawned via DSH_AGENT_SPAWN_HELPER with DSH_AGENT_CHILD_UID=502/GID=20 (trusted-CP seam)",
+      "launchPath": "/usr/local/libexec/agent-core/node-runtime/bin/node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core --catchup 0",
+      "installRoot": "/usr/local/libexec/agent-core/app (controlled root; rollback/failed generations retained)",
+      "deployedGeneration": "d602b592 (plist AGENT_CORE_DEPLOYED_SHA; verified ancestor of main)",
+      "digestAnchor": {
+        "verified": "scripts/production-runtime.mjs and package.json sha256 BYTE-IDENTICAL to the current main-based candidate (launcher + manifest generation current)",
+        "drifted": "packages/production-runtime/src/entry.js and compose.js differ from candidate (installed tree is at d602b592; entry/compose evolved on main since)",
+        "manifest": "still absent at the install root — the T1 release-package manifest is the fix; INSTALL/VERIFY_ONLY claims limited to what was actually digested"
+      },
+      "feishu": "FEISHU_CREDS_PATH=/Users/authsvc/.dsh/feishu-creds.json (path only; content never read) — the ONLY launch chain in the census carrying real Feishu credentials: the real-HR Feishu channel lands HERE",
+      "verdict": "REAL_HR_ENTRY=SYSTEM_DOMAIN_RUNTIME (corrects round-1 attribution); VERIFY_ONLY (no probe/reset), INSTALL of the next package is the T2 deployment input"
+    },
+    "ordinaryAgentEntry": {
+      "guiDomainRuntime": "ai.agent-core.runtime gui domain pid 1753 (yanfenma): product-api 127.0.0.1:8787 + notification-ingress 127.0.0.1:8791 + history-only Tailnet listener 100.103.205.36:8789 (wrapper env, fail-closed, out-of-Git 0600 auth config); launch chain wrapper zsh (reads 0600 ZAI key file — content not read) -> exec /usr/local/bin/node (v25.6.1) production-dsh-agent-core/scripts/production-runtime.mjs --root /Users/yanfenma/.agent-core; source 549dace + uncommitted live patches (round-1 findings unchanged); roster 89 agents (default agt_stock_agent; agt_hr-agent present); NO broker credential env in its launch chain -> broker tool calls fail closed per call (credential_unavailable)",
+      "systemDomainRuntime": "same agent identities (agt_hr-agent / agt_cto-agent / agt_content-ops-agent present in the readable 98-agent roster) WITH broker credentials (AGENT_CORE_CREDENTIALS_FILE) and real Feishu — this is where ordinary-Agent business that needs tools/Feishu actually executes",
+      "verdict": "ordinary Agents run under BOTH services against a SHARED identity namespace; model-side execution (ZAI route) exists on the gui runtime, tool/Feishu-side execution is system-runtime-only"
+    },
+    "w1QueryEntry": {
+      "today": "http://127.0.0.1:8790/health — the system runtime's scheduler health endpoint; W1's plist SCHEDULER_HEALTH_URL points exactly there",
+      "workers": "ai.agent-core.scheduler-watchdog-w1 (authsvc, StartInterval 300, KeepAlive false) and -w2 (ROOT) run /usr/local/libexec/agent-core/app/scripts/scheduler-watchdog.mjs --role w1|w2; deployed generation d602b592; shared state /Users/authsvc/.agent-core/{scheduler/jobs.json, control/scheduler-watchdog}; W2 logs under /usr/local/var/scheduler-watchdog/",
+      "afterInstall": "W1 read surfaces (MY_SESSIONS / Execution History / Human Attention) are main capabilities ABSENT from the installed d602b592 tree -> INSTALL via the next package; they serve through the same system runtime's product-api (8788), not through a new service",
+      "verdict": "W1_QUERY_ENTRY=8790/health (read-only health), W1 business read surfaces=PENDING_INSTALL on the system runtime product-api"
+    },
+    "authService": {
+      "service": "com.auth-service (launchd), pid 366 authsvc, 127.0.0.1:4001",
+      "launchPath": "/usr/local/bin/node /Users/yanfenma/workspace/project/production-auth-service-862eab36677d214b2ce340f49bb141173b51efea/dist/src/server.js",
+      "role": "BROKER_AUTH_ORIGIN + SCHEDULER_AUTH_JWKS authority for the system runtime (and the auth surface behind the broker Trusted CP seam)",
+      "verdict": "VERIFY_ONLY this round; installed->repo mapping recorded at the pinned checkout path"
+    },
+    "overlapConsumption": [
+      "agt_hr-agent (and the wider agent namespace) is defined in BOTH runtimes' rosters — one business identity, two consuming services; Feishu traffic and broker-credentialed tool calls resolve to the system runtime, model-side product surface to the gui runtime",
+      "ai.agent-core.scheduler-watchdog-w1/w2 and the system runtime's own scheduler engine consume the SAME durable store /Users/authsvc/.agent-core/scheduler/jobs.json (watchdog + engine overlapping consumers by design)",
+      "gui runtime's notification-ingress (8791) and product-api (8787) are separate consumption surfaces of the same runtime that also hosts the same agent identities — service identity difference does NOT imply disjoint consumption",
+      "scheduler-v2 (pid 1752, dsh-agent-core-main @ d6d18787) keeps its OWN state root (/Users/yanfenma/.agent-core-scheduler-v2) and is NOT the W1 watch target — round-1 row retained with this disambiguation"
+    ]
+  },
+  "services": [
+    {
+      "service": "ai.agent-core.runtime (SYSTEM domain — real Feishu/HR + broker-credentialed Agents)",
+      "loaded": true,
+      "launchdState": "running pid 8971 (authsvc; /Library/LaunchDaemons/ai.agent-core.runtime.plist, KeepAlive)",
+      "sourceSha": "d602b592 (plist AGENT_CORE_DEPLOYED_SHA; merge-base verified ancestor of main) — installed tree at the controlled root",
+      "sourceRoot": "/usr/local/libexec/agent-core/app",
+      "artifactDigest": "partially anchored: launcher/package.json byte-identical to main-current candidate; entry/compose at d602b592 generation; NO install-root manifest (T1 release-package fixes this)",
+      "runtimeDigest": "/usr/local/libexec/agent-core/node-runtime/bin/node v25.6.1 (sha256 c6c9bfa8…)",
+      "configRevision": "plist env frozen in this inventory: BROKER_AUTH_ORIGIN=http://127.0.0.1:4001, PRODUCT_API_PORT=8788, NOTIFICATION_INGRESS_ENABLED=1 (8790), SCHEDULER_ROUTING_MANIFEST=/usr/local/libexec/agent-core/config/scheduler-routing.json (OWNER_UID=0, READER_GID=601 — root-owned manifest is how production satisfies the watchdog parent-chain check), child spawn uid 502/gid 20 via helper",
+      "executionIdentity": "authsvc (system daemon domain); agent children uid 502/gid 20 via DSH_AGENT_SPAWN_HELPER",
+      "stateRoot": "/Users/authsvc/.agent-core",
+      "stateFormat": "roster readable (98 agents incl agt_hr-agent/agt_cto-agent/agt_content-ops-agent; default agt_fb7837711a9d4c3393dcffa83f49dd41); ledger contents NOT read",
+      "featureEvidence": ["only launch chain with FEISHU_CREDS_PATH (path recorded, content never read)", "W1/W2 watchdogs configured against its health endpoint and store"],
+      "unresolvedDrift": [
+        "installed entry.js/compose.js at d602b592 while main advanced — the INSTALL delta the next package carries",
+        "business-verified status stays user-reported only (no probe per plan constraint)"
+      ]
+    },
+    {
+      "service": "ai.agent-core.runtime (gui domain — product surface / model-side Agents)",
+      "loaded": true,
+      "launchdState": "running pid 1753 (yanfenma; ~/Library/LaunchAgents, wrapper zsh launch, since 2026-09-30 12:32:59)",
+      "sourceSha": "549dace (production-dsh-agent-core checkout) PLUS uncommitted live patches (round-1 three-way classification unchanged: 9 M identical, 9 M semantics already in main, 57 untracked identical, 5 backflowed in 1dbfb70b)",
+      "sourceRoot": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+      "artifactDigest": "unverified (workspace checkout, no manifest)",
+      "runtimeDigest": "/usr/local/bin/node v25.6.1",
+      "configRevision": "plist+wrapper env: DSH_AGENT_PROVIDER=oc-go/deepseek-v4-flash, DSH_AGENT_TURN_TIMEOUT=900000, PRODUCT_API_HISTORY (Tailnet 8789 fail-closed), ingress 8791, product-api default 8787; NO FEISHU_CREDS_PATH; NO AGENT_CORE_CREDENTIALS_FILE/BROKER_AUTH_ORIGIN (broker calls fail closed per call)",
+      "executionIdentity": "user yanfenma (gui domain)",
+      "stateRoot": "/Users/yanfenma/.agent-core (roster readable: 89 agents, default agt_stock_agent)",
+      "stateFormat": "unverified beyond roster",
+      "featureEvidence": ["listening confirmed by named sockets: 8787 + 8791 (pid 1753)", "8789 history listener per wrapper env"],
+      "unresolvedDrift": [
+        "ROUND-1 CORRECTION: this service was labeled 'HR + ordinary Agents entry' — revised: it is the gui product/model surface sharing the agent identity namespace; the Feishu-channel HR entry is the SYSTEM-domain runtime",
+        "which runtime served the user-reported 09-29/30 HR recovery is UNVERIFIED (T2 input; do not attribute by label)"
+      ]
+    },
+    {
+      "service": "ai.agent-core.scheduler-watchdog-w1 + -w2 (W1/W2)",
+      "loaded": true,
+      "launchdState": "registered /Library/LaunchDaemons; StartInterval 300, KeepAlive false (periodic, not resident)",
+      "sourceSha": "d602b592 generation (same AGENT_CORE_DEPLOYED_SHA env; scripts/scheduler-watchdog.mjs from the controlled root app)",
+      "sourceRoot": "/usr/local/libexec/agent-core/app",
+      "artifactDigest": "same controlled-root anchor as the system runtime entry",
+      "runtimeDigest": "/usr/local/libexec/agent-core/node-runtime/bin/node v25.6.1",
+      "configRevision": "W1: UserName authsvc, SCHEDULER_HEALTH_URL=http://127.0.0.1:8790/health, SCHEDULER_WATCHDOG_STORE=/Users/authsvc/.agent-core/scheduler/jobs.json, desired-state + routing manifest root-owned. W2: UserName root, logs /usr/local/var/scheduler-watchdog/",
+      "executionIdentity": "w1=authsvc, w2=root (privileged leg)",
+      "stateRoot": "/Users/authsvc/.agent-core/control/scheduler-watchdog",
+      "stateFormat": "unverified (shared with system runtime by configuration)",
+      "featureEvidence": ["W1 query entry is 8790/health on the system runtime — the only W1 visibility surface installed today"],
+      "unresolvedDrift": ["W1 read-surface backlog (MY_SESSIONS / Execution History / Human Attention) absent from the installed generation -> INSTALL"]
+    },
+    {
+      "service": "com.auth-service (authsvc auth service)",
+      "loaded": true,
+      "launchdState": "running pid 366 (authsvc), 127.0.0.1:4001",
+      "sourceSha": "pinned checkout path production-auth-service-862eab36677d214b2ce340f49bb141173b51efea (installed->repo mapping by directory name; no manifest)",
+      "sourceRoot": "/Users/yanfenma/workspace/project/production-auth-service-862eab36677d214b2ce340f49bb141173b51efea",
+      "artifactDigest": "unverified",
+      "runtimeDigest": "/usr/local/bin/node",
+      "configRevision": "unverified",
+      "executionIdentity": "authsvc",
+      "stateRoot": "unverified (not read)",
+      "stateFormat": "unverified",
+      "featureEvidence": ["consumed as BROKER_AUTH_ORIGIN and JWKS authority by the system runtime"],
+      "unresolvedDrift": ["installed->repo commit mapping not proven beyond the pinned checkout directory name (T2 input)"]
+    },
+    {
+      "service": "ai.agent-core.scheduler-v2",
+      "loaded": true,
+      "launchdState": "running pid 1752 (yanfenma, since 2026-09-30 12:32)",
+      "sourceSha": "d6d18787 (dsh-agent-core-main checkout 2026-09-06) — verified ancestor of main",
+      "sourceRoot": "/Users/yanfenma/workspace/project/dsh-agent-core-main",
+      "artifactDigest": "unverified",
+      "runtimeDigest": "/usr/local/libexec/agent-core/node-runtime (controlled runtime)",
+      "configRevision": "unverified",
+      "executionIdentity": "user yanfenma (gui domain)",
+      "stateRoot": "/Users/yanfenma/.agent-core-scheduler-v2",
+      "stateFormat": "unverified",
+      "featureEvidence": ["only dirty file is an untracked scratch script; no source patches"],
+      "unresolvedDrift": ["disambiguation: NOT the W1 watch target — W1/W2 and the SYSTEM runtime share /Users/authsvc/.agent-core/scheduler/jobs.json; scheduler-v2 keeps its own store"]
+    },
+    {
+      "service": "ai.agent-deploy-system + ai.agent-deploy-shim (DS/shim privileged deploy surface)",
+      "loaded": true,
+      "launchdState": "daemons registered in /Library/LaunchDaemons (system domain)",
+      "sourceSha": "unverified (installed python under /usr/local/libexec/agent-deploy-system/deployment_system.py, /usr/local/libexec/agent-deploy-shim/deploy_shim.py; installed->repo mapping not yet established — T2 input)",
+      "artifactDigest": "unverified",
+      "runtimeDigest": "/usr/bin/python3",
+      "configRevision": "unverified",
+      "executionIdentity": "system (root domain per plist domain)",
+      "stateFormat": "unverified",
+      "featureEvidence": ["deployment-reuse receipt client exists on main (scripts/lib/deployment-reuse/receipt.py) — reuse path for T2"],
+      "unresolvedDrift": [
+        "ai.agent-deployd (root) also registered — actual executor identity for production releases not yet proven; T2 must map installed->repo before any release action"
+      ]
+    }
+  ],
+  "backflowCandidate": {
+    "branch": "live-restore/t0-backflow-20260930",
+    "base": "51f477394fbab0234eae807bacd0f942ffdc22ed",
+    "round1Commits": ["1dbfb70b", "9c6d9edb", "5701d165"],
+    "round2Commits": ["c1b19fad", "e7020597", "d8cba748", "eb2b1a21", "b39747b5", "(+ driver fix-ups; see T1 results round-2 section)"],
+    "worktree": "/Users/yanfenma/workspace/worktrees/t0-backflow-20260930",
+    "candidateV2": {
+      "outputRoot": "/Users/yanfenma/workspace/worktrees/t1-release-candidate-v2-20260930",
+      "builtAtSourceSha": "eb2b1a21 (pre-docs closure build; the shipped candidate is rebuilt at the final docs commit — manifest.json in the output root is the authoritative digest)",
+      "artifactDigest": "34335422c545024a54dce4056b959e1fbc84b5a609573cf90fe4d011c232de1c",
+      "dependencyDigest": "3f7e8dff1dbc790e295b966e7d956a821dff875392304c22dc24f373017aff1c",
+      "files": "1288 / 16,417,999 bytes (includes test tree + deployment-artifacts per explicit recipe; excludes pnpm-lock.yaml leftover via recipe.exclude)",
+      "resolvedDependencies": 102,
+      "assembly": "clean dir npm ci from the pinned lockfile: 102 packages installed (registry deps integrity-checked by npm ci; @larksuite/channel git dep pinned by commit sha ab028f9 — npm skips integrity re-check for git deps, recorded as-is); ENTRY_IMPORT_OK from the assembled app with zero live-tree reuse",
+      "closureRun": "scripts/availability-recovery/release-startup-closure.mjs --full = PASS (two fresh OS processes on one persistent root; schedulerReadinessRequired gate ON; normal Agent + HR delivered via notification-ingress HTTP -> Router -> real OS fixture workers; controlled restart with NEW requests + durable replay duplicate:true; negative credential 401; 4 distinct worker pids; evidence root /Users/yanfenma/.agent-core-closure/closure-Qy2E2Y)"
+    },
+    "testResults": {
+      "toolchain": "controlled node v25.6.1 (/usr/local/libexec/agent-core/node-runtime), proxy env unset",
+      "round1": {
+        "broker": "489/489 pass",
+        "production-runtime": "157/157 pass",
+        "product-api": "93/97 pass (4 fails = real-TTS engine tests, headless by design)",
+        "preexisting": "agent-switch switch.test.js 1 (harness schema shape; identical on unmodified main); incident-migration fixture 1 (baseline-reproduced)"
+      },
+      "round2": {
+        "releasePackage": "13/13 pass (failure-first: 5 new gap tests RED before implementation)",
+        "recoveryAcceptance": "4/4 pass (existing harness untouched)",
+        "startupClosureDriver": "--full PASS exit 0; --selftest PASS"
+      }
+    }
+  },
+  "nonGoalsThisRun": ["no production deploy/restart", "no HR reset", "no full-machine census", "no secret reads", "no new permissions", "no T2 production actions this round"]
+}
