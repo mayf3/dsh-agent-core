@@ -79,6 +79,13 @@ import {
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 import {
+  HUMAN_WORK_ITEM_AUDIT_FILE,
+  HUMAN_WORK_ITEM_INGRESS_ENABLED_ENV,
+  HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE_ENV,
+  isStrictTruthyEnv,
+  wireHumanWorkItemIngress,
+} from './human-work-item-ingress.js'
+import {
   resolveFeishuUxSwitches,
   resolveProcessingReactionConfig,
   resolveReplyRenderMode,
@@ -366,6 +373,32 @@ export async function composeProductionRuntime(options = {}) {
     // throughout startup; readiness rejection fails runtime composition loud.
     await feishu.ready()
     log.log('feishu channel live (first handshake + bot identity resolved)')
+  }
+
+  // G5 Human Work Item Feishu action ingress (Product #478, NON-PRODUCTION
+  // lane, ACCEPTANCE_MODE=TEST_IDENTITY): OPTIONAL composition seam, OFF by
+  // default — installed only when HUMAN_WORK_ITEM_INGRESS_ENABLED is exactly
+  // '1'/'true' AND a principals allowlist file is configured. The seam sits
+  // AFTER the V2 gate and consumes a p2p message only when the sender is an
+  // EXACT allowlist key AND the text matches the strict `/work` grammar;
+  // everything else falls through to the Router's AUTHENTICATED delivery
+  // byte-identically (zero default production behavior change). The broker
+  // gateway is mounted below (mountBrokerGateway); the seam resolves it
+  // lazily per command via ctx so wiring order never depends on mount order.
+  if (feishu !== undefined && isStrictTruthyEnv(process.env[HUMAN_WORK_ITEM_INGRESS_ENABLED_ENV])) {
+    const principalsFile = process.env[HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE_ENV]
+    if (typeof principalsFile !== 'string' || principalsFile === '') {
+      throw new Error('production-runtime: HUMAN_WORK_ITEM_INGRESS_ENABLED requires HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE (fail loud — an authorization allowlist must never be silently absent)')
+    }
+    wireHumanWorkItemIngress({
+      feishu,
+      router,
+      gateway: { execute: (call, context) => ctx.get('brokerGateway').execute(call, context) },
+      principalsFile,
+      auditFile: join(layout.controlDir, HUMAN_WORK_ITEM_AUDIT_FILE),
+      enabled: true,
+      log,
+    })
   }
 
   // Trusted CP seam: gateway mode always mounted; the credential store path
