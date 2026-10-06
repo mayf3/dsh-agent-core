@@ -1,0 +1,24 @@
+(node:67636) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ collaboration read/append are split by least-privilege scope (CTR-10) (1.118833ms)
+✔ collaboration manifests freeze the proposal CTR-10 routes and wire surfaces (0.199166ms)
+✔ non-interference: the additive family leaves the existing default surface intact (0.061209ms)
+✔ collaboration error tables declare the proposal §3 catalogue; declared codes only (0.133083ms)
+✔ collaboration capabilities are part of the default broker surface exactly once (0.045875ms)
+✔ collaboration feed forwards the frozen query surface and returns the envelope verbatim (17.828834ms)
+✔ collaboration feed: absent cursor and limit are not forwarded (server default 50) (3.760125ms)
+✔ collaboration feed: half cursor triple and limit bounds fail closed with ZERO downstream requests (0.572375ms)
+✔ collaboration append sends the trusted Idempotency-Key and the exact optional-reference body (2.346792ms)
+✔ collaboration append: absent optional references omit the keys entirely (request-hash identity) (1.92775ms)
+✔ collaboration append: missing required body fails closed locally with ZERO downstream requests (0.349125ms)
+✔ collaboration append preserves svc error codes verbatim with requestId and no retry (5.856834ms)
+✔ collaboration feed preserves read-side errors verbatim (404 not-visible family) (1.409375ms)
+✔ undeclared svc code degrades to the declared canonical family (no wildcard declaration) (1.416542ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 130.045833
