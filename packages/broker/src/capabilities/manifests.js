@@ -13,6 +13,7 @@ export { manifests as forumManifests, normalManifests as forumNormalManifests } 
 export { moderatorManifests as forumModeratorManifests } from './forum-moderation.js'
 export { manifests as workflowManifests } from './workflow.js'
 export { workflowAssistanceManifests } from './workflow-assistance.js'
+export { workflowCollaborationManifests } from './workflow-collaboration.js'
 export { manifests as okrManifests } from './okr.js'
 export { agentDefinitionManifests } from './agent-definition.js'
 export { schedulerManifests } from './scheduler.js'

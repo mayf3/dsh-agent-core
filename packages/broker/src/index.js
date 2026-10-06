@@ -52,7 +52,7 @@ import { createBrokerGateway } from './gateway.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
-  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowAssistanceManifests, okrManifests,
+  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowAssistanceManifests, workflowCollaborationManifests, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
@@ -89,7 +89,7 @@ export const DEFAULT_MANIFESTS = [
   ...forumNormalManifests,
   ...workflowManifests,
   ...workflowAssistanceManifests,
-  ...okrManifests,
+  ...workflowCollaborationManifests,
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...selfOpsManifests,
