@@ -77,6 +77,7 @@ export const workflowCollaborationReadManifest = withTransportErrors({
         afterId: { type: 'string', description: 'Cursor item id (event/submission id for facts, collaboration_entry_id for entries); pair with afterCreatedAt and afterItemType.' },
       },
       required: ['workflowInstanceId'],
+      additionalProperties: false,
       allOrNone: [{ properties: ['afterCreatedAt', 'afterItemType', 'afterId'], validationError: 'invalid_cursor' }],
     },
     result: { type: 'json' },
@@ -115,6 +116,7 @@ export const workflowCollaborationAppendManifest = withTransportErrors({
         relatedAssistanceCaseId: uuid('Optional assistance case referenced; must belong to the same instance'),
       },
       required: ['workflowInstanceId', 'body'],
+      additionalProperties: false,
     },
     result: { type: 'json' },
     errors: [

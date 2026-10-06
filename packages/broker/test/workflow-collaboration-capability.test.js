@@ -82,6 +82,19 @@ test('collaboration manifests freeze the proposal CTR-10 routes and wire surface
     'relatedAssistanceCaseId',
   ])
   assert.deepEqual(appendOp.arguments.required, ['workflowInstanceId', 'body'])
+  // Review m2: closed argument schemas — hallucinated fields fail fast locally.
+  assert.equal(feed.arguments.additionalProperties, false)
+  assert.equal(appendOp.arguments.additionalProperties, false)
+})
+
+test('non-interference: the additive family leaves the existing default surface intact', () => {
+  // Review B1 guard: the index.js wiring must INSERT the family, never swap
+  // an existing spread line (the 54->55 count and okr_read presence pin the
+  // pre-existing families that no dedicated test otherwise pins).
+  const ids = DEFAULT_MANIFESTS.map((manifest) => manifest.id)
+  assert.ok(ids.includes('okr_read'), 'okr_read must stay registered')
+  assert.ok(ids.includes('workflow_execute'), 'workflow_execute must stay registered')
+  assert.ok(ids.includes('workflow_assistance_read'), 'workflow_assistance_read must stay registered')
 })
 
 test('collaboration error tables declare the proposal §3 catalogue; declared codes only', () => {
