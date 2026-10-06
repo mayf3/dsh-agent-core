@@ -28,10 +28,10 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { Scheduler } from '../src/scheduler.js'
-import { JobStore } from '../src/store.js'
-import { createRecordingDelivery } from '../src/seams.js'
-import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../src/occurrence-model.js'
+import { Scheduler } from '../../src/scheduler.js'
+import { JobStore } from '../../src/store.js'
+import { createRecordingDelivery } from '../../src/seams.js'
+import { applyTransition, buildOccurrenceRecord, rebuildFences } from '../../src/occurrence-model.js'
 
 const sleep = (ms = 10) => new Promise((resolve) => setTimeout(resolve, ms))
 const deferred = () => {
