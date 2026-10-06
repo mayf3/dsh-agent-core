@@ -39,7 +39,6 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
-import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { mountBrokerGateway } from './broker-composition.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
@@ -71,17 +70,29 @@ import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
+import { appendRestartBoundaryReceipt, collectRuntimeRestartCensus } from './restart-boundary.js'
+import { loadAgentModelOverrides, canonicalDefaultGlobalRoute, createModelArtifactContext } from './model-overrides.js'
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
-import { resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
+import {
+  resolveFeishuUxSwitches,
+  resolveProcessingReactionConfig,
+  resolveReplyRenderMode,
+  warnInvalidUnconfiguredFeishuEnv,
+} from './feishu-env.js'
 
 // Re-exported for the existing test/compat imports (parseStrictBooleanEnv etc.).
-export { parseStrictBooleanEnv, resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
+export {
+  parseStrictBooleanEnv,
+  resolveFeishuUxSwitches,
+  resolveProcessingReactionConfig,
+  resolveReplyRenderMode,
+  warnInvalidUnconfiguredFeishuEnv,
+} from './feishu-env.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
@@ -148,13 +159,6 @@ export async function composeProductionRuntime(options = {}) {
   // must remain proxy-free and the proven Node env-proxy behavior is pinned
   // exactly. This gate runs before composition mutates env or mounts anything.
   assertTargetProxyRuntime()
-  // Feishu UX switches: strict-parsed BEFORE any mount so an invalid value
-  // fails composition loud even when the channel itself is unconfigured.
-  const feishuUxSwitches = resolveFeishuUxSwitches()
-  // Processing-reaction switch: same fail-loud contract (unset/empty=false).
-  const processingReactionEnabled = resolveProcessingReactionConfig()
-  // Reply render mode: same fail-loud contract (unset/empty='markdown').
-  const replyRenderMode = resolveReplyRenderMode()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -242,6 +246,7 @@ export async function composeProductionRuntime(options = {}) {
   // never reads the file or learns provider/model rules.
   // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
   // canonical built-in default (GPT Luna as a complete subscription route).
+  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
   const globalRouteSource = opts.globalRoute !== undefined
     ? 'composition_config'
     : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
@@ -252,12 +257,15 @@ export async function composeProductionRuntime(options = {}) {
       provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
       model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
     }
-    : canonicalDefaultGlobalRoute()))
+    : canonicalDefaultGlobalRoute(modelLoadOptions)))
   log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  // Reconciliation A2/A4: the runtime root binds its own credential and
+  // immutable artifact identity at startup and subsequent process boundaries.
+  // A foreign domain or changed artifact fails closed at load.
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
@@ -274,24 +282,51 @@ export async function composeProductionRuntime(options = {}) {
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
   // offline (no fake recording seam in production); delivery-requesting
   // jobs fail loud as not-delivered.
+  //
+  // OPTIONAL ADAPTER ADMISSION (audit Product #442): this channel is an
+  // OPTIONAL adapter, so BOTH its config validation and its module graph
+  // belong to the ENABLED branch only —
+  //   - the channel-specific supervision switches are strictly parsed HERE,
+  //     so an invalid value on an ENABLED channel still fails composition
+  //     loud (fail closed), while a disabled channel's invalid switch can
+  //     never block the unrelated base path (it warns instead — observable,
+  //     never silently dropped);
+  //   - the connector + @larksuite/channel SDK graph is loaded ONLY for an
+  //     enabled channel, so a broken/absent optional-adapter implementation
+  //     is no longer a base-boot dependency; a CONFIGURED channel whose
+  //     implementation cannot load fails loud (FEISHU_CONNECTOR_UNAVAILABLE).
   let feishu = undefined
   const feishuCredsPath = opts.feishuCredsPath ?? process.env.FEISHU_CREDS_PATH
   if (typeof feishuCredsPath === 'string' && feishuCredsPath !== '' && existsSync(feishuCredsPath)) {
+    // Feishu UX switches: strict-parsed for the ENABLED channel (absent =
+    // connector defaults true/true). Any invalid value fails loud HERE.
+    const feishuUxSwitches = resolveFeishuUxSwitches()
+    // Processing reaction: definite boolean (unset/empty resolves to false —
+    // the connector default stays OFF); render mode resolves to 'markdown'.
+    const processingReactionEnabled = resolveProcessingReactionConfig()
+    const replyRenderMode = resolveReplyRenderMode()
+    let applyFeishu
+    try {
+      const connector = await import('../../feishu-connector/src/index.js')
+      applyFeishu = connector.apply
+    } catch (cause) {
+      throw Object.assign(
+        new Error(`production-runtime: feishu channel is configured but the connector module graph failed to load: ${cause?.message ?? cause}`),
+        { code: 'FEISHU_CONNECTOR_UNAVAILABLE', cause },
+      )
+    }
     feishu = applyFeishu(ctx, {
       enabled: true,
       credentialsPath: feishuCredsPath,
       // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
       // keys are forwarded (absent = connector defaults true/true).
       ...feishuUxSwitches,
-      // Processing reaction: definite boolean (unset/empty already resolved
-      // to false above — the connector default stays OFF).
       processingReactionEnabled,
-      // Reply render mode: definite 'markdown' | 'card' (unset/empty already
-      // resolved to 'markdown' above — the byte-identical default).
       replyRenderMode,
     })
     log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
   } else {
+    warnInvalidUnconfiguredFeishuEnv(process.env, (message) => log.warn(message))
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
 
@@ -554,6 +589,11 @@ export async function composeProductionRuntime(options = {}) {
     history,
     tickMs,
     concurrency,
+    // C11-R1 trusted late-outcome self-heal: the engine consults the SAME
+    // published resolveCallerCorrelation surface the self-ops consume, so an
+    // exact trusted late business outcome settles its own occurrence through
+    // the accepted V3/C-039 paths instead of waiting for a human prompt.
+    reconciliation: { resolveCallerCorrelation: (coordinates) => router.resolveCallerCorrelation(coordinates) },
     log: {
       info: (...a) => log.log(...a),
       warn: (...a) => log.warn(...a),
@@ -589,14 +629,46 @@ export async function composeProductionRuntime(options = {}) {
     workflowExecution,
     writeEvidence,
     start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
-    stop: async () => {
-      // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
-      // (in-flight poll finishes, no further page) BEFORE the scheduler and
-      // the owned contexts (Router processes) are torn down — a late poll can
-      // then never deliver into a disposed Router nor outlive the result.
-      await workflowExecution.stop()
-      await scheduler.stop()
-      await ctx.disposeAll()
+    stop: async (signal) => {
+      // C11-R3 (Product #426 A4): while this (old-epoch) process is still
+      // observable, persist the exact restart-boundary receipt — quiesce_begin
+      // before the drain (previous epoch + lifecycle slots + unresolved
+      // handles + in-flight occurrences), quiesce_end after the EXISTING
+      // controlled shutdown settled what it could. Evidence only: the receipt
+      // never writes the recovery store and never stamps exit evidence.
+      const writeBoundary = (phase) => {
+        try {
+          appendRestartBoundaryReceipt({
+            boundaryLog: layout.restartBoundaryLog,
+            entry: {
+              kind: 'restart_boundary',
+              phase,
+              pid: process.pid,
+              ...(signal === undefined ? {} : { signal: String(signal) }),
+              census: collectRuntimeRestartCensus({
+                turnRecoveryStore: layout.turnRecoveryStore,
+                jobsStore: layout.jobsStore,
+                router,
+                agentIds: definition.listAgents().map((agent) => agent.id),
+              }),
+            },
+          })
+        } catch (error) {
+          writeEvidence({ kind: 'restart_boundary_error', phase, error: String(error?.message ?? error) })
+        }
+      }
+      writeBoundary('quiesce_begin')
+      try {
+        // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
+        // (in-flight poll finishes, no further page) BEFORE the scheduler and
+        // the owned contexts (Router processes) are torn down — a late poll can
+        // then never deliver into a disposed Router nor outlive the result.
+        await workflowExecution.stop()
+        await scheduler.stop()
+        await ctx.disposeAll()
+      } finally {
+        writeBoundary('quiesce_end')
+      }
     },
   }
 }

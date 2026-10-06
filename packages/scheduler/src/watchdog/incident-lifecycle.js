@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { canonicalJSON } from '../occurrence-model.js'
 import { compileIncidents } from './incident-compiler.js'
+import { DELIVERY_PROJECTION_VERSION } from './delivery-projection.js'
 
 const VERSION = 1
 
@@ -67,6 +68,7 @@ export function updateIncidentState(inputState, currentIncidents, {
         ...structuredClone(input), producer, episode: record.episode + 1,
         incidentId: `${rootIdentity}|episode:${record.episode + 1}`,
         lifecycle: 'OPEN', transitionRevision: 0, firstSeenAt: nowMs, lastSeenAt: nowMs,
+        deliveryProjection: DELIVERY_PROJECTION_VERSION,
         alertState: { lifecycle: 'OPEN', delivery: 'PENDING', incidentKey: rootIdentity, lastTransitionAt: nowMs },
       }
       state.incidents[rootIdentity] = record
@@ -77,6 +79,7 @@ export function updateIncidentState(inputState, currentIncidents, {
       record = {
         ...structuredClone(input), producer, episode: 1, incidentId: `${rootIdentity}|episode:1`,
         lifecycle: 'OPEN', transitionRevision: 0, firstSeenAt: nowMs, lastSeenAt: nowMs,
+        deliveryProjection: DELIVERY_PROJECTION_VERSION,
         alertState: { lifecycle: 'OPEN', delivery: 'PENDING', incidentKey: rootIdentity, lastTransitionAt: nowMs },
       }
       state.incidents[rootIdentity] = record

@@ -379,3 +379,9 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `HR_S256_ADMIN_EMERGENCY_RECOVERY_V1` | accepted 2026-09-28 by original Deployment Agent under standing nonproduction technical delegation; reviewed head `435fdd01…`, Spec `0e80887d…`, review `0a636410…`, acceptance `a1520e2f…`; effective after canonical integration | contracts; production apply none | distinct peer-authenticated fixed action/ID, genuine CTO-free qualification prerequisite, one whole-host s256 cut, old effect UNKNOWN/no replay and conflict-specific restrictions |
+
+## Bounded governance adoption candidate
+
+| Spec | Lifecycle | Scope | Activation |
+|---|---|---|---|
+| [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3](AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md) | proposed; V2 stays current until atomic acceptance | exact upstream PR #21 fixes plus local bounded-development routing; no product implementation or production effect | independent local review, exact maintainer acceptance, reciprocal lifecycle/lock update, then main merge |

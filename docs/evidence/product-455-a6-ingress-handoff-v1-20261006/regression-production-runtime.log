@@ -1,0 +1,484 @@
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-S6Savs/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-S6Savs/workspaces/agt_dir-e2e-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246685892,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246685892,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_dir-e2e-target-agent session main requestId f2acf682-1296-4426-8863-... (683d7fb6-340f-44de-987f-6d39b0109843) in 69ms
+✔ ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main (329.197291ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-CRuWPS/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: unknown name → not_found and ZERO deliveries anywhere (121.263416ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-AX71N8/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries (119.188ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-UXdOj5/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E disabled target: resolves enabled:false (existence truth) and the send is refused (167.810416ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dir-e2e-N45yXJ/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E list: the full composed stack lists both agents in directory shape (172.076541ms)
+✔ R2: the exact three fields accept boundary values (2.847ms)
+✔ R2: byte-length, NUL, grammar, and range violations reject with invalid_arguments detail (0.374542ms)
+✔ R3: a missing or stale source-turn proof fails BEFORE Router delivery (6.876792ms)
+✔ R3: self-send is rejected before delivery and before any audit intent (3.595125ms)
+✔ R3/R4: a trusted legal opaque source id with underscores is preserved exactly (3.284833ms)
+✔ R3/R4: one deliver carries the frozen inter_agent messageOrigin built from trusted context (6.118083ms)
+✔ R12: authoritative argument validation denial writes one L0 row and zero deliveries (2.015167ms)
+✔ R12: intent row precedes delivery; outcome row follows the receipt (2.654333ms)
+✔ R12: an intent append failure returns internal_error with ZERO Router deliveries (1.281084ms)
+✔ R12: first coordinate append failure after receipt is honest outcome_unknown and never redelivers (1.368375ms)
+✔ R12: later wait-outcome audit degradation preserves the already-retained trace success (7.401375ms)
+✔ R8: the exact Run completing in time returns exactly one replied with the full text (2.906083ms)
+✔ R8: reply-wait timeout returns {status:timeout} and never cancels or replays (3.112292ms)
+✔ R8: the reply deadline starts AT the receipt (pre-receipt queue time excluded) (5.881125ms)
+✔ R8: failed / no_output / truncated / outcome_unknown never become success (9.57225ms)
+✔ deliver failures map to exact §5 classes and never retry (7.598375ms)
+✔ a malformed post-acceptance receipt is outcome_unknown, never not-delivered (0.599167ms)
+✔ wait mode without a reconciliation handle returns honest outcome_unknown (0.788458ms)
+✔ inspection handler forwards only args and the gateway-frozen caller to the read-only seam (0.517125ms)
+✔ reconcile lookup is caller-bound, reads live + .1, and returns retained V2 coordinate evidence (8.97125ms)
+✔ the provider requires the full Router reconciliation seam (0.303875ms)
+✔ R8 available rows: completed/late_completed reply; truncated never becomes success (3.869458ms)
+✔ R8 failed rows: retained text is never returned as success (0.349292ms)
+✔ R8 F19 rows: terminated_without_outcome maps to outcome_unknown in both shapes (0.378917ms)
+✔ R8 no_output / not_admitted / absence rows (0.554042ms)
+✔ R9: an already-settled Run settles from the first read without subscribing (0.361917ms)
+✔ R9: settle between read and subscribe returns the same exact reply (0.392708ms)
+✔ R9: a matching event settles through a fresh authoritative read (0.556958ms)
+✔ R9: events for other handles are ignored (0.201666ms)
+✔ R9: deadline fires timeout only after one final authoritative read (0.196291ms)
+✔ R9: terminal settle racing the timer wins over timeout (once-guard) (6.2865ms)
+✔ R9: a late terminal read at deadline time is honored (never mislabeled timeout) (1.264375ms)
+✔ ACC-1: plist forwards DSH_AGENTS_HOME when set at install time (2.690208ms)
+✔ ACC-1: unset at install time -> key absent, value only ever comes from the install-time env (0.289625ms)
+✔ ACC-2: agentEnv carries parent DSH_AGENTS_HOME into the child env (0.470167ms)
+✔ ACC-5: unset parent env -> child env carries no DSH_AGENTS_HOME (fallback root semantics preserved) (0.16225ms)
+✔ ACC-2b: configured agentsHome (production compose shape) ignores env DSH_AGENTS_HOME (0.36ms)
+✔ ACC-5b: bootstrap WITHOUT configured agentsHome still honours the env var (documented override knob) (0.251208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/compose-dep-root-own-9UqTbm/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ composition pins the credentialFile to the runtime deployment root (own root accepted) (161.357416ms)
+✔ composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed) (22.063917ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-8vii3q/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:60999 (deliverReady=true storeReady=true)
+✔ composition provides the full existing service graph over the production layout (136.714708ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-JHjFKI/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61002 (deliverReady=true storeReady=true)
+[notification-ingress] ERROR POST /v1/deliver failed: notification-ingress: sessionMode must be one of main | fresh
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686252,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686252,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-1... (msg-1) in 73ms
+✔ notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox (603.607ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-TguuVM/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686917,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686917,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ scheduler engine consumes a job from the production store through the router seam (629.334375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-Ec7R5J/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246687201,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:outcome_unknown"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246687201,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"NONE","finalOutcome":"stop:outcome_unknown","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ B15 production evidence preserves scheduled outcome_unknown reconciliation data (225.558834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-64BQNF/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61031 (deliverReady=true storeReady=true)
+✔ graceful stop closes the HTTP surfaces and writes stopped-able state (92.6355ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-OLTAUS/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246687404,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246687404,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session fresh-1eb7dfd82f271a47ef697aa829491c92 requestId req-clean... (msg-1) in 5ms
+✔ runtime state carries no demo artifacts anywhere (39.594291ms)
+✔ C-WIRE paths: the production layout owns the notification-ingress persistent surface (3.371125ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-a9PlpA/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61033 (deliverReady=true storeReady=true)
+✔ C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env (84.232083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-qC2QoO/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246687691,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246687691,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services (395.239292ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-CkvEEs/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null (37.70825ms)
+✔ C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks (4.974417ms)
+✔ MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed) (66.810292ms)
+✔ canonicalDefaultGlobalRoute is the complete Luna subscription route (2.868208ms)
+✔ passthrough carries the built-in subscription; a plain globalRoute keeps the legacy shape (4.46525ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-RGLigl/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount (134.473791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-TCRtj5/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-KVu6n0/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D2 runtime env override wins over the default; composition config wins over env (256.79725ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-WLC3NX/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default (178.287084ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/default-route-29Br2N/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ composition freezes the own-domain artifact and refuses drift before the next process boundary (271.485875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-U3hqwi/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61007 (deliverReady=true storeReady=true)
+✔ RED base: missing adapter implementation does not block the channel-OFF base path (786.3345ms)
+✔ enabled channel + missing adapter implementation fails composition LOUD (fail closed) (58.90225ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-fFsuij/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61000 (deliverReady=true storeReady=true)
+✔ RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal) (136.69275ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-8opYnl/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61003 (deliverReady=true storeReady=true)
+✔ RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal) (87.859ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-69F2yd/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61006 (deliverReady=true storeReady=true)
+✔ RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal) (113.726125ms)
+✔ enabled channel + invalid mention switch fails composition LOUD (fail closed) (41.94725ms)
+✔ enabled channel + invalid reply render mode fails composition LOUD (fail closed) (51.09ms)
+✔ enabled channel + invalid identity credentials fail composition LOUD (fail closed) (309.450458ms)
+✔ Feishu gate wiring precedes awaited readiness and live declaration (4.236375ms)
+✔ ENV: unset and empty mean not-configured (undefined) (1.953917ms)
+✔ ENV: exact true/false parse to real booleans (0.134417ms)
+✔ ENV: every other value fails LOUD with FEISHU_UX_SWITCH_INVALID (1.588917ms)
+✔ SWITCHES: nothing configured -> empty object (connector defaults apply) (1.780083ms)
+✔ SWITCHES: false/false (the frozen production target) parses to both false (0.29075ms)
+✔ SWITCHES: the two switches are independent (mixed values) (0.125917ms)
+✔ SWITCHES: an invalid value on EITHER var fails loud (first var reported) (0.937625ms)
+✔ COMPOSE: switches are strictly parsed INSIDE the enabled branch and spread into the feishu mount (0.907791ms)
+✔ LAUNCHD: both FEISHU switch vars pass through into the rendered plist when set (1.317875ms)
+✔ LAUNCHD: unset switch vars emit NO plist keys (defaults stay connector-owned) (3.408917ms)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+✔ production composition resolves fixedOperationAccess after broker mount (9.304ms)
+✔ production composition denies an ordinary unnoted turn (2.515792ms)
+✔ production composition rejects model-carried workflow coordinates (0.875125ms)
+✔ conflicting flat and nested turn ids fail closed (1.351083ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-OZqwAV/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:60998 (deliverReady=true storeReady=true)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686079,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686079,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-a6-restart-handoff... (msg-1) in 71ms
+✔ A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface (547.386041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-Oebx12/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61014 (deliverReady=true storeReady=true)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-Oebx12/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:61024 (deliverReady=true storeReady=true)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686975,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686975,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-a6-restart-handoff... (msg-1) in 461ms
+[notification-ingress] ERROR POST /v1/deliver failed: notification-ingress: settle target record missing for client-forum-abc/req-a6-restart-handoff
+✔ A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission (801.794834ms)
+✔ default production root is ~/.agent-core (agentcore-cron store root, NOT .demo) (3.715708ms)
+✔ layout derives every durable path under one root (0.6335ms)
+✔ explicit root wins over the env; the env wins over the default (0.469ms)
+✔ .demo roots are rejected fail-loud (production state is never demo state) (2.330208ms)
+✔ runtime gate rejects every recognized proxy key and any non-exact Node version without values (2.432792ms)
+✔ production composition applies the runtime proxy gate before any mount or layout read (2.802791ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/model-runtime-vV42N0/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ composition resolves the v3 primary to target and the global route to another Agent (214.519334ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/model-runtime-0MV7EV/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] process for agt_cto-agent exited (0); will respawn
+[router] process for agt_cto-agent exited (0); will respawn
+[router] reuse process for agt_other (pid 7103)
+✔ target-only rollback rewrites the config file; non-target PID and route unchanged (257.221458ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/model-runtime-DdM48V/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] process for agt_cto-agent exited (0); will respawn
+[router] reuse process for agt_other (pid 7107)
+✔ malformed config fails target respawn loud without disturbing a running non-target (219.899417ms)
+✔ the code constant carries ONLY pins and scope — no route tuple values (F-10) (5.084042ms)
+✔ GPT6-0: the GPT-6 tuple constant carries the exact DEC-G6R-002/003 identity — dormant, separate from V3 (0.229417ms)
+✔ missing file = global passthrough; valid v3 chain resolves primary-first with identities (15.58925ms)
+✔ version discipline: older files fail loud (no auto conversion) (5.063167ms)
+✔ malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys fail loud (29.622542ms)
+✔ reference integrity and dedup: unknown ref, repeated ref, canonical alias duplicates fail loud (36.214333ms)
+✔ hard bound: chain length ≤ MAX_CONFIGURED_ROUTES = 4 (never 2) (10.356292ms)
+✔ fleet activation accepts any registered Agent and rejects unregistered Agent ids (16.929792ms)
+✔ CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (not a fallback class) (9.483708ms)
+✔ shared mode rejects missing, per-home, relative, and non-canonical credentialFile values (24.213125ms)
+✔ ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud (19.182708ms)
+✔ ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block (17.634875ms)
+✔ ACC-019 reuse-gate identity: builtin and subscription processes never share an identity (8.034958ms)
+✔ providerEnv accepts only the frozen four-key set and safe host-list grammar (103.026167ms)
+✔ providerEnv URL, key and value failures are fail-loud without secret echo (67.568833ms)
+✔ GPT6-1: an explicit reasoningEffort on the GPT-6 tuple loads and rides the process config (12.126416ms)
+✔ GPT6-2: effective reasoningEffort joins the canonical route identity — absent GPT-6 IS medium, high is distinct (14.729917ms)
+✔ GPT6-2b: absent and explicit medium in ONE catalog is a malformed alias (same canonical identity) (1.478334ms)
+✔ GPT6-3: the legacy tuple keeps the exact pre-change schema, identity bytes and absent reasoning (1.308375ms)
+✔ GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message (17.501125ms)
+✔ GPT6-5: reasoningEffort is FORBIDDEN outside the GPT-6 tuple — builtin, non-dsh-codex, legacy tuple (31.880791ms)
+✔ GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity (13.901584ms)
+✔ GPT6-7: the built-in default global route stays the legacy V3 tuple — merge is dormant (CTR-G6R-001) (4.741167ms)
+✔ GPT6-8: the dshr1 pin is bound to exactly one tuple — wrong pluginVersion/model pairings fail loud (ACC-G6R-005) (18.124ms)
+✔ GPT6-9: both dsh-codex pins coexist in one catalog and keep distinct identities (13.991875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-priws-H9rShK/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686188,"routeChainId":"chain-agt_stock_agent-df58fa0d488989fb","agentId":"agt_stock_agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686188,"routeChainId":"chain-agt_stock_agent-df58fa0d488989fb","agentId":"agt_stock_agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_stock_agent session main requestId r1... (msg-1) in 67ms
+✔ wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env) (278.849875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-priws-do4VYO/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686481,"routeChainId":"chain-agt_stock_agent-df58fa0d488989fb","agentId":"agt_stock_agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686482,"routeChainId":"chain-agt_stock_agent-df58fa0d488989fb","agentId":"agt_stock_agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_stock_agent session main requestId r1... (msg-1) in 80ms
+✔ absent primary-workspaces.json → behavior identical to today (default derivation) (372.054209ms)
+✔ invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID (63.038459ms)
+✔ invalid import entry (missing directory) → startup fails loud (57.170125ms)
+✔ malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud (42.370334ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-priws-nOOaHO/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-priws-nOOaHO/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ I: the same static config file yields the identical primary across restarts (195.531ms)
+✔ ENV: unset and empty mean FALSE (connector default OFF) (1.677042ms)
+✔ ENV: exact true/false parse to real booleans (production target = true) (0.140667ms)
+✔ ENV: every other value fails LOUD with FEISHU_PROCESSING_REACTION_INVALID (1.374292ms)
+✔ ENV: the reaction switch is independent of the UX mention switches (0.162292ms)
+✔ COMPOSE: the reaction switch is strictly parsed in the ENABLED branch and forwarded into the feishu mount (0.611ms)
+✔ LAUNCHD: FEISHU_PROCESSING_REACTION_ENABLED passes through into the rendered plist when set (1.020291ms)
+✔ LAUNCHD: unset var emits NO plist key (connector default OFF applies) (0.319834ms)
+✔ ENV: unset and empty mean MARKDOWN (byte-identical default) (2.020916ms)
+✔ ENV: exact markdown/card parse to the real modes (production target = card, NOT applied this round) (0.159291ms)
+✔ ENV: every other value fails LOUD with FEISHU_REPLY_RENDER_MODE_INVALID (2.075083ms)
+✔ ENV: the render mode is independent of the UX mention switches (0.212708ms)
+✔ COMPOSE: the render mode is strictly parsed in the ENABLED branch and forwarded into the feishu mount (0.800667ms)
+✔ LAUNCHD: FEISHU_REPLY_RENDER_MODE passes through into the rendered plist when set (0.588458ms)
+✔ LAUNCHD: unset var emits NO plist key (connector default markdown applies) (0.517417ms)
+✔ A4: the runtime census names the epoch, the lifecycle slots and every unresolved handle class (178.459959ms)
+✔ GUARD: taking the census and writing the boundary receipt never touches the recovery store (228.242ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-HpMmy9/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end) (193.694833ms)
+✔ T67-r2: stop failure => stop_failed evidence + exit 1 (never clean) (3.608916ms)
+✔ T67-r2: clean stop => stopped evidence + exit 0 (unchanged) (0.151417ms)
+✔ T67-r2 entry integration: applyShutdownResult drives evidence/log/exit truthfully (1.377ms)
+✔ HTTP fetch proxy observer captures its own CONNECT evidence (287.459709ms)
+✔ WebSocket proxy observer captures WebSocket CONNECT independently of SSE fallback (5227.14075ms)
+﹣ real dsh-codex usage service has separate proxy CONNECT evidence (0.5365ms) # DSH_CODEX_PACKAGE_TARBALL and DSH_CODEX_SOURCE_STAMP are required for deterministic real-package acceptance
+✔ V2_INGRESS_MODE is frozen to PREBOUND_ONLY (6.012833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-3ObJWD/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ UNKNOWN conversation -> FAIL CLOSED: no forward, no default Binding row, fixed receipt (90.165375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-smCg4u/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ ordinary no-mention group/topic -> silent drop before gate/Router and zero Binding delta (43.552333ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-TUORTc/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ UNKNOWN conversation (direct gate call): unbound verdict, store untouched (42.950166ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-1b08dn/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="ping")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686569,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686569,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9101) produced a 7B reply
+✔ PRE-BOUND primary conversation -> forwarded: canonical main + Agent primary workspace, no override (160.893208ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-CpAsST/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="first")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686689,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686690,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9102) produced a 8B reply
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="second")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686691,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686691,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9102) produced a 9B reply
+✔ PRE-BOUND primary conversation: second message RESUMES the same main (regression) (115.820917ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-Xx0MhL/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ AC11 rollback without state migration: PRE-BOUND NON-PRIMARY compatibility row stays byte-preserved and blocked (35.270458ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-60EDOb/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ NON-PRIMARY row (direct gate call): non_primary_workspace verdict (36.162875ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-jVbWKO/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ An explicit workspace that RESOLVES to the primary path is allowed (effective == primary) (42.401875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-gN1f8r/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ wireV2IngressGate: wires onto a feishu handle; returns false without one (32.519ms)
+✔ makeV2PreboundIngressGate: fail-loud on missing generic Router read seams (0.847458ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-lRojw9/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+✔ IMPORTED primary: Binding.workspace == agentId no longer resolves to the primary → blocked (non_primary_workspace) (41.651292ms)
+[router] binding store loaded: 1 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/acr-v2gate-qeoIma/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] channelConversation feishu:oc_92332c45c1cac2... -> binding -> agent agt_stock_agent + session main (channel=group chat=oc_92332c45c1cac2ef89857abfee8ed762 sender=ou_sen text="post-import turn")
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791246686969,"routeChainId":"single-route","agentId":"agt_stock_agent","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791246686969,"routeChainId":"single-route","agentId":"agt_stock_agent","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] agent agt_stock_agent (pid 9103) produced a 19B reply
+✔ IMPORTED primary: workspace-null binding stays allowed and the turn runs in the imported directory (62.837667ms)
+✔ runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves (1190.907292ms)
+✔ owner assistance wake resolves exact principal and uses stable inter-agent delivery (4.54325ms)
+✔ existing pending/settled caller correlation suppresses duplicate prompt (0.221209ms)
+✔ delivery error is accepted only when caller correlation proves admission (0.998708ms)
+✔ owner principal resolution failure prevents delivery and stays retryable (0.9745ms)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+✔ real gateway resolves late-mounted workflowProgressAccess and records checkpoint (274.815791ms)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+✔ real gateway rejects untrusted turn and model-carried coordinates (150.355542ms)
+✔ workflow_progress tool shape exposes no identity/provenance arguments (2.789375ms)
+✔ trusted Workflow turn records and reads the current checkpoint (254.399ms)
+✔ ordinary, wrong-agent and conflicting-turn contexts fail closed (139.73ms)
+✔ model-carried workflow coordinates and transcript-sized payloads are rejected (126.798792ms)
+✔ terminal attempts cannot accept another checkpoint (108.334125ms)
+ℹ tests 176
+ℹ suites 0
+ℹ pass 175
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 1
+ℹ todo 0
+ℹ duration_ms 11318.15375

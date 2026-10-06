@@ -30,150 +30,39 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
-import { isIP } from 'node:net'
 
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
 import {
   CANONICAL_DEFAULT_MODEL_ROUTE,
+  CHATGPT_SUBSCRIPTION_V1,
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
   GPT6_LUNA_ROUTE_V1,
   REASONING_EFFORT_VALUES,
+  canonicalOpenAICodexCredentialFileFor,
 } from '../../agent-provisioning/src/shared-codex.js'
 
-/**
- * Config-independent pins and scope (parent CTR-011 / CTR-IMPL-009
- * carry-forward). Route tuple VALUES never come from here — only exact
- * dsh-codex/Harness source identity and the canonical credential path do.
- * Canonical path realigned to the yanfenma unified production backend
- * (AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2 CTR-ACT2-002).
- */
-export const CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE = '/Users/yanfenma/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json'
+export { CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE, CHATGPT_SUBSCRIPTION_V1 }
 
-export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({
-  targetAgentId: 'agt_cto-agent',
-  plugin: 'dsh-codex',
-  pluginVersion: '0.2.3',
-  sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',
-  artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',
-  dshVersion: '0.1.0-rc.8',
-  dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',
-  credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
-})
+// The shared provisioning module owns exact plugin/Harness pins and per-domain
+// artifact validation; the public loader exports stay compatible.
+import { createModelArtifactContext, verifyModelArtifactContext as verifyArtifactContext } from '../../agent-provisioning/src/deployment-artifact.js'
+
+
 
 /**
  * GPT6_LUNA_AND_REASONING_EFFORT_V1 (CTR-G6R-001/002): the V3 production pin
- * above is preserved byte-for-byte — the dormant GPT-6 tuple lives in
+ * is preserved byte-for-byte — the dormant GPT-6 tuple lives in
  * GPT6_LUNA_ROUTE_V1 (agent-provisioning/shared-codex.js) and is selected
  * ONLY by a deployment-owned model override. The loader accepts BOTH
  * dsh-codex pins; a single global pin replacement is forbidden, and no
  * reasoning default is injected into the legacy tuple (DEC-G6R-004).
  */
 
-export const PROVIDER_ENV_ALLOWLIST = Object.freeze([
-  'HTTP_PROXY',
-  'HTTPS_PROXY',
-  'NO_PROXY',
-  'NODE_USE_ENV_PROXY',
-])
+export { PROVIDER_ENV_ALLOWLIST } from './identity/provider-environment.js'
+import { PROVIDER_ENV_ALLOWLIST, validateProviderEnv, invalid } from './identity/provider-environment.js'
 
 /** Hard chain bound (parent Spec Q-1, Owner-frozen 2026-08-25). */
 export const MAX_CONFIGURED_ROUTES = 4
-
-function invalid(message, cause) {
-  return Object.assign(new Error(`production-runtime: invalid agent model overrides: ${message}`, { cause }), {
-    code: 'AGENT_MODEL_OVERRIDE_INVALID',
-  })
-}
-
-function invalidProviderEnv(key, invalidClass) {
-  return invalid(`${key}: ${invalidClass}`)
-}
-
-function assertProxyUrl(key, value) {
-  if (typeof value !== 'string' || value === '') throw invalidProviderEnv(key, 'invalid_non_empty_string')
-  let url
-  try {
-    url = new URL(value)
-  } catch {
-    throw invalidProviderEnv(key, 'invalid_url')
-  }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw invalidProviderEnv(key, 'invalid_scheme')
-  if (url.username !== '' || url.password !== '' || value.includes('@')) throw invalidProviderEnv(key, 'userinfo_forbidden')
-  if (url.hostname === '') throw invalidProviderEnv(key, 'host_missing')
-  if (url.pathname !== '' && url.pathname !== '/') throw invalidProviderEnv(key, 'path_forbidden')
-  if (url.search !== '') throw invalidProviderEnv(key, 'query_forbidden')
-  if (url.hash !== '') throw invalidProviderEnv(key, 'fragment_forbidden')
-}
-
-function validPort(port) {
-  if (port === undefined) return true
-  if (!/^[0-9]+$/u.test(port)) return false
-  const number = Number(port)
-  return Number.isInteger(number) && number >= 1 && number <= 65_535
-}
-
-function validHostname(host) {
-  if (host.length === 0 || host.length > 253) return false
-  return host.split('.').every((label) => (
-    label.length >= 1
-    && label.length <= 63
-    && /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/u.test(label)
-  ))
-}
-
-function validNoProxyEntry(entry) {
-  if (entry === '*') return true
-
-  const bracketed = entry.match(/^\[([^\]]+)\](?::([0-9]+))?$/u)
-  if (bracketed !== null) return isIP(bracketed[1]) === 6 && validPort(bracketed[2])
-  if (entry.includes('[') || entry.includes(']')) return false
-
-  // A raw IPv6 literal is valid only without a port. Brackets are mandatory
-  // for the IPv6 + port form, keeping the grammar mechanically unambiguous.
-  if (isIP(entry) === 6) return true
-
-  const hostPort = entry.match(/^([^:]+)(?::([0-9]+))?$/u)
-  if (hostPort === null || !validPort(hostPort[2])) return false
-  const host = hostPort[1]
-  if (isIP(host) === 4) return true
-  // Numeric dotted input is an IPv4 candidate, never a hostname fallback.
-  if (/^[0-9.]+$/u.test(host)) return false
-  return validHostname(host)
-}
-
-function assertNoProxy(value) {
-  if (typeof value !== 'string' || value === '') {
-    throw invalidProviderEnv('NO_PROXY', 'invalid_non_empty_string')
-  }
-  // Shell expansion syntax is forbidden. '*' and '[' / ']' are handled only
-  // by their exact grammar positions in validNoProxyEntry.
-  if (/[\s\u0000-\u001f\u007f'"`$\\?{}();&|<>!~]/u.test(value)) {
-    throw invalidProviderEnv('NO_PROXY', 'invalid_character')
-  }
-  const entries = value.split(',')
-  if (entries.some((entry) => entry === '' || !validNoProxyEntry(entry))) {
-    throw invalidProviderEnv('NO_PROXY', 'invalid_entry')
-  }
-}
-
-function validateProviderEnv(value) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    throw invalidProviderEnv('providerEnv', 'invalid_type')
-  }
-  const allowed = new Set(PROVIDER_ENV_ALLOWLIST)
-  for (const key of Object.keys(value)) {
-    if (!allowed.has(key)) throw invalidProviderEnv(key, 'unknown_key')
-  }
-  for (const key of PROVIDER_ENV_ALLOWLIST) {
-    if (!Object.hasOwn(value, key)) throw invalidProviderEnv(key, 'missing_key')
-  }
-  assertProxyUrl('HTTP_PROXY', value.HTTP_PROXY)
-  assertProxyUrl('HTTPS_PROXY', value.HTTPS_PROXY)
-  assertNoProxy(value.NO_PROXY)
-  if (value.NODE_USE_ENV_PROXY !== '1') {
-    throw invalidProviderEnv('NODE_USE_ENV_PROXY', 'invalid_value')
-  }
-  return Object.freeze(Object.fromEntries(PROVIDER_ENV_ALLOWLIST.map((key) => [key, value[key]])))
-}
 
 /**
  * JSON.parse silently keeps the final value for duplicate object keys. The
@@ -295,7 +184,7 @@ function assertNonEmptyString(value, what) {
 }
 
 /** One resolved chain route entry: frozen process config + reuse identity. */
-function makeChainRoute(routeRef, route) {
+function makeChainRoute(routeRef, route, artifactContext) {
   const processConfig = Object.freeze({
     provider: route.provider,
     model: route.model,
@@ -305,7 +194,7 @@ function makeChainRoute(routeRef, route) {
     // block; a builtin processConfig has NO subscription key, so the spawn
     // side's conditional expansion keeps it off the plugin/pin path entirely.
     ...(route.routeKind === 'subscription' ? {
-      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, effectiveRouteReasoningEffort(route)),
+      subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, effectiveRouteReasoningEffort(route), artifactContext),
     } : {}),
   })
   return Object.freeze({
@@ -325,23 +214,23 @@ function makeChainRoute(routeRef, route) {
  * identity is the ROUTE'S OWN pin (CTR-G6R-002): legacy routes carry the V3
  * dsh-codex@0.2.3 identity, the GPT-6 tuple carries the exact dshr1
  * identity; a single global stamp is forbidden. */
-function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort) {
+export { createModelArtifactContext }
+function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort, artifactContext) {
   const tupleIdentity = pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion ? GPT6_LUNA_ROUTE_V1 : CHATGPT_SUBSCRIPTION_V1
+  const binding = plugin === CHATGPT_SUBSCRIPTION_V1.plugin && pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion ? artifactContext?.binding : undefined
+  const paths = artifactContext ?? { packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL, sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP }
   return Object.freeze({
     plugin,
     pluginVersion,
     sourceCommit: tupleIdentity.sourceCommit,
-    artifactSha256: tupleIdentity.artifactSha256,
+    artifactSha256: binding?.artifactSha256 ?? tupleIdentity.artifactSha256,
+    ...(binding === undefined ? {} : { artifactBinding: binding }),
     dshVersion: tupleIdentity.dshVersion,
     dshCommit: tupleIdentity.dshCommit,
     ...(credentialFile === undefined ? {} : { credentialFile }),
     ...(reasoningEffort === undefined ? {} : { reasoningEffort }),
-    ...(process.env.DSH_CODEX_PACKAGE_TARBALL === undefined ? {} : {
-      packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL,
-    }),
-    ...(process.env.DSH_CODEX_SOURCE_STAMP === undefined ? {} : {
-      sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP,
-    }),
+    ...(paths.packageArtifact === undefined ? {} : { packageArtifact: paths.packageArtifact }),
+    ...(paths.sourceStamp === undefined ? {} : { sourceStamp: paths.sourceStamp }),
   })
 }
 
@@ -353,14 +242,16 @@ function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, r
  * explicitly configured Luna Agent. A missing canonical credential or plugin
  * artifact fails loud at provision; there is never a silent oc-go fallback.
  */
-export function canonicalDefaultGlobalRoute() {
+export function canonicalDefaultGlobalRoute(options = {}) {
+  const artifactContext = verifyArtifactContext(options)
   return Object.freeze({
     provider: CANONICAL_DEFAULT_MODEL_ROUTE.provider,
     model: CANONICAL_DEFAULT_MODEL_ROUTE.model,
     subscription: subscriptionProcessConfigBlock(
       CHATGPT_SUBSCRIPTION_V1.plugin,
       CHATGPT_SUBSCRIPTION_V1.pluginVersion,
-      CHATGPT_SUBSCRIPTION_V1.credentialFile,
+      options.deploymentRoot === undefined ? CHATGPT_SUBSCRIPTION_V1.credentialFile : canonicalOpenAICodexCredentialFileFor(options.deploymentRoot),
+      undefined, artifactContext,
     ),
   })
 }
@@ -368,13 +259,23 @@ export function canonicalDefaultGlobalRoute() {
 /**
  * Load the frozen V3 route chain schema. Missing file is the rollback/legacy
  * state (global env route for every agent). Malformed files fail loud.
+ * One accepted canonical credential store per load — the deployment root's
+ * OWN store (FLEET_SHARED_CODEX_AUTH amendment A2): `options.deploymentRoot`
+ * (the production seam: the runtime's `--root`) pins that root explicitly;
+ * absent, the executing surface's canonical applies. A foreign surface's
+ * lineage (or any other credentialFile) fails closed.
  * @param {string} file
  * @param {Iterable<string>} registeredAgentIds
+ * @param {{deploymentRoot?: string}} [options]
  * @returns {{filePresent:boolean, overrides:Readonly<Record<string,object>>,
  *   resolve:(agentId:string, globalRoute:object)=>object,
  *   resolveChain:(agentId:string, globalRoute:object)=>object}}
  */
-export function loadAgentModelOverrides(file, registeredAgentIds) {
+export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) {
+  const artifactContext = verifyArtifactContext(options)
+  const ownCanonicalCredentialFile = options.deploymentRoot === undefined
+    ? CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+    : canonicalOpenAICodexCredentialFileFor(options.deploymentRoot)
   const filePresent = existsSync(file)
   const mutableOverrides = new Map()
   if (filePresent) {
@@ -448,9 +349,9 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         !isSubscription
         || route.provider !== 'openai-codex'
         || !(isLegacyCodexTuple || isGpt6Tuple)
-        || route.credentialFile !== CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE
+        || route.credentialFile !== ownCanonicalCredentialFile
       )) {
-        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or @${GPT6_LUNA_ROUTE_V1.pluginVersion} and credentialFile ${CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE}`)
+        throw invalid(`routeCatalog.${routeRef}: openai-codex shared mode requires dsh-codex@${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or @${GPT6_LUNA_ROUTE_V1.pluginVersion} and credentialFile ${ownCanonicalCredentialFile}`)
       }
       if (isGpt6Tuple && route.model !== GPT6_LUNA_ROUTE_V1.model) {
         // DEC-G6R-002: the dshr1 pin is bound to exactly one model tuple.
@@ -582,7 +483,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds) {
         })
       }
       const chain = [override.primary, ...override.fallbacks]
-      const routes = Object.freeze(chain.map((ref) => makeChainRoute(ref, override.routes[ref])))
+      const routes = Object.freeze(chain.map((ref) => makeChainRoute(ref, override.routes[ref], artifactContext)))
       return Object.freeze({
         agentId,
         override: true,

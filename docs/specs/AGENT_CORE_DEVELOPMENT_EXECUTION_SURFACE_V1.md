@@ -1,7 +1,16 @@
 ---
 spec_id: AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1
 title: Development Execution Surface — shared, backend-abstracted coding-executor capability (development_execute) for any authorized agent, with system-owned execution state, repo/worktree authority, and session-centric trace correlation
-status: accepted
+status: superseded
+superseded_by: AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1
+superseded_date: 2026-10-02
+supersession_note: >-
+  Operational writer authority (start/continue/cancel admission, worktree
+  reservation, terminal declaration, raw-PID cancel/timeout) superseded by
+  AGENT_CORE_DEVELOPMENT_EXECUTION_AUTHORITY_CONVERGENCE_V1 per Owner Product
+  #413 (E12). Read-only state/receipt semantics remain in force as the
+  compatibility surface. Contract body below preserved byte-identical as
+  historical record; it no longer grants implementation permission.
 accepted_date: 2026-09-24
 accepted_by: mayf3
 accepted_reviewed_head: e3393e7c26fce2d058629cce136448fcf311e37b

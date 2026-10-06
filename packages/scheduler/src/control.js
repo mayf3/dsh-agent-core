@@ -284,7 +284,9 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     .update(`operator-terminate|${operatorActorId}|${occurrenceId}|${runId}`, 'utf8')
     .digest('hex').slice(0, 16)}`
   const resolvedAt = nowMs
-  const { doc, value } = await store.mutateDoc((latest) => {
+  let value
+  try {
+    ({ value } = await store.mutateDoc((latest) => {
     const record = findOccurrenceById(latest.occurrences, occurrenceId)
     if (!record) throw new Error(`unknown occurrence: ${occurrenceId}`)
     if (record.runId !== runId) {
@@ -360,7 +362,17 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
       else resolvedJob.enabled = false
     }
     return { value: { record, identity, fenceRemaining: latest.fences[record.jobId] !== undefined, alreadySettled: false } }
-  })
+    }))
+  } catch (error) {
+    // Transactional convergence: the atomic commit may be durable even when
+    // its acknowledgement is lost — mutateDoc tags that ambiguity with
+    // mutationOutcome:'committed' + committedValue. Replay the committed
+    // receipt instead of surfacing an error whose only safe retry is
+    // RECONCILE_NOT_UNKNOWN (same committed-receipt discipline as the
+    // trusted self-ops reconcile); the settlement itself stays settle-once.
+    if (error?.mutationOutcome !== 'committed' || !error.committedValue) throw error
+    value = error.committedValue
+  }
   const evidenceStatus = value.alreadySettled
     ? { ok: true, alreadyApplied: true }
     : await store.appendRunEvent({

@@ -1,0 +1,14 @@
+{
+  "specHead": "b08db324aa179af962536a804d275866fa2bb7f2",
+  "specSha256": "3dd42a9b8793bb9f68df420d779edd7af42def897861551349cf68db30dd8458",
+  "provisioningCommit": "81382b7bf591c8cea8f7c5013d253b917f39873f",
+  "scriptSha256": "9f835448ded70f1941293bcc194389743fa9b0f3c41442e22b367b0ba2668966",
+  "pluginTgzSha256": "d4f0d0ec794a84d9e3daa346a3a51c5d61a5ebf5504ac0397707d298216dfea2",
+  "scopesTgzSha256": "7c628e30f142569916a355b772a311acfbfebf35d8efdb47bf1f1cfda45f8c77",
+  "deploymentRoot": "/Users/authsvc/.agent-core",
+  "txSchema": 1,
+  "acceptedBy": "mayf3",
+  "acceptedAt": "2026-09-21",
+  "goal": "OPENAI_CODEX_REFRESH_TOKEN_REUSED_V2_PERMANENT_FIX_PRODUCTION_CLOSURE",
+  "note": "Owner decision 2026-09-21; acceptance bound to frozen reviewed material only; body of amendment verbatim r12; Phase D restart safety gate = hard precondition before production mutation"
+}

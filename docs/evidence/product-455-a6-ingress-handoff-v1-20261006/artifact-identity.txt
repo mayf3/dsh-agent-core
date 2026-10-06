@@ -1,0 +1,36 @@
+# PRODUCT_455_A6_INGRESS_HANDOFF_V1 — artifact-identity
+# r262 REVIEW_FIX regeneration (2026-10-06, claim a6-pr487-review-fix-r262 / agent-control#460).
+# r255 manifest superseded in place; its original bytes are preserved in git at af9733e1.
+#
+# P1 FIX (review 5422747406): the seven r255 execution logs are NOW COMMITTED at the repo
+# paths below, SANITIZED by the single mechanical rule  /Users/yanfenma -> <LOCAL_HOME>
+# (local-username worktree paths in stack-trace file URLs). Scanned: no secrets, credentials,
+# private runtime data, production dumps, or personal data otherwise present; Feishu
+# oc_*/ou_* strings are synthetic test fixtures. Logs with zero /Users/ occurrences are
+# byte-identical to the r255 captures (single hash). For the three logs whose sanitized
+# bytes differ, both generations are recorded: R255_CAPTURED_SHA256 (original execution
+# bytes = the reviewed r255 surface) and COMMITTED_SHA256 (retrievable at this repo path).
+# All logs are force-added (git add -f) past the global .gitignore '*.log' rule;
+# .gitignore itself is NOT modified.
+# Format: <sha256>  <repo path>
+#
+# ── tracked docs / test ──────────────────────────────────────────────────────
+f2b10b99399846e5accdb1d5cee8c64cf29a649d84e6ab0554461a70bf5352f1  packages/production-runtime/test/ingress-restart-handoff.test.js  (r262: P2 bounded replay assertion; r255 was c2615c995c0cefc2f8a2085b124fd628262f7af56a6b9a1184ff0f9a4ed061bf)
+910abb80aa62d7f13953cabda4b0c1517084c113d826767135ac172a9668b2de  docs/investigations/ingress-runtime-handoff-map-v1.md  (unchanged from r255)
+c40be8dc11f8cf65355a0e26e7e889ef5d9d21c071bfc22dbdfd2fd315d1acb7  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/MANIFEST.md  (r262 REVIEW_FIX section appended; r255 was 09fd6d64ca0e1c821c74dfc738a25224ff9dc86a81d6a30e348b6c75027f75c0)
+bd2b99997ca0cce112ae11bf83380aea2e6f5427db884274d444fe0fc06fa033  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/VERDICT.txt  (r262 addendum appended; r255 was fcb7da1a5edd6dda75c4ab42e766371aa5cf88180cdc1d5ac9948d0cb774ebcc)
+#
+# ── r255 execution logs (committed r262, sanitized; see rule above) ─────────
+f35d98ba992a6e595c488d481fe26e419ba96b673e12b990b96fb10c001fc08d  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/green-focused-test.log  (no local path present: committed == R255_CAPTURED)
+b413af66d40c14d599943811fe9212e2ec9884b7fa1c1fdc835eb9adf62cd3b9  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/red-m1-store-path-decoupled.log  (R255_CAPTURED d39cb1bfbc3def10e9fba994750d74bf5d534278d409e357145afbd3541a89f0)
+bac16ac101c49cdfd596a316b8f6134784b7b84ad5dec1f4e9452a4baf8247b6  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/red-m2-quiesce-begin-dropped.log  (R255_CAPTURED fff48a52ae06715cd8d4ee98db2d5252b96688db316ed8f756d1b57a5789bdc2)
+4fb8abf143eb8e7894764ba536f7e16dc63c5d7a4cf4e5879f7430ef291cc46b  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-agent-router.log  (R255_CAPTURED b9acb7c1256c369a5ae25f7f64e80f8b6e6bfb8be2bd728a5c5f57b519da2ab8)
+ef02cfc5f00e4dd83c12c0ac9b7825bd2477a08ff768cc07b4de19d107805caf  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-notification-ingress.log  (no local path present: committed == R255_CAPTURED)
+e28e98b4fbe32294b38bff9570bae4cd65e5d9a8d35f0fb277d1a842130a449f  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-production-runtime.log  (no local path present: committed == R255_CAPTURED)
+78e258a6d3dc3d9baadc4057e727893a54383a7df24cfb53d6b352b4e646f5fe  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-scheduler.log  (no local path present: committed == R255_CAPTURED)
+#
+# ── r262 review-fix logs (this round; sanitized with the same rule) ─────────
+2b4fcfe45d61d33650b8aa4a0dd7ce1eee5ad58be806973e848b52d9615d6005  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/r262-green-focused-test.log  (focused 2/2, run 3 of 3)
+fcc1b9c91cb7ba4348d8fdea2b1d1761cb86a0152de216138a42f5d3115f2590  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/r262-red-stall-observation-unbounded-mutation.log  (P2 RED: unbounded HEAD test + deliver-handler.js:162 mutation — still parked at the 45s kill bound)
+df7633efb91f5ac6af58748b61c867ed7b8cdcf5ab6990ef044a7319212ff7eb  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/r262-red-replay-bound-mutation.log  (P2 RED: bounded r262 test + same mutation — prompt FAIL ~6s with unexpected-admission diagnostic)
+d8a842eb106cacd43391608e935b2020ce3b69561d09f50bdcf245695e7f20b1  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/r262-regression-production-runtime.log  (production-runtime suite incl. r262 test: 175 pass / 0 fail / 1 skip)

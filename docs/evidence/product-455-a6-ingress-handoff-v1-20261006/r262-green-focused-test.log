@@ -1,0 +1,35 @@
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-VfcHln/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50969 (deliverReady=true storeReady=true)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791250667325,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791250667325,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-a6-restart-handoff... (msg-1) in 20ms
+✔ A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface (178.345208ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-lPS6y6/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50973 (deliverReady=true storeReady=true)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/prt-compose-lPS6y6/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 47 http capabilities ready, 17 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:50975 (deliverReady=true storeReady=true)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1791250667577,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1791250667577,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-a6-restart-handoff... (msg-1) in 134ms
+[notification-ingress] ERROR POST /v1/deliver failed: notification-ingress: settle target record missing for client-forum-abc/req-a6-restart-handoff
+✔ A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission (219.850417ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5661.221041

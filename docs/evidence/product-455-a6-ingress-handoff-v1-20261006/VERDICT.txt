@@ -1,0 +1,28 @@
+PRODUCT_455_A6_INGRESS_HANDOFF_V1 — VERDICT (frozen 2026-10-06)
+
+CLAIM            a6-stable-ingress-r255 / agent-control#457
+BASE             origin/main 556ea5b4 (branch product-455-a6-ingress-handoff-v1-20261006... see MANIFEST)
+CONFLICT_CHECK   CLEAN (Product #465 surface docs/evidence/product-465-* only; Product #470 worktree clean at e9699aee, nothing pushed; disjoint files+worktrees)
+SOURCE           merged on current main (556ea5b4) under accepted specs — reused, not reimplemented
+CHANGED          1 new test file + 1 new investigation map + this packet; ZERO source change (git diff origin/main = empty, reviewer-confirmed)
+RED              M1 store-layout decoupling -> 0/2 pass; M2 quiesce_begin dropped -> receipt test fails; both reverted, tree pristine
+GREEN            focused test 2/2, deterministic x10; production-runtime 175/0/1; notification-ingress 60/0/1; scheduler 399/0; agent-router 477 pass / 5 pre-existing env failures reproduced on pristine main
+REVIEW           independent changed-surface review VERDICT=PASS, BLOCKING_ISSUES=NONE, ZERO_SOURCE_CHANGE_CONFIRMED=YES, TEST_PASSES_3X=YES; 4 doc-accuracy notes fixed, 2 dispositioned in MANIFEST
+DONE_WHEN        mapped/bounded/restart-safe/independently-verifiable = TEST_IDENTITY PASS; BUSINESS_VERIFIED = no (frozen boundary: production enablement/verification per standing PROD_AUTH rules)
+A6_PREREQ         NOT a prerequisite for read-only delivery: zero source change, zero read-surface impact
+NO_NEW_PLATFORM  yes — reuses existing runtime/ingress mechanisms only
+PRODUCTION_MUTATION = NO
+ACCEPTANCE       TEST_IDENTITY PASS — packet FROZEN
+
+--- r262 REVIEW_FIX ADDENDUM (2026-10-06, claim a6-pr487-review-fix-r262 / agent-control#460) ---
+
+CLAIM           a6-pr487-review-fix-r262 / agent-control#460 (SAME PR #487, REVIEW_FIX_ONLY; r255 verdict above stays frozen)
+REVIEW          exact-head review 5422747406 @ af9733e1: P1 = seven cited logs not committed/retrievable; P2 = negative replay awaited post() under the 300000 ms Router deadline (auth.js:63 DEFAULT_ROUTER_DEADLINE_MS). Both re-verified against exact-head bytes BEFORE editing and CONFIRMED.
+P1              logs RECOVERED byte-exact from preserved worktree ac-457, sanitized via single rule /Users/yanfenma -> <LOCAL_HOME> (scan: no secrets/credentials/private runtime data/production dumps/personal data; oc_*/ou_* strings are synthetic fixtures), force-added past global .gitignore '*.log'; R255_CAPTURED_SHA256 and COMMITTED_SHA256 both recorded in artifact-identity.txt; evidence now retrievable in-repo
+P2              test-only bounded replay assertion (5000 ms unref'd gate-releasing race + unexpected-admission diagnostic); RED-proven: unbounded+mutation STALL at 45s kill bound vs bounded+same-mutation FAIL at ~6s; mutation reverted, tree pristine
+TESTS           focused 2/2 x3 (r262 bytes); production-runtime 175 pass / 0 fail / 1 skip — identical to r255 baseline
+DRIFT           git diff af9733e1 = test file (bound) + docs/evidence/product-455-* (provenance) only; zero source/behavior change
+FOLLOW_UP_DEBT  review 5422747406 comment 4190610898 (production-runtime/test directory ceiling) — outside the verified blocker union, not implemented this round
+CONFLICT        CLEAN — Product #456 / agent-control#458 (packages/scheduler/*) and B7/Core414 agent-control#417/#424 (deployment/DS surfaces, artifacts e4c033d4) untouched
+MERGE           FORBIDDEN this lane — ONE exact-head independent re-review of the full blocker union required first
+PRODUCTION_MUTATION = NO
