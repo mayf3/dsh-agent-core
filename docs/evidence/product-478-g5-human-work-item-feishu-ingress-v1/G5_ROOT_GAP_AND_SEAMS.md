@@ -42,8 +42,11 @@ query/transition machinery through the EXISTING broker gateway.
   fields, non-object → load error. When the feature is explicitly enabled a
   broken file FAILS LOUD at compose (misconfiguration must not silently run
   unmapped); when not enabled nothing is read.
-- `humanPrincipalId` is optional provenance metadata (the canonical test
-  identity per PROJECTION_V0); it is NEVER used for authorization.
+- `humanPrincipalId` is REQUIRED provenance metadata (r2: the loader
+  fail-closes on a missing/empty value — without it the durable trail would
+  carry only a redacted openId prefix, which is not unambiguous human
+  provenance; the canonical test identity per PROJECTION_V0); it is NEVER
+  used for authorization and NEVER enters a gateway call payload.
 
 ### S2 — Command seam (strict grammar, p2p-only, fall-through default)
 
@@ -93,15 +96,26 @@ Grammar (exact, anchored, case-sensitive prefix `/work `):
   the server's receipt replay / CAS / terminal rules make the outcome
   deterministic; the seam keeps no state (no parallel state machine).
 
-### Provenance
+### Provenance (r2-amended)
 
 - Canonical/durable: svc-workflow `workflow_events` + `workflow_command_receipts`
   (actor = executor principal, in-transaction, replayable).
-- Ingress-side durable: one closed JSONL row per handled command at
-  `<controlDir>/human-work-item-audit.jsonl` — `{ts, kind,
-  openIdPrefix (6 chars), channel, action, workflowInstanceId?, transitionId?,
-  outcome, code?, eventSequence?, workflowStateVersion?}`; secret-free;
-  best-effort append (write failure logs, never blocks the reply).
+- Ingress-side durable: one closed JSONL command row per handled command at
+  `<controlDir>/human-work-item-audit.jsonl` — `{ts, kind, commandId,
+  openIdPrefix (6 chars; full openId never persisted), channel,
+  humanPrincipalId, executorAgentId, originalMessageId, action,
+  workflowInstanceId?, transitionId?, outcome, code?,
+  canonicalOutcome? ('unresolved' only), eventSequence?,
+  workflowStateVersion?, sourceNodeVisitId?, currentNodeVisitId?,
+  submissionId?, currentContextRevisionId?, reasonCode?, rootCauseNodeVisitId?}`;
+  secret-free. A reply delivery failure appends a linked
+  `human_work_item_reply_failure` row (same identity + commandId + bounded
+  error) — it never rewrites the command row.
+- DURABILITY ORDER (r2): the command row is persisted BEFORE any Feishu
+  reply attempt, so a reply failure can never erase, skip, or misclassify a
+  known canonical success. Audit-sink write failures are returned (never
+  swallowed) and surfaced truthfully: log line + a reply disclosure line —
+  the canonical result itself is never rendered as a failure.
 - The success reply carries the canonical receipt ids
   (`workflowStateVersion`, `sourceNodeVisitId`, `eventSequence`), binding the
   human action to the durable workflow receipt.

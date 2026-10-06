@@ -26,7 +26,9 @@ governed_by (planned):
    iff channel=p2p ∧ text under the strict `/work` namespace ∧
    sender.openId is an EXACT key of the version-1 principals allowlist
    (array form; total fail-closed load; one executor identity per human;
-   humanPrincipalId is provenance metadata, never authorization).
+   each entry names BOTH executorAgentId and humanPrincipalId —
+   humanPrincipalId is REQUIRED provenance metadata (r2: fail-closed
+   without it), never authorization, never a workflow input).
 2. Actor: the canonical workflow actor is the allowlisted executor
    principal's credential (existing machine seam). The HUMAN principal is
    NOT the workflow actor — widening that requires an auth-service +
@@ -43,12 +45,26 @@ governed_by (planned):
    translated, never mapped (BUSINESS error preservation inherited).
 5. Idempotency/duplicates: no seam-side state; bridge owns message dedup;
    broker mints the per-attempt Idempotency-Key; server CAS/receipts own
-   duplicate semantics.
-6. Provenance: canonical = svc-workflow workflow_events +
+   duplicate semantics. A duplicate retry after a lost reply resolves from
+   fresh server state exactly like any other command (r2: DR3).
+6. Provenance (r2-amended): canonical = svc-workflow workflow_events +
    workflow_command_receipts (actor = executor principal); ingress-side =
-   closed JSONL rows at control/human-work-item-audit.jsonl (6-char openId
-   prefix, receipt ids; size cap REQUIRED before any production promotion);
-   success replies carry the canonical receipt ids.
+   closed JSONL rows at control/human-work-item-audit.jsonl. DURABILITY:
+   the canonical-result row is persisted BEFORE any Feishu reply attempt —
+   a reply failure appends a commandId-linked `human_work_item_reply_failure`
+   row and can never erase, skip, or misclassify a known canonical success.
+   AUDIT FAILURE: the sink reports failure (never swallows); the failure is
+   surfaced truthfully in log + a reply disclosure line, never rendered as
+   a transition failure. IDENTITY: every row carries humanPrincipalId,
+   executorAgentId (the canonical actor), the original Feishu messageId, a
+   commandId, and the redacted 6-char openId prefix (full openId never
+   persisted); transition rows additionally carry the canonical receipt /
+   source-visit linkage (eventSequence, workflowStateVersion,
+   sourceNodeVisitId, currentNodeVisitId, submissionId,
+   currentContextRevisionId when present) and reject rows carry
+   reasonCode + rootCauseNodeVisitId. Size cap/rotation + a dead-letter
+   consideration for simultaneous sink+reply failure REQUIRED before any
+   production promotion (r2 review notes 1 + r1 deferral).
 7. Wiring: compose-level, default OFF (strict env HUMAN_WORK_ITEM_INGRESS_ENABLED
    ∈ {1,true}); requires HUMAN_WORK_ITEM_INGRESS_PRINCIPALS_FILE; every
    misconfiguration fails loud; fall-through returns the downstream outcome

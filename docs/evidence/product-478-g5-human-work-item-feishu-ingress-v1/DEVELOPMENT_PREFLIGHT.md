@@ -113,3 +113,69 @@ Need new/amended Spec = YES (candidate outline included; merge gated on its
 acceptance — implementation in this NON-PRODUCTION lane proceeds under the
 owner command-bus instruction with do-NOT-merge).
 ```
+
+## r2 delta preflight — PR #492 integration-review repair (same Product, same PR)
+
+```text
+DEVELOPMENT_PREFLIGHT (r2, bounded repair)
+
+Problem =
+  Parent read-only integration review of exact PR #492 head eee7535
+  (recorded on agent-control#492) identified two load-bearing gaps in the
+  seam this PR introduces:
+  G1. The canonical success receipt was audited only AFTER the Feishu reply.
+      A reply failure routed a KNOWN canonical success into the generic
+      internal_error path (misclassification + lost receipt); a second
+      reply failure skipped the audit row entirely; audit-write failures
+      were silently swallowed.
+  G2. Audit rows carried only a 6-char openId prefix — no humanPrincipalId,
+      no executorAgentId, no original messageId, no canonical
+      submission/source-visit linkage — so durable human provenance was
+      not unambiguous.
+
+Governing Spec = unchanged (same REUSE set as r1; no accepted Spec file is
+  touched). The two gaps are defects inside the NOT-YET-ACCEPTED candidate
+  surface (human-work-item-ingress.js + its evidence docs), repaired under
+  the same owner command-bus mandate (agent-control#495, claim
+  g5-feishu-review-fix-r323, Product #478 round 323: "SAME-Product
+  continuation — PR #492 integration-review repair").
+
+Authority action = REUSE (no accepted Contract meaning changes; the
+  candidate spec outline is amended BEFORE acceptance — the amendment
+  narrows/strengthens the candidate's own provenance and ordering clauses;
+  actor semantics stay exactly as r1 froze them).
+
+Actor contract (RE-FROZEN, honesty guard) =
+  The canonical workflow ACTOR remains the allowlisted executor principal's
+  credential (agentId-keyed gateway context). humanPrincipalId is REQUIRED
+  allowlist metadata for unambiguous durable provenance of the requesting
+  human; it NEVER reaches the gateway call payload and NEVER becomes the
+  workflow actor. No Human-principal canonical actor semantics are claimed
+  anywhere; exact-assignee semantics remain server-authoritative.
+
+Implementation scope (r2) =
+  - packages/production-runtime/src/human-work-item-ingress.js
+    (audit-before-reply ordering on every handled path; reply delivery
+    isolated so it can never erase/misclassify a canonical result; audit
+    sink failures returned — not swallowed — and truthfully surfaced in
+    log + user reply without fabricating transition failure; commandId
+    linkage; provenance identity/linkage fields on every row; loader
+    requires humanPrincipalId)
+  - packages/production-runtime/test/human-work-item-ingress.test.js
+    (RED-first: canonical-success+reply-failure, audit-failure, duplicate
+    retry after reply failure, provenance identity/linkage, real-sink
+    failure surfacing, loader tightening)
+  - evidence docs in this directory (review record r2, RED_GREEN matrix,
+    spec-candidate outline amendment, publish packet head update)
+  NO other surface (compose.js, agent-router, feishu-connector, broker)
+  is modified; default OFF and the authorization boundary are untouched.
+
+Out-of-scope (r2) = same as r1, unchanged. No merge, deploy, restart,
+  provisioning, credential, data mutation, or production enablement.
+
+DONE_WHEN (r2) =
+  New RED-first tests pass (GREEN after the fix), full lane suite GREEN,
+  focused regressions match the r1 pre-existing-failure baseline,
+  independent changed-surface review of the repair reports no load-bearing
+  gap, PR #492 updated at a new exact head (still DRAFT, not merged).
+```
