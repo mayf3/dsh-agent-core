@@ -137,7 +137,8 @@ by this lane.
 1. **RED** (`red-module-absent.log`): `Cannot find module
    .../capabilities/workflow-collaboration.js` — 0 pass / 1 fail before any
    implementation existed.
-2. **GREEN** (`green-focused-collab.log`): focused battery 13/13 PASS —
+2. **GREEN** (`green-focused-collab.log`): focused battery PASS (13/13 at
+   r1; 14/14 at r2 after the review-added non-interference guard test) —
    scope-split freeze (workflow.read vs workflow.execute), CTR-10 route/body/
    query/wire freeze (incl. allOrNone keyset triple, limit 1..100 with
    `invalid_pagination`, IK on append only, no-Kind/no-author/no-observed-*
