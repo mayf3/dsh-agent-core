@@ -173,3 +173,78 @@ Non-blocking reviewer notes → disposition:
 See VERDICT.txt. SOURCE=merged (main already contains the capability);
 INSTALLED/ENABLED unchanged by this lane (non-production);
 ACCEPTANCE(TEST_IDENTITY)=PASS; PRODUCTION_MUTATION=NO.
+
+## REVIEW_FIX r262 (SAME PR #487, REVIEW_FIX_ONLY — claim `a6-pr487-review-fix-r262`, agent-control#460)
+
+Exact-head independent review `5422747406` (Codex, at `af9733e1`) reported a two-item
+blocker union. Both findings were re-verified against exact-head bytes BEFORE editing and
+both are technically valid; this section fixes the whole union. The review's third finding
+(test-directory ceiling, comment 4190610898) is NOT part of the verified blocker union →
+FOLLOW_UP_DEBT, not implemented this round.
+
+### P1 — the seven cited test logs were hashed but not committed (evidence provenance)
+
+Verified at `af9733e1`: the tree tracked ZERO `.log` files; the seven logs below existed only
+as untracked files in the preserved execution worktree `ac-457` (clean at `af9733e1`), blocked
+from tracking by the global `.gitignore:3` `*.log` rule. Disposition: RECOVERED from the
+preserved worktree — all seven recovered copies hashed byte-exact against the r255
+`artifact-identity.txt` values BEFORE any edit — then sanitized with the single mechanical
+rule
+
+```text
+/Users/yanfenma  →  <LOCAL_HOME>
+```
+
+(local-username worktree paths leaked into stack-trace file URLs in red-m1, red-m2 and
+regression-agent-router; scanned: no secrets, credentials, private runtime data, production
+dumps, or personal data otherwise present — Feishu `oc_*`/`ou_*` strings in the logs are
+synthetic test fixtures). Logs with zero `/Users/` occurrences are byte-identical to their
+r255 captures. Both hash generations are recorded in `artifact-identity.txt`:
+`R255_CAPTURED_SHA256` (original bytes = the reviewed r255 surface) and the committed
+sanitized bytes now retrievable at these repo paths. Logs are force-added
+(`git add -f`) past the global `*.log` ignore; `.gitignore` itself is intentionally NOT
+modified (shared file, outside the blocker union).
+
+Additionally committed: the r262 round's own logs (`r262-*.log` below), produced in a fresh
+detached worktree at `af9733e1` (`pr-487-review-fix`, node_modules shared read-only with
+ac-457); the preserved ac-457 worktree and its untracked originals are untouched.
+
+### P2 — negative duplicate-replay path awaited `post()` unbounded
+
+Verified at `af9733e1`: `ingress-restart-handoff.test.js:216` awaited the replay POST with no
+bound; on a regression that re-admits the replay into the Router, `GatedProc.deliver()` parks
+until teardown and the response resolves only under the ingress default 300000 ms Router
+deadline (`packages/notification-ingress/src/auth.js:63`
+`DEFAULT_ROUTER_DEADLINE_MS = 300000`). Disposition: smallest deterministic TEST-ONLY bound —
+the replay `post()` is raced against a 5000 ms unref'd timer that releases the gate and
+resolves `{boundExceeded: true}`; a leading assertion fails promptly with the
+unexpected-admission diagnostic. Zero production/source behavior change.
+
+RED proof of the failure-bound mechanism — same applied-then-reverted source mutation on
+`packages/notification-ingress/src/deliver-handler.js:162` (terminal duplicate branch
+disabled → replay re-admits; reverted afterwards, tree pristine):
+
+| Variant | Result |
+|---|---|
+| HEAD test (unbounded) + mutation | STALL — still parked at the 45 s kill bound (`r262-red-stall-observation-unbounded-mutation.log`); would resolve only under the 300000 ms deadline |
+| r262 test (bounded) + same mutation | FAIL at ~6 s wall-clock: "replay was not answered from the durable outcome within 5000ms — unexpected Router re-admission parked the response" (`r262-red-replay-bound-mutation.log`) |
+| mutation reverted, pristine | 2/2 pass, deterministic ×3 (`r262-green-focused-test.log`) |
+
+### r262 TESTS (2026-10-06, /usr/local/bin/node v25.6.1, detached worktree pr-487-review-fix)
+
+| Suite | Result | Log |
+|---|---|---|
+| focused ingress-restart-handoff.test.js (r262 bytes) | 2/2 pass, ×3 consecutive | `r262-green-focused-test.log` |
+| packages/production-runtime (incl. r262 test file) | 176 tests: 175 pass / 0 fail / 1 skip — identical to the r255 baseline | `r262-regression-production-runtime.log` |
+
+The r255 notification-ingress / scheduler / agent-router suite logs are committed unchanged:
+the r262 delta is the test-only bound in the production-runtime suite (re-run green above);
+the notification-ingress source was mutation-touched only under RED and reverted (drift check
+below). Their r255 logs remain load-bearing for this packet and are now in-repo retrievable.
+
+### r262 drift + conflict re-check
+
+- `git diff af9733e1` (tracked) = exactly `packages/production-runtime/test/ingress-restart-handoff.test.js` (test-only bound) + `docs/evidence/product-455-a6-ingress-handoff-v1-20261006/*` (provenance). Zero source/behavior drift.
+- Product #456 / agent-control#458 surface = `packages/scheduler/*` (worktree ac-458) — zero file intersection with this delta.
+- B7/Core414 ownership records agent-control#417/#424 = deployment/DS observation surfaces (B7 artifacts at `e4c033d4`) — zero file intersection with this delta.
+- FOLLOW_UP_DEBT (not this round): review `5422747406` comment `4190610898` — `packages/production-runtime/test` direct-child count vs its registered ceiling; needs a placement decision as a separate bounded action.

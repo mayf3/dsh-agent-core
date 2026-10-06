@@ -13,3 +13,16 @@ A6_PREREQ         NOT a prerequisite for read-only delivery: zero source change,
 NO_NEW_PLATFORM  yes — reuses existing runtime/ingress mechanisms only
 PRODUCTION_MUTATION = NO
 ACCEPTANCE       TEST_IDENTITY PASS — packet FROZEN
+
+--- r262 REVIEW_FIX ADDENDUM (2026-10-06, claim a6-pr487-review-fix-r262 / agent-control#460) ---
+
+CLAIM           a6-pr487-review-fix-r262 / agent-control#460 (SAME PR #487, REVIEW_FIX_ONLY; r255 verdict above stays frozen)
+REVIEW          exact-head review 5422747406 @ af9733e1: P1 = seven cited logs not committed/retrievable; P2 = negative replay awaited post() under the 300000 ms Router deadline (auth.js:63 DEFAULT_ROUTER_DEADLINE_MS). Both re-verified against exact-head bytes BEFORE editing and CONFIRMED.
+P1              logs RECOVERED byte-exact from preserved worktree ac-457, sanitized via single rule /Users/yanfenma -> <LOCAL_HOME> (scan: no secrets/credentials/private runtime data/production dumps/personal data; oc_*/ou_* strings are synthetic fixtures), force-added past global .gitignore '*.log'; R255_CAPTURED_SHA256 and COMMITTED_SHA256 both recorded in artifact-identity.txt; evidence now retrievable in-repo
+P2              test-only bounded replay assertion (5000 ms unref'd gate-releasing race + unexpected-admission diagnostic); RED-proven: unbounded+mutation STALL at 45s kill bound vs bounded+same-mutation FAIL at ~6s; mutation reverted, tree pristine
+TESTS           focused 2/2 x3 (r262 bytes); production-runtime 175 pass / 0 fail / 1 skip — identical to r255 baseline
+DRIFT           git diff af9733e1 = test file (bound) + docs/evidence/product-455-* (provenance) only; zero source/behavior change
+FOLLOW_UP_DEBT  review 5422747406 comment 4190610898 (production-runtime/test directory ceiling) — outside the verified blocker union, not implemented this round
+CONFLICT        CLEAN — Product #456 / agent-control#458 (packages/scheduler/*) and B7/Core414 agent-control#417/#424 (deployment/DS surfaces, artifacts e4c033d4) untouched
+MERGE           FORBIDDEN this lane — ONE exact-head independent re-review of the full blocker union required first
+PRODUCTION_MUTATION = NO
