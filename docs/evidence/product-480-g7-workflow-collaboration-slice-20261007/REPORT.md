@@ -125,7 +125,9 @@ by this lane.
 - NEW `docs/specs/AGENT_CORE_WORKFLOW_COLLABORATION_BROKER_V1.md` —
   governing Spec candidate (docs-first; GOVERNING_SPEC of the riding WIP).
 - NEW `docs/evidence/product-480-g7-workflow-collaboration-slice-20261007/`
-  (this REPORT + RED/GREEN/mutation/regression logs).
+  (this REPORT + RED/GREEN/mutation/regression logs — force-added past the
+  global `*.log` gitignore per repo precedent, so the evidence chain is in
+  the PR).
 - NO change: packages/broker existing manifests, svc-workflow (entirely
   untouched), product-api, scheduler, production-runtime, docs/decisions,
   profiles, scripts.
@@ -177,9 +179,31 @@ by this lane.
 
 ## REVIEW
 
-One independent exact-head changed-surface review: performed on the exact
-commit pushed to this PR (see PR description for the review record and
-verdict).
+One independent exact-head changed-surface review at head `b67ed87d`:
+verdict **REVISE** — 1 blocker + 1 major + 4 minors, all repaired in the
+follow-up commit on this same PR branch:
+
+- **B1 (blocker, repaired)**: the index.js wiring had REPLACED the
+  `...okrManifests,` spread line instead of inserting — silently dropping
+  `okr_read` from DEFAULT_MANIFESTS (runtime-verified by the reviewer: 54
+  manifests, okr_read absent; escaped the suite because no existing test pins
+  okr registration). Repair: restored `...okrManifests,`; the delta is now a
+  pure 1-line insertion (55 manifests; okr_read/collab counts pinned by a NEW
+  non-interference guard test).
+- **M1 (major, repaired)**: the four cited evidence logs were gitignored
+  (`*.log`) and absent from the commit; force-added past the global gitignore
+  per repo precedent (7a70b95d).
+- **m1**: CTR-4's 404 `current_visit_not_found` noted in spec R4 as an
+  intentionally undeclared code (structurally unreachable; fails closed).
+- **m2**: closed both manifests' argument schemas (`additionalProperties:
+  false`) for local fail-fast parity with the strictest family member;
+  freeze test pins it.
+- **m3**: acknowledged, no change (local length validation is an explicit
+  R2 freeze; svc owns the declared 422 invalid_input).
+- **m4**: this section's forward reference removed; verdict recorded.
+
+Delta re-review at the amended head: see PR description for the final
+verdict line.
 
 ## PR
 

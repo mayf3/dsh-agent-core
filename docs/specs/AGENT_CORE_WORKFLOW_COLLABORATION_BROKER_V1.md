@@ -127,6 +127,10 @@ Product #480（G7 Workflow collaboration）的 DONE_WHEN 要求一条真实的�
   detail 内容由 error-detail-sanitizer 家族净化（可能 redacted，非本 Spec
   冻结点）；未声明码 fail-closed 到 canonical `http_4xx`/`http_5xx`（无
   wildcard，DEC-006）；零 broker 自动重试。
+- 提案 CTR-4 的 404 `current_visit_not_found`（append 时实例无当前 Visit 的
+  结构性拒绝，§3 catalogue 之外）**不**声明于 broker 错误表：按提案注释其
+  经任何现行 create 路径不可达；若服务端仍返回，则按未声明码 fail-closed
+  为 `http_4xx`（status/requestId 保留）。
 
 ## 2. 实现面（随本 PR 保存的 WIP；acceptance 前不授权合并）
 

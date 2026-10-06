@@ -1,0 +1,63 @@
+(node:54486) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ collaboration read/append are split by least-privilege scope (CTR-10) (1.004833ms)
+✖ collaboration manifests freeze the proposal CTR-10 routes and wire surfaces (0.508959ms)
+✔ collaboration error tables declare the proposal §3 catalogue; declared codes only (0.153375ms)
+✔ collaboration capabilities are part of the default broker surface exactly once (0.050459ms)
+✔ collaboration feed forwards the frozen query surface and returns the envelope verbatim (16.241459ms)
+✔ collaboration feed: absent cursor and limit are not forwarded (server default 50) (3.51775ms)
+✔ collaboration feed: half cursor triple and limit bounds fail closed with ZERO downstream requests (0.48325ms)
+✖ collaboration append sends the trusted Idempotency-Key and the exact optional-reference body (2.146334ms)
+✔ collaboration append: absent optional references omit the keys entirely (request-hash identity) (2.002375ms)
+✔ collaboration append: missing required body fails closed locally with ZERO downstream requests (0.341458ms)
+✔ collaboration append preserves svc error codes verbatim with requestId and no retry (5.733166ms)
+✔ collaboration feed preserves read-side errors verbatim (404 not-visible family) (1.34525ms)
+✔ undeclared svc code degrades to the declared canonical family (no wildcard declaration) (1.239083ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 11
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 110.403125
+
+✖ failing tests:
+
+test at packages/broker/test/workflow-collaboration-capability.test.js:44:1
+✖ collaboration manifests freeze the proposal CTR-10 routes and wire surfaces (0.508959ms)
+  AssertionError [ERR_ASSERTION]: CTR-10: Idempotency-Key required on the append command
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-501/packages/broker/test/workflow-collaboration-capability.test.js:76:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/broker/test/workflow-collaboration-capability.test.js:248:1
+✖ collaboration append sends the trusted Idempotency-Key and the exact optional-reference body (2.146334ms)
+  AssertionError [ERR_ASSERTION]: append must carry the trusted Idempotency-Key
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-501/packages/broker/test/workflow-collaboration-capability.test.js:281:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

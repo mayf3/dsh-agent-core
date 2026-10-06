@@ -90,6 +90,7 @@ export const DEFAULT_MANIFESTS = [
   ...workflowManifests,
   ...workflowAssistanceManifests,
   ...workflowCollaborationManifests,
+  ...okrManifests,
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...selfOpsManifests,
