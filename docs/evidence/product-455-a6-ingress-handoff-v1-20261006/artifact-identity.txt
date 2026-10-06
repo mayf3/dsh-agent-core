@@ -1,0 +1,11 @@
+c2615c995c0cefc2f8a2085b124fd628262f7af56a6b9a1184ff0f9a4ed061bf  packages/production-runtime/test/ingress-restart-handoff.test.js
+910abb80aa62d7f13953cabda4b0c1517084c113d826767135ac172a9668b2de  docs/investigations/ingress-runtime-handoff-map-v1.md
+09fd6d64ca0e1c821c74dfc738a25224ff9dc86a81d6a30e348b6c75027f75c0  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/MANIFEST.md
+fcb7da1a5edd6dda75c4ab42e766371aa5cf88180cdc1d5ac9948d0cb774ebcc  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/VERDICT.txt
+f35d98ba992a6e595c488d481fe26e419ba96b673e12b990b96fb10c001fc08d  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/green-focused-test.log
+d39cb1bfbc3def10e9fba994750d74bf5d534278d409e357145afbd3541a89f0  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/red-m1-store-path-decoupled.log
+fff48a52ae06715cd8d4ee98db2d5252b96688db316ed8f756d1b57a5789bdc2  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/red-m2-quiesce-begin-dropped.log
+b9acb7c1256c369a5ae25f7f64e80f8b6e6bfb8be2bd728a5c5f57b519da2ab8  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-agent-router.log
+ef02cfc5f00e4dd83c12c0ac9b7825bd2477a08ff768cc07b4de19d107805caf  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-notification-ingress.log
+e28e98b4fbe32294b38bff9570bae4cd65e5d9a8d35f0fb277d1a842130a449f  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-production-runtime.log
+78e258a6d3dc3d9baadc4057e727893a54383a7df24cfb53d6b352b4e646f5fe  docs/evidence/product-455-a6-ingress-handoff-v1-20261006/regression-scheduler.log
