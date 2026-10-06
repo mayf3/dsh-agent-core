@@ -309,7 +309,8 @@ Forum / Workflow / OKR / 其他外部业务系统
   hermetic tooling、离开正常 boot/pack graph；accepted legacy tests 在合法 successor 出现前保留。
 - **R5 · incident exit**：例外的窄 scope、owner、剩余 safety obligations、移除条件和 rollback
   dependency 写在同一个 incident Issue/runbook；不得用定时自动过期删除 active fences；
-  已修复的危险权限不得借 cleanup 泛化。这里不新建 incident ledger 或执行入口。
+  条件满足后转 DELETE/MOVE 并给正常 import/pack 的删除证据；已修复的危险权限不得借
+  cleanup 泛化。这里不新建 incident ledger 或执行入口。
 - **R6 · review / proof**：跨职责 review 覆盖 changed surface 及直接 caller/consumer/dependency
   closure；先判断 Spec 是否允许了错误架构，再判断实现是否符合 Spec。每轮汇总一个 material
   blocker union → 一次集中修复 → 一次 recheck，新增反例保留可追溯证据。
@@ -317,7 +318,8 @@ Forum / Workflow / OKR / 其他外部业务系统
   PASS 同此禁止；source/test PASS ≠ installed / enabled / business verified；release 端点按
   精确预期状态判定：readiness=200、带有效 token 的 auth=200、无 token 的 auth guard=401，
   偏离该端点的精确预期才算失败，不得把 guard 的 401 预期误写为失败。禁止 constant PASS、
-  skipped 假指标或无消费者的 obsolete gate claim；历史结果不冒充当前验证。
+  skipped 假指标或无消费者的 obsolete gate claim；历史结果不冒充当前验证；未实际触发的
+  检查（如 nested/复选 workflow）明确标 NOT_RUNNING，不冒充更大覆盖面。
   file-line/barrel/import-count 只帮助 reviewability；拆文件不证明架构改善，禁止为指标 re-export/wrapper。
   普通开发 PR 不承担创建真实业务 Workflow instance 的跨层义务；真实业务验收仅在对应授权范围执行。
   supervisor typed required facts / fail-closed 及 #394 event → action → closure liveness 原样保留，
@@ -331,7 +333,8 @@ PR #443（OPEN、未合并：production wrapper 只读 executions.jsonl + writer
 （Agent/root、WORKFLOW_EXECUTION_POLLER_AGENT_ID；#438 移除固定 import，报告的 main 为 daa4c82d）；
 C5：#440（product_linkage.py exact binding / #382 age）及 #408（>3600000ms 同 visit/version，
 audit comment 5962699309）；C6：#407/#440（receipt 历史=语义值保留、current=pinned bytes）。
-这些源修复归 ChatGPT Work，不得以本节或相邻旧测试声称已修复。基线事实：候选 git base =
-main 51e14105；`packages/development-execution` 在该 base 的 git tree 中存在（src×5 +
-test×2，无 package.json），"absent" 只是起草 workspace 头 e9699aee（非 main 祖先）的局部
-事实，不描述 base/main 的 import/source graph。
+这些源修复归 ChatGPT Work，不得以本节或相邻旧测试声称已修复。基线事实：冻结评审基线 =
+main 51e14105（现 main d1e42f21 的祖先；本候选已 rebase 到 d1e42f21）；
+`packages/development-execution` 在该基线的 git tree 中存在（src×5 + test×2，无 package.json；
+现 main 已补 package.json），"absent" 只是起草 workspace 头 e9699aee（非 main 祖先）的局部
+事实，不描述 main 的 import/source graph。
