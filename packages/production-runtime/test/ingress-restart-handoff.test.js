@@ -212,8 +212,28 @@ test('A6: runtime restart on the same root reuses the in-flight admission idempo
   )
 
   // Replay the SAME (caller, requestId): the durable outcome is REUSED —
-  // never a second delivery (C-IDM-010 restart contract).
-  const replay = await post(runtime2.notificationIngress.address().port)
+  // never a second delivery (C-IDM-010 restart contract). BOUNDED: if a
+  // regression re-admits the replay into the Router, GatedProc.deliver()
+  // parks this HTTP response until teardown under the ingress's default
+  // 300000 ms Router deadline (notification-ingress DEFAULT_ROUTER_DEADLINE_MS),
+  // so race a short bound that releases the gate and fails promptly with an
+  // unexpected-admission diagnostic instead of stalling the suite.
+  const REPLAY_BOUND_MS = 5000
+  const replay = await Promise.race([
+    post(runtime2.notificationIngress.address().port),
+    new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        for (const proc of spawned2) proc.gateResolve?.()
+        resolve({ boundExceeded: true })
+      }, REPLAY_BOUND_MS)
+      timer.unref?.()
+    }),
+  ])
+  assert.equal(
+    replay.boundExceeded,
+    undefined,
+    `replay was not answered from the durable outcome within ${REPLAY_BOUND_MS}ms — unexpected Router re-admission parked the response`,
+  )
   assert.equal(replay.status, 200)
   assert.equal(replay.body.outcome, 'outcome_unknown')
   assert.equal(replay.body.duplicate, true)
