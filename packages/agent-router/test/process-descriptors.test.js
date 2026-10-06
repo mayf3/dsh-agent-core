@@ -28,7 +28,7 @@ import { authorityCapacityMethods } from '../src/reconciliation/authority-capaci
 import { startupRecoveryMethods } from '../src/reconciliation/startup-recovery.js'
 import { adminAbandonmentMethods } from '../src/reconciliation/admin-abandonment.js'
 
-const METHOD_COUNT_AGENT_PROCESS = 46 // V3 adds parent-owned recovery scheduling/coordinator methods (count drift re-verified at 83bea95c)
+const METHOD_COUNT_AGENT_PROCESS = 45 // #434 runtime hygiene: the one-off fixed-admin canary method (qualifyFixedTurn) retired with its spent qualification path (was 46 at 83bea95c)
 const METHOD_COUNT_RECONCILIATION = 42 // V3 durable recovery/capacity/projections + HR_RESET_AND_RESUME_V1 declaration/projection/read-projection/entry-gate evidence projection
 
 function composedKeys(groups) {

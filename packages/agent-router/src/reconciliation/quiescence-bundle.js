@@ -1,11 +1,9 @@
 /** RQ-002/003: closed bundle, exact subject, receipts and prospective ordering. */
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import {
   defaultEvidenceIO, namedReceipt, ownedFile, proofReject, sha256,
   verifyCurrentWindow,
 } from './quiescence-custody.js'
-import { resolveFixedR2Journal, FIXED_R2_OPERATION, FIXED_ADMIN_OPERATION } from './quiescence-fixed-r2.js'
-import { compareQuiescenceReplayPreimage } from './quiescence-replay-preimage.js'
 
 const HASH = /^[a-f0-9]{64}$/
 const MAX_BUNDLE_BYTES = 65536
@@ -43,8 +41,7 @@ function verifyShape(bundle) {
   exactKeys(bundle.custody, ['executedAs', 'producedBy', 'evidenceDir'], 'V2_custody_shape')
   const cut = bundle.recoveryCutover
   if (typeof cut.operationId !== 'string'
-      || (cut.operationId !== FIXED_R2_OPERATION && cut.operationId !== FIXED_ADMIN_OPERATION
-        && !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId))
+      || !/^op-[a-z0-9-]{1,64}$/.test(cut.operationId)
       || typeof cut.hostId !== 'string' || cut.hostId.length < 1 || cut.hostId.length > 128
       || typeof cut.startupNonce !== 'string' || cut.startupNonce.length < 8 || cut.startupNonce.length > 128) proofReject('V2_identity_invalid')
   for (const key of ['subjectPreimageSha256', 'exclusiveWindowReceiptSha256',
@@ -102,12 +99,12 @@ function verifyRecord(store, bundle) {
   return { record, alreadySettled: false }
 }
 
-function verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io, fixed) {
+function verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io) {
   const cut = bundle.recoveryCutover
   const window = namedReceipt(evidenceDir, 'exclusive-window.json', cut.exclusiveWindowReceiptSha256, io)
   const inhibited = namedReceipt(evidenceDir, 'launch-sources-inhibited.json', cut.launchSourcesInhibitedReceiptSha256, io)
   const quiesced = namedReceipt(evidenceDir, 'old-tree-quiesced.json', cut.oldTreeQuiescedReceiptSha256, io)
-  const authorization = fixed?.authorization ?? namedReceipt(evidenceDir, 'launch-authorization.json', cut.launchAuthorizationReceiptSha256, io)
+  const authorization = namedReceipt(evidenceDir, 'launch-authorization.json', cut.launchAuthorizationReceiptSha256, io)
   receiptTime(window, 'windowOpenedAtWallMs', 'V9_receipt_time_invalid')
   receiptTime(inhibited, 'atWallMs', 'V9_receipt_time_invalid')
   receiptTime(quiesced, 'atWallMs', 'V9_receipt_time_invalid')
@@ -174,8 +171,6 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
   try { bundle = JSON.parse(bytes.toString('utf8')) } catch { proofReject('V2_bundle_json_invalid') }
   verifyShape(bundle)
   const cut = bundle.recoveryCutover
-  if (basename(bundleFile) === 'bundle.json'
-      && cut.operationId !== FIXED_R2_OPERATION && cut.operationId !== FIXED_ADMIN_OPERATION) proofReject('V9_fixed_operation_required')
   if (bundle.custody.evidenceDir !== evidenceDir || cut.hostId !== startup.hostId
       || cut.startupNonce !== startup.startupNonce
       || cut.consumingBinarySha256 !== startup.consumingBinarySha256
@@ -184,11 +179,6 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
       || bundle.subject.runtimeEpoch === store.runtimeEpoch
       || !store.runtimeEpochs.has(bundle.subject.runtimeEpoch)) proofReject('V4_epoch_invalid')
   const { record, alreadySettled } = verifyRecord(store, bundle)
-  const fixed = cut.operationId === FIXED_R2_OPERATION || cut.operationId === FIXED_ADMIN_OPERATION
-    ? resolveFixedR2Journal(bundleFile, bytes, bundle, evidenceDir, io) : null
-  if (fixed) compareQuiescenceReplayPreimage({ record, bundleBytes: bytes,
-    commitment: fixed.commitment, consumingRuntimeEpoch: store.runtimeEpoch,
-    durableRuntimeEpochs: store.runtimeEpochs })
   time(record.createdAtWallMs, 'V9_subject_time_invalid')
   if (!(record.createdAtWallMs < cut.windowOpenedAtWallMs)) proofReject('V9_subject_after_cut')
   if (!alreadySettled) {
@@ -197,8 +187,8 @@ export function verifyQuiescenceBundle(store, bundleFile, { evidenceDir, deploym
   }
   if (!alreadySettled && sha256(JSON.stringify(record)) !== cut.subjectPreimageSha256) proofReject('V9_preimage_mismatch')
   if ((bundle.controlledStop !== null) !== (startup.recoveryPlanStopsRuntime === true)) proofReject('V7_stop_plan_mismatch')
-  verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io, fixed)
+  verifyReceipts(bundle, evidenceDir, deploymentDir, startup, io)
   verifyCurrentWindow(evidenceDir, bundle, startup, io)
   return { handle: bundle.subject.reconciliationHandle, bundle, bundleSha256: sha256(bytes),
-    alreadySettled, commitmentSha256: fixed?.commitmentSha256 }
+    alreadySettled }
 }

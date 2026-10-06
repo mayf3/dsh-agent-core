@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { createHash } from 'node:crypto'
 
 import { resolveProductionLayout } from '../../src/paths.js'
-import { assertSchedulerStartupReady, createSchedulerHealthRuntime } from '../../src/scheduler/health-runtime.js'
+import { assertSchedulerStartupReady, createSchedulerHealthRuntime, createSchedulerRuntimeStarter } from '../../src/scheduler/health-runtime.js'
 import { compileIncidents } from '../../../scheduler/src/watchdog/incident-compiler.js'
 import { bindNotificationDelivery, markNotificationDelivery, updateIncidentState } from '../../../scheduler/src/watchdog/incident-lifecycle.js'
 import { providerIdempotencyKey, stableNotificationText } from '../../../scheduler/src/watchdog/delivery.js'
@@ -136,4 +136,47 @@ test('production layout exposes dedicated route, incident and local sink paths',
 test('startup fails only on incomplete global provenance, not one Job-local block', () => {
   assert.equal(assertSchedulerStartupReady({ complete: true, blocked: 1 }), true)
   assert.throws(() => assertSchedulerStartupReady({ complete: false, censusError: 'routing generation unavailable' }), (error) => error.code === 'SCHEDULER_HEALTH_INCOMPLETE')
+})
+
+// Product #442 baseline: the wired start() keeps refusing the scheduler AND
+// the workflow engine when the AUTHORITATIVE execution-safety census
+// (jobs/occurrence/fence/provenance) is untrusted — readiness-closed is the
+// accepted SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
+// contract, not an accidental coupling. The refusal must happen BEFORE any
+// engine starts (no tick, no admission) while the health read itself stays
+// operable and observable (complete=false + censusError, never hidden).
+test('wired start refuses scheduler and workflow engine while the canonical authority is invalid', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const document = JSON.parse(await readFile(layout.jobsStore, 'utf8'))
+  document.occurrences = [{ occurrenceId: 'fabricated', jobId: 'a', state: 'outcome_unknown' }]
+  document.fences = { a: { occurrenceId: 'fabricated' } }
+  await writeFile(layout.jobsStore, JSON.stringify(document))
+  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 1 })
+  const health = await runtime.read()
+  assert.equal(health.complete, false, 'authority-invalid census stays observably incomplete')
+  assert.match(health.censusError, /occurrence.*missing authority field/)
+  const started = []
+  const start = createSchedulerRuntimeStarter({
+    schedulerHealth: runtime,
+    scheduler: { start: async (opts) => { started.push(['scheduler', opts]) } },
+    workflowExecution: { start: () => { started.push(['wec']) } },
+    catchup: true,
+    readinessRequired: true,
+  })
+  await assert.rejects(() => start(), (error) => error.code === 'SCHEDULER_HEALTH_INCOMPLETE')
+  assert.deepEqual(started, [], 'no engine may start behind a refused readiness gate')
+})
+
+test('wired start without the readiness requirement proceeds to both engines (test/overlay seam preserved)', async () => {
+  const { layout, routingSecurity, credentialStoreFile } = await fixture()
+  const runtime = createSchedulerHealthRuntime({ layout, routingSecurity, credentialStoreFile, runtimeGeneration: RUNTIME_SHA, nowMs: () => 1 })
+  const started = []
+  const start = createSchedulerRuntimeStarter({
+    schedulerHealth: runtime,
+    scheduler: { start: async (opts) => { started.push(['scheduler', opts]) } },
+    workflowExecution: { start: () => { started.push(['wec']) } },
+    catchup: true,
+  })
+  await start()
+  assert.deepEqual(started, [['scheduler', { autoStart: true, catchup: true }], ['wec']])
 })

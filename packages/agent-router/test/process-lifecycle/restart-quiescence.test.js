@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import test from 'node:test'
 
@@ -325,4 +325,45 @@ test('ACC-RQ-007 persistence failure rolls the exact record back and leaves its 
   assert.equal(result[0].status, 'rejected')
   assert.deepEqual(store.records.get(fx.handle), before)
   assert.equal(store.activeFenceForAgent('agt_subject').handle, fx.handle)
+})
+
+test('RQ generic bundle.json (retired fixed-name gate removed) verifies and settles exactly once', t => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  // The historical fixed-operation allowlist is gone: a plain `bundle.json`
+  // with a generic registered operation id verifies through the SAME
+  // fail-closed consumer (startup binding, epoch, preimage, receipts, window).
+  // Present the SAME proof under the plain fixed name only (the duplicate
+  // subject guard must never see two bundles for one subject).
+  rmSync(fx.bundleFile)
+  const bundlePath = join(fx.evidenceDir, 'bundle.json')
+  writeFileSync(bundlePath, json(fx.bundle), { mode: 0o600 })
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const emitted = []
+  store.onTurnReconciled(event => emitted.push(event))
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.deepEqual(result.map(row => row.status), ['settled'], JSON.stringify(result))
+  assert.equal(store.records.get(fx.handle).terminationEvidence, 'restart_quiescence_proven')
+  assert.equal(store.activeFenceForAgent('agt_subject'), null)
+  assert.equal(emitted.filter(event => event.handle === fx.handle).length, 1)
+  // Settle-once: a second consumer pass over the same evidence is a
+  // duplicate, never a second settlement or a replay.
+  const second = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch-2' })
+  const secondResult = second.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.deepEqual(secondResult.map(row => row.status), ['duplicate_ignored'], JSON.stringify(secondResult))
+})
+
+test('RQ foreign operation id bundle is rejected fail-closed with zero store writes', t => {
+  const fx = proofFixture(cleanup => t.after(cleanup))
+  fx.bundle.recoveryCutover.operationId = 'op-foreign-unregistered'
+  writeFileSync(fx.bundleFile, json(fx.bundle), { mode: 0o600 })
+  const store = new TurnReconciliationStore({ persistenceFile: fx.persistenceFile, runtimeEpoch: 'fresh-epoch' })
+  const recordBefore = JSON.stringify(store.records.get(fx.handle))
+  const durableBefore = readFileSync(fx.persistenceFile)
+  const result = store.consumeStartupQuiescence({ evidenceDir: fx.evidenceDir,
+    deploymentDir: fx.deploymentDir, startup: fx.startup, io: fx.io })
+  assert.equal(result[0].status, 'rejected')
+  assert.equal(JSON.stringify(store.records.get(fx.handle)), recordBefore)
+  assert.deepEqual(readFileSync(fx.persistenceFile), durableBefore)
 })

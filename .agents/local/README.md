@@ -41,6 +41,28 @@ Local rules:
 - an accepted-looking document on an unmerged branch is not active authority;
 - code, tests, reports, and runtime evidence may prove conformance or drift but do not rewrite normative authority.
 
+## Bounded-development route (effective on V3 adoption only)
+
+These local choices become active only with the accepted
+`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` and accepted lock merged into `main`.
+Until then, the authority branch's existing rules remain controlling.
+
+- `REUSE` inside an accepted implementation Contract needs no new Spec or
+  standalone Spec review merely because code changes. Use focused tests and the
+  review required by its Assurance level.
+- Explicitly permit one atomic Spec-delta-and-code PR for bounded
+  `AMEND/NEW + ROUTINE/DURABLE` work under the owner's task authorization. The
+  delta must be independently accepted before merge; it cannot contradict
+  Architecture, replace accepted meaning, widen privileges, change Secret/Grant
+  boundaries, introduce destructive migration, or authorize production effects.
+- `CONTROLLED` and `SUPERSEDE` remain docs-first. Implementation and production
+  permissions are separate; missing production permission does not itself stop
+  unrelated authorized nonproduction work.
+- Review the affected change and invalidated dependencies. A new SHA alone does
+  not require a full audit. Use the vendored explicit scope/impact checks.
+- Ordinary tasks use the existing PR/Brief; no mandatory extra Agent formation,
+  full-corpus review, or new control-plane document is introduced here.
+
 ## Acceptance and review actors
 
 ```text
@@ -224,25 +246,16 @@ A re-audit may add a new ship blocker only when it is a valid blocker under the 
 
 A newly discovered concrete `SECURITY_OR_DATA_LOSS`, `FALSE_EVIDENCE`, `REQUIRED_GATE_FAILURE`, `CONTRACT_VIOLATION`, `REPOSITORY_INVARIANT_VIOLATION`, `CONCRETE_REGRESSION`, or `SCOPE_ESCALATION` remains blocking; this section never suppresses a real blocker.
 
-### Convergence guard
+### Convergence checkpoint (effective on V3 adoption only)
 
-A review/fix round is counted when a review produces a blocker that causes candidate semantics or rollout protocol to change and the candidate is then re-reviewed.
-
-After three such rounds without reaching the intended readiness boundary:
-
-```text
-GOAL_STATUS = PAUSED_CONVERGENCE_GUARD
-FOURTH_SEMANTIC_EXPANSION_IN_SAME_CANDIDATE = FORBIDDEN
-```
-
-The next action MUST be one of:
-
-1. shrink to a smaller independently useful live slice;
-2. split an optional/high-risk capability into a later Goal;
-3. re-PREFLIGHT a genuinely independent missing Product Contract;
-4. abandon the candidate.
-
-`PAUSED_CONVERGENCE_GUARD` does not waive an unresolved blocker and does not authorize shipping. It prevents an unbounded sequence of “review -> invent more protocol -> review again” inside one candidate.
+Retain review/repair history for the same business outcome across candidate
+renames. Repetition without new evidence calls for reassessing scope or choosing
+an existing simpler recovery path; it is not progress merely because another
+report exists. This is diagnostic guidance, not a universal numeric cutoff.
+Task-specific budgets require applicable authorization; they neither waive real
+Blockers nor forbid an otherwise authorized necessary repair solely by round count.
+Do not stop a usable service merely because a development candidate is paused.
+The old three-round local guard remains controlling before V3 is active on main.
 
 ### Minimum live slice first
 
@@ -277,17 +290,16 @@ Once `DONE_WHEN` is met and no valid `EXPANSION_TRIGGER` fired, stop. Do not con
 ## Local operating loop
 
 ```text
-1. PREFLIGHT: discover Product Architecture, Current Decisions, related investigations, and governing Specs.
-2. Classify exactly one of REUSE / AMEND / SUPERSEDE / NEW.
-3. UNCERTAIN about mechanical = NON_MECHANICAL.
-4. No accepted implementation-authorizing Spec in base = no implementation.
-5. Review the exact Spec commit independently.
-6. Authorized maintainer accepts the exact final head.
-7. Implement against the pinned Spec revision.
-8. Produce Contract-by-Contract conformance evidence.
-9. Apply blocker-union freeze / convergence guard / minimum-live-slice rules when review or rollout starts expanding.
-10. Report drift; never edit accepted authority to excuse code.
-11. DONE_WHEN met without a valid EXPANSION_TRIGGER -> STOP.
+1. Read only the current task, relevant local authorities, and required evidence.
+2. Classify Authority, Plan, and Assurance independently.
+3. REUSE: implement within the accepted base Contracts; no new Spec for internal choices.
+4. AMEND/NEW: use the active local atomic permission only where applicable.
+5. CONTROLLED/SUPERSEDE or no active atomic permission: keep the docs-first boundary.
+6. Review the actual affected surface; acceptance is by the authorized maintainer.
+7. Run relevant tests and report implementation, installation, and business results separately.
+8. Scope any real blocker to dependent work; do not restart unrelated completed checks.
+9. Prefer existing safe recovery; optional generalized maintenance stays separate.
+10. DONE_WHEN met without a valid EXPANSION_TRIGGER -> STOP.
 ```
 
 Local extensions may refine the vendored governance but may not silently weaken or contradict the pinned distribution. Updating the distribution requires a separate docs-only adoption/update review.
