@@ -7,8 +7,12 @@ Product: mayf3/dsh-agent-core#478 (Program #382, Goal #386, Epic #381/G5)
 
 - Branch: `product-478-g5-human-work-item-feishu-ingress` (from
   `origin/main` @ `d1e42f21`)
-- Head: `322bff68` (review-fix commit on top of authoring commit `919ee8ba`)
-- Changed surface vs main: 7 files, +1570/−0 —
+- Head: `7ced6f58` — three commits on main:
+  `919ee8ba` (authoring: seams + RED-first 34-test matrix) →
+  `322bff68` (independent-review fixes: 2 load-bearing gaps + minors) →
+  `7ced6f58` (lane evidence completion: matrix / review record / spec
+  candidate outline / this packet)
+- Changed surface vs main: 7 code/doc files, +~1600/−0 —
   - `packages/production-runtime/src/human-work-item-ingress.js` (NEW seam)
   - `packages/production-runtime/test/human-work-item-ingress.test.js` (NEW 34-test matrix)
   - `packages/agent-router/src/index.js` (+10: additive `routeAuthenticated`)
