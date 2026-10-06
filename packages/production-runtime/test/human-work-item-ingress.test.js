@@ -171,12 +171,19 @@ function fakeGateway(script = {}) {
   }
 }
 
-/** Fake feishu reply surface. */
+/** Fake feishu reply surface — mirrors the REAL contract's failure mode:
+ * the connector's replyTargetToSdkSend throws on a kind-less ReplyTarget
+ * (core.js:441), so a target without a resolved replyTo(messageId) throws. */
 function fakeFeishu() {
   const receipts = []
   return {
     receipts,
-    reply: async (target, text) => { receipts.push({ target, text }) },
+    reply: async (target, text) => {
+      if (typeof target?.messageId !== 'string' || target.messageId.length === 0) {
+        throw new Error('unknown ReplyTarget kind "undefined" (missing replyTo)')
+      }
+      receipts.push({ target, text })
+    },
     replyTargetFor: (ingress) => ({
       conversationId: ingress.conversationId,
       replyTo(messageId) { this.messageId = messageId; return this },
@@ -241,21 +248,26 @@ test('G1. grammar: exact forms parse; workflowInstanceId normalizes to lowercase
   )
 })
 
-test('G2. grammar: non-command text returns null; command-shaped text with bad arguments returns usage', () => {
+test('G2. grammar: non-command text returns null; anything under the /work namespace that matches no valid form returns usage', () => {
   // Non-command text (fall-through domain — never consumed for anyone):
-  assert.equal(parseWorkItemCommand('/work'), null)
-  assert.equal(parseWorkItemCommand('/work complete'), null)
-  assert.equal(parseWorkItemCommand(`/work reject ${INSTANCE_ID}`), null)
-  assert.equal(parseWorkItemCommand(`/work reject ${INSTANCE_ID}   `), null)
-  assert.equal(parseWorkItemCommand('/work query extra'), null)
+  assert.equal(parseWorkItemCommand('/work'), null) // no subcommand namespace entry
   assert.equal(parseWorkItemCommand('  /work query'), null) // must be anchored
   assert.equal(parseWorkItemCommand('/Work query'), null) // case-sensitive
   assert.equal(parseWorkItemCommand('/todo query'), null)
   assert.equal(parseWorkItemCommand('帮我查一下待办'), null)
   assert.equal(parseWorkItemCommand(''), null)
-  // Command-shaped with bad arguments (consumed ONLY for allowlisted senders):
+  // Under the namespace but invalid → usage (consumed ONLY for allowlisted):
+  assert.deepEqual(parseWorkItemCommand('/work complete'), { action: 'usage' })
+  assert.deepEqual(parseWorkItemCommand(`/work reject ${INSTANCE_ID}`), { action: 'usage' })
+  assert.deepEqual(parseWorkItemCommand(`/work reject ${INSTANCE_ID}   `), { action: 'usage' })
+  assert.deepEqual(parseWorkItemCommand('/work query extra'), { action: 'usage' })
   assert.deepEqual(parseWorkItemCommand('/work complete not-a-uuid'), { action: 'usage' })
   assert.deepEqual(parseWorkItemCommand('/work complete not-a-uuid key'), { action: 'usage' })
+  // transitionKey is echoed back into replies — unsafe tokens are usage, not echo material.
+  assert.deepEqual(parseWorkItemCommand(`/work complete ${INSTANCE_ID} bad key`), { action: 'usage' })
+  assert.deepEqual(parseWorkItemCommand(`/work complete ${INSTANCE_ID} ${'x'.repeat(65)}`), { action: 'usage' })
+  // reject reason is forwarded as a submission body — bounded before shipping.
+  assert.deepEqual(parseWorkItemCommand(`/work reject ${INSTANCE_ID} ${'r'.repeat(2001)}`), { action: 'usage' })
   // Trailing whitespace is not an argument: plain complete stays valid.
   assert.deepEqual(
     parseWorkItemCommand(`/work complete ${INSTANCE_ID} `),
@@ -339,6 +351,7 @@ test('I2. loader: rejects wrong version, duplicates, missing fields, junk', asyn
     { version: 1, principals: [{ feishuOpenId: OPEN_ID }] },
     { version: 1, principals: [{ executorAgentId: EXECUTOR_AGENT_ID }] },
     { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: 'x' }, { feishuOpenId: OPEN_ID, executorAgentId: 'y' }] },
+    { version: 1, principals: [{ feishuOpenId: OPEN_ID, executorAgentId: 'shared' }, { feishuOpenId: 'ou_other_000000000000000000000000000000', executorAgentId: 'shared' }] },
     { version: 1, principals: 'all-of-them' },
     { principals: [] },
     'not-an-object',
@@ -685,7 +698,8 @@ test('Z3. wire: enabled + explicit wiring → wrapper falls through to routeAuth
   const installed = []
   const feishu = { setCallback: (fn) => { installed.push(fn) } }
   const routed = []
-  const router = { routeAuthenticated: async (ingress) => { routed.push(ingress) } }
+  const DELIVERY_OUTCOME = { ok: true, reply: 'agent reply' }
+  const router = { routeAuthenticated: async (ingress) => { routed.push(ingress); return DELIVERY_OUTCOME } }
   const gateway = fakeGateway({ 'workflow_my_tasks:list': [{ ok: true, result: { items: [], next_cursor: null } }] })
 
   const wired = wireHumanWorkItemIngress({
@@ -698,16 +712,20 @@ test('Z3. wire: enabled + explicit wiring → wrapper falls through to routeAuth
   assert.equal(wired, true)
   assert.equal(installed.length, 1)
 
-  // Authorized query → consumed.
+  // Authorized query → consumed; the reply target carries the resolved
+  // replyTo(messageId) (the real connector throws on a kind-less target).
   assert.equal(await installed[0](p2pEvent('/work query')), true)
   assert.equal(routed.length, 0)
   assert.equal(gateway.calls.length, 1)
-
-  // Anything else → byte-identical fall-through to the AUTHENTICATED delivery.
+  // NOTE: the Z3 feishu stub has no reply — the handler's send throws and is
+  // contained; consumption semantics are unaffected.
+  // Fall-through → downstream outcome PROPAGATED (value and identity), so the
+  // bridge keeps its error contract for unconsumed deliveries.
   const passthrough = p2pEvent('hello agent')
-  assert.equal(await installed[0](passthrough), false)
+  const outcome = await installed[0](passthrough)
   assert.equal(routed.length, 1)
   assert.equal(routed[0], passthrough)
+  assert.equal(outcome, DELIVERY_OUTCOME, 'fall-through returns the Router delivery outcome unchanged')
 })
 
 test('Z4. wire: enabled + broken principals file → FAILS LOUD (never silently unmapped)', async (t) => {
@@ -737,10 +755,11 @@ test('Z5. audit rows are durably appended to the JSONL sink and parse back', asy
     principals: [{ feishuOpenId: OPEN_ID, executorAgentId: EXECUTOR_AGENT_ID }],
   }), 'utf8')
   const installed = []
+  const replySurface = fakeFeishu()
   const feishu = {
     setCallback: (fn) => { installed.push(fn) },
-    reply: async () => {},
-    replyTargetFor: (ingress) => ({ conversationId: ingress.conversationId }),
+    reply: replySurface.reply,
+    replyTargetFor: replySurface.replyTargetFor,
   }
   const gateway = fakeGateway({ 'workflow_my_tasks:list': [{ ok: true, result: { items: [], next_cursor: null } }] })
   wireHumanWorkItemIngress({
@@ -753,4 +772,5 @@ test('Z5. audit rows are durably appended to the JSONL sink and parse back', asy
   assert.equal(rows.length, 1)
   assert.equal(rows[0].kind, 'human_work_item_command')
   assert.equal(rows[0].action, 'query')
+  assert.equal(rows[0].outcome, 'executed')
 })

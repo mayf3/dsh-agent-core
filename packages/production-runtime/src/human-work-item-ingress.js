@@ -39,6 +39,12 @@ export function isStrictTruthyEnv(value) {
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+/** transitionKey is echoed back in replies — bound to a safe token shape. */
+const TRANSITION_KEY_RE = /^[A-Za-z0-9._-]{1,64}$/
+/** User reject reason is forwarded as submissionPayload.reason (server also
+ * enforces its own size limit) — bounded here so the seam never ships a
+ * multi-hundred-KB body just to get a 413 back. */
+const REASON_MAX_LENGTH = 2000
 
 const USAGE_TEXT = [
   'Human work item commands (usage):',
@@ -49,9 +55,10 @@ const USAGE_TEXT = [
 
 /**
  * Strict grammar parser. Returns a parsed command object or null when the
- * text is not a `/work` command (the fall-through domain). Command-shaped
- * text with bad arguments returns { action: 'usage' } so an authorized
- * sender gets guidance instead of a silent agent turn.
+ * text is not under the `/work ` command namespace (the fall-through
+ * domain). Text under the namespace that matches no valid form returns
+ * { action: 'usage' } — command intent gets guidance instead of a silent
+ * agent turn; consumption still requires the exact allowlisted sender.
  */
 export function parseWorkItemCommand(text) {
   if (typeof text !== 'string' || !text.startsWith('/work ')) return null
@@ -62,6 +69,7 @@ export function parseWorkItemCommand(text) {
   const complete = trimmed.match(/^complete\s+(\S+)(?:\s+(\S+))?$/)
   if (complete) {
     if (!UUID_RE.test(complete[1])) return { action: 'usage' }
+    if (complete[2] !== undefined && !TRANSITION_KEY_RE.test(complete[2])) return { action: 'usage' }
     return {
       action: 'complete',
       workflowInstanceId: complete[1].toLowerCase(),
@@ -72,10 +80,13 @@ export function parseWorkItemCommand(text) {
   if (reject) {
     if (!UUID_RE.test(reject[1])) return { action: 'usage' }
     const reason = reject[2].replace(/\s+$/, '')
-    if (reason.length === 0) return { action: 'usage' }
+    if (reason.length === 0 || reason.length > REASON_MAX_LENGTH) return { action: 'usage' }
     return { action: 'reject', workflowInstanceId: reject[1].toLowerCase(), reason }
   }
-  return null
+  // Anything else under the explicit `/work ` prefix is command intent —
+  // usage guidance (consumed ONLY for allowlisted senders, checked later)
+  // instead of a silent agent turn.
+  return { action: 'usage' }
 }
 
 /**
@@ -102,6 +113,7 @@ export function loadPrincipalBindings(file) {
   if (parsed.version !== 1) return { ok: false, error: 'principals file version must be 1' }
   if (!Array.isArray(parsed.principals)) return { ok: false, error: 'principals must be an array' }
   const bindings = new Map()
+  const executorAgents = new Set()
   for (const entry of parsed.principals) {
     if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
       return { ok: false, error: 'each principal entry must be an object' }
@@ -117,6 +129,12 @@ export function loadPrincipalBindings(file) {
       return { ok: false, error: 'humanPrincipalId must be a string when present' }
     }
     if (bindings.has(feishuOpenId)) return { ok: false, error: `duplicate feishuOpenId ${JSON.stringify(feishuOpenId.slice(0, 6))}` }
+    // One executor identity per human: a shared executor would merge two
+    // humans' worklists into one allowlist entry's authority.
+    if (executorAgents.has(executorAgentId)) {
+      return { ok: false, error: `duplicate executorAgentId ${JSON.stringify(executorAgentId)} — each human principal needs its own executor identity` }
+    }
+    executorAgents.add(executorAgentId)
     bindings.set(feishuOpenId, {
       executorAgentId,
       ...(entry.humanPrincipalId === undefined ? {} : { humanPrincipalId: entry.humanPrincipalId }),
@@ -203,7 +221,11 @@ export function createHumanWorkItemIngressHandler({
   }
 
   const send = async (ingress, text) => {
-    await reply(replyTargetFor(ingress), text)
+    // Mirror the Router's reply construction exactly (ingress-delivery.js):
+    // the ReplyTarget MUST carry replyTo(messageId) — the connector's
+    // replyTargetToSdkSend rejects a kind-less target, which would consume
+    // the command and silently lose every receipt.
+    await reply(replyTargetFor(ingress).replyTo(ingress.messageId), text)
   }
 
   async function runQuery(ingress, binding) {
@@ -374,8 +396,11 @@ export function wireHumanWorkItemIngress({
   feishu.setCallback(async (ingress, meta) => {
     const handled = await handler(ingress)
     if (!handled) {
-      await downstream(ingress, meta)
-      return false
+      // Fall-through MUST propagate the downstream outcome (value AND throw):
+      // the bridge inspects the callback result to surface delivery failures
+      // as channel errors exactly once — swallowing it would change the
+      // Router's failure semantics for every unconsumed message.
+      return downstream(ingress, meta)
     }
     return true
   })
