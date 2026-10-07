@@ -27,6 +27,16 @@ class PacketError(Exception):
     """Deterministic refusal (bad input, unsafe member, malformed document)."""
 
 
+class TraversalRefused(PacketError):
+    """Refusal raised while walking packet content; carries a finding code."""
+
+    def __init__(self, code, path, detail=None):
+        super().__init__("%s: %s" % (code, path))
+        self.code = code
+        self.path = path
+        self.detail = detail
+
+
 def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -50,12 +60,21 @@ def check_rel(rel):
 
 
 def list_files(root, exclude=()):
-    """Sorted packet-relative regular-file paths under root; symlinks refused."""
+    """Sorted packet-relative regular-file paths under root; symlinks refused.
+
+    Symlinked directories are rejected too: os.walk lists them in `dirnames`
+    without traversing, so a link smuggled in after sealing would otherwise be
+    invisible to every manifest.
+    """
     exclude = frozenset(exclude)
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames.sort()
         rel_dir = os.path.relpath(dirpath, root)
+        for name in dirnames:
+            if (Path(dirpath) / name).is_symlink():
+                rel = name if rel_dir == "." else "%s/%s" % (rel_dir.replace(os.sep, "/"), name)
+                raise TraversalRefused("SYMLINK_IN_PACKET", rel)
         for name in sorted(filenames):
             rel = name if rel_dir == "." else "%s/%s" % (rel_dir.replace(os.sep, "/"), name)
             if rel in exclude:
@@ -104,12 +123,30 @@ def write_manifest(root, exclude):
 
 
 def verify_manifest(root, exclude=()):
-    """Compare a manifest against actual bytes; report the complement too."""
+    """Compare a manifest against actual bytes; report the complement too.
+
+    A missing or malformed manifest, and any refused traversal (e.g. a
+    symlinked directory), are structured findings — never an aborted verifier.
+    """
     root = Path(root)
+    exclude = frozenset(exclude)
+    try:
+        actual = [r for r in list_files(root) if r not in exclude]
+    except TraversalRefused as exc:
+        detail = {"code": exc.code, "path": exc.path}
+        if exc.detail:
+            detail["detail"] = exc.detail
+        return [detail], []
+    except PacketError as exc:
+        return [{"code": "PACKET_TRAVERSAL_REFUSED", "path": str(root), "detail": str(exc)}], []
+    try:
+        recorded = parse_manifest((root / MANIFEST_NAME).read_bytes())
+    except OSError:
+        return [{"code": "MANIFEST_ABSENT", "path": MANIFEST_NAME}], actual
+    except PacketError as exc:
+        return [{"code": "MANIFEST_MALFORMED", "path": MANIFEST_NAME, "detail": str(exc)}], actual
     findings = []
-    actual = [r for r in list_files(root) if r not in exclude]
     actual_set = set(actual)
-    recorded = parse_manifest((root / MANIFEST_NAME).read_bytes())
     for rel in sorted(recorded):
         p = root / rel
         if not p.is_file():

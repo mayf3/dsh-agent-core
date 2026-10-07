@@ -54,26 +54,36 @@ def pointer_set(doc, pointer, value):
     node[tokens[-1]] = value
 
 
-def _normalize_record_path(value, packet_root, where):
-    """Resolve a recorded path to a packet-relative path (or refuse)."""
+def _normalize_record_path(value, render_root, where):
+    """Resolve a recorded path (render-root space) to a safe packet-relative path.
+
+    Recorded absolute paths point at the packet's final location even while a
+    rebuild is staged in a sibling directory, so normalization is against
+    `render_root`; the resolved relative path is then read from the directory
+    currently being hashed.
+    """
     text = str(value)
     p = Path(text)
-    root = Path(packet_root)
+    root = Path(render_root)
     if p.is_absolute():
         if str(p).startswith(str(root) + os.sep):
-            return str(p.relative_to(root))
+            return check_rel(str(p.relative_to(root)))
         raise PacketError("PIN_PATH_OUTSIDE_PACKET: %s (%s)" % (text, where))
     return check_rel(text)
 
 
-def apply_pin_bindings(packet_root, doc_path, bindings, build):
+def apply_pin_bindings(packet_root, doc_path, bindings, build, render_root=None):
     """Recompute (build) or check (verify) pinned digests from actual bytes.
 
     Returns (findings, doc). In build mode the doc is rewritten with paths
     rebound to this packet root and digests recomputed; in verify mode it is
     left untouched and every binding is compared against actual bytes.
+    `render_root` is where recorded absolute paths point; it differs from
+    `packet_root` only when a rebuild is staged in a sibling directory before
+    the old packet is replaced.
     """
     packet_root = Path(packet_root)
+    render_root = Path(render_root) if render_root is not None else packet_root
     path = Path(doc_path)
     findings = []
     if build:
@@ -84,7 +94,7 @@ def apply_pin_bindings(packet_root, doc_path, bindings, build):
         except (OSError, ValueError) as exc:
             return [{"code": "PIN_DOC_UNREADABLE", "path": str(path), "detail": str(exc)}], None
     for binding in bindings:
-        findings.extend(_apply_binding(packet_root, doc, binding, build, str(path)))
+        findings.extend(_apply_binding(packet_root, render_root, doc, binding, build, str(path)))
     if build:
         doc_out = dict(doc)
         doc_out["schema"] = PIN_DOC_SCHEMA
@@ -98,11 +108,12 @@ def _digest_finding(code, binding, target, expected, observed):
     return {"code": code, "binding": binding.get("pointer"), "target": target, "expected": expected, "observed": observed}
 
 
-def _apply_binding(packet_root, doc, binding, build, doc_path):
+def _apply_binding(packet_root, render_root, doc, binding, build, doc_path):
     packet_root = Path(packet_root)
+    render_root = Path(render_root)
     findings = []
     if "forEach" in binding:
-        return _apply_map_binding(packet_root, doc, binding, build, doc_path)
+        return _apply_map_binding(packet_root, render_root, doc, binding, build, doc_path)
     if "pointer" not in binding:
         raise PacketError("PIN_BINDING_MALFORMED: need pointer or forEach")
     pointer = binding["pointer"]
@@ -113,17 +124,20 @@ def _apply_binding(packet_root, doc, binding, build, doc_path):
         if build:
             if not ok or raw is None:
                 raise PacketError("PIN_TARGET_POINTER_EMPTY: %s" % target_pointer)
-            rel = _normalize_record_path(raw, packet_root, doc_path + target_pointer)
-            pointer_set(doc, target_pointer, str(packet_root / rel))
+            rel = _normalize_record_path(raw, render_root, doc_path + target_pointer)
+            pointer_set(doc, target_pointer, str(render_root / rel))
         elif not ok:
             return [{"code": "PIN_TARGET_POINTER_MISSING", "binding": pointer, "target": target_pointer}]
         else:
             try:
-                rel = _normalize_record_path(raw, packet_root, doc_path + target_pointer)
+                rel = _normalize_record_path(raw, render_root, doc_path + target_pointer)
             except PacketError as exc:
                 return [{"code": "PIN_PATH_OUTSIDE_PACKET", "binding": pointer, "target": str(raw), "detail": str(exc)}]
     if rel is None:
         raise PacketError("PIN_BINDING_MALFORMED: need target or targetPointer")
+    # A configured target is untrusted input: without this check an absolute
+    # path or "../../x" would hash bytes outside the packet and still PASS.
+    rel = check_rel(rel)
     target = packet_root / rel
     if not target.is_file():
         return [{"code": "PIN_TARGET_MISSING", "binding": pointer, "target": rel}]
@@ -139,8 +153,9 @@ def _apply_binding(packet_root, doc, binding, build, doc_path):
     return findings
 
 
-def _apply_map_binding(packet_root, doc, binding, build, doc_path):
+def _apply_map_binding(packet_root, render_root, doc, binding, build, doc_path):
     packet_root = Path(packet_root)
+    render_root = Path(render_root)
     findings = []
     container, ok = pointer_get(doc, binding["forEach"])
     if not ok or not isinstance(container, dict):
@@ -155,7 +170,7 @@ def _apply_map_binding(packet_root, doc, binding, build, doc_path):
     if build and binding.get("paths") is not None:
         for declared in binding["paths"]:
             rel = check_rel(declared)
-            container.setdefault(rel, {path_key: str(packet_root / rel)} if path_key else {})
+            container.setdefault(rel, {path_key: str(render_root / rel)} if path_key else {})
     for name in sorted(container):
         record = container[name]
         if path_key:
@@ -167,12 +182,12 @@ def _apply_map_binding(packet_root, doc, binding, build, doc_path):
                 findings.append({"code": "PIN_PATH_ABSENT", "binding": binding["forEach"], "target": name})
                 continue
             try:
-                rel = _normalize_record_path(raw, packet_root, doc_path)
+                rel = _normalize_record_path(raw, render_root, doc_path)
             except PacketError as exc:
                 findings.append({"code": "PIN_PATH_OUTSIDE_PACKET", "binding": binding["forEach"], "target": str(raw), "detail": str(exc)})
                 continue
             if build:
-                record[path_key] = str(packet_root / rel)
+                record[path_key] = str(render_root / rel)
         else:
             if not isinstance(record, dict):
                 findings.append({"code": "PIN_RECORD_MALFORMED", "binding": binding["forEach"], "target": name})
