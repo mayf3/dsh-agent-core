@@ -57,3 +57,18 @@ migration-attributable classes = zero-tolerance). Doc 11 §6 PLIST EDIT +
 CANARY_LOG rows amended in place ([AMENDED r376] markers). Live service
 untouched (read-only anchor; live plist sha byte-identical pre/post proof).
 PRODUCTION_MUTATION=NO.
+
+Round r380 (2026-10-07, task agent-control#564, branch ac-task/558): added
+14_XIAOMUSIC_C2_REROOTCAUSE_R380.md + raw/63 +
+scripts/c2-rerootcause-probe-matrix.sh — NON_PRODUCTION re-root-cause of the
+r373/r377 bootstrap exit-5 failures on ~60 disposable dummy-label launchd
+probes: OPERATIVE CAUSE = launchd re-load gate (a label whose last EXECUTED
+instance had an interpreted-script ProgramArguments[0] rejects byte-changed
+re-bootstrap with exit 5 for >=6 min); r376 tab-form root cause SUPERSEDED
+(form exonerated); arg0 file properties, spawn-preflight, same-inode writes,
+load order and plist path all exonerated; C1 irbridge succeeded because its
+arg0 is a Mach-O interpreter. Doc 11 §6 rows TARGET_IDENTITY / PLIST EDIT /
+RELOAD amended in place ([AMENDED r380] markers); doc 13 §1 superseded-banner.
+Focused reproduction driver 7/7 PASS (disposable labels, synthetic programs).
+com.xiaomusic.secure never bootstrapped/booted-out this round; live service
+read-only anchor verified pre/post. PRODUCTION_MUTATION=NO.

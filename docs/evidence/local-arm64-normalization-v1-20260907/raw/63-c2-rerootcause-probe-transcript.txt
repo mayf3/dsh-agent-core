@@ -1,0 +1,333 @@
+# 63-c2-rerootcause-probe-transcript — NON_PRODUCTION dummy-label launchd probe matrix (round r380)
+# task mayf3/agent-control#564, claim g10-xiaomusic-c2-rerootcause-r380, 2026-10-07
+# host macOS 26.6.2 (25G83) arm64 darwin 25.6.0, uid 502. All labels com.probe.disposable.r380.* (disposable, booted out).
+# All probe plists/programs under /tmp/xr380-rerootcause-DZPRGk and ~/Library/Application Support/xr380-probe-disposable/ (disposable, removed post-round).
+# com.xiaomusic.secure NEVER bootstrapped/booted-out this round. Real venv/plist/logs accessed READ-ONLY (metadata + plist bytes copied to fixture).
+# PROBE-matrix scope: stages A/B/C/D/E/F/G/H/I/J/K + K6. See 14_XIAOMUSIC_C2_REROOTCAUSE_R380.md for the analysis.
+
+===== stageA =====
+[probe 12:22:22Z] === STAGE A start; host 26.6.2 25G83; uid=502
+[probe 12:22:23Z] fixture a5-copy-prov xattrs=[com.apple.provenance ] signed=no
+[probe 12:22:23Z] fixture a6-copy-noprov xattrs=[com.apple.provenance ] signed=no
+[probe 12:22:23Z] fixture a7-copy-signed xattrs=[com.apple.cs.CodeDirectory com.apple.cs.CodeRequirements com.apple.cs.CodeSignature com.apple.provenance ] signed=yes
+[probe 12:22:23Z] fixture a8-copy-signed-keepprov xattrs=[com.apple.cs.CodeDirectory com.apple.cs.CodeRequirements com.apple.cs.CodeSignature com.apple.provenance ] signed=yes
+[probe 12:22:23Z] fixture a9-unsigned-macho xattrs=[com.apple.provenance ] signed=yes
+[probe 12:22:23Z] ---- PROBE a1-control-orig-signed: arg0=/usr/local/bin/xiaomusic note=accepted-class control (signed script) plist=f7b66f5713bc
+[probe 12:22:23Z] PROBE a1-control-orig-signed bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a1-control-orig-signed state=	state = not running pid=
+[probe 12:22:23Z] PROBE a1-control-orig-signed bootout_exit=0
+[probe 12:22:23Z] PROBE a1-control-orig-signed residue_check=clean
+[probe 12:22:23Z] ---- PROBE a2-nonexistent: arg0=/tmp/xr380-rerootcause-DZPRGk/nonexistent-binary note=existence preflight characterization plist=33daaefc570c
+[probe 12:22:23Z] PROBE a2-nonexistent bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a2-nonexistent state=	state = not running pid=
+[probe 12:22:23Z] PROBE a2-nonexistent bootout_exit=0
+[probe 12:22:23Z] PROBE a2-nonexistent residue_check=clean
+[probe 12:22:23Z] ---- PROBE a3-real-arm-candidate: arg0=/Users/yanfenma/Library/PythonEnvs/xiaomusic-arm64/bin/xiaomusic note=KEY: real rejected arg0, dormant (never executed) plist=6d40560e620e
+[probe 12:22:23Z] PROBE a3-real-arm-candidate bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a3-real-arm-candidate state=	state = not running pid=
+[probe 12:22:23Z] PROBE a3-real-arm-candidate bootout_exit=0
+[probe 12:22:23Z] PROBE a3-real-arm-candidate residue_check=clean
+[probe 12:22:23Z] ---- PROBE a4-real-c1-class: arg0=/Users/yanfenma/Library/PythonEnvs/irbridge-arm64/bin/python note=C1 accepted-class anchor (signed Mach-O) plist=9384177a5d04
+[probe 12:22:23Z] PROBE a4-real-c1-class bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a4-real-c1-class state=	state = not running pid=
+[probe 12:22:23Z] PROBE a4-real-c1-class bootout_exit=0
+[probe 12:22:23Z] PROBE a4-real-c1-class residue_check=clean
+[probe 12:22:23Z] ---- PROBE a5-copy-unsigned-prov: arg0=/tmp/xr380-rerootcause-DZPRGk/a5-copy-prov note=unsigned+provenance transferred to /tmp plist=8fefdfe85407
+[probe 12:22:23Z] PROBE a5-copy-unsigned-prov bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a5-copy-unsigned-prov state=	state = not running pid=
+[probe 12:22:23Z] PROBE a5-copy-unsigned-prov bootout_exit=0
+[probe 12:22:23Z] PROBE a5-copy-unsigned-prov residue_check=clean
+[probe 12:22:23Z] ---- PROBE a6-copy-unsigned-noprov: arg0=/tmp/xr380-rerootcause-DZPRGk/a6-copy-noprov note=unsigned, provenance stripped plist=12e192959aef
+[probe 12:22:23Z] PROBE a6-copy-unsigned-noprov bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a6-copy-unsigned-noprov state=	state = not running pid=
+[probe 12:22:23Z] PROBE a6-copy-unsigned-noprov bootout_exit=0
+[probe 12:22:23Z] PROBE a6-copy-unsigned-noprov residue_check=clean
+[probe 12:22:23Z] ---- PROBE a7-copy-signed-noprov: arg0=/tmp/xr380-rerootcause-DZPRGk/a7-copy-signed note=ad-hoc signed, provenance stripped plist=cc0f5609e954
+[probe 12:22:23Z] PROBE a7-copy-signed-noprov bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a7-copy-signed-noprov state=	state = not running pid=
+[probe 12:22:23Z] PROBE a7-copy-signed-noprov bootout_exit=0
+[probe 12:22:23Z] PROBE a7-copy-signed-noprov residue_check=clean
+[probe 12:22:23Z] ---- PROBE a8-copy-signed-keepprov: arg0=/tmp/xr380-rerootcause-DZPRGk/a8-copy-signed-keepprov note=ad-hoc signed, provenance kept plist=5f3b2eb9bd48
+[probe 12:22:23Z] PROBE a8-copy-signed-keepprov bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a8-copy-signed-keepprov state=	state = not running pid=
+[probe 12:22:23Z] PROBE a8-copy-signed-keepprov bootout_exit=0
+[probe 12:22:23Z] PROBE a8-copy-signed-keepprov residue_check=clean
+[probe 12:22:23Z] ---- PROBE a9-unsigned-macho: arg0=/tmp/xr380-rerootcause-DZPRGk/a9-unsigned-macho note=unsigned Mach-O (.so copy) plist=ab3d66eec3ce
+[probe 12:22:23Z] PROBE a9-unsigned-macho bootstrap_exit=0 stderr=
+[probe 12:22:23Z] PROBE a9-unsigned-macho state=	state = not running pid=
+[probe 12:22:23Z] PROBE a9-unsigned-macho bootout_exit=0
+[probe 12:22:23Z] PROBE a9-unsigned-macho residue_check=clean
+[probe 12:22:23Z] === STAGE A end
+
+===== stageB =====
+[probeB 12:23:57Z] === STAGE B start (RunAtLoad=true; spawn-preflight path)
+[probeB 12:23:57Z] fixture b3-synth-venv-shebang xattrs=[com.apple.provenance ] signed=no mode=0755
+[probeB 12:23:57Z] fixture b4-realprops-bodyexit xattrs=[com.apple.provenance ] signed=no mode=0755
+[probeB 12:23:57Z] fixture b5-realprops-signed xattrs=[com.apple.cs.CodeDirectory com.apple.cs.CodeRequirements com.apple.cs.CodeSignature com.apple.provenance ] signed=yes mode=0755
+[probeB 12:23:57Z] fixture b6-realprops-noprov xattrs=[com.apple.provenance ] signed=no mode=0755
+[probeB 12:23:57Z] ---- PROBE b1-nonexistent-runatload: arg0=/tmp/xr380-rerootcause-DZPRGk/nonexistent-binary note=spawn-preflight characterization (ENOENT)
+[probeB 12:23:57Z] PROBE b1-nonexistent-runatload bootstrap_exit=0 stderr=
+[probeB 12:23:58Z] PROBE b1-nonexistent-runatload 	state = spawn scheduled;	runs = 1;	last exit code = 78: EX_CONFIG;		state = active;		state = active;
+[probeB 12:23:58Z] PROBE b1-nonexistent-runatload bootout_exit=0
+[probeB 12:23:58Z] PROBE b1-nonexistent-runatload residue_check=clean
+[probeB 12:23:58Z] ---- PROBE b2-sys-echo-runatload: arg0=/bin/echo note=spawn-path signed-system-binary control
+[probeB 12:23:58Z] PROBE b2-sys-echo-runatload bootstrap_exit=0 stderr=
+[probeB 12:23:59Z] PROBE b2-sys-echo-runatload 	state = not running;	runs = 1;	last exit code = 0;		state = active;		state = active;
+[probeB 12:23:59Z] PROBE b2-sys-echo-runatload bootout_exit=0
+[probeB 12:23:59Z] PROBE b2-sys-echo-runatload residue_check=clean
+[probeB 12:23:59Z] ---- PROBE b3-venvshebang-unsigned: arg0=/tmp/xr380-rerootcause-DZPRGk/b3-synth-venv-shebang note=unsigned synthetic, venv shebang, no provenance
+[probeB 12:23:59Z] PROBE b3-venvshebang-unsigned bootstrap_exit=0 stderr=
+[probeB 12:24:00Z] PROBE b3-venvshebang-unsigned 	state = not running;	runs = 1;	last exit code = 0;		state = active;		state = active;
+[probeB 12:24:00Z] PROBE b3-venvshebang-unsigned bootout_exit=0
+[probeB 12:24:00Z] PROBE b3-venvshebang-unsigned residue_check=clean
+[probeB 12:24:00Z] ---- PROBE b4-realprops-unsigned: arg0=/tmp/xr380-rerootcause-DZPRGk/b4-realprops-bodyexit note=KEY: real file properties (unsigned+provenance+venv shebang), body=exit0
+[probeB 12:24:00Z] PROBE b4-realprops-unsigned bootstrap_exit=0 stderr=
+[probeB 12:24:01Z] PROBE b4-realprops-unsigned 	state = not running;	runs = 1;	last exit code = 0;		state = active;		state = active;
+[probeB 12:24:01Z] PROBE b4-realprops-unsigned bootout_exit=0
+[probeB 12:24:01Z] PROBE b4-realprops-unsigned residue_check=clean
+[probeB 12:24:01Z] ---- PROBE b5-realprops-signed: arg0=/tmp/xr380-rerootcause-DZPRGk/b5-realprops-signed note=b4 + ad-hoc signature
+[probeB 12:24:01Z] PROBE b5-realprops-signed bootstrap_exit=0 stderr=
+[probeB 12:24:02Z] PROBE b5-realprops-signed 	state = not running;	runs = 1;	last exit code = 0;		state = active;		state = active;
+[probeB 12:24:02Z] PROBE b5-realprops-signed bootout_exit=0
+[probeB 12:24:02Z] PROBE b5-realprops-signed residue_check=clean
+[probeB 12:24:02Z] ---- PROBE b6-realprops-noprov: arg0=/tmp/xr380-rerootcause-DZPRGk/b6-realprops-noprov note=b4 minus provenance xattr
+[probeB 12:24:02Z] PROBE b6-realprops-noprov bootstrap_exit=0 stderr=
+[probeB 12:24:04Z] PROBE b6-realprops-noprov 	state = not running;	runs = 1;	last exit code = 0;		state = active;		state = active;
+[probeB 12:24:04Z] PROBE b6-realprops-noprov bootout_exit=0
+[probeB 12:24:04Z] PROBE b6-realprops-noprov residue_check=clean
+[probeB 12:24:04Z] === STAGE B end
+
+===== stageC =====
+[probeC 12:27:28Z] c1 v1 arg0=/tmp/xr380-fake-a inode=148490357
+[probeC 12:27:28Z] c1 bootstrap#1_exit=0 (expect 0)
+[probeC 12:27:28Z] c1 bootout#1_exit=0
+[probeC 12:27:28Z] c1 v2 same-inode edit arg0=/tmp/xr380-fake-b inode=148490360 (same=selfref-true)
+[probeC 12:27:28Z] c1 bootstrap#2_sameinode_changed_exit=0  <-- KEY RESULT (r377 shape)
+[probeC 12:27:28Z] c2 recreated same path NEW inode=148490362 arg0=/tmp/xr380-fake-c
+[probeC 12:27:28Z] c2 bootstrap_newinode_changed_exit=0  <-- KEY RESULT (path- vs inode-keyed)
+[probeC 12:27:28Z] c3 bootstrap#1_exit=0
+[probeC 12:27:28Z] c3 edited inode=148490367 same=no
+[probeC 12:27:28Z] c3 bootstrap#2_changed_exit=0
+[probeC 12:27:29Z] c3 restored orig bytes inode=148490367 same=no
+[probeC 12:27:29Z] c3 bootstrap#3_restored_exit=0  <-- r377-rollback shape
+[probeC 12:27:29Z] c4 bootstrap#1_exit=0
+[probeC 12:27:29Z] c4 edited-while-loaded inode-same=no
+[probeC 12:27:29Z] c4 bootout#1_exit=0
+[probeC 12:27:29Z] c4 bootstrap#2_edit-before-bootout_exit=0  <-- r371-C1 shape
+[probeC 12:27:29Z] c5 bootstrap#1_exit=0
+[probeC 12:27:29Z] c5 bootstrap#2_samecontent_exit=0
+[probeC 12:27:29Z] c6 bootstrap#1_exit=0 pathA
+[probeC 12:27:29Z] c6 bootstrap#2_newpath_changed_exit=0  <-- label-keyed test
+[probeC 12:27:29Z] c7 bootstrap#1_exit=0
+[probeC 12:27:29Z] c7 replaced via rename NEW inode=148490384 old=148490382 same=no
+[probeC 12:27:29Z] c7 bootstrap#2_rename_exit=0  <-- remediation shape
+[probeC 12:27:29Z] === STAGE C end
+
+===== stageD =====
+[probeD 12:30:13Z] d1 bs#1 rc=0
+[probeD 12:30:13Z] d1 bout rc=0
+[probeD 12:30:13Z] d1 edited same-inode=yes
+[probeD 12:30:13Z] d1 bs#2_sameinode_changed rc=0  <== r377 SHAPE
+[probeD 12:30:13Z] d2 bs#1 rc=0
+[probeD 12:30:13Z] d2 bout rc=0
+[probeD 12:30:13Z] d2 edited same-inode=yes
+[probeD 12:30:13Z] d2 bs#2_sameinode_changed rc=0  <== home-dir variant
+[probeD 12:30:13Z] d3 bs#1(fullkeys, keepalive+runatload, nonexistent arg0) rc=0
+[probeD 12:30:14Z] d3 print1: 	state = spawn scheduled;	runs = 1;	last exit code = 78: EX_CONFIG;		state = active;		state = active;
+[probeD 12:30:14Z] d3 bout rc=0
+[probeD 12:30:14Z] d3 edited same-inode=yes
+[probeD 12:30:14Z] d3 bs#2_sameinode_changed_fullkeys rc=0  <== full-keys variant
+[probeD 12:30:15Z] d3 print2: 	state = spawn scheduled;	runs = 1;	last exit code = 78: EX_CONFIG;		state = active;		state = active;
+[probeD 12:30:15Z] d4 bs#1 rc=0
+[probeD 12:30:15Z] d4 bout rc=0
+[probeD 12:30:15Z] d4 edited same-inode=yes
+[probeD 12:30:15Z] d4 bs#2_changed rc=0
+[probeD 12:30:15Z] d4 restored same-inode=yes
+[probeD 12:30:15Z] d4 bs#3_restored rc=0  <== rollback shape
+[probeD 12:30:15Z] d5 bs#1 rc=0
+[probeD 12:30:15Z] d5 edited-while-loaded same-inode=yes
+[probeD 12:30:15Z] d5 bout rc=0
+[probeD 12:30:15Z] d5 bs#2_edit-before-bootout rc=0  <== C1 shape
+[probeD 12:30:16Z] d6 bs#1 rc=0
+[probeD 12:30:16Z] d6 bout rc=0
+[probeD 12:30:16Z] d6 xattr added, content unchanged, ino=148502312
+[probeD 12:30:16Z] d6 bs#2_xattronly rc=0
+[probeD 12:30:16Z] d7 relabeled real-bytes copy sha=c2cc3598ee680b57 ino=148502314
+[probeD 12:30:16Z] d7 bs#1 rc=0
+[probeD 12:30:16Z] d7 print1: 	state = xpcproxy;	program = /usr/local/bin/xiaomusic;		state = active;		state = active;	jetsamproperties category = daemon;	properties = keepalive | runatload | inferred program;
+[probeD 12:30:16Z] d7 bout rc=0
+[probeD 12:30:16Z] d7 arg0 swapped same-inode, sha=6b322b1d1d2ac9cd
+[probeD 12:30:16Z] d7 bs#2_sameinode_arg0swap rc=0  <== EXACT r377 REPLAY ON DUMMY LABEL
+[probeD 12:30:16Z] d7 print2: 	state = xpcproxy;	program = /Users/yanfenma/Library/PythonEnvs/xiaomusic-arm64/bin/xiaomusic;	last exit code = (never exited);		state = active;		state = active;	jetsamproperties category = daemon;	pr
+[probeD 12:30:16Z] === STAGE D end
+
+===== stageE =====
+[probeE 12:33:38Z] e0 bs#1(LaunchAgents dir, dormant) rc=0
+[probeE 12:33:38Z] e0 bout rc=0
+[probeE 12:33:38Z] e0 same-inode swap=yes
+[probeE 12:33:38Z] e0 bs#2_sameinode_changed_LAUNCHAGENTS_DIR rc=0  <== KEY
+[probeE 12:33:38Z] e0 file removed residue=ls: /Users/yanfenma/Library/LaunchAgents
+[probeE 12:33:38Z] e1 bs#1 rc=0
+[probeE 12:33:38Z] e1 bout rc=0
+[probeE 12:33:38Z] e1 bs#2_sameinode_changed_APPSUPPORT rc=0
+[probeE 12:33:38Z] e2 bs#1 rc=0
+[probeE 12:33:39Z] e2 state after spawn: 	state = running
+[probeE 12:33:39Z] e2 bout rc=0
+[probeE 12:33:39Z] e2 IMMEDIATE bs#2_after_teardown rc=0
+[probeE 12:33:39Z] e2b bs#1 rc=0
+[probeE 12:33:40Z] e2b bout rc=0
+[probeE 12:33:43Z] e2b bs#2_after_3s_gap rc=0
+[probeE 12:33:43Z] e3 bs#1 rc=0
+[probeE 12:33:44Z] e3 bout rc=0
+[probeE 12:33:44Z] e3 IMMEDIATE bs#2_unchanged rc=0
+[probeE 12:33:44Z] === STAGE E end
+[probeE 12:33:44Z] residue labels checked; LaunchAgents dir e0-file removed
+
+===== stageF =====
+[probeF 12:35:48Z] f1 bs#1 rc=0
+[probeF 12:35:49Z] f1 state: 	state = running
+[probeF 12:35:49Z] f1 bout rc=0
+[probeF 12:35:49Z] f1 IMMEDIATE bs#2_unchanged rc=5  <== teardown race, unchanged bytes
+[probeF 12:35:49Z] f1 bs#2 stderr=Bootstrap failed: 5: Input/output error
+Try re-running the command as root for richer errors.
+[probeF 12:35:49Z] f1 print2: 	state = SIGTERMed;	runs = 1;	last exit code = (never exited);		state = active;		state = active;
+[probeF 12:35:49Z] f2 bs#1 rc=0
+[probeF 12:35:50Z] f2 bout rc=0
+[probeF 12:35:50Z] f2 IMMEDIATE bs#2_sameinode_changed rc=5  <== teardown race, changed bytes (FULL r377 shape)
+[probeF 12:35:50Z] f2 bs#2 stderr=Bootstrap failed: 5: Input/output error
+Try re-running the command as root for richer errors.
+[probeF 12:35:50Z] f2 print2: 	state = SIGTERMed;	runs = 1;	last exit code = (never exited);		state = active;		state = active;
+[probeF 12:35:50Z] f3 bs#1 rc=0
+[probeF 12:35:51Z] f3 bout rc=0
+[probeF 12:35:56Z] f3 teardown drained after 5s
+[probeF 12:35:56Z] f3 bs#2_after_drain_changed rc=5
+[probeF 12:35:56Z] f3 bs#2 stderr=Bootstrap failed: 5: Input/output error
+Try re-running the command as root for richer errors.
+[probeF 12:35:56Z] f4 bs#1 rc=0
+[probeF 12:35:57Z] f4 bout rc=0
+[probeF 12:36:03Z] f4 drained 6s; IMMEDIATE bootstrap unchanged
+[probeF 12:36:03Z] f4 bs#2 rc=0
+[probeF 12:36:03Z] === STAGE F end
+[probeF 12:36:05Z] cleanup done
+
+===== stageG =====
+[probeG 12:37:38Z] g1 bs#1 rc=0
+[probeG 12:37:39Z] g1 oldpid==
+[probeG 12:37:39Z] g1 bootout rc=0
+[probeG 12:37:39Z] g1 bytes changed same-inode; retry loop begins
+[probeG 12:37:39Z] g1 t=+0s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:41Z] g1 t=+2s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:43Z] g1 t=+4s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:45Z] g1 t=+6s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:47Z] g1 t=+8s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:50Z] g1 t=+11s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:52Z] g1 t=+13s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:54Z] g1 t=+15s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:56Z] g1 t=+17s oldpid_alive=no bootstrap_rc=5
+[probeG 12:37:58Z] g1 t=+19s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:00Z] g1 t=+21s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:03Z] g1 t=+23s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:05Z] g1 t=+26s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:07Z] g1 t=+28s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:09Z] g1 t=+30s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:11Z] g1 t=+32s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:13Z] g1 t=+34s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:15Z] g1 t=+36s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:17Z] g1 t=+38s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:19Z] g1 t=+40s oldpid_alive=no bootstrap_rc=5
+[probeG 12:38:19Z] g1 no success within 40s — ABORT
+[probeG 12:38:19Z] g1 done, bootout cleanup rc=3
+[probeG 12:38:19Z] === STAGE G end
+
+===== stageH =====
+[probeH 12:42:15Z] h2 retry changed-bytes on g1 label at ~+6min: rc=5
+[probeH 12:42:15Z] h2 stderr=Bootstrap failed: 5: Input/output error
+[probeH 12:42:15Z] h3 bs#1 rc=0
+[probeH 12:42:16Z] h3 edited WHILE RUNNING (same inode)
+[probeH 12:42:16Z] h3 bootout rc=0
+[probeH 12:42:16Z] h3 IMMEDIATE bootstrap changed-bytes rc=5  <== C1-ORDER REMEDIATION SHAPE
+[probeH 12:42:16Z] h3 stderr=Bootstrap failed: 5: Input/output error
+[probeH 12:42:16Z] h3 print: 	state = SIGTERMed;	runs = 1;	last exit code = (never exited);		state = active;		state = active;
+[probeH 12:42:16Z] h4 bs#1 rc=0
+[probeH 12:42:17Z] h4 bootout rc=0
+[probeH 12:42:17Z] h4 bootstrap CHANGED bytes from DIFFERENT path rc=5
+[probeH 12:42:17Z] h4 stderr=Bootstrap failed: 5: Input/output error
+[probeH 12:42:17Z] === STAGE H end
+
+===== stageI =====
+[probeI 12:44:39Z] i5 g1 label restored to ORIGINAL bytes; bootstrap rc=5  <== expect 0 (byte-selective, label alive)
+[probeI 12:44:40Z] i5 g1 label re-changed; bootstrap rc=5  <== expect 5 (byte-selective rejection)
+[probeI 12:44:40Z] i5 cleanup bootstrap rc=5
+[probeI 12:44:40Z] i1 bs#1 rc=0
+[probeI 12:44:41Z] i1 pid=37980
+[probeI 12:44:42Z] i1 pid alive after SIGKILL: no
+[probeI 12:44:42Z] i1 bootout rc=0
+[probeI 12:44:42Z] i1 bootstrap CHANGED after SIGKILL-first rc=5  <== quiesce-first remedy shape
+[probeI 12:44:42Z] i1 stderr=Bootstrap failed: 5: Input/output error
+[probeI 12:44:42Z] i3 bs#1 rc=0
+[probeI 12:44:43Z] i3 pid=38031
+[probeI 12:44:43Z] i3 bootout rc=0
+[probeI 12:44:45Z] i3 pid exited fast: yes
+[probeI 12:44:45Z] i3 bootstrap CHANGED after fast-TERM-exit teardown rc=5  <== boundary: handler-present-instant-exit
+[probeI 12:44:45Z] i3 stderr=Bootstrap failed: 5: Input/output error
+[probeI 12:44:45Z] === STAGE I end
+
+===== stageJ =====
+[probeJ 12:46:26Z] j1 bs#1 rc=0
+[probeJ 12:46:36Z] j1 CHANGED after fast-TERM teardown +8s settle rc=5
+[probeJ 12:46:36Z] j1 stderr=Bootstrap failed: 5: Input/output error
+[probeJ 12:46:36Z] j2 bs#1 rc=0
+[probeJ 12:46:45Z] j2 CHANGED after slow teardown +8s settle rc=5
+[probeJ 12:46:45Z] j2 stderr=Bootstrap failed: 5: Input/output error
+[probeJ 12:46:45Z] j3 bs#1 rc=0
+[probeJ 12:46:54Z] j3 UNCHANGED reload rc=0
+[probeJ 12:47:04Z] j3 CHANGED after unchanged-reload cycle rc=5  <== POISON-CLEAR TEST
+[probeJ 12:47:04Z] j3 stderr=Bootstrap failed: 5: Input/output error
+[probeJ 12:47:04Z] j4 bs#1 rc=0
+[probeJ 12:47:14Z] j4 CHANGED after SIGKILL-first +8s rc=5
+[probeJ 12:47:14Z] j4 stderr=Bootstrap failed: 5: Input/output error
+[probeJ 12:47:15Z] j5 bs#1 rc=0
+[probeJ 12:47:24Z] j5 UNCHANGED at +8s single-poke rc=0
+[probeJ 12:47:24Z] === STAGE J end
+
+===== stageK =====
+[probeK 12:50:29Z] k1 bs#1 rc=0
+[probeK 12:50:38Z] k1 CHANGED sleep-class +8s rc=0
+[probeK 12:50:38Z] k2 bs#1 rc=0
+[probeK 12:50:39Z] k2 CHANGED fastterm +0s rc=5
+[probeK 12:50:40Z] k5 bs#1 rc=0
+[probeK 12:50:41Z] k5 CHANGED notrap(signal-death script) +0s rc=5
+[probeK 12:50:41Z] === STAGE K end
+
+===== c2-rerootcause-probe-matrix.sh validation run (committed script, fresh labels) =====
+[12:56:00Z] PASS t01 first-load any-form
+[12:56:00Z] PASS t02 dormant re-load script->script
+[12:56:00Z] PASS t03 nonexistent arg0 dormant
+[12:56:01Z] PASS t04 re-load gate exit-5 reproduction
+[12:56:10Z] PASS t05 unchanged-bytes reload after settle
+[12:56:12Z] PASS t06 Mach-O arg0 history clean re-load
+[12:56:12Z] PASS t07 fresh label same bytes clean
+[12:56:12Z] === matrix done: PASS=7 FAIL=0
+
+===== K6 single-poke expiry probe (appended at completion) =====
+[probeK6 12:54:26Z] k6 bs#1 rc=0
+[probeK6 12:54:27Z] k6 poisoned (script history); changed bytes staged; SLEEPING 1200s single-poke protocol
+[continuation] Original #564 session (sess_e21d04c9) hit a provider rate-limit and died at
+[continuation] 13:13:55Z while the k6 single-poke was still sleeping (12:54:26Z start, +1200 s).
+[continuation] Completing session re-verified the whole matrix first-hand before closing:
+[continuation]   driver c2-rerootcause-probe-matrix.sh re-run: PASS=7 FAIL=0 (13:37:00-13:37:11Z, fresh labels)
+[continuation]   dormant-label probes with REAL arg0 files (never executed): xiaomusic-arm64/bin/xiaomusic rc=0;
+[continuation]     irbridge-arm64/bin/python rc=0 (13:36Z, labels com.probe.disposable.r380v-v1/-v2, booted out)
+[continuation]   live anchor read-only throughout: com.xiaomusic.secure pid 95291 runs=1, 8090 LISTEN x2, GET / -> 401
+[continuation]
+===== stageK6 (completing-session re-run, single-poke protocol) =====
+[13:38:15Z] k6v2 bs#1 rc=0
+[13:38:17Z] k6v2 bootout rc=0 (label poisoned with script exec-history)
+[13:38:17Z] k6v2 changed bytes staged (same inode); t0=13:38:17Z; single poke at +1200s
+[13:58:17Z] k6v2 SINGLE-POKE at +1200s bootstrap_rc=0 err=[]
+[13:58:17Z] k6v2 print: state = xpcproxy (mid-spawn; synthetic program only); bootout issued; residue clean
+[13:58:17Z] k6v2 done; residue clean
+[continuation] K6 BOUND: changed-bytes re-load gate EXPIRES at <= +1200 s on the single-poke protocol
+[continuation] (accepted at exactly +1200 s). Combined with H1/H2 (still blocked at +4/+6 min), the
+[continuation] bound is >= 6 min and <= 20 min. Poke-count confound (G1/I5): zero intermediate
+[continuation] bootstrap attempts are permitted while waiting out the window.
