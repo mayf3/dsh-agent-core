@@ -1,0 +1,49 @@
+# raw/53 — intel-side runtime census (read-only, 2026-10-07T09:00:45Z)
+## console script /usr/local/bin/xiaomusic
+-rwxr-xr-x@ 1 yanfenma  admin  237 Apr 13  2025 /usr/local/bin/xiaomusic
+17e9f6272ba44d2ef8fbcd620b001de7f09c732c9f363880805265cbb6032aa2  /usr/local/bin/xiaomusic
+#!/usr/local/opt/python@3.13/bin/python3.13
+# -*- coding: utf-8 -*-
+import re
+import sys
+from xiaomusic.cli import main
+
+## interpreter identity (console-script shebang target)
+/usr/local/opt/python@3.13/bin/python3.13: Mach-O 64-bit executable x86_64
+Python 3.13.3
+lrwxr-xr-x@ 1 yanfenma  admin  43 Apr 13  2025 /usr/local/bin/python3.13 -> ../Cellar/python@3.13/3.13.3/bin/python3.13
+
+## live process exec (real framework path)
+  PID COMMAND
+ 1324 /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python /usr/local/bin/xiaomusic --config /Users/yanfenma/workspace/baby/xiaoai/conf/setting.json
+
+## pip show xiaomusic
+Name: xiaomusic
+Version: 0.3.78
+Summary: Play Music with xiaomi AI speaker
+Home-page: https://github.com/hanxi/xiaomusic
+Author: 
+Author-email: =?utf-8?b?5ra15pum?= <im.hanxi@gmail.com>
+License: MIT
+Location: /usr/local/lib/python3.13/site-packages
+Requires: aiofiles, aiohttp, apscheduler, fastapi, ga4mp, miservice-fork, mutagen, opencc-python-reimplemented, pillow, python-multipart, python-socketio, requests, sentry-sdk, starlette, uvicorn, watchdog, yt-dlp
+Required-by: 
+
+## selected resolved versions of direct deps (intel live env)
+aiohttp==3.11.16
+miservice-fork==2.8.0
+watchdog==6.0.0
+mutagen==1.47.0
+yt-dlp==2025.4.6.232826.dev0
+uvicorn==0.34.0
+fastapi==0.115.12
+starlette==0.46.1
+aiofiles==24.1.0
+ga4mp==2.0.4
+apscheduler==3.11.0
+opencc-python-reimplemented==0.1.7
+pillow==11.1.0
+python-multipart==0.0.20
+requests==2.32.3
+sentry-sdk==1.45.1
+python-socketio==5.13.0

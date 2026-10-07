@@ -1,0 +1,119 @@
+# raw/58 — G4 script run_xiaomusic.sh (content; secret-pattern scan CLEAN; METADATA-level classification)
+captured: 2026-10-07T09:01:11Z
+
+## intel-path reference count/lines
+2
+9:# 确保 PATH 包含 /usr/local/bin，否则 cron/launchd 找不到 xiaomusic 命令
+10:export PATH="/usr/local/bin:/usr/local/sbin:/opt/homebrew/bin:$PATH"
+
+## secret-pattern scan
+CLEAN (no credential-pattern matches)
+
+## full script content (sha256 preimage below)
+261b44b6af29012212e5e12098929a885853bdfc7bd1dc11534e6dc422dd756d  /Users/yanfenma/workspace/baby/xiaoai/run_xiaomusic.sh
+#!/bin/bash
+
+# 小爱音乐管理脚本
+# 使用方法: ./run_xiaomusic.sh {start|stop|restart|status|logs}
+#
+# 注意：launchd 通过此脚本 start 命令启动服务
+# 使用 exec 让 launchd 直接管理 xiaomusic 进程（PID 更准确）
+
+# 确保 PATH 包含 /usr/local/bin，否则 cron/launchd 找不到 xiaomusic 命令
+export PATH="/usr/local/bin:/usr/local/sbin:/opt/homebrew/bin:$PATH"
+
+XIAOMUSIC_LOG="/Users/yanfenma/workspace/baby/xiaoai/logs/xiaomusic.log"
+XIAOMUSIC_DIR="/Users/yanfenma/workspace/baby/xiaoai"
+
+start() {
+    # 创建日志目录
+    mkdir -p "$XIAOMUSIC_DIR/logs"
+
+    cd "$XIAOMUSIC_DIR"
+    # 使用 exec 让 launchd 直接管理 xiaomusic 进程
+    # 这样 PID 就是 xiaomusic 本身的 PID，不会出现 PID 不匹配的问题
+    exec xiaomusic --config "$XIAOMUSIC_DIR/conf/setting.json"
+}
+
+stop() {
+    echo "停止 xiaomusic..."
+    # 找到 xiaomusic 进程
+    PID=$(pgrep -f "xiaomusic --config" 2>/dev/null | head -1)
+    if [ -z "$PID" ]; then
+        echo "xiaomusic 未运行"
+        return 0
+    fi
+
+    kill $PID
+    for i in {1..10}; do
+        if ! kill -0 $PID 2>/dev/null; then
+            echo "✅ xiaomusic 已停止"
+            return 0
+        fi
+        sleep 1
+    done
+
+    kill -9 $PID 2>/dev/null
+    echo "✅ xiaomusic 已强制停止"
+}
+
+status() {
+    PID=$(pgrep -f "xiaomusic --config" 2>/dev/null | head -1)
+    if [ -n "$PID" ]; then
+        echo "✅ xiaomusic 正在运行 (PID: $PID)"
+        echo "   访问地址: http://localhost:8090"
+
+        # 检查 API
+        if curl -s -m 3 http://localhost:8090/cmdstatus > /dev/null 2>&1; then
+            echo "   Web服务: 正常"
+        else
+            echo "   Web服务: 异常"
+        fi
+    else
+        echo "❌ xiaomusic 未运行"
+    fi
+}
+
+logs() {
+    if [ -f "$XIAOMUSIC_LOG" ]; then
+        echo "查看日志文件: $XIAOMUSIC_LOG"
+        tail -f "$XIAOMUSIC_LOG"
+    else
+        echo "日志文件不存在: $XIAOMUSIC_LOG"
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        sleep 2
+        start
+        ;;
+    status)
+        status
+        ;;
+    logs)
+        logs
+        ;;
+    *)
+        echo "使用方法: $0 {start|stop|restart|status|logs}"
+        echo ""
+        echo "命令说明:"
+        echo "  start   - 启动 xiaomusic 服务 (launchd 使用 exec 模式)"
+        echo "  stop    - 停止 xiaomusic 服务"
+        echo "  restart - 重启 xiaomusic 服务"
+        echo "  status  - 查看服务状态"
+        echo "  logs    - 查看实时日志"
+        exit 1
+        ;;
+esac
+
+## ffmpeg resolution facts (plist PATH = /usr/local/bin first; no /opt/homebrew/bin in plist PATH)
+lrwxr-xr-x@ 1 yanfenma  admin  35 Sep  7 21:31 /opt/homebrew/bin/ffmpeg -> ../Cellar/ffmpeg/9.0.1_1/bin/ffmpeg
+lrwx------  1 yanfenma  admin  33 May 25 10:18 /usr/local/bin/ffmpeg -> ../Cellar/ffmpeg/8.1.1/bin/ffmpeg

@@ -26,3 +26,11 @@ Mutation boundary of this round:
 
 Post-batch production health check obligation: production services were never touched;
 no health delta possible from this round (user-level CLI installs only).
+
+Round r370 (2026-10-07, task agent-control#543, branch ac-task/543): added
+11_XIAOMUSIC_C2_ARM_CENSUS_PACKET_R1.md + raw/51-58 — xiaomusic C2 bounded
+NON_PRODUCTION census (intel py3.13.3 closure, ARM 3.13.14 isolated venv
+import proof, credential-path disposition, G4 run_xiaomusic.sh disposition)
+and XIAOMUSIC-PACKET-C2 frozen candidate. PRODUCTION_MUTATION=NO.
+(C1 packet/execution docs 09/10 live on preserved branch ac-task/528:
+6fa857f2, cb72b928.)

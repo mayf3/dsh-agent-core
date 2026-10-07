@@ -1,0 +1,49 @@
+# raw/56 — ARM venv closure proof (venv=/tmp/xiaomusic-c2-arm-census-r370/venv, disposable test identity)
+## interpreter
+3.13.14 arm64
+
+## isolated import proof (-I), transcript 2026-10-07T09:00:50Z
+INTERPRETER: 3.13.14 arm64 mode=-I
+xiaomusic import OK, dist version: 0.3.78
+xiaomusic.cli.main import OK: True
+  import OK: aiohttp
+  import OK: PIL
+  import OK: multidict
+  import OK: frozenlist
+  import OK: yarl
+  import OK: propcache
+  import OK: charset_normalizer
+  import OK: brotli
+  import OK: Cryptodome
+  import OK: apscheduler
+  import OK: fastapi
+  import OK: uvicorn
+  import OK: mutagen
+  import OK: miservice
+ALL CLOSURE IMPORTS PASS
+import-exit=0
+
+## compileall xiaomusic package
+COMPILEALL_OK
+
+## pip check
+No broken requirements found.
+
+## .so architecture audit (every binary must carry an arm64 slice)
+      62
+  43 Mach-O 64-bit bundle arm64]
+  43 	Mach-O 64-bit bundle x86_64
+  43 	Mach-O 64-bit bundle arm64
+   4          Mach-O 64-bit bundle arm64
+   2               Mach-O 64-bit bundle arm64
+   2                Mach-O 64-bit bundle arm64
+files WITHOUT any arm64 slice (per-file file(1) check, null-delimited):
+      0   (all 62 .so files carry an arm64 slice; x86_64 lines above are slices
+           inside Mach-O universal2 binaries, not x86_64-only binaries)
+
+## venv console script (shebang → venv python)
+-rwxr-xr-x@ 1 yanfenma  wheel  205 Oct  7 16:55 /tmp/xiaomusic-c2-arm-census-r370/venv/bin/xiaomusic
+#!/private/tmp/xiaomusic-c2-arm-census-r370/venv/bin/python3.13
+
+## venv size (disk budget)
+144M	/tmp/xiaomusic-c2-arm-census-r370/venv

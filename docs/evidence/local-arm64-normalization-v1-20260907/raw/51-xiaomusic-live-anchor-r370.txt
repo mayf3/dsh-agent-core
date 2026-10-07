@@ -1,0 +1,68 @@
+# raw/51 — xiaomusic fresh live anchor r370 (read-only, 2026-10-07T09:00:22Z)
+## launchctl print gui/502/com.xiaomusic.secure (identity/state excerpt)
+gui/502/com.xiaomusic.secure = {
+	active count = 1
+	path = /Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist
+	type = LaunchAgent
+	state = running
+
+	program = /usr/local/bin/xiaomusic
+	arguments = {
+		/usr/local/bin/xiaomusic
+		--config
+		/Users/yanfenma/workspace/baby/xiaoai/conf/setting.json
+	}
+
+	working directory = /Users/yanfenma/workspace/baby/xiaoai
+
+	stdout path = /Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stdout.log
+	stderr path = /Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stderr.log
+	inherited environment = {
+		SSH_AUTH_SOCK => /var/run/com.apple.launchd.AuKdam8SXY/Listeners
+	}
+
+	default environment = {
+		PATH => /usr/bin:/bin:/usr/sbin:/sbin
+	}
+
+	environment = {
+		OSLogRateLimit => 64
+		PATH => /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+		HOME => /Users/yanfenma
+		XPC_SERVICE_NAME => com.xiaomusic.secure
+	}
+
+	domain = gui/502 [100003]
+	asid = 100003
+	minimum runtime = 10
+	exit timeout = 5
+	runs = 1
+	pid = 1324
+	immediate reason = speculative
+	forks = 9
+
+## ps (live process, real exec path)
+  PID STARTED                      COMMAND
+ 1324 Thu Oct  1 19:34:27 2026     /usr/local/Cellar/python@3.13/3.13.3/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python /usr/local/bin/xiaomusic --config /Users/yanfenma/workspace/baby/xiaoai/conf/setting.json
+
+## port 8090
+COMMAND  PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+Python  1324 yanfenma   16u  IPv6 0xbef73570970d65b2      0t0  TCP *:8090 (LISTEN)
+Python  1324 yanfenma   17u  IPv4 0x6ba42d367cc58002      0t0  TCP *:8090 (LISTEN)
+
+## HTTP alive probe (unauthenticated; credential-bearing requests forbidden)
+GET / -> 401 in 0.002017s
+
+## secure launchd log metadata (metadata only)
+/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stdout.log size=5042 mtime=Oct  7 17:00:22 2026
+/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stderr.log size=676448960 mtime=Oct  7 17:00:22 2026
+
+## post-test re-anchor (after ARM venv tests): same pid / runs=1 / LISTEN / 401
+  PID STARTED
+ 1324 Thu Oct  1 19:34:27 2026    
+	state = running
+	runs = 1
+	pid = 1324
+		state = active
+		state = active
+2

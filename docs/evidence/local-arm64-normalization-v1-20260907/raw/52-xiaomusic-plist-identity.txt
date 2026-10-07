@@ -1,0 +1,27 @@
+# raw/52 — com.xiaomusic.secure.plist identity (metadata + structured dump; no secrets present)
+size=1100 mode=-rw------- owner=yanfenma:staff mtime=Sep 18 22:14:28 2026
+e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0  /Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist
+/Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist: OK
+{
+  "EnvironmentVariables" => {
+    "HOME" => "/Users/yanfenma"
+    "PATH" => "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+  }
+  "KeepAlive" => true
+  "Label" => "com.xiaomusic.secure"
+  "ProgramArguments" => [
+    0 => "/usr/local/bin/xiaomusic"
+    1 => "--config"
+    2 => "/Users/yanfenma/workspace/baby/xiaoai/conf/setting.json"
+  ]
+  "RunAtLoad" => true
+  "StandardErrorPath" => "/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stderr.log"
+  "StandardOutPath" => "/Users/yanfenma/workspace/baby/xiaoai/logs/secure_launchd_stdout.log"
+  "WorkingDirectory" => "/Users/yanfenma/workspace/baby/xiaoai"
+}
+
+## system-domain duplicate check
+NO xiaomusic entry in /Library/LaunchDaemons (no system-domain duplicate)
+
+## user-domain LaunchAgents xiaomusic entries
+-rw-------@   1 yanfenma  staff    1100 Sep 18 22:14 com.xiaomusic.secure.plist
