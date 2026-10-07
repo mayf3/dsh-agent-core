@@ -1,0 +1,44 @@
+# raw/59 — C2 cutover attempt + rollback transcript (2026-10-07T09:34:03Z)
+
+## PREIMAGE
+backup: /Users/yanfenma/Library/LaunchAgents/com.xiaomusic.secure.plist.bak-armnorm-c2-20261007-172814
+sha: e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0  mode 0600  cp -p  cmp BYTE-IDENTICAL
+
+## EDIT PRIMITIVE FAILURE 1 (caught by diff gate, BEFORE any reload)
+/usr/lib/PlistBuddy: absent on this OS ('no such file or directory')
+plutil -replace 'ProgramArguments.0' -string <venv> -> APPENDED element instead of replacing
+  => plist had 4 ProgramArguments (venv path, intel path, --config, setting.json); size 1100->1088
+  => discarded via cp -p byte restore from backup; sha re-verified == frozen; service never reloaded in this state
+
+## EDIT PRIMITIVE 2 (plistlib single-key edit — structured diff EXACTLY one line)
+plutil -lint OK; normalized diff vs backup = single ProgramArguments[0] line; mode 0600 preserved
+
+## RELOAD FAILURE
+stderr-offset-before=677197939
+launchctl bootout gui/502/com.xiaomusic.secure -> exit 0
+launchctl bootstrap gui/502 <plistlib-edited plist> -> FAILED: 5 Input/output error
+  (plutil -lint had PASSED on the rejected file; the ORIGINAL bytes bootstrap exit 0 immediately
+   during rollback — failure tracks the file serialization, not a bootout race)
+
+## ROLLBACK (immediate, per frozen contract)
+cp -p backup -> plist; sha-restored == e23d0371… EXACT
+launchctl bootstrap gui/502 -> exit 0 (no retry needed)
+service: state=running, NEW pid 23900, runs=1, program=/usr/local/bin/xiaomusic
+exec: /usr/local/Cellar/python@3.13/3.13.3/…/Python (intel x86_64 generation, byte-exact preimage)
+8090 LISTEN x2; GET / -> 401 in 9ms — ORIGINAL HEALTH RESTORED
+
+## POST-ROLLBACK LOG ANALYSIS (health + baseline classification)
+post-rollback segment: graceful shutdown lines of pid 1324 (17:30:03, bootout), startup of 23900
+2 Tracebacks = miservice miaccount login code 70016 登录验证失败 + 'conf/.mi.token file not exist'
+BASELINE: Oct-1 original startup window (head 400KB of same log) = 12x 70016, 1x .mi.token-missing,
+  47 tracebacks; steady-state 300KB pre-mutation = 604 'All retries failed' warnings
+  => Mi-login degradation is PRE-EXISTING environmental (token absent since Sep-18 hardening),
+     restart-attributable, NOT migration-attributable (ARM process never ran)
+
+## VENV REPLAY (service venv, built pre-cutover — RETAINED for next round)
+~/Library/PythonEnvs/xiaomusic-arm64: python 3.13.14 arm64, exact 54-pin replay (version-identical),
+pip check clean, all import asserts PASS, all .so arm64, console script shebang -> venv python, 144MB
+
+## FAILED PLIST ARTIFACT
+byte-exact reproduction of the rejected serialization at:
+  raw/60-c2-rejected-plist/rejected-by-launchd-bootstrap5.plist (NOT loaded, evidence only)

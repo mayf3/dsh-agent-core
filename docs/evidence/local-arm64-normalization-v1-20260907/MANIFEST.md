@@ -34,3 +34,11 @@ import proof, credential-path disposition, G4 run_xiaomusic.sh disposition)
 and XIAOMUSIC-PACKET-C2 frozen candidate. PRODUCTION_MUTATION=NO.
 (C1 packet/execution docs 09/10 live on preserved branch ac-task/528:
 6fa857f2, cb72b928.)
+
+Round r373 (2026-10-07, task agent-control#550, branch ac-task/543): added
+12_XIAOMUSIC_C2_CUTOVER_EXECUTION_ROLLBACK.md + raw/59-60 — XIAOMUSIC-PACKET-C2
+cutover attempt: preflight zero-drift, preimage pinned, venv replay PASS, but
+launchd bootstrap rejected the plistlib-serialized plist (exit 5) => exact
+rollback verified (original intel generation healthy, pid 23900, 401 alive).
+Packet errata recorded (edit primitive + canary scope). PRODUCTION_MUTATION=YES
+(bounded, rolled back).
