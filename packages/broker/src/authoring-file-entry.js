@@ -152,11 +152,15 @@ export function createAuthoringFileEntryTool({ manifest, requestFn, workspaceRoo
   /**
    * Evidence writes never traverse symlinks out of the workspace: an
    * existing evidence directory must realpath-contain inside the workspace,
-   * and an existing evidence file must be a regular non-symlink file. Any
-   * violation reads as a write failure (request line ⇒ the call aborts
-   * before the relay).
+   * and an existing evidence file must be a regular non-symlink file. The
+   * append itself goes through ONE descriptor that is identity-checked
+   * (dev/ino) against a fresh lstat of the path AFTER the open — a swap
+   * between the checks fails closed instead of writing through a redirected
+   * path. Any violation reads as a write failure (request line ⇒ the call
+   * aborts before the relay).
    */
   function appendEvidenceLine(evidenceFile, entry) {
+    let fd
     try {
       const dir = joinPath(evidenceFile, '..')
       let dirReal = null
@@ -168,13 +172,21 @@ export function createAuthoringFileEntryTool({ manifest, requestFn, workspaceRoo
       try {
         const fileStat = lstatSync(evidenceFile)
         if (fileStat.isSymbolicLink() || fileStat.isFile() === false) return false
-      } catch { /* absent — appendFileSync creates it */ }
+      } catch { /* absent — the flagged open creates it */ }
       mkdirSync(dir, { recursive: true })
-      appendFileSync(evidenceFile, `${JSON.stringify(entry)}\n`)
+      fd = openSync(evidenceFile, 'a')
+      const fdStat = fstatSync(fd)
+      if (fdStat.isFile() === false) return false
+      const pathStat = lstatSync(evidenceFile)
+      if (pathStat.dev !== fdStat.dev || pathStat.ino !== fdStat.ino) return false
+      if (pathStat.isSymbolicLink()) return false
+      appendFileSync(fd, `${JSON.stringify(entry)}\n`)
       return true
     } catch (cause) {
       log?.(`[broker] authoring file entry: evidence append failed: ${cause instanceof Error ? cause.message : String(cause)}`)
       return false
+    } finally {
+      if (fd !== undefined) closeSync(fd)
     }
   }
 
