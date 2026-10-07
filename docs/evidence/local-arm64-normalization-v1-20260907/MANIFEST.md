@@ -42,3 +42,18 @@ launchd bootstrap rejected the plistlib-serialized plist (exit 5) => exact
 rollback verified (original intel generation healthy, pid 23900, 401 alive).
 Packet errata recorded (edit primitive + canary scope). PRODUCTION_MUTATION=YES
 (bounded, rolled back).
+
+Round r376 (2026-10-07, task agent-control#558, branch ac-task/558): added
+13_XIAOMUSIC_C2_PACKET_ERRATA_R376.md + raw/61-62 +
+scripts/c2-apply-program-args0-edit.sh + scripts/c2-edit-primitive-proof.sh —
+XIAOMUSIC-PACKET-C2 errata repair, NON_PRODUCTION off-lane fixture proof only:
+root cause = launchd rejects TAB-indented XML (plistlib/plutil/default forms)
+while the 4/8-space-indented original form is accepted; frozen primitive =
+deterministic single-line byte substitution (candidate raw/61 sha 01db501d…,
+determinism + form/semantic/rollback guards + fail-closed refusals all PASS,
+raw/62 25/0); plutil round-trip and defaults-write candidates refuted on
+fixtures; canary amended (Mi-login-70016/.mi.token = environmental baseline,
+migration-attributable classes = zero-tolerance). Doc 11 §6 PLIST EDIT +
+CANARY_LOG rows amended in place ([AMENDED r376] markers). Live service
+untouched (read-only anchor; live plist sha byte-identical pre/post proof).
+PRODUCTION_MUTATION=NO.

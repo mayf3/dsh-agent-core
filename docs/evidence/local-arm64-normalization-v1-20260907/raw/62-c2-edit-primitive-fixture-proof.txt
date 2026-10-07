@@ -1,0 +1,62 @@
+== C2 EDIT-PRIMITIVE FIXTURE PROOF — 2026-10-07T10:59:56Z ==
+== host: macOS 26.6.2 / arm64 / darwin 25.6.0 ==
+== live preimage sha: e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0 (frozen: e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0) ==
+== scope: /tmp fixtures only; zero launchd/service mutation ==
+== fixtures made (cp -p, byte-identical to live preimage) ==
+== POSITIVE apply (fixture A) ==
+PRIMITIVE_APPLIED target=/tmp/c2-errata-r376/fx-a.plist new_sha256=01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34
+== PASS: primitive applies to fixture A (all internal guards green) ==
+== candidate sha A = 01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34 ==
+PRIMITIVE_APPLIED target=/tmp/c2-errata-r376/fx-b.plist new_sha256=01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34
+== PASS: primitive applies to fixture B — determinism ==
+== candidate sha B = 01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34 ==
+== PASS: determinism: candidate A bytes == candidate B bytes ==
+== GUARDS on candidate ==
+== PASS: byte diff vs preimage is exactly one changed line pair ==
+== PASS: changed lines are the two <string> lines and nothing else ==
+== PASS: zero tab bytes in candidate (launchd-rejected form absent) ==
+== PASS: form-identity: all non-target bytes identical to the launchd-accepted preimage form ==
+== PASS: semantic diff == exactly ProgramArguments[0]; array length 3; other keys deep-equal ==
+/tmp/c2-errata-r376/fx-a.plist: OK
+== PASS: plutil -lint candidate ==
+== PASS: plutil -convert xml1 round-trip semantic equality (Apple-parser agreement) ==
+== FROZEN candidate -> raw/61 sha256 = 01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34 ==
+== PASS: raw/61 sha == fixture candidate sha ==
+== ROLLBACK serialization compatibility ==
+== PASS: cp -p restore sha == frozen preimage ==
+PRIMITIVE_APPLIED target=/tmp/c2-errata-r376/fx-a.plist new_sha256=01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34
+== PASS: primitive re-applies on restored preimage ==
+== PASS: re-applied candidate byte-identical to frozen raw/61 ==
+== REFUSAL paths ==
+PRIMITIVE_REFUSED: backup sha drift: e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0 != 01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34
+== PASS(refused exit 9 as required): apply to already-edited target (idempotency = refuse) ==
+PRIMITIVE_REFUSED: target sha drift: e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0 != 0000000000000000000000000000000000000000000000000000000000000000
+== PASS(refused exit 9 as required): apply with drifted expected-sha ==
+PRIMITIVE_REFUSED: backup missing: /tmp/c2-errata-r376/fx-a-bak.plist.NOPE (rollback coupling is mandatory)
+== PASS(refused exit 9 as required): apply with missing backup (rollback coupling mandatory) ==
+== RED R1: plutil -replace ProgramArguments.0 misbehaves on array index (reproduced; banned primitive) ==
+  R1: ProgramArguments after plutil -replace: length=4 elements=['/Users/yanfenma/Library/PythonEnvs/xiaomusic-arm64/bin/xiaomusic', '/usr/local/bin/xiaomusic', '--config', '/Users/yanfenma/workspace/baby/xiaoai/conf/setting.json']
+== PASS: R1: plutil -replace does NOT leave a clean 3-element replacement (append/insert bug reproduced) ==
+== RED R2: plistlib dump edit (order-preserving) == raw/60 rejected bytes — root-cause closure ==
+==   raw/60 (rejected) sha = b8fcc4b3e2d2806d36ed1ed9785ebb2edaed15af4ac55ae445630d25220d0036 ==
+==   R2 plistlib dump sha  = b8fcc4b3e2d2806d36ed1ed9785ebb2edaed15af4ac55ae445630d25220d0036 ==
+== PASS: R2: byte-identical to the r373 launchd-rejected artifact (EIO 5) ==
+== PASS: R2: rejected form carries tab indentation; accepted preimage form does not ==
+== RED R3: plutil -convert xml1 emits tab-indented XML — doc-12 candidate (b) refuted ==
+== PASS: R3: round-trip output still tab-indented (would re-fail bootstrap identically) ==
+== PASS: R3b: even round-tripping the ORIGINAL also emits tabs + re-sorted keys (normalization destroys the accepted form) ==
+==   R3b head (key order re-sorted alphabetically, tab indent): ==
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+    	<key>EnvironmentVariables</key>
+    	<dict>
+== RED R5: defaults-write rewrite of ProgramArguments (alternative system primitive — form check) ==
+==   R5 output format: Apple binary property list ==
+==   R5 head: binary bplist00 (content dump suppressed to keep transcript textual) ==
+  R5: ProgramArguments=['/usr/local/bin/xiaomusic', '--config', '/Users/yanfenma/workspace/baby/xiaoai/conf/setting.json'] binary=True
+== PASS: R5: defaults write does NOT preserve the accepted XML serialization form (binary rewrite — refuted as candidate primitive) ==
+== LIVE anchor after all fixture work (read-only) ==
+== PASS: live plist sha still == frozen preimage (zero live effect) ==
+== OVERALL=PASS ==

@@ -113,17 +113,23 @@ replays the FROZEN pin set (raw/55) for determinism — see §9 GAP-1.
 | ARM_TARGET | `/opt/homebrew/opt/python@3.13/bin/python3.13` = Python **3.13.14 arm64** (pinned opt path) |
 | TARGET_IDENTITY | service venv `~/Library/PythonEnvs/xiaomusic-arm64` (mirrors C1 convention) + venv console script `bin/xiaomusic` as new ProgramArguments[0] |
 | REPLAY (venv build at cutover time) | `/opt/homebrew/opt/python@3.13/bin/python3.13 -m venv ~/Library/PythonEnvs/xiaomusic-arm64` ; `~/Library/PythonEnvs/xiaomusic-arm64/bin/pip install --index-url https://pypi.org/simple --only-binary=:all: -r <frozen requirements>` where requirements = raw/55 (54 pins, xiaomusic==0.3.78) ; then `pip check` + re-run the §3 isolated import asserts against the service venv |
-| PLIST EDIT | PlistBuddy: `ProgramArguments:0` → `/Users/yanfenma/Library/PythonEnvs/xiaomusic-arm64/bin/xiaomusic`. NOTHING else changes (config arg, WorkingDirectory, env, logs untouched). Normalized diff = exactly one line. `plutil -lint` required |
+| PLIST EDIT | **[AMENDED r376 → 13 §2]** primitive = `scripts/c2-apply-program-args0-edit.sh` (deterministic single-line byte substitution; candidate bytes pre-frozen `raw/61`, sha256 `01db501d…`, post-edit file MUST sha-match raw/61 BEFORE any reload). Original PlistBuddy wording SUPERSEDED: `/usr/lib/PlistBuddy` ABSENT on this OS; `plutil -replace ProgramArguments.0` INSERTS an element (4-arg corruption); plistlib dump / `plutil -convert xml1` / `defaults write` all emit launchd-rejected forms (tab-indented / binary) — proof 13 §1/§3, raw/62. ProgramArguments[0] → `/Users/yanfenma/Library/PythonEnvs/xiaomusic-arm64/bin/xiaomusic`. NOTHING else changes (config arg, WorkingDirectory, env, logs untouched). Normalized diff = exactly one line. `plutil -lint` required (note: lint ≠ launchd acceptance — form guard is the raw/61 sha match) |
 | RELOAD | user-domain `launchctl bootout gui/$(id -u)/com.xiaomusic.secure` → `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.xiaomusic.secure.plist` (C1 erratum inherited: `kickstart -k` alone does NOT load an on-disk plist edit). No sudo |
 | CANARY_PROCESS | launchctl print: state=running, NEW pid, runs=2, then stable / never-exit re-check |
 | CANARY_LISTEN | `*:8090` LISTEN held by the new pid |
 | CANARY_HTTP_ALIVE | `GET / → 401` within 30 s (auth-gated alive signal; NO credential-bearing or authenticated request may be synthesized against 8090) |
-| CANARY_LOG | `secure_launchd_stderr.log` gains xiaomusic startup line(s) for the new pid; **zero Traceback/ERROR** in the post-start window; `xiaomusic.log.txt` keeps rotating |
+| CANARY_LOG | `secure_launchd_stderr.log` gains xiaomusic startup line(s) for the new pid; **[AMENDED r376 → 13 §4]** zero MIGRATION-ATTRIBUTABLE traceback classes in the post-start window (ImportError/dyld/arm64-load/app-fatal/etc. = FAIL); known pre-existing Mi-login **70016 / .mi.token-missing** environmental baseline (raw/59: Oct-1 window 12× 70016, 47 tracebacks; steady-state 604 retry-warnings/300KB) is EXPECTED and non-failing; `xiaomusic.log.txt` keeps rotating |
 | CANARY_IDENTITY | new pid's exec = `~/Library/PythonEnvs/xiaomusic-arm64` framework Python, `file` = arm64 (txt-lib check per C1 style) |
 | CANARY_BUSINESS (soft, hardware) | owner-assisted speaker playback canary pending — like C1's device canary, do NOT synthesize; absence keeps BUSINESS_VERIFIED at HEALTH_LEVEL for the C2 slice |
 | ROLLBACK | `cp -p` restore of timestamped preimage backup `com.xiaomusic.secure.plist.bak-armnorm-c2-<ts>` (byte-copy, sha==ARTIFACT_SHA256, mode 0600 preserved) → bootout→bootstrap → verify pid + 8090 LISTEN + GET / → 401 + startup log. Intel python@3.13 Cellar, `/usr/local/bin/xiaomusic`, and `/usr/local/lib/python3.13/site-packages` remain untouched throughout (rollback needs none of them removed); ARM venv removal optional/additive |
 | POST-CUTOVER | re-measure Phase-6 gates (G3/G4 accounting per §5 residual note); update Product #483 truth C2-slice INSTALLED/ENABLED/BUSINESS_VERIFIED from evidence only |
 | PARALLEL_BOUNDARY | cutover is a live-listener (8090) restart = production-slot-gated separate round under standing authority; this packet is the frozen preimage/rollback/canary contract for that slot-holder |
+
+AMENDMENT RECORD: r373 cutover FAILED at first bootstrap (exit 5) → exact rollback; r376
+errata = root cause (tab-indented XML rejected by launchd), proven edit primitive, canary
+environmental-baseline classification, retry stop conditions — authoritative record
+`13_XIAOMUSIC_C2_PACKET_ERRATA_R376.md`; packet rows above amended in place with
+[AMENDED r376] markers; all other §6 rows unchanged.
 
 ## §7 CONFLICT_CHECK (fresh, 2026-10-07 ~08:45–08:57Z)
 
