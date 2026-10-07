@@ -17,14 +17,20 @@ Problem =
       live 3× (agent-control#191/#193/#195); the repo tooling still records nothing.
 
 Governing Spec =
-  docs/specs/AGENT_CORE_BACKUP_RETENTION_V1.md (names trusted-cp-deploy-install.sh as
-  expected implementation file; failure semantics: a failed deployment must never
-  reduce rollback capacity); TRUSTED_CONTROL_PLANE_DEPLOYMENT_HARDENING_V1
-  (docs/reports/…, accepted verification record; installer authority);
-  docs/specs/PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1.md (detection-not-
-  prevention doctrine; receipts as integrity authority).
+  docs/specs/AGENT_CORE_BACKUP_RETENTION_V1.md — status: accepted IN THIS REPO at
+  base d1e42f21; EXPECTED_IMPLEMENTATION_FILES names scripts/trusted-cp-deploy-install.sh
+  (+ operator helper); failure semantics: a failed deployment must never reduce
+  rollback capacity; Pin Model sanctions sidecar markers — covers the reuse record.
+  docs/reports/trusted-control-plane-deployment-hardening-v1.md — accepted
+  verification record (32/32 PASS) for the installer's own authority surface.
+  PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1 (detection-not-prevention,
+  receipts doctrine): accepted copy is NOT present in this repo at base d1e42f21
+  (canonical copy lives on a shared branch; docs/investigations census OBS-DCP-001:
+  do not transplant its acceptance status) — its doctrine is cited as background
+  only; acceptance status is NOT claimed for this base.
 
-Spec status = accepted (all three)
+Spec status = accepted (AGENT_CORE_BACKUP_RETENTION_V1 + hardening record, in-repo);
+  stage-isolation doctrine = background citation only, no acceptance claimed here
 
 Relevant investigations =
   docs/investigations/PRODUCTION_STAGE_ISOLATION_CENSUS_V1.md;
