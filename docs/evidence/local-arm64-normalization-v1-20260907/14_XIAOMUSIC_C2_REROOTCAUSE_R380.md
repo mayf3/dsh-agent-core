@@ -194,7 +194,19 @@ live irbridge anchor (transparently cited); §3 pgrep/401-latency corroborated
 independently (3.1 ms appended to raw/63).
 
 **Exact-head re-audit (blocker-union freeze rule, one repair pass + one re-audit):**
-PENDING — verdict to be appended below after this fix commit.
+RE-AUDIT of 71b00dea by the same independent reviewer = **REVISE, solely for one
+REPOSITORY_INVARIANT_VIOLATION**: every round-1 blocker/minor/note finding verified
+CLOSED (probe-list corrections, measured-bound restatement, remedy (B) ≥ +20 min
+single-poke, doc 13 §6 in-file marker, settle +6..9 s, raw/63 append-only correction
+block, §9 accuracy, live anchor untouched, no residual stale bound anywhere), but the
+committed MANIFEST.sha256 pin for doc 14 (`df402c97…`) matched neither the committed
+content (`cbd53336…`) nor any prior state — the regen had run before the §9 text landed,
+leaving one stale pin of 89. MINIMAL_CLOSURE applied in this commit: re-audit verdict
+appended here + MANIFEST.sha256 regenerated from the final tree (regen == committed,
+89/89, mechanical diff = zero delta). Per the freeze rule this closure requires no
+further re-audit beyond that mechanical check. Round r380 review loop CLOSED:
+round-1 REVISE → repair pass → re-audit REVISE (manifest pin only) → final closure
+commit (this one).
 
 ## §10 PRODUCTION_MUTATION = NO
 
