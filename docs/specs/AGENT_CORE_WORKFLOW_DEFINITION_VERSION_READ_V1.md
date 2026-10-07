@@ -1,6 +1,11 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_DEFINITION_VERSION_READ_V1
-status: proposed
+status: accepted
+accepted_date: 2026-10-08
+accepted_by: mayf3
+accepted_reviewed_head: 330ee934665cdac3d92a0c9608d72e3fe9711975
+independent_review_result: ACCEPT (r1 REVISE/1 mechanical blocker -> blocker-union repair 330ee934 -> exact-head re-audit ACCEPT)
+acceptance_delta_class: lifecycle_acceptance_only
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -19,12 +24,13 @@ owners: [repository-maintainers]
 
 # AGENT_CORE_WORKFLOW_DEFINITION_VERSION_READ_V1
 
-> STATUS: **proposed** — branch-local candidate (issue #555, same branch as
-> AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1, writer continuity for adjacent
-> Workflow Broker surfaces). Nothing merged or installed. The read endpoints,
-> their scope gate and the service-internal domain-owner check are and remain
-> svc-workflow's own accepted behavior — this candidate only exposes them
-> through the existing trusted broker relay.
+> STATUS: **accepted** (2026-10-08) — Owner mayf3 accepted both #496 capability
+> designs in the PR thread ("没问题", 23:01 UTC) after the same independent
+> review cycle binding `330ee934`. Acceptance is lifecycle-only (merge
+> authorization); installation and business acceptance remain separate
+> stages. The read endpoints, their scope gate and the service-internal
+> domain-owner check are and remain svc-workflow's own accepted behavior —
+> this capability only exposes them through the existing trusted broker relay.
 
 ## 1. Goal
 

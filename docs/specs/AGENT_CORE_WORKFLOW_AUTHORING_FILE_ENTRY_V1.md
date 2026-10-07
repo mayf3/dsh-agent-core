@@ -1,6 +1,11 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1
-status: proposed
+status: accepted
+accepted_date: 2026-10-08
+accepted_by: mayf3
+accepted_reviewed_head: 330ee934665cdac3d92a0c9608d72e3fe9711975
+independent_review_result: ACCEPT (r1 REVISE/1 mechanical blocker -> blocker-union repair 330ee934 -> exact-head re-audit ACCEPT)
+acceptance_delta_class: lifecycle_acceptance_only
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -19,11 +24,14 @@ owners: [repository-maintainers]
 
 # AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1
 
-> STATUS: **proposed** — branch-local candidate authored under the #562 Owner
-> dispatch (2026-10-07). Nothing here is merged or installed; the underlying
-> `replace_draft_graph` operation remains governed, unchanged, by
-> AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4 (accepted). Owner acceptance of
-> THIS candidate is a precondition for any merge/install of the entry.
+> STATUS: **accepted** (2026-10-08) — Owner mayf3 accepted both #496 capability
+> designs in the PR thread ("没问题", 23:01 UTC, following the explicit
+> two-design acceptance question) after the independent review cycle
+> (r1 REVISE/1 mechanical blocker -> repair -> exact-head re-audit ACCEPT at
+> `330ee934`). Acceptance is lifecycle-only: it binds the reviewed head and
+> authorizes merge; installation and business acceptance remain separate
+> stages. The underlying `replace_draft_graph` operation remains governed,
+> unchanged, by AGENT_CORE_WORKFLOW_DEFINITION_AUTHORING_V4 (accepted).
 
 ## 1. Goal
 
