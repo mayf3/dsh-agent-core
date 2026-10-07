@@ -53,7 +53,8 @@ import { maybeRegisterAuthoringFileEntry } from './authoring-file-entry.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
-  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowAssistanceManifests, okrManifests,
+  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowDefinitionReadManifest,
+  workflowAssistanceManifests, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
@@ -89,6 +90,7 @@ export const DEFAULT_MANIFESTS = [
   ...forumManifests,
   ...forumNormalManifests,
   ...workflowManifests,
+  workflowDefinitionReadManifest,
   ...workflowAssistanceManifests,
   ...okrManifests,
   ...agentDefinitionManifests,

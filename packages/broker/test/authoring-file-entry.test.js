@@ -259,6 +259,71 @@ test('evidence write failure aborts the call before the relay (no partial submis
   assert.ok(definition)
 })
 
+test('relay failure preserves UNKNOWN outcome (never disguised as invalid_arguments, never retried)', async (t) => {
+  const raw = JSON.stringify(graphArgs())
+  const { workspace, file } = await workspaceWithFile(t, 'args.json', raw)
+  let calls = 0
+  const { definition } = createAuthoringFileEntryTool({
+    manifest: workflowDefinitionAuthoringManifest,
+    requestFn: async () => { calls += 1; throw new Error('channel died mid-call') },
+    workspaceRoot: workspace,
+    evidenceFile: join(workspace, 'ev.jsonl'),
+  })
+  const envelope = await definition.execute({ path: file })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'outcome_unknown')
+  assert.match(envelope.error.detail, /UNKNOWN/)
+  assert.match(envelope.error.detail, /channel died mid-call/)
+  assert.equal(calls, 1)
+})
+
+test('unusable relay envelope also surfaces outcome_unknown', async (t) => {
+  const raw = JSON.stringify(graphArgs())
+  const { workspace, file } = await workspaceWithFile(t, 'args.json', raw)
+  const { definition } = createAuthoringFileEntryTool({
+    manifest: workflowDefinitionAuthoringManifest,
+    requestFn: async () => ({ ok: true }),
+    workspaceRoot: workspace,
+    evidenceFile: join(workspace, 'ev.jsonl'),
+  })
+  const envelope = await definition.execute({ path: file })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'outcome_unknown')
+})
+
+test('evidence directory symlink escaping the workspace fails the call before the relay', async (t) => {
+  const raw = JSON.stringify(graphArgs())
+  const { workspace, file } = await workspaceWithFile(t, 'args.json', raw)
+  const outsideDir = await mkdtemp(join(tmpdir(), 'afe-ev-outside-'))
+  t.after(() => rm(outsideDir, { recursive: true, force: true }))
+  const evidenceDir = join(workspace, '.workflow-authoring-file-entry')
+  await mkdir(evidenceDir, { recursive: true })
+  await rm(evidenceDir, { recursive: true })
+  await symlink(outsideDir, evidenceDir)
+  const { definition, relayCalls } = harness({ workspace, evidenceFile: join(evidenceDir, 'evidence.jsonl') })
+  const envelope = await definition.execute({ path: file })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'evidence_write_failed')
+  assert.equal(relayCalls.length, 0)
+})
+
+test('evidence file symlink is refused (write failure, no relay, no write-through)', async (t) => {
+  const raw = JSON.stringify(graphArgs())
+  const { workspace, file } = await workspaceWithFile(t, 'args.json', raw)
+  const evidenceFile = join(workspace, '.workflow-authoring-file-entry', 'evidence.jsonl')
+  await mkdir(join(evidenceFile, '..'), { recursive: true })
+  const outsideDir = await mkdtemp(join(tmpdir(), 'afe-ev-file-'))
+  t.after(() => rm(outsideDir, { recursive: true, force: true }))
+  await writeFile(join(outsideDir, 'stolen.jsonl'), 'x')
+  await symlink(join(outsideDir, 'stolen.jsonl'), evidenceFile)
+  const { definition, relayCalls } = harness({ workspace, evidenceFile })
+  const envelope = await definition.execute({ path: file })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'evidence_write_failed')
+  assert.equal(relayCalls.length, 0)
+  assert.equal((await readFile(join(outsideDir, 'stolen.jsonl'), 'utf8')).trim(), 'x')
+})
+
 test('response-evidence write failure never alters the returned envelope', async (t) => {
   const raw = JSON.stringify(graphArgs())
   const { workspace, file } = await workspaceWithFile(t, 'args.json', raw)

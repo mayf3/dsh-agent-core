@@ -12,6 +12,7 @@
 export { manifests as forumManifests, normalManifests as forumNormalManifests } from './forum.js'
 export { moderatorManifests as forumModeratorManifests } from './forum-moderation.js'
 export { manifests as workflowManifests } from './workflow.js'
+export { workflowDefinitionReadManifest } from './workflow-definition-read.js'
 export { workflowAssistanceManifests } from './workflow-assistance.js'
 export { manifests as okrManifests } from './okr.js'
 export { agentDefinitionManifests } from './agent-definition.js'
