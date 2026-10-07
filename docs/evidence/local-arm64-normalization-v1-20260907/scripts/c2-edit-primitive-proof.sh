@@ -4,6 +4,9 @@
 # No launchd mutation, no service reload; live file accessed read-only via cp -p.
 # Produces: raw/61-c2-candidate-plist.plist (frozen candidate bytes)
 #           raw/62-c2-edit-primitive-fixture-proof.txt (this transcript)
+# NOTE: re-running this driver OVERWRITES raw/61 and raw/62 in the evidence tree —
+# do not re-run after cutover acceptance without owner instruction (MANIFEST would
+# flag the drift, but the frozen artifacts would be replaced).
 set -u
 EV="/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-558/docs/evidence/local-arm64-normalization-v1-20260907"
 RAW="$EV/raw"
@@ -53,10 +56,18 @@ assert "determinism: candidate A bytes == candidate B bytes" test "$CAND_A" = "$
 
 # ---- byte/semantic/form guards on the candidate ----
 note "GUARDS on candidate"
-expect 0 "byte diff vs preimage is exactly one changed line pair" \
-  bash -c "[ \"\$(diff \"$FIX/fx-a-bak.plist\" \"$FIX/fx-a.plist\" | grep -c '^[<>]')\" = 2 ]"
-expect 0 "changed lines are the two <string> lines and nothing else" \
-  bash -c "diff \"$FIX/fx-a-bak.plist\" \"$FIX/fx-a.plist\" | grep '^[<>]' | grep -vc '<string>' | grep -q '^0$'"
+python3 - "$FIX/fx-a-bak.plist" "$FIX/fx-a.plist" "$NEW_ARG0" >>"$OUT" 2>&1 <<'PYEOF'
+import sys
+a = open(sys.argv[1], 'rb').read().splitlines(keepends=True)
+c = open(sys.argv[2], 'rb').read().splitlines(keepends=True)
+assert len(a) == len(c), f"line count changed {len(a)}->{len(c)}"
+d = [(x, y) for x, y in zip(a, c) if x != y]
+old = b"        <string>/usr/local/bin/xiaomusic</string>\n"
+new = b"        <string>" + sys.argv[3].encode() + b"</string>\n"
+assert d == [(old, new)], d
+PYEOF
+PYRC=$?
+expect 0 "changed lines are EXACTLY the expected old/new ProgramArguments[0] lines (nothing else)" test "$PYRC" -eq 0
 expect 0 "zero tab bytes in candidate (launchd-rejected form absent)" \
   bash -c "! grep -q \"\$(printf '\\t')\" \"$FIX/fx-a.plist\""
 python3 - "$FIX/fx-a-bak.plist" "$FIX/fx-a.plist" "$NEW_ARG0" >>"$OUT" 2>&1 <<'PYEOF'
@@ -105,12 +116,18 @@ assert "re-applied candidate byte-identical to frozen raw/61" \
 
 # ---- REFUSAL paths (fail-closed) ----
 note "REFUSAL paths"
-refuse "apply to already-edited target (idempotency = refuse)" \
+refuse "apply to already-edited target (sha gates refuse; idempotency = refuse)" \
   bash "$PRIM" "$FIX/fx-a.plist" "$FIX/fx-a-bak.plist" "$CAND_A" "$NEW_ARG0"
+cp "$FIX/fx-a.plist" "$FIX/fx-e1.plist"; cp "$FIX/fx-a.plist" "$FIX/fx-e1-bak.plist"
+refuse "apply with sha-consistent already-edited pair (exercises the old-line-count/arg0 guard past the sha gates)" \
+  bash "$PRIM" "$FIX/fx-e1.plist" "$FIX/fx-e1-bak.plist" "$CAND_A" "$NEW_ARG0"
 refuse "apply with drifted expected-sha" \
   bash "$PRIM" "$FIX/fx-a-bak.plist" "$FIX/fx-a-bak.plist" 0000000000000000000000000000000000000000000000000000000000000000 "$NEW_ARG0"
 refuse "apply with missing backup (rollback coupling mandatory)" \
   bash "$PRIM" "$FIX/fx-a-bak.plist" "$FIX/fx-a-bak.plist.NOPE" "$FROZEN_SHA" "$NEW_ARG0"
+cp -p "$FIX/fx-a-bak.plist" "$FIX/fx-e2.plist"; ln "$FIX/fx-e2.plist" "$FIX/fx-e2-link.plist" 2>>"$OUT"
+refuse "apply with TARGET and BACKUP the same inode (hardlink; rollback-coupling guard)" \
+  bash "$PRIM" "$FIX/fx-e2.plist" "$FIX/fx-e2-link.plist" "$FROZEN_SHA" "$NEW_ARG0"
 
 # ---- RED: reproduce the two proven r373 failure modes (fixture-only) ----
 note "RED R1: plutil -replace ProgramArguments.0 misbehaves on array index (reproduced; banned primitive)"
@@ -137,7 +154,7 @@ assert "R2: byte-identical to the r373 launchd-rejected artifact (EIO 5)" test "
 expect 0 "R2: rejected form carries tab indentation; accepted preimage form does not" \
   bash -c "grep -q \"\$(printf '\\t')\" \"$REJECTED\" && ! grep -q \"\$(printf '\\t')\" \"$FIX/fx-a-bak.plist\""
 
-note "RED R3: plutil -convert xml1 emits tab-indented XML — doc-12 candidate (b) refuted"
+note "RED R3: plutil -convert xml1 emits tab-indented XML — doc-12 §9 candidate (a) round-trip refuted"
 cp "$FIX/fx-r2.plist" "$FIX/fx-r3.plist"; plutil -convert xml1 "$FIX/fx-r3.plist" >>"$OUT" 2>&1
 expect 0 "R3: round-trip output still tab-indented (would re-fail bootstrap identically)" \
   bash -c "grep -q \"\$(printf '\\t')\" \"$FIX/fx-r3.plist\""
@@ -179,6 +196,8 @@ fi
 note "LIVE anchor after all fixture work (read-only)"
 assert "live plist sha still == frozen preimage (zero live effect)" \
   test "$(shasum -a 256 "$LIVE" | awk '{print $1}')" = "$LIVESTATED"
+launchctl print "gui/$(id -u)/com.xiaomusic.secure" 2>>"$OUT" | grep -E '^[[:space:]]+(state|pid|runs) =' | sed 's/^/  live: /' | tee -a "$OUT"
+curl -s -o /dev/null -w '  live: GET / -> %{http_code}\n' --max-time 5 http://127.0.0.1:8090/ | tee -a "$OUT"
 
 note "OVERALL=$OVERALL"
 [ "$OVERALL" = PASS ] || exit 1

@@ -12,8 +12,9 @@ mutation, NO playback synthesis. Live plist accessed READ-ONLY (cp -p to fixture
 NOTE ON DOC 12 §9: its proof suggestion ("dummy-label plist in user domain, then
 delete") is SUPERSEDED by this round's strictly fixture-only method — the current
 command forbids all launchd mutation. Substituted proof: byte-form identity of the
-candidate against a serialization launchd demonstrably accepted (the original bytes
-bootstrapped exit 0 twice on 2026-10-07: Sep-18 original load and the 09:35 rollback).
+candidate against a serialization form launchd demonstrably accepts — the original
+bytes loaded at the Sep-18 original start and bootstrapped exit 0 during the r373
+rollback (2026-10-07 17:31 local / raw/59 transcript stamped 09:34:03Z).
 
 ## §1 ROOT_CAUSE (failure of agent-control#550, r373)
 
@@ -40,8 +41,17 @@ Secondary finding (raw/62 RED R1): `plutil -replace 'ProgramArguments.0' -string
 on this OS does NOT replace the array element — it **inserts an extra element at the
 subscript position**, yielding a 4-element ProgramArguments
 `[ <new>, /usr/local/bin/xiaomusic, --config, setting.json ]` (r373 caught this
-pre-reload with the diff gate; reproduced on fixtures). Numeric subscripts in plutil
-keypaths are unusable for replacement. `/usr/lib/PlistBuddy` is absent on this OS.
+pre-reload with the diff gate; reproduced on fixtures; this corrects doc 12 §5's
+"APPENDED" wording — observed behavior is insert-at-subscript, operative conclusion
+identical: numeric subscripts in plutil keypaths are unusable for replacement).
+`/usr/lib/PlistBuddy` is absent on this OS.
+
+EVIDENCE SCOPE: the form conclusion rests on one rejected tab-form bootstrap vs the
+accepted space-form loads; fixtures cannot fully exclude the changed arg0 VALUE as an
+alternative trigger for that single rejection (lint passes and launchd resolves the
+program only at spawn, not at parse, so content-cause is unlikely but not fixture-
+falsifiable). The retry's stop-condition 4 (first failure → immediate rollback) is the
+final arbiter; the primitive's correctness depends only on preserving the accepted form.
 
 ## §2 EDIT_PRIMITIVE (frozen for the C2 retry round)
 
@@ -54,45 +64,48 @@ leaving every other byte of the accepted serialization EXACTLY unchanged.
 
 | FIELD | VALUE |
 |---|---|
-| SCRIPT | `scripts/c2-apply-program-args0-edit.sh` sha256 `38221ce357a93360234395bec70339231424dabdbc886a676603157c0f58f1ad` |
+| SCRIPT | `scripts/c2-apply-program-args0-edit.sh` sha256 `11c29f14ac13c53dcd730242e518315d45a43a4ad1bf37c64a384320f9c993b9` |
 | USAGE | `c2-apply-program-args0-edit.sh <TARGET_PLIST> <BACKUP_PLIST> <EXPECTED_PREIMAGE_SHA256> <NEW_ARG0>` |
 | DRIFT GATE | target AND backup sha256 must equal the frozen preimage sha `e23d0371695260f1a2aec5b4d3ce56c60bce088c21bec69baa9fb2d2325632e0` |
-| ROLLBACK COUPLING | refuses to run unless the cp -p backup exists and is sha-exact (idempotency: refuses when arg0 already = NEW_ARG0) |
+| ROLLBACK COUPLING | refuses to run unless the cp -p backup exists, is sha-exact, and is a DIFFERENT file (same-path/hardlink refused); idempotency: refuses when arg0 already = NEW_ARG0 |
 | PRE-GUARDS | old line occurs exactly once; NEW_ARG0 has no XML-escapable bytes; preimage ProgramArguments length 3 with [0] = old value; no duplicate elements |
 | CANDIDATE GUARDS | one-line byte diff; form-identity (non-target bytes identical); ZERO tab bytes (launchd-rejected form absent); plistlib semantic diff == exactly `ProgramArguments[0]`, array length 3, tail args + all other keys deep-equal; `plutil -lint` OK; `plutil -convert xml1` round-trip semantic equality (scratch copy only) |
-| APPLY | truncate+write on the SAME inode (preserves xattrs incl. `com.apple.provenance`, mode, owner), `fchmod 0600` |
+| APPLY | truncate+write on the SAME inode (preserves xattrs incl. `com.apple.provenance`, mode, owner), `fchmod 0600`. In-place, NOT atomic-rename: a crash/ENOSPC mid-write can truncate the live file — the sha-exact backup (mandatory) is the recovery artifact; post-apply sha guard + packet stop conditions forbid reloading unverified bytes |
 | POST-GUARDS | re-read sha == candidate sha; lint OK; byte diff vs backup == exactly one line pair |
 | CANDIDATE BYTES | pre-frozen at `raw/61-c2-candidate-plist.plist`, sha256 `01db501d925683f00f85a4d53361a818a869afa225792ea24f8080999c7e2c34` — the retry round's post-edit file must equal this sha exactly |
-| PROOF DRIVER | `scripts/c2-edit-primitive-proof.sh` sha256 `8f3fa44835d4c520616030c7917ab3e163e62e285bbe370da10c8590bb2de709` → transcript `raw/62-c2-edit-primitive-fixture-proof.txt` sha256 `4d1261bc5b89f0288b8bd5efb03214d86941bfb079d0ef3b75442b19481c5e5f` |
+| PROOF DRIVER | `scripts/c2-edit-primitive-proof.sh` sha256 `1a8a290e15324d76832750633249e3d3da4f8c9f41e4e71e719c3999d46321ee` → transcript `raw/62-c2-edit-primitive-fixture-proof.txt` sha256 `13fec3cb6eba42b0d252e909f3d18bbb5554ff186b07766b833494d24ade0ab6`. Driver re-run OVERWRITES raw/61-62 — do not re-run after cutover acceptance without owner instruction |
 
 ## §3 SERIALIZATION_PROOF (off-lane, fixtures only — raw/62, 2026-10-07T11:0xZ)
 
-OVERALL=PASS, 25 PASS / 0 FAIL, host macOS 26.6.2 arm64 darwin 25.6.0:
+OVERALL=PASS, 26 PASS / 0 FAIL, host macOS 26.6.2 arm64 darwin 25.6.0:
 
 1. POSITIVE: primitive applies to two independent fixture copies → **byte-identical
    candidates** (determinism), each == raw/61 sha.
-2. Byte guard: diff vs preimage = exactly one changed line pair (the `<string>` line 9).
+2. Byte guard: changed lines == exactly the expected old/new ProgramArguments[0] pair,
+   same line count, nothing else.
 3. Form guards: non-target bytes identical (mask-compare); zero tab bytes anywhere.
 4. Semantic guards: plistlib diff == exactly `ProgramArguments[0]`; length 3; tail args
    and all other keys deep-equal; `plutil -lint` OK; plutil round-trip semantic equality.
 5. Rollback serialization compatibility: `cp -p` restore → sha == frozen preimage →
    primitive re-applies → candidate byte-identical to raw/61 (the edit is deterministic
    on the restored preimage; the rollback artifact remains the exact accepted bytes).
-6. Refusals (fail-closed): already-edited target; drifted expected-sha; missing backup —
-   all refuse with exit 9, target untouched.
+6. Refusals (fail-closed, all exit 9, target untouched): already-edited target via sha
+   gates; sha-consistent already-edited pair exercising the old-line-count/arg0 guard;
+   drifted expected-sha; missing backup; TARGET==BACKUP same inode (hardlink).
 7. RED reproductions: R1 plutil -replace insert-bug (4-element corruption);
    R2 plistlib dump == raw/60 sha-exact (root-cause closure); R3 `plutil -convert xml1`
-   emits TAB-indented, key-re-sorted XML — doc-12 candidate (b) **refuted** (would
-   re-fail bootstrap identically); R3b round-tripping even the ORIGINAL destroys the
-   accepted form; R5 `defaults write` rewrites as **binary bplist** — form-destroying,
+   emits TAB-indented, key-re-sorted XML — doc-12 §9 candidate (a) round-trip **refuted**
+   (would re-fail bootstrap identically); R3b round-tripping even the ORIGINAL destroys
+   the accepted form; R5 `defaults write` rewrites as **binary bplist** — form-destroying,
    refuted.
 
 Launchd-consumability basis (off-lane substitute for a live load): the candidate's
-serialization form is byte-form-identical to the file launchd accepted twice on
-2026-10-07 (original load + 09:35 rollback bootstrap exit 0), with exactly one content
-line changed; every serializer that produces a DIFFERENT form (plistlib tabs, plutil
-round-trip, defaults binary) is proven-refuted on fixtures. Residual risk: none
-identified short of the reload itself, which stays production-slot-gated.
+serialization form is byte-form-identical to the file launchd accepts — loaded at the
+Sep-18 original start and bootstrapped exit 0 during the 2026-10-07 rollback — with
+exactly one content line changed; every serializer that produces a DIFFERENT form
+(plistlib tabs, plutil round-trip, defaults binary) is proven-refuted on fixtures.
+Residual risk: none identified short of the reload itself, which stays
+production-slot-gated (§1 evidence-scope note + §6 stop conditions bound it).
 
 ## §4 CANARY_ERRATA (amends packet §6 CANARY_LOG; implements doc 12 §7)
 
@@ -160,9 +173,25 @@ and agent-control#556 (Product #388, agent-control controller/dashboard install+
 — both surfaces disjoint from com.xiaomusic.secure / xiaomusic venv / port 8090 /
 dsh-agent-core evidence tree. This round's writes: this evidence tree (docs 13, raw/61-62,
 scripts/c2-*, doc 11 §6 amendments, MANIFEST) + /tmp/c2-errata-r376 fixtures (disposable).
+The proof transcript records live-state METADATA only (launchctl state/pid/runs lines and
+the unauthenticated HTTP status code — no log payloads, no credential-bearing requests).
 PRODUCTION_MUTATION = NO: zero launchd mutation (live file read-only, zero reload of any
 label), zero service impact (live sha re-anchored unchanged post-proof), zero
 credential/config/data mutation, zero credential content reads (plist census-verified
 credential-free; setting.json/admin-credentials/.mi.token/logs untouched), no sudo,
 no playback synthesis. Secret guard: docs/raw/scripts added here contain no credential
 bytes. MANIFEST.sha256 regenerated.
+
+## §8 INDEPENDENT REVIEW (exact-head round-1, review of commit af9e5c9f)
+
+VERDICT = **PASS / LOAD_BEARING_GAPS = 0**. The independent reviewer reproduced on
+private /tmp fixtures: the frozen candidate bytes (primitive exit 0 → sha `01db501d…`
+== raw/61, mode 0600 preserved, same-inode apply), the R2 raw/60 byte-exact closure
+(`b8fcc4b3…`), the indentation-only form delta, MANIFEST 86/86, and the read-only live
+anchor (pid 23900, runs=1, 8090 LISTEN ×2, GET / → 401; plist sha `e23d0371…` exact).
+Findings (3 minor + 8 notes, none load-bearing) applied in the same-round fix commit:
+timestamp/acceptance-event wording fixed; doc-12 §9 candidate-(a) label corrected;
+TARGET==BACKUP same-inode refusal added; byte-diff assert strengthened to exact
+old/new-line equality; arg0-guard refusal path now explicitly exercised; in-place-apply
+mid-write caveat + driver-overwrite warning documented; APPENDED→INSERT correction
+noted vs doc 12 §5; live-state metadata capture added to the transcript.

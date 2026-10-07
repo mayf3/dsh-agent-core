@@ -10,17 +10,22 @@
 # Usage:
 #   c2-apply-program-args0-edit.sh <TARGET_PLIST> <BACKUP_PLIST> <EXPECTED_PREIMAGE_SHA256> <NEW_ARG0>
 #
-# Contract (fail-closed, all guards must pass before the target is touched):
+# Contract (fail-closed; pre-guards 1-5 all pass BEFORE the target is touched):
 #   1. TARGET sha256 == EXPECTED_PREIMAGE_SHA256 (drift gate) and BACKUP sha256 too.
 #   2. TARGET parses (plistlib) with ProgramArguments length 3 and [0] == OLD_ARG0.
 #   3. OLD_ARG0 line (8-space indent form) occurs EXACTLY once in the bytes.
 #   4. NEW_ARG0 contains no XML-escapable bytes (& < > ' ").
-#   5. Candidate built purely in memory; guards: one-line byte diff vs preimage,
-#      form-identity (non-changed bytes identical), zero tab bytes (launchd-form guard),
-#      plistlib semantic diff == exactly ProgramArguments[0], plutil -lint OK,
-#      plutil -convert xml1 round-trip semantic equality (scratch copy only).
+#   5. TARGET and BACKUP are distinct files (same-inode refused: protects rollback coupling).
+#   Candidate guards (in temp, before apply): one-line byte diff vs preimage,
+#   form-identity (non-changed bytes identical), zero tab bytes (launchd-form guard),
+#   plistlib semantic diff == exactly ProgramArguments[0], plutil -lint OK,
+#   plutil -convert xml1 round-trip semantic equality (scratch copy only).
 #   6. Apply = truncate+write on the SAME inode (preserves xattrs/mode/owner), fchmod 0600.
-#   7. Post-apply: re-read target, sha == candidate sha, lint OK, byte-diff vs backup == 1 line.
+#      NOTE: in-place, not atomic-rename — a crash/ENOSPC mid-write can truncate the live
+#      file; the sha-exact BACKUP (mandatory, verified above) is the recovery artifact.
+#   7. Post-apply: re-read target, sha == candidate sha, lint OK, byte-diff vs backup == 1 line
+#      (these three guards fire after the write; on failure the file stays edited and the
+#      backup remains the rollback artifact — reload is then forbidden per packet stop conditions).
 # Exit 0 only if every guard passed (idempotency: refuses if TARGET arg0 already == NEW_ARG0).
 set -u
 TARGET=$1; BACKUP=$2; EXPECTED_SHA=$3; NEW_ARG0=$4
@@ -33,6 +38,7 @@ command -v python3 >/dev/null || die "python3 not on PATH"
 command -v plutil   >/dev/null || die "plutil not on PATH"
 [ -f "$TARGET" ] || die "target missing: $TARGET"
 [ -f "$BACKUP" ]  || die "backup missing: $BACKUP (rollback coupling is mandatory)"
+[ "$TARGET" -ef "$BACKUP" ] && die "target and backup are the same file (rollback coupling destroyed)"
 
 TSHA=$(shasum -a 256 "$TARGET" | awk '{print $1}')
 BSHA=$(shasum -a 256 "$BACKUP" | awk '{print $1}')
@@ -98,7 +104,7 @@ PYEOF
 rm -f "$RT"
 
 CSHA=$(shasum -a 256 "$CAND" | awk '{print $1}')
-python3 - "$TARGET" "$CAND" <<'PYEOF' || { rm -f "$CAND"; die "atomic apply failed"; }
+python3 - "$TARGET" "$CAND" <<'PYEOF' || { rm -f "$CAND"; die "in-place apply failed"; }
 import sys, os, stat
 target, cand = sys.argv[1], sys.argv[2]
 data = open(cand, 'rb').read()
