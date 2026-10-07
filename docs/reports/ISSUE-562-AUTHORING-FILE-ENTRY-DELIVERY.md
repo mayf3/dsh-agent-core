@@ -69,6 +69,30 @@ Then independently read back the DRAFT `a85253b1-d887-49cf-b28d-57c456a1c710` of
 `workflow_definition_read.get_definition { domainId: <blog-domain>, definitionId: <blog-definition> }`
 and verify the PUBLISHED version row exposes the exact `context_schema` (required: title/description/acceptanceCriteria/sourceArtifactRef per the #555 diagnostics); confirm a nonexistent/foreign definition honestly returns `definition_not_found` with requestId, and that pre-creation input can now be composed from the precise schema WITHOUT touching global instance enumeration. Then, through the agent's normal `workflow_execute`, decide creation per the existing same-domain dedup contracts (this round creates nothing itself).
 
+## 4b. Install packet (prepared; surgical, serialized; apply is a privileged Owner step)
+
+Live serving topology, located by read-only evidence (pids/paths, not assumptions):
+
+- Control plane serving the agents: pid 99017 `node /usr/local/libexec/agent-core/app/scripts/production-runtime.mjs --root /Users/authsvc/.agent-core` (launchd; parent of all per-agent children). A SECOND runtime pid 1329 (workspace clone `~/workspace/project/production-dsh-agent-core` @549dace, 73 dirty, root `~/.agent-core`) and scheduler-v2 pid 1328 (`dsh-agent-core-main`, root `~/.agent-core-scheduler-v2`) coexist — do NOT confuse them; the agents' parent is the app-dir runtime.
+- Family steward child: pid 273 (`DSH_AGENT_ID=agt_family-steward-agent`), harness CLI from `/usr/local/libexec/agent-core/harness`, `DSH_HOME=/Users/authsvc/.agent-core/homes/agt_family-steward-agent`, `DSH_PRIMARY_WORKSPACE=/Users/yanfenma/.openclaw/groups/workspace-oc_6331d216dd4911f0966d3683f8451ad4` (the family Feishu chat workspace — the args file goes THERE), `AGENT_CORE_DEPLOYED_SHA=d602b592…`.
+- Deployed code generation: `d602b592` (2026-09-17, PR #303; a sealed generation of SCHEDULER_CONTROL_PLANE lineage). Installed `broker/src/index.js` is byte-identical to d602b59. authsvc = uid 505 (owns installed app files + agent homes); runtime processes run as yanfenma (uid 502).
+- Broker resolution chain for children: `<DSH_HOME>/profiles/agent-core-production` → harness → `app/node_modules/@agent-core/bundle-broker` → `app/packages/broker` (authsvc-owned). So the install target is EXACTLY `/usr/local/libexec/agent-core/app/packages/broker/src/`.
+
+**Conflict conclusion (precise):** origin/main has NOT moved (5181c211 still tip; no concurrent writer on packages/broker). Between deployed base d602b59 and my base main, `index.js` drifted 124 lines and `manifests.js` was CREATED (manifest hub refactor) — third-party drift my files must NOT carry. My own hunks' regions have ZERO overlap with that drift (mechanically checked), so the correct install is a surgical 4-file closure against the DEPLOYED base:
+
+1. `packages/broker/src/authoring-file-entry.js` — NEW file, verbatim from the branch.
+2. `packages/broker/src/capabilities/workflow-definition-read.js` — NEW file, verbatim.
+3. `packages/broker/src/index.js` — surgical hunks onto the d602b59 version (direct-style imports for both new modules, `authoringFileEntry` config key after `fixtureSelfAssert`, `workflowDefinitionReadManifest,` in DEFAULT_MANIFESTS after the workflow spread, registration block after `registerCapabilities`) — the exact port proven below.
+4. NO `manifests.js` change on the deployed tree (it does not exist there; the branch's manifests.js edit is main-line-only and rides the normal PR merge later).
+
+**Preview proof (executed locally on a temp worktree at d602b59, zero production touch):** patched deployed `index.js` loads; ALL 21 tests pass on the preview tree (incl. the DEPLOYED generation's parent-rpc-relay with the HR-specific stop barrier); the delivery pipe re-runs with the real 57,593-byte args file and the gateway capture is BYTE-identical.
+
+**Apply prerequisites (Owner, serialized with B7/#595 which is currently source-stage-only in ac-592 — no live install activity to collide with):**
+- Privileges: installed files are authsvc:authsvc (uid 505); the write step requires the existing admin/deploy path (trusted-cp deploy / sealed-generation runner pattern per PRODUCTION_STAGE_ISOLATION_AND_ARTIFACT_INTEGRITY_V1) — NOT writable from the yanfenma session that runs the agents.
+- Gates: preimage drift check (installed bytes == d602b59 bytes at capture), untouched-guard on the live line (relay/gateway/transport/registry/workflow.js/wda capability), post-install in-place smoke via the runtime's own node, atomic rollback to preimages.
+- Activation: broker code is loaded at child spawn — new tools appear for an agent after its DSH child respawns (next runtime-managed restart/turn cycle); no svc/auth/data change.
+- Post-install acceptance: runbook §4 cases A (family steward: place args file in the OpenClaw group workspace above, one tool call, independent read-back zero-diff, 16-example re-validation) and B (blog agent: `workflow_definition_read.get_definition` precise schema; honest 404 on foreign definitions).
+
 ## 5. Honest boundaries / remaining blockers
 
 - PENDING INSTALL (shared runtime, serialized with B7/#595): everything at INSTALLED/ENABLED/BUSINESS stage. Local evidence is mock-endpoint verification of the real pipeline — NOT production acceptance.
