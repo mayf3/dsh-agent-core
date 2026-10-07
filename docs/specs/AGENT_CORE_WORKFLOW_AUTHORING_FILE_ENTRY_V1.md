@@ -103,7 +103,12 @@ result/error envelope including the downstream `requestId` when present)
 after it. Evidence paths never traverse symlinks out of the workspace (r2
 amendment): an existing evidence directory must realpath-contain inside the
 workspace and an existing evidence file must be a regular non-symlink file —
-any violation reads as a write failure. A request-line write failure aborts
+any violation reads as a write failure; the append descriptor is
+identity-checked against a fresh lstat after open. Documented residual
+(same review): a pre-planted HARDLINK target passes the symlink checks and
+receives the evidence bytes — same-uid adversaries already control their own
+files, so no boundary is crossed; the symlink-escape class itself is closed
+and race fail-closed. A request-line write failure aborts
 the call (fail loud, nothing submitted). A response-line write failure never
 alters the returned envelope (the request line already carries the mandatory
 args/hash evidence; the failure is logged to stderr).

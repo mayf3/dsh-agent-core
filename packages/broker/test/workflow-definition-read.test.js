@@ -1,5 +1,7 @@
 /**
  * AGENT_CORE_WORKFLOW_DEFINITION_VERSION_READ_V1 (candidate, issue #555) —
+ * (flat test dir: packages/broker/test/capabilities sat at its 20-children
+ * structure ceiling — CODE_STRUCTURE_GUARDRAILS_V1 DIRECTORY_MAX_CHILDREN.)
  * the same-domain precise definition/version schema read capability:
  * manifest pins + allow / deny / missing-field behavior over the REAL
  * transport against mock auth/svc servers. Read-only: GET bindings carry no
@@ -9,11 +11,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { workflowDefinitionReadManifest } from '../../src/capabilities/workflow-definition-read.js'
-import { DEFAULT_MANIFESTS } from '../../src/index.js'
-import { validateManifest } from '../../src/schema.js'
-import { createHttpTransport } from '../../src/transport.js'
-import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+import { workflowDefinitionReadManifest } from '../src/capabilities/workflow-definition-read.js'
+import { DEFAULT_MANIFESTS } from '../src/index.js'
+import { validateManifest } from '../src/schema.js'
+import { createHttpTransport } from '../src/transport.js'
+import { json, mockTargets, startMockServer, startTokenServer, wire } from '../test-support/capability-fixtures.js'
 
 const VERSION_ROW = {
   id: 'ver-fc9b0966',

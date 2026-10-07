@@ -17,7 +17,7 @@
 
 | File | Change |
 |---|---|
-| `packages/broker/src/authoring-file-entry.js` | NEW (376 lines): `workflow_definition_authoring_file(path, expectedSha256?)` — single-operation lossless file entry; r2: one-descriptor contained read (pre/post-open containment + dev/ino identity), evidence path symlink hardening, relay loss → `outcome_unknown` |
+| `packages/broker/src/authoring-file-entry.js` | NEW (388 lines): `workflow_definition_authoring_file(path, expectedSha256?)` — single-operation lossless file entry; r2: one-descriptor contained read (pre/post-open containment + dev/ino identity), evidence path symlink hardening, relay loss → `outcome_unknown` |
 | `packages/broker/src/index.js` | import + config key `authoringFileEntry` (default true) + child-mode registration block + one `DEFAULT_MANIFESTS` entry |
 | `packages/broker/src/capabilities/workflow-definition-read.js` | NEW (120 lines, pure data): `workflow_definition_read` — `list_definitions` / `get_definition`, GET-only, `workflow.read`, same-domain (svc H-5) — #555 |
 | `packages/broker/src/capabilities/manifests.js` | +1 re-export line (convention) |
@@ -37,7 +37,7 @@ config.
 
 | Stage | State | Evidence |
 |---|---|---|
-| SOURCE | **DONE** — commit `b3e766f8` on `ac-562/authoring-file-entry`; 13/13 new tests GREEN (RED first), broker suite 517/517, agent-router failures = the 5 pre-existing env failures reproduced identically on clean base | commit; test output |
+| SOURCE | **DONE** — final head of the reviewed delta (branch `ac-562/authoring-file-entry`); 21/21 new-candidate tests GREEN (16 file-entry unit incl. hardening + runtime-entry + 4 definition-read), broker suite 525/525, agent-router failures = the 5 pre-existing env failures reproduced identically on clean base | commit; test output |
 | BUILD | **N/A as a separate step** — the package is zero-dependency ESM executed directly by the production node runtime; verification ran on the same node v25.6.1 binary the installed runtime uses (`/usr/local/bin/node`) | runtime tests |
 | INSTALLED | **NOT INSTALLED** — `/usr/local/libexec/agent-core/app` is untouched. Install happens ONLY via the Owner's formal process (see §4). Observed pre-existing drift (not ours, do not fix here): installed `parent-rpc-relay.js` matches `53b6536f` (2026-09-29) while main has the newer generic stop barrier; irrelevant to this entry (the BROKER_RPC_METHOD contract is identical in both) | diff vs installed |
 | ENABLED | **NOT ENABLED** — the tool appears for an agent child only after install, and only when `$DSH_PRIMARY_WORKSPACE` resolves (fail-closed skip otherwise) | `maybeRegisterAuthoringFileEntry` |
