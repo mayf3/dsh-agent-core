@@ -96,8 +96,10 @@ def verify_packet(cfg, cfg_dir, packet_root, expect_top_seal=None):
     status, details = findings_status(pm.verify_seal(packet_root, kind=cfg["packet"]["kind"])[0])
     add("TOP_SEAL", True, status, details)
     if expect_top_seal:
-        top_manifest = packet_root / pm.MANIFEST_NAME
-        observed = pm.sha256_file(top_manifest) if top_manifest.is_file() else None
+        # The external anchor is the digest of the top SEAL.json bytes — the
+        # same value the receipt emits as topSealSha256 — not the manifest's.
+        top_seal_path = packet_root / pm.SEAL_NAME
+        observed = pm.sha256_file(top_seal_path) if top_seal_path.is_file() else None
         status = "PASS" if observed == expect_top_seal else "FAIL"
         add("EXPECTED_TOP_SEAL", True, status,
             [] if status == "PASS" else [{"code": "TOP_SEAL_ANCHOR_MISMATCH",

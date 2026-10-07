@@ -2,7 +2,7 @@
 
 All fixtures are synthetic temporary trees: a tiny git repo, an overlay, a
 stage input and a frozen file. No real packet, agent, host, business or
-incident data is used. Run: python3 scripts/lib/release-packet/test_release_packet.py
+incident data is used. Run: python3 scripts/lib/deployment-reuse/release-packet/test_release_packet.py
 """
 
 import json
@@ -47,7 +47,8 @@ class Fixture:
         (self.root / "frozen" / "frozen-bundle.bin").write_bytes(b"\x00frozen-bytes\x00")
 
     def _git(self, *args):
-        subprocess.check_output(["git", "-C", str(self.repo)] + list(args), env=dict(os.environ))
+        out = subprocess.check_output(["git", "-C", str(self.repo)] + list(args), env=dict(os.environ))
+        return out.decode().strip() if args and args[0] == "rev-parse" else None
 
     def config(self, **overrides):
         cfg = {
@@ -331,7 +332,7 @@ class RepairByRebuild(PacketTestBase):
 class TopSealAnchor(PacketTestBase):
     def test_anchor_rejects_fully_reforged_packet(self):
         cfg, cfg_path, _ = self.build()
-        receipt_seal = pm.read_seal(self.fx.packet)["manifestSha256"]
+        anchor = pm.sha256_file(self.fx.packet / pm.SEAL_NAME)  # the receipt's topSealSha256
         (self.fx.packet / "operation-source" / "app-src" / "app.txt").write_text("reforged body\n")
         # full self-consistent reforge: layer pair + top pair regenerated over tampered bytes
         pm.write_manifest(self.fx.packet / "operation-source", exclude={pm.MANIFEST_NAME, pm.SEAL_NAME})
@@ -339,10 +340,11 @@ class TopSealAnchor(PacketTestBase):
         self.reforge_top(cfg)
         plain = self.verify(cfg, cfg_path)
         self.assertEqual("PASS", rp.aggregate(plain)[0])  # self-consistent forgeries verify clean
-        checks = self.verify(cfg, cfg_path, expect_top_seal=receipt_seal)
+        checks = self.verify(cfg, cfg_path, expect_top_seal=anchor)
         self.assert_blocked(checks, "EXPECTED_TOP_SEAL", "TOP_SEAL_ANCHOR_MISMATCH")
-        checks = self.verify(cfg, cfg_path, expect_top_seal=pm.read_seal(self.fx.packet)["manifestSha256"])
-        self.assertEqual("PASS", rp.aggregate(checks)[0])  # untouched packet passes with the fresh anchor
+        checks = self.verify(cfg, cfg_path,
+                             expect_top_seal=pm.sha256_file(self.fx.packet / pm.SEAL_NAME))
+        self.assertEqual("PASS", rp.aggregate(checks)[0])  # untouched packet passes with its own anchor
 
 
 class ConfigSafety(PacketTestBase):

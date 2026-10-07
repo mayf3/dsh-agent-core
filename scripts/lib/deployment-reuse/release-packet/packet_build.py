@@ -5,18 +5,22 @@ Generates the packet from the unique source plus the fixed config: layers
 copy artifacts with sha256 sidecars, rendered command files, recomputed pin
 documents, then bottom-up sealing (per-layer manifest+seal, then top).
 Refusals happen before or during materialization; a failed build leaves no
-half-built packet behind. There is no in-place re-seal: the only repair path
-is rebuilding from the source, so batch-editing documents can never turn a
-failure into PASS.
+half-built packet behind. `--rebuild-existing` stages the regeneration in a
+sibling directory and swaps only after the new packet is fully built and
+sealed, so a failed rebuild leaves the previous packet byte-identical.
+There is no in-place re-seal: the only repair path is rebuilding from the
+source, so batch-editing documents can never turn a failure into PASS.
 """
 
 import gzip
 import hashlib
 import io
 import json
+import os
 import shutil
 import subprocess
 import tarfile
+import tempfile
 from pathlib import Path
 
 import packet_config as pc
@@ -137,33 +141,77 @@ def seal_layers(cfg, packet_root):
     return layers, top_seal_sha, len(top_rels)
 
 
+def _generate_packet_contents(cfg, cfg_dir, build_dir, render_root):
+    """Materialize layers, artifacts, commands and pins into `build_dir`.
+
+    Recorded absolute paths (commands, pin documents) are rendered against
+    `render_root` — the packet's final location — so a staged rebuild produces
+    bytes identical to a fresh build at the same root.
+    """
+    for layer in cfg.get("layers", []):
+        ldir = build_dir / layer["dir"]
+        ldir.mkdir(parents=True, exist_ok=True)
+        kind = layer["build"]["type"]
+        if kind == "git-archive":
+            _materialize_git_archive(layer, ldir, cfg_dir, cfg["source"])
+        elif kind == "copy-tree":
+            _materialize_copy_tree(layer, ldir, cfg_dir)
+        else:
+            _materialize_inline_files(layer, ldir, cfg_dir)
+    for art in cfg.get("artifacts", []):
+        _build_artifact(cfg_dir, build_dir, art)
+    for cmd in cfg.get("commandFiles", []):
+        (build_dir / cmd["path"]).write_bytes(pr.render_command_file(cmd["entries"], render_root))
+    for pins in cfg.get("pinFiles", []):
+        path = build_dir / pins["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        pr.apply_pin_bindings(build_dir, path, pins.get("bindings", []), build=True,
+                              render_root=render_root)
+
+
+def _rebuild_existing(cfg, cfg_dir, packet_root):
+    """Regenerate into a staging sibling; replace the old packet only on success.
+
+    Every refusal — dirty source, missing overlay, drifted commit, unsafe
+    binding — happens while the previous packet is still in place, so a failed
+    rebuild keeps it byte-identical (the repair attempt must never destroy the
+    last known-good packet).
+    """
+    parent = packet_root.parent
+    staging = Path(tempfile.mkdtemp(prefix=".%s.rebuild-" % packet_root.name, dir=str(parent)))
+    try:
+        try:
+            _generate_packet_contents(cfg, cfg_dir, staging, packet_root)
+            layers, top_seal_sha, entries = seal_layers(cfg, staging)
+        except BaseException:
+            shutil.rmtree(str(staging), ignore_errors=True)
+            raise
+        staging.chmod(0o755)
+        retired = Path(tempfile.mkdtemp(prefix=".%s.replaced-" % packet_root.name, dir=str(parent)))
+        os.rename(str(packet_root), str(retired / packet_root.name))
+        try:
+            os.rename(str(staging), str(packet_root))
+        except BaseException:
+            os.rename(str(retired / packet_root.name), str(packet_root))
+            raise
+        finally:
+            shutil.rmtree(str(retired), ignore_errors=True)
+        return layers, top_seal_sha, entries
+    finally:
+        if staging.exists():
+            shutil.rmtree(str(staging), ignore_errors=True)
+
+
 def build_packet(cfg, cfg_dir, packet_root, rebuild=False):
     packet_root = Path(packet_root).resolve()
     pc.check_root_safety(packet_root, cfg_dir, cfg)
     if packet_root.exists():
         pc.require(rebuild, "PACKET_ROOT_EXISTS: %s (use --rebuild-existing to regenerate generated artifacts)" % packet_root)
         pc.require(packet_root.is_dir() and not packet_root.is_symlink(), "PACKET_ROOT_NOT_DIR: %s" % packet_root)
-        shutil.rmtree(str(packet_root))
+        return _rebuild_existing(cfg, cfg_dir, packet_root)
     packet_root.mkdir(parents=True)
     try:
-        for layer in cfg.get("layers", []):
-            ldir = packet_root / layer["dir"]
-            ldir.mkdir(parents=True, exist_ok=True)
-            kind = layer["build"]["type"]
-            if kind == "git-archive":
-                _materialize_git_archive(layer, ldir, cfg_dir, cfg["source"])
-            elif kind == "copy-tree":
-                _materialize_copy_tree(layer, ldir, cfg_dir)
-            else:
-                _materialize_inline_files(layer, ldir, cfg_dir)
-        for art in cfg.get("artifacts", []):
-            _build_artifact(cfg_dir, packet_root, art)
-        for cmd in cfg.get("commandFiles", []):
-            (packet_root / cmd["path"]).write_bytes(pr.render_command_file(cmd["entries"], packet_root))
-        for pins in cfg.get("pinFiles", []):
-            path = packet_root / pins["path"]
-            path.parent.mkdir(parents=True, exist_ok=True)
-            pr.apply_pin_bindings(packet_root, path, pins.get("bindings", []), build=True)
+        _generate_packet_contents(cfg, cfg_dir, packet_root, packet_root)
     except BaseException:
         # The target only ever holds generated artifacts, so removing it
         # restores the exact pre-build state.

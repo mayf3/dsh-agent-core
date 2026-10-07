@@ -30,6 +30,11 @@ def is_sha256(value):
     return isinstance(value, str) and len(value) == 64 and set(value) <= _HEX
 
 
+def is_git_oid(value):
+    """Git object id: 40-hex (SHA-1 repository) or 64-hex (SHA-256 repository)."""
+    return isinstance(value, str) and len(value) in (40, 64) and set(value) <= _HEX
+
+
 def resolve(base, value):
     p = Path(str(value))
     return p if p.is_absolute() else Path(base) / p
@@ -49,9 +54,9 @@ def load_config(path):
     source = cfg.get("source")
     require(isinstance(source, dict), "CONFIG_SOURCE_REQUIRED")
     if source.get("commit") is not None:
-        require(is_sha256(source["commit"]), "CONFIG_SOURCE_COMMIT_MALFORMED")
+        require(is_git_oid(source["commit"]), "CONFIG_SOURCE_COMMIT_MALFORMED")
     if source.get("tree") is not None:
-        require(is_sha256(source["tree"]), "CONFIG_SOURCE_TREE_MALFORMED")
+        require(is_git_oid(source["tree"]), "CONFIG_SOURCE_TREE_MALFORMED")
     for layer in cfg.get("layers", []):
         require(isinstance(layer, dict) and layer.get("name") and layer.get("dir"), "CONFIG_LAYER_MALFORMED")
         pm.check_rel(layer["dir"])
