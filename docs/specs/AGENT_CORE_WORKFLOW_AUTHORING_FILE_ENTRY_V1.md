@@ -71,12 +71,14 @@ The read boundary re-uses existing mechanisms only: the file must be a
 regular file whose REAL resolved path lies inside the agent's primary
 workspace (`$DSH_PRIMARY_WORKSPACE`, the existing spawn env channel also used
 by agent-memory; absent ⇒ the tool is not registered), byte size ≤ 1 MiB
-(the existing parent-RPC frame bound), absolute explicit path. Symlink
-escape out of the workspace is rejected. Reads are single-shot: the exact
-bytes read once are hashed (SHA-256), parsed, validated, relayed and
-persisted — there is no second read and no TOCTOU window. An optional
+(the existing parent-RPC frame bound), absolute explicit path. The read is
+ONE descriptor: containment is checked on the realpath BEFORE the open, then
+re-checked AFTER the open together with a dev/ino identity match against the
+open descriptor — a symlink or directory-entry swap between the checks fails
+closed with nothing read (TOCTOU-hardened; r2 amendment). An optional
 `expectedSha256` argument is compared before the relay and mismatches are
-rejected.
+rejected. Hash (SHA-256), parse, validation, relay and evidence all use the
+exact bytes of that single read.
 
 ### CTR-AFE-003 — full validation before any write
 
@@ -98,21 +100,29 @@ The tool appends two JSONL evidence lines to
 `stage:'request'` (ts, path, bytes, sha256, the COMPLETE parsed args object —
 never truncated) BEFORE the relay, and `stage:'response'` (the complete
 result/error envelope including the downstream `requestId` when present)
-after it. A request-line write failure aborts the call (fail loud, nothing
-submitted). A response-line write failure never alters the returned envelope
-(the request line already carries the mandatory args/hash evidence; the
-failure is logged to stderr).
+after it. Evidence paths never traverse symlinks out of the workspace (r2
+amendment): an existing evidence directory must realpath-contain inside the
+workspace and an existing evidence file must be a regular non-symlink file —
+any violation reads as a write failure. A request-line write failure aborts
+the call (fail loud, nothing submitted). A response-line write failure never
+alters the returned envelope (the request line already carries the mandatory
+args/hash evidence; the failure is logged to stderr).
 
-### CTR-AFE-005 — envelope and idempotency passthrough
+### CTR-AFE-005 — envelope, idempotency, and honest unknown outcomes
 
-The tool returns the gateway invoke-shaped envelope verbatim —
-`{ok:true,result}` | `{ok:false,error:{code,status?,detail?,requestId?}}` —
-byte-compatible with the existing capability tools. Idempotency stays exactly
-as accepted in V4: one fresh trusted key per call (`createIdempotencyKey`),
-server-owned conflict semantics; a repeated call with the same file converges
-(the draft is atomically re-replaced with identical content; no duplicate
-definition or version is created by the entry). Unknown outcomes are never
-auto-retried.
+On success and on service-produced failures the tool returns the gateway
+invoke-shaped envelope verbatim — `{ok:true,result}` |
+`{ok:false,error:{code,status?,detail?,requestId?}}` — byte-compatible with
+the existing capability tools. A response that is LOST or unusable at the
+relay is surfaced as `outcome_unknown` (r2 amendment: never disguised as
+`invalid_arguments`, which is reserved for deterministic pre-relay
+rejections), with an explicit do-not-retry instruction and the advice to
+re-read the draft; whether the replace committed is UNKNOWN. Idempotency
+stays exactly as accepted in V4: one fresh trusted key per call
+(`createIdempotencyKey`), server-owned conflict semantics; a repeated call
+with the same file converges (the draft is atomically re-replaced with
+identical content; no duplicate definition or version is created by the
+entry). Unknown outcomes are never auto-retried.
 
 ### CTR-AFE-006 — registration and surface
 

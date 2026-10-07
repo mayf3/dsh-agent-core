@@ -58,7 +58,14 @@ const svc = await startMockServer((req, res, entry) => {
     res.writeHead(200, { 'content-type': 'application/json', 'x-request-id': 'req-sh562-pipe' })
     return res.end(JSON.stringify({ status: 'ok' }))
   }
-  return json(res, 404, { error: { code: 'definition_not_found' } })
+  if (entry.method === 'GET' && entry.pathname === '/internal/v1/domains/e738b9af-b34f-46ee-8d60-e3c0db24d64d/definitions/fa016161-d6d0-48b3-826f-b684b4439554') {
+    res.writeHead(200, { 'content-type': 'application/json', 'x-request-id': 'req-sh555-read' })
+    return res.end(JSON.stringify({
+      definition: { id: 'fa016161-d6d0-48b3-826f-b684b4439554' },
+      versions: [{ id: 'a85253b1-d887-49cf-b28d-57c456a1c710', version_status: 'PUBLISHED', context_schema: { type: 'object', required: ['requestId'] } }],
+    }))
+  }
+  return json(res, 404, { error: { code: 'definition_not_found', message: 'safe-not-found' } })
 })
 
 const dir = await mkdtemp(join(tmpdir(), 'sh562-pipe-'))
@@ -84,7 +91,7 @@ const gatewayCtx = {
 }
 const { gateway } = applyBroker(gatewayCtx, {
   mode: 'gateway',
-  manifests: [workflowDefinitionAuthoringManifest],
+  manifests: [workflowDefinitionAuthoringManifest, workflowDefinitionReadManifest],
   targets,
   authServiceOrigin: token.origin,
   credentialsFile,
@@ -112,7 +119,7 @@ const childCtx = {
 }
 process.env.DSH_PRIMARY_WORKSPACE = workspace
 applyBroker(childCtx, {
-  manifests: [workflowDefinitionAuthoringManifest],
+  manifests: [workflowDefinitionAuthoringManifest, workflowDefinitionReadManifest],
   targets,
   authServiceOrigin: token.origin,
 })
@@ -201,15 +208,17 @@ await expectRejection('type_violation_nodes_not_array', 'pre_svc_write', async (
   return f
 })
 // unknown outcome is NEVER auto-retried: the relay failure leaves exactly one
-// gateway attempt and surfaces the failure verbatim.
+// gateway attempt and preserves the UNKNOWN category (never invalid_arguments).
 const failedCallsBefore = gatewayCalls.length
 provided.set('agentRpc', { request: async () => { throw new Error('channel died mid-call') } })
 const relayFailure = await fileEntry.execute({ path: workspaceArgsFile })
 assert.equal(relayFailure.ok, false)
-assert.match(relayFailure.error.detail, /broker relay failed/)
+assert.equal(relayFailure.error.code, 'outcome_unknown')
+assert.match(relayFailure.error.detail, /UNKNOWN/)
+assert.match(relayFailure.error.detail, /channel died mid-call/)
 assert.equal(gatewayCalls.length, failedCallsBefore)
 negatives.push({ name: 'relay_failure_no_auto_retry', rejected: relayFailure.ok === false, ok: relayFailure.ok, code: relayFailure.error?.code, detail: relayFailure.error?.detail, gatewayCallsDelta: 0 })
-console.log('[sh562] negative relay_failure_no_auto_retry: single attempt, no retry')
+console.log('[sh562] negative relay_failure_no_auto_retry: outcome_unknown, single attempt, no retry')
 provided.set('agentRpc', { request: async (method, params) => ({ ok: true, result: await parentHandler(method, params, {}) }) })
 
 // ── persist UNTRUNCATED evidence ─────────────────────────────────────────
@@ -243,6 +252,41 @@ await writeFile(join(outDir, 'sh562-pipe-negative-results.json'), JSON.stringify
   positiveCalls: 2, gatewayCallsTotal: gatewayCalls.length,
   negatives,
 }, null, 2) + '\n')
+
+// ── #555 same-domain precise definition/version schema read (pipe) ────────
+// The read capability flows the SAME real pipeline (child tool → parent
+// handler → gateway → transport). Allow / deny / honest-not-found against
+// the mock svc; identity stays the ACTUAL caller (agt_family-steward-agent).
+import { workflowDefinitionReadManifest } from '../packages/broker/src/capabilities/workflow-definition-read.js'
+const readTool = registered.find((tool) => tool?.name === 'workflow_definition_read')
+assert.ok(readTool, 'workflow_definition_read must be registered in child mode')
+const readCalls = []
+provided.set('agentRpc', {
+  request: async (method, params) => ({
+    ok: true,
+    result: await createParentRpcHandler({
+      agentId: 'agt_family-steward-agent',
+      log: { log: () => {} },
+      getProc: () => ({ state: 'READY', processGeneration: 1, executions: new Map() }),
+      getBrokerGateway: () => ({
+        execute: async (call, ctx) => { readCalls.push(call); return gateway.execute(call, ctx) },
+      }),
+      switchAgent: async () => { throw new Error('switch not used') },
+    })(method, params, {}),
+  }),
+})
+const detail = await readTool.execute({ operation: 'get_definition', domainId: 'e738b9af-b34f-46ee-8d60-e3c0db24d64d', definitionId: 'fa016161-d6d0-48b3-826f-b684b4439554' })
+assert.equal(detail.ok, true)
+assert.equal(detail.result.versions[0].version_status, 'PUBLISHED')
+assert.ok(detail.result.versions[0].context_schema)
+const denied = await readTool.execute({ operation: 'get_definition', domainId: 'e738b9af-b34f-46ee-8d60-e3c0db24d64d', definitionId: 'def-foreign' })
+assert.equal(denied.ok, false)
+assert.equal(denied.error.code, 'definition_not_found')
+const missingField = await readTool.execute({ operation: 'get_definition', domainId: 'e738b9af-b34f-46ee-8d60-e3c0db24d64d' })
+assert.equal(missingField.ok, false)
+assert.equal(missingField.error.code, 'invalid_arguments')
+console.log('[sh555] read pipe: allow (PUBLISHED + context_schema), deny (honest 404), missing-field (local invalid_arguments) — all through the real pipeline')
+assert.equal(readCalls.length, 2)
 
 console.log('[sh562] PIPE VERIFICATION PASSED — evidence written to', outDir)
 await token.close()
