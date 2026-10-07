@@ -64,7 +64,7 @@ scripts/c2-rerootcause-probe-matrix.sh — NON_PRODUCTION re-root-cause of the
 r373/r377 bootstrap exit-5 failures on ~60 disposable dummy-label launchd
 probes: OPERATIVE CAUSE = launchd re-load gate (a label whose last EXECUTED
 instance had an interpreted-script ProgramArguments[0] rejects byte-changed
-re-bootstrap with exit 5 for >=6 min); r376 tab-form root cause SUPERSEDED
+re-bootstrap with exit 5; clean single-poke acceptance measured only at +20 min — K6); r376 tab-form root cause SUPERSEDED
 (form exonerated); arg0 file properties, spawn-preflight, same-inode writes,
 load order and plist path all exonerated; C1 irbridge succeeded because its
 arg0 is a Mach-O interpreter. Doc 11 §6 rows TARGET_IDENTITY / PLIST EDIT /

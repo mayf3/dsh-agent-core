@@ -30,9 +30,9 @@ raw/63):
 | 4 | Same-inode in-place mutation / inode identity / write mechanics | **NOT causal** — true same-inode truncate+write flows accepted (dormant + binary-arg0 classes) | C*, D1-D7, E2 |
 | 5 | Load order (edit-before-bootout = C1 order vs bootout-edit-bootstrap) | **NOT causal** — h3 rejects changed bytes in C1 order too | H3 |
 | 6 | Plist path/location (LaunchAgents dir vs /tmp vs App Support) | **NOT causal** — label-keyed: changed bytes rejected from a different path (h4); LaunchAgents-dir dummy flows accepted (E0) | C6, H4, E0 |
-| 7 | **Re-load of a label whose last executed instance was a SCRIPT (full exec history) with changed bytes** | **REJECTED exit 5 — THE operative trigger** | F1-F3, G1, H1-H4, I1, I3, J1-J4, K2, K5 |
+| 7 | **Re-load of a label whose last executed instance was a SCRIPT (full exec history) with changed bytes** | **REJECTED exit 5 — THE operative trigger** | F2, F3, G1, H3, H4, I1, I3, J1, J2, J4, K2, K5 (F1 = unchanged-bytes teardown race, see §2; H2 = poke-confounded, see §2) |
 | 8 | Same, but bytes EXACTLY equal to the last-loaded definition | **ACCEPTED** (after a short settle window; see §2) | F4, J3, J5 |
-| 9 | Same, but previous instance was a Mach-O binary (C1 irbridge `bin/python` shape, `/bin/sleep`) | **ACCEPTED** with changed bytes | E2, E2b, K1, C1-production |
+| 9 | Same, but previous instance was a Mach-O binary (C1 irbridge `bin/python` shape, `/bin/sleep`) | **ACCEPTED** with changed bytes | K1, t06 (driver), C1-production |
 | 10 | Same rejection, new label | **ACCEPTED** — the gate is LABEL-keyed, not path- or file-keyed | C6, T07 |
 
 Mechanism internals are not observable without Apple source; the operational rule above
@@ -45,15 +45,17 @@ byte-exact preimage bytes → exit 0. The doc-13 §1 tab-form "root cause" was a
 ## §2 MEASURED BOUNDARIES (dummy labels, script-history class)
 
 - **Short settle window**: immediately after bootout (<~1-2s) even UNCHANGED bytes may
-  bootstrap-reject (F1 at +0s = 5); at +6..8s unchanged bytes accept (F4, J3, J5).
-  r373/r377 rollback bootstraps (+2..4s) landed AFTER that uncertain window and
+  bootstrap-reject (F1 at +0s = 5); at +6..9 s unchanged bytes accept (F4 +6s; J3/J5
+  +9s). r373/r377 rollback bootstraps (+2..4s) landed AFTER that uncertain window and
   succeeded.
-- **Changed-bytes block is LONG but bounded**: single-poke rejections at +4 min (H1) and
-  +6 min (H2); sustained failures to +40 s (G1). Expiry measured on the completing
-  session's K6 re-run: changed bytes ACCEPTED at exactly +1200 s single-poke → block
-  bound is **≥6 min and ≤20 min** (raw/63). The poke-count confound (G1/I5: ~20 failed
-  pokes left a label rejecting even ORIGINAL bytes at +7 min) means ZERO intermediate
-  bootstrap attempts are permitted while waiting the window out.
+- **Changed-bytes block is LONG; clean single-poke acceptance measured ONLY at +1200 s**:
+  rejected at +8 s on clean single-poke labels (J1/J2/J4); sustained failures to +40 s
+  (G1); ACCEPTED at exactly +1200 s single-poke (K6, completing-session re-run, raw/63).
+  The interior 8 s..20 min is UNMEASURED on clean labels — the only mid-interval data
+  point (h2 at ~+4 min 36 s after the G1 bootout, still rejected) sat on the
+  poke-confounded G1 label and cannot bound a clean label. Poke-count confound (G1/I5:
+  ~20 failed pokes left a label rejecting even ORIGINAL bytes at +7 min) means ZERO
+  intermediate bootstrap attempts are permitted while waiting the window out.
 - **Confounds observed**: repeated failed bootstrap attempts on one label may extend the
   block (G1 label rejected even ORIGINAL bytes at +7 min after ~20 pokes (I5), while
   single-poke labels accept unchanged bytes at +8 s (J3/J5)); mechanism unconfirmed.
@@ -123,18 +125,20 @@ SUPERSEDED where conflicting):
      (§1 row 10, raw/63 T07). Requires owner sign-off on the service-identity rename
      (one additional edited line; new candidate sha; raw/61 remains installed-virgin).
    - **(B) SAME-LABEL install (owner must approve a downtime window):** bootout → wait
-     the measured block expiry (measured ≥6 min, ≤20 min; K6 accepted at exactly +1200 s
-     single-poke, raw/63) with the service DOWN, then bootstrap changed bytes. ZERO
-     intermediate bootstrap attempts during the wait (poke-count confound, H1/H2/I5/G1).
-     NO in-lane retry before expiry is permitted.
+     out the block with the service DOWN, then bootstrap changed bytes with ONE single
+     poke. Clean single-poke acceptance is measured ONLY at exactly +1200 s (K6,
+     raw/63); the 8 s..20 min interior is unmeasured, so the poke must be at ≥ +20 min.
+     ZERO intermediate bootstrap attempts during the wait (poke-count confound,
+     G1/I5/H2). NO in-lane retry before expiry is permitted.
    - **(C) NOT VIABLE (measured):** unchanged-reload clearing (J3), SIGKILL-first
      (J4), C1-order (H3), path change under same label (H4), reboot-then-cutover
      (login RunAtLoad re-forms script exec-history immediately).
 3. **RELOAD row + stop conditions:** insert pre-knowledge: `bootstrap exit 5 on a
    changed-bytes load of this label is a CLASSIFIED expected failure (doc 14 §1), not a
    new unknown` → rollback-first still applies verbatim: restore preimage → poll
-   bootstrap (2 s interval, cap 30 s; unchanged bytes accepted at ≥6-8 s per F4/J3/J5)
-   → health proof → release lane. The "tab-form" wording in doc 13 §6/§4 is superseded.
+   bootstrap (2 s interval, cap 30 s; unchanged bytes accepted at ≥6-9 s per F4/J3/J5)
+   → health proof → release lane. The doc 13 §1 tab-form wording is superseded (in-file
+   banner + §6 in-file marker added r380).
 4. **raw/61 candidate bytes (sha 01db501d…) remain byte-valid** for remedy (B); remedy
    (A) requires a NEW frozen candidate (Label line + arg0 line both change). The frozen
    primitive `c2-apply-program-args0-edit.sh` (11c29f14…) edits ONLY the arg0 line;
@@ -162,10 +166,35 @@ SUPERSEDED where conflicting):
 
 ## §9 INDEPENDENT REVIEW
 
-Independent exact-head review round-1 of this commit: verdict and findings frozen here
-post-review (changed-surface reviewer: scope containment, no-production-mutation
-verification, root-cause claim vs transcript consistency, packet-amendment consistency,
-secret scan, MANIFEST self-consistency).
+**Round-1 exact-head review of 3a8cd7c1 (base a22b4fb9), independent changed-surface
+reviewer (fresh context, did not author the delta): VERDICT = REVISE.** All mechanical
+gates PASS: changed surface = exactly the 7 declared evidence-tree files; MANIFEST.sha256
+regeneration byte-identical (89/89); secret scan clean; driver safety audit clean
+(disposable labels + synthetic programs only); LIVE driver reproduction PASS=7/FAIL=0
+with zero residue and live anchor unchanged (pid 95291 runs=1 from 11:38:48Z — predates
+round start 12:22Z, zero restarts); D7 disclosure corroborated (pgrep shows exactly one
+xiaomusic process); §1 rows 2–10 + most of §2 verified line-by-line vs raw/63; K6v2
+confirmed genuinely single-poke (original session died ~31 s before its own poke).
+
+**BLOCKER (FALSE_EVIDENCE class) — "≥6 min" block lower bound was unsupported**: it
+cited probe H1, which does not exist in raw/63 (stage H begins at h2), and h2's
+"~+6 min" annotation was an arithmetic slip (g1 bootout 12:37:39Z → poke 12:42:15Z =
++4 min 36 s) on the poke-confounded G1 label. Clean single-poke data supports only:
+rejected +8 s (J1/J2/J4), accepted exactly +1200 s (K6); the 8 s..20 min interior is
+UNMEASURED. MINIMAL_CLOSURE (a) applied: every "≥6 min / ≤20 min" bound reworded across
+doc 14 §1 row 7 (probe list corrected: H1 removed, F1 reclassified to §2, H2 marked
+confounded; row 9 citation tightened to K1/t06/C1-production), §2 (measured-bound
+restatement), §6 remedy (B) (single poke at ≥ +20 min), doc 11 §6 TARGET_IDENTITY +
+RELOAD rows, doc 13 SUPERSEDED banner, MANIFEST.md; settle-window arithmetic corrected
+to +6..9 s (F4 +6s; J3/J5 +9s); h2 correction appended to raw/63 continuation.
+**MINOR findings applied**: doc 13 §6 now carries the r380 in-file classification marker
+(banner's "§6 stop conditions carry" claim made true); doc 14 §6 item 3 pointer fixed to
+doc 13 §1. Reviewer notes recorded: row-1 TAB-form first-load acceptance rests on the
+live irbridge anchor (transparently cited); §3 pgrep/401-latency corroborated
+independently (3.1 ms appended to raw/63).
+
+**Exact-head re-audit (blocker-union freeze rule, one repair pass + one re-audit):**
+PENDING — verdict to be appended below after this fix commit.
 
 ## §10 PRODUCTION_MUTATION = NO
 

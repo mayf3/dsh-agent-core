@@ -331,3 +331,10 @@ Try re-running the command as root for richer errors.
 [continuation] (accepted at exactly +1200 s). Combined with H1/H2 (still blocked at +4/+6 min), the
 [continuation] bound is >= 6 min and <= 20 min. Poke-count confound (G1/I5): zero intermediate
 [continuation] bootstrap attempts are permitted while waiting out the window.
+[continuation r380 review-fix] CORRECTION: the stageH line "h2 retry changed-bytes on g1 label at ~+6min"
+[continuation r380 review-fix] carries the original session's arithmetic slip — g1 bootout was 12:37:39Z and
+[continuation r380 review-fix] the h2 poke 12:42:15Z = +4 min 36 s, AND g1 was the ~20-poke confounded label
+[continuation r380 review-fix] (see G1/I5). There is NO h1 probe in this transcript (stage H begins at h2).
+[continuation r380 review-fix] Clean single-poke data in this record: rejected +8 s (J1/J2/J4); accepted exactly
+[continuation r380 review-fix] +1200 s (K6v2). The 8 s..20 min interior is UNMEASURED on clean labels.
+[continuation r380 review-fix] Anchor latency corroboration: completing session GET / -> 401 in 3.1 ms (read-only, 13:36Z window).

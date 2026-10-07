@@ -1,5 +1,5 @@
 # 13_XIAOMUSIC_C2_PACKET_ERRATA_R376 — root cause, proven edit primitive, canary amendment (2026-10-07)
-> **[SUPERSEDED r380 → 14]** §1's tab-indented-XML root cause is REFUTED as the operative trigger: form is exonerated (both forms accepted on first load; TAB-form com.irbridge.secure loaded since r371). Operative cause = launchd re-load gate: a label whose last EXECUTED instance had an interpreted (script) ProgramArguments[0] rejects byte-changed re-bootstrap with exit 5 for ≥6 min — 14_XIAOMUSIC_C2_REROOTCAUSE_R380.md §1/§2. §2 primitive byte-mechanics remain valid; §6 stop conditions carry the r380 classification (changed-bytes EIO = expected, rollback-first unchanged).
+> **[SUPERSEDED r380 → 14]** §1's tab-indented-XML root cause is REFUTED as the operative trigger: form is exonerated (both forms accepted on first load; TAB-form com.irbridge.secure loaded since r371). Operative cause = launchd re-load gate: a label whose last EXECUTED instance had an interpreted (script) ProgramArguments[0] rejects byte-changed re-bootstrap with exit 5 (clean single-poke acceptance measured only at +20 min — K6, raw/63) — 14_XIAOMUSIC_C2_REROOTCAUSE_R380.md §1/§2. §2 primitive byte-mechanics remain valid; §6 stop conditions carry the r380 classification (changed-bytes EIO = expected, rollback-first unchanged).
 
 Round r376 of record. Task = mayf3/agent-control#558, CLAIM_TOKEN
 `g10-xiaomusic-c2-packet-errata-r376`, base HEAD `60eba40b` (branch `ac-task/558`,
@@ -153,6 +153,8 @@ in the evidence, never treated as success signals by themselves.
   full-drift re-verification (packet §1 axes).
 
 ## §6 RETRY_STOP_CONDITIONS (frozen)
+
+> **[AMENDED r380 → 14 §6 / 11 §6 RELOAD]** stop-condition 4's changed-bytes bootstrap exit-5 on this label is a CLASSIFIED expected failure (14 §1), not a new unknown; clean single-poke acceptance measured only at +1200 s (K6, raw/63); rollback-first wording unchanged.
 
 1. Any preimage/venv/packet drift at retry preflight → STOP MATERIAL_DRIFT (no edit).
 2. The §2 primitive refuses ANY guard (incl. missing/ drifted backup) → STOP; no reload
