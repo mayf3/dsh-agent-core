@@ -124,13 +124,15 @@ grep -q "RESTORE-R1" "$DEPLOY" \
 # pins byte-wise must be untouched (distinct-owner regression stays green).
 # ---------------------------------------------------------------------------
 echo "== §5b pinned-set guard regression (node:test) =="
+GUARD_LOG="$(mktemp -t rtr-guard.XXXXXX)"
 if command -v node >/dev/null 2>&1; then
-  if (cd "$THIS_DIR/.." && node --test "$GUARD_TEST" >/tmp/rtr-guard.log 2>&1); then
+  if (cd "$THIS_DIR/.." && node --test "$GUARD_TEST" >"$GUARD_LOG" 2>&1); then
     ok "trusted-cp-watchdog-ownership-guard tests still PASS (§5b shape intact)"
   else
     bad "watchdog ownership guard test FAILED — §5b pinned-set shape drifted"
-    tail -20 /tmp/rtr-guard.log
+    tail -20 "$GUARD_LOG"
   fi
+  rm -f "$GUARD_LOG"
 else
   bad "node not available — cannot run the §5b guard regression"
 fi

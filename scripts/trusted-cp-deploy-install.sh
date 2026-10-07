@@ -784,13 +784,14 @@ if [ -n "${BAK:-}" ]; then
     if [ -d "$BAK/.cache" ]; then
       rmdir "$TRUSTED_ROOT/.cache"
       mv "$BAK/.cache" "$TRUSTED_ROOT/.cache"
+      # RESTORE-R1 record: this subtree LEFT the fresh preimage.
+      note_preimage_reuse "$BAK" .cache
     fi
     REUSE_HARNESS=1
     # RESTORE-R1 record: these subtrees LEFT the fresh preimage — a restore
     # from $BAK lands without them (boot-fatal for node-runtime).
     note_stage reuse_harness_mv
     note_preimage_reuse "$BAK" harness
-    [ -d "$TRUSTED_ROOT/.cache" ] && note_preimage_reuse "$BAK" .cache
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
   if [ -x "$BAK/node-runtime/bin/node" ] \
@@ -1219,6 +1220,7 @@ note_stage trusted_ownership
 
 # ---- 7. spawn helper (root:wheel 4755) --------------------------------------
 echo "== spawn helper"
+note_stage helper_gate
 if [ -x "$HELPER" ]; then
   mode="$(stat -f '%Sp' "$HELPER")"
   owner="$(stat -f '%Su:%Sg' "$HELPER")"
@@ -1237,7 +1239,6 @@ else
 fi
 
 # ---- 8. trusted-tree audit ---------------------------------------------------
-note_stage helper_gate
 echo "== symlink audit (every link must stay inside the trusted root)"
 BAD=""
 while IFS= read -r link; do
