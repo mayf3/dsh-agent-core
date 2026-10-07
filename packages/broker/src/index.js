@@ -49,10 +49,12 @@ import { createIdentityResolver } from './identity.js'
 import { targets as defaultTargets, buildTargetMap } from './targets.js'
 import { BROKER_RPC_METHOD, SCHEDULER_MUTATIONS, createRelayHandlers } from './relay.js'
 import { createBrokerGateway } from './gateway.js'
+import { maybeRegisterAuthoringFileEntry } from './authoring-file-entry.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
-  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowAssistanceManifests, okrManifests,
+  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowDefinitionReadManifest,
+  workflowAssistanceManifests, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
@@ -88,6 +90,7 @@ export const DEFAULT_MANIFESTS = [
   ...forumManifests,
   ...forumNormalManifests,
   ...workflowManifests,
+  workflowDefinitionReadManifest,
   ...workflowAssistanceManifests,
   ...okrManifests,
   ...agentDefinitionManifests,
@@ -152,6 +155,14 @@ export const Config = z.object({
    * Never enabled in product configurations.
    */
   fixtureSelfAssert: z.boolean().default(false),
+  /**
+   * Child mode only (AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 candidate):
+   * register workflow_definition_authoring_file — the narrow lossless
+   * local-JSON-file entry for the EXISTING replace_draft_graph operation.
+   * Default on; registration itself still requires the agent's
+   * $DSH_PRIMARY_WORKSPACE read boundary to resolve (fail closed).
+   */
+  authoringFileEntry: z.boolean().default(true),
   /**
    * Closed moderator-Agent list (AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2
    * CTR-FMC-004). In CHILD mode the eight Forum moderator tools are
@@ -360,6 +371,19 @@ export function apply(ctx, config = {}) {
   })
 
   registerCapabilities(ctx, defineTool, registeredCapabilities)
+
+  // AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 (candidate): the narrow
+  // lossless file entry for the EXISTING replace_draft_graph operation.
+  // Fail-closed registration: skipped unless the workspace boundary resolves.
+  const authoringManifest = manifests.find((m) => m?.id === 'workflow_definition_authoring')
+  if (authoringManifest !== undefined) {
+    maybeRegisterAuthoringFileEntry(ctx, defineTool, {
+      manifest: authoringManifest,
+      enabled: config.authoringFileEntry !== false,
+    })
+  } else if (config.authoringFileEntry !== false) {
+    process.stderr.write('[broker] authoring file entry: not registered (workflow_definition_authoring manifest absent)\n')
+  }
 
   // Acceptance fixture (self-assert proof): registered only when explicitly
   // configured (BROKER_FIXTURE_SELF_ASSERT=1 in acceptance runtimes).
