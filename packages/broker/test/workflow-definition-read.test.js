@@ -40,16 +40,17 @@ test('manifest: registered exactly once, GET-only, workflow.read scope, no idemp
   assert.equal(validateManifest(workflowDefinitionReadManifest).ok, true)
   assert.equal(DEFAULT_MANIFESTS.filter((m) => m?.id === 'workflow_definition_read').length, 1)
   assert.deepEqual(workflowDefinitionReadManifest.requiredScopes, ['workflow.read'])
-  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.name), ['list_definitions', 'get_definition'])
+  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.name), ['list_definitions', 'get_definition_version', 'get_definition'])
   for (const op of workflowDefinitionReadManifest.operations) {
     assert.equal(op.http.method, 'GET')
     assert.equal(op.http.idempotencyKey, undefined)
   }
   assert.equal(workflowDefinitionReadManifest.operations[0].http.path, '/internal/v1/domains/{domainId}/definitions')
-  assert.equal(workflowDefinitionReadManifest.operations[1].http.path, '/internal/v1/domains/{domainId}/definitions/{definitionId}')
+  assert.equal(workflowDefinitionReadManifest.operations[1].http.path, '/internal/v1/domains/{domainId}/definitions/{definitionId}/versions/{definitionVersionId}')
+  assert.equal(workflowDefinitionReadManifest.operations[2].http.path, '/internal/v1/domains/{domainId}/definitions/{definitionId}')
   // Same-domain precision is the point: the version row contract stays the
   // service's own — the capability never reshapes or filters it.
-  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.result), [{ type: 'json' }, { type: 'json' }])
+  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.result), [{ type: 'json' }, { type: 'json' }, { type: 'json' }])
 })
 
 test('allow: same-domain owner reads the precise version schema through the real transport', async () => {
@@ -140,5 +141,103 @@ test('missing fields: cursor half-pair and absent arguments fail fast locally, b
   // Zero local rejections reached the token endpoint or svc.
   assert.equal(svc.requests.length, 0)
   assert.equal(token.requests.length, 0)
+  await token.close(); await svc.close()
+})
+
+test('get_definition_version: owner reads ONE precise version with the complete graph, fields intact', async () => {
+  const token = await startTokenServer()
+  const svc = await startMockServer((req, res, entry) => {
+    if (entry.method === 'GET' && /\/definitions\/def-9\/versions\/ver-fc9b$/.test(entry.pathname)) {
+      return json(res, 200, {
+        definition: { id: 'def-9' },
+        version: { id: 'ver-fc9b', version_status: 'PUBLISHED' },
+        nodes: [
+          { node_key: 'draft', assignee_ref: { ref_type: 'WORKFLOW_CREATOR' }, instructions: '冻结需求', primary_advance_transition_id: 'tid-1', metadata: { humanConfirmationRequired: true } },
+        ],
+        transitions: [
+          { transition_key: 'advance', transition_effect: 'ADVANCE', submission_schema: { type: 'object', required: ['confirm'] } },
+        ],
+        nodes_count: 1,
+        transitions_count: 1,
+      })
+    }
+    return json(res, 404, { error: { code: 'definition_not_found', message: 'safe' } })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
+    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
+  })
+  const { definition } = wire(workflowDefinitionReadManifest, transport)
+  const envelope = await definition.execute({ operation: 'get_definition_version', domainId: 'dom-1', definitionId: 'def-9', definitionVersionId: 'ver-fc9b' })
+  assert.equal(envelope.ok, true)
+  assert.equal(envelope.result.versions, undefined)
+  assert.equal(envelope.result.nodes[0].assignee_ref.ref_type, 'WORKFLOW_CREATOR')
+  assert.equal(envelope.result.nodes[0].instructions, '冻结需求')
+  assert.equal(envelope.result.nodes[0].primary_advance_transition_id, 'tid-1')
+  assert.equal(envelope.result.transitions[0].submission_schema.required[0], 'confirm')
+  const get = svc.requests[0]
+  assert.equal(get.method, 'GET')
+  assert.equal(get.pathname, '/internal/v1/domains/dom-1/definitions/def-9/versions/ver-fc9b')
+  assert.equal(get.headers['idempotency-key'], undefined)
+  assert.equal(token.requests[0].body.scope, 'workflow.read')
+  await token.close(); await svc.close()
+})
+
+test('get_definition_version: missing params fail locally with zero token and zero HTTP', async () => {
+  const token = await startTokenServer()
+  const svc = await startMockServer((_req, res) => json(res, 500, { error: { code: 'internal_consistency_error' } }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
+    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
+  })
+  const { definition } = wire(workflowDefinitionReadManifest, transport)
+  const missing = await definition.execute({ operation: 'get_definition_version', domainId: 'd', definitionId: 'x' })
+  assert.equal(missing.ok, false)
+  assert.equal(missing.error.code, 'invalid_arguments')
+  assert.equal(svc.requests.length, 0)
+  assert.equal(token.requests.length, 0)
+  await token.close(); await svc.close()
+})
+
+test('three-action missing-param matrix: all fail locally, zero token and zero HTTP', async () => {
+  const token = await startTokenServer()
+  const svc = await startMockServer((_req, res) => json(res, 500, { error: { code: 'internal_consistency_error' } }))
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
+    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
+  })
+  const { definition } = wire(workflowDefinitionReadManifest, transport)
+  const cases = [
+    { operation: 'list_definitions' },
+    { operation: 'get_definition', domainId: 'd' },
+    { operation: 'get_definition_version', domainId: 'd' },
+    { operation: 'get_definition_version', definitionId: 'x' },
+  ]
+  for (const args of cases) {
+    const envelope = await definition.execute(args)
+    assert.equal(envelope.ok, false, JSON.stringify(args))
+    assert.equal(envelope.error.code, 'invalid_arguments')
+  }
+  assert.equal(svc.requests.length, 0)
+  assert.equal(token.requests.length, 0)
+  await token.close(); await svc.close()
+})
+
+test('get_definition_version: downstream 404 preserves code and requestId on the envelope', async () => {
+  const token = await startTokenServer()
+  const svc = await startMockServer((_req, res) => {
+    res.writeHead(404, { 'content-type': 'application/json', 'x-request-id': 'req-ver-404' })
+    res.end(JSON.stringify({ error: { code: 'definition_not_found', message: 'safe' } }))
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
+    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
+  })
+  const { definition } = wire(workflowDefinitionReadManifest, transport)
+  const envelope = await definition.execute({ operation: 'get_definition_version', domainId: 'd', definitionId: 'x', definitionVersionId: 'v' })
+  assert.equal(envelope.ok, false)
+  assert.equal(envelope.error.code, 'definition_not_found')
+  assert.equal(envelope.error.status, 404)
+  assert.equal(envelope.error.requestId, 'req-ver-404')
   await token.close(); await svc.close()
 })
