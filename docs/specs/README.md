@@ -88,7 +88,8 @@ runtime change, credential change, or real HR dispatch.
 
 | Spec ID | Status in this branch | Kind | Scope | Supersedes on acceptance |
 |---|---|---|---|---|
-| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | accepted / current governance (v1.0.3, accepted 2026-09-05) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted / current governance (2.0.0-rc.1 draft pilot, accepted 2026-10-08; activation at merge per CTR-AD3-002) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |
+| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`; was accepted 2026-09-05) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` |
 | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1`) | invariant / governance adoption | `mayf3/dsh-agent-core` | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` |
 | `AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1` | superseded | legacy governance | repository knowledge model | — |
