@@ -76,20 +76,26 @@ def main():
 
     # Dimension 1 — RULE_CONFORMANCE: measured from the rule's own baseline.
     # Violations here are rule breaches; they are reported honestly and are
-    # NOT waived by this check (waiving them needs an approved transition
-    # policy). This dimension never flips the exit code by itself.
+    # NOT waived by this check. A failing or unmeasurable conformance
+    # dimension FAILS THIS CHECK (exit 3): without an approved transition
+    # policy the gate may not silently pass binding-rule breaches, and it may
+    # not hide a measurement failure either. The owner decides policy; until
+    # then the check stays honestly red.
     if args.rule_conformance_report:
         report_path = Path(args.rule_conformance_report)
         raw = report_path.read_text(encoding="utf-8").strip() if report_path.exists() else ""
+        conformance_gate = None
         if not raw:
             # The original verifier refused to produce a report (registry
-            # configuration fact below) — record UNMEASURABLE instead of
-            # pretending compliance or failing the increment gate.
+            # configuration fact below) — record UNMEASURABLE and fail the
+            # check: an unmeasurable binding-rule dimension may not masquerade
+            # as compliance.
             fact = ""
             if args.config_fact_file and Path(args.config_fact_file).exists():
                 fact = Path(args.config_fact_file).read_text(encoding="utf-8").strip()
             print("RULE_CONFORMANCE: UNMEASURABLE (original verifier produced no report; %s)"
                   % (fact or "no config fact captured"))
+            conformance_gate = "UNMEASURABLE"
         else:
             rule, rule_summary = violations(args.rule_conformance_report, "rule-conformance")
             verdict = "PASS" if not rule else "FAIL"
@@ -97,6 +103,8 @@ def main():
                   % (verdict, len(rule)))
             for (check, rule_key, path), (f, _) in sorted(rule.items()):
                 print("  VIOLATION %s %s %s" % (rule_key, path, f.get("detail") or ""))
+            if verdict == "FAIL":
+                conformance_gate = "FAIL"
 
     # Dimension 2 — registry configuration fact: the rule text still names
     # d506f811 as BASELINE_COMMIT while the registry's entries only validate
@@ -126,6 +134,16 @@ def main():
             sys.stderr.write("  GREW %s %s %s -> %s\n" % (rule, path, b, h))
         return 1
     print("NON_REGRESSION: PASS — no new violations, no growth vs the frozen baseline.")
+
+    if conformance_gate is not None:
+        # Both dimensions are always reported; the gate then fails honestly:
+        # without an approved transition policy the check may neither waive
+        # rule breaches nor pass over an unmeasurable conformance dimension.
+        print("GATE: check fails on rule-conformance %s (exit 3); an approved transition "
+              "policy from the repository owner is required to change this." % conformance_gate)
+        return 3
+    if not args.rule_conformance_report:
+        print("NOTE: no rule-conformance report supplied; only the increment gate was judged.")
     return 0
 
 

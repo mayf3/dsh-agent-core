@@ -14,8 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Governance mechanism selftest (stdlib only, no network)
-        run: python3 .agents/local/tools/governance_selftest.py
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Governance mechanism selftest (stdlib + PyYAML for frontmatter parsing; no network)
+        run: |
+          python3 -c "import yaml" || { echo "PyYAML required (preinstalled on GitHub runners)"; exit 2; }
+          python3 .agents/local/tools/governance_selftest.py
 
   merge-readiness:
     name: merge-readiness

@@ -37,11 +37,12 @@ jobs:
           # dimension flips this check's exit code: allowing legacy debt into
           # a hard gate needs an approved transition policy, which does not
           # exist yet, and hiding the failure is not allowed either.
-          set -o pipefail
-          node scripts/verify-code-structure.mjs --base d506f81105e8aa05177a01b817ebe11dcc076ba5 --head HEAD --json > /tmp/rule-conformance.json 2>/tmp/rule-config-fact.txt
-          echo "exit=$?" >> /tmp/rule-config-fact.txt || true
-          { head -1 /tmp/rule-config-fact.txt; tail -1 /tmp/rule-config-fact.txt; } > /tmp/rule-config-fact-summary.txt || true
-          continue_output=true
+          rc=0
+          err=$(node scripts/verify-code-structure.mjs --base d506f81105e8aa05177a01b817ebe11dcc076ba5 --head HEAD --json 2>&1 >/tmp/rule-conformance.json) || rc=$?
+          { echo "exit=$rc"; echo "$err" | tail -3; } > /tmp/rule-config-fact-summary.txt
+          echo "rule-baseline verifier exit=$rc"
+          echo "$err" | tail -3
+          echo "exit=$rc" >> /tmp/rule-config-fact-summary.txt
       - name: Compare head structure against the frozen baseline
         run: |
           node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head "$STRUCTURE_BASE" --json > /tmp/base-structure.json || true

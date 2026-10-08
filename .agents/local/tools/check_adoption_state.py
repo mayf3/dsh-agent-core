@@ -48,6 +48,14 @@ def main():
     parser.add_argument("--index", default=None,
                         help="Spec index markdown; checked against the transition "
                              "records' frontmatter statuses")
+    parser.add_argument("--transition-base-ref", default=None,
+                        help="git ref holding the BEFORE state of the transition "
+                             "records (e.g. the pre-acceptance commit). When given, "
+                             "before-frontmatter is extracted via 'git show "
+                             "<ref>:<path>' and the vendored validator judges the "
+                             "real before→after transition; without it only the "
+                             "current topology is judged, which is NOT a "
+                             "transition check")
     args = parser.parse_args()
 
     root = Path(args.target)
@@ -78,7 +86,7 @@ def main():
     if args.transition_records:
         problems.extend(check_transition(
             root, [s.strip() for s in args.transition_records.split(",") if s.strip()],
-            args.index))
+            args.index, args.transition_base_ref))
 
     if problems:
         sys.stderr.write("adoption state INCONSISTENT:\n" + "".join("- %s\n" % p for p in problems))
@@ -90,14 +98,26 @@ def main():
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def frontmatter_meta(path):
-    parts = Path(path).read_text(encoding="utf-8").split("---")
+def frontmatter_text(text):
+    parts = text.split("---")
     if len(parts) < 3:
-        raise ValueError("no frontmatter block: %s" % path)
+        raise ValueError("no frontmatter block in provided text")
     return yaml.safe_load(parts[1])
 
 
-def check_transition(root, record_paths, index_path):
+def frontmatter_meta(path):
+    return frontmatter_text(Path(path).read_text(encoding="utf-8"))
+
+
+def git_show(root, ref, rel):
+    result = subprocess.run(["git", "-C", str(root), "show", "%s:%s" % (ref, rel)],
+                            capture_output=True, text=True)
+    if result.returncode != 0:
+        raise ValueError("git show %s:%s failed: %s" % (ref, rel, result.stderr.strip()))
+    return result.stdout
+
+
+def check_transition(root, record_paths, index_path, base_ref=None):
     """Whole-authority checks beyond the single-spec/lock agreement.
 
     1. The vendored raw transition validator judges the complete frontmatter
@@ -121,14 +141,28 @@ def check_transition(root, record_paths, index_path):
 
     validator = root / ".agents" / "tools" / "validate_spec_transition.py"
     with tempfile.TemporaryDirectory(prefix="adoption-transition-") as td:
-        state = Path(td) / "current.json"
-        state.write_text(json.dumps(metas, ensure_ascii=False, default=str))
-        result = subprocess.run([sys.executable, str(validator),
-                                 "--base", str(state), "--candidate", str(state)],
-                                capture_output=True, text=True)
+        after = Path(td) / "after.json"
+        after.write_text(json.dumps(metas, ensure_ascii=False, default=str))
+        if base_ref:
+            before_metas = []
+            try:
+                for rel in record_paths:
+                    before_metas.append(frontmatter_text(git_show(root, base_ref, rel)))
+            except Exception as exc:
+                return ["transition before-state extraction failed: %s" % exc]
+            before = Path(td) / "before.json"
+            before.write_text(json.dumps(before_metas, ensure_ascii=False, default=str))
+            result = subprocess.run([sys.executable, str(validator),
+                                     "--base", str(before), "--candidate", str(after)],
+                                    capture_output=True, text=True)
+            label = "raw transition validation (%s -> working tree)" % base_ref
+        else:
+            result = subprocess.run([sys.executable, str(validator),
+                                     "--base", str(after), "--candidate", str(after)],
+                                    capture_output=True, text=True)
+            label = "raw transition validation (current topology only; no base ref given)"
         if result.returncode != 0:
-            problems.append("raw five-record transition validation failed:\n%s%s"
-                            % (result.stdout.strip(), result.stderr.strip()))
+            problems.append("%s failed:\n%s%s" % (label, result.stdout.strip(), result.stderr.strip()))
 
     accepted = [m for m in metas if m.get("status") == "accepted"]
     if len(accepted) > 1:

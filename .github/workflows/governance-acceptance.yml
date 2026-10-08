@@ -14,7 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Adoption claim must match the lock (proposed stays proposed)
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Adoption claim must match the lock and the whole authority transition
+        env:
+          TRANSITION_BASE_REF: b86aa5ec53bb603098bf1f5bc01fd6b44b566930
         run: |
           python3 .agents/local/tools/check_adoption_state.py \
-            --spec docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md
+            --spec docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md \
+            --transition-records docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md,docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md,docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1.md,docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md,docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md \
+            --transition-base-ref "$TRANSITION_BASE_REF" \
+            --index docs/specs/README.md

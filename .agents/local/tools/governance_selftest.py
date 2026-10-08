@@ -206,9 +206,9 @@ class AdoptionTransitionIntegrity(unittest.TestCase):
         "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1":
             "spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1\nstatus: superseded\nsuperseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0\ngoverned_by: []\n",
         "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2":
-            "spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\nstatus: superseded\nsuperseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1\ngoverned_by: []\n",
+            "spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\nstatus: superseded\nsuperseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1\ngoverned_by: []\nauthority_level: governing_spec\n",
         "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3":
-            "spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nstatus: accepted\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\ngoverned_by: []\naccepted_date: 2026-10-08\naccepted_by: mayf3\naccepted_at: 2026-10-08T12:34:53Z\naccepted_reviewed_spec_commit: fd5881bb6f93c50f19578fefa24a64f3fdbcdf07\nacceptance_review_verdict: PASS\n",
+            "spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nstatus: accepted\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\ngoverned_by: []\nauthority_level: governing_spec\naccepted_date: 2026-10-08\naccepted_by: mayf3\naccepted_at: 2026-10-08T12:34:53Z\naccepted_reviewed_spec_commit: fd5881bb6f93c50f19578fefa24a64f3fdbcdf07\nacceptance_review_verdict: PASS\n",
     }
     INDEX_ROWS = (
         "| `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted / current governance | invariant | repo | `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` |\n"
@@ -239,14 +239,15 @@ class AdoptionTransitionIntegrity(unittest.TestCase):
                             "accepted_by": accepted_by, "accepted_at": accepted_at}
         lock_path.write_text(json.dumps(lock, indent=2) + "\n")
 
-    def run_checker(self):
-        return subprocess.run(
-            [sys.executable, str(CHECKER), "--target", str(self.target),
-             "--spec", "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
-             "--transition-records",
-             ",".join("docs/specs/" + n + ".md" for n in self.FIVE_RECORDS),
-             "--index", "docs/specs/README.md"],
-            capture_output=True, text=True)
+    def run_checker(self, base_ref=None):
+        args = [sys.executable, str(CHECKER), "--target", str(self.target),
+                "--spec", "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+                "--transition-records",
+                ",".join("docs/specs/" + n + ".md" for n in self.FIVE_RECORDS),
+                "--index", "docs/specs/README.md"]
+        if base_ref:
+            args += ["--transition-base-ref", base_ref]
+        return subprocess.run(args, capture_output=True, text=True)
 
     def edit(self, name, old, new):
         p = self.target / "docs" / "specs" / name
@@ -290,6 +291,74 @@ class AdoptionTransitionIntegrity(unittest.TestCase):
         idx.write_text(t)
         self.assertNotEqual(0, self.run_checker().returncode,
                             "an index contradicting the frontmatter must be refused")
+
+    def test_real_before_after_transition_is_judged(self):
+        # --transition-base-ref must bind the REAL before state (a git ref),
+        # not a same-file self-comparison: the fixture commits the genuine
+        # pre-acceptance records, moves the tree to the accepted state, and
+        # a V2 flip-back in the after state must fail the transition check.
+        self.set_lock("proposed")
+        specs = self.target / "docs" / "specs"
+        subprocess.run(["git", "init", "-q", str(self.target)], check=True)
+        subprocess.run(["git", "-C", str(self.target), "add", "-A"], check=True)
+        subprocess.run(["git", "-C", str(self.target), "-c", "user.name=f",
+                        "-c", "user.email=f@f", "commit", "-qm", "pre-acceptance"],
+                       check=True)
+        pre_v2 = ("spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\nstatus: accepted\n"
+                  "superseded_by: null\nsupersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1\n"
+                  "governed_by: []\nauthority_level: governing_spec\naccepted_date: 2026-09-05\naccepted_by: mayf3\n"
+                  "accepted_at: 2026-09-05T00:21:28Z\n"
+                  "accepted_reviewed_spec_commit: 8eed354656e9de249f7dfab3f9b0610132ebb167\n"
+                  "acceptance_review_verdict: PASS\n")
+        pre_v3 = ("spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nstatus: proposed\n"
+                  "supersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\ngoverned_by: []\n"
+                  "authority_level: governing_spec\n")
+        (specs / "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md").write_text("---\n" + pre_v2 + "---\n# t\n")
+        (specs / "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md").write_text("---\n" + pre_v3 + "---\n# t\n")
+        idx = specs / "README.md"
+        t = idx.read_text()
+        t = t.replace("`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted / current governance",
+                      "`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | proposed / draft pilot")
+        t = t.replace("`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`)",
+                      "`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | accepted / current governance")
+        idx.write_text(t)
+        # before==after (the committed pre-acceptance state) is a valid state
+        result = self.run_checker()
+        self.assertEqual(0, result.returncode,
+                         "the genuine pre-acceptance state must validate: " + result.stderr)
+        # now move to the accepted state: the real transition must validate
+        self.edit("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md",
+                  "status: accepted", "status: superseded")
+        self.edit("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md",
+                  "superseded_by: null", "superseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3")
+        for name, fm in (("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md", None),):
+            pass
+        accepted_v3 = ("spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3\nstatus: accepted\n"
+                       "supersedes:\n  - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2\ngoverned_by: []\n"
+                       "authority_level: governing_spec\naccepted_date: 2026-10-08\naccepted_by: mayf3\n"
+                       "accepted_at: 2026-10-08T12:34:53Z\n"
+                       "accepted_reviewed_spec_commit: fd5881bb6f93c50f19578fefa24a64f3fdbcdf07\n"
+                       "acceptance_review_verdict: PASS\n")
+        (specs / "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md").write_text("---\n" + accepted_v3 + "---\n# t\n")
+        # the lock transitions together with the records (CTR-AD3-002 atomic)
+        self.set_lock("accepted", accepted_by="mayf3", accepted_at="2026-10-08T12:34:53Z")
+        t = idx.read_text()
+        t = t.replace("`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | proposed / draft pilot",
+                      "`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` | accepted / current governance")
+        t = t.replace("`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | accepted / current governance",
+                      "`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2` | superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`)")
+        idx.write_text(t)
+        result = self.run_checker()
+        self.assertEqual(0, result.returncode,
+                         "the real proposed->accepted transition must validate: " + result.stderr)
+        # and a flip-back in the after state must be caught against the bound
+        # before commit (HEAD still points at the pre-acceptance commit)
+        self.edit("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md",
+                  "status: superseded", "status: accepted")
+        result = self.run_checker(base_ref="HEAD")
+        self.assertNotEqual(0, result.returncode,
+                            "V2 flip-back must fail against the bound before state")
+        self.assertIn("raw transition validation", result.stderr)
 
     def test_proposed_pilot_without_review_fields_still_passes(self):
         # A proposed pilot (the agent-control shape: a single-record adoption
@@ -393,7 +462,8 @@ class StructureNonRegressionComparator(unittest.TestCase):
                                      extra=["--rule-conformance-report", str(empty),
                                             "--config-fact-file", str(fact)])
         combined = result.stdout + result.stderr
-        self.assertEqual(0, result.returncode, combined)
+        self.assertEqual(3, result.returncode,
+                         "conformance-unmeasurable must fail the check (exit 3)")
         self.assertIn("RULE_CONFORMANCE: UNMEASURABLE", combined)
         self.assertIn("exit=2", combined)
         self.assertIn("NON_REGRESSION: PASS", combined)
@@ -406,11 +476,24 @@ class StructureNonRegressionComparator(unittest.TestCase):
         result = self.run_comparator(tmp, b, h,
                                      extra=["--rule-conformance-report", h])
         combined = result.stdout + result.stderr
-        self.assertIn("NON_REGRESSION", combined)
-        self.assertIn("RULE_CONFORMANCE", combined)
+        self.assertIn("NON_REGRESSION: PASS", combined)
+        self.assertIn("RULE_CONFORMANCE: FAIL", combined)
+        self.assertEqual(3, result.returncode,
+                         "rule-conformance FAIL must fail the check (exit 3)")
+
+    def test_clean_head_with_clean_conformance_passes(self):
+        tmp = Path(tempfile.mkdtemp(prefix="struct-selftest-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        b, h = self.write_reports(tmp, [])
+        clean = tmp / "clean-rule.json"
+        clean.write_text(json.dumps({"summary": {"violations": 0, "head": "x"}, "findings": []}))
+        result = self.run_comparator(tmp, b, h,
+                                     extra=["--rule-conformance-report", str(clean)])
+        combined = result.stdout + result.stderr
+        self.assertEqual(0, result.returncode, combined)
+        self.assertIn("RULE_CONFORMANCE: PASS", combined)
+        self.assertIn("NON_REGRESSION: PASS", combined)
 
 
 if __name__ == "__main__":
-    unittest.main()
-
     unittest.main()
