@@ -125,7 +125,7 @@ version row's own `version_status`); the capability does not editorialize.
   zero token and zero svc traffic.
 
 ## AMENDMENT_1 (2026-10-08, status: **ACCEPTED** — Owner mayf3 accepted in the
-> #613 thread at 2026-10-09 12:26:25 UTC ("同意的"), replying to the explicit
+> #613 thread at 2026-10-08 12:26:25 UTC ("同意的"), replying to the explicit
 > one-sentence increment question at 12:18 UTC; independent static review of
 > svc head c1392a4750e9d5d6673e09599eb4b52c3063db2f and Core head
 > 6bb4e6389bf7d07fe3bdf79b1bc2b95eabdf25b9 reported no P0/P1. Adds one action)
