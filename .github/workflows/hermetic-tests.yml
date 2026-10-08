@@ -32,27 +32,41 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 - <<'PY'
-          import json, os, subprocess, sys
+          import json, os, subprocess, sys, time
 
           required = [name.strip() for name in os.environ["REQUIRED_CHECKS"].split(",") if name.strip()]
           head = os.environ["HEAD_SHA"]
           repo = os.environ["GITHUB_REPOSITORY"]
 
-          runs = []
-          page = 1
+          def fetch_runs():
+              runs, page = [], 1
+              while True:
+                  out = subprocess.run(
+                      ["gh", "api", f"repos/{repo}/commits/{head}/check-runs",
+                       "-X", "GET", "-f", "per_page=100", "-f", "page=%d" % page],
+                      capture_output=True, text=True)
+                  if out.returncode != 0:
+                      sys.stderr.write("check-runs API failed: %s\n" % out.stderr)
+                      sys.exit(2)
+                  batch = json.loads(out.stdout).get("check_runs", [])
+                  runs.extend(batch)
+                  if len(batch) < 100:
+                      return runs
+                  page += 1
+
+          # Parallel workflows may still be running when this job starts: wait,
+          # with a bound, until every required check has COMPLETED. A timeout is
+          # reported as NOT READY — it is never silently treated as a pass.
+          deadline = time.time() + 360
           while True:
-              out = subprocess.run(
-                  ["gh", "api", f"repos/{repo}/commits/{head}/check-runs",
-                   "-X", "GET", "-f", "per_page=100", "-f", "page=%d" % page],
-                  capture_output=True, text=True)
-              if out.returncode != 0:
-                  sys.stderr.write("check-runs API failed: %s\n" % out.stderr)
-                  sys.exit(2)
-              batch = json.loads(out.stdout).get("check_runs", [])
-              runs.extend(batch)
-              if len(batch) < 100:
+              runs = fetch_runs()
+              tracked = [r for r in runs if r["name"] in required]
+              if len({r["name"] for r in tracked}) >= len(required) and all(r["status"] == "completed" for r in tracked):
                   break
-              page += 1
+              if time.time() >= deadline:
+                  sys.stderr.write("timed out waiting for required checks to complete; treating as NOT READY\n")
+                  break
+              time.sleep(15)
 
           # Latest run per check name wins (re-runs supersede earlier verdicts).
           latest = {}
