@@ -1,0 +1,84 @@
+name: hermetic-tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  hermetic-tests:
+    name: hermetic-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Governance mechanism selftest (stdlib only, no network)
+        run: python3 .agents/local/tools/governance_selftest.py
+
+  merge-readiness:
+    name: merge-readiness
+    needs: [hermetic-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate required checks at this exact head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUIRED_CHECKS: governance-integrity,governance-acceptance,structure-nonregression,hermetic-tests
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, sys
+
+          required = [name.strip() for name in os.environ["REQUIRED_CHECKS"].split(",") if name.strip()]
+          head = os.environ["HEAD_SHA"]
+          repo = os.environ["GITHUB_REPOSITORY"]
+
+          runs = []
+          page = 1
+          while True:
+              out = subprocess.run(
+                  ["gh", "api", f"repos/{repo}/commits/{head}/check-runs",
+                   "-X", "GET", "-f", "per_page=100", "-f", "page=%d" % page],
+                  capture_output=True, text=True)
+              if out.returncode != 0:
+                  sys.stderr.write("check-runs API failed: %s\n" % out.stderr)
+                  sys.exit(2)
+              batch = json.loads(out.stdout).get("check_runs", [])
+              runs.extend(batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+
+          # Latest run per check name wins (re-runs supersede earlier verdicts).
+          latest = {}
+          for run in runs:
+              if run.get("status") != "completed":
+                  latest[run["name"]] = {"state": "INCOMPLETE",
+                                         "conclusion": run.get("conclusion")}
+                  continue
+              if run["name"] not in latest:
+                  latest[run["name"]] = {"state": "DONE", "conclusion": run.get("conclusion")}
+
+          failures = []
+          for name in required:
+              entry = latest.get(name)
+              if entry is None:
+                  failures.append("%s: NOT RUN — merge readiness not established (missing is a failure, not a pass)" % name)
+              elif entry["state"] != "DONE":
+                  failures.append("%s: INCOMPLETE (status not completed)" % name)
+              elif entry["conclusion"] != "success":
+                  failures.append("%s: conclusion=%s (failure/cancel/skip is rejected)" % (name, entry["conclusion"]))
+
+          print("required checks evaluated at %s:" % head)
+          for name in required:
+              entry = latest.get(name)
+              print("  %-24s %s" % (name, "NOT RUN" if entry is None else
+                                     ("%s/%s" % (entry["state"], entry["conclusion"]) if entry["state"] == "DONE" else "INCOMPLETE")))
+          if failures:
+              sys.stderr.write("MERGE NOT READY:\n" + "".join("- %s\n" % f for f in failures))
+              sys.exit(1)
+          print("MERGE READY: all required checks succeeded at this head.")
+          PY

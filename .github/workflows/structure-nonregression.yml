@@ -1,0 +1,32 @@
+name: structure-nonregression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  structure-nonregression:
+    name: structure-nonregression
+    runs-on: ubuntu-latest
+    env:
+      # Frozen structural-debt baseline: origin/main at PR #494 merge. Legacy
+      # violations at this ref are reported and allowed; new violations and
+      # growth of existing ones fail. Moving this pin is an explicit PR.
+      STRUCTURE_BASE: 5181c211e80916130b472610d7cb791e7b3a7d0f
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Compare head structure against the frozen baseline
+        run: |
+          node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head "$STRUCTURE_BASE" --json > /tmp/base-structure.json || true
+          node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head HEAD --json > /tmp/head-structure.json || true
+          python3 .agents/local/tools/check_structure_nonregression.py \
+            /tmp/base-structure.json /tmp/head-structure.json

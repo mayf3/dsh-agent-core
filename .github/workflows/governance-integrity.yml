@@ -1,0 +1,18 @@
+name: governance-integrity
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  governance-integrity:
+    name: governance-integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify vendored governance bytes against the lock
+        run: python3 .agents/tools/verify_governance.py --target .

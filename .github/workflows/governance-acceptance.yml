@@ -1,0 +1,20 @@
+name: governance-acceptance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  governance-acceptance:
+    name: governance-acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Adoption claim must match the lock (proposed stays proposed)
+        run: |
+          python3 .agents/local/tools/check_adoption_state.py \
+            --spec docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md
