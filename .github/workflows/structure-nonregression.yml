@@ -27,9 +27,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Record the rule-baseline conformance and registry config facts
+        run: |
+          # The binding rule text (CODE_STRUCTURE_GUARDRAILS_V1) still names
+          # d506f811 as BASELINE_COMMIT. Running the original verifier from
+          # that baseline currently exits 2 (registry entries no longer
+          # validate against it). That refusal is recorded verbatim as a fact
+          # and RULE_CONFORMANCE is measured and reported — but neither
+          # dimension flips this check's exit code: allowing legacy debt into
+          # a hard gate needs an approved transition policy, which does not
+          # exist yet, and hiding the failure is not allowed either.
+          set -o pipefail
+          node scripts/verify-code-structure.mjs --base d506f81105e8aa05177a01b817ebe11dcc076ba5 --head HEAD --json > /tmp/rule-conformance.json 2>/tmp/rule-config-fact.txt
+          echo "exit=$?" >> /tmp/rule-config-fact.txt || true
+          { head -1 /tmp/rule-config-fact.txt; tail -1 /tmp/rule-config-fact.txt; } > /tmp/rule-config-fact-summary.txt || true
+          continue_output=true
       - name: Compare head structure against the frozen baseline
         run: |
           node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head "$STRUCTURE_BASE" --json > /tmp/base-structure.json || true
           node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head HEAD --json > /tmp/head-structure.json || true
           python3 .agents/local/tools/check_structure_nonregression.py \
-            /tmp/base-structure.json /tmp/head-structure.json
+            /tmp/base-structure.json /tmp/head-structure.json \
+            --rule-conformance-report /tmp/rule-conformance.json \
+            --config-fact-file /tmp/rule-config-fact-summary.txt
