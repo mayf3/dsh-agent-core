@@ -2,6 +2,7 @@
 
 > 状态：冻结草案（docs-only）· 日期：2026-08-15  
 > Authority amendment：2026-08-18  
+> Authority amendment（DRAFT_EXISTING_POLICY）：2026-10-03 · #441 · 见 §7；待审，未接受。
 > 基线：`69273a9`（Integration V1 已合并）；契约：`AGENT_SESSION_CHANNEL_MODEL_V1`（D-002）  
 > 本文件回答：**最终 Agent Core 到底是什么、每一层归谁负责、哪些边界永不跨越**。
 >
@@ -267,3 +268,73 @@ Forum / Workflow / OKR / 其他外部业务系统
 - peer-Agent security-domain claim 的 current authority 是
   `docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md`；冲突时以该 Program 为准。
 - 其他冲突处理见 `docs/AGENT_CORE_ROADMAP_V1.md` §8（如有）。
+
+## 7. Authority amendment — #441 prevention consolidation（待审）
+
+本节为一个 docs-only candidate，不改变本文件或任何 Spec 的 acceptance metadata，
+不授权实现、安装或部署。按 `specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md` §5/§11
+由 Reviewer 评审、经既有 AMEND / acceptance 路径接受后才成为政策；冲突不得靠本草案覆盖 accepted authority。
+
+- **R1 · responsibility / dependency**：agent-control 拥有离线 coding execution；Core 拥有
+  physical runtime / admission / effect fences；svc-workflow 拥有 logical workflow；Auth 拥有
+  identity；Forum 拥有 projections；现有 DS/release 拥有部署。通用 Router/Scheduler 不依赖
+  incident/deployment 实现或 offline executor（含传递 boot/pack 依赖）；静态纯数据组合、
+  普通 HR Jobs、合法 maintenance 入口不能仅因名称被禁。Registry 登记不替代 Auth 身份权威。
+  正常 import/pack/composition 不得构造/解析 Codex backend、创建离线 worktree/ledger 或 spawn/kill/recover 离线 child。
+- **R2 · one fact, one writer**：binding / state-field 变更逐项列出唯一 writable owner、
+  readers/projections 和真实 mutation unit；logical Workflow ≠ physical attempt，
+  desired protection policy ≠ actual Job state；business-fact authority ≠ optional
+  execution projection。field-level owner 本身不构成写安全：现有 whole-body publisher
+  （如 agent-control `product_linkage.py` `write_product_body` 整体回写 Issue body）可抹掉
+  并发的 SOURCE/BUSINESS_VERIFIED 编辑，或用过期业务 body 恢复旧 ACTIVE_EXECUTION；
+  reread + field owner 单独不是架构收敛。在既有 controller/command-bus admission 与
+  receipt 已保安全处，优先移除冗余 writable execution mirror；不为满足措辞新增
+  whole-body metadata publisher；#397/#382/#386 successor 与 Watch/supervisor/CLI
+  迁移仍是具体、未接受的后续工作。mutation helper 对实际将修改的 body 重验 exact expected
+  binding；旧 terminal receipt 不得释放后续 claim/command。GitHub 重读不是 atomic CAS；
+  缺失/不可读 age、不可用读取、UNKNOWN identity 或未确认 termination 均不能证明
+  abandonment。协议变更给直接消费者 migration / rollback，不得新增 wrapper 隐藏旧写路径。
+  release 历史 receipt 按既有契约保留解析后的语义值（可见消费者比较
+  source/artifact/migration/verification 值），不主张原始字节格式不变；字节一致要求只针对
+  exact current receipt：安装必须 materialize pinned Git objects 或拒绝 dirty bytes，
+  记录 commit/blob 存在不证明字节一致。
+- **R3 · optional startup / parameterization**：未配置 adapter 关闭；移除 incident 材料、替换
+  test Agent ID/root 后其余 runtime 仍能启动。缺 credential 只关闭对应 optional capability；
+  缺 security policy 仍对其操作 fail-closed。OWNER_ASSISTANCE_WAKE 的既有 outbox 消费独立于
+  optional Forum 配置/失败。普通 cron/every/at 对任意 test Agent 同语义，无隐藏 HR 分支；
+  Workflow dispatch 的 recovering/unknown/undefined/failed evidence 应 defer，不 mint/deliver；真实缺依赖反例优先于静态计数。
+- **R4 · retirement / effects**：default-off ≠ retired；生产配置不得复活 retired writer。
+  history read/list/replay 在 backend 配置缺失或畸形、无 writable storage 时仍无 backend 构造/解析、
+  mkdir/worktree、spawn/kill/recovery/write；writer 方法在任何 effect 前拒绝。test-only 实现限于
+  hermetic tooling、离开正常 boot/pack graph；accepted legacy tests 在合法 successor 出现前保留。
+- **R5 · incident exit**：例外的窄 scope、owner、剩余 safety obligations、移除条件和 rollback
+  dependency 写在同一个 incident Issue/runbook；不得用定时自动过期删除 active fences；
+  条件满足后转 DELETE/MOVE 并给正常 import/pack 的删除证据；已修复的危险权限不得借
+  cleanup 泛化。这里不新建 incident ledger 或执行入口。
+- **R6 · review / proof**：跨职责 review 覆盖 changed surface 及直接 caller/consumer/dependency
+  closure；先判断 Spec 是否允许了错误架构，再判断实现是否符合 Spec。每轮汇总一个 material
+  blocker union → 一次集中修复 → 一次 recheck，新增反例保留可追溯证据。
+  not-run / missing-tool / ordinary compiler failure 不得记 PASS，先过滤工具/编译错误再报
+  PASS 同此禁止；source/test PASS ≠ installed / enabled / business verified；release 端点按
+  精确预期状态判定：readiness=200、带有效 token 的 auth=200、无 token 的 auth guard=401，
+  偏离该端点的精确预期才算失败，不得把 guard 的 401 预期误写为失败。禁止 constant PASS、
+  skipped 假指标或无消费者的 obsolete gate claim；历史结果不冒充当前验证；未实际触发的
+  检查（如 nested/复选 workflow）明确标 NOT_RUNNING，不冒充更大覆盖面。
+  file-line/barrel/import-count 只帮助 reviewability；拆文件不证明架构改善，禁止为指标 re-export/wrapper。
+  普通开发 PR 不承担创建真实业务 Workflow instance 的跨层义务；真实业务验收仅在对应授权范围执行。
+  supervisor typed required facts / fail-closed 及 #394 event → action → closure liveness 原样保留，
+  不缩短或删除 mandatory event policy strings。
+
+证据边界：下列是 Owner 提供的 2026-10-03 Issue 摘要，未联网复核，不是本候选的测试结果。
+C1/C2：#439（normal composition 与 effect-free history；CTR-DEC-001/002、22 legacy tests）、
+PR #443（OPEN、未合并：production wrapper 只读 executions.jsonl + writer 文件迁 test/helpers
++ effect-free history 回归提案；结果以该 PR 自身证据为准，本候选未运行）、
+#435 F2（disabled ≠ removed）；C3：#407/#442（audit comment 5962699533）；C4：#434/#408
+（Agent/root、WORKFLOW_EXECUTION_POLLER_AGENT_ID；#438 移除固定 import，报告的 main 为 daa4c82d）；
+C5：#440（product_linkage.py exact binding / #382 age）及 #408（>3600000ms 同 visit/version，
+audit comment 5962699309）；C6：#407/#440（receipt 历史=语义值保留、current=pinned bytes）。
+这些源修复归 ChatGPT Work，不得以本节或相邻旧测试声称已修复。基线事实：冻结评审基线 =
+main 51e14105（现 main d1e42f21 的祖先；本候选已 rebase 到 d1e42f21）；
+`packages/development-execution` 在该基线的 git tree 中存在（src×5 + test×2，无 package.json；
+现 main 已补 package.json），"absent" 只是起草 workspace 头 e9699aee（非 main 祖先）的局部
+事实，不描述 main 的 import/source graph。
