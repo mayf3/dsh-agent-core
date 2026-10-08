@@ -7,3 +7,7 @@ package-lock.json
 
 # PRODUCT_API_VOICE_TRANSCRIPTION_V1: ASR model assets never enter Git.
 .agent-core/models/
+
+# Python bytecode caches (never track generated interpreter output)
+__pycache__/
+*.pyc
