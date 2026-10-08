@@ -4,7 +4,7 @@
  *
  * PURE-DATA manifest like every capability family. Read-only, SAME-DOMAIN:
  *
- *   workflow_definition_read.list_definitions  GET .../definitions        (page)
+ *   workflow_definition_read.list_definitions      GET .../definitions                     (page)
  *   workflow_definition_read.get_definition    GET .../definitions/{id}   (detail)
  *
  * Both operations bind the svc-workflow endpoints that ALREADY exist and
@@ -94,6 +94,27 @@ export const workflowDefinitionReadManifest = withTransportErrors({
         path: '/internal/v1/domains/{domainId}/definitions',
         pathParams: ['domainId'],
         query: ['limit', 'beforeCreatedAt', 'beforeId'],
+      },
+    },
+    {
+      name: 'get_definition_version',
+      description:
+        'Read ONE precise version by definitionVersionId: the full version row plus its COMPLETE graph — every node (assignee_ref, instructions, primary_advance_transition_id, metadata) and every transition (transition_effect, submission_schema, metadata). Use it to verify exactly what a version contains before creating instances or after authoring. Same-domain owner visibility enforced by the service; nonexistent versions, foreign definitions and non-owner callers return the service\u2019s own opaque errors.',
+      arguments: {
+        properties: {
+          domainId: domainIdProperty,
+          definitionId: { type: 'string', description: 'Workflow definition id (UUID) the version belongs to.' },
+          definitionVersionId: { type: 'string', description: 'Workflow definition version id (UUID), e.g. from get_definition\u2019s version rows.' },
+        },
+        required: ['domainId', 'definitionId', 'definitionVersionId'],
+      },
+      result: { type: 'json' },
+      errors: ['invalid_arguments'],
+      http: {
+        target: 'svc-workflow',
+        method: 'GET',
+        path: '/internal/v1/domains/{domainId}/definitions/{definitionId}/versions/{definitionVersionId}',
+        pathParams: ['domainId', 'definitionId', 'definitionVersionId'],
       },
     },
     {

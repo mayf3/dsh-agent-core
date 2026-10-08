@@ -123,3 +123,27 @@ version row's own `version_status`); the capability does not editorialize.
   honest `definition_not_found` with requestId for a foreign definition;
   local `invalid_arguments` / `invalid_cursor` / `invalid_pagination` with
   zero token and zero svc traffic.
+
+## AMENDMENT_1 (2026-10-08, status: **ACCEPTED** — Owner mayf3 accepted in the
+> #613 thread at 2026-10-09 12:26:25 UTC ("同意的"), replying to the explicit
+> one-sentence increment question at 12:18 UTC; independent static review of
+> svc head c1392a4750e9d5d6673e09599eb4b52c3063db2f and Core head
+> 6bb4e6389bf7d07fe3bdf79b1bc2b95eabdf25b9 reported no P0/P1. Adds one action)
+
+Driven by #613 field evidence: `get_definition`'s list projection returns
+empty `nodes`/`transitions` arrays by service design, so the precise
+version-level graph (assignee_ref / instructions / primary_advance_transition_id /
+metadata / submission_schema / transition_effect) was unreachable through the
+capability. Adds ONE third operation:
+
+- `get_definition_version(domainId, definitionId, definitionVersionId)` — GET
+  `/internal/v1/domains/{domainId}/definitions/{definitionId}/versions/{definitionVersionId}`
+  (implemented server-side by the svc-workflow normal authenticated route that
+  reuses `DefinitionService.get_definition_version` unchanged: `workflow.read`
+  scope + H-5 domain owner + enabled principal, path-ownership consistency with
+  opaque 404, DRAFT/PUBLISHED both readable by the owner).
+
+Everything else in this spec is unchanged: GET-only, no idempotency key,
+verbatim passthrough, no global read, no new roles/scopes, invalid-arguments
+fail-fast before any token/HTTP. Companion svc-workflow change:
+mayf3/svc-workflow PR #76 (branch feat/definition-version-detail-read-v1).
