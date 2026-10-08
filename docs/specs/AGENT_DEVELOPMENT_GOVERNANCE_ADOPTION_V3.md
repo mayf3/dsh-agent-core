@@ -1,6 +1,22 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
-status: proposed
+status: accepted
+accepted_date: 2026-10-08
+accepted_by: mayf3
+accepted_at: 2026-10-08T12:34:53Z
+acceptance_authority_basis: >-
+  Owner mayf3 approved this exact scope in the working session transcript at
+  2026-10-08T12:34:53Z ("没问题" replying to the proposal to complete Core
+  governance acceptance with main PR-only plus governance-integrity /
+  governance-acceptance / structure-nonregression / hermetic-tests /
+  merge-readiness as the main gate set). The lock transition was executed by
+  the central tools/vendor.py at the pinned source 6301662e with the original
+  preparation fields preserved. Per CTR-AD3-002 / ACC-AD3-002 the
+  independent-reviewed / final-head bindings are completed at the pre-merge
+  final-delta recheck arranged by the owner; this PR is not merged before
+  that recheck, so the adoption is not active until merge. No
+  acceptance_review_verdict or reviewed-spec-commit value is recorded here
+  because that review has not happened yet; none is forged.
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
