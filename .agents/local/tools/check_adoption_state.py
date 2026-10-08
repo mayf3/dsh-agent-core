@@ -194,12 +194,16 @@ def check_transition(root, record_paths, index_path, base_ref=None):
                 problems.append("index is missing the row for %s" % spec_id)
                 continue
             expected = m.get("status")
-            if expected == "accepted" and "accepted" not in row:
-                problems.append("index row for %s does not reflect accepted" % spec_id)
-            if expected == "superseded" and "superseded" not in row:
-                problems.append("index row for %s does not reflect superseded" % spec_id)
-            if expected == "proposed" and ("accepted / current" in row or "superseded" in row):
-                problems.append("index row for %s does not reflect proposed" % spec_id)
+            # Parse the STATUS CELL (second column), not the whole row: a row
+            # like `superseded (was accepted)` contains the substring
+            # "accepted" and must not satisfy an accepted record.
+            cells = [c.strip() for c in row.split("|")]
+            status_cell = cells[2] if len(cells) > 2 else ""
+            cell_status = status_cell.split()[0] if status_cell.split() else ""
+            if expected != cell_status:
+                problems.append("index row for %s states %r but frontmatter status is %r"
+                                % (spec_id, status_cell, expected))
+                continue
             backlink = m.get("superseded_by")
             if expected == "superseded" and backlink:
                 # Index rows are history-formatted (some legacy rows use a

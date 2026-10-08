@@ -360,6 +360,29 @@ class AdoptionTransitionIntegrity(unittest.TestCase):
                             "V2 flip-back must fail against the bound before state")
         self.assertIn("raw transition validation", result.stderr)
 
+    def test_index_status_cell_smuggling_is_caught(self):
+        # "(was accepted)" style wording contains the expected substring but
+        # the row's STATUS disagrees — whole-row substring matching missed it.
+        for spec, old_status, smuggled in (
+                ("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md",
+                 "accepted / current governance", "superseded (was accepted)"),
+                ("AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2.md",
+                 "superseded (by `AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3`)",
+                 "accepted (was superseded)")):
+            with self.subTest(spec=spec, smuggled=smuggled):
+                idx = self.target / "docs" / "specs" / "README.md"
+                original = idx.read_text()
+                spec_id = spec[:-3]
+                t = original.replace("`%s` | %s" % (spec_id, old_status),
+                                     "`%s` | %s" % (spec_id, smuggled))
+                assert t != original
+                idx.write_text(t)
+                result = self.run_checker()
+                self.assertNotEqual(0, result.returncode,
+                                    "smuggled status cell must be refused")
+                self.assertIn("index row for", result.stderr)
+                idx.write_text(original)
+
     def test_proposed_pilot_without_review_fields_still_passes(self):
         # A proposed pilot (the agent-control shape: a single-record adoption
         # with a proposed lock) has no reviewed-commit/verdict yet; requiring
