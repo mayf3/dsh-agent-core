@@ -18,9 +18,12 @@ jobs:
       # growth of existing ones fail. Moving this pin is an explicit PR.
       STRUCTURE_BASE: 5181c211e80916130b472610d7cb791e7b3a7d0f
     steps:
+      # Evaluate the EXACT PR head (not the pull_request merge ref), so growth
+      # merged into main by other PRs is attributed to those PRs, not this one.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20

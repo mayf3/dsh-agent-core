@@ -22,6 +22,8 @@ jobs:
     needs: [hermetic-tests]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      checks: read
     steps:
       - name: Evaluate required checks at this exact head
         env:
