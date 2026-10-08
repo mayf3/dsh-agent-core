@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # the transition base ref (pre-acceptance commit) must be fetchable
+          fetch-depth: 0
       - name: Adoption claim must match the lock and the whole authority transition
         env:
           TRANSITION_BASE_REF: b86aa5ec53bb603098bf1f5bc01fd6b44b566930
