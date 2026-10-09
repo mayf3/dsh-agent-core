@@ -11,11 +11,18 @@ recovery contract; this tool performs zero writes, zero renames, zero deletes
 and no identity workaround. UNKNOWN means unreconciled, never absent, never
 safe to dispose.
 
-Ancestor path components are checked for non-writability and open-identity
-only — their uid is not scope-pinned; the root directory itself is compared
-against the scope "." entry (uid/gid always, mode where the scope pins it).
-A symlinked prefix (macOS /var -> private/var) is resolved once to a
-canonical walk root and recorded, never followed at open time.
+Ancestor path components are opened O_NOFOLLOW with per-component
+writability and open-identity checks (their uid is not scope-pinned); the
+root directory itself is compared against the scope "." entry (uid/gid
+always, mode where the scope pins it). Symlinks are refused, not resolved:
+a symlinked retained root fails ROOT_SYMLINK, and an ancestor symlink fails
+ROOT_ANCESTOR_SYMLINK unless the logical prefix is in the closed table
+KNOWN_ANCESTOR_ALIASES (macOS /var -> /private/var), which substitutes the
+table's physical prefix WITHOUT reading the link target and re-verifies the
+remaining components; the substitutions applied are recorded in the output.
+An object that cannot be observed (read/lstat/open error, blocked by a link
+or a type mismatch) is UNKNOWN — never MISSING_OBJECT — and its unobserved
+descendants are UNKNOWN/not_observed: unreadable is not absent.
 
 Usage:
   retained-custody-export.py --scope SCOPE.json --binding BINDING.json [--root ROOT]
@@ -152,11 +159,16 @@ def load_scope(path):
             "operationSourceArchiveSha256": scope.get("operationSourceArchiveSha256")}
 
 
+# Closed allowlist of ancestor aliases: key = logical prefix of the requested
+# root, value = canonical symlink-free physical prefix (every component of the
+# value is still verified during the walk). Extending this table is a contract
+# change, not a runtime decision.
+KNOWN_ANCESTOR_ALIASES = {"/var": "/private/var"}
+
+
 def root_chain(root, root_entry):
-    real = os.path.realpath(root)
-    parts = [p for p in real.split("/") if p]
     uid, gid = root_entry["expectedUid"], root_entry["expectedGid"]
-    chain, all_fds, current = [], [os.open("/", os.O_RDONLY | os.O_DIRECTORY)], ""
+    chain, substitutions, all_fds, current = [], [], [os.open("/", os.O_RDONLY | os.O_DIRECTORY)], ""
     fd = all_fds[0]
     cleaned = False
 
@@ -175,9 +187,40 @@ def root_chain(root, root_entry):
         raise Stop(code, detail)
 
     try:
-        for part in parts:
+        original = [p for p in root.split("/") if p]
+        queue = [(p, p) for p in original]
+        consumed_logical, logical_current = 0, ""
+        index = 0
+        while index < len(queue):
+            part, logical_name = queue[index]
+            index += 1
             current += "/" + part
-            before = os.stat(part, dir_fd=fd, follow_symlinks=False)
+            if logical_name is not None:
+                consumed_logical += 1
+                logical_current = "/" + "/".join(original[:consumed_logical])
+            try:
+                before = os.stat(part, dir_fd=fd, follow_symlinks=False)
+            except OSError as e:
+                fail("ROOT_ABSENT" if isinstance(e, FileNotFoundError) else "UNKNOWN",
+                     f"root walk {current}: {e}")
+            if stat.S_ISLNK(before.st_mode):
+                if index == len(queue):
+                    fail("ROOT_SYMLINK", f"retained root itself is a symlink: {current}")
+                physical = KNOWN_ANCESTOR_ALIASES.get(logical_current)
+                if physical is None:
+                    fail("ROOT_ANCESTOR_SYMLINK", f"unapproved ancestor symlink: {current}")
+                if len(substitutions) >= 4:
+                    fail("ROOT_ANCESTOR_SYMLINK", "alias substitution limit exceeded")
+                substitutions.append({"logicalPrefix": logical_current, "physicalPrefix": physical,
+                                      "source": "KNOWN_ANCESTOR_ALIASES"})
+                cleanup()
+                cleaned = False
+                all_fds = [os.open("/", os.O_RDONLY | os.O_DIRECTORY)]
+                fd = all_fds[0]
+                queue = ([(p, None) for p in physical.split("/") if p]
+                         + [(n, n) for n in original[consumed_logical:]])
+                current, index, chain = "", 0, []
+                continue
             if not stat.S_ISDIR(before.st_mode):
                 fail("ROOT_CUSTODY", f"not a directory: {current}")
             if before.st_mode & 0o022:
@@ -202,12 +245,11 @@ def root_chain(root, root_entry):
     except BaseException:
         cleanup()
         raise
-    return {"requested": root, "canonical": real, "canonicalDiffers": real != root,
-            "chain": chain, "root": measured}, fd
+    return {"requested": root, "aliasSubstitutions": substitutions, "chain": chain, "root": measured}, fd
 
 
 def measure(expected, dir_fd):
-    inventory, anomalies = [], []
+    inventory, anomalies, blocked = [], [], set()
 
     def drift(rel, detail):
         anomalies.append({"class": "DRIFT", "relative": rel, "detail": detail})
@@ -223,6 +265,7 @@ def measure(expected, dir_fd):
                 st = os.stat(name, dir_fd=fd, follow_symlinks=False)
             except OSError as e:
                 note("UNKNOWN", child, detail=str(e))
+                blocked.add(child)
                 continue
             if stat.S_ISLNK(st.st_mode):
                 try:
@@ -230,6 +273,8 @@ def measure(expected, dir_fd):
                 except OSError as e:
                     target = f"UNREADABLE:{e}"
                 note("LINK_OBJECT", child, target=target[:LINK_TARGET_CAP])
+                if item is not None and item["type"] == "directory":
+                    blocked.add(child)
                 inventory.append({"relative": child, "type": "symlink", "uid": st.st_uid, "gid": st.st_gid,
                                   "mode": format(stat.S_IMODE(st.st_mode), "04o"), "nlink": st.st_nlink})
                 continue
@@ -252,11 +297,13 @@ def measure(expected, dir_fd):
                     nxt = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
                 except OSError as e:
                     note("UNKNOWN", child, detail=f"open: {e}")
+                    blocked.add(child)
                     inventory.append(measured)
                     continue
                 try:
                     if identity(st) != identity(os.fstat(nxt)):
                         note("UNKNOWN", child, detail="changed during open")
+                        blocked.add(child)
                         inventory.append(measured)
                         continue
                     inventory.append(measured)
@@ -305,12 +352,18 @@ def measure(expected, dir_fd):
                 inventory.append(measured)
             else:
                 drift(child, f"scope type {item['type']} not found on site")
+                if item["type"] == "directory":
+                    blocked.add(child)
                 inventory.append(measured)
 
     walk(".", dir_fd)
     measured_paths = {e["relative"] for e in inventory}
     for rel in sorted(k for k in expected if k != "." and k not in measured_paths):
-        note("MISSING_OBJECT", rel)
+        blocker = next((b for b in blocked if rel == b or rel.startswith(b + "/")), None)
+        if blocker is not None:
+            note("UNKNOWN", rel, reason="not_observed", blockedAncestor=blocker)
+        else:
+            note("MISSING_OBJECT", rel)
     return inventory, anomalies
 
 
