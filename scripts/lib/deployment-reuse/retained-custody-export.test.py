@@ -9,12 +9,14 @@ import hashlib
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).parent
 SCRIPT = HERE / "retained-custody-export.py"
@@ -325,6 +327,127 @@ class RetainedCustodyExportTests(unittest.TestCase):
                               capture_output=True, text=True)
         self.assertEqual(proc.returncode, 3 if True else proc.returncode)
         self.assertIn("--binding", proc.stderr)
+
+
+    def rewrite_scope_root(self, link_path, name):
+        scope = json.loads(Path(self.scope).read_text())
+        scope["root"] = str(link_path)
+        return self.fx.write_scope(scope, name=name)
+
+    def scope_for(self, root_path, files, name):
+        uid, gid = os.getuid(), os.getgid()
+        entries = [{"relative": ".", "type": "directory", "expectedUid": uid, "expectedGid": gid,
+                    "expectedMode": "0700"}]
+        for rel, data in sorted(files.items()):
+            entries.append({"relative": rel, "type": "regular", "expectedUid": uid, "expectedGid": gid,
+                            "expectedBytes": len(data), "expectedSha256": digest(data)})
+        scope = {"kind": "B7_R10_EXPECTED_RETAINED_SCOPE_DERIVED_ONLY_V1", "root": str(root_path),
+                 "sourceItemlistSha256": "a" * 64, "sourceOutputSha256": "b" * 64,
+                 "operationSourceArchiveSha256": "c" * 64,
+                 "expectedCounts": {"regularFiles": len(files), "directories": 1, "symlinks": 0,
+                                    "entries": len(entries),
+                                    "regularBytes": sum(len(d) for d in files.values())},
+                 "entries": entries}
+        path = self.fx.root.parent / name
+        path.write_text(json.dumps(scope))
+        return str(path)
+
+    def test_root_symlink_refused(self):
+        link = self.fx.root.parent / f"root-link-{os.getpid()}"
+        link.symlink_to(self.fx.root)
+        self.addCleanup(link.unlink)
+        scope = self.rewrite_scope_root(link, f"scope-rootlink-{os.getpid()}.json")
+        code, record = self.call(scope, self.binding)
+        self.assertEqual((code, record["verdict"]), (2, "ROOT_SYMLINK"))
+        self.assertNotEqual(record["verdict"], "MATCH")
+
+    def test_unapproved_ancestor_symlink_refused(self):
+        base = self.fx.root.parent / f"lbase-{os.getpid()}"
+        base.mkdir(mode=0o700)
+        self.addCleanup(base.rmdir)
+        real = self.fx.root.parent / f"real-decoy-{os.getpid()}"
+        (real / "deep").mkdir(parents=True, mode=0o700)
+        self.addCleanup(lambda: shutil.rmtree(real))
+        data = b"decoy-alpha"
+        (real / "deep" / "a.txt").write_bytes(data)
+        alias = base / "alias"
+        alias.symlink_to(real)
+        self.addCleanup(alias.unlink)
+        scope = self.scope_for(alias / "deep", {"a.txt": data}, f"scope-ancestor-{os.getpid()}.json")
+        code, record = self.call(scope, self.binding)
+        self.assertEqual((code, record["verdict"]), (2, "ROOT_ANCESTOR_SYMLINK"))
+        self.assertNotEqual(record["verdict"], "MATCH")
+
+    def test_known_ancestor_alias_allowed_and_recorded(self):
+        real = Path(os.path.realpath(self.fx.root.parent)) / f"alias-real-{os.getpid()}"
+        (real / "proj").mkdir(parents=True, mode=0o700)
+        self.addCleanup(lambda: shutil.rmtree(real))
+        data = b"alias-content"
+        (real / "proj" / "a.txt").write_bytes(data)
+        holder = self.fx.root.parent / f"alias-base-{os.getpid()}"
+        holder.mkdir(mode=0o700)
+        self.addCleanup(holder.rmdir)
+        entry = holder / "entry"
+        entry.symlink_to(real)
+        self.addCleanup(entry.unlink)
+        scope = self.scope_for(entry / "proj", {"a.txt": data}, f"scope-alias-{os.getpid()}.json")
+        saved = self.m.KNOWN_ANCESTOR_ALIASES
+        self.m.KNOWN_ANCESTOR_ALIASES = dict(saved, **{str(entry): str(real)})
+        self.addCleanup(setattr, self.m, "KNOWN_ANCESTOR_ALIASES", saved)
+        code, record = self.m.run(scope, self.binding)
+        self.assertEqual((code, record["verdict"]), (0, "MATCH"))
+        substitutions = record["rootCustody"].get("aliasSubstitutions") or []
+        self.assertEqual(substitutions, [{"logicalPrefix": "/var", "physicalPrefix": "/private/var",
+                                          "source": "KNOWN_ANCESTOR_ALIASES"},
+                                         {"logicalPrefix": str(entry), "physicalPrefix": str(real),
+                                          "source": "KNOWN_ANCESTOR_ALIASES"}])
+
+    def test_unreadable_dir_descendants_not_observed(self):
+        self.fx.path("tree/nested").chmod(0o000)
+        try:
+            code, record = self.m.run(self.scope, self.binding)
+        finally:
+            self.fx.path("tree/nested").chmod(0o700)
+        self.assertEqual(code, 2)
+        rels = {a["relative"]: a for a in record["anomalies"]}
+        self.assertEqual(rels["tree/nested/deep.bin"]["class"], "UNKNOWN")
+        self.assertEqual(rels["tree/nested/deep.bin"].get("reason"), "not_observed")
+        self.assertFalse([a for a in record["anomalies"] if a["class"] == "MISSING_OBJECT"])
+        self.assertEqual(record["verdict"], "UNKNOWN")
+
+    def test_lstat_failure_descendants_not_observed(self):
+        real_stat = os.stat
+
+        def flaky(path, *args, **kwargs):
+            if kwargs.get("dir_fd") is not None and not str(path).startswith("/") and str(path) == "nested":
+                raise OSError(13, "synthetic lstat denial")
+            return real_stat(path, *args, **kwargs)
+
+        with mock.patch("os.stat", side_effect=flaky):
+            code, record = self.m.run(self.scope, self.binding)
+        rels = {a["relative"]: a for a in record["anomalies"]}
+        self.assertEqual(rels["tree/nested"]["class"], "UNKNOWN")
+        self.assertEqual(rels["tree/nested/deep.bin"]["class"], "UNKNOWN")
+        self.assertEqual(rels["tree/nested/deep.bin"].get("reason"), "not_observed")
+        self.assertFalse([a for a in record["anomalies"] if a["class"] == "MISSING_OBJECT"])
+
+    def test_symlink_at_scope_dir_descendants_not_observed(self):
+        elsewhere = self.fx.root.parent / f"decoy-nested-{os.getpid()}"
+        elsewhere.mkdir(mode=0o700)
+        self.addCleanup(lambda: shutil.rmtree(elsewhere))
+        (elsewhere / "deep.bin").write_bytes(b"decoy")
+        nested = self.fx.path("tree/nested")
+        (nested / "deep.bin").unlink()
+        nested.rmdir()
+        nested.symlink_to(elsewhere)
+        self.before = self.fx.snapshot()
+        code, record = self.m.run(self.scope, self.binding)
+        self.assertEqual((code, record["verdict"]), (2, "LINK_OBJECT"))
+        rels = {a["relative"]: a for a in record["anomalies"]}
+        self.assertEqual(rels["tree/nested/deep.bin"]["class"], "UNKNOWN")
+        self.assertEqual(rels["tree/nested/deep.bin"].get("reason"), "not_observed")
+        self.assertFalse([a for a in record["anomalies"] if a["class"] == "MISSING_OBJECT"])
+        self.zero_write()
 
 
 if __name__ == "__main__":
