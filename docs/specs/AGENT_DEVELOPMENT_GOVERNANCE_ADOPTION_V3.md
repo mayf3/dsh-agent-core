@@ -1,6 +1,34 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
-status: proposed
+status: accepted
+accepted_date: 2026-10-08
+accepted_by: mayf3
+accepted_at: 2026-10-08T12:34:53Z
+accepted_reviewed_spec_commit: fd5881bb6f93c50f19578fefa24a64f3fdbcdf07
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  Owner mayf3 approved this exact scope in the working session transcript at
+  2026-10-08T12:34:53Z ("没问题" replying to the proposal to complete Core
+  governance acceptance with main PR-only plus governance-integrity /
+  governance-acceptance / structure-nonregression / hermetic-tests /
+  merge-readiness as the main gate set). The lock transition was executed by
+  the central tools/vendor.py at the pinned source 6301662e with the original
+  preparation fields preserved. The ACC-AD3-002 independent-reviewed binding
+  was completed before merge by an owner-coordinated independent read-only
+  source review (reviewer identity: verify_github_merge_gates; this is a
+  coordinated independent source review, NOT a GitHub-native APPROVED event
+  and NOT a human signature) at the exact reviewed head fd5881bb: exact
+  one-commit delta of four files versus b86aa5ec with no other tree blob/mode
+  change; pin, manifest, 25 managed bytes and preparation fields preserved;
+  no duplicate frontmatter keys across the five records; V2 lifecycle-only
+  change with correct reciprocal backlinks; all five GitHub Actions checks
+  completed/success at that head; main abca6f03 adds only
+  workflow-definition-read files beyond the prior base, non-overlapping with
+  the governance surface. Reviewer verdict: no new blocking findings; cleared
+  for final binding — recorded as acceptance_review_verdict: PASS against
+  that reviewed commit. The merge-time final-head delta recheck (delta of
+  this binding commit over fd5881bb) remains the owner's last step; the
+  adoption activates at merge, not at this commit.
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none

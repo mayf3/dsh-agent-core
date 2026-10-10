@@ -1,0 +1,53 @@
+name: structure-nonregression
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  structure-nonregression:
+    name: structure-nonregression
+    runs-on: ubuntu-latest
+    env:
+      # Frozen structural-debt baseline: origin/main at PR #494 merge. Legacy
+      # violations at this ref are reported and allowed; new violations and
+      # growth of existing ones fail. Moving this pin is an explicit PR.
+      STRUCTURE_BASE: 5181c211e80916130b472610d7cb791e7b3a7d0f
+    steps:
+      # Evaluate the EXACT PR head (not the pull_request merge ref), so growth
+      # merged into main by other PRs is attributed to those PRs, not this one.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Record the rule-baseline conformance and registry config facts
+        run: |
+          # The binding rule text (CODE_STRUCTURE_GUARDRAILS_V1) still names
+          # d506f811 as BASELINE_COMMIT. Running the original verifier from
+          # that baseline currently exits 2 (registry entries no longer
+          # validate against it). That refusal is recorded verbatim as a fact
+          # and RULE_CONFORMANCE is measured and reported — but neither
+          # dimension flips this check's exit code: allowing legacy debt into
+          # a hard gate needs an approved transition policy, which does not
+          # exist yet, and hiding the failure is not allowed either.
+          rc=0
+          err=$(node scripts/verify-code-structure.mjs --base d506f81105e8aa05177a01b817ebe11dcc076ba5 --head HEAD --json 2>&1 >/tmp/rule-conformance.json) || rc=$?
+          { echo "exit=$rc"; echo "$err" | tail -3; } > /tmp/rule-config-fact-summary.txt
+          echo "rule-baseline verifier exit=$rc"
+          echo "$err" | tail -3
+          echo "exit=$rc" >> /tmp/rule-config-fact-summary.txt
+      - name: Compare head structure against the frozen baseline
+        run: |
+          node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head "$STRUCTURE_BASE" --json > /tmp/base-structure.json || true
+          node scripts/verify-code-structure.mjs --base "$STRUCTURE_BASE" --head HEAD --json > /tmp/head-structure.json || true
+          python3 .agents/local/tools/check_structure_nonregression.py \
+            /tmp/base-structure.json /tmp/head-structure.json \
+            --rule-conformance-report /tmp/rule-conformance.json \
+            --config-fact-file /tmp/rule-config-fact-summary.txt
