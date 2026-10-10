@@ -116,12 +116,14 @@ artifact/marker 绑定，且 U-1/U-2 未核事项须先对齐。
 
 ---
 
-## ACCEPTANCE RECORD（Owner exact-head acceptance——接受后回填）
+## ACCEPTANCE RECORD（Owner exact-head acceptance，2026-10-10）
 
 ```text
-AMENDMENT_ACCEPTED = YES/NO
-accepted_by = mayf3
-accepted_date = <date>
-accepted_head = <merge commit of this file into docs/specs/>
+AMENDMENT_ACCEPTED = YES
+accepted_by = mayf3（Owner 于部署会话中审阅最终 head 并指令"继续"——接受指示，2026-10-10）
+reviewed_head = 83c857e0af83f6feafb131d5756b21dec387cde8
+accepted_date = 2026-10-10
+accepted_head = <merge commit of this file into docs/specs/>（merge 后回填）
 bound evidence = #424 2026-10-10 私有评论链（r20/resume/死锁证明/沙盒验证/哈希与 diff）
+P1 处置 = 两条均已在 83c857e0 修复并回复（4236822753/4236822993）
 ```
