@@ -316,6 +316,10 @@ const SUBMISSION_AUTHZ_CODES = new Set([
   'principal_not_found', 'principal_disabled', 'principal_not_assignee', 'not_domain_owner',
   'domain_membership_required', 'domain_disabled', 'cross_domain_violation', 'credential_unavailable',
   'credential_invalid', 'authorization_denied',
+  // Manifest-declared auth-layer denials every workflow_execute call can
+  // produce (broker authErrors: claims.rs / error.rs) — an expired bearer or
+  // a missing scope is an authorization block, never a missing commit.
+  'unauthenticated', 'forbidden',
 ])
 
 /** Codes where the call may have landed but the result is unknowable. */

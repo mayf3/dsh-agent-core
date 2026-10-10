@@ -158,6 +158,7 @@ test('judgeAttempt: no verified Run linkage => NEEDS_REVIEW delivery_unverified 
 // trigger, never a business fact derived from exit0 shapes or model text.
 
 import * as judgmentNs from '../src/judgment.js'
+import { authErrors } from '../../broker/src/capabilities/workflow-definition-authoring.js'
 
 const ATTEMPT_ID = `wfeat-${'d'.repeat(24)}`
 const OTHER_ATTEMPT_ID = `wfeat-${'e'.repeat(24)}`
@@ -312,4 +313,32 @@ test('#724-8 unreadable / truncated evidence => OUTCOME_UNKNOWN with missingEvid
   assert.equal(noSettle.category, 'OUTCOME_UNKNOWN', 'without a settle probe the still-current premise is not established')
   const planned = judgmentNs.diagnoseSubmissionGap({ attempt: { ...gapAttempt, phase: 'planned' }, settle: STILL_CURRENT, lastToolResult: undefined, evidenceStatus: 'readable' })
   assert.equal(planned.category, 'OUTCOME_UNKNOWN', 'delivery-unverified attempts cannot be classified')
+})
+
+test('#724-4b manifest-declared auth-layer denials (unauthenticated/forbidden) => AUTHORIZATION_BLOCKED; no resubmission guidance, no identity fallback (P2 4236719936)', () => {
+  assert.equal(typeof judgmentNs.diagnoseSubmissionGap, 'function', 'diagnoseSubmissionGap missing (#724)')
+  for (const code of ['unauthenticated', 'forbidden']) {
+    const d = judgmentNs.diagnoseSubmissionGap({
+      attempt: gapAttempt,
+      settle: STILL_CURRENT,
+      lastToolResult: gapToolResult({ error: { code, requestId: 'req-gap-4b' } }),
+      evidenceStatus: 'readable',
+    })
+    assert.equal(d.category, 'AUTHORIZATION_BLOCKED', `${code} is a declared auth-layer denial, not a missing commit`)
+    assert.ok(d.evidenceRefs.some((r) => r.includes(code)), `original denial code preserved for ${code}`)
+    assert.doesNotMatch(d.suggestedNextStep, /fallback|another principal|new token|global read|resubmit|retry|重新提交|重试/i, `${code}: expired credentials / missing scopes must not produce resubmission guidance`)
+  }
+})
+
+test('#724-4c the authz code set covers every manifest-declared workflow_execute auth-layer code (no drift)', () => {
+  const declared = new Set(authErrors.map((e) => e.code))
+  for (const code of declared) {
+    const d = judgmentNs.diagnoseSubmissionGap({
+      attempt: gapAttempt,
+      settle: STILL_CURRENT,
+      lastToolResult: gapToolResult({ error: { code } }),
+      evidenceStatus: 'readable',
+    })
+    assert.equal(d.category, 'AUTHORIZATION_BLOCKED', `manifest-declared auth-layer code ${code} classifies as AUTHORIZATION_BLOCKED`)
+  }
 })
