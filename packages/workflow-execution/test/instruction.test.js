@@ -42,3 +42,13 @@ test('instruction rejects malformed ids (fail loud, never prompt with garbage co
     assert.throws(() => buildExecutionInstruction(input), TypeError)
   }
 })
+
+// #724-9 EXISTS pin: the version-conflict guidance is already instructed; this
+// regression keeps a future edit from silently dropping it (no second submit
+// API, no extra retry budget is introduced by this slice).
+test('#724-9 conflict guidance EXISTS: re-read then retry once, never repeated retries', () => {
+  const text = buildExecutionInstruction({ workflowInstanceId: INSTANCE, nodeVisitId: VISIT, dispatchIntentId: INTENT, attemptId: ATTEMPT })
+  assert.match(text, /workflow_state_version_conflict/)
+  assert.match(text, /重新读取实例后再试一次/, 're-read then retry ONCE is already instructed')
+  assert.match(text, /不要反复重试提交/, 'repeated retries are already excluded')
+})
