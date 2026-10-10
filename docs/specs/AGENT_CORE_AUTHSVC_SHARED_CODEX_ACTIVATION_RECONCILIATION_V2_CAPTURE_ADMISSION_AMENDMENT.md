@@ -29,8 +29,10 @@ owners:
 部署执行（r20）首次到达外层 stageAndSeal 后被 `SIX_TARGET_BATCH_INCOMPLETE` 拒止。逐层定位：
 
 ```text
-OBS-1 六个固定迁移目标消费者（V2 F-集成员；身份绑定于私有 operation packet，
-      本公开文档不列）以同参数复刻采集全部 THROW DEPENDENCY_SECRET_PATH。
+OBS-1 六个固定范围目标消费者（2026-10-07 六件套批次 B7_SIX_FIXED_SCOPE_
+      USER_AUTHORIZED_20261007 的目标集，即 R∖F：runtime_env 路由消费者；
+      身份绑定于私有 operation packet，本公开文档不列）以同参数复刻采集全部
+      THROW DEPENDENCY_SECRET_PATH。
 OBS-2 触发物为已接受钉住工件 dsh-codex-0.2.3-release.tgz（A1 钉住 sha256
       869b8e64…）自带的 @aws-sdk 依赖树（1599 个 aws-sdk 路径）：`dist-*/auth`
       源码目录命中 secretName 裸名 `auth` 规则。六家现装插件与钉住 tgz 逐字节
@@ -47,9 +49,10 @@ OBS-6 本修订三条 Contract 于沙盒同构副本（放置树工具副本 + �
       全量验证：全 registry（98 ids）collectCohortPre noHome=[]、blocked=[]、
       harness 闭包 treeSha256=4fa78d38…（1178 entries）；负例 AC-2/3/4 全部正确
       拒收（见 §3）。完整工具/工件哈希、最小 diff、命令结果存私有 #424。
-未核事项（显式）：
-U-1 V2 私有 packet 的 F-集与 2026-10-07 六目标批次的身份集是否完全一致——未核，
-    生产使用前必须对齐私有绑定。
+U-1 已核（2026-10-10）：R=98（registry 非禁用全集）、F=92（v2 config overrides
+    键集，= V2 legacy 迁移集）、六件套批次目标集 = R∖F（6，runtime_env 路由）。
+    集合精确闭合，无代换。批次目标不是 F-集成员（本文件初稿 OBS-1 的措辞已按此
+    修正）。
 U-2 r20 保留事务（tx-1146f06f…）在新工具字节下能否复用——未核（r20 包 pin 的是
     修订前工具）；任何生产进入都按 V2 operationBinding 重新绑定。
 CLM-1（SUPPORTED）三处为"冻结合同 vs 已接受工件"的潜在漂移，非执行误操作；
