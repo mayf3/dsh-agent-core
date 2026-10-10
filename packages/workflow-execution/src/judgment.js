@@ -157,6 +157,177 @@ export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAt
 }
 
 /**
+ * #724 submission-gap diagnosis — a READ-ONLY explain-result beside the frozen
+ * reconcile judgment (never a new execution state, never an auto-retry
+ * trigger): given one ended attempt, its settle probe result, and the
+ * structured tool result of the SAME attempt's last workflow_execute
+ * submission, name the explainable category with explicit evidence references
+ * and evidence gaps. Pure: no I/O, no clocks, deterministic; it never submits,
+ * retries, swaps versions, substitutes identity, or infers a business fact
+ * from exit0 shapes or model text.
+ *
+ * Category contract (#724):
+ *   - INPUT_INVALID: same-attempt structured submission/context rejection
+ *     (field paths + error code + request ref only — never payload values);
+ *   - STALE_VERSION: same-attempt workflow_state_version_conflict — suggests
+ *     re-reading the current visit and an explicit resubmission decision;
+ *   - AUTHORIZATION_BLOCKED: explicit identity/permission denial, original
+ *     error preserved, no fallback principal/token/global-read;
+ *   - OUTCOME_UNKNOWN: the call may have landed but the result is unknown
+ *     (timeout/5xx/malformed/still-processing or unreadable evidence) —
+ *     reconcile via the original read entry, never repeat the call;
+ *   - NO_COMMIT_OBSERVED: run ended with the visit still current and no
+ *     provable cause from the categories above — model "done" text and
+ *     success-shaped results are never business conclusions;
+ *   - 'settled' / 'progressed': the existing vocabulary reused verbatim —
+ *     the instance moved past this attempt, which is not a business-quality
+ *     verdict. Cross-attempt / stale-visit / non-JSON evidence never upgrades
+ *     to a cause: it is excluded and reported in missingEvidence.
+ *
+ * @param {object} input
+ * @param {{attemptId?:string, nodeVisitId?:string, workflowInstanceId?:string,
+ *          phase?:string}} input.attempt - ledger projection of the attempt.
+ * @param {{kind:'settled'|'still_current'|'unavailable'|'progressed', reason:string}|undefined}
+ *          input.settle - judgeSettleFromDetail / judgeStaleFromDetail output.
+ * @param {{attemptId?:string, nodeVisitId?:string, workflowInstanceId?:string,
+ *          ok?:boolean, text?:unknown, error?:{code?:string, fieldPaths?:string[],
+ *          requestId?:string}}|undefined} input.lastToolResult - structured
+ *          result of the SAME attempt's last submission call (values are
+ *          dropped by contract; only codes/paths/request ids are referenced).
+ * @param {'readable'|'unreadable'|'truncated'|'cross_attempt'} [input.evidenceStatus]
+ * @returns {{category:string, evidenceRefs:string[], missingEvidence:string[],
+ *            suggestedNextStep:string}}
+ */
+export function diagnoseSubmissionGap({ attempt, settle, lastToolResult, evidenceStatus } = {}) {
+  const evidenceRefs = []
+  const missingEvidence = []
+  const attemptId = attempt?.attemptId
+  if (typeof attemptId === 'string' && attemptId !== '') evidenceRefs.push(`attempt:${attemptId}`)
+  const outcomeUnknown = () => ({
+    category: 'OUTCOME_UNKNOWN',
+    evidenceRefs,
+    missingEvidence,
+    suggestedNextStep: 'the outcome cannot be established from the retained evidence: read back the instance via workflow_instance_detail with the original entry to reconcile before any further action; this diagnosis never re-sends the call',
+  })
+  const noCommitObserved = () => ({
+    category: 'NO_COMMIT_OBSERVED',
+    evidenceRefs,
+    missingEvidence,
+    suggestedNextStep: 'the run ended with the visit still current and no provable submission-blocking cause: complete the work and commit via workflow_execute.transition, or use the existing Assistance path when actually blocked; model text and exit0 shapes are never completion evidence',
+  })
+
+  // 1. The business moved past this attempt: reuse settled/progressed verbatim.
+  if (settle?.kind === 'settled' || settle?.kind === 'progressed') {
+    if (typeof settle.reason === 'string' && settle.reason !== '') evidenceRefs.push(`settle:${settle.reason}`)
+    return {
+      category: settle.kind,
+      evidenceRefs,
+      missingEvidence,
+      suggestedNextStep: 'no submission is needed for this attempt: the instance moved past it (settled/progressed). This is not a business-quality verdict',
+    }
+  }
+  // 2. Without a verified run linkage nothing about the submission can be classified.
+  if (attempt?.phase !== 'run_delivered') {
+    missingEvidence.push('no verified run linkage for this attempt (delivery unverified)')
+    return outcomeUnknown()
+  }
+  // 3. The submission-gap premise (visit still awaiting this submission) needs
+  //    a settle probe; without one even NO_COMMIT_OBSERVED would be a guess.
+  if (settle === undefined || settle === null || settle?.kind === 'unavailable') {
+    missingEvidence.push('settle probe unavailable: cannot establish whether the visit still awaits this submission')
+    return outcomeUnknown()
+  }
+  // 4. Unreadable/truncated evidence is unknown — never "no call was made".
+  const status = evidenceStatus ?? 'readable'
+  if (status === 'unreadable' || status === 'truncated') {
+    missingEvidence.push(`evidence ${status}: the correlated structured result could not be read completely for this attempt`)
+    return outcomeUnknown()
+  }
+  // 5. Only a truly same-attempt structured result may classify; anything else
+  //    is an explicit gap (cross-attempt evidence never upgrades to a cause).
+  let result
+  if (lastToolResult !== undefined && lastToolResult !== null && typeof lastToolResult === 'object') {
+    const sameAttempt = (lastToolResult.attemptId === undefined || attemptId === undefined || lastToolResult.attemptId === attemptId) &&
+      (lastToolResult.nodeVisitId === undefined || attempt?.nodeVisitId === undefined || lastToolResult.nodeVisitId === attempt.nodeVisitId)
+    if (!sameAttempt || status === 'cross_attempt') {
+      missingEvidence.push('a structured tool result exists but belongs to another attempt/visit; it is excluded from this diagnosis (cross-attempt evidence stays a gap)')
+    } else {
+      result = lastToolResult
+    }
+  }
+  // 6. Classify by the structured error code, when there is one.
+  const code = result?.error?.code
+  if (result !== undefined && typeof code === 'string' && code !== '') {
+    evidenceRefs.push(`tool_result:error.code=${code}`)
+    if (typeof result.error.requestId === 'string' && result.error.requestId !== '') evidenceRefs.push(`tool_result:requestId=${result.error.requestId}`)
+    if (Array.isArray(result.error.fieldPaths)) {
+      for (const path of result.error.fieldPaths) {
+        if (typeof path === 'string' && path !== '') evidenceRefs.push(`tool_result:field=${path}`)
+      }
+    }
+    if (SUBMISSION_VALIDATION_CODES.has(code)) {
+      return {
+        category: 'INPUT_INVALID',
+        evidenceRefs,
+        missingEvidence,
+        suggestedNextStep: 'fix the rejected fields named by the preserved error detail and resubmit explicitly through the existing flow; do not change identity or widen scope',
+      }
+    }
+    if (code === 'workflow_state_version_conflict') {
+      return {
+        category: 'STALE_VERSION',
+        evidenceRefs,
+        missingEvidence,
+        suggestedNextStep: 're-read the current visit via workflow_instance_detail, then explicitly decide whether to resubmit under the fresh version exactly as the execution instruction allows (once); this diagnosis never swaps versions and never submits',
+      }
+    }
+    if (SUBMISSION_AUTHZ_CODES.has(code)) {
+      return {
+        category: 'AUTHORIZATION_BLOCKED',
+        evidenceRefs,
+        missingEvidence,
+        suggestedNextStep: 'keep the original denial: resolve authorization through the existing domain membership/ownership channels; the diagnosis never substitutes identity',
+      }
+    }
+    if (SUBMISSION_OUTCOME_UNKNOWN_CODES.has(code)) {
+      missingEvidence.push('the submission call may have landed but its result is unknown')
+      return outcomeUnknown()
+    }
+    // A definite structured rejection outside the diagnosis vocabulary stands
+    // as-is — it is never bent into one of the categories above.
+    missingEvidence.push(`structured rejection code "${code}" is outside the diagnosis vocabulary; the original error stands uninterpreted`)
+    return noCommitObserved()
+  }
+  if (result !== undefined && result.ok === true) {
+    missingEvidence.push('the retained tool result is success-shaped while the settle probe still shows the visit awaiting submission; a success shape is never a business fact')
+  }
+  return noCommitObserved()
+}
+
+/** Same-attempt structured rejection codes that name invalid submission/context input. */
+const SUBMISSION_VALIDATION_CODES = new Set([
+  'context_validation_failed', 'invalid_input', 'submission_required', 'submission_validation_failed',
+  'size_limit_exceeded', 'invalid_return_references', 'transition_not_applicable', 'idempotency_conflict',
+  'binding_error',
+])
+
+/** Explicit identity/permission denial codes (svc + local fail-closed credential seam). */
+const SUBMISSION_AUTHZ_CODES = new Set([
+  'principal_not_found', 'principal_disabled', 'principal_not_assignee', 'not_domain_owner',
+  'domain_membership_required', 'domain_disabled', 'cross_domain_violation', 'credential_unavailable',
+  'credential_invalid', 'authorization_denied',
+  // Manifest-declared auth-layer denials every workflow_execute call can
+  // produce (broker authErrors: claims.rs / error.rs) — an expired bearer or
+  // a missing scope is an authorization block, never a missing commit.
+  'unauthenticated', 'forbidden',
+])
+
+/** Codes where the call may have landed but the result is unknowable. */
+const SUBMISSION_OUTCOME_UNKNOWN_CODES = new Set([
+  'transport_failure', 'http_5xx', 'malformed_response', 'command_still_processing',
+])
+
+/**
  * Reconcile judgment for ONE ACTIVE attempt, given the Router's turn
  * reconciliation state and the settle probe result.
  *

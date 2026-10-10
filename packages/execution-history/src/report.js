@@ -80,6 +80,141 @@ const DIM_LABELS = {
   evidenceIntegrity: '证据完整性',
 }
 
+/**
+ * #724 submission-gap evidence — collect the structured workflow_execute
+ * submission result of ONE attempt from an ALREADY-CORRELATED session view,
+ * so only a truly same-attempt tool result can feed the pure
+ * diagnoseSubmissionGap (workflow-execution/judgment.js). Read-only: no
+ * journal is opened here, nothing is written, no collector is added — the
+ * caller supplies the session view and the R3-style correlation evidence refs
+ * that the existing correlation rules already produced. A result that lacks
+ * its own workflow coordinates (the natural {ok:false,error:{...}} failure
+ * envelope) is tied to this attempt ONLY through its originating
+ * workflow_execute tool/call (same callId, preceding the result), whose
+ * argument coordinates are the trusted source (P1 4236719932).
+ *
+ * Value hygiene by construction: the returned lastToolResult carries ONLY
+ * {ok, error:{code, fieldPaths, requestId}} — payload values, message text and
+ * any other detail fields are dropped, never promoted into evidence.
+ *
+ * @param {object} input
+ * @param {{attemptId:string, nodeVisitId?:string, workflowInstanceId:string}} input.attempt
+ * @param {{toolCalls?:object[]}} input.sessionView - one correlated session view
+ *        (projectJournal projection) whose toolCalls retain structured results.
+ * @param {string[]} input.correlationRefs - evidence refs tying that session to
+ *        this attempt (e.g. the R3 correlation row's evidenceRefs).
+ * @returns {{ok:true, input:{lastToolResult:object|undefined, evidenceStatus:'readable'|'unreadable'},
+ *            evidenceRefs:string[], missingEvidence:string[]}
+ *           |{ok:false, missingEvidence:string[]}}
+ */
+export function collectSubmissionGapEvidence({ attempt, sessionView, correlationRefs }) {
+  const missingEvidence = []
+  const refs = Array.isArray(correlationRefs) ? correlationRefs : []
+  if (typeof attempt?.attemptId !== 'string' || !refs.includes(attempt.attemptId)) {
+    return { ok: false, missingEvidence: [`session view not correlated to attempt ${attempt?.attemptId ?? '(none)'} — no R3-style evidence ref covers it; it never feeds this attempt's diagnosis`] }
+  }
+  const instance = String(attempt.workflowInstanceId ?? '').toLowerCase()
+  const calls = Array.isArray(sessionView?.toolCalls) ? sessionView.toolCalls : []
+  // callId → originating call record (P1 4236719932): a naturally shaped
+  // workflow_execute failure {ok:false,error:{...}} carries no
+  // workflowInstanceId, so its instance coordinates are recovered from the
+  // PRECEDING same-call tool/call's ARGUMENT coordinates — never from result
+  // text, never across attempts. Fail closed: a result whose callId matches
+  // no call, a non-workflow_execute call, a sibling instance, or a
+  // misordered (later) call lends nothing.
+  const callsById = new Map()
+  for (const call of calls) {
+    if (call === null || typeof call !== 'object' || call.kind === 'result') continue
+    if (typeof call.callId !== 'string' || call.callId === '') continue
+    callsById.set(call.callId, call)
+  }
+  const originCallOf = (result) => {
+    if (typeof result?.callId !== 'string' || result.callId === '') return undefined
+    const origin = callsById.get(result.callId)
+    if (origin === undefined || origin === null || typeof origin !== 'object') return undefined
+    if (origin.name !== 'workflow_execute' && origin.coordinates?.tool !== 'workflow_execute') return undefined
+    if (Number.isFinite(origin.seq) && Number.isFinite(result.seq) && origin.seq > result.seq) return undefined
+    return origin
+  }
+  let matched
+  let matchedOrigin
+  for (const call of calls) {
+    if (call === null || typeof call !== 'object' || call.kind !== 'result') continue
+    const directInstance = String(call?.coordinates?.workflowInstanceId ?? '').toLowerCase()
+    const origin = directInstance === '' ? originCallOf(call) : undefined
+    const resultInstance = directInstance !== '' ? directInstance : String(origin?.coordinates?.workflowInstanceId ?? '').toLowerCase()
+    // A result without workflow coordinates (or from another instance) can
+    // never be tied to this attempt — excluded, never upgraded to a cause.
+    if (resultInstance === '') continue
+    if (resultInstance !== instance) continue
+    matched = call
+    matchedOrigin = origin
+  }
+  if (matched === undefined) {
+    return { ok: false, missingEvidence: ['no structured workflow_execute tool result correlated to this attempt\'s instance exists in the retained session view'] }
+  }
+  const seqRef = `session_journal#${matched.seq ?? '?'}`
+  const callSeqRef = matchedOrigin !== undefined && Number.isFinite(matchedOrigin.seq) ? `session_journal#call:${matchedOrigin.seq}` : undefined
+  let parsed
+  try {
+    parsed = typeof matched.resultText === 'string' && matched.resultText !== '' ? JSON.parse(matched.resultText) : null
+  } catch {
+    parsed = null
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return {
+      ok: true,
+      input: { lastToolResult: undefined, evidenceStatus: 'unreadable' },
+      evidenceRefs: [seqRef],
+      missingEvidence: ['retained tool result text is not structured JSON; it cannot classify the cause'],
+    }
+  }
+  const error = parsed.error !== null && typeof parsed.error === 'object' && !Array.isArray(parsed.error) ? parsed.error : undefined
+  const lastToolResult = {
+    attemptId: attempt.attemptId,
+    nodeVisitId: attempt.nodeVisitId,
+    workflowInstanceId: attempt.workflowInstanceId,
+    ok: parsed.ok === true,
+    ...(error !== undefined
+      ? {
+          error: {
+            ...(typeof error.code === 'string' ? { code: error.code } : {}),
+            ...(Array.isArray(error.fieldPaths) ? { fieldPaths: error.fieldPaths.filter((p) => typeof p === 'string') } : {}),
+            ...(typeof error.requestId === 'string' ? { requestId: error.requestId } : {}),
+          },
+        }
+      : {}),
+  }
+  return {
+    ok: true,
+    input: { lastToolResult, evidenceStatus: 'readable' },
+    evidenceRefs: [seqRef, ...(callSeqRef !== undefined ? [callSeqRef] : []), ...(typeof lastToolResult.error?.requestId === 'string' ? [`tool_result:requestId=${lastToolResult.error.requestId}`] : [])],
+    missingEvidence,
+  }
+}
+
+/**
+ * #724 submission-gap presentation — render one diagnosis (the pure
+ * diagnoseSubmissionGap output) as a report section. Deterministic and
+ * value-free by construction: the diagnosis contract carries only categories,
+ * field paths, error codes, request refs and named gaps. No diagnosis in —
+ * no section out (default reports stay byte-identical).
+ *
+ * @param {{category:string, evidenceRefs:string[], missingEvidence:string[],
+ *          suggestedNextStep:string}|null|undefined} diagnosis
+ * @returns {string|null}
+ */
+export function renderSubmissionGapDiagnosis(diagnosis) {
+  if (diagnosis === null || diagnosis === undefined) return null
+  const lines = []
+  lines.push('## 提交缺口诊断 (submission-gap diagnosis — 只读内部解释, 非新执行状态)')
+  lines.push(`- category: ${diagnosis.category}`)
+  lines.push(`- 下一步: ${diagnosis.suggestedNextStep}`)
+  lines.push(`- 证据引用: ${Array.isArray(diagnosis.evidenceRefs) && diagnosis.evidenceRefs.length > 0 ? diagnosis.evidenceRefs.join(', ') : '(无)'}`)
+  lines.push(`- 证据缺口: ${Array.isArray(diagnosis.missingEvidence) && diagnosis.missingEvidence.length > 0 ? diagnosis.missingEvidence.join('; ') : '(无)'}`)
+  return lines.join('\n')
+}
+
 /** Render the human report (view=report). UTC + native sequence preserved. */
 export function renderReportText(result) {
   const lines = []
