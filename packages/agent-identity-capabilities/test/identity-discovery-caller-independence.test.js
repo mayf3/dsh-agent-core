@@ -99,19 +99,17 @@ test('reverse: unbound target (auth 404 AGENT_NOT_FOUND) is the same closed outc
   assert.deepEqual(fromY, expected)
 })
 
-test('directory: the result is independent of the caller context entirely', async () => {
+test('directory: both authenticated gateway-frozen callers get identical results (no anonymous access pinned)', async () => {
   const { handlers } = createAgentDirectoryAccess({ definition: definition() })
   const resolve = handlers[AGENT_DIRECTORY_CAPABILITY_ID].resolve
   const fromX = await resolve({ query: TARGET_ID }, { callerAgentId: CALLER_DOMAIN_X })
   const fromY = await resolve({ query: TARGET_ID }, { callerAgentId: CALLER_DOMAIN_Y })
-  const anonymous = await resolve({ query: TARGET_ID }, undefined)
   const expected = {
     ok: true,
     result: { status: 'resolved', agent: { agentId: TARGET_ID, name: 'Butler', description: null, enabled: true } },
   }
   assert.deepEqual(fromX, expected)
   assert.deepEqual(fromY, expected)
-  assert.deepEqual(anonymous, expected)
 })
 
 test('directory: list exposes exactly the four public identity fields — never principal/credential data', async () => {
