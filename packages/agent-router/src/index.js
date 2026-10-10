@@ -364,6 +364,16 @@ export function apply(ctx, config) {
     ensureRunningForRoute: registry.ensureRunningForRoute,
     route: ingressDelivery.onIngress,
     /**
+     * Product #478 (G5 human work item ingress): the SAME authenticated
+     * callback bound to the feishu channel (onAuthenticatedFeishuIngress),
+     * published so a composition-level non-agent command seam can fall
+     * through to the exact bound delivery — provenance authority included —
+     * without re-binding or unwrapping the channel callback. Additive read
+     * of existing behavior; nothing else may use the unauthenticated
+     * `route` for feishu fall-through (it never registers provenance).
+     */
+    routeAuthenticated: ingressDelivery.onAuthenticatedFeishuIngress,
+    /**
      * Unified route-attempt chain seam (CTR-IMPL-002): the published surface
      * the scheduler-router bridge (and any future sync-turn caller) uses —
      * same executor as onIngress; external bridge code never imports the
