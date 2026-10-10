@@ -409,3 +409,136 @@ test('#724-W3 other roots and attempt-less workflow reports stay section-free (n
     assert.ok(!noAttempt.result.report.includes('提交缺口诊断'), 'no attempt context => no section (CORRELATION_GAP already reports it)')
   } finally { destroyFixtureRoot(fixture) }
 })
+
+// ── #724 B1/B2 repair regressions (independently reproduced blockers @ e9636c2b) ──
+// B1: canonical-main session reuse — an OLD attempt/visit's structured failure
+// in the same session journal must never be stamped with the CURRENT attempt's
+// coordinates; only a provable same-attempt dispatch window (existing
+// messageId/workflow_execution provenance evidence) may feed the collector,
+// else explicit missingEvidence/UNKNOWN. A callId match alone is not
+// same-attempt proof.
+// B2: a bounded (truncated/skipped-lines) journal read must degrade the
+// evidenceStatus to 'truncated' — a capped prefix must never become definitive
+// STALE_VERSION/resubmit advice when omitted events can contain UNKNOWN
+// outcomes. Identical full-versus-capped journal comparison below.
+
+const WIN_OLD_VISIT = '47474747-4747-4474-8474-474747474747'
+const WIN_OLD_ATTEMPT = gapAttemptIdFor(WIN_OLD_VISIT, 1)
+
+function buildWindowFixtureRoot({ journalEvents, ledgerRows }) {
+  const root = join(tmpdir(), `exec-window-fixture-${process.pid}-${Math.random().toString(36).slice(2, 8)}`)
+  const controlDir = join(root, 'control')
+  const homesRoot = join(root, 'homes')
+  const historyDir = join(root, 'scheduler', 'history')
+  const workflowExecutionDir = join(root, 'workflow-execution')
+  mkdirSync(controlDir, { recursive: true })
+  mkdirSync(historyDir, { recursive: true })
+  mkdirSync(workflowExecutionDir, { recursive: true })
+  writeFileSync(join(workflowExecutionDir, 'attempts.jsonl'), ledgerRows.map((r) => JSON.stringify(r)).join('\n') + '\n')
+  const projKey = '--Users-fixture--'
+  mkdirSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main'), { recursive: true })
+  const header = { type: 'session', version: 0, id: 'main', createdAt: GAP_T0, cwd: '/tmp/window' }
+  writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), [header, ...journalEvents].map((e) => JSON.stringify(e)).join('\n') + '\n')
+  return {
+    root,
+    paths: { homesRoot, controlDir, historyDir, jobsStore: join(root, 'scheduler', 'jobs.json'), workflowExecutionDir, evidenceLog: join(controlDir, 'runtime-evidence.jsonl') },
+  }
+}
+
+const winMsg = (seq, attemptId, visitId, messageId) => ({ type: 'user/message', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { content: 'synthetic dispatch', messageId, source: { kind: 'workflow_execution', workflowInstanceId: GAP_INSTANCE, nodeVisitId: visitId, attemptId } } })
+const winTurnStart = (seq, turn) => ({ type: 'turn/start', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { turn } })
+const winTurnEnd = (seq, turn) => ({ type: 'turn/end', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { turn, reason: { kind: 'completed' } } })
+const winCall = (seq, callId, turn = 1) => ({ type: 'tool/call', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { turn, callId, name: 'workflow_execute', arguments: JSON.stringify({ operation: 'transition', workflowInstanceId: GAP_INSTANCE, transitionDefinitionId: 'td-win', expectedWorkflowStateVersion: 3 }) } })
+const winResult = (seq, callId, code, turn = 1) => ({ type: 'tool/result', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { turn, message: { content: [{ type: 'tool-result', toolCallId: callId, isError: true, content: JSON.stringify({ ok: false, error: { code, requestId: `request-${callId}` } }) }] } } })
+const winAssistant = (seq, turn = 1) => ({ type: 'assistant/message', seq, time: new Date(GAP_T0 + seq).toISOString(), data: { message: { content: [{ type: 'text', text: 'synthetic no tools' }] } } })
+
+const WIN_LEDGER = [
+  { kind: 'attempt_planned', attemptId: GAP_ATTEMPT, nodeVisitId: GAP_VISIT, dispatchIntentId: 'i-win-1', workflowInstanceId: GAP_INSTANCE, ownerPrincipalId: 'p-win-1', generation: 1, atMs: GAP_T0 + 100 },
+  { kind: 'run_delivered', nodeVisitId: GAP_VISIT, attemptId: GAP_ATTEMPT, agentId: 'agt_a', requestId: GAP_ATTEMPT, sessionId: 'main', messageId: 'message-current', reconciliationHandle: 'te-win-1', atMs: GAP_T0 + 200 },
+]
+
+function windowSectionOf(outcome) {
+  const report = outcome.result.report
+  const start = report.indexOf('## 提交缺口诊断')
+  return start >= 0 ? report.slice(start) : '(no section)'
+}
+
+test('#724-W4 (B1) an OLD attempt/visit failure in a reused main session is never the CURRENT attempt\'s cause; no current tool call => explicit UNKNOWN gap', async () => {
+  const fixture = buildWindowFixtureRoot({
+    ledgerRows: WIN_LEDGER,
+    journalEvents: [
+      winMsg(1, WIN_OLD_ATTEMPT, WIN_OLD_VISIT, 'message-old'),
+      winTurnStart(2, 1), winCall(3, 'call-old'), winResult(4, 'call-old', 'workflow_state_version_conflict'), winTurnEnd(5, 1),
+      winMsg(6, GAP_ATTEMPT, GAP_VISIT, 'message-current'),
+      winTurnStart(7, 2), winAssistant(8), winTurnEnd(9, 2),
+    ],
+  })
+  try {
+    const outcome = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: GAP_INSTANCE, view: 'report' }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: gapSvcRequest(),
+    })
+    assert.equal(outcome.ok, true)
+    const section = windowSectionOf(outcome)
+    assert.ok(section.startsWith('## 提交缺口诊断'), 'section rendered')
+    assert.doesNotMatch(section, /STALE_VERSION/, 'the old attempt\'s version conflict never classifies the current attempt')
+    assert.ok(!section.includes('request-old'), 'the old attempt\'s requestId never appears as this attempt\'s evidence')
+    assert.match(section, /OUTCOME_UNKNOWN/, 'without a provable same-attempt result the section stays unknown')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('#724-W4b (B1) no provable current-attempt dispatch anchor => the section names the unbounded window as an explicit evidence gap', async () => {
+  const fixture = buildWindowFixtureRoot({
+    ledgerRows: WIN_LEDGER,
+    journalEvents: [
+      winMsg(1, WIN_OLD_ATTEMPT, WIN_OLD_VISIT, 'message-old'),
+      winTurnStart(2, 1), winCall(3, 'call-old'), winResult(4, 'call-old', 'workflow_state_version_conflict'), winTurnEnd(5, 1),
+    ],
+  })
+  try {
+    const outcome = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: GAP_INSTANCE, view: 'report' }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: gapSvcRequest(),
+    })
+    assert.equal(outcome.ok, true)
+    const section = windowSectionOf(outcome)
+    assert.doesNotMatch(section, /STALE_VERSION/)
+    assert.ok(!section.includes('request-old'))
+    assert.match(section, /OUTCOME_UNKNOWN/)
+    assert.match(section, /same-attempt dispatch window/, 'the unbounded/reused session is named as the reason')
+  } finally { destroyFixtureRoot(fixture) }
+})
+
+test('#724-W5 (B2) identical journal: a capped (maxJournalRecords) prefix read degrades to UNKNOWN+truncation gap; only the FULL read may classify', async () => {
+  const journalEvents = [
+    winMsg(1, GAP_ATTEMPT, GAP_VISIT, 'message-current'),
+    winTurnStart(2, 1), winCall(3, 'earlier'), winResult(4, 'earlier', 'workflow_state_version_conflict'),
+    winCall(5, 'last', 1), winResult(6, 'last', 'transport_failure', 1), winTurnEnd(7, 1),
+  ]
+  const fixture = buildWindowFixtureRoot({ ledgerRows: WIN_LEDGER, journalEvents })
+  try {
+    // FULL read (control, identical file): the last same-attempt result is a
+    // transport failure — the existing conservative UNKNOWN/no-replay verdict.
+    const full = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: GAP_INSTANCE, view: 'report' }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: gapSvcRequest(),
+    })
+    assert.equal(full.ok, true)
+    const fullSection = windowSectionOf(full)
+    assert.match(fullSection, /OUTCOME_UNKNOWN/)
+    assert.match(fullSection, /request-last/, 'the full read sees the later same-attempt result')
+
+    // CAPPED read of the IDENTICAL journal: the prefix retains the earlier
+    // version conflict but the omitted tail may contain UNKNOWN outcomes.
+    const capped = await queryExecutionTrace({
+      root: 'workflow_instance', args: { workflowInstanceId: GAP_INSTANCE, view: 'report' }, viewer: SELF_A,
+      paths: fixture.paths, svcRequest: gapSvcRequest(), caps: { maxJournalRecords: 5 },
+    })
+    assert.equal(capped.ok, true)
+    const cappedSection = windowSectionOf(capped)
+    assert.doesNotMatch(cappedSection, /STALE_VERSION/, 'a capped prefix must never become definitive stale-version/resubmit advice')
+    assert.ok(!cappedSection.includes('request-earlier'), 'the prefix result is not classified as this attempt\'s cause')
+    assert.match(cappedSection, /OUTCOME_UNKNOWN/, 'bounded-read incompleteness degrades to the existing UNKNOWN rule')
+    assert.match(cappedSection, /truncated/, 'the truncation gap is named')
+  } finally { destroyFixtureRoot(fixture) }
+})

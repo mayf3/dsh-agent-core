@@ -114,18 +114,26 @@ function finalize(ctx, result, meta) {
 }
 
 /**
- * #724 submission-gap report section (P1 4236719930) — consume ONLY facts the
- * workflow-root query already correlated: the latest attempts-ledger attempt
- * (R2), its R3 run→session correlation row, the correlated session view and
- * the already-fetched svc instance detail. No new read, collector, store or
- * API; nothing is written. Content discipline (§4.3): only an OWNED session's
- * structured results feed the collector — a foreign session's reduced
- * coordinates carry no result text and degrade to unreadable evidence. Settle
- * semantics apply only when the viewer IS the delivered agent (the reader of
- * the visibility invariant); everyone else stays unknown. No trusted evidence
- * renders an explicit UNKNOWN/missingEvidence section — never an invented
- * business proof, never payload values (the collector drops them by
- * construction). No attempt context => no section (the report's
+ * #724 submission-gap report section (P1 4236719930; B1/B2 repair) — consume
+ * ONLY facts the workflow-root query already correlated: the latest
+ * attempts-ledger attempt (R2), its R3 run→session correlation row, the
+ * correlated session view and the already-fetched svc instance detail. No new
+ * read, collector, store or API; nothing is written. Content discipline
+ * (§4.3): only an OWNED session's structured results feed the collector — a
+ * foreign session's reduced coordinates carry no result text and degrade to
+ * unreadable evidence. Settle semantics apply only when the viewer IS the
+ * delivered agent (the visibility invariant's reader); everyone else stays
+ * unknown. B1: canonical-main sessions are REUSED across attempts, so results
+ * are consumed only inside a provable same-attempt dispatch window (existing
+ * workflow_execution provenance / delivery-receipt messageId anchors); a
+ * callId match alone is not same-attempt proof, and bounds that cannot be
+ * established are an explicit missingEvidence — an old attempt's result is
+ * never stamped with the current attempt's coordinates. B2: a bounded read
+ * (truncated file/record cap, skipped lines) degrades evidenceStatus to
+ * 'truncated' — a capped prefix never becomes definitive resubmit advice when
+ * omitted events can contain UNKNOWN outcomes. No trusted evidence renders an
+ * explicit UNKNOWN/missingEvidence section — never an invented business
+ * proof, never payload values. No attempt context => no section (the report's
  * CORRELATION_GAP already says so).
  */
 function submissionGapReportSection(ctx, built, { workflowInstanceId, viewerAgentId }) {
@@ -134,16 +142,18 @@ function submissionGapReportSection(ctx, built, { workflowInstanceId, viewerAgen
   if (attempts.length === 0) return null
   const proj = attempts[attempts.length - 1]
   const attemptId = proj.attemptId
+  const deliveredEvent = proj.events.find((e) => e.kind === 'attempt_run_delivered' && e.data?.attemptId === attemptId)
   const attempt = {
     attemptId,
     nodeVisitId: proj.nodeVisitId,
     workflowInstanceId: instance,
-    phase: proj.events.some((e) => e.kind === 'attempt_run_delivered' && e.data?.attemptId === attemptId) ? 'run_delivered' : 'planned',
+    phase: deliveredEvent !== undefined ? 'run_delivered' : 'planned',
   }
   const r3 = built.correlations.find((c) => c.rule === 'R3' && c.from?.nativeRef === attemptId)
   const correlationRefs = Array.isArray(r3?.evidenceRefs) ? r3.evidenceRefs : []
   let collected = null
   let ownedSession = false
+  let boundedReadIncomplete = false
   if (r3 !== undefined && typeof r3.to?.nativeRef === 'string') {
     const sep = r3.to.nativeRef.indexOf('/')
     const sessionAgentId = sep > 0 ? r3.to.nativeRef.slice(0, sep) : undefined
@@ -151,10 +161,19 @@ function submissionGapReportSection(ctx, built, { workflowInstanceId, viewerAgen
     const loaded = sessionAgentId !== undefined ? ctx.journal(sessionAgentId, sessionId) : null
     if (loaded !== null && loaded.raw.readFailed === undefined) {
       ownedSession = sessionAgentId === viewerAgentId
+      boundedReadIncomplete = loaded.raw.truncated === true || (Number.isInteger(loaded.raw.skipped) && loaded.raw.skipped > 0)
       const sessionView = ownedSession
         ? { toolCalls: loaded.projected.toolCalls }
         : projectForViewer({ sessionAgentId, viewerAgentId, journal: loaded.projected })
-      collected = collectSubmissionGapEvidence({ attempt, sessionView, correlationRefs })
+      const bounds = sameAttemptDispatchWindow(loaded.projected.messages, attempt, deliveredEvent)
+      if (bounds === null) {
+        collected = { ok: false, missingEvidence: ['no provable same-attempt dispatch window in the correlated session journal: this attempt\'s dispatch provenance (workflow_execution attemptId or delivery-receipt messageId) was not found, so retained results cannot be bounded to this attempt and are never stamped with its coordinates'] }
+      } else {
+        const boundedToolCalls = sessionView.toolCalls.filter((c) => Number.isFinite(c?.seq)
+          && c.seq > bounds.anchorSeq
+          && (bounds.endSeq === null || c.seq < bounds.endSeq))
+        collected = collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: boundedToolCalls }, correlationRefs })
+      }
     }
   }
   if (collected === null) {
@@ -166,18 +185,66 @@ function submissionGapReportSection(ctx, built, { workflowInstanceId, viewerAgen
   const settle = ownedSession && svcDetailRecord !== undefined
     ? judgeSettleFromDetail({ body: svcDetailRecord.data, nodeVisitId: attempt.nodeVisitId })
     : undefined
+  // B2: the bounded reader's incompleteness reaches the existing diagnosis
+  // boundary — diagnoseSubmissionGap already treats 'truncated' as
+  // OUTCOME_UNKNOWN (never a definitive cause from a partial prefix).
+  let evidenceStatus = collected.ok === true ? collected.input.evidenceStatus : 'unreadable'
+  if (evidenceStatus === 'readable' && boundedReadIncomplete) evidenceStatus = 'truncated'
   const diagnosis = diagnoseSubmissionGap({
     attempt, settle,
     lastToolResult: collected.ok === true ? collected.input.lastToolResult : undefined,
-    evidenceStatus: collected.ok === true ? collected.input.evidenceStatus : 'unreadable',
+    evidenceStatus,
   })
   if (Array.isArray(collected.missingEvidence)) diagnosis.missingEvidence.push(...collected.missingEvidence)
-  if (collected.ok === true && Array.isArray(collected.evidenceRefs)) {
+  // Classification-grade refs (request ids / journal rows of the retained
+  // result) merge only when the read was COMPLETE: under a truncated or
+  // unreadable read the retained prefix result is not this attempt's
+  // classified evidence, and its identity must not imply attribution.
+  if (collected.ok === true && evidenceStatus === 'readable' && Array.isArray(collected.evidenceRefs)) {
     for (const ref of collected.evidenceRefs) {
       if (!diagnosis.evidenceRefs.includes(ref)) diagnosis.evidenceRefs.push(ref)
     }
   }
   return renderSubmissionGapDiagnosis(diagnosis)
+}
+
+/**
+ * B1 window bounds from EXISTING journal evidence (projectJournal messages:
+ * dispatch provenance + messageId). The window opens at THIS attempt's
+ * dispatch anchor — a message whose source carries this attemptId
+ * (workflow_execution provenance), or, for older producers without attemptId,
+ * the delivery-receipt messageId on a message of this instance. It closes at
+ * the next workflow_execution dispatch for a DIFFERENT attempt/visit (the
+ * next provable hand-off). Turn structure inside the window is deliberately
+ * not a narrower bound (a run may span turns). No anchor => null: a reused
+ * session cannot prove which results belong to this attempt.
+ */
+function sameAttemptDispatchWindow(messages, attempt, deliveredEvent) {
+  const attemptId = String(attempt.attemptId ?? '').toLowerCase()
+  let anchorSeq
+  for (const m of messages) {
+    if (m === null || typeof m !== 'object' || !Number.isFinite(m.seq)) continue
+    const src = m.source
+    if (src === null || typeof src !== 'object') continue
+    const provenanceHit = src.kind === 'workflow_execution'
+      && typeof src.attemptId === 'string' && src.attemptId.toLowerCase() === attemptId
+    const receiptHit = !provenanceHit
+      && typeof deliveredEvent?.data?.messageId === 'string' && deliveredEvent.data.messageId !== ''
+      && m.messageId === deliveredEvent.data.messageId
+      && String(src.workflowInstanceId ?? '').toLowerCase() === String(attempt.workflowInstanceId ?? '').toLowerCase()
+    if (provenanceHit || receiptHit) { anchorSeq = m.seq; break }
+  }
+  if (anchorSeq === undefined) return null
+  for (const m of messages) {
+    if (m === null || typeof m !== 'object' || !Number.isFinite(m.seq) || m.seq <= anchorSeq) continue
+    const src = m.source
+    if (src === null || typeof src !== 'object' || src.kind !== 'workflow_execution') continue
+    const otherAttempt = typeof src.attemptId === 'string' && src.attemptId.toLowerCase() !== attemptId
+    const otherVisit = typeof src.nodeVisitId === 'string' && attempt.nodeVisitId !== undefined
+      && src.nodeVisitId.toLowerCase() !== String(attempt.nodeVisitId).toLowerCase()
+    if (otherAttempt || otherVisit) return { anchorSeq, endSeq: m.seq }
+  }
+  return { anchorSeq, endSeq: null }
 }
 
 async function runWorkflow(ctx, args, meta) {
