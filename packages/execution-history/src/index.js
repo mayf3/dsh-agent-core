@@ -12,7 +12,9 @@ import { buildWorkflowRoot, briefWorkflow } from './correlate/workflow-root.js'
 import { buildSessionRoot, briefSession } from './correlate/session-root.js'
 import { buildSchedulerRoot } from './correlate/scheduler-root.js'
 import { buildMessageRoot } from './correlate/message-root.js'
-import { assembleResult, renderReportText } from './report.js'
+import { assembleResult, collectSubmissionGapEvidence, renderReportText, renderSubmissionGapDiagnosis } from './report.js'
+import { projectForViewer } from './redact.js'
+import { judgeSettleFromDetail, diagnoseSubmissionGap } from '../../workflow-execution/src/judgment.js'
 import { jobRoutingAgent } from './loaders/scheduler-store.js'
 // CTR-SCT-002: the MY_SESSIONS listing core rides the same public entry so
 // the trusted provider imports ONE module.
@@ -101,9 +103,81 @@ function finalize(ctx, result, meta) {
     nowMs, cursor, limit, brief,
   })
   if (view === 'report') {
-    return { ok: true, result: { reportId: assembled.reportId, format: 'text/report', report: renderReportText(assembled), structured: assembled } }
+    let report = renderReportText(assembled)
+    if (root === 'workflow_instance') {
+      const section = submissionGapReportSection(ctx, result, { workflowInstanceId: meta.args?.workflowInstanceId, viewerAgentId: viewer.agentId })
+      if (section !== null) report = `${report}\n\n${section}`
+    }
+    return { ok: true, result: { reportId: assembled.reportId, format: 'text/report', report, structured: assembled } }
   }
   return { ok: true, result: assembled }
+}
+
+/**
+ * #724 submission-gap report section (P1 4236719930) — consume ONLY facts the
+ * workflow-root query already correlated: the latest attempts-ledger attempt
+ * (R2), its R3 run→session correlation row, the correlated session view and
+ * the already-fetched svc instance detail. No new read, collector, store or
+ * API; nothing is written. Content discipline (§4.3): only an OWNED session's
+ * structured results feed the collector — a foreign session's reduced
+ * coordinates carry no result text and degrade to unreadable evidence. Settle
+ * semantics apply only when the viewer IS the delivered agent (the reader of
+ * the visibility invariant); everyone else stays unknown. No trusted evidence
+ * renders an explicit UNKNOWN/missingEvidence section — never an invented
+ * business proof, never payload values (the collector drops them by
+ * construction). No attempt context => no section (the report's
+ * CORRELATION_GAP already says so).
+ */
+function submissionGapReportSection(ctx, built, { workflowInstanceId, viewerAgentId }) {
+  const instance = String(workflowInstanceId ?? '').toLowerCase()
+  const attempts = ctx.attemptProjections().filter((proj) => String(proj.workflowInstanceId ?? '').toLowerCase() === instance)
+  if (attempts.length === 0) return null
+  const proj = attempts[attempts.length - 1]
+  const attemptId = proj.attemptId
+  const attempt = {
+    attemptId,
+    nodeVisitId: proj.nodeVisitId,
+    workflowInstanceId: instance,
+    phase: proj.events.some((e) => e.kind === 'attempt_run_delivered' && e.data?.attemptId === attemptId) ? 'run_delivered' : 'planned',
+  }
+  const r3 = built.correlations.find((c) => c.rule === 'R3' && c.from?.nativeRef === attemptId)
+  const correlationRefs = Array.isArray(r3?.evidenceRefs) ? r3.evidenceRefs : []
+  let collected = null
+  let ownedSession = false
+  if (r3 !== undefined && typeof r3.to?.nativeRef === 'string') {
+    const sep = r3.to.nativeRef.indexOf('/')
+    const sessionAgentId = sep > 0 ? r3.to.nativeRef.slice(0, sep) : undefined
+    const sessionId = sep > 0 ? r3.to.nativeRef.slice(sep + 1) : undefined
+    const loaded = sessionAgentId !== undefined ? ctx.journal(sessionAgentId, sessionId) : null
+    if (loaded !== null && loaded.raw.readFailed === undefined) {
+      ownedSession = sessionAgentId === viewerAgentId
+      const sessionView = ownedSession
+        ? { toolCalls: loaded.projected.toolCalls }
+        : projectForViewer({ sessionAgentId, viewerAgentId, journal: loaded.projected })
+      collected = collectSubmissionGapEvidence({ attempt, sessionView, correlationRefs })
+    }
+  }
+  if (collected === null) {
+    collected = { ok: false, missingEvidence: [r3 === undefined
+      ? `no R3 run→session correlation for attempt ${attemptId ?? '(none)'} — delivery receipt or session record absent`
+      : 'correlated session journal is unresolvable or unreadable'] }
+  }
+  const svcDetailRecord = built.records.find((r) => r.source === 'svc_detail')
+  const settle = ownedSession && svcDetailRecord !== undefined
+    ? judgeSettleFromDetail({ body: svcDetailRecord.data, nodeVisitId: attempt.nodeVisitId })
+    : undefined
+  const diagnosis = diagnoseSubmissionGap({
+    attempt, settle,
+    lastToolResult: collected.ok === true ? collected.input.lastToolResult : undefined,
+    evidenceStatus: collected.ok === true ? collected.input.evidenceStatus : 'unreadable',
+  })
+  if (Array.isArray(collected.missingEvidence)) diagnosis.missingEvidence.push(...collected.missingEvidence)
+  if (collected.ok === true && Array.isArray(collected.evidenceRefs)) {
+    for (const ref of collected.evidenceRefs) {
+      if (!diagnosis.evidenceRefs.includes(ref)) diagnosis.evidenceRefs.push(ref)
+    }
+  }
+  return renderSubmissionGapDiagnosis(diagnosis)
 }
 
 async function runWorkflow(ctx, args, meta) {
