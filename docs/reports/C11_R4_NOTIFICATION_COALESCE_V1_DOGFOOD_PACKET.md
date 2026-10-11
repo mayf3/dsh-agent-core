@@ -1,8 +1,10 @@
 # C11-R4 NOTIFICATION_COALESCE_V1 — Production Dogfood Packet (FROZEN, DO NOT DEPLOY)
 
-> status: **READY_FOR_PRODUCTION_PACKET = PENDING §8r3 INDEPENDENT REVIEW（R3 refresh 后须复评）** ·
+> status: **READY_FOR_PRODUCTION_PACKET = YES（§8r3 独立非作者评审 ACCEPT 已绑定；本
+> binding 提交本身为 docs-only original-owner 记录、未经独立评审，reviewed 语义唯一锚定
+> reviewed_head `09e53eb0…`）** ·
 > **READY_FOR_PRODUCTION_APPLY = NO** ·
-> **PRODUCTION_APPLY = HOLD（本命令 DO_NOT_DEPLOY）** · **PRODUCTION_MUTATION = NO**
+> **PRODUCTION_APPLY = HOLD（生产 apply 为独立 gated 事务，见 §4）** · **PRODUCTION_MUTATION = NO**
 > Product: mayf3/dsh-agent-core#428（[PRODUCT C11-R4] Scheduler watchdog actionable
 > notifications — correlate, coalesce, and suppress derived alert noise）
 > governing（均 accepted，fresh-read 于 main `d54b8f70`）:
@@ -25,8 +27,12 @@
 >   sha，values-only）+ snapshot 2 路径 digest 再绑定（compose 树/embedded → `a555adc8…`、
 >   entry → `5a33a90f…`，由现行 reviewed main `1117933f` 机械再生成）；实现字节零改动；
 >   `PACKET_EXACT_HEAD` 随本刷新事务前移
-> - `PACKET_REFRESH_R3_HEAD` = 本提交（exact sha 记录于 #428 R3 刷新 comment）；
->   **§8r3 独立评审 = PENDING（作者不得自行宣告 PASS）**
+> - `PACKET_REFRESH_R3_HEAD` = `09e53eb0d44c869378467950a5080523ad672cfc`（tree
+>   `d0c737d3ab4e19d500eac981817c1dd852b1da6f`；**独立非作者评审 ACCEPT / load_bearing_gaps=0，
+>   记录 = #428 comment `6114674821`，verdict 绑定见 §8r3**）
+> - `R3_ACCEPT_BINDING` = 本 docs-only 提交：仅将上述 ACCEPT 绑定进 §8r3 并恢复头部 READY；
+>   三实现面文件（admission-overlay / snapshot manifest / closure test）相对 `09e53eb0`
+>   逐字节未动，src delta = 0；**本提交自身未经独立评审（不重绑评审对象）**
 > - `INDEPENDENT_REVIEW` @ `f1853c6c`：**PASS / load_bearing_gaps = 0**（记录见 §5）
 
 ## 1. 本包冻结什么
@@ -257,16 +263,21 @@ PENDING §8r3 INDEPENDENT REVIEW，评审 PASS 后方可恢复（见 §8r3）。
 （snapshot 数据段与全部 src 字节不动）；吸收后 head 以前移后的 `PACKET_REFRESH_R2_HEAD`
 为准，gates 于吸收提交上复跑存证。
 
-## 8r3. R3 refresh 独立评审 handoff（PENDING——作者不得自行宣告 PASS）
+## 8r3. R3 refresh 独立评审记录（ACCEPT——非作者评审已绑定；本 binding 提交未经独立评审）
 
 ```json
-{"reviewed_head":"<由评审者绑定：本 R3 commit（exact sha 见 #428 刷新 comment）>",
- "status":"HANDOFF_PENDING","verdict":null,"load_bearing_gaps":null,
- "surface":"6ae6f6e7→R3_HEAD 恰 4 文件：admission-overlay.mjs（4+4 pin 值+R3 注释）、
-   watchdog-payload-snapshot.mjs（2 digest rebind + embedded compose 机械重建 + 头注释）、
-   deployment-overlay-closure.test.js（compose 常量 + 测试名）、本 packet（头部/§2 r3 行/
-   §4.1/§6r3/本节）；admission-lib.mjs / scheduler-cp-admission.mjs / 全部 src diff=0",
- "questions":[
+{"reviewed_head":"09e53eb0d44c869378467950a5080523ad672cfc",
+ "reviewed_tree":"d0c737d3ab4e19d500eac981817c1dd852b1da6f",
+ "reviewed_base":"1117933f085de0ae61987b566615d983775055cd（= origin/main at review time，零基漂移）",
+ "status":"ACCEPTED（由 R3_ACCEPT_BINDING docs-only 提交绑定）",
+ "verdict":"ACCEPT","load_bearing_gaps":0,"blockers":[],
+ "reviewer":"非作者独立评审 lane，agent-control#924（terminal/CLOSED，claim c11r4-r3-one-independent-review-20261012-r1）",
+ "review_record":"mayf3/dsh-agent-core#428 issuecomment 6114674821（2026-10-11T22:37:26Z）",
+ "q1_pin_semantics":"PASS（身份再冻结 values-only；apply 门语义未弱化，未来漂移仍 fail-closed）",
+ "q2_plan_write_set":"PASS（universe=23；update-6/add-1 与 R4 reviewed 树字节一致；plan 6/1/16 切分记为 author-reported live 实测）",
+ "q3_rollback_canary":"PASS（§4 第 2 项起父→head 逐字节相同；§4.1 前置仅严格增强；无过早生产授权）",
+ "q4_snapshot_r3":"PASS（评审独立复现：恰 2 digest 变化且与 git show 1117933f 逐字节一致；embedded==tree；23/23）",
+ "handoff_questions":[
   "Q1 身份再冻结（PRE=POST=部署世代 sha）对 4 枚已集成文件是否为忠实 pin 语义（glue
    字节等价证据见 §6r3 FINDING）",
   "Q2 embedded/tree compose 升至现行 main（a555adc8，242-graph）后，plan 写集
@@ -274,8 +285,18 @@ PENDING §8r3 INDEPENDENT REVIEW，评审 PASS 后方可恢复（见 §8r3）。
   "Q3 7/7 integration 文件 seed-verbatim、零写入，§4.4 回滚契约与 §4.2-4.3 canary
    定义是否保持完好",
   "Q4 snapshot r3 漂移集是否恰为 compose/entry 2 路径（其余 21 SAME 断言复现）"],
- "author_note":"本节由 R3 事务作者填写至 PENDING 为止；PASS/FAIL 裁决与 reviewed_head
-   绑定只能由非作者评审写入，PASS 后 §4/头部 READY 状态方可恢复"}
+ "non_blocking_notes":[
+  "本地 main ref stale（5c7b6205，落后 origin/main）——apply 绑 SOURCE_SHA 以 exact
+   head/origin/main 为准，勿用本地 main ref",
+  "4 枚 fresh live sha 与 plan 6/1/16 切分为作者 live 实测（评审禁生产读未复测）；
+   code/packet/comment 内部零矛盾，apply 门执行时 fresh 重读 fail-closed",
+  "作者申报 gate exits（selftest/deployment 13/13/focused 9/9/scheduler 421/421）未被
+   评审独立复跑（评审零套件执行）；静态一致性通过，无相反证据"],
+ "binding_note":"本 binding 提交为 original-owner docs-only acceptance 记录：仅写入本节
+   与头部坐标/status；其本身未经独立评审（评审不可自行宣告，binding 亦不可自评），
+   不重绑、不改动评审对象任何字节；reviewed 语义唯一锚定 reviewed_head/tree",
+ "stage_after_review":"SOURCE=merged / R3 PREPARED=review-PASS / INSTALLED=no /
+   ENABLED=no / BUSINESS_VERIFIED=no（均不变；apply/安装为独立后续 gated 事务）"}
 ```
 
 ## 7. PRODUCTION_MUTATION
