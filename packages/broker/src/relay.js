@@ -49,6 +49,16 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  *  readiness mask (index.js): the same set is withheld from tool registration
  *  when this runtime has no credential provider configured. */
 export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove', 'clone_disabled'])
+
+function validSchedulerFailure(parent, manifest) {
+  if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
+  const error = parent.error
+  return exactKeys(error, ['code', 'detail'])
+    && nonEmpty(error.code)
+    && typeof error.detail === 'string'
+    && manifest.errors.some((candidate) => candidate.code === error.code)
+}
+
 function validSessionSendResult(result) {
   const traceKeys = ['messageId', 'sessionId', 'status', 'targetAgentId']
   const validTrace = nonEmpty(result?.targetAgentId)
