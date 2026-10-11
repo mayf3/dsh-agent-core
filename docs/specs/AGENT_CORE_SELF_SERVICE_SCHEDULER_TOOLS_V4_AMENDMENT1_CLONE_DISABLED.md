@@ -1,23 +1,38 @@
 ---
 spec_id: AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4_AMENDMENT1_CLONE_DISABLED
 title: Scheduler capability — eighth action `clone_disabled` (same-Owner atomic disabled clone)
-status: proposed  # DRAFT / PENDING_ACCEPTANCE — this candidate authorizes NO production claim
+status: accepted  # accepted 2026-10-11 by Owner mayf3; candidate-era blocks below retained as history
+date: 2026-10-11
+accepted_date: 2026-10-11
+accepted_by: mayf3
+accepted_reviewed_head: 1feec97181556fa7bdf0461607fa7a4e8dd00a50  # docs-only lineage; statically reviewed source delta = 0b84a822440a108227a76731de55343cc9bc4c7b
+independent_review_result: PASS  # two limited static review passes on the source delta (findings closure + persistence/invalidation chain), private agent-control#547 record; RED→GREEN 18/18 + targeted regression 65/65 author-executed receipts on record
+independent_review_blockers: []
 candidate_date: 2026-10-11
-candidate_base: a96900bd7a0a2ecb30b6b8bd5f7a27d06b8837b1  # current accepted main head this draft was authored against
+candidate_base: a96900bd7a0a2ecb30b6b8bd5f7a27d06b8837b1  # accepted main head this draft was authored against
 candidate_head: see PR (branch ac-547/clone-disabled-v1)
 amends:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4  # status stays accepted; THIS file never modifies V4's body
 related:
   - SCHEDULER_CONTROL_PLANE_RELIABILITY_V1  # §5.1 logical key / §5.2 outcome state machine / §5.3 readiness — reused unchanged
-spec_kind: amendment-candidate
-authority_level: pending_governing_spec
-implementation_authority: none-until-accepted  # implementation exists on the candidate branch as Owner-pre-authorized SOURCE work (private#547), explicitly UNINSTALLED / UNENABLED
-production_apply_authority: none
+spec_kind: amendment
+authority_level: governing_spec
+implementation_authority: contracts  # implementation merged via the same PR per the existing release process; additive eighth action only
+production_apply_authority: none  # deployment follows the existing release process; any job enablement remains a separate per-job authorization
 owners:
   - mayf3
 ---
 
-# AMENDMENT1_CLONE_DISABLED (DRAFT / PENDING_ACCEPTANCE)
+# AMENDMENT1_CLONE_DISABLED
+
+> **ACCEPTED (2026-10-11).** Owner mayf3 accepted this amendment binding reviewed head
+> `1feec97181556fa7bdf0461607fa7a4e8dd00a50` (docs-only lineage from the statically reviewed
+> source delta `0b84a822440a108227a76731de55343cc9bc4c7b`), authorizing the eighth action's
+> implementation to ride the existing release process. The candidate-era blocks below
+> (including the former DRAFT/PENDING_ACCEPTANCE lifecycle note) are retained verbatim as
+> history. Enablement of any cloned successor job (e.g. HR v5→v6) remains a separate,
+> per-job authorization; a clone of an unknown-fenced job is not safe-to-enable by virtue
+> of the clone (§A5 source invariants).
 
 > **Candidate revision 2 (2026-10-11, SUP-20261011-0310-HR-SUCCESSOR):** corrects two intent
 > gaps of the initial candidate text — (1) the lost-response read-back no longer treats any
