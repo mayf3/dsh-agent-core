@@ -130,6 +130,53 @@ export async function findJobByLogicalKey(store, logicalKey) {
 }
 
 /**
+ * clone_disabled (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4_AMENDMENT1_CLONE_DISABLED,
+ * DRAFT / PENDING_ACCEPTANCE): same-Owner atomic clone of one stored
+ * definition into a permanently disabled target.
+ *
+ * One mutateDoc (single mutation authority: lock + re-read-latest) enforces
+ * the frozen judgment order — source visible -> owned (assertSource; clone has
+ * NO admin bypass) -> expected-revision CAS (stale readers never clone) ->
+ * logical-key dedup (equal projection: already_applied zero write; differing:
+ * LOGICAL_KEY_CONFLICT) -> insert. The target is born enabled:false with a
+ * fresh id/revision/state and inherits NO occurrence, fence, run or history —
+ * only the definition whitelist bytes (name/schedule/payload/delivery/retry/
+ * deleteAfterRun/description) are copied. The hidden payload message travels
+ * only inside the store: it is never accepted from nor returned to the model,
+ * and audit carries digests only.
+ */
+export async function cloneDisabledJobOp(store, { sourceJobId, expectedRevision, cloneInput }, { nowMs = Date.now(), assertSource } = {}) {
+  const clone = normalizeJob({ ...cloneInput, enabled: false }, { nowMs })
+  const { value } = await store.mutateDoc((latest) => {
+    const source = findJob(latest.jobs, sourceJobId)
+    if (typeof assertSource === 'function') assertSource(source)
+    assertExpectedRevision(source, expectedRevision)
+    const existing = clone.logicalKey !== undefined
+      ? latest.jobs.find((candidate) => candidate.logicalKey === clone.logicalKey)
+      : undefined
+    if (existing !== undefined) {
+      const differingFields = differingProjectionFields(existing, clone)
+      if (differingFields.length === 0) {
+        // Zero semantic write: the committed clone stays byte-identical
+        // (already_applied — a retry with the SAME key + SAME source revision
+        // converges here and never duplicates).
+        return { value: { job: cloneJob(existing), alreadyApplied: true } }
+      }
+      throw logicalKeyConflictError(existing, differingFields)
+    }
+    if (latest.jobs.some((candidate) => candidate.id === clone.id)) throw new Error(`job id already exists: ${clone.id}`)
+    const stored = cloneJob(clone)
+    stored.state = deriveJobStateSummary(stored, latest.occurrences, nowMs)
+    latest.jobs.push(stored)
+    return { value: { job: stored, alreadyApplied: false } }
+  })
+  return {
+    outcome: value.alreadyApplied ? 'already_applied' : 'created',
+    job: toPublicJob(value.job),
+  }
+}
+
+/**
  * Update mutable fields. A change to schedule/payload/agentId/retry semantics
  * bumps `scheduleRevision` (D-007 §5.2): existing occurrences stay bound to
  * their creation revision; future occurrences mint in the new space.
