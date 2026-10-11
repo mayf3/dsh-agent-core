@@ -104,12 +104,16 @@ a separate, explicitly-authorized enable.
      full strength; this amendment lowers nothing.
    - **Prompt secrecy**: the payload message crosses neither request nor response nor audit;
      audit events carry digests only (existing `definitionDigest` behavior).
-   - **Mutation state machine (§5.2, unchanged)**: `clone_disabled` joins `SCHEDULER_MUTATIONS`
+   - **Mutation state machine (§5.2; wording per the revision-2 correction in the header)**:
+     `clone_disabled` joins `SCHEDULER_MUTATIONS`
      — readiness gate (§5.3), strict committed-shape validation (the committed clone must be
      `enabled:false` and `nextRunAt:null`; anything else is unprovable), and lost-response
-     reconcile by the NEW logical key: found+disabled ⇒ APPLIED (synthetic result), absent ⇒
-     `mutation_not_applied` (retry-safe with the SAME key), found+enabled ⇒ STILL_UNKNOWN.
-     An UNKNOWN outcome never auto-retries with a different key.
+     reconcile by the NEW logical key: found AND the persisted `cloneProvenance` proves THIS
+     clone intent (same source job id + same source revision CAS) with the target disabled ⇒
+     APPLIED (synthetic result); absent ⇒ `mutation_not_applied` (retry-safe with the SAME
+     key); anything unprovable — no provenance, a different source, a drifted revision, an
+     enabled job — ⇒ STILL_UNKNOWN. An UNKNOWN outcome never auto-retries with a different
+     key.
 5. **Source invariants**: the source job's bytes, its unresolved UNKNOWN occurrences, fences,
    run evidence and history are untouched by a clone (the transaction only appends the new
    job). Cloning does NOT transfer or resolve anything: a fenced source stays fenced, and a
