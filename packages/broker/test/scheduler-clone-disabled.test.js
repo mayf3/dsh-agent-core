@@ -119,13 +119,20 @@ test('relay strict result: a clone commit must be the disabled committed shape โ
   assert.equal(answer.errorCode, 'mutation_outcome_unknown')
 })
 
-test('relay reconcile on lost clone response: disabled target visible -> APPLIED; absent -> NOT_APPLIED (retry-safe by the SAME new key)', async (t) => {
-  // Lost transport, target committed and disabled -> synthetic committed result.
+test('relay reconcile on lost clone response: provenance-proven disabled target -> APPLIED; unprovable collisions stay STILL_UNKNOWN; absent -> NOT_APPLIED (retry-safe by the SAME new key)', async (t) => {
+  // Lost transport, target committed and disabled WITH proof that the key is
+  // bound to THIS clone intent (same source job + same source revision CAS)
+  // -> synthetic committed result (ยง5.2: APPLIED requires the read-back to
+  // prove the same intent, not merely any disabled job behind the key).
   const applied = relayRig()
   applied.requestFn.next = async (call) => {
     if (call.operation === 'clone_disabled') throw new Error('transport lost')
     if (call.operation === 'list') {
-      return { ok: true, result: { ok: true, result: { jobs: [{ id: 'job-clone', name: 'hr v5', enabled: false, logicalKey: 'owner:v6', schedule: { kind: 'every', everyMs: 1_800_000, anchorMs: 1 } }] } } }
+      return { ok: true, result: { ok: true, result: { jobs: [{
+        id: 'job-clone', name: 'hr v5', enabled: false, logicalKey: 'owner:v6',
+        schedule: { kind: 'every', everyMs: 1_800_000, anchorMs: 1 },
+        cloneProvenance: { sourceJobId: 'job-src', sourceScheduleRevision: 2, sourceUpdatedAtMs: 77 },
+      }] } } }
     }
     throw new Error('unexpected call')
   }
@@ -136,6 +143,36 @@ test('relay reconcile on lost clone response: disabled target visible -> APPLIED
   assert.equal(appliedAnswer.nextRunAt, null)
   assert.equal(appliedAnswer.auditStatus, 'reconciled')
   assert.deepEqual(applied.calls[1].args, { logical_key: 'owner:v6' }, 'read-back runs under the NEW logical key')
+
+  // COLLISION (RED gap 1): a disabled job behind the key WITHOUT provenance
+  // proving this intent (e.g. created by create, or cloned from a different
+  // source/revision) is NOT provably the same intent -> STILL_UNKNOWN, never
+  // a fabricated APPLIED.
+  for (const [label, job] of Object.entries({
+    no_provenance: { id: 'job-clone', name: 'hr v5', enabled: false, schedule: { kind: 'every', everyMs: 1_800_000 } },
+    foreign_source: {
+      id: 'job-clone', name: 'hr v5', enabled: false, schedule: { kind: 'every', everyMs: 1_800_000 },
+      cloneProvenance: { sourceJobId: 'job-OTHER-source', sourceScheduleRevision: 2, sourceUpdatedAtMs: 77 },
+    },
+    drifted_revision: {
+      id: 'job-clone', name: 'hr v5', enabled: false, schedule: { kind: 'every', everyMs: 1_800_000 },
+      cloneProvenance: { sourceJobId: 'job-src', sourceScheduleRevision: 9, sourceUpdatedAtMs: 7700 },
+    },
+    enabled_target: {
+      id: 'job-clone', name: 'hr v5', enabled: true, nextRunAtMs: 1, schedule: { kind: 'every', everyMs: 1_800_000 },
+      cloneProvenance: { sourceJobId: 'job-src', sourceScheduleRevision: 2, sourceUpdatedAtMs: 77 },
+    },
+  })) {
+    const collision = relayRig()
+    collision.requestFn.next = async (call) => {
+      if (call.operation === 'clone_disabled') throw new Error('transport lost')
+      if (call.operation === 'list') return { ok: true, result: { ok: true, result: { jobs: [job] } } }
+      throw new Error('unexpected call')
+    }
+    const collisionHandlers = createRelayHandlers(schedulerManifest, collision.requestFn)
+    const collisionAnswer = await collisionHandlers.clone_disabled('clone_disabled', CLONE_ARGS)
+    assert.equal(collisionAnswer.errorCode, 'mutation_outcome_unknown', label)
+  }
 
   // Lost transport, nothing committed -> NOT_APPLIED, retry with the SAME key is safe.
   const notApplied = relayRig()

@@ -131,22 +131,36 @@ export async function findJobByLogicalKey(store, logicalKey) {
 
 /**
  * clone_disabled (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4_AMENDMENT1_CLONE_DISABLED,
- * DRAFT / PENDING_ACCEPTANCE): same-Owner atomic clone of one stored
- * definition into a permanently disabled target.
+ * DRAFT / PENDING_ACCEPTANCE; candidate revision 2, SUP-20261011-0310-HR-SUCCESSOR):
+ * same-Owner atomic clone of one stored definition into a permanently disabled
+ * target.
  *
  * One mutateDoc (single mutation authority: lock + re-read-latest) enforces
  * the frozen judgment order — source visible -> owned (assertSource; clone has
  * NO admin bypass) -> expected-revision CAS (stale readers never clone) ->
- * logical-key dedup (equal projection: already_applied zero write; differing:
- * LOGICAL_KEY_CONFLICT) -> insert. The target is born enabled:false with a
- * fresh id/revision/state and inherits NO occurrence, fence, run or history —
- * only the definition whitelist bytes (name/schedule/payload/delivery/retry/
- * deleteAfterRun/description) are copied. The hidden payload message travels
- * only inside the store: it is never accepted from nor returned to the model,
- * and audit carries digests only.
+ * logical-key dedup -> insert. The dedup anchor is the SOURCE INTENT, not the
+ * projection alone: each committed clone persists a minimal non-secret
+ * `cloneProvenance` {sourceJobId, sourceScheduleRevision, sourceUpdatedAtMs},
+ * and a retry converges to `already_applied` ONLY when the existing key
+ * binding carries THIS clone's provenance (same source job + same source
+ * revision CAS) AND the projection still matches. A key bound to a job
+ * without this provenance (created by create, or cloned from a different
+ * source or an earlier revision — even one whose bytes later drifted back) is
+ * a different intent and conflicts; it is never silently adopted. The target
+ * is born enabled:false with a fresh id/revision/state and inherits NO
+ * occurrence, fence, run or history — only the definition whitelist bytes
+ * (name/schedule/payload/delivery/retry/deleteAfterRun/description) are
+ * copied. The hidden payload message travels only inside the store: it is
+ * never accepted from nor returned to the model, and audit carries digests
+ * only.
  */
 export async function cloneDisabledJobOp(store, { sourceJobId, expectedRevision, cloneInput }, { nowMs = Date.now(), assertSource } = {}) {
   const clone = normalizeJob({ ...cloneInput, enabled: false }, { nowMs })
+  const provenance = {
+    sourceJobId,
+    sourceScheduleRevision: expectedRevision.scheduleRevision,
+    sourceUpdatedAtMs: expectedRevision.updatedAtMs,
+  }
   const { value } = await store.mutateDoc((latest) => {
     const source = findJob(latest.jobs, sourceJobId)
     if (typeof assertSource === 'function') assertSource(source)
@@ -155,17 +169,26 @@ export async function cloneDisabledJobOp(store, { sourceJobId, expectedRevision,
       ? latest.jobs.find((candidate) => candidate.logicalKey === clone.logicalKey)
       : undefined
     if (existing !== undefined) {
+      const prior = existing.cloneProvenance
+      const sameIntent = prior !== null && typeof prior === 'object'
+        && prior.sourceJobId === provenance.sourceJobId
+        && prior.sourceScheduleRevision === provenance.sourceScheduleRevision
+        && prior.sourceUpdatedAtMs === provenance.sourceUpdatedAtMs
+      if (!sameIntent) {
+        throw logicalKeyConflictError(existing, ['cloneProvenance'])
+      }
       const differingFields = differingProjectionFields(existing, clone)
       if (differingFields.length === 0) {
         // Zero semantic write: the committed clone stays byte-identical
-        // (already_applied — a retry with the SAME key + SAME source revision
-        // converges here and never duplicates).
+        // (already_applied — a retry with the SAME key + SAME source identity
+        // and revision converges here and never duplicates).
         return { value: { job: cloneJob(existing), alreadyApplied: true } }
       }
       throw logicalKeyConflictError(existing, differingFields)
     }
     if (latest.jobs.some((candidate) => candidate.id === clone.id)) throw new Error(`job id already exists: ${clone.id}`)
     const stored = cloneJob(clone)
+    stored.cloneProvenance = provenance
     stored.state = deriveJobStateSummary(stored, latest.occurrences, nowMs)
     latest.jobs.push(stored)
     return { value: { job: stored, alreadyApplied: false } }
