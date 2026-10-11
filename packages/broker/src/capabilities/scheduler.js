@@ -36,6 +36,13 @@ const properties = {
     + 're-creating with the same key and the same definition answers the existing job instead of duplicating it; '
     + 're-creating with the same key and a different definition fails closed (logical_key_conflict).',
   ),
+  new_logical_key: nonEmptyString(
+    'Stable caller-provided logical identity for the cloned job (clone_disabled only). Persisted '
+    + 'and unique; re-cloning with the same key and the same source revision answers the existing '
+    + 'disabled job instead of duplicating it; the same key bound to a different definition fails '
+    + 'closed (logical_key_conflict).',
+  ),
+  new_name: nonEmptyString('Optional display name for the cloned job (clone_disabled only); defaults to the source job name.'),
   expected_revision: {
     type: 'object',
     additionalProperties: false,
@@ -112,6 +119,7 @@ export const schedulerManifest = {
     operation('enable', 'Enable one job for future slots.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
     operation('disable', 'Disable future occurrence minting for one job.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
     operation('remove', 'Remove one definition while retaining occurrence evidence.', args(['job_id', 'expected_revision'], ['job_id']), ['invalid_arguments', 'access_denied', 'job_not_found', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
+    operation('clone_disabled', 'Atomically clone one OWNED job definition into a permanently disabled copy. The stored configuration and hidden payload bytes are copied server-side; no message text is accepted from or returned to the model, and the copy inherits no occurrence, fence, or history.', args(['job_id', 'expected_revision', 'new_logical_key', 'new_name'], ['job_id', 'expected_revision', 'new_logical_key']), ['invalid_arguments', 'access_denied', 'job_not_found', 'validation_error', 'logical_key_conflict', 'stale_target_conflict', 'capability_unavailable', 'mutation_not_applied']),
   ],
 }
 

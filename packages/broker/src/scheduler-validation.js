@@ -59,6 +59,12 @@ export function validateSchedulerArguments(operation, rawArgs, { nowMs = Date.no
   if (present(args, 'logical_key') && !['create', 'list'].includes(operation)) {
     violations.push('logical_key is only valid on create (and as a list read-back filter)')
   }
+  if (operation === 'clone_disabled' && !present(args, 'new_logical_key')) {
+    violations.push('clone_disabled requires new_logical_key (stable caller-provided logical identity)')
+  }
+  if (present(args, 'new_logical_key') && operation !== 'clone_disabled') {
+    violations.push('new_logical_key is only valid on clone_disabled')
+  }
   if (present(args, 'expected_revision')) {
     const revision = args.expected_revision
     const shapeOk = revision !== null && typeof revision === 'object' && !Array.isArray(revision)
@@ -67,9 +73,12 @@ export function validateSchedulerArguments(operation, rawArgs, { nowMs = Date.no
     if (!shapeOk) {
       violations.push('expected_revision must be {schedule_revision: integer >= 1, updated_at_ms: integer >= 1}')
     }
-    if (!['update', 'enable', 'disable', 'remove'].includes(operation)) {
-      violations.push('expected_revision is only valid on update/enable/disable/remove')
+    if (!['update', 'enable', 'disable', 'remove', 'clone_disabled'].includes(operation)) {
+      violations.push('expected_revision is only valid on update/enable/disable/remove/clone_disabled')
     }
+  }
+  if (operation === 'clone_disabled' && !present(args, 'expected_revision')) {
+    violations.push('clone_disabled requires expected_revision {schedule_revision, updated_at_ms}')
   }
 
   const hasScheduleKind = present(args, 'schedule_kind')

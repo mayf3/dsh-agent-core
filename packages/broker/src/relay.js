@@ -36,6 +36,7 @@ import { randomUUID } from 'node:crypto'
 import { appendFileSync } from 'node:fs'
 
 import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID } from './capabilities/agent-session-reconcile.js'
+import { exactKeys, nonEmpty, validSchedulerMutationResult } from './scheduler-mutation-result.js'
 
 /**
  * The parent-RPC method the router dispatches to the trusted broker gateway.
@@ -47,51 +48,7 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  *  (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2). Exported for the child-side
  *  readiness mask (index.js): the same set is withheld from tool registration
  *  when this runtime has no credential provider configured. */
-export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
-const COMMITTED_FIELDS = [
-  'auditStatus', 'autoRetry', 'deleteAfterRun', 'enabled',
-  'exactPersistedDeliveryDestination', 'jobId', 'name', 'nextRunAt',
-  'normalizedSchedule', 'targetAgentId', 'timezone',
-]
-
-function exactKeys(value, expected) {
-  return value !== null
-    && typeof value === 'object'
-    && !Array.isArray(value)
-    && Object.keys(value).sort().join('\0') === [...expected].sort().join('\0')
-}
-
-function validAuditStatus(value) {
-  return value === 'appended' || value === 'append_failed' || value === 'reconciled'
-}
-
-function nonEmpty(value) {
-  return typeof value === 'string' && value.length > 0
-}
-
-function validIso(value) {
-  if (!nonEmpty(value)) return false
-  const parsed = Date.parse(value)
-  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value
-}
-
-function validSchedule(value) {
-  if (value?.kind === 'at') return exactKeys(value, ['at', 'kind']) && validIso(value.at)
-  if (value?.kind === 'every') {
-    return exactKeys(value, ['everyMs', 'kind'])
-      && Number.isSafeInteger(value.everyMs)
-      && value.everyMs >= 1
-  }
-  return value?.kind === 'cron'
-    && exactKeys(value, ['expr', 'kind', 'timezone'])
-    && nonEmpty(value.expr)
-    && nonEmpty(value.timezone)
-}
-
-function validDestination(value) {
-  return value === null
-    || (exactKeys(value, ['channel', 'to']) && nonEmpty(value.channel) && nonEmpty(value.to))
-}
+export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove', 'clone_disabled'])
 
 function validSchedulerFailure(parent, manifest) {
   if (!exactKeys(parent, ['error', 'ok']) || parent.ok !== false) return false
@@ -100,38 +57,6 @@ function validSchedulerFailure(parent, manifest) {
     && nonEmpty(error.code)
     && typeof error.detail === 'string'
     && manifest.errors.some((candidate) => candidate.code === error.code)
-}
-
-function validSchedulerMutationResult(operation, result) {
-  if (operation === 'create' || operation === 'update') {
-    return exactKeys(result, COMMITTED_FIELDS)
-      && nonEmpty(result.jobId)
-      && nonEmpty(result.name)
-      && typeof result.enabled === 'boolean'
-      && validSchedule(result.normalizedSchedule)
-      && (result.normalizedSchedule.kind === 'cron'
-        ? result.timezone === result.normalizedSchedule.timezone
-        : result.timezone === null)
-      && (result.nextRunAt === null || validIso(result.nextRunAt))
-      && (operation !== 'create' || (result.enabled === true && result.nextRunAt !== null))
-      && nonEmpty(result.targetAgentId)
-      && validDestination(result.exactPersistedDeliveryDestination)
-      && typeof result.autoRetry === 'boolean'
-      && typeof result.deleteAfterRun === 'boolean'
-      && validAuditStatus(result.auditStatus)
-  }
-  if (operation === 'enable' || operation === 'disable') {
-    return exactKeys(result, ['auditStatus', 'enabled', 'jobId', 'nextRunAt'])
-      && nonEmpty(result.jobId)
-      && typeof result.enabled === 'boolean'
-      && (result.nextRunAt === null || validIso(result.nextRunAt))
-      && validAuditStatus(result.auditStatus)
-  }
-  return operation === 'remove'
-    && exactKeys(result, ['auditStatus', 'jobId', 'removed'])
-    && result.removed === true
-    && nonEmpty(result.jobId)
-    && validAuditStatus(result.auditStatus)
 }
 
 function validSessionSendResult(result) {
@@ -237,6 +162,10 @@ function convertSessionSendLookup(lookup, issuedAtWallMs) {
  *
  *   create   (logical_key)          -> found+matches: APPLIED (synthetic result)
  *                                      absent: NOT_APPLIED (mutation_not_applied)
+ *   clone_disabled (new_logical_key) -> found+disabled: APPLIED (synthetic result)
+ *                                      absent: NOT_APPLIED (retry-safe with the
+ *                                      SAME new key); found+enabled: STILL_UNKNOWN
+ *                                      (key bound to a different definition)
  *   update/enable/disable (job_id +
  *     expected_revision)            -> revision moved past expected: APPLIED
  *                                      unchanged/absent: NOT_APPLIED (a committed
@@ -271,7 +200,9 @@ function persistReconciliationEvidence(entry) {
 async function reconcileAfterLostResponse(requestFn, operation, args) {
   const identity = args?.logical_key !== undefined
     ? { logicalKey: args.logical_key }
-    : args?.job_id !== undefined ? { jobId: args.job_id } : {}
+    : args?.new_logical_key !== undefined
+      ? { logicalKey: args.new_logical_key }
+      : args?.job_id !== undefined ? { jobId: args.job_id } : {}
   const evidence = (reason) => JSON.stringify({ state: 'STILL_UNKNOWN', operation, ...identity, reason })
   const stillUnknown = (reason) => {
     const detail = `scheduler mutation outcome STILL_UNKNOWN after canonical read-back: ${evidence(reason)}`
@@ -323,8 +254,9 @@ async function reconcileAfterLostResponse(requestFn, operation, args) {
   // applied, because the caller must have seen the job to request removal).
   let readBack
   try {
-    const listArgs = args?.logical_key !== undefined
-      ? { logical_key: args.logical_key }
+    const logicalKey = args?.logical_key !== undefined ? args.logical_key : args?.new_logical_key
+    const listArgs = logicalKey !== undefined
+      ? { logical_key: logicalKey }
       : { job_id: args?.job_id }
     const envelope = await requestFn({ capabilityId: 'scheduler', operation: 'list', args: listArgs })
     const structured = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
@@ -340,6 +272,28 @@ async function reconcileAfterLostResponse(requestFn, operation, args) {
     // Shallow sanity: the committed create must at least carry the requested
     // display name; anything else means the key is bound to a foreign shape.
     if (args?.name !== undefined && job.name !== args.name) return stillUnknown('logical key bound to a different definition')
+    return { ok: true, result: committedFromJob(job) }
+  }
+  if (operation === 'clone_disabled') {
+    if (job === undefined) return notApplied()
+    // §5.2: APPLIED requires the read-back to PROVE the same intent — a mere
+    // disabled job behind the key is not proof. The only legal in-store proof
+    // for a clone is its persisted cloneProvenance (own-source job id + the
+    // source revision CAS) matching THIS request's coordinates; anything else
+    // (no provenance, a different source, a drifted revision, an enabled
+    // job) is a different definition behind the key -> STILL_UNKNOWN, never
+    // a fabricated APPLIED. No new reader and no payload readback exists or
+    // is added for this.
+    const anchor = args?.expected_revision
+    if (anchor === null || typeof anchor !== 'object') return stillUnknown('no revision anchor for a deterministic clone read-back')
+    const provenance = job.cloneProvenance
+    const proven = provenance !== null && typeof provenance === 'object'
+      && provenance.sourceJobId === args?.job_id
+      && provenance.sourceScheduleRevision === anchor.schedule_revision
+      && provenance.sourceUpdatedAtMs === anchor.updated_at_ms
+    if (!proven) return stillUnknown('logical key bound to a job whose clone provenance does not prove this intent')
+    if (job.enabled !== false) return stillUnknown('logical key bound to an enabled job')
+    if (args?.new_name !== undefined && job.name !== args.new_name) return stillUnknown('logical key bound to a different definition')
     return { ok: true, result: committedFromJob(job) }
   }
   if (operation === 'remove') {
