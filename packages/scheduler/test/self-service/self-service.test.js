@@ -35,7 +35,7 @@ test('create returns the exact 11-field committed projection and resolves only t
   assert.equal(job.delivery.to, 'chat:oc_exact_chat')
 })
 
-test('all seven actions use capability id scheduler and ordinary self actions make zero grant requests', async (t) => {
+test('all eight actions use capability id scheduler and ordinary self actions make zero grant requests', async (t) => {
   const { call, store, grantCalls } = await rig(t)
   const created = await call('create', {
     name: 'self', logical_key: 'self-test:self', schedule_kind: 'every', every_ms: 60_000, message: 'm',
@@ -50,6 +50,17 @@ test('all seven actions use capability id scheduler and ordinary self actions ma
   assertExactCommittedResult(updated.result)
   assert.equal((await call('disable', { job_id: jobId })).ok, true)
   assert.equal((await call('enable', { job_id: jobId })).ok, true)
+  const doc = await store.loadDoc({ force: true })
+  const live = doc.jobs.find((job) => job.id === jobId)
+  // AMENDMENT1_CLONE_DISABLED (DRAFT/PENDING_ACCEPTANCE): eighth action, same
+  // zero-Auth self path.
+  const cloned = await call('clone_disabled', {
+    job_id: jobId,
+    expected_revision: { schedule_revision: live.scheduleRevision, updated_at_ms: live.updatedAtMs },
+    new_logical_key: 'self-test:clone',
+  })
+  assert.equal(cloned.ok, true, JSON.stringify(cloned.error ?? {}))
+  assert.equal(cloned.result.enabled, false)
   assert.equal((await call('remove', { job_id: jobId })).ok, true)
   assert.deepEqual(grantCalls, [])
 })

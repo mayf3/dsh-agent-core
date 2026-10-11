@@ -119,7 +119,7 @@ export function createBrokerGateway({
     }
   }
 
-  const schedulerMutations = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+  const schedulerMutations = new Set(['create', 'update', 'enable', 'disable', 'remove', 'clone_disabled'])
   const schedulerContextFields = [
     'callerAgentId', 'processGeneration', 'turnExecutionId',
     'channelNamespace', 'channelConversationId', 'feishuChatId',
@@ -150,7 +150,7 @@ export function createBrokerGateway({
   function availabilitySnapshot(agentId) {
     const schedulerReady = schedulerMutationReady(agentId)
     const schedulerOps = {}
-    for (const op of ['create', 'update', 'enable', 'disable', 'remove']) schedulerOps[op] = schedulerReady
+    for (const op of ['create', 'update', 'enable', 'disable', 'remove', 'clone_disabled']) schedulerOps[op] = schedulerReady
     const selfOpsHandlers = handlersForCall().self_ops ?? {}
     const selfOpsReady = typeof agentId === 'string' && agentId !== ''
       && typeof selfOpsHandlers.status === 'function'

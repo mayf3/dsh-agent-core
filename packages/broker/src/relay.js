@@ -47,7 +47,7 @@ export const BROKER_RPC_METHOD = 'agent-core/broker'
  *  (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2). Exported for the child-side
  *  readiness mask (index.js): the same set is withheld from tool registration
  *  when this runtime has no credential provider configured. */
-export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove'])
+export const SCHEDULER_MUTATIONS = new Set(['create', 'update', 'enable', 'disable', 'remove', 'clone_disabled'])
 const COMMITTED_FIELDS = [
   'auditStatus', 'autoRetry', 'deleteAfterRun', 'enabled',
   'exactPersistedDeliveryDestination', 'jobId', 'name', 'nextRunAt',
@@ -114,6 +114,24 @@ function validSchedulerMutationResult(operation, result) {
         : result.timezone === null)
       && (result.nextRunAt === null || validIso(result.nextRunAt))
       && (operation !== 'create' || (result.enabled === true && result.nextRunAt !== null))
+      && nonEmpty(result.targetAgentId)
+      && validDestination(result.exactPersistedDeliveryDestination)
+      && typeof result.autoRetry === 'boolean'
+      && typeof result.deleteAfterRun === 'boolean'
+      && validAuditStatus(result.auditStatus)
+  }
+  if (operation === 'clone_disabled') {
+    // A committed clone is ALWAYS disabled with no due slot — an enabled
+    // result is a different definition behind the key and stays unprovable.
+    return exactKeys(result, COMMITTED_FIELDS)
+      && nonEmpty(result.jobId)
+      && nonEmpty(result.name)
+      && result.enabled === false
+      && result.nextRunAt === null
+      && validSchedule(result.normalizedSchedule)
+      && (result.normalizedSchedule.kind === 'cron'
+        ? result.timezone === result.normalizedSchedule.timezone
+        : result.timezone === null)
       && nonEmpty(result.targetAgentId)
       && validDestination(result.exactPersistedDeliveryDestination)
       && typeof result.autoRetry === 'boolean'
@@ -237,6 +255,10 @@ function convertSessionSendLookup(lookup, issuedAtWallMs) {
  *
  *   create   (logical_key)          -> found+matches: APPLIED (synthetic result)
  *                                      absent: NOT_APPLIED (mutation_not_applied)
+ *   clone_disabled (new_logical_key) -> found+disabled: APPLIED (synthetic result)
+ *                                      absent: NOT_APPLIED (retry-safe with the
+ *                                      SAME new key); found+enabled: STILL_UNKNOWN
+ *                                      (key bound to a different definition)
  *   update/enable/disable (job_id +
  *     expected_revision)            -> revision moved past expected: APPLIED
  *                                      unchanged/absent: NOT_APPLIED (a committed
@@ -271,7 +293,9 @@ function persistReconciliationEvidence(entry) {
 async function reconcileAfterLostResponse(requestFn, operation, args) {
   const identity = args?.logical_key !== undefined
     ? { logicalKey: args.logical_key }
-    : args?.job_id !== undefined ? { jobId: args.job_id } : {}
+    : args?.new_logical_key !== undefined
+      ? { logicalKey: args.new_logical_key }
+      : args?.job_id !== undefined ? { jobId: args.job_id } : {}
   const evidence = (reason) => JSON.stringify({ state: 'STILL_UNKNOWN', operation, ...identity, reason })
   const stillUnknown = (reason) => {
     const detail = `scheduler mutation outcome STILL_UNKNOWN after canonical read-back: ${evidence(reason)}`
@@ -323,8 +347,9 @@ async function reconcileAfterLostResponse(requestFn, operation, args) {
   // applied, because the caller must have seen the job to request removal).
   let readBack
   try {
-    const listArgs = args?.logical_key !== undefined
-      ? { logical_key: args.logical_key }
+    const logicalKey = args?.logical_key !== undefined ? args.logical_key : args?.new_logical_key
+    const listArgs = logicalKey !== undefined
+      ? { logical_key: logicalKey }
       : { job_id: args?.job_id }
     const envelope = await requestFn({ capabilityId: 'scheduler', operation: 'list', args: listArgs })
     const structured = exactKeys(envelope, ['ok', 'result']) && envelope.ok === true
@@ -340,6 +365,14 @@ async function reconcileAfterLostResponse(requestFn, operation, args) {
     // Shallow sanity: the committed create must at least carry the requested
     // display name; anything else means the key is bound to a foreign shape.
     if (args?.name !== undefined && job.name !== args.name) return stillUnknown('logical key bound to a different definition')
+    return { ok: true, result: committedFromJob(job) }
+  }
+  if (operation === 'clone_disabled') {
+    if (job === undefined) return notApplied()
+    // A committed clone is ALWAYS disabled; an enabled job behind the new key
+    // is a different definition — STILL_UNKNOWN, never a fabricated APPLIED.
+    if (job.enabled !== false) return stillUnknown('logical key bound to a different definition')
+    if (args?.new_name !== undefined && job.name !== args.new_name) return stillUnknown('logical key bound to a different definition')
     return { ok: true, result: committedFromJob(job) }
   }
   if (operation === 'remove') {

@@ -11,7 +11,7 @@ import { assertValidManifest } from '../src/mapping.js'
 import { createRelayHandlers } from '../src/relay.js'
 import { buildToolDefinition } from '../src/registry.js'
 
-const ACTIONS = ['create', 'list', 'runs', 'update', 'enable', 'disable', 'remove']
+const ACTIONS = ['create', 'list', 'runs', 'update', 'enable', 'disable', 'remove', 'clone_disabled']
 const LEGACY_TOOL_NAMES = ACTIONS.map((action) => `scheduler_${action}`)
 
 const trustedContext = (overrides = {}) => ({
@@ -40,6 +40,7 @@ const validCalls = {
   enable: { action: 'enable', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 } },
   disable: { action: 'disable', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 } },
   remove: { action: 'remove', job_id: 'job-1' },
+  clone_disabled: { action: 'clone_disabled', job_id: 'job-1', expected_revision: { schedule_revision: 1, updated_at_ms: 2 }, new_logical_key: 'owner:clone' },
 }
 
 function schedulerResult(action) {
@@ -56,6 +57,15 @@ function schedulerResult(action) {
     return { jobId: 'job-1', enabled: action === 'enable', nextRunAt: null, auditStatus: 'appended' }
   }
   if (action === 'remove') return { removed: true, jobId: 'job-1', auditStatus: 'appended' }
+  if (action === 'clone_disabled') {
+    return {
+      jobId: 'job-clone', name: 'daily', enabled: false,
+      normalizedSchedule: { kind: 'every', everyMs: 60_000 }, timezone: null,
+      nextRunAt: null, targetAgentId: 'agt_a',
+      exactPersistedDeliveryDestination: null, autoRetry: false,
+      deleteAfterRun: false, auditStatus: 'appended',
+    }
+  }
   return { selected: action }
 }
 
@@ -66,7 +76,7 @@ function schedulerDefinition(requestFn = async (call) => ({ ok: true, result: { 
   }).definition
 }
 
-test('one model-visible scheduler manifest declares action and exactly seven actions', () => {
+test('one model-visible scheduler manifest declares action and exactly eight actions (AMENDMENT1_CLONE_DISABLED, DRAFT/PENDING_ACCEPTANCE)', () => {
   assert.equal(schedulerManifests.length, 1)
   const manifest = assertValidManifest(schedulerManifests[0])
   assert.equal(manifest.id, 'scheduler')
@@ -103,7 +113,7 @@ test('selector compatibility: scheduler exposes action; existing manifests retai
   assert.equal(assertValidManifest(calculatorManifest).selector, 'operation')
 })
 
-test('all seven valid actions relay locally and action is removed from business args', async () => {
+test('all eight valid actions relay locally and action is removed from business args', async () => {
   const calls = []
   const definition = schedulerDefinition(async (call) => {
     calls.push(call)
