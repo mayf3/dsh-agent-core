@@ -1,6 +1,7 @@
 # C11-R4 NOTIFICATION_COALESCE_V1 — Production Dogfood Packet (FROZEN, DO NOT DEPLOY)
 
-> status: **READY_FOR_PRODUCTION_PACKET = YES** · **READY_FOR_PRODUCTION_APPLY = NO** ·
+> status: **READY_FOR_PRODUCTION_PACKET = PENDING §8r3 INDEPENDENT REVIEW（R3 refresh 后须复评）** ·
+> **READY_FOR_PRODUCTION_APPLY = NO** ·
 > **PRODUCTION_APPLY = HOLD（本命令 DO_NOT_DEPLOY）** · **PRODUCTION_MUTATION = NO**
 > Product: mayf3/dsh-agent-core#428（[PRODUCT C11-R4] Scheduler watchdog actionable
 > notifications — correlate, coalesce, and suppress derived alert noise）
@@ -19,6 +20,13 @@
 > - `PACKET_REFRESH_R2_HEAD`（reviewed）= `0f3043148277a457661bba178e42442b98b63c41`
 >   （独立评审 PASS / load_bearing_gaps=0，记录见 §8；其后仅 docs-only 评审记录
 >   冻结 + N1 注释吸收，零语义增量）
+> - `PACKET_REFRESH_R3` = agent-control#892（2026-10-11）live-adapter re-pin + snapshot r3
+>   （§6r3）：4 枚 live-adapter pin 身份再冻结至现行部署世代（PRE=POST=fresh deployed
+>   sha，values-only）+ snapshot 2 路径 digest 再绑定（compose 树/embedded → `a555adc8…`、
+>   entry → `5a33a90f…`，由现行 reviewed main `1117933f` 机械再生成）；实现字节零改动；
+>   `PACKET_EXACT_HEAD` 随本刷新事务前移
+> - `PACKET_REFRESH_R3_HEAD` = 本提交（exact sha 记录于 #428 R3 刷新 comment）；
+>   **§8r3 独立评审 = PENDING（作者不得自行宣告 PASS）**
 > - `INDEPENDENT_REVIEW` @ `f1853c6c`：**PASS / load_bearing_gaps = 0**（记录见 §5）
 
 ## 1. 本包冻结什么
@@ -56,6 +64,7 @@
 | 新增 | `watchdog/delivery-projection.js` | delivery.js/incident-lifecycle.js/index.js 的新 import；必须入 overlay universe，否则 narrow REFUSED |
 | 刷新 | `product-api/src/index.js`、`production-runtime/src/{entry.js,paths.js,scheduler-invoker.js}`、`scheduler/src/{occurrence-model.js,self-ops/index.js}` | **先于本包即已漂移**（main 在 0bfbfb9d 后由其他已合并 lane 演进，drift 门在 pristine main 已红）；按 §B1 语义刷新为 SOURCE_SHA=`f1853c6c` 树字节 |
 | 刷新 r2 | `production-runtime/src/compose.js`（embedded） | **embedded compose 世代再生成（agent-control#226，机械 rebind）**：0bfbfb9d 世代 → `f1853c6c` 树字节（sha256 `cdc6d85c…`，与 main `d54b8f70` 逐字节相同，main tip 自分支以来未动）——闭合 §6 的 `EMBEDDED_COMPOSE_STALE_GENERATION` 部署前阻塞；实现字节零改动 |
+| 刷新 r3 | `production-runtime/src/compose.js`（树+embedded）、`production-runtime/src/entry.js` | **main 合并后合法演进再绑定（agent-control#892，机械再生成，B1 drift 门在 pristine 现行 main 上已红）**：compose `cdc6d85c…` → `a555adc8…`（embedded 由 `git show HEAD:compose.js` 重建，35930 字节/631 段）、entry `033c7ec8…` → `5a33a90f…`；其余 21 digest（含 R4 行为面全量）逐一验证未动 |
 | 配套 | `scripts/lib/admission-lib.mjs` universe 22→23；`deployment-overlay-closure.test.js` 权威 census 22→23 | 单一 reviewed 事务 |
 
 ## 3. 验证证据（全部在本 worktree 实测，命令可重放）
@@ -81,8 +90,10 @@ admission selftest = PASS（r2 embedded compose refresh 后整链 PASS：三跑 
 
 ## 4. Dogfood 程序（一次真实 NEW→RECOVERED 生命周期；授权后由生产 lane 执行）
 
-1. 前置：§6 阻塞已由 §6r2 embedded compose refresh 闭合 + CTR §12.2 既有门（implementation gates、serialization slot、
-   provenance、canary、sequential readback）全部满足；SOURCE_SHA = 本包 head。
+1. 前置：§6 阻塞已由 §6r2 embedded compose refresh 闭合；§6r3 live-adapter pin/snapshot
+   再绑定已完成且 §8r3 独立评审 PASS（R3 前 apply 必然 fail-closed）+ CTR §12.2 既有门
+   （implementation gates、serialization slot、provenance、canary、sequential readback）
+   全部满足；SOURCE_SHA = 本包 head。
 2. 观察一次**真实** incident（禁止合成 incident、禁止制造 outcome_unknown——CTR §12.2），
    期望用户面消息 census（对 #428 生产序列 HR v5：14 条 → 6 条）：
    - 每个因果事件 ≤1 OPEN + ≤1 RECOVERED；被吸收/合并子事件零用户消息；
@@ -154,6 +165,69 @@ PRODUCTION_MUTATION  = NO（无 deploy/restart/sudo/凭据/raw-store/fence/UNKNO
 §4 生产 dogfood 的前置「§6 阻塞修复」自此满足；production apply 仍按 §4 + CTR §12.2 由
 Owner 显式授权的序列化 lane 执行（本 refresh 不构成任何生产授权）。
 
+## 6r3. LIVE_ADAPTER_PIN_STALE_GENERATION 再冻结 + snapshot r3 记录（agent-control#892，NON-PRODUCTION）
+
+Product #428 lifecycle 授权的 bounded refresh（CLAIM_TOKEN =
+`c11-r4-same-product-packet-refresh-20261011-r1`；授权依据 = #428 comment
+`6016755933` VERDICT=2 的 EXACT_NEXT_ACTION-1，全部 live 事实于 2026-10-11 fresh 重导，
+不沿用 10-06 hash）。机械事实：
+
+```text
+FRESH_LIVE_TARGET = /usr/local/libexec/agent-core/app（authsvc 域；root 未变；全部只读
+                    sha256，无 sudo；与 10-06 独立记录逐字节一致，含一次失败 install +
+                    restore_r1（2026-10-11 13:51 receipt，B7 车辆自身事务）后恢复原代）
+PIN_GATE_FRESH    = 7 枚 WATCHDOG_LIVE_ADAPTER_SHA 文件逐一实测：
+  entry.js                  5c52329d… = 旧 POST ✓（保留）
+  self-service-runtime.js   acfde749… = 旧 POST ✓（保留）
+  scheduler/src/index.js    9ded6900… = 旧 POST ✓（保留）
+  compose.js                96098f23… ≠ PRE 678374d7 ≠ POST 17e4aedd ✗
+  paths.js                  3e862991… ≠ PRE e99add38 ≠ POST e5131350 ✗
+  product-api/src/index.js  864b2cec… ≠ PRE f49cbbba ≠ POST a23e7b7e ✗
+  self-ops/index.js         0fcb6811… ≠ PRE 0cd886e7 ≠ POST d253d34b ✗（恰 == 本包树字节）
+FINDING           = 4 枚 stale 文件不是「未集成的较新世代」，而是「已集成的较新部署世代」：
+  compose 首个 adapter anchor import 已不存在（adaptLiveComposeForWatchdog 会
+  fail-loud anchor drift），三者（paths/product-api/self-ops）anchor 虽在但适配插入
+  内容已存在——机械按 10-06 处方 PRE:=live/POST:=adapt(live) 不可执行且会双集成。
+  集成 glue 字节证据：compose observed-invoker/health-mount/readiness（行 49-50/338/
+  355/362/495-500）、paths 三路径项（92-94）、product-api health route（53/274）、
+  self-ops reconciliation+health（7-8/117/137）全部在位。
+RESOLUTION        = 4 枚改身份 pin（PRE=POST=现行部署 sha，values-only）：deployed 文件
+  已携带集成 wiring，buildOverlaySeedBytes 对 live==POST 逐字采用——与保留的 3 枚
+  同一既有代码路径；pin 机制/门语义零改动，任何后续 live 漂移仍被 apply 门 fail-closed。
+  pin 类不变：旧 PRE/POST（678374d7/17e4aedd 等）亦不在 main 400 commit 历史内，
+  本 pin 类一贯绑定部署工件字节而非 git 字节。
+SNAPSHOT_R3       = B1 drift 门在 pristine 现行 main 上独立变红（非本事务引入）：
+  23 路径中恰 2 漂移（main 合并后演进）——compose 树/embedded cdc6d85c…→a555adc8…、
+  entry 033c7ec8…→5a33a90f…；一次性脚本由 git show HEAD 机械再生成（未手写字节）；
+  其余 21 digest（R4 行为面全量）逐一 SAME。
+OLD_DIGEST_REFS   = 8 枚旧 pin 全仓引用面恰 3 文件：本 map（已更新）、closure-test
+  compose 常量（已更新）、本 packet §6r2/§8 历史记录（按 docs-honesty 原样保留）。
+COHERENCE_PROOF   = hermetic 只读复刻 overlay() 非自测路径（真实 live 树）：
+  pin 门 7/7 PASS（7/7 live==POST → 全部逐字 seed，adapt() 零调用）；
+  snapshot 断言 23/23 PASS；narrow walk 收敛 universe=23；
+  plan = update 6（scheduler-invoker、occurrence-model、delivery、incident-lifecycle、
+  index、scheduler-watchdog.mjs）+ add 1（delivery-projection）+ already-identical 16
+  ——写集恰为 R4 行为面 + 漂移 universe 文件；7 枚 integration 文件零写入（回滚对
+  这些路径为 no-op，§4.4 file-level preimage + incident state backup 契约不变）。
+DISK_PRECHECK     = （Owner policy 2026-10-02 第 8 条四字段）DISK_FREE_BEFORE = 102 GiB
+  （fresh df 2026-10-11；同日 deploy-budget receipt 20261011-145753-97830-20318 =
+  ADMITTED：free 118 GB / after reservation 89.8 GB / retention_cap_ok=1）；
+  ESTIMATED_PEAK = file-level（7 overlay 写 ≤ ~200 KB + incident-state backup +
+  tar preimage，MiB 级；无全树备份）；DISK_FREE_AFTER_RESERVATION ≈ 102 GiB
+  ≥ 50 GiB floor ✓；RETAINED_FULL_TREE_BACKUPS = 1 pinned large
+  （bak-20261001T144015Z-pre-b7-refreeze 26.2 GB，pinned）+ B7 车辆自身
+  newest-preimage 记账（production 工具链强制，非本包义务）；未创建任何备份。
+GATES             = 于本 R3 精确 commit 复跑（原始输出存 #428 刷新 comment）：
+  admission --selftest EXIT=0；deployment gates 13/13；focused delivery-projection 9/9；
+  npm run test:scheduler 421/421 PASS（较 R2 基线 399 的 +22 用例来自 #437 合并后
+  main 上其他 lane 的既有新增；本事务相对 main 零 scheduler test 文件增删）。
+PRODUCTION_MUTATION = NO（无 deploy/restart/sudo/凭据/raw-store/fence/UNKNOWN replay/
+  Remote Desktop；未写任何生产字节；runtime/persisted jobs/outbox 未触碰）
+```
+
+本节与 §8r3 handoff 为 docs+values 记录；`READY_FOR_PRODUCTION_PACKET` 自 R3 起降为
+PENDING §8r3 INDEPENDENT REVIEW，评审 PASS 后方可恢复（见 §8r3）。
+
 ## 8. Refresh 事务的独立 changed-surface review 记录（评审者非作者）
 
 ```json
@@ -182,6 +256,27 @@ Owner 显式授权的序列化 lane 执行（本 refresh 不构成任何生产�
 本节为 docs-only 记录冻结 + N1 注释吸收，自 reviewed head `0f304314` 起**零语义增量**
 （snapshot 数据段与全部 src 字节不动）；吸收后 head 以前移后的 `PACKET_REFRESH_R2_HEAD`
 为准，gates 于吸收提交上复跑存证。
+
+## 8r3. R3 refresh 独立评审 handoff（PENDING——作者不得自行宣告 PASS）
+
+```json
+{"reviewed_head":"<由评审者绑定：本 R3 commit（exact sha 见 #428 刷新 comment）>",
+ "status":"HANDOFF_PENDING","verdict":null,"load_bearing_gaps":null,
+ "surface":"6ae6f6e7→R3_HEAD 恰 4 文件：admission-overlay.mjs（4+4 pin 值+R3 注释）、
+   watchdog-payload-snapshot.mjs（2 digest rebind + embedded compose 机械重建 + 头注释）、
+   deployment-overlay-closure.test.js（compose 常量 + 测试名）、本 packet（头部/§2 r3 行/
+   §4.1/§6r3/本节）；admission-lib.mjs / scheduler-cp-admission.mjs / 全部 src diff=0",
+ "questions":[
+  "Q1 身份再冻结（PRE=POST=部署世代 sha）对 4 枚已集成文件是否为忠实 pin 语义（glue
+   字节等价证据见 §6r3 FINDING）",
+  "Q2 embedded/tree compose 升至现行 main（a555adc8，242-graph）后，plan 写集
+   （update=6/add=1）是否仍精确承载 R4 reviewed 投影语义",
+  "Q3 7/7 integration 文件 seed-verbatim、零写入，§4.4 回滚契约与 §4.2-4.3 canary
+   定义是否保持完好",
+  "Q4 snapshot r3 漂移集是否恰为 compose/entry 2 路径（其余 21 SAME 断言复现）"],
+ "author_note":"本节由 R3 事务作者填写至 PENDING 为止；PASS/FAIL 裁决与 reviewed_head
+   绑定只能由非作者评审写入，PASS 后 §4/头部 READY 状态方可恢复"}
+```
 
 ## 7. PRODUCTION_MUTATION
 
