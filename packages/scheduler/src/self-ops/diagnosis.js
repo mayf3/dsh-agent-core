@@ -20,7 +20,7 @@ import {
   previousNaturalSlotMs,
 } from '../eligibility.js'
 
-const ROUTER_DISPOSITIONS = new Set([
+export const ROUTER_DISPOSITIONS = new Set([
   'terminated_without_outcome', 'pending', 'restart_lost', 'evicted', 'never_existed',
   'late_completed', 'late_failed', 'mismatch', 'conflict', 'unsupported',
 ])
