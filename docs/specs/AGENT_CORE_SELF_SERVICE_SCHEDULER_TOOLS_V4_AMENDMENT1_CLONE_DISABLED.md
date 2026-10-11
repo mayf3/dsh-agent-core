@@ -19,6 +19,15 @@ owners:
 
 # AMENDMENT1_CLONE_DISABLED (DRAFT / PENDING_ACCEPTANCE)
 
+> **Candidate revision 2 (2026-10-11, SUP-20261011-0310-HR-SUCCESSOR):** corrects two intent
+> gaps of the initial candidate text — (1) the lost-response read-back no longer treats any
+> disabled job behind the new key as APPLIED (the initial wording `found+disabled ⇒ APPLIED`
+> did NOT meet the original SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 §5.2 bar of "found AND
+> projection/intent matches"); (2) the logical-key dedup is anchored on persisted source-intent
+> provenance, not on the projection alone. Audit wording clarified: one audit event per call
+> (the `alreadyApplied` marker on retries) is the existing create convention — not a duplicate
+> job/mutation and not an exactly-once audit promise.
+
 > **Lifecycle truth (normative for this candidate):** V4 remains `accepted` and its frozen
 > 7-action union (`create | list | runs | update | enable | disable | remove`) remains the ONLY
 > accepted contract until this amendment is accepted through the normal review path. Nothing in
@@ -62,13 +71,24 @@ a separate, explicitly-authorized enable.
      a held `scheduler.admin` proof is NEVER consulted — clone has no allowAny path) →
      exact two-field CAS (stale ⇒ `stale_target_conflict`, zero write) → elapsed one-shot rule
      (below) → **locked** re-verify of ownership and CAS → logical-key dedup → insert.
-   - **Logical-key dedup (§5.1 reuse)**: same `new_logical_key` + equal desired projection
-     (`agentId/schedule/payload/delivery/retry/deleteAfterRun`) ⇒ `already_applied` — the
-     original target is answered again, zero duplicate job, the retry's audit event carries
-     `alreadyApplied:true` (never a second committed mutation). Same key + differing
-     projection ⇒ `logical_key_conflict`, zero write. A source change after a first clone makes
-     the same-key retry lose to the CAS first (stale) and then conflict (fresh CAS) — the stale
-     path must never silently answer the outdated clone.
+   - **Logical-key dedup (§5.1 reuse; anchored on SOURCE INTENT)**: every committed clone
+     persists a minimal non-secret `cloneProvenance` `{sourceJobId, sourceScheduleRevision,
+     sourceUpdatedAtMs}` — the same Owner's own-source coordinates, visible to that Owner only
+     through the EXISTING bounded `list` surface (additive field; no new reader, no payload
+     content, never in the committed result). A retry with the same `new_logical_key`
+     converges to `already_applied` ONLY when the existing binding carries THIS clone's
+     provenance AND the desired projection still matches — the original target is answered
+     again, zero duplicate job. Everything else conflicts (`logical_key_conflict`, zero write):
+     a key bound to a create-made job (no provenance), a clone of a DIFFERENT source, or a
+     clone of an earlier source revision (even one whose bytes later drifted back). The audit
+     trail keeps the existing create convention: ONE audit event per call, with
+     `alreadyApplied:true` marking a converged retry — this is an observability record, not a
+     duplicate job or a second committed mutation, and the contract promises no cross-retry
+     exactly-once audit semantics. A source change after a first clone makes the same-key
+     retry lose to the CAS first (stale) and then conflict (fresh CAS) — the stale path must
+     never silently answer the outdated clone; the locked re-verify (ownership + CAS) rejects
+     any source change injected between the pre-read and the lock (stale bytes are never
+     cloned).
    - **Copy whitelist (definition bytes only)**: `name` (or `new_name`), `agentId` (== caller ==
      source owner), `schedule` (stored bytes; `every.anchorMs` phase and `cron` expr/tz/stagger
      preserved verbatim — no anchor reset, no immediate trigger, no backlog), `payload`
