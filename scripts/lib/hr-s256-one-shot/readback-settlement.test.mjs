@@ -5,7 +5,7 @@ import { closeSync, openSync, readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { fixedR2Fixture } from '../../../packages/agent-router/test/helpers/fixed-r2-consumer-fixture.js'
+import { fixedR2Fixture } from './readback-settlement-fixture.mjs'
 import { projectSubject } from '../../../deployment-artifacts/hr-s256-trusted-cut-v1/project-subject.mjs'
 import { readSettlement } from './readback-settlement.mjs'
 
