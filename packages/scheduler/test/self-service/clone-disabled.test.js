@@ -174,6 +174,19 @@ test('happy path: byte-preserving disabled clone, exact committed shape, zero me
     .filter((event) => event.action === 'self_service_mutation' && event.operation === 'clone_disabled')
   assert.equal(auditEvents.length, 1)
   assert.equal(auditEvents[0].alreadyApplied, undefined)
+
+  // AMENDMENT1 revision 2 (SUP-20261011-0310-HR-SUCCESSOR): the clone's
+  // source-intent provenance is persisted as a minimal NON-SECRET internal
+  // field (own-source job id + the observed two-field CAS), visible to the
+  // same Owner through the EXISTING bounded list surface only — it is not a
+  // new reader, not in the committed result, and carries no payload content.
+  assert.deepEqual(Object.keys(committed).sort(), COMMITTED_FIELDS, 'committed shape unchanged by provenance')
+  const listed = await fx.call('list', { logical_key: CLONE_KEY })
+  assert.deepEqual(listed.result.jobs[0].cloneProvenance, {
+    sourceJobId: source.id,
+    sourceScheduleRevision: source.scheduleRevision,
+    sourceUpdatedAtMs: source.updatedAtMs,
+  })
 })
 
 test('new_name is optional: explicit name wins, default inherits the source display name', async (t) => {
@@ -290,8 +303,7 @@ test('same-key retry converges to the original target with one job and an alread
   assert.equal(auditEvents[0].alreadyApplied, undefined)
 })
 
-test('source moved: stale CAS outranks dedup; fresh CAS against a changed source conflicts', async (t) => {
-  const fx = await fixture(t)
+test('source moved: stale CAS outranks dedup; fresh CAS against a changed source conflicts', async (t) => {  const fx = await fixture(t)
   await createSource(fx)
   const source = (await docOf(fx)).jobs.find((job) => job.logicalKey === SOURCE_KEY)
   const first = await fx.call('clone_disabled', cloneArgs(source))
@@ -454,4 +466,77 @@ test('real engine tick: the disabled clone mints zero occurrences while the enab
     assert.notEqual(request.jobId, cloneId)
   }
   assert.equal(doc.occurrences.some((record) => record.jobId === source.id), true, 'enabled source admitted normally')
+})
+
+test('RED gap A: identical projection from a DIFFERENT source never adopts the existing key binding', async (t) => {
+  const fx = await fixture(t)
+  await createSource(fx, { logical_key: 'agt_owner:twin-a', name: 'twin a' })
+  await createSource(fx, { logical_key: 'agt_owner:twin-b', name: 'twin b' })
+  const a = (await docOf(fx)).jobs.find((job) => job.logicalKey === 'agt_owner:twin-a')
+  const b = (await docOf(fx)).jobs.find((job) => job.logicalKey === 'agt_owner:twin-b')
+
+  const first = await fx.call('clone_disabled', cloneArgs(a, { new_logical_key: CLONE_KEY }))
+  assert.equal(first.ok, true, JSON.stringify(first.error ?? {}))
+  // Same-Owner, same projection bytes — but the intent is to clone B, while
+  // the key is already bound to A's clone. AMENDMENT1 revision 2: the source
+  // identity (not the projection alone) is the intent anchor -> conflict.
+  const second = await fx.call('clone_disabled', cloneArgs(b, { new_logical_key: CLONE_KEY }))
+  assert.equal(second.ok, false, JSON.stringify(second))
+  assert.equal(second.error.code, 'logical_key_conflict')
+  const target = (await docOf(fx)).jobs.find((job) => job.logicalKey === CLONE_KEY)
+  assert.equal(target.cloneProvenance?.sourceJobId, a.id, 'key still bound to the first intent')
+  assert.equal((await docOf(fx)).jobs.filter((job) => job.logicalKey === CLONE_KEY).length, 1, 'conflict committed nothing')
+})
+
+test('RED gap B: same source, different revision history under the same key conflicts', async (t) => {
+  const fx = await fixture(t)
+  await createSource(fx)
+  let source = (await docOf(fx)).jobs.find((job) => job.logicalKey === SOURCE_KEY)
+  const first = await fx.call('clone_disabled', cloneArgs(source))
+  assert.equal(first.ok, true, JSON.stringify(first.error ?? {}))
+
+  // r1 -> r2 -> r3: the definition lands back on identical bytes, but the
+  // source revision moved past the cloned intent.
+  await fx.call('update', { job_id: source.id, expected_revision: cloneArgs(source).expected_revision, timeout: 1200 })
+  source = (await docOf(fx)).jobs.find((job) => job.id === source.id)
+  await fx.call('update', { job_id: source.id, expected_revision: cloneArgs(source).expected_revision, timeout: 900 })
+  const drifted = (await docOf(fx)).jobs.find((job) => job.id === source.id)
+  assert.equal(drifted.scheduleRevision, 3)
+  assert.equal(drifted.payload.timeoutSeconds, 900, 'projection bytes returned to the cloned shape')
+
+  const retry = await fx.call('clone_disabled', cloneArgs(drifted))
+  assert.equal(retry.ok, false, JSON.stringify(retry))
+  assert.equal(retry.error.code, 'logical_key_conflict')
+  assert.equal((await docOf(fx)).jobs.filter((job) => job.logicalKey === CLONE_KEY).length, 1)
+})
+
+test('locked re-verify: a source change between the pre-read and the lock fails stale and never clones stale bytes', async (t) => {
+  const fx = await fixture(t)
+  await createSource(fx)
+  const source = (await docOf(fx)).jobs.find((job) => job.logicalKey === SOURCE_KEY)
+
+  // Inject a REAL committed source mutation between the handler's pre-lock
+  // read and the clone's locked transaction (mutateDoc wrapper runs just
+  // before the clone's own transaction).
+  const inner = fx.store.mutateDoc.bind(fx.store)
+  let injected = false
+  fx.store.mutateDoc = async (fn) => {
+    if (!injected) {
+      injected = true
+      await inner((doc) => {
+        const live = doc.jobs.find((job) => job.id === source.id)
+        live.payload.timeoutSeconds = 4242
+        live.scheduleRevision += 1
+        live.updatedAtMs += 1
+      })
+    }
+    return inner(fn)
+  }
+
+  const result = await fx.call('clone_disabled', cloneArgs(source))
+  assert.equal(result.ok, false, JSON.stringify(result))
+  assert.equal(result.error.code, 'stale_target_conflict')
+  const doc = await docOf(fx)
+  assert.equal(doc.jobs.some((job) => job.logicalKey === CLONE_KEY), false, 'no clone of stale bytes')
+  assert.equal(doc.jobs.find((job) => job.id === source.id).payload.timeoutSeconds, 4242, 'injected change stands; clone wrote nothing')
 })

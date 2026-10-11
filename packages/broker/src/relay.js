@@ -276,9 +276,23 @@ async function reconcileAfterLostResponse(requestFn, operation, args) {
   }
   if (operation === 'clone_disabled') {
     if (job === undefined) return notApplied()
-    // A committed clone is ALWAYS disabled; an enabled job behind the new key
-    // is a different definition — STILL_UNKNOWN, never a fabricated APPLIED.
-    if (job.enabled !== false) return stillUnknown('logical key bound to a different definition')
+    // §5.2: APPLIED requires the read-back to PROVE the same intent — a mere
+    // disabled job behind the key is not proof. The only legal in-store proof
+    // for a clone is its persisted cloneProvenance (own-source job id + the
+    // source revision CAS) matching THIS request's coordinates; anything else
+    // (no provenance, a different source, a drifted revision, an enabled
+    // job) is a different definition behind the key -> STILL_UNKNOWN, never
+    // a fabricated APPLIED. No new reader and no payload readback exists or
+    // is added for this.
+    const anchor = args?.expected_revision
+    if (anchor === null || typeof anchor !== 'object') return stillUnknown('no revision anchor for a deterministic clone read-back')
+    const provenance = job.cloneProvenance
+    const proven = provenance !== null && typeof provenance === 'object'
+      && provenance.sourceJobId === args?.job_id
+      && provenance.sourceScheduleRevision === anchor.schedule_revision
+      && provenance.sourceUpdatedAtMs === anchor.updated_at_ms
+    if (!proven) return stillUnknown('logical key bound to a job whose clone provenance does not prove this intent')
+    if (job.enabled !== false) return stillUnknown('logical key bound to an enabled job')
     if (args?.new_name !== undefined && job.name !== args.new_name) return stillUnknown('logical key bound to a different definition')
     return { ok: true, result: committedFromJob(job) }
   }
