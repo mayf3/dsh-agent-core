@@ -6,6 +6,7 @@ date: 2026-10-11
 accepted_date: 2026-10-11
 accepted_by: mayf3
 accepted_reviewed_head: 1feec97181556fa7bdf0461607fa7a4e8dd00a50  # docs-only lineage; statically reviewed source delta = 0b84a822440a108227a76731de55343cc9bc4c7b
+accepted_head: d6f817b9  # merge commit of PR505 into main (backfilled per CAPTURE_ADMISSION_AMENDMENT precedent)
 independent_review_result: PASS  # two limited static review passes on the source delta (findings closure + persistence/invalidation chain), private agent-control#547 record; RED→GREEN 18/18 + targeted regression 65/65 author-executed receipts on record
 independent_review_blockers: []
 candidate_date: 2026-10-11
