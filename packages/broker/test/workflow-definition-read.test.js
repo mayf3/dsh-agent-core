@@ -40,7 +40,7 @@ test('manifest: registered exactly once, GET-only, workflow.read scope, no idemp
   assert.equal(validateManifest(workflowDefinitionReadManifest).ok, true)
   assert.equal(DEFAULT_MANIFESTS.filter((m) => m?.id === 'workflow_definition_read').length, 1)
   assert.deepEqual(workflowDefinitionReadManifest.requiredScopes, ['workflow.read'])
-  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.name), ['list_definitions', 'get_definition_version', 'get_definition', 'get_published_version_input_contract'])
+  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.name), ['list_definitions', 'get_definition_version', 'get_definition'])
   for (const op of workflowDefinitionReadManifest.operations) {
     assert.equal(op.http.method, 'GET')
     assert.equal(op.http.idempotencyKey, undefined)
@@ -48,10 +48,9 @@ test('manifest: registered exactly once, GET-only, workflow.read scope, no idemp
   assert.equal(workflowDefinitionReadManifest.operations[0].http.path, '/internal/v1/domains/{domainId}/definitions')
   assert.equal(workflowDefinitionReadManifest.operations[1].http.path, '/internal/v1/domains/{domainId}/definitions/{definitionId}/versions/{definitionVersionId}')
   assert.equal(workflowDefinitionReadManifest.operations[2].http.path, '/internal/v1/domains/{domainId}/definitions/{definitionId}')
-  assert.equal(workflowDefinitionReadManifest.operations[3].http.path, '/internal/v1/definition-versions/{definitionVersionId}/input-contract')
   // Same-domain precision is the point: the version row contract stays the
   // service's own — the capability never reshapes or filters it.
-  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.result), [{ type: 'json' }, { type: 'json' }, { type: 'json' }, { type: 'json' }])
+  assert.deepEqual(workflowDefinitionReadManifest.operations.map((op) => op.result), [{ type: 'json' }, { type: 'json' }, { type: 'json' }])
 })
 
 test('allow: same-domain owner reads the precise version schema through the real transport', async () => {
@@ -240,108 +239,5 @@ test('get_definition_version: downstream 404 preserves code and requestId on the
   assert.equal(envelope.error.code, 'definition_not_found')
   assert.equal(envelope.error.status, 404)
   assert.equal(envelope.error.requestId, 'req-ver-404')
-  await token.close(); await svc.close()
-})
-
-// ---------------------------------------------------------------------------
-// AMENDMENT_2 candidate (PROPOSED — not accepted, not installed):
-// get_published_version_input_contract — the member-readable PUBLISHED
-// input-contract read (svc-workflow SVC_WORKFLOW_DEFINITION_INPUT_CONTRACT_
-// MEMBER_READ_V1). Same five admission conditions / same membership SQL as
-// instance creation, applied in the read's own member-safe order; the three
-// owner management reads above are untouched (H-5 semantics unchanged).
-// ---------------------------------------------------------------------------
-
-const INPUT_CONTRACT_RESPONSE = {
-  definitionVersionId: 'ver-fc9b',
-  definitionId: 'def-9',
-  versionNumber: 1,
-  versionStatus: 'PUBLISHED',
-  contextSchema: { type: 'object', required: ['title'] },
-}
-
-test('AMENDMENT_2 candidate: manifest pins the fourth operation get_published_version_input_contract', () => {
-  const op = workflowDefinitionReadManifest.operations.find((o) => o.name === 'get_published_version_input_contract')
-  assert.notEqual(op, undefined, 'AMENDMENT_2 op missing from workflow_definition_read manifest')
-  assert.equal(op.http.method, 'GET')
-  assert.equal(op.http.idempotencyKey, undefined)
-  assert.equal(op.http.path, '/internal/v1/definition-versions/{definitionVersionId}/input-contract')
-  assert.deepEqual(op.http.pathParams, ['definitionVersionId'])
-  assert.deepEqual(Object.keys(op.arguments.properties), ['definitionVersionId'])
-  assert.deepEqual(op.arguments.required, ['definitionVersionId'])
-  assert.deepEqual(op.result, { type: 'json' })
-  // Scope surface unchanged: workflow.read only — no new scope/role/grant.
-  assert.deepEqual(workflowDefinitionReadManifest.requiredScopes, ['workflow.read'])
-  // Honest failure surface: the 409 this read can produce is declared.
-  assert.ok(workflowDefinitionReadManifest.errors.some((e) => e.code === 'version_not_published'))
-})
-
-test('AMENDMENT_2 candidate: member reads the published input contract through the real transport, five fields verbatim', async () => {
-  const token = await startTokenServer()
-  const svc = await startMockServer((req, res, entry) => {
-    if (entry.method === 'GET' && entry.pathname === '/internal/v1/definition-versions/ver-fc9b/input-contract') {
-      return json(res, 200, INPUT_CONTRACT_RESPONSE)
-    }
-    return json(res, 404, { error: { code: 'definition_not_found', message: 'safe' } })
-  })
-  const transport = createHttpTransport({
-    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
-    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
-  })
-  const { definition } = wire(workflowDefinitionReadManifest, transport)
-
-  const envelope = await definition.execute({ operation: 'get_published_version_input_contract', definitionVersionId: 'ver-fc9b' })
-  assert.equal(envelope.ok, true)
-  // Verbatim five-field passthrough — no reshaping, no management data.
-  assert.deepEqual(envelope.result, INPUT_CONTRACT_RESPONSE)
-
-  const get = svc.requests[0]
-  assert.equal(get.method, 'GET')
-  assert.equal(get.pathname, '/internal/v1/definition-versions/ver-fc9b/input-contract')
-  assert.equal(get.headers['idempotency-key'], undefined)
-  assert.equal(token.requests[0].body.scope, 'workflow.read')
-  await token.close(); await svc.close()
-})
-
-test('AMENDMENT_2 candidate: service 404/409/403 pass through honestly with requestId', async () => {
-  const token = await startTokenServer()
-  const responses = [
-    [404, 'definition_not_found'], [409, 'version_not_published'], [403, 'domain_disabled'],
-  ]
-  const svc = await startMockServer((_req, res) => {
-    const [status, code] = responses.shift()
-    res.writeHead(status, { 'content-type': 'application/json', 'x-request-id': `req-${code}` })
-    res.end(JSON.stringify({ error: { code, message: `safe-${code}` } }))
-  })
-  const transport = createHttpTransport({
-    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
-    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
-  })
-  const { definition } = wire(workflowDefinitionReadManifest, transport)
-  const results = []
-  for (let i = 0; i < 3; i++) {
-    results.push(await definition.execute({ operation: 'get_published_version_input_contract', definitionVersionId: 'ver-x' }))
-  }
-  assert.deepEqual(results.map((r) => [r.error.code, r.error.status, r.error.requestId]), [
-    ['definition_not_found', 404, 'req-definition_not_found'],
-    ['version_not_published', 409, 'req-version_not_published'],
-    ['domain_disabled', 403, 'req-domain_disabled'],
-  ])
-  await token.close(); await svc.close()
-})
-
-test('AMENDMENT_2 candidate: missing definitionVersionId fails locally with zero token and zero HTTP', async () => {
-  const token = await startTokenServer()
-  const svc = await startMockServer((_req, res) => json(res, 500, { error: { code: 'internal_consistency_error' } }))
-  const transport = createHttpTransport({
-    credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
-    targets: mockTargets({ 'svc-workflow': svc.origin }), authServiceOrigin: token.origin,
-  })
-  const { definition } = wire(workflowDefinitionReadManifest, transport)
-  const missing = await definition.execute({ operation: 'get_published_version_input_contract' })
-  assert.equal(missing.ok, false)
-  assert.equal(missing.error.code, 'invalid_arguments')
-  assert.equal(svc.requests.length, 0)
-  assert.equal(token.requests.length, 0)
   await token.close(); await svc.close()
 })
