@@ -158,10 +158,46 @@ test('ENVELOPE_FAILED: structured provider failure with a stable handle', async 
     assert.equal(error.status, 'failed')
     assert.equal(error.code, 'account_quota_exhausted')
     assert.equal(typeof error.reconciliationHandle, 'string')
+    assert.equal(error.evidence.terminationEvidence, 'exact_terminal_then_idle')
+    assert.equal(error.evidence.phase, 'terminal')
   })
   const record = fx.store.getTurnReconciliation(observed.reconciliationHandle)
   assert.equal(record.state, 'settled')
   assert.equal(record.snapshot.outcome, 'failed')
+  assert.equal(observed.evidence.terminationEvidence, record.snapshot.terminationEvidence)
+})
+
+test('FAILED_EVIDENCE: a failed durable settlement cannot publish terminal proof to the caller', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+  let callerSettled = false
+  const turn = fx.proc.turn('main', 'storage-failure', {})
+  turn.then(() => { callerSettled = true }, () => { callerSettled = true })
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-storage-failure' })
+  await fx.tick()
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-storage-failure' } })
+  fx.emitEvent('main', { type: 'turn/end', data: {
+    turn: 1, reason: { kind: 'error', error: { code: 'PI_AI_ERROR', message: 'Internal Server Error' } },
+  } })
+  const execution = [...fx.proc.executions.values()][0]
+  const persistDurable = fx.store.persistDurable
+  fx.store.persistDurable = () => { throw new Error('injected durable settlement failure') }
+  try {
+    assert.throws(() => fx.emitStatus('main', 'idle'), /injected durable settlement failure/)
+    await fx.tick()
+    assert.equal(callerSettled, false)
+    assert.equal(execution.settled, false)
+    assert.equal(execution.terminationEvidence, null)
+    assert.equal(fx.store.getTurnReconciliation(execution.handle).state, 'pending')
+  } finally {
+    fx.store.persistDurable = persistDurable
+    fx.proc.trySettleExecution(execution)
+  }
+  const error = await rejectsWith(turn, () => {})
+  assert.equal(error.evidence.terminationEvidence, 'exact_terminal_then_idle')
+  assert.equal(error.evidence.phase, 'terminal')
 })
 
 test('B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence', async () => {
