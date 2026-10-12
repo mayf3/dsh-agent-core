@@ -150,7 +150,8 @@ mayf3/svc-workflow PR #76 (branch feat/definition-version-detail-read-v1).
 
 ## AMENDMENT_2 (2026-10-12, status: **PROPOSED** — candidate only. NOT accepted,
 > NOT merged as authority, NOT installed; svc prerequisite
-> mayf3/svc-workflow PR #75 is open/draft and NOT deployed. Adds one
+> mayf3/svc-workflow PR #75 was merged 2026-10-12 (main bcfdee5c) but is NOT
+> installed/loaded. Adds one
 > member-readable operation to the SAME capability)
 
 Driven by the original #555 field gap on the member side: a same-domain

@@ -6,11 +6,6 @@
  *
  *   workflow_definition_read.list_definitions      GET .../definitions                     (page)
  *   workflow_definition_read.get_definition    GET .../definitions/{id}   (detail)
- *   workflow_definition_read.get_definition_version GET .../definitions/{id}/versions/{vid} (owner graph detail, AMENDMENT_1)
- *   workflow_definition_read.get_published_version_input_contract
- *       GET /internal/v1/definition-versions/{definitionVersionId}/input-contract
- *       (AMENDMENT_2 candidate, PROPOSED — member-readable PUBLISHED input
- *       contract; admission is svc's create-instance predicate, NOT H-5)
  *
  * Both operations bind the svc-workflow endpoints that ALREADY exist and
  * already enforce their own authorization — endpoint scope `workflow.read`
@@ -59,10 +54,9 @@ export const workflowDefinitionReadManifest = withTransportErrors({
   description:
     'Agent Core capability `workflow_definition_read` (svc-workflow): SAME-DOMAIN read-only access to workflow definitions and their versions. ' +
     'Use it to read the precise context schema and version status of YOUR domain before preparing workflow_execute(create_instance) input, or to independently read back a draft after authoring. ' +
-    'list_definitions pages a domain\u2019s definitions; get_definition returns the definition plus EVERY version row, each carrying version_status (DRAFT|PUBLISHED|…) and the exact context_schema; get_definition_version returns ONE version with its complete graph — these three are OWNER management reads (service-internal H-5 domain-owner check). ' +
-    'get_published_version_input_contract (AMENDMENT_2 candidate, PROPOSED) is the MEMBER-readable input-contract read: any caller who could create instances of that version (same five admission conditions and same membership SQL as create) reads ONLY {definitionId, definitionVersionId, versionNumber, versionStatus, contextSchema} of a PUBLISHED version — no graph, no draft, no management data. ' +
-    'Authorization is svc-workflow\u2019s own per operation: H-5 domain-owner for the three management reads, the create-instance admission predicate for the member input-contract read (no global read permission is involved or granted; global instance enumeration is not a prerequisite for instance creation). ' +
-    'Returns {ok: true, result: <definition page, detail, version graph, or input contract>} on success; nonexistent versions/definitions, foreign domains and unauthorized callers fail exactly as the service reports them.',
+    'list_definitions pages a domain\u2019s definitions; get_definition returns the definition plus EVERY version row, each carrying version_status (DRAFT|PUBLISHED|…) and the exact context_schema. ' +
+    'Authorization is svc-workflow\u2019s own: the caller must hold the domain-owner role of the domain that owns the definition (no global read permission is involved or granted; global instance enumeration is not a prerequisite for instance creation). ' +
+    'Returns {ok: true, result: <definition page or detail>} on success; nonexistent versions/definitions, foreign domains and non-owner callers fail exactly as the service reports them.',
   requiredScopes: ['workflow.read'],
   errors: [
     ...baseErrors,
@@ -70,7 +64,6 @@ export const workflowDefinitionReadManifest = withTransportErrors({
     ...paginationErrors,
     { code: 'definition_not_found', description: 'Definition is absent or intentionally not visible to the caller (HTTP 404).' },
     { code: 'domain_disabled', description: 'The owning domain is disabled (HTTP 403).' },
-    { code: 'version_not_published', description: 'The requested version is not PUBLISHED, so its input contract is not readable (HTTP 409; get_published_version_input_contract only).' },
   ],
   operations: [
     {
@@ -142,25 +135,6 @@ export const workflowDefinitionReadManifest = withTransportErrors({
         method: 'GET',
         path: '/internal/v1/domains/{domainId}/definitions/{definitionId}',
         pathParams: ['domainId', 'definitionId'],
-      },
-    },
-    {
-      name: 'get_published_version_input_contract',
-      description:
-        'Read the INPUT CONTRACT of a PUBLISHED definition version as a domain member: exactly {definitionId, definitionVersionId, versionNumber, versionStatus, contextSchema} — the schema workflow_execute(create_instance) validates contextPayload against. Admission is the service\u2019s own create-instance predicate (same five conditions / same membership SQL as create, member-safe order): any caller authorized to create instances of this version may read its published input contract. No graph, no draft, no owner management data; non-PUBLISHED versions answer version_not_published (409); denials are opaque definition_not_found (404).',
-      arguments: {
-        properties: {
-          definitionVersionId: { type: 'string', description: 'Workflow definition version id (UUID), e.g. from get_definition\u2019s version rows or a prior create receipt.' },
-        },
-        required: ['definitionVersionId'],
-      },
-      result: { type: 'json' },
-      errors: ['invalid_arguments'],
-      http: {
-        target: 'svc-workflow',
-        method: 'GET',
-        path: '/internal/v1/definition-versions/{definitionVersionId}/input-contract',
-        pathParams: ['definitionVersionId'],
       },
     },
   ],
