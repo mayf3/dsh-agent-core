@@ -224,3 +224,60 @@ accepted exact-evidence recovery route; configure the requested retry policy;
 then observe a real failed round followed by the next natural successful slot and
 a continuing independent job. No such deployment, reconciliation, retry, reset,
 or production configuration change was executed in this task.
+
+## Bounded partial-release preparation — 2026-10-12
+
+Owner follow-up: "能部分部署吗，完整的部署我感觉要等特别久".
+Prepared a single-file release package at
+`/Users/yanfenma/workspace/artifacts/scheduler-failure-evidence-20261012-71132803`.
+The exact source remains `71132803e5bb58120aeeefe3086fd17ff1df25c0`; no new product
+source changes are included. The current installed target is byte-identical to
+the base and has UID 505 / GID 601 / mode 0644. The package contains candidate,
+the full original-file rollback, source patch, content-bound manifest and a
+concrete execution/verification sequence. It is **PREPARED ONLY**, not admitted,
+installed, activated, or a new privileged execution interface.
+
+`EVD-SFE-004`: actual installed Node v25.6.1, AgentProcess, TurnExecution,
+reconciliation store, Scheduler and bridge were loaded in isolated test
+processes using fake OS children and temporary stores. A test-only loader
+substituted only the candidate event-correlation module in memory. Baseline:
+10 PASS / 4 expected FAIL. Single-file candidate: **14/14 PASS**, no skips.
+The loader inventory binds 47 installed code modules and exactly one patched
+module. This supports compatibility of this minimal release with the current
+installed composition; it does not prove real child boot or production E2E.
+Logs, loader, inventory, original/candidate bytes and hashes are in that package.
+
+No unrelated main features, new dependencies, Harness deployment, database or
+credential change is required for the payload. An activation requires a
+controlled restart of the shared `system/ai.agent-core.runtime`, so Router,
+Scheduler, Broker and Feishu share the restart impact. The existing full
+installer has no single-file mode; historical file-specific hotfix grants cannot
+be transferred, and the PDC daemon/profile/socket were not confirmed active.
+The report does not require finishing or bootstrapping that platform as a
+prerequisite for this patch.
+
+Fresh readback found the production mutation lock directory still present;
+its holder contents are not readable to this task. The latest B7 record retains
+a nonterminal native reservation, even though controller tasks have stopped.
+That is a concrete current admission/conflict-readback gap, not proof that
+every unrelated production action is globally blocked. An existing admitted
+writer must establish disjointness or accepted disposition before this shared
+runtime replacement/restart. No lock removal, retained-operation replay, source
+install, restart, fence settlement, or configuration update was executed.
+
+Independent payload/compatibility review by `/root/spec_contract`: PASS at the
+prepared scope. The reviewer independently read back all file hashes/sizes,
+candidate/source equality, rollback/live/base equality, all 47 loaded-module
+hashes, the single substituted module, and fixture isolation. It found a
+metadata-completeness gap (the live code file has an 11-byte
+`com.apple.provenance` xattr). Preparation now includes observed ACL/xattrs/flags
+in `preimage-metadata.json`; the runbook requires fresh admitted-writer capture
+and retention of the actual original inode for exact rollback, and refuses
+activation if complete metadata cannot be preserved by the reviewed vehicle.
+The final manifest SHA-256 is
+`899c27375ae8a4207d128b542acd2a1e0c3e903dba28177d2674b998f79ba542`.
+Source/test bytes and the passing compatibility evidence are unchanged.
+The independent reviewer rechecked that final manifest, all nine registered
+files, and live metadata, and closed the metadata finding: PREPARED package
+review PASS, no must-fix findings.
+This is not a deployment-ready/admission conclusion.
