@@ -147,3 +147,36 @@ Everything else in this spec is unchanged: GET-only, no idempotency key,
 verbatim passthrough, no global read, no new roles/scopes, invalid-arguments
 fail-fast before any token/HTTP. Companion svc-workflow change:
 mayf3/svc-workflow PR #76 (branch feat/definition-version-detail-read-v1).
+
+## AMENDMENT_2 (2026-10-12, status: **PROPOSED** — candidate only. NOT accepted,
+> NOT merged as authority, NOT installed; svc prerequisite
+> mayf3/svc-workflow PR #75 is open/draft and NOT deployed. Adds one
+> member-readable operation to the SAME capability)
+
+Driven by the original #555 field gap on the member side: a same-domain
+DOMAIN_MEMBER that may create instances of a version (create admission)
+could not read the PUBLISHED input contract that creation is validated
+against, forcing a domain-owner relay per schema delivery. Adds ONE fourth
+operation to the existing `workflow_definition_read` manifest (no new
+capability, no new registration line):
+
+- `get_published_version_input_contract(definitionVersionId)` — GET
+  `/internal/v1/definition-versions/{definitionVersionId}/input-contract`
+  (svc-workflow `SVC_WORKFLOW_DEFINITION_INPUT_CONTRACT_MEMBER_READ_V1`):
+  same five admission conditions and the same membership SQL as instance
+  creation — the authorized set is identical; the service applies them in
+  its own member-safe order (order equivalence with create is not claimed).
+  Returns ONLY `{definitionId, definitionVersionId, versionNumber,
+  versionStatus, contextSchema}`; non-PUBLISHED answers 409
+  `version_not_published`; denials stay in the opaque-404
+  `definition_not_found` bucket.
+
+Unchanged: the three owner management reads keep their CTR-WDR-001 H-5
+semantics verbatim; GET-only, no idempotency key, verbatim passthrough,
+`workflow.read` scope only, no new role/grant/global read, no DRAFT or
+management-data exposure, invalid-arguments fail-fast before any token/HTTP.
+The capability description separates the three owner management reads from
+this member input-contract read. This section is a CANDIDATE record: it
+does not modify AMENDMENT_1's accepted facts and does not claim production
+availability — the operation is usable only after the svc prerequisite is
+reviewed, merged, and deployed through the normal paths.
