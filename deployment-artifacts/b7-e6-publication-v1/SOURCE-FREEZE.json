@@ -1,0 +1,63 @@
+{
+  "kind": "B7_E6_SECTION8_SOURCE_FREEZE_V1",
+  "created_at": "2026-10-12T13:20:46.044725+00:00",
+  "state": "SOURCE_READY_REVIEW_PENDING",
+  "production": "NOT_PUBLISHED_NOT_ARMED",
+  "operation_id": "b7-packet-r27-65e5606cf5c352f2e-e6",
+  "tx_id": "tx-5974ef29916145a68133111f57ce3f9a",
+  "governing_spec_sha256": "9cd2e69d5a71d225521b3e8c83f15f425abb48d0e677ec23ac9b5b59849cff31",
+  "source_base_commit": "f6919399b0937a828af375a43672ed071b8951a3",
+  "accepted_server_preimage": "89b4a9110c3c9bf7b644bdf18e6f9a4aab140bdc5d554282fd6f0530162b6013",
+  "accepted_client_preimage": "4a55662a6e0a5308a24b191aa44c445de9a5d12fd81595bc4b6971cedab32e3f",
+  "tests": {
+    "RED": "original guard MAINTENANCE_UNKNOWN_OR_CONFLICT; P1 staging reentry; unsealed/outer mismatch",
+    "GREEN": "15/15 finite groups",
+    "guard_and_ds_update": "actual functions in temporary prefix",
+    "observer_and_job": "fixture syscall/consumed-job boundaries; no live Root/loaded/business proof",
+    "freeze_references": "4/4; every other top-level AST node unchanged"
+  },
+  "independent_delta_review": "NOT_RUN_OWNER_REQUEST_NO_DISPATCH",
+  "remaining_admission_inputs": [
+    "original GUI/authsvc controller single-writer release",
+    "fresh native PREPARED/SEALED, raw TX/holder hashes via original trusted receipt",
+    "raw original e6 receipt hash and whole-policy digest",
+    "admission-fresh installed pair preimages",
+    "separate accepted DS maintenance and genuine Owner recovery/ABORT",
+    "separate legitimate ABORTED retained-file disposition contract",
+    "permanent B7 interruption bounds and original Gate6 admission"
+  ],
+  "files": {
+    "evidence/r27-install-candidate-preparation/output/ds-repair/section8/candidate/deployment_system.py": {
+      "bytes": 110360594,
+      "sha256": "9b909e1653eb872f1c0fd468c4ff5e8193c71f823bfd14a0939ffcb348e10d9c"
+    },
+    "evidence/r27-install-candidate-preparation/output/ds-repair/section8/candidate/ds_client.py": {
+      "bytes": 55474,
+      "sha256": "4a55662a6e0a5308a24b191aa44c445de9a5d12fd81595bc4b6971cedab32e3f"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/build_candidate.py": {
+      "bytes": 4542,
+      "sha256": "0ac0437169bdb5948d8a6c7d3da7ff92652cc21f7b9c663a7e63b5449f143566"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/e6_publication.py": {
+      "bytes": 8866,
+      "sha256": "44f6c1c48bc1dcce9e1be9c5b2b477bb1ecfeb1809f7fdbc4c1b511eb23214dc"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/maintenance_entry.py": {
+      "bytes": 6776,
+      "sha256": "078c2f4aa5750d245621005d8dcb34b8ab80bf7b44586101a405ec0f24647079"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/test_publication.py": {
+      "bytes": 23231,
+      "sha256": "6bc06ec12b9c7b283257c4e79b3309eef7747740da80e362863326cf3acfa13e"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/e6-publication.patch": {
+      "bytes": 14743,
+      "sha256": "16fe3f154b64566161b8a2b9627d054aebeb66a1fe49fe5d24929fd0e7cf214a"
+    },
+    "deployment-artifacts/b7-e6-publication-v1/HANDOFF.md": {
+      "bytes": 9380,
+      "sha256": "7f8e2c7c5250901668babbfaf5cf3003be8925c49768ae9321e902f0ce9a0c2e"
+    }
+  }
+}
