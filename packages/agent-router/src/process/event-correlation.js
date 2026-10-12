@@ -204,7 +204,6 @@ export const eventCorrelationMethods = {
       error.status = 'failed'
       error.envelope = 'failed'
       error.reconciliationHandle = execution.handle
-      error.evidence = execution.evidenceSnapshot()
       this.store.settleDirect(execution.handle, {
         outcome: 'failed',
         outcomeEvidence: 'exact_turn_end_failure',
@@ -214,6 +213,7 @@ export const eventCorrelationMethods = {
       execution.settled = true
       execution.terminationEvidence = 'exact_terminal_then_idle'
       execution.phase = 'terminal'
+      error.evidence = execution.evidenceSnapshot()
       execution.terminalReject?.(error)
     } else {
       this.store.settleDirect(execution.handle, {
