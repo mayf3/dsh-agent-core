@@ -2,7 +2,10 @@
  * R2-only maintenance-zone re-home of the package-level fixture deleted by the
  * #434 de-specialization (dfb654f8): the admin-emergency parameterization had
  * no surviving consumer and is dropped, not restored. Non-runtime test helper;
- * incident literals stay confined to this sanctioned zone. */
+ * incident literals stay confined to this sanctioned zone. The synthetic
+ * evidence identity uses the current generic verifier operation-id contract
+ * (op- format, PRODUCT_434 minimal A adaptation); the historical sealed
+ * identity stays in journal.py untouched. */
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { closeSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, rmSync, writeFileSync } from 'node:fs'
@@ -13,7 +16,7 @@ import { TurnReconciliationStore } from '../../../packages/agent-router/src/reco
 
 export const FIXED_HANDLE = 'turn:961534a5-8c94-487d-8e55-d324a54e821a:a2:g1:s256'
 const epoch = '961534a5-8c94-487d-8e55-d324a54e821a'
-const operationId = 'hr-s256-trusted-quiescence-cut-20260925-v1'
+const operationId = 'op-hr-s256-r2-readback-surrogate-r1'
 const sha = raw => createHash('sha256').update(raw).digest('hex')
 const json = value => JSON.stringify(value) + '\n'
 
@@ -64,7 +67,7 @@ export function fixedR2Fixture(cleanup) {
     subject, consumingBinarySha256: binary, archiveSha256, outputsSha256, holderCheck }
   const script = resolve(dirname(fileURLToPath(import.meta.url)),
     '../../../deployment-artifacts/hr-s256-trusted-cut-v1/consumer-fixture.py')
-  const result = spawnSync('python3', ['-B', script], { input: JSON.stringify({ stateRoot, authorization, bundle, receipts }), encoding: 'utf8', timeout: 5000 })
+  const result = spawnSync('python3', ['-B', script], { input: JSON.stringify({ stateRoot, authorization, bundle, receipts, operationId }), encoding: 'utf8', timeout: 5000 })
   if (result.status !== 0) throw new Error(`synthetic Python producer failed: ${result.stderr}`)
   const produced = JSON.parse(result.stdout)
   const windowPath = join(evidenceDir, 'window.lock')
@@ -73,6 +76,6 @@ export function fixedR2Fixture(cleanup) {
   cleanup(() => closeSync(windowFd))
   const io = { stat: path => ({ ...lstatSync(path), uid: 0 }), fstat: fd => ({ ...fstatSync(fd), uid: 0 }),
     challengeWindow: (_fd, challenge) => ({ ...challenge, exclusiveWindowHeld: true, launchSourcesStillInhibited: true, windowClosed: false }) }
-  return { store, handle, persistenceFile, evidenceDir, deploymentDir, bundleFile: join(evidenceDir, 'bundle.json'),
+  return { store, handle, persistenceFile, evidenceDir, deploymentDir, operationId, bundleFile: join(evidenceDir, 'bundle.json'),
     bundle: produced.bundle, io, startup: { hostId, startupNonce, consumingBinarySha256: binary, windowFd, challengeFd: windowFd, recoveryPlanStopsRuntime: false } }
 }

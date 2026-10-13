@@ -22,6 +22,10 @@ COMMITMENT_FIELDS = {"receiptVersion", "operationId", "hostId", "startupNonce",
                      "bundleByteLength", "sealedAtWallMs", "producerId"}
 INDEX_FIELDS = {"version", "operationId", "reconciliationHandle", "hostId",
                 "startupNonceSha256", "bundleSha256"}
+AUTHORIZATION_FIELDS = {"operationId", "hostId", "startupNonce", "subject",
+                        "subjectPreimageSha256", "consumingBinarySha256",
+                        "archiveSha256", "outputsSha256", "holderCheck",
+                        "authorizedStartupAtWallMs"}
 _fresh_claim = []  # Same-process continuation only; restart never retries a nonce.
 
 
@@ -208,6 +212,17 @@ def readback(kind):
         record = json.loads(raw)
         require(type(record) is dict and record.get("operationId") == OPERATION_ID,
                 "RECEIPT_IDENTITY_INVALID")
+        plain_authorization = None
+        if kind == "launch-authorization" and TEST_MODE and exact(record, AUTHORIZATION_FIELDS):
+            # PRODUCT_434 minimal A: TEST_MODE evidence receipts use the current
+            # generic producer format (the authorization object itself). Wrap it
+            # for the internal chain so legacy validation and the commitment
+            # bindings stay exact; legacy wrapped records still read unchanged.
+            require(raw == canonical(record), "RECEIPT_CANONICAL_INVALID")
+            plain_authorization = record
+            record = {"version": 1, "operationId": OPERATION_ID,
+                      "phase": "LAUNCH_AUTHORIZED", "intentSha256": None,
+                      "authorization": record}
         if kind == "intent":
             require(set(record) == {"version", "operationId", "phase", "subject",
                                     "subjectPreimageSha256", "nonceSha256", "atWallMs"}
@@ -219,6 +234,10 @@ def readback(kind):
                     and type(record["atWallMs"]) is int and record["atWallMs"] >= 0,
                     "INTENT_INVALID")
         elif kind == "launch-authorization":
+            if plain_authorization is not None:
+                # Self-reference resolved above: record["authorization"] is the
+                # plain object; bind intentSha256 exactly like the sealed format.
+                record["intentSha256"] = readback("intent")[1]
             require(exact(record, {"version", "operationId", "phase",
                                    "intentSha256", "authorization"})
                     and type(record["version"]) is int
@@ -294,7 +313,8 @@ def readback(kind):
                     and type(record["atWallMs"]) is int and record["atWallMs"] >
                         readback("bundle-commitment")[0]["sealedAtWallMs"],
                     "LAUNCH_CLAIM_INVALID")
-        require(raw == canonical(record), "RECEIPT_CANONICAL_INVALID")
+        if plain_authorization is None:
+            require(raw == canonical(record), "RECEIPT_CANONICAL_INVALID")
         return record, hashlib.sha256(raw).hexdigest()
     except (OSError, ValueError, UnicodeDecodeError, Rejected) as exc:
         raise Rejected("RECEIPT_READBACK_UNKNOWN") from exc
@@ -327,7 +347,13 @@ def write_once(kind, record):
     finally:
         close_custody(root, directory)
     observed, digest = readback(kind)
-    require(observed == record and digest == hashlib.sha256(raw).hexdigest(),
+    if TEST_MODE and kind == "launch-authorization" and exact(record, AUTHORIZATION_FIELDS):
+        # Plain-format seal: readback wraps for the chain; byte identity is the
+        # digest equality below and the sealed content is the authorization itself.
+        require(observed["authorization"] == record, "RECEIPT_READBACK_MISMATCH")
+    else:
+        require(observed == record, "RECEIPT_READBACK_MISMATCH")
+    require(digest == hashlib.sha256(raw).hexdigest(),
             "RECEIPT_READBACK_MISMATCH")
     return digest
 
@@ -347,8 +373,12 @@ def seal_intent(nonce, subject_preimage_sha256, at_wall_ms):
 def seal_launch_authorization(authorization):
     intent, _ = readback("intent")
     require(valid_authorization(authorization, intent), "LAUNCH_AUTHORIZATION_BINDING_INVALID")
-    return write_once("launch-authorization", {"version": 1,
-        "operationId": OPERATION_ID, "phase": "LAUNCH_AUTHORIZED",
+    # PRODUCT_434 minimal A: in TEST_MODE the evidence receipt follows the current
+    # generic producer/verifier contract (launch-authorization.json is the
+    # authorization object itself, digest-bound into the bundle cut). The durable
+    # legacy wrapped-record format is unchanged without TEST_MODE.
+    return write_once("launch-authorization", authorization if TEST_MODE else {
+        "version": 1, "operationId": OPERATION_ID, "phase": "LAUNCH_AUTHORIZED",
         "intentSha256": readback("intent")[1], "authorization": authorization})
 
 
