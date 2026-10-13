@@ -1,5 +1,12 @@
 # Generic terminal failure evidence repair
 
+Current status (2026-10-13): the reviewed producer repair is installed as a
+single-file production overlay, with a restarted parent and real HR child and
+natural-run evidence. The source branch integrates
+cd86bdfbd2a87b668d70f16604d7106d3428e979 without changing the reviewed code/tests.
+The production evidence and limitations below supersede the earlier
+preparation-only status; earlier observations remain historical.
+
 Attributable task authorization: the Owner's 2026-10-12 request in this chat:
 "对于 hr 应该是失败了就跳过，下一次还能正常执行调度 ... 通用的修复，而不是 hardcode 了 hr 的 agent".
 This bounded source repair and isolated verification implement the already accepted
@@ -281,3 +288,84 @@ The independent reviewer rechecked that final manifest, all nine registered
 files, and live metadata, and closed the metadata finding: PREPARED package
 review PASS, no must-fix findings.
 This is not a deployment-ready/admission conclusion.
+
+## Production overlay and upstream integration — 2026-10-13
+
+The original e6 transaction completed genuine Owner ABORT and original-outer
+release. Native transaction hash 7664aee4f216f3dd96eeae1b5ac7bdc303e40ee69043ebacd34b89068c0ac7b6
+and the original terminal overlay matched the actual readback. The Scheduler
+release reused execution-revision-2 manifest
+82150dc6863d8d805b2fd74b3382513b04c6d560452e732b3a3205c3101cbc85,
+candidate 47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc
+and old code 662419bd7690c63cb35112fe4fe8a8ecb28b3e5e3d30bcc01dd5a9813a805135.
+No whole application, dependency, Harness, credential, retry-policy or old
+fence deployment was performed.
+
+Actual overlay replacement: 2026-10-13T14:24:17.422652Z. One SIGTERM targeted
+the existing system/ai.agent-core.runtime unit; old parent 35215 and its 19
+recorded direct children exited. New parent 43098 started at 14:24:18Z;
+runtime composed at 1791901463168 and ready at 1791901463982. Independent
+post-state readback verified the fixed production entry, target bytes and
+complete staged metadata, and authsvc parent 43098 listening on 127.0.0.1:8788
+with a successful health response. The declared whole-app source stamp remains
+its existing baseline; this is a named overlay, not a full 71132803 installation.
+
+Original inode 135258700 and old bytes are retained with nlink=1. Native copy
+and hardlink capture normalized the OS-managed com.apple.provenance value.
+The pre-link snapshot and actual post-link native value were both retained;
+independent execution-delta review approved only that native value exception,
+with all other metadata, bytes, device and inode strictly checked. Rollback
+uses the actual original inode and post-capture native metadata; it does not
+claim recreation of the historical pre-link provenance bytes. No attribute
+was forged. The initial capture refusal and same-operation continuation are
+recorded; preparation was not falsely labeled zero side effects.
+
+Real production evidence, without a native noop or fake child:
+
+- Existing HR v7 job 064ea914-5d6e-4a13-93be-13cafa952768, occurrence
+  occ:3c904588ed15d519, began at 1791901475311, after new-parent ready, and
+  succeeded at 1791901598246. The matching invocation is parent43098/
+  child43272 and handle turn:25e5a856-8baa-4e03-9e08-6eb334e5f264:a2:g18:s811,
+  completed with exact_terminal_then_idle/terminal evidence. It is an existing
+  natural job, not a replay or a new HR Agent identity.
+- A new harmless request to the same HR Agent returned
+  SFE_HR_REAL_CHILD_71132803_PONG through the real Router, child43272, with
+  handle turn:25e5a856-8baa-4e03-9e08-6eb334e5f264:a2:g18:s812 and exact terminal
+  proof. Delivery was local to the release's Product API surface.
+- An independent existing lifecycle canary Agent produced an actual provider
+  MissingSessionID 400. Its durable turn is failed with exact_terminal_then_idle,
+  not UNKNOWN. A temporary no-delivery recurring diagnostic job for that Agent
+  then produced adjacent real natural failed rounds under unchanged revision1,
+  retry absent, distinct occurrence/run/session identities and child46053.
+  Every completed round carried exact terminal/terminal-phase proof and the
+  job remained unfenced. The next natural invocation ran without a retry or
+  manual recovery. Only the temporary definition was disabled and removed;
+  occurrence/run evidence is retained. Existing jobs and UNKNOWN fences were
+  not manually changed or replayed.
+
+This real negative case proves failed-round scheduling liveness, not recovery
+of the unrelated canary provider configuration: subsequent diagnostic rounds
+also failed because that provider continued rejecting requests. Do not call
+them business successes. The unchanged-revision failed-to-successful-natural
+case remains explicitly demonstrated by the 14 bounded acceptance tests;
+production HR success and real failed-canary continuation are separate evidence
+subjects. No provider configuration change or synthetic fault injection was
+used to manufacture a favorable result.
+
+The only installed-module difference from the preparation snapshot was an
+additive restart_quiescence_proven termination-evidence enum in
+occurrence-model.js; it equals this source base. Reusing the original installed
+module hook with only the candidate substituted yielded 14/14 PASS on production
+Node v25.6.1, log hash f157cee000db72eeabebaa12cf9960ec44747497537c92b3d3926641315adb4e.
+After merging origin/main into this existing source branch, the original 14
+code/test acceptance cases also passed, zero skips/failures. The earlier 531
+affected-regression results remain reused evidence; main changed only unrelated
+deployment preparation files, with zero overlap in the three code/test paths.
+No full-suite PASS or automated CI result is claimed.
+
+Main still carried old producer bytes when integration began. Publishing this
+already-reviewed source repair prevents later whole-tree packages from
+silently restoring 662419bd. The existing branch preserves original commit71132803;
+no new Product Spec, replacement implementation, second deployer or #508
+dependency was introduced. Controlled install/business receipts remain in the
+original release artifact and protected same-operation record.
