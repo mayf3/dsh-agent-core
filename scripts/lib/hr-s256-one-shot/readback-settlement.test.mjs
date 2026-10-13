@@ -5,7 +5,7 @@ import { closeSync, openSync, readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { fixedR2Fixture } from '../../../packages/agent-router/test/helpers/fixed-r2-consumer-fixture.js'
+import { fixedR2Fixture } from './readback-settlement-fixture.mjs'
 import { projectSubject } from '../../../deployment-artifacts/hr-s256-trusted-cut-v1/project-subject.mjs'
 import { readSettlement } from './readback-settlement.mjs'
 
@@ -52,6 +52,7 @@ def load(path):
 adapter=load(Path(inputs['moduleDir'])/'fixed_os.py')
 journal=load(Path(inputs['moduleDir']).parents[2]/'deployment-artifacts/hr-s256-trusted-cut-v1/journal.py')
 journal.TEST_MODE=True;journal.STATE_ROOT=str(Path(inputs['evidenceDir']).parent)
+journal.DIRECTORY=Path(inputs['evidenceDir']).name;journal.OPERATION_ID=inputs['operationId']
 # Actual receipt validator reads its immutable root-custody surrogate, not a mocked tuple.
 commitment=journal.readback('bundle-commitment')[0]
 assert set(commitment['subject']) == {'turnExecutionId','runtimeEpoch','agentId','processGeneration'}
@@ -77,7 +78,7 @@ finally: os.close(store)
 `
   const result = spawnSync('python3', ['-c', script], { encoding: 'utf8', timeout: 5000,
     env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
-    input: JSON.stringify({ moduleDir: dirname(fileURLToPath(import.meta.url)), evidenceDir: fx.evidenceDir, store: fx.persistenceFile, projection }) })
+    input: JSON.stringify({ moduleDir: dirname(fileURLToPath(import.meta.url)), evidenceDir: fx.evidenceDir, operationId: fx.operationId, store: fx.persistenceFile, projection }) })
   assert.equal(result.status, 0, result.stderr)
   assert.match(result.stdout, /ACTUAL_JOIN_PASS/)
   assert.deepEqual(readFileSync(fx.persistenceFile), before)
