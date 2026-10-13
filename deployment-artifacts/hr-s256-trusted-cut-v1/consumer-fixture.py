@@ -14,6 +14,13 @@ spec.loader.exec_module(journal)
 def fixture(inputs):
     journal.TEST_MODE = True
     journal.STATE_ROOT = inputs["stateRoot"]
+    if inputs.get("operationId"):
+        # PRODUCT_434 minimal A adaptation: TEST_MODE-only identity override so the
+        # retained producer can seal evidence under the current generic verifier
+        # contract (/^op-[a-z0-9-]{1,64}$/). Without an override the sealed
+        # identity stays the hardcoded historical operation id, byte-identical.
+        journal.OPERATION_ID = inputs["operationId"]
+        journal.DIRECTORY = inputs["operationId"]
     auth = inputs["authorization"]
     bundle = inputs["bundle"]
     journal.seal_intent(auth["startupNonce"], auth["subjectPreimageSha256"],
