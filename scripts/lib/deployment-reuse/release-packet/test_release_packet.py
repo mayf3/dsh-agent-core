@@ -329,6 +329,47 @@ class RepairByRebuild(PacketTestBase):
                          (self.fx.packet / "operation-source" / "app-src" / "lib" / "util.txt").read_text())
 
 
+class FailurePreservedRebuild(PacketTestBase):
+    """A rebuild whose full verification blocks must preserve the previous
+    packet byte-for-byte with its external seal — the swap is committed only
+    after the whole verify passes at the final location."""
+
+    @staticmethod
+    def tree_digest(root):
+        import hashlib
+        h = hashlib.sha256()
+        for rel in sorted(str(p.relative_to(root)) for p in Path(root).rglob("*") if p.is_file()):
+            h.update(rel.encode())
+            h.update(b"\x00")
+            h.update((Path(root) / rel).read_bytes())
+        return h.hexdigest()
+
+    def test_blocking_verify_failure_preserves_previous_packet(self):
+        cfg, cfg_path, _ = self.build()
+        before = self.tree_digest(self.fx.packet)
+        anchor = pm.sha256_file(self.fx.packet / pm.SEAL_NAME)
+        # same input class as ArchiveNameFaults: build succeeds, verify blocks
+        bad = self.fx.config()
+        bad["pinFiles"][0]["bindings"][0]["target"] = "artifacts/app-archive-old-name.tar.gz"
+        bad_path = self.fx.write_config(bad, "bad-rebuild.json")
+        out = subprocess.run(TOOL_CLI + ["build", "--config", str(bad_path),
+                                         "--rebuild-existing"],
+                             capture_output=True, text=True)
+        self.assertNotEqual(0, out.returncode, out.stdout + out.stderr)
+        self.assertIn("REBUILD_VERIFY_BLOCKED", out.stderr)
+        self.assertEqual(before, self.tree_digest(self.fx.packet),
+                         "the previous packet must survive a blocked rebuild byte-for-byte")
+        checks = self.verify(cfg, cfg_path, expect_top_seal=anchor)
+        self.assertEqual(("PASS", 0), rp.aggregate(checks))
+
+    def test_successful_rebuild_still_commits(self):
+        cfg, cfg_path, _ = self.build()
+        (self.fx.packet / "operation-source" / "app-src" / "lib" / "util.txt").write_text("tampered\n")
+        rp.build_packet(cfg, cfg_path.parent, self.fx.packet, rebuild=True)
+        status, exit_code = rp.aggregate(self.verify(cfg, cfg_path))
+        self.assertEqual(("PASS", 0), (status, exit_code))
+
+
 class TopSealAnchor(PacketTestBase):
     def test_anchor_rejects_fully_reforged_packet(self):
         cfg, cfg_path, _ = self.build()

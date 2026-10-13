@@ -222,15 +222,37 @@ def main(argv):
         cfg_dir = cfg_path.resolve().parent
         expect_top_seal = args.get("expect-top-seal")
         pc.require(not expect_top_seal or pc.is_sha256(expect_top_seal), "--expect-top-seal must be 64 hex")
+        gate_checks = {}
         if mode == "build":
             packet_root = pc.resolve(cfg_dir, cfg["packet"]["root"])
-            layers, top_seal_sha, entries = build_packet(cfg, cfg_dir, packet_root,
-                                                         rebuild=bool(args.get("rebuild-existing")))
+            rebuild = bool(args.get("rebuild-existing"))
+
+            def rebuild_gate(root):
+                # full verification at the FINAL location before the rebuild
+                # commits; a blocking failure raises and the builder rolls the
+                # previous packet back byte-for-byte
+                checks = verify_packet(cfg, cfg_dir, root, expect_top_seal)
+                status, _ = aggregate(checks)
+                if status == "BLOCKED":
+                    failing = ["%s: %s" % (c["id"], ",".join(
+                        d.get("code", "?") for d in c["details"] if isinstance(d, dict)))
+                        for c in checks if c["blocking"] and c["status"] == "FAIL"]
+                    raise pc.ConfigError(
+                        "REBUILD_VERIFY_BLOCKED: previous packet preserved; blocking "
+                        "failures -> " + "; ".join(failing))
+                gate_checks["checks"] = checks
+
+            layers, top_seal_sha, entries = build_packet(
+                cfg, cfg_dir, packet_root, rebuild=rebuild,
+                verify_gate=rebuild_gate if rebuild else None)
+            if "checks" in gate_checks:
+                checks = gate_checks["checks"]  # reuse the gate's verification
         else:
             pc.require(args.get("package"), "verify requires --package DIR")
             packet_root = Path(args["package"])
             layers, top_seal_sha, entries = _observed_summary(cfg, packet_root)
-        checks = verify_packet(cfg, cfg_dir, packet_root, expect_top_seal)
+        if "checks" not in gate_checks:
+            checks = verify_packet(cfg, cfg_dir, packet_root, expect_top_seal)
         receipt = make_receipt(mode, cfg, cfg_path, packet_root, checks, layers, top_seal_sha, entries,
                                started, expect_top_seal)
     except (ConfigError, pm.PacketError) as exc:

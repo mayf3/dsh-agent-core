@@ -6,10 +6,11 @@ copy artifacts with sha256 sidecars, rendered command files, recomputed pin
 documents, then bottom-up sealing (per-layer manifest+seal, then top).
 Refusals happen before or during materialization; a failed build leaves no
 half-built packet behind. `--rebuild-existing` stages the regeneration in a
-sibling directory and swaps only after the new packet is fully built and
-sealed, so a failed rebuild leaves the previous packet byte-identical.
-There is no in-place re-seal: the only repair path is rebuilding from the
-source, so batch-editing documents can never turn a failure into PASS.
+sibling directory, swaps, and commits only after the FULL verification passes
+at the final location — a blocking verify failure (stale pin target included)
+rolls the previous packet back byte-for-byte. There is no in-place re-seal:
+the only repair path is rebuilding from the source, so batch-editing documents
+can never turn a failure into PASS.
 """
 
 import gzip
@@ -169,13 +170,15 @@ def _generate_packet_contents(cfg, cfg_dir, build_dir, render_root):
                               render_root=render_root)
 
 
-def _rebuild_existing(cfg, cfg_dir, packet_root):
-    """Regenerate into a staging sibling; replace the old packet only on success.
+def _rebuild_existing(cfg, cfg_dir, packet_root, verify_gate=None):
+    """Regenerate into a staging sibling; commit only after full verification.
 
     Every refusal — dirty source, missing overlay, drifted commit, unsafe
-    binding — happens while the previous packet is still in place, so a failed
-    rebuild keeps it byte-identical (the repair attempt must never destroy the
-    last known-good packet).
+    binding — happens while the previous packet is still in place, and the
+    swapped-in regeneration is verified at its final location BEFORE the commit
+    becomes final: any blocking verify failure rolls the previous packet back
+    byte-for-byte (external seal included). A failed rebuild must never
+    destroy the last known-good packet.
     """
     parent = packet_root.parent
     staging = Path(tempfile.mkdtemp(prefix=".%s.rebuild-" % packet_root.name, dir=str(parent)))
@@ -194,21 +197,31 @@ def _rebuild_existing(cfg, cfg_dir, packet_root):
         except BaseException:
             os.rename(str(retired / packet_root.name), str(packet_root))
             raise
-        finally:
-            shutil.rmtree(str(retired), ignore_errors=True)
+        if verify_gate is not None:
+            try:
+                verify_gate(packet_root)
+            except BaseException:
+                # verification failed at the final location: roll the previous
+                # packet back byte-for-byte and discard the regeneration
+                os.rename(str(packet_root), str(staging))
+                os.rename(str(retired / packet_root.name), str(packet_root))
+                shutil.rmtree(str(staging), ignore_errors=True)
+                shutil.rmtree(str(retired), ignore_errors=True)
+                raise
+        shutil.rmtree(str(retired), ignore_errors=True)
         return layers, top_seal_sha, entries
     finally:
         if staging.exists():
             shutil.rmtree(str(staging), ignore_errors=True)
 
 
-def build_packet(cfg, cfg_dir, packet_root, rebuild=False):
+def build_packet(cfg, cfg_dir, packet_root, rebuild=False, verify_gate=None):
     packet_root = Path(packet_root).resolve()
     pc.check_root_safety(packet_root, cfg_dir, cfg)
     if packet_root.exists():
         pc.require(rebuild, "PACKET_ROOT_EXISTS: %s (use --rebuild-existing to regenerate generated artifacts)" % packet_root)
         pc.require(packet_root.is_dir() and not packet_root.is_symlink(), "PACKET_ROOT_NOT_DIR: %s" % packet_root)
-        return _rebuild_existing(cfg, cfg_dir, packet_root)
+        return _rebuild_existing(cfg, cfg_dir, packet_root, verify_gate)
     packet_root.mkdir(parents=True)
     try:
         _generate_packet_contents(cfg, cfg_dir, packet_root, packet_root)
