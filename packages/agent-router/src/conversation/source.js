@@ -12,7 +12,7 @@ const stamp=value=>Number.isSafeInteger(value)&&value>=0?value:null
 function sourceError(){return Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE',status:'not_admitted',proven:'zero_byte'})}
 export function readConversationSource({directory,agentId,requestId,now=Date.now}){
   if(!directory||!isAbsolute(directory))return {state:'unrecoverable'}
-  const row=readPrivateJson(fileFor(directory,requestId),3*1024*1024)
+  const row=readPrivateJson(fileFor(directory,requestId),9*1024*1024)
   if(!row)return {state:'not_found'}
   if(row.version!==1||row.agent_id!==agentId||row.request_id!==requestId) return {state:'unrecoverable'}
   if(row.expires_at&&now()>=row.expires_at){
@@ -31,7 +31,7 @@ export function createConversationSource({directory,agentId,write=atomicPrivateJ
   const tracked=new Map()
   return {
     reserve({requestId,session,message}){
-      if(typeof requestId!=='string'||requestId.length>256||String(session?.id)!=='main'||!message?.id
+      if(typeof requestId!=='string'||requestId.length>256||String(session?.id)!=='main'||String(session?.header?.id)!=='main'||!message?.id
         ||!Number.isSafeInteger(session?.header?.createdAt))throw sourceError()
       const path=fileFor(directory,requestId)
       if(readPrivateJson(path))throw sourceError()

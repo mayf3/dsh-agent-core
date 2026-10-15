@@ -20,11 +20,13 @@ export function readPrivateJson(path, maxBytes = 64 * 1024 * 1024) {
 export function atomicPrivateJson(path, value) {
   privateDirectory(dirname(path))
   if (existsSync(path)) readPrivateJson(path)
+  const serialized = JSON.stringify(value) + '\n'
+  if (Buffer.byteLength(serialized,'utf8') > 64 * 1024 * 1024) throw Object.assign(new Error('private storage capacity exceeded'),{className:'RESOURCE_LIMIT',httpStatus:429})
   const temp = path + '.tmp-' + randomUUID()
   let fd
   try {
     fd = openSync(temp, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600)
-    writeFileSync(fd, JSON.stringify(value) + '\n', 'utf8')
+    writeFileSync(fd, serialized, 'utf8')
     fsyncSync(fd)
     closeSync(fd)
     fd = undefined
