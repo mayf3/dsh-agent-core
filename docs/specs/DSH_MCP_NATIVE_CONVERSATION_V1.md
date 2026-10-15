@@ -6,7 +6,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-10-15
-revision: r2
+revision: r3
 scope:
   - authenticated MCP product-surface conversation facade inside the existing DSH runtime
   - principal-scoped request reservation, exact native reply result and resumable event projection
@@ -71,6 +71,8 @@ DEC-003（待Owner接受）：pilot默认current main且只读自己请求关联
 
 每次调用MUST按当前授权复核；target/session/cursor/request handle不是bearer授权。失败返回脱敏diagnostic_id及错误分类，不泄露不存在/越权目标的正文、会话路径或身份映射。最窄pilot只授resolve、send、own-result/own-events给一个已验证BIP；不得因其是业务Owner自动开放其他Workflow详情或全main正文。返回正文/ref沿现有输出安全策略脱敏，redaction显式；投影hash绑定实际返回bytes，与native source hash分列，不返回内部推理或凭据。
 
+pilot认证协议冻结为已有在线service credential验证模式：MCP服务端向本机DSH facade提交专用 `Authorization: Basic` credential；DSH每请求只经受信HTTPS auth-service `/oauth/token`、`grant_type=client_credentials`、固定 `resource=agent-core-mcp-conversation-v1`、`scope=conversation.access` 在线核验，严格校验成功响应，不缓存credential或验证结论，不调用management API。该resource/scope是本proposal的新边界，不复用Notification或Agent凭据；auth-service owning authority接受并实际配置前保持disabled。verified clientId由DSH受控配置唯一映射到原connector subject、稳定communication_scope_id及DSH product-surface principal；MCP仅为已认证且匹配的该subject选择其专用credential，禁止跨subject共用或信任body/header自报subject。缺失/无效/错误resource为401，verified但无映射/操作权限为403，网络/5xx/不完整核验为503 AUTH_INCONCLUSIVE；均零目标读取/零Router调用。每次核验及当前grant检查先于返回结果/正文或新准入，撤销即时阻止后续调用；凭据及mint返回的token不持久进入业务记录或日志。只复用验证机制，不改Notification名单或原resource合同。
+
 ### CTR-NC-002 — Resolve, main and concurrency
 
 resolve输入恰一种canonical agent_id或workflow_instance_id，禁止显示名模糊匹配。MUST核Agent↔principal/domain唯一映射；Workflow Owner、node assignee、domain Owner分列，合法source无字段则unknown，404不可分存在/可见时不猜负责人。只在合法数据源可见范围生成opaque target_handle，绑定主体/scope/目标/路由版本。解析只读，不选择或切换共享surface Binding。
@@ -91,11 +93,13 @@ send MUST在Router副作用前，持久reserve `(subject_id, communication_scope
 
 在admission前注册原runtime协调观察，复用 `onTurnReconciled` 并在重启补扫有界本主体request坐标。回复出现后MUST自动提交request-owned的可补取result/body ref与事件，之后才声明reply available；不能另起任务导出答案。只有hash/bytes而无可读正文/ref时reply_status不可available。持久化失败标RESULT_PERSIST_FAILED、执行/回复状态分别保留，只经正式exact reader修复原result，不send。结果正文/ref按授权读取；journal路径永不传给MCP。正文/ref保留期须在启动配置和结果中明示，未配置则disabled；保留期内重启、main换代或reset不使结果消失，期满明确RESULT_EXPIRED且不删除幂等tombstone。未完成/UNKNOWN请求不得因保留期删除。
 
+捕获前crash窗口同样属于恢复合同：原runtime源拥有者MUST为已准入本主体request保留可按native exact坐标重读的回复正文或受控artifact，直至request-owned result提交完成；仅内存callback、output hash或live/.1恰未被轮转不是该保证。启动核定该源保留/正式读取前提不可满足则native send保持disabled；实现只在原runtime协调/源保留路径闭合，不另设调度器。reply已产出但result commit前崩溃、main reset或源轮转，重启后MUST从该保留源补投影原result，不再次send。若实际源已丢失，返回RESULT_UNRECOVERABLE及脱敏诊断、保留已知执行/回复事实与原号；不得伪造available或成功恢复，该次ACC-003/005必须FAIL且阻止扩大启用。NOT_PROVISIONED、不可恢复与仍可补取的RESULT_PERSIST_FAILED分列。
+
 ### CTR-NC-005 — Result envelope and errors
 
 至少返回 `request_id, agent_id, session_handle, session_generation, message_id, reply_to, workflow_refs`；`submitted_at, accepted_at, started_at, finished_at, reply_created_at, result_persisted_at, served_at`；独立 `request_status, execution_status, reply_status`；`reply_message_id, reply_body/reply_ref`；`error.class, diagnostic_id, retryable, retry_preconditions`。没有source字段时用unknown＋field_availability/reason，不补0或false。
 
-请求状态区分reserved/accepted/not_executed/unknown/failed；执行区分not_started/running/completed/failed/interrupted/unknown；回复区分pending/available/incomplete/unavailable/failed/unknown。accepted、进程exit0与Owner声称完成不互相升级。Owner报告保留 `provenance=OWNER_REPORT`；Workflow提交/transition/产物独立列refs及验证状态。错误至少区分NO_ACCESS、NOT_FOUND_OR_NOT_VISIBLE、REQUEST_CONFLICT、CURSOR_STALE、SESSION_GENERATION_CHANGED、TRUNCATED、RESOURCE_LIMIT、UPSTREAM_UNAVAILABLE、RESULT_PERSIST_FAILED、NOT_SUPPORTED；未实现不得返回空成功。
+请求状态区分reserved/accepted/not_executed/unknown/failed；执行区分not_started/running/completed/failed/interrupted/unknown；回复区分pending/available/incomplete/unavailable/failed/unknown。accepted、进程exit0与Owner声称完成不互相升级。Owner报告保留 `provenance=OWNER_REPORT`；Workflow提交/transition/产物独立列refs及验证状态。错误至少区分NO_ACCESS、NOT_FOUND_OR_NOT_VISIBLE、REQUEST_CONFLICT、CURSOR_STALE、SESSION_GENERATION_CHANGED、TRUNCATED、RESOURCE_LIMIT、UPSTREAM_UNAVAILABLE、RESULT_PERSIST_FAILED、RESULT_UNRECOVERABLE、NOT_SUPPORTED；未实现不得返回空成功。
 
 ### CTR-NC-006 — History and reply content coverage
 
@@ -117,7 +121,7 @@ Workflow raw lifecycle、cancelled、archived、node/Owner/assignee、state vers
 
 ### CTR-NC-009 — Staged activation and rollback
 
-Source、安装/加载、身份grant、dot实际往返分别记账。所有新route默认disabled；生产source/profile/grant启用不由Spec或本任务授予。先一Agent一条新稳定请求，保留原1135只读；其余验收再运行。关闭native adapter或撤销send grant必须立即拒新admission；原结果/UNKNOWN记录不删除，合法read grant仍可补取。回退不得恢复第二writer、旧不受控send、未知重发或将旧生成cursor静默映射到新代。
+Source、安装/加载、身份grant、dot实际往返分别记账。所有新route默认disabled；生产source/profile/grant启用不由Spec或本任务授予。启用前必须证明原runtime能在reply→result commit窗口保留及正式重读原source；缺证明不启用send。先一Agent一条新稳定请求，保留原1135只读；其余验收再运行。关闭native adapter或撤销send grant必须立即拒新admission；原结果/UNKNOWN记录不删除，合法read grant仍可补取。回退不得恢复第二writer、旧不受控send、未知重发或将旧生成cursor静默映射到新代。
 
 ## 10. Acceptance
 
@@ -125,9 +129,9 @@ Source、安装/加载、身份grant、dot实际往返分别记账。所有新ro
 
 | Acceptance | Contracts | 方法／环境 | Required evidence与Expected result | Failure condition |
 |---|---|---|---|---|
-| ACC-001 | CTR-NC-001,002 | 隔离auth/registry/Router fixture；获批pilot后dot connector | 合法BIP resolve/send；错误principal/target/scope/伪session拒绝，diagnostic脱敏且目标读/Router调用0 | 冒充Agent、仅凭transport放行、泄露内容或修改共享Binding |
+| ACC-001 | CTR-NC-001,002 | 隔离auth/registry/Router fixture；获批pilot后dot connector | 合法BIP resolve/send；跨subject credential、错误resource、撤销、核验故障、错误principal/target/scope/伪session拒绝，diagnostic脱敏且目标读/Router调用0；核对固定token endpoint协议 | 冒充Agent、仅凭transport放行、缓存放过撤销、泄露内容或修改共享Binding |
 | ACC-002 | CTR-NC-003 | 隔离并发、crash-window/restart；获批pilot同号重试 | 同号同payload原receipt且Router一次；同号异payload409；reserve后超时未知只补查；跨客户端、重启不丢key | 任意第二send/UNKNOWN清零/资源压力删除tombstone |
-| ACC-003 | CTR-NC-004,005 | 隔离乱序双request及回传失败；获批pilot真实回复 | 两回复乱序仍按native turn对应；自动持久后原号可取正文/ref；Owner_REPORT与Workflow证据分列 | 时间/文本匹配，exit0冒回复，额外导出任务，只有hash即available |
+| ACC-003 | CTR-NC-004,005 | 隔离乱序双request、回传失败及reply产出→result commit前crash/reset/源轮转；获批pilot真实回复 | 两回复乱序仍按native turn对应；启用前证明原runtime保留源及正式读取能力，由该源恢复原result，提交后原号可取正文/ref；Owner_REPORT与Workflow证据分列 | 时间/文本匹配，exit0冒回复，额外导出任务，只有hash即available，源丢失却报完整恢复PASS |
 | ACC-004 | CTR-NC-006 | 隔离多页/增长/换代/长内容/失败turn；获批history grant | 不重复漏页，稳定边界；cursor失效明确；caps/附件/未完成/Archive限制可见；零任意路径读 | 旧EH offset行为重复，静默换代、空成功或完整聊天误述 |
 | ACC-005 | CTR-NC-007 | 隔离事件重复、断连、restart、retention gap；获批dot查询 | seq/cursor可恢复、原结果常可补取，过期明示；只查询不宣称主动notify | 丢event即丢结果、自动重发、错误wake保证 |
 | ACC-006 | CTR-NC-008 | 隔离Workflow取消/归档/终态/partial与合法resolve；获批独立读 | raw缺项unknown；filter与object状态分列；问Owner不触状态；失败项/覆盖如实 | 再次cancel验证、updated计节点停滞、实例算进程 |
