@@ -378,7 +378,6 @@ export const turnExecutionMethods = {
           source,
           deadlineAtWallMs: execution.hardDeadlineAt,
           evidence: execution.evidenceSnapshot(),
-          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
         }))
       execution.terminalReject = undefined
     }, Math.max(0, remaining))
