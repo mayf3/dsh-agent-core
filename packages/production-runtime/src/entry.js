@@ -15,6 +15,7 @@
  * Usage (via scripts/production-runtime.mjs):
  *   node scripts/production-runtime.mjs [--root <dir>] [--tick-ms N]
  *       [--concurrency N] [--catchup 0|1]
+ *       [--website-inquiry-enabled true|false] [--website-inquiry-config <private file>]
  *
  * Env (all optional; see compose.js for the full list):
  *   PRODUCTION_RUNTIME_ROOT   persistent root (default ~/.agent-core)
@@ -41,6 +42,7 @@
 import { assertProductionArchitecture } from './native-arm64/admission.js'
 import { resolveProductionLayout } from './paths.js'
 import { composeProductionRuntime } from './compose.js'
+import { websiteInquiryStartupConfig } from './agent-session/website-inquiry/startup-config.js'
 
 function argValue(args, name, fallback) {
   const idx = args.indexOf(name)
@@ -51,10 +53,11 @@ function argValue(args, name, fallback) {
  * Run the Production Runtime resident until SIGTERM/SIGINT.
  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
  * @param {object} [processLike] - process stand-in (tests); default process.
+ * @param {object} [dependencies] - external composition seam for isolated entry tests.
  */
 import { applyShutdownResult } from './shutdown-result.js'
 
-export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
+export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process, { compose = composeProductionRuntime } = {}) {
   const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
   const root = argValue(argv, '--root', undefined)
   const layout = resolveProductionLayout(root)
@@ -70,7 +73,8 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
+  const websiteInquiry = websiteInquiryStartupConfig(argv)
+  const runtime = await compose({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, websiteInquiry })
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',
