@@ -110,4 +110,3 @@ export async function integratedFixture({ deferReplies = false } = {}) {
     completePending: (index = 0) => completions.splice(index, 1)[0]?.(), http, handler, startServer, sends: () => sends,
     close() { server?.close(); native.dispose(); store.close(); rmSync(root, { recursive: true, force: true }) } }
 }
-
