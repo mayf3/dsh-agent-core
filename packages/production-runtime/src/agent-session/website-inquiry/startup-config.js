@@ -56,7 +56,7 @@ function validateRegistry(entries) {
   if (!exact(entry, registryFields) || typeof entry.enabled !== 'boolean'
     || registryFields.filter(key => !['enabled', 'pilot_surface', 'allowed_operations'].includes(key)).some(key => !text(entry[key]))
     || entry.issuer !== 'auth-service' || !uuidValid(entry.auth_subject) || entry.auth_subject !== entry.human_principal_id
-    || !uuidValid(entry.transport_principal_id) || entry.transport_client_id !== 'agent-control-website-inquiry-v1') unavailable()
+    || !uuidValid(entry.transport_principal_id)) unavailable()
   const pilot = entry.pilot_surface
   if (!exact(pilot, ['channel', 'external_id', 'expected_agent_id']) || Object.values(pilot).some(value => !text(value))
     || ['mobile', 'feishu'].includes(pilot.channel) || !/^agt_[A-Za-z0-9_-]+$/.test(pilot.expected_agent_id)) unavailable()
