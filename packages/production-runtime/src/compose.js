@@ -66,6 +66,7 @@ import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { mountWebsiteInquiryRuntime } from './agent-session/website-inquiry/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -383,6 +384,7 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
+  await mountWebsiteInquiryRuntime({ ctx, config: opts.websiteInquiry, router, definition, workspaceBootstrap })
   const productApiCfg = opts.productApi ?? {}
   const productApi = applyProductApi(ctx, {
     workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
@@ -392,8 +394,6 @@ export async function composeProductionRuntime(options = {}) {
     // MOBILE_SESSION_HISTORY_V1 / PRODUCT_API_AUTHENTICATION_V1: the
     // dedicated history-only Tailnet listener config must reach the product
     // api through the composition contract. Pure pass-through — the module
-    // owns default-OFF (enabled:false) and every fail-closed mount decision;
-    // an absent key keeps the listener OFF exactly as before.
     history: productApiCfg.history,
   })
 

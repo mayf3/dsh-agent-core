@@ -29,6 +29,7 @@
 
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import { validateWebsiteAdmission } from './website-admission.js'
 
 /** Structured rejection code (cross-workspace session mismatch, R3). */
 export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
@@ -44,7 +45,7 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
  * @returns {{handles:Map, pendingCreations:Map, getOrCreateSession, prompt,
  *   assertSessionCwd}}
  */
-export function createSessionSeam({ ctx, settings }) {
+export function createSessionSeam({ ctx, settings, websiteAdmission }) {
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
@@ -74,7 +75,7 @@ export function createSessionSeam({ ctx, settings }) {
    * @param {string|undefined} resolvedCwd - the Router-resolved effective
    *   workspace path for THIS session.
    */
-  async function getOrCreateSession(sessionId, resolvedCwd) {
+  async function getOrCreateSession(sessionId, resolvedCwd, websitePrivate = false) {
     const effectiveCwd = resolvedCwd ?? settings.cwd
     const existing = handles.get(sessionId)
     if (existing !== undefined) {
@@ -145,7 +146,7 @@ export function createSessionSeam({ ctx, settings }) {
         handle = await agents.create({ sessionId: id, meta: { cwd: effectiveCwd }, agentOptions })
       }
       handles.set(sessionId, handle)
-      process.stderr.write(
+      if (!websitePrivate) process.stderr.write(
         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
       )
       return handle
@@ -215,10 +216,13 @@ export function createSessionSeam({ ctx, settings }) {
   }
 
   /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined) {
-    const handle = await getOrCreateSession(sessionId, resolvedCwd)
+  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, websiteCarrier = undefined) {
+    const carrier = websiteCarrier === undefined ? undefined : validateWebsiteAdmission(websiteCarrier)
+    if (carrier && (sessionId !== 'main' || messageOrigin !== undefined || typeof websiteAdmission !== 'function')) throw new TypeError('website admission unavailable')
+    const handle = await getOrCreateSession(sessionId, resolvedCwd, Boolean(carrier))
     const source = validateMessageOrigin(messageOrigin)
     const message = createUserMessage({ content: contentBlocks, source })
+    if (carrier) await websiteAdmission(carrier, message, handle.agent.session)
     handle.agent.followup(message)
     return { messageId: message.id }
   }
