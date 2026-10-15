@@ -355,6 +355,10 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) throw lineageError
+    if (opts?.websiteControl) {
+      await opts.websiteControl.recheck()
+      execution.websiteControl = opts.websiteControl
+    }
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono,
       opts?.admissionDeadlineMono ?? Infinity)
     const requestId = execution.promptRequestId
@@ -376,6 +380,7 @@ export const turnExecutionMethods = {
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
       ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
       ...(opts?.nativeGoalContinuation === undefined ? {} : { nativeGoalContinuation: opts.nativeGoalContinuation }),
+      ...(opts?.websiteControl === undefined ? {} : { websiteAdmission: opts.websiteControl.carrier }),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,
