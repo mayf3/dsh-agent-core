@@ -1,0 +1,28 @@
+{
+  "enabled": true,
+  "authServiceOrigin": "https://OWNER-PINNED-HTTPS-AUTH-SERVICE-ORIGIN",
+  "retentionMs": 604800000,
+  "maxRecords": 1000,
+  "clients": [
+    {
+      "clientId": "OWNER-MINTED-CLIENT-ID",
+      "subject_id": "OWNER-PINNED-CONNECTOR-SUBJECT-UUID",
+      "communication_scope_id": "mcp-native-conversation-pilot-v1",
+      "principal_id": "OWNER-PINNED-DSH-PRODUCT-SURFACE-PRINCIPAL-UUID",
+      "operations": [
+        "resolve",
+        "send",
+        "result"
+      ],
+      "targets": [
+        {
+          "agent_id": "agt_build-in-public-agent",
+          "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+          "domain_id": "OWNER-PINNED-BIP-DOMAIN-ID",
+          "binding_id": "mcp:owner-prebound-pilot",
+          "routing_version": "1"
+        }
+      ]
+    }
+  ]
+}

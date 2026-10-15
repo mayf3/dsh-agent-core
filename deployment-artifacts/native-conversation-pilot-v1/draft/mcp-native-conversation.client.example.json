@@ -1,0 +1,5 @@
+{
+  "connector_subject": "OWNER-PINNED-CONNECTOR-SUBJECT-UUID",
+  "client_id": "OWNER-MINTED-CLIENT-ID",
+  "client_secret": "PROVISIONED-SECRET-WRITTEN-ONLY-INTO-THIS-0600-FILE"
+}

@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "connector_subject": "OWNER-PINNED-CONNECTOR-SUBJECT-UUID",
+  "endpoint": "http://127.0.0.1:8787",
+  "credential_file": "native-conversation.client.json"
+}
