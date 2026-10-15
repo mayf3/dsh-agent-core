@@ -77,6 +77,7 @@ import { createProcessRegistry } from './process-registry.js'
 import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
 import { createIngressDelivery } from './ingress-delivery.js'
+import { createWebsiteInquiryAdmission } from './website-inquiry-admission.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
@@ -342,6 +343,7 @@ export function apply(ctx, config) {
      * for the model turn (see deliver's doc for the full contract).
      */
     deliver: ingressDelivery.deliver,
+    admitWebsiteInquiry: createWebsiteInquiryAdmission({ routeChain, reconciliationStore, workspaceBootstrap, definition: agentDefinition, store }),
     /** Test/ops surface: durable Delivery V0 fresh-mapping table snapshot. */
     freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */

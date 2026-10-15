@@ -37,6 +37,7 @@ import z from '@deepseek-ai/schemastery'
 
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
+import { WebsiteSourceCustody } from './website-custody.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
@@ -105,7 +106,16 @@ export function apply(ctx) {
   // verifies it against the resolved workspace; a mismatch is a structured
   // SESSION_WORKSPACE_MISMATCH rejection. Getters observe the
   // initialize-time values at call time.
+  let websiteCustody
   const seam = createSessionSeam({
+    websiteAdmission: async (carrier, message, session) => {
+      if (!process.env.DSH_HOME) throw new Error('website source custody unavailable')
+      websiteCustody ??= new WebsiteSourceCustody(process.env.DSH_HOME)
+      websiteCustody.register(carrier, message)
+      await ctx.get('sessionPersistence')?.flush?.(session)
+      const response = await agentRpc.request('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id })
+      if (response?.ok !== true || response.result?.mapped !== true) throw new Error('website native mapping unavailable')
+    },
     ctx,
     settings: {
       get cwd() { return cwd },
@@ -119,6 +129,7 @@ export function apply(ctx) {
   // Mirror the SDK server's event fan-out: every durable fact streams as
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
+    websiteCustody?.observe(String(session.id), event)
     notify('session.event', { sessionId: String(session.id), event })
   })
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
@@ -201,7 +212,7 @@ export function apply(ctx) {
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin),
+          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.websiteAdmission),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.

@@ -11,6 +11,8 @@
  * Router.
  */
 
+import { bindWebsiteNativeMessage } from './website-inquiry-admission.js'
+
 /** The tool method name per-agent processes use over the parent-RPC relay. */
 export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
 
@@ -67,6 +69,7 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         || boundProc?.exit !== undefined) {
       return { ok: false, error: { code: 'PROCESS_STOP_BARRIER_EFFECT_DENIED' } }
     }
+    if (method === 'agent-core/websiteInquiryMap') return bindWebsiteNativeMessage(boundProc, params, rpcMeta)
     if (method === BROKER_RPC_METHOD) {
       // TRUSTED CREDENTIAL BROKER: the caller identity is THIS proc's
       // actual agentId (the trusted spawning relationship) — never

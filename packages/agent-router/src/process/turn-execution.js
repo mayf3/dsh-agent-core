@@ -325,6 +325,10 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) throw lineageError
+    if (opts?.websiteControl) {
+      await opts.websiteControl.recheck()
+      execution.websiteControl = opts.websiteControl
+    }
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'
@@ -343,6 +347,7 @@ export const turnExecutionMethods = {
       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
+      ...(opts?.websiteControl === undefined ? {} : { websiteAdmission: opts.websiteControl.carrier }),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,

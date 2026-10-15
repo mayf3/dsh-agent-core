@@ -256,6 +256,7 @@ export function apply(ctx, config = {}) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
+      if (await ctx.get('websiteInquiryHandler')?.(req, res)) return
       if (req.method === 'GET' && url.pathname === '/health') {
         json(res, 200, { ok: true, service: 'agent-core-product-api' })
         return
