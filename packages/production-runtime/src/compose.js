@@ -41,6 +41,7 @@ import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { mountBrokerGateway } from './broker-composition.js'
+import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
@@ -332,6 +333,7 @@ export async function composeProductionRuntime(options = {}) {
 
   const router = applyRouter(ctx, {
     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
+    ...(opts.productApi?.conversation?.enabled === true ? {conversationSourceDir:join(layout.controlDir,'native-conversation','source')} : {}),
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,
@@ -384,16 +386,13 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   const productApiCfg = opts.productApi ?? {}
+  mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
     workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
-    // MOBILE_SESSION_HISTORY_V1 / PRODUCT_API_AUTHENTICATION_V1: the
-    // dedicated history-only Tailnet listener config must reach the product
-    // api through the composition contract. Pure pass-through — the module
-    // owns default-OFF (enabled:false) and every fail-closed mount decision;
-    // an absent key keeps the listener OFF exactly as before.
+    // Dedicated history-only Tailnet config remains pass-through/default-OFF.
     history: productApiCfg.history,
   })
 
