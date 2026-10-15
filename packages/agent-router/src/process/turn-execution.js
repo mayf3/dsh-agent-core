@@ -297,6 +297,7 @@ export const turnExecutionMethods = {
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
           ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
+          ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
         })
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise

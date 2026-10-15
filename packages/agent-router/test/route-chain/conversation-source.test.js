@@ -39,3 +39,39 @@ test('source reserve fails before followup when durable retention is unavailable
   const owner=createConversationSource({directory:'/not-a-configured-retention-root',agentId:'agt_pilot',write:()=>{throw Error('disk-full')}})
   assert.throws(()=>owner.reserve({requestId:'new',session:{id:'main',header:{id:'main',createdAt:1}},message:{id:'u'}}))
 })
+
+test('B002: visible text and its native ID survive an empty completion anchor in the same exact turn',async t=>{
+  const {createConversationSource,readConversationSource}=await import('../../src/conversation/source.js')
+  const dir=mkdtempSync(join(tmpdir(),'native-empty-anchor-'))
+  t.after(()=>rmSync(dir,{recursive:true,force:true}))
+  const owner=createConversationSource({directory:dir,agentId:'agt_pilot'})
+  const session={id:'main',header:{id:'main',createdAt:12}}
+  owner.reserve({requestId:'visible-empty',session,message:{id:'user'}})
+  const events=[['agent/inbox/spliced',{inserted:[{id:'user'}]}],['turn/start',{turn:8}],['user/message',{id:'user'}],
+    ['assistant/message',{turn:8,message:{id:'visible',content:[{type:'text',text:'visible business answer'},{type:'tool-call',id:'tool'}]}}],
+    ['assistant/message',{turn:8,message:{id:'usage-only',content:[]}}],['turn/end',{turn:8,reason:{kind:'completed'}}]]
+  events.forEach(([type,data],seq)=>owner.onEvent(session,{type,data,seq,time:100+seq}))
+  const row=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'visible-empty'})
+  assert.equal(row.reply_body,'visible business answer')
+  assert.equal(row.reply_message_id,'visible')
+  assert.equal(row.reply_created_at,103)
+  assert.equal(row.source_retained,true)
+})
+
+test('B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer',async t=>{
+  const {createConversationSource,readConversationSource}=await import('../../src/conversation/source.js')
+  const dir=mkdtempSync(join(tmpdir(),'native-wholly-empty-'))
+  t.after(()=>rmSync(dir,{recursive:true,force:true}))
+  const owner=createConversationSource({directory:dir,agentId:'agt_pilot'})
+  const session={id:'main',header:{id:'main',createdAt:13}}
+  owner.reserve({requestId:'wholly-empty',session,message:{id:'user'}})
+  const events=[['agent/inbox/spliced',{inserted:[{id:'user'}]}],['turn/start',{turn:9}],['user/message',{id:'user'}],
+    ['assistant/message',{turn:9,message:{id:'empty',content:[]}}],['turn/end',{turn:9,reason:{kind:'completed'}}]]
+  events.forEach(([type,data],seq)=>owner.onEvent(session,{type,data,seq,time:100+seq}))
+  const row=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'wholly-empty'})
+  assert.equal(row.state,'completed')
+  assert.equal(row.reply_body,null)
+  assert.equal(row.reply_message_id,null)
+  assert.equal(row.source_retained,false)
+  assert.equal(row.reply_coverage.reason,'no_visible_reply')
+})

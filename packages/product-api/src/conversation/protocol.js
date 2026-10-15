@@ -11,7 +11,7 @@ export function failure(error, request_id) {
   return { status: error?.httpStatus ?? 503, body: { status: 'ERROR', contract_version: CONTRACT_VERSION,
     ...(requestIdValid(request_id) ? { request_id } : {}), error: { class: classification },
     diagnostic_id: randomBytes(8).toString('hex'), retryable: false,
-    retry_preconditions: classification === 'RESULT_PERSIST_FAILED' ? ['query_original_request_only'] : [] } }
+    retry_preconditions: ['RESULT_PERSIST_FAILED','RESULT_UNRECOVERABLE','UPSTREAM_UNAVAILABLE','OUTCOME_UNKNOWN'].includes(classification) ? ['query_original_request_only'] : [] } }
 }
 export function exactObject(value, required, optional = []) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || required.some(k => !Object.hasOwn(value,k))

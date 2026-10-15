@@ -53,3 +53,14 @@ No source fixture is a loaded-runtime or dot/real-Agent acceptance. Required liv
 ## Disable / rollback
 
 Remove `send` from the current config's operations to deny new admission immediately while separately allowed result reads continue. Disabling the adapter denies all of its endpoints. Neither operation deletes requests, source artifacts, result refs or UNKNOWN tombstones. Roll back code only with the new adapter disabled; preserve the native-conversation storage and do not route old keys through another entry/session. Deployment remains the user's operation.
+
+## Frozen review repair, after a6f1b074
+
+The first independent review required NC-PILOT-B001/B002/B003; an independently reproduced token redirect violation was added in the same bounded repair wave. The original candidate and its evidence stay recorded in the implementation receipt.
+
+- B001: formal source read failures are classified instead of swallowed. The original Router proof is checked against the retained Agent/session/message/request coordinates before projecting native unknown, failed or terminated facts. Source I/O failure and native outcome uncertainty carry diagnostics and query-original-only recovery conditions; no new send occurs. A proven accepted receipt alone no longer claims that execution has started.
+- B002: the source selects the last nonempty visible assistant text in the exact turn and retains its original message association across legal empty/reasoning/tool-only completion anchors. A wholly empty completion explicitly has no visible reply. Coverage and the existing 1 MiB source limit are returned; neither empty text nor truncated/missing bytes become available business replies.
+- B003: the native seam returns its actual created/resumed/hot-reuse disposition and concrete reason through receipt, retained source and result. A missing reset/generation-change cause stays explicitly unknown. The scoped continuation identifies the original result and requires a freshly authorized resolve for follow-up to current main; it does not grant historical-generation resume.
+- Authentication: the fixed canonical `/oauth/token` request now uses `redirect: error`, so redirects cannot carry the credential into another path. No new identity, resource, grant, history or scheduling surface was added.
+
+The new counterexamples were executed RED before repair. The bounded Source/regression set and original process-lifecycle set were rerun after the receipt change; exact counts and log hashes are in the appended fix-wave receipt. Full `npm test` was not repeated. Production loading, real Agent/dot acceptance and independent re-audit remain separate gates.

@@ -51,10 +51,11 @@ test('real AgentProcess receipt-only product surface holds trusted context until
     conversationSource:{requestId:'mcpnc-process'},callerCorrelation:{requestId:'mcpnc-process'}})
   await fx.tick()
   assert.equal(fx.proc.activeBindingContext,'mcp:pilot')
-  const prompt=fx.respondTo('session/prompt',{messageId:'source-user',sessionGeneration:'trajectory-not-process-generation'})
+  const prompt=fx.respondTo('session/prompt',{messageId:'source-user',sessionGeneration:'trajectory-not-process-generation',mainResolution:{disposition:'created',reason:'main_artifact_absent'}})
   const receipt=await pending
   assert.equal(prompt.params.conversationSource.requestId,'mcpnc-process')
   assert.equal(receipt.sessionGeneration,'trajectory-not-process-generation')
+  assert.equal(receipt.mainResolution.disposition,'created')
   assert.equal(fx.proc.activeBindingContext,'mcp:pilot','inbox receipt does not clear active surface')
   fx.completeTurn('main','source-user','answer')
   await fx.tick()

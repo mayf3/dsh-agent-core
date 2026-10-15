@@ -30,18 +30,20 @@ export function createConversationSource({directory,agentId,write=atomicPrivateJ
   if(!directory||!isAbsolute(directory)||!/^agt_[A-Za-z0-9_-]+$/.test(agentId??''))return null
   const tracked=new Map()
   return {
-    reserve({requestId,session,message}){
+    reserve({requestId,session,message,mainResolution}){
       if(typeof requestId!=='string'||requestId.length>256||String(session?.id)!=='main'||String(session?.header?.id)!=='main'||!message?.id
         ||!Number.isSafeInteger(session?.header?.createdAt))throw sourceError()
       const path=fileFor(directory,requestId)
       if(readPrivateJson(path))throw sourceError()
       const row={version:1,request_id:requestId,agent_id:agentId,session_id:String(session.id),
         session_generation:generation(session),message_id:message.id,state:'pending',turn_id:null,
+        main_resolution:structuredClone(mainResolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}),
+        reply_coverage:{selection:'last_nonempty_visible_assistant_message',limit_bytes:1048576,original_bytes:0,reason:'pending'},
         inserted_seen:false,user_seen:false,last_seq:-1,accepted_at:null,started_at:null,finished_at:null,reply_created_at:null,
         reply_message_id:null,reply_body:null,truncated:false,source_retained:false}
       try{write(path,row)}catch{throw sourceError()}
       tracked.set(requestId,row)
-      return {sessionGeneration:row.session_generation,sourceRetentionVersion:1}
+      return {sessionGeneration:row.session_generation,sourceRetentionVersion:1,mainResolution:structuredClone(row.main_resolution)}
     },
     onEvent(session,event){
       for(const row of tracked.values()){
@@ -57,14 +59,18 @@ export function createConversationSource({directory,agentId,write=atomicPrivateJ
         else if(type==='user/message'&&(data.id===row.message_id||data.message?.id===row.message_id)&&row.turn_id!==null)row.user_seen=true
         else if(type==='assistant/message'&&row.user_seen&&data.turn===row.turn_id){
           const text=(data.message?.content??[]).filter(block=>block.type==='text'&&typeof block.text==='string').map(block=>block.text).join('')
-          row.truncated=Buffer.byteLength(text,'utf8')>1024*1024
+          if(text.length===0)continue // Empty/usage/reasoning/tool-only anchors are not visible replies.
+          row.reply_coverage.original_bytes=Buffer.byteLength(text,'utf8')
+          row.truncated=row.reply_coverage.original_bytes>1024*1024
+          row.reply_coverage.reason=row.truncated?'truncated':'visible_reply'
           row.reply_body=row.truncated?null:text
           row.reply_message_id=typeof data.message?.id==='string'&&data.message.id?data.message.id:null
           row.reply_created_at=stamp(event.time)
         }else if(type==='turn/end'&&row.user_seen&&data.turn===row.turn_id){
           row.state=data.reason?.kind==='completed'?'completed':data.reason?.kind==='error'?'failed':'interrupted'
           row.finished_at=stamp(event.time)
-          row.source_retained=typeof row.reply_body==='string'&&!row.truncated
+          row.source_retained=typeof row.reply_body==='string'&&row.reply_body.length>0&&!row.truncated
+          if(!row.source_retained&&!row.truncated)row.reply_coverage.reason='no_visible_reply'
         }else continue
         row.last_seq=event.seq
         // A failed write escapes to the owner, which continues Router facts
