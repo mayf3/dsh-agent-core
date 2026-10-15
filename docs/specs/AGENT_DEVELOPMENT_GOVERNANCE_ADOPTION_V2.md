@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V2
-status: accepted
+status: superseded
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -31,7 +31,7 @@ external_authorities:
     relation: constrained_by
 supersedes:
   - AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V1
-superseded_by: null
+superseded_by: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
 owners:
   - mayf3
 ---
