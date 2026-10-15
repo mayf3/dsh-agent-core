@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import { createSessionSeam } from '../../../demo-server/src/session-seam.js'
-import { WebsiteSourceCustody } from '../../../demo-server/src/website-custody.js'
+import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from '../../../demo-server/src/website-custody.js'
 import { AgentProcess } from '../../../agent-router/src/process/agent-process.js'
 import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/index.js'
 import { createParentRpcHandler } from '../../../agent-router/src/parent-rpc-relay.js'
@@ -30,7 +30,8 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   writeFileSync(target.artifactPath, JSON.stringify(header) + '\n')
   const workspaceBootstrap = { resolveDshHome: () => home, resolveWorkspace: () => workspace }
   const reconciliation = new TurnReconciliationStore()
-  const log = { log() {}, warn() {}, error() {} }
+  const logs = []
+  const log = { log: value => logs.push(value), warn: value => logs.push(value), error: value => logs.push(value) }
   const proc = new AgentProcess({ agentId: 'agt_pilot', home, workspace, profile: '/synthetic-profile', log, reconciliationStore: reconciliation })
   proc.state = 'READY'
   const custody = new WebsiteSourceCustody(home)
@@ -42,8 +43,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   let turn = 0
   const push = (type, data) => {
     const event = { type, seq: seq++, time: Date.now(), data }
-    custody.observe('main', event)
-    proc.onSessionEvent({ sessionId: 'main', event })
+    forwardWebsiteSessionEvent(custody, 'main', event, value => proc.onSessionEvent(value))
   }
   const agent = { session: { header, seq: 0 }, followup(message) {
     sends++
@@ -106,7 +106,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
     return `http://127.0.0.1:${server.address().port}`
   }
-  return { root, home, service, human, machine, store, native, registry, router, definition, proc, sourceReadCounts,
+  return { root, home, service, human, machine, store, native, registry, router, definition, proc, sourceReadCounts, logs,
     completePending: (index = 0) => completions.splice(index, 1)[0]?.(), http, handler, startServer, sends: () => sends,
     close() { server?.close(); native.dispose(); store.close(); rmSync(root, { recursive: true, force: true }) } }
 }

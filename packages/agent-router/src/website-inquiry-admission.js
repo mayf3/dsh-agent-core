@@ -37,3 +37,13 @@ export async function bindWebsiteNativeMessage(proc, params, rpcMeta) {
   await control.map({ messageId: params.messageId, agentId: proc.agentId })
   return { mapped: true }
 }
+
+/** Website diagnostics are request-digest/enums only. Original journal stays
+ * the existing Router authority, and other admission logs remain unchanged.
+ */
+export function websiteRouteLog(entry, control) {
+  return { kind: entry.kind, request_digest: control.carrier.payload_digest,
+    attempt_index: entry.attemptIndex, failure_class: entry.failureClass,
+    admission_proven: entry.admissionProven, attempt_outcome: entry.attemptOutcome,
+    final_outcome: entry.finalOutcome, total_attempts: entry.totalRouteAttempts }
+}

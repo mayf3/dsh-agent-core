@@ -93,3 +93,11 @@ export function readCustodyProjection(home, carrier) {
     complete: record.terminal && record.status === 'completed' && record.assistantMessageId !== null && record.content !== null,
     truncated: false, startedAt: record.startedAt ?? null, finishedAt: record.finishedAt ?? null, replyCreatedAt: record.replyCreatedAt ?? null }
 }
+
+/** Custody is a projection observer. Its disk/order failure cannot intercept
+ * the original native event stream; the same-coordinate reader may repair it.
+ */
+export function forwardWebsiteSessionEvent(custody, sessionId, event, forward) {
+  try { custody?.observe(sessionId, event) } catch { /* no raw source/error logging */ }
+  forward({ sessionId, event })
+}

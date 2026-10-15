@@ -38,7 +38,8 @@ import z from '@deepseek-ai/schemastery'
 
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
-import { WebsiteSourceCustody } from './website-custody.js'
+import { nativePromptError } from './website-admission.js'
+import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from './website-custody.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
@@ -148,8 +149,7 @@ export function apply(ctx, config = {}) {
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
     try { seam.conversationSource?.onEvent(session,event) } catch { process.stderr.write('[demo-server] conversation source retention failed\n') }
-    websiteCustody?.observe(String(session.id), event)
-    notify('session.event', { sessionId: String(session.id), event })
+    forwardWebsiteSessionEvent(websiteCustody, String(session.id), event, value => notify('session.event', value))
   })
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
     notify('session.status', { sessionId: String(agent.session.id), status })
@@ -289,13 +289,11 @@ export function apply(ctx, config = {}) {
       }
       respond(id, result, undefined)
     } catch (error) {
-      process.stderr.write(`[demo-server] ${method} failed: ${error instanceof Error ? error.message : String(error)}\n`)
+      const safeError = nativePromptError(method, params, error)
+      process.stderr.write(`[demo-server] ${method} failed: ${safeError.message}\n`)
       // STRUCTURED rejections (e.g. SESSION_WORKSPACE_MISMATCH) keep their
       // string code on the wire so the Router can surface them verbatim.
-      respond(id, undefined, {
-        code: typeof error?.code === 'string' ? error.code : -32603,
-        message: error instanceof Error ? error.message : String(error),
-      })
+      respond(id, undefined, safeError)
     }
   }
 

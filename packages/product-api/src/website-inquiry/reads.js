@@ -81,7 +81,7 @@ export function createReads({ access, store, codec, now, envelope }) {
     const has_more = rows.length > page.length
     const pos = has_more ? page.at(-1).seq : high
     return envelope({ events: page, has_more,
-      next_cursor: encode(entry, 'events', hash, high, pos, { tail: !has_more, at: cursor.at }),
+      next_cursor: encode(entry, 'events', hash, high, pos, { tail: !has_more, at: has_more ? cursor.at : now() }),
       coverage: { scope: 'website_request_owned', start_at: state.events[0]?.persisted_at ?? null,
         end_at: state.events.at(-1)?.persisted_at ?? null, source_high_water: high, complete: true, gaps: [] } })
   }

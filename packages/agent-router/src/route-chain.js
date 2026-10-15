@@ -20,6 +20,7 @@
  * refs/enums/counts only — never raw errors/tokens/credentials/bodies.
  */
 
+import { websiteRouteLog } from './website-inquiry-admission.js'
 import { resolve } from 'node:path'
 import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
 import { monotonicNowMs } from './process/state-machine.js'
@@ -274,10 +275,10 @@ export function createRouteChainExecutor({
     : null
   const pendingObservers = new Map() // pending canary observers by nonce
 
-  function record(entry) {
+  function record(entry, websiteControl) {
     journal.push(entry)
     if (journal.length > journalMaxEntries) journal.shift()
-    log.log?.(`route-chain ${JSON.stringify(entry)}`)
+    log.log?.(`route-chain ${JSON.stringify(websiteControl ? websiteRouteLog(entry, websiteControl) : entry)}`)
   }
 
   function defaultSnapshot(agentId) {
@@ -304,6 +305,7 @@ export function createRouteChainExecutor({
   }
 
   async function executeChain(mode, agentId, { sessionId, message, opts, deadlineMs, strictReason }) {
+    const recordAttempt = entry => record(entry, opts?.websiteControl)
     let snapshot
     try {
       snapshot = (typeof resolveRouteChain === 'function' ? resolveRouteChain(agentId) : undefined)
@@ -311,7 +313,7 @@ export function createRouteChainExecutor({
     } catch (cause) {
       // Config invalid at the process-boundary snapshot: fail loud with zero
       // attempts (the final block keeps the turn-level journal truthful).
-      record({
+      recordAttempt({
         kind: 'route_chain_final', tsWallMs: Date.now(), agentId,
         routeChainId: 'invalid', primaryRoute: 'NONE', finalRoute: 'NONE',
         finalOutcome: 'stop:unknown_failure_class', totalRouteAttempts: 0,
@@ -395,13 +397,13 @@ export function createRouteChainExecutor({
         const result = mode === 'turn'
           ? await proc.turn(sessionId, message, opts, remainingMs)
           : await proc.deliver(sessionId, message, opts)
-        record({
+        recordAttempt({
           kind: 'route_attempt', tsWallMs: Date.now(), routeChainId: chainId, agentId,
           attemptIndex, route: label, primaryRoute,
           failureClass: 'NONE', admissionProven: 'admitted', attemptOutcome: 'success',
           ...(strict ? { strictReason } : {}),
         })
-        record({
+        recordAttempt({
           kind: 'route_chain_final', tsWallMs: Date.now(), routeChainId: chainId, agentId,
           primaryRoute, finalRoute: label, finalOutcome: 'SUCCESS',
           totalRouteAttempts: attemptIndex + 1, fallbackActivated, fallbackRoute: fallbackRouteUsed,
@@ -420,7 +422,7 @@ export function createRouteChainExecutor({
         const nextRouteExists = attemptIndex + 1 < routes.length
         const budgetRemains = monotonicNowMs() < deadlineMono
         const hopAllowed = verdict.failureClass !== null && nextRouteExists && budgetRemains
-        record({
+        recordAttempt({
           kind: 'route_attempt', tsWallMs: Date.now(), routeChainId: chainId, agentId,
           attemptIndex, route: label, primaryRoute,
           failureClass: verdict.failureClass ?? 'NONE',
@@ -436,7 +438,7 @@ export function createRouteChainExecutor({
             : verdict.failureClass !== null
               ? verdict.failureClass
               : `stop:${verdict.stopReason}`
-          record({
+          recordAttempt({
             kind: 'route_chain_final', tsWallMs: Date.now(), routeChainId: chainId, agentId,
             primaryRoute, finalRoute: 'NONE', finalOutcome,
             totalRouteAttempts: attemptIndex + 1, fallbackActivated, fallbackRoute: fallbackRouteUsed,
