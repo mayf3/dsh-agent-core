@@ -130,6 +130,7 @@ export function apply(ctx) {
   // Mirror the SDK server's event fan-out: every durable fact streams as
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
+    try { seam.conversationSource?.onEvent(session,event) } catch { process.stderr.write('[demo-server] conversation source retention failed\n') }
     forwardWebsiteSessionEvent(websiteCustody, String(session.id), event, value => notify('session.event', value))
   })
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
@@ -203,6 +204,7 @@ export function apply(ctx) {
           route: { provider, model },
           registeredProviders,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
+          conversationSource: seam.conversationSource ? {version:1} : null,
         }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
@@ -212,7 +214,7 @@ export function apply(ctx) {
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.websiteAdmission),
+          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource, params?.websiteAdmission),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.

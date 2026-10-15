@@ -19,10 +19,12 @@ const job = {
 }
 
 function run(args) {
+  assert.ok(args.includes('--store'), 'fixture CLI calls require an explicit --store before spawning')
   return spawnSync(process.execPath, [cli, ...args], { cwd: root, encoding: 'utf8' })
 }
 
 function runAsync(args) {
+  assert.ok(args.includes('--store'), 'fixture CLI calls require an explicit --store before spawning')
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [cli, ...args], { cwd: root })
     let stdout = ''
@@ -144,8 +146,9 @@ test('CLI_MUTATION_SEMANTICS_MATCH_BROKER: CLI add replays converge to already-a
   assert.equal(doc.jobs.length, 1, 'singleton preserved across identical retries')
 
   const msgIdx = base.indexOf('--message')
-  const withoutMessage = [...base.slice(0, msgIdx), ...base.slice(msgIdx + 2, base.indexOf('--json'))]
-  const conflicting = run([...withoutMessage, '--message', 'DIFFERENT'])
+  const conflictingArgs = [...base]
+  conflictingArgs[msgIdx + 1] = 'DIFFERENT'
+  const conflicting = run(conflictingArgs)
   assert.equal(conflicting.status, 1)
   assert.match(conflicting.stderr, /DIFFERENT definition/)
   const after = await new JobStore(file).loadDoc({ force: true })
