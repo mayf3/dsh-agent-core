@@ -2,7 +2,6 @@ import { createPublicKey, verify } from 'node:crypto'
 import { fail, uuidValid } from './protocol.js'
 const HUMAN = 'agent-core-website-human-v1'
 const MACHINE = 'agent-core-website-transport-v1'
-const CLIENT = 'agent-control-website-inquiry-v1'
 const scopes = { redeem: 'conversation.intent.redeem', read: 'conversation.own_result.read', events: 'conversation.own_events.read' }
 const COMMON = ['iss', 'sub', 'aud', 'principal_type', 'client_id', 'token_use', 'type', 'version', 'jti', 'iat', 'nbf', 'exp']
 export function createInquiryAuthenticator({ jwksUrl, fetchImpl = fetch, now = Date.now } = {}) {
@@ -47,7 +46,9 @@ export function createInquiryAuthenticator({ jwksUrl, fetchImpl = fetch, now = D
     if (['iat', 'nbf', 'exp'].some(k => !Number.isSafeInteger(payload[k]) || payload[k] < 0)
       || payload.nbf > payload.iat || payload.iat >= payload.exp || payload.exp - payload.iat > (kind === 'human' ? 900 : 600)
       || payload.iat > clock + 60 || payload.nbf > clock + 60 || payload.exp <= clock - 60) fail('UNAUTHENTICATED')
-    if (payload.client_id !== (kind === 'human' ? 'project-progress-desk-web-v1' : CLIENT)) fail('FORBIDDEN')
+    if (kind === 'human' && payload.client_id !== 'project-progress-desk-web-v1') fail('FORBIDDEN')
+    // SERVICE client/Principal eligibility is exact current registry authority,
+    // checked by service.access before any target/result read or admission.
     return payload
   }
   return {
