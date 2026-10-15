@@ -45,6 +45,7 @@ export function createConversationService({ router, definition, storeFile, confi
       retainFacts({error_class:'UPSTREAM_UNAVAILABLE',source_read_state:'unavailable',reply_status:'unknown'})
       throw fault('UPSTREAM_UNAVAILABLE',503)
     }
+    retainFacts({source_read_state:'available'})
     if(native.read_failed)throw fault('UPSTREAM_UNAVAILABLE',503)
     if(native.facts.error_class)throw fault(native.facts.error_class,503)
     // A recovered read clears only a transient read error. Native unknown or

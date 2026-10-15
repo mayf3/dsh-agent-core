@@ -211,12 +211,17 @@ test('B001: original native unknown, termination and source EIO preserve exact f
   assert.equal(result.body.execution_status,'interrupted')
   assert.equal(result.body.native_outcome,'terminated_without_outcome')
   assert.equal(result.body.message_id,'user-1')
+  const originalSourceReader=f.router.readConversationSource
   f.router.readConversationSource=()=>{throw Object.assign(new Error('/private/secret/source EIO'),{code:'EIO'})}
   result=await f.service.invoke('result',{request_id:payload.request_id},credential)
   assert.equal(result.body.error.class,'UPSTREAM_UNAVAILABLE')
   assert.equal(result.body.execution_status,'interrupted')
   assert.equal(result.body.request_id,payload.request_id)
   assert.equal(JSON.stringify(result).includes('/private/secret'),false)
+  f.router.readConversationSource=originalSourceReader
+  const recoveredRead=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(recoveredRead.body.error.class,'OUTCOME_UNKNOWN')
+  assert.equal(recoveredRead.body.source_read_state,'available')
   await f.service.invoke('send',payload,credential)
   assert.equal(f.calls.length,1)
 })
