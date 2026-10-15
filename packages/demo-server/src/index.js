@@ -260,6 +260,7 @@ export function apply(ctx, config = {}) {
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
           ...(nativeToolPolicyAck === undefined ? {} : { nativeToolPolicy: nativeToolPolicyAck }),
+          websiteAdmission: { version: 1 },
         }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS

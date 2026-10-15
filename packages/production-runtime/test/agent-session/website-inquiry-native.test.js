@@ -89,3 +89,38 @@ test('source owner retains exact completed final after observer loss and restart
   assert.deepEqual(nativePromptError('session/prompt', { websiteAdmission: {} }, error), { code: -32603, message: 'WEBSITE_NATIVE_ADMISSION_FAILED' })
   assert.deepEqual(nativePromptError('session/prompt', {}, error), { code: 'ENOENT', message: error.message })
 })
+
+ test('MCP fifth carrier and website sixth carrier cannot share one native admission', async () => {
+  let effects = 0
+  const carrier = { namespace: 'website-human-inquiry-v1', human_principal_id: 'human', communication_scope_id: 'scope', request_id: 'rid', payload_digest: 'a'.repeat(64), site_owner_binding_version: '1' }
+  const agent = { session: { header: { cwd: '/synthetic' }, seq: 0 }, followup() { effects++ } }
+  const services = { loader: { await: async () => {} }, agentLoop: {}, sessionPersistence: { list: async () => [] },
+    agents: { create: async () => { effects++; return { agent } } } }
+  const seam = createSessionSeam({ ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' },
+    websiteAdmission: async () => { effects++ }, conversationSource: { reserve() { effects++; return {} } } })
+  await assert.rejects(seam.prompt('main', [{ type: 'text', text: 'mixed' }], '/synthetic', undefined, { requestId: 'mcp' }, carrier), /mixed product surface admission/)
+  assert.equal(effects, 0)
+})
+
+ test('old, MCP-only and wrong-version children reject website admission before mint or prompt', async () => {
+  const { makeFx } = await import('../../../agent-router/test/helpers/fake-child.js')
+  const evidenceCases = [{}, { conversationSource: { version: 1 } }, ...[null, { version: 0 }, { version: 2 }, { version: '1' }]
+    .map(websiteAdmission => ({ conversationSource: { version: 1 }, websiteAdmission }))]
+  for (const evidence of evidenceCases) {
+    const fx = makeFx()
+    try {
+      await fx.readyNow()
+      Object.assign(fx.proc.initializeEvidence, evidence)
+      let callbacks = 0
+      const opts = { websiteControl: { recheck: async () => { callbacks++ }, map: async () => { callbacks++ } } }
+      // Inspect before deliver so the RED never starts an unsupported long turn.
+      const error = fx.proc.preAdmissionError('deliver', 'main', 'question', 8, opts)
+      assert.ok(error, 'website capability is required even when MCP capability exists')
+      assert.equal(error.code, 'WEBSITE_SOURCE_UNAVAILABLE')
+      await assert.rejects(fx.proc.deliver('main', 'question', opts), { code: 'WEBSITE_SOURCE_UNAVAILABLE' })
+      assert.equal(fx.writes.filter(write => write.method === 'session/prompt').length, 0)
+      assert.equal(fx.proc.executions.size, 0)
+      assert.equal(callbacks, 0)
+    } finally { fx.childExit() }
+  }
+})
