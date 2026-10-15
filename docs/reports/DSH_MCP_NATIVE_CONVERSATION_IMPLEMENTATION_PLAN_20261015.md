@@ -8,7 +8,7 @@
 
 **Tech Stack:** 现有Node ESM、Router/reconciliation、原持久存储与MCP SDK；不新增数据库产品、调度器或Web平台。
 
-**Spec:** `docs/specs/DSH_MCP_NATIVE_CONVERSATION_V1.md` proposed r3，及dot-read-mcp integration proposed；当前不可实施。
+**Spec:** `docs/specs/DSH_MCP_NATIVE_CONVERSATION_V1.md` accepted r3，及已获Owner接受的dot-read-mcp integration；两仓合入权威基线后执行首段。生产加载与新增权限仍不在授权内。
 
 ## Global Constraints
 

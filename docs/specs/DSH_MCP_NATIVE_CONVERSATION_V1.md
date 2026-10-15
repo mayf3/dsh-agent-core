@@ -1,6 +1,6 @@
 ---
 spec_id: DSH_MCP_NATIVE_CONVERSATION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -25,7 +25,7 @@ owners:
 
 ## 1. Goal
 
-让 dot 经现有 MCP connector 直接向获准业务 Agent 提问、核对准确对应回复、分页读取获准上下文，并在断连或重启后补取原结果。用户2026-10-15需求是 authoring/source mandate；本 proposed Spec 尚非 implementation authority，且永不构成生产变更或 grant 授权。
+让 dot 经现有 MCP connector 直接向获准业务 Agent 提问、核对准确对应回复、分页读取获准上下文，并在断连或重启后补取原结果。Owner于2026-10-15明确接受本r3及MCP工具合同、授权合入权威基线并继续首段源码实施。合同仅在合入main后成为implementation authority；生产加载及新增权限仍须另行批准。EP49和UNKNOWN请求不重发。
 
 ## 2. Scope and non-goals
 
@@ -35,9 +35,9 @@ MUST NOT 使用网页或飞书作该链中转、建立第二Router/调度器、�
 
 ## 3. Authority and dependencies
 
-本产品边界归DSH；薄客户端由 `mayf3/dot-read-mcp` Owner 单独接受其 `docs/DSH_NATIVE_CONVERSATION_INTEGRATION_V1.md`。仅继承已accepted的Architecture/D-008不变式：Router拥有Binding和会话选择，单AgentProcess、原准入/队列/fence/UNKNOWN。
+本产品边界归DSH；薄客户端由 `mayf3/dot-read-mcp` Owner 已于2026-10-15单独接受其 `docs/DSH_NATIVE_CONVERSATION_INTEGRATION_V1.md`。仅继承已accepted的Architecture/D-008不变式：Router拥有Binding和会话选择，单AgentProcess、原准入/队列/fence/UNKNOWN。
 
-复用参考：ASM V2的native坐标及协调、Notification持久幂等模式、Mobile History安全投影、EH exact correlation规则。它们不授予新外部caller、他者历史或新Grant。新Spec为NEW/CONTROLLED，必须docs-first accepted in main，随后另开REUSE实施任务；不修改自身governing Spec。任何 auth-service/client/grant 变更须其owning authority与明确运行批准，不由本文件自授权。
+复用参考：ASM V2的native坐标及协调、Notification持久幂等模式、Mobile History安全投影、EH exact correlation规则。它们不授予新外部caller、他者历史或新Grant。本Spec的NEW/CONTROLLED docs-first接受获Owner批准；合入main后继续REUSE实施，不修改自身governing Spec。任何 auth-service/client/grant 变更须其owning authority与明确运行批准，不由本文件自授权。
 
 ## 4. Current State
 
@@ -57,11 +57,11 @@ EVD-001：OBS-003..008 SUPPORTS CLM-001，在上述两个exact源码revision上�
 
 ## 8. Decisions
 
-DEC-001（待Owner接受）：使用现有runtime内的受鉴权Product Surface facade复用Router内部primitive，MCP仅薄适配；不把MCP冒充真实Agent/source turn，也不扩大Notification caller名单。
+DEC-001（Owner已接受）：使用现有runtime内的受鉴权Product Surface facade复用Router内部primitive，MCP仅薄适配；不把MCP冒充真实Agent/source turn，也不扩大Notification caller名单。
 
-DEC-002（待Owner接受）：DSH journal保持内容权威。持久请求记录仅保存主体/范围/request_id、规范payload digest、native坐标、分维状态、正文/产物引用和增量序号；回复可读前必须提交有界immutable回复投影或同等retention的受控产物，以跨journal换代补取。它是request-owned结果产物，禁止变成第二聊天库或查询未经授权历史。
+DEC-002（Owner已接受）：DSH journal保持内容权威。持久请求记录仅保存主体/范围/request_id、规范payload digest、native坐标、分维状态、正文/产物引用和增量序号；回复可读前必须提交有界immutable回复投影或同等retention的受控产物，以跨journal换代补取。它是request-owned结果产物，禁止变成第二聊天库或查询未经授权历史。
 
-DEC-003（待Owner接受）：pilot默认current main且只读自己请求关联内容；完整main历史、新fresh/归档上下文是独立read授权。若fresh没有合法接续能力，则明确NOT_SUPPORTED，不先建再要求换入口。既存UNKNOWN不换会话或入口重发。
+DEC-003（Owner已接受）：pilot默认current main且只读自己请求关联内容；完整main历史、新fresh/归档上下文是独立read授权。若fresh没有合法接续能力，则明确NOT_SUPPORTED，不先建再要求换入口。既存UNKNOWN不换会话或入口重发。
 
 ## 9. Contracts
 
@@ -149,6 +149,6 @@ ALT-001 REJECTED：直接套ASM caller/借Agent credential，违反source-turn�
 
 ## 13. Open questions
 
-产品决策已作具体proposal，待Owner接受DEC-001..003及CTR-NC-001..009。运行待批准值独立：原connector subject UUID→DSH principal/scope、唯一pilot BIP绑定、受控服务端credential/resource、结果/事件/内容retention及容量配置、单次加载与dot验收mandate。尚无这些值时保持disabled；Source实施不读取secret来补值。完整业务历史及Workflow对象读授权另列，不默认随send放开。
+Owner已接受DEC-001..003及CTR-NC-001..009，并指定先完成单个Agent的发送、精确回复关联与持久补取。运行待批准值独立：原connector subject UUID→DSH principal/scope、唯一pilot BIP绑定、受控服务端credential/resource、结果/事件/内容retention及容量配置、单次加载与dot验收mandate。尚无这些值时保持disabled；Source实施不读取secret来补值。完整业务历史及Workflow对象读授权另列，不默认随send放开。
 
 实施计划：[2026-10-15原生对话计划](../reports/DSH_MCP_NATIVE_CONVERSATION_IMPLEMENTATION_PLAN_20261015.md)。SOURCE authoring结束不等于目标已交付。
