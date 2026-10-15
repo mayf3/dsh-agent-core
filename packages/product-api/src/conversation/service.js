@@ -105,7 +105,8 @@ export function createConversationService({ router, definition, storeFile, confi
       if (row.reply_body !== null) ensureStore().update(row.key,current => { current.reply_body = null; current.reply_status = 'unavailable'; current.error_class = 'RESULT_EXPIRED' })
       throw fault('RESULT_EXPIRED',410)
     }
-    const unknown = ['accepted_at','started_at','finished_at','reply_created_at','session_generation','reply_message_id'].filter(key => row[key] === null || row[key] === undefined)
+    const unknown = ['message_id','accepted_at','started_at','finished_at','reply_created_at','session_generation','reply_message_id','native_turn_id'].filter(key => row[key] === null || row[key] === undefined)
+    if (!row.session_generation) unknown.push('session_handle')
     return { status: 'OK', contract_version: CONTRACT_VERSION, request_id: row.request_id, agent_id: row.agent_id,
       session_handle: row.session_generation ? sessionHandle(row) : null, session_generation: row.session_generation,
       session_generation_namespace: 'dsh_trajectory_header_sha256_v1', message_id: row.message_id,
