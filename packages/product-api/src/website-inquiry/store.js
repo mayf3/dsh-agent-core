@@ -14,11 +14,13 @@ export class InquiryStore {
     if (!isAbsolute(file) || !lstatSync(dirname(file)).isDirectory() || lstatSync(dirname(file)).isSymbolicLink()) fail('NOT_PROVISIONED')
     try { if (!lstatSync(file).isFile() || lstatSync(file).isSymbolicLink()) fail('NOT_PROVISIONED') } catch (error) { if (error.code !== 'ENOENT') throw error }
     this.db = new DatabaseSync(file)
-    chmodSync(file, 0o600)
-    this.db.exec('PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA busy_timeout=1000;')
-    this.db.exec('CREATE TABLE IF NOT EXISTS scopes (id TEXT PRIMARY KEY, state TEXT NOT NULL)')
-    this.db.exec('CREATE TABLE IF NOT EXISTS handles (id TEXT PRIMARY KEY, data TEXT NOT NULL)')
-    this.db.exec('CREATE TABLE IF NOT EXISTS identities (id TEXT PRIMARY KEY, digest TEXT NOT NULL)')
+    try {
+      chmodSync(file, 0o600)
+      this.db.exec('PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA busy_timeout=1000;')
+      this.db.exec('CREATE TABLE IF NOT EXISTS scopes (id TEXT PRIMARY KEY, state TEXT NOT NULL)')
+      this.db.exec('CREATE TABLE IF NOT EXISTS handles (id TEXT PRIMARY KEY, data TEXT NOT NULL)')
+      this.db.exec('CREATE TABLE IF NOT EXISTS identities (id TEXT PRIMARY KEY, digest TEXT NOT NULL)')
+    } catch (error) { this.db.close(); throw error }
   }
   snapshot(scope) {
     const row = this.db.prepare('SELECT state FROM scopes WHERE id=?').get(scope)
