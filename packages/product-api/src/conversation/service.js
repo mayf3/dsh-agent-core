@@ -29,7 +29,6 @@ export function createConversationService({ router, definition, storeFile, confi
   let store, closed = false
   const ensureStore = () => { if (!store) store = new ConversationStore(storeFile,now); return store }
   const reconcile = async row => {
-    if (row.reply_status === 'available' || row.result_persisted_at !== null) return row
     const native=originalNativeProof(row,router)
     const retainFacts=fields=>{
       if(Object.entries(fields).some(([key,value])=>JSON.stringify(row[key])!==JSON.stringify(value))) {
@@ -38,6 +37,17 @@ export function createConversationService({ router, definition, storeFile, confi
       }
       return row
     }
+    const executionDiagnostic = () => native.facts.error_class ? {
+      class:native.facts.error_class,diagnostic_id:hash([row.key,'execution',native.facts]).slice(0,16),
+      retryable:false,retry_preconditions:['query_original_request_only'],
+    } : native.completed ? null : row.execution_diagnostic??null
+    if(row.reply_status==='available') {
+      // Canonical reply bytes and their TTL are immutable. The original Router
+      // may still settle later; refreshing its facts never clears its fence.
+      const {reply_status,error_class,...executionFacts}=native.facts
+      return retainFacts({...executionFacts,execution_diagnostic:executionDiagnostic()})
+    }
+    if(row.result_persisted_at!==null)return row
     retainFacts(native.facts)
     let source
     try { source=await router.readConversationSource({requestId:row.native_request_id,agentId:row.agent_id}) }
@@ -47,11 +57,12 @@ export function createConversationService({ router, definition, storeFile, confi
     }
     retainFacts({source_read_state:'available'})
     if(native.read_failed)throw fault('UPSTREAM_UNAVAILABLE',503)
-    if(native.facts.error_class)throw fault(native.facts.error_class,503)
-    // A recovered read clears only a transient read error. Native unknown or
-    // failed facts above remain authoritative and cannot be cleared here.
+    if(native.facts.error_class && native.facts.error_class!=='OUTCOME_UNKNOWN')throw fault(native.facts.error_class,503)
+    // A recovered read clears only a transient read error. Original execution
+    // uncertainty remains separate from any exact reply recovered below.
     if(row.error_class==='UPSTREAM_UNAVAILABLE')retainFacts({error_class:null,source_read_state:'available'})
     if (!source || ['pending','not_found'].includes(source.state)) {
+      if(native.facts.error_class)throw fault(native.facts.error_class,503)
       if(native.completed){
         retainFacts({request_status:'accepted',execution_status:'completed',reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
         throw fault('RESULT_UNRECOVERABLE',503)
@@ -62,7 +73,9 @@ export function createConversationService({ router, definition, storeFile, confi
       return row
     }
     if (source.agent_id !== row.agent_id || (row.message_id !== null && source.message_id !== row.message_id)
-      || !source.message_id || !source.session_generation || source.session_id !== 'main') {
+      || !source.message_id || !source.session_generation || source.session_id !== 'main'
+      || (row.session_generation!==null&&row.session_generation!==source.session_generation)
+      || !Number.isSafeInteger(source.turn_id)) {
       retainFacts({reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
       throw fault('RESULT_UNRECOVERABLE',503)
     }
@@ -70,8 +83,10 @@ export function createConversationService({ router, definition, storeFile, confi
       retainFacts({reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
       throw fault('RESULT_UNRECOVERABLE',503)
     }
-    if (!['completed','failed','interrupted'].includes(source.state)) return row
-    if(native.pending)return row
+    if (!['completed','failed','interrupted'].includes(source.state)) {
+      if(native.facts.error_class)throw fault(native.facts.error_class,503)
+      return row
+    }
     const safeText=typeof source.reply_body==='string'?redactInspectionText(source.reply_body):null
     const noVisible=safeText===''||source.reply_coverage?.reason==='no_visible_reply'
     const coverage=source.reply_coverage??{selection:'last_nonempty_visible_assistant_message',limit_bytes:1048576,
@@ -80,7 +95,8 @@ export function createConversationService({ router, definition, storeFile, confi
       const committed=ensureStore().update(row.key,current=>{
         if(current.result_persisted_at!==null)return
         current.request_status='accepted'
-        current.execution_status=source.state
+        current.execution_status=native.facts.execution_status??(source.state==='completed'?current.execution_status:source.state)
+        current.execution_diagnostic=executionDiagnostic()
         current.session_id=source.session_id
         current.session_generation=source.session_generation
         current.main_resolution=source.main_resolution??current.main_resolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}
@@ -146,6 +162,7 @@ export function createConversationService({ router, definition, storeFile, confi
       continuation:{session_handle:row.session_generation?sessionHandle(row):null,read_result_request_id:row.request_id,
         followup:{operation:'resolve_agent_target',agent_id:row.agent_id,session_policy:'current_main',resume_original_generation:false,requires_current_authorization:true}},
       reply_coverage:row.reply_coverage??null,native_reconciliation_state:row.native_reconciliation_state??null,
+      execution_diagnostic:row.execution_diagnostic??null,
       native_outcome:row.native_outcome??null,native_termination_evidence:row.native_termination_evidence??null,retention_ms: row.retention_ms, expires_at: row.expires_at ?? null,
       provenance: 'OWNER_REPORT', business_goal_status: 'unknown', redacted: row.redacted ?? false,
       field_availability: Object.fromEntries(unknown.map(key => [key,{status:'unknown',reason:'source_field_not_available'}])),

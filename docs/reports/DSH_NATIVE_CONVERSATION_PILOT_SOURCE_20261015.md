@@ -64,3 +64,11 @@ The first independent review required NC-PILOT-B001/B002/B003; an independently 
 - Authentication: the fixed canonical `/oauth/token` request now uses `redirect: error`, so redirects cannot carry the credential into another path. No new identity, resource, grant, history or scheduling surface was added.
 
 The new counterexamples were executed RED before repair. The bounded Source/regression set and original process-lifecycle set were rerun after the receipt change; exact counts and log hashes are in the appended fix-wave receipt. Full `npm test` was not repeated. Production loading, real Agent/dot acceptance and independent re-audit remain separate gates.
+
+## Exact-source recovery after original execution uncertainty
+
+The `9a7bb1b` re-audit remained OPEN: it reproduced a completed, retained exact native reply being hidden after facade restart because the original Router later reported `terminated_without_outcome`. This is a source-candidate regression repair under CTR-NC-004/005/009, not a new authority or a successful live recovery claim.
+
+After validating the retained source against the original Agent, main generation, user message and native turn, the facade can durably commit and return that reply while preserving `execution_status=interrupted/unknown`, the original native reconciliation/outcome/termination evidence and `business_goal_status=unknown`. `execution_diagnostic` separately contains the classified execution uncertainty, a redacted diagnostic ID, `retryable=false` and `query_original_request_only`; a readable reply returns `status=OK,error=null`. Missing, mismatched or unreadable source still produces an explicit failure before result commit. An already committed canonical reply remains readable without rereading the source.
+
+Subsequent reads/callbacks may refresh only the original operation's execution facts when it naturally settles; reply bytes, message association, projection ID, initial result timestamp and expiry do not change. This never changes the original Router record/fence or sends again. The isolated RED/GREEN tests cover restart recovery, source generation mismatch/EIO denial, original late completion and immutable reply/TTL. Exact candidate coordinates and evidence are appended to the implementation receipt; independent re-audit, production loading and actual dot/Agent acceptance remain separate.
