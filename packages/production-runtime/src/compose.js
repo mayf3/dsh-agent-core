@@ -69,6 +69,7 @@ import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { mountWebsiteInquiryRuntime } from './agent-session/website-inquiry/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -384,6 +385,7 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
+  await mountWebsiteInquiryRuntime({ ctx, config: opts.websiteInquiry, router, definition, workspaceBootstrap })
   const productApiCfg = opts.productApi ?? {}
   mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {

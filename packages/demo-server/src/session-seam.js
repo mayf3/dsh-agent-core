@@ -30,6 +30,7 @@
 import { createConversationSource } from '../../agent-router/src/conversation/source.js'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import { validateWebsiteAdmission } from './website-admission.js'
 
 /** Structured rejection code (cross-workspace session mismatch, R3). */
 export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
@@ -45,7 +46,7 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
  * @returns {{handles:Map, pendingCreations:Map, getOrCreateSession, prompt,
  *   assertSessionCwd}}
  */
-export function createSessionSeam({ ctx, settings, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
+export function createSessionSeam({ ctx, settings, websiteAdmission, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
   const sessionOrigins = new WeakMap()
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
@@ -76,7 +77,7 @@ export function createSessionSeam({ ctx, settings, conversationSource = createCo
    * @param {string|undefined} resolvedCwd - the Router-resolved effective
    *   workspace path for THIS session.
    */
-  async function getOrCreateSession(sessionId, resolvedCwd) {
+  async function getOrCreateSession(sessionId, resolvedCwd, websitePrivate = false) {
     const effectiveCwd = resolvedCwd ?? settings.cwd
     const existing = handles.get(sessionId)
     if (existing !== undefined) {
@@ -149,7 +150,7 @@ export function createSessionSeam({ ctx, settings, conversationSource = createCo
       sessionOrigins.set(handle,{disposition:resumed?'resumed':'created',reason:resumed?'persisted_main_resumed':'main_artifact_absent',
         provenance:'native_session_resolution',generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'})
       handles.set(sessionId, handle)
-      process.stderr.write(
+      if (!websitePrivate) process.stderr.write(
         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
       )
       return handle
@@ -219,9 +220,12 @@ export function createSessionSeam({ ctx, settings, conversationSource = createCo
   }
 
   /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, conversation = undefined) {
+  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, conversation = undefined, websiteCarrier = undefined) {
+    if (conversation !== undefined && websiteCarrier !== undefined) throw new TypeError('mixed product surface admission')
+    const carrier = websiteCarrier === undefined ? undefined : validateWebsiteAdmission(websiteCarrier)
+    if (carrier && (sessionId !== 'main' || messageOrigin !== undefined || typeof websiteAdmission !== 'function')) throw new TypeError('website admission unavailable')
     const wasHot=handles.has(sessionId),wasPending=pendingCreations.has(sessionId)
-    const handle = await getOrCreateSession(sessionId, resolvedCwd)
+    const handle = await getOrCreateSession(sessionId, resolvedCwd, Boolean(carrier))
     const mainResolution=wasHot?{disposition:'hot_reuse',reason:'loaded_main_handle',provenance:'native_session_resolution',
       generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'}
       :{...(sessionOrigins.get(handle)??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}),shared_initialization:wasPending}
@@ -232,6 +236,7 @@ export function createSessionSeam({ ctx, settings, conversationSource = createCo
       if (!conversationSource || Object.keys(conversation).join() !== 'requestId') throw Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})
       retention = conversationSource.reserve({requestId:conversation.requestId,session:handle.agent.session,message,mainResolution})
     }
+    if (carrier) await websiteAdmission(carrier, message, handle.agent.session)
     handle.agent.followup(message)
     return { messageId: message.id, ...(retention ?? {}) }
   }
