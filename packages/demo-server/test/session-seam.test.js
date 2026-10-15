@@ -215,3 +215,21 @@ test('resolved Luna route is identical for session create and restart resume', a
   assert.deepEqual(restarted.calls.resume[0].agentOptions, route)
   assert.deepEqual(restarted.calls.create, [], 'resume never creates a replacement with another route')
 })
+
+test('B003: native source receipts distinguish first artifact creation, persisted resume and hot reuse without inventing reset cause',async()=>{
+  const fake=fakeCtx(),seen=[]
+  const source={reserve(args){seen.push(args);return {sessionGeneration:'fixture-generation',sourceRetentionVersion:1,mainResolution:args.mainResolution}}}
+  const seam=createSessionSeam({ctx:fake,settings:{cwd:WS_A,provider:'fixture',model:'fixture'},conversationSource:source})
+  const created=await seam.prompt('main',[{type:'text',text:'new'}],WS_A,undefined,{requestId:'created'})
+  assert.equal(created.mainResolution.disposition,'created')
+  assert.equal(created.mainResolution.reason,'main_artifact_absent')
+  assert.equal(created.mainResolution.generation_change_reason,null)
+  const hot=await seam.prompt('main',[{type:'text',text:'reuse'}],WS_A,undefined,{requestId:'hot'})
+  assert.equal(hot.mainResolution.disposition,'hot_reuse')
+  const resumedFake=fakeCtx({persisted:new Map([['main',WS_A]])})
+  const resumedSeam=createSessionSeam({ctx:resumedFake,settings:{cwd:WS_A,provider:'fixture',model:'fixture'},conversationSource:source})
+  const resumed=await resumedSeam.prompt('main',[{type:'text',text:'resume'}],WS_A,undefined,{requestId:'resumed'})
+  assert.equal(resumed.mainResolution.disposition,'resumed')
+  assert.equal(resumed.mainResolution.reason,'persisted_main_resumed')
+  assert.equal(seen.length,3)
+})
