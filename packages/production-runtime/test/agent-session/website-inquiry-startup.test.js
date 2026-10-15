@@ -16,7 +16,7 @@ function fixture() {
     registry: [{ binding_id: 'binding', version: '1', enabled: true, site_project_id: 'site', site_owner_id: 'owner', issuer: 'auth-service',
       auth_subject: human.principalId, human_principal_id: human.principalId, communication_scope_id: 'scope',
       pilot_surface: { channel: 'website', external_id: 'pilot', expected_agent_id: 'agt_pilot' },
-      allowed_operations: ['bound_resolve', 'preauthorize', 'own_read', 'own_events'], transport_client_id: 'agent-control-website-inquiry-v1',
+      allowed_operations: ['bound_resolve', 'preauthorize', 'own_read', 'own_events'], transport_client_id: 'synthetic-opaque-service.42',
       transport_principal_id: '00000000-0000-4000-8000-000000000002', exact_web_origin: 'https://synthetic.example' }] }
   writeFileSync(keyFile, Buffer.alloc(32, 7), { mode: 0o600 })
   const save = () => writeFileSync(configFile, JSON.stringify(config), { mode: 0o600 })
