@@ -36,7 +36,7 @@ export async function authenticate({ authorization, config, operation, fetchImpl
   if (!credential) throw fault('INVALID_CREDENTIAL', 401)
   let response, body
   try {
-    response = await fetchImpl(config.authServiceOrigin + '/oauth/token', { method: 'POST', headers: {
+    response = await fetchImpl(config.authServiceOrigin + '/oauth/token', { method: 'POST', redirect:'error', headers: {
       Authorization: authorization, 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: new URLSearchParams({ grant_type: 'client_credentials', resource: RESOURCE, scope: SCOPE }).toString(), signal: AbortSignal.timeout(15000) })
     body = await response.json()

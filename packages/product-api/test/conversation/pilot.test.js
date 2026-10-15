@@ -193,3 +193,79 @@ test('native turn-end content waits for original Router reconciliation rather th
   f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{agentId:agent,sessionId:'main',messageId:'user-1',outcome:'completed'}})
   assert.equal((await f.service.invoke('result',{request_id:'settlement'},credential)).body.reply_status,'available')
 })
+
+test('B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay',async t=>{
+  const f=await fixture(t),target=await f.resolve()
+  const payload={request_id:'native-unknown',target_handle:target.body.target_handle,message:'original question'}
+  await f.service.invoke('send',payload,credential)
+  const snapshot={agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown'}
+  f.router.getTurnReconciliation=()=>({state:'pending',snapshot})
+  let result=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(result.body.execution_status,'unknown')
+  assert.equal(result.body.reply_status,'unknown')
+  assert.equal(result.body.error.class,'OUTCOME_UNKNOWN')
+  assert.ok(result.body.diagnostic_id)
+  assert.deepEqual(result.body.retry_preconditions,['query_original_request_only'])
+  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{...snapshot,lateOutcome:'terminated_without_outcome',terminationEvidence:'child_real_exit'}})
+  result=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(result.body.execution_status,'interrupted')
+  assert.equal(result.body.native_outcome,'terminated_without_outcome')
+  assert.equal(result.body.message_id,'user-1')
+  f.router.readConversationSource=()=>{throw Object.assign(new Error('/private/secret/source EIO'),{code:'EIO'})}
+  result=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(result.body.error.class,'UPSTREAM_UNAVAILABLE')
+  assert.equal(result.body.execution_status,'interrupted')
+  assert.equal(result.body.request_id,payload.request_id)
+  assert.equal(JSON.stringify(result).includes('/private/secret'),false)
+  await f.service.invoke('send',payload,credential)
+  assert.equal(f.calls.length,1)
+})
+
+test('B002: completed wholly-empty native turn is not an available empty business reply',async t=>{
+  const f=await fixture(t),target=await f.resolve()
+  await f.service.invoke('send',{request_id:'empty-anchor',target_handle:target.body.target_handle,message:'x'},credential)
+  f.finish(f.calls[0],'','usage-only')
+  const result=await f.service.invoke('result',{request_id:'empty-anchor'},credential)
+  assert.notEqual(result.body.reply_status,'available')
+  assert.equal(result.body.error.class,'REPLY_UNAVAILABLE')
+  assert.equal(result.body.reply_coverage.reason,'no_visible_reply')
+})
+
+test('auth redirect rejection keeps the fixed canonical token endpoint and never follows a management target',async t=>{
+  const {createConversationService}=await import('../../src/conversation/service.js')
+  const dir=mkdtempSync(join(tmpdir(),'native-auth-redirect-'))
+  t.after(()=>rmSync(dir,{recursive:true,force:true}))
+  const paths=[],config=pilotConfig()
+  config.authServiceOrigin+='/'
+  const service=createConversationService({router:{onTurnReconciled:()=>()=>{}},definition:{},storeFile:join(dir,'requests.json'),configProvider:()=>config,
+    fetchImpl:async(url,options)=>{
+      paths.push(new URL(url).pathname)
+      if(options.redirect==='error')throw new TypeError('redirect forbidden')
+      paths.push('/forbidden-management')
+      return {ok:true,status:200,json:async()=>({access_token:'fixture',token_type:'Bearer',expires_in:60})}
+    }})
+  t.after(()=>service.close())
+  const result=await service.invoke('resolve',{target:{agent_id:agent}},credential)
+  assert.equal(result.body.error.class,'AUTH_INCONCLUSIVE')
+  assert.deepEqual(paths,['/oauth/token'])
+})
+
+test('B003: retained native main resolution and scoped lawful continuation survive result persistence',async t=>{
+  const f=await fixture(t),target=await f.resolve()
+  await f.service.invoke('send',{request_id:'main-resolution',target_handle:target.body.target_handle,message:'x'},credential)
+  f.finish(f.calls[0],'reply')
+  const source=f.sources.get(f.calls[0])
+  source.main_resolution={disposition:'created',reason:'main_artifact_absent',generation_change_reason:null,
+    generation_change_reason_availability:'unknown_no_native_reset_cause'}
+  const result=await f.service.invoke('result',{request_id:'main-resolution'},credential)
+  assert.equal(result.body.main_resolution.disposition,'created')
+  assert.equal(result.body.main_resolution.generation_change_reason,null)
+  assert.equal(result.body.continuation.session_handle,result.body.session_handle)
+  assert.equal(result.body.continuation.read_result_request_id,'main-resolution')
+  assert.equal(result.body.continuation.followup.resume_original_generation,false)
+  assert.equal(result.body.continuation.followup.requires_current_authorization,true)
+  f.service.close()
+  const reopened=f.make()
+  t.after(()=>reopened.close())
+  assert.deepEqual((await reopened.invoke('result',{request_id:'main-resolution'},credential)).body.main_resolution,result.body.main_resolution)
+})
