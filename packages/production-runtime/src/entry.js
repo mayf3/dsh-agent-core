@@ -54,6 +54,18 @@ function argValue(args, name, fallback) {
  */
 import { applyShutdownResult } from './shutdown-result.js'
 
+// DSH_MCP_NATIVE_CONVERSATION_V1 pilot seam: the conversation mount is wired
+// only when the supervision unit exports the dedicated 0600 auth config path.
+// Absent/empty env = the exact pre-pilot composition (the facade mount is
+// never constructed); a set path pointing at an invalid file leaves the
+// runtime bootable and fails every conversation request NOT_PROVISIONED
+// inside the facade, never at boot.
+export function productApiCompositionFromEnv(env = process.env) {
+  const authConfigFile = env.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE
+  if (typeof authConfigFile !== 'string' || authConfigFile === '') return {}
+  return { productApi: { conversation: { enabled: true, authConfigFile } } }
+}
+
 export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
   const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
   const root = argValue(argv, '--root', undefined)
@@ -70,7 +82,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
+  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, ...productApiCompositionFromEnv(processLike.env ?? process.env) })
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',
