@@ -31,6 +31,12 @@ requested work within active Contract scope = yes
 
 This index is a navigation aid, not a second authority. File frontmatter and explicit supersession links are authoritative. Existing historical Specs are not bulk-rewritten or bulk-indexed during the pilot adoption.
 
+## Website Human bound-Agent inquiry authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [WEBSITE_HUMAN_WORKFLOW_INQUIRY_V1](WEBSITE_HUMAN_WORKFLOW_INQUIRY_V1.md) | accepted by Owner mayf3 on 2026-10-15; reviewed head `cec853e9`; effective after independent final-Head recheck and main merge | contracts after authority-branch merge; production apply none | bounded `BOUND_AGENT_PILOT` through one server-fixed original Router binding, Human intention/original controller separation, exact request-owned result/history/events and no replay; automatic Workflow targeting remains `NOT_SUPPORTED` |
+
 ## Fixed HR maintenance-installation authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |

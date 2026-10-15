@@ -1,10 +1,23 @@
 ---
 spec_id: WEBSITE_HUMAN_WORKFLOW_INQUIRY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
+accepted_date: 2026-10-15
+accepted_by: mayf3
+accepted_at: 2026-10-15T11:02:18Z
+accepted_reviewed_spec_commit: cec853e9163dc99de09abaf3bf806755e50c2d23
+accepted_reviewed_spec_sha256: 9e13ffe2da20af1df48df1c49f7270bad86baba8081ce8ecb3c17796636bf819
+acceptance_source: https://github.com/mayf3/project-progress-desk/pull/7#issuecomment-6190498903
+acceptance_hub_commit: a58f65f99f1523a5b08abd6bd8eedc4f2599d7b6
+acceptance_authority_basis: >-
+  Owner mayf3 explicitly instructed: "确认接受 PR #7（a58f65f）所列四份精确合同及本站计划，按原流程完成最终复核、合并并继续非生产源码实现。新增 Grant、凭据、发布、加载或启用前再给我具体差量确认，其余已授权工作直接推进。"
+  The linked Agent-authored comment faithfully records the human quote; it is not
+  reviewer acceptance. The exact hub commit lists this reviewed Spec commit/hash
+  and its independent ACCEPT recommendation (zero blockers). Final lifecycle-only
+  Head still requires independent recheck before authority-branch merge.
 scope:
   - website Human workflow-facts inquiry to one server-bound Agent pilot through the original controller and Router
   - request-owned durable authorization, native trace, result, history and events
@@ -28,7 +41,7 @@ revision: r2
 
 # WEBSITE_HUMAN_WORKFLOW_INQUIRY_V1
 
-**PROPOSED / DOCS-ONLY / NOT_IMPLEMENTED.** All routes, DTOs and defaults below are author proposals, not existing interfaces or accepted authority. Owner authorization to continue PR7 direction/identity checks and original-contract review permits this document; it does not accept it or authorize new Client/Grant, publication, installation, gate enablement or a production message. `implementation_authority: contracts` takes effect only after independent exact-head review and authorized acceptance in the implementation base. `production_apply_authority: none` remains binding.
+**ACCEPTED / DOCS-ONLY / NOT_IMPLEMENTED.** Owner mayf3 accepted the exact reviewed r2 proposal at `cec853e9163dc99de09abaf3bf806755e50c2d23` (Spec SHA256 `9e13ffe2da20af1df48df1c49f7270bad86baba8081ce8ecb3c17796636bf819`) through the attributable quote and frozen PR7 hub coordinate above. This lifecycle record changes no r2 Contract or Acceptance meaning; the authoring route and §13 output below remain historical r2 authoring coordinates. `implementation_authority: contracts` takes effect only after independent final-Head recheck and authority-branch merge. `production_apply_authority: none` remains binding; new Grant, credentials, publication, loading or enablement require the Owner's later concrete-delta confirmation. No installed capability or live inquiry result is claimed.
 
 ## 1. Goal
 
