@@ -34,6 +34,8 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   const log = { log: value => logs.push(value), warn: value => logs.push(value), error: value => logs.push(value) }
   const proc = new AgentProcess({ agentId: 'agt_pilot', home, workspace, profile: '/synthetic-profile', log, reconciliationStore: reconciliation })
   proc.state = 'READY'
+  // This synthetic child implements the real website mapping/custody seam below.
+  proc.initializeEvidence = { websiteAdmission: { version: 1 } }
   const custody = new WebsiteSourceCustody(home)
   let requestContext
   let sends = 0

@@ -205,6 +205,7 @@ export function apply(ctx) {
           registeredProviders,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
+          websiteAdmission: { version: 1 },
         }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
