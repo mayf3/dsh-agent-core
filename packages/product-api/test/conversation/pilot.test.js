@@ -184,14 +184,31 @@ test('source retained but facade disk write fails: original result can be repair
   assert.equal(f.calls.length,1)
 })
 
-test('native turn-end content waits for original Router reconciliation rather than claiming process completion early',async t=>{
+test('retained exact reply is readable while native execution stays unknown, then refreshes only original execution facts',async t=>{
   const f=await fixture(t),target=await f.resolve()
-  await f.service.invoke('send',{request_id:'settlement',target_handle:target.body.target_handle,message:'x'},credential)
+  const payload={request_id:'settlement',target_handle:target.body.target_handle,message:'x'}
+  await f.service.invoke('send',payload,credential)
   f.finish(f.calls[0],'reply source retained')
-  f.router.getTurnReconciliation=()=>({state:'pending'})
-  assert.equal((await f.service.invoke('result',{request_id:'settlement'},credential)).body.reply_status,'pending')
-  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{agentId:agent,sessionId:'main',messageId:'user-1',outcome:'completed'}})
-  assert.equal((await f.service.invoke('result',{request_id:'settlement'},credential)).body.reply_status,'available')
+  const snapshot=Object.freeze({agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown'})
+  f.router.getTurnReconciliation=()=>({state:'pending',snapshot})
+  const pending=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(pending.body.reply_status,'available')
+  assert.equal(pending.body.execution_status,'unknown')
+  assert.equal(pending.body.native_outcome,'outcome_unknown')
+  assert.equal(pending.body.execution_diagnostic.class,'OUTCOME_UNKNOWN')
+  f.sources.clear()
+  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{...snapshot,lateOutcome:'late_completed'}})
+  const completed=await f.service.invoke('send',payload,credential)
+  assert.equal(completed.body.execution_status,'completed')
+  assert.equal(completed.body.native_outcome,'late_completed')
+  assert.equal(completed.body.execution_diagnostic,null)
+  assert.equal(completed.body.reply_body,pending.body.reply_body)
+  assert.equal(completed.body.reply_message_id,pending.body.reply_message_id)
+  assert.equal(completed.body.expires_at,pending.body.expires_at)
+  assert.equal(completed.body.result_persisted_at,pending.body.result_persisted_at)
+  assert.equal(completed.body.business_goal_status,'unknown')
+  assert.equal(snapshot.initialOutcome,'outcome_unknown')
+  assert.equal(f.calls.length,1)
 })
 
 test('B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay',async t=>{
@@ -273,4 +290,46 @@ test('B003: retained native main resolution and scoped lawful continuation survi
   const reopened=f.make()
   t.after(()=>reopened.close())
   assert.deepEqual((await reopened.invoke('result',{request_id:'main-resolution'},credential)).body.main_resolution,result.body.main_resolution)
+})
+
+test('CTR004 regression: retained exact reply survives facade restart while original execution stays terminated/unknown',async t=>{
+  const f=await fixture(t),target=await f.resolve()
+  const payload={request_id:'source-retained-before-parent-terminal',target_handle:target.body.target_handle,message:'original request'}
+  await f.service.invoke('send',payload,credential)
+  f.finish(f.calls[0],'durably retained business reply','native-reply')
+  const snapshot=Object.freeze({agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown',
+    lateOutcome:'terminated_without_outcome',terminationEvidence:'child_real_exit'})
+  f.router.getTurnReconciliation=()=>({state:'settled',snapshot})
+  const source=f.sources.get(f.calls[0])
+  source.session_generation='other-generation'
+  const mismatch=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(mismatch.body.error.class,'RESULT_UNRECOVERABLE')
+  assert.equal(mismatch.body.reply_body,null)
+  source.session_generation='trajectory:fixture'
+  const readSource=f.router.readConversationSource
+  f.router.readConversationSource=()=>{throw Object.assign(new Error('source unavailable'),{code:'EIO'})}
+  const unreadable=await f.service.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(unreadable.body.error.class,'UPSTREAM_UNAVAILABLE')
+  assert.equal(unreadable.body.reply_body,null)
+  f.router.readConversationSource=readSource
+  f.service.close()
+  const resumed=f.make()
+  t.after(()=>resumed.close())
+  const result=await resumed.invoke('result',{request_id:payload.request_id},credential)
+  assert.equal(result.body.reply_status,'available')
+  assert.equal(result.body.reply_body,'durably retained business reply')
+  assert.equal(result.body.reply_to,'user-1')
+  assert.equal(result.body.relation_source,'native_turn')
+  assert.equal(result.body.execution_status,'interrupted')
+  assert.equal(result.body.native_outcome,'terminated_without_outcome')
+  assert.equal(result.body.native_termination_evidence,'child_real_exit')
+  assert.equal(result.body.business_goal_status,'unknown')
+  assert.equal(result.body.execution_diagnostic.class,'OUTCOME_UNKNOWN')
+  assert.ok(result.body.execution_diagnostic.diagnostic_id)
+  assert.equal(result.body.execution_diagnostic.retryable,false)
+  assert.deepEqual(result.body.execution_diagnostic.retry_preconditions,['query_original_request_only'])
+  assert.equal(snapshot.lateOutcome,'terminated_without_outcome','native UNKNOWN evidence is unchanged')
+  f.sources.clear()
+  assert.equal((await resumed.invoke('send',payload,credential)).body.reply_body,'durably retained business reply')
+  assert.equal(f.calls.length,1)
 })
