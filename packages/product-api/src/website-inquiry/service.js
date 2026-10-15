@@ -39,6 +39,7 @@ export function createInquiryService({ enabled = false, registry, store, router,
     const key = recordKey(caller.principalId, body.request_id)
     const existing = store.snapshot(entry.communication_scope_id).requests[key]
     const same = record => {
+      access(caller, 'read')
       if (authorizationDigest(entry, body, handle.resolution, record.bindingVersion) !== record.shell.payload_digest) fail('REQUEST_CONFLICT')
       return envelope({ status: 200, request: structuredClone(record.shell) })
     }

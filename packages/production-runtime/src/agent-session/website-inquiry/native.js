@@ -10,7 +10,7 @@ export function createWebsiteNative({ router, workspaceBootstrap }) {
       communication_scope_id: record.shell.communication_scope_id, request_id: record.shell.request_id,
       payload_digest: record.shell.payload_digest, site_owner_binding_version: record.bindingVersion }
     const retained = readCustodyProjection(workspaceBootstrap.resolveDshHome(record.shell.trace.agent_id), carrier)
-    if (retained.status !== 'pending' || record.shell.delivery_status !== 'DELIVERED') return retained
+    if (retained.status !== 'pending') return retained
     try { return recoverNativeProjection(workspaceBootstrap, record) } catch { return retained }
   }
   const off = router.onTurnReconciled(() => {

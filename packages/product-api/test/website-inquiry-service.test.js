@@ -110,3 +110,50 @@ test('31-request keyset history, event tail and multibyte body remain stable acr
     assert.equal(Object.keys(f.store.snapshot('scope').requests).length, 33)
   } finally { f.close() }
 })
+
+test('lost admission outcome is durable query-only UNKNOWN; changed scope cannot mint another RID namespace', async () => {
+  const f = fixture()
+  try {
+    let admissions = 0
+    f.native.custodyReady = () => true
+    f.native.admit = async () => { admissions++; throw Error('lost external receipt') }
+    const resolved = await f.service.resolve(f.human, {})
+    const body = { request_id: 'unknown', target_handle: resolved.target_handle, message: 'one intention', purpose: 'workflow_facts', context_refs: [], allow_create_main: false }
+    await f.service.authorize(f.human, body)
+    await f.service.redeem(f.machine, 'unknown', { message: body.message, context_refs: [] })
+    await new Promise(resolve => setImmediate(resolve))
+    assert.equal((await f.service.read(f.human, 'unknown', {})).request.request_status, 'UNKNOWN')
+    await f.service.redeem(f.machine, 'unknown', { message: body.message, context_refs: [] })
+    assert.equal(admissions, 1)
+    f.registry[0].communication_scope_id = 'different-scope'
+    await assert.rejects(f.service.authorize(f.human, body), { code: 'BINDING_CHANGED' })
+    assert.equal(admissions, 1)
+  } finally { f.close() }
+})
+
+test('capacity preserves 10000 tombstones and UNKNOWN instead of reusing old keys', async () => {
+  const f = fixture()
+  try {
+    const resolved = await f.service.resolve(f.human, {})
+    f.store.transaction('scope', state => {
+      for (let i = 0; i < 10000; i++) state.requests[`retained-${i}`] = { request_status: 'UNKNOWN', payload_digest: `retained-${i}` }
+    })
+    await assert.rejects(f.service.authorize(f.human, { request_id: 'new', target_handle: resolved.target_handle,
+      message: 'new', purpose: 'workflow_facts', context_refs: [], allow_create_main: false }), { code: 'RESOURCE_LIMIT' })
+    assert.equal(Object.keys(f.store.snapshot('scope').requests).length, 10000)
+    assert.equal(f.store.snapshot('scope').requests['retained-0'].request_status, 'UNKNOWN')
+  } finally { f.close() }
+})
+
+ test('idempotent authorization requires current own-read without rereading the protected target', async () => {
+  const f = fixture()
+  try {
+    const resolved = await f.service.resolve(f.human, {})
+    const body = { request_id: 'repeat-acl', target_handle: resolved.target_handle, message: 'one', purpose: 'workflow_facts', context_refs: [], allow_create_main: false }
+    await f.service.authorize(f.human, body)
+    const before = { ...f.hits }
+    f.registry[0].allowed_operations = f.registry[0].allowed_operations.filter(op => op !== 'own_read')
+    await assert.rejects(f.service.authorize(f.human, body), { code: 'FORBIDDEN' })
+    assert.deepEqual(f.hits, before)
+  } finally { f.close() }
+})
