@@ -160,6 +160,7 @@ export const turnExecutionMethods = {
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) return lineageError
+    if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
     }
@@ -261,7 +262,7 @@ export const turnExecutionMethods = {
       return
     }
     this.executions.set(handle, execution)
-    if (mode === 'turn') {
+    if (mode === 'turn' || opts?.productSurface === true) {
       const ingress = opts?.ingressContext
       // CTR-CTX-001: identity comes only from this Router-owned process and
       // the handle minted for THIS execution. Copy only the allowlisted
@@ -295,6 +296,7 @@ export const turnExecutionMethods = {
           ms: Date.now() - startedWall,
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
+          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
         })
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise
@@ -313,7 +315,7 @@ export const turnExecutionMethods = {
     } catch (error) {
       this.handleExecutionCallerError(execution, error, reject)
     } finally {
-      if (mode === 'turn') {
+      if (mode === 'turn' || opts?.productSurface === true) {
         // Clear both turn-scoped contexts together before the single-flight
         // queue may install the next turn's values.
         this.activeBindingContext = undefined
@@ -343,6 +345,7 @@ export const turnExecutionMethods = {
       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
+      ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,
@@ -375,6 +378,7 @@ export const turnExecutionMethods = {
           source,
           deadlineAtWallMs: execution.hardDeadlineAt,
           evidence: execution.evidenceSnapshot(),
+          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
         }))
       execution.terminalReject = undefined
     }, Math.max(0, remaining))

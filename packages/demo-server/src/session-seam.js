@@ -27,6 +27,7 @@
  * created with.
  */
 
+import { createConversationSource } from '../../agent-router/src/conversation/source.js'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 
@@ -44,7 +45,7 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
  * @returns {{handles:Map, pendingCreations:Map, getOrCreateSession, prompt,
  *   assertSessionCwd}}
  */
-export function createSessionSeam({ ctx, settings }) {
+export function createSessionSeam({ ctx, settings, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
@@ -215,13 +216,18 @@ export function createSessionSeam({ ctx, settings }) {
   }
 
   /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined) {
+  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, conversation = undefined) {
     const handle = await getOrCreateSession(sessionId, resolvedCwd)
     const source = validateMessageOrigin(messageOrigin)
     const message = createUserMessage({ content: contentBlocks, source })
+    let retention
+    if (conversation !== undefined) {
+      if (!conversationSource || Object.keys(conversation).join() !== 'requestId') throw Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})
+      retention = conversationSource.reserve({requestId:conversation.requestId,session:handle.agent.session,message})
+    }
     handle.agent.followup(message)
-    return { messageId: message.id }
+    return { messageId: message.id, ...(retention ?? {}) }
   }
 
-  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin }
+  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin, conversationSource }
 }
