@@ -6,7 +6,7 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-10-15
-revision: r1
+revision: r2
 scope:
   - authenticated MCP product-surface conversation facade inside the existing DSH runtime
   - principal-scoped request reservation, exact native reply result and resumable event projection
@@ -59,7 +59,7 @@ EVD-001：OBS-003..008 SUPPORTS CLM-001，在上述两个exact源码revision上�
 
 DEC-001（待Owner接受）：使用现有runtime内的受鉴权Product Surface facade复用Router内部primitive，MCP仅薄适配；不把MCP冒充真实Agent/source turn，也不扩大Notification caller名单。
 
-DEC-002（待Owner接受）：DSH journal保持内容权威。持久请求记录仅保存主体/范围/request_id、规范payload digest、native坐标、分维状态、正文/产物引用和增量序号；可保存有界immutable回复投影以跨journal换代补取，但它是request-owned结果产物，禁止变成第二聊天库或查询未经授权历史。
+DEC-002（待Owner接受）：DSH journal保持内容权威。持久请求记录仅保存主体/范围/request_id、规范payload digest、native坐标、分维状态、正文/产物引用和增量序号；回复可读前必须提交有界immutable回复投影或同等retention的受控产物，以跨journal换代补取。它是request-owned结果产物，禁止变成第二聊天库或查询未经授权历史。
 
 DEC-003（待Owner接受）：pilot默认current main且只读自己请求关联内容；完整main历史、新fresh/归档上下文是独立read授权。若fresh没有合法接续能力，则明确NOT_SUPPORTED，不先建再要求换入口。既存UNKNOWN不换会话或入口重发。
 
@@ -69,13 +69,15 @@ DEC-003（待Owner接受）：pilot默认current main且只读自己请求关联
 
 服务MUST从现有connector的server-side身份映射取得原subject及通信scope；凭据只经原安全文件引用/短命服务端获取，不在模型参数、响应或日志。DSH facade MUST独立验证resource/audience、subject与operation/target/session范围。MCP登录成功、workflow reader或单纯loopback访问均不是该权限。默认OFF、没有完整绑定时零目标读取/零Router调用；不得公开本机接口。
 
-每次调用MUST按当前授权复核；target/session/cursor/request handle不是bearer授权。失败返回脱敏diagnostic_id及错误分类，不泄露不存在/越权目标的正文、会话路径或身份映射。最窄pilot只授resolve、send、own-result/own-events给一个已验证BIP；不得因其是业务Owner自动开放其他Workflow详情或全main正文。
+每次调用MUST按当前授权复核；target/session/cursor/request handle不是bearer授权。失败返回脱敏diagnostic_id及错误分类，不泄露不存在/越权目标的正文、会话路径或身份映射。最窄pilot只授resolve、send、own-result/own-events给一个已验证BIP；不得因其是业务Owner自动开放其他Workflow详情或全main正文。返回正文/ref沿现有输出安全策略脱敏，redaction显式；投影hash绑定实际返回bytes，与native source hash分列，不返回内部推理或凭据。
 
 ### CTR-NC-002 — Resolve, main and concurrency
 
 resolve输入恰一种canonical agent_id或workflow_instance_id，禁止显示名模糊匹配。MUST核Agent↔principal/domain唯一映射；Workflow Owner、node assignee、domain Owner分列，合法source无字段则unknown，404不可分存在/可见时不猜负责人。只在合法数据源可见范围生成opaque target_handle，绑定主体/scope/目标/路由版本。解析只读，不选择或切换共享surface Binding。
 
-send只接handle；runtime MUST复用原Router准入、单AgentProcess、队列/并发/冲突控制，默认main。MCP不得提交sessionId/sourceAgent/sourceTurn/路径/URL；native call身份与provenance由trusted facade派生。main首次创建/换代原因、session generation和合法后续handle必须返回；没有授权续读的旧代不能悄悄切换。fresh/历史session初版明确不支持，只有获准且有合法continuation合同后才能声明可用。任何询问不直接调用Workflow变更。
+send只接handle；runtime MUST复用原Router准入、单AgentProcess、队列/并发/冲突控制，默认main。每个允许目标使用Owner经原Router流程预置的专用Product Surface Binding；MCP不传surfaceId，resolve/send核绑定Agent与handle一致，缺失/不一致即拒绝且不自动switch。该Binding与手机/其他原surface分离，Router仍唯一拥有它；没有Binding的target不能绕过Binding直接当human发送。
+
+MCP不得提交sessionId/sourceAgent/sourceTurn/路径/URL；native call身份与human/product-surface provenance由trusted facade派生，不伪装inter_agent。main首次创建/换代原因、session generation和合法后续handle必须返回；没有授权续读的旧代不能悄悄切换。fresh/历史session初版明确不支持，只有获准且有合法continuation合同后才能声明可用。任何询问不直接调用Workflow变更。
 
 ### CTR-NC-003 — Durable admission and idempotency
 
@@ -87,7 +89,7 @@ send MUST在Router副作用前，持久reserve `(subject_id, communication_scope
 
 成功receipt MUST持久绑定原request到native `Agent ID + SessionRef/generation + request messageId` 及native turn/reconciliation坐标。回复MUST按同native turn/原message坐标精确关联；禁止同群/同session/时间邻近/文本相似匹配。reply_to若由native turn关系投影生成，须标 `relation_source=native_turn` 并分列原native parent_id，不能伪称源消息本有parent。
 
-在admission前注册原runtime协调观察，复用 `onTurnReconciled` 并在重启补扫有界本主体request坐标。回复出现后MUST自动提交request-owned的可补取result/body ref与事件，之后才声明reply available；不能另起任务导出答案。只有hash/bytes而无可读正文/ref时reply_status不可available。持久化失败标RESULT_PERSIST_FAILED、执行/回复状态分别保留，只经正式exact reader修复原result，不send。结果正文/ref按授权读取；journal路径永不传给MCP。
+在admission前注册原runtime协调观察，复用 `onTurnReconciled` 并在重启补扫有界本主体request坐标。回复出现后MUST自动提交request-owned的可补取result/body ref与事件，之后才声明reply available；不能另起任务导出答案。只有hash/bytes而无可读正文/ref时reply_status不可available。持久化失败标RESULT_PERSIST_FAILED、执行/回复状态分别保留，只经正式exact reader修复原result，不send。结果正文/ref按授权读取；journal路径永不传给MCP。正文/ref保留期须在启动配置和结果中明示，未配置则disabled；保留期内重启、main换代或reset不使结果消失，期满明确RESULT_EXPIRED且不删除幂等tombstone。未完成/UNKNOWN请求不得因保留期删除。
 
 ### CTR-NC-005 — Result envelope and errors
 
