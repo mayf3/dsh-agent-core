@@ -76,6 +76,7 @@ import { BindingStore } from './binding-store.js'
 import { createProcessRegistry } from './process-registry.js'
 import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
+import { createProductSurfaceConversation } from './conversation/surface.js'
 import { createIngressDelivery } from './ingress-delivery.js'
 import { createWebsiteInquiryAdmission } from './website-inquiry-admission.js'
 import { channelConversationId } from './channel-conversation.js'
@@ -191,7 +192,7 @@ export function apply(ctx, config) {
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
   const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
-  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup })
+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })
   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
     ? cfg.resolveProcessConfig
     : () => ({})
@@ -316,6 +317,7 @@ export function apply(ctx, config) {
   ctx.effect(() => () => registry.dispose())
 
   const service = {
+    ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
     pluginName: name,
     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
     resolveChannelConversation: bindingResolution.resolveChannelConversation,

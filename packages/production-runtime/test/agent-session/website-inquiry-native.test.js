@@ -8,17 +8,17 @@ test('real native message allocation remains user and durable mapping must finis
   const services = { loader: { await: async () => {} }, agentLoop: {}, sessionPersistence: { list: async () => [] },
     agents: { create: async () => ({ agent }) } }
   const carrier = { namespace: 'website-human-inquiry-v1', human_principal_id: 'human', communication_scope_id: 'scope', request_id: 'rid', payload_digest: 'a'.repeat(64), site_owner_binding_version: 'v1' }
-  const seam = createSessionSeam({ ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' },
+  const seam = createSessionSeam({ conversationSource: null, ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' },
     websiteAdmission: async (value, message) => { calls.push(['map', message.id]); assert.deepEqual(value, carrier) } })
-  const receipt = await seam.prompt('main', [{ type: 'text', text: 'hello' }], '/synthetic', undefined, carrier)
+  const receipt = await seam.prompt('main', [{ type: 'text', text: 'hello' }], '/synthetic', undefined, undefined, carrier)
   assert.equal(calls[0][0], 'map')
   assert.equal(calls[1][0], 'followup')
   assert.equal(calls[0][1], receipt.messageId)
   assert.deepEqual(calls[1][1].source, { kind: 'user' })
   assert.equal(Object.hasOwn(calls[1][1], 'website_request'), false)
   services.agents.create = async () => ({ agent })
-  const failing = createSessionSeam({ ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' }, websiteAdmission: async () => { throw Error('durability failed') } })
-  await assert.rejects(failing.prompt('main', [{ type: 'text', text: 'hello' }], '/synthetic', undefined, carrier))
+  const failing = createSessionSeam({ conversationSource: null, ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' }, websiteAdmission: async () => { throw Error('durability failed') } })
+  await assert.rejects(failing.prompt('main', [{ type: 'text', text: 'hello' }], '/synthetic', undefined, undefined, carrier))
   assert.equal(calls.filter(([kind]) => kind === 'followup').length, 1)
 })
 
@@ -88,4 +88,16 @@ test('source owner retains exact completed final after observer loss and restart
   const error = Object.assign(Error('/private/agent_home/token-secret'), { code: 'ENOENT' })
   assert.deepEqual(nativePromptError('session/prompt', { websiteAdmission: {} }, error), { code: -32603, message: 'WEBSITE_NATIVE_ADMISSION_FAILED' })
   assert.deepEqual(nativePromptError('session/prompt', {}, error), { code: 'ENOENT', message: error.message })
+})
+
+ test('MCP fifth carrier and website sixth carrier cannot share one native admission', async () => {
+  let effects = 0
+  const carrier = { namespace: 'website-human-inquiry-v1', human_principal_id: 'human', communication_scope_id: 'scope', request_id: 'rid', payload_digest: 'a'.repeat(64), site_owner_binding_version: '1' }
+  const agent = { session: { header: { cwd: '/synthetic' }, seq: 0 }, followup() { effects++ } }
+  const services = { loader: { await: async () => {} }, agentLoop: {}, sessionPersistence: { list: async () => [] },
+    agents: { create: async () => { effects++; return { agent } } } }
+  const seam = createSessionSeam({ ctx: { get: name => services[name] }, settings: { cwd: '/synthetic' },
+    websiteAdmission: async () => { effects++ }, conversationSource: { reserve() { effects++; return {} } } })
+  await assert.rejects(seam.prompt('main', [{ type: 'text', text: 'mixed' }], '/synthetic', undefined, { requestId: 'mcp' }, carrier), /mixed product surface admission/)
+  assert.equal(effects, 0)
 })
