@@ -90,9 +90,7 @@ export const apply = (ctx, config) => {
     description:
       'Switch the current conversation to another Agent. Use when the user asks to talk to a different agent ' +
       '("叫 Agent B 来", "换回论文导师", "let me talk to the research director"). ' +
-      'First query agent_definition_read(operation=list) to find the real target; do not invent roles or IDs. ' +
-      'Use the returned canonical id of the unambiguous enabled target, and ask the user when ambiguous. ' +
-      'Only report a successful switch after this tool succeeds. The next message in this conversation goes to that Agent.',
+      'targetAgentId is the target Agent\'s id or display name. The next message in this conversation goes to that Agent.',
     parameters: {
       targetAgentId: {
         type: 'string',

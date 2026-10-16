@@ -26,15 +26,7 @@
  *                        AGENT_CORE_CREDENTIALS_FILE, BROKER_AUTH_ORIGIN,
  *                        DSH_AGENT_CHILD_UID/GID, DSH_AGENT_SPAWN_HELPER —
  *                        the TRUSTED_CP seam: hardening lands by setting env
- *                        here, not by changing runtime code — and
- *                        DSH_AGENTS_HOME: the DeepSeek Harness skill-
- *                        filesystem resolves its shared user skill root as
- *                        config.agentsHome ?? $DSH_AGENTS_HOME ?? ~/.agents,
- *                        so the deploying lifecycle sets it to the canonical
- *                        shared skills home at install time; per-agent DSH
- *                        homes are unaffected because the runtime passes the
- *                        configured agentsHome to workspace-bootstrap, whose
- *                        configured root outranks this env var)
+ *                        here, not by changing runtime code)
  *   Standard{Out,Error}  <root>/logs/runtime{,.err}.log
  *
  * TARGET SELECTION (PRODUCTION_INTEGRATION_V1, Task 2): the production
@@ -80,21 +72,6 @@ const RUNTIME_SCRIPT = join(REPO, 'scripts', 'production-runtime.mjs')
 /** Default trusted install root (matches trusted-cp-deploy-install.sh). */
 const DEFAULT_TRUSTED_ROOT = '/usr/local/libexec/agent-core'
 
-/**
- * Frozen scheduler verifier seam emitted into EVERY rendered plist. The
- * runtime derives schedulerTokenVerifier from exactly this triple
- * (packages/production-runtime/src/scheduler/history-runtime.js, R8 gate:
- * partial config stays unconfigured and fail-closed); `scheduler` is the one
- * audience Minimal Auth V1 registers with scheduler.admin/scheduler.audit.
- */
-const FROZEN_SCHEDULER_AUTH = Object.freeze({
-  jwksUrl: 'http://127.0.0.1:4001/.well-known/jwks.json',
-  issuer: 'auth-service',
-  audience: 'scheduler',
-})
-
-export { FROZEN_SCHEDULER_AUTH }
-
 /** Env vars forwarded from the installing shell into the plist when set. */
 const PASS_THROUGH_ENV = [
   'FEISHU_CREDS_PATH',
@@ -115,13 +92,6 @@ const PASS_THROUGH_ENV = [
   'DSH_AGENT_CHILD_UID',
   'DSH_AGENT_CHILD_GID',
   'DSH_AGENT_SPAWN_HELPER',
-  // Shared skill root for the DeepSeek Harness skill-filesystem
-  // (config.agentsHome ?? $DSH_AGENTS_HOME ?? ~/.agents). Forwarded only when
-  // set at install time — the deploying lifecycle owns the canonical value;
-  // nothing is hardcoded here. Per-agent DSH-home resolution is unaffected:
-  // the runtime gives workspace-bootstrap a configured agentsHome, which
-  // outranks this env var.
-  'DSH_AGENTS_HOME',
 ]
 
 function argValue(args, name, fallback) {
@@ -171,19 +141,6 @@ export function renderPlist({ root, label, nodeBin, harness, runtimeScript = RUN
     `    <key>DSH_HARNESS_ROOT</key><string>${xmlEscape(harness)}</string>`,
     `    <key>HOME</key><string>${xmlEscape(homedir())}</string>`,
     '    <key>PATH</key><string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>',
-    // FROZEN scheduler verifier seam (AGENT_CORE_SCHEDULER_RUN_HISTORY_V1 R8:
-    // the verifier exists only when the full auth triple is configured, and a
-    // partial or wrong audience fails closed). These three values are
-    // deployment-frozen facts of the production authsvc, deliberately NOT
-    // installer-shell pass-throughs: a hand-edited or pass-through value that
-    // regressed to an audience outside Minimal Auth V1 (Product #425 incident,
-    // 2026-10-02: SCHEDULER_AUTH_AUDIENCE=agent-platform) silently 401s every
-    // scheduler-token surface, including the accepted admin turn-abandonment
-    // entry (AGENT_PROCESS_ADMIN_TURN_ABANDONMENT_V1 C1). Regeneration always
-    // emits the correct triple; the focused test pins it.
-    `    <key>SCHEDULER_AUTH_JWKS_URL</key><string>${xmlEscape(FROZEN_SCHEDULER_AUTH.jwksUrl)}</string>`,
-    `    <key>SCHEDULER_AUTH_ISSUER</key><string>${xmlEscape(FROZEN_SCHEDULER_AUTH.issuer)}</string>`,
-    `    <key>SCHEDULER_AUTH_AUDIENCE</key><string>${xmlEscape(FROZEN_SCHEDULER_AUTH.audience)}</string>`,
   ]
   for (const name of PASS_THROUGH_ENV) {
     if (process.env[name] !== undefined && process.env[name] !== '') {

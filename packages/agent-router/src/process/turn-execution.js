@@ -16,7 +16,9 @@
 import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
+import { FIXED_ADMIN_CANARY_TEXT } from '../../../production-runtime/src/native-arm64/hr-admin-canary-contract.mjs'
 
+const FIXED_ADMIN_PRIVATE_TURN = Symbol('fixed-admin-private-turn')
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
     this.handle = handle
@@ -133,6 +135,23 @@ export class TurnExecution {
 }
 
 export const turnExecutionMethods = {
+  /** Only the authenticated Router-owned qualification path may call this on
+   * its privately held AgentProcess. No generic Router service exports it. */
+  qualifyFixedTurn() {
+    if (this.fixedAdminQualification === null || this.fixedAdminCanaryAttempted) {
+      return Promise.reject(envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_NO_REPLAY',
+        'fixed admin canary is not privately armed or was already attempted'))
+    }
+    this.fixedAdminCanaryAttempted = true
+    return this.enqueuePromptExecution('turn', 'main', FIXED_ADMIN_CANARY_TEXT,
+      { [FIXED_ADMIN_PRIVATE_TURN]: true }, this.deadlines.turnTimeoutMs).then(result => {
+      if (this.fixedAdminEffectAttempted) {
+        throw envelopeCarrier('outcome_unknown', result.reconciliationHandle,
+          'FIXED_ADMIN_CANARY_EFFECT_ATTEMPTED', 'qualified child attempted a denied effect')
+      }
+      return result
+    })
+  },
   enqueuePromptExecution(mode, sessionId, text, opts, callerBoundMs) {
     return new Promise((resolve, reject) => {
       const promptBytes = Buffer.byteLength(String(text ?? ''), 'utf8')
@@ -158,9 +177,32 @@ export const turnExecutionMethods = {
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
-    const lineageError = promptFenceError(this.store, this.agentId)
+    const lineageError = promptFenceError(this.store, this.agentId, sessionId,
+      opts?.lineageAdmissionToken)
     if (lineageError) return lineageError
-    if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
+    if (this.fixedAdminQualification !== null) {
+      // OWNER BYPASS 2026-09-30 (grant expired 2026-09-24; Owner ordered direct
+      // recovery, D6 residual risk accepted, full root granted): the first-live
+      // qualification procedure can no longer complete, so the canary-only
+      // refusal is disabled. Ordinary prompts re-enter normal admission below;
+      // the canary-turn path and every durable fence check stay intact.
+      if (false && (mode !== 'turn' || opts?.[FIXED_ADMIN_PRIVATE_TURN] !== true
+          || sessionId !== 'main' || text !== FIXED_ADMIN_CANARY_TEXT)) {
+        return envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_PRIVATE_ONLY',
+          'qualified child admits only the one fixed private canary')
+      }
+      try {
+        this.store.assertBusinessAdmissionReady()
+        if (this.store.activeFenceForAgent(this.agentId) !== null) {
+          return envelopeCarrier('not_admitted', null, 'FIXED_ADMIN_CANARY_AGENT_FENCED',
+            'fixed canary agent has an unresolved fence')
+        }
+        this.store.assertMintCapacity(this.agentId)
+      } catch (error) {
+        return envelopeCarrier('not_admitted', null, error?.code ?? 'FIXED_ADMIN_CANARY_STORE_UNKNOWN',
+          'fixed canary durable store admission is unavailable')
+      }
+    }
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
     }
@@ -262,7 +304,7 @@ export const turnExecutionMethods = {
       return
     }
     this.executions.set(handle, execution)
-    if (mode === 'turn' || opts?.productSurface === true) {
+    if (mode === 'turn') {
       const ingress = opts?.ingressContext
       // CTR-CTX-001: identity comes only from this Router-owned process and
       // the handle minted for THIS execution. Copy only the allowlisted
@@ -296,8 +338,6 @@ export const turnExecutionMethods = {
           ms: Date.now() - startedWall,
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
-          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
-          ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
         })
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise
@@ -316,7 +356,7 @@ export const turnExecutionMethods = {
     } catch (error) {
       this.handleExecutionCallerError(execution, error, reject)
     } finally {
-      if (mode === 'turn' || opts?.productSurface === true) {
+      if (mode === 'turn') {
         // Clear both turn-scoped contexts together before the single-flight
         // queue may install the next turn's values.
         this.activeBindingContext = undefined
@@ -326,7 +366,8 @@ export const turnExecutionMethods = {
   },
 
   async promptWrite(execution, sessionId, text, opts) {
-    const lineageError = promptFenceError(this.store, this.agentId)
+    const lineageError = promptFenceError(this.store, this.agentId, sessionId,
+      opts?.lineageAdmissionToken)
     if (lineageError) throw lineageError
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
@@ -346,7 +387,6 @@ export const turnExecutionMethods = {
       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
-      ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,

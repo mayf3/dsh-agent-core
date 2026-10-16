@@ -26,7 +26,6 @@ export const TRUSTED_TERMINATION_EVIDENCE = new Set([
   'exact_queued_removal',
   'child_real_exit',
   'cancellation_ack',
-  'restart_quiescence_proven',
 ])
 
 export const hasTerminationProof = (outcome) => TRUSTED_TERMINATION_EVIDENCE.has(
@@ -177,18 +176,7 @@ export async function applyTerminationSettlement(record, proof) {
       latest.fences = rebuildFences(latest.occurrences)
       current.terminationSettlement.fenceAfter = latest.fences[current.jobId] !== undefined
       job.state = deriveJobStateSummary(job, latest.occurrences.filter((entry) => entry.jobId === job.id), now)
-      return {
-        value: {
-          committed: true,
-          // C11-R3 (Product #426 Owner usability invariant): the auditable
-          // receipt rides the evidence line — the settlement NEVER replays
-          // the occurrence, states its schedule disposition, and records the
-          // recomputed future-natural next run (recovery is automatic; no
-          // prompt/run-now/manual toggle).
-          scheduleDisposition: current.terminationSettlement.scheduleDisposition,
-          nextRunAtMsAfter: job.state?.nextRunAtMs ?? null,
-        },
-      }
+      return { value: { committed: true } }
     })
     this.doc = doc
     committed = value?.committed === true
@@ -201,9 +189,6 @@ export async function applyTerminationSettlement(record, proof) {
         basis: 'engine-trusted-readback',
         evidenceKind: proof.evidenceKind,
         kind: 'terminated_without_outcome',
-        replayOccurrence: false,
-        scheduleDisposition: value.scheduleDisposition,
-        nextRunAtMsAfter: value.nextRunAtMsAfter,
       })
     }
   } catch (error) {

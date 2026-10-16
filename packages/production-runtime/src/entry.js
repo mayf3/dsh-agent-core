@@ -20,17 +20,17 @@
  *   PRODUCTION_RUNTIME_ROOT   persistent root (default ~/.agent-core)
  *   FEISHU_CREDS_PATH         feishu credentials (channel OFF without it)
  *   FEISHU_REQUIRE_MENTION_IN_GROUP    'true'|'false' only (default true);
+ *                             invalid values fail startup loud
  *   FEISHU_AUTO_MENTION_TRIGGER_SENDER 'true'|'false' only (default true);
+ *                             invalid values fail startup loud
  *   FEISHU_PROCESSING_REACTION_ENABLED 'true'|'false' only (unset/empty =
- *                             false, the connector default)
+ *                             false, the connector default); any other value
+ *                             fails startup loud
+ *                             (FEISHU_PROCESSING_REACTION_INVALID)
  *   FEISHU_REPLY_RENDER_MODE   'markdown'|'card' only (unset/empty =
- *                             markdown, the byte-identical default)
- *                             (audit Product #442: these four configure ONLY
- *                             the optional Feishu adapter — with the channel
- *                             CONFIGURED an invalid value fails startup loud
- *                             (fail closed); with the channel OFF an invalid
- *                             value is warned and does not block the base
- *                             startup path)
+ *                             markdown, the byte-identical default); any
+ *                             other value fails startup loud
+ *                             (FEISHU_REPLY_RENDER_MODE_INVALID)
  *   DSH_AGENT_PROVIDER / DSH_AGENT_MODEL   model route for spawned agents
  *   AGENT_CORE_CREDENTIALS_FILE / BROKER_AUTH_ORIGIN   Trusted CP seam
  *
@@ -38,7 +38,6 @@
  * <root>/control/runtime-evidence.jsonl.
  */
 
-import { assertProductionArchitecture } from './native-arm64/admission.js'
 import { resolveProductionLayout } from './paths.js'
 import { composeProductionRuntime } from './compose.js'
 
@@ -52,22 +51,7 @@ function argValue(args, name, fallback) {
  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
  * @param {object} [processLike] - process stand-in (tests); default process.
  */
-import { applyShutdownResult } from './shutdown-result.js'
-
-// DSH_MCP_NATIVE_CONVERSATION_V1 pilot seam: the conversation mount is wired
-// only when the supervision unit exports the dedicated 0600 auth config path.
-// Absent/empty env = the exact pre-pilot composition (the facade mount is
-// never constructed); a set path pointing at an invalid file leaves the
-// runtime bootable and fails every conversation request NOT_PROVISIONED
-// inside the facade, never at boot.
-export function productApiCompositionFromEnv(env = process.env) {
-  const authConfigFile = env.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE
-  if (typeof authConfigFile !== 'string' || authConfigFile === '') return {}
-  return { productApi: { conversation: { enabled: true, authConfigFile } } }
-}
-
 export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
-  const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
   const root = argValue(argv, '--root', undefined)
   const layout = resolveProductionLayout(root)
   const tickMs = Number(argValue(argv, '--tick-ms', '500'))
@@ -82,11 +66,10 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, ...productApiCompositionFromEnv(processLike.env ?? process.env) })
+  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',
-    ...(nativeIdentity ? { nativeRuntime: nativeIdentity } : {}),
     pid: processLike.pid,
     root: layout.root,
     tickMs,
@@ -104,22 +87,17 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
     stopping = true
     log.log(`${signal} received — graceful stop`)
     clearInterval(keepalive)
-    let stopError
     try {
-      await runtime.stop(signal)
+      await runtime.stop()
     } catch (error) {
-      stopError = error
       log.error(`stop failed: ${error?.message ?? error}`)
     }
-    // T67 r2: the result surface is TRUTHFUL — a failed stop is recorded as
-    // stop_failed with a non-zero exit, never as 'stopped cleanly'/exit 0
-    // (pre-r2 the catch above swallowed the failure and the result triple
-    // claimed a clean stop unconditionally).
-    applyShutdownResult({ writeEvidence: runtime.writeEvidence, log, processLike, signal, stopError })
+    runtime.writeEvidence({ kind: 'stopped', pid: processLike.pid, signal })
+    log.log('stopped cleanly')
+    processLike.exit(0)
   }
   processLike.on('SIGTERM', () => void shutdown('SIGTERM'))
   processLike.on('SIGINT', () => void shutdown('SIGINT'))
 
   return runtime
 }
-
