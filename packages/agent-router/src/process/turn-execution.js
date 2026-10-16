@@ -180,6 +180,7 @@ export const turnExecutionMethods = {
     const lineageError = promptFenceError(this.store, this.agentId, sessionId,
       opts?.lineageAdmissionToken)
     if (lineageError) return lineageError
+    if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
     if (this.fixedAdminQualification !== null) {
       // OWNER BYPASS 2026-09-30 (grant expired 2026-09-24; Owner ordered direct
       // recovery, D6 residual risk accepted, full root granted): the first-live
@@ -304,7 +305,7 @@ export const turnExecutionMethods = {
       return
     }
     this.executions.set(handle, execution)
-    if (mode === 'turn') {
+    if (mode === 'turn' || opts?.productSurface === true) {
       const ingress = opts?.ingressContext
       // CTR-CTX-001: identity comes only from this Router-owned process and
       // the handle minted for THIS execution. Copy only the allowlisted
@@ -338,6 +339,8 @@ export const turnExecutionMethods = {
           ms: Date.now() - startedWall,
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
+          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
+          ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
         })
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise
@@ -356,7 +359,7 @@ export const turnExecutionMethods = {
     } catch (error) {
       this.handleExecutionCallerError(execution, error, reject)
     } finally {
-      if (mode === 'turn') {
+      if (mode === 'turn' || opts?.productSurface === true) {
         // Clear both turn-scoped contexts together before the single-flight
         // queue may install the next turn's values.
         this.activeBindingContext = undefined
@@ -387,6 +390,7 @@ export const turnExecutionMethods = {
       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
+      ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,

@@ -27,6 +27,7 @@
  * created with.
  */
 
+import { createConversationSource } from '../../agent-router/src/conversation/source.js'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 
@@ -44,7 +45,8 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
  * @returns {{handles:Map, pendingCreations:Map, getOrCreateSession, prompt,
  *   assertSessionCwd}}
  */
-export function createSessionSeam({ ctx, settings }) {
+export function createSessionSeam({ ctx, settings, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
+  const sessionOrigins = new WeakMap()
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
@@ -144,6 +146,8 @@ export function createSessionSeam({ ctx, settings }) {
         // into the new session's header at create time.
         handle = await agents.create({ sessionId: id, meta: { cwd: effectiveCwd }, agentOptions })
       }
+      sessionOrigins.set(handle,{disposition:resumed?'resumed':'created',reason:resumed?'persisted_main_resumed':'main_artifact_absent',
+        provenance:'native_session_resolution',generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'})
       handles.set(sessionId, handle)
       process.stderr.write(
         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
@@ -188,13 +192,22 @@ export function createSessionSeam({ ctx, settings }) {
   }
 
   /** Queue one user prompt on a session, creating or resuming it first. */
-  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined) {
+  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, conversation = undefined) {
+    const wasHot=handles.has(sessionId),wasPending=pendingCreations.has(sessionId)
     const handle = await getOrCreateSession(sessionId, resolvedCwd)
+    const mainResolution=wasHot?{disposition:'hot_reuse',reason:'loaded_main_handle',provenance:'native_session_resolution',
+      generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'}
+      :{...(sessionOrigins.get(handle)??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}),shared_initialization:wasPending}
     const source = validateMessageOrigin(messageOrigin)
     const message = createUserMessage({ content: contentBlocks, source })
+    let retention
+    if (conversation !== undefined) {
+      if (!conversationSource || Object.keys(conversation).join() !== 'requestId') throw Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})
+      retention = conversationSource.reserve({requestId:conversation.requestId,session:handle.agent.session,message,mainResolution})
+    }
     handle.agent.followup(message)
-    return { messageId: message.id }
+    return { messageId: message.id, ...(retention ?? {}) }
   }
 
-  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin }
+  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin, conversationSource }
 }
