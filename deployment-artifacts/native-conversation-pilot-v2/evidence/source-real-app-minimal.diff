@@ -1,0 +1,2124 @@
+diff --git a/packages/agent-router/src/conversation/persistence.js b/packages/agent-router/src/conversation/persistence.js
+--- /dev/null
++++ b/packages/agent-router/src/conversation/persistence.js
+@@ -0,0 +1,61 @@
++import { closeSync, constants, existsSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
++import { dirname, isAbsolute } from 'node:path'
++import { randomUUID } from 'node:crypto'
++
++export function privateDirectory(path) {
++  if (!isAbsolute(path)) throw new Error('absolute private storage path required')
++  mkdirSync(path, { recursive: true, mode: 0o700 })
++  const stat = lstatSync(path)
++  if (!stat.isDirectory() || stat.isSymbolicLink() || (stat.mode & 0o077) !== 0 || stat.uid !== process.getuid?.()) throw new Error('private storage ownership/mode invalid')
++}
++
++export function readPrivateJson(path, maxBytes = 64 * 1024 * 1024) {
++  if (!existsSync(path)) return null
++  const stat = lstatSync(path)
++  if (!stat.isFile() || stat.isSymbolicLink() || stat.uid !== process.getuid?.() || (stat.mode & 0o077) !== 0 || stat.size > maxBytes) throw new Error('private storage invalid')
++  const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
++  try { return JSON.parse(readFileSync(fd, 'utf8')) } finally { closeSync(fd) }
++}
++
++export function atomicPrivateJson(path, value) {
++  privateDirectory(dirname(path))
++  if (existsSync(path)) readPrivateJson(path)
++  const serialized = JSON.stringify(value) + '\n'
++  if (Buffer.byteLength(serialized,'utf8') > 64 * 1024 * 1024) throw Object.assign(new Error('private storage capacity exceeded'),{className:'RESOURCE_LIMIT',httpStatus:429})
++  const temp = path + '.tmp-' + randomUUID()
++  let fd
++  try {
++    fd = openSync(temp, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600)
++    writeFileSync(fd, serialized, 'utf8')
++    fsyncSync(fd)
++    closeSync(fd)
++    fd = undefined
++    renameSync(temp, path)
++    const dir = openSync(dirname(path), constants.O_RDONLY)
++    try { fsyncSync(dir) } finally { closeSync(dir) }
++  } finally {
++    if (fd !== undefined) closeSync(fd)
++    try { unlinkSync(temp) } catch { /* already renamed */ }
++  }
++}
++
++export function lockedPrivateMutation(path, mutate) {
++  privateDirectory(dirname(path))
++  const lock = path + '.lock'
++  let fd
++  try {
++    fd = openSync(lock, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY, 0o600)
++    writeFileSync(fd, JSON.stringify({ pid: process.pid }), 'utf8')
++  } catch (error) {
++    if (error.code !== 'EEXIST') throw error
++    const owner = readPrivateJson(lock, 1024)
++    if (!Number.isSafeInteger(owner?.pid) || owner.pid <= 0) throw new Error('storage lock unavailable')
++    try { process.kill(owner.pid, 0) } catch (cause) {
++      if (cause.code !== 'ESRCH') throw new Error('storage lock unavailable')
++      unlinkSync(lock)
++      return lockedPrivateMutation(path, mutate)
++    }
++    throw new Error('storage lock busy')
++  }
++  try { return mutate() } finally { closeSync(fd); unlinkSync(lock) }
++}
+diff --git a/packages/agent-router/src/conversation/source-ownership.js b/packages/agent-router/src/conversation/source-ownership.js
+--- /dev/null
++++ b/packages/agent-router/src/conversation/source-ownership.js
+@@ -0,0 +1,40 @@
++// The original Router derives the source writer from its trusted child-spawn
++// configuration. This exception is source-only; request/config storage keeps
++// the general same-UID private JSON rules unchanged.
++import {constants,lstatSync,openSync,fstatSync,readFileSync,closeSync} from 'node:fs'
++import {isAbsolute,join} from 'node:path'
++import {createHash} from 'node:crypto'
++
++function invalid(){return Object.assign(new Error('conversation source ownership unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})}
++export function sourceWriterUid({env=process.env,readerUid=process.getuid?.()}={}) {
++  const configured=env.DSH_AGENT_CHILD_UID
++  if(configured===undefined) {
++    if(!Number.isSafeInteger(readerUid)||readerUid<0)throw invalid()
++    return readerUid
++  }
++  if(typeof configured!=='string'||!/^(0|[1-9][0-9]*)$/.test(configured))throw invalid()
++  const uid=Number(configured)
++  if(!Number.isSafeInteger(uid)||uid<0)throw invalid()
++  return uid
++}
++const same=(a,b)=>a.dev===b.dev&&a.ino===b.ino
++function checkDirectory(stat,uid){if(!stat.isDirectory()||stat.isSymbolicLink()||stat.uid!==uid||(stat.mode&0o7777)!==0o700)throw invalid()}
++function checkFile(stat,uid,maxBytes){if(!stat.isFile()||stat.isSymbolicLink()||stat.uid!==uid||(stat.mode&0o7777)!==0o600||stat.nlink!==1||stat.size>maxBytes)throw invalid()}
++export function readOwnedSourceJson({directory,filename,ownerUid,maxBytes=9*1024*1024}) {
++  if(typeof directory!=='string'||!isAbsolute(directory)||!/^[a-f0-9]{64}\.json$/.test(filename)
++    ||!Number.isSafeInteger(ownerUid)||ownerUid<0||typeof constants.O_NOFOLLOW!=='number')throw invalid()
++  let directoryBefore,entry
++  const path=join(directory,filename)
++  try {directoryBefore=lstatSync(directory);checkDirectory(directoryBefore,ownerUid);entry=lstatSync(path)}
++  catch(error){if(error.code==='ENOENT')return null;throw error}
++  checkFile(entry,ownerUid,maxBytes)
++  const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW)
++  try {
++    const opened=fstatSync(fd);checkFile(opened,ownerUid,maxBytes)
++    if(!same(entry,opened))throw invalid()
++    const bytes=readFileSync(fd),after=fstatSync(fd),directoryAfter=lstatSync(directory)
++    checkFile(after,ownerUid,maxBytes);checkDirectory(directoryAfter,ownerUid)
++    if(!same(opened,after)||!same(directoryBefore,directoryAfter)||bytes.length!==after.size||bytes.length>maxBytes)throw invalid()
++    return {value:JSON.parse(bytes.toString('utf8')),sha256:createHash('sha256').update(bytes).digest('hex')}
++  } finally {closeSync(fd)}
++}
+diff --git a/packages/agent-router/src/conversation/source.js b/packages/agent-router/src/conversation/source.js
+--- /dev/null
++++ b/packages/agent-router/src/conversation/source.js
+@@ -0,0 +1,94 @@
++/** Source-owned retention of explicitly registered Product Surface turns.
++ * Called before demo-server publishes each native event; never a history reader.
++ */
++import {createHash} from 'node:crypto'
++import {join,isAbsolute,dirname,basename} from 'node:path'
++import {atomicPrivateJson,readPrivateJson,privateDirectory} from './persistence.js'
++import {sourceWriterUid,readOwnedSourceJson} from './source-ownership.js'
++const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])])):value
++const digest=value=>createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex')
++const fileFor=(directory,requestId)=>join(directory,digest(requestId)+'.json')
++const generation=session=>'trajectory_header_v1:'+digest(session.header)
++const stamp=value=>Number.isSafeInteger(value)&&value>=0?value:null
++function sourceError(){return Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE',status:'not_admitted',proven:'zero_byte'})}
++function readSource(directory,requestId,writerUid){return readOwnedSourceJson({directory,filename:basename(fileFor(directory,requestId)),ownerUid:writerUid})}
++function readAck(directory,requestId){return readOwnedSourceJson({directory:join(dirname(directory),'acks'),filename:basename(fileFor(directory,requestId)),ownerUid:process.getuid?.(),maxBytes:4096})}
++export function readConversationSource({directory,agentId,requestId,now=Date.now,writerUid=sourceWriterUid()}){
++  if(!directory||!isAbsolute(directory))return {state:'unrecoverable'}
++  const source=readSource(directory,requestId,writerUid),row=source?.value
++  if(!source)return {state:'not_found'}
++  if(row.version!==1||row.agent_id!==agentId||row.request_id!==requestId) return {state:'unrecoverable'}
++  const ack=readAck(directory,requestId)?.value
++  if(ack) {
++    if(Object.keys(ack).sort().join()!=='agent_id,expires_at,request_id,source_sha256,version'||ack.version!==1
++      ||ack.agent_id!==agentId||ack.request_id!==requestId||ack.source_sha256!==source.sha256
++      ||!Number.isSafeInteger(ack.expires_at)||ack.expires_at<=0)return {state:'unrecoverable'}
++    if(now()>=ack.expires_at)return {state:'expired'}
++  }
++  return structuredClone(row)
++}
++export function acknowledgeConversationSource({directory,agentId,requestId,expiresAt,writerUid=sourceWriterUid()}){
++  const source=readSource(directory,requestId,writerUid),row=source?.value
++  if(!row||row.version!==1||row.agent_id!==agentId||row.request_id!==requestId)throw sourceError()
++  if(!['completed','failed','interrupted'].includes(row.state))return
++  if(!Number.isSafeInteger(expiresAt)||expiresAt<=0)throw sourceError()
++  const ack={version:1,agent_id:agentId,request_id:requestId,source_sha256:source.sha256,expires_at:expiresAt}
++  const existing=readAck(directory,requestId)?.value
++  if(existing&&JSON.stringify(existing)!==JSON.stringify(ack))throw sourceError()
++  if(!existing)atomicPrivateJson(join(dirname(directory),'acks',basename(fileFor(directory,requestId))),ack)
++}
++export function createConversationSource({directory,agentId,write=atomicPrivateJson}={}){
++  if(!directory||!isAbsolute(directory)||!/^agt_[A-Za-z0-9_-]+$/.test(agentId??''))return null
++  try {if(sourceWriterUid()!==process.getuid?.())return null;privateDirectory(directory)}catch{return null}
++  const tracked=new Map()
++  return {
++    reserve({requestId,session,message,mainResolution}){
++      if(typeof requestId!=='string'||requestId.length>256||String(session?.id)!=='main'||String(session?.header?.id)!=='main'||!message?.id
++        ||!Number.isSafeInteger(session?.header?.createdAt))throw sourceError()
++      const path=fileFor(directory,requestId)
++      if(readPrivateJson(path))throw sourceError()
++      const row={version:1,request_id:requestId,agent_id:agentId,session_id:String(session.id),
++        session_generation:generation(session),message_id:message.id,state:'pending',turn_id:null,
++        main_resolution:structuredClone(mainResolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}),
++        reply_coverage:{selection:'last_nonempty_visible_assistant_message',limit_bytes:1048576,original_bytes:0,reason:'pending'},
++        inserted_seen:false,user_seen:false,last_seq:-1,accepted_at:null,started_at:null,finished_at:null,reply_created_at:null,
++        reply_message_id:null,reply_body:null,truncated:false,source_retained:false}
++      try{write(path,row)}catch{throw sourceError()}
++      tracked.set(requestId,row)
++      return {sessionGeneration:row.session_generation,sourceRetentionVersion:1,mainResolution:structuredClone(row.main_resolution)}
++    },
++    onEvent(session,event){
++      for(const row of tracked.values()){
++        if(row.state!=='pending'||String(session.id)!==row.session_id)continue
++        if(generation(session)!==row.session_generation){row.state='unrecoverable';write(fileFor(directory,row.request_id),row);continue}
++        if(!Number.isSafeInteger(event?.seq)||event.seq<0||event.seq<=row.last_seq)continue
++        const type=event.type,data=event.data??{}
++        if(type==='agent/inbox/spliced'&&data.inserted?.some(message=>message.id===row.message_id)){
++          if(data.inserted.some(message=>message.id!==row.message_id)){row.state='unrecoverable';write(fileFor(directory,row.request_id),row);tracked.delete(row.request_id);continue}
++          row.inserted_seen=true;row.accepted_at=stamp(event.time)
++        }
++        else if(type==='turn/start'&&row.inserted_seen&&row.turn_id===null&&Number.isSafeInteger(data.turn)){row.turn_id=data.turn;row.started_at=stamp(event.time)}
++        else if(type==='user/message'&&(data.id===row.message_id||data.message?.id===row.message_id)&&row.turn_id!==null)row.user_seen=true
++        else if(type==='assistant/message'&&row.user_seen&&data.turn===row.turn_id){
++          const text=(data.message?.content??[]).filter(block=>block.type==='text'&&typeof block.text==='string').map(block=>block.text).join('')
++          if(text.length===0)continue // Empty/usage/reasoning/tool-only anchors are not visible replies.
++          row.reply_coverage.original_bytes=Buffer.byteLength(text,'utf8')
++          row.truncated=row.reply_coverage.original_bytes>1024*1024
++          row.reply_coverage.reason=row.truncated?'truncated':'visible_reply'
++          row.reply_body=row.truncated?null:text
++          row.reply_message_id=typeof data.message?.id==='string'&&data.message.id?data.message.id:null
++          row.reply_created_at=stamp(event.time)
++        }else if(type==='turn/end'&&row.user_seen&&data.turn===row.turn_id){
++          row.state=data.reason?.kind==='completed'?'completed':data.reason?.kind==='error'?'failed':'interrupted'
++          row.finished_at=stamp(event.time)
++          row.source_retained=typeof row.reply_body==='string'&&row.reply_body.length>0&&!row.truncated
++          if(!row.source_retained&&!row.truncated)row.reply_coverage.reason='no_visible_reply'
++        }else continue
++        row.last_seq=event.seq
++        // A failed write escapes to the owner, which continues Router facts
++        // but emits source failure explicitly. No available result is invented.
++        try{write(fileFor(directory,row.request_id),row);if(row.state!=='pending')tracked.delete(row.request_id)}catch(error){row.state='unrecoverable';row.source_retained=false;throw error}
++      }
++    },
++  }
++}
+diff --git a/packages/agent-router/src/conversation/surface.js b/packages/agent-router/src/conversation/surface.js
+--- /dev/null
++++ b/packages/agent-router/src/conversation/surface.js
+@@ -0,0 +1,29 @@
++import {readConversationSource,acknowledgeConversationSource} from './source.js'
++import {sourceWriterUid} from './source-ownership.js'
++function reject(code){return Object.assign(new Error(code),{code,status:'not_admitted',proven:'zero_byte'})}
++export function createProductSurfaceConversation({sourceDirectory,bindingResolution,definition,reconciliationStore,routeChain,workspaceBootstrap}){
++  let writerUid=null
++  if(sourceDirectory)try{writerUid=sourceWriterUid()}catch{/* invalid trusted spawn identity leaves send disabled */}
++  return {
++    async sendProductSurface({requestId,bindingId,agentId,message}){
++      if(!sourceDirectory||writerUid===null)throw reject('CONVERSATION_SOURCE_NOT_CONFIGURED')
++      const binding=bindingResolution.getBinding(bindingId),agent=definition.getAgent(agentId)
++      if(!binding||binding.activeAgentId!==agentId||binding.activeSessionId!=='main'||agent?.id!==agentId||agent.disabled)throw reject('CONVERSATION_BINDING_INVALID')
++      reconciliationStore.assertBusinessAdmissionReady?.()
++      const fence=reconciliationStore.admissionBlockerForAgent?.(agentId)??reconciliationStore.activeFenceForAgent?.(agentId)
++      if(fence)throw reject('AGENT_PROCESS_TURN_FENCED')
++      reconciliationStore.assertMintCapacity(agentId)
++      const {workspaceId,workspacePath}=bindingResolution.resolveEffectiveWorkspace(binding)
++      if(workspaceId!==null)await workspaceBootstrap.ensureWorkspace(workspaceId)
++      // Binding movement during asynchronous bootstrap is never silently adopted.
++      const current=bindingResolution.getBinding(bindingId)
++      if(JSON.stringify(current)!==JSON.stringify(binding))throw reject('CONVERSATION_BINDING_CHANGED')
++      const receipt=await routeChain.admitWithRouteChain(agentId,{sessionId:'main',message,opts:{
++        cwd:workspacePath,bindingContext:bindingId,productSurface:true,callerCorrelation:{requestId},conversationSource:{requestId},
++      }})
++      return {...receipt,acceptedAt:Date.now()}
++    },
++    readConversationSource:({requestId,agentId})=>readConversationSource({directory:sourceDirectory,requestId,agentId,writerUid}),
++    acknowledgeConversationSource:({requestId,agentId,expiresAt})=>acknowledgeConversationSource({directory:sourceDirectory,requestId,agentId,expiresAt,writerUid}),
++  }
++}
+diff --git a/packages/agent-router/src/index.js b/packages/agent-router/src/index.js
+--- a/packages/agent-router/src/index.js
++++ b/packages/agent-router/src/index.js
+@@ -79,6 +79,7 @@
+ import { createProcessRegistry } from './process-registry.js'
+ import { createRouteChainExecutor } from './route-chain.js'
+ import { createBindingResolution } from './binding-resolution.js'
++import { createProductSurfaceConversation } from './conversation/surface.js'
+ import { createIngressDelivery } from './ingress-delivery.js'
+ import { channelConversationId } from './channel-conversation.js'
+ import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
+@@ -230,7 +231,7 @@
+   const authenticatedIngressOpts = new WeakMap()
+   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
+   const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
+-  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup })
++  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })
+   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
+     ? cfg.resolveProcessConfig
+     : () => ({})
+@@ -370,6 +371,7 @@
+   ctx.effect(() => () => registry.dispose())
+ 
+   const service = {
++    ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
+     pluginName: name,
+     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
+     resolveChannelConversation: bindingResolution.resolveChannelConversation,
+diff --git a/packages/agent-router/src/process/turn-execution.js b/packages/agent-router/src/process/turn-execution.js
+--- a/packages/agent-router/src/process/turn-execution.js
++++ b/packages/agent-router/src/process/turn-execution.js
+@@ -180,6 +180,7 @@
+     const lineageError = promptFenceError(this.store, this.agentId, sessionId,
+       opts?.lineageAdmissionToken)
+     if (lineageError) return lineageError
++    if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
+     if (this.fixedAdminQualification !== null) {
+       // OWNER BYPASS 2026-09-30 (grant expired 2026-09-24; Owner ordered direct
+       // recovery, D6 residual risk accepted, full root granted): the first-live
+@@ -304,7 +305,7 @@
+       return
+     }
+     this.executions.set(handle, execution)
+-    if (mode === 'turn') {
++    if (mode === 'turn' || opts?.productSurface === true) {
+       const ingress = opts?.ingressContext
+       // CTR-CTX-001: identity comes only from this Router-owned process and
+       // the handle minted for THIS execution. Copy only the allowlisted
+@@ -338,6 +339,8 @@
+           ms: Date.now() - startedWall,
+           reconciliationHandle: handle,
+           evidence: execution.evidenceSnapshot(),
++          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
++          ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
+         })
+         if (!execution.settled) this.installBackgroundTurnWatch(execution)
+         await execution.queueReleasePromise
+@@ -356,7 +359,7 @@
+     } catch (error) {
+       this.handleExecutionCallerError(execution, error, reject)
+     } finally {
+-      if (mode === 'turn') {
++      if (mode === 'turn' || opts?.productSurface === true) {
+         // Clear both turn-scoped contexts together before the single-flight
+         // queue may install the next turn's values.
+         this.activeBindingContext = undefined
+@@ -387,6 +390,7 @@
+       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
+       // validated upstream (deliver) and consumed by the session seam.
+       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
++      ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
+     }, undefined, {
+       deadlineMono: receiptDeadlineMono,
+       execution,
+diff --git a/packages/agent-router/test/helpers/conversation-uid-actor.mjs b/packages/agent-router/test/helpers/conversation-uid-actor.mjs
+--- /dev/null
++++ b/packages/agent-router/test/helpers/conversation-uid-actor.mjs
+@@ -0,0 +1,16 @@
++import {readConversationSource,acknowledgeConversationSource} from '../../src/conversation/source.js'
++import {readFileSync,writeFileSync} from 'node:fs'
++import {createHash} from 'node:crypto'
++import {join,dirname} from 'node:path'
++const [directory,requestId,action,arg]=process.argv.slice(2)
++const tag=createHash('sha256').update(JSON.stringify(requestId)).digest('hex')
++const sourceFile=join(directory,tag+'.json'),ackFile=join(dirname(directory),'acks',tag+'.json')
++try {
++  let value
++  if(action==='read')value=readConversationSource({directory,agentId:'agt_pilot',requestId,...(arg?{now:()=>Number(arg)}:{})})
++  else if(action==='ack'){acknowledgeConversationSource({directory,agentId:'agt_pilot',requestId,expiresAt:Number(arg)});value={acknowledged:true}}
++  else if(action==='write-source'){writeFileSync(sourceFile,'forbidden');value={unexpectedWrite:true}}
++  else if(action==='tamper-ack'){const row=JSON.parse(readFileSync(ackFile));row.source_sha256='0'.repeat(64);writeFileSync(ackFile,JSON.stringify(row));value={tampered:true}}
++  else throw new Error('unknown fixture action')
++  process.stdout.write(JSON.stringify({ok:true,value}))
++}catch(error){process.stdout.write(JSON.stringify({ok:false,code:error.code??null,message:error.message}))}
+diff --git a/packages/agent-router/test/helpers/fake-child.js b/packages/agent-router/test/helpers/fake-child.js
+--- /dev/null
++++ b/packages/agent-router/test/helpers/fake-child.js
+@@ -0,0 +1,146 @@
++/**
++ * Deterministic fault-injection harness for AGENT_PROCESS_LIFECYCLE_
++ * HARDENING_V2 (packages/agent-router/src/process.js).
++ *
++ * Drives the REAL AgentProcess class with a controllable fake OS child
++ * attached through the production wiring path (`attachChild`): stdin writes
++ * are captured (with sync-throw / callback-error injection points), stdout
++ * notifications are emitted through the real `onStdout` parser, and
++ * child error/exit plus stdin error/close are triggered on demand. Fully
++ * deterministic — no wall-clock sleeps beyond explicit awaits.
++ *
++ * `counts()` returns the §10.3 S/W/K/R counters (spawnAttempts /
++ * promptWriteAttempts / rpcResponseWriteAttempts / gracefulShutdownWrite-
++ * Attempts / killSignals / replayAdmissions) plus responseWrite records.
++ */
++
++import { AgentProcess } from '../../src/process.js'
++import { TurnReconciliationStore } from '../../src/reconciliation-store.js'
++
++/** Fast deadline fixture (ms) — every test can override per field. */
++export const FX_DEADLINES = Object.freeze({
++  initializeTimeoutMs: 600,
++  promptReceiptTimeoutMs: 250,
++  turnTimeoutMs: 900,
++  shutdownGraceMs: 200,
++})
++
++export function makeFakeChild({ pid = 4242 } = {}) {
++  const child = {
++    pid,
++    killSignals: [],
++    writes: [],
++    handlers: {},
++    stdin: {
++      handlers: {},
++      syncThrowNext: undefined,
++      callbackErrorNext: undefined,
++      holdCallbacks: false,
++      on(event, fn) { this.handlers[event] = fn },
++      write(line, callback) {
++        child.writes.push(JSON.parse(line))
++        if (this.syncThrowNext !== undefined) {
++          const error = this.syncThrowNext
++          this.syncThrowNext = undefined
++          throw error
++        }
++        if (typeof callback === 'function') {
++          if (this.callbackErrorNext !== undefined) {
++            const error = this.callbackErrorNext
++            this.callbackErrorNext = undefined
++            queueMicrotask(() => callback(error))
++            return true
++          }
++          if (!this.holdCallbacks) queueMicrotask(() => callback(null))
++        }
++        return true
++      },
++    },
++    stdout: { handler: null, on(event, fn) { if (event === 'data') this.handler = fn } },
++    stderr: { handler: null, on(event, fn) { if (event === 'data') this.handler = fn } },
++    once(event, fn) { this.handlers[event] = fn },
++    kill(signal) { this.killSignals.push(signal) },
++  }
++  return child
++}
++
++export function makeFx({ deadlines, generation, integration, reconciliationStore, ...ctorOpts } = {}) {
++  const store = reconciliationStore ?? new TurnReconciliationStore()
++  const child = makeFakeChild()
++  const slotOps = []
++  const registryIntegration = {
++    casReap(proc, cause) {
++      slotOps.push({ op: 'casReap', generation: proc.processGeneration, cause, ownershipToken: proc.ownershipToken ?? null })
++      return integration?.casReap ? integration.casReap(proc, cause) : { fence: true }
++    },
++    casStartupEmpty(proc) {
++      slotOps.push({ op: 'casStartupEmpty', generation: proc.processGeneration, processRefNone: proc.ownership === null })
++      if (integration?.casStartupEmpty) integration.casStartupEmpty(proc)
++      return true
++    },
++    casEmpty(proc) {
++      slotOps.push({ op: 'casEmpty', generation: proc.processGeneration, ownershipToken: proc.ownershipToken ?? null })
++      return integration?.casEmpty ? integration.casEmpty(proc) : true
++    },
++    verifyReapOwnership: (proc) => (integration?.verifyReapOwnership ? integration.verifyReapOwnership(proc) : true),
++  }
++  const proc = new AgentProcess({
++    agentId: 'agt_fx',
++    home: '/tmp/fx-home',
++    workspace: '/tmp/fx-ws',
++    profile: 'fx-profile',
++    log: { log() {}, error() {} },
++    ...(Object.keys(ctorOpts).length === 0 ? {} : ctorOpts),
++    processGeneration: generation ?? 1,
++    deadlines: { ...FX_DEADLINES, ...(deadlines ?? {}) },
++    reconciliationStore: store,
++    registryIntegration,
++  })
++  proc.attachChild(child)
++  // The harness attach IS one successful spawn attempt of the fake child.
++  proc.counters.spawnAttempts += 1
++
++  const tick = () => new Promise((resolve) => setImmediate(resolve))
++  const fx = {
++    proc,
++    child,
++    store,
++    slotOps,
++    writes: child.writes,
++    tick,
++    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
++    counts: () => ({ ...proc.counters }),
++    /** §10.3 evidence snapshot of pending count + fence. */
++    pendingSize: () => proc.pending.size,
++    fence: () => (proc.activeUnknownFence === null ? false : proc.activeUnknownFence.handle),
++    emit(message) { child.stdout.handler(`${JSON.stringify(message)}\n`) },
++    emitEvent(sessionId, event) { fx.emit({ method: 'session.event', params: { sessionId, event } }) },
++    emitStatus(sessionId, status) { fx.emit({ method: 'session.status', params: { sessionId, status } }) },
++    respondTo(method, result) {
++      const write = [...child.writes].reverse().find(candidate => candidate.method === method)
++      if (write === undefined) throw new Error(`fx: no ${method} request to respond to`)
++      fx.emit({ id: write.id, result })
++      return write
++    },
++    async readyNow({ providers } = {}) {
++      const pendingReady = proc.ready()
++      await tick()
++      fx.respondTo('initialize', { registeredProviders: providers ?? [proc.provider] })
++      await pendingReady
++      return proc
++    },
++    completeTurn(sessionId, messageId, replyText, { turn = 1 } = {}) {
++      fx.emitEvent(sessionId, { type: 'agent/inbox/spliced', data: { inserted: [{ id: messageId }] } })
++      fx.emitEvent(sessionId, { type: 'turn/start', data: { turn } })
++      fx.emitEvent(sessionId, { type: 'user/message', data: { id: messageId } })
++      fx.emitEvent(sessionId, { type: 'assistant/message', data: { message: { content: [{ type: 'text', text: replyText }] } } })
++      fx.emitEvent(sessionId, { type: 'turn/end', data: { turn, reason: { kind: 'completed' } } })
++      fx.emitStatus(sessionId, 'idle')
++    },
++    childExit(code = 0, signal = null) { child.handlers.exit?.(code, signal) },
++    childError(error) { child.handlers.error?.(error) },
++    stdinError(error) { child.stdin.handlers.error?.(error) },
++    stdinClose() { child.stdin.handlers.close?.() },
++  }
++  return fx
++}
+diff --git a/packages/agent-router/test/route-chain/conversation-runtime-seam.test.js b/packages/agent-router/test/route-chain/conversation-runtime-seam.test.js
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/conversation-runtime-seam.test.js
+@@ -0,0 +1,91 @@
++import assert from 'node:assert/strict'
++import {test} from 'node:test'
++import {mkdtempSync,rmSync} from 'node:fs'
++import {tmpdir} from 'node:os'
++import {join} from 'node:path'
++import {apply as applyRouter} from '../../src/index.js'
++import {createConversationSource} from '../../src/conversation/source.js'
++import {makeFx} from '../helpers/fake-child.js'
++import {TurnReconciliationStore} from '../../src/reconciliation/index.js'
++import {createProductSurfaceConversation} from '../../src/conversation/surface.js'
++
++test('real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain',async t=>{
++  const root=mkdtempSync(join(tmpdir(),'native-router-'))
++  t.after(()=>rmSync(root,{recursive:true,force:true}))
++  const sourceDirectory=join(root,'source'),agentId='agt_pilot',calls=[]
++  let owner
++  const target={id:agentId,name:'Pilot'}
++  const definition={getAgent:id=>id===agentId?target:undefined,listAgents:()=>[target],getDefaultAgent:()=>target,resolveAgentRef:()=>target}
++  const bootstrap={resolveWorkspace:()=>'/fixture/workspace',resolveDshHome:()=>'/fixture/home',ensure:async()=>({workspace:'/fixture/workspace',dshHome:'/fixture/home'}),
++    validateWorkspaceId:id=>id,resolveWorkspacePath:id=>'/fixture/'+id,ensureWorkspace:async()=>{}}
++  const ctx={get:key=>({agentDefinition:definition,workspaceBootstrap:bootstrap})[key],provide(){},effect:fn=>fn()}
++  const processFactory=opts=>({pid:12345,exit:undefined,state:'READY',spawn(){},ready:async()=>0,shutdown:async()=>{},
++    deliver:async(sessionId,text,options)=>{
++      calls.push({sessionId,text,options,opts})
++      owner=createConversationSource({directory:opts.env.DSH_CONVERSATION_SOURCE_DIR,agentId})
++      const session={id:sessionId,header:{id:sessionId,createdAt:44,cwd:'/fixture/workspace'}}
++      const retained=owner.reserve({requestId:options.conversationSource.requestId,session,message:{id:'native-user'}})
++      const events=[['agent/inbox/spliced',{inserted:[{id:'native-user'}]}],['turn/start',{turn:4}],['user/message',{id:'native-user'}],
++        ['assistant/message',{turn:4,message:{id:'native-reply',content:[{type:'text',text:'actual retained reply'}]}}],['turn/end',{turn:4,reason:{kind:'completed'}}]]
++      events.forEach(([type,data],i)=>owner.onEvent(session,{type,data,seq:i,time:100+i}))
++      return{accepted:true,sessionId,messageId:'native-user',reconciliationHandle:'fixture-handle',...retained}
++    }})
++  const router=applyRouter(ctx,{bindingsStoreFile:join(root,'bindings.json'),agentProfile:'fixture',defaultSessionId:'main',conversationSourceDir:sourceDirectory,processFactory,provisionHome:async()=>({})})
++  await router.switchAgent('mcp:pilot',agentId)
++  const before=router.bindingsSnapshot()
++  const receipt=await router.sendProductSurface({requestId:'mcpnc-runtime',bindingId:'mcp:pilot',agentId,message:'question'})
++  assert.equal(receipt.accepted,true)
++  assert.equal(calls[0].options.productSurface,true)
++  assert.equal(calls[0].options.bindingContext,'mcp:pilot')
++  assert.equal(calls[0].options.callerCorrelation.requestId,'mcpnc-runtime')
++  assert.equal(calls[0].options.messageOrigin,undefined,'human provenance is not ASM')
++  assert.deepEqual(router.bindingsSnapshot(),before)
++  assert.equal(router.readConversationSource({requestId:'mcpnc-runtime',agentId}).reply_body,'actual retained reply')
++  await assert.rejects(router.sendProductSurface({requestId:'must-not-send',bindingId:'mobile:other',agentId,message:'x'}))
++  assert.equal(calls.length,1)
++})
++
++test('real AgentProcess receipt-only product surface holds trusted context until original terminal',async()=>{
++  const fx=makeFx()
++  await fx.readyNow()
++  fx.proc.initializeEvidence.conversationSource={version:1}
++  const pending=fx.proc.deliver('main','question',{bindingContext:'mcp:pilot',productSurface:true,
++    conversationSource:{requestId:'mcpnc-process'},callerCorrelation:{requestId:'mcpnc-process'}})
++  await fx.tick()
++  assert.equal(fx.proc.activeBindingContext,'mcp:pilot')
++  const prompt=fx.respondTo('session/prompt',{messageId:'source-user',sessionGeneration:'trajectory-not-process-generation',mainResolution:{disposition:'created',reason:'main_artifact_absent'}})
++  const receipt=await pending
++  assert.equal(prompt.params.conversationSource.requestId,'mcpnc-process')
++  assert.equal(receipt.sessionGeneration,'trajectory-not-process-generation')
++  assert.equal(receipt.mainResolution.disposition,'created')
++  assert.equal(fx.proc.activeBindingContext,'mcp:pilot','inbox receipt does not clear active surface')
++  fx.completeTurn('main','source-user','answer')
++  await fx.tick()
++  assert.equal(fx.proc.activeBindingContext,undefined)
++  assert.equal(fx.store.resolveCallerCorrelation({requestId:'mcpnc-process'}).snapshot.messageId,'source-user')
++  fx.childExit()
++})
++
++test('product surface consults the original Router fence and leaves its UNKNOWN record unchanged',async()=>{
++  const store=new TurnReconciliationStore()
++  const handle=store.mintTurnExecution({agentId:'agt_pilot',processGeneration:1,sessionId:'main',callerCorrelation:{requestId:'old-original'}})
++  store.markOutcomeUnknown(handle,{source:'fixture_original_unknown',deadlineAtWallMs:1})
++  const before=store.getTurnReconciliation(handle)
++  let calls=0
++  const surface=createProductSurfaceConversation({sourceDirectory:'/fixture/source',reconciliationStore:store,
++    definition:{getAgent:()=>({id:'agt_pilot'})},
++    bindingResolution:{getBinding:()=>({activeAgentId:'agt_pilot',activeSessionId:'main'}),resolveEffectiveWorkspace:()=>({workspaceId:null,workspacePath:'/fixture/workspace'})},
++    workspaceBootstrap:{ensureWorkspace:async()=>{}},routeChain:{admitWithRouteChain:async()=>{calls++;return {accepted:true}}}})
++  await assert.rejects(surface.sendProductSurface({requestId:'new-mcp-request',bindingId:'mcp:pilot',agentId:'agt_pilot',message:'new'}),{code:'AGENT_PROCESS_TURN_FENCED'})
++  assert.equal(calls,0)
++  assert.deepEqual(store.getTurnReconciliation(handle),before)
++})
++
++test('source retention unavailable rejects product surface before any native prompt write',async()=>{
++  const fx=makeFx()
++  await fx.readyNow()
++  await assert.rejects(fx.proc.deliver('main','question',{productSurface:true,conversationSource:{requestId:'new-mcp'}}),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})
++  assert.equal(fx.writes.filter(row=>row.method==='session/prompt').length,0)
++  assert.equal(fx.store.occupancy().records,0)
++  fx.childExit()
++})
+diff --git a/packages/agent-router/test/route-chain/conversation-source-ownership.test.js b/packages/agent-router/test/route-chain/conversation-source-ownership.test.js
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/conversation-source-ownership.test.js
+@@ -0,0 +1,92 @@
++import assert from 'node:assert/strict'
++import {test} from 'node:test'
++import {execFileSync} from 'node:child_process'
++import {mkdirSync,readFileSync,writeFileSync,unlinkSync,symlinkSync,linkSync,statSync,existsSync} from 'node:fs'
++import {join,dirname} from 'node:path'
++import {fileURLToPath} from 'node:url'
++import {createHash} from 'node:crypto'
++import {createConversationSource} from '../../src/conversation/source.js'
++
++const node=process.execPath,actor=fileURLToPath(new URL('../helpers/conversation-uid-actor.mjs',import.meta.url))
++const tag=requestId=>createHash('sha256').update(JSON.stringify(requestId)).digest('hex')
++const sha=file=>createHash('sha256').update(readFileSync(file)).digest('hex')
++const sudo=(...args)=>execFileSync('/usr/bin/sudo',['-n','-u','authsvc',...args],{encoding:'utf8'}).trim()
++
++test('source owner UID comes only from trusted spawn configuration, with a same-UID default',async()=>{
++  const modulePath=new URL('../../src/conversation/source-ownership.js',import.meta.url)
++  assert.ok(existsSync(modulePath),'source-specific ownership policy is implemented')
++  const {sourceWriterUid}=await import(modulePath)
++  assert.equal(sourceWriterUid({env:{},readerUid:505}),505)
++  assert.equal(sourceWriterUid({env:{DSH_AGENT_CHILD_UID:'502'},readerUid:505}),502)
++  for(const bad of ['502junk','-1','1.2','','9007199254740992'])assert.throws(()=>sourceWriterUid({env:{DSH_AGENT_CHILD_UID:bad},readerUid:505}))
++})
++
++test('real UID502 source and UID505 reader use exact ownership, read-only ACL, immutable body and parent-owned ACK',async t=>{
++  assert.equal(process.getuid(),502,'this fixture requires the actual Agent UID')
++  assert.equal(sudo('/usr/bin/id','-u'),'505','the reader is a real authsvc process')
++  const root=sudo(node,'-e',"process.stdout.write(require('node:fs').mkdtempSync('/private/tmp/pilot-native-uids-'))")
++  assert.ok(root.startsWith('/private/tmp/pilot-native-uids-'))
++  const directory=join(root,'source'),requestId='mcpnc-real-uids',file=join(directory,tag(requestId)+'.json')
++  const rootCreate='user:yanfenma allow search,add_subdirectory'
++  const dirRead='user:authsvc allow search,readattr,readsecurity'
++  const fileRead='user:authsvc allow read,readattr,readsecurity,file_inherit,only_inherit'
++  try {
++    sudo('/bin/chmod','+a',rootCreate,root)
++    mkdirSync(directory,{mode:0o700})
++    sudo('/bin/chmod','-a',rootCreate,root)
++    sudo('/bin/chmod','+a','user:yanfenma allow search',root)
++    execFileSync('/bin/chmod',['+a',dirRead,directory])
++    execFileSync('/bin/chmod',['+a',fileRead,directory])
++    const owner=createConversationSource({directory,agentId:'agt_pilot'})
++    const session={id:'main',header:{id:'main',createdAt:11,cwd:'/fixture/workspace'}}
++    owner.reserve({requestId,session,message:{id:'user-real'}})
++    const emit=(type,data,seq)=>owner.onEvent(session,{type,data,seq,time:100+seq})
++    emit('agent/inbox/spliced',{inserted:[{id:'user-real'}]},1)
++    emit('turn/start',{turn:7},2)
++    emit('user/message',{id:'user-real'},3)
++    emit('assistant/message',{turn:7,message:{id:'reply-real',content:[{type:'text',text:'exact source reply'}]}},4)
++    emit('turn/end',{turn:7,reason:{kind:'completed'}},5)
++    owner.reserve({requestId:'mcpnc-retained-unknown',session,message:{id:'unknown-user'}})
++    const run=(action,arg,writer='502')=>JSON.parse(sudo('/usr/bin/env','DSH_AGENT_CHILD_UID='+writer,node,actor,directory,requestId,action,...(arg===undefined?[]:[String(arg)])))
++    const original=readFileSync(file),before=sha(file)
++    assert.equal(statSync(file).uid,502)
++    assert.equal(statSync(file).mode&0o7777,0o600)
++    const read=run('read')
++    assert.equal(read.ok,true,JSON.stringify(read))
++    assert.equal(read.value.reply_body,'exact source reply')
++    const denied=run('write-source')
++    assert.equal(denied.ok,false)
++    assert.ok(['EACCES','EPERM'].includes(denied.code))
++    const expiresAt=Date.now()+60000
++    assert.equal(run('ack',expiresAt).ok,true)
++    const ackFile=join(dirname(directory),'acks',tag(requestId)+'.json')
++    assert.throws(()=>writeFileSync(ackFile,'forbidden'),error=>['EACCES','EPERM'].includes(error.code))
++    assert.equal(sha(file),before,'reader ACK never changes source owner or bytes')
++    const expired=run('read',expiresAt+1)
++    assert.equal(expired.value.state,'expired')
++    assert.equal(sha(file),before,'expiry changes visibility, never source or UNKNOWN bytes')
++    const unknown=JSON.parse(sudo('/usr/bin/env','DSH_AGENT_CHILD_UID=502',node,actor,directory,'mcpnc-retained-unknown','read',String(expiresAt+1)))
++    assert.equal(unknown.value.state,'pending','an uncommitted/unknown source has no TTL acknowledgement and is retained')
++    assert.equal(run('read',Date.now(),'505').ok,false,'a wrong configured source owner is rejected')
++    const alias=join(directory,'hardlink.json')
++    linkSync(file,alias)
++    assert.equal(run('read').ok,false,'hard-linked source is rejected')
++    unlinkSync(alias)
++    const alternate=join(directory,'alternate.json')
++    writeFileSync(alternate,original,{mode:0o600})
++    unlinkSync(file)
++    symlinkSync(alternate,file)
++    assert.equal(run('read').ok,false,'source symlink is rejected')
++    unlinkSync(file)
++    writeFileSync(file,original,{mode:0o600})
++    execFileSync('/bin/chmod',['-a',dirRead,directory])
++    assert.equal(run('read').ok,false,'missing directory search ACL fails closed')
++    execFileSync('/bin/chmod',['+a',dirRead,directory])
++    assert.equal(run('tamper-ack').ok,true)
++    assert.equal(run('read').value.state,'unrecoverable','ACK hash mismatch cannot silently extend source TTL')
++    assert.equal(sha(file),before)
++  } finally {
++    if(existsSync(directory))execFileSync('/bin/chmod',['+a','user:authsvc allow list,delete_child',directory])
++    sudo('/bin/rm','-rf',root)
++  }
++})
+diff --git a/packages/agent-router/test/route-chain/conversation-source.test.js b/packages/agent-router/test/route-chain/conversation-source.test.js
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/conversation-source.test.js
+@@ -0,0 +1,77 @@
++import assert from 'node:assert/strict'
++import {test} from 'node:test'
++import {mkdtempSync,rmSync,existsSync} from 'node:fs'
++import {tmpdir} from 'node:os'
++import {join} from 'node:path'
++
++test('source owner retains exact native reply before publication, survives reset and restart',async t=>{
++  const modulePath=new URL('../../src/conversation/source.js',import.meta.url)
++  assert.ok(existsSync(modulePath),'native source retention is implemented')
++  const {createConversationSource,readConversationSource}=await import(modulePath)
++  const dir=mkdtempSync(join(tmpdir(),'native-source-'))
++  t.after(()=>rmSync(dir,{recursive:true,force:true}))
++  const owner=createConversationSource({directory:dir,agentId:'agt_pilot'})
++  const session={id:'main',header:{id:'main',createdAt:11,version:1,cwd:'/fixture/workspace'}}
++  owner.reserve({requestId:'mcpnc-fixture',session,message:{id:'user-1',content:[{type:'text',text:'question'}]}})
++  const emit=(type,data,seq)=>owner.onEvent(session,{type,data,seq,time:100+seq})
++  emit('agent/inbox/spliced',{inserted:[{id:'user-1'}]},1)
++  emit('turn/start',{turn:7},2)
++  emit('user/message',{id:'user-1'},3)
++  emit('assistant/message',{turn:6,message:{id:'wrong',content:[{type:'text',text:'must not leak'}]}},4)
++  emit('assistant/message',{turn:7,message:{content:[{type:'reasoning',text:'hidden'},{type:'text',text:'answer'}]}},5)
++  emit('turn/end',{turn:7,reason:{kind:'completed'}},6)
++  const result=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'mcpnc-fixture'})
++  assert.equal(result.reply_body,'answer')
++  assert.equal(result.turn_id,7)
++  assert.equal(result.reply_message_id,null)
++  assert.equal(result.source_retained,true)
++  session.header.createdAt=999
++  const restarted=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'mcpnc-fixture'})
++  assert.deepEqual(restarted,result)
++  assert.notEqual(result.session_generation,'main')
++  assert.equal(result.message_id,'user-1')
++})
++
++test('source reserve fails before followup when durable retention is unavailable',async t=>{
++  const modulePath=new URL('../../src/conversation/source.js',import.meta.url)
++  assert.ok(existsSync(modulePath),'native source retention is implemented')
++  const {createConversationSource}=await import(modulePath)
++  const owner=createConversationSource({directory:'/not-a-configured-retention-root',agentId:'agt_pilot',write:()=>{throw Error('disk-full')}})
++  assert.throws(()=>owner.reserve({requestId:'new',session:{id:'main',header:{id:'main',createdAt:1}},message:{id:'u'}}))
++})
++
++test('B002: visible text and its native ID survive an empty completion anchor in the same exact turn',async t=>{
++  const {createConversationSource,readConversationSource}=await import('../../src/conversation/source.js')
++  const dir=mkdtempSync(join(tmpdir(),'native-empty-anchor-'))
++  t.after(()=>rmSync(dir,{recursive:true,force:true}))
++  const owner=createConversationSource({directory:dir,agentId:'agt_pilot'})
++  const session={id:'main',header:{id:'main',createdAt:12}}
++  owner.reserve({requestId:'visible-empty',session,message:{id:'user'}})
++  const events=[['agent/inbox/spliced',{inserted:[{id:'user'}]}],['turn/start',{turn:8}],['user/message',{id:'user'}],
++    ['assistant/message',{turn:8,message:{id:'visible',content:[{type:'text',text:'visible business answer'},{type:'tool-call',id:'tool'}]}}],
++    ['assistant/message',{turn:8,message:{id:'usage-only',content:[]}}],['turn/end',{turn:8,reason:{kind:'completed'}}]]
++  events.forEach(([type,data],seq)=>owner.onEvent(session,{type,data,seq,time:100+seq}))
++  const row=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'visible-empty'})
++  assert.equal(row.reply_body,'visible business answer')
++  assert.equal(row.reply_message_id,'visible')
++  assert.equal(row.reply_created_at,103)
++  assert.equal(row.source_retained,true)
++})
++
++test('B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer',async t=>{
++  const {createConversationSource,readConversationSource}=await import('../../src/conversation/source.js')
++  const dir=mkdtempSync(join(tmpdir(),'native-wholly-empty-'))
++  t.after(()=>rmSync(dir,{recursive:true,force:true}))
++  const owner=createConversationSource({directory:dir,agentId:'agt_pilot'})
++  const session={id:'main',header:{id:'main',createdAt:13}}
++  owner.reserve({requestId:'wholly-empty',session,message:{id:'user'}})
++  const events=[['agent/inbox/spliced',{inserted:[{id:'user'}]}],['turn/start',{turn:9}],['user/message',{id:'user'}],
++    ['assistant/message',{turn:9,message:{id:'empty',content:[]}}],['turn/end',{turn:9,reason:{kind:'completed'}}]]
++  events.forEach(([type,data],seq)=>owner.onEvent(session,{type,data,seq,time:100+seq}))
++  const row=readConversationSource({directory:dir,agentId:'agt_pilot',requestId:'wholly-empty'})
++  assert.equal(row.state,'completed')
++  assert.equal(row.reply_body,null)
++  assert.equal(row.reply_message_id,null)
++  assert.equal(row.source_retained,false)
++  assert.equal(row.reply_coverage.reason,'no_visible_reply')
++})
+diff --git a/packages/demo-server/src/index.js b/packages/demo-server/src/index.js
+--- a/packages/demo-server/src/index.js
++++ b/packages/demo-server/src/index.js
+@@ -118,6 +118,7 @@
+   // Mirror the SDK server's event fan-out: every durable fact streams as
+   // session.event, every whole-agent lifecycle transition as session.status.
+   const offEvent = ctx.on('session/event', (session, event) => {
++    try { seam.conversationSource?.onEvent(session,event) } catch { process.stderr.write('[demo-server] conversation source retention failed\n') }
+     notify('session.event', { sessionId: String(session.id), event })
+   })
+   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
+@@ -191,6 +192,7 @@
+           route: { provider, model },
+           registeredProviders,
+           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
++          conversationSource: seam.conversationSource ? {version:1} : null,
+         }
+       } else if (method === 'session/prompt') {
+         // params.cwd = the Router-resolved effective workspace for THIS
+@@ -200,7 +202,7 @@
+         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
+         result = await rpcTurnContext.run(
+           params?.turnExecutionId,
+-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin),
++          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource),
+         )
+       } else if (method === 'rpc.response') {
+         // Parent's answer to a rpc.request: resolve the pending plugin call.
+diff --git a/packages/demo-server/src/session-seam.js b/packages/demo-server/src/session-seam.js
+--- a/packages/demo-server/src/session-seam.js
++++ b/packages/demo-server/src/session-seam.js
+@@ -27,6 +27,7 @@
+  * created with.
+  */
+ 
++import { createConversationSource } from '../../agent-router/src/conversation/source.js'
+ import { createUserMessage } from '@deepseek-ai/dsh-llm'
+ import { SessionId } from '@deepseek-ai/dsh-session'
+ 
+@@ -44,7 +45,8 @@
+  * @returns {{handles:Map, pendingCreations:Map, getOrCreateSession, prompt,
+  *   assertSessionCwd}}
+  */
+-export function createSessionSeam({ ctx, settings }) {
++export function createSessionSeam({ ctx, settings, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
++  const sessionOrigins = new WeakMap()
+   const handles = new Map() // sessionId -> AgentHandle
+   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
+ 
+@@ -144,6 +146,8 @@
+         // into the new session's header at create time.
+         handle = await agents.create({ sessionId: id, meta: { cwd: effectiveCwd }, agentOptions })
+       }
++      sessionOrigins.set(handle,{disposition:resumed?'resumed':'created',reason:resumed?'persisted_main_resumed':'main_artifact_absent',
++        provenance:'native_session_resolution',generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'})
+       handles.set(sessionId, handle)
+       process.stderr.write(
+         `[demo-server] session ${sessionId} ${resumed ? 'resumed' : 'created'} (${eventCount} events) cwd=${effectiveCwd}\n`,
+@@ -188,13 +192,22 @@
+   }
+ 
+   /** Queue one user prompt on a session, creating or resuming it first. */
+-  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined) {
++  async function prompt(sessionId, contentBlocks, resolvedCwd, messageOrigin = undefined, conversation = undefined) {
++    const wasHot=handles.has(sessionId),wasPending=pendingCreations.has(sessionId)
+     const handle = await getOrCreateSession(sessionId, resolvedCwd)
++    const mainResolution=wasHot?{disposition:'hot_reuse',reason:'loaded_main_handle',provenance:'native_session_resolution',
++      generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'}
++      :{...(sessionOrigins.get(handle)??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}),shared_initialization:wasPending}
+     const source = validateMessageOrigin(messageOrigin)
+     const message = createUserMessage({ content: contentBlocks, source })
++    let retention
++    if (conversation !== undefined) {
++      if (!conversationSource || Object.keys(conversation).join() !== 'requestId') throw Object.assign(new Error('native source retention unavailable'),{code:'CONVERSATION_SOURCE_UNAVAILABLE'})
++      retention = conversationSource.reserve({requestId:conversation.requestId,session:handle.agent.session,message,mainResolution})
++    }
+     handle.agent.followup(message)
+-    return { messageId: message.id }
+-  }
+-
+-  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin }
++    return { messageId: message.id, ...(retention ?? {}) }
++  }
++
++  return { handles, pendingCreations, getOrCreateSession, prompt, assertSessionCwd, validateMessageOrigin, conversationSource }
+ }
+diff --git a/packages/demo-server/test/session-seam.test.js b/packages/demo-server/test/session-seam.test.js
+--- /dev/null
++++ b/packages/demo-server/test/session-seam.test.js
+@@ -0,0 +1,235 @@
++/**
++ * Unit tests for @agent-core/demo-server's session seam — the
++ * AGENT_CORE_BINDING_WORKSPACE_V1 SESSION_WRITE_CONTRACT, driven with FAKE
++ * DSH services (agents factory + persistence) so no real model/process is
++ * needed:
++ *
++ *   R1  cold session           -> agents.create({sessionId, meta:{cwd}}) —
++ *                                 the ONLY creation contract; the resolved
++ *                                 effective workspace freezes into the header.
++ *   R2  persisted session      -> agents.resume(...) with NO meta; the
++ *                                 persisted header.cwd is the authority;
++ *                                 equal -> the message is queued normally.
++ *   R3  cross-workspace        -> structured SESSION_WORKSPACE_MISMATCH:
++ *                                 cwd stays persisted, the message is never
++ *                                 queued, no second session is created.
++ *
++ * Together with the Router-level workspace-binding tests (which assert the
++ * resolved effective workspace is what reaches this seam) these cover the
++ * frozen session-cwd invariants end to end at the seam level; the
++ * real-process chain remains the acceptance drivers' territory.
++ */
++
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++
++import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from '../src/session-seam.js'
++
++const WS_A = '/tmp/ws/root-a'
++const WS_B = '/tmp/ws/root-b'
++
++/**
++ * Fake DSH service context. `persisted` is a Map sessionId -> cwd (the
++ * persisted session headers); the fake agents factory records every
++ * create/resume call and returns handles whose header.cwd mirrors the
++ * persisted entry (or the requested creation cwd for fresh sessions) —
++ * exactly the DSH-native semantics the contract relies on (create freezes
++ * meta.cwd into the header; resume restores the persisted header).
++ */
++function fakeCtx({ persisted = new Map() } = {}) {
++  const calls = { create: [], resume: [] }
++  const makeHandle = (sessionId, cwd) => ({
++    agent: { session: { id: sessionId, seq: 3, header: { cwd } }, followup: (message) => { calls.followups = [...(calls.followups ?? []), { sessionId, message }] } },
++    disposed: false,
++    dispose: async function () { this.disposed = true },
++  })
++  const agents = {
++    create: async ({ sessionId, meta, agentOptions }) => {
++      calls.create.push({ sessionId, meta, agentOptions })
++      const handle = makeHandle(String(sessionId), meta?.cwd)
++      persisted.set(String(sessionId), meta?.cwd)
++      return handle
++    },
++    resume: async ({ resumeSessionId, agentOptions }) => {
++      calls.resume.push({ resumeSessionId, agentOptions })
++      const id = String(resumeSessionId)
++      return makeHandle(id, persisted.get(id))
++    },
++  }
++  const persistence = { list: async () => [...persisted.entries()].map(([id, cwd]) => ({ id, cwd })) }
++  const services = new Map([
++    ['agentLoop', {}],
++    ['sessionPersistence', persistence],
++    ['agents', agents],
++  ])
++  return {
++    calls,
++    persisted,
++    get: (name) => services.get(name),
++  }
++}
++
++/** A seam over the fake ctx with initialize-time process cwd = WS_A. */
++function makeSeam(fake, route = { provider: 'opencode-go', model: 'deepseek-v4-flash' }) {
++  return createSessionSeam({
++    ctx: fake,
++    settings: {
++      get cwd() { return WS_A },
++      get provider() { return route.provider },
++      get model() { return route.model },
++      get maxTokens() { return undefined },
++    },
++  })
++}
++
++test('R1: cold session is CREATED with meta:{cwd = resolved workspace} — the only creation contract', async () => {
++  const fake = fakeCtx()
++  const seam = makeSeam(fake)
++
++  const receipt = await seam.prompt('main', [{ type: 'text', text: 'hello' }], WS_B)
++
++  assert.ok(typeof receipt.messageId === 'string' && receipt.messageId !== '', 'the message was queued')
++  assert.equal(fake.calls.create.length, 1, 'exactly one create')
++  assert.equal(fake.calls.create[0].sessionId, 'main')
++  assert.equal(fake.calls.create[0].meta.cwd, WS_B, 'resolved workspace froze into the session header')
++  assert.equal(fake.calls.resume.length, 0)
++})
++
++test('R1: a prompt with no cwd falls back to the initialize-time process cwd', async () => {
++  const fake = fakeCtx()
++  const seam = makeSeam(fake)
++
++  await seam.prompt('main', [{ type: 'text', text: 'hello' }], undefined)
++
++  assert.equal(fake.calls.create[0].meta.cwd, WS_A, 'legacy/scheduler prompts keep the process-level cwd')
++})
++
++test('R2: a persisted session is RESUMED with no meta; equal cwd -> the message is queued', async () => {
++  const fake = fakeCtx({ persisted: new Map([['main', WS_A]]) })
++  const seam = makeSeam(fake)
++
++  await seam.prompt('main', [{ type: 'text', text: 'again' }], WS_A)
++
++  assert.equal(fake.calls.resume.length, 1, 'persisted artifact -> resume')
++  assert.equal(fake.calls.resume[0].resumeSessionId, 'main')
++  assert.deepEqual(fake.calls.create, [], 'no second session is created')
++  assert.equal(fake.calls.followups.length, 1, 'equal cwd -> routed normally')
++})
++
++test('R3: persisted cwd != resolved workspace -> STRUCTURED_REJECT, cwd unchanged, no second session', async () => {
++  const fake = fakeCtx({ persisted: new Map([['main', WS_A]]) })
++  const seam = makeSeam(fake)
++
++  await assert.rejects(
++    () => seam.prompt('main', [{ type: 'text', text: 'go to B' }], WS_B),
++    (error) => error.code === SESSION_WORKSPACE_MISMATCH,
++  )
++
++  // The cwd stays as persisted; the message never entered the session; no
++  // other session was created or registered.
++  assert.equal(fake.persisted.get('main'), WS_A, 'persisted cwd NOT mutated')
++  assert.equal(fake.calls.followups?.length ?? 0, 0, 'message never queued')
++  assert.deepEqual(fake.calls.create, [], 'no silently-created replacement session')
++  assert.equal(seam.handles.size, 0, 'mismatched handle not registered')
++})
++
++test('R3: hot path — a LIVE session resumed/created earlier rejects a different resolved workspace', async () => {
++  const fake = fakeCtx()
++  const seam = makeSeam(fake)
++
++  await seam.prompt('main', [{ type: 'text', text: 'first' }], WS_A)
++  await assert.rejects(
++    () => seam.prompt('main', [{ type: 'text', text: 'second' }], WS_B),
++    (error) => error.code === SESSION_WORKSPACE_MISMATCH,
++  )
++  // And back on the right workspace it continues (cwd immutability, not a
++  // permanent lock-out).
++  const receipt = await seam.prompt('main', [{ type: 'text', text: 'third' }], WS_A)
++  assert.ok(typeof receipt.messageId === 'string' && receipt.messageId !== '')
++})
++
++test('R3: a persisted session WITHOUT a header.cwd also rejects (never silently adopts one)', async () => {
++  const fake = fakeCtx({ persisted: new Map([['legacy', undefined]]) })
++  const seam = makeSeam(fake)
++
++  await assert.rejects(
++    () => seam.prompt('legacy', [{ type: 'text', text: 'x' }], WS_A),
++    (error) => error.code === SESSION_WORKSPACE_MISMATCH,
++  )
++})
++
++test('same workspace, multiple sessions: independent handles, same frozen cwd (AC2/AC7 seam level)', async () => {
++  const fake = fakeCtx()
++  const seam = makeSeam(fake)
++
++  await seam.prompt('main', [{ type: 'text', text: 'a' }], WS_A)
++  await seam.prompt('cron-daily', [{ type: 'text', text: 'b' }], WS_A)
++  await seam.prompt('memory-maintenance', [{ type: 'text', text: 'c' }], WS_A)
++
++  assert.equal(fake.calls.create.length, 3, 'three distinct native sessions')
++  const cwds = fake.calls.create.map(c => c.meta.cwd)
++  assert.deepEqual(cwds, [WS_A, WS_A, WS_A], 'same cwd — they share one workspace by construction')
++  assert.equal(seam.handles.size, 3, 'trajectory/context stays per-session')
++})
++
++test('restart semantics (AC5 seam level): resume restores the persisted cwd and never re-passes meta', async () => {
++  // Process 1 creates both sessions in two different workspaces.
++  const persisted = new Map()
++  const fake1 = fakeCtx({ persisted })
++  const seam1 = makeSeam(fake1)
++  await seam1.prompt('main-A', [{ type: 'text', text: 'a' }], WS_A)
++  await seam1.prompt('main-B', [{ type: 'text', text: 'b' }], WS_B)
++
++  // Process 2 (fresh seam, same persistence) resumes each: no meta is ever
++  // passed on resume, and the resolved workspace must MATCH the persisted
++  // one for the turn to proceed.
++  const fake2 = fakeCtx({ persisted })
++  const seam2 = makeSeam(fake2)
++  await seam2.prompt('main-A', [{ type: 'text', text: 'a2' }], WS_A)
++  await seam2.prompt('main-B', [{ type: 'text', text: 'b2' }], WS_B)
++  assert.equal(fake2.calls.resume.length, 2)
++  for (const call of fake2.calls.resume) {
++    assert.equal('meta' in call, false, 'resume carries NO meta:{cwd}')
++  }
++  assert.equal(persisted.get('main-A'), WS_A, 'cwd from the persisted header, never re-guessed')
++  assert.equal(persisted.get('main-B'), WS_B)
++
++  // A control plane that resolves the WRONG workspace for a persisted
++  // session is rejected instead of silently migrating it.
++  await assert.rejects(
++    () => seam2.prompt('main-A', [{ type: 'text', text: 'x' }], WS_B),
++    (error) => error.code === SESSION_WORKSPACE_MISMATCH,
++  )
++  assert.equal(persisted.get('main-A'), WS_A)
++})
++
++test('resolved Luna route is identical for session create and restart resume', async () => {
++  const route = { provider: 'openai-codex', model: 'gpt-5.6-luna' }
++  const persisted = new Map()
++  const first = fakeCtx({ persisted })
++  await makeSeam(first, route).prompt('main', [{ type: 'text', text: 'create' }], WS_A)
++  assert.deepEqual(first.calls.create[0].agentOptions, route)
++
++  const restarted = fakeCtx({ persisted })
++  await makeSeam(restarted, route).prompt('main', [{ type: 'text', text: 'resume' }], WS_A)
++  assert.deepEqual(restarted.calls.resume[0].agentOptions, route)
++  assert.deepEqual(restarted.calls.create, [], 'resume never creates a replacement with another route')
++})
++
++test('B003: native source receipts distinguish first artifact creation, persisted resume and hot reuse without inventing reset cause',async()=>{
++  const fake=fakeCtx(),seen=[]
++  const source={reserve(args){seen.push(args);return {sessionGeneration:'fixture-generation',sourceRetentionVersion:1,mainResolution:args.mainResolution}}}
++  const seam=createSessionSeam({ctx:fake,settings:{cwd:WS_A,provider:'fixture',model:'fixture'},conversationSource:source})
++  const created=await seam.prompt('main',[{type:'text',text:'new'}],WS_A,undefined,{requestId:'created'})
++  assert.equal(created.mainResolution.disposition,'created')
++  assert.equal(created.mainResolution.reason,'main_artifact_absent')
++  assert.equal(created.mainResolution.generation_change_reason,null)
++  const hot=await seam.prompt('main',[{type:'text',text:'reuse'}],WS_A,undefined,{requestId:'hot'})
++  assert.equal(hot.mainResolution.disposition,'hot_reuse')
++  const resumedFake=fakeCtx({persisted:new Map([['main',WS_A]])})
++  const resumedSeam=createSessionSeam({ctx:resumedFake,settings:{cwd:WS_A,provider:'fixture',model:'fixture'},conversationSource:source})
++  const resumed=await resumedSeam.prompt('main',[{type:'text',text:'resume'}],WS_A,undefined,{requestId:'resumed'})
++  assert.equal(resumed.mainResolution.disposition,'resumed')
++  assert.equal(resumed.mainResolution.reason,'persisted_main_resumed')
++  assert.equal(seen.length,3)
++})
+diff --git a/packages/product-api/src/conversation/auth.js b/packages/product-api/src/conversation/auth.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/auth.js
+@@ -0,0 +1,55 @@
++import { parseBasicCredential } from '../../../notification-ingress/src/auth.js'
++import { lstatSync } from 'node:fs'
++import { dirname } from 'node:path'
++import { readPrivateJson } from '../../../agent-router/src/conversation/persistence.js'
++import { fault } from './protocol.js'
++export const RESOURCE = 'agent-core-mcp-conversation-v1'
++export const SCOPE = 'conversation.access'
++export function loadConversationConfig(path) {
++  try {
++    const directory=lstatSync(dirname(path))
++    if (!directory.isDirectory() || directory.isSymbolicLink() || directory.uid !== process.getuid?.() || (directory.mode & 0o077) !== 0) return null
++    return readPrivateJson(path, 1024 * 1024)
++  } catch { return null }
++}
++export function validateConfig(config) {
++  if (config?.enabled !== true) throw fault('NOT_PROVISIONED', 503)
++  let origin
++  try { origin = new URL(config.authServiceOrigin) } catch { throw fault('NOT_PROVISIONED', 503) }
++  if (origin.protocol !== 'https:' || origin.origin + '/' !== origin.href || !Number.isSafeInteger(config.retentionMs)
++    || config.retentionMs <= 0 || !Number.isSafeInteger(config.maxRecords) || config.maxRecords <= 0
++    || !Array.isArray(config.clients) || config.clients.length !== 1) throw fault('NOT_PROVISIONED', 503)
++  const client = config.clients[0]
++  for (const key of ['clientId','subject_id','communication_scope_id','principal_id']) {
++    if (typeof client[key] !== 'string' || !client[key] || client[key].length > 256) throw fault('NOT_PROVISIONED', 503)
++  }
++  if (!Array.isArray(client.operations) || client.operations.some(op => !['resolve','send','result'].includes(op))
++    || !Array.isArray(client.targets) || client.targets.length !== 1) throw fault('NOT_PROVISIONED', 503)
++  const target = client.targets[0]
++  for (const key of ['agent_id','principal_id','domain_id','binding_id','routing_version']) {
++    if (typeof target[key] !== 'string' || !target[key]) throw fault('NOT_PROVISIONED', 503)
++  }
++  return {...config,authServiceOrigin:origin.origin}
++}
++export async function authenticate({ authorization, config, operation, fetchImpl }) {
++  const credential = parseBasicCredential(authorization)
++  if (!credential) throw fault('INVALID_CREDENTIAL', 401)
++  let response, body
++  try {
++    response = await fetchImpl(config.authServiceOrigin + '/oauth/token', { method: 'POST', redirect:'error', headers: {
++      Authorization: authorization, 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
++    body: new URLSearchParams({ grant_type: 'client_credentials', resource: RESOURCE, scope: SCOPE }).toString(), signal: AbortSignal.timeout(15000) })
++    body = await response.json()
++  } catch { throw fault('AUTH_INCONCLUSIVE', 503) }
++  if (!response.ok) {
++    if (response.status >= 400 && response.status < 500 && ['invalid_client','invalid_scope','invalid_grant','invalid_resource','invalid_target'].includes(body?.error)) throw fault('INVALID_CREDENTIAL', 401)
++    throw fault('AUTH_INCONCLUSIVE', 503)
++  }
++  if (response.status !== 200 || typeof body?.access_token !== 'string' || !body.access_token
++    || typeof body.token_type !== 'string' || body.token_type.toLowerCase() !== 'bearer'
++    || !Number.isSafeInteger(body.expires_in) || body.expires_in <= 0
++    || (body.resource !== undefined && body.resource !== RESOURCE) || (body.scope !== undefined && !body.scope.split(' ').includes(SCOPE))) throw fault('AUTH_INCONCLUSIVE', 503)
++  const principal = config.clients.find(client => client.clientId === credential.clientId)
++  if (!principal || !principal.operations.includes(operation)) throw fault('NO_ACCESS', 403)
++  return principal
++}
+diff --git a/packages/product-api/src/conversation/http.js b/packages/product-api/src/conversation/http.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/http.js
+@@ -0,0 +1,22 @@
++import { failure, fault } from './protocol.js'
++export function createConversationHandler({service} = {}) {
++  return async function handle(req,url) {
++    if (!url.pathname.startsWith('/v1/conversation/')) return null
++    if (req.socket?.remoteAddress && !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return failure(fault('NO_ACCESS',403))
++    if (!service) return failure(fault('NOT_PROVISIONED',503))
++    const operation = url.pathname.slice('/v1/conversation/'.length)
++    if (req.method !== 'POST' || !['resolve','send','result'].includes(operation) || url.search) return failure(fault('NOT_SUPPORTED',405))
++    try {
++      const chunks=[]
++      let size=0
++      for await (const chunk of req) {
++        size+=chunk.length
++        if(size>1000000) throw fault('RESOURCE_LIMIT',413)
++        chunks.push(chunk)
++      }
++      let body
++      try {body=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)))} catch {throw fault('INVALID_ARGUMENTS')}
++      return await service.invoke(operation,body,req.headers.authorization)
++    } catch(error) {return failure(error)}
++  }
++}
+diff --git a/packages/product-api/src/conversation/native-proof.js b/packages/product-api/src/conversation/native-proof.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/native-proof.js
+@@ -0,0 +1,39 @@
++/** Read only the original Router operation; never an admission/retry surface. */
++export function originalNativeProof(row,router) {
++  let proof
++  try {
++    proof=row.reconciliation_handle
++      ? router.getTurnReconciliation?.(row.reconciliation_handle)
++      : router.resolveCallerCorrelation?.({requestId:row.native_request_id})
++  } catch {
++    return {facts:{execution_status:'unknown',reply_status:'unknown',native_reconciliation_state:'unavailable',
++      error_class:'UPSTREAM_UNAVAILABLE'},read_failed:true}
++  }
++  if(!proof)return {facts:{}}
++  const snapshot=proof.snapshot
++  if(!snapshot){
++    if(['evicted','restart_lost'].includes(proof.state))return {facts:{execution_status:'unknown',reply_status:'unknown',
++      native_reconciliation_state:proof.state,error_class:'OUTCOME_UNKNOWN'}}
++    return {facts:{native_reconciliation_state:proof.state??'unknown'},pending:['pending','recovering'].includes(proof.state)}
++  }
++  if(snapshot.agentId!==row.agent_id||snapshot.sessionId!=='main'
++    ||(row.message_id!==null&&snapshot.messageId!==row.message_id)
++    ||(snapshot.callerCorrelation?.requestId!==undefined&&snapshot.callerCorrelation.requestId!==row.native_request_id)){
++    return {facts:{execution_status:'unknown',reply_status:'unknown',native_reconciliation_state:'coordinate_mismatch',
++      error_class:'RESULT_UNRECOVERABLE'}}
++  }
++  const outcome=snapshot.lateOutcome??snapshot.outcome??snapshot.initialOutcome??null
++  const facts={native_reconciliation_state:proof.state??'unknown',native_outcome:outcome,
++    native_termination_evidence:snapshot.terminationEvidence??null}
++  if(typeof snapshot.messageId==='string'&&snapshot.messageId){
++    facts.message_id=snapshot.messageId
++    facts.session_id='main'
++    facts.request_status='accepted'
++  }
++  if(outcome==='outcome_unknown')Object.assign(facts,{execution_status:'unknown',reply_status:'unknown',error_class:'OUTCOME_UNKNOWN'})
++  else if(outcome==='terminated_without_outcome')Object.assign(facts,{execution_status:'interrupted',reply_status:'unknown',error_class:'OUTCOME_UNKNOWN'})
++  else if(['failed','late_failed'].includes(outcome))Object.assign(facts,{execution_status:'failed',reply_status:'failed',error_class:'TARGET_RUN_FAILED'})
++  else if(outcome==='not_admitted')Object.assign(facts,{request_status:'not_executed',execution_status:'not_started',reply_status:'unavailable',error_class:'NOT_EXECUTED'})
++  else if(['completed','late_completed'].includes(outcome))facts.execution_status='completed'
++  return {facts,completed:['completed','late_completed'].includes(outcome),pending:['pending','recovering'].includes(proof.state)}
++}
+diff --git a/packages/product-api/src/conversation/protocol.js b/packages/product-api/src/conversation/protocol.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/protocol.js
+@@ -0,0 +1,37 @@
++import { createHash, randomBytes } from 'node:crypto'
++export const CONTRACT_VERSION = 'native-conversation-v1'
++export const requestIdValid = value => typeof value === 'string' && /^[A-Za-z0-9._:-]{1,128}$/.test(value)
++export const canonical = value => Array.isArray(value) ? '[' + value.map(canonical).join(',') + ']'
++  : value && typeof value === 'object' ? '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}' : JSON.stringify(value)
++export const hash = value => createHash('sha256').update(typeof value === 'string' ? value : canonical(value)).digest('hex')
++export const nativeId = (subject, scope, request) => 'mcpnc-' + hash([subject, scope, request])
++export function fault(className, httpStatus = 400) { return Object.assign(new Error(className), { className, httpStatus }) }
++export function failure(error, request_id) {
++  const classification = error?.className ?? 'UPSTREAM_UNAVAILABLE'
++  return { status: error?.httpStatus ?? 503, body: { status: 'ERROR', contract_version: CONTRACT_VERSION,
++    ...(requestIdValid(request_id) ? { request_id } : {}), error: { class: classification },
++    diagnostic_id: randomBytes(8).toString('hex'), retryable: false,
++    retry_preconditions: ['RESULT_PERSIST_FAILED','RESULT_UNRECOVERABLE','UPSTREAM_UNAVAILABLE','OUTCOME_UNKNOWN'].includes(classification) ? ['query_original_request_only'] : [] } }
++}
++export function exactObject(value, required, optional = []) {
++  if (!value || typeof value !== 'object' || Array.isArray(value) || required.some(k => !Object.hasOwn(value,k))
++    || Object.keys(value).some(k => !required.includes(k) && !optional.includes(k))) throw fault('INVALID_ARGUMENTS')
++}
++export const opaque = (value, max = 4096) => typeof value === 'string' && value.length >= 1 && value.length <= max
++export function validateArgs(operation, body) {
++  if (operation === 'resolve') {
++    exactObject(body, ['target'])
++    exactObject(body.target, [], ['agent_id','workflow_instance_id'])
++    if (Object.keys(body.target).length !== 1) throw fault('INVALID_ARGUMENTS')
++    if (body.target.workflow_instance_id !== undefined) throw fault('NOT_SUPPORTED', 501)
++    if (typeof body.target.agent_id !== 'string' || !/^agt_[A-Za-z0-9_-]{1,124}$/.test(body.target.agent_id)) throw fault('INVALID_ARGUMENTS')
++  } else if (operation === 'send') {
++    exactObject(body, ['request_id','target_handle','message'], ['reply_to','workflow_refs'])
++    if (!requestIdValid(body.request_id) || !opaque(body.target_handle) || typeof body.message !== 'string'
++      || Buffer.byteLength(body.message,'utf8') < 1 || Buffer.byteLength(body.message,'utf8') > 65536 || body.message.includes('\0')) throw fault('INVALID_ARGUMENTS')
++    if (body.reply_to !== undefined || (body.workflow_refs !== undefined && (!Array.isArray(body.workflow_refs) || body.workflow_refs.length))) throw fault('NOT_SUPPORTED', 501)
++  } else if (operation === 'result') {
++    exactObject(body, ['request_id'], ['reply_cursor'])
++    if (!requestIdValid(body.request_id) || (body.reply_cursor !== undefined && !opaque(body.reply_cursor))) throw fault('INVALID_ARGUMENTS')
++  } else throw fault('NOT_SUPPORTED', 501)
++}
+diff --git a/packages/product-api/src/conversation/runtime.js b/packages/product-api/src/conversation/runtime.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/runtime.js
+@@ -0,0 +1,15 @@
++import { join } from 'node:path'
++import { createConversationService } from './service.js'
++import { createConversationHandler } from './http.js'
++import { loadConversationConfig } from './auth.js'
++export function mountConversationRuntime(ctx,{layout,router,definition,config={}}) {
++  if (config.enabled !== true) return null
++  const service = createConversationService({router,definition,
++    storeFile:join(layout.controlDir,'native-conversation','requests.json'),
++    configProvider:() => loadConversationConfig(config.authConfigFile),
++  })
++  ctx.provide('nativeConversation',service)
++  ctx.effect(() => () => service.close())
++  return service
++}
++export {createConversationHandler}
+diff --git a/packages/product-api/src/conversation/service.js b/packages/product-api/src/conversation/service.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/service.js
+@@ -0,0 +1,243 @@
++import { existsSync } from 'node:fs'
++import { redactInspectionText } from '../../../production-runtime/src/agent-session/projection-redaction.js'
++import { authenticate, validateConfig } from './auth.js'
++import { originalNativeProof } from './native-proof.js'
++import { ConversationStore } from './store.js'
++import { CONTRACT_VERSION, failure, fault, hash, validateArgs } from './protocol.js'
++
++const targetHandle = (p,t) => 'target_nc1_' + hash([p.subject_id,p.communication_scope_id,t])
++const sessionHandle = row => 'session_nc1_' + hash([row.subject_id,row.communication_scope_id,row.agent_id,row.session_id,row.session_generation])
++const time = value => Number.isSafeInteger(value) && value >= 0 ? value : null
++function bodyPage(text, cursor, row) {
++  const bytes = Buffer.from(text,'utf8'), tag = hash([row.key,text])
++  let offset = 0
++  if (cursor !== undefined) {
++    let parsed
++    try { parsed = JSON.parse(Buffer.from(cursor,'base64url').toString('utf8')) } catch { throw fault('CURSOR_STALE',409) }
++    if (parsed.tag !== tag || !Number.isSafeInteger(parsed.offset) || parsed.offset < 0 || parsed.offset >= bytes.length) throw fault('CURSOR_STALE',409)
++    offset = parsed.offset
++    if ((bytes[offset] & 0xc0) === 0x80) throw fault('CURSOR_STALE',409)
++  }
++  let end = Math.min(bytes.length,offset+6144)
++  while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end -= 1
++  return { reply_body: bytes.subarray(offset,end).toString('utf8'), reply_body_sha256: hash(bytes.toString('utf8')),
++    reply_body_bytes: bytes.length, reply_body_offset: offset, reply_body_complete: end === bytes.length,
++    next_reply_cursor: end < bytes.length ? Buffer.from(JSON.stringify({tag,offset:end})).toString('base64url') : null }
++}
++
++export function createConversationService({ router, definition, storeFile, configProvider = () => null, fetchImpl = fetch, now = Date.now }) {
++  let store, closed = false
++  const ensureStore = () => { if (!store) store = new ConversationStore(storeFile,now); return store }
++  const reconcile = async row => {
++    const native=originalNativeProof(row,router)
++    const retainFacts=fields=>{
++      if(Object.entries(fields).some(([key,value])=>JSON.stringify(row[key])!==JSON.stringify(value))) {
++        try { row=ensureStore().update(row.key,current=>Object.assign(current,fields)) }
++        catch { throw Object.assign(fault('RESULT_PERSIST_FAILED',503),{knownFacts:{...row,...fields}}) }
++      }
++      return row
++    }
++    const executionDiagnostic = () => native.facts.error_class ? {
++      class:native.facts.error_class,diagnostic_id:hash([row.key,'execution',native.facts]).slice(0,16),
++      retryable:false,retry_preconditions:['query_original_request_only'],
++    } : native.completed ? null : row.execution_diagnostic??null
++    if(row.reply_status==='available') {
++      // Canonical reply bytes and their TTL are immutable. The original Router
++      // may still settle later; refreshing its facts never clears its fence.
++      const {reply_status,error_class,...executionFacts}=native.facts
++      return retainFacts({...executionFacts,execution_diagnostic:executionDiagnostic()})
++    }
++    if(row.result_persisted_at!==null)return row
++    retainFacts(native.facts)
++    let source
++    try { source=await router.readConversationSource({requestId:row.native_request_id,agentId:row.agent_id}) }
++    catch {
++      retainFacts({error_class:'UPSTREAM_UNAVAILABLE',source_read_state:'unavailable',reply_status:'unknown'})
++      throw fault('UPSTREAM_UNAVAILABLE',503)
++    }
++    retainFacts({source_read_state:'available'})
++    if(native.read_failed)throw fault('UPSTREAM_UNAVAILABLE',503)
++    if(native.facts.error_class && native.facts.error_class!=='OUTCOME_UNKNOWN')throw fault(native.facts.error_class,503)
++    // A recovered read clears only a transient read error. Original execution
++    // uncertainty remains separate from any exact reply recovered below.
++    if(row.error_class==='UPSTREAM_UNAVAILABLE')retainFacts({error_class:null,source_read_state:'available'})
++    if (!source || ['pending','not_found'].includes(source.state)) {
++      if(native.facts.error_class)throw fault(native.facts.error_class,503)
++      if(native.completed){
++        retainFacts({request_status:'accepted',execution_status:'completed',reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
++        throw fault('RESULT_UNRECOVERABLE',503)
++      }
++      if(source?.agent_id===row.agent_id&&source.message_id===row.message_id&&source.session_id==='main'&&time(source.started_at)!==null){
++        retainFacts({execution_status:'running',started_at:time(source.started_at)})
++      }
++      return row
++    }
++    if (source.agent_id !== row.agent_id || (row.message_id !== null && source.message_id !== row.message_id)
++      || !source.message_id || !source.session_generation || source.session_id !== 'main'
++      || (row.session_generation!==null&&row.session_generation!==source.session_generation)
++      || !Number.isSafeInteger(source.turn_id)) {
++      retainFacts({reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
++      throw fault('RESULT_UNRECOVERABLE',503)
++    }
++    if (source.state === 'unrecoverable') {
++      retainFacts({reply_status:'unknown',error_class:'RESULT_UNRECOVERABLE'})
++      throw fault('RESULT_UNRECOVERABLE',503)
++    }
++    if (!['completed','failed','interrupted'].includes(source.state)) {
++      if(native.facts.error_class)throw fault(native.facts.error_class,503)
++      return row
++    }
++    const safeText=typeof source.reply_body==='string'?redactInspectionText(source.reply_body):null
++    const noVisible=safeText===''||source.reply_coverage?.reason==='no_visible_reply'
++    const coverage=source.reply_coverage??{selection:'last_nonempty_visible_assistant_message',limit_bytes:1048576,
++      reason:noVisible?'no_visible_reply':source.truncated?'truncated':safeText===null?'source_not_available':'visible_reply'}
++    try {
++      const committed=ensureStore().update(row.key,current=>{
++        if(current.result_persisted_at!==null)return
++        current.request_status='accepted'
++        current.execution_status=native.facts.execution_status??(source.state==='completed'?current.execution_status:source.state)
++        current.execution_diagnostic=executionDiagnostic()
++        current.session_id=source.session_id
++        current.session_generation=source.session_generation
++        current.main_resolution=source.main_resolution??current.main_resolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}
++        current.message_id=source.message_id
++        current.native_turn_id=source.turn_id??null
++        current.accepted_at=current.accepted_at??time(source.accepted_at)
++        current.started_at=time(source.started_at)
++        current.finished_at=time(source.finished_at)
++        current.reply_created_at=time(source.reply_created_at)
++        current.reply_status=source.state!=='completed'?'incomplete':source.truncated===true||safeText===null||noVisible||!source.source_retained?'unavailable':'available'
++        current.reply_coverage=coverage
++        current.reply_body=current.reply_status==='available'?safeText:null
++        current.reply_message_id=source.reply_message_id??null
++        current.reply_projection_id='reply_nc1_'+hash([current.native_request_id,current.message_id,current.native_turn_id,safeText])
++        current.redacted=safeText!==source.reply_body
++        current.result_persisted_at=now()
++        current.expires_at=current.result_persisted_at+current.retention_ms
++        current.error_class=source.state==='failed'?'TARGET_RUN_FAILED':source.state==='interrupted'?'OUTCOME_UNKNOWN':current.reply_status==='unavailable'
++          ?source.truncated?'TRUNCATED':noVisible?'REPLY_UNAVAILABLE':'RESULT_UNRECOVERABLE':null
++      })
++      try { router.acknowledgeConversationSource?.({requestId:row.native_request_id,agentId:row.agent_id,expiresAt:committed.expires_at}) } catch { /* durable result committed; original source stays retained */ }
++      return committed
++    } catch { throw fault('RESULT_PERSIST_FAILED',503) }
++  }
++  if (storeFile && existsSync(storeFile)) ensureStore()
++  const scan = async handle => {
++    if (!store || closed) return
++    for (const row of store.all()) {
++      if (handle && row.reconciliation_handle !== handle) continue
++      try { await reconcile(row) } catch { /* canonical read reports the persisted/source condition; never resends */ }
++    }
++  }
++  queueMicrotask(() => { void scan() })
++  const dispose = typeof router?.onTurnReconciled === 'function' ? router.onTurnReconciled(event => { void scan(event?.handle) }) : () => {}
++
++  function targetFor(principal, agentId) {
++    const target = principal.targets.find(t => t.agent_id === agentId)
++    if (!target) throw fault('NOT_FOUND_OR_NOT_VISIBLE',404)
++    const agent = definition.getAgent(agentId)
++    const binding = router.getBinding(target.binding_id)
++    if (agent?.id !== agentId || agent.disabled === true || binding?.activeAgentId !== agentId || binding?.activeSessionId !== 'main') throw fault('NOT_FOUND_OR_NOT_VISIBLE',404)
++    return target
++  }
++  function present(row, cursor) {
++    if (row.error_class && row.error_class !== 'RESULT_EXPIRED') throw fault(row.error_class,503)
++    if (row.expires_at !== undefined && now() >= row.expires_at) {
++      if (row.reply_body !== null) ensureStore().update(row.key,current => { current.reply_body = null; current.reply_status = 'unavailable'; current.error_class = 'RESULT_EXPIRED' })
++      throw fault('RESULT_EXPIRED',410)
++    }
++    const unknown = ['message_id','accepted_at','started_at','finished_at','reply_created_at','session_generation','reply_message_id','native_turn_id'].filter(key => row[key] === null || row[key] === undefined)
++    if (!row.session_generation) unknown.push('session_handle')
++    return { status: 'OK', contract_version: CONTRACT_VERSION, request_id: row.request_id, agent_id: row.agent_id,
++      session_handle: row.session_generation ? sessionHandle(row) : null, session_generation: row.session_generation,
++      session_generation_namespace: 'dsh_trajectory_header_sha256_v1', message_id: row.message_id,
++      reply_to: row.reply_status === 'available' ? row.message_id : null, relation_source: row.reply_status === 'available' ? 'native_turn' : null,
++      native_parent_id: null, workflow_refs: [], submitted_at: row.submitted_at, accepted_at: row.accepted_at,
++      started_at: row.started_at, finished_at: row.finished_at, reply_created_at: row.reply_created_at,
++      result_persisted_at: row.result_persisted_at, served_at: now(), request_status: row.request_status,
++      execution_status: row.execution_status, reply_status: row.reply_status, reply_message_id: row.reply_message_id ?? row.reply_projection_id ?? null,
++      reply_message_id_namespace: row.reply_message_id ? 'native_dsh' : 'request_owned_native_turn_v1', native_reply_message_id: row.reply_message_id ?? null,
++      reply_projection_id: row.reply_projection_id ?? null, reply_projection_namespace: 'request_owned_native_turn_v1',
++      native_turn_id: row.native_turn_id ?? null, main_resolution:row.main_resolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null},
++      continuation:{session_handle:row.session_generation?sessionHandle(row):null,read_result_request_id:row.request_id,
++        followup:{operation:'resolve_agent_target',agent_id:row.agent_id,session_policy:'current_main',resume_original_generation:false,requires_current_authorization:true}},
++      reply_coverage:row.reply_coverage??null,native_reconciliation_state:row.native_reconciliation_state??null,
++      execution_diagnostic:row.execution_diagnostic??null,
++      native_outcome:row.native_outcome??null,native_termination_evidence:row.native_termination_evidence??null,retention_ms: row.retention_ms, expires_at: row.expires_at ?? null,
++      provenance: 'OWNER_REPORT', business_goal_status: 'unknown', redacted: row.redacted ?? false,
++      field_availability: Object.fromEntries(unknown.map(key => [key,{status:'unknown',reason:'source_field_not_available'}])),
++      ...(row.reply_status === 'available' ? bodyPage(row.reply_body,cursor,row) : { reply_body:null,next_reply_cursor:null }),
++      error: row.error_class ? {class:row.error_class} : null, retryable:false, retry_preconditions:[] }
++  }
++  return {
++    async invoke(operation, body, authorization) {
++      let principal
++      try {
++        if (closed) throw fault('NOT_PROVISIONED',503)
++        const config = validateConfig(await configProvider())
++        principal = await authenticate({authorization,config,operation,fetchImpl})
++        validateArgs(operation,body)
++        if (operation === 'resolve') {
++          const target = targetFor(principal,body.target.agent_id)
++          return { status:200, body:{status:'OK',contract_version:CONTRACT_VERSION,target_handle:targetHandle(principal,target),
++            agent_id:target.agent_id,principal_id:target.principal_id,domain:target.domain_id,node_owner:null,
++            mapping_provenance:'owner_controlled_config_and_exact_definition',allowed_operations:[...principal.operations],
++            sessions:[{mode:'main',history_scope:'request_bound_only'}],unsupported:['fresh','archive','workflow_resolution','history','events']} }
++        }
++        const db = ensureStore()
++        if (operation === 'result') {
++          const original = db.get(principal,body.request_id)
++          if (!original || !principal.targets.some(t => t.agent_id === original.agent_id)) throw fault('NOT_FOUND_OR_NOT_VISIBLE',404)
++          const row = await reconcile(original)
++          return {status:200,body:present(row,body.reply_cursor)}
++        }
++        const old = db.get(principal,body.request_id)
++        const target = old && body.target_handle === targetHandle(principal,old.target) ? old.target : principal.targets.find(t => body.target_handle === targetHandle(principal,t))
++        if (!target || !principal.targets.some(t => t.agent_id === target.agent_id)) throw fault('NO_ACCESS',403)
++        const reservation = db.reserve(principal,body,target,config)
++        if (!reservation.fresh) return {status:200,body:present(await reconcile(reservation.row))}
++        let receipt
++        try {
++          targetFor(principal,target.agent_id)
++          receipt = await router.sendProductSurface({ requestId:reservation.row.native_request_id,
++            bindingId:target.binding_id,agentId:target.agent_id,message:body.message })
++        } catch (cause) {
++          const noAdmission = cause?.proven === 'zero_byte' || cause?.status === 'not_admitted'
++          const row = db.update(reservation.row.key,current => {current.request_status=noAdmission?'not_executed':'unknown'; current.execution_status=noAdmission?'not_started':'unknown'; current.reply_status='unknown'})
++          return {status:200,body:present(row)}
++        }
++        if (receipt?.accepted !== true || !receipt.messageId || !receipt.reconciliationHandle || !receipt.sessionGeneration || receipt.sessionId !== 'main') {
++          const row = db.update(reservation.row.key,current => {current.request_status='unknown';current.execution_status='unknown';current.reply_status='unknown'})
++          return {status:200,body:present(row)}
++        }
++        let row
++        try {
++          row = db.update(reservation.row.key,current => {current.request_status='accepted';current.execution_status='unknown';
++            current.accepted_at=time(receipt.acceptedAt) ?? now();current.session_id=receipt.sessionId;
++            current.session_generation=receipt.sessionGeneration ?? null;current.message_id=receipt.messageId;current.reconciliation_handle=receipt.reconciliationHandle;
++            current.main_resolution=receipt.mainResolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null}})
++        } catch { throw fault('RESULT_PERSIST_FAILED',503) }
++        row = await reconcile(row)
++        return {status:202,body:present(row)}
++      } catch (error) {
++        const response = failure(error,body?.request_id)
++        if (principal && store && ['RESULT_PERSIST_FAILED','RESULT_UNRECOVERABLE','RESULT_EXPIRED','UPSTREAM_UNAVAILABLE','OUTCOME_UNKNOWN','TARGET_RUN_FAILED','NOT_EXECUTED','REPLY_UNAVAILABLE','TRUNCATED'].includes(error?.className)) {
++          const row = error.knownFacts ?? store.get(principal,body?.request_id)
++          if (row && principal.targets.some(t => t.agent_id === row.agent_id)) Object.assign(response.body,{
++            agent_id:row.agent_id,message_id:row.message_id,request_status:row.request_status,
++            execution_status:row.execution_status,reply_status:row.reply_status,reply_body:null,
++            session_handle:row.session_generation?sessionHandle(row):null,session_generation:row.session_generation,
++            native_reconciliation_state:row.native_reconciliation_state??null,native_outcome:row.native_outcome??null,
++            native_termination_evidence:row.native_termination_evidence??null,reply_coverage:row.reply_coverage??null,
++            source_read_state:row.source_read_state??null,main_resolution:row.main_resolution??{disposition:'unknown',reason:'source_field_not_available',generation_change_reason:null},
++            submitted_at:row.submitted_at,accepted_at:row.accepted_at,started_at:row.started_at,
++            finished_at:row.finished_at,reply_created_at:row.reply_created_at,result_persisted_at:row.result_persisted_at,
++          })
++        }
++        return response
++      }
++    },
++    close() {closed=true;dispose()},
++    reconcilePending: () => scan(),
++  }
++}
+diff --git a/packages/product-api/src/conversation/store.js b/packages/product-api/src/conversation/store.js
+--- /dev/null
++++ b/packages/product-api/src/conversation/store.js
+@@ -0,0 +1,46 @@
++import { atomicPrivateJson, lockedPrivateMutation, readPrivateJson } from '../../../agent-router/src/conversation/persistence.js'
++import { fault, hash, nativeId, requestIdValid } from './protocol.js'
++export class ConversationStore {
++  constructor(file, now = Date.now) {
++    this.file = file
++    this.now = now
++    this.read()
++    this.mutate(doc => {
++      for (const row of doc.records) {
++        if (row.request_status === 'reserved') row.request_status = 'unknown'
++        if (row.execution_status === 'running') row.execution_status = 'unknown'
++      }
++    })
++  }
++  read() {
++    const doc = readPrivateJson(this.file) ?? { version: 1, records: [] }
++    if (doc.version !== 1 || !Array.isArray(doc.records) || doc.records.some(row => !row.key || !row.native_request_id || !row.digest || !row.subject_id || !row.communication_scope_id || !row.request_id)
++      || doc.records.some(row => !requestIdValid(row.request_id) || row.key !== hash([row.subject_id,row.communication_scope_id,row.request_id])
++        || row.native_request_id !== nativeId(row.subject_id,row.communication_scope_id,row.request_id) || row.agent_id !== row.target?.agent_id
++        || (row.reply_status === 'available' && (typeof row.reply_body !== 'string' || row.reply_projection_id !== 'reply_nc1_' + hash([row.native_request_id,row.message_id,row.native_turn_id,row.reply_body]))))
++      || new Set(doc.records.map(row => row.key)).size !== doc.records.length) throw fault('RESULT_STORE_INVALID', 503)
++    return doc
++  }
++  mutate(fn) {
++    return lockedPrivateMutation(this.file, () => { const doc = this.read(), result = fn(doc); atomicPrivateJson(this.file, doc); return structuredClone(result ?? null) })
++  }
++  key(principal, request_id) { return hash([principal.subject_id, principal.communication_scope_id, request_id]) }
++  get(principal, request_id) { return this.read().records.find(row => row.key === this.key(principal, request_id)) }
++  all() { return this.read().records }
++  reserve(principal, body, target, config) {
++    const key = this.key(principal, body.request_id), digest = hash({ agent_id: target.agent_id, message: body.message, reply_to: null, workflow_refs: body.workflow_refs ?? [] })
++    return this.mutate(doc => {
++      const old = doc.records.find(row => row.key === key)
++      if (old) { if (old.digest !== digest) throw fault('REQUEST_CONFLICT', 409); return { fresh: false, row: old } }
++      if (doc.records.length >= config.maxRecords) throw fault('RESOURCE_LIMIT', 429)
++      const row = { key, subject_id: principal.subject_id, communication_scope_id: principal.communication_scope_id,
++        request_id: body.request_id, native_request_id: nativeId(principal.subject_id, principal.communication_scope_id, body.request_id),
++        digest, target: structuredClone(target), agent_id: target.agent_id, request_status: 'reserved', execution_status: 'not_started', reply_status: 'pending',
++        submitted_at: this.now(), retention_ms: config.retentionMs, accepted_at: null, started_at: null, finished_at: null,
++        reply_created_at: null, result_persisted_at: null, session_id: null, session_generation: null, message_id: null, reconciliation_handle: null }
++      doc.records.push(row)
++      return { fresh: true, row }
++    })
++  }
++  update(key, fn) { return this.mutate(doc => { const row = doc.records.find(row => row.key === key); if (!row) throw fault('NOT_FOUND_OR_NOT_VISIBLE',404); fn(row); return row }) }
++}
+diff --git a/packages/product-api/src/index.js b/packages/product-api/src/index.js
+--- a/packages/product-api/src/index.js
++++ b/packages/product-api/src/index.js
+@@ -49,6 +49,7 @@
+  */
+ 
+ import { createServer } from 'node:http'
++import { createConversationHandler } from './conversation/http.js'
+ import z from '@deepseek-ai/schemastery'
+ import { handleSchedulerHealthRequest } from './scheduler-health-routes.js'
+ 
+@@ -238,6 +239,7 @@
+     }
+   }
+ 
++  const conversation = () => createConversationHandler({service:config.conversationService ?? ctx.get('nativeConversation')})
+   const server = createServer(async (req, res) => {
+     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
+     try {
+@@ -245,6 +247,8 @@
+         json(res, 200, { ok: true, service: 'agent-core-product-api' })
+         return
+       }
++      const conversationResult = await conversation()(req,url)
++      if (conversationResult) { res.setHeader('Cache-Control','no-store'); json(res,conversationResult.status,conversationResult.body); return }
+       if (req.method === 'GET' && url.pathname === '/v1/binding') {
+         json(res, 200, getBinding(url.searchParams))
+         return
+diff --git a/packages/product-api/test/conversation/native-source-fault.test.js b/packages/product-api/test/conversation/native-source-fault.test.js
+--- /dev/null
++++ b/packages/product-api/test/conversation/native-source-fault.test.js
+@@ -0,0 +1,50 @@
++import assert from 'node:assert/strict'
++import {test} from 'node:test'
++import {mkdtempSync,rmSync,chmodSync} from 'node:fs'
++import {join} from 'node:path'
++import {tmpdir} from 'node:os'
++import {createConversationSource,readConversationSource} from '../../../agent-router/src/conversation/source.js'
++import {atomicPrivateJson} from '../../../agent-router/src/conversation/persistence.js'
++import {createConversationService} from '../../src/conversation/service.js'
++
++test('real source turn-end disk fault is reported through original request; no perpetual pending and no replay',async t=>{
++  const dir=mkdtempSync(join(tmpdir(),'native-source-fault-')),sourceDir=join(dir,'source'),agentId='agt_pilot'
++  t.after(()=>rmSync(dir,{recursive:true,force:true}))
++  const source=createConversationSource({directory:sourceDir,agentId,write(path,row){
++    if(row.state!=='completed')return atomicPrivateJson(path,row)
++    chmodSync(sourceDir,0o500)
++    try{return atomicPrivateJson(path,row)}finally{chmodSync(sourceDir,0o700)}
++  }})
++  let sent=0,nativeId
++  const router={getBinding:()=>({activeAgentId:agentId,activeSessionId:'main'}),onTurnReconciled:()=>()=>{},
++    getTurnReconciliation:()=>({state:'settled',snapshot:{agentId,sessionId:'main',messageId:'native-user',outcome:'completed'}}),
++    readConversationSource:({requestId})=>readConversationSource({directory:sourceDir,agentId,requestId}),
++    async sendProductSurface({requestId}){
++      sent+=1
++      nativeId=requestId
++      const session={id:'main',header:{id:'main',createdAt:11}}
++      const receipt=source.reserve({requestId,session,message:{id:'native-user'}})
++      const events=[['agent/inbox/spliced',{inserted:[{id:'native-user'}]}],['turn/start',{turn:1}],['user/message',{id:'native-user'}],
++        ['assistant/message',{turn:1,message:{content:[{type:'text',text:'retained text without terminal commit'}]}}],['turn/end',{turn:1,reason:{kind:'completed'}}]]
++      events.forEach(([type,data],seq)=>{try{source.onEvent(session,{type,data,seq,time:100+seq})}catch{/* original Router facts still flow */}})
++      return{accepted:true,sessionId:'main',messageId:'native-user',reconciliationHandle:'native-turn',...receipt}
++    }}
++  const config={enabled:true,authServiceOrigin:'https://auth.example',retentionMs:10000,maxRecords:10,clients:[{
++    clientId:'client',subject_id:'subject',communication_scope_id:'scope',principal_id:'product',operations:['resolve','send','result'],
++    targets:[{agent_id:agentId,principal_id:'agent',domain_id:'domain',binding_id:'mcp:pilot',routing_version:'1'}]}]}
++  const service=createConversationService({router,definition:{getAgent:()=>({id:agentId})},storeFile:join(dir,'requests.json'),configProvider:()=>config,
++    fetchImpl:async()=>({status:200,ok:true,json:async()=>({access_token:'fixture-only',token_type:'Bearer',expires_in:60})})})
++  t.after(()=>service.close())
++  const auth='Basic '+Buffer.from('client:fixture-only').toString('base64')
++  const resolved=await service.invoke('resolve',{target:{agent_id:agentId}},auth)
++  const payload={request_id:'source-write-failure',target_handle:resolved.body.target_handle,message:'new request'}
++  const result=await service.invoke('send',payload,auth)
++  assert.equal(result.body.error.class,'RESULT_UNRECOVERABLE')
++  assert.equal(result.body.execution_status,'completed')
++  assert.equal(result.body.reply_status,'unknown')
++  assert.ok(result.body.diagnostic_id)
++  assert.equal(readConversationSource({directory:sourceDir,agentId,requestId:nativeId}).state,'pending')
++  await service.invoke('send',payload,auth)
++  await service.invoke('result',{request_id:payload.request_id},auth)
++  assert.equal(sent,1)
++})
+diff --git a/packages/product-api/test/conversation/pilot.test.js b/packages/product-api/test/conversation/pilot.test.js
+--- /dev/null
++++ b/packages/product-api/test/conversation/pilot.test.js
+@@ -0,0 +1,335 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { mkdtempSync, rmSync, existsSync, chmodSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++import { apply } from '../../src/index.js'
++
++const agent = 'agt_pilot'
++const credential = 'Basic ' + Buffer.from('pilot-client:fixture-secret').toString('base64')
++export const pilotConfig = () => ({ enabled: true, authServiceOrigin: 'https://auth.example', retentionMs: 3600000,
++  maxRecords: 100, clients: [{ clientId: 'pilot-client', subject_id: 'dot-subject', communication_scope_id: 'pilot-scope',
++    principal_id: 'product-principal', operations: ['resolve', 'send', 'result'], targets: [{ agent_id: agent,
++      principal_id: 'agent-principal', domain_id: 'pilot-domain', binding_id: 'mcp:pilot', routing_version: '1' }] }] })
++
++async function fixture(t) {
++  const modulePath = new URL('../../src/conversation/service.js', import.meta.url)
++  assert.ok(existsSync(modulePath), 'native conversation service is implemented')
++  const { createConversationService } = await import(modulePath)
++  const dir = mkdtempSync(join(tmpdir(), 'native-pilot-'))
++  t.after(() => rmSync(dir, { recursive: true, force: true }))
++  const calls = [], sources = new Map(), listeners = new Set()
++  const router = {
++    getBinding: () => ({ activeAgentId: agent, activeSessionId: 'main', workspace: null }),
++    sendProductSurface: async ({ requestId }) => { calls.push(requestId); return { accepted: true, sessionId: 'main',
++      messageId: 'user-' + calls.length, sessionGeneration: 'trajectory:fixture', reconciliationHandle: 'turn-' + calls.length } },
++    readConversationSource: ({ requestId }) => sources.get(requestId) ?? { state: 'pending' },
++    resolveCallerCorrelation: () => ({ state: 'never_existed' }),
++    onTurnReconciled: fn => { listeners.add(fn); return () => listeners.delete(fn) },
++  }
++  const config = pilotConfig()
++  const authCalls = []
++  const fetchImpl = async (url, options) => { authCalls.push({ url, options }); return { ok: true, status: 200,
++    json: async () => ({ access_token: 'fixture-ignored-token', token_type: 'Bearer', expires_in: 60 }) } }
++  const make = () => createConversationService({ router, definition: { getAgent: id => ({ id, disabled: false }) },
++    storeFile: join(dir, 'requests.json'), configProvider: () => config, fetchImpl })
++  const service = make()
++  t.after(() => service.close())
++  const resolve = () => service.invoke('resolve', { target: { agent_id: agent } }, credential)
++  const finish = (nativeId, text, messageId = 'reply-native') => {
++    sources.set(nativeId, { state: 'completed', agent_id: agent, session_id: 'main', session_generation: 'trajectory:fixture',
++      message_id: 'user-' + (calls.indexOf(nativeId) + 1), turn_id: calls.indexOf(nativeId) + 1, reply_message_id: messageId,
++      reply_body: text, started_at: 100, finished_at: 200, reply_created_at: 199, source_retained: true })
++  }
++  return { service, make, calls, sources, listeners, resolve, finish, config, authCalls, router, dir }
++}
++
++test('native HTTP routes fail closed while unconfigured; no Router target read', async t => {
++  const services = new Map([['agentRouter', {}], ['agentDefinition', {}]])
++  const disposers = []
++  const ctx = { get: key => services.get(key), provide: (k,v) => services.set(k,v), effect: fn => disposers.push(fn()) }
++  const api = apply(ctx, { port: 0 })
++  t.after(() => disposers.forEach(fn => fn?.()))
++  await new Promise(resolve => setImmediate(resolve))
++  const res = await fetch('http://127.0.0.1:' + api.address().port + '/v1/conversation/send', {
++    method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })
++  assert.equal(res.status, 503)
++  const body = await res.json()
++  assert.equal(body.error.class, 'NOT_PROVISIONED')
++  assert.ok(body.diagnostic_id)
++})
++
++test('principal-scoped request key survives restart, duplicates do not send, payload conflict is explicit', async t => {
++  const f = await fixture(t)
++  const resolved = await f.resolve()
++  assert.equal(resolved.status, 200)
++  const payload = { request_id: 'new-pilot-1', target_handle: resolved.body.target_handle, message: 'progress?' }
++  const [a,b] = await Promise.all([f.service.invoke('send', payload, credential), f.service.invoke('send', payload, credential)])
++  assert.equal(a.body.request_id, payload.request_id)
++  assert.equal(b.body.request_id, payload.request_id)
++  assert.equal(f.calls.length, 1)
++  assert.equal((await f.service.invoke('send', { ...payload, message: 'changed' }, credential)).status, 409)
++  f.finish(f.calls[0], 'owner report')
++  const result = await f.service.invoke('result', { request_id: payload.request_id }, credential)
++  assert.equal(result.body.reply_status, 'available')
++  assert.equal(result.body.reply_body, 'owner report')
++  assert.equal(result.body.reply_to, 'user-1')
++  f.service.close()
++  const restarted = f.make()
++  t.after(() => restarted.close())
++  assert.equal((await restarted.invoke('result', { request_id: payload.request_id }, credential)).body.reply_body, 'owner report')
++  assert.equal(f.calls.length, 1)
++})
++
++test('two reverse-order replies use native request coordinates; automatic callback persists results', async t => {
++  const f = await fixture(t), resolved = await f.resolve()
++  for (const request_id of ['one','two']) await f.service.invoke('send', { request_id, target_handle: resolved.body.target_handle, message: request_id }, credential)
++  f.finish(f.calls[1], 'second reply', 'reply-2')
++  for (const fn of f.listeners) fn({ handle: 'turn-2' })
++  await new Promise(resolve => setImmediate(resolve))
++  f.finish(f.calls[0], 'first reply', 'reply-1')
++  for (const fn of f.listeners) fn({ handle: 'turn-1' })
++  await new Promise(resolve => setImmediate(resolve))
++  assert.equal((await f.service.invoke('result', { request_id: 'one' }, credential)).body.reply_body, 'first reply')
++  assert.equal((await f.service.invoke('result', { request_id: 'two' }, credential)).body.reply_body, 'second reply')
++})
++
++test('authorization revalidated per request and grants/targets are not borrowed from a handle', async t => {
++  const f = await fixture(t), target = await f.resolve()
++  f.config.clients[0].operations = ['resolve']
++  const denied = await f.service.invoke('send', { request_id: 'denied', target_handle: target.body.target_handle, message: 'x' }, credential)
++  assert.equal(denied.status, 403)
++  assert.equal(f.calls.length, 0)
++  assert.equal(f.authCalls.length, 2)
++  assert.equal(new URLSearchParams(f.authCalls[0].options.body).get('resource'), 'agent-core-mcp-conversation-v1')
++  assert.equal(new URLSearchParams(f.authCalls[0].options.body).get('scope'), 'conversation.access')
++  assert.equal((await f.service.invoke('resolve', { target: { workflow_instance_id: '00000000-0000-4000-8000-000000000000' } }, credential)).body.error.class, 'NOT_SUPPORTED')
++})
++
++test('reserved/unknown original is recovered from source after lost receipt, never routed again',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  const payload={request_id:'receipt-lost',target_handle:target.body.target_handle,message:'one new question'}
++  const original=f.service
++  // The source is still correlated by the deterministic native request even
++  // if the HTTP transport disappears after sending and before reading it.
++  const deliver=f.router.sendProductSurface
++  f.router.sendProductSurface=async args=>{await deliver(args);throw Error('receipt transport lost')}
++  const uncertain=await original.invoke('send',payload,credential)
++  assert.equal(uncertain.body.request_status,'unknown')
++  f.finish(f.calls[0],'reply retained before facade restart')
++  original.close()
++  const restored=f.make()
++  t.after(()=>restored.close())
++  const result=await restored.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(result.body.reply_status,'available')
++  assert.equal(result.body.reply_body,'reply retained before facade restart')
++  assert.equal(f.calls.length,1)
++})
++
++test('missing auth and stale target are denied without sending or exposing source',async t=>{
++  const f=await fixture(t)
++  const denied=await f.service.invoke('resolve',{target:{agent_id:agent}},'')
++  assert.equal(denied.status,401)
++  assert.ok(denied.body.diagnostic_id)
++  assert.equal(JSON.stringify(denied).includes('fixture-secret'),false)
++  const target=await f.resolve()
++  f.config.clients[0].targets[0].routing_version='2'
++  assert.equal((await f.service.invoke('send',{request_id:'stale',target_handle:target.body.target_handle,message:'x'},credential)).status,403)
++  assert.equal(f.calls.length,0)
++})
++
++test('pagination gives UTF8-safe complete reply with stable projection ID when native assistant ID is unknown',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  await f.service.invoke('send',{request_id:'long',target_handle:target.body.target_handle,message:'x'},credential)
++  f.finish(f.calls[0],'业务回复'.repeat(2000),null)
++  let cursor,body='',id
++  do{
++    const result=await f.service.invoke('result',{request_id:'long',...(cursor?{reply_cursor:cursor}:{})},credential)
++    assert.equal(result.body.reply_status,'available')
++    assert.equal(result.body.native_reply_message_id,null)
++    assert.ok(result.body.reply_message_id.startsWith('reply_nc1_'))
++    if(id)assert.equal(result.body.reply_message_id,id)
++    id=result.body.reply_message_id
++    assert.ok(Buffer.byteLength(result.body.reply_body)<=6144)
++    body+=result.body.reply_body
++    cursor=result.body.next_reply_cursor
++  }while(cursor)
++  assert.equal(body,'业务回复'.repeat(2000))
++})
++
++
++test('a settled native turn with source still pending is an explicit unrecoverable failure, not perpetual pending',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  await f.service.invoke('send',{request_id:'source-fault',target_handle:target.body.target_handle,message:'x'},credential)
++  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{agentId:agent,sessionId:'main',messageId:'user-1',outcome:'completed'}})
++  const result=await f.service.invoke('result',{request_id:'source-fault'},credential)
++  assert.equal(result.body.error.class,'RESULT_UNRECOVERABLE')
++  assert.equal(result.body.execution_status,'completed')
++  assert.equal(result.body.reply_status,'unknown')
++  assert.ok(result.body.diagnostic_id)
++  assert.equal(f.calls.length,1)
++})
++
++test('source retained but facade disk write fails: original result can be repaired, never resent',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  await f.service.invoke('send',{request_id:'persist-fault',target_handle:target.body.target_handle,message:'x'},credential)
++  f.finish(f.calls[0],'source survived')
++  chmodSync(f.dir,0o500)
++  let failed
++  try{failed=await f.service.invoke('result',{request_id:'persist-fault'},credential)}finally{chmodSync(f.dir,0o700)}
++  assert.equal(failed.body.error.class,'RESULT_PERSIST_FAILED')
++  assert.equal(f.calls.length,1)
++  const repaired=await f.service.invoke('result',{request_id:'persist-fault'},credential)
++  assert.equal(repaired.body.reply_body,'source survived')
++  assert.equal(f.calls.length,1)
++})
++
++test('retained exact reply is readable while native execution stays unknown, then refreshes only original execution facts',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  const payload={request_id:'settlement',target_handle:target.body.target_handle,message:'x'}
++  await f.service.invoke('send',payload,credential)
++  f.finish(f.calls[0],'reply source retained')
++  const snapshot=Object.freeze({agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown'})
++  f.router.getTurnReconciliation=()=>({state:'pending',snapshot})
++  const pending=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(pending.body.reply_status,'available')
++  assert.equal(pending.body.execution_status,'unknown')
++  assert.equal(pending.body.native_outcome,'outcome_unknown')
++  assert.equal(pending.body.execution_diagnostic.class,'OUTCOME_UNKNOWN')
++  f.sources.clear()
++  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{...snapshot,lateOutcome:'late_completed'}})
++  const completed=await f.service.invoke('send',payload,credential)
++  assert.equal(completed.body.execution_status,'completed')
++  assert.equal(completed.body.native_outcome,'late_completed')
++  assert.equal(completed.body.execution_diagnostic,null)
++  assert.equal(completed.body.reply_body,pending.body.reply_body)
++  assert.equal(completed.body.reply_message_id,pending.body.reply_message_id)
++  assert.equal(completed.body.expires_at,pending.body.expires_at)
++  assert.equal(completed.body.result_persisted_at,pending.body.result_persisted_at)
++  assert.equal(completed.body.business_goal_status,'unknown')
++  assert.equal(snapshot.initialOutcome,'outcome_unknown')
++  assert.equal(f.calls.length,1)
++})
++
++test('B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  const payload={request_id:'native-unknown',target_handle:target.body.target_handle,message:'original question'}
++  await f.service.invoke('send',payload,credential)
++  const snapshot={agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown'}
++  f.router.getTurnReconciliation=()=>({state:'pending',snapshot})
++  let result=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(result.body.execution_status,'unknown')
++  assert.equal(result.body.reply_status,'unknown')
++  assert.equal(result.body.error.class,'OUTCOME_UNKNOWN')
++  assert.ok(result.body.diagnostic_id)
++  assert.deepEqual(result.body.retry_preconditions,['query_original_request_only'])
++  f.router.getTurnReconciliation=()=>({state:'settled',snapshot:{...snapshot,lateOutcome:'terminated_without_outcome',terminationEvidence:'child_real_exit'}})
++  result=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(result.body.execution_status,'interrupted')
++  assert.equal(result.body.native_outcome,'terminated_without_outcome')
++  assert.equal(result.body.message_id,'user-1')
++  const originalSourceReader=f.router.readConversationSource
++  f.router.readConversationSource=()=>{throw Object.assign(new Error('/private/secret/source EIO'),{code:'EIO'})}
++  result=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(result.body.error.class,'UPSTREAM_UNAVAILABLE')
++  assert.equal(result.body.execution_status,'interrupted')
++  assert.equal(result.body.request_id,payload.request_id)
++  assert.equal(JSON.stringify(result).includes('/private/secret'),false)
++  f.router.readConversationSource=originalSourceReader
++  const recoveredRead=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(recoveredRead.body.error.class,'OUTCOME_UNKNOWN')
++  assert.equal(recoveredRead.body.source_read_state,'available')
++  await f.service.invoke('send',payload,credential)
++  assert.equal(f.calls.length,1)
++})
++
++test('B002: completed wholly-empty native turn is not an available empty business reply',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  await f.service.invoke('send',{request_id:'empty-anchor',target_handle:target.body.target_handle,message:'x'},credential)
++  f.finish(f.calls[0],'','usage-only')
++  const result=await f.service.invoke('result',{request_id:'empty-anchor'},credential)
++  assert.notEqual(result.body.reply_status,'available')
++  assert.equal(result.body.error.class,'REPLY_UNAVAILABLE')
++  assert.equal(result.body.reply_coverage.reason,'no_visible_reply')
++})
++
++test('auth redirect rejection keeps the fixed canonical token endpoint and never follows a management target',async t=>{
++  const {createConversationService}=await import('../../src/conversation/service.js')
++  const dir=mkdtempSync(join(tmpdir(),'native-auth-redirect-'))
++  t.after(()=>rmSync(dir,{recursive:true,force:true}))
++  const paths=[],config=pilotConfig()
++  config.authServiceOrigin+='/'
++  const service=createConversationService({router:{onTurnReconciled:()=>()=>{}},definition:{},storeFile:join(dir,'requests.json'),configProvider:()=>config,
++    fetchImpl:async(url,options)=>{
++      paths.push(new URL(url).pathname)
++      if(options.redirect==='error')throw new TypeError('redirect forbidden')
++      paths.push('/forbidden-management')
++      return {ok:true,status:200,json:async()=>({access_token:'fixture',token_type:'Bearer',expires_in:60})}
++    }})
++  t.after(()=>service.close())
++  const result=await service.invoke('resolve',{target:{agent_id:agent}},credential)
++  assert.equal(result.body.error.class,'AUTH_INCONCLUSIVE')
++  assert.deepEqual(paths,['/oauth/token'])
++})
++
++test('B003: retained native main resolution and scoped lawful continuation survive result persistence',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  await f.service.invoke('send',{request_id:'main-resolution',target_handle:target.body.target_handle,message:'x'},credential)
++  f.finish(f.calls[0],'reply')
++  const source=f.sources.get(f.calls[0])
++  source.main_resolution={disposition:'created',reason:'main_artifact_absent',generation_change_reason:null,
++    generation_change_reason_availability:'unknown_no_native_reset_cause'}
++  const result=await f.service.invoke('result',{request_id:'main-resolution'},credential)
++  assert.equal(result.body.main_resolution.disposition,'created')
++  assert.equal(result.body.main_resolution.generation_change_reason,null)
++  assert.equal(result.body.continuation.session_handle,result.body.session_handle)
++  assert.equal(result.body.continuation.read_result_request_id,'main-resolution')
++  assert.equal(result.body.continuation.followup.resume_original_generation,false)
++  assert.equal(result.body.continuation.followup.requires_current_authorization,true)
++  f.service.close()
++  const reopened=f.make()
++  t.after(()=>reopened.close())
++  assert.deepEqual((await reopened.invoke('result',{request_id:'main-resolution'},credential)).body.main_resolution,result.body.main_resolution)
++})
++
++test('CTR004 regression: retained exact reply survives facade restart while original execution stays terminated/unknown',async t=>{
++  const f=await fixture(t),target=await f.resolve()
++  const payload={request_id:'source-retained-before-parent-terminal',target_handle:target.body.target_handle,message:'original request'}
++  await f.service.invoke('send',payload,credential)
++  f.finish(f.calls[0],'durably retained business reply','native-reply')
++  const snapshot=Object.freeze({agentId:agent,sessionId:'main',messageId:'user-1',initialOutcome:'outcome_unknown',
++    lateOutcome:'terminated_without_outcome',terminationEvidence:'child_real_exit'})
++  f.router.getTurnReconciliation=()=>({state:'settled',snapshot})
++  const source=f.sources.get(f.calls[0])
++  source.session_generation='other-generation'
++  const mismatch=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(mismatch.body.error.class,'RESULT_UNRECOVERABLE')
++  assert.equal(mismatch.body.reply_body,null)
++  source.session_generation='trajectory:fixture'
++  const readSource=f.router.readConversationSource
++  f.router.readConversationSource=()=>{throw Object.assign(new Error('source unavailable'),{code:'EIO'})}
++  const unreadable=await f.service.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(unreadable.body.error.class,'UPSTREAM_UNAVAILABLE')
++  assert.equal(unreadable.body.reply_body,null)
++  f.router.readConversationSource=readSource
++  f.service.close()
++  const resumed=f.make()
++  t.after(()=>resumed.close())
++  const result=await resumed.invoke('result',{request_id:payload.request_id},credential)
++  assert.equal(result.body.reply_status,'available')
++  assert.equal(result.body.reply_body,'durably retained business reply')
++  assert.equal(result.body.reply_to,'user-1')
++  assert.equal(result.body.relation_source,'native_turn')
++  assert.equal(result.body.execution_status,'interrupted')
++  assert.equal(result.body.native_outcome,'terminated_without_outcome')
++  assert.equal(result.body.native_termination_evidence,'child_real_exit')
++  assert.equal(result.body.business_goal_status,'unknown')
++  assert.equal(result.body.execution_diagnostic.class,'OUTCOME_UNKNOWN')
++  assert.ok(result.body.execution_diagnostic.diagnostic_id)
++  assert.equal(result.body.execution_diagnostic.retryable,false)
++  assert.deepEqual(result.body.execution_diagnostic.retry_preconditions,['query_original_request_only'])
++  assert.equal(snapshot.lateOutcome,'terminated_without_outcome','native UNKNOWN evidence is unchanged')
++  f.sources.clear()
++  assert.equal((await resumed.invoke('send',payload,credential)).body.reply_body,'durably retained business reply')
++  assert.equal(f.calls.length,1)
++})
+diff --git a/packages/production-runtime/src/compose.js b/packages/production-runtime/src/compose.js
+--- a/packages/production-runtime/src/compose.js
++++ b/packages/production-runtime/src/compose.js
+@@ -43,6 +43,7 @@
+ import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
+ import { apply as applyBroker } from '../../broker/src/index.js'
+ import { apply as applyProductApi } from '../../product-api/src/index.js'
++import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
+ import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
+ import { Scheduler, JobStore } from '../../scheduler/src/index.js'
+ import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
+@@ -270,6 +271,7 @@
+ 
+   const router = applyRouter(ctx, {
+     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
++    ...(opts.productApi?.conversation?.enabled === true ? {conversationSourceDir:join(layout.controlDir,'native-conversation','source')} : {}),
+     defaultAgentId: defaultAgent.id,
+     defaultSessionId: 'main',
+     agentProfile,
+@@ -322,6 +324,7 @@
+   })
+ 
+   const productApiCfg = opts.productApi ?? {}
++  mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
+   const productApi = applyProductApi(ctx, {
+     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
+     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
+diff --git a/packages/production-runtime/src/entry.js b/packages/production-runtime/src/entry.js
+--- a/packages/production-runtime/src/entry.js
++++ b/packages/production-runtime/src/entry.js
+@@ -46,6 +46,14 @@
+   return idx >= 0 && args[idx + 1] ? args[idx + 1] : fallback
+ }
+ 
++// DSH_MCP_NATIVE_CONVERSATION_V1: only the dedicated supervision-unit config
++// path enables the existing facade; validation remains fail-closed per call.
++export function productApiCompositionFromEnv(env = process.env) {
++  const authConfigFile = env.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE
++  if (typeof authConfigFile !== 'string' || authConfigFile === '') return {}
++  return { productApi: { conversation: { enabled: true, authConfigFile } } }
++}
++
+ /**
+  * Run the Production Runtime resident until SIGTERM/SIGINT.
+  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
+@@ -66,7 +74,7 @@
+ 
+   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
+ 
+-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
++  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, ...productApiCompositionFromEnv(processLike.env ?? process.env) })
+   await runtime.start()
+   runtime.writeEvidence({
+     kind: 'ready',
+diff --git a/packages/production-runtime/test/compose-conversation-backport.test.js b/packages/production-runtime/test/compose-conversation-backport.test.js
+--- /dev/null
++++ b/packages/production-runtime/test/compose-conversation-backport.test.js
+@@ -0,0 +1,38 @@
++import assert from 'node:assert/strict'
++import {test} from 'node:test'
++import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs'
++import {tmpdir} from 'node:os'
++import {join} from 'node:path'
++import {composeProductionRuntime} from '../src/compose.js'
++import {resolveProductionLayout} from '../src/paths.js'
++
++test('installed composition keeps conversation default off and reuses the original Router recovery authority when enabled',async t=>{
++  for(const enabled of [false,true]) {
++    const root=mkdtempSync(join(tmpdir(),'pilot-backport-compose-'))
++    t.after(()=>rmSync(root,{recursive:true,force:true}))
++    mkdirSync(join(root,'scheduler'),{recursive:true})
++    const layout=resolveProductionLayout(root),captured=[]
++    writeFileSync(layout.agentsConfig,JSON.stringify({version:1,defaultAgentId:'agt_pilot',agents:[{id:'agt_pilot',name:'Pilot fixture'}]}))
++    let finish
++    const runtime=await composeProductionRuntime({layout,globalRoute:{provider:'opencode-go',model:'deepseek-v4-flash'},
++      productApi:{enabled:false,...(enabled?{conversation:{enabled:true,authConfigFile:join(root,'missing-auth.json')}}:{})},
++      notificationIngress:{enabled:false},feishuCredsPath:join(root,'missing-feishu.json'),
++      provisionHome:()=>{},processFactory:opts=>{
++        captured.push(opts)
++        return {pid:12345,state:'READY',exit:undefined,spawn(){},ready:async()=>0,
++          exitPromise:new Promise(resolve=>{finish=resolve}),async shutdown(){this.exit={code:0,signal:null};finish(this.exit);return this.exit}}
++      },log:{log(){},warn(){},error(){}}})
++    try {
++      assert.equal(Boolean(runtime.ctx.get('nativeConversation')),enabled)
++      await runtime.router.ensureRunning('agt_pilot')
++      assert.equal(captured.length,1)
++      assert.equal(captured[0].reconciliationStore.persistenceFile,layout.turnRecoveryStore)
++      assert.equal(captured[0].env.DSH_CONVERSATION_SOURCE_DIR,enabled?join(layout.controlDir,'native-conversation','source'):undefined)
++      if(enabled) {
++        const response=await runtime.ctx.get('nativeConversation').invoke('resolve',{target:{agent_id:'agt_pilot'}},undefined)
++        assert.equal(response.status,503)
++        assert.equal(response.body.error.class,'NOT_PROVISIONED')
++      }
++    } finally { await runtime.stop() }
++  }
++})
+diff --git a/packages/production-runtime/test/entry-conversation-env.test.js b/packages/production-runtime/test/entry-conversation-env.test.js
+--- /dev/null
++++ b/packages/production-runtime/test/entry-conversation-env.test.js
+@@ -0,0 +1,37 @@
++/**
++ * DSH_MCP_NATIVE_CONVERSATION_V1 pilot — supervision-unit composition seam.
++ *
++ * The conversation facade is mounted only through
++ * PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE. The env is the single enablement
++ * input: absent/empty must compose EXACTLY the pre-pilot runtime (no
++ * productApi key at all — the mount stays unconstructed and default-OFF per
++ * CTR-NC-001), and a set path must forward verbatim as
++ * productApi.conversation={enabled:true,authConfigFile} (the path is only
++ * validated per request by the facade's own 0600/directory checks, never at
++ * boot — a bad file must not take the runtime down).
++ */
++
++import test from 'node:test'
++import assert from 'node:assert/strict'
++
++import { productApiCompositionFromEnv } from '../src/entry.js'
++
++test('absent env composes exactly the pre-pilot runtime (no productApi key)', () => {
++  assert.deepEqual(productApiCompositionFromEnv({}), {})
++})
++
++test('empty env value is treated as unset (no productApi key)', () => {
++  assert.deepEqual(productApiCompositionFromEnv({ PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE: '' }), {})
++})
++
++test('set path forwards verbatim as enabled conversation with authConfigFile', () => {
++  assert.deepEqual(
++    productApiCompositionFromEnv({ PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE: '/Users/yanfenma/.agent-core/config/native-conversation.json' }),
++    { productApi: { conversation: { enabled: true, authConfigFile: '/Users/yanfenma/.agent-core/config/native-conversation.json' } } },
++  )
++})
++
++test('non-string env values are not wires (defense against supervision typos)', () => {
++  assert.deepEqual(productApiCompositionFromEnv({ PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE: undefined }), {})
++  assert.deepEqual(productApiCompositionFromEnv({ PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE: 42 }), {})
++})

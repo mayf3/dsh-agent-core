@@ -1,0 +1,12 @@
+{
+  "commit": "a231f6316cfbe6ea9c29bfd7d36a53742883b536",
+  "tree": "2788aa3fc7d3b5cb382d3c42ba62a8ae5c197c28",
+  "installed_source_files": 303,
+  "parent": "c81103f395b920a8d5ac371a1080d49d2ab0dfd3",
+  "runtime_payload_excludes": [
+    "docs",
+    ".agents",
+    "deployment-artifacts"
+  ],
+  "deployment_applied": false
+}

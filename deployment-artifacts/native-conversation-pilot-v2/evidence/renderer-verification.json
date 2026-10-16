@@ -1,0 +1,45 @@
+{
+  "checks": [
+    {
+      "case": "valid synthetic receipt, fixed output, disabled configs",
+      "pass": true
+    },
+    {
+      "case": "invalid identity/secret receipt 0",
+      "pass": true
+    },
+    {
+      "case": "invalid identity/secret receipt 1",
+      "pass": true
+    },
+    {
+      "case": "invalid identity/secret receipt 2",
+      "pass": true
+    },
+    {
+      "case": "invalid identity/secret receipt 3",
+      "pass": true
+    },
+    {
+      "case": "reject output /Users/yanfenma/workspace/project/dot-read-mcp/__review_no_write__",
+      "pass": true,
+      "actual_write": false
+    },
+    {
+      "case": "reject output /Users/yanfenma/workspace/project/production-dsh-agent-core/__review_no_write__",
+      "pass": true,
+      "actual_write": false
+    },
+    {
+      "case": "reject output /usr/local/libexec/agent-core/app/__review_no_write__",
+      "pass": true,
+      "actual_write": false
+    },
+    {
+      "case": "reject output /Users/yanfenma/workspace/project/pilot1156-fixed-v2/generated-configs/../../dot-read-mcp/__review_no_write__",
+      "pass": true,
+      "actual_write": false
+    }
+  ],
+  "synthetic_only": true
+}

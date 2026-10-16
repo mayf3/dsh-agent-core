@@ -1,0 +1,19 @@
+{
+  "identity": "Codex chat 01a1420a-252b-7280-b93e-941f155a72a3",
+  "issue": "mayf3/agent-control#1156",
+  "previous_packet_commit": "c81103f395b920a8d5ac371a1080d49d2ab0dfd3",
+  "branch": "codex/1156-production-minimal-v2",
+  "writer_checks": {
+    "old_worktree_clean": true,
+    "other_active_chat_in_candidate": false,
+    "old_zcode_status": "failed",
+    "old_zcode_pid": 82243,
+    "old_zcode_exit_code": 1,
+    "old_zcode_process_absent": true
+  },
+  "scope": "source/package/config-drafts/isolated-verification/approval-materials only; no production mutation",
+  "final_branch": "codex/1156-system-minimal-v2",
+  "actual_bip_root": "/Users/authsvc/.agent-core",
+  "actual_bip_app": "/usr/local/libexec/agent-core/app",
+  "target_correction": "BIP child PPID and trusted system runtime readback; legacy 8787 is not original BIP controller"
+}

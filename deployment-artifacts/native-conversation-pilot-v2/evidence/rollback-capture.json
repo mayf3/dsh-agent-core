@@ -1,0 +1,17 @@
+{
+  "archive": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/rollback-private/system-preimage.tar.gz",
+  "sha256": "4b099c7750d110973b577aacb4b00914d3062f46b005c5bb3a4f4b5fffdfae14",
+  "entries": 71800,
+  "regular_files": 66443,
+  "baseline_file_mismatches": [],
+  "captures": [
+    "actual source bytes",
+    "installed dependency bytes",
+    "symlink text",
+    "uid/gid/mode/mtime",
+    "ACL/xattrs via BSD tar PAX",
+    "system launchd plist bytes and metadata"
+  ],
+  "runtime_data_copied": false,
+  "DS_rollback_admitted": false
+}

@@ -1,0 +1,1850 @@
+{
+  "observed_at": "2026-10-16T00:11:08.248806+00:00",
+  "production_head": "549dacea95f918416dc06a534a21d8e16be5ce83",
+  "production_tree": "bb12dcf6c3acc7864e32cd11e08504c19c091391",
+  "candidate": "bd8f74c4d8311e9093ec73ffa959b81ca2c25109",
+  "frozen_overlay_manifest_sha256": "081c59195ed8ed4b320e1ce6ae8338e1c5f18e16336185c675f1fc73530ff1e9",
+  "frozen_count": 67,
+  "relations": {
+    "different": 27,
+    "same": 39,
+    "candidate_missing": 1
+  },
+  "status_count": 102,
+  "status_counts": {
+    " M": 24,
+    " D": 1,
+    "??": 77
+  },
+  "statuses": [
+    {
+      "status": " M",
+      "path": "bundle-broker/cordis.patch.yml"
+    },
+    {
+      "status": " M",
+      "path": "package.json"
+    },
+    {
+      "status": " M",
+      "path": "packages/agent-definition/src/definition.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/agent-provisioning/src/index.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/agent-switch/src/index.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/capabilities/forum.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/capabilities/workflow.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/credential-store.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/gateway.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/index.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/mapping.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/registry.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/relay.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/schema.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/targets.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/src/transport.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/test/broker.test.js"
+    },
+    {
+      "status": " D",
+      "path": "packages/broker/test/capabilities.test.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/test/relay.test.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/broker/test/transport.test.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/product-api/src/index.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/production-runtime/src/compose.js"
+    },
+    {
+      "status": " M",
+      "path": "packages/production-runtime/src/model-overrides.js"
+    },
+    {
+      "status": " M",
+      "path": "profile-production/cordis.patch.yml"
+    },
+    {
+      "status": " M",
+      "path": "scripts/install-integration.mjs"
+    },
+    {
+      "status": "??",
+      "path": "docs/specs/AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2.md"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-provisioning/src/shared-codex.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/provider-errors.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/state-machine.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/route-chain-canary.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/route-chain.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/agent-principal-resolution.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/agent-session-messaging.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/forum-governance.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/forum-moderation.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/forum-notifications.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/life-workbench.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/scheduler.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/self-ops.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/workflow-definition-authoring.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/workflow-execute.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/capabilities/workflow-linear-authoring.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/error-detail-sanitizer.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/readiness.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/src/scheduler-validation.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/authoring-usability/local-service.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/authoring-usability/scenarios.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/capability-fixtures.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/model3-real-service.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/agent-principal-resolution.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/agent-session-messaging.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/forum.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/manifest-inventory.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/okr.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-authoring-model-render.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-authoring-structural-diagnostics.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-definition-authoring.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-dispatch-intent.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-admin.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-members.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-pagination-v2.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-reconcile.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-execute.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-execution-class.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-global-instances-v2.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-instances.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-linear-authoring.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-my-tasks.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-transition.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/credential-metadata-seam.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/credential-metadata-side-effects.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/credential-metadata.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/forum-capabilities.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/forum-governance-capabilities.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/forum-notifications-capabilities.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/generic-deltas.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/index-bindings.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/life-workbench-registration.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/scheduler-capability.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/scheduler-reliability.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/self-ops-v3.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/history-auth.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/history-listener.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/scheduler-auth.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/voice-transcription-worker.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/voice-transcription.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/src/workflow-admission.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/test/history-auth.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/product-api/test/history-listener.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/shared-codex-migration.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/production-runtime/src/txn-safety.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/package.json"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/constants.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/dsh-compat.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/errors.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/ids.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/index.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/locator.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/projection.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/snapshot.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/test/session-history.test.js"
+    }
+  ],
+  "not_in_frozen_manifest": [
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/provider-errors.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/agent-router/src/process/state-machine.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/authoring-usability/local-service.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/authoring-usability/scenarios.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/capability-fixtures.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test-support/model3-real-service.mjs"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/forum.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/manifest-inventory.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/okr.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-authoring-model-render.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-authoring-structural-diagnostics.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-definition-authoring.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-dispatch-intent.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-admin.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-members.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-pagination-v2.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-domain-reconcile.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-execute.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-execution-class.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-global-instances-v2.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-instances.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-linear-authoring.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-my-tasks.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/broker/test/capabilities/workflow-transition.test.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/package.json"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/constants.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/dsh-compat.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/errors.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/ids.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/index.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/locator.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/projection.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/src/snapshot.js"
+    },
+    {
+      "status": "??",
+      "path": "packages/session-history/test/session-history.test.js"
+    }
+  ],
+  "overlay": [
+    {
+      "path": "bundle-broker/cordis.patch.yml",
+      "frozen_sha256": "41bcee80afe5749d6d81daeca4a3059a3443a48ec9327f0fe739d978ec0ccfcf",
+      "live_sha256": "41bcee80afe5749d6d81daeca4a3059a3443a48ec9327f0fe739d978ec0ccfcf",
+      "candidate_sha256": "6945c1d2b66f9f4b784be134d389cdd9bbf5816e2cdef613dd3dbf4ca93944f9",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 1763,
+        "mtime_ns": 1789304147000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "package.json",
+      "frozen_sha256": "03f32df778187b40ad1e3a4d77ea906cbb66e6935e89924b6874facbf6756a15",
+      "live_sha256": "03f32df778187b40ad1e3a4d77ea906cbb66e6935e89924b6874facbf6756a15",
+      "candidate_sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 1242,
+        "mtime_ns": 1789484575000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-manifest-unless-new-dependency-proven",
+      "evidence": "current conversation modules need existing dependencies and Node builtins; source audit owns final closure"
+    },
+    {
+      "path": "packages/agent-definition/src/definition.js",
+      "frozen_sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "live_sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "candidate_sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 16056,
+        "mtime_ns": 1787745940000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/agent-provisioning/src/index.js",
+      "frozen_sha256": "916caaf1af925cbeace84e4cff589f6454e0bb41fe6ad2d3a31ffeab16c5d5f3",
+      "live_sha256": "916caaf1af925cbeace84e4cff589f6454e0bb41fe6ad2d3a31ffeab16c5d5f3",
+      "candidate_sha256": "ba397d8cb92d56f11158400256097379edbea69271a6ac5fee471b56127eb0cf",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 20042,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/agent-switch/src/index.js",
+      "frozen_sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "live_sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "candidate_sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 6061,
+        "mtime_ns": 1788917616000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum.js",
+      "frozen_sha256": "ac231cef1082749b58996ac6f1817bd4167e183dbf6673d47f7a7b4e9a566017",
+      "live_sha256": "ac231cef1082749b58996ac6f1817bd4167e183dbf6673d47f7a7b4e9a566017",
+      "candidate_sha256": "99efd917cd9e19c0cec5e3e94929fbf92116cd65e4fe7a6e1309f8f2eff6a5e1",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 18689,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "frozen_sha256": "ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e",
+      "live_sha256": "ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e",
+      "candidate_sha256": "207fa11372b6f7164a8a4b77ab31dba40c6cf6d63d6042b765162a48b9599482",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 43500,
+        "mtime_ns": 1789695862551523762,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/credential-store.js",
+      "frozen_sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "live_sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "candidate_sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 8374,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/gateway.js",
+      "frozen_sha256": "f700960ab7e8f47a1afc3ca4f63d9e327f360025a22e96b1da5f865ab6b42ebc",
+      "live_sha256": "f700960ab7e8f47a1afc3ca4f63d9e327f360025a22e96b1da5f865ab6b42ebc",
+      "candidate_sha256": "db27861583543379b877803bb2d91056f2e4831b85224aacc504076de616f8a3",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 19068,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/index.js",
+      "frozen_sha256": "a558c67f58169713c31a056cc72157f196a6cadf70fdc9f3cc61110020eb4b34",
+      "live_sha256": "a558c67f58169713c31a056cc72157f196a6cadf70fdc9f3cc61110020eb4b34",
+      "candidate_sha256": "90bbcac4715020b55d1a9d1c699bd78a8d394c2762ae872a6d7d377718cf1a42",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 18960,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/mapping.js",
+      "frozen_sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "live_sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "candidate_sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 13374,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/registry.js",
+      "frozen_sha256": "31d94430bdd821d23e7795c3ccf31f0c9137ca4fe2ece40c4675c5f89830d133",
+      "live_sha256": "31d94430bdd821d23e7795c3ccf31f0c9137ca4fe2ece40c4675c5f89830d133",
+      "candidate_sha256": "9dab1da617e9856f99020f0d1c4fd533997f31713e1941bb1a33e3d543216534",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 10265,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/relay.js",
+      "frozen_sha256": "4c06ec96918250c1b59e61fdb09e91543782880efe45586a3d4edf2814ce5033",
+      "live_sha256": "4c06ec96918250c1b59e61fdb09e91543782880efe45586a3d4edf2814ce5033",
+      "candidate_sha256": "42e2de5e914d86928a8648a9d49434a2a92bd25548278a60dd9c13661dcb6880",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 18180,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/schema.js",
+      "frozen_sha256": "18c390be9ad03c7d43449a44d4a8791c8fcbd57fa311b24f9a1c589d802e710c",
+      "live_sha256": "18c390be9ad03c7d43449a44d4a8791c8fcbd57fa311b24f9a1c589d802e710c",
+      "candidate_sha256": "ff0ee4cbae21121e0b5af55048227b3a5bf25a331d4af7749f16a2434fa939d8",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 22296,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/targets.js",
+      "frozen_sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "live_sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "candidate_sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 1677,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/transport.js",
+      "frozen_sha256": "9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445",
+      "live_sha256": "9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445",
+      "candidate_sha256": "9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 29266,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/broker.test.js",
+      "frozen_sha256": "6a8c13f0aaa730ad2218267fb4417ee9e17a04508270c00b8e30f7df2fc61068",
+      "live_sha256": "6a8c13f0aaa730ad2218267fb4417ee9e17a04508270c00b8e30f7df2fc61068",
+      "candidate_sha256": "6a8c13f0aaa730ad2218267fb4417ee9e17a04508270c00b8e30f7df2fc61068",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 22614,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/relay.test.js",
+      "frozen_sha256": "90d2f1479d9675736e6d3693500716f5fafc514a5b13cfcfc89074e8a52adf5d",
+      "live_sha256": "90d2f1479d9675736e6d3693500716f5fafc514a5b13cfcfc89074e8a52adf5d",
+      "candidate_sha256": "90d2f1479d9675736e6d3693500716f5fafc514a5b13cfcfc89074e8a52adf5d",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 5261,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/transport.test.js",
+      "frozen_sha256": "e848e51102a8c2f0b8de5c6544052eee4675ac8e1c3ad4e1f03e2f466ba72ddd",
+      "live_sha256": "e848e51102a8c2f0b8de5c6544052eee4675ac8e1c3ad4e1f03e2f466ba72ddd",
+      "candidate_sha256": "e848e51102a8c2f0b8de5c6544052eee4675ac8e1c3ad4e1f03e2f466ba72ddd",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 41379,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/index.js",
+      "frozen_sha256": "685b6090a957d2108b777a1aba70c93b66fc3f3df1cf7b9f98ef91b2602032e5",
+      "live_sha256": "685b6090a957d2108b777a1aba70c93b66fc3f3df1cf7b9f98ef91b2602032e5",
+      "candidate_sha256": "2a5eb5f31e0b2739f05bf49509d5a5195bd3ee0186a194f6ae741b0f9172fee0",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 16529,
+        "mtime_ns": 1789484575000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-and-adapt-only-conversation-seam",
+      "evidence": "retain live history/voice/admission/API behavior; add minimal listener seam"
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "frozen_sha256": "9baec1b45f00d1a6eac09dcf518b691517c7d2b70032ae10833bcbd50ae32646",
+      "live_sha256": "9baec1b45f00d1a6eac09dcf518b691517c7d2b70032ae10833bcbd50ae32646",
+      "candidate_sha256": "9a71ba89a55b6d267ff92481cf4da3d1a2fb8ea41288e80b434ca4dd7dd4bf45",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 21005,
+        "mtime_ns": 1789484575000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-and-adapt-only-conversation-seam",
+      "evidence": "retain live composition; add conversation mount/source option only"
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "frozen_sha256": "9f2f68589c486a9540cf5684812f739a25ea87a413c32ce27c3a64d8321cd282",
+      "live_sha256": "9f2f68589c486a9540cf5684812f739a25ea87a413c32ce27c3a64d8321cd282",
+      "candidate_sha256": "15fa37832c5696ca9561a1ff260734bc5a4a13814380fc5828a6b5fbd58081a3",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 20493,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "profile-production/cordis.patch.yml",
+      "frozen_sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "live_sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "candidate_sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 2435,
+        "mtime_ns": 1788917616000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "scripts/install-integration.mjs",
+      "frozen_sha256": "4b235a79605ee2fb62fcccfa52e43e915a32c1dde73ff870a84d380c50b853ba",
+      "live_sha256": "4b235a79605ee2fb62fcccfa52e43e915a32c1dde73ff870a84d380c50b853ba",
+      "candidate_sha256": "4b235a79605ee2fb62fcccfa52e43e915a32c1dde73ff870a84d380c50b853ba",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 4009,
+        "mtime_ns": 1789484575000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2.md",
+      "frozen_sha256": "cd9bcfb2abca8b041f122eafd9c8af8c29e09fe7760b1913b5dad89da8128d7d",
+      "live_sha256": "cd9bcfb2abca8b041f122eafd9c8af8c29e09fe7760b1913b5dad89da8128d7d",
+      "candidate_sha256": "cd9bcfb2abca8b041f122eafd9c8af8c29e09fe7760b1913b5dad89da8128d7d",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 94839,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/agent-provisioning/src/shared-codex.js",
+      "frozen_sha256": "cd4933b43a75fce851b5d05beb3b6e48497422ca4024e02a7e74d34204a75182",
+      "live_sha256": "cd4933b43a75fce851b5d05beb3b6e48497422ca4024e02a7e74d34204a75182",
+      "candidate_sha256": "1355948d3c1c75bc641d65f0febffa1dd4db7e858d3454679bfad5e245e3c3c2",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 3730,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/agent-router/src/route-chain-canary.js",
+      "frozen_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "live_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "candidate_sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12097,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "frozen_sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+      "live_sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+      "candidate_sha256": "261e8ca076a768679b9fc79d3a91eebccec04af3050e26cec0a590f27d93cb7a",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 22928,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-principal-resolution.js",
+      "frozen_sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "live_sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "candidate_sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 5418,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-session-messaging.js",
+      "frozen_sha256": "da437f2a2f198b971d6bf8415d964cd7ef8531f7b4998b4bef6ec968228a5d9b",
+      "live_sha256": "da437f2a2f198b971d6bf8415d964cd7ef8531f7b4998b4bef6ec968228a5d9b",
+      "candidate_sha256": "96bd1db8cf9beda69f014a0581a0a74166e697b1d1eb3982112480a5481c1bd6",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 5444,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-governance.js",
+      "frozen_sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "live_sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "candidate_sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 8233,
+        "mtime_ns": 1789303381000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-moderation.js",
+      "frozen_sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "live_sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "candidate_sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 11764,
+        "mtime_ns": 1789303396000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-notifications.js",
+      "frozen_sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "live_sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "candidate_sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 5620,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/life-workbench.mjs",
+      "frozen_sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "live_sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "candidate_sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 2696,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/scheduler.js",
+      "frozen_sha256": "a3873a388b2c044ae9720e3ae7f0e9a8b9f663489cc95a1992d63545ecc8069c",
+      "live_sha256": "a3873a388b2c044ae9720e3ae7f0e9a8b9f663489cc95a1992d63545ecc8069c",
+      "candidate_sha256": "b26510561dec8648abf1b20f6dbe788035f3ed17258f076638e1cf1b8186f1ea",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 7763,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/self-ops.js",
+      "frozen_sha256": "5c5ebc865f857812ff22d9f4967c47885f7eca5ddbf03d446f310648c329b4f8",
+      "live_sha256": "5c5ebc865f857812ff22d9f4967c47885f7eca5ddbf03d446f310648c329b4f8",
+      "candidate_sha256": "e7f6105de4be81e37ccc60e983fe005751880d9b8a0af93c9e0602a78da87620",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 1744,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "frozen_sha256": "2bb05413777a67f5948d8a2829cec8a8b29e969344610388fdbbe30eaaac0f87",
+      "live_sha256": "2bb05413777a67f5948d8a2829cec8a8b29e969344610388fdbbe30eaaac0f87",
+      "candidate_sha256": "c95d4e45c827ae2026318052fc17ae7b2a87e634f49ee31d377883f8bf76ac0d",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12514,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-execute.js",
+      "frozen_sha256": "fa345c678c9653d7204a15bd907fc9fe28072fd673572721af038fcd8c10e7af",
+      "live_sha256": "fa345c678c9653d7204a15bd907fc9fe28072fd673572721af038fcd8c10e7af",
+      "candidate_sha256": "14a1c178ee81ce924a8cfbfe20e5f18e64a43a230ce11b6cf31f06738a54ba6c",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 13110,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-linear-authoring.js",
+      "frozen_sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "live_sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "candidate_sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 3768,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/error-detail-sanitizer.js",
+      "frozen_sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "live_sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "candidate_sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 6318,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/readiness.js",
+      "frozen_sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "live_sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "candidate_sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 1572,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/src/scheduler-validation.js",
+      "frozen_sha256": "752e283583f42b1bf91b92fd71a4a80a7f3128d2ec17092c540c94817e85a51e",
+      "live_sha256": "752e283583f42b1bf91b92fd71a4a80a7f3128d2ec17092c540c94817e85a51e",
+      "candidate_sha256": "4a3db6c16aa7ea827ee120b7b03aeb914ea79ffcd930ce6bdcd36f2b65576716",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 7083,
+        "mtime_ns": 1789303235000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/agent-principal-resolution.test.js",
+      "frozen_sha256": "cc73e406156f687190228a87e5ca0874cbe7f144cb6cece82f32dd767f37b8d2",
+      "live_sha256": "cc73e406156f687190228a87e5ca0874cbe7f144cb6cece82f32dd767f37b8d2",
+      "candidate_sha256": "cc73e406156f687190228a87e5ca0874cbe7f144cb6cece82f32dd767f37b8d2",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 2945,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/agent-session-messaging.test.js",
+      "frozen_sha256": "75ad8472518c47825a2df6a80381302337f428cf802cce2ed24c30af479f9fd4",
+      "live_sha256": "75ad8472518c47825a2df6a80381302337f428cf802cce2ed24c30af479f9fd4",
+      "candidate_sha256": "30ed47d7ae667ce53eba3c91d1486fa7408a491dd80e2160fe96b2cbd048e65b",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12166,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/credential-metadata-seam.test.js",
+      "frozen_sha256": "cdfc42812583a7fa29eca2d6a9ee5f7148793effcf48c65cd2cf4418ea38fbe9",
+      "live_sha256": "cdfc42812583a7fa29eca2d6a9ee5f7148793effcf48c65cd2cf4418ea38fbe9",
+      "candidate_sha256": "cdfc42812583a7fa29eca2d6a9ee5f7148793effcf48c65cd2cf4418ea38fbe9",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 11296,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/credential-metadata-side-effects.test.js",
+      "frozen_sha256": "19008e0c41bc6d63282759da28a17aa9d1a0591bbeeb39b6f08a1e6deae55478",
+      "live_sha256": "19008e0c41bc6d63282759da28a17aa9d1a0591bbeeb39b6f08a1e6deae55478",
+      "candidate_sha256": "19008e0c41bc6d63282759da28a17aa9d1a0591bbeeb39b6f08a1e6deae55478",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 11051,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/credential-metadata.test.js",
+      "frozen_sha256": "9a58e794efe64f1d10ec998d41c60164ed913dc5d0dfb259b80b7b5956c7002a",
+      "live_sha256": "9a58e794efe64f1d10ec998d41c60164ed913dc5d0dfb259b80b7b5956c7002a",
+      "candidate_sha256": "9a58e794efe64f1d10ec998d41c60164ed913dc5d0dfb259b80b7b5956c7002a",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 14205,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/forum-capabilities.test.js",
+      "frozen_sha256": "355a27e3deb54e5aa05b152b57e51a7109f27afab9dbd11c125382bc9fb7f0da",
+      "live_sha256": "355a27e3deb54e5aa05b152b57e51a7109f27afab9dbd11c125382bc9fb7f0da",
+      "candidate_sha256": "355a27e3deb54e5aa05b152b57e51a7109f27afab9dbd11c125382bc9fb7f0da",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 27059,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/forum-governance-capabilities.test.js",
+      "frozen_sha256": "7da8dd2d9ee4fa261b51e07f4e5bf1f4129f9f7472a8749e52a6645401e445e1",
+      "live_sha256": "7da8dd2d9ee4fa261b51e07f4e5bf1f4129f9f7472a8749e52a6645401e445e1",
+      "candidate_sha256": "7da8dd2d9ee4fa261b51e07f4e5bf1f4129f9f7472a8749e52a6645401e445e1",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12581,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/forum-notifications-capabilities.test.js",
+      "frozen_sha256": "ae2fcf41a4b1ac9c73f327802d980ceadee5d9ffd252585a957d980da7276a61",
+      "live_sha256": "ae2fcf41a4b1ac9c73f327802d980ceadee5d9ffd252585a957d980da7276a61",
+      "candidate_sha256": "ae2fcf41a4b1ac9c73f327802d980ceadee5d9ffd252585a957d980da7276a61",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 15950,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/generic-deltas.test.js",
+      "frozen_sha256": "20a12e59227f66fb45b87ea313185081fa76bcedce66f9b9090b6973a10ee684",
+      "live_sha256": "20a12e59227f66fb45b87ea313185081fa76bcedce66f9b9090b6973a10ee684",
+      "candidate_sha256": "f57d8f3c54fd23577615c06523b379fa7c1c75447e8badbd182bb5c8d3a0ae38",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 5552,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/index-bindings.test.js",
+      "frozen_sha256": "e21f91f69e873a1856242b7f13dceb6327e3d83e5b33c2ac77c5c7603368f032",
+      "live_sha256": "e21f91f69e873a1856242b7f13dceb6327e3d83e5b33c2ac77c5c7603368f032",
+      "candidate_sha256": "e21f91f69e873a1856242b7f13dceb6327e3d83e5b33c2ac77c5c7603368f032",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 2345,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/life-workbench-registration.test.js",
+      "frozen_sha256": "8e1fb89b85cef59cc1c103353c14e3c85d04f5d4dfbfd774486ce67ee1c1564d",
+      "live_sha256": "8e1fb89b85cef59cc1c103353c14e3c85d04f5d4dfbfd774486ce67ee1c1564d",
+      "candidate_sha256": "fd445963456c8f599c734fd02584457ed1bd596b1b6a4f370c51d750cf1c23a1",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 2085,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/scheduler-capability.test.js",
+      "frozen_sha256": "523a9b672e4b794358825a2578846a0ef738925779b667e9135fa22c38c21405",
+      "live_sha256": "523a9b672e4b794358825a2578846a0ef738925779b667e9135fa22c38c21405",
+      "candidate_sha256": "e32ca0754aa29edd3a6aecdd8ca821cceffbe26e8b4c72282c45b1fae59e8b79",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 19532,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/scheduler-reliability.test.js",
+      "frozen_sha256": "efd0749923baaa7eb8d718c24f7b4380344fb7eacafa86e603ba93245605a301",
+      "live_sha256": "efd0749923baaa7eb8d718c24f7b4380344fb7eacafa86e603ba93245605a301",
+      "candidate_sha256": "efd0749923baaa7eb8d718c24f7b4380344fb7eacafa86e603ba93245605a301",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 21883,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/broker/test/self-ops-v3.test.js",
+      "frozen_sha256": "e640d661c0de3c41157fd6b9a54168bdd639de1247d25c5922e6d80a10d0586e",
+      "live_sha256": "e640d661c0de3c41157fd6b9a54168bdd639de1247d25c5922e6d80a10d0586e",
+      "candidate_sha256": "4c11b8eb482acc33bbbdd8ac860e3eea1996d0950a0f6df110e79625c53c7576",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 3693,
+        "mtime_ns": 1789304310000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/history-auth.js",
+      "frozen_sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "live_sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "candidate_sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12681,
+        "mtime_ns": 1789485499000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/history-listener.js",
+      "frozen_sha256": "9ad648e8ab12db2a64be6d73bca6f66d16e38a1420bc87546687832cfbbc0f6b",
+      "live_sha256": "9ad648e8ab12db2a64be6d73bca6f66d16e38a1420bc87546687832cfbbc0f6b",
+      "candidate_sha256": "9ad648e8ab12db2a64be6d73bca6f66d16e38a1420bc87546687832cfbbc0f6b",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 8631,
+        "mtime_ns": 1789391823000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/scheduler-auth.js",
+      "frozen_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "live_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "candidate_sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12309,
+        "mtime_ns": 1788735012000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription-worker.js",
+      "frozen_sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "live_sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "candidate_sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 3638,
+        "mtime_ns": 1788904041000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription.js",
+      "frozen_sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "live_sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "candidate_sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12664,
+        "mtime_ns": 1788904041000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/src/workflow-admission.js",
+      "frozen_sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "live_sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "candidate_sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 4579,
+        "mtime_ns": 1788785232000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/test/history-auth.test.js",
+      "frozen_sha256": "306536bf4ac623fd0096762b835a26d07eefd1eec1bb55d5f6d075836a64e5c3",
+      "live_sha256": "306536bf4ac623fd0096762b835a26d07eefd1eec1bb55d5f6d075836a64e5c3",
+      "candidate_sha256": "306536bf4ac623fd0096762b835a26d07eefd1eec1bb55d5f6d075836a64e5c3",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 12287,
+        "mtime_ns": 1789391823000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/product-api/test/history-listener.test.js",
+      "frozen_sha256": "b3bb9cb82aa8aa637b80e7666c79fc5bea741921680e0ccda83ea6f37b1485d9",
+      "live_sha256": "b3bb9cb82aa8aa637b80e7666c79fc5bea741921680e0ccda83ea6f37b1485d9",
+      "candidate_sha256": "b3bb9cb82aa8aa637b80e7666c79fc5bea741921680e0ccda83ea6f37b1485d9",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 15538,
+        "mtime_ns": 1789391823000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js",
+      "frozen_sha256": "937c6bd4a3addcfdad9313f20bc39a16fb2ca37f1ad805b6a035fe0fbd46cc72",
+      "live_sha256": "937c6bd4a3addcfdad9313f20bc39a16fb2ca37f1ad805b6a035fe0fbd46cc72",
+      "candidate_sha256": "94676f716c908a5f3f386dcd7c894d30ca70900808b54148bdb8ba0a0fe5c359",
+      "relation": "different",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 26350,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration.js",
+      "frozen_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "live_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "candidate_sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "relation": "same",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 4620,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    },
+    {
+      "path": "packages/production-runtime/src/txn-safety.js",
+      "frozen_sha256": "e213f048b897516eed57a232603488aeff9350e27b0437d73024b1db2b77d329",
+      "live_sha256": "e213f048b897516eed57a232603488aeff9350e27b0437d73024b1db2b77d329",
+      "candidate_sha256": null,
+      "relation": "candidate_missing",
+      "metadata": {
+        "mode": "0o644",
+        "uid": 502,
+        "gid": 20,
+        "size": 11262,
+        "mtime_ns": 1788714281000000000,
+        "kind": "file",
+        "link": null,
+        "xattr_capture": "not captured in survey; archive must preserve ACLs/xattrs/resource forks"
+      },
+      "disposition": "preserve-live-bytes",
+      "evidence": "selected live baseline; no need for this candidate substitution established"
+    }
+  ],
+  "deleted": [
+    {
+      "status": " D",
+      "path": "packages/broker/test/capabilities.test.js"
+    }
+  ],
+  "deployment_scope": "historical GUI runtime only; not the actual BIP system target",
+  "disposition_scope_note": "Retain evidence and old runtime bytes in place; do not merge its overlays into the true system-app candidate unless a separate demonstrated dependency requires it."
+}

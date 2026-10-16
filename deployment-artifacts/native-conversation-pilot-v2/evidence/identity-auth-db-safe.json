@@ -1,0 +1,55 @@
+{
+  "checked_at": "2026-10-16T00:16:10.613Z",
+  "method": "Prisma raw SELECT in SET TRANSACTION READ ONLY; narrow non-secret fields only",
+  "database": "auth-service runtime DATABASE_URL selected from active service cwd",
+  "target_principals": [
+    {
+      "id": "bb9d8f48-7962-4321-8fb1-554bb428c159",
+      "principal_type": "agent",
+      "agent_id": "build-in-public-agent",
+      "owner_user_id": "2f6580a0-bdf1-4cac-9260-f28559587010",
+      "display_name": "Build in Public 主理人",
+      "external_ref": "openclaw:agent:build-in-public-agent",
+      "status": "active"
+    },
+    {
+      "id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "principal_type": "agent",
+      "agent_id": "agt_build-in-public-agent",
+      "owner_user_id": null,
+      "display_name": "Build in Public 主理人",
+      "external_ref": "agentcore:v1:principal:agt_build-in-public-agent",
+      "status": "active"
+    }
+  ],
+  "reader_principals": [
+    {
+      "id": "7711a8ed-c538-488b-b569-dcb1253adad8",
+      "principal_type": "agent",
+      "agent_id": "dot-read-mcp-reader",
+      "owner_user_id": null,
+      "display_name": "dot-read-mcp reader",
+      "external_ref": "dot-read-mcp-reader",
+      "status": "active"
+    }
+  ],
+  "conversation_clients": [],
+  "existing_reader_client": [
+    {
+      "client_id": "mc_2FQPUAenQVavCaNN2PqC4Wnh",
+      "machine_principal_id": "7711a8ed-c538-488b-b569-dcb1253adad8",
+      "status": "active",
+      "external_ref": "dot-read-mcp-reader",
+      "allowed_resources": [
+        "svc-workflow"
+      ],
+      "allowed_scopes": [
+        "workflow.read"
+      ]
+    }
+  ],
+  "conversation_audiences": [],
+  "product_surface_principals": [],
+  "connector_source_bindings": [],
+  "reader_target_attestations": []
+}

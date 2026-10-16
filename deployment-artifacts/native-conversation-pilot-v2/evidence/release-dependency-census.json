@@ -1,0 +1,222 @@
+[
+  {
+    "root": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "locks": {
+      "package.json": {
+        "sha256": "03f32df778187b40ad1e3a4d77ea906cbb66e6935e89924b6874facbf6756a15",
+        "bytes": 1242
+      }
+    },
+    "modules": [
+      {
+        "module": "@deepseek-ai/dsh-session",
+        "exists": false,
+        "symlink": false
+      },
+      {
+        "module": "@deepseek-ai/dsh-tools",
+        "exists": false,
+        "symlink": false
+      },
+      {
+        "module": "@deepseek-ai/dsh-session-persistence-jsonl",
+        "exists": false,
+        "symlink": false
+      },
+      {
+        "module": "@deepseek-ai/schemastery",
+        "exists": false,
+        "symlink": false
+      },
+      {
+        "module": "@larksuite/channel",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-main/node_modules/@larksuite/channel",
+        "version": "0.5.0",
+        "type": "module",
+        "main": "./dist/index.cjs",
+        "pkg_sha256": "3902c533b49093a09e4753b69706befa97c159aca83a9b4201c1b6be0dccfa7d",
+        "dependencies": {
+          "@larksuiteoapi/node-sdk": "^1.73.0",
+          "https-proxy-agent": "^9.0.0"
+        },
+        "devDependencies_count": 6
+      },
+      {
+        "module": "@larksuiteoapi/node-sdk",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-main/node_modules/@larksuiteoapi/node-sdk",
+        "version": "1.73.0",
+        "type": null,
+        "main": "./lib/index.js",
+        "pkg_sha256": "0b409d423deca6843557c23b8d76cdd4e58f803589f0ff6bc5bef3f8a00ed6a4",
+        "dependencies": {
+          "axios": "^1.16.0",
+          "lodash.identity": "^3.0.0",
+          "lodash.merge": "^4.6.2",
+          "lodash.pickby": "^4.6.0",
+          "protobufjs": "^7.2.6",
+          "qs": "^6.14.2",
+          "ws": "^8.19.0"
+        },
+        "devDependencies_count": 27
+      },
+      {
+        "module": "croner",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-main/node_modules/croner",
+        "version": "10.0.1",
+        "type": "module",
+        "main": "./dist/croner.cjs",
+        "pkg_sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250",
+        "dependencies": {},
+        "devDependencies_count": 0
+      },
+      {
+        "module": "sherpa-onnx-node",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-main/node_modules/sherpa-onnx-node",
+        "version": "1.13.7",
+        "type": null,
+        "main": "sherpa-onnx.js",
+        "pkg_sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d",
+        "dependencies": {},
+        "devDependencies_count": 0
+      }
+    ]
+  },
+  {
+    "root": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1",
+    "locks": {
+      "package.json": {
+        "sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+        "bytes": 1555
+      },
+      "package-lock.json": {
+        "sha256": "42df0c0f735f12a063660b51dd5751da60f7a5a45d3e5945f04e3924387363e7",
+        "bytes": 45757
+      }
+    },
+    "modules": [
+      {
+        "module": "@deepseek-ai/dsh-session",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/@deepseek-ai/dsh-session",
+        "version": "0.1.0-rc.8",
+        "type": "module",
+        "main": "lib/index.js",
+        "pkg_sha256": "08cded232b9232017c8446bddfd4ce11590a1a1126f08b3b904c7340f69d2878",
+        "dependencies": {},
+        "devDependencies_count": 7
+      },
+      {
+        "module": "@deepseek-ai/dsh-tools",
+        "exists": true,
+        "symlink": true,
+        "realpath": "/Users/yanfenma/workspace/github/deepseek-harness/packages/core/tools",
+        "version": "0.1.0-rc.8",
+        "type": "module",
+        "main": "lib/index.js",
+        "pkg_sha256": "f835488df4e2eb457e765b6ea0947184b37c41066ba8778f25295c71043b1e22",
+        "dependencies": {
+          "@deepseek-ai/schemastery": "workspace:^"
+        },
+        "devDependencies_count": 9
+      },
+      {
+        "module": "@deepseek-ai/dsh-session-persistence-jsonl",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/@deepseek-ai/dsh-session-persistence-jsonl",
+        "version": "0.1.0-rc.8",
+        "type": "module",
+        "main": "lib/index.js",
+        "pkg_sha256": "9627c3643a1e3f9877369946e23a2b65554501f05647ed9ecf2af534efb3d18f",
+        "dependencies": {
+          "koffi": "^3.1.0",
+          "@deepseek-ai/schemastery": "^3.18.1"
+        },
+        "devDependencies_count": 4
+      },
+      {
+        "module": "@deepseek-ai/schemastery",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/@deepseek-ai/schemastery",
+        "version": "3.18.4",
+        "type": "module",
+        "main": "lib/index.cjs",
+        "pkg_sha256": "81c5663da570b5072eecaa9d823dd600315308538ed1fd931b276523fb40d95f",
+        "dependencies": {
+          "@standard-schema/spec": "^1.1.0",
+          "@deepseek-ai/cosmokit": "~1.8.5"
+        },
+        "devDependencies_count": 0
+      },
+      {
+        "module": "@larksuite/channel",
+        "exists": true,
+        "symlink": true,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/night-gpt6-luna-source-closure/packages/feishu-connector/node_modules/@larksuite/channel",
+        "version": "0.5.0",
+        "type": "module",
+        "main": "./dist/index.cjs",
+        "pkg_sha256": "3902c533b49093a09e4753b69706befa97c159aca83a9b4201c1b6be0dccfa7d",
+        "dependencies": {
+          "@larksuiteoapi/node-sdk": "^1.73.0",
+          "https-proxy-agent": "^9.0.0"
+        },
+        "devDependencies_count": 6
+      },
+      {
+        "module": "@larksuiteoapi/node-sdk",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/@larksuiteoapi/node-sdk",
+        "version": "1.75.0",
+        "type": null,
+        "main": "./lib/index.js",
+        "pkg_sha256": "9e65ce882cb71eaa0dd99dc3a296ef2510c8958c89e01a03ca6137f47e3d28e7",
+        "dependencies": {
+          "axios": "^1.16.0",
+          "lodash.identity": "^3.0.0",
+          "lodash.merge": "^4.6.2",
+          "lodash.pickby": "^4.6.0",
+          "protobufjs": "^7.2.6",
+          "qs": "^6.14.2",
+          "ws": "^8.19.0"
+        },
+        "devDependencies_count": 27
+      },
+      {
+        "module": "croner",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/croner",
+        "version": "10.0.1",
+        "type": "module",
+        "main": "./dist/croner.cjs",
+        "pkg_sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250",
+        "dependencies": {},
+        "devDependencies_count": 0
+      },
+      {
+        "module": "sherpa-onnx-node",
+        "exists": true,
+        "symlink": false,
+        "realpath": "/Users/yanfenma/workspace/project/dsh-agent-core-pilot-deploy-v1/node_modules/sherpa-onnx-node",
+        "version": "1.13.7",
+        "type": null,
+        "main": "sherpa-onnx.js",
+        "pkg_sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d",
+        "dependencies": {},
+        "devDependencies_count": 0
+      }
+    ]
+  }
+]

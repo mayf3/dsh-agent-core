@@ -1,0 +1,3821 @@
+{
+  "captured_at": "2026-10-16T00:11:16.889621+00:00",
+  "root": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "head": "549dacea95f918416dc06a534a21d8e16be5ce83",
+  "rows": [
+    {
+      "path": ".agents/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "276081dae1e48959e98e8d2a7d379a10514d2318891cb286d099c67268b8fb39",
+      "size": 15418
+    },
+    {
+      "path": ".agents/governance.lock.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "1a2c3ea83e094c832d9612ba1230f68413ba6f85d44b17c0eb8a1ea65227856f",
+      "size": 3582
+    },
+    {
+      "path": ".agents/local/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "a34975bc3f87495348711b3d180c13f32f01e0668f9bc9907087a375a382526e",
+      "size": 5226
+    },
+    {
+      "path": ".agents/protocol/SPEC_FORMAT_V0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "c9a5e3bebb6f8928de5559c1f9024038c10530bd8da1f1aeee9fbbf9f6c6b036",
+      "size": 12010
+    },
+    {
+      "path": ".agents/protocol/SPEC_GOVERNANCE_V0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "7a85b39f4fd9ca4965c90f85d3521d5e0334793f76194cd2f16a0e61a15be9a5",
+      "size": 15979
+    },
+    {
+      "path": ".agents/schemas/distribution-manifest.schema.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "9255c0772bf552b6118b664cd3e7a399b5ccbe6f7bedb711a9049f9716072041",
+      "size": 1113
+    },
+    {
+      "path": ".agents/schemas/governance-lock.schema.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "e21a9b535cfacc20b898e782dbe142c76078f73a76c1bcddae83ea50c0c478a3",
+      "size": 2812
+    },
+    {
+      "path": ".agents/schemas/spec-frontmatter.schema.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "445860137a5f8229871f15566ae2ed0ce0322305d5c0d14e72849610e8af9de8",
+      "size": 2424
+    },
+    {
+      "path": ".agents/skills/spec-governance/SKILL.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "2ef55ddaa72051dc7b948851538bde1c33d9e9b9026d1cac15c4c44d491214b7",
+      "size": 2369
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/AUTHOR.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "b568a174a1370ffb637afec27cdc66a67e7e0017a1b07e1927700568233eca4c",
+      "size": 2757
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/COMPLIANCE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "dd28faaea5eff25066097a9aa45af9e5b52a07ced6d755cbc4d7bc7fad63aeee",
+      "size": 2805
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/PREFLIGHT.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "4fb139bd43726fb880ccb3431df4c38d1bac84c078807dace578cf1a89d063c7",
+      "size": 3014
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/REVIEW.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "6f2ccbea5c2e867293e50dbf8be7215b88d8684fdc19f1726bd3ca4208cd31ff",
+      "size": 2645
+    },
+    {
+      "path": ".agents/templates/CONFORMANCE_RECORD_TEMPLATE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "a22dfad8c948d801ae9f19ab41d6885b14926902dd4b492b4d17524321d94f96",
+      "size": 1960
+    },
+    {
+      "path": ".agents/templates/GOVERNANCE_ADOPTION_SPEC_TEMPLATE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "b8758487fdf4cec5d67ab28982a84b73add09d2a944a77d59fcb2bb34ee9682a",
+      "size": 11290
+    },
+    {
+      "path": ".agents/templates/INVESTIGATION_RECORD_TEMPLATE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "e63e5081b1fb68720784bf6bc6bd35357901d8ed566743a7e1507b5a9c5ca28b",
+      "size": 1394
+    },
+    {
+      "path": ".agents/templates/REVIEW_RECORD_TEMPLATE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "0ef6dd2acb479426d31afb586e31dcfdf09a7e93dc5c4422407e03913be76cfb",
+      "size": 1215
+    },
+    {
+      "path": ".agents/templates/SPEC_TEMPLATE.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "fbc45e2996065f3ad9db266d7bf8fad6b0adc3866bbacc6a0e32df9104e5c1e2",
+      "size": 3343
+    },
+    {
+      "path": ".agents/templates/development-preflight.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cf6d467a167294e5da9f1046e576d686e47d51c3da7c965c613c09865aeb3d08",
+      "size": 822
+    },
+    {
+      "path": ".agents/templates/spec-compliance.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d81e2fe1a940fb1f04d9e470cab6c4a32e2a001a5fa4fd8ddf3e9b0eaaf295be",
+      "size": 886
+    },
+    {
+      "path": ".agents/tools/verify_governance.py",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "1a4b8e3421ad6e3d07d0c11badbc103e9a7646a25015814241a3f29049515937",
+      "size": 7938
+    },
+    {
+      "path": ".gitignore",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ab88816a209ad10658cea9a31a5a2c18fb84d6c07c5ae9030da9214fec1e7804",
+      "size": 61
+    },
+    {
+      "path": "AGENTS.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "094dd663d0c8be224ea81138e974db8910b0dbd1390c216eb1806ddc932bb138",
+      "size": 884
+    },
+    {
+      "path": "README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "3ad0d5fd54fa3c5e7992180bbda3d4f4ff985a3c890565fd3337ade17f0bad1c",
+      "size": 7934
+    },
+    {
+      "path": "bundle-agent-switch/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "401e0ceeeb32632c847d99fd7f9e4ba90d03e0c49b1ee8720df4fc321d3e9c5a",
+      "size": 513
+    },
+    {
+      "path": "bundle-agent-switch/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "eec14fddbe619bb4864c9a81f9920d234a18044b3b351204e1ee5c05b16505d3",
+      "size": 429
+    },
+    {
+      "path": "bundle-broker/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304147000000000,
+      "type": "file",
+      "sha256": "41bcee80afe5749d6d81daeca4a3059a3443a48ec9327f0fe739d978ec0ccfcf",
+      "size": 1763
+    },
+    {
+      "path": "bundle-broker/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "bed99c24a0fc49a624e12a1836586f5e858f121844e78e16fe49bf8f1df620ed",
+      "size": 560
+    },
+    {
+      "path": "bundle-demo/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ec0e07737214f5296eb8b8541557c4fba8d04d3c7b8c5f686eed8ca34df17d28",
+      "size": 1111
+    },
+    {
+      "path": "bundle-demo/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "b300c086eab68ced09e3d34410c67d655a1b93670f223e4cfec74d7107ec4043",
+      "size": 457
+    },
+    {
+      "path": "bundle-integration/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f4a64cbbb2bd20210125d6d7ce0c93f5f3b14e5e88ae15e9d5c41226235147fd",
+      "size": 5280
+    },
+    {
+      "path": "bundle-integration/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "06e5a43f15b609dd46731ac97d06d6ef6886b1dd17becb259c22e9ed1c3f36eb",
+      "size": 446
+    },
+    {
+      "path": "bundle-memory/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f7715b128c890328699addfbde630fbac3147ba2410a6b0278b44ed88cfb5e6c",
+      "size": 696
+    },
+    {
+      "path": "bundle-memory/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "65c41a351f62240d4474258bfe7179d73f8761dab7eced460871eb5301e97306",
+      "size": 451
+    },
+    {
+      "path": "docs/AGENT_CORE_COMPONENT_MAP_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a46e064600699af5ccb98e35ecface8c892228eb59eebc38bd088b0d3c6d1fda",
+      "size": 8468
+    },
+    {
+      "path": "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "c8d2627086cb202dcf0e70d9e0d0a9aeb174ea1d74b0b9cfd54339d28c33fe9b",
+      "size": 15685
+    },
+    {
+      "path": "docs/AGENT_CORE_ROADMAP_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "9980898174477220cc7d933691f68288f47236061d1733f38f22109c96009c28",
+      "size": 11514
+    },
+    {
+      "path": "docs/CAPABILITY_MATRIX.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "20cfeb4c1e3951ca99f886f1f99ed4dab1924b6457181f9d5dab9215aea6cca9",
+      "size": 12207
+    },
+    {
+      "path": "docs/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "568ec33b7f65db247a7cc256187ca24be60134554284bc61d3b057fbc4f9201b",
+      "size": 9867
+    },
+    {
+      "path": "docs/TRUST-BOUNDARY-REPORT.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "bc1bed7e0b584a0ed2a9db3a045abd73701a46aaacb17317a63824fa09ad3e74",
+      "size": 15157
+    },
+    {
+      "path": "docs/decisions/AGENT_SESSION_CHANNEL_MODEL_V1.api.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e16d66c290faa3c6c528d38988c74ecde05c3fbd41875dca7387e0344126fc6f",
+      "size": 25754
+    },
+    {
+      "path": "docs/decisions/AGENT_SESSION_CHANNEL_MODEL_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "5c0b00943ebb00b2db5a80e555f5b480f1505a57a1e866a074faf871ef87adc4",
+      "size": 13002
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cb3b7644c81ce03790c2b2036637838a34e20e9332f8cbb0b05e60684e420ce0",
+      "size": 37224
+    },
+    {
+      "path": "docs/decisions/BINDING_AND_SWITCH_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ef36b99437f2bc7e8d727deb98d7174386c23d63e86c4efaa505bcce51bb7622",
+      "size": 5980
+    },
+    {
+      "path": "docs/decisions/MEMORY_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "aa98239ec8aed0d207645934963ade88f324fc93d2e8462de126928e907365e1",
+      "size": 5623
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "678655561fdf48f71e7a3fba26e5dccfcbfd8f1d9f3531423f66e31f9198febc",
+      "size": 14920
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "f22a36ffda2b92d27be6f2e2c1855aa0f74e60ecb0a644c1a6a986c35c95436f",
+      "size": 37940
+    },
+    {
+      "path": "docs/decisions/SCHEDULER_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "860be5dd799477a2fe508a62294041760263a60f2c465cb05796223f5bc42eb4",
+      "size": 5862
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/identity-cto.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "038d0db9f9735d3e7aee71987f44330c8605a975651301e34e14eecd32e2d6f1",
+      "size": 524
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/identity-stock.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "625ce2844c0014b59161f3675921fdbbe27022ff79b3b14dfb410d834d2ae4c7",
+      "size": 530
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/manifest.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "6c81025fc9ac55820a65a49301e08e06e0c10692c26f8180fad5ae98eea3018a",
+      "size": 3013
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/migration-review.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "207b1037f0d2b7e0ececfd108e46d8796c4afdc868c3fd20d4d5604fa85a961a",
+      "size": 421
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/operator-approval.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "ea5c2afba0ac4c23e841bc67dfa8d4892dd57437e588f735c42521e1531a888e",
+      "size": 652
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/phase-a.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "2c51589d79dce1f613606d23511f8ad266c4bd6ec384ec408790fb8d058cd55e",
+      "size": 246
+    },
+    {
+      "path": "docs/evidence/workflow-recovery-stage-w-20260821/readiness.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "5058f58fb5e1a927a1ca1480b17968f4b8f4910dc674522ead4d9918ad42a56e",
+      "size": 273
+    },
+    {
+      "path": "docs/investigations/AGENT_CORE_OFFICIAL_LARK_CHANNEL_INTEGRATION_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "d7e74d18f46ff9afd31c66a8563e5d113b1580f33eb2ccfeab745183d1a976c9",
+      "size": 27897
+    },
+    {
+      "path": "docs/investigations/AGENT_PROCESS_INTERACTIVE_TURN_TIMEOUT_INVESTIGATION_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "d1129927e7d28db74021f8353e09f2416b1d89cabec0bfa5debd6e44118d236b",
+      "size": 19537
+    },
+    {
+      "path": "docs/investigations/LUNA_DSH_RC8_VERSION_ALIGNMENT_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "de3591120a8a43b5dfa47b54493458bccd0a3484698b3f51c1a0e3c30242e295",
+      "size": 7133
+    },
+    {
+      "path": "docs/investigations/agent-core-backup-retention-v1-proposal.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "34eeba563fa806cd8d2143615fffc50fd65cd7458555adc604e2d2edb495f895",
+      "size": 34744
+    },
+    {
+      "path": "docs/investigations/agent-core-production-resident-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a46ea99a9735c26fc835d7e3f669f0ea68e4528810b0c682579c4a7aa2814fd9",
+      "size": 5996
+    },
+    {
+      "path": "docs/investigations/always-on.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0833b71c7c8e89e830fb5204b771e2dfedfe87a1ceafa5103f785bd22933de3c",
+      "size": 15602
+    },
+    {
+      "path": "docs/investigations/dashboard.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4f4ceb876bda6894e5bbc3ccff966add38f472703f0511d8a4dbe78cc4bb7bdf",
+      "size": 14508
+    },
+    {
+      "path": "docs/investigations/identity-auth.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ff1c60214c611c15b7f3200a06084c24773ef801661757a084a3d4f98d27731c",
+      "size": 12257
+    },
+    {
+      "path": "docs/investigations/memory.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7ae734baf927bc38bb0c9ba321d6d48feb2453e09e5dc5886905b27690f1dc15",
+      "size": 13618
+    },
+    {
+      "path": "docs/investigations/openclaw-lark-transport-reuse-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "168a9f3483555fcda1199ba9b16cbcbd7ba2d12329fbf1f511f82639a5ff4060",
+      "size": 32831
+    },
+    {
+      "path": "docs/investigations/openclaw-scheduler-caller-migration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1b5bce44bf33806137bfa015ed543eb8e01bfa44bd7e2aed6da2582ef8b9de0a",
+      "size": 11182
+    },
+    {
+      "path": "docs/investigations/scheduler-replacement-audit.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a0ed7e8a6fcabc3c457addda94749c648cb5e69be5750047048891e06ed097de",
+      "size": 14107
+    },
+    {
+      "path": "docs/investigations/stock-agent-registry-adoption-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "51fb96ecd7048a5958cadfa2ea64e9e7832bef414edb3365c1934b9542b8ad38",
+      "size": 8851
+    },
+    {
+      "path": "docs/investigations/test-agent-feishu-product-semantics-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ed2fcf1383f8b02899f85388a5ae1726d31edf98fcc6ead58d11a49f23465565",
+      "size": 27037
+    },
+    {
+      "path": "docs/investigations/workspace-files.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6d7543ba4a2f2c70f1073cb62c8e54d4e95296b77b40ec9f2c13fefe38cb4910",
+      "size": 17803
+    },
+    {
+      "path": "docs/reports/agent-core-production-resident-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1aff55ae82b45583548110e4f198c06bc140a8e113704a92f1f45e8f6115adf7",
+      "size": 5482
+    },
+    {
+      "path": "docs/reports/agent-definition-config-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e0cce9080eed34ef9fe0f2ab757862137bc4d930301b3913c501f1670706e904",
+      "size": 10687
+    },
+    {
+      "path": "docs/reports/agent-registry-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4689449abba334d5b41d303f3efbd80c2b20a87ecceb889ce8d2cca3d63a7670",
+      "size": 11322
+    },
+    {
+      "path": "docs/reports/agent-router-delivery-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2c9cf0a169829a7ec5a632487e3a992cb1d357acad67524dc48c35936555a47f",
+      "size": 7033
+    },
+    {
+      "path": "docs/reports/agent-session-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1139cea30c2925db127b8b1f70a125813d50c42a2a674a2614ed397463ba8e20",
+      "size": 15532
+    },
+    {
+      "path": "docs/reports/bootstrap-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "fc6f071b8e9a4169703cabaa2c4105adec1e7f25bbfd3f68c80696758a1b581b",
+      "size": 8757
+    },
+    {
+      "path": "docs/reports/broker-transport-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "69c69950276b3b9039e388d96ab3842a1f4aa8996118a0e3ce47f412ee8689e8",
+      "size": 21774
+    },
+    {
+      "path": "docs/reports/broker-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7571547141fd7482f8bc80a33d21c4f4625149a53f6b258befc1d30635d0608f",
+      "size": 13651
+    },
+    {
+      "path": "docs/reports/delivery-pipeline-integration-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4ae584ba96c3addd63e0fec29c800f313d4eb8d35a4e7056520820fab6b7e366",
+      "size": 2894
+    },
+    {
+      "path": "docs/reports/feishu-connector-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9f7835f267e11b2b57f6b472f67798722fd3e90d6b4abc594e0cdb5d4db0b394",
+      "size": 15266
+    },
+    {
+      "path": "docs/reports/integration-review.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "061cb94f59dafb94d74d28297c806371edcd6a75d3f267d03e73b967555efca8",
+      "size": 6909
+    },
+    {
+      "path": "docs/reports/integration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1b2c6440ddc87c7937941e1769b74e5639413c64f2f4670bb5cb2a5d9f48efda",
+      "size": 8215
+    },
+    {
+      "path": "docs/reports/memory-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9c0b959e4c62a0827e6af926cf545b6450ee4784fc5d16554f58746a3f0fa9a9",
+      "size": 11511
+    },
+    {
+      "path": "docs/reports/mobile-gate1-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "fd5862901fecf928f9dcdd586476236dac211913d9a030d02577bef28a5e139a",
+      "size": 13866
+    },
+    {
+      "path": "docs/reports/openclaw-scheduler-caller-migration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "eb8b4d92060d6947836abfb92e241ef843982428b3a0066efc79c0d5ba115d50",
+      "size": 6956
+    },
+    {
+      "path": "docs/reports/process-model-demo-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7292348023b280f62f06f9971a07c390b38eae08f499c2fd36354f3499f80356",
+      "size": 6195
+    },
+    {
+      "path": "docs/reports/product-integration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "5e0964f67621fcc64a0949d034ae39d4cb83d121b7a229db00abe0dd8f3d0d58",
+      "size": 18233
+    },
+    {
+      "path": "docs/reports/production-runtime-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6fe06b59b3caaeab6fdbde9a339f3c6649914c1d55c8cb8e4a7c009eb3056cf9",
+      "size": 9374
+    },
+    {
+      "path": "docs/reports/repo-hygiene-convergence-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "08053020a107ee73a1fca886ddfad756407adcc249766acb225b16818bc18e57",
+      "size": 6374
+    },
+    {
+      "path": "docs/reports/scheduler-production-cutover-closure-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "adb01801ebc3f80867bf2bd3bd3271ea47924140ec661325310f0752ae4ee3d8",
+      "size": 15912
+    },
+    {
+      "path": "docs/reports/scheduler-replacement-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1f1ea7a9692a56a1494eef06f82bcee5791cfef4a8e482d29a0c6602f7e360cd",
+      "size": 16768
+    },
+    {
+      "path": "docs/reports/scheduler-router-final-integration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9d45a5c450b5e030989f0a10564efff914c61707f65fcdd807e89379cadff68a",
+      "size": 8974
+    },
+    {
+      "path": "docs/reports/stock-agent-registry-adoption-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e413618a73584a94047382941f02c07884e6f0a05a10dc469d643436ba8e76d8",
+      "size": 6480
+    },
+    {
+      "path": "docs/reports/trusted-control-plane-deployment-hardening-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "892c7c7a3cfa7b6482c6234b7e649cf41e1b9710e5b594664eb2430460353f91",
+      "size": 12609
+    },
+    {
+      "path": "docs/reports/trusted-credential-505-final-acceptance-v2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9d225167786a5049b8f7aa0291122285c911f2f5e9c70abeb1ac679302eaa8f5",
+      "size": 5327
+    },
+    {
+      "path": "docs/reports/trusted-credential-broker-integration-v1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "02fdf8a22102307a5a0d695af99129fffb844005bd1bdc41eac10a6cc063a59a",
+      "size": 10037
+    },
+    {
+      "path": "docs/reports/workspace-bootstrap-v0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "70f76693d1f15a030bd24be578212ce8a3ced7c533e42a67930b424062580683",
+      "size": 12548
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "306fc386adef9d87cb2b97260f015c46295960afc422a8c9e2722fe7da98dd14",
+      "size": 106796
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_BACKUP_RETENTION_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "b97382af664b6677a89546cea5d851f427bef0fb14619eae969e8fc32b06edb2",
+      "size": 10152
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_BINDING_WORKSPACE_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "26fa0d37ead41ef3380202e5a1f8145e626ab0b0e5236179d9e34a1c7820f56d",
+      "size": 40394
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_PROVIDER_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "fb142dd0dbb452fb3c50575889157a2852326d3d8b1989ea25d918ca059a8be7",
+      "size": 26035
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_CHATGPT_SUBSCRIPTION_TARGET_PROXY_SEAM_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "ae84f3ca15a6e8c47c89a2f2b4ed94e7471a0512600cecbd00d401de48e6dbb6",
+      "size": 24849
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "cd9bcfb2abca8b041f122eafd9c8af8c29e09fe7760b1913b5dad89da8128d7d",
+      "size": 94839
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_HARDENING_PROGRAM_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "f2a78ab23d00693b85d70a1e0e1025ef7db64d5207818f89560990811ce2a5bc",
+      "size": 26372
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "980a8c5499d00152c64e1249de03c5434be6407cfecc42b611c6418de897286d",
+      "size": 51057
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "cbe10693c7c951a49fd639370bda21092d6258bd8f9af2904b763f316a1b623d",
+      "size": 36129
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_LARK_CHANNEL_SDK_INTEGRATION_V2_INGRESS_CONTENT_COMPATIBILITY_AMENDMENT.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "7db996b0466ad9ef651cd5b617ee0794a63dd21e3c589b1e14686a1cd1a90751",
+      "size": 11136
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_LARK_TRANSPORT_PHASE1_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "c63aab2f9bdbefea0462cf3f183a732adc87252796b966930dc046ad7c95113d",
+      "size": 31719
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_LARK_UX_PHASE1_V2.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "7d4774f3f1cb23afc4450e51fba17c54fdb297d4d88ccab11a013efb63dca1d2",
+      "size": 64186
+    },
+    {
+      "path": "docs/specs/AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V0.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "a1426ac164c8fe279ad5d9189810f35cde8fb73faee84d4ed69d14f0d84ddb2b",
+      "size": 17100
+    },
+    {
+      "path": "docs/specs/AGENT_PRIMARY_WORKSPACE_IMPORT_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "b2315609609bd9654fe708240dda35989588706f1ac53dff99799005b5ecdbb1",
+      "size": 23606
+    },
+    {
+      "path": "docs/specs/AGENT_PROCESS_LIFECYCLE_HARDENING_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "4f953375ab2d4335195c917c11b5fe67e6bb31ffe4b31c11a699f71c30a53909",
+      "size": 67149
+    },
+    {
+      "path": "docs/specs/AGENT_REPO_KNOWLEDGE_GOVERNANCE_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "7bcf76a5878c4e055d43c45c8c94edb6e6ac466a49007162fbbb641ce7fcc0a1",
+      "size": 29155
+    },
+    {
+      "path": "docs/specs/AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2ba0da3b4ff7a4b377ac5275524b1ac7010907733d99cc63e4d2d2a3b6a2d014",
+      "size": 38452
+    },
+    {
+      "path": "docs/specs/OPEN_SOURCE_DOCS_CONVERGENCE_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2de4ed97a231d84a150b211d1b0dcde308a23f3148c53bd8b81c2af7a64f8ac6",
+      "size": 66932
+    },
+    {
+      "path": "docs/specs/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "1c77a732f6b541e2887ab01987110f18839d9d3e4ff43fc9282c8c39fe76a0f8",
+      "size": 1348
+    },
+    {
+      "path": "docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "f59721fdeedb34db111d9082050ad72ce5a0dae97e46a0f54d04c6865b761dcb",
+      "size": 21685
+    },
+    {
+      "path": "examples/v0-vertical-slice/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a4695df93210ad09c7f6c0da04ef33acc1a7dee699a3be2ca685fc7a6887c665",
+      "size": 2383
+    },
+    {
+      "path": "examples/v0-vertical-slice/bundle/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e6f4bc4684562a165d867c65f6819850038b70ab93462eeb48d31e1a8c4fe34f",
+      "size": 839
+    },
+    {
+      "path": "examples/v0-vertical-slice/bundle/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9a87ddbd8d097a2c2aa8357067e360205b30c62d6a485d92d5ddb63e38b721df",
+      "size": 417
+    },
+    {
+      "path": "examples/v0-vertical-slice/profile/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ef189a8c27db6d63930aa3046a3040482e952eafcb7487c644d508e8d461f027",
+      "size": 217
+    },
+    {
+      "path": "examples/v0-vertical-slice/profile/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d5f6f7faceea5cb0ec2a39a36d8e680a01c5a60ae6f0717d91b55f79ab7f8e7f",
+      "size": 294
+    },
+    {
+      "path": "examples/v0-vertical-slice/router/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cb25789555d0909873a22db22a5f434a57f229c2ad4ef7eb93936ac858593cc2",
+      "size": 648
+    },
+    {
+      "path": "examples/v0-vertical-slice/router/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1586e06dbd4fe856b6c7e0da34e2f7e80ff607fe9809cc02c2cd567498ed0c7d",
+      "size": 6029
+    },
+    {
+      "path": "examples/v0-vertical-slice/scripts/install-profile.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0c48e31d5e8b4f3acdd9af7dd4ca8e8a6fb80465095ba31d54921db71ea78d98",
+      "size": 3514
+    },
+    {
+      "path": "examples/v0-vertical-slice/scripts/run.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "c2b4b4c131cde56f08950dcf0316d73d8b864b8386bcf50347af2a774e2b723a",
+      "size": 1856
+    },
+    {
+      "path": "examples/v0-vertical-slice/scripts/verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "30cea514a2a8d7aa6771b2818a2d998f57eb07a4b1d4c458b8ad4685a1a27f72",
+      "size": 1402
+    },
+    {
+      "path": "node_modules",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788904564222721210,
+      "type": "symlink",
+      "target": "/Users/yanfenma/workspace/project/dsh-agent-core-main/node_modules"
+    },
+    {
+      "path": "package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789484575000000000,
+      "type": "file",
+      "sha256": "03f32df778187b40ad1e3a4d77ea906cbb66e6935e89924b6874facbf6756a15",
+      "size": 1242
+    },
+    {
+      "path": "packages/agent-credential-provisioning/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "088b63035aac89a6ca2ed5983f6b898bcd970dff8f58c1834beb0474818fb3b6",
+      "size": 447
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/auth-client.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "2e6439d95a3df5ffd84a5ee37ff9452566acf5d0781773af44a8338d69dbd53f",
+      "size": 4787
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "84a5b2764f24de2828aebdd02ac788c1c506247796cd6adfff520ee2fa78767d",
+      "size": 9710
+    },
+    {
+      "path": "packages/agent-credential-provisioning/src/store-writer.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "f0c53d65fb24408adb195ce66776e119f51682d3f64acd7df00cf3f30ddcf0c0",
+      "size": 21447
+    },
+    {
+      "path": "packages/agent-credential-provisioning/test/auth-client.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "ae1a3d2eed24d41562c3e02665eabc087f63d00ee6cd8d671d63476b46ef9020",
+      "size": 4433
+    },
+    {
+      "path": "packages/agent-credential-provisioning/test/provisioning.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "aebecb188bead4f2f5abcb00cdca98bc15140f6b4e8daa0afb3b134d3d536530",
+      "size": 32868
+    },
+    {
+      "path": "packages/agent-credential-provisioning/test/store-writer.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "df6ac1a8f8d8fc11fc4d89fbb1db76d4c24b555e3061995c42d638837e7b7ed0",
+      "size": 14374
+    },
+    {
+      "path": "packages/agent-definition/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "075b8585a266c2ed0a4585f2c26a99db61581e1df584a7511a36b0d6d06ded53",
+      "size": 3776
+    },
+    {
+      "path": "packages/agent-definition/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a5be1dec68b0adbfa5125fec070530eff6cf504eb6a0a0e33005757f916f2a1b",
+      "size": 711
+    },
+    {
+      "path": "packages/agent-definition/src/access.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787745940000000000,
+      "type": "file",
+      "sha256": "0cf284aa9c61f3dba1edf861c0929e13c857831e9a13a4d678f003ee5606f210",
+      "size": 6607
+    },
+    {
+      "path": "packages/agent-definition/src/config.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787745940000000000,
+      "type": "file",
+      "sha256": "fa33f6ff4cb905e558be661f29e7b7b82099427982430c2e86c9ccf914ff366c",
+      "size": 16616
+    },
+    {
+      "path": "packages/agent-definition/src/definition.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787745940000000000,
+      "type": "file",
+      "sha256": "3ac7332957717e70c03b92a682a83ca1e60180140688903c5a746b4c9803db4a",
+      "size": 16056
+    },
+    {
+      "path": "packages/agent-definition/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787745940000000000,
+      "type": "file",
+      "sha256": "9754ec51d67848607a84313e65529a6075c8676dd4a97173ef6b4629953ccf73",
+      "size": 4503
+    },
+    {
+      "path": "packages/agent-definition/test/definition.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "002a89cef829f9cc901523f6844fcc772a482f94e2747ed4e2c560d837af6803",
+      "size": 25026
+    },
+    {
+      "path": "packages/agent-memory/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "448953e0e2e9fd910b4e9e52580e0d9195912601a64fe1bb640ec70ff88c45da",
+      "size": 714
+    },
+    {
+      "path": "packages/agent-memory/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "691371f0b2b4036d7d6ec6365501541b150d22dedc10e63d7257865058fde20f",
+      "size": 28676
+    },
+    {
+      "path": "packages/agent-memory/src/memory.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "239cd5ed488886ee9c66900112e7203ce7b6a9432efa1365d550787a2bfeabcc",
+      "size": 16415
+    },
+    {
+      "path": "packages/agent-memory/src/paths.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d0db84ad9ea5a5c93fbe7ea474b83b3c332795b87b61d76e6def215313a97d1b",
+      "size": 3777
+    },
+    {
+      "path": "packages/agent-memory/test/memory.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "c503fc1cbedb6b82f38a3ab2dca92030d2306d9ced37ae9b8c9fc254174b3139",
+      "size": 12501
+    },
+    {
+      "path": "packages/agent-memory/test/paths.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a4cb5b2a059d900570bf5f3f0584af45eb102920881fda0817bafd3807d568ab",
+      "size": 2460
+    },
+    {
+      "path": "packages/agent-memory/test/plugin-workspace.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "af2a1a93621e7150e301a472a90644824cb3098bad9a5c514ef2d531d1e6e807",
+      "size": 13155
+    },
+    {
+      "path": "packages/agent-memory/test/primary-workspace.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "63f7048b7ac483d3eb9f6e1ae77c1d1b12eabdcde3b4b71622b2d3b5f0ad8b51",
+      "size": 7076
+    },
+    {
+      "path": "packages/agent-provisioning/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6b4d085939c1a182a0e2661cf3f8001eea37f4aed290a573cf812eb460a5bef2",
+      "size": 422
+    },
+    {
+      "path": "packages/agent-provisioning/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "916caaf1af925cbeace84e4cff589f6454e0bb41fe6ad2d3a31ffeab16c5d5f3",
+      "size": 20042
+    },
+    {
+      "path": "packages/agent-provisioning/src/shared-codex.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "cd4933b43a75fce851b5d05beb3b6e48497422ca4024e02a7e74d34204a75182",
+      "size": 3730
+    },
+    {
+      "path": "packages/agent-provisioning/test/provisioning.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "9f3e0a863a7d0bebba8ec604b77ebec44c8975102066ff3d1e1850eb813ce412",
+      "size": 8886
+    },
+    {
+      "path": "packages/agent-router/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9622010ec44bed87f0e71fd7e6a5cac3427cd68b20e06c4bbaa93e1f99e79e15",
+      "size": 569
+    },
+    {
+      "path": "packages/agent-router/src/binding-store.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788709210000000000,
+      "type": "file",
+      "sha256": "fd2278a9fe83017da72e148923dc32860fe811f18fe234ad957933bcb87140e3",
+      "size": 21708
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788709210000000000,
+      "type": "file",
+      "sha256": "681a600f1fe97a64b0ff3971da4b01b8c5a45cffd5fda7a0d543626c57e4ba8a",
+      "size": 43623
+    },
+    {
+      "path": "packages/agent-router/src/process.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788709210000000000,
+      "type": "file",
+      "sha256": "e6fb5e1952d915d66215796c9e1f0648909d0d8b28ffa8c30471979fd0d9f30a",
+      "size": 25640
+    },
+    {
+      "path": "packages/agent-router/src/process/provider-errors.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "3e25f3269b39a0e253949c022d7845709a255d62d74fb2cb98750bc4766578b6",
+      "size": 3298
+    },
+    {
+      "path": "packages/agent-router/src/process/state-machine.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "64cacdd42a65825fac8ad1ef06f9ed1dd9d4c37f8e49c7d15b7cc2153a28e598",
+      "size": 2904
+    },
+    {
+      "path": "packages/agent-router/src/route-chain-canary.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "ca228549abbbdfb4c7519641a8b5d6e08de7dca3ba5b72dac82f5ca562afc4b9",
+      "size": 12097
+    },
+    {
+      "path": "packages/agent-router/src/route-chain.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+      "size": 22928
+    },
+    {
+      "path": "packages/agent-router/test/binding-store.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2ac3d24393be42ab1ba6920cade8951dc1dd7462db697be6de52e230c2385cea",
+      "size": 14619
+    },
+    {
+      "path": "packages/agent-router/test/broker-rpc.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "c19407696a936af5a0c61ca7805099f2af17d58283224babbbda2f7c2ab4b8c7",
+      "size": 6090
+    },
+    {
+      "path": "packages/agent-router/test/delivery.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cdd0a6f5401191c24f715d87caf4670a1d38d6eb4a66b327ae5b7cf4bf78d2cc",
+      "size": 18252
+    },
+    {
+      "path": "packages/agent-router/test/feishu-regression.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4bf93c76aa479c2d1cf05bc5b30c7f3620a197db103960d71d1c5aaae4b4ef53",
+      "size": 12187
+    },
+    {
+      "path": "packages/agent-router/test/feishu-v2-normal.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "03abea54d528f4375efc379821f3a27c261d10ac38977db7cf521d1f0623874b",
+      "size": 8846
+    },
+    {
+      "path": "packages/agent-router/test/primary-workspace.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "709da7f5172ffbe00c792b73044b5aadb741f015aa054fd6960c31ebf870f054",
+      "size": 10861
+    },
+    {
+      "path": "packages/agent-router/test/process-delivery.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "5000bf226c3097429b7dbec25ddfec06b560ee24300ab19860a492406c56566a",
+      "size": 6714
+    },
+    {
+      "path": "packages/agent-router/test/provider-route.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "b71438e21683462ed49f5ff032ce4e69230728b8a53f6ecf63424edc818929a9",
+      "size": 11582
+    },
+    {
+      "path": "packages/agent-router/test/router.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "aa4a150b6a63dbc32c7aa4e8e01b09620b3dbb2dbabf978603e1f7492d6eab35",
+      "size": 13353
+    },
+    {
+      "path": "packages/agent-router/test/single-flight.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "4a1700efab9b31d72b260d1ce691b74a77c755576f91e9f4166379652335a900",
+      "size": 9027
+    },
+    {
+      "path": "packages/agent-router/test/workspace-binding.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ab582bee3624c599eac7ae0398a0e5d95a7605489e1e28ddfaff31bc90a2e3b0",
+      "size": 25436
+    },
+    {
+      "path": "packages/agent-switch/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "3496ed7b68cec1f08faf07953f5d3dd1b726f6abac6bc0bd3230d875123d7420",
+      "size": 719
+    },
+    {
+      "path": "packages/agent-switch/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788917616000000000,
+      "type": "file",
+      "sha256": "0569fecc335dfb8068f999e1fb58a8d56a5732c5545cc6860bb0b72c99d29107",
+      "size": 6061
+    },
+    {
+      "path": "packages/agent-switch/test/switch.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a1dfc6595ec404290f6042fd56e595b1902976bf13b492fc343f5d2fb077fbe6",
+      "size": 3876
+    },
+    {
+      "path": "packages/broker/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "835296e41f62321b53c79d95da5300a21160e6d3c39f209cefcc5a6485f15d0e",
+      "size": 963
+    },
+    {
+      "path": "packages/broker/src/calculator.manifest.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "dea44da1716d3203dde01cb1a90745b29d0c9a4f1be04afd8fad1e98af51cc3c",
+      "size": 3826
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-definition.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "6a0566d0c7ef4135094087f92115076a1e6ec47f4cf67825b6e2eb90175e41c8",
+      "size": 6215
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-principal-resolution.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "807763ee04269449c57daa851cad3269850bb8e777cb906b24f7794ea0866736",
+      "size": 5418
+    },
+    {
+      "path": "packages/broker/src/capabilities/agent-session-messaging.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "da437f2a2f198b971d6bf8415d964cd7ef8531f7b4998b4bef6ec968228a5d9b",
+      "size": 5444
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-governance.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303381000000000,
+      "type": "file",
+      "sha256": "7b743f2187e0cde05faa40153c68d2496d5a3a9378995977c482bc429c963e67",
+      "size": 8233
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-moderation.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303396000000000,
+      "type": "file",
+      "sha256": "44fde22f7d6926eaee2087f00d9b5fb1d3f338198be422920d2ca685d4951cf0",
+      "size": 11764
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum-notifications.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "e401f9fed8b292a4987c8aa1e73fbd32ac2f6c292c3e24ba5dc4785ce28355df",
+      "size": 5620
+    },
+    {
+      "path": "packages/broker/src/capabilities/forum.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "ac231cef1082749b58996ac6f1817bd4167e183dbf6673d47f7a7b4e9a566017",
+      "size": 18689
+    },
+    {
+      "path": "packages/broker/src/capabilities/life-workbench.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "29159953c4f65f82e22d1f0c82fbd795d0890dce31843cc40cbc737b2a3765f4",
+      "size": 2696
+    },
+    {
+      "path": "packages/broker/src/capabilities/okr.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "97b95a47005e373aa379dce4f9a4d173fc03c9cfaf83797d65817b56212c7a46",
+      "size": 1659
+    },
+    {
+      "path": "packages/broker/src/capabilities/scheduler.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "a3873a388b2c044ae9720e3ae7f0e9a8b9f663489cc95a1992d63545ecc8069c",
+      "size": 7763
+    },
+    {
+      "path": "packages/broker/src/capabilities/self-ops.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "5c5ebc865f857812ff22d9f4967c47885f7eca5ddbf03d446f310648c329b4f8",
+      "size": 1744
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-definition-authoring.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "2bb05413777a67f5948d8a2829cec8a8b29e969344610388fdbbe30eaaac0f87",
+      "size": 12514
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-execute.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "fa345c678c9653d7204a15bd907fc9fe28072fd673572721af038fcd8c10e7af",
+      "size": 13110
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow-linear-authoring.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "5bee9fd3405a1b7047c6238e4db912f63a228170f8d915794d24744ed9a44990",
+      "size": 3768
+    },
+    {
+      "path": "packages/broker/src/capabilities/workflow.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789695862551523762,
+      "type": "file",
+      "sha256": "ecddc1b7cb07addf4890bdb39a0314da0570b992e13ba67bc6e0f3928026932e",
+      "size": 43500
+    },
+    {
+      "path": "packages/broker/src/credential-store.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "4bc68707b98fb436155ebb3a3aa229ab2afcc388ac7e71660f752f2795b13ac0",
+      "size": 8374
+    },
+    {
+      "path": "packages/broker/src/credential.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "b306ed3e09dce8f0d67e3972648392f3fcc58dbfbbda149c44f6ea43ffd55605",
+      "size": 4012
+    },
+    {
+      "path": "packages/broker/src/error-detail-sanitizer.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "6eb3307c8d20bced15464fcfac677d9cc6f1b5c44a65d17771a5b5e0f8470c6f",
+      "size": 6318
+    },
+    {
+      "path": "packages/broker/src/fixtures/self-assert.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "e5a7c73ca562ad3c24b7e34357601fa76a375874aabd54ce2a8a749d6db231a7",
+      "size": 2431
+    },
+    {
+      "path": "packages/broker/src/gateway.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "f700960ab7e8f47a1afc3ca4f63d9e327f360025a22e96b1da5f865ab6b42ebc",
+      "size": 19068
+    },
+    {
+      "path": "packages/broker/src/identity.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "5383d11820a7107cd076156a19d4fc63ea00f335364f10ca2609c95eaf902af1",
+      "size": 2305
+    },
+    {
+      "path": "packages/broker/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "a558c67f58169713c31a056cc72157f196a6cadf70fdc9f3cc61110020eb4b34",
+      "size": 18960
+    },
+    {
+      "path": "packages/broker/src/mapping.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "c171a809abbebbdeafb2c99a17451008d025149b3f542386bce9aba4fcd75edf",
+      "size": 13374
+    },
+    {
+      "path": "packages/broker/src/readiness.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "2d7d163ec601cf8387969bf169bd00b8ef220f0e58dccd671209bb52038bb1b7",
+      "size": 1572
+    },
+    {
+      "path": "packages/broker/src/registry.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "31d94430bdd821d23e7795c3ccf31f0c9137ca4fe2ece40c4675c5f89830d133",
+      "size": 10265
+    },
+    {
+      "path": "packages/broker/src/relay.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "4c06ec96918250c1b59e61fdb09e91543782880efe45586a3d4edf2814ce5033",
+      "size": 18180
+    },
+    {
+      "path": "packages/broker/src/scheduler-validation.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "752e283583f42b1bf91b92fd71a4a80a7f3128d2ec17092c540c94817e85a51e",
+      "size": 7083
+    },
+    {
+      "path": "packages/broker/src/schema.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "18c390be9ad03c7d43449a44d4a8791c8fcbd57fa311b24f9a1c589d802e710c",
+      "size": 22296
+    },
+    {
+      "path": "packages/broker/src/targets.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "d20172841530d1e89f29d6c309c52054d3733417070376c77a5528d35b2d5ef7",
+      "size": 1677
+    },
+    {
+      "path": "packages/broker/src/transport.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789303235000000000,
+      "type": "file",
+      "sha256": "9454a6aef4adbe3c202aad1a24355a4ad6947ce1c5f848baf45b61c6063a7445",
+      "size": 29266
+    },
+    {
+      "path": "packages/broker/test-support/authoring-usability/local-service.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "3de04e3f9bd8916b7437764c0c82bad3b08e33104b5279efa7f5acf8f322da51",
+      "size": 4712
+    },
+    {
+      "path": "packages/broker/test-support/authoring-usability/scenarios.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "b8a63af17b0aff6ffcad7bdcadaab87925ba0331b09ce183b625734e5eac775d",
+      "size": 11180
+    },
+    {
+      "path": "packages/broker/test-support/capability-fixtures.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "e8dc0f4417c0bd9c56f4b17cdf99c68a2c6b302390d327241452004362d93882",
+      "size": 2693
+    },
+    {
+      "path": "packages/broker/test-support/model3-real-service.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "c1253ccb9e8050bc35cf2248879d5d9da3a680cdc21b2a865f9ca0a36b0b2f16",
+      "size": 9730
+    },
+    {
+      "path": "packages/broker/test/agent-principal-resolution.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "cc73e406156f687190228a87e5ca0874cbe7f144cb6cece82f32dd767f37b8d2",
+      "size": 2945
+    },
+    {
+      "path": "packages/broker/test/agent-session-messaging.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "75ad8472518c47825a2df6a80381302337f428cf802cce2ed24c30af479f9fd4",
+      "size": 12166
+    },
+    {
+      "path": "packages/broker/test/broker.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "6a8c13f0aaa730ad2218267fb4417ee9e17a04508270c00b8e30f7df2fc61068",
+      "size": 22614
+    },
+    {
+      "path": "packages/broker/test/capabilities.test.js",
+      "type": "deleted"
+    },
+    {
+      "path": "packages/broker/test/capabilities/forum.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "f882c57cf3832298ff279e67dc2a0b5497a64c78525d9849a98284239cd55cc7",
+      "size": 6659
+    },
+    {
+      "path": "packages/broker/test/capabilities/manifest-inventory.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "2c4491cc74543b5fd4f9892c9b5cb0eb4b8877a7420e50401944e07b83673c66",
+      "size": 1505
+    },
+    {
+      "path": "packages/broker/test/capabilities/okr.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "897a4da2abc6bc131f9e19d10dab77299433ded58df93c03deac323b8584b1a5",
+      "size": 1710
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-authoring-model-render.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "ae1ab5e86932c2142326e77d9e87f9c3d4d9f11a11ba3dabf5953c383b7a7de5",
+      "size": 7558
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-authoring-structural-diagnostics.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "b1d9c6450f878cbc5f85f473af4bafa59cc958c202bb46028d728e243fa2bdce",
+      "size": 5547
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-definition-authoring.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "86495c8be53919a8c91e02a3a7b80e47dee442a097efc2bf46366e81b9340e2b",
+      "size": 13719
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-dispatch-intent.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "fb49057c707799211c9f81744f05e8911da72600276b27e3d571af3592566255",
+      "size": 13624
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-domain-admin.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "9bae856c3a7277c70c67fb1e9ea45a1b47e8a6703a3097f276c18e70969bf5ff",
+      "size": 7550
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-domain-members.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "0f38199235521c34d85cb04d0b0657ac930c1e86ac643a967a6b1a875b335741",
+      "size": 7564
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-domain-pagination-v2.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "3beb584e4a3ff5aad76612b25363d0f7ceb19101879fe1398b4ba07ec16439c1",
+      "size": 9637
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-domain-reconcile.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "14273d4cba105b6806c73d47d1db69df8f55af289c7b633c23dff566d845e3e4",
+      "size": 8296
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-execute.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "7c1a07f28458d5caf3fef64b6943631eee1ffdb897936f0b9e12e56a615a1002",
+      "size": 21263
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-execution-class.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "fa361c07c0b0a91fccdf29d9341bf0698940a7a757770930341da27ec5f5109b",
+      "size": 8366
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-global-instances-v2.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "aea27de7388b5a7abd4b02473f5d6fe1a9de956b27588cf7ce5ac66d2dbf01fd",
+      "size": 14285
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-instances.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "5479eecde1ecfdd9d199d8ea5a812a4864c4e76ce2d2451813529072293280fa",
+      "size": 9208
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-linear-authoring.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "62327ffd4ccccb852180ac836633f7e7883929f2f1f47d7acab9134587219d1d",
+      "size": 8341
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-my-tasks.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "a7239e17be32f08b1f0d3cbb7470583947a564f6863ce3c13c0cc62c5f8651fb",
+      "size": 9237
+    },
+    {
+      "path": "packages/broker/test/capabilities/workflow-transition.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "57b405cd346bdc311adc6d7640ea10ca41acf3e7be490166d97a71cf6e00fd91",
+      "size": 11455
+    },
+    {
+      "path": "packages/broker/test/credential-metadata-seam.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "cdfc42812583a7fa29eca2d6a9ee5f7148793effcf48c65cd2cf4418ea38fbe9",
+      "size": 11296
+    },
+    {
+      "path": "packages/broker/test/credential-metadata-side-effects.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "19008e0c41bc6d63282759da28a17aa9d1a0591bbeeb39b6f08a1e6deae55478",
+      "size": 11051
+    },
+    {
+      "path": "packages/broker/test/credential-metadata.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "9a58e794efe64f1d10ec998d41c60164ed913dc5d0dfb259b80b7b5956c7002a",
+      "size": 14205
+    },
+    {
+      "path": "packages/broker/test/forum-capabilities.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "355a27e3deb54e5aa05b152b57e51a7109f27afab9dbd11c125382bc9fb7f0da",
+      "size": 27059
+    },
+    {
+      "path": "packages/broker/test/forum-governance-capabilities.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "7da8dd2d9ee4fa261b51e07f4e5bf1f4129f9f7472a8749e52a6645401e445e1",
+      "size": 12581
+    },
+    {
+      "path": "packages/broker/test/forum-notifications-capabilities.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "ae2fcf41a4b1ac9c73f327802d980ceadee5d9ffd252585a957d980da7276a61",
+      "size": 15950
+    },
+    {
+      "path": "packages/broker/test/gateway.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "a3cf04d7a451cff47fc5f83aff6f23af4ecb7ab8bcf57b337a3cf60fc6406579",
+      "size": 20094
+    },
+    {
+      "path": "packages/broker/test/generic-deltas.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "20a12e59227f66fb45b87ea313185081fa76bcedce66f9b9090b6973a10ee684",
+      "size": 5552
+    },
+    {
+      "path": "packages/broker/test/index-bindings.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "e21f91f69e873a1856242b7f13dceb6327e3d83e5b33c2ac77c5c7603368f032",
+      "size": 2345
+    },
+    {
+      "path": "packages/broker/test/life-workbench-registration.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "8e1fb89b85cef59cc1c103353c14e3c85d04f5d4dfbfd774486ce67ee1c1564d",
+      "size": 2085
+    },
+    {
+      "path": "packages/broker/test/relay.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "90d2f1479d9675736e6d3693500716f5fafc514a5b13cfcfc89074e8a52adf5d",
+      "size": 5261
+    },
+    {
+      "path": "packages/broker/test/scheduler-capability.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "523a9b672e4b794358825a2578846a0ef738925779b667e9135fa22c38c21405",
+      "size": 19532
+    },
+    {
+      "path": "packages/broker/test/scheduler-reliability.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "efd0749923baaa7eb8d718c24f7b4380344fb7eacafa86e603ba93245605a301",
+      "size": 21883
+    },
+    {
+      "path": "packages/broker/test/self-ops-v3.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "e640d661c0de3c41157fd6b9a54168bdd639de1247d25c5922e6d80a10d0586e",
+      "size": 3693
+    },
+    {
+      "path": "packages/broker/test/transport.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789304310000000000,
+      "type": "file",
+      "sha256": "e848e51102a8c2f0b8de5c6544052eee4675ac8e1c3ad4e1f03e2f466ba72ddd",
+      "size": 41379
+    },
+    {
+      "path": "packages/demo-server/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e3bc869fab1c55dbba48d421658442461516bce31c7337e3a1abf51784f5e2ba",
+      "size": 359
+    },
+    {
+      "path": "packages/demo-server/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "72d10ed2785e03ae6a53b92312605b01c76fc90acbceac95d9f3b4ef6f34ba21",
+      "size": 8941
+    },
+    {
+      "path": "packages/demo-server/src/session-seam.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f5eca6ef7409d464cc6bcaba81ff352d98db44a2d2f14e9582f9b87a5477b475",
+      "size": 7609
+    },
+    {
+      "path": "packages/demo-server/test/real-boot-smoke.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ac5b047c201ef30b6c1288ee5683ea048a92921fc15440e91113810cd63b6ea3",
+      "size": 5458
+    },
+    {
+      "path": "packages/demo-server/test/session-seam.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "691c9ce01ad36d3ddf675a7601939e5b0b7382f98e61c32b6b01a2d3f74a641f",
+      "size": 9703
+    },
+    {
+      "path": "packages/feishu-connector/fixtures/fixtures.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "46d57cdafc3773f2c6c227f77a9d0bc61545d4d3e0c41e08bcf10b69ad10a7e8",
+      "size": 5065
+    },
+    {
+      "path": "packages/feishu-connector/package-lock.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "673d9d0ac659098d14d8f9faa3007fc7e54d0ef1ccf77d270008b56f4caa1c81",
+      "size": 22621
+    },
+    {
+      "path": "packages/feishu-connector/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "139a7d24dd8b470e47fea832e20b5ec9f4958c13ce8504aedaf9a7da35c7d127",
+      "size": 768
+    },
+    {
+      "path": "packages/feishu-connector/src/api.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "50a31f14a6b9b5089f081b4bc6a434f589025819808f987417bbfd70bcee7e32",
+      "size": 2875
+    },
+    {
+      "path": "packages/feishu-connector/src/core.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "de3e8d828715e702a34ec7d57cd76d1d83ac83d3a5d4833360bb7e74a6bdaed7",
+      "size": 28577
+    },
+    {
+      "path": "packages/feishu-connector/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2ce1df1785690c68b4eef212759dc52301b6c95d3c70ce59adfa339738c36fa6",
+      "size": 10138
+    },
+    {
+      "path": "packages/feishu-connector/src/transport.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "2bbb8ecc2176fa835a95dc44f8c1eb11a9d0d8583d269133e14e14dd0066c35e",
+      "size": 4490
+    },
+    {
+      "path": "packages/feishu-connector/standalone.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "b5620ce4a96cd7b07479b12bece3895396c4a1196930e3d1cce470cbf113e0c5",
+      "size": 6087
+    },
+    {
+      "path": "packages/feishu-connector/test/api.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ac8fc89799d12f33bfb67bff9c7c5540c660d03f735d80384623679b9095d2e8",
+      "size": 3647
+    },
+    {
+      "path": "packages/feishu-connector/test/core.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d04adf14bdf4efd54b068007191ce36c5808ea1273c62b0b4c7d44f8134b1188",
+      "size": 6977
+    },
+    {
+      "path": "packages/feishu-connector/test/ingress-gate.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cc8edb9031c3107c1b64db7593fa1a554b08c14475bd7e8f296de06407151d9a",
+      "size": 6878
+    },
+    {
+      "path": "packages/feishu-connector/test/transport.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0f872259b8756a7214d1b846d59f632bf40eccc53a9030172e5f41e0805266ac",
+      "size": 3813
+    },
+    {
+      "path": "packages/notification-ingress/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "84e72dd5b9d129a05edb0b97ff80010306c1db1b8a45b1732b02f9635ae8e6df",
+      "size": 549
+    },
+    {
+      "path": "packages/notification-ingress/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "004b579f9b3000ea36931fb129615ecce7484a31638cbe0d9f3212366576534b",
+      "size": 9218
+    },
+    {
+      "path": "packages/notification-ingress/test/api.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "741c76fbdb25ebc37c77ccbd86b7a91596eaf4d26382c2438c97fb5d6f149fea",
+      "size": 8879
+    },
+    {
+      "path": "packages/notification-ingress/test/integration.seam.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "707c5ccde112cf4866021916ac5525d1cf97d726afe18259381abd0ca48ea3c1",
+      "size": 7857
+    },
+    {
+      "path": "packages/owner-guard/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "78f226ba67e06671924cd6ccd4028585c98b8aa40c1cab72a21ff46ff270c1ef",
+      "size": 351
+    },
+    {
+      "path": "packages/owner-guard/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4633077e73198bcce1436832bfbfcbcbd048ae2ec8a7ad661e9cb32b11afac51",
+      "size": 4181
+    },
+    {
+      "path": "packages/product-api/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ea74bf86fdf0b0e20890cd9207c6a6dfd44d981bc84d74e2701fa49bd9582a90",
+      "size": 542
+    },
+    {
+      "path": "packages/product-api/src/history-auth.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789485499000000000,
+      "type": "file",
+      "sha256": "c632779322f13e85455820286a5f3828ac26d17ce9894c7b445dac4c579c76b2",
+      "size": 12681
+    },
+    {
+      "path": "packages/product-api/src/history-listener.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "9ad648e8ab12db2a64be6d73bca6f66d16e38a1420bc87546687832cfbbc0f6b",
+      "size": 8631
+    },
+    {
+      "path": "packages/product-api/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789484575000000000,
+      "type": "file",
+      "sha256": "685b6090a957d2108b777a1aba70c93b66fc3f3df1cf7b9f98ef91b2602032e5",
+      "size": 16529
+    },
+    {
+      "path": "packages/product-api/src/scheduler-auth.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788735012000000000,
+      "type": "file",
+      "sha256": "5802cc884d84159133fb0dca9a46b6a79b08e0a953ec14c2f6f5f3a396dd3e4e",
+      "size": 12309
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription-worker.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788904041000000000,
+      "type": "file",
+      "sha256": "00a6d410457e2474db51ef572f31f598268512b7a55df5037bea9a632ec36333",
+      "size": 3638
+    },
+    {
+      "path": "packages/product-api/src/voice-transcription.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788904041000000000,
+      "type": "file",
+      "sha256": "bb253fe7f01458bc71d28e20f3eb49c58f3b6bec3342a2bb25c395daf1e3e256",
+      "size": 12664
+    },
+    {
+      "path": "packages/product-api/src/workflow-admission.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788785232000000000,
+      "type": "file",
+      "sha256": "339bd0eb1fd22fb2ec37e5c0c0201e4c816f3bde20a6665529c45d0ec2a2329e",
+      "size": 4579
+    },
+    {
+      "path": "packages/product-api/test/api.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f788e54958df625f0ba5d45d1640b99816921572ea7d174d6b499ffa9043e533",
+      "size": 8002
+    },
+    {
+      "path": "packages/product-api/test/history-auth.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "306536bf4ac623fd0096762b835a26d07eefd1eec1bb55d5f6d075836a64e5c3",
+      "size": 12287
+    },
+    {
+      "path": "packages/product-api/test/history-listener.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "b3bb9cb82aa8aa637b80e7666c79fc5bea741921680e0ccda83ea6f37b1485d9",
+      "size": 15538
+    },
+    {
+      "path": "packages/production-runtime/README.md",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "89c8a30b10e32a1d41ae69cfb600456f25a5bc83388ba424045235ed21ba0b10",
+      "size": 5164
+    },
+    {
+      "path": "packages/production-runtime/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e83317fe9f9c276627fc80c6d9bd4df970048b13bfeb3f35516783fd9890a59b",
+      "size": 541
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789484575000000000,
+      "type": "file",
+      "sha256": "9baec1b45f00d1a6eac09dcf518b691517c7d2b70032ae10833bcbd50ae32646",
+      "size": 21005
+    },
+    {
+      "path": "packages/production-runtime/src/context.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7af2e1407cdeb3ab157916bf4867695e36c141dcace88c8d67d8e20e0a4c04c7",
+      "size": 1486
+    },
+    {
+      "path": "packages/production-runtime/src/entry.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788709210000000000,
+      "type": "file",
+      "sha256": "1d380af3c82d5e865ca89648a6f1e5e78354a663460c15918f76587a4dc09947",
+      "size": 3906
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "9f2f68589c486a9540cf5684812f739a25ea87a413c32ce27c3a64d8321cd282",
+      "size": 20493
+    },
+    {
+      "path": "packages/production-runtime/src/paths.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788709210000000000,
+      "type": "file",
+      "sha256": "b1f5d496c78dbde6a7741e7b565cb67c81951f6daeb721dc002fb933b6a24075",
+      "size": 4251
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "937c6bd4a3addcfdad9313f20bc39a16fb2ca37f1ad805b6a035fe0fbd46cc72",
+      "size": 26350
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "b2e111fbdfe53ea850938d20a61be9dfaafd7bc50f9798e48e940914b54a67ab",
+      "size": 4620
+    },
+    {
+      "path": "packages/production-runtime/src/txn-safety.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788714281000000000,
+      "type": "file",
+      "sha256": "e213f048b897516eed57a232603488aeff9350e27b0437d73024b1db2b77d329",
+      "size": 11262
+    },
+    {
+      "path": "packages/production-runtime/src/v2-ingress-gate.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "06d9c0c62cefedad46ccbb726e2f3e81313ccee5e358034ca3b413662679edd1",
+      "size": 5523
+    },
+    {
+      "path": "packages/production-runtime/test/chatgpt-subscription-real.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "157e7c3d9a32532bde6b43898f327d116b07f61d8f59db23742b153e0762669a",
+      "size": 9404
+    },
+    {
+      "path": "packages/production-runtime/test/compose.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4050973d81296fff48e805b1de3aea0a39d0dfdffcd6357aa4ac586525b75720",
+      "size": 9656
+    },
+    {
+      "path": "packages/production-runtime/test/layout.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787150756000000000,
+      "type": "file",
+      "sha256": "117ff462f39e8abe8567eb6aed4aa4326666bde3a2d2dd104bc55707c77fb903",
+      "size": 3077
+    },
+    {
+      "path": "packages/production-runtime/test/model-overrides.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "9d70bf1b6647337095ac03efe6ed6fa59e97f0eb9d755884944f931188a4e4f0",
+      "size": 16056
+    },
+    {
+      "path": "packages/production-runtime/test/primary-workspaces.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "84a53fcd32227c7d019712bddd6a70ab3fef96c9878d89e3db3245df94c27bdd",
+      "size": 9778
+    },
+    {
+      "path": "packages/production-runtime/test/target-proxy-observer.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787266860000000000,
+      "type": "file",
+      "sha256": "0a9378d42e7f6ef33001a6f3a334c1a9e73671461aaa0e9cd8e700113717bde4",
+      "size": 6370
+    },
+    {
+      "path": "packages/production-runtime/test/v2-ingress-gate.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e8866ad36699b08d8dd4847f7c191cae6a10c7cad391cbb4de5c9f25f8519902",
+      "size": 18148
+    },
+    {
+      "path": "packages/scheduler-router/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ba0228503be72ea3a1026ffa5432a064e8046d0d60f32429908b6352525588e4",
+      "size": 492
+    },
+    {
+      "path": "packages/scheduler-router/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ebd7f6f20853e6616c0d44aa002d7b4651cfe3919e51e2673fbc76231bf1ba59",
+      "size": 8336
+    },
+    {
+      "path": "packages/scheduler-router/test/bridge.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8e01e707038809be2a485a20a7c83fb146d37a1c6e2df053ad94a05b02f9019e",
+      "size": 6731
+    },
+    {
+      "path": "packages/scheduler/fixtures/openclaw-jobs-enabled.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "1e1c6d01337a8f1d2c1e1868da2874edc2d7170bd2116c062ede738b28d77cfd",
+      "size": 283625
+    },
+    {
+      "path": "packages/scheduler/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6e0cf8f01c7a65b0f5e38528d23a29e5b384cad4da0d1d1643bb2a685411f537",
+      "size": 655
+    },
+    {
+      "path": "packages/scheduler/src/import-openclaw.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a9b5bf59719863ad165770d1a7c66a5f5a514529d62bfb515497d2fb42f788cc",
+      "size": 9249
+    },
+    {
+      "path": "packages/scheduler/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "616681ecf2e066a317facd2f16b09e242f1dff01ce729ef2beb50ae20abd8a24",
+      "size": 1286
+    },
+    {
+      "path": "packages/scheduler/src/job-model.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "5af2243ce3dca3e49308d9c3742a29b1cd0e2d5dd63c1df3ed72fc93b90af172",
+      "size": 7455
+    },
+    {
+      "path": "packages/scheduler/src/schedule.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "be487dfe542bb0006ed5a3443c9cacf3fbf67a665451afbd356ca80fb23e1933",
+      "size": 10517
+    },
+    {
+      "path": "packages/scheduler/src/scheduler.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "700654e4ec85a611acfc93960d81f660234fa16f563a0bc5d6777753f116dbea",
+      "size": 28328
+    },
+    {
+      "path": "packages/scheduler/src/seams.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "21598b9729ca8deb87bb3ecd5513bcf459e1d3388fb8507b8d82c870e2763545",
+      "size": 4101
+    },
+    {
+      "path": "packages/scheduler/src/store.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a9e49d36cb4dee1ac867e27eac01de567619f2b1d5556d3d91740f90d7374907",
+      "size": 11763
+    },
+    {
+      "path": "packages/scheduler/test/audit-fixes.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "686483fd740938df45e116aa63ea11a179ae434fce431e0952b34ea034d525eb",
+      "size": 18685
+    },
+    {
+      "path": "packages/scheduler/test/import.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4d193ad9654b1cd20a8d5ccd45c34004c0d3173ad10e9884755793a5f775833e",
+      "size": 6093
+    },
+    {
+      "path": "packages/scheduler/test/schedule.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8956c305e234c2f6c995d0414297565985c31084d9b9eaec7d16b1c81a85221b",
+      "size": 3981
+    },
+    {
+      "path": "packages/scheduler/test/scheduler.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "eaf6d33ed79187a8b87ff226f15ad330becafada8cea0b98cb0dcba63ed95d5c",
+      "size": 27360
+    },
+    {
+      "path": "packages/session-history/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "d806d97f09d7537e50609f8463ed5822c698352129b54f0ad74574b49b672097",
+      "size": 617
+    },
+    {
+      "path": "packages/session-history/src/constants.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "3dab412741e25cac36c91630345ec679b4f3fe16a121b97bd47ac4e63d689ac4",
+      "size": 2024
+    },
+    {
+      "path": "packages/session-history/src/dsh-compat.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "3d59abbcca5bf58182c4ea8eba5b6fe1b3c4985fae36f111314bf9746399f8d5",
+      "size": 4181
+    },
+    {
+      "path": "packages/session-history/src/errors.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "e41f918a5e6b52d533fdd406288d827fd15036fab25867354a0ec3a4f4149c0c",
+      "size": 1330
+    },
+    {
+      "path": "packages/session-history/src/ids.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "cf7cef6167440e9a6fc83f239101a3b08fd389b0e51e5783aa1dc3ff3f3913c4",
+      "size": 3726
+    },
+    {
+      "path": "packages/session-history/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "ec04a058b7bb84bde8a04c642d7f62f56db9d3b0542588c24e84d0e808ce7904",
+      "size": 7791
+    },
+    {
+      "path": "packages/session-history/src/locator.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "a762981c5ffce924c3dde9a6c6243f0ec0eb69dde688bf43b9172e1440b34e26",
+      "size": 7473
+    },
+    {
+      "path": "packages/session-history/src/projection.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "ab3be19e141304bbc015753b4fb20d9df887a869bbc84e3938becff5b3a7ab1a",
+      "size": 6042
+    },
+    {
+      "path": "packages/session-history/src/snapshot.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "1e54fe154ce924284ede43eb6f40e893b9ce1aeb1c86be045069df942bb7ccd2",
+      "size": 5775
+    },
+    {
+      "path": "packages/session-history/test/session-history.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789391823000000000,
+      "type": "file",
+      "sha256": "a9a9c5086bb3a18205a429dc940ef3721279c40adb428f43f47ad46e8583bb7d",
+      "size": 32602
+    },
+    {
+      "path": "packages/workspace-bootstrap/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7766eb5e49aebfa91cab499562951d0e3f0a3f68e5b1877e923b0edece56c634",
+      "size": 535
+    },
+    {
+      "path": "packages/workspace-bootstrap/src/index.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "e4c282a3cf2882598a9aff8e313b5ddf593abe99aec9fda2c11ac6e4e7d64486",
+      "size": 16180
+    },
+    {
+      "path": "packages/workspace-bootstrap/src/paths.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6f6659d92dd87cbe554442531218add5dba4ba2e20a8a03c1bf14b5e822f0ef5",
+      "size": 8739
+    },
+    {
+      "path": "packages/workspace-bootstrap/test/ensure.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "19ac0dce315e3a102aacae9fa23a57bd2e34ec90a74aee6daf8f8b5aac532651",
+      "size": 4652
+    },
+    {
+      "path": "packages/workspace-bootstrap/test/paths.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0a7170825df84019a9984cc8e831a5652afbd5eb2c0ac70214d581e6962f101d",
+      "size": 4045
+    },
+    {
+      "path": "packages/workspace-bootstrap/test/primary-workspace.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8e588ab977cf169c612f7af6a236166b0bfcdfa8987a458e8157a9dc33499dc2",
+      "size": 14944
+    },
+    {
+      "path": "packages/workspace-bootstrap/test/workspace-id.test.js",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d4f7f2f4efdffc2f6f8dc8eb5c5eb6940b37cbdf5209db701708e6c39b1c753f",
+      "size": 5542
+    },
+    {
+      "path": "profile-demo/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "3e73523196c3703ef6985755b3ad06d999631c1f62cfba1349254ccf54d3cf62",
+      "size": 484
+    },
+    {
+      "path": "profile-demo/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "777016365f0f912b583165bb395c4569484a9ee80a0c9414eae82247d3c1e4b5",
+      "size": 374
+    },
+    {
+      "path": "profile-integration-agent/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f63f3bcc306d603df01b10dd0c0df99c1eb953991d27fb9805fa4ffde9ed208b",
+      "size": 1756
+    },
+    {
+      "path": "profile-integration-agent/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0f8d7d9d70cbbea8e65a90a55b0e36d9c8b82b1f5fd9f3dc8ff34b30466b4e68",
+      "size": 733
+    },
+    {
+      "path": "profile-integration/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8349fe930cd9d73f4f3b53fec25f46c9e829af7ff768134267ff746913a65315",
+      "size": 306
+    },
+    {
+      "path": "profile-integration/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a2b4c4127194e1d9b531f45175d2930927a52171f7916d2dfcde765890aead68",
+      "size": 437
+    },
+    {
+      "path": "profile-memory/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9bf3c3cd7d6a581e808134af9bd3519424a97d9f4f31710647cd69634017f074",
+      "size": 1762
+    },
+    {
+      "path": "profile-memory/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "200509ceb8447e95144685047f7323bd0c9fa06eafbc443dd471efb337989f3b",
+      "size": 463
+    },
+    {
+      "path": "profile-production/cordis.patch.yml",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1788917616000000000,
+      "type": "file",
+      "sha256": "1eb164e5c43f3471d44798d0941c3e5adf19e41adbf276d88818586e6ab65fa5",
+      "size": 2435
+    },
+    {
+      "path": "profile-production/package.json",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "19cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33",
+      "size": 815
+    },
+    {
+      "path": "scripts/agent-core-backup-ops.sh",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6e05393b58265b8680094c02414d96afed8b8e8e1cdbd55cf2a1b111ecaaefe9",
+      "size": 18330
+    },
+    {
+      "path": "scripts/agent-core-production-resident-v1-verify.mjs",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "196fc31fcc8f0171e96bf609fc3043c50fcadb7eacb3e30fdc0ba000fd026292",
+      "size": 14144
+    },
+    {
+      "path": "scripts/agent-core-resident.mjs",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0dc5e83cda1bcc1bc62bae956faf6835813966f29f830945cd3857357e336b4a",
+      "size": 11284
+    },
+    {
+      "path": "scripts/agent-credential-provisioning-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "6d85cfdfb3c60ed18d820fd870be2132d4be73d8ec6518c099827a178329dfc3",
+      "size": 2270
+    },
+    {
+      "path": "scripts/agent-definition-access-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "adbcd13e0f14137f96e2e353372c4e28f20bb4477371eb093c726397f927a819",
+      "size": 18915
+    },
+    {
+      "path": "scripts/agent-router-delivery-v0-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0408fdb2d241e728e30a3fe00866db9e9a60532e7b9c3ce1fd456c99a5fcd42c",
+      "size": 23004
+    },
+    {
+      "path": "scripts/agent-session-v1-poc.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8d688db0cc55ecc2e65af3ffe03a8e2f3164eb2870418d14bf2d466a5749da50",
+      "size": 13238
+    },
+    {
+      "path": "scripts/agentcore-cron.mjs",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "24ce44e7586f9a1a04ea1491408db94ffa7379daf011f0abde20edbbcc4d86e9",
+      "size": 7497
+    },
+    {
+      "path": "scripts/demo-home.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f4493b78bbec11934df1601e27a7589543b1f4dd6b3aa2c8e664985848a81c19",
+      "size": 1306
+    },
+    {
+      "path": "scripts/dsh-agent-spawn-helper.c",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "6200b4fb4e66f85f056450eab891bde9e662d836432dbea09d1f8df074400e1d",
+      "size": 2400
+    },
+    {
+      "path": "scripts/install-demo-home.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "82f6ea45430605aa583376a4560db93809b08333e77d6b86c4202b48c30a91ef",
+      "size": 838
+    },
+    {
+      "path": "scripts/install-integration.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1789484575000000000,
+      "type": "file",
+      "sha256": "4b235a79605ee2fb62fcccfa52e43e915a32c1dde73ff870a84d380c50b853ba",
+      "size": 4009
+    },
+    {
+      "path": "scripts/integration-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "f8ced4c468dc071a0a16f6340bae7668deb6c80d94984a57a1b8a5eeee917c6e",
+      "size": 7838
+    },
+    {
+      "path": "scripts/luna-dsh-rc8-compat-driver.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787360383000000000,
+      "type": "file",
+      "sha256": "588d6d24c1b52f803d500a6595e64243668b50a46eb614498dcbc2ce1eeb6935",
+      "size": 15798
+    },
+    {
+      "path": "scripts/memory-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a101ec70dcd395f504613ec87d42a7e44891b8ad4f7bd2dd5b229567667b8042",
+      "size": 18955
+    },
+    {
+      "path": "scripts/migrate-registry-to-definition.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ccf3641bf6cd902668b47be83f5db7e0abee0398abbdcd097a8e7c143da47d3e",
+      "size": 3683
+    },
+    {
+      "path": "scripts/mobile-gate1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "fdadfa6dc5d0392c22f26f8ce23c547df0cbd9797860cb387fdd9429ea21537c",
+      "size": 31151
+    },
+    {
+      "path": "scripts/openclaw-job-import.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "5f2e00918b3b43e4a15622d98e10d0a052d788cbe42d5171fe749c0bdc752525",
+      "size": 6266
+    },
+    {
+      "path": "scripts/process-model-demo.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "3622a78c02ef437d2f8e1c5f9d22da6ab791e9e0237316338601bdc9390d0fa3",
+      "size": 27828
+    },
+    {
+      "path": "scripts/product-integration-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4024702706cc5a197053ca156140b470e8b280066d916e3316aea504749412f2",
+      "size": 27368
+    },
+    {
+      "path": "scripts/production-agent-provision.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "9ec70f029beeaab751ad197aaac549a019c10aaddcd821d23d0d5128730e2445",
+      "size": 5248
+    },
+    {
+      "path": "scripts/production-integration-v1-acceptance.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "cc465a91a5583b209400dc783c6950cdb4f8073bf89d94b31ed135b4eef09960",
+      "size": 42580
+    },
+    {
+      "path": "scripts/production-integration-v1-root-verify.sh",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "00084d3551187a07662becd400ff4ced046e42c5ab3eecc156450542dc8465d6",
+      "size": 11057
+    },
+    {
+      "path": "scripts/production-runtime-launchd.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "a57a0639a3e4e86bd1763abcbdf635625270d1e693d8a3af9d705382c449e580",
+      "size": 11688
+    },
+    {
+      "path": "scripts/production-runtime-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "18f89a63785ad5a8207fb2bf013edc5b54ba971a78c95ada22a033ea96bcd0d9",
+      "size": 21635
+    },
+    {
+      "path": "scripts/production-runtime.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "857a6103bf69e947c71bdbf9a22f3b5fe0e5e1ff569529514aeef8f08190f692",
+      "size": 573
+    },
+    {
+      "path": "scripts/rollback-callers-to-openclaw-v1.sh",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "0a1f9b812c722f566f37520f891076dec87e1a603fa33e37e595ac65bb138d0c",
+      "size": 2768
+    },
+    {
+      "path": "scripts/scheduler-caller-migration-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "99aed2e850d6948f69659061cdab6d861a40b0a1962f631736bec2520e6fcc04",
+      "size": 17453
+    },
+    {
+      "path": "scripts/scheduler-router-final-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ffab24ef5033ff866239bc2d7ed91c82249ba40ca9423918a4daa541f17cbca8",
+      "size": 21916
+    },
+    {
+      "path": "scripts/scheduler-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "aa97a4daa81760ca6d6c369cc6ee5ce34c9720a5109efe9835ab996ee5acffa1",
+      "size": 8244
+    },
+    {
+      "path": "scripts/setup-feishu-creds.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "d7f4899153de42b90460ea30afdad984c7764524f9f9b8e317237dbbc2f0e660",
+      "size": 1366
+    },
+    {
+      "path": "scripts/stock-agent-registry-adoption-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "76945436c84b043f6ed3a7c2ee0cca603f9584f1a0987a084487dc2ecbadcf71",
+      "size": 22993
+    },
+    {
+      "path": "scripts/test-agent-core-backup-retention-v1.sh",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "ecb9873923126aafde85a69df7d1ca907532a293ebc9fe681f3ccbb966f5fdeb",
+      "size": 19887
+    },
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "39144ad6547eb01c4f0d3ffc81c7922f5bb5e7698a4109714821fd57dd2cd52d",
+      "size": 25297
+    },
+    {
+      "path": "scripts/trusted-cp-hardening-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "8cadebcb4b4e4381b15447bc7da806d0271487c7a672968e06b65cdbc30ea9f8",
+      "size": 39997
+    },
+    {
+      "path": "scripts/trusted-credential-505-final-v2-run.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "7337a610c6e0ba9b09c099834c33bce7364aae7ba86a38f6f02c5d69cb61438a",
+      "size": 32100
+    },
+    {
+      "path": "scripts/trusted-credential-broker-v1-verify.mjs",
+      "mode": "0o644",
+      "uid": 502,
+      "gid": 20,
+      "mtime_ns": 1787030320000000000,
+      "type": "file",
+      "sha256": "4dbfbb31fedb95c982da4e0579d62f749da0418d6c5b6f2b68871afac599f950",
+      "size": 25860
+    }
+  ],
+  "git_status_nul": " M bundle-broker/cordis.patch.yml\u0000 M package.json\u0000 M packages/agent-definition/src/definition.js\u0000 M packages/agent-provisioning/src/index.js\u0000 M packages/agent-switch/src/index.js\u0000 M packages/broker/src/capabilities/forum.js\u0000 M packages/broker/src/capabilities/workflow.js\u0000 M packages/broker/src/credential-store.js\u0000 M packages/broker/src/gateway.js\u0000 M packages/broker/src/index.js\u0000 M packages/broker/src/mapping.js\u0000 M packages/broker/src/registry.js\u0000 M packages/broker/src/relay.js\u0000 M packages/broker/src/schema.js\u0000 M packages/broker/src/targets.js\u0000 M packages/broker/src/transport.js\u0000 M packages/broker/test/broker.test.js\u0000 D packages/broker/test/capabilities.test.js\u0000 M packages/broker/test/relay.test.js\u0000 M packages/broker/test/transport.test.js\u0000 M packages/product-api/src/index.js\u0000 M packages/production-runtime/src/compose.js\u0000 M packages/production-runtime/src/model-overrides.js\u0000 M profile-production/cordis.patch.yml\u0000 M scripts/install-integration.mjs\u0000?? docs/specs/AGENT_CORE_FORUM_MODERATION_CAPABILITIES_V2.md\u0000?? node_modules\u0000?? packages/agent-provisioning/src/shared-codex.js\u0000?? packages/agent-router/src/process/\u0000?? packages/agent-router/src/route-chain-canary.js\u0000?? packages/agent-router/src/route-chain.js\u0000?? packages/broker/src/capabilities/agent-principal-resolution.js\u0000?? packages/broker/src/capabilities/agent-session-messaging.js\u0000?? packages/broker/src/capabilities/forum-governance.js\u0000?? packages/broker/src/capabilities/forum-moderation.js\u0000?? packages/broker/src/capabilities/forum-notifications.js\u0000?? packages/broker/src/capabilities/life-workbench.mjs\u0000?? packages/broker/src/capabilities/scheduler.js\u0000?? packages/broker/src/capabilities/self-ops.js\u0000?? packages/broker/src/capabilities/workflow-definition-authoring.js\u0000?? packages/broker/src/capabilities/workflow-execute.js\u0000?? packages/broker/src/capabilities/workflow-linear-authoring.js\u0000?? packages/broker/src/error-detail-sanitizer.js\u0000?? packages/broker/src/readiness.js\u0000?? packages/broker/src/scheduler-validation.js\u0000?? packages/broker/test-support/\u0000?? packages/broker/test/agent-principal-resolution.test.js\u0000?? packages/broker/test/agent-session-messaging.test.js\u0000?? packages/broker/test/capabilities/\u0000?? packages/broker/test/credential-metadata-seam.test.js\u0000?? packages/broker/test/credential-metadata-side-effects.test.js\u0000?? packages/broker/test/credential-metadata.test.js\u0000?? packages/broker/test/forum-capabilities.test.js\u0000?? packages/broker/test/forum-governance-capabilities.test.js\u0000?? packages/broker/test/forum-notifications-capabilities.test.js\u0000?? packages/broker/test/generic-deltas.test.js\u0000?? packages/broker/test/index-bindings.test.js\u0000?? packages/broker/test/life-workbench-registration.test.js\u0000?? packages/broker/test/scheduler-capability.test.js\u0000?? packages/broker/test/scheduler-reliability.test.js\u0000?? packages/broker/test/self-ops-v3.test.js\u0000?? packages/product-api/src/history-auth.js\u0000?? packages/product-api/src/history-listener.js\u0000?? packages/product-api/src/scheduler-auth.js\u0000?? packages/product-api/src/voice-transcription-worker.js\u0000?? packages/product-api/src/voice-transcription.js\u0000?? packages/product-api/src/workflow-admission.js\u0000?? packages/product-api/test/history-auth.test.js\u0000?? packages/product-api/test/history-listener.test.js\u0000?? packages/production-runtime/src/shared-codex-migration-executable.js\u0000?? packages/production-runtime/src/shared-codex-migration.js\u0000?? packages/production-runtime/src/txn-safety.js\u0000?? packages/session-history/\u0000"
+}

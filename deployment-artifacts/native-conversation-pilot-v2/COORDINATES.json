@@ -1,0 +1,46 @@
+{
+  "issue": "https://github.com/mayf3/agent-control/issues/1156",
+  "branch": "codex/1156-system-minimal-v2",
+  "baseline": {
+    "commit": "a231f6316cfbe6ea9c29bfd7d36a53742883b536",
+    "tree": "2788aa3fc7d3b5cb382d3c42ba62a8ae5c197c28",
+    "installed_source_files": 303,
+    "parent": "c81103f395b920a8d5ac371a1080d49d2ab0dfd3",
+    "runtime_payload_excludes": [
+      "docs",
+      ".agents",
+      "deployment-artifacts"
+    ],
+    "deployment_applied": false
+  },
+  "source": {
+    "commit": "1c69e052c9d232e67e4b5dc21355ecb0b9798109",
+    "tree": "d5bb6afd1d104cbc030a0df7103bd849a57da773",
+    "base_commit": "a231f6316cfbe6ea9c29bfd7d36a53742883b536",
+    "base_tree": "2788aa3fc7d3b5cb382d3c42ba62a8ae5c197c28",
+    "runtime_delta_files": 18,
+    "test_fixture_delta_files": 10,
+    "source_payload_files": 324,
+    "deployed": false
+  },
+  "mcp": {
+    "commit": "90cc8eddfc75fa149cc71210181e8f825f59c601",
+    "tree": "c5979443bd59100e027d2b4c6697abc8ff284262",
+    "local_checkout_unmodified": "46cbba8aa11d8e6431b8d65ec2c12f1197f75a1c",
+    "runtime_bytes_equal": true
+  },
+  "release_root": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2",
+  "deploy_tree_files": 314,
+  "deploy_tree_manifest_sha256": "09517e7968a18573542eae2ad09f88366e5171f44e7b924d43da344c6026bd55",
+  "runtime_manifest_sha256": "4bfcdba5e4d207baf89cb5ef4e0a6aa6f2954feb1fa5b2dee1c4199b35d014ce",
+  "private_rollback_archive": {
+    "path": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/rollback-private/system-preimage.tar.gz",
+    "sha256": "4b099c7750d110973b577aacb4b00914d3062f46b005c5bb3a4f4b5fffdfae14",
+    "ds_admitted": false
+  },
+  "production_loaded": false,
+  "permissions_created": false,
+  "bindings_changed": false,
+  "tls_deployed": false,
+  "real_business_send": false
+}

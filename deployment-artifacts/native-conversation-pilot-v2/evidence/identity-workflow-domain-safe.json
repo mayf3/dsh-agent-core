@@ -1,0 +1,103 @@
+{
+  "checked_at": "2026-10-16T00:16:41.884Z",
+  "database": "svc_workflow_dogfood_clean",
+  "env_file": "/Users/yanfenma/.local/services/svc-workflow/.env",
+  "method": "SELECT in SET TRANSACTION READ ONLY",
+  "principals": [
+    {
+      "principal_id": "7711a8ed-c538-488b-b569-dcb1253adad8",
+      "principal_type": "AGENT",
+      "display_name": "dot-read-mcp-7711a8ed",
+      "enabled": true
+    },
+    {
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "principal_type": "AGENT",
+      "display_name": "agent-d5b3aeb2",
+      "enabled": true
+    }
+  ],
+  "domains": [
+    {
+      "domain_id": "10000000-0000-0000-0000-000000000100",
+      "domain_key": "workflow-todo-dogfood",
+      "display_name": "Workflow Todo Dogfood",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "22222222-0000-0000-0000-000000000100",
+      "domain_key": "adc-v2-dogfood",
+      "display_name": "ADC V2 Dogfood",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "26a88de7-44e7-49a4-b73c-55a4b3e39b08",
+      "domain_key": "knowledge-curation",
+      "display_name": "Knowledge Curation",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "33333333-0000-0000-0000-000000000100",
+      "domain_key": "okr-dogfood",
+      "display_name": "OKR Dogfood",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "3d04944c-b5bb-4437-bbdf-217023bfdf65",
+      "domain_key": "game-dev",
+      "display_name": "Game Dev",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "47c240be-c027-5346-9342-c0db5f330af8",
+      "domain_key": "commercial-exploration-dogfood",
+      "display_name": "商业化探索 Dogfood",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "69a04d88-61d9-4537-a0de-a2afe4188eb7",
+      "domain_key": "journal-submission",
+      "display_name": "论文投稿域 (Journal Submission)",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "cdb96dbf-8560-461a-a769-7afb8e438628",
+      "domain_key": "hr-onboarding",
+      "display_name": "HR 招聘域",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_MEMBER",
+      "binding_enabled": true
+    },
+    {
+      "domain_id": "f9b5682c-1c9c-5ace-a7b1-01b9a3be5965",
+      "domain_key": "build-in-public-dogfood",
+      "display_name": "Build in Public Dogfood",
+      "enabled": true,
+      "principal_id": "d5b3aeb2-e754-49a9-9914-b963521c0985",
+      "role_key": "DOMAIN_OWNER",
+      "binding_enabled": true
+    }
+  ]
+}

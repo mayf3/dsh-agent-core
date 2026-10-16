@@ -1,0 +1,673 @@
+{
+  "observed_at": "2026-10-16T00:14:25.995136+00:00",
+  "read_only": true,
+  "code_candidate": "bd8f74c4d8311e9093ec73ffa959b81ca2c25109",
+  "accepted_slice_merge": "44da63d21987bf7115435f0767e7851b9022836a",
+  "original_bip": {
+    "pid": 67280,
+    "parent_pid": 43098,
+    "runtime_source": "/usr/local/libexec/agent-core/app",
+    "runtime_root": "/Users/authsvc/.agent-core",
+    "cwd": "/Users/yanfenma/.openclaw/groups/workspace-oc_95bd40ab17712fe0f3a7cf7eb6f4e24a",
+    "proof": "ps parent plus lsof cwd, matching old Binding canonical BIP workspace; no process environment or session content read"
+  },
+  "old_http_listener": {
+    "pid": 1329,
+    "port": 8787,
+    "runtime_source": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "runtime_root": "/Users/yanfenma/.agent-core",
+    "reconciliation_file_exists": false
+  },
+  "recommended_installed_app_slice": {
+    "runtime_files_count": 18,
+    "adds": 11,
+    "patches": 7,
+    "files": [
+      {
+        "path": "packages/agent-router/src/conversation/persistence.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20",
+        "hunks": [
+          "@@ -0,0 +1,61 @@"
+        ]
+      },
+      {
+        "path": "packages/agent-router/src/conversation/source-ownership.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "cc056c8f0be9618a65dda8a6fb0f4224c13638c2320a65b84de475ee7f83f964",
+        "hunks": [
+          "@@ -0,0 +1,40 @@"
+        ]
+      },
+      {
+        "path": "packages/agent-router/src/conversation/source.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "da476c17cb1f7aff328287170b6cb5c9ec3b7e0e758313e689a93296628fd12b",
+        "hunks": [
+          "@@ -0,0 +1,94 @@"
+        ]
+      },
+      {
+        "path": "packages/agent-router/src/conversation/surface.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "37ae8cab56036d365dcd090cca504dfd67d772eeaaf78b892ff63090adf794b4",
+        "hunks": [
+          "@@ -0,0 +1,29 @@"
+        ]
+      },
+      {
+        "path": "packages/agent-router/src/index.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "fe2acb30197a2584781ad350f72b09dd20a99d85507367bc09e0fc537d9af0cc",
+        "candidate_sha256": "a9d84ba61d928ead4053c8fb20fb066fe864128d5e681cc404818de75c871d9c",
+        "hunks": [
+          "@@ -79,6 +79,7 @@",
+          "@@ -230,7 +231,7 @@",
+          "@@ -370,6 +371,7 @@"
+        ]
+      },
+      {
+        "path": "packages/agent-router/src/process/turn-execution.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "1e719277aed6c980f49dd2f97a94d4b9932dec6b8e7ecb0104bbd8849159d14f",
+        "candidate_sha256": "ee9e537413b004b3a72331ec360a2c1f77d5f72c50b6079c9481db44bba633ee",
+        "hunks": [
+          "@@ -180,6 +180,7 @@",
+          "@@ -304,7 +305,7 @@",
+          "@@ -338,6 +339,8 @@",
+          "@@ -356,7 +359,7 @@",
+          "@@ -387,6 +390,7 @@"
+        ]
+      },
+      {
+        "path": "packages/demo-server/src/index.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "8419964e877218cbd15dbd1dd0be51fe0ae853d3d31a36ccf518bb2a11919e89",
+        "candidate_sha256": "2737301af2ca975f0f51dedca17f2a0a14f65da992a0c51cffe45590dc6e11db",
+        "hunks": [
+          "@@ -118,6 +118,7 @@",
+          "@@ -191,6 +192,7 @@",
+          "@@ -200,7 +202,7 @@"
+        ]
+      },
+      {
+        "path": "packages/demo-server/src/session-seam.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "5c9c22af2f0964a5423f0516d451dbb7206192514ece94b40d4325064eee2e12",
+        "candidate_sha256": "06a8121e7d63afbd554ca2840fb4cb73028288e1efbb74a65986cdbab38ce55c",
+        "hunks": [
+          "@@ -27,6 +27,7 @@",
+          "@@ -44,7 +45,8 @@",
+          "@@ -144,6 +146,8 @@",
+          "@@ -188,13 +192,22 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/auth.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e",
+        "hunks": [
+          "@@ -0,0 +1,55 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/http.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "d854c53ceeb425ddc4c169eef28173b9e4213d5d79bb113ee2d9e5c04790ccd2",
+        "hunks": [
+          "@@ -0,0 +1,22 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/native-proof.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2",
+        "hunks": [
+          "@@ -0,0 +1,39 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/protocol.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd",
+        "hunks": [
+          "@@ -0,0 +1,37 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/runtime.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "7c08dec0422b024f7f0d8f19802dc50de29c8a0cc471f58922f8a638a9a5cbe5",
+        "hunks": [
+          "@@ -0,0 +1,15 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/service.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "61d872a1cba52a9eac58940ad498d058c309e91afa979e34d79ec560c5f7d9a3",
+        "hunks": [
+          "@@ -0,0 +1,243 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/conversation/store.js",
+        "kind": "added",
+        "role": "runtime",
+        "baseline_sha256": null,
+        "candidate_sha256": "2a8060ae717fdb073cfb0397dc31da045ce171ded74fcb450a3b030817d7bafc",
+        "hunks": [
+          "@@ -0,0 +1,46 @@"
+        ]
+      },
+      {
+        "path": "packages/product-api/src/index.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "864b2cec122af0e171abad25832b2669409aec3244695ff3eba989d3531db008",
+        "candidate_sha256": "0ce043f678e603e4ec7f45dd86c447baedf1191c622649e8fbe198cace004d9f",
+        "hunks": [
+          "@@ -49,6 +49,7 @@",
+          "@@ -238,6 +239,7 @@",
+          "@@ -245,6 +247,8 @@"
+        ]
+      },
+      {
+        "path": "packages/production-runtime/src/compose.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f",
+        "candidate_sha256": "a92ddaf6c363ad3ffa1b7d36d22a5454c0e279ebecf41bf80809d4da05463a87",
+        "hunks": [
+          "@@ -43,6 +43,7 @@",
+          "@@ -270,6 +271,7 @@",
+          "@@ -322,6 +324,7 @@"
+        ]
+      },
+      {
+        "path": "packages/production-runtime/src/entry.js",
+        "kind": "modified",
+        "role": "runtime",
+        "baseline_sha256": "5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070",
+        "candidate_sha256": "a4c7358efb4843a1bc5d90da06e0c1bcecb2abb930e61f5ad6684e38ff6ca129",
+        "hunks": [
+          "@@ -46,6 +46,14 @@",
+          "@@ -66,7 +74,7 @@"
+        ]
+      }
+    ],
+    "new_module_relative_dependency_edges": [
+      {
+        "from": "packages/agent-router/src/conversation/source.js",
+        "specifier": "./persistence.js",
+        "to": "packages/agent-router/src/conversation/persistence.js",
+        "baseline_exists": false,
+        "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20"
+      },
+      {
+        "from": "packages/agent-router/src/conversation/source.js",
+        "specifier": "./source-ownership.js",
+        "to": "packages/agent-router/src/conversation/source-ownership.js",
+        "baseline_exists": false,
+        "candidate_sha256": "cc056c8f0be9618a65dda8a6fb0f4224c13638c2320a65b84de475ee7f83f964"
+      },
+      {
+        "from": "packages/agent-router/src/conversation/surface.js",
+        "specifier": "./source.js",
+        "to": "packages/agent-router/src/conversation/source.js",
+        "baseline_exists": false,
+        "candidate_sha256": "da476c17cb1f7aff328287170b6cb5c9ec3b7e0e758313e689a93296628fd12b"
+      },
+      {
+        "from": "packages/agent-router/src/conversation/surface.js",
+        "specifier": "./source-ownership.js",
+        "to": "packages/agent-router/src/conversation/source-ownership.js",
+        "baseline_exists": false,
+        "candidate_sha256": "cc056c8f0be9618a65dda8a6fb0f4224c13638c2320a65b84de475ee7f83f964"
+      },
+      {
+        "from": "packages/product-api/src/conversation/auth.js",
+        "specifier": "../../../notification-ingress/src/auth.js",
+        "to": "packages/notification-ingress/src/auth.js",
+        "baseline_exists": true,
+        "candidate_sha256": "f42d3ff45f622850631acefb9cc53f27f7839d18d05bbabb9c435dd521e76f14"
+      },
+      {
+        "from": "packages/product-api/src/conversation/auth.js",
+        "specifier": "../../../agent-router/src/conversation/persistence.js",
+        "to": "packages/agent-router/src/conversation/persistence.js",
+        "baseline_exists": false,
+        "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20"
+      },
+      {
+        "from": "packages/product-api/src/conversation/auth.js",
+        "specifier": "./protocol.js",
+        "to": "packages/product-api/src/conversation/protocol.js",
+        "baseline_exists": false,
+        "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd"
+      },
+      {
+        "from": "packages/product-api/src/conversation/http.js",
+        "specifier": "./protocol.js",
+        "to": "packages/product-api/src/conversation/protocol.js",
+        "baseline_exists": false,
+        "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd"
+      },
+      {
+        "from": "packages/product-api/src/conversation/runtime.js",
+        "specifier": "./service.js",
+        "to": "packages/product-api/src/conversation/service.js",
+        "baseline_exists": false,
+        "candidate_sha256": "61d872a1cba52a9eac58940ad498d058c309e91afa979e34d79ec560c5f7d9a3"
+      },
+      {
+        "from": "packages/product-api/src/conversation/runtime.js",
+        "specifier": "./http.js",
+        "to": "packages/product-api/src/conversation/http.js",
+        "baseline_exists": false,
+        "candidate_sha256": "d854c53ceeb425ddc4c169eef28173b9e4213d5d79bb113ee2d9e5c04790ccd2"
+      },
+      {
+        "from": "packages/product-api/src/conversation/runtime.js",
+        "specifier": "./auth.js",
+        "to": "packages/product-api/src/conversation/auth.js",
+        "baseline_exists": false,
+        "candidate_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e"
+      },
+      {
+        "from": "packages/product-api/src/conversation/service.js",
+        "specifier": "../../../production-runtime/src/agent-session/projection-redaction.js",
+        "to": "packages/production-runtime/src/agent-session/projection-redaction.js",
+        "baseline_exists": true,
+        "candidate_sha256": "83117df9d41b7d68e460d96178a544d9ae982ac37dfce7423d0b3d320f2ad9d0"
+      },
+      {
+        "from": "packages/product-api/src/conversation/service.js",
+        "specifier": "./auth.js",
+        "to": "packages/product-api/src/conversation/auth.js",
+        "baseline_exists": false,
+        "candidate_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e"
+      },
+      {
+        "from": "packages/product-api/src/conversation/service.js",
+        "specifier": "./native-proof.js",
+        "to": "packages/product-api/src/conversation/native-proof.js",
+        "baseline_exists": false,
+        "candidate_sha256": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2"
+      },
+      {
+        "from": "packages/product-api/src/conversation/service.js",
+        "specifier": "./store.js",
+        "to": "packages/product-api/src/conversation/store.js",
+        "baseline_exists": false,
+        "candidate_sha256": "2a8060ae717fdb073cfb0397dc31da045ce171ded74fcb450a3b030817d7bafc"
+      },
+      {
+        "from": "packages/product-api/src/conversation/service.js",
+        "specifier": "./protocol.js",
+        "to": "packages/product-api/src/conversation/protocol.js",
+        "baseline_exists": false,
+        "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd"
+      },
+      {
+        "from": "packages/product-api/src/conversation/store.js",
+        "specifier": "../../../agent-router/src/conversation/persistence.js",
+        "to": "packages/agent-router/src/conversation/persistence.js",
+        "baseline_exists": false,
+        "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20"
+      },
+      {
+        "from": "packages/product-api/src/conversation/store.js",
+        "specifier": "./protocol.js",
+        "to": "packages/product-api/src/conversation/protocol.js",
+        "baseline_exists": false,
+        "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd"
+      }
+    ],
+    "unresolved_dependency_paths": [],
+    "required_existing_apis": [
+      "router.getBinding",
+      "router.sendProductSurface (new facade helper)",
+      "router.getTurnReconciliation",
+      "router.resolveCallerCorrelation",
+      "router.onTurnReconciled",
+      "TurnReconciliationStore.assertBusinessAdmissionReady",
+      "TurnReconciliationStore.admissionBlockerForAgent or activeFenceForAgent",
+      "TurnReconciliationStore.assertMintCapacity",
+      "routeChain.admitWithRouteChain",
+      "process unified turnQueueEntries + enqueuePromptExecution + installBackgroundTurnWatch",
+      "sessionSeam messageOrigin validation + rpcTurnContext already installed"
+    ]
+  },
+  "rejected_old_8787_whole_router_migration": {
+    "router_files_different": 41,
+    "files": [
+      {
+        "path": "packages/agent-router/src/binding-resolution.js",
+        "operation": "add",
+        "candidate_sha256": "615f8cab77dbed9ff89e4c92cfaf7055afc028240b4525cb212ba60aaeb4f738",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/binding-store.js",
+        "operation": "replace_or_rebase",
+        "candidate_sha256": "4fe013a03dcbc0a6a8503c4a8ed83a869835557decc84a6b7b63ba9ef5194cf5",
+        "old_sha256": "fd2278a9fe83017da72e148923dc32860fe811f18fe234ad957933bcb87140e3"
+      },
+      {
+        "path": "packages/agent-router/src/channel-conversation.js",
+        "operation": "add",
+        "candidate_sha256": "18e787bc1950077e8eac811a212925cb7ab6cbd0b90167c655b5903c09d33c25",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/conversation/persistence.js",
+        "operation": "add",
+        "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/conversation/source.js",
+        "operation": "add",
+        "candidate_sha256": "ea96a9d09eaadcc044a6f040abf8f96b323cc12260e2400ddd1a9683c87e341c",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/conversation/surface.js",
+        "operation": "add",
+        "candidate_sha256": "08deaada5571030b5d4ce67f458d3b01cc06bdbf42b61d2197311240e4fe1210",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/deadline-config.js",
+        "operation": "add",
+        "candidate_sha256": "dde4a7a2c8c90f92d5944a32720407fc51a32fa3865b86178cba0ae542600485",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/index.js",
+        "operation": "replace_or_rebase",
+        "candidate_sha256": "1682d505e521472b53a38b4540f759fb70594265cb68cceb91a08b05b7bcd61c",
+        "old_sha256": "681a600f1fe97a64b0ff3971da4b01b8c5a45cffd5fda7a0d543626c57e4ba8a"
+      },
+      {
+        "path": "packages/agent-router/src/ingress-authenticated.js",
+        "operation": "add",
+        "candidate_sha256": "17dcedddf0b15c644e61c523e72619e5e93584d23c0e4cecd8e88320d5d4f95e",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/ingress-delivery.js",
+        "operation": "add",
+        "candidate_sha256": "01eab5d3e535f2b05fd15960e396376a2db339676a2a5f57993a189c868484f6",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/parent-rpc-relay.js",
+        "operation": "add",
+        "candidate_sha256": "1ac2e0e03a405d8d84a0dc52116c0b84318009726f8a0457032341d8875e021a",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/agent-process.js",
+        "operation": "add",
+        "candidate_sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/env.js",
+        "operation": "add",
+        "candidate_sha256": "d80e523341543ed1778327acfc5f80693d04b11c49cab82dd38893221023eb4e",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/event-correlation.js",
+        "operation": "add",
+        "candidate_sha256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/evidence-buffer.js",
+        "operation": "add",
+        "candidate_sha256": "c5f1938bbc199927d6e2e9ddf30563ebcf61066b392bb175474a2b0118b8ecbc",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/index.js",
+        "operation": "add",
+        "candidate_sha256": "ade2ecf1f1fdb94001d8cf10fd16da7a6b8116cbc759077e537519102454350b",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/ingress-failure.js",
+        "operation": "add",
+        "candidate_sha256": "d3670623daef7e8382fe349beacb1c9c9a82bfa2f976bcec224f634bc479c91c",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/route-chain-evidence.js",
+        "operation": "add",
+        "candidate_sha256": "b682c18dc244f22f11ccbe1f587ab7b0dda6487ccfda1f03c08d33575e5d65b9",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/rpc-channel.js",
+        "operation": "add",
+        "candidate_sha256": "23810dad5218da19e67a9a3c1f13103eab8dc390e074e35ee9ed5ae4d84cb7ee",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/shutdown.js",
+        "operation": "add",
+        "candidate_sha256": "159381ce7afdc1dfe11656973e6e0d00b4b59cb69ad2dbdab6f6e312f2829eab",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/spawn.js",
+        "operation": "add",
+        "candidate_sha256": "add4e95e3318b98f8157c8c2dc3d5e29db219839a2b50484a2f5f3a7a8fc0063",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process/state-machine.js",
+        "operation": "replace_or_rebase",
+        "candidate_sha256": "6e079adcc807c772e2a360db9c4e4efcd06070397ef196f53f9173ab9b643342",
+        "old_sha256": "64cacdd42a65825fac8ad1ef06f9ed1dd9d4c37f8e49c7d15b7cc2153a28e598"
+      },
+      {
+        "path": "packages/agent-router/src/process/turn-execution.js",
+        "operation": "add",
+        "candidate_sha256": "d1e5ec10b20599aeeff3c5adb040469777c9df02424b7122f938628b68549cc6",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process-registry-route-gate.js",
+        "operation": "add",
+        "candidate_sha256": "949343251aad7feda52b24c4856b3fae938dbc2e7486508ddea6a25665e7b566",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process-registry-startup.js",
+        "operation": "add",
+        "candidate_sha256": "675ae69f454a8a9c0ae27e549a2f404a10fbaee25e24d4befa8f7ac8e5ac3a49",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process-registry.js",
+        "operation": "add",
+        "candidate_sha256": "87abee00c4c4911bca44b002ecfdc1815eb680f8c1fd18444d32ba06c38334ae",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/process.js",
+        "operation": "replace_or_rebase",
+        "candidate_sha256": "b07a27f6b8ec9f43969f871ad17e0db2b8df8df23af72fff2f6b655aeb558e07",
+        "old_sha256": "e6fb5e1952d915d66215796c9e1f0648909d0d8b28ffa8c30471979fd0d9f30a"
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/admin-abandonment.js",
+        "operation": "add",
+        "candidate_sha256": "83d356f7d29c8ec542ec22672a02262cdfa795471271575a81729d7c9229a46f",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/authority-capacity.js",
+        "operation": "add",
+        "candidate_sha256": "994b4c87365a51fa2b4458d9ff8d2b0837f61a6428ecb548a6fd513bc934c7c9",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/capacity.js",
+        "operation": "add",
+        "candidate_sha256": "237afe154801a0900209e68ddae47f1d7e0ca531594729209f16f687c73bb8b0",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/durable-file.js",
+        "operation": "add",
+        "candidate_sha256": "44120e2bc94c7b6941029ecf08eadde49dec4356bb7e9fb71d64849699fd5d26",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/index.js",
+        "operation": "add",
+        "candidate_sha256": "8f8d56082e0513397ca89c3799c9bd745bbafa540050b7c4189bdb3f2a61a91f",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/ingress-correlation.js",
+        "operation": "add",
+        "candidate_sha256": "ac33ff2964f8a434dcc931e1b16e56cd783c0b9c6a284f55207457d28fea53ca",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/query.js",
+        "operation": "add",
+        "candidate_sha256": "c91819d3104e836ee912d70f88ac8732f79fc9ea419a3322a34a36c7acb936b4",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/quiescence-bundle.js",
+        "operation": "add",
+        "candidate_sha256": "f2a724c2b0e5e00d5b81e1a5eb86efddc97365519fb75daa3321e5417e1694ed",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/quiescence-custody.js",
+        "operation": "add",
+        "candidate_sha256": "0a64281ff4beb6aab0e91bb249f2b58c78715ee579148d6fd45632e4073edef8",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/startup-recovery.js",
+        "operation": "add",
+        "candidate_sha256": "795c3cf863023d11f270ec2600bf350d0eaf04bd07c392503696ef57dba04963",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/state-machine.js",
+        "operation": "add",
+        "candidate_sha256": "7b96834f6788ac607527bc48a020697f39968a019dcc1e7fa4f1430c8852f8b5",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation/store.js",
+        "operation": "add",
+        "candidate_sha256": "9c5fa22a8fb62f1064a4362918f217fd9fa4ad83acd35d1d3a137e60c27ac410",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/reconciliation-store.js",
+        "operation": "add",
+        "candidate_sha256": "eb5ef8b3b4a0db0222d6529f16da1ba12a708b0e9099759448292ad585f9efcd",
+        "old_sha256": null
+      },
+      {
+        "path": "packages/agent-router/src/route-chain.js",
+        "operation": "replace_or_rebase",
+        "candidate_sha256": "261e8ca076a768679b9fc79d3a91eebccec04af3050e26cec0a590f27d93cb7a",
+        "old_sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e"
+      }
+    ],
+    "extra_missing_direct_imports": [
+      "packages/notification-ingress/src/auth.js",
+      "packages/production-runtime/src/agent-session/projection-redaction.js"
+    ],
+    "missing_symbol": "CANONICAL_DEFAULT_MODEL_ROUTE not exported by production old shared-codex.js",
+    "reason": "Old listener has no original BIP lifecycle/reconciliation authority; adding a second sender cannot preserve original active BIP owner."
+  },
+  "implementation_status": "18 runtime files backported including source-only exact-UID custody repair; 41 targeted tests passed; independent source review passed. PRODUCTION_APPLY and permission changes HOLD.",
+  "real_baseline": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-baseline/source",
+  "real_candidate": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source",
+  "runtime_authority_preservation": {
+    "unchanged_installed_runtime_file_count": 296,
+    "unchanged_protected_paths": {
+      "packages/agent-router/src/process/event-correlation.js": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+      "packages/agent-router/src/process-registry.js": "ea2717a27db187358c8241fdab7cc420c57a1d043e53b98b64f26ddab01599eb",
+      "packages/agent-router/src/reconciliation/store.js": "74c4996fe494fccde18ecbe9ae5b64678dba5bd7428f7b4754eb9f552936270f",
+      "packages/agent-router/src/reconciliation/fresh-hr-lineage.js": "037dae9f7dc07d96bc897e9fb77056ed4f7c0dac1d983d0074e6d967a6526d93",
+      "packages/agent-router/src/fresh-hr-cut-startup.js": "8654fe47aabe7f831447014c4ea77a3a49d93998ed19de7e78ad5ee5656683c5",
+      "packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs": "4a611ac8e72092674eb453e40f6d9c01c3c51ff088704aac7d7af4815189dbdc",
+      "packages/production-runtime/src/native-arm64/hr-fresh-lineage-startup-context.mjs": "4ced34563b91259f9a1420e7a3fa848ee763b99ada65005f424d0ca103aa6c47"
+    },
+    "no_existing_file_deleted": true
+  },
+  "verification": {
+    "node": "/usr/local/libexec/agent-core/node-runtime/bin/node v25.6.1",
+    "targeted_test_files": 8,
+    "tests": 41,
+    "pass": 41,
+    "fail": 0,
+    "log": "/tmp/pilot1156-closure/green41.log",
+    "log_sha256": "6a67ffdceafd7daaf95ddecaf2f56cb16b5b4cfe0701520a15e7acaaa7c58bd0",
+    "real_dual_uid_positive": "PASS",
+    "red_evidence": [
+      "source retention assertion failed before backport",
+      "public native HTTP POST returned404 instead of503 before mount",
+      "actual505 reader rejected502 source before source-only repair; 2/2 source ownership tests RED"
+    ],
+    "live_business_send": "NOT_RUN",
+    "production_load": "NOT_RUN",
+    "production_permissions": "NOT_APPLIED"
+  },
+  "source_custody": {
+    "status": "FIXED_IN_CANDIDATE",
+    "parent_uid": 505,
+    "child_uid": 502,
+    "authority_evidence": "/Library/LaunchDaemons/ai.agent-core.runtime.plist DSH_AGENT_CHILD_UID=502 / GID=20 / SPAWN_HELPER=/usr/local/libexec/dsh-agent-spawn-helper; process parent505 and child502 observed",
+    "writer_policy": "Exact UID from trusted spawn config snapshot, no model or API args",
+    "body_directory": "/Users/authsvc/.agent-core/control/native-conversation/source",
+    "ack_directory": "/Users/authsvc/.agent-core/control/native-conversation/acks",
+    "reader": "Source-only readonly safe reader: regular0600, exact owner, no symlink, nlink1, O_NOFOLLOW+fstat+size/inode checks",
+    "ack": "Parent505-owned metadata only: version,agent_id,request_id,source_sha256,expires_at; parent never rewrites source body",
+    "ttl": "Valid hash-bound ACK controls visibility; mismatch=unrecoverable; expiry never deletes source or unknown/tombstone",
+    "general_private_json_unchanged": true,
+    "real_dual_uid_fixture": "PASS: actual502 writer, sudo -n -u authsvc505 reader in temporary /private/tmp ACL fixture, cleaned",
+    "production_acl_applied": false,
+    "independent_review": "identity_tls independently ran source ownership test2/2 PASS; no blocking source findings"
+  }
+}

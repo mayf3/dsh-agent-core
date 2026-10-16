@@ -1,0 +1,57 @@
+[
+  {
+    "path": "/Users/yanfenma/.agent-core/control/turn-recovery-v3.json",
+    "exists": false
+  },
+  {
+    "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+    "readability": "permission_denied"
+  },
+  {
+    "path": "/Users/authsvc/.agent-core/control/shared-codex-migration-fence.json",
+    "readability": "permission_denied"
+  },
+  {
+    "path": "/private/var/db/agent-core/authsvc-codex-migration/migration-transaction.json",
+    "readability": "permission_denied"
+  },
+  {
+    "path": "/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock",
+    "exists": false
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/scripts/production-runtime.mjs",
+    "sha256": "857a6103bf69e947c71bdbf9a22f3b5fe0e5e1ff569529514aeef8f08190f692",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/scripts/production-runtime.mjs"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/entry.js",
+    "sha256": "1d380af3c82d5e865ca89648a6f1e5e78354a663460c15918f76587a4dc09947",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/entry.js"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/compose.js",
+    "sha256": "9baec1b45f00d1a6eac09dcf518b691517c7d2b70032ae10833bcbd50ae32646",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/compose.js"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/paths.js",
+    "sha256": "b1f5d496c78dbde6a7741e7b565cb67c81951f6daeb721dc002fb933b6a24075",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/production-runtime/src/paths.js"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/index.js",
+    "sha256": "681a600f1fe97a64b0ff3971da4b01b8c5a45cffd5fda7a0d543626c57e4ba8a",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/index.js"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/process.js",
+    "sha256": "e6fb5e1952d915d66215796c9e1f0648909d0d8b28ffa8c30471979fd0d9f30a",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/process.js"
+  },
+  {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/route-chain.js",
+    "sha256": "b23eccd18b9f6a440d7075e1b16ae413221995cdc9f287a5701aff8bc725fe4e",
+    "realpath": "/Users/yanfenma/workspace/project/production-dsh-agent-core/packages/agent-router/src/route-chain.js"
+  }
+]

@@ -1,0 +1,53 @@
+{
+  "Label": "ai.agent-core.runtime",
+  "ProgramArguments": [
+    "/usr/local/libexec/agent-core/node-runtime/bin/node",
+    "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+    "--root",
+    "/Users/authsvc/.agent-core",
+    "--catchup",
+    "0"
+  ],
+  "UserName": "authsvc",
+  "GroupName": "authsvc",
+  "WorkingDirectory": "/usr/local/libexec/agent-core/app",
+  "StandardOutPath": "/Users/authsvc/.agent-core/logs/runtime.log",
+  "StandardErrorPath": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+  "KeepAlive": true,
+  "RunAtLoad": true,
+  "EnvironmentVariables": {
+    "AGENTCORE_EXPECTED_STORE": "/Users/authsvc/.agent-core/scheduler/jobs.json",
+    "AGENT_CORE_CREDENTIALS_FILE": "/usr/local/libexec/agent-core/config/agent-credentials.json",
+    "AGENT_CORE_DEPLOYED_SHA": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+    "BROKER_AUTH_ORIGIN": "http://127.0.0.1:4001",
+    "DSH_AGENT_CHILD_GID": "20",
+    "DSH_AGENT_CHILD_UID": "502",
+    "DSH_AGENT_MODEL": "deepseek-v4-flash",
+    "DSH_AGENT_PROVIDER": "oc-go",
+    "DSH_AGENT_SPAWN_HELPER": "/usr/local/libexec/dsh-agent-spawn-helper",
+    "DSH_HARNESS_ROOT": "/usr/local/libexec/agent-core/harness",
+    "HOME": "/Users/authsvc",
+    "PRODUCT_API_ENABLED": "1",
+    "PRODUCT_API_PORT": "8788"
+  },
+  "other_env_names": [
+    "DSH_AGENT_TURN_TIMEOUT",
+    "FEISHU_AUTO_MENTION_TRIGGER_SENDER",
+    "FEISHU_CREDS_PATH",
+    "FEISHU_PROCESSING_REACTION_ENABLED",
+    "FEISHU_REPLY_RENDER_MODE",
+    "FEISHU_REQUIRE_MENTION_IN_GROUP",
+    "NOTIFICATION_INGRESS_ENABLED",
+    "PATH",
+    "SCHEDULER_AUTH_AUDIENCE",
+    "SCHEDULER_AUTH_ISSUER",
+    "SCHEDULER_AUTH_JWKS_URL",
+    "SCHEDULER_INCIDENT_OWNER_GID",
+    "SCHEDULER_INCIDENT_OWNER_UID",
+    "SCHEDULER_RECONCILIATION_EVIDENCE_FILE",
+    "SCHEDULER_ROUTING_MANIFEST",
+    "SCHEDULER_ROUTING_OWNER_UID",
+    "SCHEDULER_ROUTING_READER_GID"
+  ],
+  "sha256": "c41e1c18ea87517df1e5674f9f63761498c653f24cd7596754ae657d6767dc59"
+}

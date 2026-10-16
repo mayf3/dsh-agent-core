@@ -1,0 +1,134 @@
+{
+  "root": "/usr/local/libexec/agent-core/app",
+  "modules": [
+    {
+      "name": "@deepseek-ai/dsh-session",
+      "exists": true,
+      "symlink": true,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/6ffc3dee50990ac6ae5e5413825f3934",
+      "version": "0.1.0-rc.8",
+      "package_sha256": "d8eee6c8484b833272c6a861bdcde14b2b43356da0a49ee0f7c66a811d0fc12d",
+      "dependencies": {}
+    },
+    {
+      "name": "@deepseek-ai/dsh-tools",
+      "exists": true,
+      "symlink": true,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/efa0e1e49386f739ca41951482490147",
+      "version": "0.1.0-rc.8",
+      "package_sha256": "f835488df4e2eb457e765b6ea0947184b37c41066ba8778f25295c71043b1e22",
+      "dependencies": {
+        "@deepseek-ai/schemastery": "workspace:^"
+      }
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence-jsonl",
+      "exists": true,
+      "symlink": true,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/a72e81c32ac6569452bafedbacc7a7fe",
+      "version": "0.1.0-rc.8",
+      "package_sha256": "b749e283af3d7d14cbee56ddacbab7c85b3530d40a3070e414a33cd08ea2ff32",
+      "dependencies": {
+        "koffi": "^3.1.0",
+        "@deepseek-ai/schemastery": "workspace:^"
+      }
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "exists": true,
+      "symlink": true,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/.capture-deps/7e5749b9207d5276f6d449de486f37a9",
+      "version": "3.18.1",
+      "package_sha256": "b0905e78e12bad636adaf25f0f3b1f9e70eb9f5640d06be4c17e17838ae4067d",
+      "dependencies": {
+        "@standard-schema/spec": "^1.1.0",
+        "@deepseek-ai/cosmokit": "workspace:^"
+      }
+    },
+    {
+      "name": "@larksuite/channel",
+      "exists": true,
+      "symlink": false,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@larksuite/channel",
+      "version": "0.5.0",
+      "package_sha256": "3902c533b49093a09e4753b69706befa97c159aca83a9b4201c1b6be0dccfa7d",
+      "dependencies": {
+        "@larksuiteoapi/node-sdk": "^1.73.0",
+        "https-proxy-agent": "^9.0.0"
+      }
+    },
+    {
+      "name": "@larksuiteoapi/node-sdk",
+      "exists": true,
+      "symlink": false,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@larksuiteoapi/node-sdk",
+      "version": "1.73.0",
+      "package_sha256": "0b409d423deca6843557c23b8d76cdd4e58f803589f0ff6bc5bef3f8a00ed6a4",
+      "dependencies": {
+        "axios": "^1.16.0",
+        "lodash.identity": "^3.0.0",
+        "lodash.merge": "^4.6.2",
+        "lodash.pickby": "^4.6.0",
+        "protobufjs": "^7.2.6",
+        "qs": "^6.14.2",
+        "ws": "^8.19.0"
+      }
+    },
+    {
+      "name": "croner",
+      "exists": true,
+      "symlink": false,
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/croner",
+      "version": "10.0.1",
+      "package_sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250",
+      "dependencies": {}
+    },
+    {
+      "name": "sherpa-onnx-node",
+      "exists": false,
+      "symlink": false
+    }
+  ],
+  "files": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/package.json",
+      "exists": true,
+      "sha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+      "exists": true,
+      "sha256": "721c36a37c18a2a0f753ede6540c1b1021cadef4d6af8a19163698a0a59ee788"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/index.js",
+      "exists": true,
+      "sha256": "fe2acb30197a2584781ad350f72b09dd20a99d85507367bc09e0fc537d9af0cc"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/process.js",
+      "exists": true,
+      "sha256": "b07a27f6b8ec9f43969f871ad17e0db2b8df8df23af72fff2f6b655aeb558e07"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js",
+      "exists": true,
+      "sha256": "96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/entry.js",
+      "exists": true,
+      "sha256": "5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/paths.js",
+      "exists": true,
+      "sha256": "3e862991b866927e8cb7492af51dcb476715022df6525631fb99987a6c5e0767"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/scheduler-router/src/event-correlation.js",
+      "exists": false,
+      "sha256": null
+    }
+  ]
+}

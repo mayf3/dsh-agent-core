@@ -1,0 +1,82 @@
+✖ source owner retains exact native reply before publication, survives reset and restart (2.466417ms)
+✖ source reserve fails before followup when durable retention is unavailable (0.247083ms)
+✖ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (1.876208ms)
+✖ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (0.893625ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 185.433166
+
+✖ failing tests:
+
+test at packages/agent-router/test/route-chain/conversation-source.test.js:7:1
+✖ source owner retains exact native reply before publication, survives reset and restart (2.466417ms)
+  AssertionError [ERR_ASSERTION]: native source retention is implemented
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/test/route-chain/conversation-source.test.js:9:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/route-chain/conversation-source.test.js:35:1
+✖ source reserve fails before followup when durable retention is unavailable (0.247083ms)
+  AssertionError [ERR_ASSERTION]: native source retention is implemented
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/test/route-chain/conversation-source.test.js:37:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/route-chain/conversation-source.test.js:43:1
+✖ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (1.876208ms)
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/src/conversation/source.js' imported from /Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/test/route-chain/conversation-source.test.js
+      at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:991:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:713:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:730:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:52)
+      at #resolve (node:internal/modules/esm/loader:695:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+      at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:32)
+      at TracingChannel.tracePromise (node:diagnostics_channel:350:14) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/src/conversation/source.js'
+  }
+
+test at packages/agent-router/test/route-chain/conversation-source.test.js:61:1
+✖ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (0.893625ms)
+  Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/src/conversation/source.js' imported from /Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/test/route-chain/conversation-source.test.js
+      at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+      at moduleResolve (node:internal/modules/esm/resolve:865:10)
+      at defaultResolve (node:internal/modules/esm/resolve:991:11)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:713:20)
+      at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:730:38)
+      at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:52)
+      at #resolve (node:internal/modules/esm/loader:695:17)
+      at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
+      at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:32)
+      at TracingChannel.tracePromise (node:diagnostics_channel:350:14) {
+    code: 'ERR_MODULE_NOT_FOUND',
+    url: 'file:///Users/yanfenma/workspace/project/pilot1156-fixed-v2/real-candidate/source/packages/agent-router/src/conversation/source.js'
+  }

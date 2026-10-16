@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/Users/yanfenma/.agent-core/control/shared-codex-migration-fence.json",
+    "exists": false
+  },
+  {
+    "path": "/Users/yanfenma/.agent-core/control/turn-recovery.json",
+    "exists": false
+  },
+  {
+    "path": "/Users/yanfenma/.agent-core/control/turn-reconciliation.json",
+    "exists": false
+  },
+  {
+    "path": "/Users/yanfenma/.agent-core/bindings/bindings.json",
+    "exists": true,
+    "sha256": "234584c58ae2d68f3ad9032d7a0e1225fe6cb2ee1b12732710371bd87d66a0c2",
+    "bytes": 32985,
+    "uid": 502,
+    "gid": 20,
+    "mode": "0o600",
+    "bip_binding_metadata": [
+      {
+        "key": "feishu:oc_95bd40ab17712fe0f3a7cf7eb6f4e24a",
+        "channelConversationId": "feishu:oc_95bd40ab17712fe0f3a7cf7eb6f4e24a",
+        "activeAgentId": "agt_build-in-public-agent",
+        "activeSessionId": "main",
+        "workspace": null
+      }
+    ]
+  }
+]

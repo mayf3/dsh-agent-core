@@ -1,0 +1,96 @@
+{
+  "checked_at": "2026-10-16T00:16:41.963189+00:00",
+  "runtimes": [
+    {
+      "plist": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "Label": "ai.agent-core.runtime",
+      "UserName": "authsvc",
+      "ProgramArguments": [
+        "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "/usr/local/libexec/agent-core/app/scripts/production-runtime.mjs",
+        "--root",
+        "/Users/authsvc/.agent-core",
+        "--catchup",
+        "0"
+      ],
+      "WorkingDirectory": "/usr/local/libexec/agent-core/app",
+      "safe_environment": {
+        "BROKER_AUTH_ORIGIN": "http://127.0.0.1:4001",
+        "HOME": "/Users/authsvc",
+        "PRODUCT_API_PORT": "8788"
+      }
+    },
+    {
+      "plist": "/Users/yanfenma/Library/LaunchAgents/ai.agent-core.runtime.plist",
+      "Label": "ai.agent-core.runtime",
+      "UserName": null,
+      "ProgramArguments": [
+        "/Users/yanfenma/.agent-core/control/agent-core-runtime-glm53-wrapper.zsh"
+      ],
+      "WorkingDirectory": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+      "safe_environment": {
+        "HOME": "/Users/yanfenma"
+      }
+    },
+    {
+      "plist": "/Users/yanfenma/Library/LaunchAgents/ai.agent-core.scheduler-v2.plist",
+      "Label": "ai.agent-core.scheduler-v2",
+      "UserName": null,
+      "ProgramArguments": [
+        "/usr/local/libexec/agent-core/node-runtime/bin/node",
+        "/Users/yanfenma/workspace/project/dsh-agent-core-main/scripts/production-runtime.mjs",
+        "--root",
+        "/Users/yanfenma/.agent-core-scheduler-v2",
+        "--catchup",
+        "0"
+      ],
+      "WorkingDirectory": "/Users/yanfenma/workspace/project/dsh-agent-core-main",
+      "safe_environment": {
+        "HOME": "/Users/yanfenma"
+      }
+    }
+  ],
+  "system_files": [
+    {
+      "path": "/Users/authsvc/.agent-core/agents.json",
+      "sha256": "e0800b0fde6fc46b2873decd0f83c9b807b48b56cc3c9ad9cf578a5685b5b6fe",
+      "target_rows": [
+        {
+          "id": "agt_build-in-public-agent",
+          "name": "Build in Public 主理人",
+          "description": "imported from OpenClaw agent build-in-public-agent",
+          "disabled": false
+        }
+      ],
+      "agent_count": 98
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/bindings/bindings.json",
+      "sha256": "eb1a7382cb7f99c5be9ade1315e588a97ed36ce9bbc6bada9e08078becdd2f2d",
+      "target_rows": [
+        {
+          "channelConversationId": "feishu:oc_95bd40ab17712fe0f3a7cf7eb6f4e24a",
+          "activeAgentId": "agt_build-in-public-agent",
+          "activeSessionId": "main",
+          "workspace": null,
+          "updatedAt": "2026-10-08T08:41:42.246Z"
+        }
+      ],
+      "channel_counts": {
+        "feishu": 90,
+        "mobile": 20,
+        "mcp": 0
+      },
+      "binding_count": 110
+    }
+  ],
+  "auth_runtime_contract": {
+    "path": "/Users/yanfenma/workspace/project/production-auth-service-862eab36677d214b2ce340f49bb141173b51efea/generated/minimal-auth-v1/runtime-contract.json",
+    "sha256": "3b9f744c0c317c9c38470d26c6778794e1b85ab1575ec74affea2c3cbcf4f1d5",
+    "contractVersion": "1.12.0",
+    "runtimeDigest": "131105f186688f6020aa3bae56f551ca1762b2a2cd31c29d07e97e7a4244e212",
+    "reviewedSourceGitCommit": "02bccd428554868125a65800f1334928c80543a2",
+    "sourceBundleDigest": "b499ac82cfecc34ed181161f1e642c0497f3f780b8c4e7b91af307a55ffb6a80",
+    "conversation_audiences": []
+  }
+}

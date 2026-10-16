@@ -1,0 +1,15 @@
+{
+  "action": "DS_B7_EXECUTION_STATUS_V2",
+  "current_runtime_verified": false,
+  "data": {},
+  "effect": "READ_ONLY",
+  "error": {
+    "code": "BINDING_MISMATCH",
+    "next_action": "INSPECT_SAME_OPERATION",
+    "replay_allowed": false
+  },
+  "ok": false,
+  "operation_id": "b7-packet-r27-65e5606cf5c352f2e-e6",
+  "replay_allowed": false,
+  "schema": "ds-b7-execution-v2"
+}

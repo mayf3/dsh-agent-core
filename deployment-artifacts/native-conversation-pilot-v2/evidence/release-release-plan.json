@@ -1,0 +1,75 @@
+{
+  "preparation_only": true,
+  "production_mutation": false,
+  "actual_target": {
+    "app": "/usr/local/libexec/agent-core/app",
+    "runtime_root": "/Users/authsvc/.agent-core",
+    "launchd": "system/ai.agent-core.runtime",
+    "product_api": "http://127.0.0.1:8788",
+    "unit": "scheduler-whole-main",
+    "preserve": [
+      "node_modules"
+    ]
+  },
+  "historical_gui_target": {
+    "path": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+    "port": 8787,
+    "eligible_for_bip_pilot": false
+  },
+  "pins": {
+    "system_plist_sha256": "c41e1c18ea87517df1e5674f9f63761498c653f24cd7596754ae657d6767dc59",
+    "deployed_event_correlation_sha256": "47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc",
+    "registry_generation_observed": "30aa3e6454a165cc975aa5660185d77bc89c70979a11f78d4f7c27303317c779"
+  },
+  "original_controller_readback": {
+    "e29_phase": "RETAINED",
+    "e29_reason": "EXECUTION_INTENT",
+    "e29_native_terminal_verified": false,
+    "e29_tx_id": null,
+    "e29_installed": "UNKNOWN",
+    "e29_replay_allowed": false,
+    "e29_next_action": "INSPECT_ORIGINAL_STAGE_CUSTODY_NO_STAGE_REPLAY",
+    "e6_error": "BINDING_MISMATCH",
+    "unit_installation": "UNKNOWN",
+    "unit_health": "HEALTHY",
+    "current_runtime_verified": false
+  },
+  "release_sequence": [
+    "complete isolated true-app candidate",
+    "original executor reconciles retained B7 custody, no replay",
+    "fresh exact authority/registry/worker/effect quiescence gates",
+    "original DS CAPTURE_CURRENT_GENERATION",
+    "original DS ADMIT_CAPTURED_SCHEDULER_ROLLBACK",
+    "original DS fixed tree deployment with admitted rollback generation",
+    "original approved config/TLS/permission/Binding fixed effects separately",
+    "attributed code/config/health readback",
+    "separate first real request approval"
+  ],
+  "rollback_sequence": [
+    "revoke send; preserve result and MCP enabled",
+    "classify uncertain operation before action",
+    "original DS ROLLBACK exact admitted generation",
+    "restore changed plist/config only through their exact original fixed-effect rollback",
+    "verify original bytes/metadata/dependency closure and retained records",
+    "report actual result-reader availability"
+  ],
+  "protected_data_never_restored_or_deleted": [
+    "bindings",
+    "turn-recovery-v3 ledger",
+    "UNKNOWN/tombstones",
+    "conversation sources/results",
+    "sessions/history",
+    "scheduler jobs/runs",
+    "business audit/outbox",
+    "credentials",
+    "B7 transaction/fence"
+  ],
+  "offline_preimage_rollback_eligible": false,
+  "blockers": [
+    "retained e29 stage custody unresolved",
+    "revised source/tests must target true system app",
+    "privileged rollback capture/admission not performed",
+    "exact config/env fixed effect not yet bound",
+    "loaded JS byte identity not verified"
+  ]
+}

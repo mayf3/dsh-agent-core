@@ -1,0 +1,29 @@
+▶ actual MCP loader accepts only safe matching files and authenticated original transport
+  ✔ valid (67.270125ms)
+  ✔ nonloopback (7.744334ms)
+  ✔ https_endpoint (2.751667ms)
+  ✔ extra_config_key (4.334959ms)
+  ✔ mismatched_subject (4.176417ms)
+  ✔ newline_secret (2.699542ms)
+  ✔ invalid_client_charset (1.98825ms)
+  ✔ disabled (2.035917ms)
+  ✔ unauthenticated_transport (1.37225ms)
+  ✔ unsafe mode and symlink rejected by actual file loader (3.745292ms)
+✔ actual MCP loader accepts only safe matching files and authenticated original transport (125.286958ms)
+▶ actual DSH validator preserves single client/target, HTTPS and send-only withdrawal
+  ✔ valid (0.9065ms)
+  ✔ http (0.511417ms)
+  ✔ two_clients (0.090334ms)
+  ✔ two_targets (0.060917ms)
+  ✔ disabled (0.045667ms)
+  ✔ send_withdrawn (0.047542ms)
+✔ actual DSH validator preserves single client/target, HTTPS and send-only withdrawal (2.081917ms)
+✔ proposed TLS sidecar preserves the actual POST client_credentials wire and rejects other routes (660.512458ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 895.474542
