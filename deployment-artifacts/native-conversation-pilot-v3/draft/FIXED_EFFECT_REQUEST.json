@@ -1,0 +1,218 @@
+{
+  "template_only": true,
+  "apply_allowed": false,
+  "production_mutation": false,
+  "executor": "original sole authorized executor; never this audit",
+  "all_unbound_values_must_be_measured_and_authorized": true,
+  "schema": "pilot1156-ops-effects-draft-v3",
+  "target": {
+    "unit": "scheduler-whole-main",
+    "app": "/usr/local/libexec/agent-core/app",
+    "root": "/Users/authsvc/.agent-core",
+    "product_api": "http://127.0.0.1:8788"
+  },
+  "gates": {
+    "b7_e30_terminal_custody": "NOT_ESTABLISHED",
+    "business_drain": "NOT_ESTABLISHED",
+    "rollback_admission": "NOT_ESTABLISHED_FOR_PILOT",
+    "system_env_effect": "UNBOUND",
+    "auth_identity_and_credential": "OWNING_AUTHORITY_RECEIPT_REQUIRED",
+    "source_acl_real_path_probe": "REQUIRED_BEFORE_ENABLE",
+    "binding_fixed_effect": "UNBOUND"
+  },
+  "effects": [
+    {
+      "id": "system-env",
+      "authorization_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "EXACT_ACCEPTED_EFFECT_AND_APPROVAL"
+      },
+      "entrypoint": "UNBOUND_NO_CURRENT_NATIVE_ENV_FIXED_ACTION",
+      "object": "/Library/LaunchDaemons/ai.agent-core.runtime.plist",
+      "observed_preimage_sha256": "c41e1c18ea87517df1e5674f9f63761498c653f24cd7596754ae657d6767dc59",
+      "observed_at": "2026-10-16T01:45:32Z",
+      "fresh_preimage_required": true,
+      "preimage_material": "private exact original bytes, ordered ACL, xattr, flags, uid/gid/mode",
+      "delta": {
+        "EnvironmentVariables.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE": {
+          "preimage": "ABSENT",
+          "postimage": "/Users/authsvc/.agent-core/config/native-conversation.json"
+        },
+        "EnvironmentVariables.NODE_EXTRA_CA_CERTS": {
+          "preimage": "ABSENT",
+          "postimage": "/usr/local/etc/agent-core-native-auth-tls/ca.crt"
+        }
+      },
+      "preserve": "all other plist fields/environment, Node argv, --catchup 0, child uid502/gid20/helper, HR seams",
+      "load": "one governed original-system load only after drain and all dependencies",
+      "readback": "exact candidate bytes/metadata plus attributed loaded argv/env/startup trust; health alone insufficient"
+    },
+    {
+      "id": "tls",
+      "authorization_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "EXACT_TLS_APPROVAL"
+      },
+      "entrypoint": "UNBOUND_ORIGINAL_SYSTEM_TLS_INSTALL_AUTHORITY",
+      "objects": {
+        "app": "/usr/local/libexec/agent-core-native-auth-tls/proxy.mjs",
+        "plist": "/Library/LaunchDaemons/com.agentcore.native-auth-tls.plist",
+        "config_directory": "/usr/local/etc/agent-core-native-auth-tls",
+        "ca": "/usr/local/etc/agent-core-native-auth-tls/ca.crt",
+        "leaf": "/usr/local/etc/agent-core-native-auth-tls/server.crt",
+        "key": "/usr/local/etc/agent-core-native-auth-tls/server.key"
+      },
+      "observed_preimage": "three public targets absent at audit; fresh check mandatory",
+      "app_artifact": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/packet/tls/token-proxy.mjs",
+      "plist_artifact": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/packet/tls/com.agentcore.native-auth-tls.plist",
+      "service": "system/com.agentcore.native-auth-tls",
+      "runtime_identity": "authsvc uid505/gid601",
+      "bind": "127.0.0.1:4443",
+      "upstream": "127.0.0.1:4001",
+      "only_route": "POST /oauth/token",
+      "certificate": "dedicated approved CA; leaf serverAuth SAN IP127.0.0.1",
+      "private_issuer_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "ROOT_OWNED_0700_PRIVATE_DIRECTORY_FROM_APPROVED_EFFECT"
+      },
+      "metadata": {
+        "app": "root-owned not service-writable",
+        "plist": "root:wheel 0644 plus exact approved ACL/xattr/flags",
+        "config_directory": "root:authsvc 0750",
+        "leaf_key": "authsvc 0600"
+      },
+      "fresh_gates": [
+        "4443 all-user listener census",
+        "port/route ownership",
+        "exact artifact hashes",
+        "normal TLS verification; never insecure override"
+      ],
+      "secret_logging": "none"
+    },
+    {
+      "id": "native-config",
+      "authorization_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "EXACT_CONFIG_APPROVAL"
+      },
+      "entrypoint": "UNBOUND_EXACT_PREIMAGE_AWARE_CONFIG_EFFECT",
+      "dsh_path": "/Users/authsvc/.agent-core/config/native-conversation.json",
+      "mcp_path": "/Users/yanfenma/.config/read-mcp/native-conversation.json",
+      "credential_path": "/Users/yanfenma/.config/read-mcp/native-conversation.client.json",
+      "initial_enabled": false,
+      "dsh_owner_mode": "505:601 0600, config directory 0700",
+      "mcp_owner_mode": "502:20 0600, config directory 0700",
+      "auth_origin": "https://127.0.0.1:4443",
+      "render_tool": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/packet/scripts/render-configs.py",
+      "render_input": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "ATTESTED_NON_SECRET_OWNING_IDENTITY_AND_BINDING_RECEIPT"
+      },
+      "secret_delivery": "original auth operation writes direct to credential file; never this report, argv, model, receipt or logs",
+      "send_admission": "separate approved enable after all readiness proofs"
+    },
+    {
+      "id": "source-acl",
+      "authorization_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "EXACT_PERMISSIONS_APPROVAL"
+      },
+      "entrypoint": "UNBOUND_ORIGINAL_RUNTIME_PERMISSION_EFFECT",
+      "preimage": "lstat regular/non-symlink ancestors; existence; uid/gid/mode/flags; complete ordered ACL/xattrs; actual changed bytes; absent paths explicit",
+      "runtime_reader_uid": 505,
+      "writer_uid": 502,
+      "writer_gid": 20,
+      "objects": [
+        {
+          "path": "/Users/authsvc/.agent-core/control",
+          "delta_aces": [
+            "user:yanfenma allow search"
+          ],
+          "inherit": false
+        },
+        {
+          "path": "/Users/authsvc/.agent-core/control/native-conversation",
+          "delta_aces": [
+            "user:yanfenma allow search"
+          ],
+          "inherit": false
+        },
+        {
+          "path": "/Users/authsvc/.agent-core/control/native-conversation/source",
+          "owner_mode": "502:20 0700",
+          "delta_aces": [
+            "user:authsvc allow search,readattr,readsecurity",
+            "user:authsvc allow read,readattr,readsecurity,file_inherit,only_inherit"
+          ],
+          "two_entries_must_remain_separate": true
+        },
+        {
+          "path": "/Users/authsvc/.agent-core/control/native-conversation/acks",
+          "owner_mode": "505:601 0700",
+          "delta_aces": []
+        }
+      ],
+      "real_path_probe": "under actual trusted OS identities; bounded zero-business namespace; prove atomic rename inheritance, read-only parent, private ACK, exact hash retention; cleanup only its exact probe objects",
+      "activation": "native stays disabled or send absent until probe PASS"
+    },
+    {
+      "id": "binding",
+      "authorization_ref": {
+        "state": "NOT_ISSUED",
+        "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+        "request": "EXACT_ROUTER_BINDING_APPROVAL"
+      },
+      "entrypoint": "UNBOUND_ORIGINAL_ROUTER_FIXED_EFFECT",
+      "store": "/Users/authsvc/.agent-core/bindings/bindings.json",
+      "only_key": "mcp:dot-native-conversation-pilot-v1",
+      "agent_id": "agt_build-in-public-agent",
+      "session": "original main generation re-read by Router",
+      "workspace": "Router current default; do not invent a new workspace",
+      "routing_version": "proposed expected routing version 1; exact authorized Router receipt required",
+      "preimage": "only target key expected absent/present state plus original Router ownership/version receipt",
+      "prohibit": [
+        "direct JSON replacement",
+        "WRITE_CONFIG as Binding mutation",
+        "modifying Feishu Binding",
+        "whole-store snapshot restore",
+        "caller-selected session substitution"
+      ],
+      "readback": "exact dedicated key, canonical agent, original main generation, routing version and unchanged unrelated Binding state"
+    }
+  ],
+  "document_kind": "FIXED_EFFECT_CONTRACT_REQUEST_NOT_EXECUTABLE_COMMAND",
+  "private_ca_issuance_directory": {
+    "path": "/usr/local/var/agent-core-native-auth-tls/issuer",
+    "owner": "root:wheel",
+    "mode": "0700",
+    "key_mode": "0600",
+    "apply_allowed": false,
+    "preimage_policy": "fresh absent-or-exact readback; do not overwrite an existing CA"
+  },
+  "identity_runtime_mapping": {
+    "authority": "DSH_MCP_NATIVE_CONVERSATION_V1#CTR-NC-001",
+    "connector_subject_source": "approved DSH/MCP configuration operation generates one stable opaque UUID and persists mapping receipt",
+    "not_auth_token_sub": true,
+    "not_csesb_business_subject_id": true,
+    "runtime_csesb_lookup": false,
+    "client_legacy_allowedResources": [],
+    "client_legacy_allowedScopes": [],
+    "auth_authorization": "one exact active V1 MachineAccessGrant"
+  },
+  "auth_credential_escrow_setup": {
+    "path": "/Users/yanfenma/.config/read-mcp/.native-conversation-pilot-v1-escrow",
+    "owner": "root:wheel",
+    "mode": "0700",
+    "raw_and_ledger_mode": "0600",
+    "apply_allowed": false,
+    "entrypoint": "UNBOUND_SEPARATE_ORIGINAL_AUTH_OS_PERMISSION_OPERATION",
+    "preimage_policy": "fresh absent or exact inode/metadata; no existing ancestor permission changes",
+    "authority": "AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1#CTR-MCS-005 proposed; separate setup mandate/readback before supply"
+  }
+}

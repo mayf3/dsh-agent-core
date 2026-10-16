@@ -1,0 +1,164 @@
+{
+  "reviewer": "/root/auth_authority_v3",
+  "review_kind": "SPEC",
+  "observed_at_utc": "2026-10-16T02:07:50.946550+00:00",
+  "base": "57f459804df1b6526a164016ea3aefa12836286d",
+  "head": "c04599b301f3e757475bc20960992cb5d024106a",
+  "tree": "41a627e290e2139afd6b32202f66a527e3810726",
+  "remote_main": "57f459804df1b6526a164016ea3aefa12836286d\trefs/heads/main",
+  "pr": "https://github.com/mayf3/auth-service/pull/90",
+  "files": [
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+      "sha256": "a052790b5df80b35f9f3020dbb76bf811954798d28b29623a4bafd1079bd16fd",
+      "git_blob": "33ba6282c74b70e6c9582e9634f2d7d7b88290e7",
+      "worktree_matches_committed": true
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md",
+      "sha256": "b9fa7e0af3ccdad98e2d76ec4dfe0822032d8353429d8698c4952189dca2c76a",
+      "git_blob": "5843565f918200b4a877bc05330089e20018afb6",
+      "worktree_matches_committed": true
+    },
+    {
+      "path": "docs/plans/MCP_CONVERSATION_AUDIENCE_IMPLEMENTATION_PLAN_V1.md",
+      "sha256": "83d8752aad710977bee9c5829a7df6c6af22042f92bdf637870fc7ee553695b2",
+      "git_blob": "0ed325f5a64d1dff1a10e7ed92d5b53e6b188609",
+      "worktree_matches_committed": true
+    },
+    {
+      "path": "docs/specs/README.md",
+      "sha256": "25c67ce583a19e8cea01241039e36bf12d89da8024a6b39a19e86aef4ad25086",
+      "git_blob": "42c9560f240fa3dbe26c3b8d4747e3dd3c30d82c",
+      "worktree_matches_committed": true
+    }
+  ],
+  "checks": [
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+      "frontmatter_schema": "PASS",
+      "status": "proposed",
+      "production_apply_authority": "none",
+      "sections": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "contract_count": 8,
+      "contracts_all_covered": true
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md",
+      "frontmatter_schema": "PASS",
+      "status": "proposed",
+      "production_apply_authority": "none",
+      "sections": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "contract_count": 12,
+      "contracts_all_covered": true
+    }
+  ],
+  "changed_paths": [
+    "A\tdocs/plans/MCP_CONVERSATION_AUDIENCE_IMPLEMENTATION_PLAN_V1.md",
+    "A\tdocs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+    "A\tdocs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md",
+    "M\tdocs/specs/README.md"
+  ],
+  "existing_spec_byte_changes": [],
+  "new_record_metadata_errors": {
+    "AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1": [],
+    "AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1": []
+  },
+  "whole_transition": {
+    "base_count": 46,
+    "candidate_count": 48,
+    "base_to_base_errors": [
+      "candidate[AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AGENT_ACCESS_POLICY_V1 (accepted)",
+      "candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AUDIENCE_CCR_V1 (accepted)",
+      "candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1].superseded_by must name a strict successor",
+      "historical edge changed for AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1",
+      "historical edge changed for AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1",
+      "historical edge changed for AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1",
+      "AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1 is superseded without a strict successor backlink"
+    ],
+    "base_to_candidate_errors": [
+      "candidate[AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AGENT_ACCESS_POLICY_V1 (accepted)",
+      "candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AUDIENCE_CCR_V1 (accepted)",
+      "candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1].superseded_by must name a strict successor",
+      "candidate[AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1].superseded_by must name a strict successor",
+      "historical edge changed for AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1",
+      "historical edge changed for AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1",
+      "historical edge changed for AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1",
+      "historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1",
+      "AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1 is superseded without a strict successor backlink",
+      "AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1 is superseded without a strict successor backlink"
+    ],
+    "new_error_delta": [],
+    "removed_error_delta": [],
+    "parse_limits": [
+      {
+        "ref": "57f459804df1b6526a164016ea3aefa12836286d",
+        "path": "docs/specs/AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1.md",
+        "error": "ScannerError"
+      },
+      {
+        "ref": "c04599b301f3e757475bc20960992cb5d024106a",
+        "path": "docs/specs/AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1.md",
+        "error": "ScannerError"
+      }
+    ]
+  },
+  "governance_integrity": {
+    "exit_code": 0,
+    "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+    "stderr": ""
+  },
+  "product_tests": "NOT_RUN_DOCS_ONLY",
+  "production_observation_or_effects": "NONE_BY_REVIEWER"
+}

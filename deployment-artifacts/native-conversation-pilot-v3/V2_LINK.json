@@ -1,0 +1,22 @@
+{
+  "version": "v3_addendum__v2_not_rebuilt",
+  "v2_final_receipt_sha256": "310d8231e53b5dc23e82dc4540b4a16aabb8b9bfcc6e0ff65721554adfb90150",
+  "v2_archive_path": "/Users/yanfenma/workspace/project/pilot1156-fixed-v2/native-conversation-pilot-v2.fixed.tar.gz",
+  "v2_archive_sha256": "ad9886bc6771331388710a63601e3c6fe8ea37ceaab36d46c4a9c5737202bc73",
+  "v2_source_commit": "1c69e052c9d232e67e4b5dc21355ecb0b9798109",
+  "v2_packet_commit": "db70e198e23e50b9b753ab84bd33756b6aa2539e",
+  "v2_tests_historical_not_rerun": {
+    "dsh_targeted": {
+      "pass": 41,
+      "fail": 0
+    },
+    "config_tls": {
+      "pass": 19,
+      "fail": 0
+    },
+    "renderer_checks": {
+      "pass": 9,
+      "fail": 0
+    }
+  }
+}

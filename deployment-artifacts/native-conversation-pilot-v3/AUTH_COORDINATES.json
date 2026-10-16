@@ -1,0 +1,16 @@
+{
+  "repository": "mayf3/auth-service",
+  "pr": "https://github.com/mayf3/auth-service/pull/90",
+  "branch": "codex/mcp-conversation-audience-ccr-v1",
+  "base_commit": "57f459804df1b6526a164016ea3aefa12836286d",
+  "base_tree": "28a7051ad5bd60332f75d04f13140190feb4ae18",
+  "head_commit": "c04599b301f3e757475bc20960992cb5d024106a",
+  "head_tree": "41a627e290e2139afd6b32202f66a527e3810726",
+  "status": "proposed",
+  "implementation_allowed_now": false,
+  "production_apply_allowed_now": false,
+  "files": {
+    "AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md": "a052790b5df80b35f9f3020dbb76bf811954798d28b29623a4bafd1079bd16fd",
+    "AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md": "b9fa7e0af3ccdad98e2d76ec4dfe0822032d8353429d8698c4952189dca2c76a"
+  }
+}

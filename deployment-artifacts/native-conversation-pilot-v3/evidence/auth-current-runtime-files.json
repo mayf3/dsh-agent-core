@@ -1,0 +1,18 @@
+{
+  "observed_file_preimages_only": true,
+  "loaded_memory_contract_not_attested": true,
+  "plist_sha256": "3360d656e467714acde4f418bcbd91d283726dadc916fc9c3c416ebad5bbd7d0",
+  "working_directory": "/Users/yanfenma/workspace/project/production-auth-service-862eab36677d214b2ce340f49bb141173b51efea",
+  "runtime_user": "authsvc",
+  "public_env": {
+    "AUTH_HTTP_BIND_HOST": "127.0.0.1",
+    "AUTH_TRUST_PROXY_HOPS": "1"
+  },
+  "snapshot_path": "/Users/yanfenma/workspace/project/production-auth-service-862eab36677d214b2ce340f49bb141173b51efea/generated/minimal-auth-v1/runtime-contract.json",
+  "snapshot_sha256": "3b9f744c0c317c9c38470d26c6778794e1b85ab1575ec74affea2c3cbcf4f1d5",
+  "contract_version": "1.12.0",
+  "source_bundle_digest": "b499ac82cfecc34ed181161f1e642c0497f3f780b8c4e7b91af307a55ffb6a80",
+  "runtime_digest": "131105f186688f6020aa3bae56f551ca1762b2a2cd31c29d07e97e7a4244e212",
+  "audience_count": 12,
+  "mcp_audience_present": false
+}

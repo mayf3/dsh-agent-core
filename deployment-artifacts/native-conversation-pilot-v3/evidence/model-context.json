@@ -1,0 +1,10 @@
+{
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning_effort": "ultra",
+  "observed_turn_context": {
+    "model": "gpt-6.1-sol",
+    "effort": "ultra",
+    "turn_id": "01a1425f-eac7-7860-8407-1507b4ff51a7"
+  },
+  "source": "current local rollout turn_context; not provider-internal attestation"
+}

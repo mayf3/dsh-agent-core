@@ -1,0 +1,191 @@
+{
+  "observed_at": "2026-10-16T01:45:32Z",
+  "production_mutation": false,
+  "responses": {
+    "b7-e29.json": {
+      "request": {
+        "action": "DS_B7_EXECUTION_STATUS_V2",
+        "operation_id": "b7-packet-r27-83054332f5c352f2e-e29"
+      },
+      "observed_at": "2026-10-16T01:45:32.560518+00:00",
+      "response": {
+        "action": "DS_B7_EXECUTION_STATUS_V2",
+        "current_runtime_verified": false,
+        "data": {
+          "active": false,
+          "attempt": 1,
+          "disposal_terminal": {
+            "authorization_sha256": "a6b02d98a041b3d25d9432aec10460dc639406ec0b7b0a9305877074843c5e50",
+            "execution_receipt_sha256": "9dcd88879889183fabf06bef3a7403884ee9a66af16cf264068d80cd7156a624",
+            "installed": false,
+            "native_state": "CLOSED_PRE_TX"
+          },
+          "execution_enabled": true,
+          "input_pending": false,
+          "input_sequence": 0,
+          "installed": "UNKNOWN",
+          "loaded_business_proof": false,
+          "native_state": "UNKNOWN",
+          "native_terminal_verified": false,
+          "next_action": "COHERENT_CANDIDATE_NEXT",
+          "output_available": false,
+          "owner_transport": "ORIGINAL_STDIN_FD3",
+          "phase": "RETAINED",
+          "reason": "EXECUTION_INTENT",
+          "replay_allowed": false,
+          "tx_id": null
+        },
+        "effect": "READ_ONLY",
+        "error": null,
+        "ok": true,
+        "operation_id": "b7-packet-r27-83054332f5c352f2e-e29",
+        "replay_allowed": false,
+        "schema": "ds-b7-execution-v2"
+      }
+    },
+    "b7-e30.json": {
+      "request": {
+        "action": "DS_B7_EXECUTION_STATUS_V2",
+        "operation_id": "b7-packet-r27-758d5250f5c352f2e-e30"
+      },
+      "observed_at": "2026-10-16T01:45:32.561402+00:00",
+      "response": {
+        "action": "DS_B7_EXECUTION_STATUS_V2",
+        "current_runtime_verified": false,
+        "data": {
+          "active": false,
+          "attempt": 1,
+          "execution_enabled": true,
+          "input_pending": false,
+          "input_sequence": 0,
+          "installed": "UNKNOWN",
+          "loaded_business_proof": false,
+          "native_state": "UNKNOWN",
+          "native_terminal_verified": false,
+          "next_action": "INSPECT_ORIGINAL_STAGE_CUSTODY_NO_STAGE_REPLAY",
+          "output_available": true,
+          "owner_transport": "ORIGINAL_STDIN_FD3",
+          "phase": "RETAINED",
+          "reason": "EXECUTION_INTENT",
+          "replay_allowed": false,
+          "tx_id": null
+        },
+        "effect": "READ_ONLY",
+        "error": null,
+        "ok": true,
+        "operation_id": "b7-packet-r27-758d5250f5c352f2e-e30",
+        "replay_allowed": false,
+        "schema": "ds-b7-execution-v2"
+      }
+    },
+    "b7-e30-lifecycle.json": {
+      "request": {
+        "action": "DS_B7_LIFECYCLE_STATUS_V1",
+        "operation_id": "b7-packet-r27-758d5250f5c352f2e-e30"
+      },
+      "observed_at": "2026-10-16T01:45:32.562588+00:00",
+      "response": {
+        "action": "DS_B7_LIFECYCLE_STATUS_V1",
+        "current_runtime_verified": false,
+        "data": {
+          "binding": {
+            "manifestSha256": "758d5250ae752f3d85ea950c572d5545569ee5687c2558e6fa4ba11f17ec168b",
+            "packetId": "b7-native-execution-r27-new-candidate-uninstallable",
+            "sourceSha256": "b4b0dd3e0b7d0b943731c97c5548fafa067589730c39f4443537d7a87053c7d6"
+          },
+          "evidence_reason": "NATIVE_STATE_NOT_FOUND_NO_EFFECT_INFERENCE",
+          "execution_enabled": false,
+          "installed": "UNKNOWN",
+          "loaded_business_proof": false,
+          "native_phase": "UNKNOWN",
+          "native_state": "UNKNOWN",
+          "native_terminal_verified": false,
+          "owner_transport": "NOT_IMPLEMENTED",
+          "registration_state": "REGISTERED_ONLY",
+          "retained": true,
+          "source_bytes_verified": "NOT_RUN",
+          "stage_started": "UNKNOWN"
+        },
+        "error": null,
+        "observation": "UNKNOWN",
+        "observed_at": "2026-10-16T01:45:32Z",
+        "ok": true,
+        "replay_allowed": false,
+        "schema": "ds-observation-v1",
+        "subject": {
+          "operation_id": "b7-packet-r27-758d5250f5c352f2e-e30"
+        }
+      }
+    },
+    "unit.json": {
+      "request": {
+        "action": "DS_UNIT_STATUS_V1",
+        "unit": "scheduler-whole-main"
+      },
+      "observed_at": "2026-10-16T01:45:32.544958+00:00",
+      "response": {
+        "action": "DS_UNIT_STATUS_V1",
+        "current_runtime_verified": false,
+        "data": {
+          "consistency": "SCOPED_READBACK",
+          "installation": {
+            "observed_at": "2026-10-16T01:45:32Z",
+            "registry_generation": "30aa3e6454a165cc975aa5660185d77bc89c70979a11f78d4f7c27303317c779",
+            "status": "UNKNOWN"
+          },
+          "runtime": {
+            "health": "HEALTHY",
+            "identity": "ATTRIBUTED",
+            "observed_at": "2026-10-16T01:45:32Z",
+            "stable": true
+          }
+        },
+        "error": null,
+        "observation": "MATCH",
+        "observed_at": "2026-10-16T01:45:32Z",
+        "ok": true,
+        "replay_allowed": false,
+        "schema": "ds-observation-v1",
+        "subject": {
+          "unit": "scheduler-whole-main"
+        }
+      }
+    },
+    "inspect.json": {
+      "request": {
+        "action": "DS_INSPECT_V1"
+      },
+      "observed_at": "2026-10-16T01:45:32.426974+00:00",
+      "response": {
+        "action": "DS_INSPECT_V1",
+        "current_runtime_verified": false,
+        "data": {
+          "capabilities": [
+            "DS_B7_EXECUTION_STATUS_V2",
+            "DS_B7_LIFECYCLE_STATUS_V1",
+            "DS_B7_OWNER_OUTPUT_V2",
+            "DS_B7_PACKET_CHECK_V1",
+            "DS_CONFIG_SUMMARY_V1",
+            "DS_INSPECT_V1",
+            "DS_OPERATION_STATUS_V1",
+            "DS_RUNTIME_INPUTS_READONLY_V1",
+            "DS_UNIT_STATUS_V1"
+          ],
+          "declared_build_id": "ds-observation-v1-sourcecandidate",
+          "disk_artifact_sha256": "dc88a927caa23ea2ab775e025732ef5c1487737056577a29461f40a8d57bf51b",
+          "loaded_identity": {
+            "status": "UNKNOWN"
+          },
+          "protocol_version": 1
+        },
+        "error": null,
+        "observation": "MATCH",
+        "observed_at": "2026-10-16T01:45:32Z",
+        "ok": true,
+        "replay_allowed": false,
+        "schema": "ds-observation-v1",
+        "subject": {}
+      }
+    }
+  }
+}

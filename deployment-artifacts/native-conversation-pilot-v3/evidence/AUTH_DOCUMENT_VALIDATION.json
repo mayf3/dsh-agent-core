@@ -1,0 +1,81 @@
+{
+  "observed_at": "2026-10-16T02:05:31.130105+00:00",
+  "base": "57f459804df1b6526a164016ea3aefa12836286d",
+  "spec_checks": [
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+      "sha256": "a052790b5df80b35f9f3020dbb76bf811954798d28b29623a4bafd1079bd16fd",
+      "status": "proposed",
+      "frontmatter_schema": "PASS",
+      "sections": 13,
+      "contracts": 8,
+      "acceptance_coverage": "PASS"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md",
+      "sha256": "b9fa7e0af3ccdad98e2d76ec4dfe0822032d8353429d8698c4952189dca2c76a",
+      "status": "proposed",
+      "frontmatter_schema": "PASS",
+      "sections": 13,
+      "contracts": 12,
+      "acceptance_coverage": "PASS"
+    }
+  ],
+  "authority_records_base": 46,
+  "authority_records_candidate": 48,
+  "preexisting_metadata_parse_limits": [
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENTCORE_HR_DISPATCHER_IDENTITY_V1.md",
+      "class": "BASE_EXISTING_YAML_PARSE_ERROR",
+      "message": "while scanning for the next token"
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "python3",
+        ".agents/tools/validate_spec_transition.py",
+        "--base",
+        "/Users/yanfenma/workspace/project/pilot1156-fixed-v3/evidence/governance-base.json",
+        "--candidate",
+        "/Users/yanfenma/workspace/project/pilot1156-fixed-v3/evidence/governance-candidate.json"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "Spec transition validation failed:\n  - candidate[AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AGENT_ACCESS_POLICY_V1 (accepted)\n  - candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AUDIENCE_CCR_V1 (accepted)\n  - candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1].superseded_by must name a strict successor\n  - historical edge changed for AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1\n  - historical edge changed for AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1\n  - historical edge changed for AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1\n  - AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1 is superseded without a strict successor backlink\n"
+    },
+    {
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "/Users/yanfenma/workspace/project/auth-service-mcp-conversation-ccr-v1",
+        "--require-accepted"
+      ],
+      "exit_code": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    }
+  ],
+  "changed_paths": [
+    "docs/specs/README.md",
+    "docs/plans/MCP_CONVERSATION_AUDIENCE_IMPLEMENTATION_PLAN_V1.md",
+    "docs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+    "docs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md"
+  ],
+  "only_docs_changed": true,
+  "product_tests": "NOT_RUN_NO_ACCEPTED_IMPLEMENTATION_AUTHORITY",
+  "production_effects": 0,
+  "baseline_transition_check": {
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "Spec transition validation failed:\n  - candidate[AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AGENT_ACCESS_POLICY_V1 (accepted)\n  - candidate[AUTH_SERVICE_LIFE_WORKBENCH_PILOT_GRANT_SUPPLY_V1].governed_by contains a non-strict ID: LIFE_WORKBENCH_AUDIENCE_CCR_V1 (accepted)\n  - candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1].superseded_by must name a strict successor\n  - candidate[AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1].superseded_by must name a strict successor\n  - historical edge changed for AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1\n  - historical edge changed for AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1\n  - historical edge changed for AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1\n  - historical edge changed for AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1\n  - AUTH_SERVICE_AGENTCORE_CANARY_GRANT_SUPPLY_STAGE_W_EXECUTION_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_FORUM_MODERATOR_GRANT_SUPPLY_BUNDLE_RETARGET_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_AUDIENCE_CCR_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_AUDIENCE_REGISTRY_RECONCILIATION_V1 is superseded without a strict successor backlink\n  - AUTH_SERVICE_SVC_FORUM_VERSION_LINKAGE_V1 is superseded without a strict successor backlink\n"
+  },
+  "transition_error_delta": [],
+  "new_record_metadata_errors": {
+    "AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1": [],
+    "AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1": []
+  },
+  "existing_spec_byte_changes": [],
+  "summary": "NEW_DOCUMENT_SCHEMA_STRUCTURE_COVERAGE_PASS; GOVERNANCE_INTEGRITY_PASS; WHOLE_TRANSITION_BLOCKED_BY_UNCHANGED_BASE_METADATA; NEW_ERROR_DELTA_ZERO"
+}

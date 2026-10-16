@@ -1,0 +1,81 @@
+{
+  "schema": "pilot1156-ops-status-addendum-v1",
+  "read_only": true,
+  "production_mutation_by_audit": false,
+  "cross_chat_message_sent": false,
+  "refresh_count": 1,
+  "refresh_method": "wait_threads(timeoutMs=0, afterCursor=efd3707f-ecb6-4727-9033-6faa8284b928:2)",
+  "material_change": true,
+  "source_kind": "original B7 executor chat final report, not fresh DS native-terminal evidence",
+  "thread_id": "01a1421a-5bbe-70d3-8ce0-a595ed9b9e7a",
+  "thread_title": "B7 v4.9 接替 ZCode：修复、复核与上线",
+  "source_turn_completed_at": "2026-10-16T01:55:18+00:00",
+  "source_snapshot": {
+    "timedOut": false,
+    "wake": {
+      "reason": "turnCompleted",
+      "turnId": "01a1425c-be3f-74c3-97cc-58b086b5b380",
+      "threadId": "01a1421a-5bbe-70d3-8ce0-a595ed9b9e7a",
+      "hostId": "local"
+    },
+    "polls": [
+      {
+        "schemaVersion": 1,
+        "cursor": "efd3707f-ecb6-4727-9033-6faa8284b928:3",
+        "revision": 3,
+        "changed": true,
+        "thread": {
+          "id": "01a1421a-5bbe-70d3-8ce0-a595ed9b9e7a",
+          "hostId": "local",
+          "status": {
+            "type": "idle"
+          }
+        },
+        "latestTurn": {
+          "id": "01a1425c-be3f-74c3-97cc-58b086b5b380",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1792114736,
+          "completedAt": 1792115718,
+          "durationMs": 981488
+        },
+        "latestAssistantMessageId": "msg_03fbb277b57366f8016ad18400c5f4819180681a9c3439c3b5",
+        "latestAssistantMessage": {
+          "id": "msg_03fbb277b57366f8016ad18400c5f4819180681a9c3439c3b5",
+          "turnId": "01a1425c-be3f-74c3-97cc-58b086b5b380",
+          "phase": "final_answer",
+          "text": "离线修复已通过 23/23 回归和独立复核，尚未部署。 pair 已 COMMITTED、e29 已关闭；e30 仍 RETAINED，1644 个部分输入对象完整保留，B7 尚未完成。 待你接受上方固定 e30 amendment（8f858833…）后，我继续实现、复核和原链部署。 此次接受源于仓库“Spec insufficient → amend / supersede before coding”要求；此前批准明确仅限 e29。"
+        },
+        "latestToolMarkerId": "call_2f9a931786944e4293803d55dc551a30",
+        "latestToolMarker": {
+          "id": "call_2f9a931786944e4293803d55dc551a30",
+          "turnId": "01a1425c-be3f-74c3-97cc-58b086b5b380",
+          "type": "sleep",
+          "name": "sleep",
+          "status": null
+        }
+      }
+    ]
+  },
+  "changed_facts": {
+    "executor_chat_status": "idle",
+    "offline_fix": "author reports 23/23 regressions and independent review passed",
+    "fix_deployed": false,
+    "e29": "closed per original executor; prior original DS disposal_terminal CLOSED_PRE_TX",
+    "e30": "still RETAINED per original executor",
+    "partial_input_objects_preserved_author_reported": 1644,
+    "b7_complete": false,
+    "next_gate": "user acceptance of fixed e30 amendment before original executor implementation/review/original-chain deployment",
+    "amendment_short_ref_only": "8f858833...",
+    "full_amendment_pin_read_in_this_review": false
+  },
+  "unchanged_boundaries": [
+    "no e30 replay",
+    "no lock/fence/stage/custody manipulation by audit",
+    "original executor retains sole writer responsibility",
+    "source tests and proposed amendment review are not deployment or business acceptance"
+  ],
+  "last_direct_ds_observation_at": "2026-10-16T01:45:32Z",
+  "fresh_ds_status_requested_in_this_review": false,
+  "packet_update_recommendation": "README can add this latest source-attributed idle/awaiting-acceptance fact; its conservative e30 retained blocker remains correct"
+}
