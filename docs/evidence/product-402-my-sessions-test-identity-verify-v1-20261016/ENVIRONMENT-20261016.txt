@@ -1,0 +1,8 @@
+=== environment ===
+date_utc: 2026-10-16T11:10:38Z
+node: v25.6.1 (production-identical binary /usr/local/libexec/agent-core/node-runtime/bin/node)
+source_under_test: mayf3/dsh-agent-core main 0d3a2d6c146bc3223accfdf2f5f65675d7a8e85e (worktree src/ detached)
+ suites: 18/18 PASS (agent-session-list.test.js + broker-manifest-registration.test.js, env -i)
+ probe: === PROBE RESULT: 47 PASS / 0 FAIL ===
+session-listing.js sha256 main: cfca58936600eb56ac89e0fcd03a508b7f3533dbc2ff4afc6d0cf25ebf632f0f
+session-listing.js sha256 user-domain tree: cfca58936600eb56ac89e0fcd03a508b7f3533dbc2ff4afc6d0cf25ebf632f0f

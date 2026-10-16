@@ -1,0 +1,59 @@
+  PASS provider seam mounted: executionHistoryAccess.agent_session_list.list is a function
+  PASS manifest trio registered on the provider
+
+[1] bounded view — MY_SESSIONS list as agt_p402_probe (provider seam)
+  PASS ok:true returned
+  PASS result.agentId = trusted caller
+  PASS exactly the 3 own sessions
+  PASS kinds main/scheduler/other
+  PASS main row origins.user=true
+  PASS main row origins.workflow_execution=true
+  PASS main row carries exactly the real workflow coordinate
+  PASS cron row carries the occurrence coordinate derived from session id
+  PASS team-sync row origins.inter_agent=true
+  PASS row shape is coordinate-only
+  PASS timestamps present
+  PASS escape-hatch dirs never become rows
+  PASS no fleet index created by the listing
+
+[2] identity boundaries (fail-closed, self-only)
+  PASS missing trusted identity → forbidden_not_owner
+  PASS invalid identity shape → forbidden_not_owner
+  PASS sessions-root symlink substitution → honest EMPTY listing
+  PASS substitution leaks no victim data
+  PASS missing homes root → history_unavailable
+
+[3] pagination (fail-closed validation, deterministic keyset)
+  PASS invalid args {"limit":0} → invalid_arguments
+  PASS invalid args {"limit":201} → invalid_arguments
+  PASS invalid args {"limit":"10"} → invalid_arguments
+  PASS invalid args {"limit":null} → invalid_arguments
+  PASS invalid args {"cursor":5} → invalid_arguments
+  PASS invalid args {"cursor":""} → invalid_arguments
+  PASS invalid args {"unknown":1} → invalid_arguments
+  PASS limit=1 → one row + truncated=true + nextCursor
+  PASS page 2 completes the set, no overlap
+  PASS pages compose to the full owned set
+  PASS non-finite cursor timestamp → invalid_arguments (never a repeating page)
+
+[4] redaction / coordinate-only boundary (whole-output sentinel scan)
+  PASS output free of "P402_SECRET"
+  PASS output free of "P402_VICTIM"
+  PASS output free of "77777777-7777-4777-8777-"
+  PASS output free of "88888888-8888-4888-8888-"
+  PASS output free of "occ:0bad0bad0bad0bad1"
+  PASS output free of "victim"
+  PASS output free of "private user text"
+  PASS output free of "scheduled run body"
+  PASS output free of "hello teammate"
+  PASS output free of "session.jsonl"
+  PASS output free of "/tmp/p402-fixture-cwd"
+  PASS output free of "workflow_execute"
+  PASS output free of "agt_p402_victim"
+
+[5] zero write side-effects (full fixture inventory before/after)
+  PASS inventory byte-identical (23 entries)
+  PASS victim journal mtime untouched
+  PASS hardlink attack was actually planted (test validity)
+
+=== PROBE RESULT: 47 PASS / 0 FAIL ===
