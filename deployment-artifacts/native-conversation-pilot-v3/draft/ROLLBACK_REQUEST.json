@@ -1,0 +1,124 @@
+{
+  "template_only": true,
+  "apply_allowed": false,
+  "production_mutation": false,
+  "executor": "original sole authorized executor; never this audit",
+  "all_unbound_values_must_be_measured_and_authorized": true,
+  "schema": "pilot1156-rollback-draft-v3",
+  "requests_are_not_submittable_until_bound": true,
+  "gates": [
+    "e30 original-operation custody and terminal proof",
+    "fresh sole-writer/drain/authority",
+    "measured registry/app/dependency preimages",
+    "trusted ADMITTED capture",
+    "all affected fixed-effect own rollback bindings"
+  ],
+  "original_ds_protocol_request_templates": [
+    {
+      "when": "authorized capture after gate proof",
+      "request": {
+        "action": "CAPTURE_CURRENT_GENERATION",
+        "operation_id": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "NEW_CAPTURE_ID_AT_AUTHORIZED_STEP"
+        },
+        "expected_registry_sha256": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "FRESH_CONTROLLER_REGISTRY_SHA256"
+        },
+        "expected_tree_sha256": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "FRESH_TREE_SHA256_USING_ORIGINAL_DS_ALGORITHM"
+        },
+        "expected_preserved_sha256": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "FRESH_NODE_MODULES_SHA256_USING_ORIGINAL_DS_ALGORITHM"
+        }
+      },
+      "required_result": "CAPTURED_UNPROVEN; rollback_eligible remains false"
+    },
+    {
+      "when": "same captured generation exists",
+      "request": {
+        "action": "ADMIT_CAPTURED_SCHEDULER_ROLLBACK",
+        "operation_id": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "DISTINCT_NEW_ADMISSION_ID_AT_AUTHORIZED_STEP"
+        },
+        "capture_operation_id": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "EXACT_CAPTURE_ID"
+        }
+      },
+      "required_result": "ADMITTED; exact capture trusted-proof and rollback-pointer; probe and preimage revalidation done by original controller"
+    },
+    {
+      "when": "approved code rollback after same-op unknown classification",
+      "request": {
+        "action": "ROLLBACK",
+        "operation_id": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "DISTINCT_NEW_AUTHORIZED_ROLLBACK_ID"
+        },
+        "unit": "scheduler-whole-main",
+        "generation": {
+          "state": "NOT_ISSUED",
+          "binding_source": "original approved owning operation receipt; never Owner/model-entered values",
+          "request": "EXACT_ADMITTED_CAPTURE_ID_NOT_ADMISSION_ID"
+        }
+      },
+      "required_result": "verified self-contained capture closure, independent clone/switch, controlled restart, attributed readback; original state retained"
+    }
+  ],
+  "normal_stop_send": {
+    "authority": "original exact config mutation lane",
+    "precondition": "expected current target client config version/hash",
+    "only_change": "remove send from this client operations",
+    "retain": [
+      "resolve",
+      "result",
+      "MCP enabled",
+      "TLS",
+      "credential",
+      "read grant",
+      "source ACL",
+      "ACK",
+      "Binding",
+      "all canonical data"
+    ]
+  },
+  "fixed_effect_compensation": {
+    "system_env": "compare exact expected postimage; restore privately retained original plist bytes/metadata through same original effect and governed load; compare all original env/argv; never delete only guessed lines",
+    "config": "compare affected object expected postimage/version; restore exact original config bytes/metadata only if approved full disable; no whole-root restore; retain result auth for normal stop",
+    "tls": "normal stop retains service; approved full disable first records result-reader unavailability, stops only dedicated TLS unit, restores exact changed env, leaves4001 and other TLS/tunnels intact; private key retention policy applies",
+    "acl": "normal stop retains ACEs; approved full withdrawal compares exact ordered postimage and restores original metadata/removes only this effect ACEs; retains source/ACK historical objects",
+    "binding": "normal stop retains row/bookmarks; if full withdrawal approved, only original Router single-key compensating operation at expected version; if no such accepted entrypoint, retain disabled row and report; never whole bindings.json restore"
+  },
+  "protected_never_snapshot_restored_or_deleted": [
+    "bindings/bookmarks/freshSessions",
+    "turn-recovery ledger/fences",
+    "scheduler jobs/runs",
+    "UNKNOWN/tombstones",
+    "sources/results/ACK/requests",
+    "sessions/history",
+    "business audit/outbox",
+    "canonical credentials",
+    "B7 transactions/stage/custody/fences"
+  ],
+  "verification": [
+    "original code/dependency closure and metadata",
+    "original plist bytes/metadata/argv",
+    "attributed correct runtime health",
+    "authorized bounded retained-record proof",
+    "truthful result-reader availability"
+  ],
+  "unknown_rule": "same-operation read-only classification; no replay/no guessed complete/no cleanup",
+  "document_kind": "ROLLBACK_CONTRACT_REQUEST_NOT_EXECUTABLE_COMMAND"
+}

@@ -1,0 +1,101 @@
+{
+  "raw_artifacts_not_in_git": true,
+  "evidence": [
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/system-plist-public-facts.json",
+      "sha256": "a60409b317630365de0d8fe321b268a4a68fac1ee383f1d0485e162055ce02b9"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/authority-pins.json",
+      "sha256": "f8d90144742e81f169efa67fd2db3daf5efb6f77dd4243d6e361ffd5e1d17ded"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/REPORT.md",
+      "sha256": "3b11b69de98d3a3a7b9cdde8eb6eb196859a9e21e8d92568dadea647f39c6658"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/registration-protocol-excerpts.txt",
+      "sha256": "3143b3137e90d45a4fbe851a37912db4638e029831b7614dd98c31a1ccd094dc"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/MANIFEST.sha256.json",
+      "sha256": "f7ffd4a46fa9c6e0de61c69e14f429a6823a6679259a5cf93a1ba85f228d43be"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/installed-controller-source-pin.json",
+      "sha256": "c0ca241e8ab592e7cea528060cdfad9ffe925d54739733f149851e9d3c9e1a36"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/audit-verification.json",
+      "sha256": "ff2385c78006ce068482179d49b8eb89de2d86fa00a3982db4fc017b75d39ab1"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/e30-output-safe-error-lines.txt",
+      "sha256": "25c9e4625c33c06a5a5c3361bf7110e2e8159f4e24f4de9db07c3f84b645a0a8"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/execution-protocol-excerpts.txt",
+      "sha256": "1321ac0f55d9c15173a716831ee91fbf8856087f419f644f1b40c1bdc568ceee"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/EFFECTS.template.json",
+      "sha256": "1e22b1498641b0f7bef9d920bf61a3d4e90eab6088fad6af8581097336a8bb18"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/e29-closure-protocol-excerpts.txt",
+      "sha256": "db70f9331e3696fbaed9d659d5e9babdca5e58ed259e7f5b003dc3f470bbfa11"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/tls-public-path-lstat.json",
+      "sha256": "806f7b974e0441bdd100ae3113bf08026951e2e6d381245b351c610f2b5bf96a"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/ROLLBACK.template.json",
+      "sha256": "0d793ca3b3127895a2c5e5c78053235b2e935dcd3000ecddc2bdc1aae8094a25"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/controller-source-excerpts.txt",
+      "sha256": "05b3a1693c53cf343750b8e3de2dcd903aa9863dd0f18e708547269fb763eb1e"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/website-chat-readonly-summary.json",
+      "sha256": "1ed283d7f0eac8781c3a13b3d556258742e42118036f46004fa0ade4c8cc74e5"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/b7-chat-readonly-summary.json",
+      "sha256": "4755e5f3dcdafb8b1622bbeecbe4cb0ad17fac9eb7e5fa8f1b531ac66d87ce3c"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/b7-final-wait-snapshot.json",
+      "sha256": "78e8528a60370b02ffb2f1fffb5b7d9f50db0292ea698d08aab51e01c749b4d2"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/b7-e30.json",
+      "sha256": "66e0bb659da9bdb9369bd0c7f477b510045261d5fd56c2563c7089db3afa8230"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/b7-e30-output-cursor0.json",
+      "sha256": "eecce19b9435170b113ecc2472e65ae5c6e87c4e4989ab1519c30c716843ea58"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/b7-e30-lifecycle.json",
+      "sha256": "80c1bef268c0b6ebc5c1cacbe557b5f25f23478ac5f5c7d31254a01ce289ba53"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/inspect.json",
+      "sha256": "520170170f66aafc947a0016b058340008d5848e4da6584fbdf86ee1e185543b"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/unit.json",
+      "sha256": "2499b9952db4f5a85f58369ddde574cd92de768b524cb43015b4bf477749f973"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/runtime-inputs.json",
+      "sha256": "51413dddfaf67bbcbe9c9cee84c4f71d8c6795c03f3e0a4802f6835ce9269caa"
+    },
+    {
+      "path": "/tmp/pilot1156-ops-v3-audit/observations/b7-e29.json",
+      "sha256": "b08df0ccf62c0ead4c14167aad4b8c20a4747fa42ce6279664d1944180213503"
+    }
+  ]
+}

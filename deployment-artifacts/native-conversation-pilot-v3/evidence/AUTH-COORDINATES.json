@@ -1,0 +1,193 @@
+{
+  "readOnly": true,
+  "observedAtUTC": "2026-10-16T01:47:44.981269+00:00",
+  "remoteMain": "57f459804df1b6526a164016ea3aefa12836286d",
+  "trackingMain": "57f459804df1b6526a164016ea3aefa12836286d",
+  "dirtyCheckoutHead": "862eab36677d214b2ce340f49bb141173b51efea",
+  "registryVersion": "1.12.0",
+  "manifestVersion": "1.12.0",
+  "audienceCount": 12,
+  "mcpAudiencePresent": false,
+  "registeredConversationScopes": [],
+  "artifacts": [
+    {
+      "path": "AGENTS.md",
+      "blob": "0ad19c664d8e4a0dfa0344daaecc5a78b951a682",
+      "sha256": "6c7d8dfe3f20580c996c3bd1ff6ab3b3bfcfe1be9dca6c98b18fdd822b8f5fa6"
+    },
+    {
+      "path": ".agents/README.md",
+      "blob": "27b8c0742e960f9987ab275292b76446cbc5d0d7",
+      "sha256": "1f9f00a3692ac8a191384feb768f8accb4276039b688828c7db22c50efd02d22"
+    },
+    {
+      "path": ".agents/local/README.md",
+      "blob": "89f56dd258b5291eb67d818926b8300de95186f3",
+      "sha256": "121a4a525987b3bdcb47b2339a2dbfb5affd7c78645c71140a4bc6716c5ff73e"
+    },
+    {
+      "path": "docs/specs/README.md",
+      "blob": "5b4982774b79bfe6107484a90d5b1d064208625f",
+      "sha256": "b6e57002f7a5f8485a7483c9d75891d6e0471ad7441aedcf19c52b1521236724"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_WEBSITE_INQUIRY_AUDIENCE_CCR_V1.md",
+      "blob": "500e8df2d895c1a0341b0e48742650ffc9a78b55",
+      "sha256": "8965818386172dca15254a10af75defb313ad69f46938c3fdc5cc0ee715cd7ad"
+    },
+    {
+      "path": "docs/contracts/minimal-auth-v2/MINIMAL_AUTH_FOUNDATION_V2.md",
+      "blob": "576b7a75e4be278f20fee71ee4ba5e263bd958c7",
+      "sha256": "18d2a7644cd76a731fac67296aa89d55e209b675bb3999ad3304b2c0c254c53c"
+    },
+    {
+      "path": "docs/contracts/minimal-auth-v1/README.md",
+      "blob": "7493e093031e5db05b6235c70f04d0143989fcb5",
+      "sha256": "46ed9533dc041b75d84cd96bd1961fa75ef90b73c0b4060c21a2d6e8f7b76a60"
+    },
+    {
+      "path": "docs/contracts/minimal-auth-v1/grants-and-audiences.md",
+      "blob": "2f05c06a3fb1b61480356be30ef7e0789e09107e",
+      "sha256": "e798a54b5e62a53c7b087d099bcf4ec282d90ef155e17053c1bb3395025ea63b"
+    },
+    {
+      "path": "docs/contracts/minimal-auth-v1/conformance.md",
+      "blob": "d56c45c514d308e65e698f6b2e78799d079a65ea",
+      "sha256": "def7921e854e8f28529cbf03b3246fff0e0bff52d69e79703635bad6b6858dce"
+    },
+    {
+      "path": "contract-bundles/minimal-auth-v1/README.md",
+      "blob": "86746806c9f2128d3ba1399440874f43aabc0ae5",
+      "sha256": "21ea8f9b295446dedbcf0dbc51934fa3741db1a6a7c509ec0aba26fd5e72643d"
+    },
+    {
+      "path": "contract-bundles/minimal-auth-v1/audience-registry.json",
+      "blob": "6a415f26e5d6d202c20b4e0e4fec1da215bfe3b1",
+      "sha256": "4cbb725bb56f1fd817e8bb2a3fd7b91d1211b5be7e7fd38654947de6a98e86e4"
+    },
+    {
+      "path": "contract-bundles/minimal-auth-v1/contract-manifest.json",
+      "blob": "de12478b3d6fd879c44fdfed77c30a58f9c8622f",
+      "sha256": "b2097f32becd48e740054018719abc18c1229aeae4d58813de8fc990c7f10c27"
+    },
+    {
+      "path": "contract-bundles/minimal-auth-v1/validate.mjs",
+      "blob": "0d5e65013dd34f7b03a7374bc102f244ae18cdb7",
+      "sha256": "90f50f0f990023d032d828d66907669278393750de5c705b1f262fb3c90a36fc"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_SESSION_MESSAGING_AUDIENCE_CCR_V2.md",
+      "blob": "b6b49dbab841ac9bc7c250d09e315860529beffc",
+      "sha256": "dde595e5fe06291368055b6e7f66d138c56d91d7814dd832c19cc742645a0411"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_AUDIENCE_CCR_V1.md",
+      "blob": "f236b525c2193941c234ddebe8ebc2bb16c5341a",
+      "sha256": "8bdd91462f450ba617867134ec7b648e4a3ccffc0e2d68943a5a764069203ee7"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_NOTIFICATION_INGRESS_IMPLEMENTATION_CLOSURE_V2.md",
+      "blob": "47c17f1cce652c1b916e7df3ebda8c0dc8bd28a1",
+      "sha256": "804f954c44d2ab19c8e997be1841d4a87a49ce7ecead5caa110959aec88b6ead"
+    },
+    {
+      "path": "docs/specs/LIFE_WORKBENCH_AUDIENCE_CCR_V1.md",
+      "blob": "146c4a5026d02cfba727dbb24e3e6c464833d9e0",
+      "sha256": "73802e871c19973b8fa1dd72f31977434451a019060c3a3e7264f2b6957b3993"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_SCHEDULER_PRODUCTION_RECONCILIATION_V1.md",
+      "blob": "014a81247b7cf24294930d0351c7746804c18003",
+      "sha256": "115adf773e1c465ae64cabe1026cdd8d6673d7e31e9c1293fd895057f5939f62"
+    },
+    {
+      "path": "docs/specs/AUTH_SERVICE_CANONICAL_SUBJECT_ENROLLMENT_AND_SOURCE_BINDING_V1.md",
+      "blob": "3af9bdc75eb09de65ed136bfad2b619f1fe97ce7",
+      "sha256": "a7c5d16d90ea5395d3990068c7e9b5c0e0fb31afb8803a734d02b87365f4a912"
+    },
+    {
+      "path": "src/lib/oauth/v1/direct.ts",
+      "blob": "2ed3461b981e664db220b1c7fae31c43bc40f1d3",
+      "sha256": "6ce86bbee2ca13aac5909c7e2f70ab0f8c490960a47644b3860e905b0b91a40d"
+    },
+    {
+      "path": "src/lib/oauth/v1/contract.ts",
+      "blob": "d14dcf871d4b13909b40e79f20558b99a64f3f33",
+      "sha256": "c48b5a59c1820d69eb6ff549448e1352be0f6424ab002c986eb763c607a3517d"
+    },
+    {
+      "path": "src/lib/oauth/v1/grant-migration.ts",
+      "blob": "c446ca9d60358e82f6e3be319a62f80b8bd0fce3",
+      "sha256": "bfe5226a8e35b60b64ec3b86c8b33c19e1ab0fee033f5ff473b95befb69bd4d8"
+    },
+    {
+      "path": "src/lib/oauth/v1/idempotent.ts",
+      "blob": "35ea341f8e7af80091e46c0b7091be8d3a77705f",
+      "sha256": "573f76b28bcd3bc4faa332d911d6aa48d1b396388ddd3770a10cb0700ba50711"
+    },
+    {
+      "path": "src/lib/oauth/v1/fleet-send-grant.ts",
+      "blob": "a7531d14a170bbb0601c079ee7089a8edc070fe4",
+      "sha256": "e8db119414166e14b21f2f1f6650773dc04e67acf2b0c85f80e9c1cb111b1a46"
+    },
+    {
+      "path": "src/routes/idempotent.ts",
+      "blob": "1384cf7668c1bb03b8c295103deba9dd44ccf2c2",
+      "sha256": "45a26a6fa6dec95f296222ad49f116803620ae9bf7a805712640c37c08b7d1ee"
+    },
+    {
+      "path": "src/middleware/v1-management-auth.ts",
+      "blob": "bc6963e0936cebf8e2b07ee2eef38770e4bcb9e7",
+      "sha256": "1e8474da9239d4d350e59aa6cd41e4c8c7c62398e5b946418755fe3a9a8ca707"
+    },
+    {
+      "path": "scripts/prepare-minimal-auth-v1.mjs",
+      "blob": "eeaee471141a0667e119779d04f87663aec8a6dd",
+      "sha256": "6a577158dd4f1d4ddb90d0c0b4794d791fd938103dfd494e74f6350886a0db90"
+    },
+    {
+      "path": "scripts/prepare-candidate-snapshot.mjs",
+      "blob": "65e03714a48d9dcd577b43fbac921f170d975c84",
+      "sha256": "8aa322dadaab48fa772f54f53bf79d7792156215476545898a747b55f7d45de2"
+    },
+    {
+      "path": "scripts/reconcile-life-workbench-audience-registry-v1.ts",
+      "blob": "2df6f62275e99e381cab82f15c990d78801a9a63",
+      "sha256": "7701da158d4b52e4309bdddd152417f226940c96ee95ea027e041eb36123037b"
+    },
+    {
+      "path": "tests/oauth/agent-session-inspection-audience-v2.test.ts",
+      "blob": "6ed7a9ec295c05ce53d45cd54a7361faf4bb1cce",
+      "sha256": "a2b5b073c2dc9f7bcbe9888d8c5462de54abc1b6f81b798739174c2f4020e05b"
+    },
+    {
+      "path": "tests/oauth/contract-runtime-v1.test.ts",
+      "blob": "97e32c4eb790120ecf33f73d52f4265d212e7c96",
+      "sha256": "b7c35a107aa74cf4a0ce7b3368601a3f72d646e3a9ba82609565edba1855f041"
+    },
+    {
+      "path": "tests/oauth/candidate-contract.test.ts",
+      "blob": "e3b3e67641d4be35c2313f52e15d2316a5640e92",
+      "sha256": "a8dba42bdcb31abf7473feda30455a0efcd536f5d12c0e3814d937a346aaf5f8"
+    },
+    {
+      "path": "tests/helpers/load-candidate-snapshot.ts",
+      "blob": "3a9b551bf8aa46931e54118f98e60d20c4d62512",
+      "sha256": "5e12e0d04a7b1fe0afcf51cd15568215c7c3edd3ba208d4672bfd5a2e98d483c"
+    },
+    {
+      "path": "prisma/schema.prisma",
+      "blob": "0f4ed129203b3797134dda9c10c5b5c26e25cd07",
+      "sha256": "c7414655f8c82031ec01f29315be4f7f1ecc9ec35517d2fbdcffbfa2460f3db8"
+    },
+    {
+      "path": "package.json",
+      "blob": "1a81254abdedd63dc84f1713a6b0f654bc968abc",
+      "sha256": "bfdcb1ce82a0b5bfd6e970e3c2e60a0fc0825928ec5c6f0904723ce7021a5aef"
+    }
+  ],
+  "runtimeLiveAccessed": false,
+  "databaseAccessed": false,
+  "businessMessagesSent": false,
+  "fetchPerformedByThisAudit": false
+}

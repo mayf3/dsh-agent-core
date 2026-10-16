@@ -1,0 +1,36 @@
+{
+  "observed_at": "2026-10-16T02:10:07.812256+00:00",
+  "readback": {
+    "baseRefName": "main",
+    "files": [
+      {
+        "path": "docs/plans/MCP_CONVERSATION_AUDIENCE_IMPLEMENTATION_PLAN_V1.md",
+        "additions": 38,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "docs/specs/AUTH_SERVICE_AGENT_CORE_MCP_CONVERSATION_AUDIENCE_CCR_V1.md",
+        "additions": 297,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "docs/specs/AUTH_SERVICE_MCP_CONVERSATION_PILOT_SUPPLY_V1.md",
+        "additions": 746,
+        "deletions": 0,
+        "changeType": "ADDED"
+      },
+      {
+        "path": "docs/specs/README.md",
+        "additions": 7,
+        "deletions": 0,
+        "changeType": "MODIFIED"
+      }
+    ],
+    "headRefOid": "c04599b301f3e757475bc20960992cb5d024106a",
+    "isDraft": true,
+    "state": "OPEN",
+    "url": "https://github.com/mayf3/auth-service/pull/90"
+  }
+}
