@@ -1,0 +1,34 @@
+{
+  "action": "DS_B7_EXECUTION_STATUS_V2",
+  "current_runtime_verified": false,
+  "data": {
+    "active": false,
+    "attempt": 4,
+    "disposal_terminal": {
+      "authorization_sha256": "a3360784deb99a68aa547e4e3c43ca27aa102435e4ea5c011cb3fb9cd7d7f81b",
+      "execution_receipt_sha256": "8029fafa6d54fdef72fd7ee53ee58f6dd8e6fea38dfe364fcae1c29ba1029254",
+      "installed": false,
+      "native_state": "DISPOSED_PRESEALED"
+    },
+    "execution_enabled": true,
+    "input_pending": false,
+    "input_sequence": 0,
+    "installed": "UNKNOWN",
+    "loaded_business_proof": false,
+    "native_state": "UNKNOWN",
+    "native_terminal_verified": false,
+    "next_action": "COHERENT_CANDIDATE_NEXT",
+    "output_available": false,
+    "owner_transport": "ORIGINAL_STDIN_FD3",
+    "phase": "RETAINED",
+    "reason": "EXECUTION_INTENT",
+    "replay_allowed": false,
+    "tx_id": "tx-71aba8f65acd42f987a1dd31e2b54942"
+  },
+  "effect": "READ_ONLY",
+  "error": null,
+  "ok": true,
+  "operation_id": "b7-packet-r27-67fe19ef96ebaa510-e23",
+  "replay_allowed": false,
+  "schema": "ds-b7-execution-v2"
+}

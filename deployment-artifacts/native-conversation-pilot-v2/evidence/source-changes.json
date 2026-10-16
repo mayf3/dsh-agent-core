@@ -1,0 +1,298 @@
+[
+  {
+    "path": "packages/agent-router/src/conversation/persistence.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "0a980ab16302e728de14aa0480118b37df7fa9894e0fec059b2382c5016e6f20",
+    "hunks": [
+      "@@ -0,0 +1,61 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/src/conversation/source-ownership.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "cc056c8f0be9618a65dda8a6fb0f4224c13638c2320a65b84de475ee7f83f964",
+    "hunks": [
+      "@@ -0,0 +1,40 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/src/conversation/source.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "da476c17cb1f7aff328287170b6cb5c9ec3b7e0e758313e689a93296628fd12b",
+    "hunks": [
+      "@@ -0,0 +1,94 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/src/conversation/surface.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "37ae8cab56036d365dcd090cca504dfd67d772eeaaf78b892ff63090adf794b4",
+    "hunks": [
+      "@@ -0,0 +1,29 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/src/index.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "fe2acb30197a2584781ad350f72b09dd20a99d85507367bc09e0fc537d9af0cc",
+    "candidate_sha256": "a9d84ba61d928ead4053c8fb20fb066fe864128d5e681cc404818de75c871d9c",
+    "hunks": [
+      "@@ -79,6 +79,7 @@",
+      "@@ -230,7 +231,7 @@",
+      "@@ -370,6 +371,7 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/src/process/turn-execution.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "1e719277aed6c980f49dd2f97a94d4b9932dec6b8e7ecb0104bbd8849159d14f",
+    "candidate_sha256": "ee9e537413b004b3a72331ec360a2c1f77d5f72c50b6079c9481db44bba633ee",
+    "hunks": [
+      "@@ -180,6 +180,7 @@",
+      "@@ -304,7 +305,7 @@",
+      "@@ -338,6 +339,8 @@",
+      "@@ -356,7 +359,7 @@",
+      "@@ -387,6 +390,7 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/test/helpers/conversation-uid-actor.mjs",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "2bb277e3a3e90bcb1829efa8c0c159d2cf2391c36508c30978b676df6af84c4c",
+    "hunks": [
+      "@@ -0,0 +1,16 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/test/helpers/fake-child.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "f6e39bfc0a5102964fc0eb306bd047a0c5467dbfbfa5fefc2d1e26a21d4a1062",
+    "hunks": [
+      "@@ -0,0 +1,146 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/test/route-chain/conversation-runtime-seam.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "1e776e06ed06ac6a1e794ffdd3ac8a2b6b48519269e7ef30c9d6ac50751edd37",
+    "hunks": [
+      "@@ -0,0 +1,91 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/test/route-chain/conversation-source-ownership.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "8df03a9d3473bd4bc6343f3a0140e2338925f50a9fd1e7cb281ccab1d7d8fd8b",
+    "hunks": [
+      "@@ -0,0 +1,92 @@"
+    ]
+  },
+  {
+    "path": "packages/agent-router/test/route-chain/conversation-source.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "2ca1cde713551611d1c153e24fb5a51b40f34b4aef6345d66927bc7ddaaae1eb",
+    "hunks": [
+      "@@ -0,0 +1,77 @@"
+    ]
+  },
+  {
+    "path": "packages/demo-server/src/index.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "8419964e877218cbd15dbd1dd0be51fe0ae853d3d31a36ccf518bb2a11919e89",
+    "candidate_sha256": "2737301af2ca975f0f51dedca17f2a0a14f65da992a0c51cffe45590dc6e11db",
+    "hunks": [
+      "@@ -118,6 +118,7 @@",
+      "@@ -191,6 +192,7 @@",
+      "@@ -200,7 +202,7 @@"
+    ]
+  },
+  {
+    "path": "packages/demo-server/src/session-seam.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "5c9c22af2f0964a5423f0516d451dbb7206192514ece94b40d4325064eee2e12",
+    "candidate_sha256": "06a8121e7d63afbd554ca2840fb4cb73028288e1efbb74a65986cdbab38ce55c",
+    "hunks": [
+      "@@ -27,6 +27,7 @@",
+      "@@ -44,7 +45,8 @@",
+      "@@ -144,6 +146,8 @@",
+      "@@ -188,13 +192,22 @@"
+    ]
+  },
+  {
+    "path": "packages/demo-server/test/session-seam.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "617926f64d1c84d1318c90fc8854081c0c713ea98c008507cc09548cf9d25c42",
+    "hunks": [
+      "@@ -0,0 +1,235 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/auth.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "ec835d2cf72de3e05cb5ed30afeab98f6e30ce0ffce679f2a0098c98426b631e",
+    "hunks": [
+      "@@ -0,0 +1,55 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/http.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "d854c53ceeb425ddc4c169eef28173b9e4213d5d79bb113ee2d9e5c04790ccd2",
+    "hunks": [
+      "@@ -0,0 +1,22 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/native-proof.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2",
+    "hunks": [
+      "@@ -0,0 +1,39 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/protocol.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "4b4dcdc0375dd175c719d08c622a48175e2c72d0b0aba1f4e511656b3506bbbd",
+    "hunks": [
+      "@@ -0,0 +1,37 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/runtime.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "7c08dec0422b024f7f0d8f19802dc50de29c8a0cc471f58922f8a638a9a5cbe5",
+    "hunks": [
+      "@@ -0,0 +1,15 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/service.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "61d872a1cba52a9eac58940ad498d058c309e91afa979e34d79ec560c5f7d9a3",
+    "hunks": [
+      "@@ -0,0 +1,243 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/conversation/store.js",
+    "kind": "added",
+    "role": "runtime",
+    "baseline_sha256": null,
+    "candidate_sha256": "2a8060ae717fdb073cfb0397dc31da045ce171ded74fcb450a3b030817d7bafc",
+    "hunks": [
+      "@@ -0,0 +1,46 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/src/index.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "864b2cec122af0e171abad25832b2669409aec3244695ff3eba989d3531db008",
+    "candidate_sha256": "0ce043f678e603e4ec7f45dd86c447baedf1191c622649e8fbe198cace004d9f",
+    "hunks": [
+      "@@ -49,6 +49,7 @@",
+      "@@ -238,6 +239,7 @@",
+      "@@ -245,6 +247,8 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/test/conversation/native-source-fault.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "7a05392f8da2bd0ba52165e9e0b42cbf87a51cb54d67ad13e382243157513988",
+    "hunks": [
+      "@@ -0,0 +1,50 @@"
+    ]
+  },
+  {
+    "path": "packages/product-api/test/conversation/pilot.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "18e91650834f2ffe23a276332f52b6c10cc0437be8090ac13ddfabbb0880a99e",
+    "hunks": [
+      "@@ -0,0 +1,335 @@"
+    ]
+  },
+  {
+    "path": "packages/production-runtime/src/compose.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f",
+    "candidate_sha256": "a92ddaf6c363ad3ffa1b7d36d22a5454c0e279ebecf41bf80809d4da05463a87",
+    "hunks": [
+      "@@ -43,6 +43,7 @@",
+      "@@ -270,6 +271,7 @@",
+      "@@ -322,6 +324,7 @@"
+    ]
+  },
+  {
+    "path": "packages/production-runtime/src/entry.js",
+    "kind": "modified",
+    "role": "runtime",
+    "baseline_sha256": "5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070",
+    "candidate_sha256": "a4c7358efb4843a1bc5d90da06e0c1bcecb2abb930e61f5ad6684e38ff6ca129",
+    "hunks": [
+      "@@ -46,6 +46,14 @@",
+      "@@ -66,7 +74,7 @@"
+    ]
+  },
+  {
+    "path": "packages/production-runtime/test/compose-conversation-backport.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "45d72a66d9a9439373d3c4a736ccb9d4f63dc64adebb8ba037c6bcc786fa8cd5",
+    "hunks": [
+      "@@ -0,0 +1,38 @@"
+    ]
+  },
+  {
+    "path": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "kind": "added",
+    "role": "test_or_fixture",
+    "baseline_sha256": null,
+    "candidate_sha256": "95609d3d724819fb03a3f6d8ffd2eb7e0bc8ec71a6f4dbcd231e8d9353ac5714",
+    "hunks": [
+      "@@ -0,0 +1,37 @@"
+    ]
+  }
+]

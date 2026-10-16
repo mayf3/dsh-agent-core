@@ -1,0 +1,36 @@
+{
+  "packages/agent-router/src/index.js": [
+    "apply: add source env to existing processFactory; spread existing helper into original Router service",
+    "PRESERVED: readDurableRecoveryStore, preparedHrCut, fixed HR startup context, fixed admin qualification, qualification observer, publishFixedRuntimeAdmission"
+  ],
+  "packages/agent-router/src/process/turn-execution.js": [
+    "preAdmissionError: source handshake check after existing 4-argument lineage gate",
+    "runPromptExecution: productSurface keeps binding/ingress context through queue ownership; forwards source receipt metadata",
+    "promptWrite: pass trusted conversationSource alongside existing messageOrigin",
+    "PRESERVED: fixed admin private qualification, lineageAdmissionToken in both gates, original queue/fence/mint/settlement machinery"
+  ],
+  "packages/demo-server/src/index.js": [
+    "apply/onEvent: retain source before session.event publish",
+    "initialize: advertise source retention version",
+    "session/prompt: pass new trusted argument through original rpcTurnContext",
+    "PRESERVED: installed opencode-go/deepseek-v4-flash defaults; no CANONICAL_DEFAULT_MODEL_ROUTE import"
+  ],
+  "packages/demo-server/src/session-seam.js": [
+    "createSessionSeam: source owner and sessionOrigins; getOrCreateSession records native resolution",
+    "prompt: reserve retained source before followup; return generation/mainResolution",
+    "PRESERVED: installed inter_agent messageOrigin validator; no workflow_execution provenance addition"
+  ],
+  "packages/product-api/src/index.js": [
+    "apply: import/create conversation handler and route /v1/conversation/* after health",
+    "PRESERVED: installed unique mobile occurrence/run/request correlation, scheduler health, workflow routes, hr_reset routes"
+  ],
+  "packages/production-runtime/src/compose.js": [
+    "composeProductionRuntime: sourceDir option on SAME original Router; mountConversationRuntime before existing Product API",
+    "PRESERVED: original Broker, Scheduler, Workflow, identity providers, process config, readiness/drain; no history/dev-execution/reverse identity migration"
+  ],
+  "packages/production-runtime/src/entry.js": [
+    "productApiCompositionFromEnv: only dedicated auth config path enables facade",
+    "runProductionRuntime: spread helper result into existing options",
+    "PRESERVED: actual entry architecture/shutdown behavior; no native admission/shutdown rewrite"
+  ]
+}

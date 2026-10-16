@@ -1,0 +1,83 @@
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/native-router-dtHHMi/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] switch: mcp:pilot... -> agent agt_pilot + session main + workspace (agent default)
+[router] route-chain {"kind":"route_attempt","tsWallMs":1792110479948,"routeChainId":"single-route","agentId":"agt_pilot","attemptIndex":0,"route":"global","primaryRoute":"global","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1792110479949,"routeChainId":"single-route","agentId":"agt_pilot","primaryRoute":"global","finalRoute":"global","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain (199.605167ms)
+✔ real AgentProcess receipt-only product surface holds trusted context until original terminal (12.968375ms)
+✔ product surface consults the original Router fence and leaves its UNKNOWN record unchanged (1.844375ms)
+✔ source retention unavailable rejects product surface before any native prompt write (9.876833ms)
+✔ source owner UID comes only from trusted spawn configuration, with a same-UID default (6.499375ms)
+✔ real UID502 source and UID505 reader use exact ownership, read-only ACL, immutable body and parent-owned ACK (2684.887041ms)
+✔ source owner retains exact native reply before publication, survives reset and restart (99.196ms)
+✔ source reserve fails before followup when durable retention is unavailable (1.032916ms)
+✔ B002: visible text and its native ID survive an empty completion anchor in the same exact turn (105.834792ms)
+✔ B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer (102.257333ms)
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-b
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session cron-daily created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session memory-maintenance created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main-A created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main-B created (0 events) cwd=/tmp/ws/root-b
+[demo-server] session main-A resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main-B resumed (3 events) cwd=/tmp/ws/root-b
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+✔ R1: cold session is CREATED with meta:{cwd = resolved workspace} — the only creation contract (3.47275ms)
+✔ R1: a prompt with no cwd falls back to the initialize-time process cwd (0.80525ms)
+✔ R2: a persisted session is RESUMED with no meta; equal cwd -> the message is queued (1.129416ms)
+✔ R3: persisted cwd != resolved workspace -> STRUCTURED_REJECT, cwd unchanged, no second session (2.978792ms)
+✔ R3: hot path — a LIVE session resumed/created earlier rejects a different resolved workspace (2.407333ms)
+✔ R3: a persisted session WITHOUT a header.cwd also rejects (never silently adopts one) (0.474708ms)
+✔ same workspace, multiple sessions: independent handles, same frozen cwd (AC2/AC7 seam level) (3.854917ms)
+✔ restart semantics (AC5 seam level): resume restores the persisted cwd and never re-passes meta (9.129875ms)
+✔ resolved Luna route is identical for session create and restart resume (4.644292ms)
+✔ B003: native source receipts distinguish first artifact creation, persisted resume and hot reuse without inventing reset cause (4.608917ms)
+✔ real source turn-end disk fault is reported through original request; no perpetual pending and no replay (278.685292ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ native HTTP routes fail closed while unconfigured; no Router target read (67.959834ms)
+✔ principal-scoped request key survives restart, duplicates do not send, payload conflict is explicit (196.031833ms)
+✔ two reverse-order replies use native request coordinates; automatic callback persists results (89.896375ms)
+✔ authorization revalidated per request and grants/targets are not borrowed from a handle (3.056916ms)
+✔ reserved/unknown original is recovered from source after lost receipt, never routed again (76.708959ms)
+✔ missing auth and stale target are denied without sending or exposing source (21.12075ms)
+✔ pagination gives UTF8-safe complete reply with stable projection ID when native assistant ID is unknown (87.732417ms)
+✔ a settled native turn with source still pending is an explicit unrecoverable failure, not perpetual pending (46.597666ms)
+✔ source retained but facade disk write fails: original result can be repaired, never resent (43.520125ms)
+✔ retained exact reply is readable while native execution stays unknown, then refreshes only original execution facts (66.2185ms)
+✔ B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay (76.366792ms)
+✔ B002: completed wholly-empty native turn is not an available empty business reply (41.857833ms)
+✔ auth redirect rejection keeps the fixed canonical token endpoint and never follows a management target (0.920584ms)
+✔ B003: retained native main resolution and scoped lawful continuation survive result persistence (50.002916ms)
+✔ CTR004 regression: retained exact reply survives facade restart while original execution stays terminated/unknown (100.103875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/pilot-backport-compose-0MBkmG/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 45 http capabilities ready, 10 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/pilot-backport-compose-fEa56S/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 45 http capabilities ready, 10 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ installed composition keeps conversation default off and reuses the original Router recovery authority when enabled (144.370334ms)
+✔ absent env composes exactly the pre-pilot runtime (no productApi key) (1.765333ms)
+✔ empty env value is treated as unset (no productApi key) (0.076833ms)
+✔ set path forwards verbatim as enabled conversation with authConfigFile (0.116958ms)
+✔ non-string env values are not wires (defense against supervision typos) (0.052667ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2943.440625

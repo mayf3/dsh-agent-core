@@ -1,0 +1,6 @@
+{
+  "path": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+  "version": "v25.6.1",
+  "sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+  "replacement_required": false
+}

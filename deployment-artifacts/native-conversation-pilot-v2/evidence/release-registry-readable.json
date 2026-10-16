@@ -1,0 +1,11 @@
+{
+  "deployment-registry.json": {
+    "unreadable": "[Errno 13] Permission denied: '/private/var/db/agent-deploy-system-config/deployment-registry.json'"
+  },
+  "authorized-owner.json": {
+    "unreadable": "[Errno 13] Permission denied: '/private/var/db/agent-deploy-system-config/authorized-owner.json'"
+  },
+  "owner.json": {
+    "unreadable": "[Errno 13] Permission denied: '/private/var/db/agent-deploy-system-config/owner.json'"
+  }
+}

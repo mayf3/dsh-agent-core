@@ -1,0 +1,27 @@
+{
+  "action": "DS_UNIT_STATUS_V1",
+  "current_runtime_verified": false,
+  "data": {
+    "consistency": "SCOPED_READBACK",
+    "installation": {
+      "observed_at": "2026-10-16T00:15:34Z",
+      "registry_generation": "30aa3e6454a165cc975aa5660185d77bc89c70979a11f78d4f7c27303317c779",
+      "status": "UNKNOWN"
+    },
+    "runtime": {
+      "health": "HEALTHY",
+      "identity": "ATTRIBUTED",
+      "observed_at": "2026-10-16T00:15:34Z",
+      "stable": true
+    }
+  },
+  "error": null,
+  "observation": "MATCH",
+  "observed_at": "2026-10-16T00:15:34Z",
+  "ok": true,
+  "replay_allowed": false,
+  "schema": "ds-observation-v1",
+  "subject": {
+    "unit": "scheduler-whole-main"
+  }
+}

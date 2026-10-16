@@ -1,0 +1,32 @@
+{
+  "action": "DS_B7_LIFECYCLE_STATUS_V1",
+  "current_runtime_verified": false,
+  "data": {
+    "binding": {
+      "manifestSha256": "830543323f22ccd3717a38a55c178e97716a61615fcc16b17860d84ba10e659c",
+      "packetId": "b7-native-execution-r27-new-candidate-uninstallable",
+      "sourceSha256": "cac1c3a334e6ff92e0fd113e598149ba553f3098f22009372b88eb9a0e120e85"
+    },
+    "evidence_reason": "NATIVE_STATE_NOT_FOUND_NO_EFFECT_INFERENCE",
+    "execution_enabled": false,
+    "installed": "UNKNOWN",
+    "loaded_business_proof": false,
+    "native_phase": "UNKNOWN",
+    "native_state": "UNKNOWN",
+    "native_terminal_verified": false,
+    "owner_transport": "NOT_IMPLEMENTED",
+    "registration_state": "REGISTERED_ONLY",
+    "retained": true,
+    "source_bytes_verified": "NOT_RUN",
+    "stage_started": "UNKNOWN"
+  },
+  "error": null,
+  "observation": "UNKNOWN",
+  "observed_at": "2026-10-16T00:15:51Z",
+  "ok": true,
+  "replay_allowed": false,
+  "schema": "ds-observation-v1",
+  "subject": {
+    "operation_id": "b7-packet-r27-83054332f5c352f2e-e29"
+  }
+}
