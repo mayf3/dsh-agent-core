@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "deploymentRoot": "/Users/authsvc/.agent-core",
+  "packageArtifact": "/usr/local/share/agent-core/artifacts/dsh-codex-0.2.3-release.tgz",
+  "sourceStamp": "/usr/local/share/agent-core/artifacts/dsh-codex-0.2.3-source-stamp.prepared.json"
+}

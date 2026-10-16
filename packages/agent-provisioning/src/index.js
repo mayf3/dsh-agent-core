@@ -8,17 +8,6 @@
  * single place that makes such a spawn self-sufficient — no verification
  * driver or operator may be needed to pre-provision an agent home.
  *
- * Responsibilities (additive only, idempotent — running twice is a no-op):
- *
- *   <home>/
- *     settings.yaml          # copy of the operator's ~/.dsh/settings.yaml (pi-ai route)
- *     .credentials.yaml      # copy of ~/.dsh/.credentials.yaml (OPENCODE_GO_API_KEY)
- *     profiles/<profile>/{package.json,cordis.patch.yml}   # COPIES (the CLI
- *                             # rewrites cordis.yml in this dir on every boot, so
- *                             # sharing one symlinked dir across agents is unsafe)
- *     profiles/node_modules/@agent-core/...                # farm SYMLINKS into the repo
- *     workspace/             # created by the caller (workspace-bootstrap owns it)
- *
  * The profile table (`AGENT_PROFILE_DEFS`) is the SINGLE mapping from a
  * profile name to the repo profile dir + the out-of-tree plugin farm links
  * its composition needs. Production runtimes use `agent-core-production`
@@ -30,18 +19,30 @@
  */
 
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync,
-  renameSync, rmSync, symlinkSync, writeFileSync,
+  copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync,
 } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
-import { dirname, isAbsolute, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
+import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import {
+  assertSameDomainCredentialFile,
+  canonicalOpenAICodexCredentialFileFor,
+  deploymentRootOfAgentHome,
+  persistOpenAICodexCredentialFile,
+} from './shared-codex.js'
+import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact, verifyPluginInputs, resolvePluginPeerLinks } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
+import { REPO, ensureRepoCoreBridge, provisionProfileWorkspaceLinks } from './repo-core-bridge.js'
+export { REPO, ensureRepoCoreBridge }
 
-/** Repo root (three levels up from src/: packages/agent-provisioning/src). */
-export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
+export {
+  assertOAuthCredentialBoundary,
+  assertSameDomainCredentialFile,
+  canonicalOpenAICodexCredentialFileFor,
+  deploymentRootOfAgentHome,
+  CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,
+  persistOpenAICodexCredentialFile,
+} from './shared-codex.js'
 
 /**
  * Resolve the deepseek-harness checkout (the `dsh` CLI the Router spawns
@@ -150,9 +151,29 @@ function atomicWriteJson(file, value) {
   renameSync(temp, file)
 }
 
-function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact }) {
+function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact, artifactBinding }) {
   if (packageArtifact !== undefined && (!isAbsolute(packageArtifact) || !existsSync(packageArtifact))) {
     throw provisioningError('plugin_missing', `local package artifact must be an existing absolute path: ${packageArtifact}`)
+  }
+  if (artifactBinding) {
+    // The domain-bound artifact is already the complete accepted payload.
+    // npm prunes its unbundled dependencies; retain the exact archive instead.
+    const installedRoot = join(profilesRoot, 'node_modules', plugin)
+    mkdirSync(dirname(installedRoot), { recursive: true })
+    const scratch = mkdtempSync(join(dirname(installedRoot), '.exact-artifact-'))
+    try {
+      const unpack = spawnSync('/usr/bin/tar', ['-xzf', packageArtifact, '-C', scratch], { encoding: 'utf8' })
+      const payload = join(scratch, 'package')
+      if (unpack.status !== 0 || !existsSync(payload) || !lstatSync(payload).isDirectory()
+        || !installedArtifactMatches(payload, packageArtifact)) {
+        throw provisioningError('plugin_artifact_mismatch', `cannot unpack exact ${plugin}@${version} payload`)
+      }
+      const manifest = JSON.parse(readFileSync(join(payload, 'package.json'), 'utf8'))
+      if (manifest.name !== plugin || manifest.version !== version) throw provisioningError('plugin_version_mismatch', 'archive package name/version differs')
+      rmSync(installedRoot, { recursive: true, force: true })
+      renameSync(payload, installedRoot)
+    } finally { rmSync(scratch, { recursive: true, force: true }) }
+    return
   }
   const result = spawnSync('npm', [
     'install', '--prefix', profilesRoot, '--no-save', '--no-package-lock', '--ignore-scripts',
@@ -167,77 +188,59 @@ function defaultPluginInstaller({ profilesRoot, plugin, version, packageArtifact
   }
 }
 
+// Read-only: shares precisely the normal provisioning input checks.
+export function verifyPluginProvisioningInputs(requirement, options = {}) {
+  return verifyPluginInputs(requirement, options, readHarnessIdentity)
+}
+
 /**
  * Install/verify one exact external bundle in this Agent's own profile farm.
  * The shared repo profile is never touched. Tests inject `pluginInstaller`
  * so ordinary automation has no npm-registry dependency.
  */
 export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {
-  const { plugin, version, dshVersion, dshCommit } = requirement ?? {}
-  for (const [field, value] of Object.entries({ plugin, version, dshVersion, dshCommit })) {
-    if (typeof value !== 'string' || value === '') {
-      throw provisioningError('plugin_provisioning_invalid', `${field} must be a non-empty exact value`)
-    }
-  }
-  if (/^[~^*]|[xX]$|\s\|\||\s-\s/u.test(version)) {
-    throw provisioningError('plugin_version_mismatch', `plugin version must be exact (got ${version})`)
-  }
-
-  const identity = options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot)
-  if (identity.version !== dshVersion) {
-    throw provisioningError('dsh_version_mismatch', `expected DSH ${dshVersion}, resolved ${identity.version ?? '(missing)'}`)
-  }
-  if (identity.commit !== dshCommit) {
-    throw provisioningError('dsh_commit_mismatch', `expected DSH commit ${dshCommit}, resolved ${identity.commit ?? '(missing)'}`)
-  }
-
+  verifyPluginProvisioningInputs(requirement, { ...options, deploymentRoot: deploymentRootOfAgentHome(home) })
+  const { plugin, version, sourceCommit, artifactSha256, dshVersion } = requirement
+  const injectedArtifactIdentity = options.artifactIdentity
+  const artifactIdentity = { version: 1, sourceCommit, artifactSha256 }
   const profilesRoot = join(home, 'profiles')
+  const installedRoot = join(profilesRoot, 'node_modules', plugin)
   const installedPackage = join(profilesRoot, 'node_modules', plugin, 'package.json')
-  if (existsSync(installedPackage)) {
-    let installedVersion
-    try {
-      installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
-    } catch (cause) {
-      throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
-    }
-    if (installedVersion !== version) {
-      throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
-    }
-  } else {
+  const existingVersion = installedPluginVersion(installedPackage)
+  if (existingVersion !== undefined && existingVersion !== version) {
+    throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${existingVersion ?? '(missing)'}`)
+  }
+  // Same version is insufficient: reuse only exact installed artifact bytes.
+  if (!installedArtifactMatches(installedRoot, options.packageArtifact, artifactIdentity)) {
+    rmSync(installedRoot, { recursive: true, force: true })
     const installer = options.pluginInstaller ?? defaultPluginInstaller
-    installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact })
+    installer({ profilesRoot, plugin, version, packageArtifact: options.packageArtifact, artifactBinding: requirement.artifactBinding })
+    if (injectedArtifactIdentity !== undefined && existsSync(installedRoot)) stampInstalledArtifact(installedRoot, artifactIdentity)
   }
   if (!existsSync(installedPackage)) {
     throw provisioningError('plugin_missing', `${plugin}@${version} is not resolvable from ${profilesRoot}/node_modules`)
   }
-  let installedVersion
-  try {
-    installedVersion = JSON.parse(readFileSync(installedPackage, 'utf8')).version
-  } catch (cause) {
-    throw provisioningError('plugin_version_mismatch', `cannot verify installed ${plugin}`, cause)
-  }
+  if (requirement.artifactBinding && JSON.parse(readFileSync(installedPackage, 'utf8')).name !== plugin) throw provisioningError('plugin_version_mismatch', 'installed archive package name differs')
+  const installedVersion = installedPluginVersion(installedPackage)
   if (installedVersion !== version) {
     throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${installedVersion ?? '(missing)'}`)
   }
+  if (!installedArtifactMatches(installedRoot, options.packageArtifact, artifactIdentity)) {
+    throw provisioningError('plugin_artifact_mismatch', `installed ${plugin}@${version} payload does not match the pinned artifact`)
+  }
+  stampInstalledArtifact(installedRoot, artifactIdentity)
 
   // External bundles declare DSH packages as peers. A local tarball install
   // intentionally uses --legacy-peer-deps so npm cannot consult the registry;
   // close those peers against the already-pinned Harness checkout instead.
   // This also prevents npm from choosing a different published DSH version.
+  // GPT6_LUNA_AND_REASONING_EFFORT_V1 (ACC-G6R-002): @earendil-works/pi-ai is
+  // the one exception — the frozen GPT-6 artifact identity is a DEPLOYMENT-
+  // provided exact npm artifact, so a pi-ai already present in the profile
+  // farm is kept and identity-checked below instead of harness-closed.
   const packageJson = JSON.parse(readFileSync(installedPackage, 'utf8'))
-  const peerNames = Object.keys(packageJson.peerDependencies ?? {})
   const harnessRoot = options.harnessRoot ?? resolveHarnessRoot()
-  for (const peer of peerNames) {
-    const candidates = [
-      join(harnessRoot, 'node_modules', '.pnpm', 'node_modules', ...peer.split('/')),
-      join(harnessRoot, 'apps', 'cli', 'node_modules', ...peer.split('/')),
-    ]
-    const source = candidates.find((candidate) => existsSync(candidate))
-    if (source === undefined) {
-      throw provisioningError('plugin_missing', `cannot close peer ${peer} for ${plugin}@${version} from pinned DSH ${harnessRoot}`)
-    }
-    ensureSymlink(source, join(profilesRoot, 'node_modules', ...peer.split('/')))
-  }
+  for (const { source, destination } of resolvePluginPeerLinks(packageJson, profilesRoot, harnessRoot, { plugin, version, dshVersion })) ensureSymlink(source, destination)
 
   const profilePackageFile = join(profilesRoot, profile, 'package.json')
   const profilePackage = JSON.parse(readFileSync(profilePackageFile, 'utf8'))
@@ -251,28 +254,6 @@ export function provisionExactProfilePlugin(home, profile, requirement, options 
   }
   return { plugin, version, installedPackage, profilePackageFile }
 }
-
-/** Validate the Agent-owned OAuth store without ever reading its contents. */
-export function assertOAuthCredentialBoundary(home, credentialFile, options = {}) {
-  const file = join(home, credentialFile)
-  let stat
-  try {
-    stat = lstatSync(file)
-  } catch (cause) {
-    if (cause?.code === 'ENOENT' && options.allowMissing === true) return undefined
-    if (cause?.code === 'ENOENT') throw provisioningError('credential_missing', `credential_missing: ${file}`)
-    throw provisioningError('credential_missing', `credential_missing: cannot stat ${file}`, cause)
-  }
-  if (!stat.isFile()) throw provisioningError('credential_permission_invalid', `credential store must be a regular file: ${file}`)
-  if ((stat.mode & 0o777) !== 0o600) {
-    throw provisioningError('credential_permission_invalid', `credential store permissions must be 0600: ${file}`)
-  }
-  if ((lstatSync(home).mode & 0o777) !== 0o700) {
-    throw provisioningError('credential_permission_invalid', `credential directory permissions must be 0700: ${home}`)
-  }
-  return file
-}
-
 
 /** Copy a file when the source exists; never overwrite an existing target. */
 function copyOnce(source, target) {
@@ -355,48 +336,18 @@ export const AGENT_PROFILE_DEFS = {
 }
 
 /**
- * Dev-harness resolution bridge: symlink every @agent-core package into the
- * REPO's own `node_modules/@agent-core`, mirroring the existing @deepseek-ai
- * bridge (scripts/install-integration.mjs "dev resolution bridge").
- *
- * WHY: the per-home plugin farm (<home>/profiles/node_modules/@agent-core)
- * is symlinked INTO the repo, and Node's ESM resolver walks the REAL path of
- * the importing module. A package loaded through the farm therefore resolves
- * its transitive `@agent-core/*` imports from the REPO — which fails unless
- * the repo itself exposes the same names. The bridge closes exactly that gap
- * (empirically verified: without it the per-agent composition dies at boot
- * with ERR_MODULE_NOT_FOUND for '@agent-core/workspace-bootstrap' imported by
- * agent-memory). Idempotent, additive, only touches the gitignored
- * node_modules dir.
- */
-export function ensureRepoCoreBridge() {
-  const bridgeDir = join(REPO, 'node_modules', '@agent-core')
-  mkdirSync(bridgeDir, { recursive: true })
-  const candidates = []
-  for (const name of readdirSync(join(REPO, 'packages'))) {
-    if (existsSync(join(REPO, 'packages', name, 'package.json'))) {
-      candidates.push([name, join(REPO, 'packages', name)])
-    }
-  }
-  for (const name of readdirSync(REPO)) {
-    if (name.startsWith('bundle-') && existsSync(join(REPO, name, 'package.json'))) {
-      candidates.push([name, join(REPO, name)])
-    }
-  }
-  for (const [pkg, target] of candidates) {
-    ensureSymlink(target, join(bridgeDir, pkg))
-  }
-}
-
-/**
  * Provision one agent home (idempotent). Returns the resolved home path.
  * The profile is REQUIRED and must be a known AGENT_PROFILE_DEFS entry — a
  * production spawn must never silently fall back to a default composition.
  * @param {string} home - absolute home directory (the agent's DSH_HOME).
  * @param {string} workspace - absolute working directory for the agent process.
- * @param {object} options - `{ profile, subscription? }` — the per-agent
+ * @param {object} options - `{ profile, subscription?, deploymentRoot? }` — the per-agent
  *   profile to install plus an optional deployment-resolved target-only
  *   external plugin/credential requirement; unknown profiles fail loud.
+ *   `deploymentRoot` (the runtime's `--root`) pins the persisted shared credentialFile
+ *   reference to THAT surface's canonical store; production homes laid out as
+ *   `<root>/homes/<agent>` are additionally guarded against cross-surface references
+ *   even without it.
  * @returns {string} the resolved home path.
  */
 export function provisionAgentHome(home, workspace, options = {}) {
@@ -408,12 +359,19 @@ export function provisionAgentHome(home, workspace, options = {}) {
   if (def === undefined) {
     throw new Error(`provisionAgentHome: unknown agent profile ${JSON.stringify(profile)} (known: ${Object.keys(AGENT_PROFILE_DEFS).join(', ')})`)
   }
+  // Validate the domain binding before any home/profile/seed side effect.
+  const bound = options.subscription
+  if (bound?.artifactBinding) verifyPluginProvisioningInputs({ ...bound, version: bound.pluginVersion }, {
+    ...options, packageArtifact: bound.packageArtifact, sourceStamp: bound.sourceStamp,
+    deploymentRoot: deploymentRootOfAgentHome(home),
+  })
   // A freshly provisioned Agent-owned home starts private. Existing homes are
   // never chmodded here: an operator-owned 0755 home remains a fail-loud
   // activation prerequisite rather than being mutated implicitly.
   mkdirSync(home, { recursive: true, mode: 0o700 })
   // Farm links point into the repo; the repo must expose @agent-core names
-  // for transitive imports (see ensureRepoCoreBridge). Idempotent, gitignored.
+  // for transitive imports (see ensureRepoCoreBridge). Production topology
+  // is deployment-owned; this call is read-only when the repo is immutable.
   ensureRepoCoreBridge()
   const settingsSource = process.env.DSH_SETTINGS_SOURCE ?? join(homedir(), '.dsh', 'settings.yaml')
   if (!copyOnce(settingsSource, join(home, 'settings.yaml'))) {
@@ -438,35 +396,32 @@ export function provisionAgentHome(home, workspace, options = {}) {
     provisionExactProfilePlugin(home, profile, {
       plugin: subscription.plugin,
       version: subscription.pluginVersion,
+      sourceCommit: subscription.sourceCommit,
+      artifactSha256: subscription.artifactSha256,
+      ...(subscription.artifactBinding === undefined ? {} : { artifactBinding: subscription.artifactBinding }),
       dshVersion: subscription.dshVersion,
       dshCommit: subscription.dshCommit,
     }, {
       pluginInstaller: options.pluginInstaller,
       packageArtifact: subscription.packageArtifact,
+      sourceStamp: subscription.sourceStamp,
+      artifactIdentity: options.artifactIdentity,
       harnessIdentity: options.harnessIdentity,
       harnessRoot: options.harnessRoot,
     })
+    const persistOptions = {
+      // GPT6_LUNA_AND_REASONING_EFFORT_V1: the route's per-route reasoning
+      // effort rides the SAME provisioned profile patch as the credential
+      // reference, so one spawn's provisioning output is internally
+      // consistent (plugin artifact + plugin config always from one route).
+      reasoningEffort: subscription.reasoningEffort,
+    }
+    if (typeof options.deploymentRoot === 'string' && options.deploymentRoot !== '') {
+      persistOptions.deploymentRoot = options.deploymentRoot
+    }
+    if (basename(dirname(home)) === 'homes') persistOptions.agentHome = home
+    persistOpenAICodexCredentialFile(join(profileDir, 'cordis.patch.yml'), subscription.credentialFile, persistOptions)
   }
 
-  // Out-of-tree plugin resolution links for this profile's composition.
-  const farm = join(home, 'profiles', 'node_modules')
-  const agentCoreFarm = join(farm, '@agent-core')
-  for (const [pkg, relTarget] of Object.entries(def.farmLinks)) {
-    ensureSymlink(join(REPO, relTarget), join(agentCoreFarm, pkg))
-  }
-
-  // Accepted ChatGPT Subscription Provider V1: the composition decides
-  // whether THIS agent has an opt-in and hands the immutable requirement
-  // through the Router. This generic provisioning layer only performs the
-  // requested exact install/check inside this home; it never selects agents.
-  if (options.subscription !== undefined) {
-    const subscription = options.subscription
-    // Missing OAuth state is a runtime/provider boundary: the plugin must
-    // load and the configured provider must register before the turn fails.
-    // If a store exists, its ownership boundary is still validated here.
-    assertOAuthCredentialBoundary(home, subscription.credentialFile, { allowMissing: true })
-  }
-
-  mkdirSync(workspace, { recursive: true })
-  return home
+  return provisionProfileWorkspaceLinks(home, workspace, def.farmLinks)
 }
