@@ -61,7 +61,7 @@ import { projectExecutionTrace } from '../../workflow-execution/src/projection.j
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { loadAgentModelOverrides } from './model-overrides.js'
+import { createModelArtifactContext, loadAgentModelOverrides } from './model-overrides.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
@@ -217,7 +217,7 @@ export async function composeProductionRuntime(options = {}) {
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
   // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
-  // owned static route chain config (agent-model-overrides.json version 2).
+  // owned static route chain config (agent-model-overrides.json version 3).
   // The composition validates it against the already-loaded Agent Definition
   // and re-reads it ONLY at each new process boundary (turn-start chain
   // snapshot) so target-only rollback needs neither a runtime restart nor a
@@ -229,8 +229,9 @@ export async function composeProductionRuntime(options = {}) {
   })
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
