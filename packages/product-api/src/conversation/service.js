@@ -202,11 +202,25 @@ export function createConversationService({ router, definition, storeFile, confi
           receipt = await router.sendProductSurface({ requestId:reservation.row.native_request_id,
             bindingId:target.binding_id,agentId:target.agent_id,message:body.message })
         } catch (cause) {
+          // AC1159 TEMP DIAGNOSTIC (revert after triage): bounded stderr line
+          // for the unclassified send stop. Owner-side log only — the remote
+          // response stays the contract UNKNOWN envelope, never this content.
+          process.stderr.write(`[conversation] send diagnostic (temp): ${JSON.stringify({
+            name: cause?.name ?? null, code: cause?.code ?? null, proven: cause?.proven ?? null,
+            status: cause?.status ?? null, routeChain: cause?.routeChain ?? null,
+            message: String(cause?.message ?? cause).slice(0, 600),
+          })}\n`)
           const noAdmission = cause?.proven === 'zero_byte' || cause?.status === 'not_admitted'
           const row = db.update(reservation.row.key,current => {current.request_status=noAdmission?'not_executed':'unknown'; current.execution_status=noAdmission?'not_started':'unknown'; current.reply_status='unknown'})
           return {status:200,body:present(row)}
         }
         if (receipt?.accepted !== true || !receipt.messageId || !receipt.reconciliationHandle || !receipt.sessionGeneration || receipt.sessionId !== 'main') {
+          // AC1159 TEMP DIAGNOSTIC (revert after triage): receipt-shape stop.
+          process.stderr.write(`[conversation] send diagnostic (temp): receipt shape stop ${JSON.stringify({
+            accepted: receipt?.accepted ?? null, hasMessageId: receipt?.messageId != null,
+            hasReconciliationHandle: receipt?.reconciliationHandle != null,
+            hasSessionGeneration: receipt?.sessionGeneration != null, sessionId: receipt?.sessionId ?? null,
+          })}\n`)
           const row = db.update(reservation.row.key,current => {current.request_status='unknown';current.execution_status='unknown';current.reply_status='unknown'})
           return {status:200,body:present(row)}
         }
