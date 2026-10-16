@@ -72,15 +72,23 @@ import { join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
+import { readDurableRecoveryStore } from './reconciliation/durable-file.js'
 import { BindingStore } from './binding-store.js'
+import { readFixedPreparedHrCut, readHrDurableFileSha256, hrOldRecordSha256,
+  mountFixedHrCut } from './fresh-hr-cut-startup.js'
 import { createProcessRegistry } from './process-registry.js'
 import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
-import { createProductSurfaceConversation } from './conversation/surface.js'
 import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
+import * as startupContext from '../../production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs'
+import { getFixedHrFreshCutContext } from '../../production-runtime/src/native-arm64/hr-fresh-lineage-startup-context.mjs'
+
+const { getFixedStartupContext, getFixedAdminQualificationContext,
+  hasFixedQualificationContext, signalFixedStartupConsumptionFinished,
+  publishFixedRuntimeAdmission, qualificationReplyObserver } = startupContext
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -187,11 +195,42 @@ export function apply(ctx, config) {
   const store = new BindingStore({ storeFile })
   const recoveryFile = typeof cfg.reconciliationStoreFile === 'string'
     && cfg.reconciliationStoreFile !== '' ? cfg.reconciliationStoreFile : null
+  let preparedHrCut = null
+  const liveHrStartup = getFixedHrFreshCutContext() ?? null
+  // A prior Binding cut means this PREPARED receipt has already been consumed
+  // by another mount. Never reuse its runtime epoch on an ordinary restart.
+  if (store.getFreshHrCutBinding() === null) {
+    try {
+      const candidate = readFixedPreparedHrCut(liveHrStartup)
+      if (candidate !== null) {
+        if (recoveryFile === null) throw new TypeError('HR cut: durable recovery file unavailable')
+        const filePreimage = readHrDurableFileSha256(recoveryFile)
+        const prior = readDurableRecoveryStore(recoveryFile)
+        if (prior === null || prior.runtimeEpochs.has(candidate.cut.newRuntimeEpoch)
+            || prior.records.get(candidate.cut.oldHandle)?.agentId !== candidate.cut.agentId
+            || prior.records.get(candidate.cut.oldHandle)?.runtimeEpoch !== candidate.cut.oldRuntimeEpoch
+            || prior.records.get(candidate.cut.oldHandle)?.processGeneration !== candidate.cut.oldProcessGeneration
+            || prior.records.get(candidate.cut.oldHandle)?.sessionId !== candidate.cut.oldSessionId
+            || prior.records.get(candidate.cut.oldHandle)?.initialOutcome !== 'outcome_unknown'
+            || prior.records.get(candidate.cut.oldHandle)?.fenceState !== 'active'
+            || hrOldRecordSha256(prior.records.get(candidate.cut.oldHandle))
+              !== candidate.receipt.oldRecordSha256
+            || readHrDurableFileSha256(recoveryFile) !== filePreimage) {
+          throw new TypeError('HR cut: old durable subject or mount epoch mismatch')
+        }
+        preparedHrCut = candidate
+      }
+    } catch (error) {
+      // Keep V3 old-HR fencing and ordinary-Agent service. Projection failure
+      // is never a reason to clear the record, retry the root cut or reuse ID.
+      log.error(`fixed HR cut startup denied: ${error?.message ?? error}`)
+    }
+  }
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
   const baseProcessFactory = typeof cfg.processFactory === 'function' ? cfg.processFactory : (opts) => new AgentProcess(opts)
-  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup, env: {...opts.env, ...(typeof cfg.conversationSourceDir === 'string' ? {DSH_CONVERSATION_SOURCE_DIR:cfg.conversationSourceDir} : {})} })
+  const processFactory = (opts) => baseProcessFactory({ ...opts, ingressCorrelationLookup })
   const resolveProcessConfig = typeof cfg.resolveProcessConfig === 'function'
     ? cfg.resolveProcessConfig
     : () => ({})
@@ -233,12 +272,19 @@ export function apply(ctx, config) {
    * The Router reconciliation store — the SINGLE query authority for late
    * turn reconciliation (C-018). One store per control-plane runtime epoch.
    */
-  const reconciliationStore = new TurnReconciliationStore({ persistenceFile: recoveryFile })
-  // RQ-005/007: privileged launcher authority has not been bootstrapped in a
-  // plain-process startup. Environment values cannot establish its nonce,
-  // binary, or live FDs; this production composition is deliberately
-  // incapable of settlement while the configured evidence directory exists.
-  if (typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+  const reconciliationStore = new TurnReconciliationStore({
+    persistenceFile: recoveryFile,
+    ...(preparedHrCut === null ? {} : { runtimeEpoch: preparedHrCut.cut.newRuntimeEpoch }),
+  })
+  const fixedStartup = getFixedStartupContext()
+  if (fixedStartup !== undefined) {
+    reconciliationStore.consumeStartupQuiescence(fixedStartup)
+    signalFixedStartupConsumptionFinished()
+  } else if (!hasFixedQualificationContext()
+      && typeof cfg.restartQuiescenceEvidenceDir === 'string' && cfg.restartQuiescenceEvidenceDir !== '') {
+    // RQ-005/007 privileged launcher authority has not been bootstrapped.
+    // Environment values cannot establish its nonce, binary, or live FDs;
+    // this production composition is deliberately incapable of settlement.
     reconciliationStore.consumeStartupQuiescence({
       evidenceDir: cfg.restartQuiescenceEvidenceDir,
       deploymentDir: cfg.restartQuiescenceDeploymentProofDir,
@@ -266,7 +312,14 @@ export function apply(ctx, config) {
     provisionHome,
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
+    fixedAdminRootContext: getFixedAdminQualificationContext(),
   })
+  if (preparedHrCut !== null) {
+    void mountFixedHrCut({ prepared: preparedHrCut, context: liveHrStartup,
+      reconciliationStore, bindingStore: store, registry })
+      .then(() => log.log(`fixed HR fresh cut mounted: ${preparedHrCut.receiptSha256}`))
+      .catch(error => log.error(`fixed HR Binding/child/ACK denied: ${error?.message ?? error}`))
+  }
   /**
    * The unified ordered route-attempt chain executor
    * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2 CTR-I2-005): the ONE seam
@@ -288,6 +341,7 @@ export function apply(ctx, config) {
       : {}),
   })
   const ingressDelivery = createIngressDelivery({
+    observeQualificationReply: qualificationReplyObserver(reconciliationStore),
     log,
     feishu,
     workspaceBootstrap,
@@ -316,7 +370,6 @@ export function apply(ctx, config) {
   ctx.effect(() => () => registry.dispose())
 
   const service = {
-    ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
     pluginName: name,
     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
     resolveChannelConversation: bindingResolution.resolveChannelConversation,
@@ -423,6 +476,7 @@ export function apply(ctx, config) {
   // ChannelConversations, switch Agents and dispatch per the D-002 contract.
   // VALUE semantics: Cordis stores the value as-is.
   ctx.provide('agentRouter', service)
+  publishFixedRuntimeAdmission(service, reconciliationStore, registry.ensureFixedAdminProcess)
   return service
 }
 

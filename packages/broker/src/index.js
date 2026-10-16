@@ -46,21 +46,30 @@ import z from '@deepseek-ai/schemastery'
 
 import { registerCapabilities } from './registry.js'
 import { createIdentityResolver } from './identity.js'
+import { maybeRegisterAuthoringFileEntry } from './authoring-file-entry.js'
 import { targets as defaultTargets, buildTargetMap } from './targets.js'
 import { BROKER_RPC_METHOD, SCHEDULER_MUTATIONS, createRelayHandlers } from './relay.js'
 import { createBrokerGateway } from './gateway.js'
-import { maybeRegisterAuthoringFileEntry } from './authoring-file-entry.js'
 import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
-  forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowDefinitionReadManifest,
-  workflowAssistanceManifests, okrManifests,
-  agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
-  agentSessionMessagingManifests,
-  agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
-  workflowHumanPrincipalProjectionManifests, executionHistoryManifests, lifeWorkbenchManifests,
-  fixedOperationManifests, workflowProgressManifests,
-} from './capabilities/manifests.js'
+  manifests as forumManifests,
+  normalManifests as forumNormalManifests,
+} from './capabilities/forum.js'
+import { moderatorManifests as forumModeratorManifests } from './capabilities/forum-moderation.js'
+import { manifests as workflowManifests } from './capabilities/workflow.js'
+import { workflowDefinitionReadManifest } from './capabilities/workflow-definition-read.js'
+import { manifests as okrManifests } from './capabilities/okr.js'
+import { agentDefinitionManifests } from './capabilities/agent-definition.js'
+import { schedulerManifests } from './capabilities/scheduler.js'
+import { selfOpsManifests } from './capabilities/self-ops.js'
+import { manifests as agentSessionMessagingManifests } from './capabilities/agent-session-messaging.js'
+import { manifests as agentPrincipalResolutionManifests } from './capabilities/agent-principal-resolution.js'
+import { manifests as agentDirectoryManifests } from './capabilities/agent-directory.js'
+import {
+  manifests as workflowHumanPrincipalProjectionManifests,
+} from './capabilities/workflow-human-principal-projection.js'
+import { lifeWorkbenchManifests } from './capabilities/life-workbench.mjs'
 
 /** Stable plugin name referenced by bundle patches / loaded as plugin identity. */
 export const name = 'broker'
@@ -91,20 +100,14 @@ export const DEFAULT_MANIFESTS = [
   ...forumNormalManifests,
   ...workflowManifests,
   workflowDefinitionReadManifest,
-  ...workflowAssistanceManifests,
   ...okrManifests,
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...selfOpsManifests,
-  developmentExecuteManifest,
-  ...fixedOperationManifests,
-  ...workflowProgressManifests,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,
-  ...agentPrincipalReverseResolutionManifests,
   ...agentDirectoryManifests,
   ...workflowHumanPrincipalProjectionManifests,
-  ...executionHistoryManifests,
   ...lifeWorkbenchManifests,
 ]
 
@@ -159,8 +162,6 @@ export const Config = z.object({
    * Child mode only (AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 candidate):
    * register workflow_definition_authoring_file — the narrow lossless
    * local-JSON-file entry for the EXISTING replace_draft_graph operation.
-   * Default on; registration itself still requires the agent's
-   * $DSH_PRIMARY_WORKSPACE read boundary to resolve (fail closed).
    */
   authoringFileEntry: z.boolean().default(true),
   /**
@@ -175,14 +176,6 @@ export const Config = z.object({
    * (trusted control plane); tool visibility there is not authorization.
    */
   forumModeratorAgentIds: z.array(z.string()),
-  /**
-   * Gateway mode only (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 generic LOCAL
-   * handler seam): a `() => handlersByCapabilityId` function injected by the
-   * composition. The broker never sees business service names — it merges
-   * whatever the composition returns at EXECUTE time. Absent => local
-   * capabilities fail closed as unsupported_operation.
-   */
-  resolveLocalHandlers: z.any(),
 })
 
 /**
@@ -298,14 +291,13 @@ export function apply(ctx, config = {}) {
 
   // ------------------------------------------------------------- gateway
   if (mode === 'gateway') {
-    // DSH_AGENT_CORE_MODULARITY_PHASE_A_V1: the Broker is GENERIC. It does
-    // not enumerate business provider service names anymore — the
-    // composition injects the LOCAL handler map through
-    // `resolveLocalHandlers` (a () => handlersByCapabilityId function).
-    // Resolved at EXECUTE time (the loader applies sibling composition rows
-    // concurrently, so reading sibling services at APPLY time would race);
-    // when absent or empty, local capabilities fail closed as unsupported —
-    // the gateway stays fully functional.
+    // AGENT_DEFINITION_ACCESS_V1: the control plane injects the LOCAL
+    // (in-process) capability handlers for the Agent Definition config
+    // (provided by the `agentDefinitionAccess` service, mounted by the
+    // agent-definition row). Resolved at EXECUTE time (the loader applies
+    // sibling rows concurrently, so reading the sibling service at APPLY
+    // time would race); when absent, local capabilities fail closed as
+    // unsupported — the gateway stays fully functional.
     const gateway = createBrokerGateway({
       manifests,
       targets,
@@ -314,9 +306,28 @@ export function apply(ctx, config = {}) {
       // Optional L0 pre-handler denial evidence hook (R12); the composition
       // scopes it to the capabilities it records. Never alters outcomes.
       ...(config.auditDenial === undefined ? {} : { auditDenial: config.auditDenial }),
-      ...(typeof config.resolveLocalHandlers === 'function'
-        ? { localHandlerResolver: config.resolveLocalHandlers }
-        : {}),
+      // LOCAL capability handlers are injected by the control-plane
+      // composition and resolved at EXECUTE time (sibling services are
+      // concurrent-loaded; reading them at APPLY time would race).
+      localHandlerResolver: () => ({
+        ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
+        ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
+        ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_SESSION_MESSAGING_V1: third LOCAL provider — the
+        // generalization keeps the execute-time resolve-at-call contract
+        // (sibling rows load concurrently; reading at APPLY time would race).
+        ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
+        // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1: fourth LOCAL
+        // provider (read-only exact Principal -> enabled agentId).
+        ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
+        // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1: LOCAL provider (read-only
+        // Agent discovery: exact reference resolve + list, Agent Definition
+        // snapshot only).
+        ...(ctx.get('agentDirectoryAccess')?.handlers ?? {}),
+        // AGENT_CORE_WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_V0: exact one-shot
+        // Human projection provider; workflow.admin remains caller-bound.
+        ...(ctx.get('workflowHumanPrincipalProjectionAccess')?.handlers ?? {}),
+      }),
       log: (msg) => process.stderr.write(`${msg}\n`),
     })
     ctx.provide('brokerGateway', gateway)
@@ -372,8 +383,8 @@ export function apply(ctx, config = {}) {
 
   registerCapabilities(ctx, defineTool, registeredCapabilities)
 
-  // AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 (candidate): the narrow
-  // lossless file entry for the EXISTING replace_draft_graph operation.
+  // AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 (accepted) + AGENT_CORE_WORKFLOW_DEFINITION_VERSION_READ_V1 (accepted):
+  // the narrow lossless file entry for the EXISTING replace_draft_graph operation.
   // Fail-closed registration: skipped unless the workspace boundary resolves.
   const authoringManifest = manifests.find((m) => m?.id === 'workflow_definition_authoring')
   if (authoringManifest !== undefined) {

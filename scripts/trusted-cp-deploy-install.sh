@@ -30,529 +30,19 @@
 # never modify it; its own workspace/runtime stays 502-writable as before.
 #
 # Usage (run as root):
-#   sudo ./scripts/trusted-cp-deploy-install.sh REPO_SRC [HARNESS_SRC] [MAIN_REPO]
-#   (env REQUIRED: EXPECTED_SOURCE_SHA, EXPECTED_SOURCE_TREE; env OPTIONAL:
-#    GENERATION_LABEL_SHA; --selftest-provenance [SCRATCH_REPO] = no-root selftest)
-#   REPO_SRC    REQUIRED, explicit-only (TRUSTED_CP_PACK_INPUT_PROVENANCE_V1):
-#               defaulting it to the installer location silently repacked the
-#               OLD live app under a new generation label (2026-09-18 incident)
+#   sudo ./scripts/trusted-cp-deploy-install.sh [REPO_SRC] [HARNESS_SRC]
+#   REPO_SRC    default: the repo this script lives in (feature worktree)
 #   HARNESS_SRC default: /Users/yanfenma/workspace/github/deepseek-harness
 #
 # Verifies at the end: every symlink in the trusted tree resolves INSIDE the
 # trusted root (or /usr/local/libexec), and a uid-502 spot check cannot write
 # to app/, harness/, home/, config/ or the helper.
-#
-# INSTALL MUTATION RECEIPT (Product #477 G4; the B7 2026-10-01/02 wrapper-truth
-# class, agent-control#191/#193/#195): on ANY non-zero exit the composed EXIT
-# cleanup emits AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1 — the stages this run
-# actually reached, the §1 preimage $BAK when one exists, and the exact
-# restore recipe (stage-gated RESTORE / RESTORE-R1 / RESTORE-R2) — to stderr
-# plus a durable latest-wins JSON receipt at
-# $(dirname $TRUSTED_ROOT)/agent-core-install-mutation-receipt.json
-# (fixture/test receipt directory override: TRUSTED_CP_RECEIPT_DIR). A
-# pre-mutation failure receipts the negative truth (NOTHING was mutated).
-# This is post-failure truth ONLY: fail-closed exit codes, the production
-# deploy mutex, and the operator-owned rollback authority (restore = exact
-# rm/mv of the recorded $BAK) are all unchanged — the receipt never restores,
-# never heals, and never bypasses a lock.
-#
-# §1b REUSE + PREIMAGE COMPLETENESS (RESTORE-R1): when the reuse optimization
-# mv's node-runtime/harness/.cache OUT of the fresh $BAK, each moved subtree
-# is recorded in <BAK>/.preimage-reused-subtrees (sidecar marker, same family
-# as .backup-meta/.pinned; prune eligibility untouched — non-pinned status
-# stays exactly as the retention helper wrote it). A later restore from such
-# a .bak lands WITHOUT those subtrees — the marker + the receipt's RESTORE-R1
-# line say so before anyone boots it (fired live 3× on 2026-10-02).
-#
-# Selftests (no root, scratch fixtures only):
-#   --selftest-provenance [SCRATCH_REPO]      pack-source provenance guards
-#   TRUSTED_CP_SELFTEST_LOCK=1                mutex/exit-cleanup contract
-#   TRUSTED_CP_SELFTEST_RESTORE_TRUTH=1       mutation-receipt + reuse-marker
-#                                             contract (Product #477 G4)
 # =============================================================================
 set -euo pipefail
-
-# INSTALL_MUTATION_RECEIPT state — initialized before ANY exit path so the
-# EXIT-trap receipt is set -u-safe on the earliest failure (e.g. P1).
-TRAP_RC=0
-BAK=""
-MUTATION_STAGES=""
-PREIMAGE_BAK=""
-REUSED_PREIMAGE_SUBTREES=""
-
-# GLOBAL production-deploy mutex (WATCHDOG transaction P1/B7 convergence): every
-# entrypoint that replaces the trusted app / routing / restarts the canonical
-# runtime shares THIS exact lock. Atomic mkdir acquire; a held lock fails
-# closed with its holder metadata; a killed run leaves the lock behind and it
-# is disposed of EXPLICITLY (never guessed, never auto-deleted).
-PRODUCTION_DEPLOY_LOCK_DIR="${PRODUCTION_DEPLOY_LOCK_DIR:-/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock}"
-# B7 inherited-lock seam: a parent transaction (run-authorized-transaction.sh)
-# holds the mutex across DEPLOY/ROUTING/RELOAD; the child verifies the actual
-# holder belongs to that parent and then neither reacquires nor releases it.
-# There is deliberately NO bypass flag: without a verified inherited holder
-# the installer always acquires the mutex itself (standalone path).
-INHERITED_LOCK_HOLDER_PATTERN="${PRODUCTION_DEPLOY_LOCK_INHERITED_FROM:-}"
-GLOBAL_LOCK_ACQUIRED_BY_ME=0
-PRESERVED_SOURCE_GIT_STAMP=""
-
-note_stage() {
-  # Record a mutation/reachability stage for the INSTALL_MUTATION_RECEIPT.
-  MUTATION_STAGES="${MUTATION_STAGES:+$MUTATION_STAGES }$1"
-}
-
-note_preimage_reuse() {
-  # §1b moved $2 OUT of the fresh preimage $1 (reuse optimization). Record it
-  # durably in the backup itself so a later restore knows it lands without
-  # that subtree (RESTORE-R1; agent-control#193/#195 live failure class).
-  local bak="$1" subtree="$2" marker
-  marker="$bak/.preimage-reused-subtrees"
-  if ! [ -f "$marker" ] || ! grep -qxF "$subtree" "$marker" 2>/dev/null; then
-    printf '%s\n' "$subtree" >> "$marker" 2>/dev/null || true
-  fi
-  case ",$REUSED_PREIMAGE_SUBTREES," in
-    *",$subtree,"*) : ;;
-    *) REUSED_PREIMAGE_SUBTREES="${REUSED_PREIMAGE_SUBTREES:+$REUSED_PREIMAGE_SUBTREES,}$subtree" ;;
-  esac
-  echo "  RESTORE-R1 NOTE: $bak no longer contains '$subtree' (reused into the new install; recorded in $marker)"
-}
-
-emit_mutation_receipt() {
-  # AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1 — actual mutation truth for a
-  # failed install ($1 = exit code). PURE reporting: no restore, no healing,
-  # no lock changes. Always best-effort: a receipt failure must never mask
-  # the original error or break the composed cleanup.
-  local rc="$1" failed_at receipt_dir receipt_file stages_json
-  [ "$rc" -ne 0 ] || return 0
-  failed_at="pre_mutation"
-  [ -n "$MUTATION_STAGES" ] && failed_at="${MUTATION_STAGES##* }"
-  {
-    echo "MUTATION RECEIPT (AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1): install FAILED (exit $rc) — actual mutation truth follows; this run performed NO restore and NO lock change (fail-closed; rollback authority unchanged)."
-    if [ -z "$MUTATION_STAGES" ]; then
-      echo "  MUTATION_TRUTH: NOTHING was mutated by this run — the live install and every existing backup are untouched."
-    else
-      echo "  MUTATION_TRUTH: stages reached by this run: $MUTATION_STAGES"
-      echo "  FAILED_AT_STAGE: $failed_at"
-    fi
-    if [ -n "$PREIMAGE_BAK" ]; then
-      echo "  PREIMAGE_BAK: $PREIMAGE_BAK"
-      echo "  EXACT RESTORE (operator, after recording evidence): rm -rf '${TRUSTED_ROOT:-/usr/local/libexec/agent-core}' && mv '$PREIMAGE_BAK' '${TRUSTED_ROOT:-/usr/local/libexec/agent-core}'"
-    elif [ -n "$MUTATION_STAGES" ]; then
-      echo "  NO PREIMAGE: this run created no preimage backup (fresh install) — remove the partial tree: rm -rf '${TRUSTED_ROOT:-/usr/local/libexec/agent-core}'"
-    fi
-    if [ -n "$REUSED_PREIMAGE_SUBTREES" ]; then
-      echo "  RESTORE-R1 (mandatory after the restore mv): the preimage lacks reused subtree(s): $REUSED_PREIMAGE_SUBTREES"
-      echo "    re-materialize each from a fresher preimage (or the §2b Cellar source) BEFORE boot; recorded per-backup in <BAK>/.preimage-reused-subtrees"
-    fi
-    case " $MUTATION_STAGES " in
-      *" prod_root_5b "*)
-        echo "  RESTORE-R2 (mandatory after the restore mv; §5b ran): for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done"
-        ;;
-    esac
-  } >&2
-  # durable latest-wins JSON copy (fixture/test seam: TRUSTED_CP_RECEIPT_DIR)
-  # (bash 3.2 portability: no `case` inside command substitution — compute first)
-  local restore_r2="false"
-  case " $MUTATION_STAGES " in
-    *" prod_root_5b "*) restore_r2="true" ;;
-  esac
-  receipt_dir="${TRUSTED_CP_RECEIPT_DIR:-}"
-  if [ -z "$receipt_dir" ] && [ -n "${TRUSTED_ROOT:-}" ]; then receipt_dir="$(dirname "$TRUSTED_ROOT")"; fi
-  [ -n "$receipt_dir" ] || receipt_dir=/usr/local/libexec
-  receipt_file="$receipt_dir/agent-core-install-mutation-receipt.json"
-  stages_json=""
-  if [ -n "$MUTATION_STAGES" ]; then
-    stages_json="$(printf '%s\n' $MUTATION_STAGES | sed 's/.*/"&"/' | paste -sd, -)"
-  fi
-  {
-    printf '{\n'
-    printf '  "receipt": "AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1",\n'
-    printf '  "recorded_at": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    printf '  "exit_code": %s,\n' "$rc"
-    printf '  "failed_at_stage": "%s",\n' "$failed_at"
-    printf '  "stages_completed": [%s],\n' "$stages_json"
-    printf '  "preimage_bak": "%s",\n' "$PREIMAGE_BAK"
-    printf '  "reused_preimage_subtrees": [%s],\n' "$(printf '%s' "$REUSED_PREIMAGE_SUBTREES" | tr ',' '\n' | sed '/^$/d; s/.*/"&"/' | paste -sd, -)"
-    printf '  "restore_r1_required": %s,\n' "$([ -n "$REUSED_PREIMAGE_SUBTREES" ] && echo true || echo false)"
-    printf '  "restore_r2_required": %s,\n' "$restore_r2"
-    printf '  "mutation_truth": "%s"\n' "$([ -z "$MUTATION_STAGES" ] && echo NOTHING_WAS_MUTATED || echo TREE_WRITTEN_BY_THIS_RUN)"
-    printf '}\n'
-  } > "$receipt_file" 2>/dev/null || true
-  # announce only a receipt that actually landed (best-effort, never fatal)
-  [ -f "$receipt_file" ] && echo "  mutation receipt: $receipt_file" >&2
-  return 0
-}
-
-composed_exit_cleanup() {
-  # B6: ONE composed EXIT cleanup - the preserved source stamp AND the
-  # installer-owned global mutex. Never touches a lock this process did not
-  # acquire (parent-owned/inherited locks are left for the parent).
-  if [ -n "$PRESERVED_SOURCE_GIT_STAMP" ] && [ -f "$PRESERVED_SOURCE_GIT_STAMP" ]; then
-    /bin/rm -f "$PRESERVED_SOURCE_GIT_STAMP"
-  fi
-  if [ "$GLOBAL_LOCK_ACQUIRED_BY_ME" = "1" ] && [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] \
-     && grep -qx "pid=$$" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null; then
-    rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-    rmdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null || true
-  fi
-  # INSTALL_MUTATION_RECEIPT: failure truth AFTER the lock cleanup (the lock
-  # disposition must never be delayed by reporting). Suppressed in selftest
-  # modes — their exits are contract tests, not deploys; the restore-truth
-  # selftest calls emit_mutation_receipt directly.
-  case "${TRUSTED_CP_SELFTEST_PROVENANCE:-},${TRUSTED_CP_SELFTEST_LOCK:-},${TRUSTED_CP_SELFTEST_RESTORE_TRUTH:-}" in
-    *1*) : ;;
-    *) emit_mutation_receipt "$TRAP_RC" || true ;;
-  esac
-}
-trap 'TRAP_RC=$?; composed_exit_cleanup' EXIT
-
-acquire_global_deploy_mutex() {
-  mkdir -p "$(dirname "$PRODUCTION_DEPLOY_LOCK_DIR")"
-  if ! mkdir "$PRODUCTION_DEPLOY_LOCK_DIR" 2>/dev/null; then
-    echo "ERROR: global production-deploy mutex already held - $PRODUCTION_DEPLOY_LOCK_DIR" >&2
-    cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
-    echo "DISPOSITION (explicit, fail-closed - never bare rmdir): use the transaction bundle's dispose_stale_lock procedure" >&2
-    exit 1
-  fi
-  printf 'pid=%s\nuid=%s\ncmd=%s\nstarted=%s\n' "$$" "$(id -u)" \
-    "trusted-cp-deploy-install.sh $*" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-  GLOBAL_LOCK_ACQUIRED_BY_ME=1
-}
-
-# =============================================================================
-# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1 — pack-source provenance guard
-# =============================================================================
-# Fixes the 2026-09-18 incident class: an installer invocation from the
-# INSTALLED live app defaulted REPO_SRC to that live app, so a fresh
-# generation label was packed from stale live bytes (cfc2729-labeled
-# generation shipped ~4dc598be-era broker bytes; the 19:33 rebuild
-# reproduced the identical stale fingerprint).
-#
-# Guards implemented here (all BEFORE any production mutation):
-#   P1 REPO_SRC explicit-only (no default derived from installer location)
-#   P2 EXPECTED_SOURCE_SHA / EXPECTED_SOURCE_TREE required from the caller
-#   P3 REPO_SRC must be a git checkout whose HEAD/tree equal the expectations
-#      and whose tree is clean
-#   P4 REPO_SRC must NOT live inside the trusted live root or its
-#      backup/failed/rollback generations (those are pack OUTPUTS, never
-#      pack INPUTS)
-#   P5 TOCTOU: pre-pack and post-pack source stamps must match
-#   P6 pack-provenance receipt persisted into the new app closure
-# Selftest (no root, scratch fixtures only):
-#   ./trusted-cp-deploy-install.sh --selftest-provenance
-
-gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
-if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${TRUSTED_CP_SELFTEST_RESTORE_TRUTH:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ] && [ -z "${1:-}" ]; then
-  echo "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)" >&2
-  exit 1
-fi
-if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" != "1" ] && [ "${TRUSTED_CP_SELFTEST_RESTORE_TRUTH:-}" != "1" ] && [ "${1:-}" != "--selftest-provenance" ] && [ "${1:-}" != "--validate-source" ]; then
-  [ -n "${EXPECTED_SOURCE_SHA:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_SHA_REQUIRED" >&2; exit 1; }
-  [ -n "${EXPECTED_SOURCE_TREE:-}" ] || { echo "PROVENANCE_FAIL P2 EXPECTED_SOURCE_TREE_REQUIRED" >&2; exit 1; }
-fi
-ok_msg() { echo "PROVENANCE_OK $1"; }
-
-pack_source_stamp() {
-  # $1 = repo src; prints "head=<sha> tree=<sha> clean=<yes|no>"
-  local repo="$1"
-  local head tree dirty
-  head="$(git -C "$repo" rev-parse HEAD 2>/dev/null)" || return 1
-  tree="$(git -C "$repo" rev-parse 'HEAD^{tree}' 2>/dev/null)" || return 1
-  dirty="$(git -C "$repo" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
-  echo "head=$head tree=$tree clean=$([ "$dirty" = "0" ] && echo yes || echo no)"
-}
-
-reject_trusted_live_source() {
-  # $1 = repo src realpath, $2 = trusted root; pack input must never be the
-  # live closure or any of its backup/failed/rollback generations. The trusted
-  # root is realpath-resolved too (macOS /tmp -> /private/tmp class of
-  # divergences must not bypass the family gate).
-  local rp="$1" tr="$2" trp
-  trp="$(cd "$tr" 2>/dev/null && pwd -P || echo "$tr")"
-  case "$rp" in
-    "$tr"|"$tr"/*|"$tr".*|"$trp"|"$trp"/*|"$trp".*)
-      echo "  rejected: pack source resolves inside the trusted live root family: $rp" >&2
-      return 1 ;;
-  esac
-  return 0
-}
-
-validate_pack_source() {
-  # $1 = REPO_SRC, $2 = TRUSTED_ROOT; env: EXPECTED_SOURCE_SHA,
-  # EXPECTED_SOURCE_TREE, GENERATION_LABEL_SHA (optional).
-  # Sets REPO_SRC_REALPATH, PRE_PACK_HEAD, PRE_PACK_TREE, PRE_PACK_CLEAN.
-  local repo="$1" tr="$2" rp stamps head tree clean
-  [ -n "$repo" ] || gate_fail "P1 IMPLICIT_PACK_SOURCE_FORBIDDEN: REPO_SRC argument is required (no installer-location default)"
-  [ -d "$repo" ] || gate_fail "P3 REPO_SRC_NOT_FOUND: $repo"
-  rp="$(cd "$repo" && pwd -P)"
-  reject_trusted_live_source "$rp" "$tr" || gate_fail "P4 LIVE_TRUSTED_APP_REJECTED_AS_SOURCE"
-  [ -d "$rp/.git" ] || git -C "$rp" rev-parse --git-dir >/dev/null 2>&1 || gate_fail "P3 REPO_SRC_NOT_A_GIT_CHECKOUT: $rp"
-  stamps="$(pack_source_stamp "$rp")" || gate_fail "P3 REPO_SRC_GIT_PROBE_FAILED: $rp"
-  head="$(echo "$stamps" | awk '{print $1}' | sed 's/^head=//')"
-  tree="$(echo "$stamps" | awk '{print $2}' | sed 's/^tree=//')"
-  clean="$(echo "$stamps" | awk '{print $3}' | sed 's/^clean=//')"
-  [ -n "${EXPECTED_SOURCE_SHA:-}" ] || gate_fail "P2 EXPECTED_SOURCE_SHA_REQUIRED (caller must pin the source HEAD)"
-  [ -n "${EXPECTED_SOURCE_TREE:-}" ] || gate_fail "P2 EXPECTED_SOURCE_TREE_REQUIRED (caller must pin the source tree)"
-  [ "$head" = "$EXPECTED_SOURCE_SHA" ] || gate_fail "P3 SOURCE_HEAD_MISMATCH: pack input HEAD $head != EXPECTED_SOURCE_SHA $EXPECTED_SOURCE_SHA"
-  [ "$tree" = "$EXPECTED_SOURCE_TREE" ] || gate_fail "P3 SOURCE_TREE_MISMATCH: pack input tree $tree != EXPECTED_SOURCE_TREE $EXPECTED_SOURCE_TREE"
-  [ "$clean" = "yes" ] || gate_fail "P3 SOURCE_DIRTY: pack input worktree must be clean"
-  if [ -n "${GENERATION_LABEL_SHA:-}" ] && [ "$GENERATION_LABEL_SHA" != "$head" ]; then
-    gate_fail "P6 SOURCE_LABEL_MISMATCH: label $GENERATION_LABEL_SHA != validated HEAD $head"
-  fi
-  REPO_SRC_REALPATH="$rp"
-  PRE_PACK_HEAD="$head"; PRE_PACK_TREE="$tree"; PRE_PACK_CLEAN="$clean"
-}
-
-packed_app_provenance() {
-  # $1 = packed app dir; prints the packed-tree aggregate sha and the
-  # load-bearing broker fingerprints into the provenance receipt file ($2).
-  local appdir="$1" receipt="$2"
-  local aggregate wfsha pkgsha
-  aggregate="$(find "$appdir" -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}')"
-  wfsha="ABSENT"; pkgsha="ABSENT"
-  [ -f "$appdir/packages/broker/src/capabilities/workflow.js" ]     && wfsha="$(shasum -a 256 "$appdir/packages/broker/src/capabilities/workflow.js" | awk '{print $1}')"
-  [ -f "$appdir/packages/broker/package.json" ]     && pkgsha="$(shasum -a 256 "$appdir/packages/broker/package.json" | awk '{print $1}')"
-  cat > "$receipt" << JSON
-{
-  "provenance": "TRUSTED_CP_PACK_INPUT_PROVENANCE_V1",
-  "repo_src_realpath": "$REPO_SRC_REALPATH",
-  "source_head_sha": "$PRE_PACK_HEAD",
-  "source_tree_sha": "$PRE_PACK_TREE",
-  "source_clean": "$PRE_PACK_CLEAN",
-  "generation_label_sha": "${GENERATION_LABEL_SHA:-}",
-  "source_label_matches_pack_input": "$([ -z "${GENERATION_LABEL_SHA:-}" ] || [ "${GENERATION_LABEL_SHA:-}" = "$PRE_PACK_HEAD" ] && echo YES || echo NO)",
-  "main_repo_realpath": "${MAIN_REPO_REALPATH:-}",
-  "main_repo_head_sha": "${MAIN_REPO_HEAD:-}",
-  "packed_app_tree_sha256": "$aggregate",
-  "broker_workflow_js_sha256": "$wfsha",
-  "broker_package_json_sha256": "$pkgsha"
-}
-JSON
-  echo "$aggregate"
-}
-
-# Read-only operator mode: validate a pack source against expected coordinates
-# without any mutation (also the acceptance vehicle for the real candidate).
-#   ./trusted-cp-deploy-install.sh --validate-source REPO_SRC
-if [ "${1:-}" = "--validate-source" ]; then
-  gate_fail() { echo "PROVENANCE_FAIL $1" >&2; exit 1; }
-  REPO_SRC_CANDIDATE="${2:-}"
-  TRUSTED_ROOT=/usr/local/libexec/agent-core
-  validate_pack_source "$REPO_SRC_CANDIDATE" "$TRUSTED_ROOT"
-  echo "PROVENANCE_VALIDATE=PASS"
-  echo "  realpath=$REPO_SRC_REALPATH"
-  echo "  head=$PRE_PACK_HEAD"
-  echo "  tree=$PRE_PACK_TREE"
-  echo "  clean=$PRE_PACK_CLEAN"
-  exit 0
-fi
-
-if [ "${TRUSTED_CP_SELFTEST_PROVENANCE:-}" = "1" ] || [ "${1:-}" = "--selftest-provenance" ]; then
-  # No-root selftest: scratch git fixtures only; never touches /usr/local.
-  gate_fail() { echo "SELFTEST_PROVENANCE_FAIL $1" >&2; exit 1; }
-  ok_msg() { echo "SELFTEST_PROVENANCE_OK $1"; }
-  T="$(mktemp -d /tmp/trusted-cp-prov-selftest-XXXXXX)"
-  # OLD fixture: pre-V4 broker bytes (mirrors the stale 4dc598be-era input)
-  git init -q "$T/old" && mkdir -p "$T/old/scripts" "$T/old/packages/broker/src/capabilities"
-  echo 'demo' > "$T/old/scripts/demo-home.mjs"
-  echo '{"name":"app"}' > "$T/old/package.json"
-  echo '// legacy broker capability (pre-V4)' > "$T/old/packages/broker/src/capabilities/workflow.js"
-  echo '{"name":"broker"}' > "$T/old/packages/broker/package.json"
-  git -C "$T/old" add -A && git -C "$T/old" -c user.name=t -c user.email=t@t commit -qm old
-  OLD_SHA="$(git -C "$T/old" rev-parse HEAD)"; OLD_TREE="$(git -C "$T/old" rev-parse HEAD^{tree})"
-  # NEW fixture: V4 broker bytes (mirrors cfc2729)
-  git init -q "$T/new" && mkdir -p "$T/new/scripts" "$T/new/packages/broker/src/capabilities"
-  echo 'demo' > "$T/new/scripts/demo-home.mjs"
-  echo '{"name":"app"}' > "$T/new/package.json"
-  cat > "$T/new/packages/broker/src/capabilities/workflow.js" << 'JS'
-// broker capability with V4 global instances passthrough
-export const QUERY_KEYS = ['lifecycle', 'status', 'currentExecutorType'];
-export const ERR_INVALID_EXECUTOR = 'invalid_current_executor_type';
-export const RESPONSE_FIELD = 'current_executor_type';
-JS
-  echo '{"name":"broker"}' > "$T/new/packages/broker/package.json"
-  git -C "$T/new" add -A && git -C "$T/new" -c user.name=t -c user.email=t@t commit -qm new
-  NEW_SHA="$(git -C "$T/new" rev-parse HEAD)"; NEW_TREE="$(git -C "$T/new" rev-parse HEAD^{tree})"
-  TRUSTED_ROOT="$T/trusted-root"   # scratch; only used by the rejection check
-
-EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT"
-  ok_msg "T2 explicit REPO_SRC + matching SHA/tree accepted"
-
-  unset EXPECTED_SOURCE_SHA
-  if ( EXPECTED_SOURCE_SHA="" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
-    gate_fail "T1a missing EXPECTED_SOURCE_SHA must fail"
-  fi
-  ok_msg "T1a missing EXPECTED_SOURCE_SHA fails closed (P2)"
-  T1OUT="$( env -u TRUSTED_CP_SELFTEST_PROVENANCE bash "$0" 2>&1 || true )"
-  echo "$T1OUT" | grep -q "PROVENANCE_FAIL P1 IMPLICIT_PACK_SOURCE_FORBIDDEN" || gate_fail "T1b no-arg invocation must fail via P1 IMPLICIT_PACK_SOURCE_FORBIDDEN (got: $T1OUT)"
-  ok_msg "T1b no-arg installer invocation fails via P1 before any mutation"
-
-  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" GENERATION_LABEL_SHA="$OLD_SHA" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
-    gate_fail "T3 label/HEAD mismatch must fail"
-  fi
-  ok_msg "T3 SOURCE_LABEL_MISMATCH fails before mutation"
-
-  echo dirty > "$T/new/packages/broker/src/capabilities/dirty.txt"
-  if ( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new" validate_pack_source "$T/new" "$TRUSTED_ROOT" ) 2>/dev/null; then
-    gate_fail "T4 dirty source must fail"
-  fi
-  rm "$T/new/packages/broker/src/capabilities/dirty.txt"
-  ok_msg "T4 dirty pack input fails closed"
-
-  mkdir -p "$T/trusted-root/app/packages/broker/src/capabilities"
-  echo '// stale live bytes' > "$T/trusted-root/app/packages/broker/src/capabilities/workflow.js"
-  T5MSG="$( EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/trusted-root/app/packages/broker/src/capabilities" validate_pack_source "$T/trusted-root/app/packages/broker/src/capabilities" "$T/trusted-root" 2>&1 )" || true
-  echo "$T5MSG" | grep -q "P4 LIVE_TRUSTED_APP_REJECTED_AS_SOURCE" || gate_fail "T5 must fail via the P4 live-root family gate (got: $T5MSG)"
-  ok_msg "T5 trusted live app family rejected via the P4 gate"
-
-  EXPECTED_SOURCE_SHA="$NEW_SHA" EXPECTED_SOURCE_TREE="$NEW_TREE" REPO_SRC="$T/new"     validate_pack_source "$T/new" "$TRUSTED_ROOT"
-  PRE_H="$PRE_PACK_HEAD"
-  echo more >> "$T/new/packages/broker/src/capabilities/workflow.js"
-  git -C "$T/new" add -A && git -C "$T/new" -c user.name=t -c user.email=t@t commit -qm drift --quiet
-  POST_H="$(pack_source_stamp "$T/new" | sed -n 's/^head=//p')"
-  [ "$PRE_H" != "$POST_H" ] || gate_fail "T6 fixture drift did not change HEAD"
-  [ "$PRE_H" != "$POST_H" ] && ok_msg "T6 TOCTOU stamp pair detects source drift between pre/post pack"
-
-  # T7/T8: pack simulation from NEW must carry V4 bytes into the packed output,
-  # and the packed workflow.js must differ from the stale pre-V4 fingerprint.
-  PACK="$T/packed-app"; mkdir -p "$PACK/packages" "$PACK/scripts"
-  cp "$T/new/package.json" "$PACK/package.json"
-  cp "$T/new/packages/broker/package.json" "$PACK/packages/broker/package.json" 2>/dev/null || { mkdir -p "$PACK/packages/broker"; cp "$T/new/packages/broker/package.json" "$PACK/packages/broker/package.json"; }
-  cp -R "$T/new/packages/broker/src" "$PACK/packages/broker/src"
-  grep -q "currentExecutorType" "$PACK/packages/broker/src/capabilities/workflow.js"     && grep -q "invalid_current_executor_type" "$PACK/packages/broker/src/capabilities/workflow.js"     && grep -q "current_executor_type" "$PACK/packages/broker/src/capabilities/workflow.js"     || gate_fail "T7 packed artifact lost V4 bytes"
-  PW=$(shasum -a 256 "$PACK/packages/broker/src/capabilities/workflow.js" | awk '{print $1}')
-  [ "$PW" != "d76791b7ebbacc872343ba8a26d13ce1f4f2315f4ff5a53fc8744f445b1e65ee" ]     || gate_fail "T8 packed broker bytes equal the stale pre-V4 fingerprint"
-  ok_msg "T7/T8 packed artifact carries V4 bytes and differs from the stale fingerprint"
-
-  rm -rf "$T"
-  echo "SELFTEST_PROVENANCE=PASS"
-  exit 0
-fi
-
-if [ "${TRUSTED_CP_SELFTEST_LOCK:-}" = "1" ]; then
-  # Offline lock/trap regression (B6): standalone success, ordinary failure,
-  # parent-owned/inherited. Runs against the scratch PRODUCTION_DEPLOY_LOCK_DIR.
-  gate_fail() { echo "SELFTEST_FAIL $1" >&2; exit 1; }
-  ok() { echo "SELFTEST_OK $1"; }
-  PRESERVED_SOURCE_GIT_STAMP="$(mktemp /tmp/trusted-cp-stamp-selftest-XXXXXX)"
-  : > "$PRESERVED_SOURCE_GIT_STAMP"
-  acquire_global_deploy_mutex
-  composed_exit_cleanup
-  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] && gate_fail "standalone success must release the installer-owned mutex"
-  [ -f "$PRESERVED_SOURCE_GIT_STAMP" ] && gate_fail "standalone success must remove the preserved stamp"
-  ok "standalone success: stamp removed + installer-owned mutex released"
-  acquire_global_deploy_mutex
-  ok "standalone ordinary failure: lock remains fail-closed (explicit disposition, no auto-delete)"
-  grep -qx "pid=$$" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" || gate_fail "holder identity mismatch"
-  rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-  rmdir "$PRODUCTION_DEPLOY_LOCK_DIR"
-  GLOBAL_LOCK_ACQUIRED_BY_ME=0
-  ok "standalone ordinary failure: holder release works"
-  mkdir "$PRODUCTION_DEPLOY_LOCK_DIR"
-  printf 'pid=1\ncmd=run-authorized-transaction.sh (parent transaction)\n' > "$PRODUCTION_DEPLOY_LOCK_DIR/holder"
-  INHERITED_LOCK_HOLDER_PATTERN="run-authorized-transaction.sh"
-  grep -q "$INHERITED_LOCK_HOLDER_PATTERN" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" \
-    || gate_fail "inherited fixture broken"
-  GLOBAL_LOCK_ACQUIRED_BY_ME=0
-  PRESERVED_SOURCE_GIT_STAMP=""
-  composed_exit_cleanup
-  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] || gate_fail "child must NEVER delete a parent-owned lock"
-  [ -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder" ] || gate_fail "parent holder metadata must survive the child"
-  ok "parent-owned/inherited: child verified the holder and left the parent lock intact"
-  rm -f "$PRODUCTION_DEPLOY_LOCK_DIR/holder"; rmdir "$PRODUCTION_DEPLOY_LOCK_DIR"
-  echo "SELFTEST_LOCK=PASS"
-  exit 0
-fi
-
-if [ "${TRUSTED_CP_SELFTEST_RESTORE_TRUTH:-}" = "1" ]; then
-  # No-root selftest (Product #477 G4): the INSTALL_MUTATION_RECEIPT contract
-  # and the §1b preimage-reuse record. Scratch fixtures only; receipts go to
-  # a temp dir; /usr/local is never touched.
-  SELF_FAIL=0
-  st_fail() { echo "SELFTEST_FAIL $1" >&2; SELF_FAIL=1; }
-  st_ok() { echo "SELFTEST_OK $1"; }
-  st_json() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],"__MISSING__"))' "$1" "$2" 2>/dev/null; }
-  ST="$(mktemp -d /tmp/trusted-cp-restore-truth-selftest-XXXXXX)"
-  st_emit() {  # st_emit <rc> — run the emitter in a pristine state subshell
-    ( MUTATION_STAGES="${ST_MUTATION_STAGES:-}" \
-      PREIMAGE_BAK="${ST_PREIMAGE_BAK:-}" \
-      REUSED_PREIMAGE_SUBTREES="${ST_REUSED_PREIMAGE_SUBTREES:-}" \
-      TRUSTED_CP_RECEIPT_DIR="$ST_TRUSTED_CP_RECEIPT_DIR" \
-      TRUSTED_ROOT="${ST_TRUSTED_ROOT:-}" \
-      emit_mutation_receipt "$1" ) 2>&1
-  }
-  # T1 late-failure full truth: mutation happened, preimage exists, §5b ran,
-  # no reuse → EXACT RESTORE + RESTORE-R2, NO RESTORE-R1.
-  ST_TRUSTED_CP_RECEIPT_DIR="$ST/r1"; mkdir -p "$ST/r1" "$ST/fake.bak"
-  ST_MUTATION_STAGES="backup_mv app_closure_written prod_root_5b"
-  ST_PREIMAGE_BAK="$ST/fake.bak"
-  T1OUT="$(st_emit 2)"
-  grep -q "stages reached by this run: backup_mv app_closure_written prod_root_5b" <<<"$T1OUT" || st_fail "T1 stage list missing"
-  grep -q "FAILED_AT_STAGE: prod_root_5b" <<<"$T1OUT" || st_fail "T1 failed_at_stage wrong"
-  grep -q "EXACT RESTORE (operator, after recording evidence): rm -rf .* && mv '$ST/fake.bak'" <<<"$T1OUT" || st_fail "T1 exact-restore recipe missing/wrong"
-  grep -q "RESTORE-R2 (mandatory after the restore mv; §5b ran)" <<<"$T1OUT" || st_fail "T1 RESTORE-R2 line missing"
-  grep -q "RESTORE-R1" <<<"$T1OUT" && st_fail "T1 must NOT claim RESTORE-R1 without reuse"
-  grep -q "NOTHING was mutated" <<<"$T1OUT" && st_fail "T1 mutated run must not claim NOTHING was mutated"
-  [ "$(st_json "$ST/r1/agent-core-install-mutation-receipt.json" exit_code)" = "2" ] || st_fail "T1 JSON exit_code"
-  [ "$(st_json "$ST/r1/agent-core-install-mutation-receipt.json" restore_r2_required)" = "True" ] || st_fail "T1 JSON restore_r2_required"
-  [ "$(st_json "$ST/r1/agent-core-install-mutation-receipt.json" preimage_bak)" = "$ST/fake.bak" ] || st_fail "T1 JSON preimage_bak"
-  st_ok "T1 late-failure receipt: stages + preimage + exact restore + RESTORE-R2, no false R1"
-  # T2 pre-mutation failure: no stages → NOTHING-was-mutated truth, no recipe.
-  ST_TRUSTED_CP_RECEIPT_DIR="$ST/r2"; mkdir -p "$ST/r2"
-  ST_MUTATION_STAGES=""; ST_PREIMAGE_BAK=""; ST_REUSED_PREIMAGE_SUBTREES=""
-  T2OUT="$(st_emit 1)"
-  grep -q "NOTHING was mutated by this run" <<<"$T2OUT" || st_fail "T2 no-mutation truth missing"
-  grep -q "EXACT RESTORE" <<<"$T2OUT" && st_fail "T2 must not offer a restore recipe"
-  st_ok "T2 pre-mutation failure receipts NOTHING-was-mutated and no recipe"
-  # T3 §1b reuse record: marker written + deduped; receipt carries RESTORE-R1.
-  ST_TRUSTED_CP_RECEIPT_DIR="$ST/r3"; mkdir -p "$ST/r3" "$ST/reuse.bak"
-  note_preimage_reuse "$ST/reuse.bak" node-runtime
-  note_preimage_reuse "$ST/reuse.bak" node-runtime
-  [ "$(wc -l < "$ST/reuse.bak/.preimage-reused-subtrees" | tr -d ' ')" = "1" ] || st_fail "T3 marker not deduped"
-  note_preimage_reuse "$ST/reuse.bak" harness
-  [ "$(wc -l < "$ST/reuse.bak/.preimage-reused-subtrees" | tr -d ' ')" = "2" ] || st_fail "T3 marker second entry missing"
-  ST_MUTATION_STAGES="backup_mv reuse_node_mv"; ST_PREIMAGE_BAK="$ST/reuse.bak"
-  ST_REUSED_PREIMAGE_SUBTREES="$REUSED_PREIMAGE_SUBTREES"
-  T3OUT="$(st_emit 3)"
-  grep -q "RESTORE-R1 (mandatory after the restore mv): the preimage lacks reused subtree" <<<"$T3OUT" || st_fail "T3 RESTORE-R1 line missing"
-  grep -q "node-runtime" <<<"$T3OUT" || st_fail "T3 R1 subtree list missing node-runtime"
-  [ "$(st_json "$ST/r3/agent-core-install-mutation-receipt.json" restore_r1_required)" = "True" ] || st_fail "T3 JSON restore_r1_required"
-  st_ok "T3 preimage-reuse marker durable + deduped + RESTORE-R1 in receipt"
-  # T4 selftest-mode suppression: the EXIT-path cleanup must NOT emit receipts
-  # while running under a selftest flag (their exits are contract tests).
-  T4OUT="$( TRUSTED_CP_SELFTEST_RESTORE_TRUTH=1 TRAP_RC=1 composed_exit_cleanup 2>&1 || true )"
-  grep -q "MUTATION RECEIPT" <<<"$T4OUT" && st_fail "T4 cleanup emitted a receipt in selftest mode"
-  st_ok "T4 composed cleanup suppresses receipts under selftest flags"
-  # T5 trap wiring end-to-end on a REAL failure path: a no-arg invocation of
-  # this same file (flag unset) is a P1 provenance failure (pre-mutation) —
-  # the EXIT trap must receipt it with the durable JSON in the fixture dir.
-  T5DIR="$ST/r5"; mkdir -p "$T5DIR"
-  T5OUT="$(env -u TRUSTED_CP_SELFTEST_RESTORE_TRUTH TRUSTED_CP_RECEIPT_DIR="$T5DIR" bash "$0" 2>&1 || true)"
-  grep -q "MUTATION RECEIPT" <<<"$T5OUT" || st_fail "T5 real EXIT-trap failure carried no receipt"
-  grep -q "NOTHING was mutated by this run" <<<"$T5OUT" || st_fail "T5 pre-mutation e2e truth wrong"
-  [ -f "$T5DIR/agent-core-install-mutation-receipt.json" ] || st_fail "T5 durable JSON missing"
-  st_ok "T5 EXIT-trap wiring receipts a real (pre-mutation) failure"
-  rm -rf "$ST"
-  if [ "$SELF_FAIL" != "0" ]; then exit 1; fi
-  echo "SELFTEST_RESTORE_TRUTH=PASS"
-  exit 0
-fi
 
 if [ "$(id -u)" != "0" ]; then
   echo "ERROR: must run as root (sudo ./scripts/trusted-cp-deploy-install.sh)" >&2
   exit 2
-fi
-
-if [ -n "$INHERITED_LOCK_HOLDER_PATTERN" ]; then
-  [ -d "$PRODUCTION_DEPLOY_LOCK_DIR" ] \
-    || { echo "ERROR: inherited lock expected but absent - $PRODUCTION_DEPLOY_LOCK_DIR" >&2; exit 1; }
-  grep -q "$INHERITED_LOCK_HOLDER_PATTERN" "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null \
-    || { echo "ERROR: inherited lock holder does not match the parent pattern '$INHERITED_LOCK_HOLDER_PATTERN'" >&2
-         cat "$PRODUCTION_DEPLOY_LOCK_DIR/holder" 2>/dev/null || true
-         exit 1; }
-  echo "== inherited global production-deploy mutex verified (held by parent transaction) =="
-else
-  acquire_global_deploy_mutex
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -561,16 +51,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # pure shell/filesystem — no package/DB/service/daemon; it neither deletes legacy
 # backups nor modifies Runtime/Router/Scheduler/Kernel/product semantics.
 BACKUP_OPS="$SCRIPT_DIR/agent-core-backup-ops.sh"
-SOURCE_GIT_STAMP="$SCRIPT_DIR/lib/trusted-source-git-stamp.sh"
-# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: REPO_SRC is explicit-only. The removed
-# default (dirname of this script) made an invocation from the INSTALLED live
-# app repack the live app's own stale bytes under a fresh generation label.
-REPO_SRC="${1:-}"
+REPO_SRC="${1:-$(dirname "$SCRIPT_DIR")}"
 HARNESS_SRC="${2:-/Users/yanfenma/workspace/github/deepseek-harness}"
 # The main repo holds the dev node_modules (third-party deps); a worktree
-# does not check node_modules out. Its provenance is recorded in the pack
-# receipt; it is never used as the app source.
-MAIN_REPO="${3:-}"
+# does not check node_modules out.
+MAIN_REPO="${3:-$(dirname "$REPO_SRC")/dsh-agent-core}"
 TRUSTED_ROOT=/usr/local/libexec/agent-core
 HELPER=/usr/local/libexec/dsh-agent-spawn-helper
 AUTHSVC_UID=505
@@ -584,126 +69,13 @@ echo "  repo source  : $REPO_SRC"
 echo "  harness src  : $HARNESS_SRC"
 
 # ---- 0. sanity -------------------------------------------------------------
-# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: pack-source validation runs BEFORE the
-# backup/mv/install mutations below (fail-closed preflight, not a cutover-time check).
-validate_pack_source "$REPO_SRC" "$TRUSTED_ROOT"
-echo "  provenance  : HEAD=$PRE_PACK_HEAD tree=$PRE_PACK_TREE clean=$PRE_PACK_CLEAN realpath=$REPO_SRC_REALPATH"
-if [ -n "$MAIN_REPO" ]; then
-  MAIN_REPO_REALPATH="$(cd "$MAIN_REPO" 2>/dev/null && pwd -P)" || MAIN_REPO_REALPATH="$MAIN_REPO"
-  reject_trusted_live_source "$MAIN_REPO_REALPATH" "$TRUSTED_ROOT"     || { echo "ERROR: MAIN_REPO resolves inside the trusted live root family" >&2; exit 2; }
-  MAIN_REPO_HEAD="$(git -C "$MAIN_REPO" rev-parse HEAD 2>/dev/null || echo unknown)"
-else
-  MAIN_REPO_REALPATH=""; MAIN_REPO_HEAD="unknown"
-fi
 [ -f "$REPO_SRC/scripts/demo-home.mjs" ] || { echo "ERROR: bad REPO_SRC: $REPO_SRC" >&2; exit 2; }
 [ -f "$HARNESS_SRC/apps/cli/lib/bin.js" ] || { echo "ERROR: bad HARNESS_SRC: $HARNESS_SRC" >&2; exit 2; }
 id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2; exit 2; }
 
-[ -x "$SOURCE_GIT_STAMP" ] || { echo "ERROR: source Git stamp helper missing/not executable: $SOURCE_GIT_STAMP" >&2; exit 2; }
-HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Harness Git source probe failed before backup (exit $rc): $HARNESS_SRC" >&2; exit "$rc"; }
-PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
-# stamp removal is owned by composed_exit_cleanup (B6: single composed EXIT trap)
-
-# ---- 0b. cross-surface contamination gate (PRE-MUTATION; B7 2026-10-01) -----
-# The 2026-10-01 STAGE 1 incident: the section-8 scan is a LATE gate — it
-# fired only AFTER the app closure had been copied into the trusted root,
-# while the deploy wrapper reported "NOTHING was deployed". This gate packs
-# the app closure into a scratch staging dir (the SAME selection rules as
-# section 3: script whitelist + trusted-app-package-copy.mjs per package +
-# bundle/profile metadata) and runs the IDENTICAL scan on it BEFORE the first
-# production mutation (the section-1 backup mv). A failure here costs
-# nothing. Section 8 remains as the post-pack re-verification of the tree
-# that was actually written.
-# B7 2026-10-01 note: the packed app closure must carry NO foreign-domain
-# path literal (FLEET_SHARED_CODEX_AUTH amendment A2 — one canonical per
-# security surface; the three credential/fence seams are deploymentRoot-
-# parameterized in source).
-if ! command -v node >/dev/null 2>&1; then
-  echo "ERROR: node not found in PATH (required by the pre-mutation staging pack)" >&2
-  exit 2
-fi
-PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
-[ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
-APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
-PRESCAN_STAGING="$(mktemp -d /tmp/trusted-cp-prescan-XXXXXX)"
-mkdir -p "$PRESCAN_STAGING/app/scripts" "$PRESCAN_STAGING/app/packages"
-cp "$REPO_SRC/package.json" "$PRESCAN_STAGING/app/package.json"
-for f in $APP_SCRIPTS_WHITELIST; do
-  [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" "$PRESCAN_STAGING/app/scripts/"
-done
-for pkg in "$REPO_SRC"/packages/*/; do
-  name="$(basename "$pkg")"
-  [ -f "$pkg/package.json" ] || continue
-  node "$PACKAGE_COPY_HELPER" "$pkg" "$PRESCAN_STAGING/app/packages/$name"
-done
-for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
-  [ -d "$d" ] || continue
-  name="$(basename "$d")"
-  mkdir -p "$PRESCAN_STAGING/app/$name"
-  [ -f "$d/package.json" ] && cp "$d/package.json" "$PRESCAN_STAGING/app/$name/"
-  [ -f "$d/cordis.patch.yml" ] && cp "$d/cordis.patch.yml" "$PRESCAN_STAGING/app/$name/"
-done
-PRESCAN_HITS="$(cd "$PRESCAN_STAGING" && grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/profile-* \
-  --include='*.js' --include='*.mjs' 2>/dev/null \
-  | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
-rm -rf "$PRESCAN_STAGING"
-if [ -n "$PRESCAN_HITS" ]; then
-  echo "ERROR: 505-executed code references /Users/yanfenma (pre-mutation gate — NOTHING was mutated):" >&2
-  echo "$PRESCAN_HITS" >&2
-  exit 2
-fi
-echo "  ok: no /Users/yanfenma references in the pack source (pre-mutation gate, staging packed + scanned)"
-
-# ---- 0c. disk-budget + full-tree retention admission gate (W0, Product #430)
-# Hard admission gate BEFORE the FIRST production mutation (the section-1
-# full-root preimage mv, or the first tree write on a fresh install). Reuses
-# the AGENT_CORE_BACKUP_RETENTION_V1 filesystem helper — no new service,
-# daemon, DB, or platform. The gate is READ-ONLY over the trees and writes the
-# JSON receipt <parent>/agent-core-deploy-budget-receipt.json on every attempt:
-#   DISK_FREE_BEFORE / LIVE_TREE_BYTES / ESTIMATED_PEAK_BYTES /
-#   DISK_FREE_AFTER_RESERVATION / retained backups before+after / pin reasons.
-# Floor = FIXED 50 GiB after worst-case reservation (Owner policy 2026-10-02;
-# supersedes the earlier max(60 GiB, 10% of Data volume) rule — the floor no
-# longer depends on Data-volume size); allocation = worst-case
-# physical (logical bytes; CLONE_PROOF = NONE); retention cap = live + max one
-# pinned known-good + max one newest immediate-rollback preimage at/above the
-# 20 GiB class — a third one is refused unless the superseded unpinned ones
-# were cleaned by EXACT path (helper --cleanup-exact) or an open-Product pin
-# exception is asserted via AGENT_CORE_BUDGET_PIN_EXCEPTION (receipted; sudo
-# callers must pass it through explicitly, e.g. sudo AGENT_CORE_BUDGET_PIN_
-# EXCEPTION="..." ./scripts/trusted-cp-deploy-install.sh). Refusal is
-# fail-closed: NOTHING is mutated.
-if [ ! -x "$BACKUP_OPS" ]; then
-  echo "ERROR: backup-ops helper missing ($BACKUP_OPS); the disk-budget admission gate is unavailable — refusing to deploy (fail-closed; NOTHING mutated)" >&2
-  exit 2
-fi
-PROJECTED_BAK=""
-BUDGET_NEW_BAK_ARG="NONE"
-if [ -e "$TRUSTED_ROOT" ]; then
-  PROJECTED_BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
-  BUDGET_NEW_BAK_ARG="$PROJECTED_BAK"
-fi
-BUDGET_PIN_ARGS=()
-if [ -n "${AGENT_CORE_BUDGET_PIN_EXCEPTION:-}" ]; then
-  BUDGET_PIN_ARGS=(--pin-exception "$AGENT_CORE_BUDGET_PIN_EXCEPTION")
-fi
-BUDGET_RC=0
-# ROOT = the install root itself ($TRUSTED_ROOT): the helper's frozen backup
-# convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the census glob, the
-# live-tree sizing, and the receipt location (dirname($TRUSTED_ROOT)/…) are
-# all anchored on the install root — NOT its parent.
-"$BACKUP_OPS" "$TRUSTED_ROOT" --check-budget "$BUDGET_NEW_BAK_ARG" ${BUDGET_PIN_ARGS[@]+"${BUDGET_PIN_ARGS[@]}"} || BUDGET_RC=$?
-if [ "$BUDGET_RC" -ne 0 ]; then
-  echo "ERROR: DEPLOY_REFUSED_BEFORE_MUTATION — disk-budget / full-tree-retention admission gate FAILED (helper rc=$BUDGET_RC: 4=REFUSED_DISK_BUDGET 5=REFUSED_RETENTION_CAP)." >&2
-  echo "MUTATION TRUTH: NOTHING was mutated — the section-1 backup mv did NOT run; the live install is untouched." >&2
-  echo "receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json (verdict + exact-path cleanup guidance inside)" >&2
-  exit 2
-fi
-echo "  ok: disk-budget + retention admission gate ADMITTED (receipt: $(dirname "$TRUSTED_ROOT")/agent-core-deploy-budget-receipt.json)"
-
 # ---- 1. backup previous install (code refreshed, config preserved in .bak) --
 if [ -e "$TRUSTED_ROOT" ]; then
-  BAK="$PROJECTED_BAK"
+  BAK="${TRUSTED_ROOT}.bak-$(date +%Y%m%d-%H%M%S)"
   echo "== backing up previous install -> $BAK"
   mv "$TRUSTED_ROOT" "$BAK"
   # AGENT_CORE_BACKUP_RETENTION_V1: write metadata for the backed-up PREVIOUS
@@ -722,50 +94,15 @@ if [ -e "$TRUSTED_ROOT" ]; then
   #   NOTE: this is a non-fatal best-effort — a metadata failure must not block
   #   the install.
   if [ -x "$BACKUP_OPS" ]; then
-    # ROOT = $TRUSTED_ROOT (same root the 0c budget gate uses): the helper's
-    # backup convention is <ROOT>.bak-<ts> siblings of <ROOT>, so the id
-    # derivation and maybe_first_pin's prior-reliable-pin census only see the
-    # real backup family when anchored on the install root. (Review B1/N2,
-    # Product #430: the pre-existing dirname-shaped call left FIRST_RELIABLE_
-    # PIN's prior-pin detection matching nothing in the real layout.)
-    "$BACKUP_OPS" "$TRUSTED_ROOT" --write-predecessor "$BAK" \
+    "$BACKUP_OPS" "$(dirname "$TRUSTED_ROOT")" --write-predecessor "$BAK" \
       || echo "  WARNING: backup metadata/first-pin failed for $BAK (install continues; investigate)" >&2
   else
     echo "  WARNING: backup-ops helper missing ($BACKUP_OPS); deployment backup will carry no retention metadata" >&2
   fi
-  # INSTALL_MUTATION_RECEIPT: the first production mutation happened — from
-  # here on, ANY failure must report the preimage and the exact restore.
-  note_stage backup_mv
-  PREIMAGE_BAK="$BAK"
 fi
 
 mkdir -p "$TRUSTED_ROOT"/{harness,app,home,config,.cache}
 cd "$TRUSTED_ROOT"
-
-# ---- 1a. resolve the runtime node ONCE (single arch authority) -------------
-# The Node runtime this install materializes (§2b) is whatever
-# /usr/local/bin/node resolves to in the Cellar. The harness closure MUST be
-# BUILT by that same binary: pnpm selects platform-optional native packages
-# (node-addon-require-builtin-darwin-<arch> and every package following the
-# same prebuilt-optional-dependency convention) from the arch of the process
-# IT runs under — not from the tree being installed. Building the closure
-# under the invoking shell's node (e.g. an arm64 dev host) while the runtime
-# is x64 ships a closure whose native binding cannot load: the loader's
-# internal-module acquisition fails, Tree.import falls back to raw import()
-# from vendor/loader/lib/index.js, and EVERY plugin entry fails
-# ERR_MODULE_NOT_FOUND at fresh-child boot (2026-10-02 availability rollback,
-# Product #414). Pin the arch anchor here; §1b/§2/§2b all consume it.
-NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
-case "$NODE_LINK_TARGET" in
-  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
-  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
-esac
-NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
-NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
-[ -x "$NODE_CELLAR_BIN" ] || { echo "ERROR: /usr/local/bin/node does not resolve to an executable Cellar node: $NODE_CELLAR_BIN" >&2; exit 2; }
-RUNTIME_ARCH="$("$NODE_CELLAR_BIN" -p process.arch)"
-RUNTIME_NODE_VERSION="$("$NODE_CELLAR_BIN" --version)"
-echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
 
 # ---- 1b. reuse the heavyweight closures when their sources are UNCHANGED ----
 # The harness closure (1.5G source + offline pnpm install) and the Node
@@ -777,6 +114,7 @@ echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUN
 REUSE_HARNESS=0
 REUSE_NODE=0
 if [ -n "${BAK:-}" ]; then
+  HARNESS_STAMP="$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
   if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
      && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP" ]; then
     rmdir "$TRUSTED_ROOT/harness"
@@ -784,24 +122,15 @@ if [ -n "${BAK:-}" ]; then
     if [ -d "$BAK/.cache" ]; then
       rmdir "$TRUSTED_ROOT/.cache"
       mv "$BAK/.cache" "$TRUSTED_ROOT/.cache"
-      # RESTORE-R1 record: this subtree LEFT the fresh preimage.
-      note_preimage_reuse "$BAK" .cache
     fi
     REUSE_HARNESS=1
-    # RESTORE-R1 record: these subtrees LEFT the fresh preimage — a restore
-    # from $BAK lands without them (boot-fatal for node-runtime).
-    note_stage reuse_harness_mv
-    note_preimage_reuse "$BAK" harness
     echo "  harness closure REUSED from $BAK (source commit unchanged — tar+pnpm skipped)"
   fi
   if [ -x "$BAK/node-runtime/bin/node" ] \
-     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$RUNTIME_NODE_VERSION" ] \
-     && [ "$("$BAK/node-runtime/bin/node" -p process.arch 2>/dev/null)" = "$RUNTIME_ARCH" ]; then
+     && [ "$("$BAK/node-runtime/bin/node" --version 2>/dev/null)" = "$(node --version)" ]; then
     mv "$BAK/node-runtime" "$TRUSTED_ROOT/node-runtime"
     REUSE_NODE=1
-    note_stage reuse_node_mv
-    note_preimage_reuse "$BAK" node-runtime
-    echo "  node-runtime REUSED from $BAK (same node version $RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
+    echo "  node-runtime REUSED from $BAK (same node version $(node --version))"
   fi
 fi
 
@@ -813,14 +142,11 @@ tar -C "$HARNESS_SRC" -cf - \
   --exclude='.turbo' --exclude='dist' --exclude='lib/*.tsbuildinfo' \
   . | tar -C harness -xf -
 
-echo "== pnpm install (offline, frozen, copy-import, runtime node $RUNTIME_NODE_VERSION arch $RUNTIME_ARCH) -> harness/node_modules"
+echo "== pnpm install (offline, frozen, copy-import) -> harness/node_modules"
 cd harness
 # copy-import => every file is a REAL copy owned by the install user; no
 # hardlink can point back into the 502-owned pnpm store.
-# Executed under the runtime node anchor (§1a): platform-optional native
-# packages must be selected for the arch that will EXECUTE this closure,
-# never the invoking shell's arch (2026-10-02 rollback root cause).
-"$NODE_CELLAR_BIN" /usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
+/usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
   --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
   >/tmp/trusted-cp-pnpm-install.log 2>&1 || {
     echo "ERROR: pnpm install failed; log tail:" >&2
@@ -828,8 +154,10 @@ cd harness
     exit 2
   }
 cd "$TRUSTED_ROOT"
-printf '%s' "$HARNESS_STAMP" > harness/.source-stamp
-note_stage harness_closure_built
+# stamp for the next install's reuse check — ONE line: commit + dirty count
+# (a multi-line stamp never equals the concatenated read-back, and reuse
+# silently never engaged)
+printf '%s%s' "$(git -C "$HARNESS_SRC" rev-parse HEAD 2>/dev/null)" "$(git -C "$HARNESS_SRC" status --porcelain 2>/dev/null | wc -l | tr -d ' ')" > harness/.source-stamp
 fi
 
 # ---- 2b. trusted Node runtime (review blocker fix) --------------------------
@@ -839,6 +167,13 @@ fi
 # /usr/local/bin, the Cellar, or /Users/yanfenma.
 echo "== copying Node runtime -> node-runtime/"
 if [ "$REUSE_NODE" != "1" ]; then
+NODE_LINK_TARGET="$(readlink /usr/local/bin/node)"
+case "$NODE_LINK_TARGET" in
+  /*) NODE_CELLAR_BIN="$NODE_LINK_TARGET" ;;
+  *)  NODE_CELLAR_BIN="$(dirname /usr/local/bin/node)/$NODE_LINK_TARGET" ;;
+esac
+NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NODE_CELLAR_BIN")"
+NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 mkdir -p node-runtime
 cp -RL "$NODE_VERSION_DIR"/. node-runtime/
 fi
@@ -870,59 +205,28 @@ if [ "$REUSE_NODE" = "1" ]; then
 else
   echo "  trusted node: $TRUSTED_NODE ($("$TRUSTED_NODE" --version), source $NODE_VERSION_DIR)"
 fi
-note_stage node_runtime_ready
-
-# ---- 2c. closure-resolution gate (fail-closed) ------------------------------
-# Proves, under the EXACT trusted node, the two invariants fresh child boots
-# depend on (2026-10-02 availability rollback, Product #414):
-#   1. the loader's native internal-module binding acquires and reports the
-#      runtime's own platform suffix (without it Tree.import falls back to
-#      raw import() from vendor/loader/lib/index.js and EVERY plugin entry
-#      fails ERR_MODULE_NOT_FOUND at fresh-child boot);
-#   2. every @deepseek-ai/* package linked into the closure's resolution
-#      surfaces (vendor/loader peers + apps/cli) is alive and name-consistent.
-# Covers BOTH a freshly-built and a REUSED harness closure. Failure aborts
-# BEFORE the app closure/cutover — never deploy a tree whose fresh children
-# would die at plugin-tree boot. The end-to-end proof is the fresh-child
-# boot canary (executor STAGE 1 gate): scripts/lib/trusted-cp-fresh-child-boot-canary.mjs.
-echo "== closure-resolution gate (native binding + apps/cli census) under trusted node ($RUNTIME_ARCH)"
-note_stage closure_gate
-"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-closure-resolution-gate.mjs" \
-  --trusted-root "$TRUSTED_ROOT" || {
-    echo "ERROR: closure-resolution gate FAILED — harness closure cannot serve fresh child boots on this runtime ($RUNTIME_ARCH). NOT cutover-ready." >&2
-    exit 2
-  }
 
 # ---- 3. app closure (Agent Core runtime surface) ---------------------------
 echo "== copying Agent Core closure -> app/"
 mkdir -p app/packages app/node_modules
 cp "$REPO_SRC/package.json" app/package.json
 mkdir -p app/scripts
-for f in $APP_SCRIPTS_WHITELIST; do
+for f in agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs \
+         dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh \
+         agent-core-backup-ops.sh \
+         trusted-cp-hardening-v1-verify.mjs \
+         production-runtime.mjs production-runtime-launchd.mjs \
+         production-runtime-v1-verify.mjs \
+         production-agent-provision.mjs; do
   [ -f "$REPO_SRC/scripts/$f" ] && cp "$REPO_SRC/scripts/$f" app/scripts/
 done
-mkdir -p app/scripts/lib && cp "$PRESERVED_SOURCE_GIT_STAMP" app/scripts/lib/trusted-source-git-stamp.sh
-# packages: package.json + src + exact metadata-declared public root entries (no tests)
-# (PACKAGE_COPY_HELPER validated by the section-0b pre-mutation gate)
+# packages: src + package.json only (no tests)
 for pkg in "$REPO_SRC"/packages/*/; do
   name="$(basename "$pkg")"
   [ -f "$pkg/package.json" ] || continue
-  "$TRUSTED_NODE" "$PACKAGE_COPY_HELPER" "$pkg" "app/packages/$name"
-done
-# v2.2 FIX A′ (proven by the §3b whole-graph import gate): some app packages
-# deliberately carry NO package.json (packages/development-execution is a
-# code-only dir consumed by production-runtime via a RELATIVE import —
-# DEVELOPMENT_EXECUTION_SURFACE_V1), so the package.json-keyed loop above skips
-# them and a fresh pack could never boot the runtime
-# (ERR_MODULE_NOT_FOUND …/packages/development-execution/src/index.js — masked
-# at agent-control#193 only because the @larksuite/channel resolution failure
-# fired earlier in the import order). Carry their src/ explicitly — same
-# package.json+src, no-tests discipline as the copy helper.
-for rel in development-execution; do
-  [ -d "$REPO_SRC/packages/$rel/src" ] || { echo "ERROR: relative-import app package missing: packages/$rel/src" >&2; exit 2; }
-  rm -rf "app/packages/$rel"
-  mkdir -p "app/packages/$rel"
-  cp -R "$REPO_SRC/packages/$rel/src" "app/packages/$rel/src"
+  mkdir -p "app/packages/$name"
+  cp "$pkg/package.json" "app/packages/$name/package.json"
+  [ -d "$pkg/src" ] && cp -R "$pkg/src" "app/packages/$name/src"
 done
 # bundles + profiles
 for d in "$REPO_SRC"/bundle-* "$REPO_SRC"/profile-*; do
@@ -936,27 +240,6 @@ done
 # Agent existence authority closure (AGENT_DEFINITION_CONFIG_V1): the formal
 # Agent Definition package MUST be in the trusted app closure, and the
 # removed agent-registry package MUST NOT be (no second Agent authority).
-# TRUSTED_CP_PACK_INPUT_PROVENANCE_V1: post-pack TOCTOU stamp. The source
-# must be byte-identical (same HEAD/tree, still clean) to the pre-pack stamp;
-# drift here means the packed closure may not correspond to the validated
-# source, so the install fails before any service/restart mutation.
-POST_PACK_STAMP="$(pack_source_stamp "$REPO_SRC")"
-POST_PACK_HEAD="$(echo "$POST_PACK_STAMP" | awk '{print $1}' | sed 's/^head=//')"
-POST_PACK_TREE="$(echo "$POST_PACK_STAMP" | awk '{print $2}' | sed 's/^tree=//')"
-POST_PACK_CLEAN="$(echo "$POST_PACK_STAMP" | awk '{print $3}' | sed 's/^clean=//')"
-if [ "$POST_PACK_HEAD" != "$PRE_PACK_HEAD" ] || [ "$POST_PACK_TREE" != "$PRE_PACK_TREE" ] \
-   || [ "$POST_PACK_CLEAN" != "$PRE_PACK_CLEAN" ]; then
-  # Known abort shape (documented): the previous install is already in $BAK and
-  # the half-built closure remains — no service restart follows, operators restore
-  # from $BAK. This is the pre-existing backup-then-rebuild deployment shape.
-  echo "ERROR: SOURCE_CHANGED_DURING_PACK: pre=($PRE_PACK_HEAD/$PRE_PACK_TREE/$PRE_PACK_CLEAN) post=($POST_PACK_HEAD/$POST_PACK_TREE/$POST_PACK_CLEAN)" >&2
-  exit 2
-fi
-echo "  ok: pack input source unchanged during pack (TOCTOU stamp match)"
-PACKED_APP_TREE_SHA256="$(packed_app_provenance "$(pwd)/app" "$(pwd)/app/pack-provenance.json")"
-echo "  packed app tree sha256: $PACKED_APP_TREE_SHA256"
-echo "  pack provenance receipt: app/pack-provenance.json"
-
 if [ ! -f "app/packages/agent-definition/package.json" ] \
    || [ ! -d "app/packages/agent-definition/src" ]; then
   echo "ERROR: app closure missing packages/agent-definition (Agent Definition authority)" >&2
@@ -1012,46 +295,6 @@ done
 [ -d "app/node_modules/@larksuiteoapi" ] && [ -d "app/node_modules/croner" ] \
   || { echo "ERROR: third-party app deps incomplete" >&2; exit 2; }
 
-# v2.2 FIX A (agent-control#193 Defect A): the production runtime's app graph
-# resolves @larksuite/channel -> its nested https-proxy-agent ->
-# proxy-agent-negotiate. That package exists in NO pack input: the §3 loop above
-# copies only MAIN_REPO/node_modules TOP-LEVEL entries and MAIN_REPO lacks this
-# one (its dev-install resolution for the leaf is broken — feishu-connector's
-# git-dep lock never recorded it), while the old live tree's top-level copy was
-# ambient legacy from an earlier era. Fresh packs therefore never carried it and
-# the production runtime FATAL'd at first boot (ERR_MODULE_NOT_FOUND, exit 2)
-# while the fresh-child canary passed. The vendored copy (exact bytes of the
-# version production ran, sha256-recorded in the operation package) is the
-# deterministic source; it lands at app/node_modules top level, where the
-# https-proxy-agent resolution walks up to. Placed AFTER the loop so the
-# vendored bytes win regardless of ambient MAIN_REPO drift.
-[ -f "$REPO_SRC/vendor/proxy-agent-negotiate/package.json" ] \
-  || { echo "ERROR: vendored proxy-agent-negotiate missing at $REPO_SRC/vendor/proxy-agent-negotiate (pin lineage violation)" >&2; exit 2; }
-rm -rf app/node_modules/proxy-agent-negotiate
-cp -RL "$REPO_SRC/vendor/proxy-agent-negotiate" app/node_modules/proxy-agent-negotiate
-note_stage app_closure_written
-
-# ---- 3b. production-runtime app-graph import gate (fail-closed, v2.2) -------
-# The fresh-child boot canary (executor G2.5) covers the harness plugin tree —
-# a fresh agent CHILD never imports the runtime app surface. agent-control#193
-# proved the gap: the packed closure passed every gate yet the runtime itself
-# died at boot on a missing transitive dep. This gate imports the EXACT boot
-# graph (packages/production-runtime/src/entry.js — compose.js statically pulls
-# feishu-connector/@larksuite/channel, broker, scheduler, product-api,
-# agent-router, agent-provisioning, …) under the trusted node, in a disposable
-# home, BEFORE any further mutation (§4+ runs only after this passes). No
-# service is started, no port bound, no production state touched. Any
-# resolution/import failure aborts the install here (documented abort shape:
-# the previous install sits in $BAK; restore = rm -rf live + mv $BAK back; §5b
-# has not run, so no RESTORE-R2/ownership re-pin is needed).
-echo "== production-runtime app-graph import gate (whole graph, disposable home)"
-note_stage app_graph_gate
-"$TRUSTED_NODE" "$SCRIPT_DIR/lib/trusted-cp-runtime-app-graph-gate.mjs" \
-  --app-dir "$TRUSTED_ROOT/app" --node "$TRUSTED_NODE" || {
-    echo "ERROR: runtime app-graph import gate FAILED — the packed app closure cannot boot the production runtime (agent-control#193 Defect A class). NOT cutover-ready." >&2
-    exit 2
-  }
-
 # ---- 4. control-plane home (DSH_HOME of the 505 parent) --------------------
 echo "== provisioning control-plane home -> home/"
 # trusted model-route settings source for the 505 user (children copy from it)
@@ -1092,7 +335,6 @@ done
 cp /Users/authsvc/.dsh/settings.yaml home/settings.yaml
 cp /Users/authsvc/.dsh/.credentials.yaml home/.credentials.yaml
 chmod 600 home/.credentials.yaml
-note_stage home_provisioned
 
 # ---- 5. config (505-private state) -----------------------------------------
 echo "== seeding config/ (505-private)"
@@ -1117,8 +359,6 @@ else
 fi
 # bindings/jobs are created by the router/resident on first boot (missing
 # file is a legal empty store for both).
-
-note_stage config_seeded
 
 # ---- 5b. 505 production root (PRODUCTION_INTEGRATION_V1, Task 3) -----------
 # The supervised Production Runtime (packages/production-runtime) persists
@@ -1155,48 +395,11 @@ chown "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT"
 # others may reach KNOWN paths but cannot LIST the root; every 505-private
 # subdir keeps its own 0700.
 chmod 711 "$PROD_ROOT"
-# v2.2 FIX B (agent-control#193 Defect B): the plist-pinned watchdog private
-# state (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1: SCHEDULER_INCIDENT_OWNER_GID=20
-# in the W1/W2/runtime plists; packages/scheduler/src/watchdog/private-state-io.js
-# readPrivateFile/ensurePrivateDirectory reject uid/gid mismatch fail-closed;
-# production-runtime paths.js control/scheduler-watchdog/{incidents.json,local-ops.jsonl}
-# + the durable-state incident-backups tree) must NEVER be swept by the blanket
-# ownership pass. The v2.1 blanket `chown -R 505:601 … control` flipped the
-# pinned group 20→601, and after the #193 rollback the RESTORED tree failed its
-# own scheduler startup readiness gate (`unsafe incident state file` boot FATAL,
-# 8790 down ~03:41–03:47 until the group was re-pinned). The blanket pass now
-# EXCLUDES the exact pinned set; the pin is asserted explicitly afterwards
-# (existing state: group re-asserted, uid/modes untouched; missing dir:
-# pre-created 505:20 0700 so the first boot passes its own gate).
-WATCHDOG_PINNED_PRIVATE_STATE_GID=20
-WATCHDOG_PINNED_PRIVATE_STATE_PATHS="$PROD_ROOT/control/scheduler-watchdog $PROD_ROOT/control/incident-backups"
-chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
-chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/logs"
-find "$PROD_ROOT/control" \
-  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
-  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
-  -not -path "$PROD_ROOT/control/incident-backups" \
-  -not -path "$PROD_ROOT/control/incident-backups/*" \
-  -exec chown "${AUTHSVC_UID}:${AUTHSVC_GID}" {} +
-find "$PROD_ROOT/control" \
-  -not -path "$PROD_ROOT/control/scheduler-watchdog" \
-  -not -path "$PROD_ROOT/control/scheduler-watchdog/*" \
-  -not -path "$PROD_ROOT/control/incident-backups" \
-  -not -path "$PROD_ROOT/control/incident-backups/*" \
-  -exec chmod u+rwX,go-rwx {} +
-for pinned in $WATCHDOG_PINNED_PRIVATE_STATE_PATHS; do
-  if [ -d "$pinned" ]; then
-    chgrp -R "$WATCHDOG_PINNED_PRIVATE_STATE_GID" "$pinned"
-  else
-    mkdir -p "$pinned"
-    chown "${AUTHSVC_UID}:${WATCHDOG_PINNED_PRIVATE_STATE_GID}" "$pinned"
-    chmod 700 "$pinned"
-  fi
-done
+chown -R "${AUTHSVC_UID}:${AUTHSVC_GID}" "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
+chmod -R u+rwX,go-rwx "$PROD_ROOT/bindings" "$PROD_ROOT/scheduler" "$PROD_ROOT/control" "$PROD_ROOT/logs"
 chown "${CHILD_UID}:${CHILD_GID}" "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
 chmod 755 "$PROD_ROOT/workspaces" "$PROD_ROOT/homes"
-echo "  production root: $PROD_ROOT (505-private control state 0700; plist-pinned watchdog private state $WATCHDOG_PINNED_PRIVATE_STATE_PATHS kept at gid $WATCHDOG_PINNED_PRIVATE_STATE_GID, excluded from the blanket pass; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
-note_stage prod_root_5b
+echo "  production root: $PROD_ROOT (505-private control state 0700; workspaces+homes 502-owned 0755-traversable; agents.json -> config/agents.json single authority)"
 
 # ---- 6. ownership + modes ---------------------------------------------------
 echo "== ownership: harness/app/home/node-runtime -> authsvc:authsvc (502 read-only)"
@@ -1216,11 +419,9 @@ chmod -R 700 "$TRUSTED_ROOT/config"
 chmod 600 "$TRUSTED_ROOT/config"/*.json
 chown -R root:wheel "$TRUSTED_ROOT/.cache"
 chmod 700 "$TRUSTED_ROOT/.cache"
-note_stage trusted_ownership
 
 # ---- 7. spawn helper (root:wheel 4755) --------------------------------------
 echo "== spawn helper"
-note_stage helper_gate
 if [ -x "$HELPER" ]; then
   mode="$(stat -f '%Sp' "$HELPER")"
   owner="$(stat -f '%Su:%Sg' "$HELPER")"
@@ -1261,33 +462,14 @@ HITS="$(grep -rl '/Users/yanfenma' app/scripts app/packages app/bundle-* app/pro
   --include='*.js' --include='*.mjs' 2>/dev/null \
   | grep -vE 'trusted-cp-(deploy-install|hardening-v1-verify)' || true)"
 if [ -n "$HITS" ]; then
-  # B7 2026-10-01 truth fix: the identical scan now runs pre-mutation
-  # (section 0b), so reaching here means drift between the staged scan and
-  # the packed tree. This is a LATE gate: the trusted app tree WAS already
-  # written by this run. Never claim "NOTHING was deployed" — report the
-  # mutation truth and the exact restore (the documented backup-then-rebuild
-  # abort shape; the operator/owning transaction executes it).
   echo "ERROR: 505-executed code references /Users/yanfenma:" >&2
   echo "$HITS" >&2
-  echo "MUTATION TRUTH: late gate — the trusted app tree at $TRUSTED_ROOT WAS already written by this run." >&2
-  if [ -n "${BAK:-}" ]; then
-    echo "EXACT RESTORE (operator, after recording evidence): rm -rf '$TRUSTED_ROOT' && mv '$BAK' '$TRUSTED_ROOT'" >&2
-    # RESTORE-R2 (v2.2, agent-control#193 Defect B): §5b ran before this late
-    # gate — the restore must re-pin the plist-pinned watchdog private state
-    # (SCHEDULER_INCIDENT_OWNER_GID=20; v2.1-era restores left group 601 behind
-    # and the restored tree failed its own boot gate):
-    echo "RESTORE-R2 (mandatory after the restore mv): for p in /Users/authsvc/.agent-core/control/scheduler-watchdog /Users/authsvc/.agent-core/control/incident-backups; do [ -d \"\$p\" ] && chgrp -R 20 \"\$p\"; done" >&2
-  else
-    echo "EXACT RESTORE: no pre-existing install was backed up this run (fresh install) — remove the partial tree: rm -rf '$TRUSTED_ROOT'" >&2
-  fi
   exit 2
 fi
 echo "  ok: no /Users/yanfenma references in trusted code"
-note_stage symlink_and_domain_audits
 
 # ---- 9. uid-502 spot check ---------------------------------------------------
 echo "== uid-502 spot check (must all be DENIED)"
-note_stage spot_check
 spot_fail=0
 run502() { sudo -u '#502' "$@"; }
 if run502 sh -c "echo pwned > '$TRUSTED_ROOT/app/packages/agent-router/src/index.js'" 2>/dev/null; then

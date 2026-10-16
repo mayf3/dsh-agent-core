@@ -39,61 +39,38 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
+import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
-import { mountBrokerGateway } from './broker-composition.js'
-import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
+import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
+import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
-import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
-import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
-import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
+import { assertSchedulerStartupReady, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
-// Identity capability providers via the package's TRACKED PUBLIC ENTRY (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 closure amendment): a tracked relative path closes under plain source resolution in every checkout — no untracked node_modules bridge, no manual link step. package.json exports["."] exposes the same file.
-import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
-import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
-import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
-import { mountWorkflowExecutionContextRuntime } from './workflow-execution-context-runtime.js'
-import { mountWorkflowProgressRuntime } from './workflow-progress-runtime.js'
-// Latest-main integration: BOTH wirings coexist —
-//   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
-//   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
-import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
-import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
-import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
-import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
+import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
-import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
+import { createAgentPrincipalResolutionAccess } from './identity/agent-principal-resolution.js'
+import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
+import { createAgentDirectoryAccess } from './agent-directory.js'
+import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { appendRestartBoundaryReceipt, collectRuntimeRestartCensus } from './restart-boundary.js'
-import { loadAgentModelOverrides, canonicalDefaultGlobalRoute, createModelArtifactContext } from './model-overrides.js'
-import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
+import { loadAgentModelOverrides } from './model-overrides.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
-import {
-  resolveFeishuUxSwitches,
-  resolveProcessingReactionConfig,
-  resolveReplyRenderMode,
-  warnInvalidUnconfiguredFeishuEnv,
-} from './feishu-env.js'
+import { resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
 
 // Re-exported for the existing test/compat imports (parseStrictBooleanEnv etc.).
-export {
-  parseStrictBooleanEnv,
-  resolveFeishuUxSwitches,
-  resolveProcessingReactionConfig,
-  resolveReplyRenderMode,
-  warnInvalidUnconfiguredFeishuEnv,
-} from './feishu-env.js'
+export { parseStrictBooleanEnv, resolveFeishuUxSwitches, resolveProcessingReactionConfig, resolveReplyRenderMode } from './feishu-env.js'
 
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
@@ -115,10 +92,6 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
   }
 }
 
-// The fleet shared-Codex migration functions live in their own module
-// (structure-only move; compose keeps the stable re-export surface for the
-// existing tests and the executable).
-export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
 
 /**
  * Compose the Production Runtime.
@@ -146,10 +119,8 @@ export { runFleetSharedCodexAuthMigrationV1, selectAuthoritativeCodexGeneration 
  *   (test seam, forwarded to the Router; defaults to the real AgentProcess).
  * @param {Function} [options.provisionHome] - test seam for Router-owned home
  *   provisioning; production always uses provisionAgentHome.
- * @param {{provider:string,model:string,subscription?:object}} [options.globalRoute] - test seam;
- *   production resolves composition config > DSH_AGENT_PROVIDER/MODEL env pair >
- *   the canonical built-in default (openai-codex/gpt-5.6-luna subscription route;
- *   DEFAULT_MODEL_ROUTING_CONFIG_V1).
+ * @param {{provider:string,model:string}} [options.globalRoute] - test seam;
+ *   production defaults to the existing DSH_AGENT_PROVIDER/MODEL route.
  * @param {object} [options.log] - logger (default stderr lines).
  * @returns {Promise<object>} the runtime handle: `{ ctx, layout, definition,
  *   router, feishu, broker, productApi, notificationIngress, store,
@@ -160,6 +131,13 @@ export async function composeProductionRuntime(options = {}) {
   // must remain proxy-free and the proven Node env-proxy behavior is pinned
   // exactly. This gate runs before composition mutates env or mounts anything.
   assertTargetProxyRuntime()
+  // Feishu UX switches: strict-parsed BEFORE any mount so an invalid value
+  // fails composition loud even when the channel itself is unconfigured.
+  const feishuUxSwitches = resolveFeishuUxSwitches()
+  // Processing-reaction switch: same fail-loud contract (unset/empty=false).
+  const processingReactionEnabled = resolveProcessingReactionConfig()
+  // Reply render mode: same fail-loud contract (unset/empty='markdown').
+  const replyRenderMode = resolveReplyRenderMode()
   const opts = options ?? {}
   const log = opts.log ?? {
     log: (...a) => process.stdout.write(`[production-runtime] ${a.join(' ')}\n`),
@@ -239,34 +217,20 @@ export async function composeProductionRuntime(options = {}) {
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
 
   // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
-  // owned static route chain config (agent-model-overrides.json version 3).
+  // owned static route chain config (agent-model-overrides.json version 2).
   // The composition validates it against the already-loaded Agent Definition
   // and re-reads it ONLY at each new process boundary (turn-start chain
   // snapshot) so target-only rollback needs neither a runtime restart nor a
   // file watcher. The Router receives the immutable snapshot resolver and
   // never reads the file or learns provider/model rules.
-  // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
-  // canonical built-in default (GPT Luna as a complete subscription route).
-  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
-  const globalRouteSource = opts.globalRoute !== undefined
-    ? 'composition_config'
-    : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
-      ? 'runtime_env'
-      : 'builtin_default')
-  const globalRoute = Object.freeze(opts.globalRoute ?? (globalRouteSource === 'runtime_env'
-    ? {
-      provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
-      model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
-    }
-    : canonicalDefaultGlobalRoute(modelLoadOptions)))
-  log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
+  const globalRoute = Object.freeze(opts.globalRoute ?? {
+    provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
+    model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
+  })
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  // Reconciliation A2/A4: the runtime root binds its own credential and
-  // immutable artifact identity at startup and subsequent process boundaries.
-  // A foreign domain or changed artifact fails closed at load.
-  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
-  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
+  const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
+  const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds)
     .resolveChain(agentId, globalRoute)
   const resolveProcessConfig = (agentId) => {
     // Default route = the chain's primary (route[0]); the unified chain
@@ -283,57 +247,29 @@ export async function composeProductionRuntime(options = {}) {
   // Feishu channel: mounted ONLY with real credentials. Absent => honest
   // offline (no fake recording seam in production); delivery-requesting
   // jobs fail loud as not-delivered.
-  //
-  // OPTIONAL ADAPTER ADMISSION (audit Product #442): this channel is an
-  // OPTIONAL adapter, so BOTH its config validation and its module graph
-  // belong to the ENABLED branch only —
-  //   - the channel-specific supervision switches are strictly parsed HERE,
-  //     so an invalid value on an ENABLED channel still fails composition
-  //     loud (fail closed), while a disabled channel's invalid switch can
-  //     never block the unrelated base path (it warns instead — observable,
-  //     never silently dropped);
-  //   - the connector + @larksuite/channel SDK graph is loaded ONLY for an
-  //     enabled channel, so a broken/absent optional-adapter implementation
-  //     is no longer a base-boot dependency; a CONFIGURED channel whose
-  //     implementation cannot load fails loud (FEISHU_CONNECTOR_UNAVAILABLE).
   let feishu = undefined
   const feishuCredsPath = opts.feishuCredsPath ?? process.env.FEISHU_CREDS_PATH
   if (typeof feishuCredsPath === 'string' && feishuCredsPath !== '' && existsSync(feishuCredsPath)) {
-    // Feishu UX switches: strict-parsed for the ENABLED channel (absent =
-    // connector defaults true/true). Any invalid value fails loud HERE.
-    const feishuUxSwitches = resolveFeishuUxSwitches()
-    // Processing reaction: definite boolean (unset/empty resolves to false —
-    // the connector default stays OFF); render mode resolves to 'markdown'.
-    const processingReactionEnabled = resolveProcessingReactionConfig()
-    const replyRenderMode = resolveReplyRenderMode()
-    let applyFeishu
-    try {
-      const connector = await import('../../feishu-connector/src/index.js')
-      applyFeishu = connector.apply
-    } catch (cause) {
-      throw Object.assign(
-        new Error(`production-runtime: feishu channel is configured but the connector module graph failed to load: ${cause?.message ?? cause}`),
-        { code: 'FEISHU_CONNECTOR_UNAVAILABLE', cause },
-      )
-    }
     feishu = applyFeishu(ctx, {
       enabled: true,
       credentialsPath: feishuCredsPath,
       // requireMentionInGroup / autoMentionTriggerSender: only the env-parsed
       // keys are forwarded (absent = connector defaults true/true).
       ...feishuUxSwitches,
+      // Processing reaction: definite boolean (unset/empty already resolved
+      // to false above — the connector default stays OFF).
       processingReactionEnabled,
+      // Reply render mode: definite 'markdown' | 'card' (unset/empty already
+      // resolved to 'markdown' above — the byte-identical default).
       replyRenderMode,
     })
     log.log(`feishu connector mounted with live credentials (${feishuCredsPath}; requireMentionInGroup=${feishuUxSwitches.requireMentionInGroup ?? true} autoMentionTriggerSender=${feishuUxSwitches.autoMentionTriggerSender ?? true} processingReactionEnabled=${processingReactionEnabled} replyRenderMode=${replyRenderMode})`)
   } else {
-    warnInvalidUnconfiguredFeishuEnv(process.env, (message) => log.warn(message))
     log.warn(`feishu credentials not configured (FEISHU_CREDS_PATH=${feishuCredsPath ?? '(unset)'}); channel OFF — delivery-requesting jobs will be marked not-delivered`)
   }
 
   const router = applyRouter(ctx, {
     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
-    ...(opts.productApi?.conversation?.enabled === true ? {conversationSourceDir:join(layout.controlDir,'native-conversation','source')} : {}),
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,
@@ -374,26 +310,22 @@ export async function composeProductionRuntime(options = {}) {
   // and auth origin arrive via env from the supervision unit. Without a
   // credentials file every capability call fails closed
   // (credential_unavailable) — the gateway never fakes authorization.
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2: L0 denial evidence is scoped to
-  // the send and independently granted exact-turn inspector only; a failed
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 R12: the L0 pre-handler denial
+  // hook is scoped to exactly the agent_session_send capability; a failed
   // denial append never changes the denial itself.
   const agentSessionRuntime = createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log })
-  const broker = mountBrokerGateway({
-    ctx,
+  const broker = applyBroker(ctx, {
+    mode: 'gateway',
     credentialsFile: opts.broker?.credentialsFile ?? process.env.AGENT_CORE_CREDENTIALS_FILE,
     authServiceOrigin: opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN,
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
   const productApiCfg = opts.productApi ?? {}
-  mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
-    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
-    // Dedicated history-only Tailnet config remains pass-through/default-OFF.
-    history: productApiCfg.history,
   })
 
   const notificationIngress = mountNotificationIngressRuntime({
@@ -403,7 +335,12 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // ── scheduler engine over the production store (existing seams only) ─────
-  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence, runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA })
+  const invoker = createObservedSchedulerInvoker({
+    router,
+    definition,
+    writeEvidence,
+    runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA,
+  })
 
   // Admission observability remains a wrap around Router-owned delivery.
   wireNotificationIngressDeliveryEvidence(router, writeEvidence)
@@ -415,17 +352,6 @@ export async function composeProductionRuntime(options = {}) {
       }
 
   const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
-
-  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: structured execution history over
-  // its own directory (events.jsonl + monthly projections) and its own lock.
-  // It records facts at the engine's lifecycle boundaries and NEVER gates
-  // admission (R-H1); jobs.json / runs.jsonl authorities are untouched.
-  const history = await mountSchedulerHistoryRuntime({
-    ctx,
-    layout,
-    schedulerAuth: opts.schedulerAuth,
-    log,
-  })
   const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
 
   // Shared trusted Broker configuration is also consumed by principal
@@ -434,22 +360,20 @@ export async function composeProductionRuntime(options = {}) {
   const brokerAuthServiceOrigin = opts.broker?.authServiceOrigin ?? process.env.BROKER_AUTH_ORIGIN
   const workflowServiceOrigin = buildTargetMap(defaultBrokerTargets).get('svc-workflow')?.allowedOrigin
   mountSchedulerSelfServiceRuntime({ ctx, store, router, broker: opts.broker, log, healthProvider: () => schedulerHealth.read() })
-  // AGENT_CORE_AGENT_SESSION_MESSAGING_V2 (accepted r4): the trusted LOCAL
-  // provider for send plus caller-owned exact-turn inspection. Send reuses
-  // the Router's sole delivery
+  // AGENT_CORE_AGENT_SESSION_MESSAGING_V1 (accepted r3): the trusted LOCAL
+  // provider for agent_session_send. It reuses the Router's sole delivery
   // and reconciliation seams — one send = one new Run/Turn in the target
   // canonical main; the runtime derives source identity + exact source-turn
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
-  agentSessionRuntime.mount(ctx); mountExecutionHistoryRuntime(ctx, { layout, broker: opts.broker, log })
+  agentSessionRuntime.mount(ctx)
 
-  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
+  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
-  // identity authority (exact UUID read; audience `agent-principal-resolution`
-  // × `auth.agent.resolve`); the local Agent Definition registry then proves
-  // exact deliverability. The token is acquired by the runtime for the
-  // ACTUAL caller through the same trusted credential seam as the gateway
-  // grant check and never reaches the model; the Auth origin is the fixed
+  // identity authority; the local Agent Definition registry proves exact
+  // deliverability. The token is acquired by the runtime for the ACTUAL
+  // caller through the same trusted credential seam as the gateway grant
+  // check and never reaches the model; the Auth origin is the fixed
   // deployment configuration, never a tool argument.
   ctx.provide('agentPrincipalResolutionAccess', createAgentPrincipalResolutionAccess({
     definition,
@@ -473,49 +397,6 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
-
-  // AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1 (accepted): the trusted
-  // LOCAL provider for the read-only agent_resolve_principal_by_agent. Auth is
-  // the identity authority (exact agentId -> stored Agent Principal UUID via
-  // the identity-directory reverse route; audience `identity-directory` x
-  // `auth.directory.read` — the baseline internal directory entitlement, no
-  // new scope/audience); the local Agent Definition registry then proves exact
-  // deliverability. Same trusted seam as the forward sibling: the token is
-  // acquired for the ACTUAL caller and never reaches the model, and the Auth
-  // origin is the fixed deployment configuration, never a tool argument. No
-  // canonical-lifecycle semantics are claimed or returned.
-  ctx.provide('agentPrincipalReverseResolutionAccess', createAgentPrincipalReverseResolutionAccess({
-    definition,
-    authServiceOrigin: brokerAuthServiceOrigin,
-    acquireCallerToken: async ({ agentId }) => {
-      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-      if (credential === undefined) {
-        throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
-      }
-      try {
-        return await requestAccessToken({
-          credential,
-          authServiceOrigin: brokerAuthServiceOrigin,
-          resource: 'identity-directory',
-          scope: 'auth.directory.read',
-        })
-      } catch (error) {
-        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
-          code: error?.errorCode ?? 'transport_failure',
-        })
-      }
-    },
-  }))
-
-  // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1 (accepted): the trusted LOCAL provider
-  // for the read-only agent_directory (resolve/list). It reads ONLY the Agent
-  // Definition snapshot — the single canonical source of Agent existence/
-  // identity/enabled truth — so no second registry, cache or mapping exists;
-  // visibility is the accepted agent.definition.read no-scope baseline (no
-  // new auth audience/scope/grant, no boundary expansion), and a disabled
-  // Agent resolves explicitly with enabled:false (CTR-IAD-003 semantics).
-  ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
-
   ctx.provide('workflowHumanPrincipalProjectionAccess', createWorkflowHumanPrincipalProjectionAccess({
     workflowOrigin: workflowServiceOrigin,
     acquireCallerToken: async ({ agentId }) => {
@@ -534,18 +415,26 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
-  // AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: shared local coding-executor
-  // capability. Additive and agent-agnostic; refuses honestly (config_missing)
-  // until the Operator provisions dev-execution/{repos.json,backend.json}.
-  mountDevelopmentExecutionRuntime({ ctx, layout, log })
 
-  // Runtime-owned turn -> workflow_execution provenance mapping shared by
-  // every Workflow-scoped LOCAL capability. It is execution context only,
-  // never workflow business state.
-  mountWorkflowExecutionContextRuntime({ ctx })
+  // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1 (accepted): read-only Agent discovery
+  // LOCAL provider (resolve/list) over the Agent Definition snapshot — the
+  // single canonical source; no-scope agent.definition.read visibility.
+  ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
 
-  // FIXED_OPERATION_V1: fixture-only fixed-operation LOCAL surface.
-  mountFixedOperationRuntime({ ctx, log })
+  // Reuse the existing Scheduler JWKS verifier seam for the WEC loopback
+  // routes. Incomplete configuration stays unconfigured and rejects requests.
+  const schedulerJwksUrl = opts.schedulerAuth?.jwksUrl ?? process.env.SCHEDULER_AUTH_JWKS_URL
+  const schedulerIssuer = opts.schedulerAuth?.issuer ?? process.env.SCHEDULER_AUTH_ISSUER
+  const schedulerAudience = opts.schedulerAuth?.audience ?? process.env.SCHEDULER_AUTH_AUDIENCE
+  ctx.provide('schedulerTokenVerifier',
+    schedulerJwksUrl && schedulerIssuer && schedulerAudience
+      ? createJwksTokenVerifier({
+          jwksUrl: schedulerJwksUrl,
+          issuer: schedulerIssuer,
+          audience: schedulerAudience,
+          log: { warn: (...args) => log.warn('[scheduler-auth]', ...args) },
+        })
+      : null)
 
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
@@ -554,45 +443,24 @@ export async function composeProductionRuntime(options = {}) {
     log,
     ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
   })
-
-  // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the product-api
-  // /workflow-execution/* routes resolve this service at request time (the
-  // same late-binding discipline as schedulerHistory/schedulerTokenVerifier).
-  // traces = cross-process-fresh read model; kick = one coalesced poll
-  // trigger (latency only; the poll loop stays the correctness path).
-  mountWorkflowProgressRuntime({ ctx, ledger: workflowExecution.ledger, log })
-
   ctx.provide('workflowExecutionAccess', {
     traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
       const attempts = await workflowExecution.ledger.snapshotFresh()
       return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
     },
-    // Fleet-level attention summary: the same cross-process-fresh snapshot,
-    // selected down to the attention-worthy executionStates. Read-only.
-    attention: async () => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionAttention(attempts)
-    },
     kick: (payload) => {
       if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
-      void payload // the kick carries no semantics; the poll re-reads svc truth
+      void payload
       return workflowExecution.engine.kick()
     },
-    ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
   })
 
   const scheduler = new Scheduler({
     store,
     invoker,
     deliver,
-    history,
     tickMs,
     concurrency,
-    // C11-R1 trusted late-outcome self-heal: the engine consults the SAME
-    // published resolveCallerCorrelation surface the self-ops consume, so an
-    // exact trusted late business outcome settles its own occurrence through
-    // the accepted V3/C-039 paths instead of waiting for a human prompt.
-    reconciliation: { resolveCallerCorrelation: (coordinates) => router.resolveCallerCorrelation(coordinates) },
     log: {
       info: (...a) => log.log(...a),
       warn: (...a) => log.warn(...a),
@@ -627,47 +495,18 @@ export async function composeProductionRuntime(options = {}) {
     schedulerHealth,
     workflowExecution,
     writeEvidence,
-    start: createSchedulerRuntimeStarter({ schedulerHealth, scheduler, workflowExecution, catchup, readinessRequired: opts.schedulerReadinessRequired }),
-    stop: async (signal) => {
-      // C11-R3 (Product #426 A4): while this (old-epoch) process is still
-      // observable, persist the exact restart-boundary receipt — quiesce_begin
-      // before the drain (previous epoch + lifecycle slots + unresolved
-      // handles + in-flight occurrences), quiesce_end after the EXISTING
-      // controlled shutdown settled what it could. Evidence only: the receipt
-      // never writes the recovery store and never stamps exit evidence.
-      const writeBoundary = (phase) => {
-        try {
-          appendRestartBoundaryReceipt({
-            boundaryLog: layout.restartBoundaryLog,
-            entry: {
-              kind: 'restart_boundary',
-              phase,
-              pid: process.pid,
-              ...(signal === undefined ? {} : { signal: String(signal) }),
-              census: collectRuntimeRestartCensus({
-                turnRecoveryStore: layout.turnRecoveryStore,
-                jobsStore: layout.jobsStore,
-                router,
-                agentIds: definition.listAgents().map((agent) => agent.id),
-              }),
-            },
-          })
-        } catch (error) {
-          writeEvidence({ kind: 'restart_boundary_error', phase, error: String(error?.message ?? error) })
-        }
-      }
-      writeBoundary('quiesce_begin')
-      try {
-        // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
-        // (in-flight poll finishes, no further page) BEFORE the scheduler and
-        // the owned contexts (Router processes) are torn down — a late poll can
-        // then never deliver into a disposed Router nor outlive the result.
-        await workflowExecution.stop()
-        await scheduler.stop()
-        await ctx.disposeAll()
-      } finally {
-        writeBoundary('quiesce_end')
-      }
+    /** Start only after the canonical Watchdog health authority is readable. */
+    start: async () => {
+      if (opts.schedulerReadinessRequired === true) assertSchedulerStartupReady(await schedulerHealth.read())
+      await scheduler.start({ autoStart: true, catchup })
+      workflowExecution.start()
+    },
+    /** Graceful stop: engine first, then every plugin disposer (the Router's
+     *  disposer shuts down all owned agent processes). */
+    stop: async () => {
+      await workflowExecution.stop()
+      await scheduler.stop()
+      await ctx.disposeAll()
     },
   }
 }

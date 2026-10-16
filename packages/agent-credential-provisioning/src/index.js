@@ -200,11 +200,7 @@ export async function ensureAgentCredential({
       })
     }
 
-    // One-time secret wire field: the frozen contract is "returned once on
-    // creation"; the deployed idempotent seam carries it as `secret`
-    // (CANONICAL_ONBOARDING_COMPLETION_V1 §5 — mechanical wiring compatibility,
-    // same semantics). `client_secret`/`clientSecret` stay accepted first.
-    const credential = normalizeCredential({ clientId, clientSecret: client?.client_secret ?? client?.clientSecret ?? client?.secret })
+    const credential = normalizeCredential({ clientId, clientSecret: client?.client_secret ?? client?.clientSecret })
     if (credential === undefined) fail('auth_client_secret_missing', 'New Auth client response has no usable secret', { agentId, clientId })
     await writeCredentialForAgent(credentialsFile, agentId, credential, { ...storeWriteOptions, lock })
     const persistedDocument = await readCredentialStoreDocument(credentialsFile, {

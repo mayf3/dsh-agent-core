@@ -20,15 +20,10 @@
  *     onIngress and Delivery V0). No Router source change, no scheduler
  *     special-case inside the Router, no chain logic in this bridge.
  *   - `createFeishuDeliver(feishu)` calls only `feishu.reply(ReplyTarget,
- *     text, opts)` — the single existing outbound send (packages/
- *     feishu-connector, same seam the Router's onIngress reply path uses). It
- *     reads the opaque `job.delivery.{channel,to}` fields and builds the
- *     ReplyTarget; it never opens a second outbound path. A terminal success
- *     announce additionally carries the narrow outbound presentation intent
- *     `{ presentation: { cardEligible: true, source: 'scheduler' } }`
- *     (SCHEDULER_SUCCESS_CARD_ELIGIBLE Owner ruling) — NOT the Router ingress
- *     ux authority; the connector remains the display-policy authority and
- *     may still deliver plain text (markdown mode / oversize envelope).
+ *     text)` — the single existing outbound send (packages/feishu-connector,
+ *     same seam the Router's onIngress reply path uses). It reads the opaque
+ *     `job.delivery.{channel,to}` fields and builds the ReplyTarget; it
+ *     never opens a second outbound path.
  *
  * AbortSignal (scheduler TIMEOUT_ABORT audit): the scheduler passes
  * `request.signal` into the seam; this bridge OBSERVES it (records
@@ -48,7 +43,6 @@ const TERMINATION_EVIDENCE = new Set([
   'exact_queued_removal',
   'child_real_exit',
   'cancellation_ack',
-  'restart_quiescence_proven',
 ])
 
 /** Parse an opaque scheduler delivery target `job.delivery.to` into a Feishu chat id. */
@@ -94,29 +88,6 @@ export function chatIdFromDeliveryTo(to) {
  *     proven PRE-START rejection (no attempt ever dispatched) from a terminal
  *     failure of a started run (C-004).
  *
- * SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1 — the Router's C-010
- * closed-union envelopes are authoritative settlements and are now carried
- * through instead of being re-guessed from `turnDispatched`:
- *   - `not_admitted` -> outcome `{status:'error', started:false,
- *     routerEnvelope:'not_admitted', routerCode}` — a deterministic pre-start
- *     rejection (e.g. an Agent/session unknown-fence rejection) must NEVER
- *     become a second outcome_unknown on the scheduler side (UNKNOWN
- *     CONTAINMENT).
- *   - `failed` -> outcome `{status:'error', routerEnvelope:'failed'}` — the
- *     router's settled terminal failure (structured RPC error response /
- *     exact turn-end failure) survives the seam. No error-code whitelist: the
- *     closed envelope IS the business-failure proof.
- *   - `outcome_unknown` stays outcome_unknown. When the router's published
- *     `resolveCallerCorrelation` surface proves the exact run settled
- *     `terminated_without_outcome` with a trusted terminationEvidence kind
- *     (child_real_exit etc.), the outcome is stamped
- *     `evidence:{terminationEvidence, source:'router_disposition_readback'}`
- *     so the scheduler can record the V3 terminationSettlement (fence
- *     release, no automatic retry) — a termination proof is NEVER upgraded
- *     to a business outcome (Owner P1 ruling 2026-09-16, C-039).
- *   - everything else (bare errors, pending/mismatched readbacks) keeps the
- *     fail-closed outcome_unknown default (C-001).
- *
  * Never throws: every failure becomes the scheduler's outcome envelope.
  * Structured `outcome_unknown` carriers (status/envelope) pass through with
  * their reconciliationHandle — an unproven execution is NEVER collapsed into
@@ -151,49 +122,6 @@ export function createRouterInvoker(router, opts = {}) {
     const defined = definition.getAgent(agentId) // throws AGENT_NOT_FOUND when unknown
     if (defined.disabled === true) {
       throw Object.assign(new Error(`scheduler-router: agent ${agentId} is disabled (not runnable)`), { code: 'AGENT_DISABLED' })
-    }
-  }
-
-  /**
-   * Trusted exact-run termination readback over the router's PUBLISHED
-   * `resolveCallerCorrelation` surface (the same authority the Scheduler
-   * self-ops consume). Returns the trusted terminationEvidence kind only when
-   * the CURRENT router record for the exact (occurrenceId, runId, requestId)
-   * triple has SETTLED `terminated_without_outcome` — i.e. the router itself
-   * proved the exact turn can no longer continue (C-015 child_real_exit /
-   * exact_queued_removal / cancellation_ack / exact_terminal_then_idle).
-   * Everything else — pending, restart_lost, evicted, never_existed, a
-   * business late outcome (its own authorized seam), or any mismatch — is NO
-   * proof and returns null (fail-closed).
-   */
-  async function trustedTerminationReadback(router, request, error) {
-    const readback = router?.resolveCallerCorrelation
-    if (typeof readback !== 'function') return null
-    const triple = {
-      occurrenceId: request?.occurrenceId,
-      runId: request?.runId,
-      requestId: request?.requestId,
-    }
-    if (!Object.values(triple).every((value) => typeof value === 'string' && value !== '')) return null
-    let result
-    try {
-      result = await readback(triple)
-    } catch {
-      return null // a failed readback is never a proof
-    }
-    if (result?.state !== 'settled' || result.snapshot === null || typeof result.snapshot !== 'object') return null
-    const snapshot = result.snapshot
-    if (snapshot.agentId !== request.agentId) return null
-    const correlation = snapshot.callerCorrelation
-    if (correlation === null || typeof correlation !== 'object'
-      || triple.occurrenceId !== correlation.occurrenceId
-      || triple.runId !== correlation.runId
-      || triple.requestId !== correlation.requestId) return null
-    if (snapshot.lateOutcome !== 'terminated_without_outcome') return null
-    if (!TERMINATION_EVIDENCE.has(snapshot.terminationEvidence)) return null
-    return {
-      terminationEvidence: snapshot.terminationEvidence,
-      handle: error?.reconciliationHandle ?? result.handle,
     }
   }
 
@@ -245,66 +173,23 @@ export function createRouterInvoker(router, opts = {}) {
       calls.push(call)
       return outcome
     } catch (error) {
-      const envelope = error?.envelope ?? null
-      const explicitlyUnknown = error?.status === 'outcome_unknown' || envelope === 'outcome_unknown'
+      const explicitlyUnknown = error?.status === 'outcome_unknown' || error?.envelope === 'outcome_unknown'
       const terminationEvidence = error?.terminationEvidence ?? error?.evidence?.terminationEvidence
       const provenTerminal = error?.status === 'failed' && TERMINATION_EVIDENCE.has(terminationEvidence)
-      // Trusted termination readback (the same published resolveCallerCorrelation
-      // surface the Scheduler self-ops consume): an outcome_unknown envelope whose
-      // exact-run router record already settled `terminated_without_outcome` with
-      // a trusted terminationEvidence kind carries PROOF that the exact turn can
-      // no longer continue. BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF: the
-      // outcome STAYS outcome_unknown; the readback is only stamped onto the
-      // evidence so the scheduler can record the C-039 terminationSettlement
-      // (fence release, no automatic retry). Everything else stays fail-closed
-      // unknown.
-      const readback = explicitlyUnknown
-        ? await trustedTerminationReadback(router, request, error)
-        : null
-      // SCHEDULER_TERMINAL_PROOF_AND_UNKNOWN_CONTAINMENT_V1 (Owner P1 ruling
-      // 2026-09-16: BUSINESS_OUTCOME_PROOF != TERMINATION_PROOF): the Router's
-      // C-010 closed-union envelopes are authoritative BUSINESS settlements
-      // and are carried through —
-      //   not_admitted -> deterministic pre-start rejection (UNKNOWN
-      //     CONTAINMENT: an Agent/session fence rejection of one shift must
-      //     never reproduce as a second outcome_unknown);
-      //   failed       -> the router's settled terminal failure (e.g. the
-      //     structured RPC error response) — no error-code whitelist, the
-      //     envelope IS the business-failure proof.
-      // A trusted `terminated_without_outcome` readback is TERMINATION-only
-      // proof: the outcome STAYS outcome_unknown (C-039 — business state is
-      // never falsified from a termination proof); the readback evidence is
-      // stamped so the scheduler can record the trusted terminationSettlement
-      // (fence release, no automatic retry) through the existing V3
-      // reconciliation authority. Any OTHER post-dispatch failure without
-      // exact-turn termination proof stays outcome_unknown (fail-closed
-      // default unchanged).
-      const routerNotAdmitted = envelope === 'not_admitted'
-      const routerFailed = envelope === 'failed'
-      const unknown = explicitlyUnknown
-        ? true
-        : !(routerNotAdmitted || routerFailed) && turnDispatched && !provenTerminal
+      // Any post-dispatch failure without exact-turn termination proof is
+      // outcome_unknown, even when represented as a generic thrown Error.
+      const unknown = explicitlyUnknown || (turnDispatched && !provenTerminal)
       const outcome = {
         status: unknown ? 'outcome_unknown' : 'error',
         error: error?.message ?? String(error),
         sessionId: request.sessionId,
         durationMs: Date.now() - started,
-        started: routerNotAdmitted ? false : turnDispatched, // false = proven pre-start rejection (C-004)
-        ...(routerNotAdmitted || routerFailed ? { routerEnvelope: envelope } : {}),
-        ...(routerNotAdmitted && error?.code !== undefined ? { routerCode: error.code } : {}),
-        ...(error?.reconciliationHandle !== undefined || readback !== null
-          ? { reconciliationHandle: readback !== null
-            ? (error?.reconciliationHandle ?? readback.handle)
-            : error.reconciliationHandle }
-          : {}),
+        started: turnDispatched, // false = proven pre-start rejection (C-004)
+        ...(error?.reconciliationHandle === undefined ? {} : { reconciliationHandle: error.reconciliationHandle }),
         ...(error?.deadlineAtWallMs === undefined ? {} : { deadlineAtWallMs: error.deadlineAtWallMs }),
-        ...(readback !== null
-          ? { evidence: { terminationEvidence: readback.terminationEvidence, source: 'router_disposition_readback' } }
-          : error?.evidence !== undefined
-            ? { evidence: error.evidence }
-            : provenTerminal || (routerFailed && terminationEvidence !== undefined && terminationEvidence !== null)
-              ? { evidence: { terminationEvidence } }
-              : {}),
+        ...(error?.evidence !== undefined
+          ? { evidence: error.evidence }
+          : provenTerminal ? { evidence: { terminationEvidence } } : {}),
       }
       call.outcome = outcome
       call.aborted = aborted
@@ -343,27 +228,16 @@ export function createRouterInvoker(router, opts = {}) {
  * The real delivery seam: Scheduler.deliver -> existing Feishu outbound.
  *
  * Maps the scheduler's OPAQUE delivery directive onto the ONE existing
- * outbound seam: `feishu.reply(ReplyTarget, text, opts)` (the same call the
+ * outbound seam: `feishu.reply(ReplyTarget, text)` (the same call the
  * Router's onIngress reply path uses; im.message.create via a `create`
  * ReplyTarget). `job.delivery.{channel,to}` stay opaque to the Scheduler —
  * this adapter is the only place that reads them.
- *
- * Presentation intent (SCHEDULER_SUCCESS_CARD_ELIGIBLE Owner ruling): ONLY a
- * terminal success (`result.status === 'ok'`) announce carries the narrow
- * outbound presentation intent `{ presentation: { cardEligible: true,
- * source: 'scheduler' } }` as the reply() third argument. This is a NEW
- * namespace — it reuses NOTHING of the Router ingress ux authority (no
- * rendering / auto-mention semantics live here), and it is ADVICE, not
- * command: the connector stays the display-policy authority and keeps every
- * non-card outcome (markdown mode, oversize envelope, empty body) on the
- * byte-identical plain-text path. Every other result status (error /
- * outcome_unknown) and every caller without the intent is unaffected.
  *
  * Throws for anything it cannot send -> the Scheduler marks the run
  * not-delivered (deliver throw = not-delivered, scheduler.js _runOne).
  *
  * @param {object} feishu - the published `feishu` channel handle exposing
- *   `reply(replyTarget, text, opts) -> {messageId, chatId, code, msg}`.
+ *   `reply(replyTarget, text) -> {messageId, chatId, code, msg}`.
  * @returns {Function} the deliver({job, result, text}) seam, with
  *   `.deliveries` log.
  */
@@ -392,16 +266,7 @@ export function createFeishuDeliver(feishu) {
       rootMsgId: undefined,
       replyInThread: false,
     }
-    // SCHEDULER_SUCCESS_CARD_ELIGIBLE (Owner ruling): ONLY the terminal
-    // success announce carries the presentation intent. `source` stays
-    // 'scheduler' so the connector's card gate can never be satisfied by any
-    // other caller; no ux authority is reused and no mention semantics exist
-    // here. Any other status (error / outcome_unknown) sends with NO opts and
-    // keeps the byte-identical plain-text plan.
-    const opts = delivery.mode === 'announce' && result?.status === 'ok'
-      ? { presentation: { cardEligible: true, source: 'scheduler' } }
-      : undefined
-    const sent = await feishu.reply(target, String(text ?? ''), opts)
+    const sent = await feishu.reply(target, String(text ?? ''))
     deliveries.push({
       jobId: job.id,
       channel: delivery.channel,
