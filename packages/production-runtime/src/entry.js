@@ -61,9 +61,25 @@ import { applyShutdownResult } from './shutdown-result.js'
 // runtime bootable and fails every conversation request NOT_PROVISIONED
 // inside the facade, never at boot.
 export function productApiCompositionFromEnv(env = process.env) {
+  const productApi = {}
   const authConfigFile = env.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE
-  if (typeof authConfigFile !== 'string' || authConfigFile === '') return {}
-  return { productApi: { conversation: { enabled: true, authConfigFile } } }
+  if (typeof authConfigFile === 'string' && authConfigFile !== '') {
+    productApi.conversation = { enabled: true, authConfigFile }
+  }
+  // T48 history config passthrough (mechanical env flow for the user-runtime
+  // surface; the listener stays ABSENT unless PRODUCT_API_HISTORY_ENABLED=1
+  // with a concrete Tailnet host — identical shape to the pre-pilot overlay).
+  const history = {
+    enabled: env.PRODUCT_API_HISTORY_ENABLED === '1',
+    host: env.PRODUCT_API_HISTORY_HOST ?? '',
+    port: Number.parseInt(env.PRODUCT_API_HISTORY_PORT ?? '8788', 10),
+    authConfigFile: env.PRODUCT_API_AUTH_CONFIG_FILE ?? '',
+    whoisTimeoutMs: Number.parseInt(env.PRODUCT_API_HISTORY_WHOIS_TIMEOUT_MS ?? '1500', 10),
+  }
+  if (env.PRODUCT_API_HISTORY_TAILSALED_SOCKET) history.tailscaledSocket = env.PRODUCT_API_HISTORY_TAILSALED_SOCKET
+  productApi.history = history
+  if (!productApi.conversation && productApi.history.enabled !== true) return {}
+  return { productApi }
 }
 
 export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
