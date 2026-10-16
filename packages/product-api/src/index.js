@@ -49,6 +49,7 @@
  */
 
 import { createServer } from 'node:http'
+import { createConversationHandler } from './conversation/http.js'
 import z from '@deepseek-ai/schemastery'
 import { handleSchedulerHealthRequest } from './scheduler-health-routes.js'
 
@@ -238,6 +239,7 @@ export function apply(ctx, config = {}) {
     }
   }
 
+  const conversation = () => createConversationHandler({service:config.conversationService ?? ctx.get('nativeConversation')})
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
@@ -245,6 +247,8 @@ export function apply(ctx, config = {}) {
         json(res, 200, { ok: true, service: 'agent-core-product-api' })
         return
       }
+      const conversationResult = await conversation()(req,url)
+      if (conversationResult) { res.setHeader('Cache-Control','no-store'); json(res,conversationResult.status,conversationResult.body); return }
       if (req.method === 'GET' && url.pathname === '/v1/binding') {
         json(res, 200, getBinding(url.searchParams))
         return

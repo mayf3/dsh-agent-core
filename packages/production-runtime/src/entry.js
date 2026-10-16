@@ -46,6 +46,14 @@ function argValue(args, name, fallback) {
   return idx >= 0 && args[idx + 1] ? args[idx + 1] : fallback
 }
 
+// DSH_MCP_NATIVE_CONVERSATION_V1: only the dedicated supervision-unit config
+// path enables the existing facade; validation remains fail-closed per call.
+export function productApiCompositionFromEnv(env = process.env) {
+  const authConfigFile = env.PRODUCT_API_CONVERSATION_AUTH_CONFIG_FILE
+  if (typeof authConfigFile !== 'string' || authConfigFile === '') return {}
+  return { productApi: { conversation: { enabled: true, authConfigFile } } }
+}
+
 /**
  * Run the Production Runtime resident until SIGTERM/SIGINT.
  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
@@ -66,7 +74,7 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
+  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, ...productApiCompositionFromEnv(processLike.env ?? process.env) })
   await runtime.start()
   runtime.writeEvidence({
     kind: 'ready',

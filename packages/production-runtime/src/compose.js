@@ -43,6 +43,7 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
+import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
 import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
@@ -270,6 +271,7 @@ export async function composeProductionRuntime(options = {}) {
 
   const router = applyRouter(ctx, {
     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
+    ...(opts.productApi?.conversation?.enabled === true ? {conversationSourceDir:join(layout.controlDir,'native-conversation','source')} : {}),
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,
@@ -322,6 +324,7 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   const productApiCfg = opts.productApi ?? {}
+  mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
