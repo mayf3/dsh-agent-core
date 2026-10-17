@@ -1,0 +1,46 @@
+{
+  "kind": "FIXED_E33_PRESEALED_RECOVERY_SOURCE_ARTIFACT_V1",
+  "governing_spec_sha256": "ba11aa2d5f6eea8e7d53400356e18b268cfafb89464ef98a9e3790b479d28083",
+  "accepted_proposal_sha256": "157ae6fac475c5f842bc1df4220657d86db2d71b0b3fe2944bece76776d813ad",
+  "independent_reviews": {
+    "implementation": "e16812d3950637302f09e49e771347c9730cd3a37eff8346348ed8c1bf16fee6",
+    "lsof_reader_abi": "95a3706539f33b2dd34bb43133f5e5c2d391794d96a433cd53faa48a8527893f",
+    "logical_canonical_preimage_reader": "226eb75b14a9fbf0ec587dc66daef2a4349b3cca1564cbc650ea663b45b0f9b3"
+  },
+  "baselines": {
+    "deployment_system.py": {
+      "sha256": "cd5e797b0d435e08163262d1a7c95e726a2fcd344513cb844214a0a9c5057ad5",
+      "bytes": 110510651
+    },
+    "ds_client.py": {
+      "sha256": "826d26bf1939a281b4b6e1741fa1797bbd24bddc6783eec70e9bd6346a3a8c7c",
+      "bytes": 66113
+    }
+  },
+  "sources": {
+    "v52_e33_recovery_source.py": {
+      "sha256": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a",
+      "bytes": 95589
+    }
+  },
+  "outputs": {
+    "deployment_system.py": {
+      "sha256": "eb8639b9fea5e5a0283faf8aaddf5e6b53c982105cb8edce406f35803113564d",
+      "bytes": 110611471
+    },
+    "ds_client.py": {
+      "sha256": "826d26bf1939a281b4b6e1741fa1797bbd24bddc6783eec70e9bd6346a3a8c7c",
+      "bytes": 66113
+    },
+    "v52_e33_recovery_source.py": {
+      "sha256": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a",
+      "bytes": 95589
+    }
+  },
+  "runtime_evidence_references_only": {
+    "actual-e33-disposal.return.json": "213ca91565e9146fa630f1890b8bb086d79f4c3594fe440f57a140865a18d7d4",
+    "actual-e33-closed-native-readback.json": "2335e7a3407d04763350467020849bfd0495335ba6c11c246b3f00aed327bfaa",
+    "actual-e33-closed-status.json": "5dd95d54d42344e878508d0e9dc7b69c0610ccffe662ce93f97ba38bd7b2d65e"
+  },
+  "unchanged_executor_sha256": "a187dd0d7680e956d33dd0609526ce86aeed8ac78b1f4a974ec0cc5a032b7623"
+}
