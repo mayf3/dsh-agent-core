@@ -1,0 +1,19 @@
+{
+  "PINS.json": "09980dfa2703acca596447ae6047031f7141f4c5edda449994f2844f97f30d09",
+  "README.md": "52ee5e34842938bc43e40d1607a126120f6de8efc84761c8d6b04e181dfdb6c0",
+  "SPEC-COMPLIANCE.md": "c121604a234ff599f2ee6a12a0b9e488be1f6e539a3fbb77f97d692aa6fd2aca",
+  "evidence/alias-admission-author-tests.py.txt": "994863b25bb049c975e44cd9188bf83ce86100a8fdc3c503f559117bc917d940",
+  "evidence/global-resolution.json": "a9567fb0bcfaca6288bfca20d682f22104179ffca1c430f6c7834f7c5db63eaa",
+  "evidence/metadata-native-author-tests.py.txt": "cc5c4986f4cba80c599c6d58d54fc980fca63192bc24bb7b9409fb2ded5d72b6",
+  "patches/b7-release-executor-e35-retire.patch": "62987f199366d9f37bc3d71f479019c19e43aae8dae7fc0b41a26ccf61b5b175",
+  "patches/verify-chain-e35-retirement.patch": "7ed18e2f53517be7a48d27d2c57447898fe8c8797cdbd18318ece588b700d4fe",
+  "reviews/ACTUAL-BINDINGS.json": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40",
+  "reviews/ALIAS-DELTA.json": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027",
+  "reviews/INVOCATION-SOURCE.json": "860ff055306ba564cc1c8a309dba25864290505fdf1c17c3dbbe92d1c0962201",
+  "reviews/METADATA-DELTA.json": "ca391dc451af9a326bf3b87e18fb55173597cf8a0c009807991864b7145eac64",
+  "reviews/SOURCE-AND-ENTRY.json": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68",
+  "src/assemble_invocation.py": "2b603e151e9be4a378c0acc2866b0c2fd1e7f98b6f740af4c322c62060df0860",
+  "src/collect_actual_bindings.py": "55c5f17a4f9df07c251f30cd431f8380edc2d0fa6c224cf85c33d1240e20879d",
+  "src/e35_retirement_entry.py": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+  "src/e35_terminal_materials_once.py": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252"
+}
