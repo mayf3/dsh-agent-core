@@ -1,0 +1,85 @@
+{
+  "kind": "B7_E35_SERVICE_METADATA_STABILITY_SOURCE_ENTRY_DELTA_REVIEW_V1",
+  "status": "PASS_BOUNDED_SOURCE_ENTRY_SERVICE_METADATA_STABILITY_DELTA_ONLY",
+  "at": "2026-10-17T22:14:46.423532+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "operation_id": "b7-packet-r34-1cfeff2a5b138629-e35",
+  "tx_id": "tx-c0fd42f71e074eeb8f0e9902e1a3e084",
+  "scope": "Same accepted49b fixed retirement implementation; coordinator-decided local bounded strict service-directory metadata reread and non-secret diagnostic only. No new design, approval or gate.",
+  "subject": {
+    "unbound_helper_sha256": "2652c090a8a349f577ab573e588801ee01c01ec2f93e00174f7d4936abc207a0",
+    "helper_bytes": 80465,
+    "baseline_unbound_helper_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+    "unchanged_unbound_entry_sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+    "unchanged_executor_sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+    "unchanged_material_pins_sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+    "unchanged_CP_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+    "author_result_12_sha256": "fbd5d1bc2531c8168e78f97e9b6bba48361ed5febdff4d7311ad3731cb0314c7",
+    "actual_correct_partial_manifest_receipt_sha256": "2031220ff470006533cd1f8050bbfedea1a80fe21e5a27e89155f6b5aea0b468",
+    "actual_finite_observation_sha256": "75b97b527f026b748c4023db24ca633661e541559825fd9417e066c5174cfb37"
+  },
+  "findings": [],
+  "verified": {
+    "single_service_signature_method_span_only_and_whole_inverse": true,
+    "only_fixed_original_three_ancestor_device_inode_profiles_eligible": true,
+    "three_total_attempts_complete_original_metadata_fd_same_held_FD": true,
+    "only_exact_Refused_type_and_BASE_METADATA_CHANGED_message_retried": true,
+    "other_refusals_subclasses_near_messages_and_OSError_propagated_without_retry": true,
+    "custody_and_flags_checked_before_each_attempt_after_failure_and_after_success": true,
+    "same_FD_permission_flags_and_identity_change_refused_immediately": true,
+    "no_baseline_rewrite_and_original_Final_security_signature_fields_and_comparison_unchanged": true,
+    "original_metadata_fd_strict_stability_and_default_behavior_byte_exact": true,
+    "path_attempt_max_and_changed_outer_before_after_stat_fields_diagnostic_nonsecret": true,
+    "original_ACL_empty_flags_zero_xattr_digest_profile_preserved": true,
+    "real_Darwin_original_12_methods_independent_green_old_source_6_expected_failures_0_errors": true,
+    "additional_four_retry_boundary_tests_passed": true,
+    "correct_partial_state_four_histories_fifth_original_all_lineages_match_original_9d21": true,
+    "finite_actual_observation_no_failures_is_not_original_failure_attribution": true
+  },
+  "reused_passes": {
+    "prior_health_source_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/HEALTH-TARGET-DELTA-REVIEW-RECEIPT.json",
+      "sha256": "812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121"
+    },
+    "prior_health_invocation_actual_delta": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/HEALTH-INVOCATION-REVIEW-RECEIPT.json",
+      "sha256": "82523805a5f661f5d1f35d7355a8239404fa19b8be3b9565a76ce9435936445c"
+    },
+    "unchanged_actual_data": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ACTUAL-BINDINGS-REVIEW-RECEIPT.json",
+      "sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40"
+    },
+    "original_source_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+      "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68"
+    }
+  },
+  "evidence": {
+    "mechanical": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/SERVICE-METADATA-SOURCE-MECHANICAL.json",
+      "sha256": "9dd9e8fde6af7a9e8c082f5e0520c9b9b4162b1243eb2cc548ff225c65ce64f8"
+    },
+    "twelve_real_Darwin_runs": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/SERVICE-METADATA-TWELVE-INDEPENDENT.json",
+      "sha256": "01414a006432accdbcd80ea2314ef2ed353d8cbaf95fdada5b3a2109d764c54f"
+    },
+    "additional_edges": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/SERVICE-METADATA-EDGE-INDEPENDENT.json",
+      "sha256": "ac0c5436d78d53cc159fcc11cc4b8a01c58587b0a8dd8be275b5befa6bf980ba"
+    },
+    "earlier_conditional_assessment_sha256": "f926a092f5a5901aa4cc5821be3c69c66423f06ffe3e534b4e985cb49f082d53"
+  },
+  "mechanical_followup": "Sole writer may bind this reviewed helper to unchanged actual pins9d21, rebind entry config/entry/verifier helper+sourceReview and authority/pin/capsule against latest actual installed invocation preimage. Original pair4192/9ebd, executor741, actualCPdb413/pins9d21/facts c367 and original current fixed INTENT/ADMITTED/reservation identity remain unmodified by this source delta. A new actual overlay remains a separate bounded mechanical readback in this same review.",
+  "limits": [
+    "No root, DS, production STATUS, runtime HTTP, original lease/reservation/fsync/rename or retirement call was made by reviewer. Darwin effects were confined to owned temporary fixture directories.",
+    "Temporary fixture identity is explicitly appended to module ancestor map in tests; real product map is unchanged and contains exactly three fixed production ancestors. Selected refusal/OSError edge cases are injected, not misrepresented as production or native failure reproduction.",
+    "The actual failure stack proves BASE_METADATA_CHANGED within metadata_fd but does not identify the particular ancestor or changed field. Correct partial receipt203122 and finite read75b97 do not establish original failure cause; no such claim is made.",
+    "This source-only PASS is not actual installation, recovered reservation custody proof, replay authorization, MATERIALS_DURABLE/FINISHED, post-move checkpoint or business release. Original no-replay/own-admission continuation predicates remain required and unchanged.",
+    "Original erroneous basename partial diagnostic ffa26 is retained but excluded from actual history conclusions."
+  ],
+  "production_invoked": false,
+  "source_modified_by_reviewer": false,
+  "protected_installation_verified": false,
+  "retirement_executed": false,
+  "business_release": false
+}

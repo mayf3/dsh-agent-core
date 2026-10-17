@@ -704,7 +704,37 @@ class FixedPath:
 
     @staticmethod
     def service_signature(fd):
-        value = metadata_fd(fd)
+        initial = os.fstat(fd)
+        fixed_path = next((path for path, expected in _SERVICE_ANCESTORS.items()
+                           if (initial.st_dev, initial.st_ino) == expected[:2]), None)
+        need(fixed_path is not None, 'FIXED_SERVICE_ANCESTOR_REQUIRED')
+        security = (custody(initial), initial.st_flags)
+        for attempt in range(3):
+            before = os.fstat(fd)
+            need((custody(before), before.st_flags) == security,
+                 'FIXED_SERVICE_ANCESTOR_METADATA_CHANGED')
+            try:
+                value = metadata_fd(fd)
+                break
+            except Refused as exc:
+                if type(exc) is not Refused or str(exc) != 'BASE_METADATA_CHANGED':
+                    raise
+                after = os.fstat(fd)
+                labels = ('device', 'inode', 'uid', 'gid', 'mode',
+                          'nlink', 'bytes', 'mtime_ns', 'ctime_ns')
+                bounds = dict(zip(labels, zip(stable(before), stable(after))))
+                print(json.dumps(dict(kind='FIXED_SERVICE_DIRECTORY_READ_CHANGED',
+                    path=fixed_path, attempt=attempt + 1, max_attempts=3,
+                    outer_probe_bounds_changed={k:list(v) for k,v in bounds.items()
+                                                if v[0] != v[1]}), sort_keys=True),
+                    file=sys.stderr)
+                need((custody(after), after.st_flags) == security,
+                     'FIXED_SERVICE_ANCESTOR_METADATA_CHANGED')
+                if attempt == 2:
+                    raise
+        after = os.fstat(fd)
+        need((custody(after), after.st_flags) == security,
+             'FIXED_SERVICE_ANCESTOR_METADATA_CHANGED')
         need(value['acl_empty'] and value['flags'] == 0, 'FIXED_SERVICE_ANCESTOR_METADATA')
         return {k:value[k] for k in ('device','inode','uid','gid','mode','flags',
                                     'acl_empty','acl_sha256','xattrs')}

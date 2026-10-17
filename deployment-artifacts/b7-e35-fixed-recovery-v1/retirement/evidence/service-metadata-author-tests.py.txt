@@ -1,0 +1,224 @@
+"""Finite service-directory read stability; real Darwin directory FDs.
+
+Only temporary fixture entries are changed. No production scene or lease call.
+"""
+import ctypes
+import os
+from pathlib import Path
+import pwd
+import stat
+import subprocess
+import sys
+import tempfile
+import threading
+import types
+import unittest
+from unittest.mock import patch
+
+SOURCE = Path(sys.argv.pop(1))
+
+
+class ServiceMetadata(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='b7-e35-metadata-')
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name)
+        os.chmod(self.path, 0o755)
+        self.fd = os.open(self.path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        self.addCleanup(os.close, self.fd)
+        self.m = types.ModuleType('original_metadata_fixture')
+        self.m.__file__ = str(SOURCE)
+        exec(compile(SOURCE.read_bytes(), str(SOURCE), 'exec'), self.m.__dict__)
+        meta = os.fstat(self.fd)
+        self.m._SERVICE_ANCESTORS[str(self.path)] = (
+            meta.st_dev, meta.st_ino, meta.st_uid, meta.st_gid, stat.S_IMODE(meta.st_mode))
+        self.baseline = self.m.FixedPath.service_signature(self.fd)
+
+    def churn(self, every=False, chmod=False):
+        original = os.listdir
+        state = {'calls': 0, 'fds': []}
+
+        def listing(fd):
+            if fd == self.fd:
+                state['calls'] += 1
+                state['fds'].append(fd)
+                if every or state['calls'] == 1:
+                    (self.path / ('entry-%d' % state['calls'])).mkdir()
+                    if chmod:
+                        os.chmod(self.path, 0o750)
+            return original(fd)
+
+        return state, patch.object(self.m.os, 'listdir', listing)
+
+    def test_entry_churn_repeats_complete_read_on_same_fd(self):
+        state, effect = self.churn()
+        with effect:
+            try:
+                actual = self.m.FixedPath.service_signature(self.fd)
+            except self.m.Refused as exc:
+                self.fail('one entry-only instability should permit a fresh full read: %s' % exc)
+        self.assertEqual(actual, self.baseline)
+        self.assertEqual(state['calls'], 2)
+        self.assertEqual(state['fds'], [self.fd, self.fd])
+
+    def test_persistent_instability_exhausts_exactly_three_full_reads(self):
+        state, effect = self.churn(every=True)
+        with effect, self.assertRaisesRegex(self.m.Refused, '^BASE_METADATA_CHANGED$'):
+            self.m.FixedPath.service_signature(self.fd)
+        self.assertEqual(state['calls'], 3)
+
+    def test_actual_concurrent_entry_change_keeps_original_security_baseline(self):
+        request, done = threading.Event(), threading.Event()
+        errors = []
+        calls = []
+        original = os.listdir
+
+        def writer():
+            try:
+                if not request.wait(3):
+                    raise RuntimeError('fixture reader did not reach list boundary')
+                (self.path / 'concurrent-entry').mkdir()
+            except BaseException as exc:
+                errors.append(exc)
+            finally:
+                done.set()
+
+        def listing(fd):
+            calls.append(fd)
+            if len(calls) == 1:
+                request.set()
+                if not done.wait(3):
+                    raise RuntimeError('fixture writer did not finish')
+            return original(fd)
+
+        thread = threading.Thread(target=writer)
+        thread.start()
+        try:
+            with patch.object(self.m.os, 'listdir', listing):
+                try:
+                    actual = self.m.FixedPath.service_signature(self.fd)
+                except self.m.Refused as exc:
+                    self.fail('concurrent entry-only instability refused: %s' % exc)
+        finally:
+            request.set()
+            thread.join(3)
+        self.assertFalse(thread.is_alive())
+        self.assertEqual(errors, [])
+        self.assertEqual(calls, [self.fd, self.fd])
+        self.assertEqual(actual, self.baseline)
+
+    def test_default_metadata_reader_still_rejects_first_instability(self):
+        state, effect = self.churn()
+        with effect, self.assertRaisesRegex(self.m.Refused, '^BASE_METADATA_CHANGED$'):
+            self.m.metadata_fd(self.fd)
+        self.assertEqual(state['calls'], 1)
+
+    def test_permission_change_is_refused_without_retry(self):
+        state, effect = self.churn(chmod=True)
+        with effect, self.assertRaisesRegex(self.m.Refused, '^FIXED_SERVICE_ANCESTOR_METADATA_CHANGED$'):
+            self.m.FixedPath.service_signature(self.fd)
+        self.assertEqual(state['calls'], 1)
+
+    def test_replaced_fd_identity_is_refused_without_retry(self):
+        other = self.path / 'other'
+        other.mkdir()
+        otherfd = os.open(other, os.O_RDONLY | os.O_DIRECTORY)
+        self.addCleanup(os.close, otherfd)
+        original = os.listdir
+        calls = []
+
+        def replace(fd):
+            calls.append(fd)
+            if len(calls) == 1:
+                os.dup2(otherfd, self.fd)
+            return original(fd)
+
+        with patch.object(self.m.os, 'listdir', replace):
+            with self.assertRaisesRegex(self.m.Refused,
+                                        '^FIXED_SERVICE_ANCESTOR_METADATA_CHANGED$'):
+                self.m.FixedPath.service_signature(self.fd)
+        self.assertEqual(calls, [self.fd])
+
+    def test_actual_acl_change_is_still_refused(self):
+        result = subprocess.run(['/bin/chmod', '+a',
+                                 'user:%s allow readattr' % pwd.getpwuid(os.getuid()).pw_name,
+                                 str(self.path)],
+                                capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr.decode())
+        with self.assertRaisesRegex(self.m.Refused, '^FIXED_SERVICE_ANCESTOR_METADATA$'):
+            self.m.FixedPath.service_signature(self.fd)
+
+    def test_flags_change_during_probe_is_refused_without_retry(self):
+        original = os.listdir
+        calls = []
+
+        def listing(fd):
+            calls.append(fd)
+            if len(calls) == 1:
+                os.chflags(self.path, stat.UF_HIDDEN)
+            return original(fd)
+
+        try:
+            with patch.object(self.m.os, 'listdir', listing):
+                with self.assertRaisesRegex(self.m.Refused,
+                                            '^FIXED_SERVICE_ANCESTOR_METADATA_CHANGED$'):
+                    self.m.FixedPath.service_signature(self.fd)
+        finally:
+            os.chflags(self.path, 0)
+        self.assertEqual(calls, [self.fd])
+
+    def test_other_refusals_are_not_retried(self):
+        for reason in ('BASE_XATTR_LIST_CHANGED', 'BASE_XATTR_VALUE_CHANGED',
+                       'BASE_ACL_UNAVAILABLE', 'BASE_DIRECTORY_REQUIRED'):
+            with self.subTest(reason=reason):
+                error = self.m.Refused(reason)
+                with patch.object(self.m, 'metadata_fd', side_effect=error) as probe:
+                    with self.assertRaises(self.m.Refused) as caught:
+                        self.m.FixedPath.service_signature(self.fd)
+                self.assertIs(caught.exception, error)
+                self.assertEqual(probe.call_count, 1)
+
+    def test_os_error_is_not_retried(self):
+        error = PermissionError(13, 'fixture denied')
+        with patch.object(self.m, 'metadata_fd', side_effect=error) as probe:
+            with self.assertRaises(PermissionError) as caught:
+                self.m.FixedPath.service_signature(self.fd)
+        self.assertIs(caught.exception, error)
+        self.assertEqual(probe.call_count, 1)
+
+    def test_changed_security_signature_is_not_reset(self):
+        os.chmod(self.path, 0o750)
+        actual = self.m.FixedPath.service_signature(self.fd)
+        self.assertNotEqual(actual, self.baseline)
+        self.assertEqual(actual['mode'], 0o750)
+
+    def test_fixed_path_verify_rejects_actual_xattr_drift_from_old_baseline(self):
+        root = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+        parent = os.open(self.path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        self.addCleanup(os.close, root)
+        self.addCleanup(os.close, parent)
+        scene = self.m.FixedPath.__new__(self.m.FixedPath)
+        scene.fds = [root]
+        scene.root_pin = self.m.custody(os.fstat(root))
+        scene.trace = [(parent, self.path.name, self.fd,
+                        self.m.custody(os.fstat(self.fd)), str(self.path))]
+        scene.service_metadata = {str(self.path): self.baseline}
+        s = os.fstat(self.fd)
+        expected = (s.st_dev, s.st_ino, s.st_uid, s.st_gid, stat.S_IMODE(s.st_mode))
+        with patch.dict(self.m._SERVICE_ANCESTORS, {str(self.path): expected}):
+            scene.verify()
+            lib = ctypes.CDLL(None, use_errno=True)
+            setter = lib.fsetxattr
+            setter.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p,
+                               ctypes.c_size_t, ctypes.c_uint32, ctypes.c_int]
+            setter.restype = ctypes.c_int
+            value = ctypes.create_string_buffer(b'changed')
+            self.assertEqual(setter(self.fd, b'com.dsh.e35.test', value, 7, 0, 0), 0)
+            with self.assertRaisesRegex(self.m.Refused,
+                                        '^FIXED_SERVICE_ANCESTOR_METADATA_CHANGED$'):
+                scene.verify()
+        self.assertEqual(scene.service_metadata[str(self.path)], self.baseline)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

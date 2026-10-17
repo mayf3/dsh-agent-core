@@ -20,7 +20,7 @@
 +retire_helper_binding=('_PINS_SHA = '+repr(dig(retire_pins_raw))).encode()
 +retire_entry_binding=('ENTRY_CONFIG_SHA='+repr(dig(retire_entry_config_raw))).encode()
 +check('fixed e35 retirement helper only actual pins constant bound',
-+      retire_helper.count(retire_helper_binding)==1 and dig(retire_helper.replace(retire_helper_binding,b'_PINS_SHA = None',1))=='5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0')
++      retire_helper.count(retire_helper_binding)==1 and dig(retire_helper.replace(retire_helper_binding,b'_PINS_SHA = None',1))=='2652c090a8a349f577ab573e588801ee01c01ec2f93e00174f7d4936abc207a0')
 +check('fixed e35 retirement entry only config constant bound',
 +      retire_entry.count(retire_entry_binding)==1 and dig(retire_entry.replace(retire_entry_binding,b'ENTRY_CONFIG_SHA=None',1))=='3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2')
 +check('fixed e35 retirement config actual subject and source joins',
@@ -46,7 +46,7 @@
 +      {'e35_terminal_materials_once.py','e35_retirement_entry.py'} <= set(authority.get('drivenScripts',{}))
 +      and {'e35-terminal-material-pins.json','e35-retirement-checkpoint-inputs.json','e35-retirement-entry.json'} <= set(authority.get('drivenConfigs',{})))
 +check('fixed e35 retirement source and actual bindings reviews joined',
-+      authority.get('review_receipts',{}).get('e35_terminal_retirement_source_and_entry')=='812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121'
++      authority.get('review_receipts',{}).get('e35_terminal_retirement_source_and_entry')=='120b098166b70077bfadb028a915c6c65f51fb697e829715d0b89999889a6a56'
 +      and re.fullmatch('[a-f0-9]{64}',str(authority.get('review_receipts',{}).get('e35_terminal_retirement_actual_bindings'))) is not None)
  executor_added='  e35-recover)\n    [[ $# -eq 0 ]] || deny \'fixed e35 recovery accepts no arguments\'\n    prepare_driven || exit 2\n    receipt E35_RECOVERY_DELEGATED_INTENT \'actor=DELEGATED_EXECUTOR op=b7-packet-r34-1cfeff2a5b138629-e35 tx=tx-c0fd42f71e074eeb8f0e9902e1a3e084\' || exit 2\n    set +e\n    /bin/launchctl asuser 502 /usr/bin/sudo -n -u yanfenma /usr/bin/python3 -I -B "$DRIVEN/e35_delegated_recovery.py"\n    rc=$?\n    set -u\n    receipt E35_RECOVERY_DELEGATED_RETURN "exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"\n    exit "$rc"\n    ;;\n'.encode()
  check('executor exact reviewed one fixed e35 branch inverse',
