@@ -5,7 +5,7 @@ export function createConversationHandler({service} = {}) {
     if (req.socket?.remoteAddress && !['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return failure(fault('NO_ACCESS',403))
     if (!service) return failure(fault('NOT_PROVISIONED',503))
     const operation = url.pathname.slice('/v1/conversation/'.length)
-    if (req.method !== 'POST' || !['resolve','send','result'].includes(operation) || url.search) return failure(fault('NOT_SUPPORTED',405))
+    if (req.method !== 'POST' || !['resolve','send','result','history','events'].includes(operation) || url.search) return failure(fault('NOT_SUPPORTED',405))
     try {
       const chunks=[]
       let size=0

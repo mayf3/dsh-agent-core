@@ -1,0 +1,114 @@
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":16044,"duration_ms":500,"latency_ms":438}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ POST /v1/voice/transcription: valid short WAV -> 200 {"text"} (engine: string text; tone may be empty) (480.205ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":464044,"duration_ms":14500,"latency_ms":592}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ valid near-limit WAV (14.5 s, inside both ceilings) -> 200 (614.688916ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":63764,"duration_ms":1865,"latency_ms":501}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text (2644.401666ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":400,"byte_count":64,"duration_ms":null,"latency_ms":1}
+✔ malformed WAV (bad RIFF header) -> 400 (15.418542ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api:voice] {"route":"/v1/voice/transcription","status":415,"byte_count":0,"duration_ms":null,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ wrong content type -> 415 (16.321916ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":413,"byte_count":0,"duration_ms":null,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ payload over 512 KB ceiling -> 413 (reading stops, duration within limits) (16.278125ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":413,"byte_count":496044,"duration_ms":15500,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ decoded duration over 15 s ceiling -> 413 (payload under byte ceiling) (21.477458ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":6444,"duration_ms":200,"latency_ms":38}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ engine unavailable (model dir empty) -> 503; server boots cleanly regardless (53.834083ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":504,"byte_count":16044,"duration_ms":500,"latency_ms":3}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ service deadline exceeded -> 504 (test-only deadline override, engine present) (18.36775ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":9644,"duration_ms":300,"latency_ms":686}
+✖ zero persistence + log allowlist: no new files, stderr carries ONLY the allowlisted fields (748.65525ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 6
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5730.439584
+
+✖ failing tests:
+
+test at packages/product-api/test/voice-transcription.test.js:176:1
+✖ POST /v1/voice/transcription: valid short WAV -> 200 {"text"} (engine: string text; tone may be empty) (480.205ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:179:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:184:1
+✖ valid near-limit WAV (14.5 s, inside both ceilings) -> 200 (614.688916ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:189:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:193:1
+✖ TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text (2644.401666ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:202:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:262:1
+✖ zero persistence + log allowlist: no new files, stderr carries ONLY the allowlisted fields (748.65525ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:270:12
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async captureStderr (file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:153:5)
+      at async TestContext.<anonymous> (file:///private/tmp/ac1200-fixed-base.c2Ili2/packages/product-api/test/voice-transcription.test.js:268:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
