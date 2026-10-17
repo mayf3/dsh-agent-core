@@ -3,10 +3,11 @@ import { redactInspectionText } from '../../../production-runtime/src/agent-sess
 import { authenticate, validateConfig } from './auth.js'
 import { originalNativeProof } from './native-proof.js'
 import { ConversationStore } from './store.js'
+import { readHistory, sessionHandle } from './history.js'
+import { readEvents } from './events.js'
 import { CONTRACT_VERSION, failure, fault, hash, validateArgs } from './protocol.js'
 
 const targetHandle = (p,t) => 'target_nc1_' + hash([p.subject_id,p.communication_scope_id,t])
-const sessionHandle = row => 'session_nc1_' + hash([row.subject_id,row.communication_scope_id,row.agent_id,row.session_id,row.session_generation])
 const time = value => Number.isSafeInteger(value) && value >= 0 ? value : null
 function bodyPage(text, cursor, row) {
   const bytes = Buffer.from(text,'utf8'), tag = hash([row.key,text])
@@ -182,8 +183,11 @@ export function createConversationService({ router, definition, storeFile, confi
           return { status:200, body:{status:'OK',contract_version:CONTRACT_VERSION,target_handle:targetHandle(principal,target),
             agent_id:target.agent_id,principal_id:target.principal_id,domain:target.domain_id,node_owner:null,
             mapping_provenance:'owner_controlled_config_and_exact_definition',allowed_operations:[...principal.operations],
-            sessions:[{mode:'main',history_scope:'request_bound_only'}],unsupported:['fresh','archive','workflow_resolution','history','events']} }
+            sessions:[{mode:'main',history_scope:'request_bound_only'}],unsupported:['fresh','archive','workflow_resolution','full_main','attachment_binary']} }
         }
+        // Pure reads do not enter construction, recovery, reconciliation or any writer.
+        if (operation === 'history') return { status: 200, body: readHistory({ storeFile, principal, body, targetFor, now: now() }) }
+        if (operation === 'events') return { status: 200, body: readEvents({ storeFile, principal, body, targetFor }) }
         const db = ensureStore()
         if (operation === 'result') {
           const original = db.get(principal,body.request_id)
@@ -221,7 +225,8 @@ export function createConversationService({ router, definition, storeFile, confi
         return {status:202,body:present(row)}
       } catch (error) {
         const response = failure(error,body?.request_id)
-        if (principal && store && ['RESULT_PERSIST_FAILED','RESULT_UNRECOVERABLE','RESULT_EXPIRED','UPSTREAM_UNAVAILABLE','OUTCOME_UNKNOWN','TARGET_RUN_FAILED','NOT_EXECUTED','REPLY_UNAVAILABLE','TRUNCATED'].includes(error?.className)) {
+        if (error?.coverage) response.body.coverage = error.coverage
+        if (!['history','events'].includes(operation) && principal && store && ['RESULT_PERSIST_FAILED','RESULT_UNRECOVERABLE','RESULT_EXPIRED','UPSTREAM_UNAVAILABLE','OUTCOME_UNKNOWN','TARGET_RUN_FAILED','NOT_EXECUTED','REPLY_UNAVAILABLE','TRUNCATED'].includes(error?.className)) {
           const row = error.knownFacts ?? store.get(principal,body?.request_id)
           if (row && principal.targets.some(t => t.agent_id === row.agent_id)) Object.assign(response.body,{
             agent_id:row.agent_id,message_id:row.message_id,request_status:row.request_status,
