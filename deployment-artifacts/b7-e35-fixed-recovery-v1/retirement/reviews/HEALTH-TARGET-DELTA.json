@@ -1,0 +1,93 @@
+{
+  "kind": "B7_E35_HEALTH_TARGET_SOURCE_ENTRY_DELTA_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_BOUNDED_SOURCE_ENTRY_HEALTH_TARGET_DELTA_ONLY",
+  "at": "2026-10-17T21:56:58.467178+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "operation_id": "b7-packet-r34-1cfeff2a5b138629-e35",
+  "tx_id": "tx-c0fd42f71e074eeb8f0e9902e1a3e084",
+  "scope": "Same accepted49b original fixed retirement implementation review; single FIXED_HEALTH_TARGET predicate corrects original whole-dict comparison while preserving fixed target and original health readiness contract. No new Spec, Owner authorization or admission predicate.",
+  "subject": {
+    "unbound_helper_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+    "helper_bytes": 78807,
+    "baseline_unbound_helper_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+    "unchanged_unbound_entry_sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+    "unchanged_executor_sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+    "unchanged_actual_material_pins_sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+    "unchanged_actual_checkpoint_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+    "author_handoff_sha256": "fc8acd98940a550d75b8a818b197d1f1faeeb2a1eb038b55628b0bc4ecb9fae4",
+    "author_manifest_sha256": "2b5741b34ea33cbf35267f67f10d413f5103ff7df05e682f11db978ab2dffbe4"
+  },
+  "findings": [],
+  "verified": {
+    "single_actual_source_condition": {
+      "line": 1224,
+      "strict_dict": true,
+      "host_exact_str_127_0_0_1": true,
+      "path_exact_str_health": true,
+      "port_exact_int_8790_rejects_float_bool": true,
+      "original_contractSource_preserved_in_byte_pinned_CP": true
+    },
+    "single_span_whole_source_inverse_to_ff3b": true,
+    "all_other_function_class_and_HTTP_bytes_unchanged": true,
+    "original_HTTP_200_65536_bytes_strict_json_ok_isTrue_deliverReady_isTrue_unchanged": true,
+    "actual_CP_baseline_refused_candidate_accepted": true,
+    "independent_eight_methods": {
+      "baseline": {
+        "source_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+        "checkpoint_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+        "checkpoint_bytes_unchanged": true,
+        "methods": 8,
+        "failures": 0,
+        "errors": 1,
+        "status": "FAIL",
+        "scope": "actual sole frozen health target admission predicate only; no HTTP/DS/root/retirement/wholeScene runtime proof"
+      },
+      "candidate": {
+        "source_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+        "checkpoint_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+        "checkpoint_bytes_unchanged": true,
+        "methods": 8,
+        "failures": 0,
+        "errors": 0,
+        "status": "PASS",
+        "scope": "actual sole frozen health target admission predicate only; no HTTP/DS/root/retirement/wholeScene runtime proof"
+      }
+    },
+    "eight_author_manifest_files_verified": true
+  },
+  "reused_passes": {
+    "prior_source_and_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ALIAS-DELTA-REVIEW-RECEIPT.json",
+      "sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027"
+    },
+    "prior_actual_bindings": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ACTUAL-BINDINGS-REVIEW-RECEIPT.json",
+      "sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40"
+    },
+    "original_source_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+      "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68"
+    },
+    "original_recipe_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/REVIEW-RECEIPT.json",
+      "sha256": "860ff055306ba564cc1c8a309dba25864290505fdf1c17c3dbbe92d1c0962201"
+    }
+  },
+  "evidence": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/HEALTH-TARGET-INDEPENDENT.json",
+    "sha256": "5a15419933da8b9a6e9576702e585450edc0933078d9b0efeeb71d2c7461f7ef",
+    "baseline_result_sha256": "f8bcddba2854fd3811ae93610dc04e0fff81b574c13c00b5079f7bb95d099841",
+    "candidate_result_sha256": "aa8ced091ef81df1c03ff6ed51d8162aa923e69b1983dbc52910ec43865315d2"
+  },
+  "mechanical_followup": "Root binds new helper PINS constant to unchanged actual9d21, entry config/helper hash and ENTRY_CONFIG binding, verifier helper/sourceReview literals and authority/pin/capsule under the latest actual installed invocation preimage; executor741, original pair4192/9ebd, facts c367 and old b31 remain exact. Old ae003 authority is historical inverse basis only and is not a new live preimage. Actual current-preimage readback and new suffix receipt are not supplied or certified by this source-only receipt.",
+  "limits": [
+    "Actual predicate AST execution uses real frozen CP data but does not run HTTP, full fresh/Scene initialization, quiescent, original STATUS, lease acquisition, retirement coordinator or production mutation.",
+    "Prior actual binding receipt99134 remains evidence for unchanged actual data/proof/CP; it is not stretched to review new helper bytes. This receipt supplies the new health source delta and reuses846f for unchanged source/entry parts.",
+    "Latest refused retirement may have normal restricted executor seal/receipts. Root fresh state reports five canonical roots unchanged, histories absent, native reservation absent and zero FIXED_E35 audit rows; this is not a claim of global zero writes.",
+    "Actual protected installation, final invocation overlay readback, full original validator, original runtime health/quiescent suffix and e35-retire FINISHED remain separate original-chain evidence."
+  ],
+  "production_invoked": false,
+  "protected_installation_verified": false,
+  "retirement_executed": false,
+  "business_release": false
+}

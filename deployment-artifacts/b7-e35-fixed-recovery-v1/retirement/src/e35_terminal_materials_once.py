@@ -1221,7 +1221,7 @@ class FixedE35Scene:
             need(hashlib.sha256(raw).hexdigest()==record['sha256'] and len(raw)==record['bytes'] and (s.st_uid,s.st_gid,stat.S_IMODE(s.st_mode))==(record['uid'],record['gid'],record['mode']),'ORIGINAL_LIVE_INCREMENT_DRIFT')
         hr,_=self.checkpoint_module.read_file('/usr/local/libexec/agent-core/app/packages/agent-router/src/process/event-correlation.js')
         need(hashlib.sha256(hr).hexdigest()=='47693d4d79af4e0643078e4f178bd341457b8418c07892d1a65d846f07af58bc','PROTECTED_HR_CHANGED')
-        h=cp.c['health'];need(h==dict(host='127.0.0.1',port=8790,path='/health'),'FIXED_HEALTH_TARGET')
+        h=cp.c['health'];need(type(h) is dict and type(h.get('host')) is str and h['host']=='127.0.0.1' and type(h.get('port')) is int and h['port']==8790 and type(h.get('path')) is str and h['path']=='/health','FIXED_HEALTH_TARGET')
         connection=http.client.HTTPConnection(h['host'],h['port'],timeout=5)
         try:
             connection.request('GET',h['path']);response=connection.getresponse();raw=response.read(65537)
