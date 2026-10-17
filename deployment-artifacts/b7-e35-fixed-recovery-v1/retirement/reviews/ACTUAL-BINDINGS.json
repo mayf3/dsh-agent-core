@@ -1,0 +1,244 @@
+{
+  "kind": "B7_E35_ACTUAL_RETIREMENT_BINDINGS_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_BOUNDED_ACTUAL_BINDINGS_AND_PENDING_INVOCATION_OVERLAY_MECHANICAL_REVIEW",
+  "at": "2026-10-17T21:42:03.145688+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "scope": "Same accepted fixed E35 recovery and five-material retirement continuation; actual data/proof and mechanical root invocation assembly only. Reuse unchanged source/entry/recipe reviews. No new design or admission gate.",
+  "operation_id": "b7-packet-r34-1cfeff2a5b138629-e35",
+  "tx_id": "tx-c0fd42f71e074eeb8f0e9902e1a3e084",
+  "subject": {
+    "assembler_sha256": "2b603e151e9be4a378c0acc2866b0c2fd1e7f98b6f740af4c322c62060df0860",
+    "actual_bindings_manifest_sha256": "5dcbcef307d10fa5a716d60210618b66b567b55c9f00d642c3ac96f0b4625168",
+    "actual_recovery_return_sha256": "194a406ee1b758c1c8552299502d94404b3e50960155ab9641a531e40ffbd1a4",
+    "actual_full_collector_ndjson_sha256": "97ed2f6b38d6a1db13a9514d5edfa72bb7f3eec1f239a6373f89bae3774fe98f",
+    "actual_collector_return_sha256": "0cbe0149eed79911f988d1088d59ec4411d8d033b30a407f6884a2fb757ba46f",
+    "actual_completed_recovery_full_readback_sha256": "690bc44db1cd0e9903e931f69de9800ff55d364f8692d45c265e24a48fb6ca4f",
+    "actual_data_readback_sha256": "c671c64b779682a28e1dea6ee9a272776e0260bec9a940faebee98e0e1c1e89b",
+    "actual_recovery_helper_sha256": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d",
+    "retirement_helper_source_base_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+    "retirement_collector_sha256": "55c5f17a4f9df07c251f30cd431f8380edc2d0fa6c224cf85c33d1240e20879d",
+    "server_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+    "client_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+    "original_publication_operation_id": "ds-reader-pair-b31eb69ca7d5",
+    "candidate_facts_sha256": "c36710f7307e7141bee5f4edc97ac3a6056b6a38fa3df83aae9c58a192700327",
+    "pending_overlay_10_files": {
+      "b7-release-executor.sh": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "e35_terminal_materials_once.py": "8085b124acdbc2bd87192932b806c12ba925f9b7b152b5ac6ac300b41c2bd815",
+      "e35_retirement_entry.py": "94141b1195bedc607abb6dee96e6f7034f72df09216413042eb09d6b015ee486",
+      "e35-terminal-material-pins.json": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "e35-retirement-checkpoint-inputs.json": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "e35-retirement-entry.json": "5859360d10e216273ca464700fbd9469b444281bf8c3a6050ebf22806a03b900",
+      "verify-chain-v50.py": "80cc16054e13f76a8b8baeee0929c61de5b804a65a38df5634cdd5da344bd801",
+      "b7-v3-publication-authority.json": "514539e57ff6feb833c50ad675a8e1323db5de78f5c706b812eb1fa100b4af5d",
+      "b7-v3-publication-pin.json": "bcaf13b97b5e2bdbafeda4f6c71adc76a988dd457a77de02bae1370cfdece31b",
+      "CAPSULE-MANIFEST.json": "f8a606965601d120fc1ecabb1127f0c7360958234e9656c5e213e1de5189289c"
+    },
+    "completed_recovery_proof_sha256": "80bc8aedeaf158dd18c95b18677973205b2311704c2f3f145c503c9c63e25aff"
+  },
+  "findings": [],
+  "actual_evidence": {
+    "recovery_return": {
+      "return_sha256": "194a406ee1b758c1c8552299502d94404b3e50960155ab9641a531e40ffbd1a4",
+      "returncode": 0,
+      "actor": "DELEGATED_EXECUTOR",
+      "submitted": true,
+      "warm_status_overlay": {
+        "authorization_sha256": "38deb406e2ad1be1be7e91b9c5099febe6ff5ba8a1ed961850f6771d5645d320",
+        "installed": false,
+        "native_state": "ABORTED",
+        "original_receipt_sha256": "1d6742519840e0a2a98409b28725eed69f3e2123d27a7382e88029944aea1895"
+      },
+      "historical_original_top_status_preserved": true
+    },
+    "collector": {
+      "stream_sha256": "97ed2f6b38d6a1db13a9514d5edfa72bb7f3eec1f239a6373f89bae3774fe98f",
+      "bytes": 37832936,
+      "lines": 92557,
+      "final_summary_complete": true,
+      "inventories": {
+        "artifacts": {
+          "rows": 7,
+          "regular_files": 6,
+          "regular_bytes": 47590139,
+          "lineage_sha256": "4797b184ee8b90e2dfe051dca40eabc4c10e94a7889a2c552863f5eb98f310c8",
+          "source_lines_byte_exact_to_split": true
+        },
+        "codeinput": {
+          "rows": 92549,
+          "regular_files": 75291,
+          "regular_bytes": 1018845040,
+          "lineage_sha256": "de2690e17802c336d727fa0ab185edd69fdedb0fc314af858c8c2ff0cb8a99ef",
+          "source_lines_byte_exact_to_split": true
+        }
+      },
+      "status_sha_reconstructed_from_actual_delegated_return": true
+    },
+    "proof_pins_and_checkpoint": {
+      "pins_sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "pins_bytes": 7196,
+      "full_readback_sha256": "690bc44db1cd0e9903e931f69de9800ff55d364f8692d45c265e24a48fb6ca4f",
+      "proof_sha256": "80bc8aedeaf158dd18c95b18677973205b2311704c2f3f145c503c9c63e25aff",
+      "checkpoint_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "checkpoint_original_five_field_inverse_exact": true,
+      "seed_lineage_boundary": "Actual collector-derived typed summary; seed raw bytes were not exported or independently reconstructed; original protected helper must reverify under its lease."
+    },
+    "durability_basis": "Actual fe95 original handler rc0 after _put file fsync + parent fsync + exact _blob readback, terminal _establish and TERMINAL progress, then original warm in-process _e35_completed STATUS; not inferred from collector visibility or pair identity alone.",
+    "durability_source_locations": {
+      "file": "implementation/review-snapshot-5/v54_e35_recovery_source.py",
+      "_put": "274-295",
+      "_establish": "298-304",
+      "terminal_and_completed_before_return": "723-732",
+      "cold_safe_overlay": "636-650"
+    },
+    "delegated_return_source_locations": {
+      "file": "implementation/e35_delegated_recovery.py",
+      "single_mutation_and_always_post_STATUS": "78-95",
+      "rc2_on_UNKNOWN": "114-116"
+    },
+    "original_receipts_unchanged": "Captured original execution 1d6742519840e0a2a98409b28725eed69f3e2123d27a7382e88029944aea1895 and registration 5bbacce050401210ea3390e9b5b00dbae8e96c9ff4342875f4c66cd5e3cb38df remain byte-pinned originals; no rewrite or terminalization of old historical top-level record.",
+    "fixed_five_path_order_exact_to_helper_ast": true,
+    "actual_additive_verifier_and_original_inverse_checks": [
+      [
+        "fixed e35-retire case inverse to actual dd executor",
+        true
+      ],
+      [
+        "fixed e35 retirement helper only actual pins constant bound",
+        true
+      ],
+      [
+        "fixed e35 retirement entry only config constant bound",
+        true
+      ],
+      [
+        "fixed e35 retirement config actual subject and source joins",
+        true
+      ],
+      [
+        "fixed e35 CP original byteinverse and actual journal only",
+        true
+      ],
+      [
+        "fixed e35 retirement required sealed members",
+        true
+      ],
+      [
+        "fixed e35 retirement source and actual bindings reviews joined",
+        false
+      ],
+      [
+        "executor exact reviewed one fixed e35 branch inverse",
+        true
+      ]
+    ],
+    "all_33_capsule_members_actual_rehashed": {
+      "b7-release-executor.sh": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "delegated_owner_session.py": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4",
+      "deployment_system.py": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+      "ds_client.py": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+      "e30_preserve_once.py": "4e2916fc0b4033d0cf18be3e7ace88e563c4cf08e4798410205f829405ff3d7d",
+      "e31_preserve_once.py": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617",
+      "e34_terminal_materials_once.py": "9dfd7a80e81e2d8467a7a25487c730535c44de2970c9da4ae23d69d825110d24",
+      "e35_delegated_recovery.py": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4",
+      "feishu_fetch_material.py": "13c8f0f308b3f9b22aa67ddbcd4408ed7872d28eadc26152d69d5232c9a1785f",
+      "maintenance_entry_v50.py": "24e80b1ceb9328e30e25e13565110c5f388c586a4fb11c13ddbdf5df362933f6",
+      "owner-deploy-session.sh": "f85bab1cb15e7b47cbc0ac55c0c37683ae2b2cd7975d62bdd87b8532fabf6501",
+      "v50_e30_closure_source.py": "7d762e4ba1107c9d61e8b331b46840387c96ffe8f1a11915cbb44d2d292780c7",
+      "v50_e31_closure_source.py": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65",
+      "v50_execution_client_source.py": "6a18dd2bd09edd2973631a5546481b5a6ed2adde4b6a0a5d0de0ab135abcdf8d",
+      "v50_prepare_inputs.py": "c2b02d8ba1c62bfb97b051d5ccf26b39607968057129d768e83c842a8f8e8950",
+      "v50_source_diagnostic_source.py": "2fc16194d0484d03994311d6ce1e2502c9e075d4cdde2941978624e01a21990f",
+      "v51_e32_closure_source.py": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161",
+      "v52_e33_recovery_source.py": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a",
+      "v53_r34_execution_source.py": "c901aabdbc385230e553e0dd051e463c95bf770e857e4152c73e39702c209818",
+      "v54_e35_publication_source.py": "50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b",
+      "v54_e35_recovery_source.py": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d",
+      "verify-chain-v50.py": "80cc16054e13f76a8b8baeee0929c61de5b804a65a38df5634cdd5da344bd801",
+      "e35_terminal_materials_once.py": "8085b124acdbc2bd87192932b806c12ba925f9b7b152b5ac6ac300b41c2bd815",
+      "e35_retirement_entry.py": "94141b1195bedc607abb6dee96e6f7034f72df09216413042eb09d6b015ee486",
+      "candidate-facts.json": "c36710f7307e7141bee5f4edc97ac3a6056b6a38fa3df83aae9c58a192700327",
+      "e34-maintenance-checkpoint-inputs.json": "cac388d8471e340de14f1f3164575dfb34d2dac53b0ee1378f1acb85976e10a3",
+      "e34-public-runtime-pins.json": "3134c7b7fe2083ce6d801bcc23f5fff6874b2cb65ef47b5cd042f9b97f5ff883",
+      "e34-terminal-material-pins.json": "ec307365bec76d7ca48032c0f79e63b45f990cd36810ed1cc0f375bd2159e90d",
+      "v50-input-preparation.json": "22806ed4188311f746d8f9a482e51a7b8f0ed8c43f895e22f6166c1a1e0c9e22",
+      "e35-terminal-material-pins.json": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "e35-retirement-checkpoint-inputs.json": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "e35-retirement-entry.json": "5859360d10e216273ca464700fbd9469b444281bf8c3a6050ebf22806a03b900",
+      "b7-v3-publication-pin.json": "bcaf13b97b5e2bdbafeda4f6c71adc76a988dd457a77de02bae1370cfdece31b"
+    }
+  },
+  "mechanical_results": {
+    "recipe_three_span_inverse_to_878fa_exact": true,
+    "helper_only_PINS_SHA_inverse_to_ff3b_exact": true,
+    "entry_only_ENTRY_CONFIG_SHA_inverse_to_332721_exact": true,
+    "executor_exact_fixed_retire_case_inverse_to_ddda_exact": true,
+    "checkpoint_exact_five_fields_inverse_to_3935_exact": true,
+    "authority_whole_object_and_serialized_bytes_inverse_to_ae003_exact": true,
+    "verifier_additive_block_removal_restores_entire_original_0f279_exact": true,
+    "pending_actual_review_join_correctly_false": true,
+    "original_executor_e35_recovery_case_inverse_still_true": true,
+    "all_original_authority_pair_policy_registration_packet_frozen_candidate_and_review_receipts_preserved": true,
+    "new_invocation_authority_not_claimed_as_new_DS_UPDATE_COMMITTED": true
+  },
+  "reused_passes": {
+    "original_retirement_source_and_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+      "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68"
+    },
+    "invocation_recipe_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/REVIEW-RECEIPT.json",
+      "sha256": "860ff055306ba564cc1c8a309dba25864290505fdf1c17c3dbbe92d1c0962201"
+    },
+    "metadata_global_init_delta": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/METADATA-DELTA-REVIEW-RECEIPT.json",
+      "sha256": "ca391dc451af9a326bf3b87e18fb55173597cf8a0c009807991864b7145eac64"
+    },
+    "final_alias_source_entry_combined": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ALIAS-DELTA-REVIEW-RECEIPT.json",
+      "sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027"
+    },
+    "actual_recovery_source_input_order": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/implementation-review/REVIEW-RECEIPT-INPUT-ORDER-FIX.json",
+      "sha256": "29868478c8359b7f60461408d6355f56db297f9af81f0657b4ff98fb01e5a995"
+    }
+  },
+  "evidence": {
+    "probe_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/probe_actual_bindings.py",
+    "probe_sha256": "10d82a345b65f8effe10c8e1c9aca2b10ae611c37687e1958e6383568e3d2da9",
+    "result_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ACTUAL-BINDINGS-INDEPENDENT.json",
+    "result_sha256": "828a53d08f4c67ea2d02bfd7b274daa282b3b9e8cc10e21ba7e63029a422c2ad"
+  },
+  "same_scope_final_reseal": {
+    "receipt_does_not_self_certify_its_own_overlay_review_join": true,
+    "permitted_mechanical_followup": "Sole writer joins this receipt SHA into actual binding manifest / authority review_receipts.e35_terminal_retirement_actual_bindings, then reseals authority, independent pin and capsule. This is the existing mechanical followup, not a new code or design review.",
+    "overlay_changed_members_limited_to": [
+      "b7-v3-publication-authority.json",
+      "b7-v3-publication-pin.json",
+      "CAPSULE-MANIFEST.json"
+    ],
+    "seven_nonmetadata_overlay_files_must_remain_exact": {
+      "b7-release-executor.sh": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "e35_terminal_materials_once.py": "8085b124acdbc2bd87192932b806c12ba925f9b7b152b5ac6ac300b41c2bd815",
+      "e35_retirement_entry.py": "94141b1195bedc607abb6dee96e6f7034f72df09216413042eb09d6b015ee486",
+      "e35-terminal-material-pins.json": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "e35-retirement-checkpoint-inputs.json": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "e35-retirement-entry.json": "5859360d10e216273ca464700fbd9469b444281bf8c3a6050ebf22806a03b900",
+      "verify-chain-v50.py": "80cc16054e13f76a8b8baeee0929c61de5b804a65a38df5634cdd5da344bd801"
+    },
+    "authority_only_new_change": "PENDING_FIXED_E35_ACTUAL_BINDINGS_MECHANICAL_REVIEW_NO_PRODUCTION_ADMISSION to this receipt SHA; every other field remains exact.",
+    "pin_only_new_change": "authorization_sha256 follows final authority SHA; original kind retained.",
+    "capsule_only_new_change": "b7-v3-publication-pin.json member follows final pin SHA; all other 32 member hashes retained.",
+    "original_full_post_publication_verifier_must_run_after_protected_install": "Parent sole writer; original predicates and protected metadata/runtime readbacks remain enabled."
+  },
+  "limits": [
+    "Reviewer did not invoke root, DS, production mutations, original recovery, retirement, public runtime/network or production STATUS. Actual evidence is independently parsed and cross-bound original sole-writer readback, not a new live probe.",
+    "Collector is unlocked and is not an atomic snapshot. The protected retirement helper must reverify the exact actual scene under its own accepted original lease.",
+    "Seed raw bytes are not exported in the readback; its typed lineage comes from the actual pinned collector. Native/fence single-file lineages and both full directory lineages were independently reconstructed; no seed digest was invented.",
+    "Production installation and all original full-validator protected readbacks are pending. e35-retire and post-move CP have not executed. This receipt is not retirement FINISHED, a new DS publication, business acceptance or business release.",
+    "Historical ORIGINAL_STDIN_FD3 belongs to unchanged original execution STATUS; actual new recovery return actor is DELEGATED_EXECUTOR."
+  ],
+  "production_invoked": false,
+  "protected_installation_verified": false,
+  "retirement_executed": false,
+  "business_release": false
+}

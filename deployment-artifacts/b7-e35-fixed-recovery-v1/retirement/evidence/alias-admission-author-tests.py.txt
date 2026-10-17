@@ -1,0 +1,27 @@
+import ast,copy,hashlib,json,os,stat,sys,types,unittest
+from pathlib import Path
+SOURCE=Path(sys.argv[1]);OUTPUT=Path(sys.argv[2]);raw=SOURCE.read_bytes();tree=ast.parse(raw)
+cls=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='FixedE35Scene');fn=next(n for n in cls.body if isinstance(n,ast.FunctionDef) and n.name=='public_runtime')
+# Compile exact first two original statements, no full root method or I/O.
+fn=copy.deepcopy(fn);fn.body=fn.body[:2];scope={}
+class Refused(Exception):pass
+def need(v,r):
+ if not v:raise Refused(r)
+scope['need']=need;exec(compile(ast.fix_missing_locations(ast.Module(body=[fn],type_ignores=[])),'actual_public_runtime_first_predicate','exec'),scope);predicate=scope['public_runtime']
+PINS=Path('/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-public-runtime-pins.json');pinraw=PINS.read_bytes();assert hashlib.sha256(pinraw).hexdigest()=='3134c7b7fe2083ce6d801bcc23f5fff6874b2cb65ef47b5cd042f9b97f5ff883';v=json.loads(pinraw)['alias'];alias={k:v[k] for k in ('target','uid','gid','mode','dev','inode','bytes')}
+p=Path(v['path']);s=os.lstat(p);fresh=dict(target=os.readlink(p),uid=s.st_uid,gid=s.st_gid,mode=stat.S_IMODE(s.st_mode),dev=s.st_dev,inode=s.st_ino,bytes=s.st_size);assert stat.S_ISLNK(s.st_mode) and s.st_nlink==1
+def run(a):return predicate(types.SimpleNamespace(pins={'public_bindings':{'alias':a}}))
+class Cases(unittest.TestCase):
+ def test_original_frozen_alias_pin_0755(self):self.assertEqual(alias['mode'],0o755);run(alias)
+ def test_fresh_nofollow_lstat_matches_original_pin(self):self.assertEqual(fresh,alias);run(fresh)
+ def test_mode0777_rejected(self):
+  with self.assertRaisesRegex(Refused,'FIXED_REGISTRY_ALIAS_BINDING'):run(dict(alias,mode=0o777))
+ def test_foreign_uid_rejected(self):
+  with self.assertRaisesRegex(Refused,'FIXED_REGISTRY_ALIAS_BINDING'):run(dict(alias,uid=502))
+ def test_foreign_gid_rejected(self):
+  with self.assertRaisesRegex(Refused,'FIXED_REGISTRY_ALIAS_BINDING'):run(dict(alias,gid=20))
+ def test_foreign_target_rejected(self):
+  with self.assertRaisesRegex(Refused,'FIXED_REGISTRY_ALIAS_BINDING'):run(dict(alias,target='/owned/foreign'))
+r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Cases));v=dict(source_sha256=hashlib.sha256(raw).hexdigest(),methods=r.testsRun,failures=len(r.failures),errors=len(r.errors),status='PASS' if r.wasSuccessful() else 'FAIL',actual_lstat=fresh,original_pin_sha256=hashlib.sha256(pinraw).hexdigest(),scope='actual public_runtime first admission predicate only, original frozen metadata and fresh readonly lstat; not full root method/runtime/retirement proof')
+with OUTPUT.open('x') as f:json.dump(v,f,indent=2);f.write('\n')
+sys.exit(not r.wasSuccessful())

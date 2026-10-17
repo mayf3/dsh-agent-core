@@ -1,0 +1,91 @@
+{
+  "kind": "INDEPENDENT_FINAL_COMBINED_FIXED_E35_RETIREMENT_SOURCE_ENTRY_ALIAS_DELTA_REVIEW",
+  "at": "2026-10-17T21:34:55.430593+00:00",
+  "review_status": "PASS_SOURCE_ENTRY_ALIAS_DELTA_ACTUAL_BINDINGS_PENDING",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "accepted_spec_sha256": "daa8eb2e9599f7b032a6a11be2a123336be04af6a5fd7cfcd69db6b904c487ce",
+  "subject": {
+    "helper": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/registry-alias-mode-fix/cli-label-aligned/e35_terminal_materials_once.py",
+      "sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+      "bytes": 78677
+    },
+    "collector": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/registry-alias-mode-fix/collect_actual_bindings_v3.py",
+      "sha256": "55c5f17a4f9df07c251f30cd431f8380edc2d0fa6c224cf85c33d1240e20879d",
+      "bytes": 17811
+    },
+    "unchanged_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/e35_retirement_entry.py",
+      "sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+      "bytes": 6573
+    },
+    "unchanged_executor": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/b7-release-executor.e35-retire.DRAFT.sh",
+      "sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "bytes": 170912
+    },
+    "author_handoff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/registry-alias-mode-fix/HANDOFF.json",
+      "sha256": "2e422faef00dba9f3b1662bda3cf412b36344ac361afe74da51100d78db674ed",
+      "bytes": 943
+    },
+    "author_manifest": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/registry-alias-mode-fix/MANIFEST.json",
+      "sha256": "f93fa64db0241b72f324044eabd21785c75734951308625c4fdd7c1819651183",
+      "bytes": 1642
+    }
+  },
+  "retained_pass": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/METADATA-DELTA-REVIEW-RECEIPT.json",
+      "sha256": "ca391dc451af9a326bf3b87e18fb55173597cf8a0c009807991864b7145eac64",
+      "scope": "two missing metadata initialization/import spans and real Darwin SDK proof; unchanged after this one alias literal"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+      "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68",
+      "scope": "original bounded helper/entry/37 methods, reused unchanged scope; this new delta separately reviewed"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/REVIEW-RECEIPT.json",
+      "sha256": "860ff055306ba564cc1c8a309dba25864290505fdf1c17c3dbbe92d1c0962201",
+      "scope": "878fa strict invocation recipe7additive/coupling source, pending only fixed source path/base/review literal binding"
+    }
+  ],
+  "independent_delta": {
+    "helper_exact_one_literal_whole_inverse_to_sha256": "c6436a31dab38362f5a41068961eb97e1bce6e4b7b26cf4fba006801d39a2cce",
+    "collector_exact_one_pin_whole_inverse_to_sha256": "c76955866c3eb1e2a6b8f0dad1983368d6e11dff55e76caa23c0b76d53b8b613",
+    "original_alias_mode_decimal": 493,
+    "actual_fresh_matches_original_mode_and_identity": true,
+    "actual_original_first_admission_predicate_cases": 6,
+    "failed_cases": 0,
+    "original0777_still_refused": true,
+    "author_manifest_files_checked": 11,
+    "actual_pure_load_new_sibling_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252"
+  },
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ALIAS-HISTORICAL-EVIDENCE.json",
+      "sha256": "4a09763c189196e872bc7cbbad1c0e97271714320509c275f69f53ed201d7aa3"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ALIAS-DELTA-INDEPENDENT.json",
+      "sha256": "1a93acbe71bef3d592685d3f16f5bd9b51582f2ede736a531d42050fa9ccd62f"
+    }
+  ],
+  "report": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/ALIAS-DELTA-REVIEW.md",
+    "sha256": "d6d1ac81130302687bd7ad7f5ae0d32ab88529ebddcbf3fbfd8344f42eecd249"
+  },
+  "mechanical_followup": "Root final recipe may bind only fixed helper source path, HELPER_BASE=ff3b034f and SOURCE_REVIEW=this combined receipt, and actual manifest.source_entry_review_sha256 same; retain old recipe functions/strict guard/controlflow. Later actual data/bound source/authority/pin/capsule/full-validator readback remains separate same-scope mechanical review.",
+  "actual_pins_or_overlay_cascade_performed": false,
+  "actual_complete_collector_stream_verified_by_reviewer": false,
+  "actual_binding_install_retirement_or_business_PASS": false,
+  "limits": [
+    "Historical0755 and current identity points support original implementation error; no unobserved continuous no-drift claim.",
+    "6tests cover actual first two public_runtime statements, not full runtime/privileged scene.",
+    "No production mode/permission/source/root/DS/GUI/provider/system mutation or invocation.",
+    "Prior partial streams are not complete; external genuine durability result/readback remains separately bound."
+  ]
+}

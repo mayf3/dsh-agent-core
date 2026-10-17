@@ -1,0 +1,162 @@
+{
+  "kind": "INDEPENDENT_FIXED_E35_RETIREMENT_SOURCE_AND_FIXED_ENTRY_REVIEW",
+  "review_status": "PASS_WITH_ACTUAL_BINDINGS_PENDING",
+  "at": "2026-10-17T20:43:04.244093+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "accepted_spec_sha256": "daa8eb2e9599f7b032a6a11be2a123336be04af6a5fd7cfcd69db6b904c487ce",
+  "operation_id": "b7-packet-r34-1cfeff2a5b138629-e35",
+  "tx_id": "tx-c0fd42f71e074eeb8f0e9902e1a3e084",
+  "scope": "Same accepted fixed-five retirement delta review: reused primitives/inverse, coordinator and actual run, original STATUS cold/warm boundary, finite runtime/FD proof, terminal durability last, fixed e35-retire root entry and exact executor case. No other service/business/source scope.",
+  "subject": {
+    "helper": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/cli-label-aligned/e35_terminal_materials_once.py",
+      "sha256": "40d68b27382a6f87323fcc34cffba1a74ef90e04c46b90300c45548de8706f70",
+      "bytes": 78647
+    },
+    "source_baseline": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/e35_terminal_materials_once.py",
+      "sha256": "d5e0aefeb0ad47bb7d4d2686e0b864b80ef0e50186296b6d10ff13c9adc6311a",
+      "bytes": 78655
+    },
+    "entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/e35_retirement_entry.py",
+      "sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+      "bytes": 6573
+    },
+    "executor": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/b7-release-executor.e35-retire.DRAFT.sh",
+      "sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "bytes": 170912
+    },
+    "author_handoff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/cli-label-aligned/FINAL-HANDOFF.json",
+      "sha256": "4497c429b901a1d4762aa109ec05825004e56d1989df7a69a6a4cc567c68a088",
+      "bytes": 1370
+    },
+    "author_manifest": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/cli-label-aligned/FINAL-MANIFEST.json",
+      "sha256": "445dee52e6fac3971d1dbfa16da9c357a3a2203f5bd181de908634adcdbe148e",
+      "bytes": 1919
+    }
+  },
+  "mechanical": {
+    "helper_exact_two_audit_operation_label_inverse_to": "d5e0aefeb0ad47bb7d4d2686e0b864b80ef0e50186296b6d10ff13c9adc6311a",
+    "executor_exact_one_11_line_case_inverse_to": "ddda759a6d7cde336d244d4ee0a05c1e630f2449afbca0d43bae65418358e8b7",
+    "manifest_entries_checked": 12,
+    "manifest": [
+      {
+        "path": "cli-label-aligned/e35_terminal_materials_once.py",
+        "sha256": "40d68b27382a6f87323fcc34cffba1a74ef90e04c46b90300c45548de8706f70",
+        "bytes": 78647
+      },
+      {
+        "path": "cli-label-aligned/two-labels.patch",
+        "sha256": "843eed45a40522f50cbaa022cc44595cb0323d5c383b43a7eed1dfdc3faa49f7",
+        "bytes": 1251
+      },
+      {
+        "path": "cli-label-aligned/run_entry_aligned.py",
+        "sha256": "63ef5fac6f1c04f4632a50fa4e033659e4c3ff1bb0644c41439e163ac06d5253",
+        "bytes": 2677
+      },
+      {
+        "path": "cli-label-aligned/AUTHOR-ENTRY-ALIGNED.log",
+        "sha256": "a0559a3b93daf8e79e1d78654d1ef46ec6672b59365a86cbf46de94fa0b6990c",
+        "bytes": 1540
+      },
+      {
+        "path": "cli-label-aligned/AUTHOR-ENTRY-ALIGNED-RESULT.json",
+        "sha256": "f2cf66cf7f40371b7614c91c1e8660622b245cca66707a485cc4308b5673c521",
+        "bytes": 2848
+      },
+      {
+        "path": "cli-label-aligned/FINAL-WIRING-NOTE.md",
+        "sha256": "f8ba3908ac43e7a4584fa1f22f16f1e3b1dc467e2ba0f1e1742e6da3c4d4dae2",
+        "bytes": 2666
+      },
+      {
+        "path": "e35_retirement_entry.py",
+        "sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+        "bytes": 6573
+      },
+      {
+        "path": "b7-release-executor.e35-retire.DRAFT.sh",
+        "sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+        "bytes": 170912
+      },
+      {
+        "path": "e35-retire-executor.DRAFT.patch",
+        "sha256": "ecca403186dacee37aa5b995d44a7cb13723b3e5f7f6e0cd0ee64d8c40135039",
+        "bytes": 771
+      },
+      {
+        "path": "e35-retirement-entry.DRAFT.json",
+        "sha256": "2677b08a952ab02d2b34075dee2c3eeb7b80e53faa475e47618761a2684dea3e",
+        "bytes": 392
+      },
+      {
+        "path": "test_entry_draft.py",
+        "sha256": "a4bb9c16d3e72055e558bb8be458a802a2e25aeccce630a97217bc2b80cc1cc6",
+        "bytes": 8481
+      },
+      {
+        "path": "coordinator_fixture.py",
+        "sha256": "b36aa2f59152d18386b64c59c478555bd37b054e59ad8b290f107406ca8292b9",
+        "bytes": 5189
+      }
+    ],
+    "helper_pins_None": true,
+    "entry_config_sha_None": true
+  },
+  "independent_verification": {
+    "original_affected_methods": 27,
+    "additional_finished_fsync_methods": 2,
+    "actual_entry_composition_methods": 8,
+    "actual_case_owned_shell_probes": 3,
+    "failed": 0,
+    "bash_syntax": "PASS",
+    "reused_primitive_segments": 19,
+    "new_code_findings": []
+  },
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/INDEPENDENT-TEST-RUN.json",
+      "sha256": "27cf2d44c70375c534de365866deda9f15a3e546eb885453de836288eafd3da5"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REUSED-PRIMITIVES-INVERSE.json",
+      "sha256": "27fb3c656ef12a8af1bd6fbeacac9849862fff952821afba5c159e907e4b3329"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/INDEPENDENT-TAIL-TESTS.json",
+      "sha256": "838f600b3395e35ce29228a7eea969ce15cbcec1393e3e17d8d76437030acf24"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/ENTRY-AND-CLI-LABEL-REVIEW.json",
+      "sha256": "5bf8cfe26d32f0e2bade62c2fd5c2e46cdf9e5c14e4f0442cec3b26310fbbd2a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/EXECUTOR-CASE-OWNED-SHELL.json",
+      "sha256": "075600e490705eaea6114abbf8f5392307e849164719e874bed647b66e12aebf"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-SOURCE-d5e.md",
+      "sha256": "31248a7d9bfce795fb1927f1d96e8a7604ceb403be58bd56b08fbff16efea93e"
+    }
+  ],
+  "report": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-SOURCE-AND-ENTRY.md",
+    "sha256": "b3bc83f76f974b97f0d46401b77de843ab51491a8ee819f119bfbb877e17be20"
+  },
+  "actual_binding_status": "PENDING_REAL_ORIGINAL_RECOVERY_TERMINAL_AND_EXACT_POST_STATE",
+  "protected_installation_status": "NOT_PERFORMED_BY_REVIEWER",
+  "actual_retirement_status": "NOT_PERFORMED_BY_REVIEWER",
+  "business_release": false,
+  "limits": [
+    "Source/owned composition review only; no privileged whole-scene or production proof.",
+    "Root identity/custody, full FixedScene, live STATUS/runtime and protected checkpoint I/O explicitly modeled.",
+    "No production/root/DS/Auth/provider/network/system mutation or dispatch; active DS/session untouched.",
+    "Later exact actual proof/config/helper/entry and protected closure binding remains original writer work in this same accepted scope; None pins currently fail closed.",
+    "Existing FS/lease and unaffected source PASS reused; no new design/permission gate or repeated closed-scene requirement."
+  ]
+}

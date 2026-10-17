@@ -1,0 +1,107 @@
+{
+  "kind": "INDEPENDENT_FIXED_E35_INVOCATION_MECHANICAL_RECIPE_SOURCE_REVIEW",
+  "at": "2026-10-17T21:09:49.125027+00:00",
+  "review_status": "PASS_SOURCE_RECIPE_ONLY_ACTUAL_BINDINGS_PENDING",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "accepted_spec_sha256": "daa8eb2e9599f7b032a6a11be2a123336be04af6a5fd7cfcd69db6b904c487ce",
+  "source_entry_review_reused": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+    "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68"
+  },
+  "subject": {
+    "assembler": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/invocation-assembly-v2/assemble_invocation.py",
+      "sha256": "878fa3d9b3b3801a554e368ee110b32f87c273ad08115bb8a0b234d64b3a9c0d",
+      "bytes": 17682
+    },
+    "handoff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/invocation-assembly-v2/RECIPE-HANDOFF.json",
+      "sha256": "b59ebd4c04b857cfebed557c7de52742bd2c5a28794955604108905d8195dcda",
+      "bytes": 1563
+    },
+    "manifest": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/invocation-assembly-v2/RECIPE-MANIFEST.json",
+      "sha256": "8fc88a8fa89aabb2ee805abe99d18b9e04a2ca01f5d1f960889f6633289a586b",
+      "bytes": 3089
+    },
+    "generated_verifier_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/v2/GENERATED-VERIFIER-SOURCE.py",
+      "sha256": "32cfa4c7c7dfea523e7fba57cc8aa88c263bd348d5da84038026a29c35a1df49",
+      "bytes": 33474
+    },
+    "actual_required_unbound_template": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/invocation-assembly-v2/ACTUAL-BINDINGS.REQUIRED.json",
+      "sha256": "3d88efc757b1ea05b5600eb6d0c87b3eff08ac2bea966445e8391a394037751c",
+      "bytes": 326
+    }
+  },
+  "basis": {
+    "server_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+    "client_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+    "preimage_server_sha256": "f93609e70db39ef87ca6013c6ccb944b11a568a772848b65f84d3c095b7224de",
+    "old_pair_publication_id": "ds-reader-pair-b31eb69ca7d5",
+    "old_authority_sha256": "ae00363fae061fe45d45f56de0a7dfdfe379b70f56c8e35776fef97a1a309850",
+    "candidate_facts_sha256": "c36710f7307e7141bee5f4edc97ac3a6056b6a38fa3df83aae9c58a192700327",
+    "original_verifier_sha256": "0f279a7a473177e9d3c1c6511d468638895d11bc9b9442dc72385936e85bc1e2",
+    "retire_executor_sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903"
+  },
+  "independent_verification": {
+    "original_recipe_methods": 4,
+    "actual_assemble_boundary_cases": 8,
+    "generated_additive_and_original_executor_cases": 17,
+    "authority_pin_capsule_receipt_actual_source_slice_cases": 2,
+    "failed_expectations": 0,
+    "manifest_files_checked": 18,
+    "new_check_calls": 7,
+    "whole_verifier_inverse_exact": true,
+    "all_other_source_function_spans_exact_baseline_2155": true,
+    "all_findings_resolved_in_final_source": true
+  },
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/v2/INDEPENDENT-GREEN.json",
+      "sha256": "3ea1d5ca16c76596df3cd3e1ae10a93b19e6c9a31a84e54045445d54c37168a6"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/v2/MECHANICAL-READBACK.json",
+      "sha256": "2eca759b7995e8294ae965ae0b1361734c4437ede4b352204556fabe36f451c8"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/v2/COMPLETION-GUARD-GREEN.json",
+      "sha256": "888b6423e0381ad17d0eabfe8196f213b5a8157a79688924f1a7fe710841bc85"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/v2/VERIFIER-ADDITION-GREEN.json",
+      "sha256": "234cb879a2a47c95ec492c5fc9facce12728f9f0f22b73f983c0285d35edbfe0"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/INITIAL-FINDINGS.md",
+      "sha256": "f139804d94b9d01eeb11e0a5bf9d1f6c6eec3480ab1653e8148967d1100c2004"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/INITIAL-REPRO.json",
+      "sha256": "e3b911dc02a702f17e0ee6497737eca46379bc65112b2005782e5e33fb7bee05"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/VERIFIER-ADDITION-BASELINE-WITH-CP-PROVENANCE.json",
+      "sha256": "b58457bb68c45840f09da10fc3ab1d6053009a6c001f5cb4ad50e3338315d6a5"
+    }
+  ],
+  "report": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/REVIEW.md",
+    "sha256": "44633e5e4226bba3db2ac757ef8a037ea0468e45f7ff7bec16b6ff94e321dbd5"
+  },
+  "actual_input_files_available": false,
+  "actual_overlay_assembled": false,
+  "full_original_verifier_executed": false,
+  "protected_installed": false,
+  "DS_UPDATE_or_reload": false,
+  "new_invocation_authority_COMMITTED": false,
+  "actual_retirement_or_business_release": false,
+  "limits": [
+    "Source recipe only. Actual input proof/data/Root binding and exact installed closure are not asserted.",
+    "Owned probes and mechanical AST slices use explicitly synthetic data; no complete fake actual overlay generated.",
+    "Original source/entry and unchanged full-verifier predicates reused, not re-audited; same-scope later actual mechanical readback remains separate.",
+    "No production/root/DS/GUI/Auth/provider/network/service mutation or identity substitution."
+  ]
+}

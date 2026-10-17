@@ -1,0 +1,72 @@
+{
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "accepted_spec_commit": "3277ee3cab04f34bf3eb229fbf2a49f724ed6870",
+  "unbound_helper_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+  "unbound_entry_sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+  "source_entry_review_sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027",
+  "actual_binding_review_sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40",
+  "actual_data_binding": {
+    "kind": "B7_E35_ACTUAL_DATA_BINDING_READBACK_V1",
+    "at": "2026-10-17T21:34:38.493074+00:00",
+    "actual_recovery_return_sha256": "194a406ee1b758c1c8552299502d94404b3e50960155ab9641a531e40ffbd1a4",
+    "completed_full_readback_sha256": "690bc44db1cd0e9903e931f69de9800ff55d364f8692d45c265e24a48fb6ca4f",
+    "pins_sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+    "pins_bytes": 7196,
+    "cp_config_sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+    "completed_proof_sha256": "80bc8aedeaf158dd18c95b18677973205b2311704c2f3f145c503c9c63e25aff",
+    "two_inventories": {
+      "artifacts": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/actual-retirement-bindings/artifacts-inventory.jsonl",
+        "sha256": "c004eafaf51c94954bfa0fa7e8356c0e4bf14e7db0da3e53043ea8a5957cacea",
+        "rows": 7,
+        "lineage_sha256": "4797b184ee8b90e2dfe051dca40eabc4c10e94a7889a2c552863f5eb98f310c8",
+        "regular_files": 6,
+        "regular_bytes": 47590139,
+        "matches_actual_summary": true
+      },
+      "codeinput": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/actual-retirement-bindings/codeinput-inventory.jsonl",
+        "sha256": "d23b941f17836af9b270125c864583ad070ef9dbcc380fb806384c13eaac67e3",
+        "rows": 92549,
+        "lineage_sha256": "de2690e17802c336d727fa0ab185edd69fdedb0fc314af858c8c2ff0cb8a99ef",
+        "regular_files": 75291,
+        "regular_bytes": 1018845040,
+        "matches_actual_summary": true
+      }
+    },
+    "summary_sha256": "be314b8c1d59e5eb924a165f9c579545f26d1aa302e76fcff8a6d97d87bf84e5",
+    "source_review_and_actual_binding_review_not_substituted": true,
+    "protected_installation": false,
+    "retirement_executed": false,
+    "business_release": false
+  },
+  "final_invocation_seal": {
+    "kind": "B7_E35_ACTUAL_REVIEW_JOIN_FINAL_SEAL",
+    "at": "2026-10-17T21:42:55.684583+00:00",
+    "source_entry_review_sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027",
+    "actual_bindings_review_sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40",
+    "pending_assembly_receipt_sha256": "a5c64c0969c26a2105b6ec17c255c6f3148ba2390e6bcb69466a0b8ffa14cfc7",
+    "only_three_metadata_resealed": {
+      "b7-v3-publication-authority.json": "71eb3b02f1755ed9da6c94ebf70c4ac88e4e7bfae0a65b9e83de850f8b4c59fc",
+      "b7-v3-publication-pin.json": "00441fcc8232313b6c58063aaaf5641534d16cba02772e3731cc794dbb410965",
+      "CAPSULE-MANIFEST.json": "aaff0ecc81c683221add77931ece59b51e9e2443ab113e54bc8364870bcd72a0"
+    },
+    "seven_reviewed_nonmetadata_unchanged": {
+      "b7-release-executor.sh": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "e35_terminal_materials_once.py": "8085b124acdbc2bd87192932b806c12ba925f9b7b152b5ac6ac300b41c2bd815",
+      "e35_retirement_entry.py": "94141b1195bedc607abb6dee96e6f7034f72df09216413042eb09d6b015ee486",
+      "e35-terminal-material-pins.json": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "e35-retirement-checkpoint-inputs.json": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "e35-retirement-entry.json": "5859360d10e216273ca464700fbd9469b444281bf8c3a6050ebf22806a03b900",
+      "verify-chain-v50.py": "80cc16054e13f76a8b8baeee0929c61de5b804a65a38df5634cdd5da344bd801"
+    },
+    "authority_bytes": 12369,
+    "capsule_members": 33,
+    "old_pair_publication_retained": "ds-reader-pair-b31eb69ca7d5",
+    "no_new_publication_COMMITTED_or_reload": true,
+    "protected_installed": false,
+    "retirement_executed": false
+  },
+  "source_contribution_not_installed_or_retired": true,
+  "business_release": false
+}

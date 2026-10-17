@@ -1,0 +1,103 @@
+{
+  "kind": "INDEPENDENT_COMBINED_FIXED_E35_RETIREMENT_SOURCE_ENTRY_METADATA_DELTA_REVIEW",
+  "at": "2026-10-17T21:27:59.763505+00:00",
+  "review_status": "PASS_SOURCE_ENTRY_DELTA_ACTUAL_BINDINGS_PENDING",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "accepted_spec_sha256": "daa8eb2e9599f7b032a6a11be2a123336be04af6a5fd7cfcd69db6b904c487ce",
+  "subject": {
+    "helper": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/metadata-libc-init-fix/cli-label-aligned/e35_terminal_materials_once.py",
+      "sha256": "c6436a31dab38362f5a41068961eb97e1bce6e4b7b26cf4fba006801d39a2cce",
+      "bytes": 78677
+    },
+    "collector": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/metadata-libc-init-fix/collect_actual_bindings_v2.py",
+      "sha256": "c76955866c3eb1e2a6b8f0dad1983368d6e11dff55e76caa23c0b76d53b8b613",
+      "bytes": 17811
+    },
+    "unchanged_entry": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/e35_retirement_entry.py",
+      "sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
+      "bytes": 6573
+    },
+    "unchanged_executor": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/b7-release-executor.e35-retire.DRAFT.sh",
+      "sha256": "74110415b30bd81572d50e6c53d2e1129052521700a8ef951adfc1d557b4b903",
+      "bytes": 170912
+    },
+    "author_handoff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/metadata-libc-init-fix/HANDOFF.json",
+      "sha256": "309c4b0bbcf112f2ecb50eec8d266beb2955424ed529385bfd722b5da912fc93",
+      "bytes": 790
+    },
+    "author_manifest": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/metadata-libc-init-fix/MANIFEST.json",
+      "sha256": "b14943c0b49dc32342f765950d10a86ee2fd6a5f5b80351b547d38f40b00aca6",
+      "bytes": 2873
+    },
+    "cascade_map": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-implementation/metadata-libc-init-fix/PIN-CASCADE-MAP.json",
+      "sha256": "1dd2e2093f635935fbbe274f5f628d2949325c32c2c8a099b274ea7c34a94f85",
+      "bytes": 3223
+    }
+  },
+  "retained_pass": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/REVIEW-RECEIPT-SOURCE-AND-ENTRY.json",
+      "sha256": "46a778e393a29a1f3dea5c58b96003988fa3cbb8b867fa36ae4cad152976ab68",
+      "scope": "original37 affected source/entry methods and unchanged code/lease contract; old40d hash not relabeled as new"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/REVIEW-RECEIPT.json",
+      "sha256": "860ff055306ba564cc1c8a309dba25864290505fdf1c17c3dbbe92d1c0962201",
+      "scope": "878fa invocation recipe and unchanged seven additive checks/coupling; later helper path/base/source-review changes mechanical only"
+    }
+  ],
+  "independent_delta_verification": {
+    "exact_two_span_whole_inverse_to_sha256": "40d68b27382a6f87323fcc34cffba1a74ef90e04c46b90300c45548de8706f70",
+    "every_function_class_source_segment_unchanged": true,
+    "unresolved_global_names_all_scopes": [],
+    "true_Darwin_SDK_cases": 3,
+    "native_failed_cases": 0,
+    "original_collector_methods": 5,
+    "collector_method_failed": 0,
+    "collector_one_literal_inverse_to_sha256": "cc3224a5bb361163ff4ed8c3ee298a8fb8a37d28881f88db143778f13bc8bb22",
+    "actual_pure_load_helper_new_sibling_sha": "c6436a31dab38362f5a41068961eb97e1bce6e4b7b26cf4fba006801d39a2cce",
+    "author_manifest_files_checked": 19
+  },
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/NATIVE-METADATA-RED.json",
+      "sha256": "4343253572626d9253235c588b207fc92498ffd1c92711d9d2fe6acd70a72fd5"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/NATIVE-METADATA-GREEN.json",
+      "sha256": "05303cfdca70b48bf6d990faee1e34942dee278892ae5925f0b4f882c0a89c3c"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/METADATA-FIX-MECHANICAL.json",
+      "sha256": "3f29e618ad9e136647c08e5fcd9fed18b5c2333c4b2008e87486ab8b7cc56d3c"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/COLLECTOR-FIVE-INDEPENDENT.json",
+      "sha256": "c9b2557b8babff241979cf30b31e0ae3301e86ceb2a2044629098cf14b233b08"
+    }
+  ],
+  "report": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/METADATA-DELTA-REVIEW.md",
+    "sha256": "98bce879570884179c9b886f881f97856565b9e07662fe6d2e3f4964afb8fd8a"
+  },
+  "mechanical_followup": "Root may use this receipt SHA as SOURCE_REVIEW and actual manifest source_entry_review_sha256, rebind only fixed helper source path and HELPER_BASE=c643 in original878fa recipe; derive boundhelper/entry config/entry/verifier/authority/pin/capsule from real actual data in same scope.",
+  "actual_bindings_available": false,
+  "actual_collector_complete_stream_verified_by_reviewer": false,
+  "actual_assembly_install_or_retirement": false,
+  "full_original_verifier_executed": false,
+  "business_release": false,
+  "limits": [
+    "True SDK probes only own FDs/directories/xattrs; no root or production/private path access.",
+    "Collector5 uses explicit mocked STATUS/public observations; real full collector is Root-only pending readback.",
+    "Source fix changes only two missing initialization/import spans; no predicate weakened and existing PASS limited scopes retained.",
+    "Old partial collector stream cannot stand for final complete stream or external actual durability result.",
+    "No DS reload, alternate execution identity, GUI simulation or new permission/design gate."
+  ]
+}

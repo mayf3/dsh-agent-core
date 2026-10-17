@@ -1,0 +1,20 @@
+--- actual-preimage/b7-release-executor.sh
++++ fixed-e35-retirement/b7-release-executor.e35-retire.DRAFT.sh
+@@ -305,6 +305,17 @@
+     receipt B7_EXIT "op=$ARG1 exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"
+     exit "$rc"
+     ;;
++  e35-retire)
++    [[ $# -eq 0 ]] || deny 'fixed e35 retirement accepts no arguments'
++    prepare_driven || exit 2
++    receipt E35_TERMINAL_RETIREMENT_INTENT 'actor=FIXED_ROOT_MAINTENANCE op=b7-packet-r34-1cfeff2a5b138629-e35 tx=tx-c0fd42f71e074eeb8f0e9902e1a3e084' || exit 2
++    set +e
++    /usr/bin/python3 -I -B "$DRIVEN/e35_retirement_entry.py"
++    rc=$?
++    set -u
++    receipt E35_TERMINAL_RETIREMENT_RETURN "exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"
++    exit "$rc"
++    ;;
+   prepare-inputs)
+     prepare_driven || exit 2
+     set +e

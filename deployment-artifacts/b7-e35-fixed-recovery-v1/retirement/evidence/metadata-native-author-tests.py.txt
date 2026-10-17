@@ -1,0 +1,39 @@
+import contextlib,hashlib,json,os,pwd,stat,subprocess,sys,tempfile,types,unittest
+from pathlib import Path
+SOURCE=Path(sys.argv[1]);OUTPUT=Path(sys.argv[2]);HOME=Path(__file__).resolve().parent
+raw=SOURCE.read_bytes();m=types.ModuleType('owned_metadata_subject');m.__file__=str(SOURCE);exec(compile(raw,str(SOURCE),'exec'),m.__dict__)
+class Cases(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory(prefix='native-fd-',dir=HOME);self.path=Path(self.tmp.name);self.fd=os.open(self.path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+ def tearDown(self):
+  os.close(self.fd);self.tmp.cleanup()
+ def test_real_directory_metadata_and_cached_library(self):
+  self.assertEqual(sys.platform,'darwin');a=m.metadata_fd(self.fd);lib=m.metadata_libc();b=m.metadata_fd(self.fd)
+  self.assertIs(lib,m.metadata_libc());self.assertEqual(a,b);self.assertEqual((a['device'],a['inode'],a['mode']),(os.fstat(self.fd).st_dev,os.fstat(self.fd).st_ino,0o700));self.assertTrue(a['acl_empty'])
+  self.assertEqual(m.FixedPath.service_signature(self.fd)['inode'],os.fstat(self.fd).st_ino)
+ def test_actual_xattr_hash_and_service_signature_drift(self):
+  before=m.FixedPath.service_signature(self.fd);name='com.codex.e35.metadata.probe';value=b'owned xattr only'
+  lib=m.metadata_libc();lib.fsetxattr.argtypes=(m.ctypes.c_int,m.ctypes.c_char_p,m.ctypes.c_void_p,m.ctypes.c_size_t,m.ctypes.c_uint32,m.ctypes.c_int);lib.fsetxattr.restype=m.ctypes.c_int
+  lib.fremovexattr.argtypes=(m.ctypes.c_int,m.ctypes.c_char_p,m.ctypes.c_int);lib.fremovexattr.restype=m.ctypes.c_int
+  self.assertEqual(lib.fsetxattr(self.fd,name.encode(),value,len(value),0,0),0)
+  try:
+   a=m.metadata_fd(self.fd);after=m.FixedPath.service_signature(self.fd)
+   self.assertEqual(a['xattrs'][name],dict(bytes=len(value),sha256=hashlib.sha256(value).hexdigest()));self.assertNotEqual(before,after)
+  finally:self.assertEqual(lib.fremovexattr(self.fd,name.encode(),0),0)
+ def test_real_regular_fd_refused(self):
+  leaf=self.path/'leaf';leaf.write_bytes(b'owned');fd=os.open(leaf,os.O_RDONLY|os.O_NOFOLLOW)
+  try:
+   with self.assertRaisesRegex(m.Refused,'BASE_DIRECTORY_REQUIRED'):m.metadata_fd(fd)
+  finally:os.close(fd)
+ def test_actual_nonempty_acl_rejected_by_service_signature(self):
+  argv=['/bin/chmod','+a','user:'+pwd.getpwuid(os.getuid()).pw_name+' allow readsecurity',str(self.path)]
+  r=subprocess.run(argv,capture_output=True);self.assertEqual(r.returncode,0)
+  try:
+   self.assertFalse(m.metadata_fd(self.fd)['acl_empty'])
+   with self.assertRaisesRegex(m.Refused,'FIXED_SERVICE_ANCESTOR_METADATA'):m.FixedPath.service_signature(self.fd)
+  finally:
+   r=subprocess.run(['/bin/chmod','-N',str(self.path)],capture_output=True);self.assertEqual(r.returncode,0)
+r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Cases))
+v=dict(source_sha256=hashlib.sha256(raw).hexdigest(),methods=r.testsRun,failures=len(r.failures),errors=len(r.errors),status='PASS' if r.wasSuccessful() else 'FAIL',exceptions=[str(x[1]).splitlines()[-1] for x in r.errors+r.failures],platform=sys.platform,uid=os.getuid(),scope='actual Darwin FD/libc/xattr/ACL on owned paths only; no root/DS/provider/collector')
+with OUTPUT.open('x') as f:json.dump(v,f,indent=2);f.write('\n')
+sys.exit(not r.wasSuccessful())
