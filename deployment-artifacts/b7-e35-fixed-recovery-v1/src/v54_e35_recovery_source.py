@@ -387,7 +387,7 @@ def _json_child(e,lease,argv,value,timeout=600):
  lease.verify();child=None
  try:
   child=subprocess.Popen(['/usr/bin/python3','-I','-B','-c',CHILD_LAUNCH,str(lease.fd),json.dumps(argv)],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env={'PATH':'/usr/bin:/bin:/usr/sbin:/sbin','LC_ALL':'C'},cwd='/',close_fds=True,pass_fds=(lease.fd,),start_new_session=True)
-  out,err=_bounded_io(child,_json(value),min(timeout,max(.01,getattr(e,'_e35_deadline',time.monotonic()+timeout)-time.monotonic())),8388608)
+  out,err=_bounded_io(child,(json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n').encode(),min(timeout,max(.01,getattr(e,'_e35_deadline',time.monotonic()+timeout)-time.monotonic())),8388608)
   e.need(child.returncode==0 and not err and len(out)<=8388608,'NONTERMINAL','observe');lease.verify()
   e._e35_child_receipts.append(dict(mode='cohort-'+value['mode'],adapter_sha256=_sha(COHORT_SOURCE.encode()),argv_sha256=_sha(_json(argv)),stdout_sha256=_sha(out),stderr_sha256=_sha(err),returncode=child.returncode))
   return _strict(out)
