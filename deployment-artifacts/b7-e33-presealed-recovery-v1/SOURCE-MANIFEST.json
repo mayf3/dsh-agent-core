@@ -1,0 +1,35 @@
+{
+  "kind": "SMALL_SOURCE_ARTIFACT_CONTENT_MANIFEST",
+  "files": {
+    "PINS.json": {
+      "sha256": "f196cd818aa905d298c9e2251aa1fb4ec5c1b6ddedce263ec6325f256e0c82f9",
+      "bytes": 1962,
+      "mode": 420
+    },
+    "README.md": {
+      "sha256": "2e1edd4b1e484b7d0183798a188e7ddcd874ecead003f9e299936645735605f5",
+      "bytes": 5354,
+      "mode": 420
+    },
+    "src/v52_e33_recovery_source.py": {
+      "sha256": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a",
+      "bytes": 95589,
+      "mode": 420
+    },
+    "tests/test_reconstruction.py.fixture": {
+      "sha256": "51ec040fad9a41911219a8b51db766a298ba08c9e1a46f3046a7f8c7ec561732",
+      "bytes": 2838,
+      "mode": 420
+    },
+    "tools/build.py": {
+      "sha256": "09cd8d7111992aa8225477923307b503c4b863bec4712878045e7d2301d795b4",
+      "bytes": 3307,
+      "mode": 420
+    },
+    "tools/verify.py": {
+      "sha256": "08bf824ae361b8da6af423fab2775c9bb3c1fd897b2f07185dbd1afce140378a",
+      "bytes": 1719,
+      "mode": 420
+    }
+  }
+}
