@@ -37,6 +37,8 @@ import z from '@deepseek-ai/schemastery'
 
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
+import { nativePromptError } from './website-admission.js'
+import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from './website-custody.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
@@ -105,7 +107,16 @@ export function apply(ctx) {
   // verifies it against the resolved workspace; a mismatch is a structured
   // SESSION_WORKSPACE_MISMATCH rejection. Getters observe the
   // initialize-time values at call time.
+  let websiteCustody
   const seam = createSessionSeam({
+    websiteAdmission: async (carrier, message, session) => {
+      if (!process.env.DSH_HOME) throw new Error('website source custody unavailable')
+      websiteCustody ??= new WebsiteSourceCustody(process.env.DSH_HOME)
+      websiteCustody.register(carrier, message)
+      await ctx.get('sessionPersistence')?.flush?.(session)
+      const response = await agentRpc.request('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id })
+      if (response?.ok !== true || response.result?.mapped !== true) throw new Error('website native mapping unavailable')
+    },
     ctx,
     settings: {
       get cwd() { return cwd },
@@ -120,7 +131,7 @@ export function apply(ctx) {
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
     try { seam.conversationSource?.onEvent(session,event) } catch { process.stderr.write('[demo-server] conversation source retention failed\n') }
-    notify('session.event', { sessionId: String(session.id), event })
+    forwardWebsiteSessionEvent(websiteCustody, String(session.id), event, value => notify('session.event', value))
   })
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
     notify('session.status', { sessionId: String(agent.session.id), status })
@@ -194,6 +205,7 @@ export function apply(ctx) {
           registeredProviders,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
+          websiteAdmission: { version: 1 },
         }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
@@ -203,7 +215,7 @@ export function apply(ctx) {
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource),
+          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource, params?.websiteAdmission),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
@@ -219,13 +231,11 @@ export function apply(ctx) {
       }
       respond(id, result, undefined)
     } catch (error) {
-      process.stderr.write(`[demo-server] ${method} failed: ${error instanceof Error ? error.message : String(error)}\n`)
+      const safeError = nativePromptError(method, params, error)
+      process.stderr.write(`[demo-server] ${method} failed: ${safeError.message}\n`)
       // STRUCTURED rejections (e.g. SESSION_WORKSPACE_MISMATCH) keep their
       // string code on the wire so the Router can surface them verbatim.
-      respond(id, undefined, {
-        code: typeof error?.code === 'string' ? error.code : -32603,
-        message: error instanceof Error ? error.message : String(error),
-      })
+      respond(id, undefined, safeError)
     }
   }
 

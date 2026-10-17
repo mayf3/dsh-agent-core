@@ -160,6 +160,7 @@ export const turnExecutionMethods = {
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) return lineageError
+    if (opts?.websiteControl && this.initializeEvidence?.websiteAdmission?.version !== 1) return envelopeCarrier('not_admitted',null,'WEBSITE_SOURCE_UNAVAILABLE','website source retention is unavailable')
     if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
@@ -328,6 +329,10 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) throw lineageError
+    if (opts?.websiteControl) {
+      await opts.websiteControl.recheck()
+      execution.websiteControl = opts.websiteControl
+    }
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'
@@ -346,6 +351,7 @@ export const turnExecutionMethods = {
       // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
+      ...(opts?.websiteControl === undefined ? {} : { websiteAdmission: opts.websiteControl.carrier }),
       ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
