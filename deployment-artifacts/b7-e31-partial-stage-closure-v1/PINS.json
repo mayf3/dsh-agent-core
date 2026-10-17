@@ -1,0 +1,73 @@
+{
+  "format": "B7_E31_SOURCE_ONLY_ARTIFACT_V1",
+  "spec": {
+    "repo_path": "docs/specs/AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V2_AMENDMENT_B7_E31_PARTIAL_STAGE_CLOSURE_V1.md",
+    "sha256": "bf5fbd5c061a7f7653321e2a1ec5323ffe4c76ec2f54cec4f05b9a2c3479c6b8",
+    "owner_accepted_proposal_sha256": "0b9306d9654dd180d775cb41df503acaf014e458342ace55d358b542364778ed"
+  },
+  "baselines": {
+    "deployment_system.py": {
+      "sha256": "f127ce746322b375d34eb6ef7dabd1d41ba8b832d242f9097b55b91f24e5b35b",
+      "bytes": 110429975
+    },
+    "ds_client.py": {
+      "sha256": "4801449a6b183bf1a5ed6c244dbb088601aa81d545320e992af7613a10c212a3",
+      "bytes": 57796
+    },
+    "executor.sh": {
+      "sha256": "9ff99e820642881ed2f3dd059184707a09884825ce096ae929ad651b392cf8fe",
+      "bytes": 169563
+    }
+  },
+  "sources": {
+    "v50_e31_closure_source.py": {
+      "sha256": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65",
+      "bytes": 29764
+    },
+    "e31_preserve_once.py": {
+      "sha256": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617",
+      "bytes": 15081
+    },
+    "v50_execution_client_source.py": {
+      "sha256": "1a7641695dda0f92e81fcaba9ab104fbc622379f3ca7f9fd960919ef2a7aa96d",
+      "bytes": 15338
+    }
+  },
+  "outputs": {
+    "deployment_system.py": {
+      "sha256": "8e71f571bc225d214745e100e3b8824d398cf315df85313136c570e75bc6e309",
+      "bytes": 110461167
+    },
+    "ds_client.py": {
+      "sha256": "a590af5cb19d8d8b50f7b57a9e1f81a429442d1589f6fa30d8c4fe12f3fcac19",
+      "bytes": 57840
+    },
+    "executor.sh": {
+      "sha256": "e7556f77d1e7a30d72997e1417adff7ea39fc01961b2da346b7f092d50275ca6",
+      "bytes": 169876
+    }
+  },
+  "reviews": {
+    "v2": {
+      "filename": "REVIEW-RECEIPT-V2.json",
+      "sha256": "c29f2b61eaa7cf12e428cb2b430bc8543f31e7ce181682d46040ada6711968c0",
+      "external_audit_relative_path": "codex-e31-closure-review/REVIEW-RECEIPT-V2.json"
+    },
+    "inherited_v1": {
+      "filename": "REVIEW-RECEIPT-V1.json",
+      "sha256": "80430b4bfda1c44aceaadf4f8fc0fbc5d66ae9e6ccbfd466f183bbbe674ea1a2",
+      "external_audit_relative_path": "codex-e31-closure-review/REVIEW-RECEIPT-V1.json"
+    },
+    "verifier": {
+      "filename": "VERIFIER-REVIEW-RECEIPT.json",
+      "sha256": "3b804d579c20a74e95af59b01a9561fa0aa5bf64eaa3ffb9fe912a974a08ac15",
+      "external_audit_relative_path": "codex-e31-closure-review/VERIFIER-REVIEW-RECEIPT.json"
+    }
+  },
+  "review_limits": {
+    "v2": "bounded implementation delta, R1 closed; not a production closure receipt",
+    "inherited_v1": "unaffected predicates/joins only; its R1 request-changes is superseded by V2",
+    "verifier": "bounded mechanical verifier checks only; not runtime business"
+  },
+  "frozen_source_handoff_sha256": "90b4ce6d226c9263fae24f7ea017681090c8561405cbbad958aea073e7ad57a4"
+}

@@ -1,0 +1,76 @@
+import contextlib,io,json,os,subprocess,sys,types,unittest
+from pathlib import Path
+from unittest.mock import patch
+from fixture import *
+C=Candidate('candidate')
+class Preserve(unittest.TestCase):
+ def setUp(self):
+  self.f=Fixture(C);self.addCleanup(self.f.close);self.path=R/'candidate/e31_preserve_once.py'
+ def load(self):
+  self.assertTrue(self.path.exists(),'fixed e31 helper absent (baseline RED)')
+  h=types.ModuleType('owned_e31_preserve');h.__file__=str(self.path)
+  with patch.dict(sys.modules,{'v50_e31_closure_source':self.f.mod}):exec(compile(self.path.read_bytes(),str(self.path),'exec'),h.__dict__)
+  h._ROOT=str(self.f.root);h.STATE_ROOT=self.f.ds.STATE_ROOT;h.MUTATION_LOCK=str(Path(h.STATE_ROOT)/'mutation.lock');h.NATIVE_TRANSACTION=str(self.f.tx_path);h.NATIVE_HOLDER=str(self.f.holder_path)
+  facade=types.SimpleNamespace(**vars(self.f.mod.os));facade.geteuid=lambda:0;h.os=facade
+  native=h.rename_no_replace
+  def guarded(src,dst,parent):
+   live=self.f.stage.parent.stat();held=os.fstat(parent)
+   self.assertEqual((live.st_dev,live.st_ino),(held.st_dev,held.st_ino));self.assertEqual((src,dst),(self.f.stage.name,self.f.history.name))
+   return native(src,dst,parent)
+  h.rename_no_replace=guarded
+  self.h=h;return h
+ def runhelper(self):
+  h=self.h;fx=self.f;self.calls=[]
+  def run(argv,**kw):
+   self.assertEqual(argv,['/usr/bin/python3',h.CLIENT,'b7-status-r3',OP]);self.assertEqual((kw['user'],kw['group'],kw['extra_groups']),(502,20,[]));self.calls.append(argv)
+   r=fx.client_request(STATUS);return types.SimpleNamespace(returncode=0 if r['ok'] else 2,stdout=json.dumps(r).encode(),stderr=b'')
+  with patch.object(h.subprocess,'run',side_effect=run),contextlib.redirect_stdout(io.StringIO()) as out:
+   try:h.main();return True,out.getvalue()
+   except (SystemExit,OSError) as ex:return False,str(ex)
+ def closefirst(self):self.assertTrue(self.f.client_request(DISPOSE)['ok'])
+ def test_actual_main_fixed_preserve_and_history_repeat(self):
+  self.load();self.closefirst();ok,out=self.runhelper();self.assertTrue(ok,out);self.assertTrue(self.f.history.is_dir());self.assertFalse(self.f.stage.exists());self.assertEqual(json.loads(out)['state'],'PRESERVED')
+  self.f.stage.mkdir();(self.f.stage/'successor').write_bytes(b'keep');self.f.tx_path.write_bytes(b'new');self.f.holder_path.mkdir();self.f.journal_path.write_bytes(b'new journal');Path(self.f.mod.E31['seed_path']).write_bytes(b'new seed');before=self.f.snapshot()
+  ok,out=self.runhelper();self.assertTrue(ok,out);self.assertEqual(json.loads(out)['state'],'ALREADY_PRESERVED');self.assertEqual(self.f.snapshot(),before)
+ def test_parent_sync_failure_is_unknown_then_legal_history_retry(self):
+  h=self.load();self.closefirst();sync=h.os.fsync
+  with patch.object(h.os,'fsync',side_effect=OSError('unknown')):ok,out=self.runhelper()
+  self.assertFalse(ok);self.assertIn('DURABILITY_UNKNOWN',out);self.assertTrue(self.f.history.exists());ok,out=self.runhelper();self.assertTrue(ok,out);self.assertEqual(json.loads(out)['state'],'ALREADY_PRESERVED')
+ def test_fresh_drift_before_actual_rename_refuses(self):
+  h=self.load();self.closefirst();status=h.status;count=[0]
+  def drift():
+   result=status();count[0]+=1
+   if count[0]==2:self.f.tx_path.write_bytes(b'drift')
+   return result
+  with patch.object(h,'status',side_effect=drift):ok,out=self.runhelper()
+  self.assertFalse(ok,out);self.assertTrue(self.f.stage.exists());self.assertFalse(self.f.history.exists())
+ def test_exact_no_replace_race(self):
+  h=self.load();self.closefirst();actual=h.rename_no_replace
+  def race(src,dst,parent):
+   s=os.fstat(parent);self.assertEqual((s.st_dev,s.st_ino),(self.f.stage.parent.stat().st_dev,self.f.stage.parent.stat().st_ino));self.f.history.mkdir();(self.f.history/'sentinel').write_bytes(b'keep');return actual(src,dst,parent)
+  with patch.object(h,'rename_no_replace',side_effect=race):ok,out=self.runhelper()
+  self.assertFalse(ok,out);self.assertEqual((self.f.history/'sentinel').read_bytes(),b'keep');self.assertTrue(self.f.stage.exists())
+ def test_fixed_history_seam_never_renames_and_requires_history(self):
+  h=self.load();self.closefirst();self.assertTrue(callable(getattr(h,'fsync_fixed_history',None)),'history seam missing')
+  parent=os.open(self.f.stage.parent,os.O_RDONLY|os.O_DIRECTORY);execution=h.PreservationExec();data=self.f.client_request(STATUS)['data'];checks=[]
+  try:
+   with self.assertRaises(SystemExit):h.fsync_fixed_history(execution,data,parent,lambda:checks.append('lease'))
+   os.rename(self.f.stage,self.f.history);self.f.stage.mkdir();(self.f.stage/'successor').write_bytes(b'keep');before=self.f.snapshot()
+   with patch.object(h,'rename_no_replace',side_effect=AssertionError('history seam rename')):partial=h.fsync_fixed_history(execution,data,parent,lambda:checks.append('lease'))
+   self.assertEqual(partial['sha256'],self.f.mod.E31['partial_stage_manifest_sha256']);self.assertEqual(self.f.snapshot(),before);self.assertGreaterEqual(len(checks),2)
+  finally:os.close(parent)
+ def test_unsupported_native_platform_has_no_fallback(self):
+  h=self.load();self.closefirst();h.sys=types.SimpleNamespace(platform='unsupported');before=self.f.snapshot();ok,out=self.runhelper();self.assertFalse(ok,out);self.assertIn('ATOMIC_NOREPLACE_UNSUPPORTED',out);self.assertEqual(before,self.f.snapshot())
+ def test_history_seam_wrong_parent_and_missing_terminal_refuse(self):
+  h=self.load();self.closefirst();os.rename(self.f.stage,self.f.history);data=self.f.client_request(STATUS)['data'];execution=h.PreservationExec();fd=os.open(self.f.root,os.O_RDONLY|os.O_DIRECTORY)
+  try:
+   with self.assertRaises(SystemExit):h.fsync_fixed_history(execution,data,fd,lambda:None)
+  finally:os.close(fd)
+  self.f.terminal_path.unlink();fd=os.open(self.f.history.parent,os.O_RDONLY|os.O_DIRECTORY)
+  try:
+   with self.assertRaises(SystemExit):h.fsync_fixed_history(execution,data,fd,lambda:None)
+  finally:os.close(fd)
+ def test_cold_daemon_status_cannot_trigger_preserve(self):
+  self.load();self.closefirst();self.f.execution._e31_durability.clear();before=self.f.snapshot();ok,out=self.runhelper();self.assertFalse(ok,out);self.assertEqual(before,self.f.snapshot())
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Preserve));(R/'results/preserve.json').write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())
