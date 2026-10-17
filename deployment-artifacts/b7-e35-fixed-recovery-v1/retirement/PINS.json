@@ -1,9 +1,9 @@
 {
   "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
   "accepted_spec_commit": "3277ee3cab04f34bf3eb229fbf2a49f724ed6870",
-  "unbound_helper_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+  "unbound_helper_sha256": "2652c090a8a349f577ab573e588801ee01c01ec2f93e00174f7d4936abc207a0",
   "unbound_entry_sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
-  "source_entry_review_sha256": "812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121",
+  "source_entry_review_sha256": "120b098166b70077bfadb028a915c6c65f51fb697e829715d0b89999889a6a56",
   "actual_binding_review_sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40",
   "actual_data_binding": {
     "kind": "B7_E35_ACTUAL_DATA_BINDING_READBACK_V1",
@@ -87,5 +87,39 @@
     "historical_assembler_sha256": "2b603e151e9be4a378c0acc2866b0c2fd1e7f98b6f740af4c322c62060df0860",
     "historical_collector_sha256": "55c5f17a4f9df07c251f30cd431f8380edc2d0fa6c224cf85c33d1240e20879d",
     "historical_tool_scope": "Exact prior construction lineage for ff3b; retained files are not claimed to directly generate or collect the new5a health overlay."
+  },
+  "service_metadata_stability_delta": {
+    "source_review_sha256": "120b098166b70077bfadb028a915c6c65f51fb697e829715d0b89999889a6a56",
+    "prior_health_source_review_sha256": "812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121",
+    "prior_health_invocation_actual_review_sha256": "82523805a5f661f5d1f35d7355a8239404fa19b8be3b9565a76ce9435936445c",
+    "prior_unbound_helper_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+    "coordinator_mechanical_decision_sha256": "9967b22d4f679317a608e1c0396b6231a3eac014aeccb40fa648704bee9c809f",
+    "decision_actor": "original delegated coordinator under accepted49b; not a new human Owner signature",
+    "author_test_sha256": "32585299320515bdcfbf390fb33609cb4ebd3bdd423fad6273ba2d10d9513efa",
+    "author_result_12_sha256": "fbd5d1bc2531c8168e78f97e9b6bba48361ed5febdff4d7311ad3731cb0314c7",
+    "methods": 12,
+    "independent_additional_edges": 4,
+    "original_metadata_fd_and_baseline_unchanged": true,
+    "bounded_retry": "Only original three fixed service ancestors; same held FD; at most3 complete original strict metadata_fd reads; retry only exact Refused(BASE_METADATA_CHANGED). Other error, custody/identity/flags drift refuses immediately. Final ACL/xattr/security signature still compared to original recorded baseline; never update baseline.",
+    "actual_partial_manifest_receipt_sha256": "2031220ff470006533cd1f8050bbfedea1a80fe21e5a27e89155f6b5aea0b468",
+    "actual_partial_state": "Receipt time: four history objects present and fifth original canonical present; original INTENT/ADMITTED and original reservation retained. Not allfive retired and not FINISHED.",
+    "finite_observation_receipt_sha256": "75b97b527f026b748c4023db24ca633661e541559825fd9417e066c5174cfb37",
+    "causal_limit": "Original metadata_fd BASE_METADATA_CHANGED is proven, particular ancestor/field is unknown. Finite45s observation without reproduction is not historical failure attribution or stability proof.",
+    "new_invocation_actual_review_sha256": "8c5adec082dc026cd133349c6d280612ec3360b54f9e18242e29e554ee668cd4",
+    "new_overlay": "Actual current1a0205 preimage reviewed8c5adec; adopted small seven-file overlay; actual two-file restricted install/readback succeeded, executor741 unchanged and DS18731 not reloaded. Original full verifier110/110. Same-intent retirement continuation is separate and not yet completed at this source record.",
+    "old825_review_not_stretched_to_new_helper": true,
+    "actual_retirement_completion_claimed": false,
+    "actual_revision_readback": {
+      "authority_sha256": "934692e224c863ffd826f4f3495528a1a15f7302a48976f71d9b539f2225a378",
+      "pin_sha256": "deb1fe2ca222306c03b7efb35ef6f39fd56d80f32254dacc98b3ef3027a22d95",
+      "capsule_sha256": "798a2d805c146de91ed4614b78eef008268e1c470afdcfbb62cd99a5270e72dc",
+      "bound_helper_sha256": "4a4bf08a7d7ec923cdce5908098557b20f8936359076d8bd7a0fb7d89dd5e9fc",
+      "protected_readback_sha256": "af62c5aa86ed4f02c94022bc27713f19a4e9fb7f463cecf2108bdf0af2fc52ac",
+      "full_verifier_return_sha256": "ae755a887111210ac87e49e258d4c48b79d855aef97696dbf1d547108d081331",
+      "actual_three_ancestor_readonly_qualification_sha256": "be4baab51af4a00d33960031a310d6b3dfdc478865a385d1663e5fe7bca84ea4",
+      "full_verifier_actual": "110/110 PASS",
+      "retirement_FINISHED_claimed": false,
+      "business_release": false
+    }
   }
 }

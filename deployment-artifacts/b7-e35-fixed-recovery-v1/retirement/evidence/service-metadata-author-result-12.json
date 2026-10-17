@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-17T22:12:38.869640+00:00",
+  "runs": [
+    {
+      "label": "BASELINE-RED-12",
+      "source_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
+      "returncode": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "64a35c4b6231d9732448ed0e3effb4bed1dd5be58be81e535ee571382328f173"
+    },
+    {
+      "label": "CANDIDATE-GREEN-12",
+      "source_sha256": "2652c090a8a349f577ab573e588801ee01c01ec2f93e00174f7d4936abc207a0",
+      "returncode": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "c708f3e98307f855c33c73231d648c93604d7dd301db72376dca65f3de0e53f7"
+    }
+  ],
+  "test_sha256": "32585299320515bdcfbf390fb33609cb4ebd3bdd423fad6273ba2d10d9513efa",
+  "source_delta_single_method": true,
+  "production_write": false,
+  "real_concurrent_fixture_thread_not_production_writer": true,
+  "prior_failure_specific_ancestor_unknown": true
+}
