@@ -1,0 +1,26 @@
+{
+  "entries": [
+    {
+      "bytes": 500,
+      "rel": "settings.yaml",
+      "sha256": "3a3406785e34ecf6d333551d10dd090d1e160e12088ecfa3ec87b826bbeb64aa",
+      "storeFile": "agt_lw-lifecycle-canary__settings.yaml"
+    },
+    {
+      "bytes": 815,
+      "rel": "profiles/agent-core-production/package.json",
+      "sha256": "19cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33",
+      "storeFile": "agt_lw-lifecycle-canary__profiles__agent-core-production__package.json"
+    },
+    {
+      "bytes": 2336,
+      "rel": "profiles/agent-core-production/cordis.patch.yml",
+      "sha256": "655574d86efd905dcbde884b07fb9149d6b689b68a6efc6b32f97a4b6a515866",
+      "storeFile": "agt_lw-lifecycle-canary__profiles__agent-core-production__cordis.patch.yml"
+    }
+  ],
+  "journalSha256": "031e789ee0983aac2d209f3a6686548308724b94e6faa774422fd9fd200c8f0e",
+  "kind": "B7_CURRENT_PREIMAGE_BYTES_V1",
+  "metadataReceiptSha256": "05afac224c0cb4cf736205c469eb5598e858ecbffbd567d6367324bee4cc99fb",
+  "origin": "ORIGINAL_OWNER_REPORTED_CURRENT_ROOT_READBACK"
+}
