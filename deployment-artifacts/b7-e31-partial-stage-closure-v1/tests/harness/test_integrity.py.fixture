@@ -1,0 +1,24 @@
+import ast,hashlib,json,re,subprocess,sys,unittest
+from pathlib import Path
+from fixture import R,sha
+class Integrity(unittest.TestCase):
+ def seals(self,p):
+  tree=ast.parse(p.read_bytes());result={}
+  for n in ast.walk(tree):
+   if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='compile' and len(n.args)>=2 and isinstance(n.args[0],ast.Constant) and type(n.args[0].value)is str and isinstance(n.args[1],ast.Constant) and type(n.args[1].value)is str and n.args[1].value.startswith('<sealed-'):
+    name=n.args[1].value;self.assertNotIn(name,result);result[name]=n.args[0].value
+  return result,tree
+ def test_server_additive_old_seals_and_policies_exact(self):
+  old,ot=self.seals(R/'baseline/deployment_system.py');new,nt=self.seals(R/'candidate/deployment_system.py');self.assertEqual({k:new[k] for k in old},old);self.assertEqual(set(new)-set(old),{'<sealed-b7_e31_closure.py>'});self.assertEqual(new['<sealed-b7_e31_closure.py>'],(R/'candidate/v50_e31_closure_source.py').read_text())
+  raw=(R/'candidate/deployment_system.py').read_bytes();start=raw.index(b'# BEGIN FIXED E31 PARTIAL STAGE CLOSURE V1\n');end=raw.index(b'# END FIXED E31 PARTIAL STAGE CLOSURE V1\n')+len(b'# END FIXED E31 PARTIAL STAGE CLOSURE V1\n');self.assertTrue(raw[start:end].isascii());self.assertEqual(raw[:start]+raw[end:],(R/'baseline/deployment_system.py').read_bytes())
+  (R/'results/sealed-source-inverse.json').write_text(json.dumps({'old_seals':{k:sha(v.encode()) for k,v in old.items()},'new_seal':sha(new['<sealed-b7_e31_closure.py>'].encode()),'whole_inverse':True},indent=2)+'\n')
+ def test_client_one_exact_module_delta_and_whole_inverse(self):
+  old,ot=self.seals(R/'baseline/ds_client.py');new,nt=self.seals(R/'candidate/ds_client.py');key='<sealed-b7_ds_execution_client.py>';self.assertEqual(set(new),set(old));self.assertEqual({k:v for k,v in old.items() if k!=key},{k:v for k,v in new.items() if k!=key});self.assertEqual(new[key],(R/'candidate/v50_execution_client_source.py').read_text());self.assertEqual(new[key].replace("p['operation_id'] in (E30OP,'b7-packet-r27-2edfbaeef5c352f2e-e31')","p['operation_id']==E30OP"),old[key])
+  for call in ast.walk(nt):
+   if isinstance(call,ast.Call) and isinstance(call.func,ast.Name) and call.func.id=='compile' and call.args and isinstance(call.args[0],ast.Constant) and call.args[0].value==new[key]:call.args[0].value=old[key]
+  self.assertEqual(ast.dump(nt,include_attributes=False),ast.dump(ot,include_attributes=False))
+ def test_executor_only_fixed_branch_and_bash32_syntax(self):
+  old=(R/'baseline/executor.sh').read_bytes();new=(R/'candidate/executor.sh').read_bytes();m=re.search(rb'^  e31-preserve\)\n.*?^    ;;\n',new,re.M|re.S);self.assertIsNotNone(m);self.assertEqual(new[:m.start()]+new[m.end():],old)
+  out=subprocess.run(['/bin/bash','-n',str(R/'candidate/executor.sh')],capture_output=True,timeout=5);self.assertEqual(out.returncode,0,out.stderr)
+if __name__=='__main__':
+ r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(Integrity));(R/'results/integrity.json').write_text(json.dumps({'methods':r.testsRun,'failures':len(r.failures),'errors':len(r.errors),'details':[str(x) for x in r.failures+r.errors]},indent=2)+'\n');sys.exit(not r.wasSuccessful())
