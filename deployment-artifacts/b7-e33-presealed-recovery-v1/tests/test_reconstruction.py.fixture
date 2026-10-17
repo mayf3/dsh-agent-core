@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+"""Small source-artifact caller tests. No daemon or recovery execution."""
+import hashlib
+import importlib.util
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+PACKAGE = Path(__file__).resolve().parents[1]
+BASELINES = Path(sys.argv.pop(1)).resolve()
+
+class Reconstruction(unittest.TestCase):
+    def load(self):
+        path = PACKAGE / 'tools/build.py'
+        self.assertTrue(path.is_file(), 'E33_SOURCE_RECONSTRUCTOR_NOT_IMPLEMENTED')
+        spec = importlib.util.spec_from_file_location('e33_artifact_build', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_actual_owned_build_has_exact_products_and_whole_inverse(self):
+        build = self.load()
+        with tempfile.TemporaryDirectory(prefix='b7-e33-source-artifact-') as tmp:
+            output = Path(tmp) / 'new-output'
+            receipt = build.build(BASELINES, output)
+            self.assertEqual(receipt['outputs']['deployment_system.py']['sha256'],
+                'eb8639b9fea5e5a0283faf8aaddf5e6b53c982105cb8edce406f35803113564d')
+            self.assertEqual((output/'ds_client.py').read_bytes(), (BASELINES/'ds_client.py').read_bytes())
+            server = (output/'deployment_system.py').read_bytes()
+            source = (PACKAGE/'src/v52_e33_recovery_source.py').read_text()
+            block = build.append_block(source)
+            self.assertEqual(server.count(block), 1)
+            self.assertEqual(server.replace(block,b'',1), (BASELINES/'deployment_system.py').read_bytes())
+            self.assertFalse(receipt['install_or_ds_requests'])
+
+    def test_wrong_input_refuses_before_output_creation(self):
+        build = self.load()
+        with tempfile.TemporaryDirectory(prefix='b7-e33-source-negative-') as tmp:
+            root=Path(tmp);bad=root/'bad';bad.mkdir()
+            (bad/'deployment_system.py').write_bytes(b'wrong public source')
+            with self.assertRaisesRegex(ValueError,'EXACT_PINNED_BYTES_REQUIRED'):
+                build.build(bad,root/'must-not-exist')
+            self.assertFalse((root/'must-not-exist').exists())
+
+    def test_existing_output_refuses_without_replacing_sentinel(self):
+        build = self.load()
+        with tempfile.TemporaryDirectory(prefix='b7-e33-source-negative-') as tmp:
+            output=Path(tmp)/'existing';output.mkdir();p=output/'sentinel';p.write_bytes(b'retained')
+            before=p.stat()
+            with self.assertRaisesRegex(ValueError,'EXCLUSIVE_NEW_OUTPUT_REQUIRED'):
+                build.build(BASELINES,output)
+            self.assertEqual(p.read_bytes(),b'retained');self.assertEqual(p.stat().st_ino,before.st_ino)
+            self.assertEqual(sorted(x.name for x in output.iterdir()),['sentinel'])
+
+if __name__=='__main__': unittest.main()
