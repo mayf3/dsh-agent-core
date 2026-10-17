@@ -1,0 +1,31 @@
+{
+  "base": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+  "final_native_test": "36/36",
+  "files_sha256": {
+    "packages/product-api/src/conversation/auth.js": "f6627d29b71f64b369f9b74eb3d5fe4c2f3bd3bab5fe3120a41209196dfabe06",
+    "packages/product-api/src/conversation/events.js": "d66e3798c9cd7fb148cb6c2069e50ad0690d119ba706767ae5e2308e53b38f5b",
+    "packages/product-api/src/conversation/history.js": "a342f067861a55411e39fdc26f8f1fdf0cb9a52e0b96b16ed164c92f506f1b5f",
+    "packages/product-api/src/conversation/http.js": "69080e25324da34d843629c8c310f80f4e8cd5ad6911de207cf18aeb56c39049",
+    "packages/product-api/src/conversation/native-proof.js": "0abfe42a16c4bdf747988555583e9e01c6b6a56fdad48285a15a3f5e91a5a3a2",
+    "packages/product-api/src/conversation/projection-store.js": "9b6d94cbe931d5a799d62b84a1c924047325425de6c31df98ddd671540189bfd",
+    "packages/product-api/src/conversation/protocol.js": "9b20ab625aefb28ac1b9648250af2d5bd6c5bb983659950b19f0196fe9fa6a6e",
+    "packages/product-api/src/conversation/runtime.js": "7c08dec0422b024f7f0d8f19802dc50de29c8a0cc471f58922f8a638a9a5cbe5",
+    "packages/product-api/src/conversation/service.js": "691d315fa3bf9f2eda1c660cba7f69357aaa5b6248a14e91272109bd54a1919f",
+    "packages/product-api/src/conversation/store.js": "17c6f3d4e23743ec44cb707d7a5b8903ba93517a52dadd3c8cd5548849c5b0de",
+    "packages/product-api/test/conversation/history-events.test.js": "2fbaa8359aded6b993d7d7ade6a83fe9a3c132130df71cb25783a7190129135e",
+    "packages/product-api/test/conversation/history-regressions.test.js": "d33a585001e1234ffc356f948625a5c54395988da3739f5af972d2fffac2692b",
+    "packages/product-api/test/conversation/history-test-support.js": "540a3ccf500d00eb474fc3e9d59519236082885dd71c4faa5710c8a7755a4d07",
+    "packages/product-api/test/conversation/native-source-fault.test.js": "7a05392f8da2bd0ba52165e9e0b42cbf87a51cb54d67ad13e382243157513988",
+    "packages/product-api/test/conversation/pilot.test.js": "18e91650834f2ffe23a276332f52b6c10cc0437be8090ac13ddfabbb0880a99e"
+  },
+  "log_normalization": "Trailing whitespace removed per line in tracked copies; originals retained at /tmp/ac1200-*.log",
+  "original_logs_sha256": {
+    "docs/evidence/native-history-events-20261017/base-voice.log": "bf1ad3275e63158d21bcd6dad35d1c68e591721bff54acc9c7ebc4008612cd2f",
+    "docs/evidence/native-history-events-20261017/native-final.log": "2fba9bc37d5cac21e22a821bb8c83bf9f9a7963f9bac8e67f747504d94755a75",
+    "docs/evidence/native-history-events-20261017/product-api.log": "4345c1c9b3a822fd4df9ca34bf7682eee1f76c508ac06409bceb5baf319e6ae6",
+    "docs/evidence/native-history-events-20261017/recovery-red.log": "4ef0d990883c3723dfd9d881ba014e7a0a76a97283960057617aca4a1ade3a5f",
+    "docs/evidence/native-history-events-20261017/red.log": "ccfc0415c926286d9cbf5f1ae616d2ffe79d0bab4e4de3b3c87c41ebe7d5a120",
+    "docs/evidence/native-history-events-20261017/structure-base.log": "e2f67f3f8d2e62cfca40bc558ba0d3854b56652307d413230342e0179b2ce011",
+    "docs/evidence/native-history-events-20261017/structure-candidate.log": "1c7d1a9e31826bf09c6e9999f8edff9d5b2a0225d0af3de9f7ae648da501baea"
+  }
+}

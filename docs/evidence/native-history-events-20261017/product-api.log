@@ -1,0 +1,292 @@
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ admin gate: no token / wrong scope / foreign target all fail closed with ZERO store mutation (656.541833ms)
+✔ legitimate admin reset through the real HTTP entry unblocks the same HR via the normal ingress (935.017208ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ retrying a completed declaration over HTTP never adopts a later unknown turn (654.863583ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ declarations survive a controller restart and stay readable at the entry (435.011834ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ an identifiable live HR execution refuses the reset with a structured limitation (r4130766489) (454.509625ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ the 32-distinct-declaration budget is a real boundary; retries of existing ids still work (1591.664834ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET requires the same admin authority; the loopback /v1/message path cannot reach the admin operation (122.248291ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ Owner-designated sole authority: workflow.admin alone and CTO identity mismatches are all denied with ZERO mutation (233.475625ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ non-drained lifecycle slots refuse the reset: STARTUP and REAP are explicit local limitations, zero mutation (147.33225ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ missing lifecycle verification capability fails closed instead of defaulting to resettable (74.248791ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ restart-lost unknown fences without durable exit evidence refuse the entry: EMPTY is not drained (90.783458ms)
+✔ explicit Owner risk acceptance admits the restart-lost class: audit kept, records stay fenced + unknown (461.243875ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ D3: after a successful reset the next HR turn mints a NEW handle — the old handle is never joined (1376.639917ms)
+✔ D3 (D6 restart-lost class): reset converges with zero occupancy — nothing replayed, nothing carried, unrelated Agent unaffected (1445.167958ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ D3: an evidenced later stuck turn is only reset by an explicit NEW declaration (scope stays exact) (847.450041ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET /v1/agents lists defined agents in the contract shape (75.383ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] ERROR GET /v1/binding failed: no binding for surface: never-seen
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET /v1/binding: 200 with the surface binding; 404 BINDING_NOT_FOUND when none (55.8745ms)
+[product-api] ERROR POST /v1/switch-agent failed: product-api: sessionId is not part of the Gate 1 switch-agent contract
+[product-api] ERROR GET /v1/binding failed: no binding for surface: surface-2
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ POST /v1/switch-agent: surface scope, targetAgentId-ONLY (sessionId rejected) (96.271292ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ POST /v1/message: routes through the Router, returns the reply + binding facts (38.721666ms)
+[product-api] ERROR POST /v1/message failed: mobile turn unknown
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ B15 product API preserves typed outcome_unknown reconciliation data (13.516291ms)
+[product-api] ERROR POST /v1/message failed: product-api: surfaceId must be a non-empty string
+[product-api] ERROR POST /v1/message failed: product-api: surfaceId must be a non-empty string
+✔ validation and error envelope (400/404/500 shapes) (14.655083ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] ERROR POST /v1/switch-agent failed: agent not found: agt_x
+✔ AGENT_NOT_FOUND from the Router maps to 404 (31.002292ms)
+✔ old owner config without the new operations keeps them closed (NO_ACCESS, zero reads) (17.234166ms)
+✔ closed adapter stays NOT_PROVISIONED for the new operations (37.9115ms)
+✔ history returns the user projection and assistant reply with relations, stable ids and coverage (372.497625ms)
+✔ older/newer pagination has no dup or miss; empty newer keeps the cursor; growth is picked up (1274.592666ms)
+✔ long reply bodies page through content_cursor within 6144 UTF-8 bytes (277.331ms)
+▶ expired results keep their tombstone and history shows the expired state honestly
+  ✔ result read after expiry reports RESULT_EXPIRED but keeps the tombstone (48.445583ms)
+✔ expired results keep their tombstone and history shows the expired state honestly (328.812292ms)
+✔ records from before the user-body projection keep their content not_projected (226.151709ms)
+✔ foreign or unknown session handles leak nothing (201.8175ms)
+✔ events are scope-monotonic with stable ids, survive restart, and dedupe repeated callbacks (289.829042ms)
+✔ event cursors below retention report EVENT_CURSOR_EXPIRED with retained coverage (238.827333ms)
+✔ cold and steady history/events reads do not create files, migrate, recover or read native source (291.484292ms)
+✔ frozen pages exclude growth; after_cursor finds late replies once, also after restart and duplicate callback (1036.758416ms)
+✔ user and reply content cursors bind exact scope/version/part/generation/UTF8 and obey retention (356.363583ms)
+✔ pending user projection expires on its own bounded retention without deleting UNKNOWN (212.368584ms)
+✔ event pages resume at tail, bind filters and scope, reject explicit revoked target and stale binding (439.212417ms)
+✔ callback retry after commit failure preserves old durable state then atomically publishes one reply/event (438.7055ms)
+✔ large response obeys 1MiB and durable history positions survive actual event cap trimming (6178.16875ms)
+✔ closed read arguments reject mutually exclusive content/query fields and invalid limits (0.739916ms)
+✔ real source turn-end disk fault is reported through original request; no perpetual pending and no replay (853.411292ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ native HTTP routes fail closed while unconfigured; no Router target read (166.696334ms)
+✔ principal-scoped request key survives restart, duplicates do not send, payload conflict is explicit (856.678209ms)
+✔ two reverse-order replies use native request coordinates; automatic callback persists results (563.182959ms)
+✔ authorization revalidated per request and grants/targets are not borrowed from a handle (12.50425ms)
+✔ reserved/unknown original is recovered from source after lost receipt, never routed again (366.560084ms)
+✔ missing auth and stale target are denied without sending or exposing source (70.988ms)
+✔ pagination gives UTF8-safe complete reply with stable projection ID when native assistant ID is unknown (222.921917ms)
+✔ a settled native turn with source still pending is an explicit unrecoverable failure, not perpetual pending (307.512458ms)
+✔ source retained but facade disk write fails: original result can be repaired, never resent (249.866042ms)
+✔ retained exact reply is readable while native execution stays unknown, then refreshes only original execution facts (379.933958ms)
+✔ B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay (392.435958ms)
+✔ B002: completed wholly-empty native turn is not an available empty business reply (168.751333ms)
+✔ auth redirect rejection keeps the fixed canonical token endpoint and never follows a management target (8.227083ms)
+✔ B003: retained native main resolution and scoped lawful continuation survive result persistence (219.586917ms)
+✔ CTR004 regression: retained exact reply survives facade restart while original execution stays terminated/unknown (420.0965ms)
+✔ C1 peer canonicalization matrix (CTR-PA-013 / ACC-PA-P) (1.953375ms)
+✔ C2 surface header matrix: only canonical lowercase UUID v4 passes (ACC-PA-G) (0.279417ms)
+✔ C3 config readiness matrix: every failure is PROFILE_NOT_READY, valid config yields digest (ACC-PA-I) (231.752167ms)
+✔ C4 admission: non-history route class is 403 with zero WhoIs work (CTR-PA-001/CTR-PA-006 step 1) (26.093375ms)
+✔ C5 admission 503 matrix: not-ready config, unknown peer, whois failure (CTR-PA-007) (52.080459ms)
+✔ C6 admission 403 matrix: unlisted Node, cross pair, wrong surface, bad header (CTR-PA-007) (37.378625ms)
+✔ C7 allow path: exact pair yields the frozen trusted authContext, no StableID inside (CTR-PA-003) (0.65325ms)
+✔ H1 route class shape match is selector-agnostic; everything else is 403 (1.597417ms)
+✔ H2 allow path: exact pair → 200 frozen envelope; denial shapes are exact; loopback server untouched semantics (333.822917ms)
+✔ H4 selector ≠ main → 400 VALIDATION_ERROR with valid identity (History owns the 400) (158.4775ms)
+✔ H5 not-ready profile: listener mounts fail-closed (503 on every class-matched request, 403 otherwise) (64.001042ms)
+✔ H6 concurrent append over HTTP: existing public IDs and old cursors stay byte-stable (120.346583ms)
+✔ H7 runtime log allowlist: no content, no cursor values, no paths, no auth material (CTR-SH-014/CTR-PA-011) (171.317375ms)
+✔ H8 cold read: no spawn seams exist, artifact bytes unchanged across HTTP reads (69.824541ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 gate: no token / unconfigured seam / bad token / no scope / local label all fail closed (1319.893917ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 gate: unconfigured verification seam = 401 even for any bearer string (694.573ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-001c/d/e + ACC-004 audit view: run detail with job_snapshot / output / trace.wake_links (642.642833ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 read scope: only own runs; other agent_id query / other run / other occurrence = 403 (592.741792ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 read scope without agent binding = 403 (owns no runs) (506.984625ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ R7 query contract: filters, pagination cursor, limit bounds, invalid_query, scheduled notice (479.170833ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-009 read-only red line: no mutating routes; unauthenticated POST = 401 gate first (449.954125ms)
+✔ history store not wired = 500 internal (fail loud, not silent empty) (12.197125ms)
+✔ buildRunRecord stays a pure rebuildable projection (same facts → same record) (0.345834ms)
+✔ Auth V1 direct-machine agent and service profiles verify exactly (25.540041ms)
+✔ Auth V1 verifier requires issuer and audience configuration (0.90375ms)
+▶ Auth V1 direct-machine claim/profile violations fail closed
+  ✔ audience array (1.268834ms)
+  ✔ wrong token version (36.284ms)
+  ✔ wrong token_use (16.979458ms)
+  ✔ wrong type (28.969583ms)
+  ✔ non-UUID subject (12.998459ms)
+  ✔ missing client (17.706959ms)
+  ✔ short jti (20.2295ms)
+  ✔ nbf after iat (8.091625ms)
+  ✔ non-positive lifetime (5.331875ms)
+  ✔ TTL over 600 seconds (13.761542ms)
+  ✔ leading scope space (10.658458ms)
+  ✔ duplicate scope (9.996417ms)
+  ✔ unsorted scopes (2.036667ms)
+  ✔ bad scope grammar (3.065708ms)
+  ✔ direct token act claim (3.089084ms)
+  ✔ direct token azp claim (4.128417ms)
+  ✔ agent profile missing agent_id (7.099333ms)
+  ✔ service profile carrying agent_id (6.176583ms)
+  ✔ future iat/nbf is not yet valid (4.341583ms)
+✔ Auth V1 direct-machine claim/profile violations fail closed (218.096917ms)
+✔ Auth V1 verifier rejects non-RS256 and unknown kid tokens (3.178625ms)
+✔ Auth V1 trusted JWKS cache is usable only inside max-stale (52.142583ms)
+✔ T17 health auth runs before provider and scheduler.read receives only self rows (1.58875ms)
+✔ T17 scheduler.audit receives the complete fleet census (0.988375ms)
+✔ T17 unauthenticated/bad-scope requests never touch health provider (1.720834ms)
+✔ T17/T33 health route is GET-only and fails loud when provider is absent (0.236208ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ T17 HTTP integration mounts authenticated GET /scheduler/health with self/audit isolation (207.412375ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":16044,"duration_ms":500,"latency_ms":609}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ POST /v1/voice/transcription: valid short WAV -> 200 {"text"} (engine: string text; tone may be empty) (698.808042ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":464044,"duration_ms":14500,"latency_ms":283}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ valid near-limit WAV (14.5 s, inside both ceilings) -> 200 (304.350792ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":63764,"duration_ms":1865,"latency_ms":294}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✖ TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text (2374.097042ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":400,"byte_count":64,"duration_ms":null,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ malformed WAV (bad RIFF header) -> 400 (13.954208ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":415,"byte_count":0,"duration_ms":null,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ wrong content type -> 415 (13.788791ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":413,"byte_count":0,"duration_ms":null,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ payload over 512 KB ceiling -> 413 (reading stops, duration within limits) (14.959458ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":413,"byte_count":496044,"duration_ms":15500,"latency_ms":0}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ decoded duration over 15 s ceiling -> 413 (payload under byte ceiling) (19.073792ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":6444,"duration_ms":200,"latency_ms":28}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ engine unavailable (model dir empty) -> 503; server boots cleanly regardless (45.991542ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":504,"byte_count":16044,"duration_ms":500,"latency_ms":1}
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ service deadline exceeded -> 504 (test-only deadline override, engine present) (16.820334ms)
+[product-api:voice] {"route":"/v1/voice/transcription","status":503,"byte_count":9644,"duration_ms":300,"latency_ms":293}
+✖ zero persistence + log allowlist: no new files, stderr carries ONLY the allowlisted fields (356.923ms)
+✔ agent caller observes exactly {agentId, exists, enabled}, snapshot fresh per command (32.674959ms)
+✔ service caller is equally directory-eligible; required scope is presence-checked (9.171084ms)
+✔ unknown exact ID is a 200 observation {exists:false, enabled:false} (5.2ms)
+✔ wrong audience/issuer/profile/expired and missing scope deny before any Definition read (42.979833ms)
+✔ human principal type is denied before any Definition read (11.414083ms)
+✔ the superseded 5-second issued-at pin is retired; verifier time policy governs (9.075833ms)
+✔ query/body/list/legacy/name/prefix input is invalid after authentication (41.879292ms)
+✔ duplicate, corrupt and storage errors discriminate (14.954459ms)
+✔ whole deadline includes JWKS; late verification never reads snapshot (108.547291ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003 gate: no token / bad token / wrong scope / unconfigured seam all fail closed (93.963708ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003 traces: valid query hits the seam; unknown instance 404; bad params 400 (39.056166ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-006 kicks: valid kick 200 (kicked), never echoes the payload; malformed 400 (132.0935ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ owner-assistance wake: closed body + workflow.execute gate + retryable runtime failure (48.75325ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest) (15.189875ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ attention: zero-parameter fleet summary 200; read-only boundary (no kick/wake/trace side calls) (18.509167ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ attention: same fail-closed gate (no token / wrong scope / unconfigured seam) + closed query (58.786459ms)
+ℹ tests 135
+ℹ suites 0
+ℹ pass 131
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9456.391292
+
+✖ failing tests:
+
+test at packages/product-api/test/voice-transcription.test.js:176:1
+✖ POST /v1/voice/transcription: valid short WAV -> 200 {"text"} (engine: string text; tone may be empty) (698.808042ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:179:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:184:1
+✖ valid near-limit WAV (14.5 s, inside both ceilings) -> 200 (304.350792ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:189:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:193:1
+✖ TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text (2374.097042ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:202:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/voice-transcription.test.js:262:1
+✖ zero persistence + log allowlist: no new files, stderr carries ONLY the allowlisted fields (356.923ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:270:12
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async captureStderr (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:153:5)
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/voice-transcription.test.js:268:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
