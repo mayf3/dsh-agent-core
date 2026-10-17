@@ -51,8 +51,8 @@ const ERROR_CODE_MAP = {
 /** The closed manifest error table (capabilities/execution-history.js). */
 const KNOWN_ERROR_CODES = new Set([
   'invalid_arguments', 'id_namespace_mismatch', 'forbidden_not_owner',
-  'workflow_instance_not_found', 'session_not_found', 'scheduler_record_not_found',
-  'message_not_found', 'downstream_unavailable', 'history_unavailable',
+  'workflow_instance_not_found', 'workflow_node_visit_not_found', 'session_not_found',
+  'scheduler_record_not_found', 'message_not_found', 'downstream_unavailable', 'history_unavailable',
 ])
 
 export function createExecutionHistoryRuntime({ layout, credentialsFile, authServiceOrigin, log }) {

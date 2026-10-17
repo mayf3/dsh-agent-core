@@ -26,6 +26,7 @@ const baseErrors = [
   { code: 'id_namespace_mismatch', description: 'A mobile display id (msg_sh1_*) was passed where the native messageId is required; display ids are content hashes and cannot be resolved back.' },
   { code: 'forbidden_not_owner', description: 'The queried record is not owned by the caller (self scope).' },
   { code: 'workflow_instance_not_found', description: 'Workflow instance not found or not visible to the caller (svc visibility decides).' },
+  { code: 'workflow_node_visit_not_found', description: 'No attempts-ledger attempt for this (workflowInstanceId, nodeVisitId) on this runtime, or not visible to the caller (self scope; svc visibility decides).' },
   { code: 'session_not_found', description: 'No resolvable session journal for this agentId/sessionId.' },
   { code: 'scheduler_record_not_found', description: 'No scheduler job/occurrence/run matches the given coordinates.' },
   { code: 'message_not_found', description: 'No record matches the given message coordinate.' },
@@ -40,8 +41,9 @@ const baseErrors = [
 ]
 
 const properties = {
-  root: { type: 'string', enum: ['workflow_instance', 'agent_session', 'scheduler_run', 'message'], description: 'Query root; exactly one root key below is required, matching the root.' },
-  workflowInstanceId: { type: 'string', description: 'workflow_instance root: instance id (UUID).' },
+  root: { type: 'string', enum: ['workflow_instance', 'workflow_node_visit', 'agent_session', 'scheduler_run', 'message'], description: 'Query root; exactly one root key below is required, matching the root.' },
+  workflowInstanceId: { type: 'string', description: 'workflow_instance | workflow_node_visit root: instance id (UUID).' },
+  nodeVisitId: { type: 'string', description: 'workflow_node_visit root: node visit id (UUID); returns the visit\'s historical attempts index (every ledger generation), coordinate-only.' },
   agentId: { type: 'string', description: 'agent_session root: owning Agent canonical id (agt_*); self scope requires the caller itself.' },
   sessionId: { type: 'string', description: 'agent_session root: native session id (e.g. main, cron-run-occ:...).' },
   jobId: { type: 'string', description: 'scheduler_run root: Scheduler job id.' },
@@ -74,13 +76,13 @@ export const executionTraceQueryManifest = {
   selector: 'operation',
   name: 'Execution Trace Query',
   description:
-    'Read-only execution-history trace over the calling Agent\'s own records: given a workflow instance, one of your sessions, a scheduler job/occurrence/run, or a native message coordinate, assemble the full execution chain (admission → dispatch → send → turn/tool calls → workflow command) with per-source read boundaries, correlation rules, five-dimension verdicts and explicit gaps. Self scope: you may query your own sessions/jobs and workflow instances svc-visible to you; other Agents\' session content is never readable here.',
+    'Read-only execution-history trace over the calling Agent\'s own records: given a workflow instance, one node visit of an instance, one of your sessions, a scheduler job/occurrence/run, or a native message coordinate, assemble the full execution chain (admission → dispatch → send → turn/tool calls → workflow command) with per-source read boundaries, correlation rules, five-dimension verdicts and explicit gaps. Self scope: you may query your own sessions/jobs and workflow instances svc-visible to you; other Agents\' session content is never readable here.',
   local: { resource: 'execution-history' },
   renderErrorDetail: true,
   requiredScopes: ['execution.history.read'],
   errors: baseErrors,
   operations: [queryOperation(
-    'Assemble one execution trace from the caller-owned records (workflow_instance | agent_session | scheduler_run | message root).',
+    'Assemble one execution trace from the caller-owned records (workflow_instance | workflow_node_visit | agent_session | scheduler_run | message root).',
   )],
 }
 
@@ -96,7 +98,7 @@ export const executionHistoryAuditQueryManifest = {
   requiredScopes: ['execution.history.audit'],
   errors: baseErrors,
   operations: [queryOperation(
-    'Assemble one execution trace across Agents (workflow_instance | agent_session | scheduler_run | message root).',
+    'Assemble one execution trace across Agents (workflow_instance | workflow_node_visit | agent_session | scheduler_run | message root).',
   )],
 }
 

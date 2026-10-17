@@ -57,6 +57,10 @@ export function assembleResult(input) {
       cursorSemantics: pagination.cursorSemantics,
     },
     summary: { fiveDimensions },
+    // WORKFLOW_NODE_SESSION_HISTORY_V1: the per-attempt index rides the
+    // assembled result when the root builder produced one (additive; all
+    // other roots leave it undefined).
+    ...(build.attemptIndex !== undefined ? { attempts: build.attemptIndex.attempts } : {}),
     timeline: pagination.entries.map((entry) => ({ ...entry, atUtc: utcIso(entry.atMs), brief: brief(entry) ?? entry.brief })),
     correlations: build.correlations,
     gaps: build.gaps,
