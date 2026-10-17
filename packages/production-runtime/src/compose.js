@@ -43,7 +43,7 @@ import { apply as applyFeishu } from '../../feishu-connector/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { apply as applyBroker } from '../../broker/src/index.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { createJwksTokenVerifier } from '../../product-api/src/scheduler-auth.js'
+import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
@@ -61,7 +61,12 @@ import { projectExecutionTrace } from '../../workflow-execution/src/projection.j
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
 import { resolveProductionLayout } from './paths.js'
-import { createModelArtifactContext, loadAgentModelOverrides } from './model-overrides.js'
+import { createModelArtifactContext, loadAgentModelOverrides, canonicalDefaultGlobalRoute } from './model-overrides.js'
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
+import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
+import { mountWorkflowExecutionContextRuntime } from './workflow-execution-context-runtime.js'
+import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
+import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import {
   mountNotificationIngressRuntime,
   wireNotificationIngressDeliveryEvidence,
@@ -223,13 +228,21 @@ export async function composeProductionRuntime(options = {}) {
   // snapshot) so target-only rollback needs neither a runtime restart nor a
   // file watcher. The Router receives the immutable snapshot resolver and
   // never reads the file or learns provider/model rules.
-  const globalRoute = Object.freeze(opts.globalRoute ?? {
-    provider: process.env.DSH_AGENT_PROVIDER ?? 'opencode-go',
-    model: process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash',
-  })
+  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
+  const globalRouteSource = opts.globalRoute !== undefined
+    ? 'composition_config'
+    : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined
+      ? 'runtime_env'
+      : 'builtin_default')
+  const globalRoute = Object.freeze(opts.globalRoute ?? (globalRouteSource === 'runtime_env'
+    ? {
+      provider: process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider,
+      model: process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model,
+    }
+    : canonicalDefaultGlobalRoute(modelLoadOptions)))
+  log.log(`global model route: ${globalRoute.provider}/${globalRoute.model} (source=${globalRouteSource})`)
   const modelOverridesFile = layout.agentModelOverrides ?? join(layout.root, 'agent-model-overrides.json')
   const registeredAgentIds = Object.freeze(definition.listAgents().map((agent) => agent.id))
-  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
   const initialModelOverrides = loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
   const resolveRouteChain = (agentId) => loadAgentModelOverrides(modelOverridesFile, registeredAgentIds, modelLoadOptions)
     .resolveChain(agentId, globalRoute)
@@ -353,6 +366,7 @@ export async function composeProductionRuntime(options = {}) {
       }
 
   const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
+  const history = await mountSchedulerHistoryRuntime({ ctx, layout, schedulerAuth: opts.schedulerAuth, log })
   const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
 
   // Shared trusted Broker configuration is also consumed by principal
@@ -368,6 +382,7 @@ export async function composeProductionRuntime(options = {}) {
   // correlation (never model args); the L1 intent/outcome append surface is
   // the agentSessionAudit file with sanitized onAuditFailure signals.
   agentSessionRuntime.mount(ctx)
+  mountExecutionHistoryRuntime(ctx, { layout, broker: opts.broker, log })
 
   // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V2 (accepted): the trusted
   // LOCAL provider for the read-only agent_resolve_principal. Auth is the
@@ -422,20 +437,8 @@ export async function composeProductionRuntime(options = {}) {
   // single canonical source; no-scope agent.definition.read visibility.
   ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
 
-  // Reuse the existing Scheduler JWKS verifier seam for the WEC loopback
-  // routes. Incomplete configuration stays unconfigured and rejects requests.
-  const schedulerJwksUrl = opts.schedulerAuth?.jwksUrl ?? process.env.SCHEDULER_AUTH_JWKS_URL
-  const schedulerIssuer = opts.schedulerAuth?.issuer ?? process.env.SCHEDULER_AUTH_ISSUER
-  const schedulerAudience = opts.schedulerAuth?.audience ?? process.env.SCHEDULER_AUTH_AUDIENCE
-  ctx.provide('schedulerTokenVerifier',
-    schedulerJwksUrl && schedulerIssuer && schedulerAudience
-      ? createJwksTokenVerifier({
-          jwksUrl: schedulerJwksUrl,
-          issuer: schedulerIssuer,
-          audience: schedulerAudience,
-          log: { warn: (...args) => log.warn('[scheduler-auth]', ...args) },
-        })
-      : null)
+  mountWorkflowExecutionContextRuntime({ ctx })
+  mountFixedOperationRuntime({ ctx, log })
 
   const workflowExecution = mountWorkflowExecutionRuntime({
     ctx,
@@ -449,15 +452,21 @@ export async function composeProductionRuntime(options = {}) {
       const attempts = await workflowExecution.ledger.snapshotFresh()
       return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
     },
+    attention: async () => {
+      const attempts = await workflowExecution.ledger.snapshotFresh()
+      return projectExecutionAttention(attempts)
+    },
     kick: (payload) => {
       if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
       void payload
       return workflowExecution.engine.kick()
     },
+    ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
   })
 
   const scheduler = new Scheduler({
     store,
+    history,
     invoker,
     deliver,
     tickMs,

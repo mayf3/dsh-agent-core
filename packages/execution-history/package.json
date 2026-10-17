@@ -1,0 +1,11 @@
+{
+  "name": "@agent-core/execution-history",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AGENT_CORE_EXECUTION_HISTORY_QUERY_V1 — read-only execution-history query core: six-source loaders, R1-R9 correlation, five-dimension epistemic verdicts, report rendering, rebuildable session index.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

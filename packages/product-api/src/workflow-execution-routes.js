@@ -4,8 +4,13 @@
  *
  *   GET  /workflow-execution/traces   execution trace read model
  *                                     ?workflowInstanceId=<uuid>[&nodeVisitId=<uuid>]
+ *   GET  /workflow-execution/attention  fleet-level execution-attention summary
+ *                                     (zero parameters; read-only selection over
+ *                                     the same ledger projection; same gate)
  *   POST /workflow-execution/kicks    push-first poll trigger
  *                                     {workflowInstanceId, nodeVisitId, dispatchIntentId}
+ *   POST /workflow-execution/owner-assistance-wakes
+ *                                     durable Domain Owner assistance wake
  *
  * Both routes pass the Bearer token gate FIRST (the scheduler-routes R-H9
  * discipline, reused verbatim): the verification seam unconfigured or any
@@ -80,6 +85,15 @@ function requireUuidBodyField(body, name) {
   return value
 }
 
+function requireClosedBody(body, allowed) {
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    throw new HttpError(400, 'invalid_arguments', 'body must be a JSON object')
+  }
+  for (const key of Object.keys(body)) {
+    if (!allowed.has(key)) throw new HttpError(400, 'invalid_arguments', `unknown body field: ${key}`)
+  }
+}
+
 /** Read a bounded JSON request body. */
 function readJsonBody(req) {
   return new Promise((resolveBody, rejectBody) => {
@@ -115,7 +129,7 @@ function readJsonBody(req) {
  * @param {object} input
  * @param {import('node:http').IncomingMessage} input.req
  * @param {URL} input.url
- * @param {{traces:Function, kick:Function}|null} input.access - compose-provided
+ * @param {{traces:Function, kick:Function, ownerAssistanceWake?:Function}|null} input.access - compose-provided
  *   workflowExecutionAccess service (resolved at request time).
  * @param {{verify:Function}|null} input.verifier - the shared scheduler token verifier seam.
  * @returns {Promise<{status:number, body:object}>}
@@ -139,6 +153,21 @@ export async function handleWorkflowExecutionRequest({ req, url, access, verifie
     return { status: 200, body: { ...trace, generatedAtMs: Date.now() } }
   }
 
+  // Execution-attention summary: a zero-parameter, fleet-level, read-only
+  // selection over the SAME CTR-WEC1-001/002 ledger projection (attention =
+  // the frozen attention executionStates; conditions are ledger facts, never
+  // inferred). Same bearer gate and envelope discipline as CTR-WEC1-003.
+  if (req.method === 'GET' && path === '/workflow-execution/attention') {
+    const store = requireAccess(access)
+    if (typeof store.attention !== 'function') throw new HttpError(503, 'not_ready', 'attention seam is not wired')
+    const firstParam = url.searchParams.keys().next()
+    if (!firstParam.done) {
+      throw new HttpError(400, 'invalid_query', `attention is a zero-parameter summary; unexpected query parameter: ${firstParam.value}`)
+    }
+    const attention = await store.attention()
+    return { status: 200, body: { ...attention, generatedAtMs: Date.now() } }
+  }
+
   if (req.method === 'POST' && path === '/workflow-execution/kicks') {
     const store = requireAccess(access)
     if (typeof store.kick !== 'function') throw new HttpError(503, 'not_ready', 'kick seam is not wired')
@@ -151,6 +180,32 @@ export async function handleWorkflowExecutionRequest({ req, url, access, verifie
     // The kick result carries no semantics beyond latency: kicked vs
     // coalesced are both successes, and the payload is not echoed back.
     return { status: 200, body: { ok: true, ...(kick?.coalesced ? { coalesced: true } : { kicked: true }) } }
+  }
+
+  if (req.method === 'POST' && path === '/workflow-execution/owner-assistance-wakes') {
+    const store = requireAccess(access)
+    if (typeof store.ownerAssistanceWake !== 'function') {
+      throw new HttpError(503, 'not_ready', 'owner assistance wake seam is not wired')
+    }
+    const body = await readJsonBody(req)
+    requireClosedBody(body, new Set([
+      'workflowInstanceId', 'nodeVisitId', 'assistanceCaseId', 'ownerPrincipalId', 'reason',
+    ]))
+    const reason = body.reason
+    if (reason !== undefined && (typeof reason !== 'string' || reason === '' || reason.length > 128)) {
+      throw new HttpError(400, 'invalid_arguments', 'reason must be a non-empty string <= 128 chars when present')
+    }
+    const outcome = await store.ownerAssistanceWake({
+      workflowInstanceId: requireUuidBodyField(body, 'workflowInstanceId'),
+      nodeVisitId: requireUuidBodyField(body, 'nodeVisitId'),
+      assistanceCaseId: requireUuidBodyField(body, 'assistanceCaseId'),
+      ownerPrincipalId: requireUuidBodyField(body, 'ownerPrincipalId'),
+      ...(reason === undefined ? {} : { reason }),
+    })
+    if (!outcome?.ok) {
+      throw new HttpError(503, outcome?.code ?? 'owner_wake_failed', 'Domain Owner wake was not admitted')
+    }
+    return { status: 200, body: { ok: true, ...(outcome.reused ? { reused: true } : { delivered: true }) } }
   }
 
   throw new HttpError(404, 'not_found', `no such workflow-execution endpoint: ${req.method} ${path}`)

@@ -222,6 +222,7 @@ export async function invokeWithDeadline(record, job) {
     occurrenceId: record.occurrenceId,
     runId: record.runId,
     requestId: record.idempotencyKey,
+    jobId: job.id ?? job.jobId,
     payloadHash: record.payloadHash,
     message: job.payload.message,
     model: job.payload.model,
@@ -350,11 +351,13 @@ export async function watchLateSettlement(record, invocationPromise) {
         || outcome.routerEnvelope === 'not_admitted'
         || hasTerminationProof(outcome))
     if (provenFailure) {
+      const provenPreStart = outcome.routerEnvelope === 'not_admitted' || outcome.started === false
       await this._applyLateSettlement(
         record,
         'failed',
         `invoker late proven terminal failure after timeout: ${outcome.error ?? ''}`,
         outcome,
+        provenPreStart ? 'pre-start-rejection' : 'late-settlement',
       )
     }
   } catch {
@@ -368,7 +371,7 @@ export async function watchLateSettlement(record, invocationPromise) {
  * recognition, the C-004 envelope classification and the settlement writer).
  */
 
-export async function applyLateSettlement(record, resolvedTo, note, outcome = {}) {
+export async function applyLateSettlement(record, resolvedTo, note, outcome = {}, terminalEvidenceKind = 'late-settlement') {
   const resolvedAt = this.nowMs()
   const lateEvidence = {
     requestId: record.idempotencyKey,
@@ -395,7 +398,7 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
           basis: 'trusted-late-evidence',
           evidenceRef,
         },
-        terminalEvidence: { kind: 'late-settlement', detailRef: note },
+        terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
       })
       latest.fences = rebuildFences(latest.occurrences)
       applyLateCompletion(latest, current, resolvedAt)
@@ -418,6 +421,7 @@ export async function applyLateSettlement(record, resolvedTo, note, outcome = {}
       resolvedTo,
       basis: 'trusted-late-evidence',
       note,
+      terminalEvidence: { kind: terminalEvidenceKind, detailRef: note },
     })
   } catch (error) {
     this.log.error(`late settlement failed for ${record.occurrenceId}: ${error?.message ?? error}`)

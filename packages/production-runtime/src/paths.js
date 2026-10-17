@@ -88,6 +88,7 @@ export function resolveProductionLayout(rootInput) {
     notificationEvidence: join(root, 'notification-ingress', 'evidence.jsonl'),
     jobsStore: join(root, 'scheduler', 'jobs.json'),
     runsLog: join(root, 'scheduler', 'runs.jsonl'),
+    historyDir: join(root, 'scheduler', 'history'),
     workflowExecutionDir: join(root, 'workflow-execution'),
     schedulerRoutingManifest: resolve(process.env.SCHEDULER_ROUTING_MANIFEST ?? join(root, 'scheduler', 'routing.json')),
     schedulerIncidentState: join(root, 'control', 'scheduler-watchdog', 'incidents.json'),
