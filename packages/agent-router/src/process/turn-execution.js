@@ -241,6 +241,12 @@ export const turnExecutionMethods = {
       bindingContext: opts?.bindingContext,
     })
     execution.promptRequestId = `req-${this.processGeneration}-${this.seq + 1}`
+    // FIXED_OPERATION_V1: retain the delivery-time messageOrigin (validated
+    // and frozen upstream in ingress-delivery) on the execution record so a
+    // broker call made DURING this turn can be bound to the runtime-owned
+    // workflow_execution provenance server-side. Evidence only — never part
+    // of the matcher state machine, never model input, never re-derived.
+    execution.messageOrigin = opts?.messageOrigin
     try {
       this.store.markAdmitted(handle, {
         eventWatermarkSeq: execution.watermarkSeq,

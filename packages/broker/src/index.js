@@ -54,6 +54,7 @@ import { manifest as calculatorManifest, handlers as calculatorHandlers } from '
 import {
   forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
+  fixedOperationManifests,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
   workflowHumanPrincipalProjectionManifests, executionHistoryManifests, lifeWorkbenchManifests,
@@ -91,6 +92,7 @@ export const DEFAULT_MANIFESTS = [
   ...agentDefinitionManifests,
   ...schedulerManifests,
   ...selfOpsManifests,
+  ...fixedOperationManifests,
   developmentExecuteManifest,
   ...agentSessionMessagingManifests,
   ...agentPrincipalResolutionManifests,

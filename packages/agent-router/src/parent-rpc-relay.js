@@ -42,6 +42,24 @@ function provenSourceTurnExecutionId(proc, rpcMeta) {
 }
 
 /**
+ * FIXED_OPERATION_V1 — the runtime-bound workflow execution coordinates for
+ * the CURRENT proven turn, or undefined. Same exact proof as
+ * provenSourceTurnExecutionId (this process's execution map, unsettled) over
+ * the messageOrigin the delivery retained on the execution record
+ * (turn-execution.js); only the engine's frozen `workflow_execution` shape
+ * is forwarded. The coordinates therefore never travel through model
+ * arguments and can never be self-reported by the prompt.
+ */
+export function provenWorkflowExecutionContext(proc, rpcMeta) {
+  const candidate = rpcMeta?.turnExecutionId
+  if (typeof candidate !== 'string' || candidate === '') return undefined
+  const execution = proc.executions?.get(candidate)
+  if (execution === undefined || execution.settled === true) return undefined
+  const origin = execution.messageOrigin
+  return origin?.kind === 'workflow_execution' ? origin : undefined
+}
+
+/**
  * Create the per-process parent-RPC handler bound to one agent slot.
  * @param {object} deps
  * @param {string} deps.agentId - the ACTUAL identity of the owning process
@@ -107,6 +125,10 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           // R3 exact source-turn correlation for the messaging capability —
           // proven against the execution map above, absent when stale.
           sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+          // FIXED_OPERATION_V1: the runtime-bound workflow_execution
+          // coordinates of THIS proven turn (absent for every other turn
+          // kind, stale/settled execution, or non-workflow origin).
+          workflowExecutionContext: provenWorkflowExecutionContext(proc, rpcMeta),
           // Trusted-channel-only logical invocation anchor. It correlates a
           // lost response to this gateway-derived caller; it never supplies
           // identity and is never taken from model arguments.
