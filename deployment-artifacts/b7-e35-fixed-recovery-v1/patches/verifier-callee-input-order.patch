@@ -1,0 +1,45 @@
+--- a/verify-chain-v50.py
++++ b/verify-chain-v50.py
+@@ -200,5 +200,5 @@
+ check('all previous sealed modules except reviewed execution unchanged',
+       all(seal_srv.get(name) == source for name, source in seal_pre.items()
+-          if name != '<sealed-b7_ds_execution.py>'))
++          if name not in ('<sealed-b7_e35_recovery.py>', '<sealed-b7_e35_publication.py>')))
+ REVIEW_SHA = 'c595cd226f3b222c1b0a71f17187e8db4e08edeff7b022f4b35b04a60ad1dcf7'
+ EXECUTION_SHA = '64fc0d9f4abe8e1dcc62ee7730cbbd8721c2b00177665ec187864817d889b7d0'
+@@ -216,5 +216,5 @@
+       authority.get('review_receipts', {}).get('original_owner_wait_source_delta') == REVIEW_SHA
+       and dig(previous_execution.encode()) == R34_EXECUTION_SHA
+-       and dig((PREIMAGE / 'deployment_system.py').read_bytes()) == '9fd68034efb050b0d7382bc2c4b12dbcc394254a7956b3885b9ecb3134724952')
++       and dig((PREIMAGE / 'deployment_system.py').read_bytes()) == 'f93609e70db39ef87ca6013c6ccb944b11a568a772848b65f84d3c095b7224de')
+ check('fixed R34 pre-intent source and delta review',
+       dig(execution.encode()) == R34_EXECUTION_SHA
+@@ -293,6 +293,6 @@
+       + '    return _b7_e6_publication_module()\n'
+       + '# END ACCEPTED FIXED E35 RECOVERY HOST EXTENSION\n').encode()
+-check('reviewed fixed e35 source v54_e35_recovery_source.py', sha(HERE / 'v54_e35_recovery_source.py') == '88286ef86ba7848d09b4fdac79f7374414d1d925ebd904c3ad6ce2d02e03e7cf')
+-check('reviewed fixed e35 source v54_e35_publication_source.py', sha(HERE / 'v54_e35_publication_source.py') == 'e79121f47c9d10212dcba9e97a4170f7837aec2206b8d83fa290cdd2e947bbef')
++check('reviewed fixed e35 source v54_e35_recovery_source.py', sha(HERE / 'v54_e35_recovery_source.py') == 'fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d')
++check('reviewed fixed e35 source v54_e35_publication_source.py', sha(HERE / 'v54_e35_publication_source.py') == '50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b')
+ check('reviewed fixed e35 source e35_delegated_recovery.py', sha(HERE / 'e35_delegated_recovery.py') == '4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4')
+ 
+@@ -305,7 +305,8 @@
+ check('sealed e35 publication==reviewed source',seal_srv.get('<sealed-b7_e35_publication.py>')==publication_source.decode())
+ check('original R34 execution byte unchanged',execution==previous_execution)
+-check('server whole inverse only exact reviewed fixed e35 host extension',
++previous_extension=host_extension(seal_pre['<sealed-b7_e35_recovery.py>'].encode(),seal_pre['<sealed-b7_e35_publication.py>'].encode())
++check('server whole inverse only reviewed callee-input and actual preimage joins',
+       srv.count(extension)==1 and srv.count(new_fallback)==1 and old_fallback not in srv
+-      and srv.replace(extension,b'',1).replace(new_fallback,old_fallback,1)==(PREIMAGE/'deployment_system.py').read_bytes())
++      and srv.replace(extension,previous_extension,1)==(PREIMAGE/'deployment_system.py').read_bytes())
+ 
+ def owner_wait_client_exact_inverse(raw,preimage):
+@@ -316,6 +317,6 @@
+             and raw.replace(new,old,1)==preimage)
+ 
+-check('paired client exact fixed e35 timeout inverse retains original all policies',
+-      owner_wait_client_exact_inverse(cli,(PREIMAGE/'ds_client.py').read_bytes()))
++check('paired client byte unchanged from actual loaded e35 timeout cohort',
++      cli==(PREIMAGE/'ds_client.py').read_bytes() and dig(cli)=='9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67')
+ execution_client_source = HERE / 'v50_execution_client_source.py'
+ check('sealed execution client==source', execution_client_source.is_file() and

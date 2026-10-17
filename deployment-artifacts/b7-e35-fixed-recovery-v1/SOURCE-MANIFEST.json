@@ -1,11 +1,14 @@
 {
-  "PINS.json": "85b219c23084bc1e4f633eea0233b60913f66d4cc4eb1d050b05fd659311a934",
-  "README.md": "417ff36e3d2436278c29db5884b369eadd11e3243b45a7cbf580f629bc7abea9",
+  "PINS.json": "edf9c1f30a9fe1ceb98c2d2e9087b4ae54e7494baaaf3431ddf097a1123b57c6",
+  "README.md": "da25acf7b193582b2efda47fa6f4a60d51eaa008a20a49d6172d533b3ce73278",
   "patches/b7-release-executor.sh.patch": "f8b1d7728b292c93ea6642b020efb2b41bdfe378e1be3d3a5000bdcc109a46e0",
   "patches/ds_client.py.patch": "6cf612369e5d05d06518f906903910c50caabcdf47434c59935cfa547fb8b9ca",
+  "patches/publication-actual-preimage.patch": "bd6e09fa0e39faadde62c7e910f6c3d741bd89b6702d5f801b4dea2e168fbcf0",
+  "patches/recovery-callee-input-order.patch": "07ee38ebe4a40eb9bc10974ba63518a18c2dc633677f0a91bcc91d687b2d5ea2",
+  "patches/verifier-callee-input-order.patch": "9be42cf94c2ca25bcc1b98927510e0540ce3f9c055e6cae50b87bc0f57f29f6b",
   "patches/verify-chain-v50.py.patch": "48fee28140d1d248fa785fa79b6e9c011a35eb8493686cbffb0572464f1fc72d",
-  "src/e35-host-extension.py.txt": "98043957adb2982547df08303ed52033636e8d7df0bc9634011977e1bfe64f06",
+  "src/e35-host-extension.py.txt": "d9b716e4f49f2e8f8ede102628795611ea10ac238a13ff0e0c9964e73b413e84",
   "src/e35_delegated_recovery.py": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4",
-  "src/v54_e35_publication_source.py": "e79121f47c9d10212dcba9e97a4170f7837aec2206b8d83fa290cdd2e947bbef",
-  "src/v54_e35_recovery_source.py": "88286ef86ba7848d09b4fdac79f7374414d1d925ebd904c3ad6ce2d02e03e7cf"
+  "src/v54_e35_publication_source.py": "50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b",
+  "src/v54_e35_recovery_source.py": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d"
 }
