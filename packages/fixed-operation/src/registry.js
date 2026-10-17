@@ -93,10 +93,12 @@ export function createOperationRegistry(definitions) {
   }
 
   /**
-   * Raw execution: returns the success envelope or THROWS a coded
-   * FixedOperationError. Call-site order is the fail-closed gate order.
+   * The five fail-closed gates, shared verbatim by the sync and async
+   * surfaces: trusted context, unknown key, version pin, hash pin, argument
+   * schema. Throws the coded FixedOperationError on the first failure; a
+   * handler is only ever reachable after all five pass.
    */
-  function execute(call, trustedContext) {
+  function gatedCall(call, trustedContext) {
     const workflow = requireWorkflowTrustedContext(trustedContext)
 
     const operation = call?.operation
@@ -115,16 +117,22 @@ export function createOperationRegistry(definitions) {
       throw new FixedOperationError('invalid_arguments', structural.violations.join('; '))
     }
 
-    const args = call.args
-    const inputDigest = canonicalDigest(args)
-    const startedAt = new Date().toISOString()
-    const result = definition.handler(args, Object.freeze({ operation: publicDescriptor(definition), workflow }))
-    const finishedAt = new Date().toISOString()
+    return {
+      workflow,
+      definition,
+      args: call.args,
+      inputDigest: canonicalDigest(call.args),
+    }
+  }
 
-    // Stable invocation id: a pure digest of the pinned definition, the
-    // input digest and the trusted workflow coordinates — deterministic
-    // across retries within one registry revision (attemptIdFor discipline:
-    // no clock, no counter).
+  /**
+   * Success envelope + receipt construction, shared verbatim by the sync and
+   * async surfaces. Stable invocation id: a pure digest of the pinned
+   * definition, the input digest and the trusted workflow coordinates —
+   * deterministic across retries within one registry revision (attemptIdFor
+   * discipline: no clock, no counter).
+   */
+  function successEnvelope({ definition, workflow, inputDigest, result, startedAt, finishedAt }) {
     const invocationId = `opinv-${sha256Hex(canonicalJSON({
       operation: definition.key,
       version: definition.version,
@@ -149,6 +157,18 @@ export function createOperationRegistry(definitions) {
   }
 
   /**
+   * Raw execution: returns the success envelope or THROWS a coded
+   * FixedOperationError. Call-site order is the fail-closed gate order.
+   */
+  function execute(call, trustedContext) {
+    const { workflow, definition, args, inputDigest } = gatedCall(call, trustedContext)
+    const startedAt = new Date().toISOString()
+    const result = definition.handler(args, Object.freeze({ operation: publicDescriptor(definition), workflow }))
+    const finishedAt = new Date().toISOString()
+    return successEnvelope({ definition, workflow, inputDigest, result, startedAt, finishedAt })
+  }
+
+  /**
    * Wire envelope: coded failures become { ok: false, error: { code, detail } }.
    * Only declared FIXED_OPERATION codes can ever appear (see errors.js);
    * unexpected handler exceptions propagate and must NOT be reported as one
@@ -157,6 +177,47 @@ export function createOperationRegistry(definitions) {
   function invoke(call, trustedContext) {
     try {
       return execute(call, trustedContext)
+    } catch (error) {
+      if (error instanceof FixedOperationError) {
+        return { ok: false, error: { code: error.code, detail: error.message } }
+      }
+      throw error
+    }
+  }
+
+  /**
+   * FIXED_OPERATION async completion (candidate, additive — source slice
+   * agent-control#725): promise twins of execute/invoke on the SAME registry
+   * object. The sync surface and every existing caller stay untouched.
+   *
+   * Contract boundary:
+   * - The same five fail-closed gates run first (shared gatedCall); on any
+   *   gate failure the handler is never called, executeAsync rejects with the
+   *   coded FixedOperationError and invokeAsync maps it to the SAME declared
+   *   failure envelope as sync invoke.
+   * - Success settles only AFTER the handler's returned promise resolves;
+   *   finishedAt is taken after that resolution. A promise rejection is
+   *   never a success: a declared FixedOperationError keeps its code on the
+   *   existing failure envelope, an unexpected rejection propagates as-is.
+   * - No timeout, no cancel, no retry, no background work: exactly one
+   *   handler call per invocation.
+   * - Identical inputs still produce an identical invocationId and the
+   *   handler runs again — this is linkage, NOT idempotency or side-effect
+   *   dedup; real-write dedup belongs to the owning service/transaction.
+   * - Definition hash semantics are unchanged: it pins the contract surface
+   *   (key + version + input schema), never handler or implementation bytes.
+   */
+  async function executeAsync(call, trustedContext) {
+    const { workflow, definition, args, inputDigest } = gatedCall(call, trustedContext)
+    const startedAt = new Date().toISOString()
+    const result = await definition.handler(args, Object.freeze({ operation: publicDescriptor(definition), workflow }))
+    const finishedAt = new Date().toISOString()
+    return successEnvelope({ definition, workflow, inputDigest, result, startedAt, finishedAt })
+  }
+
+  async function invokeAsync(call, trustedContext) {
+    try {
+      return await executeAsync(call, trustedContext)
     } catch (error) {
       if (error instanceof FixedOperationError) {
         return { ok: false, error: { code: error.code, detail: error.message } }
@@ -185,5 +246,7 @@ export function createOperationRegistry(definitions) {
     }),
     execute,
     invoke,
+    executeAsync,
+    invokeAsync,
   })
 }
