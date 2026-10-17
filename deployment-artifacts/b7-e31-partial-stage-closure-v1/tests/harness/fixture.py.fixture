@@ -1,0 +1,103 @@
+"""Owned filesystem, actual original installation/handle/client. No process/network/production I/O.
+UID/GID are explicit metadata models; bytes/modes/locks/fsync/native EXCL are real.
+"""
+import ast,copy,errno,fcntl,hashlib,re,subprocess,importlib.util,json,os,pathlib,stat,sys,types
+from unittest.mock import patch
+R=pathlib.Path(__file__).resolve().parents[1]
+spec=importlib.util.spec_from_file_location('original_base',R/'baseline/test_base.py');b=importlib.util.module_from_spec(spec);spec.loader.exec_module(b)
+OP='b7-packet-r27-2edfbaeef5c352f2e-e31';MAN='2edfbaee8c97de99d9ebb8896ee0886232adb09e744c8c01f7eb6c809d4992ae';SRC='d4741d3e3c85024729ff85d57418ab4084fc6b3a14359cea951c294914e1ea20'
+REG='924aa20b8afbcb8af3bb1775dbd9a1966f71a0c05dbdd9467b8799867e225721';EX='9f7e779ab1d597e4ee8ba137e783b1698122befb733f2070fb380c9a4ce9ae07'
+STATUS=b.STATUS;DISPOSE=b.DISPOSE;OUTPUT='DS_B7_OWNER_OUTPUT_V2'
+def sha(raw):return hashlib.sha256(raw).hexdigest()
+def canon(v):return json.dumps(v,sort_keys=True,separators=(',',':')).encode()
+class Candidate(b.Candidate):
+ def __init__(self,mode):
+  b.SERVER=R/mode/'deployment_system.py';b.CLIENT=R/mode/'ds_client.py';super().__init__()
+class Fixture(b.Fixture):
+ def _execute_actual_installation(self):
+  if not hasattr(self,'host_preinstallation'):
+   self.host_preinstallation=dict(self.ds.__dict__)
+   for k in ('OBSERVATION_ACTIONS','LEGACY_ACTION_FIELDS','OBSERVATION_CONFIG_PATHS'):self.host_preinstallation[k]=copy.deepcopy(self.host_preinstallation[k])
+  # Keep original fixed e29 pins intact: the inherited harness otherwise
+  # rebinds e29 to its fixture op, accidentally granting e31 the old exception.
+  for original in self.candidate.wiring:
+   node=copy.deepcopy(original)
+   for call in ast.walk(node):
+    if isinstance(call,ast.Call) and isinstance(call.func,(ast.Name,ast.Attribute)):
+     name=call.func.id if isinstance(call.func,ast.Name) else call.func.attr
+     if name in {'install_hooks','install_execution_hooks'}:
+      for i,arg in enumerate(call.args):
+       if isinstance(arg,ast.Dict):
+        call.args[i]=b.PathRelocation(self).visit(arg)
+        if getattr(self,'future_packet',False):
+         class FutureMap(ast.NodeTransformer):
+          def visit_Constant(mapself,value):
+           if type(value.value)is str:return ast.copy_location(ast.Constant(value.value.replace('b7-native-execution-r27-new-candidate-uninstallable','b7-native-execution-r31-future-fixture')),value)
+           return value
+         call.args[i]=FutureMap().visit(call.args[i])
+   exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),'actual-server-wiring','exec'),self.ds.__dict__)
+ def __init__(self,c):
+  saved=(b.OP,b.MANIFEST,b.SOURCE,b.OLD_REG_POLICY,b.OLD_EXEC_POLICY)
+  b.OP,b.MANIFEST,b.SOURCE,b.OLD_REG_POLICY,b.OLD_EXEC_POLICY=OP,MAN,SRC,REG,EX
+  try:super().__init__(c)
+  finally:b.OP,b.MANIFEST,b.SOURCE,b.OLD_REG_POLICY,b.OLD_EXEC_POLICY=saved
+  self.auth_path=self.reg_path.with_name(OP+'.b7-execution.b7-disposal-auth.json');self.terminal_path=self.reg_path.with_name(OP+'.b7-execution.b7-disposal-terminal.json')
+  self.stage=pathlib.Path(self.policy['nativeTransactionPath']).parent/'activation-code-input';self.stage.mkdir();os.chmod(self.stage,0o700);os.chmod(self.stage.parent,0o700);os.chmod(self.reg_path.parent,0o755);os.chmod(self.ds.STATE_ROOT,0o770)
+  self.seed=self.stage/'b7-entry-code/b7-wired-stage/seed-materials.mjs';self.seed.parent.mkdir(parents=True);self.seed.write_bytes(b'fixed miniature seed\n');self.history=self.stage.with_name('activation-code-input.e31-closed-2edfbaee')
+  self.mod=next((v for v in self.ds.__dict__.values() if isinstance(v,types.ModuleType) and hasattr(v,'E31')),None)
+  if self.mod:
+   realos=os;fx=self;self.metadata_overrides={}
+   def fdpath(fd):return fcntl.fcntl(fd,50,b'\0'*1024).split(b'\0',1)[0].decode()
+   def project(s,path):
+    attrs={n:getattr(s,n) for n in dir(s) if n.startswith('st_')};attrs['st_uid']=0;attrs['st_gid']=80 if str(path).startswith(str(fx.reg_path.parent.resolve())) or str(path) in (str(pathlib.Path(fx.ds.STATE_ROOT).resolve()),str((pathlib.Path(fx.ds.STATE_ROOT)/'mutation.lock').resolve())) else 0
+    attrs.update(fx.metadata_overrides.get(str(pathlib.Path(path).resolve()),{}));return types.SimpleNamespace(**attrs)
+   def fstat(fd):return project(realos.fstat(fd),fdpath(fd))
+   def statcall(path,**kw):
+    full=str(path) if not kw.get('dir_fd') else str(pathlib.Path(fdpath(kw['dir_fd']))/path)
+    assert pathlib.Path(full).resolve().is_relative_to(fx.root.resolve()),full;return project(realos.stat(path,**kw),full)
+   facade=types.SimpleNamespace(**{n:getattr(os,n) for n in dir(os)});facade.fstat=fstat;facade.stat=statcall;facade.fchown=lambda fd,uid,gid: (uid==0 and gid==80) or (_ for _ in ()).throw(AssertionError('unexpected chown model'))
+   self.mod.os=facade
+   self.isolation_errors=[];native=self.mod._rename_excl
+   def guarded_native(e,parent,src,dst):
+    here=realos.fstat(parent);expected=fx.reg_path.parent.stat()
+    valid=(here.st_dev,here.st_ino)==(expected.st_dev,expected.st_ino) and dst in (fx.auth_path.name,fx.terminal_path.name) and re.fullmatch(r'\.'+re.escape(dst)+r'\.[0-9a-f]{32}\.tmp',src) is not None
+    if not valid:fx.isolation_errors.append('native boundary');raise AssertionError('native boundary outside owned fixed names')
+    return native(e,parent,src,dst)
+   self.mod._rename_excl=guarded_native
+   # Actual original nofollow/stable ancestor primitive, with only fixed root,
+   # STATE path and metadata modeled. This catches parent-time publication ABI.
+   ns=dict(self.ds.__dict__,os=facade,stat=stat,TEST_MODE=False,errno=errno)
+   nodes=[copy.deepcopy(n) for n in c.tree.body if isinstance(n,(ast.ClassDef,ast.FunctionDef)) and n.name in {'ObservationPath','_observation_identity','_observation_oserror'}]
+   class RootMap(ast.NodeTransformer):
+    def visit_Constant(mapself,node):
+     if node.value=='/':return ast.copy_location(ast.Constant(str(self.root)),node)
+     if node.value=='/private/var/db/agent-deploy-system':return ast.copy_location(ast.Constant(self.ds.STATE_ROOT),node)
+     return node
+   exec(compile(ast.fix_missing_locations(RootMap().visit(ast.Module(body=nodes,type_ignores=[]))),'actual-original-protected-path','exec'),ns)
+   self.ds.ObservationPath=ns['ObservationPath'];self.mod._FS_ROOT=str(self.root)
+   self.mod.NATIVE_TRANSACTION=self.policy['nativeTransactionPath'];self.mod.NATIVE_HOLDER=self.policy['nativeLockPath'];self.mod.E31.update(self.fixture_pins,original_stage=str(self.stage),preserved_stage=str(self.history),seed_path=str(self.stage.parent/'b7-preparation-input.json'))
+   rows=self.mod._stage_rows(self.execution,str(self.stage));self.mod.E31.update(partial_stage_manifest_sha256=sha(canon(rows)),partial_stage_directories=sum(r['kind']=='D' for r in rows),partial_stage_files=sum(r['kind']=='F' for r in rows),partial_stage_file_bytes=sum(r.get('bytes',0) for r in rows),stage_seed_sha256=sha(self.seed.read_bytes()),stage_seed_bytes=self.seed.stat().st_size)
+  self.policy['nativeLockPath']=str(self.holder_path)
+ def restart(self,future=False):
+  old=self.mod;actual_path=self.ds.ObservationPath;before=self.snapshot();self.future_packet=future
+  self.ds.__dict__.clear();self.ds.__dict__.update(self.host_preinstallation)
+  for k in ('OBSERVATION_ACTIONS','LEGACY_ACTION_FIELDS','OBSERVATION_CONFIG_PATHS'):self.ds.__dict__[k]=copy.deepcopy(self.host_preinstallation[k])
+  self._execute_actual_installation();self.registration=self.ds._b7_registration_instance;self.execution=self.ds._b7_execution_instance
+  self.mod=next(v for v in self.ds.__dict__.values() if isinstance(v,types.ModuleType) and hasattr(v,'E31'))
+  self.mod.E31.update(old.E31);self.mod._rename_excl=old._rename_excl;self.mod.os=old.os;self.mod._FS_ROOT=old._FS_ROOT;self.mod.NATIVE_TRANSACTION=old.NATIVE_TRANSACTION;self.mod.NATIVE_HOLDER=old.NATIVE_HOLDER;self.ds.ObservationPath=actual_path
+  if hasattr(self,'client'):sys.modules.pop(self.client.__name__,None);del self.client
+  assert not self.execution._e31_durability and before==self.snapshot()
+ def checked_handle(self,handle,raw,peer):
+  with patch.object(subprocess,'Popen',side_effect=AssertionError('process creation forbidden')) as spawn:
+   result=handle(raw,peer=peer)
+  assert spawn.call_count==0,'DS attempted a subprocess (not a semantic refusal)'
+  assert not getattr(self,'isolation_errors',[]),'native isolation violation'
+  return result
+ def request(self,action=STATUS,peer=502,op=OP,**fields):
+  response,restart=self.checked_handle(self.ds.handle,canon(dict(action=action,operation_id=op,**fields)),peer)
+  assert restart is None;return response
+ def client_request(self,action=STATUS,op=OP,**fields):
+  original=self.ds.handle
+  self.ds.handle=lambda raw,peer=None:self.checked_handle(original,raw,peer)
+  try:return super().client_request(action,op=op,**fields)
+  finally:self.ds.handle=original
