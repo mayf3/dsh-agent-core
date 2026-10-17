@@ -1,0 +1,92 @@
+{
+  "kind": "SOURCE_ONLY_MAIN_SUBMISSION",
+  "intended_repo_directory": "deployment-artifacts/b7-e31-partial-stage-closure-v1",
+  "files": {
+    ".gitignore": {
+      "bytes": 64,
+      "sha256": "e34ad835cafe363b1cddd46fc425e4284f7da36cf7a37ba811cec905574cb2ab"
+    },
+    "PINS.json": {
+      "bytes": 2865,
+      "sha256": "4efc998c520338537b8c89fa0e45967ffd225bd2352fc279a8c638b6ec7547da"
+    },
+    "README.md": {
+      "bytes": 5179,
+      "sha256": "c87862a31f8a9ce3974108cdf9f044d14121cbcc235463d153428bff8a1650dc"
+    },
+    "patches/client-module.patch": {
+      "bytes": 221,
+      "sha256": "c7b4c49ca36246a3b4063401799f4bb8ec12b05d346b9e7d69fde0369f234e67"
+    },
+    "patches/executor-e31-preserve.case": {
+      "bytes": 313,
+      "sha256": "6578f03748e8da5959b4299e0f24663c43c8da30cd0e0d6e68c3b8de54f5d4eb"
+    },
+    "patches/executor-fixed-preserve.patch": {
+      "bytes": 380,
+      "sha256": "7360711bd6cd56fa97044c423ffe42b03f8653d47f7308da4e014c0c7b41d654"
+    },
+    "src/e31_preserve_once.py": {
+      "bytes": 15081,
+      "sha256": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617"
+    },
+    "src/v50_e31_closure_source.py": {
+      "bytes": 29764,
+      "sha256": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65"
+    },
+    "src/v50_execution_client_source.py": {
+      "bytes": 15338,
+      "sha256": "1a7641695dda0f92e81fcaba9ab104fbc622379f3ca7f9fd960919ef2a7aa96d"
+    },
+    "tests/harness/fixture.py.fixture": {
+      "bytes": 8937,
+      "sha256": "f6513bcc76eab58e0fb7e3ad1fc80cba67e3d57140dfab2d87fec30d1418ebb6"
+    },
+    "tests/harness/test_boundaries.py.fixture": {
+      "bytes": 11018,
+      "sha256": "a767e2de3d02c613b9db724c18221190786353cfdb786eb39f3a2ce658f22367"
+    },
+    "tests/harness/test_closure.py.fixture": {
+      "bytes": 2573,
+      "sha256": "ad996a11f380bfee60177902e9fe28d004f1df11fc0261d8b39b76b556db196e"
+    },
+    "tests/harness/test_executor.py.fixture": {
+      "bytes": 1893,
+      "sha256": "f4ff95910f27d5a0e2e977d5406131e16aa506140bacbf4acfe59052c8e4d778"
+    },
+    "tests/harness/test_integrity.py.fixture": {
+      "bytes": 3280,
+      "sha256": "cb97c79f1d3afc09b8e46511082b462265fe3d50e37941eb201dbb2e1d5ca3f3"
+    },
+    "tests/harness/test_preserve.py.fixture": {
+      "bytes": 6521,
+      "sha256": "caadfb938c8897c6565c04eb418ee61cdc6f5e9d768c566a980f87429f1a1514"
+    },
+    "tests/harness/test_sync_authorization.py.fixture": {
+      "bytes": 3254,
+      "sha256": "addb91f48bbfa4cc901c7602d47333378eed8cbf01129f42af5807623793dd19"
+    },
+    "tests/harness/test_unchanged.py.fixture": {
+      "bytes": 1387,
+      "sha256": "2178a3dc813d001e5aeed04dbeed79506f5a34be645d94d1b1a2f06db1766c6e"
+    },
+    "tests/support/test_base.py.fixture": {
+      "bytes": 38979,
+      "sha256": "33fd81e8554ff38b89a47f02ed723dcf06d95b53f5782558fe68c6abcec8be1f"
+    },
+    "tests/support/test_e30.py.fixture": {
+      "bytes": 15958,
+      "sha256": "f42f22308323c038d73ec41bfc6912b9f6f29c3ce4877c6ebb4c0cec03c1f97d"
+    },
+    "tools/build.py": {
+      "bytes": 4712,
+      "sha256": "4c9fbd263a21d02f57125b791400d92ff62efcf50d37f540dca243de74741649"
+    },
+    "tools/verify.py": {
+      "bytes": 4039,
+      "sha256": "502f9c8477ac55ab5cdb30a231fa0c8ac3485623ae9d942480e86f24dca7ccad"
+    }
+  },
+  "payload_bytes": 171756,
+  "no_large_preimages_generated_services_credentials_or_failed_candidate": true
+}
