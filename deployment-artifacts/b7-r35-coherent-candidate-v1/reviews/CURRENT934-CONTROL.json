@@ -1,0 +1,468 @@
+{
+  "kind": "B7_R35_CURRENT934_CONTROL_SOURCE_AND_ACTUAL_OVERLAY_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_BOUNDED_FINAL_R35_CONTROL_COHORT_SOURCE_AND_ACTUAL_MECHANICAL_REVIEW_NOT_ADOPTED",
+  "at": "2026-10-17T22:57:20.707992+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "scope": "Same original R35 continuation review: finite four policy rows/two codec literals/private pre-intent checkpoint and fixed placement coupling; current934 rooted actual control overlay, full verifier exact normalization and driven flat393 closure. No new design, permissions or review gate. Unchanged accepted app/profile/shell/CLI/retirement source reviews reused within original scope.",
+  "findings": [],
+  "subject": {
+    "source_handoff_sha256": "6d41f7a9aa2c36e152bbdd11ef23f42fb2d24130c96669480103f5c783ef2e35",
+    "source_manifest_sha256": "5e3031316a6b9201213d35521920ec3102ff452ea5a471eb6a9b24c007a6f062",
+    "assembler_sha256": "9d14ba5efed707fa748881b95d8835eb0c9c4ec54816f1888e0d00857db22038",
+    "verifier_generator_sha256": "b409647518e6fcf7071b695eaef80efad3d2be62a89f125140a2732108a63631",
+    "generated_full_verifier_sha256": "581242ef9de3c753f53a90faa73cc99983718329fff9cceb68f6b8ab7376f06a",
+    "actual_current_invocation_authority_preimage_sha256": "934692e224c863ffd826f4f3495528a1a15f7302a48976f71d9b539f2225a378",
+    "actual_current_pair_preimage": {
+      "deployment_system.py": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+      "ds_client.py": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67"
+    },
+    "actual_new_pair": {
+      "deployment_system.py": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+      "ds_client.py": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+    },
+    "actual_publication": "ds-reader-pair-44cba8503d24",
+    "actual_business_operation": "b7-packet-r35-47b5528914236993-e36",
+    "actual_packet_sha256": "47b552891423699330112daa97daf4a3002760c8e1febc165b505636a503481c",
+    "actual_worker_sha256": "0289d9877cbce552723196dd726988a1499fd0b0a5681731d41c10a4b79de3b2",
+    "actual_BUILD_sha256": "c7a4d84e0d4b9c00c05551b1bf8f32f41f799b51cf1ddcfac163dbf924d0e2c1",
+    "actual_FILES_sha256": "5186dd1012d98d51d6d99da397ba054a0ad76f24a1476c2819826917c7d1a26b",
+    "actual_package_tree_sha256": "cbe5ca4075033cbd18f9326c534563f389ef9a4dd42e65d1f4b91e81de0f419d",
+    "actual_assembly_receipt_sha256": "10863cec831a01b0b974ae800916edbb54f9599e3dcae94171b2bc1ff6a272d8",
+    "actual_assembly_return_sha256": "bfcc7baf06a4fdf02d22a361fad0d78d0a4d1b83c015d1a28b2854b3eaa4fce7",
+    "pending_13_changed_members": {
+      "verify-chain-v50.py": "581242ef9de3c753f53a90faa73cc99983718329fff9cceb68f6b8ab7376f06a",
+      "v53_r34_execution_source.py": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+      "v50_execution_client_source.py": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399",
+      "e35-retirement-checkpoint-preimage.json": "393555956947d846e5e9f5772b72d6e6adaafacf069bba6c94680d1d06b6ffc5",
+      "v50_prepare_inputs.py": "6ccbabfd57ba90f5c436c77cf8159aa5d204ff722e0c5cc75c33c718953dda31",
+      "e35_finished_for_r35.py": "473a636287f3b064a0d57a3f10033b307bca1996d0c390f3517e8bba634ed52b",
+      "b7-release-executor.sh": "6d72cb9097f60a3844d18305ec0cb187b58dc02e3d65f57c1a6a6cf6007240f4",
+      "candidate-facts.json": "8454a21edd00c60403d8f5ab1cbf1c7826ca2afcaba6f386eef6b0565254ed6d",
+      "v50-input-preparation.json": "0b883ddad71daab0068a708cab18c1e54c1903efaeb617d7fa9ea0301e8ff74a",
+      "owner-deploy-session.sh": "db0d0ca7543b536857027fe90138dbe03454bf3b78d723bf88ce642ae0f53085",
+      "b7-v3-publication-authority.json": "32edd84e569fbe4d745efb05f2490748a111ef71a4e6ebe7aa0225747f91e72f",
+      "b7-v3-publication-pin.json": "d25f559f3305e4c14b0ef06feed3952593e607223c402bb84ec6eb8354c14e53",
+      "CAPSULE-MANIFEST.json": "3b694d2f28c5e11ff830f9488eb249bf3ab565d4cf29e2a88eaac2db1653563b"
+    },
+    "external_24_members_rehashed": {
+      "delegated_owner_session.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/delegated_owner_session.py",
+        "sha256": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4"
+      },
+      "deployment_system.py": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/deployment_system.py",
+        "sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d"
+      },
+      "ds_client.py": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/ds_client.py",
+        "sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+      },
+      "e30_preserve_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e30_preserve_once.py",
+        "sha256": "4e2916fc0b4033d0cf18be3e7ace88e563c4cf08e4798410205f829405ff3d7d"
+      },
+      "e31_preserve_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e31_preserve_once.py",
+        "sha256": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617"
+      },
+      "e34_terminal_materials_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34_terminal_materials_once.py",
+        "sha256": "9dfd7a80e81e2d8467a7a25487c730535c44de2970c9da4ae23d69d825110d24"
+      },
+      "e35_delegated_recovery.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_delegated_recovery.py",
+        "sha256": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4"
+      },
+      "feishu_fetch_material.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/feishu_fetch_material.py",
+        "sha256": "13c8f0f308b3f9b22aa67ddbcd4408ed7872d28eadc26152d69d5232c9a1785f"
+      },
+      "maintenance_entry_v50.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/maintenance_entry_v50.py",
+        "sha256": "24e80b1ceb9328e30e25e13565110c5f388c586a4fb11c13ddbdf5df362933f6"
+      },
+      "v50_e30_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_e30_closure_source.py",
+        "sha256": "7d762e4ba1107c9d61e8b331b46840387c96ffe8f1a11915cbb44d2d292780c7"
+      },
+      "v50_e31_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_e31_closure_source.py",
+        "sha256": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65"
+      },
+      "v50_source_diagnostic_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_source_diagnostic_source.py",
+        "sha256": "2fc16194d0484d03994311d6ce1e2502c9e075d4cdde2941978624e01a21990f"
+      },
+      "v51_e32_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v51_e32_closure_source.py",
+        "sha256": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161"
+      },
+      "v52_e33_recovery_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v52_e33_recovery_source.py",
+        "sha256": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a"
+      },
+      "v54_e35_publication_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v54_e35_publication_source.py",
+        "sha256": "50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b"
+      },
+      "v54_e35_recovery_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v54_e35_recovery_source.py",
+        "sha256": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d"
+      },
+      "e35_terminal_materials_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_terminal_materials_once.py",
+        "sha256": "4a4bf08a7d7ec923cdce5908098557b20f8936359076d8bd7a0fb7d89dd5e9fc"
+      },
+      "e35_retirement_entry.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_retirement_entry.py",
+        "sha256": "5f6693f1f2382575e0647bd2c6dcb8db55b516f87c18046eb1eacd9900a5cfb1"
+      },
+      "e34-maintenance-checkpoint-inputs.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-maintenance-checkpoint-inputs.json",
+        "sha256": "cac388d8471e340de14f1f3164575dfb34d2dac53b0ee1378f1acb85976e10a3"
+      },
+      "e34-public-runtime-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-public-runtime-pins.json",
+        "sha256": "3134c7b7fe2083ce6d801bcc23f5fff6874b2cb65ef47b5cd042f9b97f5ff883"
+      },
+      "e34-terminal-material-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-terminal-material-pins.json",
+        "sha256": "ec307365bec76d7ca48032c0f79e63b45f990cd36810ed1cc0f375bd2159e90d"
+      },
+      "e35-terminal-material-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-terminal-material-pins.json",
+        "sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5"
+      },
+      "e35-retirement-checkpoint-inputs.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-retirement-checkpoint-inputs.json",
+        "sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f"
+      },
+      "e35-retirement-entry.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-retirement-entry.json",
+        "sha256": "e5d19d1781d6e14da2b5f541fbde98afd128b8d46a3eb0670f5ec00134b13353"
+      }
+    }
+  },
+  "verified": {
+    "actual_current934_metadata_cannot_rollback_to_1a_or_71_or_ae": true,
+    "actual_new_server_c0f2_client_f308_entire_pair_inverse_exact_to_current4192_9eb": {
+      "deployment_system.py": {
+        "candidate_sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+        "preimage_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+        "whole_file_inverse_exact": true,
+        "extra_byte_refused": true
+      },
+      "ds_client.py": {
+        "candidate_sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4",
+        "preimage_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+        "whole_file_inverse_exact": true,
+        "extra_byte_refused": true
+      }
+    },
+    "actual_private6d0_and_codec36e9_exact_original_method_clone_dispatch_and_two_KEY_literals": true,
+    "preintent_retains_original_checkpoint_canonical_stageArgv_and_pre_SAVE_gate_under_original_guards": true,
+    "all_old_rows_and_noncausal_pair_bytes_preserved_by_entire_actual_pair_inverse": true,
+    "executor_only_15_fixed_R35_package_coordinate_literals_inverse_exact741_retirecase_retained": true,
+    "new_prepare_6ccb_and_reader473a_exact_prior_reviewed_root_UID_lease_fixed_range_binding": true,
+    "finished_binding_actual_return_rc0_full092_and_e878_original_row_projection": {
+      "kind": "B7_FIXED_E35_FINISHED_FOR_R35_V1",
+      "retirement_helper_sha256": "4a4bf08a7d7ec923cdce5908098557b20f8936359076d8bd7a0fb7d89dd5e9fc",
+      "retirement_pins_sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "finished_row_sha256": "e8786acc56b391c8f1243e54663d757069543913728fdc07ce71b8a2f2a99de6",
+      "completed_retirement_proof": {
+        "actual_result_sha256": "5610ac4900722cf9fde7546ffffbe099d76ee9cd95cb071ef8b4bd97d33242b2",
+        "full_readback_sha256": "0925045f7cd08132cc6872571875c07d820dbb13071ce6b9112b7e8cbcc5c293",
+        "durability_completed": true
+      }
+    },
+    "original_FINISHED_raw_audit_line_not_reconstructed": true,
+    "original_current_b31_COMMITTED_raw_1a7d_binds4192_9eb_not_historical_f936": true,
+    "new_authority_preimage4192_9eb_previous_b31_terminal_and_new44cba_publication_bound": true,
+    "retire_db413_inverse_reads_only_driven_flat_original393_config": true,
+    "flat393_enrolled_drivenConfigs_capsule_and_actual_executor_generic_config_seal": true,
+    "no_old_R34_package_required_in_driven_context": true,
+    "all_35_actual_capsule_members_rehashed": {
+      "b7-release-executor.sh": "6d72cb9097f60a3844d18305ec0cb187b58dc02e3d65f57c1a6a6cf6007240f4",
+      "delegated_owner_session.py": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4",
+      "deployment_system.py": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+      "ds_client.py": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4",
+      "e30_preserve_once.py": "4e2916fc0b4033d0cf18be3e7ace88e563c4cf08e4798410205f829405ff3d7d",
+      "e31_preserve_once.py": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617",
+      "e34_terminal_materials_once.py": "9dfd7a80e81e2d8467a7a25487c730535c44de2970c9da4ae23d69d825110d24",
+      "e35_delegated_recovery.py": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4",
+      "feishu_fetch_material.py": "13c8f0f308b3f9b22aa67ddbcd4408ed7872d28eadc26152d69d5232c9a1785f",
+      "maintenance_entry_v50.py": "24e80b1ceb9328e30e25e13565110c5f388c586a4fb11c13ddbdf5df362933f6",
+      "owner-deploy-session.sh": "db0d0ca7543b536857027fe90138dbe03454bf3b78d723bf88ce642ae0f53085",
+      "v50_e30_closure_source.py": "7d762e4ba1107c9d61e8b331b46840387c96ffe8f1a11915cbb44d2d292780c7",
+      "v50_e31_closure_source.py": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65",
+      "v50_execution_client_source.py": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399",
+      "v50_prepare_inputs.py": "6ccbabfd57ba90f5c436c77cf8159aa5d204ff722e0c5cc75c33c718953dda31",
+      "v50_source_diagnostic_source.py": "2fc16194d0484d03994311d6ce1e2502c9e075d4cdde2941978624e01a21990f",
+      "v51_e32_closure_source.py": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161",
+      "v52_e33_recovery_source.py": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a",
+      "v53_r34_execution_source.py": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+      "v54_e35_publication_source.py": "50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b",
+      "v54_e35_recovery_source.py": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d",
+      "verify-chain-v50.py": "581242ef9de3c753f53a90faa73cc99983718329fff9cceb68f6b8ab7376f06a",
+      "e35_terminal_materials_once.py": "4a4bf08a7d7ec923cdce5908098557b20f8936359076d8bd7a0fb7d89dd5e9fc",
+      "e35_retirement_entry.py": "5f6693f1f2382575e0647bd2c6dcb8db55b516f87c18046eb1eacd9900a5cfb1",
+      "e35_finished_for_r35.py": "473a636287f3b064a0d57a3f10033b307bca1996d0c390f3517e8bba634ed52b",
+      "candidate-facts.json": "8454a21edd00c60403d8f5ab1cbf1c7826ca2afcaba6f386eef6b0565254ed6d",
+      "e34-maintenance-checkpoint-inputs.json": "cac388d8471e340de14f1f3164575dfb34d2dac53b0ee1378f1acb85976e10a3",
+      "e34-public-runtime-pins.json": "3134c7b7fe2083ce6d801bcc23f5fff6874b2cb65ef47b5cd042f9b97f5ff883",
+      "e34-terminal-material-pins.json": "ec307365bec76d7ca48032c0f79e63b45f990cd36810ed1cc0f375bd2159e90d",
+      "v50-input-preparation.json": "0b883ddad71daab0068a708cab18c1e54c1903efaeb617d7fa9ea0301e8ff74a",
+      "e35-terminal-material-pins.json": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5",
+      "e35-retirement-checkpoint-inputs.json": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+      "e35-retirement-entry.json": "e5d19d1781d6e14da2b5f541fbde98afd128b8d46a3eb0670f5ec00134b13353",
+      "e35-retirement-checkpoint-preimage.json": "393555956947d846e5e9f5772b72d6e6adaafacf069bba6c94680d1d06b6ffc5",
+      "b7-v3-publication-pin.json": "d25f559f3305e4c14b0ef06feed3952593e607223c402bb84ec6eb8354c14e53"
+    },
+    "authority_whole_causal_object_and_bytes_inverse_exact_to_current934": true,
+    "generated_verifier_matches_b409_actual_context_byte_exact_and_14_span_whole_inverse_b530": true,
+    "original_strict_SC_archive_toolPins_and_HR476_actual_block": [
+      [
+        "SOURCE-CONTENT==archive rows",
+        true
+      ],
+      [
+        "SC digest==facts",
+        true
+      ],
+      [
+        "all toolPins match",
+        true
+      ],
+      [
+        "HR 47693d4d in app archive",
+        true
+      ]
+    ],
+    "actual_flat_retirement_inverse_block": [
+      [
+        "fixed e35 CP original byteinverse and actual journal only",
+        true
+      ]
+    ],
+    "same_publication_committed_AST_and_original_SC_block_unchanged": true,
+    "normal_maintenance_guard_AST_unchanged_actual_pair_and_exact_selection_cases": [
+      {
+        "value_type": "bool",
+        "value": true,
+        "selector_called": false,
+        "actual_old_50b9_qualify_executed": false
+      },
+      {
+        "value_type": "bool",
+        "value": false,
+        "selector_called": true,
+        "actual_old_50b9_qualify_executed": false
+      },
+      {
+        "value_type": "NoneType",
+        "value": null,
+        "selector_called": true,
+        "actual_old_50b9_qualify_executed": false
+      },
+      {
+        "value_type": "int",
+        "value": 1,
+        "selector_called": true,
+        "actual_old_50b9_qualify_executed": false
+      },
+      {
+        "value_type": "str",
+        "value": "true",
+        "selector_called": true,
+        "actual_old_50b9_qualify_executed": false
+      }
+    ],
+    "old50b9_P0_qualifier_retained_byte_exact_not_executed_by_review_or_claimed_valid_newpreimage": true,
+    "pending_r35_cohort_predicate_honestly_false_not_self_filled": true
+  },
+  "affected_verification": {
+    "initial_source_seven_and_actual_input_four": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CURRENT934-AFFECTED-TESTS-INITIAL.json",
+      "sha256": "ccab48b49add32c9b879b9d6bda626101eb885ca40dd1f80f05783f4c3609027",
+      "meaning": "Old b530 legitimate R35 inverse one expected RED; seven bounded source fixture cases GREEN, four actual current metadata/finished/native receipt/default refusal cases GREEN before materialize."
+    },
+    "final_flat_two_and_final_source_seven": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CURRENT934-FLAT-FINAL-TESTS.json",
+      "sha256": "e2ab2a0db51c78156a36373f520f46684530957088203d06f82678fe5b95dc13",
+      "meaning": "Pre-flat one-path expected failure; final two cases verify393/db413 with no old package and wrongbyte/futureR35STAGE refusal; final seven source cases GREEN."
+    },
+    "real_pair_and_original_branch": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CURRENT934-REAL-PAIR-AND-BRANCH.json",
+      "sha256": "c7d536de3574db3138021f13148d79bc3289681b1dfcfce2886c45788e0f396d"
+    },
+    "actual_overlay": {
+      "probe_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/probe_current934_overlay.py",
+      "probe_sha256": "b54f29dc2351b3e6ac0334751e6df1de5137f7953d098bcc850db470b3fb493f",
+      "result_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CURRENT934-ACTUAL-OVERLAY-INDEPENDENT.json",
+      "result_sha256": "29450866b64dce4b519ff2eda1491b6b8544d1efc32773f941c6937571fef7bc"
+    }
+  },
+  "reused_passes": {
+    "original_successor_source_placement_preintent": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/REVIEW-RECEIPT.json",
+      "sha256": "fd71c8a96b802fd761df5119cd35a2d012c642ab1a927a65c6ced48a14fcfe5e"
+    },
+    "canonical_source_content": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CANONICAL-SC-REVIEW-RECEIPT.json",
+      "sha256": "d5cfcf25da5d3c4a3ea1642c43242d1d5b8a9b9f598e8163300a713c94636adf"
+    },
+    "policy_span_fixed_finish": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/POLICY-SPAN-FIXED-FINISH-REVIEW-RECEIPT.json",
+      "sha256": "56fcbe4e88362b4dd443f34eed2e81ad190321e50a0c7e99263cc444b0bd6c69"
+    },
+    "retirement_invocation_source_and_actual_delta": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/retirement-review/invocation-source/SERVICE-INVOCATION-REVIEW-RECEIPT.json",
+      "sha256": "8c5adec082dc026cd133349c6d280612ec3360b54f9e18242e29e554ee668cd4"
+    },
+    "four_CLI_entry_guards": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/independent-review/REVIEW-RECEIPT-V2.json",
+      "sha256": "fe231346238f237405b98097a61aa213027261f4bc23b5b70d9b4c2f8cac9cdf"
+    }
+  },
+  "unchanged_consumer_boundary": {
+    "actual_unchanged_app_sha256": "505cff8f9627d5986594c3464ab11b48cca36b187ff9c78c4ccb26b404587e83",
+    "actual_unchanged_provenance_sha256": "ac35f9d8fb1bb1a072afcfc6e47133930b0fd1ce9aebd820b3a09576efd9ebe8",
+    "actual_unchanged_ordered_seed_template_sha256": "5e94d1418729f7cb7d826f5ea88d9641c572f142e1a85d0dc5254dfaf4cb662f",
+    "actual_FINISH_readback_reused": "1639 original archive headers/payload and2091 actual FILES readback independently reviewed under56fc; only four CLI payloads changed, original app/cohort-artifacts/provisioning/profile definition/shell/generator body unmodified. Original template is exact ordered bytes, not a sorted substitute.",
+    "prior_profile_shell_review_reference": "PASS_COMPONENT_ONLY profile e20ea55a99b1a91dcd448dc89f7f3b6daee0c6e8042eca147360d2468dead562; shell6eab581e6a38acbe9920c738ba841234da9d94a84c4c2aeff49757150d552c92; finalcohort/live/business separate",
+    "scope": "Reuse original accepted profile/shell/actual consumer evidence for unchanged assets as directed; no new ConsumerOuter state was fabricated or run, no old PONG is used as a new response."
+  },
+  "same_scope_final_metadata_reseal": {
+    "only_overlay_files_permitted_to_change": [
+      "b7-v3-publication-authority.json",
+      "b7-v3-publication-pin.json",
+      "CAPSULE-MANIFEST.json"
+    ],
+    "authority_only_change": "review_receipts.r35_cohort PENDING_FIXED_R35_FINAL_COHORT_REVIEW_NO_PRODUCTION_ADMISSION becomes this independent receipt SHA. Every other field remains exact.",
+    "pin_only_change": "authorization_sha256 follows final authority SHA.",
+    "capsule_only_change": "Only independent pin member follows final pin SHA; all other34 member hashes remain exact.",
+    "ten_nonmetadata_overlay_members_must_remain": {
+      "verify-chain-v50.py": "581242ef9de3c753f53a90faa73cc99983718329fff9cceb68f6b8ab7376f06a",
+      "v53_r34_execution_source.py": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+      "v50_execution_client_source.py": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399",
+      "e35-retirement-checkpoint-preimage.json": "393555956947d846e5e9f5772b72d6e6adaafacf069bba6c94680d1d06b6ffc5",
+      "v50_prepare_inputs.py": "6ccbabfd57ba90f5c436c77cf8159aa5d204ff722e0c5cc75c33c718953dda31",
+      "e35_finished_for_r35.py": "473a636287f3b064a0d57a3f10033b307bca1996d0c390f3517e8bba634ed52b",
+      "b7-release-executor.sh": "6d72cb9097f60a3844d18305ec0cb187b58dc02e3d65f57c1a6a6cf6007240f4",
+      "candidate-facts.json": "8454a21edd00c60403d8f5ab1cbf1c7826ca2afcaba6f386eef6b0565254ed6d",
+      "v50-input-preparation.json": "0b883ddad71daab0068a708cab18c1e54c1903efaeb617d7fa9ea0301e8ff74a",
+      "owner-deploy-session.sh": "db0d0ca7543b536857027fe90138dbe03454bf3b78d723bf88ce642ae0f53085"
+    },
+    "external_members_and_package_must_remain": {
+      "delegated_owner_session.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/delegated_owner_session.py",
+        "sha256": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4"
+      },
+      "deployment_system.py": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/deployment_system.py",
+        "sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d"
+      },
+      "ds_client.py": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/ds_client.py",
+        "sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+      },
+      "e30_preserve_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e30_preserve_once.py",
+        "sha256": "4e2916fc0b4033d0cf18be3e7ace88e563c4cf08e4798410205f829405ff3d7d"
+      },
+      "e31_preserve_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e31_preserve_once.py",
+        "sha256": "4665dc4f2cb4cd86acde54bdb201e355fd8559bb291ac0a2c0aed7b69285e617"
+      },
+      "e34_terminal_materials_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34_terminal_materials_once.py",
+        "sha256": "9dfd7a80e81e2d8467a7a25487c730535c44de2970c9da4ae23d69d825110d24"
+      },
+      "e35_delegated_recovery.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_delegated_recovery.py",
+        "sha256": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4"
+      },
+      "feishu_fetch_material.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/feishu_fetch_material.py",
+        "sha256": "13c8f0f308b3f9b22aa67ddbcd4408ed7872d28eadc26152d69d5232c9a1785f"
+      },
+      "maintenance_entry_v50.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/maintenance_entry_v50.py",
+        "sha256": "24e80b1ceb9328e30e25e13565110c5f388c586a4fb11c13ddbdf5df362933f6"
+      },
+      "v50_e30_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_e30_closure_source.py",
+        "sha256": "7d762e4ba1107c9d61e8b331b46840387c96ffe8f1a11915cbb44d2d292780c7"
+      },
+      "v50_e31_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_e31_closure_source.py",
+        "sha256": "2c26ed959ee3cffbf2b2999d2abaf5dd3e98c3207ec5e6512933fb5ccbb65c65"
+      },
+      "v50_source_diagnostic_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v50_source_diagnostic_source.py",
+        "sha256": "2fc16194d0484d03994311d6ce1e2502c9e075d4cdde2941978624e01a21990f"
+      },
+      "v51_e32_closure_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v51_e32_closure_source.py",
+        "sha256": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161"
+      },
+      "v52_e33_recovery_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v52_e33_recovery_source.py",
+        "sha256": "4dfcf106a0a86c2c534a363111c6577bad37522e853ae674d3db133be2b3063a"
+      },
+      "v54_e35_publication_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v54_e35_publication_source.py",
+        "sha256": "50b9b9658ddaa515a35afb2282ead523023b58b01c96e5a4d28d5a6dfd139f0b"
+      },
+      "v54_e35_recovery_source.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/v54_e35_recovery_source.py",
+        "sha256": "fe95f324d95fec91222881f9abb50ba325d375eafb0e8644c000dc391ae89b0d"
+      },
+      "e35_terminal_materials_once.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_terminal_materials_once.py",
+        "sha256": "4a4bf08a7d7ec923cdce5908098557b20f8936359076d8bd7a0fb7d89dd5e9fc"
+      },
+      "e35_retirement_entry.py": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35_retirement_entry.py",
+        "sha256": "5f6693f1f2382575e0647bd2c6dcb8db55b516f87c18046eb1eacd9900a5cfb1"
+      },
+      "e34-maintenance-checkpoint-inputs.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-maintenance-checkpoint-inputs.json",
+        "sha256": "cac388d8471e340de14f1f3164575dfb34d2dac53b0ee1378f1acb85976e10a3"
+      },
+      "e34-public-runtime-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-public-runtime-pins.json",
+        "sha256": "3134c7b7fe2083ce6d801bcc23f5fff6874b2cb65ef47b5cd042f9b97f5ff883"
+      },
+      "e34-terminal-material-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e34-terminal-material-pins.json",
+        "sha256": "ec307365bec76d7ca48032c0f79e63b45f990cd36810ed1cc0f375bd2159e90d"
+      },
+      "e35-terminal-material-pins.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-terminal-material-pins.json",
+        "sha256": "9d21f415c5d66e48db907612126ef0f755ca07f67bb66c1d1ba4d84c3b8de7d5"
+      },
+      "e35-retirement-checkpoint-inputs.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-retirement-checkpoint-inputs.json",
+        "sha256": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f"
+      },
+      "e35-retirement-entry.json": {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/e35-retirement-entry.json",
+        "sha256": "e5d19d1781d6e14da2b5f541fbde98afd128b8d46a3eb0670f5ec00134b13353"
+      }
+    },
+    "original_next_checks": "Sole original writer regular F adoption, original full pre/post lifecycle verifier and protected readbacks/install/publication. No full duplicate freeze or second writer required by this review."
+  },
+  "limits": [
+    "Reviewer did not invoke assembler/derive/materialize, production root, DS action, original guard/lease, actual maintenance qualification, input placement or business execution. Small ordinary artifacts were parsed and exact pure verifier slices executed.",
+    "Whole source generator/verifier inverse and real pair inverse retain original checks; fixture qualifier selection is not a live eight-ABSENT diagnosis or proof that old50b9 can execute with new4192 preimage. Original normal maintenance must observe truthful prerequisites.",
+    "Final full original verifier with actual protected filesystem/runtime and later native/business acceptance remain sole-writer steps. Pending review join was evaluated false and never patched to self-approve.",
+    "Actual root completed retirement/fullreadback/FINISHED row are pinned original captured receipts, independently cross-bound. Raw audit row bytes were not synthesized from the projection and no closed-state cache was warmed or rebuilt.",
+    "New control cohort has not been adopted, installed, loaded, published or accepted as a business release by this review; source/candidate/install/runtime/business states remain separate.107leaf cleanup is outside this review."
+  ],
+  "assembler_called": false,
+  "production_invoked": false,
+  "F_adopted_by_reviewer": false,
+  "installed": false,
+  "business_release": false
+}

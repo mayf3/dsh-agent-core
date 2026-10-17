@@ -1,0 +1,117 @@
+{
+  "src/prepare_successor.py": {
+    "sha256": "ca9c0448cac3f8a5bb9daed4f5a0e182e3989f431fce4d18c37faea2fbef788d",
+    "bytes": 21622,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-policy-span-v3/prepare_successor.py"
+  },
+  "src/finish_existing_r35.py": {
+    "sha256": "b79028ff294957efeccf84f48f71c01253578f7c9f894a9d45db3f8daeab7e2e",
+    "bytes": 12202,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-policy-span-v3/finish_existing_r35.py"
+  },
+  "src/assemble_r35_control.py": {
+    "sha256": "9d14ba5efed707fa748881b95d8835eb0c9c4ec54816f1888e0d00857db22038",
+    "bytes": 17976,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/control-assembly-current934/assemble_r35_control.py"
+  },
+  "src/r35_verifier.py": {
+    "sha256": "b409647518e6fcf7071b695eaef80efad3d2be62a89f125140a2732108a63631",
+    "bytes": 13012,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/control-assembly-current934/r35_verifier.py"
+  },
+  "src/v50_prepare_inputs.py": {
+    "sha256": "6ccbabfd57ba90f5c436c77cf8159aa5d204ff722e0c5cc75c33c718953dda31",
+    "bytes": 30038,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/placement/v50_prepare_inputs.py"
+  },
+  "src/e35_finished_for_r35.py": {
+    "sha256": "473a636287f3b064a0d57a3f10033b307bca1996d0c390f3517e8bba634ed52b",
+    "bytes": 7410,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/placement/e35_finished_for_r35.py"
+  },
+  "DEVELOPMENT_PREFLIGHT.txt": {
+    "sha256": "ce2b134fdbed145474cd3c298020863d7effcf5d4db89d6ae787088a791880e6",
+    "bytes": 1464,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/control-assembly-current934/DEVELOPMENT_PREFLIGHT.txt"
+  },
+  "reviews/CANONICAL-SC.json": {
+    "sha256": "d5cfcf25da5d3c4a3ea1642c43242d1d5b8a9b9f598e8163300a713c94636adf",
+    "bytes": 4391,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CANONICAL-SC-REVIEW-RECEIPT.json"
+  },
+  "reviews/POLICY-FIXED-FINISH.json": {
+    "sha256": "56fcbe4e88362b4dd443f34eed2e81ad190321e50a0c7e99263cc444b0bd6c69",
+    "bytes": 11420,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/POLICY-SPAN-FIXED-FINISH-REVIEW-RECEIPT.json"
+  },
+  "evidence/ACTUAL-BUILD.json": {
+    "sha256": "c7a4d84e0d4b9c00c05551b1bf8f32f41f799b51cf1ddcfac163dbf924d0e2c1",
+    "bytes": 5599,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-BUILD-RECEIPT.json"
+  },
+  "evidence/ACTUAL-FINISH-RETURN.json": {
+    "sha256": "67c6b41d9d78310a3b035456087c92f3d262fceff828f209db0952d761bb0c2d",
+    "bytes": 2023,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/ACTUAL-R35-FIXED-OWNED-FINISH.return.json"
+  },
+  "evidence/ACTUAL-OVERLAY.json": {
+    "sha256": "10863cec831a01b0b974ae800916edbb54f9599e3dcae94171b2bc1ff6a272d8",
+    "bytes": 11481,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation/control-assembly-current934/changed-overlay/ASSEMBLY-RECEIPT.json"
+  },
+  "evidence/REMAINING-STORAGE.json": {
+    "sha256": "a81773a4fa548d37aa58a91e4f377b3026c5923115aef4cda1fb21b783969fa7",
+    "bytes": 2840,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/RECEIPT.json"
+  },
+  "reviews/CURRENT934-CONTROL.json": {
+    "sha256": "218c27b45847000ccab7a1a88fc71c48db4eb33b3b7066022e08fa6abe748251",
+    "bytes": 36434,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CURRENT934-CONTROL-REVIEW-RECEIPT.json"
+  },
+  "reviews/FOUR-CLI-V2.json": {
+    "sha256": "fe231346238f237405b98097a61aa213027261f4bc23b5b70d9b4c2f8cac9cdf",
+    "bytes": 4018,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/independent-review/REVIEW-RECEIPT-V2.json"
+  },
+  "evidence/MECHANICAL-RESEAL.json": {
+    "sha256": "5111916facdf2ee5c4259d72b9d39520f9c62177f3d8408496f7e4aa2c0bc6c1",
+    "bytes": 1090,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/R35-FINAL-REVIEW-METADATA/MECHANICAL-RESEAL-READBACK.json"
+  },
+  "evidence/ACTUAL-F-ADOPTION.json": {
+    "sha256": "4cae4445460de77bd43d65b7d63cc5a8488191d609b85af79101968ef1636d45",
+    "bytes": 2838,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/ACTUAL-R35-F-ADOPTION.return.json"
+  },
+  "evidence/FULL-VERIFIER-AFTER-ADMIN.json": {
+    "sha256": "d3e6bc14b0aa624811f4373e2442f63f9dd7ed517abbaca25fd225da3caa4c95",
+    "bytes": 384,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/R35-FULL-VERIFIER-AFTER-ADMIN.return.json"
+  },
+  "evidence/FULL-VERIFIER-AFTER-ADMIN.stdout": {
+    "sha256": "09652b6407ee7b7d67d5fcdac39bc22e6bfaee5b1e34124325ce6eebd98938c4",
+    "bytes": 55,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/R35-FULL-VERIFIER-AFTER-ADMIN.stdout"
+  },
+  "operational-tools/scripts/lib/deployment-reuse/transaction-recovery.mjs": {
+    "sha256": "db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f",
+    "bytes": 21482,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/source/scripts/lib/deployment-reuse/transaction-recovery.mjs"
+  },
+  "operational-tools/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs": {
+    "sha256": "112c6d55c1a30abbd87af543ef4385dff5008ac8e4ba22ef52d2cec770ac825c",
+    "bytes": 9467,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/source/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs"
+  },
+  "operational-tools/scripts/lib/trusted-cp-model-overrides-config-gate.mjs": {
+    "sha256": "2a1d81d0fe6aced720382294af85a0dc1f2b05363eed13c2e69a965a9dc7c065",
+    "bytes": 8865,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/source/scripts/lib/trusted-cp-model-overrides-config-gate.mjs"
+  },
+  "operational-tools/scripts/lib/trusted-cp-runtime-app-graph-gate.mjs": {
+    "sha256": "5188818a291ca922714c13927b3d5ad38eecc2bc31ccae580c4e4b1bb963fc41",
+    "bytes": 7011,
+    "exact_original_source": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-cli-source-repair-20261018/source/scripts/lib/trusted-cp-runtime-app-graph-gate.mjs"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-17T23:00:41.866893+00:00",
+  "completed_at": "2026-10-17T23:01:10.640013+00:00",
+  "returncode": 0,
+  "elapsed_seconds": 28.772831417,
+  "stdout_sha256": "09652b6407ee7b7d67d5fcdac39bc22e6bfaee5b1e34124325ce6eebd98938c4",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_bytes": 0,
+  "DS_publication_called": false
+}

@@ -1,0 +1,26 @@
+{
+  "kind": "EXACT_R35_REVIEW_METADATA_ONLY_RESEAL",
+  "at": "2026-10-17T22:57:42.657471+00:00",
+  "independent_review_sha256": "218c27b45847000ccab7a1a88fc71c48db4eb33b3b7066022e08fa6abe748251",
+  "authority_only_one_review_receipt_value_changed": true,
+  "pin_exact": true,
+  "capsule_only_pin_digest_changed": true,
+  "production_or_F_changed": false,
+  "members": {
+    "b7-v3-publication-authority.json": {
+      "sha256": "1ab518c59045f68cf54518f4372e09343bb836b14f05344166b8e621ad70dfb4",
+      "bytes": 12971,
+      "before_sha256": "32edd84e569fbe4d745efb05f2490748a111ef71a4e6ebe7aa0225747f91e72f"
+    },
+    "b7-v3-publication-pin.json": {
+      "sha256": "f407e74f6aadabeb5eb04ca8988ddac80286b22a42e24c608f0c46f2c626556d",
+      "bytes": 143,
+      "before_sha256": "d25f559f3305e4c14b0ef06feed3952593e607223c402bb84ec6eb8354c14e53"
+    },
+    "CAPSULE-MANIFEST.json": {
+      "sha256": "019d089bd85416c59d15e9df8e0b7c21bcf97e7bb7b123ddc4881a8c9cea68e0",
+      "bytes": 3627,
+      "before_sha256": "3b694d2f28c5e11ff830f9488eb249bf3ab565d4cf29e2a88eaac2db1653563b"
+    }
+  }
+}

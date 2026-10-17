@@ -1,0 +1,179 @@
+{
+  "kind": "B7_R35_POLICY_INVERSE_AND_FIXED_EXISTING_FINISH_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_BOUNDED_SOURCE_VALIDATION_DELTA_AND_FIXED_OWNED_FINISH_RECIPE",
+  "at": "2026-10-17T22:46:10.577044+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "scope": "Same original R35 generator/policy review; append_policy inverse validation uses recorded AST source span instead of first global replacement. Original policy mutation itself is unchanged. Fixed existing M47b/e36 finish adds only four missing owned outputs after strict complete readback; no build replay or production action.",
+  "findings": [],
+  "subject": {
+    "generator_sha256": "ca9c0448cac3f8a5bb9daed4f5a0e182e3989f431fce4d18c37faea2fbef788d",
+    "baseline_generator_sha256": "f59117879bc50701e45a37450fac72c830d8b13cc4698a1609e0825da4b947aa",
+    "finish_script_sha256": "b79028ff294957efeccf84f48f71c01253578f7c9f894a9d45db3f8daeab7e2e",
+    "handoff_sha256": "4ea90ef0c501a982e78a6b5a465f8bc1456011664c739b5ea0fe7b41e98ae8db",
+    "manifest_sha256": "6b8151cfc4612b2dbf008d8bc4787ed9271e97b964f4c93d6957bccaabe137c2",
+    "actual_current_server_preimage_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+    "actual_current_client_preimage_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+    "actual_existing_packet_sha256": "47b552891423699330112daa97daf4a3002760c8e1febc165b505636a503481c",
+    "fixed_existing_key": "b7-native-execution-r35-c71fd2cc",
+    "fixed_existing_operation": "b7-packet-r35-47b5528914236993-e36",
+    "retained_two_existing_derived_files": {
+      "deployment_system.py": {
+        "sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+        "stat": [
+          16777233,
+          209343349,
+          110758548,
+          1792276562352485595
+        ]
+      },
+      "v53_r34_execution_source.py": {
+        "sha256": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+        "stat": [
+          16777233,
+          209343348,
+          58057,
+          1792276562303562738
+        ]
+      }
+    },
+    "four_missing_outputs_readonly_derived_buffers": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/v50_execution_client_source.py",
+        "bytes": 15341,
+        "sha256": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/ds_client.py",
+        "bytes": 79098,
+        "sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-FILES.json",
+        "bytes": 523003,
+        "sha256": "5186dd1012d98d51d6d99da397ba054a0ad76f24a1476c2819826917c7d1a26b"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-BUILD-RECEIPT.json",
+        "bytes": 5599,
+        "sha256": "c7a4d84e0d4b9c00c05551b1bf8f32f41f799b51cf1ddcfac163dbf924d0e2c1"
+      }
+    ]
+  },
+  "verified": {
+    "generator_single_validation_span_whole_inverse_exact_to_f591": true,
+    "actual_policy_replacement_bytes_and_all_other_generator_functions_unchanged": true,
+    "actual_pinned_9eb_two_hooks_three_affected_methods_pass_old_one_expected_failure": true,
+    "fixed_finish_UID502_default_no_write_and_only_finish_existing_flag": true,
+    "fixed_four_outputs_all_absent_and_existing_two_regular_nlink1_digest_pinned": true,
+    "current4192_9eb_pair_and_packetM47b_worker_and_SC9eef_and_four_tools_actual_read": true,
+    "actual_server_c0f2_and_private6d0_memory_rederivation_whole_equal": true,
+    "full_tar_member_order_header_payload_readback": {
+      "changed": [
+        "scripts/lib/deployment-reuse/transaction-recovery.mjs",
+        "scripts/lib/trusted-cp-fresh-child-boot-canary.mjs",
+        "scripts/lib/trusted-cp-runtime-app-graph-gate.mjs",
+        "scripts/lib/trusted-cp-model-overrides-config-gate.mjs"
+      ],
+      "members": 1639,
+      "before_sha256": "cfaefd9fb9f433b26e361794f0ff6790f2eb230f98644c299f25853d7ca49b51",
+      "after_sha256": "f88cd47fd1bed8eb3ea1681470a98276d862ab8dd5b391ed0b7d50bb793112fb"
+    },
+    "actual_private_preintent_proof": {
+      "preimage_sha256": "c901aabdbc385230e553e0dd051e463c95bf770e857e4152c73e39702c209818",
+      "source_sha256": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+      "whole_inverse_exact": true,
+      "old_r34_method_and_dispatch_exact": true,
+      "new_key": "b7-native-execution-r35-c71fd2cc",
+      "new_operation": "b7-packet-r35-47b5528914236993-e36"
+    },
+    "actual_policy_derivation_proofs": {
+      "deployment_system.py": {
+        "preimage_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+        "candidate_sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+        "methods": [
+          "install_hooks",
+          "install_execution_hooks"
+        ],
+        "each_policy_whole_byte_inverse": true,
+        "old_values_exact": true,
+        "codec_only_two_key_literals": false
+      },
+      "ds_client.py": {
+        "preimage_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+        "candidate_sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4",
+        "methods": [
+          "install_client_hooks",
+          "install_owner_cli"
+        ],
+        "each_policy_whole_byte_inverse": true,
+        "old_values_exact": true,
+        "codec_only_two_key_literals": true
+      }
+    },
+    "full_existing_package_FILES_inventory_members": 2091,
+    "original_exact_changed_member_set": [
+      "b7-wired-inputs/INSTALL-PINS.json",
+      "b7-wired-inputs/SOURCE-CONTENT.sha256",
+      "b7-wired-inputs/artifacts/agent-core-operation-source-b7-r1.tar.gz",
+      "b7-wired-inputs/artifacts/agent-core-operation-source-b7-r1.tar.gz.sha256",
+      "b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/transaction-recovery.mjs",
+      "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs",
+      "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-model-overrides-config-gate.mjs",
+      "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-runtime-app-graph-gate.mjs",
+      "packet/PACKET.json",
+      "packet/STAGE-ADAPTER.json",
+      "packet/b7-wired-stage/checkpoint-inputs.json",
+      "packet/b7-wired-stage/seed-materials.mjs",
+      "packet/b7-wired-stage/stage-seed-once.py"
+    ],
+    "all_four_actual_targets_still_absent_after_review": true,
+    "seven_observation_negative_cases_refused": [
+      "all four missing outputs must still be absent; no replay/overwrite",
+      "all four missing outputs must still be absent; no replay/overwrite",
+      "all four missing outputs must still be absent; no replay/overwrite",
+      "all four missing outputs must still be absent; no replay/overwrite",
+      "preexisting derived file drift deployment_system.py",
+      "actual current pair preimage drift ds_client.py",
+      "fixed actual built packet changed"
+    ],
+    "actual_exclusive_owned_fixture_existing_target_and_symlink_rejected_without_overwrite": true,
+    "actual_finish_prepare_has_no_candidate_write_copy_repack_register_or_cleanup_call": true,
+    "actual_main_finish_not_invoked": true,
+    "nine_manifest_files_checked": true
+  },
+  "reused_passes": {
+    "canonical_SC_source_delta": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CANONICAL-SC-REVIEW-RECEIPT.json",
+      "sha256": "d5cfcf25da5d3c4a3ea1642c43242d1d5b8a9b9f598e8163300a713c94636adf"
+    },
+    "original_successor_source_templates_placement_preintent": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/REVIEW-RECEIPT.json",
+      "sha256": "fd71c8a96b802fd761df5119cd35a2d012c642ab1a927a65c6ced48a14fcfe5e"
+    }
+  },
+  "evidence": {
+    "probe_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/probe_policy_finish.py",
+    "probe_sha256": "a508c15c4f2405096a0378f3d3a0b056a8b8a7be647f9f5808ad878eef151d95",
+    "result_path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/POLICY-FINISH-INDEPENDENT.json",
+    "result_sha256": "9d7560130743004187e0bdfeb9a2422b6744514c51de2681ae3ffdd8063bf35a"
+  },
+  "fixed_execution_boundary": {
+    "writer": "Original sole Root writer, owned UID502; reviewer did not invoke actual finish.",
+    "reviewed_interpreter_invocation": "/usr/bin/python3 -I -B <fixed b790 finish_existing_r35.py> --finish-existing",
+    "effect_scope": "Exactly four fixed EXCL output files returned by prepare(); output file+parent fsync/readback before next write, BUILD receipt last. No overwrite, no cleanup/rollback, no copy/repack, no old candidate mutation, no alternate operation/packet.",
+    "on_partial_output_failure": "Existing all-four-absent admission refuses blind repeat; preserve any newly created outputs and original packet/source evidence for exact state readback. This receipt does not authorize clearing/removing outputs to replay.",
+    "subsequent_actual_readback": "Original sole writer checks actual four file hashes and existing package/server/policy binding, then original full candidate validator/review/production chain. In-memory derivation is not actual finish completion."
+  },
+  "limits": [
+    "Reviewer ran repaired generator tests and pure prepare() only, never build() or actual main --finish-existing. Pure prepare() read actual fixed owned package and full archive and derived four buffers in memory; candidate outputs remain absent.",
+    "Seven early-refusal negatives inject observations without changing actual package/current pair. exclusive() positive/repeated-target/symlink tests used only a reviewer-owned temporary directory.",
+    "The finisher is an owned offline build continuation, not a privileged sealed execution entry. Reviewed -I -B invocation prevents import bytecode writes; no new production permission or deployment principal is created.",
+    "Actual package completion and future candidate/pin/authority/capsule/install/runtime/business checks remain separate. This review does not cover the forthcoming107leaf code delta or claim any native/business acceptance.",
+    "Canonical7tests and originalfd71 broader29methods/43manifest PASSes are reused only for unchanged source; no full workspace copy or irrelevant review repeat was performed."
+  ],
+  "finish_executed": false,
+  "build_replayed": false,
+  "production_invoked": false,
+  "registered": false,
+  "business_release": false
+}

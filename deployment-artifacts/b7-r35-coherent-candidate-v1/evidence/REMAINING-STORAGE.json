@@ -1,0 +1,51 @@
+{
+  "kind": "BOUNDED_R35_REMAINING_OPERATIONAL_STORAGE_CALCULATION_READONLY",
+  "at_utc": "2026-10-17T22:52:43.258047+00:00",
+  "original_reservation_sha256": "19ad2242c2b7c1cc4136d7c91780f7a525d232544240bfb3d7e47994cc092b32",
+  "actual_packet_sha256": "47b552891423699330112daa97daf4a3002760c8e1febc165b505636a503481c",
+  "Q_major_bytes": 3100127232,
+  "remaining_total_including_existing_auxiliary_bytes": 14828011520,
+  "original_floor_bytes": 53687091200,
+  "available_at_observation_bytes": 69668749312,
+  "projected_after_reservation_bytes": 54840737792,
+  "margin_to_original_floor_bytes": 1153646592,
+  "conditional_npm_term_reduced": false,
+  "cleanup_or_APFS_credit": 0,
+  "status": "POSITIVE_UNDER_FIXED_NORMAL_ONCE_ONLY_COPY_PLAN_NOT_PRODUCTION_ADMISSION",
+  "small_final_member_readback_pending": true,
+  "root_calls": 0,
+  "DS_calls": 0,
+  "production_writes": 0,
+  "inputs": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/ACTUAL-H92-METADATA.json",
+      "bytes": 29495,
+      "sha256": "7e1a9e52d9cc933293be6983df1facc84fa5d3e9c029da75f7217edc637373c6"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/ACTUAL-REMAINING-Q-COUNTS.json",
+      "bytes": 7867,
+      "sha256": "1b988e8d6198a12041161fb54b74fde36b7028f15a790e9fabcf50ce62c6a290"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/ACTUAL-SIZES-ARCHIVES-SNAPSHOT.json",
+      "bytes": 4437,
+      "sha256": "3f2300d393bca19d0a5c163392300b33ecf77fa1a429bf45fdd425c2d0bf4581"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/COPY-CALLER-SOURCE-PINS.json",
+      "bytes": 1938,
+      "sha256": "e8cb1501e00e3961a42459811ce473af8d6dba02341b5c4c3e0d0a113dc891c3"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/INITIAL-TAR-DOT-DIRECTORY-OVERCOUNT.json",
+      "bytes": 4237,
+      "sha256": "e3393f5eb79975abe59bc46c121b91cdfda749837c8b958a855009a8cae8ff58"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-capacity-readonly/R35-ACTUAL-REMAINING-READONLY/REPORT.md",
+      "bytes": 5311,
+      "sha256": "49ee631d39c5ef6d4bd77e191baf997e027527f1dfe13ac89800e23ca094acd1"
+    }
+  ]
+}

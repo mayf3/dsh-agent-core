@@ -1,0 +1,58 @@
+{
+  "kind": "B7_R35_CANONICAL_SOURCE_CONTENT_SINGLE_SPAN_INDEPENDENT_REVIEW_V1",
+  "status": "PASS_BOUNDED_GENERATOR_SOURCE_DELTA_ONLY",
+  "at": "2026-10-17T22:34:46.485071+00:00",
+  "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "scope": "Same original R35 successor generator review; source_list canonical line sorting only, restoring compatibility with original strict fullverifier SC expression. Reuse unchanged fd71 source/template/placement/preintent/header/app/policy review. No validator weakening, new design or authorization round.",
+  "findings": [],
+  "subject": {
+    "generator_sha256": "f59117879bc50701e45a37450fac72c830d8b13cc4698a1609e0825da4b947aa",
+    "generator_bytes": 21389,
+    "original_generator_sha256": "0022a87dd229d88559d05087e9805773ff4b412cc1c5491e9cc4196608dc183e",
+    "author_handoff_sha256": "456cf570d714dd8c498108ff7af72349b9b19f8a98989d54d39de232dc967a8a",
+    "author_manifest_sha256": "d11757a814561b45075a53c15dafdf64539aad47ff11d72692ca19bac663a3fe",
+    "actual_original_source_content_sha256": "7844e0727beedfab46e09227adbe045ea812a4e140147e0e7a9d40c8430aeb85",
+    "derived_canonical_source_content_sha256": "9eef50323f55dce9b96d4e420544ad9ca83e2959d4d50871d4c7af54b4fc3e48",
+    "current_original_strict_verifier_sha256": "b530737dde4e7d250302aed96660bea84a03d2d636c6eab42f54eaba155876e5",
+    "four_actual_source_sha256": [
+      "db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f",
+      "112c6d55c1a30abbd87af543ef4385dff5008ac8e4ba22ef52d2cec770ac825c",
+      "5188818a291ca922714c13927b3d5ad38eecc2bc31ccae580c4e4b1bb963fc41",
+      "2a1d81d0fe6aced720382294af85a0dc1f2b05363eed13c2e69a965a9dc7c065"
+    ]
+  },
+  "verified": {
+    "source_list_line85_only_join_out_to_join_sorted_out": true,
+    "whole_source_single_span_inverse_exact_to_0022": true,
+    "all_other_functions_classes_header_app_policy_preintent_JSON_and_path_bindings_byte_exact": true,
+    "actual_1430_old_SC_rows_and_actual_four_tool_bytes_match_original_fullchecker_expression": true,
+    "current_SC_expression_AST_exact_to_original_0f279": true,
+    "complete_path_map_equal_and_only_four_SHA_changes": true,
+    "invalid_hash_missing_tool_changed_tool_duplicate_wrong_changeset_refusals_preserved": true,
+    "independent_candidate_seven_methods_passed": true,
+    "independent_old_source_one_expected_failure_six_pass_no_errors": true,
+    "default_CLI_plan_no_new_KEY_OP_and_unbound_build_refuses_before_mkdir_copy": true,
+    "nine_author_manifest_members_verified": true
+  },
+  "reused_pass": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/REVIEW-RECEIPT.json",
+    "sha256": "fd71c8a96b802fd761df5119cd35a2d012c642ab1a927a65c6ced48a14fcfe5e",
+    "scope": "Original29 affected methods/43 manifest and all source unchanged beyond reviewed sorting statement; no rerun or relabel of actual candidate/native gates."
+  },
+  "evidence": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-independent-review/CANONICAL-SC-INDEPENDENT.json",
+    "sha256": "845fa2fd951b1d9473bf0f8c8053fe6bbcd5b825794a71730978bc9e2d714788",
+    "candidate_result_sha256": "47852b8ce9267b6afa889ebe9490c55e5eb09363f61875e6baf6525588aecbf8",
+    "baseline_result_sha256": "c8ea9d8a217bbd7597d63c1a769fef72f86a3c5f3ccd6dcbd8aafe68cf51d651"
+  },
+  "limits": [
+    "Source recipe only. Reviewer did not build a package, create candidate coordinates/operation, register, alter F/DS, run production or copy a workspace.",
+    "Actual new archive directory headers, complete package/pins/manifest/authority/capsule binding, full original validator and original native lifecycle remain checks on the later real candidate. Source SC composition is not a complete package or business acceptance proof.",
+    "Original strict validator is retained; this receipt does not approve replacing exact sorted SC byte comparison with a map-only comparison.",
+    "Actual prior e35 FINISHED/retirement/checkpoint prerequisites are sole-writer evidence and were not re-executed or independently certified in this source sorting review."
+  ],
+  "actual_candidate_built": false,
+  "new_operation": null,
+  "production_invoked": false,
+  "business_release": false
+}

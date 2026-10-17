@@ -1,0 +1,99 @@
+{
+  "kind": "OFFLINE_SUCCESSOR_RECIPE_NOT_ADMISSION",
+  "built": true,
+  "new_key": "b7-native-execution-r35-c71fd2cc",
+  "new_operation": "b7-packet-r35-47b5528914236993-e36",
+  "base": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r34-coherent-business-candidate-20261018/candidate-freeze/b7-install-r34",
+  "control_preimage": {
+    "deployment_system.py": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+    "ds_client.py": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67"
+  },
+  "app": "505cff8f/ac35f9d8/c71fd2cc unchanged",
+  "four_tools": {
+    "scripts/lib/deployment-reuse/transaction-recovery.mjs": "db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f",
+    "scripts/lib/trusted-cp-fresh-child-boot-canary.mjs": "112c6d55c1a30abbd87af543ef4385dff5008ac8e4ba22ef52d2cec770ac825c",
+    "scripts/lib/trusted-cp-runtime-app-graph-gate.mjs": "5188818a291ca922714c13927b3d5ad38eecc2bc31ccae580c4e4b1bb963fc41",
+    "scripts/lib/trusted-cp-model-overrides-config-gate.mjs": "2a1d81d0fe6aced720382294af85a0dc1f2b05363eed13c2e69a965a9dc7c065"
+  },
+  "journal_sha256": "81fbc1fc9b0a1531408d333106e50b4dad3edd7b1429f23035b01c8e056cc7cf",
+  "requires_root_sequence": "e35 recovery, fixed-five retirement and original checkpoint before Root chooses/builds/registers successor",
+  "not_control_cohort": true,
+  "registered": false,
+  "package": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35",
+  "policy_source_delta": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta",
+  "policy_proofs": {
+    "deployment_system.py": {
+      "preimage_sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+      "candidate_sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+      "methods": [
+        "install_hooks",
+        "install_execution_hooks"
+      ],
+      "each_policy_whole_byte_inverse": true,
+      "old_values_exact": true,
+      "codec_only_two_key_literals": false
+    },
+    "ds_client.py": {
+      "preimage_sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67",
+      "candidate_sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4",
+      "methods": [
+        "install_client_hooks",
+        "install_owner_cli"
+      ],
+      "each_policy_whole_byte_inverse": true,
+      "old_values_exact": true,
+      "codec_only_two_key_literals": true
+    }
+  },
+  "private_preintent_proof": {
+    "preimage_sha256": "c901aabdbc385230e553e0dd051e463c95bf770e857e4152c73e39702c209818",
+    "source_sha256": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529",
+    "whole_inverse_exact": true,
+    "old_r34_method_and_dispatch_exact": true,
+    "new_key": "b7-native-execution-r35-c71fd2cc",
+    "new_operation": "b7-packet-r35-47b5528914236993-e36"
+  },
+  "packet_manifest_sha256": "47b552891423699330112daa97daf4a3002760c8e1febc165b505636a503481c",
+  "worker_sha256": "0289d9877cbce552723196dd726988a1499fd0b0a5681731d41c10a4b79de3b2",
+  "files_manifest_sha256": "5186dd1012d98d51d6d99da397ba054a0ad76f24a1476c2819826917c7d1a26b",
+  "changed_members": [
+    "b7-wired-inputs/INSTALL-PINS.json",
+    "b7-wired-inputs/SOURCE-CONTENT.sha256",
+    "b7-wired-inputs/artifacts/agent-core-operation-source-b7-r1.tar.gz",
+    "b7-wired-inputs/artifacts/agent-core-operation-source-b7-r1.tar.gz.sha256",
+    "b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/transaction-recovery.mjs",
+    "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-fresh-child-boot-canary.mjs",
+    "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-model-overrides-config-gate.mjs",
+    "b7-wired-inputs/dsh-agent-core/scripts/lib/trusted-cp-runtime-app-graph-gate.mjs",
+    "packet/PACKET.json",
+    "packet/STAGE-ADAPTER.json",
+    "packet/b7-wired-stage/checkpoint-inputs.json",
+    "packet/b7-wired-stage/seed-materials.mjs",
+    "packet/b7-wired-stage/stage-seed-once.py"
+  ],
+  "tar_readback": {
+    "changed": [
+      "scripts/lib/deployment-reuse/transaction-recovery.mjs",
+      "scripts/lib/trusted-cp-fresh-child-boot-canary.mjs",
+      "scripts/lib/trusted-cp-runtime-app-graph-gate.mjs",
+      "scripts/lib/trusted-cp-model-overrides-config-gate.mjs"
+    ],
+    "members": 1639,
+    "before_sha256": "cfaefd9fb9f433b26e361794f0ff6790f2eb230f98644c299f25853d7ca49b51",
+    "after_sha256": "f88cd47fd1bed8eb3ea1681470a98276d862ab8dd5b391ed0b7d50bb793112fb"
+  },
+  "template_byte_exact": true,
+  "app_repacked": false,
+  "remaining": "Root original current-baseline authority/executor/prepare/verifier/publication/pin/capsule cascade plus independent review; R35 placement consumes e35 closed/retired/checkpoint proof, never warms old e31 cache; no DS calls",
+  "continuation": {
+    "kind": "FIXED_EXISTING_OWNED_POLICY_VALIDATION_CONTINUATION",
+    "failed_generator_sha256": "f59117879bc50701e45a37450fac72c830d8b13cc4698a1609e0825da4b947aa",
+    "repaired_generator_sha256": "ca9c0448cac3f8a5bb9daed4f5a0e182e3989f431fce4d18c37faea2fbef788d",
+    "existing_files_pinned": {
+      "deployment_system.py": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+      "v53_r34_execution_source.py": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529"
+    },
+    "old_packet_not_rewritten": true,
+    "build_not_replayed": true
+  }
+}

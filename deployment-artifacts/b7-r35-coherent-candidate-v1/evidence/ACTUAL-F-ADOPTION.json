@@ -1,0 +1,83 @@
+{
+  "at": "2026-10-17T22:58:27.900045+00:00",
+  "completed_rows": [
+    {
+      "name": "verify-chain-v50.py",
+      "sha256": "581242ef9de3c753f53a90faa73cc99983718329fff9cceb68f6b8ab7376f06a"
+    },
+    {
+      "name": "v53_r34_execution_source.py",
+      "sha256": "6d0b4a722e66718be04ea8b76a3faeb4627761dd3ca07d8fa7af1868ea194529"
+    },
+    {
+      "name": "v50_execution_client_source.py",
+      "sha256": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399"
+    },
+    {
+      "name": "e35-retirement-checkpoint-preimage.json",
+      "sha256": "393555956947d846e5e9f5772b72d6e6adaafacf069bba6c94680d1d06b6ffc5"
+    },
+    {
+      "name": "v50_prepare_inputs.py",
+      "sha256": "6ccbabfd57ba90f5c436c77cf8159aa5d204ff722e0c5cc75c33c718953dda31"
+    },
+    {
+      "name": "e35_finished_for_r35.py",
+      "sha256": "473a636287f3b064a0d57a3f10033b307bca1996d0c390f3517e8bba634ed52b"
+    },
+    {
+      "name": "b7-release-executor.sh",
+      "sha256": "6d72cb9097f60a3844d18305ec0cb187b58dc02e3d65f57c1a6a6cf6007240f4"
+    },
+    {
+      "name": "candidate-facts.json",
+      "sha256": "8454a21edd00c60403d8f5ab1cbf1c7826ca2afcaba6f386eef6b0565254ed6d"
+    },
+    {
+      "name": "v50-input-preparation.json",
+      "sha256": "0b883ddad71daab0068a708cab18c1e54c1903efaeb617d7fa9ea0301e8ff74a"
+    },
+    {
+      "name": "owner-deploy-session.sh",
+      "sha256": "db0d0ca7543b536857027fe90138dbe03454bf3b78d723bf88ce642ae0f53085"
+    },
+    {
+      "name": "deployment_system.py",
+      "sha256": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d"
+    },
+    {
+      "name": "ds_client.py",
+      "sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+    },
+    {
+      "name": "preimage/deployment_system.py",
+      "sha256": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647"
+    },
+    {
+      "name": "preimage/ds_client.py",
+      "sha256": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67"
+    },
+    {
+      "name": "b7-v3-publication-authority.json",
+      "sha256": "1ab518c59045f68cf54518f4372e09343bb836b14f05344166b8e621ad70dfb4"
+    },
+    {
+      "name": "b7-v3-publication-pin.json",
+      "sha256": "f407e74f6aadabeb5eb04ca8988ddac80286b22a42e24c608f0c46f2c626556d"
+    },
+    {
+      "name": "CAPSULE-MANIFEST.json",
+      "sha256": "019d089bd85416c59d15e9df8e0b7c21bcf97e7bb7b123ddc4881a8c9cea68e0"
+    }
+  ],
+  "protected_admin_or_DS_changed": false,
+  "fixed_package_materialized": true,
+  "status": "ADOPTED_ORIGINAL_F_NOT_INSTALLED",
+  "package_tree_sha256": "cbe5ca4075033cbd18f9326c534563f389ef9a4dd42e65d1f4b91e81de0f419d",
+  "package_members": 2091,
+  "capsule_members": 35,
+  "returncode": 0,
+  "completed_at": "2026-10-17T22:58:28.923265+00:00",
+  "elapsed_seconds": 1.0208402079999999,
+  "free_bytes": 69777780736
+}

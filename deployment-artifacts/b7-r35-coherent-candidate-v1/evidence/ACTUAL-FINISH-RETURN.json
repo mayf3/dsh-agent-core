@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-17T22:46:29.621394+00:00",
+  "completed_at": "2026-10-17T22:46:58.680735+00:00",
+  "returncode": 0,
+  "elapsed_seconds": 29.056200584,
+  "stdout_bytes": 5599,
+  "stdout_sha256": "c7a4d84e0d4b9c00c05551b1bf8f32f41f799b51cf1ddcfac163dbf924d0e2c1",
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "independent_review_sha256": "56fcbe4e88362b4dd443f34eed2e81ad190321e50a0c7e99263cc444b0bd6c69",
+  "DS_calls": false,
+  "build_replayed": false,
+  "actual_new_outputs": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/v50_execution_client_source.py",
+      "sha256": "36e9d5722a4c65a278338a1fa48c77b7abf2a6c87e749227dabdf40d00b79399",
+      "expected_exact": true,
+      "bytes": 15341
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-policy-source-delta/ds_client.py",
+      "sha256": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4",
+      "expected_exact": true,
+      "bytes": 79098
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-FILES.json",
+      "sha256": "5186dd1012d98d51d6d99da397ba054a0ad76f24a1476c2819826917c7d1a26b",
+      "expected_exact": true,
+      "bytes": 523003
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e35-fixed-recovery-20261018/successor-preparation-canonical-sc-v2/candidates/b7-install-r35-BUILD-RECEIPT.json",
+      "sha256": "c7a4d84e0d4b9c00c05551b1bf8f32f41f799b51cf1ddcfac163dbf924d0e2c1",
+      "expected_exact": true,
+      "bytes": 5599
+    }
+  ],
+  "all_expected_exact": true
+}
