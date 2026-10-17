@@ -1,0 +1,23 @@
+{
+  "kind": "R35_SOURCE_AND_ACTUAL_ADMIN_FREEZE_NOT_BUSINESS_RELEASE",
+  "operation": "b7-packet-r35-47b5528914236993-e36",
+  "publication": "ds-reader-pair-44cba8503d24",
+  "pair": {
+    "deployment_system.py": "c0f26fdc1354bd0116a6bde162fef47f403b4577ea4a8c7c715ca17a24a0099d",
+    "ds_client.py": "f308dbf5fe7d75756b37679833cf897d4726d9ec67df4b6fc795e97130da5ef4"
+  },
+  "actual_preimage_pair": {
+    "deployment_system.py": "4192c80eb839f3097a3c0b2a8adb9183f51faa033dd7342fc6ad072528c20647",
+    "ds_client.py": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67"
+  },
+  "packet_sha256": "47b552891423699330112daa97daf4a3002760c8e1febc165b505636a503481c",
+  "authority_sha256": "1ab518c59045f68cf54518f4372e09343bb836b14f05344166b8e621ad70dfb4",
+  "pin_sha256": "f407e74f6aadabeb5eb04ca8988ddac80286b22a42e24c608f0c46f2c626556d",
+  "capsule_sha256": "019d089bd85416c59d15e9df8e0b7c21bcf97e7bb7b123ddc4881a8c9cea68e0",
+  "executor_sha256": "6d72cb9097f60a3844d18305ec0cb187b58dc02e3d65f57c1a6a6cf6007240f4",
+  "source_review": "218c27b45847000ccab7a1a88fc71c48db4eb33b3b7066022e08fa6abe748251",
+  "full_verifier": "pre-publication 114/114 PASS after exact three-file admin install",
+  "DS_pair_loaded": false,
+  "business_release": false,
+  "app_source_and_template_unchanged": true
+}
