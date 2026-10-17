@@ -1,0 +1,13 @@
+--- a/executor.sh
++++ b/executor.sh
+@@ -305,0 +306,10 @@
++  e31-preserve)
++    [[ $# -eq 0 ]] || deny 'fixed e31 preservation accepts no arguments'
++    prepare_driven || exit 2
++    set +e
++    /usr/bin/python3 -I "$DRIVEN/e31_preserve_once.py"
++    rc=$?
++    set -u
++    receipt PRESERVE_EXIT "exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"
++    exit "$rc"
++    ;;
