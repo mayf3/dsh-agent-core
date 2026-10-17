@@ -44,9 +44,10 @@ Other existing Specs remain at their stable filenames and keep their current lif
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
-| `MOBILE_SESSION_HISTORY_V1` | proposed | contracts (inactive until accepted and present in implementation base) | DSH-native Session read-only final-text projection; minimal backend history service with Product API as thin adapter |
+| `MOBILE_SESSION_HISTORY_V1` | proposed | contracts (inactive until accepted and present in implementation base) | logical-main public history over server-resolved DSH trajectory; deterministic composite IDs, exact resource/root bounds, Tailnet-local exact device+surface activation, public auth deferred |
 
-The proposal is docs-only: it performs no product, Mobile, canary, deployment, Agent Home, or Session change.
+The V2 amendment closes independent review comment `5472147045`. It remains docs-only: no product,
+Mobile, canary, deployment, Agent Home, Session data, allowlist, or Tailnet activation change occurs.
 
 ## Agent primary Workspace authority
 
