@@ -1,0 +1,22 @@
+{
+  "actual_changed_predicates_readonly": "394b4b9fa77be78fa6187d119a0523331248df0880b066cc3c51a33f4467f138",
+  "actual_original_98_cohort_pre_quiesced": "1d31be9f9b6460f39705b431810b0ed73984df1d76c9187c1a814f7eccbd8b4e",
+  "artifacts": {
+    "deployment_system.py": "f93609e70db39ef87ca6013c6ccb944b11a568a772848b65f84d3c095b7224de",
+    "ds_client.py": "9ebd00ed4f9e01d5e6f999e2e0de86f56cea80a70d6633e5ffffef7dfd512c67"
+  },
+  "author_receipt": "84c57d8118ec5418778b23f70a2280239e2d348af2d142b574f699d09d4399e7",
+  "e35_accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
+  "preimage_artifacts": {
+    "deployment_system.py": "9fd68034efb050b0d7382bc2c4b12dbcc394254a7956b3885b9ecb3134724952",
+    "ds_client.py": "e206b5ff1bec5f2223b7314fabcc18b4679f0240bec03d39280b196f20c7528e"
+  },
+  "publication_operation_id": "ds-reader-pair-76d91cc91f52",
+  "reviews": {
+    "e35_client_timeout": "57ed34f24630c9a30bbc05988f2adc6816ed9d1d46350d74366c7ea98974ba3d",
+    "e35_host_integration": "56d1d87efd6d581d72f84fc8df6c614c18d8dd313ac4179f677886c1c18a5c43",
+    "e35_publication_component": "ce15334df3c67d74d8716ee4274e4c1d0875c29a44270e0fd7042937ba9b15d8",
+    "e35_recovery_implementation": "1096024d74c4f252254ea653283107e0b88706e2f7a7e42529be78f21a8d49ad"
+  },
+  "scope": "EXACT_SOURCE_AND_BOUNDED_REVIEW_NOT_PRODUCTION_RECEIPT"
+}

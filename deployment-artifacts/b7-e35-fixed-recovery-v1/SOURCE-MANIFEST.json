@@ -1,0 +1,11 @@
+{
+  "PINS.json": "85b219c23084bc1e4f633eea0233b60913f66d4cc4eb1d050b05fd659311a934",
+  "README.md": "417ff36e3d2436278c29db5884b369eadd11e3243b45a7cbf580f629bc7abea9",
+  "patches/b7-release-executor.sh.patch": "f8b1d7728b292c93ea6642b020efb2b41bdfe378e1be3d3a5000bdcc109a46e0",
+  "patches/ds_client.py.patch": "6cf612369e5d05d06518f906903910c50caabcdf47434c59935cfa547fb8b9ca",
+  "patches/verify-chain-v50.py.patch": "48fee28140d1d248fa785fa79b6e9c011a35eb8493686cbffb0572464f1fc72d",
+  "src/e35-host-extension.py.txt": "98043957adb2982547df08303ed52033636e8d7df0bc9634011977e1bfe64f06",
+  "src/e35_delegated_recovery.py": "4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4",
+  "src/v54_e35_publication_source.py": "e79121f47c9d10212dcba9e97a4170f7837aec2206b8d83fa290cdd2e947bbef",
+  "src/v54_e35_recovery_source.py": "88286ef86ba7848d09b4fdac79f7374414d1d925ebd904c3ad6ce2d02e03e7cf"
+}
