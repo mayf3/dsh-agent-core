@@ -29,6 +29,7 @@ import {
   canonicalOpenAICodexCredentialFileFor,
   deploymentRootOfAgentHome,
   persistOpenAICodexCredentialFile,
+  CANONICAL_DEFAULT_MODEL_ROUTE,
 } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact, verifyPluginInputs, resolvePluginPeerLinks } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
@@ -270,8 +271,8 @@ const MINIMAL_SETTINGS = [
   '    opencode-go:',
   '      apiKeyEnv: OPENCODE_GO_API_KEY',
   'agent-default-model:',
-  '  provider: opencode-go',
-  '  model: deepseek-v4-flash',
+  `  provider: ${CANONICAL_DEFAULT_MODEL_ROUTE.provider}`, 
+  `  model: ${CANONICAL_DEFAULT_MODEL_ROUTE.model}`, 
   '',
 ].join('\n')
 

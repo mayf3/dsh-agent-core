@@ -285,7 +285,7 @@ export function apply(ctx, config = {}) {
         }
         return
       }
-      if (url.pathname === '/workflow-execution/traces' || url.pathname === '/workflow-execution/kicks') {
+      if (url.pathname === '/workflow-execution/traces' || url.pathname === '/workflow-execution/kicks' || url.pathname === '/workflow-execution/attention' || url.pathname === '/workflow-execution/owner-assistance-wakes') {
         try {
           const { handleWorkflowExecutionRequest } = await import('./workflow-execution-routes.js')
           const { status, body } = await handleWorkflowExecutionRequest({

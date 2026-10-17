@@ -1,3 +1,4 @@
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../../agent-provisioning/src/shared-codex.js'
 /**
  * @agent-core/agent-router/src/process/agent-process.js — one owned DSH
  * agent process (AGENT_PROCESS_LIFECYCLE_HARDENING_V2 C-001..C-022 core).
@@ -58,8 +59,8 @@ export class AgentProcess {
     // per-Agent override before construction; every create/resume in this
     // process therefore inherits the same initialize route. Non-production
     // callers retain the historical global-env/default behavior.
-    this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? 'opencode-go'
-    this.model = model ?? process.env.DSH_AGENT_MODEL ?? 'deepseek-v4-flash'
+    this.provider = provider ?? process.env.DSH_AGENT_PROVIDER ?? CANONICAL_DEFAULT_MODEL_ROUTE.provider
+    this.model = model ?? process.env.DSH_AGENT_MODEL ?? CANONICAL_DEFAULT_MODEL_ROUTE.model
     this.providerEnv = Object.freeze({ ...providerEnv })
     this.omitEnv = [...omitEnv]
     this.log = log

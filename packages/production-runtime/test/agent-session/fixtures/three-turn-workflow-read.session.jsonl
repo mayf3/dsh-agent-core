@@ -1,0 +1,17 @@
+{"type":"session","version":1,"id":"main","createdAt":1700000000000,"cwd":"/fixture/workspaces/agt_target-agent","delegationDepth":0}
+{"seq":1,"time":1700000000001,"type":"turn/start","data":{"turn":66}}
+{"seq":2,"time":1700000000002,"type":"user/message","data":{"id":"m-fixture-previous","role":"user","source":{"kind":"user"},"content":[{"type":"text","text":"previous prompt"}]}}
+{"seq":3,"time":1700000000003,"type":"assistant/message","data":{"turn":66,"message":{"content":[{"type":"text","text":"ADJACENT_PREVIOUS_MARKER"}]}}}
+{"seq":4,"time":1700000000004,"type":"turn/end","data":{"turn":66,"reason":{"kind":"completed"}}}
+{"seq":5,"time":1700000000010,"type":"agent/inbox/spliced","data":{"inserted":[{"id":"m-fixture-owned","role":"user","source":{"kind":"inter_agent","sourceAgentId":"agt_Source_A","correlation":"turn:fixture-source"},"content":[{"type":"text","text":"fresh read the assigned Workflow"}]}]}}
+{"seq":6,"time":1700000000011,"type":"turn/start","data":{"turn":67}}
+{"seq":7,"time":1700000000012,"type":"user/message","data":{"id":"m-fixture-owned","role":"user","source":{"kind":"inter_agent","sourceAgentId":"agt_Source_A","correlation":"turn:fixture-source"},"content":[{"type":"text","text":"fresh read the assigned Workflow"}]}}
+{"seq":8,"time":1700000000013,"type":"assistant/message","data":{"turn":67,"message":{"content":[{"type":"text","text":"Reading the authoritative Workflow state."}]}}}
+{"seq":9,"time":1700000000014,"type":"tool/call","data":{"turn":67,"callId":"call-fixture-workflow-read","name":"workflow_read","arguments":"{\"operation\":\"detail\",\"workflowId\":\"00000000-0000-4000-8000-000000000001\"}"}}
+{"seq":10,"time":1700000000015,"type":"tool/result","data":{"turn":67,"message":{"source":{"kind":"tool","callId":"call-fixture-workflow-read"},"content":[{"type":"tool-result","toolCallId":"call-fixture-workflow-read","isError":false,"content":[{"type":"text","text":"Workflow read succeeded with full visibility."}]}]}}}
+{"seq":11,"time":1700000000016,"type":"assistant/message","data":{"turn":67,"message":{"content":[{"type":"text","text":"The Workflow was readable; no transition was issued in this fixture."}]}}}
+{"seq":12,"time":1700000000017,"type":"turn/end","data":{"turn":67,"reason":{"kind":"completed"}}}
+{"seq":13,"time":1700000000020,"type":"turn/start","data":{"turn":68}}
+{"seq":14,"time":1700000000021,"type":"user/message","data":{"id":"m-fixture-next","role":"user","source":{"kind":"user"},"content":[{"type":"text","text":"next prompt"}]}}
+{"seq":15,"time":1700000000022,"type":"assistant/message","data":{"turn":68,"message":{"content":[{"type":"text","text":"ADJACENT_NEXT_MARKER"}]}}}
+{"seq":16,"time":1700000000023,"type":"turn/end","data":{"turn":68,"reason":{"kind":"completed"}}}

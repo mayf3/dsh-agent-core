@@ -1,3 +1,4 @@
+import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 /**
  * @agent-core/demo-server — the process-model demo's long-lived app plugin.
  *
@@ -94,8 +95,8 @@ export function apply(ctx) {
   }
 
   let cwd = process.cwd()
-  let provider = 'opencode-go'
-  let model = 'deepseek-v4-flash'
+  let provider = CANONICAL_DEFAULT_MODEL_ROUTE.provider
+  let model = CANONICAL_DEFAULT_MODEL_ROUTE.model
   let maxTokens
 
   // The per-session resolution seam (AGENT_CORE_BINDING_WORKSPACE_V1

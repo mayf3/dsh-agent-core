@@ -25,10 +25,10 @@ export function executionStateFor(attempt) {
     return { state: attempt.judgment === STALE_NO_PROGRESS_JUDGMENT ? 'STALE_NO_PROGRESS' : 'SETTLED' }
   }
   if (attempt.state === 'NEEDS_REVIEW') {
-    // CTR-WEC1-002 table: a recorded escalation fact marks the review class
-    // HUMAN_REQUIRED (the escalation object also rides SETTLED/stale chains,
-    // whose judgment class stays stale_no_progress per the table).
-    if (attempt.escalation !== undefined) return { state: 'HUMAN_REQUIRED' }
+    // A system escalation fact now means OWNER_PENDING assistance was opened.
+    // HUMAN_REQUIRED is a later explicit Domain Owner action in svc-workflow
+    // and must never be inferred from the execution ledger alone.
+    if (attempt.escalation !== undefined) return { state: 'OWNER_PENDING' }
     if (attempt.judgment === 'run_ended_no_submission') return { state: 'RUN_ENDED_NO_TRANSITION' }
     // outcome_unknown and every unresolved/unknown-ish terminal class
     // (delivery_unverified, settle_check_unavailable, delivery_failed) is an

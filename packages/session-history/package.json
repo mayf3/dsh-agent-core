@@ -1,0 +1,12 @@
+{
+  "name": "@agent-core/session-history",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MOBILE_SESSION_HISTORY_V1 minimal read-only backend owner: raw DSH JSONL cold-read, valid complete prefix, allowlisted user/assistant final-text projection, deterministic composite public message IDs, seq-ordered exclusive-cursor pagination, fail-closed confinement. No Session ownership, no write surface, no second history store.",
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "@deepseek-ai/dsh-session": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.1.0-rc.8"
+  }
+}
