@@ -25,10 +25,13 @@ export function executionStateFor(attempt) {
     return { state: attempt.judgment === STALE_NO_PROGRESS_JUDGMENT ? 'STALE_NO_PROGRESS' : 'SETTLED' }
   }
   if (attempt.state === 'NEEDS_REVIEW') {
-    // CTR-WEC1-002 table: a recorded escalation fact marks the review class
-    // HUMAN_REQUIRED (the escalation object also rides SETTLED/stale chains,
-    // whose judgment class stays stale_no_progress per the table).
-    if (attempt.escalation !== undefined) return { state: 'HUMAN_REQUIRED' }
+    // Assistance state is authoritative from svc-workflow. Exhaustion first
+    // opens OWNER_PENDING; only an explicit Domain Owner action may later
+    // produce HUMAN_REQUIRED. Old ledger rows without a status retain the
+    // historical HUMAN_REQUIRED projection for replay compatibility.
+    if (attempt.escalation !== undefined) {
+      return { state: attempt.escalation.assistanceStatus === 'OWNER_PENDING' ? 'OWNER_PENDING' : 'HUMAN_REQUIRED' }
+    }
     if (attempt.judgment === 'run_ended_no_submission') return { state: 'RUN_ENDED_NO_TRANSITION' }
     // outcome_unknown and every unresolved/unknown-ish terminal class
     // (delivery_unverified, settle_check_unavailable, delivery_failed) is an
@@ -64,6 +67,11 @@ function traceEntryFor(attempt) {
         escalation: {
           reason: escalation.reason,
           ...(escalation.attemptCount !== undefined ? { attemptCount: escalation.attemptCount } : {}),
+          ...(escalation.assistanceCaseId !== undefined ? { assistanceCaseId: escalation.assistanceCaseId } : {}),
+          ...(escalation.assistanceStatus !== undefined ? { assistanceStatus: escalation.assistanceStatus } : {}),
+          ...(escalation.domainId !== undefined ? { domainId: escalation.domainId } : {}),
+          ...(escalation.ownerPrincipalId !== undefined ? { ownerPrincipalId: escalation.ownerPrincipalId } : {}),
+          ...(escalation.ownerAgentId !== undefined ? { ownerAgentId: escalation.ownerAgentId } : {}),
           atMs: escalation.atMs,
         },
       }

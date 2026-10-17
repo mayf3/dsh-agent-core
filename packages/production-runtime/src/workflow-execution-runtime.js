@@ -236,7 +236,35 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
         { agentId: pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'escalation_failed', detail: res.error?.detail }
-      return { ok: true, escalated: res.result?.escalated, assistanceCaseId: res.result?.assistanceCaseId }
+      const result = res.result ?? {}
+      const status = result.status
+      if (status !== 'OWNER_PENDING' && status !== 'HUMAN_REQUIRED') {
+        return { ok: false, code: 'escalation_shape_invalid', detail: `unexpected assistance status ${JSON.stringify(status)}` }
+      }
+      const ownerPrincipalId = result.ownerPrincipalId
+      if (typeof ownerPrincipalId !== 'string' || ownerPrincipalId === '') {
+        return { ok: false, code: 'escalation_shape_invalid', detail: 'ownerPrincipalId missing from assistance response' }
+      }
+      let ownerAgentId
+      if (status === 'OWNER_PENDING') {
+        const owner = await principalAccess.handlers.agent_resolve_principal.resolve(
+          { principalId: ownerPrincipalId },
+          { callerAgentId: pollerAgentId },
+        )
+        if (!owner.ok || typeof owner.result?.agentId !== 'string' || owner.result.agentId === '') {
+          return { ok: false, code: owner.error?.code ?? 'owner_resolution_failed', detail: owner.error?.detail ?? 'Domain Owner Agent is not exactly resolvable' }
+        }
+        ownerAgentId = owner.result.agentId
+      }
+      return {
+        ok: true,
+        escalated: result.escalated,
+        assistanceCaseId: result.assistanceCaseId,
+        assistanceStatus: status,
+        domainId: result.domainId,
+        ownerPrincipalId,
+        ...(ownerAgentId === undefined ? {} : { ownerAgentId }),
+      }
     },
   })
 

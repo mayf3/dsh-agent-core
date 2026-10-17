@@ -682,7 +682,7 @@ export class ExecutionLedger {
    * anything. Requires an existing terminal attempt — escalation rides the
    * attempt's own terminal evidence, never an ACTIVE attempt.
    */
-  async recordEscalationRequested({ nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
+  async recordEscalationRequested({ nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId, assistanceCaseId, assistanceStatus, domainId, ownerPrincipalId, ownerAgentId }) {
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: escalation reason is required')
     return this.mutate(() => {
       const current = this.#attempt(nodeVisitId)
@@ -706,6 +706,11 @@ export class ExecutionLedger {
         ...(Number.isInteger(attemptCount) ? { attemptCount } : {}),
         ...(typeof lastAttemptId === 'string' ? { lastAttemptId } : {}),
         ...(typeof dispatchIntentId === 'string' ? { dispatchIntentId } : {}),
+        ...(typeof assistanceCaseId === 'string' ? { assistanceCaseId } : {}),
+        ...(typeof assistanceStatus === 'string' ? { assistanceStatus } : {}),
+        ...(typeof domainId === 'string' ? { domainId } : {}),
+        ...(typeof ownerPrincipalId === 'string' ? { ownerPrincipalId } : {}),
+        ...(typeof ownerAgentId === 'string' ? { ownerAgentId } : {}),
       }
       this.#appendEvent(event)
       this.#applyEvent(event)

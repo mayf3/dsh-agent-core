@@ -57,6 +57,10 @@ test('CTR-WEC1-002: every ledger fact class maps to its executionState', () => {
     executionStateFor({ ...base, state: 'NEEDS_REVIEW', phase: 'reconciled', judgment: 'run_outcome_unknown', escalation: { reason: 'ATTEMPTS_EXHAUSTED', atMs: 2 } }).state,
     'HUMAN_REQUIRED',
   )
+  assert.equal(
+    executionStateFor({ ...base, state: 'NEEDS_REVIEW', phase: 'reconciled', judgment: 'run_outcome_unknown', escalation: { reason: 'ATTEMPTS_EXHAUSTED', assistanceStatus: 'OWNER_PENDING', atMs: 2 } }).state,
+    'OWNER_PENDING',
+  )
   assert.equal(executionStateFor({ ...base, state: 'SETTLED', judgment: 'stale_no_progress' }).state, 'STALE_NO_PROGRESS')
   assert.equal(executionStateFor({ ...base, state: 'SETTLED', judgment: 'business_commitment_observed' }).state, 'SETTLED')
 })

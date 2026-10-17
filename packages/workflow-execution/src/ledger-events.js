@@ -312,6 +312,11 @@ export function applyLedgerEvent(attempts, event) {
         ...(Number.isInteger(event.attemptCount) ? { attemptCount: event.attemptCount } : {}),
         ...(typeof event.lastAttemptId === 'string' ? { lastAttemptId: event.lastAttemptId } : {}),
         ...(typeof event.dispatchIntentId === 'string' ? { dispatchIntentId: event.dispatchIntentId } : {}),
+        ...(typeof event.assistanceCaseId === 'string' ? { assistanceCaseId: event.assistanceCaseId } : {}),
+        ...(typeof event.assistanceStatus === 'string' ? { assistanceStatus: event.assistanceStatus } : {}),
+        ...(typeof event.domainId === 'string' ? { domainId: event.domainId } : {}),
+        ...(typeof event.ownerPrincipalId === 'string' ? { ownerPrincipalId: event.ownerPrincipalId } : {}),
+        ...(typeof event.ownerAgentId === 'string' ? { ownerAgentId: event.ownerAgentId } : {}),
         atMs: event.atMs,
       }
       return

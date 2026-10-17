@@ -175,9 +175,14 @@ export function createWorkflowExecutionEngine({
         attemptCount: payload.attemptCount,
         lastAttemptId: payload.lastAttemptId,
         dispatchIntentId: payload.dispatchIntentId,
+        assistanceCaseId: result.assistanceCaseId,
+        assistanceStatus: result.assistanceStatus,
+        domainId: result.domainId,
+        ownerPrincipalId: result.ownerPrincipalId,
+        ownerAgentId: result.ownerAgentId,
       })
       if (recorded.committed) {
-        log.log?.(`workflow-execution: attempt limit escalated for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
+        log.log?.(`workflow-execution: owner assistance intent recorded for ${attempt.nodeVisitId} (${reason}; status ${result.assistanceStatus ?? 'n/a'}; svc case ${result.assistanceCaseId ?? 'n/a'}; owner ${result.ownerAgentId ?? result.ownerPrincipalId ?? 'n/a'})`)
       }
     } catch (error) {
       log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
