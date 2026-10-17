@@ -32,6 +32,9 @@ export function mountBrokerGateway({ ctx, credentialsFile, authServiceOrigin, au
       ...(ctx.get('agentDefinitionAccess')?.handlers ?? {}),
       ...(ctx.get('selfServiceSchedulerAccess')?.handlers ?? {}),
       ...(ctx.get('selfOpsAccess')?.handlers ?? {}),
+      // FIXED_OPERATION_V1: the trusted workflow_fixed_ops LOCAL provider
+      // (pre-registered immutable operations; fail closed when unmounted).
+      ...(ctx.get('fixedOperationAccess')?.handlers ?? {}),
       ...(ctx.get('agentSessionMessagingAccess')?.handlers ?? {}),
       ...(ctx.get('agentPrincipalResolutionAccess')?.handlers ?? {}),
       ...(ctx.get('agentPrincipalReverseResolutionAccess')?.handlers ?? {}),

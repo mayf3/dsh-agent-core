@@ -57,6 +57,9 @@ import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/sr
 import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
+// FIXED_OPERATION_V1: the trusted workflow_fixed_ops LOCAL provider
+// (registry empty in V1 — fail closed until composition registers operations).
+import { mountWorkflowFixedOperationRuntime } from './workflow-fixed-operation-runtime.js'
 // Latest-main integration: BOTH wirings coexist —
 //   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
 //   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
@@ -508,6 +511,12 @@ export async function composeProductionRuntime(options = {}) {
     log,
     ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
   })
+
+  // FIXED_OPERATION_V1: mount the trusted workflow_fixed_ops LOCAL provider
+  // right after the workflow execution runtime it is bound to. The registry
+  // stays EMPTY in V1 — every invocation fails closed with unknown_operation
+  // until a future accepted authority registers real operations.
+  mountWorkflowFixedOperationRuntime({ ctx, log })
 
   // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the product-api
   // /workflow-execution/* routes resolve this service at request time (the
