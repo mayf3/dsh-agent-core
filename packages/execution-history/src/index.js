@@ -12,6 +12,7 @@ import { buildWorkflowRoot, briefWorkflow } from './correlate/workflow-root.js'
 import { buildSessionRoot, briefSession } from './correlate/session-root.js'
 import { buildSchedulerRoot } from './correlate/scheduler-root.js'
 import { buildMessageRoot } from './correlate/message-root.js'
+import { buildNodeVisitHistory, briefNodeVisit } from './correlate/node-visit-root.js'
 import { assembleResult, renderReportText } from './report.js'
 import { jobRoutingAgent } from './loaders/scheduler-store.js'
 // CTR-SCT-002: the MY_SESSIONS listing core rides the same public entry so
@@ -54,6 +55,7 @@ export async function queryExecutionTrace(opts) {
   try {
     switch (root) {
       case 'workflow_instance': return await runWorkflow(ctx, normArgs, { root, viewer, audit, svcRequest, cursor, limit, nowMs, view })
+      case 'workflow_node_visit': return await runNodeVisit(ctx, normArgs, { root, viewer, audit, cursor, limit, nowMs, view })
       case 'agent_session': return await runSession(ctx, normArgs, { root, viewer, audit, cursor, limit, nowMs, view })
       case 'scheduler_run': return await runScheduler(ctx, normArgs, { root, viewer, audit, cursor, limit, nowMs, view })
       case 'message': return await runMessage(ctx, normArgs, { root, viewer, audit, cursor, limit, nowMs, view })
@@ -118,6 +120,26 @@ async function runWorkflow(ctx, args, meta) {
     }
   }
   return finalize(ctx, built, { ...meta, args, brief: briefWorkflow, extraSources: ['svc_detail', 'svc_timeline', 'svc_submissions'] })
+}
+
+async function runNodeVisit(ctx, args, meta) {
+  const workflowInstanceId = String(args.workflowInstanceId ?? '')
+  const nodeVisitId = String(args.nodeVisitId ?? '')
+  if (!UUID_RE.test(workflowInstanceId)) return err('invalid_arguments', 'workflowInstanceId must be a UUID')
+  if (!UUID_RE.test(nodeVisitId)) return err('invalid_arguments', 'nodeVisitId must be a UUID')
+  const built = await buildNodeVisitHistory(ctx, { workflowInstanceId, nodeVisitId })
+  if (meta.audit !== true) {
+    // Same self-scope visibility discipline as the workflow_instance root:
+    // svc visibility is the authority — when the caller's own credential
+    // could not see the instance AND no svc facts exist, there is nothing
+    // lawful to show (404, never 403 — existence is not leaked either way).
+    const svcDetailFailed = built.gaps.some((g) => g.stage === 'svc_instance_detail')
+    const hasSvcFacts = built.records.some((r) => r.source === 'svc_detail')
+    if (svcDetailFailed && !hasSvcFacts) {
+      return err('workflow_node_visit_not_found', 'not found or not visible to the caller')
+    }
+  }
+  return finalize(ctx, built, { ...meta, args: { workflowInstanceId, nodeVisitId }, brief: briefNodeVisit, extraSources: ['svc_detail'] })
 }
 
 async function runSession(ctx, args, meta) {

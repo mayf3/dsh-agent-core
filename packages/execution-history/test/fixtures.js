@@ -180,8 +180,7 @@ export function destroyFixtureRoot(fixture) {
   try { rmSync(fixture.root, { recursive: true, force: true }) } catch { /* tmp best-effort */ }
 }
 
-/** Fake per-caller svc read surface (visibility + timeline + submissions). */
-export function fakeSvcRequest({ visible = true, assistanceOnly = false } = {}) {
+/** Fake per-caller svc read surface (visibility + timeline + submissions). */export function fakeSvcRequest({ visible = true, assistanceOnly = false } = {}) {
   return async (_agentId, req) => {
     if (!visible) return { ok: false, code: 'downstream_unavailable', detail: 'not visible' }
     if (req.path.endsWith('/timeline')) {
@@ -212,5 +211,121 @@ export function fakeSvcRequest({ visible = true, assistanceOnly = false } = {}) 
     if (req.path.includes('/submissions')) return { ok: true, body: { items: [{ submissionId: 'sub-1' }] } }
     if (req.path.includes('/workflow-instances/')) return { ok: true, body: { visibility: 'full', detail: { workflowInstanceId: 'wf', currentStateVersion: 2, createdAt: new Date(T0).toISOString() } } }
     return { ok: false, code: 'downstream_unavailable' }
+  }
+}
+
+// ── WORKFLOW_NODE_SESSION_HISTORY_V1 fixtures ────────────────────────────────
+
+export const VISIT_ID_MG = '66666666-6666-4666-8666-666666666666'
+export const MG_PRIVATE_TEXT = 'MG PRIVATE agt_a diary text — must never surface in any index'
+
+const MG_T0 = 1759000000000
+
+/**
+ * One NodeVisit with THREE ledger generations under WF_ID (isolated root; the
+ * default fixture above stays byte-identical):
+ *   gen1  planned → delivery_started → run_delivered(agt_a/main, requestId +
+ *         messageId + reconciliationHandle) → stale_superseded  ⇒ SETTLED,
+ *         session reachable.
+ *   gen2  planned → delivery_started → delivery_failed(post-invocation)
+ *         ⇒ NEEDS_REVIEW, NO persisted session coordinate (receipt lost —
+ *         the honest missing-session case).
+ *   gen3  planned → delivery_started → run_delivered(agt_b/main, requestId
+ *         only — messageId/reconciliationHandle absent) ⇒ RUNNING; agt_b has
+ *         no homes subtree ⇒ journalReachable=false (bounded reachability).
+ */
+export function buildMultiGenerationVisitFixtureRoot() {
+  const root = join(tmpdir(), `exec-history-mg-fixture-${process.pid}-${Math.random().toString(36).slice(2, 8)}`)
+  const controlDir = join(root, 'control')
+  const homesRoot = join(root, 'homes')
+  const workflowExecutionDir = join(root, 'workflow-execution')
+  mkdirSync(controlDir, { recursive: true })
+  mkdirSync(workflowExecutionDir, { recursive: true })
+
+  const attempt1 = attemptIdFor(VISIT_ID_MG, 1)
+  const attempt2 = attemptIdFor(VISIT_ID_MG, 2)
+  const attempt3 = attemptIdFor(VISIT_ID_MG, 3)
+  const planned = (generation, attemptId, atMs) => JSON.stringify({ kind: 'attempt_planned', attemptId, nodeVisitId: VISIT_ID_MG, dispatchIntentId: INTENT_ID, workflowInstanceId: WF_ID, ownerPrincipalId: PRINCIPAL_ID, generation, atMs })
+  const ledgerRows = [
+    // gen1 — delivered + superseded.
+    planned(1, attempt1, MG_T0 + 1000),
+    JSON.stringify({ kind: 'delivery_started', nodeVisitId: VISIT_ID_MG, atMs: MG_T0 + 1010 }),
+    JSON.stringify({ kind: 'run_delivered', nodeVisitId: VISIT_ID_MG, attemptId: attempt1, agentId: 'agt_a', requestId: 'req-mg-1', sessionId: 'main', messageId: 'om_mg_1', reconciliationHandle: 'te-mg-1', atMs: MG_T0 + 1100 }),
+    JSON.stringify({ kind: 'stale_superseded', nodeVisitId: VISIT_ID_MG, observedWorkflowStateVersion: 1, atMs: MG_T0 + 1200 }),
+    // gen2 — fenced then post-invocation delivery failure: terminal
+    // NEEDS_REVIEW with no run_delivered row ever written (no session
+    // coordinate exists — must be surfaced as absent, never derived).
+    planned(2, attempt2, MG_T0 + 2000),
+    JSON.stringify({ kind: 'delivery_started', nodeVisitId: VISIT_ID_MG, atMs: MG_T0 + 2010 }),
+    JSON.stringify({ kind: 'delivery_failed', nodeVisitId: VISIT_ID_MG, attemptId: attempt2, reason: 'settle_check_unavailable:receipt-lost', atMs: MG_T0 + 2100 }),
+    // gen3 — delivered to a DIFFERENT agent (pair semantics: same 'main'
+    // session name, different agentId ⇒ different SessionRef), receipt
+    // coordinates absent (requestId only).
+    planned(3, attempt3, MG_T0 + 3000),
+    JSON.stringify({ kind: 'delivery_started', nodeVisitId: VISIT_ID_MG, atMs: MG_T0 + 3010 }),
+    JSON.stringify({ kind: 'run_delivered', nodeVisitId: VISIT_ID_MG, attemptId: attempt3, agentId: 'agt_b', requestId: 'req-mg-3', sessionId: 'main', atMs: MG_T0 + 3100 }),
+  ]
+  writeFileSync(join(workflowExecutionDir, 'attempts.jsonl'), ledgerRows.join('\n') + '\n')
+
+  // agt_a/main journal exists (gen1's sessionRef is stat/header-reachable)
+  // and carries private text that must NEVER appear in any output face.
+  // agt_b deliberately has NO homes subtree.
+  const projKey = '--Users-fixture--'
+  mkdirSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main'), { recursive: true })
+  const agtAEvents = [
+    { type: 'session', version: 0, id: 'main', createdAt: MG_T0, cwd: '/tmp/mg' },
+    { type: 'user/message', seq: 1, time: new Date(MG_T0 + 1).toISOString(), data: { content: MG_PRIVATE_TEXT, source: { kind: 'workflow_execution', workflowInstanceId: WF_ID, nodeVisitId: VISIT_ID_MG, attemptId: attempt1 } } },
+  ]
+  writeFileSync(join(homesRoot, 'agt_a', 'sessions', projKey, 'main', 'session.jsonl'), agtAEvents.map((e) => JSON.stringify(e)).join('\n') + '\n')
+
+  return {
+    root,
+    paths: {
+      homesRoot,
+      controlDir,
+      historyDir: join(root, 'scheduler', 'history'),
+      jobsStore: join(root, 'scheduler', 'jobs.json'),
+      workflowExecutionDir,
+      evidenceLog: join(controlDir, 'runtime-evidence.jsonl'),
+    },
+    attemptIds: { 1: attempt1, 2: attempt2, 3: attempt3 },
+  }
+}
+
+/**
+ * Same-shape root for ORDER stability: two generations whose ledger atMs all
+ * collide on one millisecond — merge order must still come out
+ * generation-ascending (dedupeKey generation padding tiebreak).
+ */
+export function buildEqualTimestampsFixtureRoot() {
+  const root = join(tmpdir(), `exec-history-eq-fixture-${process.pid}-${Math.random().toString(36).slice(2, 8)}`)
+  const workflowExecutionDir = join(root, 'workflow-execution')
+  const homesRoot = join(root, 'homes')
+  const controlDir = join(root, 'control')
+  mkdirSync(workflowExecutionDir, { recursive: true })
+  mkdirSync(controlDir, { recursive: true })
+  const visit = '77777777-7777-4777-8777-777777777777'
+  const a1 = attemptIdFor(visit, 1)
+  const a2 = attemptIdFor(visit, 2)
+  const ledgerRows = [
+    JSON.stringify({ kind: 'attempt_planned', attemptId: a1, nodeVisitId: visit, dispatchIntentId: INTENT_ID, workflowInstanceId: WF_ID, ownerPrincipalId: PRINCIPAL_ID, generation: 1, atMs: MG_T0 }),
+    JSON.stringify({ kind: 'delivery_started', nodeVisitId: visit, atMs: MG_T0 }),
+    JSON.stringify({ kind: 'run_delivered', nodeVisitId: visit, attemptId: a1, agentId: 'agt_x', requestId: 'req-eq-1', sessionId: 'main', atMs: MG_T0 }),
+    JSON.stringify({ kind: 'attempt_planned', attemptId: a2, nodeVisitId: visit, dispatchIntentId: INTENT_ID, workflowInstanceId: WF_ID, ownerPrincipalId: PRINCIPAL_ID, generation: 2, atMs: MG_T0 }),
+    JSON.stringify({ kind: 'delivery_started', nodeVisitId: visit, atMs: MG_T0 }),
+  ]
+  writeFileSync(join(workflowExecutionDir, 'attempts.jsonl'), ledgerRows.join('\n') + '\n')
+  return {
+    root,
+    visit,
+    attemptIds: { 1: a1, 2: a2 },
+    paths: {
+      homesRoot,
+      controlDir,
+      historyDir: join(root, 'scheduler', 'history'),
+      jobsStore: join(root, 'scheduler', 'jobs.json'),
+      workflowExecutionDir,
+      evidenceLog: join(controlDir, 'runtime-evidence.jsonl'),
+    },
   }
 }
