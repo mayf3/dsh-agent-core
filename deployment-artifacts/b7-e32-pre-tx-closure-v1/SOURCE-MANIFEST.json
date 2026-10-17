@@ -1,0 +1,96 @@
+{
+  "members": {
+    "PINS.json": {
+      "sha256": "2b5fc0668a7eefeea3f12e3518dba7eb6e7f9f22eaaf86f219d0be208937af1b",
+      "bytes": 3353
+    },
+    "README.md": {
+      "sha256": "90ff93d2e8caaa6e5c65bda3af8c6639348e98c2667d232cf031907198e62fd2",
+      "bytes": 5630
+    },
+    "patches/client-module.patch": {
+      "sha256": "15757d38de41a7a84a71325e0aee2265907c617b3324afff75ec9ec60f29e89a",
+      "bytes": 805
+    },
+    "src/v50_execution_client_source.py": {
+      "sha256": "c31c34555f1a975a09be5b3c70a2aab4bdd6fc6cf477acf9b95874b43edd7613",
+      "bytes": 15341
+    },
+    "src/v51_e32_closure_source.py": {
+      "sha256": "0601d987833a33827a205ba6850a9cdc7f83124d35cf1fb0def61baee2c09161",
+      "bytes": 33588
+    },
+    "tests/harness/fixture.py.fixture": {
+      "sha256": "f4d47ac8d50ecd97fa51965bd3361559600c4405d445b45c3ab617d50e4205ec",
+      "bytes": 8747
+    },
+    "tests/harness/test_codec_boundary.py.fixture": {
+      "sha256": "59d064699194ef59d8d86b7d70e4e3934d8c421c690d079a25d3614d0aecd7a5",
+      "bytes": 775
+    },
+    "tests/harness/test_cold_uncertain.py.fixture": {
+      "sha256": "e246b45c37bbf8bc1254459fe830f67b7797f7027328b44fa17259ec2c9d9ca8",
+      "bytes": 1513
+    },
+    "tests/harness/test_directory_custody.py.fixture": {
+      "sha256": "dc91d712e8047edd76004b66aaeb20010300b30f0f2fa55f0cbf2e49a0505c1e",
+      "bytes": 373
+    },
+    "tests/harness/test_e32.py.fixture": {
+      "sha256": "4426f372667c0a7b65bec975e7e63b8006bb9ca99b70bc4205212e171590693c",
+      "bytes": 11014
+    },
+    "tests/harness/test_snapshot_readback.py.fixture": {
+      "sha256": "14fd6ad2a80cf1da5d6526a302f0fedb4467834ea7ddaa0761e1d7b04f07865a",
+      "bytes": 759
+    },
+    "tests/snapshot/accepted-provisioning-commit.txt.fixture": {
+      "sha256": "49c5113d2bae4971bf5f49521f2f3cb18627c57f190b68ba6fac21436a0d25b9",
+      "bytes": 323
+    },
+    "tests/snapshot/accepted-spec-copy-b08db324aa179af962536a804d275866fa2bb7f2.md.fixture": {
+      "sha256": "3dd42a9b8793bb9f68df420d779edd7af42def897861551349cf68db30dd8458",
+      "bytes": 13402
+    },
+    "tests/snapshot/checkpoint-inputs.json.fixture": {
+      "sha256": "c6e916129bfc8c1f180409a68e46630fe88c733c25b9b60add2c1c58ff6e66a1",
+      "bytes": 36963
+    },
+    "tests/snapshot/checkpoint.py.fixture": {
+      "sha256": "4e3218d2fa69568353f93e2960bbc774e20418ad890e992359481fe87d17d5b2",
+      "bytes": 21288
+    },
+    "tests/snapshot/old-stage-lease-disposal-once.py.fixture": {
+      "sha256": "519441cd6b51ba3039340027746eb493c36d9ffc41bfc60c7c256e79b4f81e53",
+      "bytes": 58648
+    },
+    "tests/snapshot/option-b-quarantine-remove.py.fixture": {
+      "sha256": "e25593a703b74620e741dd40ce870d57d502a4b658f9b8564006e84b142bdc03",
+      "bytes": 15121
+    },
+    "tests/snapshot/preimage-byte-bindings.json.fixture": {
+      "sha256": "2ab340c78a5996f59d7a9e7249bb411366cef1fec979eea534e70e60940f4d12",
+      "bytes": 1061
+    },
+    "tests/snapshot/seed-materials.mjs.fixture": {
+      "sha256": "520068ca8d685bcfc34e31d4b448acdb97cb649780e188379e20f46274819346",
+      "bytes": 8819
+    },
+    "tests/snapshot/stage-seed-once.py.fixture": {
+      "sha256": "2a881af0daf50547881245f0cfc556d2f52af1f632b0662abc7754cefb3626ff",
+      "bytes": 29408
+    },
+    "tests/support/test_base.py.fixture": {
+      "sha256": "43f57a7d36e5d3011f900b310c658560a18720e71480b91687ce0f588aa76664",
+      "bytes": 17501
+    },
+    "tools/build.py": {
+      "sha256": "7e4b5ba333c6c3299e4460cfe37385ef3b952f2535d88c8a97f94faaeb0092d5",
+      "bytes": 4929
+    },
+    "tools/verify.py": {
+      "sha256": "7fceb417d594dea5baf68b8fba63ac593f0f90b8f569b7cc2480e61bf07bb10c",
+      "bytes": 4317
+    }
+  }
+}
