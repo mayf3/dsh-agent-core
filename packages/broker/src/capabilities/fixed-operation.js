@@ -1,14 +1,14 @@
 /**
  * FIXED_OPERATION_V1 candidate capability — broker manifest for the fixed-
- * operation registry (fixture operations only). Follows the LOCAL capability
- * pattern (self_ops / agent_definition): pure-data manifest here, handlers
- * injected by the composition (`fixedOperationAccess`).
+ * operation registry (fixture operations only). LOCAL capability pattern:
+ * pure-data manifest here, handlers injected by the composition
+ * (`fixedOperationAccess`).
  *
- * Wire discipline: the model/workflow can pass ONLY the operation selector,
- * the pinned `version` + `hash` from the fixed-operation catalog, and the
- * operation's declared business arguments (closed schema). There is no
- * scriptPath/shell/code surface — argument schemas close with
- * `additionalProperties: false` and the runtime re-validates at the gateway.
+ * Wire discipline: the model/workflow can pass ONLY { operation, version,
+ * hash, args } — the pinned catalog entry plus its business arguments. The
+ * closed envelope rejects every other top-level key; the nested `args` object
+ * is validated by the registry against the pinned operation's schema. There
+ * is no scriptPath/shell/code/env/path surface anywhere on the wire.
  */
 
 import { defineOperation } from '../../../fixed-operation/src/registry.js'
@@ -19,26 +19,11 @@ import { fixtureEcho, fixtureSum } from '../../../fixed-operation/src/fixtures.j
  * local handler executes against. */
 export const FIXED_OPERATION_DEFINITIONS = [fixtureEcho, fixtureSum].map(defineOperation)
 
-const WIRE_NAMES = { 'fixture.echo': 'fixture_echo', 'fixture.sum': 'fixture_sum' }
-
-/** wire operation name -> canonical registry operationKey. */
-export const FIXED_OPERATION_WIRE_KEYS = Object.fromEntries(
-  FIXED_OPERATION_DEFINITIONS.map((definition) => [WIRE_NAMES[definition.key], definition.key]),
-)
-
 const errorCodes = [
   'unsupported_operation', 'unknown_operation',
   'operation_version_mismatch', 'operation_hash_mismatch',
   'invalid_arguments', 'missing_trusted_context', 'internal_error',
 ]
-
-const string = (description) => ({ type: 'string', minLength: 1, description })
-
-/** Every invocation pins the exact catalog entry it intends to call. */
-const PIN_ARGS = {
-  version: string('The pinned operation version from the fixed-operation catalog.'),
-  hash: string('The pinned definition hash (sha256:...) from the fixed-operation catalog.'),
-}
 
 export const fixedOperationManifest = {
   id: 'fixed_operation',
@@ -46,22 +31,29 @@ export const fixedOperationManifest = {
   selector: 'operation',
   name: 'Fixed Operations',
   description:
-    'Invoke a registered fixed operation by pinning its exact catalog version and definition hash. '
-    + 'Arguments are closed; provenance comes from the trusted runtime, never from arguments.',
-  local: true,
+    'Execute a registered fixed operation: pass its catalog operation key, the pinned version and '
+    + 'definition hash, and its business arguments. Provenance comes from the trusted runtime, never '
+    + 'from arguments. Registered operations: '
+    + FIXED_OPERATION_DEFINITIONS.map((d) => `${d.key} @ ${d.version} (${d.hash})`).join(', '),
+  local: { resource: 'fixed-operation' },
   errors: errorCodes.map((code) => ({ code, description: code.replaceAll('_', ' ') })),
-  operations: FIXED_OPERATION_DEFINITIONS.map((definition) => ({
-    name: WIRE_NAMES[definition.key],
-    description: `${definition.description} Pinned: version ${definition.version}, definition ${definition.hash}.`,
-    arguments: {
-      additionalProperties: false,
-      structuralDiagnostics: true,
-      properties: { ...PIN_ARGS, ...definition.inputSchema.properties },
-      required: ['version', 'hash', ...(definition.inputSchema.required ?? [])],
+  operations: [
+    {
+      name: 'execute',
+      description: 'Execute one registered fixed operation by pinned key + version + hash.',
+      arguments: {
+        additionalProperties: false,
+        structuralDiagnostics: true,
+        properties: {
+          operation: { type: 'string', minLength: 1, description: 'Registered fixed-operation key (e.g. "fixture.echo").' },
+          version: { type: 'string', minLength: 1, description: 'The pinned operation version from the fixed-operation catalog.' },
+          hash: { type: 'string', minLength: 1, description: 'The pinned definition hash (sha256:...) from the fixed-operation catalog.' },
+          args: { type: 'object', description: 'Business arguments, validated by the registry against the pinned operation schema.' },
+        },
+        required: ['operation', 'version', 'hash', 'args'],
+      },
+      result: { type: 'json' },
+      errors: errorCodes,
     },
-    result: { type: 'json' },
-    errors: errorCodes,
-  })),
+  ],
 }
-
-export const fixedOperationManifests = [fixedOperationManifest]

@@ -5,16 +5,17 @@
  * (`fixedOperationAccess`), exactly like selfOpsAccess /
  * developmentExecutionAccess.
  *
- * Provenance discipline: the ONLY path into the registry is a
+ * Provenance discipline: the handler consumes ONLY the broker-injected
+ * trusted context. A call may enter the registry exclusively with a trusted
  * `workflow_execution` provenance recorded by the RUNTIME (noteWorkflowTurn),
- * resolved from the gateway's trusted-context turnExecutionId — never from
- * model arguments. Ordinary turns, un-noted turns and forged provenance all
- * fail closed (missing_trusted_context) inside the registry.
+ * resolved from the trusted-context turnExecutionId — never from model
+ * arguments. Ordinary sessions, un-noted turns and forged provenance all
+ * fail closed (missing_trusted_context).
  */
 
 import { createOperationRegistry } from '../../fixed-operation/src/registry.js'
 import { requireWorkflowTrustedContext } from '../../fixed-operation/src/trusted-context.js'
-import { FIXED_OPERATION_DEFINITIONS, FIXED_OPERATION_WIRE_KEYS } from '../../broker/src/capabilities/fixed-operation.js'
+import { FIXED_OPERATION_DEFINITIONS } from '../../broker/src/capabilities/fixed-operation.js'
 
 /** Bounded note table: workflow dispatches are the writer; oldest entry is
  * evicted FIFO so the table can never grow unbounded. */
@@ -56,9 +57,9 @@ export function mountFixedOperationRuntime({ ctx, log = { log: () => {} } }) {
   }
 
   /** RUNTIME-owned resolution from the gateway trusted context; undefined for
-   * ordinary sessions — the registry then fails closed. The Router forwards
-   * turnExecutionId nested in ingressContext (legacy flat callers remain
-   * supported; a nested/flat disagreement fails closed). */
+   * ordinary sessions. The Router forwards turnExecutionId nested in
+   * ingressContext (legacy flat callers remain supported; a nested/flat
+   * disagreement fails closed). */
   function resolveWorkflowProvenance(trustedContext) {
     const nested = trustedContext?.ingressContext?.turnExecutionId
     const legacy = trustedContext?.turnExecutionId
@@ -68,14 +69,19 @@ export function mountFixedOperationRuntime({ ctx, log = { log: () => {} } }) {
   }
 
   const handlers = {
-    fixed_operation: Object.fromEntries(Object.entries(FIXED_OPERATION_WIRE_KEYS).map(([wireName, operationKey]) => [
-      wireName,
-      async (args, trustedContext) => {
-        const { version, hash, ...businessArgs } = args ?? {}
+    fixed_operation: {
+      execute: async (args, trustedContext) => {
+        const { operation, version, hash, args: businessArgs } = args ?? {}
+        // Provenance is RUNTIME-owned (noted for the calling turn); model
+        // args are never consulted for it. Only a trusted workflow_execution
+        // provenance may enter the registry — everything else fails closed.
         const workflow = resolveWorkflowProvenance(trustedContext)
-        return registry.invoke({ operation: operationKey, version, hash, args: businessArgs }, workflow)
+        if (workflow === undefined || workflow.kind !== 'workflow_execution') {
+          return { ok: false, error: { code: 'missing_trusted_context', detail: 'fixed_operation requires the trusted workflow_execution provenance injected by the runtime' } }
+        }
+        return registry.invoke({ operation, version, hash, args: businessArgs }, workflow)
       },
-    ])),
+    },
   }
 
   const access = { handlers, registry, noteWorkflowTurn, resolveWorkflowProvenance }

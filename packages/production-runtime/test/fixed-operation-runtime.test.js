@@ -24,7 +24,7 @@ test('production composition resolves fixedOperationAccess after broker mount', 
   const { ctx, runtime, gateway } = createHarness()
   const access = ctx.get('fixedOperationAccess')
 
-  assert.ok(access?.handlers?.fixed_operation?.fixture_echo)
+  assert.ok(access?.handlers?.fixed_operation?.execute)
   assert.equal(access.registry, runtime.registry)
 
   assert.deepEqual(access.noteWorkflowTurn({
@@ -36,8 +36,8 @@ test('production composition resolves fixedOperationAccess after broker mount', 
   const outcome = await gateway.execute(
     {
       capabilityId: 'fixed_operation',
-      operation: 'fixture_echo',
-      args: { version: '1.0.0', hash, message: 'hello-runtime' },
+      operation: 'execute',
+      args: { operation: 'fixture.echo', version: '1.0.0', hash, args: { message: 'hello-runtime' } },
     },
     {
       agentId: 'agt_a',
@@ -64,8 +64,8 @@ test('production composition denies an ordinary unnoted turn', async () => {
   const outcome = await gateway.execute(
     {
       capabilityId: 'fixed_operation',
-      operation: 'fixture_echo',
-      args: { version: '1.0.0', hash, message: 'ordinary' },
+      operation: 'execute',
+      args: { operation: 'fixture.echo', version: '1.0.0', hash, args: { message: 'ordinary' } },
     },
     {
       agentId: 'agt_a',
@@ -83,11 +83,12 @@ test('production composition rejects model-carried workflow coordinates', async 
   const outcome = await gateway.execute(
     {
       capabilityId: 'fixed_operation',
-      operation: 'fixture_echo',
+      operation: 'execute',
       args: {
+        operation: 'fixture.echo',
         version: '1.0.0',
         hash,
-        message: 'forged',
+        args: { message: 'forged' },
         kind: 'workflow_execution',
         workflowInstanceId: FIXTURE_TRUSTED_CONTEXT.workflowInstanceId,
         nodeVisitId: FIXTURE_TRUSTED_CONTEXT.nodeVisitId,
@@ -116,8 +117,8 @@ test('conflicting flat and nested turn ids fail closed', async () => {
   const outcome = await gateway.execute(
     {
       capabilityId: 'fixed_operation',
-      operation: 'fixture_echo',
-      args: { version: '1.0.0', hash, message: 'conflict' },
+      operation: 'execute',
+      args: { operation: 'fixture.echo', version: '1.0.0', hash, args: { message: 'conflict' } },
     },
     {
       agentId: 'agt_a',
