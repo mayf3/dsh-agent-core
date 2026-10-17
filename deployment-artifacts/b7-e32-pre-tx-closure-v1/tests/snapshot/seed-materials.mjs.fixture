@@ -1,0 +1,113 @@
+// Private worker for the fixed entry. No configurable production roots or seed CLI.
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {parseLaunchd,readBoundRuntime} from '../b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/cohort-runtime.mjs';
+import {treeDigest} from '../b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/transaction-recovery.mjs';
+const PACKAGE='/private/var/db/agent-deploy-system/inputs/b7-install-r31/b7-wired-inputs';
+const TRUSTED='/usr/local/libexec/agent-core',DEPLOYMENT='/Users/authsvc/.agent-core';
+const TARGET='system/ai.agent-core.runtime',PLIST='/Library/LaunchDaemons/ai.agent-core.runtime.plist';
+const STAGE='/var/db/agent-core/authsvc-codex-migration/activation-code-input';
+export const ENTRY_PATHS=['app/scripts/production-runtime.mjs','app/packages/production-runtime/src/entry.js','app/packages/production-runtime/src/compose.js','app/packages/production-runtime/src/model-overrides.js','app/packages/agent-provisioning/src/shared-codex.js'];
+const fail=s=>{throw Error(s);};
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const canonical=x=>x && typeof x==='object' ? (Array.isArray(x)?x.map(canonical):Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])]))) : x;
+const same=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
+export function readBoundedInput(fd,max,positioned=false){
+ const b=Buffer.alloc(max+1);let used=0;
+ while(used<b.length){const n=fs.readSync(fd,b,used,b.length-used,positioned?used:null);if(!n)break;used+=n;}
+ if(used>max)fail('INPUT_BOUND');return b.subarray(0,used);
+}
+function stableBytes(p,max=1048576){
+ if(fs.realpathSync(p)!==p)fail('INPUT_PATH_ALIAS');
+ const before=fs.lstatSync(p);if(!before.isFile()||before.nlink!==1||before.size>max)fail('INPUT_CUSTODY');
+ const fd=fs.openSync(p,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);
+ try{const opened=fs.fstatSync(fd);if(before.ino!==opened.ino||before.dev!==opened.dev)fail('INPUT_OPEN_DRIFT');
+  const bytes=readBoundedInput(fd,before.size,true),after=fs.fstatSync(fd),leaf=fs.lstatSync(p);
+  if(bytes.length!==before.size||!['ino','dev','size','mtimeMs','ctimeMs','uid','gid','mode','nlink'].every(k=>before[k]===after[k]&&before[k]===leaf[k]))fail('INPUT_READ_DRIFT');
+  return bytes;
+ }finally{fs.closeSync(fd);}
+}
+function assertLoaded(j,trusted=TRUSTED){
+ if(!Number.isSafeInteger(j.pid)||j.pid<=0||j.pid===65430)fail('PID_ADMISSION_REFUSED');
+ if(j.plist!==PLIST||j.program!==trusted+'/node-runtime/bin/node'||j.arguments?.[0]!==j.program||j.arguments[1]!==trusted+'/app/scripts/production-runtime.mjs'||j.cwd!==trusted+'/app'
+  ||j.user!=='authsvc'||typeof j.group!=='string'||!j.group||j.environment.HOME!=='/Users/authsvc'||j.environment.DSH_HARNESS_ROOT!==trusted+'/harness')fail('FIXED_RUNTIME_ENTRY');
+ let roots=0;
+ for(let i=2;i<j.arguments.length;i++){
+  if(j.arguments[i]==='--native-arm64')continue;
+  const k=j.arguments[i++],v=j.arguments[i];
+  if(!['--root','--catchup','--tick-ms','--concurrency'].includes(k)||v===undefined)fail('RUNTIME_ARGUMENT');
+  if(k==='--root'){if(v!==DEPLOYMENT)fail('RUNTIME_ROOT');roots++;}else if(!/^\d+$/.test(v))fail('RUNTIME_ARGUMENT');
+ }
+ if(roots!==1)fail('RUNTIME_ROOT_COUNT');
+ return j;
+}
+const IDENTITY_ARGS=pid=>['-p',String(pid),'-o','pid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm='];
+// Every process read is first admitted against the currently loaded fixed job.
+// PGID is read only for that one fresh PID. No group or historical session query.
+export function guardRuntimeRun(rawRun,trusted=TRUSTED){
+ return (file,args)=>{
+  if(file==='/bin/launchctl'){
+   if(!same(args,['print',TARGET]))fail('COMMAND_REFUSED');
+   const text=rawRun(file,args);assertLoaded(parseLaunchd(text),trusted);return text;
+  }
+  if(file==='/usr/bin/plutil'){
+   if(!same(args,['-convert','json','-o','-',PLIST]))fail('COMMAND_REFUSED');
+   return rawRun(file,args);
+  }
+  if(file!=='/bin/ps')fail('COMMAND_REFUSED');
+  const j=assertLoaded(parseLaunchd(rawRun('/bin/launchctl',['print',TARGET])),trusted);
+  if(!same(args,IDENTITY_ARGS(j.pid)))fail('PID_NOT_FRESH_FIXED_BINDING');
+  const text=rawRun('/bin/ps',['-p',String(j.pid),'-o','pid=','-o','pgid=','-o','uid=','-o','gid=','-o','lstart=','-o','comm=']).trim();
+  const m=/^(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(.+?\d{4})\s+(\/.*)$/.exec(text);
+  if(!m||Number(m[1])!==j.pid||!Number.isFinite(Date.parse(m[5])))fail('PROCESS_INSTANCE_UNAVAILABLE');
+  if(Number(m[2])===65430)fail('UNKNOWN_PGID_REFUSED');
+  if(Number(m[2])<=0||Number(m[3])<=0||m[6]!==j.program)fail('PROCESS_PRINCIPAL_ENTRY');
+  return `${m[1]} ${m[3]} ${m[4]} ${m[5]} ${m[6]}\n`;
+ };
+}
+export function observeRuntime({run,trustedRoot=TRUSTED}){
+ const guarded=guardRuntimeRun(run,trustedRoot);
+ const job=assertLoaded(parseLaunchd(guarded('/bin/launchctl',['print',TARGET])),trustedRoot);
+ const text=guarded('/bin/ps',IDENTITY_ARGS(job.pid)).trim();
+ const m=/^(\d+)\s+(\d+)\s+(\d+)\s+(.+?\d{4})\s+(\/.*)$/.exec(text);
+ if(!m)fail('PROCESS_INSTANCE_UNAVAILABLE');
+ const preInstance={pid:job.pid,uid:Number(m[2]),gid:Number(m[3]),started:m[4].trim(),program:m[5]};
+ const {pid,...inputs}=job;
+ const entries=Object.fromEntries(ENTRY_PATHS.map(p=>[p,hash(stableBytes(path.join(trustedRoot,p)))]));
+ const b={deploymentRoot:DEPLOYMENT,trustedRoot,serviceUid:preInstance.uid,routing:{source:'runtime_env',globalRoute:{provider:job.environment.DSH_AGENT_PROVIDER,model:job.environment.DSH_AGENT_MODEL},runtime:{target:TARGET,user:job.user,group:job.group,home:job.environment.HOME,gid:preInstance.gid,inputs,preInstance,entryDigests:{pre:entries}}}};
+ readBoundRuntime(b,{phase:'pre',run:guarded});
+ return b;
+}
+export function buildSeed(template,b,digests){
+ const seed=structuredClone(template),c=seed.activation?.cohortPreparation;
+ for(const k of ['specHead','provisioningCommit'])if(!/^[a-f0-9]{40}$/.test(seed[k]??''))fail('SEED_PIN');
+ for(const k of ['specSha256','scriptSha256','pluginTgzSha256','scopesTgzSha256'])if(!/^[a-f0-9]{64}$/.test(seed[k]??''))fail('SEED_PIN');
+ if(seed.txSchema!==1||seed.deploymentRoot!==DEPLOYMENT||!c||c.deploymentRoot!==DEPLOYMENT||c.trustedRoot!==b.trustedRoot||c.routing.source!=='runtime_env')fail('SEED_FIXED_BINDING');
+ if(!/^[a-f0-9]{40}$/.test(seed.activation.sourceSha??'')||!/^[a-f0-9]{40}$/.test(seed.activation.sourceTree??''))fail('SEED_PIN');
+ if(!Number.isSafeInteger(b.serviceUid)||b.serviceUid<=0||!Number.isSafeInteger(b.routing.runtime.gid)||b.routing.runtime.gid<0)fail('SEED_PRINCIPAL');
+ for(const p of ['app','harness','node-runtime'])if(!/^[a-f0-9]{64}$/.test(digests[p]??''))fail('SEED_CODE_DIGEST');
+ for(const k of ['provider','model'])if(typeof b.routing.globalRoute[k]!=='string'||!b.routing.globalRoute[k])fail('SEED_ROUTE');
+ for(const k of ['user','group','home'])if(typeof b.routing.runtime[k]!=='string'||!b.routing.runtime[k])fail('SEED_RUNTIME_INPUT');
+ if(!b.routing.runtime.inputs||!b.routing.runtime.preInstance||!ENTRY_PATHS.every(p=>/^[a-f0-9]{64}$/.test(b.routing.runtime.entryDigests.pre?.[p]??'')))fail('SEED_RUNTIME_INPUT');
+ // Optional selected runtime keys intentionally retain proven absence (null).
+ c.serviceUid=b.serviceUid;c.routing=structuredClone(b.routing);seed.activation.codeDigests={...digests};
+ return seed;
+}
+function rawRun(file,args){return execFileSync(file,args,{encoding:'utf8',timeout:10000,maxBuffer:1048576,env:{PATH:'/usr/bin:/bin:/usr/sbin:/sbin',LC_ALL:'C'},stdio:['ignore','pipe','pipe']});}
+function main(){
+ if(process.getuid()!==0||process.geteuid()!==0||process.argv.length!==3||!['pre','finish'].includes(process.argv[2]))fail('PRIVATE_FIXED_ROOT_WORKER');
+ const b=observeRuntime({run:rawRun});
+ if(process.argv[2]==='pre'){process.stdout.write(JSON.stringify(b)+'\n');return;}
+ const prior=JSON.parse(readBoundedInput(0,65536).toString('utf8'));if(!same(prior,b))fail('RUNTIME_CHANGED_DURING_PLACEMENT');
+ const templateBytes=stableBytes(PACKAGE+'/SEED-TEMPLATE.UNINSTALLABLE.json',65536);if(hash(templateBytes)!=='ac1933eb4c15776ac18aeb59545c4d30a3a70ec9c96724713e27fb4337a56a35')fail('TEMPLATE_PIN');const template=JSON.parse(templateBytes);
+ const digests=Object.fromEntries(['app','harness','node-runtime'].map(p=>[p,treeDigest(path.join(STAGE,p))]));
+ // Runtime remains the same instance after the potentially long tree reads.
+ const last=observeRuntime({run:rawRun});if(!same(b,last))fail('RUNTIME_CHANGED_DURING_DIGEST');
+ process.stdout.write(JSON.stringify(buildSeed(template,b,digests),null,2)+'\n');
+}
+if(process.argv[1]&&fileURLToPath(import.meta.url)===path.resolve(process.argv[1])){
+ try{main();}catch(e){process.stderr.write(String(e.message)+'\n');process.exitCode=1;}
+}

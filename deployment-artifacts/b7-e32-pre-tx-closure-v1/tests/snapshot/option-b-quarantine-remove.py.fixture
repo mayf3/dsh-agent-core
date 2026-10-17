@@ -1,0 +1,284 @@
+#!/usr/bin/python3
+"""Fixed six-link Option B. Local review candidate; never invoked on production here.
+
+No owner token: authorization is already recorded in #637/6050534311.
+CLI roots and TX are fixed. Holds the retained holder's original flock throughout.
+Backups and receipt are durable before any unlink; no census is rewritten.
+--restore is only for this disposition before the retained lease is disposed.
+"""
+import argparse
+import contextlib
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import stat
+import sys
+import types
+
+HOMES = ('agt_data-engineer-agent', 'agt_family-insurance-manager-agent',
+         'agt_investment-manager-agent', 'agt_lw-lifecycle-canary',
+         'agt_machine-learning-engineer-agent', 'agt_technical-writer-agent')
+BIN_REL = 'profiles/node_modules/.bin/dsh-openai-codex'
+BIN_TARGET = '../dsh-codex/lib/bin.js'
+TX_ID = 'tx-f50c4824612e4479b040c4f8b0baa358'
+QUARANTINE = '.b7-six-link-option-b-' + TX_ID
+DISPOSAL_SHA = 'ad872da2be7dd74cf0962f7b2072d14ddb470d95600dc0d080a545311be4b7f2'
+PACKET = Path(__file__).resolve().parents[1]
+APPROVAL = 'https://github.com/mayf3/agent-control/issues/637#issuecomment-6050534311'
+
+
+class Refused(RuntimeError):
+    pass
+
+
+def open_directory(path):
+    """Resolve each directory component physically; never follow an app symlink."""
+    p = Path(path)
+    if not p.is_absolute(): raise Refused('ABSOLUTE_DIRECTORY_REQUIRED')
+    fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for name in p.parts[1:]:
+            nxt = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            os.close(fd); fd = nxt
+        return fd
+    except BaseException:
+        os.close(fd); raise
+
+
+def link_snapshot(fd, home):
+    try: s = os.stat('dsh-openai-codex', dir_fd=fd, follow_symlinks=False)
+    except FileNotFoundError: return None
+    if not stat.S_ISLNK(s.st_mode): raise Refused('LINK_TYPE:' + home)
+    target = os.readlink('dsh-openai-codex', dir_fd=fd)
+    if target != BIN_TARGET: raise Refused('LINK_TARGET:' + home)
+    return {'dev': s.st_dev, 'ino': s.st_ino, 'uid': s.st_uid, 'gid': s.st_gid,
+            'mode': s.st_mode, 'mtimeNs': s.st_mtime_ns, 'ctimeNs': s.st_ctime_ns,
+            'atimeNs': s.st_atime_ns, 'target': target}
+
+
+def same_link(a, b):
+    keys = ('dev', 'ino', 'uid', 'gid', 'mode', 'mtimeNs', 'ctimeNs', 'target')
+    return a is not None and b is not None and all(a[k] == b[k] for k in keys)
+
+
+def write_receipt(qfd, receipt):
+    raw = (json.dumps(receipt, sort_keys=True) + '\n').encode()
+    fd = os.open('RECEIPT.new', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                 0o600, dir_fd=qfd)
+    try:
+        with os.fdopen(fd, 'wb') as f:
+            f.write(raw); f.flush(); os.fsync(f.fileno())
+        os.replace('RECEIPT.new', 'RECEIPT.json', src_dir_fd=qfd, dst_dir_fd=qfd)
+        os.fsync(qfd)
+    except BaseException:
+        # Preserve incomplete evidence; never delete it or infer successful unlink.
+        raise
+
+
+def read_receipt(qfd):
+    fd = os.open('RECEIPT.json', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=qfd)
+    with os.fdopen(fd, 'rb') as f:
+        s = os.fstat(f.fileno())
+        if not stat.S_ISREG(s.st_mode) or s.st_nlink != 1 or s.st_size > 65536:
+            raise Refused('RECEIPT_CUSTODY')
+        return json.loads(f.read())
+
+
+def run_disposition(deployment, guard, mode, binding):
+    """Function seam for isolated tests; production caller supplies a held real lease.
+
+    Fixed allowlist only. Never creates a missing home/parent or follows .bin links.
+    A durable intent permits resolving an absent original after process death;
+    a present original must retain the exact inode/metadata/target from the backup.
+    """
+    if mode not in ('check', 'apply', 'restore'): raise Refused('MODE')
+    deployment = Path(deployment)
+    guard()
+    with contextlib.ExitStack() as stack:
+        depfd = open_directory(deployment); stack.callback(os.close, depfd)
+        parents = {}
+        for home in HOMES:
+            p = deployment / 'homes' / home / Path(BIN_REL).parent
+            fd = open_directory(p); stack.callback(os.close, fd)
+            parents[home] = (p, fd, (os.fstat(fd).st_dev, os.fstat(fd).st_ino))
+        def current(home):
+            p, fd, identity = parents[home]
+            fresh = open_directory(p)
+            try:
+                s = os.fstat(fresh)
+                if (s.st_dev, s.st_ino) != identity: raise Refused('LINK_PARENT_CHANGED:' + home)
+            finally: os.close(fresh)
+            return link_snapshot(fd, home)
+        snapshots = {h: current(h) for h in HOMES}
+        try: qfd = os.open(QUARANTINE, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=depfd)
+        except FileNotFoundError: qfd = None
+        def backup_guard():
+            guard()
+            try: named = os.stat(QUARANTINE, dir_fd=depfd, follow_symlinks=False)
+            except FileNotFoundError: raise Refused('BACKUP_NAMESPACE_CHANGED')
+            opened = os.fstat(qfd)
+            if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
+                raise Refused('BACKUP_NAMESPACE_CHANGED')
+            if opened.st_uid != os.geteuid() or stat.S_IMODE(opened.st_mode) != 0o700:
+                raise Refused('BACKUP_DIRECTORY_CUSTODY')
+        def persist(receipt):
+            backup_guard(); write_receipt(qfd, receipt)
+        if qfd is None:
+            if mode == 'restore': raise Refused('BACKUP_REQUIRED')
+            if any(snapshots[h] is None for h in HOMES): raise Refused('LINK_ABSENT_WITHOUT_RECEIPT')
+            receipt = {'kind': 'B7_OPTION_B_RECEIPT_V1', 'approval': APPROVAL, 'binding': binding,
+                       'links': [{'home': h, 'path': str(deployment / 'homes' / h / BIN_REL),
+                                  'original': snapshots[h], 'state': 'backed-up'} for h in HOMES]}
+            if mode == 'check': return receipt
+            guard()
+            os.mkdir(QUARANTINE, mode=0o700, dir_fd=depfd)
+            qfd = os.open(QUARANTINE, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=depfd)
+            stack.callback(os.close, qfd)
+            for row in receipt['links']:
+                backup_guard()
+                if not same_link(current(row['home']), row['original']): raise Refused('LINK_CHANGED_BEFORE_BACKUP')
+                os.symlink(BIN_TARGET, row['home'] + '.link', dir_fd=qfd)
+            os.fsync(qfd)
+            persist(receipt)
+            os.fsync(depfd)
+        else:
+            stack.callback(os.close, qfd)
+            backup_guard()
+            if 'RECEIPT.new' in os.listdir(qfd): raise Refused('INCOMPLETE_RECEIPT_RETAINED')
+            receipt = read_receipt(qfd)
+        if receipt.get('kind') != 'B7_OPTION_B_RECEIPT_V1' or receipt.get('binding') != binding:
+            raise Refused('BACKUP_BINDING')
+        if [r.get('home') for r in receipt.get('links', [])] != list(HOMES): raise Refused('BACKUP_SCOPE')
+        # Verify the whole backup and current scope before any new removal/restore.
+        for row in receipt['links']:
+            home = row['home']
+            if row.get('path') != str(deployment / 'homes' / home / BIN_REL): raise Refused('BACKUP_PATH')
+            if row.get('state') not in ('backed-up', 'unlink-intent', 'removed', 'restore-intent', 'restored'):
+                raise Refused('BACKUP_STATE')
+            s = os.stat(home + '.link', dir_fd=qfd, follow_symlinks=False)
+            if not stat.S_ISLNK(s.st_mode) or os.readlink(home + '.link', dir_fd=qfd) != BIN_TARGET:
+                raise Refused('BACKUP_TARGET')
+            now = current(home)
+            expected = row.get('restored') if row['state'] == 'restored' else row['original']
+            if now is not None and not same_link(now, expected): raise Refused('LINK_REPLACED:' + home)
+            if now is None and row['state'] not in ('unlink-intent', 'removed', 'restore-intent'):
+                raise Refused('UNWITNESSED_LINK_ABSENCE:' + home)
+            if mode == 'apply' and row['state'] in ('restore-intent', 'restored'):
+                raise Refused('RESTORED_OPERATION_RETAINED')
+        if mode == 'check': return receipt
+        for row in receipt['links']:
+            home = row['home']; _, fd, _ = parents[home]
+            backup_guard(); now = current(home)
+            if mode == 'apply':
+                if now is None: continue
+                if not same_link(now, row['original']): raise Refused('LINK_REPLACED:' + home)
+                row['state'] = 'unlink-intent'; persist(receipt)
+                backup_guard()
+                if not same_link(current(home), row['original']): raise Refused('LINK_REPLACED:' + home)
+                os.unlink('dsh-openai-codex', dir_fd=fd); os.fsync(fd)
+                row['state'] = 'removed'; persist(receipt)
+            elif now is None:
+                row['state'] = 'restore-intent'; persist(receipt)
+                backup_guard()
+                if current(home) is not None: raise Refused('RESTORE_NAME_REAPPEARED:' + home)
+                os.symlink(BIN_TARGET, 'dsh-openai-codex', dir_fd=fd)
+                old = row['original']
+                if (old['uid'], old['gid']) != (os.geteuid(), os.getegid()):
+                    os.chown('dsh-openai-codex', old['uid'], old['gid'], dir_fd=fd, follow_symlinks=False)
+                os.utime('dsh-openai-codex', ns=(old['atimeNs'], old['mtimeNs']), dir_fd=fd, follow_symlinks=False)
+                os.fsync(fd)
+                row['restored'] = current(home); row['state'] = 'restored'; persist(receipt)
+        return receipt
+
+
+def load_disposal():
+    p = PACKET / 'payload/fixed/stage-lease-disposal-once.py'
+    raw = p.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != DISPOSAL_SHA: raise Refused('DISPOSAL_SOURCE_SHA')
+    d = types.ModuleType('sealed_disposal'); d.__file__ = str(p)
+    exec(compile(raw, str(p), 'exec'), d.__dict__)
+    return d
+
+
+@contextlib.contextmanager
+def held_lease(d, paths, protected=True):
+    """Reuse the existing holder mutex and binding checks; no second lock/writer."""
+    with contextlib.ExitStack() as stack:
+        recfd = d.open_directory(paths.recovery, protected=protected); stack.callback(os.close, recfd)
+        depfd = d.open_directory(paths.deployment); stack.callback(os.close, depfd)
+        lockparent = d.open_directory(paths.lock.parent, protected=protected); stack.callback(os.close, lockparent)
+        lockfd = d.open_dir_at(lockparent, paths.lock.name, protected=protected); stack.callback(os.close, lockfd)
+        if d.journal_allowed(sorted(os.listdir(lockfd))) != 'resume': raise Refused('EMPTY_JOURNAL_REQUIRED')
+        hfd, record, identity = d.open_holder(lockfd); stack.callback(os.close, hfd)
+        tx, kind = d.admit_binding(record.get('binding'), d.package_binding(paths), d.LEGACY_BINDING_SHA)
+        if tx != TX_ID or kind != 'package-matched': raise Refused('EXACT_TASK7_LEASE_REQUIRED')
+        journal = d.journal_read_file(lockfd, d.JOURNAL_NAME)
+        if journal is None or journal['steps'] != {}: raise Refused('EMPTY_JOURNAL_REQUIRED')
+        if (journal['tx'], journal['nonce'], journal['admission']) != (tx, record['nonce'], kind):
+            raise Refused('JOURNAL_HOLDER_BINDING')
+        if journal['holder'] != identity: raise Refused('JOURNAL_HOLDER_IDENTITY')
+        raw, _, _, _ = d.bounded_read(recfd, 'b7-six-target-batch.json', 64 * 1024 * 1024)
+        batch = json.loads(raw)
+        if batch.get('phase') != 'COMPLETE' or sorted(t.get('id') for t in batch.get('targets', [])) != sorted(HOMES):
+            raise Refused('EXACT_COMPLETE_BATCH_REQUIRED')
+        if any(t.get('pending') for t in batch['targets']): raise Refused('BATCH_PENDING')
+        d.batch_link_targets(paths, batch)
+        batch_sha = hashlib.sha256(raw).hexdigest()
+        roots = [(paths.recovery, recfd, protected), (paths.deployment, depfd, False),
+                 (paths.lock.parent, lockparent, protected), (paths.lock, lockfd, protected)]
+        def guard():
+            for path, fd, custody in roots:
+                fresh = d.open_directory(path, protected=custody)
+                try:
+                    a, b = os.fstat(fresh), os.fstat(fd)
+                    if (a.st_dev, a.st_ino) != (b.st_dev, b.st_ino): raise Refused('ROOT_NAMESPACE_CHANGED')
+                finally: os.close(fresh)
+            d.holder_still_original(hfd, identity, record, lockfd)
+            d.prove_no_mutation(paths, recfd, depfd, tx, record['nonce'][:16])
+            j = d.journal_read_file(lockfd, d.JOURNAL_NAME)
+            if j != journal: raise Refused('DISPOSAL_JOURNAL_CHANGED')
+            now, _, _, _ = d.bounded_read(recfd, 'b7-six-target-batch.json', 64 * 1024 * 1024)
+            if hashlib.sha256(now).hexdigest() != batch_sha: raise Refused('BATCH_CHANGED')
+            d.batch_link_targets(paths, batch)
+        guard()
+        yield guard, {'tx': tx, 'nonce': record['nonce'], 'holderSha256': identity['sha256'],
+                      'batchSha256': batch_sha}
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--check', action='store_true')
+    group.add_argument('--apply', action='store_true')
+    group.add_argument('--restore', action='store_true')
+    parser.add_argument('--manifest-sha', required=True, help='exact reviewed MANIFEST.sha256 digest, not an owner token')
+    args = parser.parse_args()
+    manifest = PACKET / 'MANIFEST.sha256'
+    manifest_raw = manifest.read_bytes()
+    if hashlib.sha256(manifest_raw).hexdigest() != args.manifest_sha: raise Refused('MANIFEST_SHA')
+    verifier = types.ModuleType('packet_verifier')
+    vp = PACKET / 'verify-seal.py'
+    vp_raw = vp.read_bytes()
+    rows = dict((rel, digest) for digest, rel in (r.split('  ', 1) for r in manifest_raw.decode().splitlines()))
+    if rows.get('verify-seal.py') != hashlib.sha256(vp_raw).hexdigest(): raise Refused('VERIFIER_SHA')
+    exec(compile(vp_raw, str(vp), 'exec'), verifier.__dict__)
+    verifier.verify(PACKET, args.manifest_sha)
+    if os.getuid() != 0 or os.geteuid() != 0: raise Refused('FIXED_ROOT_OPERATOR_REQUIRED')
+    os.umask(0o077)
+    d = load_disposal(); d.check_operator_environment()
+    d._pinned_bytes(d.PACKAGE / 'INSTALL-PINS.json', d.PINS_SHA)
+    paths = d.Paths(d.RECOVERY, d.LOCK, d.DEPLOYMENT, d.AGENT_CORE.parent, d.PACKAGE)
+    with held_lease(d, paths) as (guard, binding):
+        result = run_disposition(paths.deployment, guard, 'restore' if args.restore else 'apply' if args.apply else 'check', binding)
+    print(json.dumps({'kind': 'B7_OPTION_B_RESULT_V1', 'mode': 'restore' if args.restore else 'apply' if args.apply else 'check',
+                      'tx': TX_ID, 'receipt': str(paths.deployment / QUARANTINE / 'RECEIPT.json'),
+                      'states': [r['state'] for r in result['links']]}))
+
+
+if __name__ == '__main__':
+    try: main()
+    except BaseException as e:
+        print('OPTION_B_STOP_RETAINED: ' + str(e)[:300], file=sys.stderr)
+        sys.exit(1)
