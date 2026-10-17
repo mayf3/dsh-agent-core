@@ -1,0 +1,347 @@
+"""Read-only bound checkpoint; called only by native immutable stage snapshot."""
+
+import argparse
+
+import contextlib
+
+import fcntl
+
+import hashlib
+
+import http.client
+
+import json
+
+import os
+
+from pathlib import Path
+
+import posixpath
+
+import re
+
+import stat
+
+import subprocess
+
+import sys
+
+import types
+
+PREIMAGE_JOURNAL_SHA256 = '031e789ee0983aac2d209f3a6686548308724b94e6faa774422fd9fd200c8f0e'
+
+PREIMAGE_METADATA_RECEIPT_SHA256 = '05afac224c0cb4cf736205c469eb5598e858ecbffbd567d6367324bee4cc99fb'
+
+PREIMAGE_BYTE_BINDING_SHA256 = '2ab340c78a5996f59d7a9e7249bb411366cef1fec979eea534e70e60940f4d12'
+
+BYTE_BINDING_PATH = Path(__file__).absolute().parent / 'preimage-byte-bindings.json'
+
+PREIMAGE_HOME = 'agt_lw-lifecycle-canary'
+
+PREIMAGE_MODES = {'settings.yaml': 0o600,
+                  'profiles/agent-core-production/package.json': 0o644,
+                  'profiles/agent-core-production/cordis.patch.yml': 0o644}
+
+class Stop(RuntimeError):
+    pass
+
+def unique_binding_fields(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result: raise Stop('PREIMAGE_BYTE_BINDING_DUPLICATE_FIELD')
+        result[key] = value
+    return result
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+def physical(path):
+    text = str(path)
+    if text.startswith('/var/'):
+        s = os.lstat('/var')
+        if not stat.S_ISLNK(s.st_mode) or s.st_uid != 0 or os.readlink('/var') != 'private/var':
+            raise Stop('SYSTEM_VAR_ALIAS')
+        text = '/private' + text
+    if not text.startswith('/') or posixpath.normpath(text) != text:
+        raise Stop('CANONICAL_ABSOLUTE_PATH')
+    return Path(text)
+
+def directory(path):
+    p = physical(path)
+    fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        for component in p.parts[1:]:
+            nxt = os.open(component, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            os.close(fd); fd = nxt
+        return fd
+    except BaseException:
+        os.close(fd); raise
+
+def private_directory(path, uid=0):
+    fd = directory(path)
+    s = os.fstat(fd)
+    if s.st_uid != uid or stat.S_IMODE(s.st_mode) != 0o700:
+        os.close(fd); raise Stop('PRIVATE_DIRECTORY_CUSTODY')
+    return fd
+
+def stamp(s):
+    return (s.st_dev, s.st_ino, s.st_mode, s.st_uid, s.st_gid, s.st_size,
+            s.st_nlink, s.st_mtime_ns, s.st_ctime_ns)
+
+def read_file(path, bound=16 * 1024 * 1024, uid=None, mode=None):
+    p = physical(path); parent = directory(p.parent)
+    try:
+        before = os.stat(p.name, dir_fd=parent, follow_symlinks=False)
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > bound:
+            raise Stop('REGULAR_FILE_CUSTODY')
+        if uid is not None and (before.st_uid != uid or before.st_mode & 0o022):
+            raise Stop('FILE_OWNER_CUSTODY')
+        if mode is not None and stat.S_IMODE(before.st_mode) != mode:
+            raise Stop('FILE_MODE_CUSTODY')
+        fd = os.open(p.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent)
+        try:
+            if stamp(before) != stamp(os.fstat(fd)): raise Stop('FILE_OPEN_DRIFT')
+            chunks = []; total = 0
+            while True:
+                b = os.read(fd, min(1024 * 1024, bound + 1 - total))
+                if not b: break
+                chunks.append(b); total += len(b)
+                if total > bound: raise Stop('FILE_SIZE_BOUND')
+            if total != before.st_size or stamp(before) != stamp(os.fstat(fd)) or stamp(before) != stamp(os.stat(p.name, dir_fd=parent, follow_symlinks=False)):
+                raise Stop('FILE_READ_DRIFT')
+            return b''.join(chunks), before
+        finally: os.close(fd)
+    finally: os.close(parent)
+
+def absent(path):
+    p = physical(path)
+    try: parent = directory(p.parent)
+    except FileNotFoundError: return
+    try:
+        try: os.stat(p.name, dir_fd=parent, follow_symlinks=False)
+        except FileNotFoundError: return
+        raise Stop('CHECKPOINT_OBJECT_PRESENT:' + p.name)
+    finally: os.close(parent)
+
+def backup_link(fd, name, target, uid=0):
+    s = os.stat(name, dir_fd=fd, follow_symlinks=False)
+    if not stat.S_ISLNK(s.st_mode) or s.st_uid != uid or os.readlink(name, dir_fd=fd) != target:
+        raise Stop('OPTION_BACKUP_LINK')
+
+class Production:
+    def __init__(self, config, packet_sha, store):
+            self.c = config; self.packet_sha = packet_sha; self.store = store
+    def source(self, key):
+            row = self.c['sources'][key]; raw, _ = read_file(row['path'], 128 * 1024)
+            if digest(raw) != row['sha256']: raise Stop('ENTRY_SOURCE_DRIFT:' + key)
+            m = types.ModuleType('sealed_' + key); m.__file__ = row['path']
+            exec(compile(raw, row['path'], 'exec'), m.__dict__)
+            return m
+    def controlled_option_receipt(self, option):
+            q = self.c['deploymentRoot'] + '/' + option.QUARANTINE
+            fd = private_directory(q)
+            try:
+                if sorted(os.listdir(fd)) != sorted(['RECEIPT.json'] + [h + '.link' for h in option.HOMES]):
+                    raise Stop('OPTION_BACKUP_MEMBERS')
+                raw, _ = read_file(Path(q) / 'RECEIPT.json', 65536, uid=0, mode=0o600)
+                record = json.loads(raw); binding = record.get('binding', {})
+                if record.get('kind') != 'B7_OPTION_B_RECEIPT_V1' or record.get('approval') != option.APPROVAL or binding.get('tx') != option.TX_ID:
+                    raise Stop('OPTION_BACKUP_BINDING')
+                for k, length in [('nonce', 32), ('holderSha256', 64), ('batchSha256', 64)]:
+                    if not re.fullmatch('[a-f0-9]{' + str(length) + '}', binding.get(k, '')): raise Stop('OPTION_BINDING_FIELD')
+                if binding['nonce'][:16] != self.c['userDisposalReceipt']['noncePrefix']: raise Stop('OWNER_STDOUT_BINDING')
+                links = record.get('links', [])
+                if [r.get('home') for r in links] != list(option.HOMES): raise Stop('OPTION_BACKUP_SCOPE')
+                for r in links:
+                    h = r['home']; original = r.get('original', {})
+                    if r.get('state') != 'removed' or r.get('path') != str(Path(self.c['deploymentRoot']) / 'homes' / h / option.BIN_REL) or original.get('target') != option.BIN_TARGET:
+                        raise Stop('OPTION_NOT_FULLY_REMOVED')
+                    backup_link(fd, h + '.link', option.BIN_TARGET)
+                    absent(r['path'])
+                return digest(raw), binding
+            finally: os.close(fd)
+    def recovered_six(self, option):
+            compatibility = self.c['oldProducer'].get('preimageCompatibility')
+            binding = None; directory_pins = []
+            if compatibility is not None:
+                expected_fields = {'kind', 'journalSha256', 'metadataReceiptSha256', 'byteBindingPath', 'byteBindingSha256', 'currentJournal'}
+                if (type(compatibility) is not dict or set(compatibility) != expected_fields
+                        or compatibility['kind'] != 'B7_THREE_PREIMAGE_COMPATIBILITY_V1'
+                        or compatibility['metadataReceiptSha256'] != PREIMAGE_METADATA_RECEIPT_SHA256):
+                    raise Stop('PREIMAGE_JOURNAL_PIN')
+                # v4.9: the live-journal binding is carried by the config's currentJournal
+                # proof (AUTHORIZED_OPERATOR_READ_SURFACE_V1; mother Spec PR452 copy
+                # 7911a67e section 3 L103 authorized read surface). The historical Owner
+                # byte-attestation (PREIMAGE_BYTE_BINDING_SHA256, internal journal
+                # record 031e789e) stays byte-unchanged and binds only store leaves.
+                cj = compatibility['currentJournal']
+                if (type(cj) is not dict or set(cj) != {'origin', 'authority', 'reader', 'utc', 'journalSha256'}
+                        or cj['origin'] != 'AUTHORIZED_OPERATOR_READ_SURFACE_V1'
+                        or not re.fullmatch('[a-f0-9]{64}', cj['journalSha256'])
+                        or compatibility['journalSha256'] != cj['journalSha256']):
+                    raise Stop('CURRENT_JOURNAL_PROOF')
+                recovery = physical(self.c['recoveryRoot']); store = physical(self.c['oldProducer']['preimageStore'])
+                if (physical(self.c['oldProducer']['journal']) != recovery / '.b7-six-journal.jsonl'
+                        or store != recovery / '.b7-six-preimage-store'
+                        or physical(compatibility['byteBindingPath']) != BYTE_BINDING_PATH):
+                    raise Stop('PREIMAGE_SCOPE')
+                for path in (recovery, store):
+                    fd = private_directory(path)
+                    try: directory_pins.append((path, stamp(os.fstat(fd))))
+                    finally: os.close(fd)
+            raw, _ = read_file(self.c['oldProducer']['journal'], 16 * 1024 * 1024, uid=0, mode=0o600)
+            if compatibility is not None:
+                if digest(raw) != compatibility['journalSha256']: raise Stop('PREIMAGE_JOURNAL_PIN')
+                if (type(PREIMAGE_BYTE_BINDING_SHA256) is not str
+                        or not re.fullmatch('[a-f0-9]{64}', PREIMAGE_BYTE_BINDING_SHA256)
+                        or compatibility['byteBindingSha256'] != PREIMAGE_BYTE_BINDING_SHA256):
+                    raise Stop('PREIMAGE_BYTE_BINDING_UNAVAILABLE_OR_UNREVIEWED')
+                body, _ = read_file(BYTE_BINDING_PATH, 65536)
+                if digest(body) != PREIMAGE_BYTE_BINDING_SHA256: raise Stop('PREIMAGE_BYTE_BINDING_DRIFT')
+                evidence = json.loads(body, object_pairs_hook=unique_binding_fields)
+                if (type(evidence) is not dict or set(evidence) != {'kind', 'origin', 'journalSha256', 'metadataReceiptSha256', 'entries'}
+                        or evidence['kind'] != 'B7_CURRENT_PREIMAGE_BYTES_V1'
+                        or evidence['origin'] != 'ORIGINAL_OWNER_REPORTED_CURRENT_ROOT_READBACK'
+                        or evidence['journalSha256'] != PREIMAGE_JOURNAL_SHA256
+                        or evidence['metadataReceiptSha256'] != PREIMAGE_METADATA_RECEIPT_SHA256
+                        or type(evidence['entries']) is not list or len(evidence['entries']) != 3):
+                    raise Stop('PREIMAGE_SCOPE')
+                binding = {}
+                for row in evidence['entries']:
+                    if (type(row) is not dict or set(row) != {'rel', 'storeFile', 'sha256', 'bytes'}
+                            or type(row['rel']) is not str or row['rel'] not in PREIMAGE_MODES
+                            or row['rel'] in binding
+                            or row['storeFile'] != PREIMAGE_HOME + '__' + row['rel'].replace('/', '__')
+                            or type(row['sha256']) is not str or not re.fullmatch('[a-f0-9]{64}', row['sha256'])
+                            or type(row['bytes']) is not int or not 0 <= row['bytes'] <= 16 * 1024 * 1024):
+                        raise Stop('PREIMAGE_SCOPE')
+                    binding[row['rel']] = row
+            rows = [json.loads(r) for r in raw.decode('utf8').splitlines() if r]
+            auth = self.c['oldProducer']['authorization']
+            if not rows or any(r.get('kind') != 'B7_SIX_TARGET_BATCH_V1' for r in rows): raise Stop('OLD_JOURNAL_FORMAT')
+            # v4.9: two legitimately completed six-target generations share this
+            # journal. Scope every structural and per-row predicate to its own
+            # generation and settle all of them; no predicate is removed.
+            generations = []; current = None
+            for r in rows:
+                if r.get('phase') == 'READ_ONLY_PREFLIGHT':
+                    current = []
+                    generations.append(current)
+                if current is None: raise Stop('OLD_JOURNAL_FORMAT')
+                current.append(r)
+            if not all(generations): raise Stop('OLD_JOURNAL_AMBIGUOUS_OR_INCOMPLETE')
+            preimages = []; known = {}; compatible_rels = set(); compatible_paths = []
+            for g in generations:
+                starts = [r for r in g if r.get('phase') == 'READ_ONLY_PREFLIGHT']
+                ends = [r for r in g if r.get('phase') == 'EXECUTE_COMPLETE']
+                if len(starts) != 1 or len(ends) != 1 or g[0] != starts[0] or g[-1] != ends[0] or any(r.get('authorizedBy') != auth for r in starts + ends) or starts[0].get('targets') != len(option.HOMES):
+                    raise Stop('OLD_JOURNAL_AMBIGUOUS_OR_INCOMPLETE')
+                targets = [r for r in g if r.get('phase') == 'TARGET']
+                if sorted(r.get('id', '') for r in targets) != sorted(option.HOMES): raise Stop('OLD_JOURNAL_TARGET_SCOPE')
+                compatible_rels = set()
+                for t in targets:
+                    h = t['id']; home = Path(self.c['deploymentRoot']) / 'homes' / h
+                    if t.get('home') != str(home) or t.get('prestate') not in ('HOME_ABSENT', 'PARTIAL'): raise Stop('OLD_TARGET_BINDING')
+                    known[h] = t['prestate']
+                    if t['prestate'] == 'HOME_ABSENT': absent(home); continue
+                    os.close(directory(home)); absent(home / 'profiles/node_modules/dsh-codex')
+                    captured = [r['path'] for r in g if r.get('phase') == 'INTENT' and r.get('operation') == 'preimage' and str(r.get('path', '')).startswith(str(home) + '/')]
+                    pst = [r for r in g if r.get('phase') == 'PRESTATE' and r.get('id') == h]
+                    if len(pst) != 1 or pst[0].get('prestate') != 'PARTIAL' or not isinstance(pst[0].get('preimages'), list) or len(pst[0]['preimages']) != len(captured) or len(set(captured)) != len(captured):
+                        raise Stop('OLD_PREIMAGE_INTENT_SCOPE')
+                    for path in captured:
+                        rel = str(Path(path).relative_to(home))
+                        if rel not in self.c['oldProducer']['homeFiles']: raise Stop('OLD_PREIMAGE_PATH')
+                        store = Path(self.c['oldProducer']['preimageStore'])
+                        os.close(private_directory(store))
+                        leaf = h + '__' + rel.replace('/', '__')
+                        if binding is not None and h == PREIMAGE_HOME and rel in PREIMAGE_MODES:
+                            row = binding[rel]
+                            # The v2 JSON replacer emits {} entries. Empty entries cannot
+                            # attest historical hashes; independent current-byte pins are
+                            # mandatory. Fully retained records must also agree exactly.
+                            records = pst[0]['preimages']
+                            if not all(type(r) is dict and not r for r in records):
+                                if (len(records) != 3 or any(type(r) is not dict or set(r) != {'rel', 'storeFile', 'sha256', 'bytes'} for r in records)
+                                        or {r['rel'] for r in records} != set(binding)
+                                        or any(r != binding[r['rel']] for r in records)):
+                                    raise Stop('PREIMAGE_PRESTATE_BINDING')
+                            backup, backup_stat = read_file(store / leaf, uid=502, mode=PREIMAGE_MODES[rel])
+                            if backup_stat.st_gid != 20: raise Stop('PREIMAGE_BACKUP_METADATA_DRIFT')
+                            if digest(backup) != row['sha256'] or len(backup) != row['bytes']: raise Stop('PREIMAGE_BYTES_DRIFT')
+                            compatible_rels.add(rel)
+                            compatible_paths.append((store / leaf, Path(path), rel))
+                        else:
+                            backup, _ = read_file(store / leaf, uid=0)
+                        actual, _ = read_file(path)
+                        if actual != backup: raise Stop('PARTIAL_PREIMAGE_NOT_RESTORED')
+                        preimages.append({'path': path, 'sha256': digest(backup), 'bytes': len(backup)})
+                if binding is not None and compatible_rels != set(PREIMAGE_MODES):
+                    raise Stop('PREIMAGE_SCOPE')
+            # Recorded symlink creations must be absent on retained PARTIAL homes.
+            for r in rows:
+                if r.get('phase') == 'INTENT' and r.get('operation') in ('farm-link', 'install-link', 'symlink'):
+                    path = r.get('path', '')
+                    if not any(path.startswith(str(Path(self.c['deploymentRoot']) / 'homes' / h) + '/') for h in option.HOMES): raise Stop('OLD_LINK_INTENT_SCOPE')
+                    absent(path)
+            if binding is not None:
+                if compatible_rels != set(PREIMAGE_MODES): raise Stop('PREIMAGE_SCOPE')
+                for backup_path, live_path, rel in compatible_paths:
+                    backup_again, backup_stat = read_file(backup_path, uid=502, mode=PREIMAGE_MODES[rel])
+                    live_again, _ = read_file(live_path)
+                    row = binding[rel]
+                    if (backup_stat.st_gid != 20 or digest(backup_again) != row['sha256']
+                            or len(backup_again) != row['bytes'] or live_again != backup_again):
+                        raise Stop('PREIMAGE_BYTES_READ_DRIFT')
+                # Recheck trusted journal, exact directory identity/custody and
+                # independently reviewed evidence after all restored-byte reads.
+                again, _ = read_file(self.c['oldProducer']['journal'], 16 * 1024 * 1024, uid=0, mode=0o600)
+                evidence_again, _ = read_file(BYTE_BINDING_PATH, 65536)
+                if digest(again) != compatibility['journalSha256'] or digest(evidence_again) != PREIMAGE_BYTE_BINDING_SHA256:
+                    raise Stop('PREIMAGE_BINDING_READ_DRIFT')
+                for path, before in directory_pins:
+                    fd = private_directory(path)
+                    try:
+                        if stamp(os.fstat(fd)) != before: raise Stop('PREIMAGE_DIRECTORY_DRIFT')
+                    finally: os.close(fd)
+            result = {'journalSha256': digest(raw), 'restoredPreimages': preimages, 'prestates': known}
+            if binding is not None:
+                result['preimageCompatibility'] = {'files': 3, 'uid': 502, 'gid': 20,
+                    'byteBindingSha256': PREIMAGE_BYTE_BINDING_SHA256,
+                    'byteEvidenceOrigin': 'ORIGINAL_OWNER_REPORTED_CURRENT_ROOT_READBACK',
+                    'historicalCaptureHashesAttested': False,
+                    'currentJournal': {'origin': cj['origin'], 'authority': cj['authority'], 'reader': cj['reader'], 'utc': cj['utc'], 'journalSha256': cj['journalSha256'], 'generations': len(generations)}}
+            return result
+    def clean_checkpoint(self):
+            option = self.source('option'); old = self.source('oldDisposal')
+            recovery = Path(self.c['recoveryRoot']); os.close(private_directory(recovery))
+            # Never execute either completed old operation, including on unknown state.
+            for p in self.c['oldCleanAbsent']: absent(p)
+            receipt_sha, binding = self.controlled_option_receipt(option)
+            paths = old.Paths(old.RECOVERY, old.LOCK, old.DEPLOYMENT, old.AGENT_CORE.parent, old.PACKAGE)
+            rec = old.open_directory(paths.recovery, protected=True); dep = old.open_directory(paths.deployment)
+            try: scope = old.prove_no_mutation(paths, rec, dep, option.TX_ID, binding['nonce'][:16])
+            finally: os.close(rec); os.close(dep)
+            recovered = self.recovered_six(option)
+            checked = []
+            for r in self.c['liveDeltas']:
+                raw, s = read_file(r['path'])
+                if digest(raw) != r['sha256'] or len(raw) != r['bytes'] or (s.st_uid, s.st_gid, stat.S_IMODE(s.st_mode)) != (r['uid'], r['gid'], r['mode']):
+                    raise Stop('LIVE_INCREMENT_DRIFT:' + r['path'])
+                checked.append({'path': r['path'], 'sha256': digest(raw)})
+            health = self.c['health']; connection = http.client.HTTPConnection(health['host'], health['port'], timeout=5)
+            try:
+                connection.request('GET', health['path']); response = connection.getresponse(); raw = response.read(65537)
+                if response.status != 200 or len(raw) > 65536: raise Stop('PUBLIC_HEALTH_STATUS_OR_SIZE')
+                value = json.loads(raw)
+                if not isinstance(value, dict) or value.get('ok') is not True or value.get('deliverReady') is not True: raise Stop('PUBLIC_HEALTH_NOT_READY')
+            finally: connection.close()
+            # Recheck old namespace after the reads; new stage owns runtime attribution.
+            for p in self.c['oldCleanAbsent']: absent(p)
+            facts = {'kind': 'B7_ACTUAL_CLEAN_CHECKPOINT_V1', 'optionReceiptSha256': receipt_sha,
+                     'oldMutationScopeAbsent': scope, 'sixTargetRecovery': recovered,
+                     'liveIncrementFiles': checked, 'publicHealthSha256': digest(raw),
+                     'health': {'ok': True, 'deliverReady': True}, 'loadedBusinessProof': False,
+                     'optionBRepeated': False, 'oldDisposalRepeated': False}
+            print(json.dumps({'kind': facts['kind'], 'liveIncrementFiles': len(checked), 'restoredPreimages': len(recovered['restoredPreimages']), 'health': facts['health'], 'productionInstalled': False}), flush=True)
+            return facts

@@ -1,0 +1,144 @@
+import json,sys,unittest
+from fixture import *
+MODE=sys.argv.pop(1) if len(sys.argv)>1 else 'candidate'
+class FixedClosure(unittest.TestCase):
+ @classmethod
+ def setUpClass(cls):cls.c=Candidate(MODE)
+ def setUp(self):self.f=Fixture(self.c)
+ def tearDown(self):self.f.close()
+ def test_actual_handler_closes_once_without_old_writes(self):
+  f=self.f;before=(f.reg_path.read_bytes(),f.exec_path.read_bytes(),f.journal_path.read_bytes())
+  reply=f.request(DISPOSE);self.assertTrue(reply['ok'],reply);self.assertEqual(reply['data']['next_action'],'COHERENT_CANDIDATE_NEXT');self.assertEqual(reply['data']['disposal_terminal']['native_state'],'CLOSED_PRE_TX')
+  self.assertEqual(set(reply['data']['disposal_terminal']),{'native_state','installed','authorization_sha256','execution_receipt_sha256'})
+  self.assertEqual(before,(f.reg_path.read_bytes(),f.exec_path.read_bytes(),f.journal_path.read_bytes()));self.assertFalse(any(p.exists() for p in f.native_absences))
+ def test_paired_client_accepts_only_exact_e29_shaped_e32_overlay(self):
+  f=self.f;reply=f.request(DISPOSE);self.assertTrue(reply['ok'],reply)
+  result=f.client_request(STATUS);self.assertTrue(result['ok'],result);self.assertIn('disposal_terminal',result['data'])
+ def test_repeats_and_cold_actual_installation_status_never_syncs(self):
+  f=self.f;self.assertTrue(f.request(DISPOSE)['ok']);before=f.snapshot();inos=[p.stat().st_ino for p in (f.auth_path,f.terminal_path)]
+  with patch.object(f.mod.os,'fsync',side_effect=AssertionError('readonly/durable repeat must not sync')):
+   for _ in range(2):self.assertTrue(f.request(STATUS)['ok']);self.assertTrue(f.request(DISPOSE)['ok'])
+  self.assertEqual(before,f.snapshot());f.restart()
+  with patch.object(f.mod.os,'fsync',side_effect=AssertionError('cold STATUS may not sync')):
+   cold=f.request(STATUS);self.assertTrue(cold['ok']);self.assertNotIn('disposal_terminal',cold['data'])
+  calls=[];real=f.mod.os.fsync
+  def sync(fd):calls.append(fd);return real(fd)
+  with patch.object(f.mod.os,'fsync',side_effect=sync):warm=f.request(DISPOSE)
+  self.assertTrue(warm['ok'],warm);self.assertIn('disposal_terminal',warm['data']);self.assertEqual(len(calls),4)
+  self.assertEqual(inos,[p.stat().st_ino for p in (f.auth_path,f.terminal_path)]);self.assertEqual(before,f.snapshot())
+ def test_each_native_absence_and_access_denied_refuse_without_records(self):
+  f=self.f
+  for path in f.native_absences:
+   with self.subTest(path=path.name):
+    f.put(path,b'foreign');reply=f.request(DISPOSE);self.assertFalse(reply['ok']);self.assertFalse(f.auth_path.exists());path.unlink()
+  f.denied_paths.add(str(f.native_absences[0]));self.assertFalse(f.request(DISPOSE)['ok']);self.assertFalse(f.auth_path.exists())
+ def test_wrong_peer_op_or_request_schema_refuses(self):
+  f=self.f
+  for peer in (0,501,True):self.assertFalse(f.request(DISPOSE,peer=peer)['ok'])
+  self.assertFalse(f.request('B7_PACKET_EXECUTE_V2')['ok']);self.assertFalse(f.request(DISPOSE,op=OP+'x')['ok']);self.assertFalse(f.request(DISPOSE,unknown='x')['ok']);self.assertFalse(f.auth_path.exists())
+ def test_raw_registration_execution_journal_drift(self):
+  f=self.f
+  for path in (f.reg_path,f.exec_path,f.journal_path):
+   with self.subTest(path=path.name):
+    raw=path.read_bytes();path.write_bytes(raw+b' ');self.assertFalse(f.request(DISPOSE)['ok']);self.assertFalse(f.auth_path.exists());path.write_bytes(raw)
+ def test_snapshot_hash_membership_link_and_root_custody(self):
+  f=self.f;leaf=f.snapshot_root/'checkpoint.py';raw=leaf.read_bytes()
+  leaf.write_bytes(raw+b' ');self.assertFalse(f.request(DISPOSE)['ok']);leaf.write_bytes(raw)
+  extra=f.snapshot_root/'foreign';extra.write_bytes(b'x');self.assertFalse(f.request(DISPOSE)['ok']);extra.unlink()
+  leaf.unlink();leaf.symlink_to('/OUTSIDE_FORBIDDEN');self.assertFalse(f.request(DISPOSE)['ok']);leaf.unlink();f.put(leaf,raw)
+  f.snapshot_root.chmod(0o755);self.assertFalse(f.request(DISPOSE)['ok']);f.snapshot_root.chmod(0o700);self.assertFalse(f.auth_path.exists())
+ def test_current_fixed_profile_disabled_refuses(self):
+  f=self.f;f.execution.policy['packets'][PACKET]['enabled']=False
+  self.assertFalse(f.request(DISPOSE)['ok']);self.assertFalse(f.auth_path.exists())
+ def test_active_child_and_mutex_busy_or_replaced(self):
+  f=self.f;f.execution.active={'operation_id':OP};self.assertFalse(f.request(DISPOSE)['ok']);f.execution.active=None
+  lock=pathlib.Path(f.ds.STATE_ROOT)/'mutation.lock';fd=os.open(lock,os.O_RDONLY);fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+  try:self.assertFalse(f.request(DISPOSE)['ok'])
+  finally:os.close(fd)
+  f.metadata_overrides[str(lock.resolve())]={'st_uid':502};self.assertFalse(f.request(DISPOSE)['ok']);self.assertFalse(f.auth_path.exists())
+ def test_auth_only_and_record_fsync_failure_recovery(self):
+  f=self.f;self.assertIsNotNone(f.mod)
+  original=f.mod._publish
+  def stop(e,path,*args):
+   if path==str(f.terminal_path):raise OSError('bounded interruption')
+   return original(e,path,*args)
+  with patch.object(f.mod,'_publish',side_effect=stop):self.assertFalse(f.request(DISPOSE)['ok'])
+  self.assertTrue(f.auth_path.exists());self.assertFalse(f.terminal_path.exists());ino=f.auth_path.stat().st_ino;f.restart()
+  self.assertTrue(f.request(DISPOSE)['ok']);self.assertEqual(ino,f.auth_path.stat().st_ino)
+ def test_auth_terminal_file_and_parent_fsync_unknown(self):
+  for slot,parent in (('auth',False),('auth',True),('terminal',False),('terminal',True)):
+   with self.subTest(slot=slot,parent=parent):
+    f=Fixture(self.c)
+    try:
+     real=f.mod.os.fsync;injected=[False];seen=[0]
+     def sync(fd):
+      path=fcntl.fcntl(fd,50,b'\0'*1024).split(b'\0',1)[0].decode()
+      isdir=stat.S_ISDIR(os.fstat(fd).st_mode)
+      if isdir:seen[0]+=1
+      selected=(isdir and seen[0]==(1 if slot=='auth' else 2)) if parent else (not isdir and ('.b7-disposal-'+slot+'.json.') in path)
+      if selected and not injected[0]:injected[0]=True;raise OSError('injected fsync uncertainty')
+      return real(fd)
+     with patch.object(f.mod.os,'fsync',side_effect=sync):reply=f.request(DISPOSE)
+     self.assertTrue(injected[0]);self.assertFalse(reply['ok']);self.assertNotIn('disposal_terminal',f.request(STATUS).get('data',{}));f.restart()
+     self.assertTrue(f.request(DISPOSE)['ok']);self.assertIn('disposal_terminal',f.request(STATUS)['data'])
+    finally:f.close()
+ def test_foreign_or_orphan_records_never_sync(self):
+  f=self.f;f.put(f.terminal_path,canon({'kind':'foreign'}))
+  with patch.object(f.mod.os,'fsync',side_effect=AssertionError('foreign sync')):self.assertFalse(f.request(DISPOSE)['ok'])
+  f.terminal_path.unlink();f.put(f.auth_path,canon({'kind':'foreign'}))
+  with patch.object(f.mod.os,'fsync',side_effect=AssertionError('foreign sync')):self.assertFalse(f.request(DISPOSE)['ok'])
+ def test_validated_auth_drift_after_known_refuses_before_any_sync(self):
+  f=self.f;self.assertTrue(f.request(DISPOSE)['ok']);f.execution._e32_durability.clear();original=f.mod._known;changed=[False];calls=[]
+  def known(e,path):
+   value=original(e,path)
+   if path==str(f.auth_path) and not changed[0]:changed[0]=True;f.auth_path.write_bytes(canon({'kind':'foreign'}))
+   return value
+  with patch.object(f.mod,'_known',side_effect=known),patch.object(f.mod.os,'fsync',side_effect=lambda fd:calls.append(fd)):
+   self.assertFalse(f.request(DISPOSE)['ok'])
+  self.assertTrue(changed[0]);self.assertEqual(calls,[])
+ def test_fresh_scene_drift_before_each_record_publish(self):
+  for slot in ('auth','terminal'):
+   with self.subTest(slot=slot):
+    f=Fixture(self.c)
+    try:
+     original=f.mod._publish
+     def publish(e,path,*args):
+      if path.endswith('.b7-disposal-'+slot+'.json'):f.put(f.native_absences[0],b'foreign')
+      return original(e,path,*args)
+     with patch.object(f.mod,'_publish',side_effect=publish):self.assertFalse(f.request(DISPOSE)['ok'])
+     self.assertFalse((f.auth_path if slot=='auth' else f.terminal_path).exists())
+    finally:f.close()
+ def test_completed_history_retains_mutable_successor_scene(self):
+  f=self.f;self.assertTrue(f.request(DISPOSE)['ok']);before=(f.auth_path.read_bytes(),f.terminal_path.read_bytes());f.put(f.native_absences[0],b'successor');f.journal_path.write_bytes(b'later journal')
+  # Warm completed proof legitimately recognizes historical immutable pair.
+  self.assertTrue(f.request(DISPOSE)['ok']);self.assertIn('disposal_terminal',f.request(STATUS)['data'])
+  f.restart();cold=f.request(STATUS);self.assertTrue(cold['ok']);self.assertNotIn('disposal_terminal',cold['data'])
+  # Cold visible pair cannot prove previous completion; unchanged history is retained UNKNOWN.
+  with patch.object(f.mod.os,'fsync',side_effect=AssertionError('unproven cold history cannot sync before fresh scene')):self.assertFalse(f.request(DISPOSE)['ok'])
+  self.assertEqual(before,(f.auth_path.read_bytes(),f.terminal_path.read_bytes()));self.assertEqual(f.native_absences[0].read_bytes(),b'successor');self.assertEqual(f.journal_path.read_bytes(),b'later journal')
+ def test_codec_rejects_partial_flag_wrong_op_and_wrong_nulltx(self):
+  f=self.f;self.assertTrue(f.request(DISPOSE)['ok']);self.assertTrue(f.client_request(STATUS)['ok'])
+  transforms=[lambda r:r.update(operation_id=OP+'x'),lambda r:r['data']['disposal_terminal'].update(partial_stage_preserved=True),lambda r:r['data'].update(tx_id='tx-foreign'),lambda r:r['data'].update(attempt=2),lambda r:r['data'].update(input_sequence=1)]
+  for transform in transforms:
+   def change(r):transform(r);return r
+   f.response_transform=change
+   self.assertFalse(f.client_request(STATUS)['ok'])
+ def test_noncanonical_exact_record_and_sync_race_refuse(self):
+  f=self.f;self.assertTrue(f.request(DISPOSE)['ok']);f.execution._e32_durability.clear();raw=f.auth_path.read_bytes();f.auth_path.write_bytes(raw+b' ');calls=[]
+  with patch.object(f.mod.os,'fsync',side_effect=lambda fd:calls.append(fd)):reply=f.request(DISPOSE)
+  self.assertFalse(reply['ok']);self.assertEqual(calls,[])
+  f.auth_path.write_bytes(raw);original=f.mod._known;changed=[False]
+  def known(e,path):
+   value=original(e,path)
+   if path==str(f.auth_path) and not changed[0]:changed[0]=True;f.auth_path.write_bytes(raw+b' ')
+   return value
+  with patch.object(f.mod,'_known',side_effect=known),patch.object(f.mod.os,'fsync',side_effect=lambda fd:calls.append(fd)):reply=f.request(DISPOSE)
+  self.assertTrue(changed[0]);self.assertFalse(reply['ok']);self.assertEqual(calls,[])
+ def test_actual_exclusive_publish_collision_preserves_foreign_target(self):
+  f=self.f;real=f.mod._rename_excl;foreign=b'foreign preexisting inode';done=[False]
+  def collide(e,parent,src,dst):
+   if dst==f.auth_path.name and not done[0]:done[0]=True;f.put(f.auth_path,foreign)
+   return real(e,parent,src,dst)
+  with patch.object(f.mod,'_rename_excl',side_effect=collide):reply=f.request(DISPOSE)
+  self.assertTrue(done[0]);self.assertFalse(reply['ok']);self.assertEqual(f.auth_path.read_bytes(),foreign);self.assertFalse(f.terminal_path.exists())
+if __name__=='__main__':unittest.main()

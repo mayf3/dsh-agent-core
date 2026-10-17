@@ -1,0 +1,3 @@
+81382b7bf591c8cea8f7c5013d253b917f39873f  fix/provisioning-shared-codex-deployment-root-v1 reviewed HEAD (A4_REVIEW=PASS)
+f7bb4355fa7c8c40e877130e13d8f302d1eca303  merged main (PR #312, merge commit; tree byte-identical to reviewed HEAD on all touched paths)
+7006a535899854f0a1b59efa14561e5e7ae477d4  implementation commit
