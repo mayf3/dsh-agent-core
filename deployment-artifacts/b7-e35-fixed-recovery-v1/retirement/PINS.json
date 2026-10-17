@@ -1,9 +1,9 @@
 {
   "accepted_proposal_sha256": "49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418",
   "accepted_spec_commit": "3277ee3cab04f34bf3eb229fbf2a49f724ed6870",
-  "unbound_helper_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+  "unbound_helper_sha256": "5a629c936f860f6eda694475f1902d5b5464666d7c77b7b88d398589eddb28b0",
   "unbound_entry_sha256": "3327212f580d8c861e0a49501c52f63f65991852886af33d6f5eb50dedf86ad2",
-  "source_entry_review_sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027",
+  "source_entry_review_sha256": "812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121",
   "actual_binding_review_sha256": "99134a0ebe4c6f29b3996d925850d5904cf330dddc721de480055d517dec1d40",
   "actual_data_binding": {
     "kind": "B7_E35_ACTUAL_DATA_BINDING_READBACK_V1",
@@ -68,5 +68,24 @@
     "retirement_executed": false
   },
   "source_contribution_not_installed_or_retired": true,
-  "business_release": false
+  "business_release": false,
+  "health_target_shape_delta": {
+    "source_review_sha256": "812d1b91d4fb94aed96dea036fb51d93d5425a2abe8cdedb29121c4ec3c81121",
+    "invocation_actual_review_sha256": "82523805a5f661f5d1f35d7355a8239404fa19b8be3b9565a76ce9435936445c",
+    "original_cp_sha256_unchanged": "db413b48146b638864665b9e9aa2060ea250189853aa37d9774f789ad653d85f",
+    "prior_unbound_helper_sha256": "ff3b034fba7de81e09026f1e72b3c42617b9a0881d9196f24f5675a29eee1252",
+    "prior_source_review_sha256": "846f7c6f2e7c30ebfba4ded47e5494909c1eb91e3abe12ed65eef51f69ba0027",
+    "change": "Only exact dict/host/path/port type-and-value predicate; original contractSource and CP bytes preserved; strict HTTP200/ok isTrue/deliverReady isTrue unchanged.",
+    "affected_predicate_methods": 8,
+    "source_predicate_tests_reused_from_exact_independent_review": true,
+    "actual_readonly_suffix_sha256": "6add9118aa1c2e777866d95ea73061ead710dce77cea3f4a6c634fd41a3b4e68",
+    "actual_suffix_scope": "Original records, five complete manifests, 13 held tools, exact health target/HTTP200/ok/deliverReady and original quiescent suffix; excludes final DS guard, DS lease, reservation, start/fresh/run/AuditTrail/fsync/rename. Not full Scene or retirement success.",
+    "first_retirement_attempt": "Returned rc1 before fixed INTENT; normal prepare_driven closure/copy and executor receipts were written. Five canonical roots remained, histories and reservation absent; not global zero writes.",
+    "retirement_FINISHED_claimed": false,
+    "current_overlay_preimage_authority_sha256": "71eb3b02f1755ed9da6c94ebf70c4ac88e4e7bfae0a65b9e83de850f8b4c59fc",
+    "current_overlay_lineage": "Reviewed same-scope health invocation overlay on actual current71eb, only causal helper/entry-config/entry/verifier and authority/pin/capsule metadata joins; no new pair publication or reload. Final installation/execution remains separate.",
+    "historical_assembler_sha256": "2b603e151e9be4a378c0acc2866b0c2fd1e7f98b6f740af4c322c62060df0860",
+    "historical_collector_sha256": "55c5f17a4f9df07c251f30cd431f8380edc2d0fa6c224cf85c33d1240e20879d",
+    "historical_tool_scope": "Exact prior construction lineage for ff3b; retained files are not claimed to directly generate or collect the new5a health overlay."
+  }
 }
