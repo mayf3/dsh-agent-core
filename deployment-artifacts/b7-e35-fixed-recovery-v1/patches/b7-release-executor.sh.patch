@@ -1,0 +1,16 @@
+--- a/b7-release-executor.sh
++++ b/b7-release-executor.sh
+@@ -285,2 +285,13 @@
+     ;;
++  e35-recover)
++    [[ $# -eq 0 ]] || deny 'fixed e35 recovery accepts no arguments'
++    prepare_driven || exit 2
++    receipt E35_RECOVERY_DELEGATED_INTENT 'actor=DELEGATED_EXECUTOR op=b7-packet-r34-1cfeff2a5b138629-e35 tx=tx-c0fd42f71e074eeb8f0e9902e1a3e084' || exit 2
++    set +e
++    /bin/launchctl asuser 502 /usr/bin/sudo -n -u yanfenma /usr/bin/python3 -I -B "$DRIVEN/e35_delegated_recovery.py"
++    rc=$?
++    set -u
++    receipt E35_RECOVERY_DELEGATED_RETURN "exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"
++    exit "$rc"
++    ;;
+   release-b7)

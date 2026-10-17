@@ -1,0 +1,118 @@
+--- a/verify-chain-v50.py
++++ b/verify-chain-v50.py
+@@ -169,7 +169,12 @@
+     out = {}
+-    for n in ast.walk(ast.parse(raw.decode('utf-8', errors='surrogateescape'))):
++    parsed = ast.parse(raw.decode('utf-8', errors='surrogateescape'))
++    named = {n.targets[0].id:n.value.value for n in parsed.body
++             if isinstance(n,ast.Assign) and len(n.targets)==1 and isinstance(n.targets[0],ast.Name)
++             and isinstance(n.value,ast.Constant) and isinstance(n.value.value,str)}
++    for n in ast.walk(parsed):
+         if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == 'compile' and n.args \
+-                and isinstance(n.args[0], ast.Constant) and isinstance(getattr(n.args[0], 'value', None), str) \
+-                and len(n.args[0].value) > 500:
+-            out[n.args[1].value] = n.args[0].value
++                 and ((isinstance(n.args[0], ast.Constant) and isinstance(n.args[0].value,str))
++                      or (isinstance(n.args[0],ast.Name) and n.args[0].id in named)):
++            value = n.args[0].value if isinstance(n.args[0],ast.Constant) else named[n.args[0].id]
++            if len(value)>500: out[n.args[1].value] = value
+     return out
+@@ -211,3 +216,4 @@
+       authority.get('review_receipts', {}).get('original_owner_wait_source_delta') == REVIEW_SHA
+-      and dig(previous_execution.encode()) == EXECUTION_SHA)
++      and dig(previous_execution.encode()) == R34_EXECUTION_SHA
++       and dig((PREIMAGE / 'deployment_system.py').read_bytes()) == '9fd68034efb050b0d7382bc2c4b12dbcc394254a7956b3885b9ecb3134724952')
+ check('fixed R34 pre-intent source and delta review',
+@@ -265,27 +271,50 @@
+ 
+-check('server exact reviewed execution and fixed successor policy inverse',
+-      srv.count(ascii(execution).encode()) == 1
+-      and successor_policy_inverse(
+-          srv.replace(ascii(execution).encode(), ascii(previous_execution).encode(), 1),
+-          (PREIMAGE / 'deployment_system.py').read_bytes(),
+-          {'install_hooks', 'install_execution_hooks'}))
+-
+-def owner_wait_client_exact_inverse(raw, preimage):
+-    text = raw.decode('utf-8')
+-    if text.count(CLIENT_ADDITION) != 1 or text.count(NEW_DEADLINE) != 1:
+-        return False
+-    key = 'b7-native-execution-r34-c71fd2cc'
+-    oldkey = 'b7-native-execution-r33-c71fd2cc'
+-    source = sealed_modules(raw).get('<sealed-b7_ds_execution_client.py>', '')
+-    previous = sealed_modules(preimage).get('<sealed-b7_ds_execution_client.py>', '')
+-    if source.count(key) != 2 or source.replace(key, oldkey) != previous:
+-        return False
+-    literal = ascii(source).encode()
+-    if raw.count(literal) != 1:
+-        return False
+-    return successor_policy_inverse(raw.replace(literal, ascii(previous).encode(), 1),
+-                                    preimage, {'install_client_hooks', 'install_owner_cli'})
+-
+-check('paired client exact successor inverse retains reviewed owner wait',
+-      owner_wait_client_exact_inverse(cli, (PREIMAGE / 'ds_client.py').read_bytes()))
++
++AMENDMENT = '49bafddea25e372a17ebc27c95eb3508d8d3ed49ca8262eeed4ee4103f601418'
++def host_extension(recovery, publication):
++    # Whole exact block is removed by the verifier's whole-byte inverse.
++    return ('\n# BEGIN ACCEPTED FIXED E35 RECOVERY HOST EXTENSION\n'
++      + '_b7_e35_recovery = _b7_types.ModuleType("b7_e35_recovery")\n'
++      + '_b7_e35_recovery_source = ' + ascii(recovery.decode()) + '\n'
++      + 'require(sha_bytes(_b7_e35_recovery_source.encode()) == ' + repr(dig(recovery)) + ', "E35_RECOVERY_SOURCE_CHANGED")\n'
++      + 'exec(compile(_b7_e35_recovery_source, "<sealed-b7_e35_recovery.py>", "exec"), _b7_e35_recovery.__dict__)\n'
++      + '_b7_e35_recovery.install_e35_recovery(_b7_host, _b7_execution_instance, ' + repr(dig(recovery)) + ')\n'
++      + '_b7_e35_publication = _b7_types.ModuleType("b7_e35_publication")\n'
++      + '_b7_e35_publication_source = ' + ascii(publication.decode()) + '\n'
++      + 'require(sha_bytes(_b7_e35_publication_source.encode()) == ' + repr(dig(publication)) + ', "E35_PUBLICATION_SOURCE_CHANGED")\n'
++      + 'exec(compile(_b7_e35_publication_source, "<sealed-b7_e35_publication.py>", "exec"), _b7_e35_publication.__dict__)\n'
++      + '\ndef _b7_fixed_publication_module(request):\n'
++      + '    _, authorization = _b7_execution_instance.base.read_json(\n'
++      + '        os.path.join(STATE_ROOT, "b7-v3-publication-authority.json"), 0o400, 16384)\n'
++      + '    if (type(authorization) is dict and type(request) is dict\n'
++      + '            and authorization.get("e35_accepted_proposal_sha256") == ' + repr(AMENDMENT) + '\n'
++      + '            and request.get("operation_id") == authorization.get("publication_operation_id")):\n'
++      + '        return _b7_e35_publication.__dict__\n'
++      + '    return _b7_e6_publication_module()\n'
++      + '# END ACCEPTED FIXED E35 RECOVERY HOST EXTENSION\n').encode()
++check('reviewed fixed e35 source v54_e35_recovery_source.py', sha(HERE / 'v54_e35_recovery_source.py') == '88286ef86ba7848d09b4fdac79f7374414d1d925ebd904c3ad6ce2d02e03e7cf')
++check('reviewed fixed e35 source v54_e35_publication_source.py', sha(HERE / 'v54_e35_publication_source.py') == 'e79121f47c9d10212dcba9e97a4170f7837aec2206b8d83fa290cdd2e947bbef')
++check('reviewed fixed e35 source e35_delegated_recovery.py', sha(HERE / 'e35_delegated_recovery.py') == '4a4fd1e2cf07b1e08a59670fb4a573f15fcbe5ba6073d399c9faf1a80d5250c4')
++
++recovery_source=(HERE/'v54_e35_recovery_source.py').read_bytes()
++publication_source=(HERE/'v54_e35_publication_source.py').read_bytes()
++extension=host_extension(recovery_source,publication_source)
++old_fallback=b'publication_recheck = _b7_e6_publication_module()["qualify"]('
++new_fallback=b'publication_recheck = _b7_fixed_publication_module(request)["qualify"]('
++check('sealed e35 recovery==reviewed source',seal_srv.get('<sealed-b7_e35_recovery.py>')==recovery_source.decode())
++check('sealed e35 publication==reviewed source',seal_srv.get('<sealed-b7_e35_publication.py>')==publication_source.decode())
++check('original R34 execution byte unchanged',execution==previous_execution)
++check('server whole inverse only exact reviewed fixed e35 host extension',
++      srv.count(extension)==1 and srv.count(new_fallback)==1 and old_fallback not in srv
++      and srv.replace(extension,b'',1).replace(new_fallback,old_fallback,1)==(PREIMAGE/'deployment_system.py').read_bytes())
++
++def owner_wait_client_exact_inverse(raw,preimage):
++    old='    timeout = READ_TIMEOUT if readonly else (B7_LONG_CALL_TIMEOUT if payload.get("action") in B7_LONG_CALL_ACTIONS else 600.0)\n'.encode()
++    new='    timeout = READ_TIMEOUT if readonly else (B7_LONG_CALL_TIMEOUT if payload.get("action") in B7_LONG_CALL_ACTIONS or (payload.get("action") == "B7_PACKET_RECOVERY_ABORT_V2" and payload.get("operation_id") == "b7-packet-r34-1cfeff2a5b138629-e35") else 600.0)\n'.encode()
++    return (dig(preimage)=='e206b5ff1bec5f2223b7314fabcc18b4679f0240bec03d39280b196f20c7528e'
++            and raw.count(CLIENT_ADDITION.encode())==1 and raw.count(new)==1
++            and raw.replace(new,old,1)==preimage)
++
++check('paired client exact fixed e35 timeout inverse retains original all policies',
++      owner_wait_client_exact_inverse(cli,(PREIMAGE/'ds_client.py').read_bytes()))
+ execution_client_source = HERE / 'v50_execution_client_source.py'
+@@ -326,3 +355,4 @@
+              'delegated_owner_session.py', 'feishu_fetch_material.py', 'b7-release-executor.sh',
+-             'deployment_system.py', 'ds_client.py'):
++              'v54_e35_recovery_source.py', 'v54_e35_publication_source.py',
++              'e35_delegated_recovery.py', 'deployment_system.py', 'ds_client.py'):
+     check('drivenScript bound ' + name, name in driven)
+@@ -335,2 +365,10 @@
+       and sha(HERE / 'b7-release-executor.sh') == authority.get('executorSha256'))
++# Exact one literal operation-class addition; original root bridge/sudo rules remain.
++executor_raw=(HERE/'b7-release-executor.sh').read_bytes()
++executor_added='  e35-recover)\n    [[ $# -eq 0 ]] || deny \'fixed e35 recovery accepts no arguments\'\n    prepare_driven || exit 2\n    receipt E35_RECOVERY_DELEGATED_INTENT \'actor=DELEGATED_EXECUTOR op=b7-packet-r34-1cfeff2a5b138629-e35 tx=tx-c0fd42f71e074eeb8f0e9902e1a3e084\' || exit 2\n    set +e\n    /bin/launchctl asuser 502 /usr/bin/sudo -n -u yanfenma /usr/bin/python3 -I -B "$DRIVEN/e35_delegated_recovery.py"\n    rc=$?\n    set -u\n    receipt E35_RECOVERY_DELEGATED_RETURN "exit=$rc driven=$DRIVEN" || exit "$(( rc == 0 ? 2 : rc ))"\n    exit "$rc"\n    ;;\n'.encode()
++check('executor exact reviewed one fixed e35 branch inverse',
++      executor_raw.count(executor_added)==1 and dig(executor_raw.replace(executor_added,b'',1))=='9cda4ea0909809718a343119a15c85b37be3fff8b6a89deb02fb933abdfc15c8')
++check('e35 exact delegated acceptance bound',authority.get('e35_accepted_proposal_sha256')==facts.get('e35_accepted_proposal_sha256')==AMENDMENT)
++check('e35 actual implementation review joined',re.fullmatch('[a-f0-9]{64}',str(authority.get('review_receipts',{}).get('e35_recovery_implementation')))!=None)
++check('e35 host integration review joined',re.fullmatch('[a-f0-9]{64}',str(authority.get('review_receipts',{}).get('e35_host_integration')))!=None)
+ check('executor binding live', authority.get('executorSha256') == sha('/usr/local/libexec/b7-release-executor'))
