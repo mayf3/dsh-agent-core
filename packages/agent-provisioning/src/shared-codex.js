@@ -215,6 +215,13 @@ export function persistOpenAICodexCredentialFile(profilePatchFile, credentialFil
     ...(reasoning === undefined ? [] : [`    reasoning: ${reasoning}`]),
     PATCH_END, '',
   ].join('\n')
+  // Preserve an already exact single managed block after all original domain
+  // and reasoning validation. Equivalent provisioning must not rewrite the
+  // containing profile's bytes, inode, or permission metadata.
+  if (current.split(PATCH_BEGIN).length === 2 && current.split(PATCH_END).length === 2) {
+    const start = current.indexOf(PATCH_BEGIN)
+    if ((start === 0 || current[start - 1] === '\n') && current.slice(start, start + block.length) === block) return
+  }
   const next = `${current.replace(pattern, '\n').trimEnd()}\n\n${block}`
   const temp = `${profilePatchFile}.tmp-${process.pid}`
   writeFileSync(temp, next, { mode: 0o644 })
