@@ -36,9 +36,9 @@ NORMATIVE_TBD = NONE
 
 来源与逐句合成 mapping 见 [docs acceptance packet](../reports/AGENT_CREDENTIAL_PROVISIONING_V2_DOCS_ACCEPTANCE_PACKET_20261019.md)。继承正文中的适用范围已逐句适配，不以附件优先规则覆盖相反“当前”规则。
 
-## V1 历史沿革（原文保留，不是 V2 接受记录）
+## V1 沿革与继承摘要（接受元数据仅历史，规范条款继续适用）
 
-以下从“性质”到 Amendment 8 摘要 A8.4 均为 V1 当时的历史记录。“本轮”“当前”“accepted”和 reviewed head/date 均指原 V1 amendment，不赋予 V2 当前 accepted 身份；原 PR #17 的历史冻结值不变。
+以下沿革中，仅 V1 的接受 actor/date/reviewed head 与当时完成/施工声明作为历史，不赋予 V2 当前 accepted 身份。Amendment 1–8 摘要、A8.1–A8.4 与验收义务按固定 V1 blob 原本有效的规范组合和优先关系继承，不重新激活已被后续 amendment 改写的早期规则；只有明确的 CTR-SER 单 State E 例外作窄适配，原 PR #17 值不变。
 
 > 性质：**Spec（SPEC ONLY — 本轮只收敛冻结，不实现）** · 初版：2026-08-17 ·
 > Amendment 1（review FIX round）：2026-08-17，base reviewed HEAD `104555f` ·
@@ -529,7 +529,7 @@ IAM 平台，不复制 OpenClaw runtime。**
 
 ## V2 继承规范正文
 
-本节至历史 Acceptance/Final Output 标记前是完整继承的当前规范；仅已明示适配的单 State E operator 例外改变 V1 意义，其余权限与限制保持。
+全部继承规范权限、限制及 Acceptance Criteria 按固定 V1 blob 原本有效的组合和优先关系持续适用，不重新激活已被后续 amendment 改写的早期规则。上文摘要与下文接受/输出记录中的仍有效规范不因历史标签降格；只有接受 actor/date/reviewed head 与当时完成声明作为历史。新增 12 CTR-SER/6 ACC-SER 不替代原验收；仅已明示的单 State E operator 例外改变 V1 意义。
 
 ## Part A — 恢复现有 credential architecture（source trace）
 
@@ -2053,7 +2053,7 @@ Agent 的破坏性 rotation——Amendment 7）。
 
 ---
 
-> **V1 历史记录边界**：下段为原 V1 当时的接受/输出记录，日期、reviewed head、PR #17 值及 AM7 COMPOSITION 原文保留；accepted/唯一 Phase A/不新增 Phase 授权不描述 V2 当前 lifecycle 或本 V2 已明示的单 State E 例外。
+> **V1 接受历史元数据边界**：仅本段的接受 actor/date/reviewed head 与当时完成声明作为历史；其中规范权限、限制与验收仍依固定 V1 blob 原本有效的组合和优先关系继承，不重新激活早期已被改写规则。PR #17 原值保持；V1 accepted 与当时“唯一 Phase A/不新增 Phase 授权”不冒充 V2 lifecycle，V2 当前仅按已明示的单 State E 例外窄适配。
 
 ## Acceptance Record（2026-08-19 acceptance finalize）
 
@@ -2076,7 +2076,7 @@ ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
 
 ---
 
-> **V1 历史记录边界**：下段为原 V1 当时的接受/输出记录，日期、reviewed head、PR #17 值及 AM7 COMPOSITION 原文保留；accepted/唯一 Phase A/不新增 Phase 授权不描述 V2 当前 lifecycle 或本 V2 已明示的单 State E 例外。
+> **V1 接受历史元数据边界**：仅本段的接受 actor/date/reviewed head 与当时完成声明作为历史；其中规范权限、限制与验收仍依固定 V1 blob 原本有效的组合和优先关系继承，不重新激活早期已被改写规则。PR #17 原值保持；V1 accepted 与当时“唯一 Phase A/不新增 Phase 授权”不冒充 V2 lifecycle，V2 当前仅按已明示的单 State E 例外窄适配。
 
 ## Acceptance Record（2026-08-20 Amendment 6 acceptance finalize）
 
@@ -2105,7 +2105,7 @@ ACCEPTANCE_FINALIZE_SEMANTIC_CHANGE = NONE
 
 ---
 
-> **V1 历史记录边界**：下段为原 V1 当时的接受/输出记录，日期、reviewed head、PR #17 值及 AM7 COMPOSITION 原文保留；accepted/唯一 Phase A/不新增 Phase 授权不描述 V2 当前 lifecycle 或本 V2 已明示的单 State E 例外。
+> **V1 接受历史元数据边界**：仅本段的接受 actor/date/reviewed head 与当时完成声明作为历史；其中规范权限、限制与验收仍依固定 V1 blob 原本有效的组合和优先关系继承，不重新激活早期已被改写规则。PR #17 原值保持；V1 accepted 与当时“唯一 Phase A/不新增 Phase 授权”不冒充 V2 lifecycle，V2 当前仅按已明示的单 State E 例外窄适配。
 
 ## Final Output（Amendment 6 — Clean Bootstrap Phase 分段冻结）
 
@@ -2231,7 +2231,7 @@ SPEC_STATUS = accepted（2026-08-19 初版 acceptance finalize；2026-08-20
 本轮 = SPEC ONLY：IMPLEMENTATION_PERFORMED = NO · MERGE_PERFORMED = NO
 ```
 
-> **V1 历史记录边界**：下段为原 V1 当时的接受/输出记录，日期、reviewed head、PR #17 值及 AM7 COMPOSITION 原文保留；accepted/唯一 Phase A/不新增 Phase 授权不描述 V2 当前 lifecycle 或本 V2 已明示的单 State E 例外。
+> **V1 接受历史元数据边界**：仅本段的接受 actor/date/reviewed head 与当时完成声明作为历史；其中规范权限、限制与验收仍依固定 V1 blob 原本有效的组合和优先关系继承，不重新激活早期已被改写规则。PR #17 原值保持；V1 accepted 与当时“唯一 Phase A/不新增 Phase 授权”不冒充 V2 lifecycle，V2 当前仅按已明示的单 State E 例外窄适配。
 
 ### Final Output 追记（Amendment 7 — Incident hardening，2026-09-09）
 
