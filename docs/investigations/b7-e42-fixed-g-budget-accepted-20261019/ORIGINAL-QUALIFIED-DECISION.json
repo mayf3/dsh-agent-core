@@ -1,0 +1,242 @@
+{
+  "schema": "E42_Q2_FIXED_G_CALLER_V2_ORIGINAL_QUALIFIED_TECHNICAL_DECISION_V1",
+  "actor": {
+    "thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "role": "Original B7/#508 user-delegated qualified technical acceptance actor; attributable docs-only decision, not a human Owner signature",
+    "delegation": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "text": "授权范围内的问题你直接决策"
+      }
+    ],
+    "current_authority": "Exclusive current relay requests acceptance of this exact fixed-e42 caller/data implementation contract within the existing technical delegation; no new OS, production or general DSH authority is inferred.",
+    "sole_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "requested_decision_model": "gpt-6-astra",
+    "native_effective_model_observed": "NOT_EXPOSED",
+    "requested_execution_model": "gpt-6.1-sol",
+    "requested_execution_reasoning": "ultra"
+  },
+  "GOAL": "Accept or identify a concrete remaining defect in this exact v2 implementation contract, without re-reviewing531/helper or waiting for future runtime quantities.",
+  "STATE": "ACCEPTED_EXACT_FIXED_CALLER_AND_SEALED_PLAN_IMPLEMENTATION_CONTRACT",
+  "decision": {
+    "verdict": "ACCEPT",
+    "accepted": true,
+    "conditional": false,
+    "implementation_spec_ready": true,
+    "accepted_implementation_scope": true,
+    "accepted_contract": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/PROPOSED-E42-FIXED-G-BUDGET-CALLER-CONTRACT.v2.md",
+      "bytes": 14462,
+      "sha256": "70abd83505b0af98fb6346753d0014834c346e93d20b7bcdfb5d757d2d8e521d"
+    },
+    "accepted_source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/SOURCE-CLOSURE-INDEX.v2.json",
+      "bytes": 4193,
+      "sha256": "34e15a6dd66548486011ed66644e2ffeb05975dc7fa7cba98d0b1d1ad920e6d6"
+    },
+    "unaccepted_deltas": [],
+    "blocking_findings": [],
+    "required_text_revisions": [],
+    "future_data_not_acceptance_conditions": [
+      "G_budget",
+      "actualG",
+      "finalJ",
+      "genuine Q1/Q3 quantity and branch/admission evidence",
+      "actual window/prompt/holder/TX"
+    ],
+    "meaning": "Formal unconditional acceptance of the exact bounded source/data contract. Actual implementation must follow the accepted-docs/main-base/PREFLIGHT lifecycle; final plan consumption and production require the original actual admission predicates. Those delivery/runtime requirements are explicit stages, not hidden conditions on this text acceptance."
+  },
+  "EVIDENCE": {
+    "read_full_and_size_sha_verified": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/PROPOSED-E42-FIXED-G-BUDGET-CALLER-CONTRACT.v2.md",
+        "bytes": 14462,
+        "sha256": "70abd83505b0af98fb6346753d0014834c346e93d20b7bcdfb5d757d2d8e521d"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/SOURCE-CLOSURE-INDEX.v2.json",
+        "bytes": 4193,
+        "sha256": "34e15a6dd66548486011ed66644e2ffeb05975dc7fa7cba98d0b1d1ad920e6d6"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/INDEX.v2.json",
+        "bytes": 963,
+        "sha256": "18160b794392130678d5b354cf135110e83188e0fe43f9471324a04df60d214d"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/independent-sol-readback/E42-Q2-FIXED-G-CALLER-CONTRACT-MATERIAL-RECEIPT.v2.json",
+        "bytes": 7518,
+        "sha256": "2ff73a695747a7e14dc9d4fc0b34fb948a13bf93a7a0257441ed62930080c1ed"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/READY-MATERIAL-INDEX.v2.json",
+        "bytes": 1351,
+        "sha256": "19f5e73d68f96a809670c5511b930630f57d7120ac224508448cf5c851a8a018"
+      }
+    ],
+    "review_reused": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/independent-sol-readback/E42-Q2-FIXED-G-CALLER-CONTRACT-MATERIAL-RECEIPT.v2.json",
+      "bytes": 7518,
+      "sha256": "2ff73a695747a7e14dc9d4fc0b34fb948a13bf93a7a0257441ed62930080c1ed",
+      "verdict": "PASS_CONTRACT_MATERIAL_ONLY",
+      "material_findings": [],
+      "role": "Original same-chain nonauthor review. Reused as material evidence; this decision, not the PASS or transport ACK, supplies acceptance."
+    },
+    "ready_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/READY-MATERIAL-INDEX.v2.json",
+      "bytes": 1351,
+      "sha256": "19f5e73d68f96a809670c5511b930630f57d7120ac224508448cf5c851a8a018"
+    },
+    "prior_direction": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q2-FINITE-PLANNING-CIRCULARITY-ORIGINAL-TECHNICAL-DISPOSITION-20261019.json",
+      "bytes": 8961,
+      "sha256": "007458fb6bd4ffb9bc51d96966f2d464f96575a61797febc8c2a88582b66e0bb",
+      "status": "Preserved; its proposed-only implementation gap is now closed by acceptance of this new exact v2 unit, not by rewriting the earlier record."
+    },
+    "original_source_facts": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q2-FINITE-PLAN-STOP-BOUNDARY-SOL-20261019.json",
+      "bytes": 16580,
+      "sha256": "42de119aa8ae7e4bc1838d3091434cd7f765f57e30d7c862a2bfa924f617f0cf",
+      "attribution": "Original /root/capacity_a_sol source observations reused; no source reread or execution this turn."
+    },
+    "unchanged_reused_evidence": "Method531, selected294746d9 plan, facts efe4c250/decision639e378a, held source/counts and R41 evidence are not reopened.",
+    "not_current_evidence": "Saved e42 unregistered/attempt0/TXnull and business0/2 are lineage context only. No live state or current capacity was observed here."
+  },
+  "accepted_scope": {
+    "subject": {
+      "operation_id": "b7-packet-r41-5a07e742664460c2-e42",
+      "manifest_sha256": "5a07e742664460c28aa169d134e72e2ded0fe86c8fa2ae323f5b712a7a3d1000",
+      "worker_sha256": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+      "source_content_sha256": "5cd372cf79c29ee1d95f949119e1fa2b164d14bf9b0c721e5b2e65832cf93721",
+      "original_callplan_sha256": "294746d9ed266a1b77480b060064f39129266839b54c46841b626e4fe5ee7c15",
+      "meaning": "Existing fixed saved candidate selector, not production registration or a new operation."
+    },
+    "semantic_parent": {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/delegated_owner_session.py",
+      "bytes": 37950,
+      "sha256": "39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4",
+      "limited_changes": "Fixed-e42 plan loader; context-return comparison inside prepare_answers155–173 before177; specific GCapExceeded catch around599 before600–612; cap outcome/retention and no-second-input finally handling only."
+    },
+    "new_data_member": {
+      "name": "e42-owner-budget-plan.json",
+      "location": "Same original root-sealed DRIVEN directory as the caller",
+      "trust": "Original offline assembly, AUTH.drivenConfigs, independent AUTH/PIN and existing seal_authority_closure; original readable root-sealed same-directory AUTH/PIN snapshots; no WB/user/caller-path/unsigned fallback or502 protected STATE0400 reads.",
+      "schema": "kind E42_OWNER_FINITE_CALLPLAN_V1 and the exact closed field set in Q2-5; duplicate/extra keys, booleans/floats for integer fields, arbitrary paths/commands and wrong subject/pins rejected.",
+      "G_budget_range": [
+        1,
+        256
+      ],
+      "D_max": 1,
+      "R_external": 0,
+      "max_bytes": 16384,
+      "final_binding": "Final caller hash is measured after assembly and checked against actual sealed caller/manifest; caller contains fixed plan filename/subject, not a literal plan hash. All final evidence digests bind genuine artifacts; no actualG or fixture TX/quantity.",
+      "load_order": "Validate immutable same-session plan before the existing context action, only in the existing legal owner-operation phase."
+    },
+    "cap_behavior": {
+      "comparison": "Count the full already-validated canonical group set immediately after context validation and before177 or any per-group side effect. No truncation, duplicate counting, consumer-count substitution or partial witnesses.",
+      "below_or_equal": "All original groups, ordinary prepare_answers result, bind/COMMIT/confirm and existing completion predicates remain required.",
+      "above": "Raise only GCapExceeded(G,plan_sha256); catch only at the existing prepare_answers599 boundary. No group folder/fetch/material/witness/bind/COMMIT. Select one original same-session ABORT before COMMIT while the original prompt/holder/window is legal.",
+      "no_pre_TX_probe": "No capacity/context/G discovery invocation or entry when no legal nonempty full group can be afforded, or existing facts already prove the selected cap inadequate."
+    },
+    "abort_and_unknown": {
+      "transport": "Existing B7_OWNER_INPUT_V2 serializer438–478, same operation/session/input_sequence/payload hash and ACK, literal ABORT plus newline. No new RID/action/native request/transport.",
+      "native_reuse": "Original outer d323f702306–313 same-FD9 recover-six-target and carrier abort;320–326 original terminal verification/release. Native/outer/transport code unchanged.",
+      "additional_external_prepare_calls": 0,
+      "post_dispatch": "Only original request/session output/status reads. ACK proves input acceptance only, never ABORTED or holder release.",
+      "ambiguous_outcome": "No resend and no automatic second owner input/EOF after possible ABORT dispatch. Specific cap-branch finally handling suppresses that mutation. Missing/expired prompt, failed restore, disconnect, timeout and uncertain ACK stay truthful RETAINED/UNKNOWN/pending states.",
+      "no_guaranteed_terminal": "Existing timers/idle behavior and original later same-TX policies remain; no heartbeat/window extension or promise that rollback completes. Only genuine original terminal/readback/release evidence closes it."
+    },
+    "evidence_and_assembly": {
+      "new_typed_observations": "At most3 new rows, <=1024B each, in the original private parent recorder; no raw context/secrets.",
+      "cost": "Include new plan/temp/marker and caller/AUTH/capsule costs and final recomputed J. No zero-cost assumption or silent oldJ inheritance.",
+      "mechanical_changes": "Original caller hash, one drivenConfig, authority/review receipt, capsule and PIN-last joins.",
+      "immutable_inputs": "No app SourceRoot/tree/tool/worker/packet/policy change selected. Any genuinely required immutable identity change must be separately reported under its exact original candidate rule; this acceptance does not allow silently reusing incompatible e42 pins or modifying olde39/e41."
+    }
+  },
+  "accounting_disposition": {
+    "prospective_addendum": "Accepted v2 becomes the explicit prospective behavioral addendum when implemented and lawfully adopted; original2947 bytes and helper Q2Plan provenance remain unchanged.",
+    "prefix": "n=2+D<=3 before cap comparison",
+    "normal": "n=5+D+2G<=6+2G_budget if canonicalG<=G_budget",
+    "excess": "n=2+D<=3; original one same-session ABORT adds0 external prepare",
+    "failed_or_unknown": "Retain every completed/partial invocation; no external repeat/gate/prepare/recovery assumed within this finite schedule.",
+    "physical_bound": "Maximum over full normal, over-cap rollback and retained-failure branches. Original3N+2S/native/npm/shadow/overlap/full-consumer metadata/COW/growth remain independent and are not reduced to G_budget.",
+    "later_recovery": "Other original recovery authority remains; any legitimate additional external call is explicitly enumerated and costed before that call.",
+    "floor_bytes": 53687091200,
+    "cleanup_clone_or_second_operation_credit": false,
+    "G_budget_selected": null,
+    "actual_G": null,
+    "final_J": null,
+    "current_numeric_remaining": null,
+    "capacity_admission": false
+  },
+  "acceptance_reason": [
+    "V2 supplies the previously missing exact caller comparison/catch/finally semantics and a concrete same-DRIVEN root-sealed plan trust chain, without creating a public API, new root action or broad identity/access authority.",
+    "Runtime and evidence values are correctly deferred to original consumption/admission, while schema, custody, phases and outcomes are complete enough to implement now after accepted docs/base.",
+    "The contract explicitly distinguishes finite external-copy bounds from earlier internal allocations and from terminal success. It handles ambiguous ABORT without a second mutation.",
+    "Ordinary below-cap and other-subject behavior, original native/outer/transport semantics, fixed50GiB and existing independent work are preserved."
+  ],
+  "NEXT": [
+    {
+      "owner": "Original1437 source lane",
+      "action": "Immediately record this exact14462B/70abd835 contract and4193B/34e15a6d closure as the docs-only accepted amendment, attributable to this decision. Preserve all frozen proposals, reviews and old decisions."
+    },
+    {
+      "owner": "Original1437 through existing repository governance",
+      "action": "Bind the actual final docs-only HEAD and accepted text/pins, complete the existing docs packaging/merge checks and land that accepted document base on main. Only status/path/hash/decision wrapper changes are implied; do not silently add semantic scope."
+    },
+    {
+      "owner": "Original1437 source lane, requested Sol6.1 ultra",
+      "action": "After the accepted main document base, issue DEVELOPMENT_PREFLIGHT for the exact parent/candidate and implement the limited caller/data behavior in the owned isolated surface."
+    },
+    {
+      "owner": "Original same nonauthor affected review chain",
+      "action": "Review only actual changed plan trust/schema, pre-group seam, G below/equal/above behavior, original normal inverse, one ABORT/ACK/UNKNOWN/finally behavior, prepare counts and necessary closure joins. Reuse unchanged helper/method/R41 evidence; no new parallel reviewer."
+    },
+    {
+      "owner": "Original1437",
+      "action": "Only later, with genuine quantity/J/branch/admission documents and original actual window/lease/phase predicates, assemble the immutable plan and proceed under the original lifecycle. This decision does not invoke or register e42."
+    }
+  ],
+  "separation": {
+    "conditional_acceptance": false,
+    "future_consumption_requirements_are_not_hidden_text_acceptance_conditions": true,
+    "helper_and_Q3_independent": true,
+    "Q3_not_required_for_this_contract_acceptance": true,
+    "Q3_if_relevant_required_for_genuine_numeric_basis_under_existing_method": true,
+    "no_generic_Owner_reapproval": true,
+    "no_new_review_of_accepted531_helper_R41": true,
+    "implementation_PASS_claimed": false,
+    "production_install_load_or_sampling_authorized_by_this_decision": false,
+    "REGISTER_TX_context_probe_business_authorized_by_this_decision": false,
+    "current_window_or_actual_TX_proved": false,
+    "business_credit": 0
+  },
+  "ACTION_TAKEN": {
+    "five_new_frozen_documents_read_and_verified": true,
+    "new_product_source_changes": 0,
+    "tests_or_gates_run": 0,
+    "production_reads_or_calls": 0,
+    "secret_DB_env_reads": 0,
+    "permission_changes": 0,
+    "new_TX_attempts_Goals_writers_reviewers": 0,
+    "old_artifacts_modified": 0
+  },
+  "cleanup": {
+    "delete_count": 0,
+    "deleted_paths": [],
+    "retained": "All originals, active evidence/source and the unique new decision/index; no redundant copy generated or production/thread/daemon object touched."
+  },
+  "transport": {
+    "actual_received_via": "Current exclusive14c relay",
+    "frozen_NOT_SENT_route0": "Preparation-time provenance preserved without rewrite; not an acceptance or failed-delivery signal.",
+    "delivery": "Unique decision/index plus this conversation final to14c; no parallel executor command",
+    "old_coordinator_written": false,
+    "downstream_ACK_claimed": false
+  },
+  "recorded_at_utc": "2026-10-19T12:58:46.235217+00:00"
+}
