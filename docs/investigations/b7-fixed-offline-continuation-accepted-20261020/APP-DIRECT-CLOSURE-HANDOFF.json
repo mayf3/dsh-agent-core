@@ -1,0 +1,59 @@
+{
+  "kind": "SELECTED_E1C_DIRECT_PUBLIC_CLOSURE_HANDOFF",
+  "status": "MATERIAL_REQUEST_ONLY_NOT_NEW_READ_OR_IMPLEMENTATION_GRANT",
+  "source_parent": {
+    "member": "app/packages/agent-provisioning/src/index.js",
+    "saved_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+    "bytes": 21325,
+    "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+    "source_spans": "26-45 and291-308",
+    "lineage": "Exact selected e1c identity accepted by02f7; parent archive/complete matching APP tree remains UNPROVEN. Not9df equivalence or ba397 current installed evidence."
+  },
+  "held_bridge": {
+    "member": "app/packages/agent-provisioning/src/repo-core-bridge.js",
+    "bytes": 4770,
+    "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+    "saved_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-repo-core-bridge.js",
+    "spans": "5,28-64,66-79",
+    "finite_effect": "ensureRepoCoreBridge may mkdir/link each selected APP packages and bundle-* member if writable; otherwise validates/refuses. Exact selected inventory and branch applicability not established; Lshared not0."
+  },
+  "needed_direct_members": [
+    {
+      "member": "app/packages/agent-provisioning/src/shared-codex.js",
+      "bytes": null,
+      "sha256": null,
+      "why": "Selected e1c static import/re-export at26-32,38-45; exact assertOAuthCredentialBoundary and imported module dependencies/side effects must be qualified, not stubbed."
+    },
+    {
+      "member": "app/packages/agent-provisioning/src/plugin-artifact.js",
+      "bytes": null,
+      "sha256": null,
+      "why": "Selected e1c static import at33; original P6 separately imports the candidate-local packages/agent-provisioning/src/plugin-artifact.js resolvePluginPeerLinks. Matching member/API and candidate-local original source pin must be bound separately, not assumed equal."
+    },
+    {
+      "member": "app/packages/agent-provisioning/src/ensure-symlink.js",
+      "bytes": null,
+      "sha256": null,
+      "why": "Selected e1c import34 and held b85 import5; exact link/foreign refusal semantics and its own finite imports."
+    }
+  ],
+  "needed_finite_manifest": {
+    "members": "Same selected APP immutable manifest entries for packages/*/package.json and top-level bundle-*/package.json that drive held b85:33-46; exact names and existing target links",
+    "purpose": "Derive the finite Lshared output set/custody refusal or a proved zero-write branch from source and immutable intended topology. This pattern describes missing documentary inputs, not permission for a live glob/read."
+  },
+  "request": "Provide existing exact unmodified public member bodies/pins and same selected APP-parent/inventory citation through new14c/original technical source chain. If absent, return the specific unheld primary; no archive search, live read or invented source keeper. Material alone does not grant a different APP implementation or runtime.",
+  "scope": "Stop only dependent APP integration/coherent tuple/P0. Independent accepted materializer source and wholly synthetic evidence proceed.",
+  "prohibited": [
+    "R30/R33 extraction",
+    "9df/null-tuple or generic keeper search",
+    "private SourceRoot/failed live path",
+    "OS/identity/root/channel/permission change",
+    "Lshared=0 assumption"
+  ],
+  "route": {
+    "execution_line_sends": 0,
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "qualified_technical_role": "01a1378d original delegated technical; not automatically an OS access issuer"
+  },
+  "new_actual_reads_or_effects": 0
+}
