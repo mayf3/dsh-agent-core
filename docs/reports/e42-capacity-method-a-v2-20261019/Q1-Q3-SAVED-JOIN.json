@@ -1,0 +1,114 @@
+{
+  "kind": "E42_ACCEPTED_METHOD_SAVED_EVIDENCE_JOIN_ONLY",
+  "operation_id": "b7-packet-r41-5a07e742664460c2-e42",
+  "state": "UNREGISTERED_ATTEMPT0_NO_ACTUAL_TX",
+  "numeric_remaining": null,
+  "numeric_admission": false,
+  "read_scope": "only already saved fixed evidence and finite held consumer span; no native/sourceRoot/DB/secret/df/context/collector/register/attempt",
+  "rows": [
+    {
+      "question": "Q1 current old-live/preimage/profiles copyset to original metric",
+      "saved_evidence": [
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-final-cohort-20261017/ACTUAL-S-H-ORIGINAL-METRIC.json",
+          "bytes": 75886,
+          "sha256": "5970ea3ebd8221521033599be720089a401eb612ef7928b1f441ec591f00fb77"
+        }
+      ],
+      "proved": {
+        "at": "2026-10-17T05:25:05.713093+00:00",
+        "original_S_bytes": 1606156288,
+        "original_H_bytes": 53592064,
+        "original_S_roots": 3,
+        "original_H_roots": 92,
+        "original_config_sha256": "321897cd8fb3024f05c4cb0b2960351fcd76b208d749e9b160ffd5e7b0216bf1",
+        "original_identity_quantity": "95 row-level root stamps, regular/directory quantities and metadata_stream_sha256; stability at original observation only"
+      },
+      "not_proved": "current e42 codeParts[*].live/migration-profile copyset to these 95 original roots: same identity/content, exact current quantity and complete growth/addition/deletion delta; metadata-stream digest is not a full content digest",
+      "current_S_bytes": null,
+      "current_H_bytes": null,
+      "producer": "frozen transaction-recovery.mjs db45db7230ec25015321081f8c9c1357355c61df517d8f6392924fd7ce06f55f:149-157,265-293; b7-preparation.mjs 00811809c5b1fb4a2d64b909f6410051733c8c0fafb97aa576fda97d605bd3b3:285-288",
+      "next_original_entry": "original prepare/apply/rollback copyset and saved current preimage/configuration reconciliation, by the existing restricted executor/sole writer in its applicable phase; no new measurement authorized here"
+    },
+    {
+      "question": "Q2 same-operation representative groups and extra retained invocation copies",
+      "saved_evidence": [
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/small-output/R41-CONTEXT.json",
+          "bytes": 16279,
+          "sha256": "d1f7b0da0107fb5b9ca2be0636b4785717b7140ccb39d7c7278735af7608c506"
+        }
+      ],
+      "proved": {
+        "scope_operation": "b7-packet-r41-5a07e742664460c2-e42",
+        "manifest_sha256": "5a07e742664460c28aa169d134e72e2ded0fe86c8fa2ae323f5b712a7a3d1000",
+        "worker_sha256": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+        "formula": "n=5+2*G+extra",
+        "G_meaning": "route/provision witness representative groups within this same e42 operation/TX; not two business versions"
+      },
+      "not_proved": "current same-scope saved plan/context representative count/bound and complete extra_prepare_driven_count including applicable recovery/place-delegation; R41 binding context is not B7_CONTEXT_V1 with representatives",
+      "G": null,
+      "extra": null,
+      "n": null,
+      "producer": "delegated_owner_session.py 39e47fd661332afb38457cccfb435659b619090fefcea0b147e2670a6f5856a4:155-173; original gate-receipt context(operation,tx_id,sequence), exact binding before consuming context.representatives",
+      "next_original_entry": "use an already saved same-scope original plan/representative bound when supplied; do not invoke context or invent a TX to establish capacity"
+    },
+    {
+      "question": "Q3 native/config/prefix dependency basis and typed auxiliary conditions",
+      "saved_evidence": [
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-SOURCE-PINS.json",
+          "bytes": 1490,
+          "sha256": "90b2236a5d0474d258a4bf7d9f9a579d5a8d00394606e415aa2b3de80975711f"
+        },
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-ALLOWANCE.json",
+          "bytes": 1872,
+          "sha256": "9680a975a70400e03233535c0cb2675193242a06de27ec6ad1af19e057860145"
+        }
+      ],
+      "proved": {
+        "original_conditional_six_npm_allowance_bytes": 2579447808,
+        "original_npm_version": "11.9.0",
+        "fixed_install_flags": [
+          "offline",
+          "ignore-scripts",
+          "legacy-peer-deps",
+          "no-save",
+          "no-package-lock"
+        ],
+        "typed_aux_original_split_bytes": {
+          "evidence_ACT": 268435456,
+          "JSON_live_temp": 268435456,
+          "tools_config_preimages": 134217728,
+          "normal_npm_metadata_logs_helper": 134217728,
+          "symlink_inode_other_metadata": 268435456
+        }
+      },
+      "not_proved": "current normal native npm implementation/effective nonsecret config identity matches original pins; all six current prefixes have no unmodeled dependency set; current bounded output/evidence/log membership and competing-pool growth satisfy the typed allowance",
+      "current_npm_allowance_bytes": null,
+      "current_typed_aux_bytes": null,
+      "producer": "six-target-provision.mjs dd96d67eca9d27afb1d4b656f870b2a13f45e80d7ab51c444ed549ed0c5f3bb9:113-118,486-489",
+      "next_original_entry": "original fixed six-prefix provisioning/native configuration basis and normal bounded receipt memberships, by its existing phase actor; this unit grants no new npm/config/prefix read or rehearsal"
+    }
+  ],
+  "symbolic_remaining_recipe": "5965164544 + 2*S_current + H_current + npm_allowance_current + typed_aux_current + (5+2*G+extra)*1496420352",
+  "unchanged_floor_bytes": 53687091200,
+  "saved_free_reused_only": 71896256512,
+  "conditional_numbers_not_promoted": [
+    26352041984,
+    457980544,
+    8142876672
+  ],
+  "current_result": "Q1-Q3 exact missing bindings are identified. No current numeric remaining established; no guard implementation or dynamic admission. Absence of held mapping is not global absence or new Owner requirement.",
+  "new_read_authority": "none added; no independently held exact new quantity/status read authorization mapped in this block",
+  "effects": {
+    "product_source": 0,
+    "production": 0,
+    "df": 0,
+    "context": 0,
+    "register": 0,
+    "attempt": 0,
+    "goal_changes": 0
+  }
+}

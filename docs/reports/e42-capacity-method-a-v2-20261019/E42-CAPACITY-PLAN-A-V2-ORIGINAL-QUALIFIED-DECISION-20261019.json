@@ -1,0 +1,235 @@
+{
+  "schema": "E42_CAPACITY_PLAN_A_V2_ORIGINAL_QUALIFIED_TECHNICAL_DECISION_V1",
+  "actor": {
+    "original_qualified_actor": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "role": "原 B7/#508 受委托技术裁决；非源码实施者或第二 production writer",
+    "requested_model": "gpt-6-astra",
+    "observed_backend_model": "NOT_EXPOSED_IN_THIS_TURN",
+    "sole_production_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "coordination_receiver": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "native_message_or_production_command_sent": false
+  },
+  "GOAL": "在原50GiB政策内核定当前e42 register前的真实未来事件预算方法；仅当前op，后续不同业务版本不合并；给原执行线可执行的有限下一步。",
+  "STATE": {
+    "technical_method_acceptance": "ACCEPT_FIXED_METHOD_AND_CONDITIONAL_EVENT_LEDGER",
+    "numeric_remaining_accepted": false,
+    "new_lower_remaining_proved": false,
+    "capacity_admission": false,
+    "business_count": "0/2_SAVED_PRIMARY_NOT_NEW_RUNTIME_READ",
+    "current_op": "b7-packet-r41-5a07e742664460c2-e42",
+    "actual_tx": null,
+    "actual_registered_or_attempted": false,
+    "accepted_exact_docs_scope": true,
+    "acceptance_conditional": false,
+    "method_contract_ready_for_original_docs_only_base": true,
+    "numeric_guard_change_implementation_spec_ready": false,
+    "UNPROVEN_current_physical_quantity": "S/H current copied-tree quantity join plus explicit current-op multiplicity and original typed allowance applicability; exact producers listed below, not a generic missing old breakdown."
+  },
+  "conditional_accounting": {
+    "floor_bytes": 53687091200,
+    "saved_free_bytes": 71896256512,
+    "saved_free_observed_at": "2026-10-19T09:52:37Z",
+    "saved_original_B0_bytes": 18667145856,
+    "saved_original_B0_gap_bytes": 457980544,
+    "saved_free_minus_floor_bytes": 18209165312,
+    "per_prepare_driven_bytes": 1496420352,
+    "normal_prepare_count_formula": "5 + 2 * representative_group_count + extra_prepare_driven_count",
+    "group_definition": "同一个 future e42/TX 的 route/provision witness 代表分组；不是 Goal 数，也不是两个不同业务版本。",
+    "conditional_group_count": 2,
+    "conditional_extra_count": 0,
+    "conditional_prepare_count": 9,
+    "conditional_execution_subtotal_bytes": 12884258816,
+    "conditional_prepare_total_bytes": 13467783168,
+    "conditional_total_bytes": 26352041984,
+    "conditional_saved_comparison_excess_bytes": 8142876672,
+    "comparison_is_fresh_capacity_predicate": false,
+    "comparison_is_physical_necessary_shortfall": false,
+    "estimate_is_apfs_physical_hard_bound": false,
+    "credits": {
+      "future_deletion": 0,
+      "purgeable_reclaim": 0,
+      "clone_or_dedupe": 0,
+      "control_completion_aggregate_deduction": 0
+    },
+    "second_distinct_business_operation_included": false,
+    "symbolic_current_operational_recipe": "5965164544 + 2*S_current + H_current + npm_allowance_current + typed_aux_current + (5+2*G+extra)*1496420352; original unaccounted shared-pool competition remains separate, never silently zero."
+  },
+  "boundaries": {
+    "production_authorized_by_this_decision": false,
+    "source_implementation_authorized": false,
+    "new_df_or_production_measurement_authorized": false,
+    "new_rehearsal_or_gate_run_authorized": false,
+    "floor_change_authorized": false,
+    "external_pool_or_tier_b_expansion": false,
+    "second_writer": false,
+    "new_op_or_attempt_authorized": false,
+    "old_e40_e41_replay_authorized": false,
+    "auth_item_waits_for_A": false,
+    "other_existing_deployment_authority_preserved": true,
+    "cleanup_or_future_deletion_credit_allowed": false
+  },
+  "cleanup": {
+    "deleted_paths": [],
+    "deleted_bytes": 0,
+    "retained": "所有本轮独有源证据/表/正文/裁决和原始资料保留；无生产、原evidence、thread或daemonDB操作。"
+  },
+  "delegation": {
+    "user_messages": [
+      {
+        "id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "text": "我是希望你来尽量审批和做决策的，尽量不要我参与",
+        "source": "本线程原用户委托及既存原决定；本轮不重新搜索历史"
+      },
+      {
+        "id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "text": "授权范围内的问题你直接决策",
+        "source": "本线程原用户委托及既存原决定"
+      },
+      {
+        "source": "本轮用户A任务与后续两次边界澄清",
+        "scope": "只当前e42未来事件预算A；允许该差量的有限保存source/metadata读；一次原非作者审后精确技术接受；50GiB不变，非生产。"
+      }
+    ],
+    "positive_existing_records": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CAPACITY-PLAN-B-ORIGINAL-ACTOR-DECISION-20261018.json",
+        "bytes": 15433,
+        "sha256": "9412a8825f1871df234347c799c8564c73b2c161239bd90bf625c726619d425d",
+        "scope": "A/B有限技术准备及精确原链接受；C降低floor不涵盖"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CAPACITY-PLAN-B-ORIGINAL-ACTOR-ADDENDUM-20261018.json",
+        "bytes": 3521,
+        "sha256": "6c79c4c8140bc9eca54c582fc925db611743192d26eb1e5dc411dfba49eee35e",
+        "scope": "旧路径可按原契约继续，不为Plan B新增等待；无新的floor或外池效应"
+      },
+      {
+        "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/docs/specs/AGENT_CORE_B7_FIXED_DRIVEN_PUBLIC_LEAF_RETENTION_STOP_COMPLETION_V1.md",
+        "bytes": 12727,
+        "sha256": "01a7f96add721cbed654a818b9a5bc362170f9fee4230569a330c65f330dd72a",
+        "clause": "§4 L79",
+        "text": "actual registration/execute remains subject to actual fresh-free-minus-genuine-remaining>=50GiB and original final review/whole verifier/current identity.",
+        "additional_clause": "Count only genuinely unspent future events once; retain full conditional6npm allowance because original recovery/fullCP proved exact six plugins absent.",
+        "read_basis": "原作者本轮完整读/核hash；主actor读其精确条款并复用原已读decision/addendum，不另开旧Spec审"
+      }
+    ],
+    "is_human_owner_signature": false,
+    "is_auth_or_mac_authority": false,
+    "floor_policy_change_requested_or_accepted": false
+  },
+  "specific_unproved_inputs": [
+    {
+      "id": "Q1_CURRENT_S_H_COPY_SET",
+      "event": "transaction-recovery prepare/rollback复制old live S；b7-preparation复制现有profiles基线H",
+      "producer": "transaction-recovery.mjs db45db72:149–157,265–293；b7-preparation.mjs 00811809:285–288",
+      "saved_quantity": {
+        "S_bytes": 1606156288,
+        "H_bytes": 53592064,
+        "metric_sha256": "5970ea3ebd8221521033599be720089a401eb612ef7928b1f441ec591f00fb77"
+      },
+      "missing": "保存S/H计量到当前e42将复制的app/harness/node与95-root依赖基线的内容/身份/数量join及未覆盖增长；不是要求从旧total扣减。",
+      "responsible": "原1437提供已有receipt path/hash和相应quantity/树身份字段；原Sol仅补这段有界保存证据映射。",
+      "not_requested": "新home全扫、生产df或rehearsal、私有source-root探测"
+    },
+    {
+      "id": "Q2_ONE_OPERATION_CALL_MULTIPLICITY",
+      "event": "每次prepare_driven新建完整invocation闭包",
+      "producer": "R41/control-source/b7-release-executor.sh 968d42e9:152,162–199；delegated_owner_session.py 39e47fd6:162–245,599–672",
+      "missing": "当前e42保存scope/plan中的context.representatives组数及真正必须的额外prepare调用；G=2/extra=0不是已实证当前值。",
+      "responsible": "原1437按固定计划/已存scope填写G/extra及同TX阶段图；不得跑context取新结果。",
+      "future_second_business_operation_excluded": true
+    },
+    {
+      "id": "Q3_ORIGINAL_OPERATIONAL_ALLOWANCE_APPLICABILITY",
+      "event": "six-target npm与固定aux的输出集合",
+      "producer": "six-target-provision.mjs dd96d67e:113–118,486–489；原NPM-OPERATIONAL-ALLOWANCE 9680a975及fixed aux split",
+      "missing": "已有native/config/prefix依赖集合与原typed aux条件的保存join；当前源码未提供无限制日志、任意deps或全机COW的byte quota。",
+      "responsible": "原1437/原Sol仅复用既有pins和依赖集合依据；无依据的字段保持UNKNOWN，不能用任意安全常数填平。",
+      "no_new_hard_physical_quota_or_all_machine_audit_gate": true
+    }
+  ],
+  "EVIDENCE": {
+    "accepted_proposal": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/PROPOSED-E42-REMAINING-PHASE-CAPACITY-A-V2.md",
+      "bytes": 14938,
+      "sha256": "398303ca62e6104e8ec3a98300b69936cdb31e6b3b579cd76cbfd61b0bafff0d"
+    },
+    "accepted_conditional_table": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/MAX-FUTURE-EVENT-OCCUPANCY-TABLE-V2.json",
+      "bytes": 11610,
+      "sha256": "2aafeecbe704143b5a47dd932ec711a386941daba4e96510ab14a704ff86e4c5"
+    },
+    "nonauthor_review": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/independent-review/REVIEW-RECEIPT-V2.json",
+      "bytes": 22644,
+      "sha256": "68b4fa6b522be0ca4266c48feb6fa7efb009d3733e0ed87fdde9610d8a201b4d",
+      "verdict": "PASS_FIXED_METHOD_AND_CONDITIONAL_PLANNING_ONLY",
+      "blocking_findings": [],
+      "numeric_verdict": "NOT_ESTABLISHED_NO_RELEASE",
+      "receipt_fully_read_and_hash_verified": true,
+      "review_itself_is_not_acceptance": true
+    },
+    "source_evidence_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/EVIDENCE-INDEX.json",
+      "bytes": 17283,
+      "sha256": "0b6451cc410c60360f0cc1470fe9722eb324fc554b6c4e55b5457ff6b27eab61"
+    },
+    "author_return": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-capacity-plan-a-20261019/RETURN.md",
+      "bytes": 2516,
+      "sha256": "ca4a51e80668a9d4702a6a4e60bad6767e44a185ce50abcdfe1d4f807c4dae34"
+    },
+    "saved_capacity_primary": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/CRITICAL-PATH-SOL-R41-CONTROL-CAPACITY-TERMINAL-OBS-20261019.json",
+      "bytes": 9739,
+      "sha256": "038746f07b37eca2fc43a40af554b804ca97d40d73949c38c91e4dbac4c619c6"
+    },
+    "B_separate_ready_decision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/AUTH-P4-B-FIXED-SOURCE-AUTHORITY-NEXT-20261019.json",
+      "bytes": 9141,
+      "sha256": "f0d8ed807065be7a085518d03cdcc2e6420e72193f2f97f737a8d668a2849846"
+    }
+  },
+  "exact_accepted_scope": [
+    "仅固定e42在R41 control COMMITTED、prepare-inputs完成、register前边界之后，按保存源码真实未来allocation事件重建remaining；不用旧聚合total机械扣减。",
+    "每prepare全闭包J=1496420352B是保存metadata的4096-rounded operational metric。固定同一future e42/TX调用图正常n=5+2G，额外合法调用另加extra；G不是两个Goal或两个不同业务版本。",
+    "3N+2S覆盖相应prepare/apply/rollback同时驻留；保留失败/UNKNOWN前缀与partial以及全部原材料；不预贷删除、clone、purgeable、未来清理。",
+    "认可V2对六个新plugin进入shadow再删除的额外预算条目，以及typed aux/custody/evidence覆盖范围；不会把正常/rollback全流程无依据相加，亦不漏同时驻留。",
+    "26,352,041,984B仅在G=2/extra=0及S/H/npm/aux继承条件下成立；接受其条件账用于计划，不把其变成当前无条件P_remaining。",
+    "50GiB与原fresh-free-minus-genuine-remaining准入谓词不变；不增加全机竞争审计/APFS绝对硬上界证明/额外锁或审批门。"
+  ],
+  "explicitly_not_accepted": [
+    "未接受新的更低remaining、改原capacity常数、当前可放行声明或任何容量数值准入。",
+    "未接受把保存gap457980544B或条件比较8142876672B称为当前物理短缺、必需回收量或可放行差额。",
+    "未接受G=2/extra=0/S/H旧数值/npm假设为当前已证事实；未覆盖量不得归入任意aux。",
+    "未接受prepare_driven源码改变、共享cache、清理/提前删除、copy省额或通用TierB/Runbook。",
+    "未接受C降低floor或外部容量池、Auth新reader规则、生产读取/执行/新op/attempt。"
+  ],
+  "ACTION_TAKEN": [
+    "复用原限定author与同一个non-author，不另派生产writer或第二审者。",
+    "实读核对固定V2、事件表、作者索引/RETURN及原审receipt；原审核到current pinned producer/consumer，仅保存source/metadata。",
+    "原actor独立复算J、K、n=5+2G、9J及两个保存比较数，未运行fixture/gate/source validator/df/生产命令。",
+    "基于原用户B7/#508技术委托，正式接受上述exact docs有限方法与条件事件账；审查PASS本身没有替代本裁决。",
+    "明确数字未就绪的实际quantity与producer，交原1437/原Sol按既有范围补保存join；不泛化新Owner确认。",
+    "B单独准备已固定可审source/authority下一步，A/B不互为前置；没有向生产线发并行命令。"
+  ],
+  "NEXT": {
+    "owner": "原唯一writer01a1437b；原Sol6.1-sol/ultra承担有界保存证据与文档落位，新协调14c排他handoff。",
+    "first": "由原writer立即按既有治理将本V2/条件表与本裁决、原审另落docs-only accepted正文/base，原稿/旧Spec/旧预算证据保留。本方法不再待另一轮Owner或重复方法审查。它不授权写数字guard；数值填充只用Q1-Q3实证，任何另行源码改变仍按原生命周期。",
+    "finite_quantity_work": "按Q1→Q2→Q3补现有保存receipt/当前op计划的精确join，并在同一表代入可证值。已有数量/条件足够则原writer按原容量谓词处理；本决定没有为数值表指定凭空的新值，也没有给现场新读权。",
+    "no_false_release": "若Q1没有已有数量join，明确返回该S/H复制集的missing measurement/receipt，而不是将旧total、控制完成、历史df或conditional26.35GB当实际放行依据。",
+    "copy_amplification_option": "如要消除已确认的每次完整1.496GB重复复制，原Sol可在既有源码准备范围拟定只针对prepare_driven的有限docs差量，保持exact capsule/custody/原调用证据和失败恢复；这不是本次已接受实现，不授共享cache、删除/提前清理或通用TierB。数值不足不强迫实施该选项。",
+    "runtime": "仅原writer以后按原已授权入口/当前身份、实际fresh available与有据genuine remaining办理原动态容量/生命周期检查；不在本turn执行、不重放已过gate。",
+    "old_path": "Plan B文件/缺字段不额外暂停原Goal；原旧路径仍受原fresh-free-minus-genuine-remaining>=50GiB。已发现的真实未来copy不能被旧常数掩盖，原旧B0不因本决定自动取得完整当前预算证明。",
+    "B_independent": true
+  },
+  "next_single_missing_quantity_handoff": {
+    "primary_quantity": "当前old-live/preimage/profile复制集的S_current/H_current与保存metric之间的数量join。",
+    "producer_entry": "transaction-recovery.mjs:149–157,265–293 / b7-preparation.mjs:282–288",
+    "exact_receipt_needed": "原ACTUAL-S-H-ORIGINAL-METRIC.json(5970ea3e…)关联到当前e42基线的已有identity/content/quantity receipt；列出超出保存S=1606156288、H=53592064的增长；若原件不存在，只报告该数量未持有，不能猜。",
+    "parallel_plan_bindings": "同一op的G/extra计划及原native/config/prefix/typed aux条件可在原保存材料中同步绑定；不把第二个业务版本计入、不启动context/collector或任何新现场试验。",
+    "cannot_claim_unique_unknown": "上述物理复制量是首要待补字段；G/extra与allowance适用性亦已显式列出，不能谎称其它条件已证。"
+  },
+  "memory_use": "MEMORY.md:334仅用于复核单writer/模型归属惯例；当前所有角色、状态、数字与授权均以本轮用户和固定实读原件为依据，不使用历史运行状态作当前事实。",
+  "at_utc": "2026-10-19T10:39:01.166047+00:00"
+}
