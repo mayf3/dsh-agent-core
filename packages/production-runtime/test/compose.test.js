@@ -443,6 +443,15 @@ test('C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / abs
 
 test('MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)', async (t) => {
   const { layout } = await seedRuntime(t)
+  // PRODUCT #525 P1: an enabled product API now requires the admission JWKS
+  // seam at composition; these compositions don't exercise the route but must
+  // still boot, so pin an unreachable-seam URL (verifier construction is lazy).
+  const savedAdmissionUrl = process.env.AGENT_DIRECTORY_AUTH_JWKS_URL
+  process.env.AGENT_DIRECTORY_AUTH_JWKS_URL = 'http://127.0.0.1:1/.well-known/jwks.json'
+  t.after(() => {
+    if (savedAdmissionUrl === undefined) delete process.env.AGENT_DIRECTORY_AUTH_JWKS_URL
+    else process.env.AGENT_DIRECTORY_AUTH_JWKS_URL = savedAdmissionUrl
+  })
 
   // Capture the product-api module's own stderr log (it writes directly to
   // process.stderr) while composing — the deterministic signal that the

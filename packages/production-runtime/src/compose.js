@@ -43,7 +43,7 @@ import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-rou
 import { mountBrokerGateway } from './broker-composition.js'
 import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
+import { mountProductApiAdmission } from './product-api-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
@@ -387,9 +387,9 @@ export async function composeProductionRuntime(options = {}) {
 
   const productApiCfg = opts.productApi ?? {}
   mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
+  // PRODUCT #525 P1: admission mount contract (JWKS seam REQUIRED, enabled-gated) lives in product-api-admission.js — compose.js is MUST_NOT_GROW.
   const productApi = applyProductApi(ctx, {
-    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
-    enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
+    ...mountProductApiAdmission({ definition, productApiCfg, log }),
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
     // Dedicated history-only Tailnet config remains pass-through/default-OFF.
