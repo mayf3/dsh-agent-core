@@ -1,0 +1,58 @@
+{
+  "kind": "HR_NEWLY_IDENTIFIED_ROOT_SETTINGS_SAFE_PROVENANCE_ADDENDUM",
+  "recorded_at_utc": "2026-10-19T11:10:08.105243+00:00",
+  "observer": "/root/critical_path_sol",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "observed_runtime_model": "NOT_EXPOSED",
+  "new_pointer_source": "Parent received original ZCode keeper answer; this task reads only the newly specified exact file, not that answer or old candidates.",
+  "exact_path": "/Users/yanfenma/.agent-core/homes/agt_hr-agent/settings.yaml",
+  "lstat": {
+    "uid": 502,
+    "gid": 20,
+    "mode": "0600",
+    "bytes": 1039,
+    "regular": true,
+    "symlink": false
+  },
+  "read_boundary": "One lstat, O_NOFOLLOW open, fstat device/inode/size/mtime identity matches before reading;1039 bytes parsed only in memory by PyYAML.safe_load. No content dump/copy/hash.",
+  "safe_projection": {
+    "root_type": "mapping",
+    "schema_or_version_fields_observed": [],
+    "related_key_categories": [
+      {
+        "category": "provider",
+        "key": "providers",
+        "value_type": "mapping"
+      },
+      {
+        "category": "provider",
+        "key": "provider",
+        "value_type": "string"
+      }
+    ],
+    "category_presence": {
+      "tool": false,
+      "toolset": false,
+      "mcp": false,
+      "provider": true,
+      "harness": false,
+      "generator_or_provenance": false
+    },
+    "pure_local_generator_or_module_paths": []
+  },
+  "withheld": "All raw YAML, environment/headers/APIkey/token/DSN/URL/args/prompt/provider values and arbitrary scalar values withheld; no private settings bytes or hash persisted.",
+  "bounded_conclusion": "The newly identified static root settings file exists0600 but reveals no tool/toolset/MCP/harness/generator schema category or local generator/module pointer in this safe parsed projection. Provider-key presence does not establish an HR bridge provider. No exact loader/generator entry obtained to hand to1437.",
+  "loaded_effective_configuration": "UNKNOWN; old static file presence/owner/mode is not current loaded runtime, authenticated identity or formal generation proof.",
+  "not_inferred": "No claim that a formal provider/generator is globally absent; no assumption that proposed new HR bridge mechanism is mandatory. Existing equivalent pointer query remains separately routed by parent.",
+  "stop": "No backup read, old8candidate recheck, extra directory/source scan or follow-up path.",
+  "effects": {
+    "config_or_permission_writes": 0,
+    "settings_content_hashes": 0,
+    "generator_or_wake": 0,
+    "API_native_or_business_calls": 0,
+    "production_actions": 0,
+    "STATE_REPORT_index_writes": 0,
+    "artifact_write": "This nonsecret projection addendum only"
+  }
+}

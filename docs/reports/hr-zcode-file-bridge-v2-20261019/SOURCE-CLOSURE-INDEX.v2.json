@@ -1,0 +1,204 @@
+{
+  "kind": "FIXED_HR_V2_EXACT_SOURCE_SCHEMA_GENERATOR_AND_NATIVE_JOIN_CLOSURE",
+  "status": "PROPOSED_NO_IMPLEMENTATION",
+  "contract": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.md",
+    "bytes": 22677,
+    "sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d"
+  },
+  "config_schema": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/CONFIG-SCHEMA.v2.json",
+    "bytes": 4198,
+    "sha256": "0ebfa5cb96749d0016c2668174a4f8d2d7027fb0f1c5e0b2ce2c1ebe1412b005"
+  },
+  "relative_delta": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/V1-V2-DELTA.json",
+    "bytes": 1888,
+    "sha256": "f0406d7389131db0769b382beed1b6ed0c3eb6067481a3a798b529b9fc56545b"
+  },
+  "baseline": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v1.md",
+    "bytes": 14261,
+    "sha256": "8bd57a6795bba395232f97f77c7fbbfa194c3604aa170edd897ce97af1169370"
+  },
+  "baseline_closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/SOURCE-CLOSURE-INDEX.v1.json",
+    "bytes": 7528,
+    "sha256": "6f84e239c646a8d3b3b9e0d07c35e42fdc0274f226f9ce0c13f9079d6c8aec49"
+  },
+  "baseline_material_review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/independent-sol-readback/HR-ZCODE-FIXED-FILE-BRIDGE-DOCS-RECEIPT.v1.json",
+    "bytes": 8929,
+    "sha256": "16afc5e4de7075799a2647d18a9a6ec2d41349ee16dee0a9d199a9a5be3b5767"
+  },
+  "new_provenance": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/coord-hr-existing-0600-generator-pointer-20261019T105053Z.md",
+      "bytes": 2068,
+      "sha256": "71a5f134218302086e9fe68bd7628a53225d716dcc20d23a6c296e1134dfb36e"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/HR-ROOT-SETTINGS-SAFE-PROVENANCE-ADDENDUM-20261019.json",
+      "bytes": 2732,
+      "sha256": "b85e598a499f0b1f68eaf1fef72a264d84473b113be8851a044f7e630ef96f2f"
+    }
+  ],
+  "new_necessary_finite_sources": [
+    {
+      "repository": "/Users/yanfenma/workspace/github/deepseek-harness",
+      "revision": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+      "path": "packages/core/agent/src/index.ts",
+      "whole_bytes": 31981,
+      "whole_sha256": "e4986fec8aa6e991378f0195df4e931e4ca5bf31b2af886f55a3242691db6804",
+      "spans": [
+        [
+          65,
+          155
+        ]
+      ],
+      "excerpt_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__core__agent__src__index.ts.txt",
+      "excerpt_bytes": 4990,
+      "excerpt_sha256": "28c75e5fc28bda7e75012aa1cdde71ebec10f96485b18f3a6c7ceeb100778442"
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/github/deepseek-harness",
+      "revision": "514ab7b0029141b88c807704764d0d3e1eea1da4",
+      "path": "packages/core/tools/src/index.ts",
+      "whole_bytes": 88328,
+      "whole_sha256": "22b20afadb31c19512972fed145b0ac67a2c6cc14392bd430763960ebeeb18c9",
+      "spans": [
+        [
+          222,
+          247
+        ],
+        [
+          314,
+          340
+        ],
+        [
+          1030,
+          1080
+        ]
+      ],
+      "excerpt_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__core__tools__src__index.ts.txt",
+      "excerpt_bytes": 5900,
+      "excerpt_sha256": "fe4538aba13bf4d06e2cb99ba0a6ef555446bf58dd194e93010343549ff736a7"
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/dsh-agent-core",
+      "revision": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+      "path": "packages/agent-router/src/process-registry.js",
+      "whole_bytes": 21813,
+      "whole_sha256": "87abee00c4c4911bca44b002ecfdc1815eb680f8c1fd18444d32ba06c38334ae",
+      "spans": [
+        [
+          196,
+          208
+        ],
+        [
+          268,
+          309
+        ],
+        [
+          320,
+          364
+        ]
+      ],
+      "excerpt_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__agent-router__src__process-registry.js.txt",
+      "excerpt_bytes": 5891,
+      "excerpt_sha256": "d265c35f170a73b5a3ffa180a545ae19cbac1c0915facbe60b4946cf819e3086"
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/dsh-agent-core",
+      "revision": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+      "path": "packages/demo-server/src/index.js",
+      "whole_bytes": 10011,
+      "whole_sha256": "0819237cd98b0cff5a43eb8c462684217c2ac99e8024136ce82c5572732b6065",
+      "spans": [
+        [
+          75,
+          122
+        ],
+        [
+          180,
+          208
+        ]
+      ],
+      "excerpt_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__demo-server__src__index.js.txt",
+      "excerpt_bytes": 3828,
+      "excerpt_sha256": "fec86bd19c172a047307e59b0c6dce031c3d969c61a801247552736ebbcfb4a5"
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/dsh-agent-core",
+      "revision": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+      "path": "packages/demo-server/src/session-seam.js",
+      "whole_bytes": 12394,
+      "whole_sha256": "0a8d1f4caf163bb85e5f821bb78550b44c2edd34371a5baf1dd62b2b45b4baf8",
+      "spans": [
+        [
+          94,
+          155
+        ]
+      ],
+      "excerpt_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__demo-server__src__session-seam.js.txt",
+      "excerpt_bytes": 3439,
+      "excerpt_sha256": "579cecb5daa4f4379de86bbf5ae6a5077ad84a3e101bd7dbdbcae20ab187aab8"
+    },
+    {
+      "repository": "/Users/yanfenma/workspace/project/dsh-agent-core",
+      "revision": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+      "path": "packages/agent-router/src/process/agent-process.js",
+      "whole_bytes": 15487,
+      "whole_sha256": "473003ddfb1fc7b1d560863f6edce8feb8105a291d3155f70a49cbd9cde30088",
+      "spans": [
+        [
+          44,
+          61
+        ],
+        [
+          163,
+          190
+        ]
+      ],
+      "excerpt": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/packages__agent-router__src__process__agent-process.js.txt",
+        "bytes": 2567,
+        "sha256": "df6b0d677c3c4ee19f307d391b491698f318dd61aa880442c176bce7b7694746"
+      }
+    }
+  ],
+  "existing_parent_relay_basis": {
+    "saved_excerpt": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/fixed-source-excerpts/packages__agent-router__src__parent-rpc-relay.js.txt",
+    "bytes": 4893,
+    "sha256": "1493cee2d253adc1cad8da2151c373261ef84ea2728a5054f478fe5f4d323fcd",
+    "source_blob_sha1": "eec0870fe54a3fb1bcc3661311033b36963fba78",
+    "spans": [
+      [
+        57,
+        130
+      ]
+    ],
+    "basis": "already-held fixed parent closure/stop/relay ABI; old13source not reopened; native registry callsite separately pinned in new necessary evidence"
+  },
+  "actual_new_functions_all_PROPOSED": [
+    "exportHrBridgeBasis trusted inprocess projection -> fixed administrative basis",
+    "readHrBridgeBinding native parent/definition/home/slot config matcher -> binding|typeddeny",
+    "composeHrBridgeTools existing AgentSetup agentCtx -> scopedToolDefinitions|no-op",
+    "one internal agent_core.hr_file_bridge callback; inspectBinding private no-file bootstrap plus3 modelops",
+    "generator plan/generate/rollback fixedpaths schema/pins/preimage custody"
+  ],
+  "not_proved": [
+    "existing exact equivalent generator/registration",
+    "current loaded HR/profile/target/process/tool set",
+    "actual runtime identity/root/codegeneration/current finite window",
+    "Message caller/sourceTurn/Grant/wake or bridge receipt"
+  ],
+  "non_HR_inverse_obligation": "absent optionaldescriptor originalinitialize and create/resume behavior; no extra RPC/configread/tool; original methods unchanged",
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "source_body_changes": 0,
+  "config_or_live_effects": 0,
+  "Goal_or_e42_changes": 0
+}
