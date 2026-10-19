@@ -2,9 +2,9 @@
   "kind": "FIXED_HR_V2_EXACT_SOURCE_SCHEMA_GENERATOR_AND_NATIVE_JOIN_CLOSURE",
   "status": "PROPOSED_NO_IMPLEMENTATION",
   "contract": {
-    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.md",
-    "bytes": 22677,
-    "sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d"
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.1.md",
+    "bytes": 23342,
+    "sha256": "4d32dfa4973aff4a3d2c0ff7403f0bd3141be1d036dba66d9def71b96a00665e"
   },
   "config_schema": {
     "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/CONFIG-SCHEMA.v2.json",
@@ -200,5 +200,12 @@
   "native_effective_model": "UNKNOWN",
   "source_body_changes": 0,
   "config_or_live_effects": 0,
-  "Goal_or_e42_changes": 0
+  "Goal_or_e42_changes": 0,
+  "affected_material_fix": {
+    "kind": "F1_CANCELLATION_WIRE_ABI_PRECISION",
+    "original_head": "f81876d0",
+    "original_unit_sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d",
+    "delta": "child observes AbortSignal before RPC; after dispatch await original request terminal; original two-argument wire unchanged; parent owns helper settle and transportUNKNOWN does not prove quiescence",
+    "new_source_protocol_or_product_change": 0
+  }
 }

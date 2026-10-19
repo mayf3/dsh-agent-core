@@ -4,10 +4,11 @@
   "base_commit": "88fe4a16a4a38c066d507d82c7020d52301c7aaa",
   "exact_contract": {
     "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.md",
-    "bytes": 22677,
-    "sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d",
+    "bytes": 23342,
+    "sha256": "4d32dfa4973aff4a3d2c0ff7403f0bd3141be1d036dba66d9def71b96a00665e",
     "repository_path": "docs/specs/AGENT_CORE_FIXED_HR_ZCODE_FILE_BRIDGE_V2.md",
-    "embedded_inverse": "EXACT"
+    "embedded_inverse": "EXACT",
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.1.md"
   },
   "copies": [
     {
@@ -18,10 +19,10 @@
       "copy_inverse": "EXACT"
     },
     {
-      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/SOURCE-CLOSURE-INDEX.v2.json",
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/SOURCE-CLOSURE-INDEX.v2.1.json",
       "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/SOURCE-CLOSURE-INDEX.v2.json",
-      "bytes": 8911,
-      "sha256": "7f2b8cf64d91ec1596cc623bf4dfff48cbc7d522864a1fb2d08a2e83271d7e31",
+      "bytes": 9389,
+      "sha256": "499084405f100a2a96f2d7a71c4d5ec167bbb157a1a01cac0c094b97e2896422",
       "copy_inverse": "EXACT"
     },
     {
@@ -132,5 +133,12 @@
   "author": "/root/sol_execution_continuation",
   "requested_model": "gpt-6.1-sol",
   "requested_reasoning": "ultra",
-  "native_effective_model": "UNKNOWN"
+  "native_effective_model": "UNKNOWN",
+  "affected_material_fix": {
+    "kind": "F1_CANCELLATION_WIRE_ABI_PRECISION",
+    "original_head": "f81876d0",
+    "original_unit_sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d",
+    "delta": "child observes AbortSignal before RPC; after dispatch await original request terminal; original two-argument wire unchanged; parent owns helper settle and transportUNKNOWN does not prove quiescence",
+    "new_source_protocol_or_product_change": 0
+  }
 }
