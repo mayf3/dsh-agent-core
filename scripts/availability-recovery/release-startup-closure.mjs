@@ -150,6 +150,10 @@ async function runPhase(root, run) {
   process.on('SIGTERM', () => { void stop(0) })
   process.on('SIGINT', () => { void stop(0) })
 
+  // PRODUCT #525 P1: an enabled product API requires the admission JWKS seam
+  // at composition. This closure harness never exercises the admission route,
+  // so default a lazy, unreachable seam when the operator env has none.
+  process.env.AGENT_DIRECTORY_AUTH_JWKS_URL ??= 'http://127.0.0.1:1/.well-known/jwks.json'
   runtime = await composeProductionRuntime({
     layout,
     tickMs: 250,
