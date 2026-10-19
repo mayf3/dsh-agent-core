@@ -1,0 +1,132 @@
+{
+  "kind": "FIXED_SELECTED_E1C_APP_EXPORT_MATERIAL_RECEIPT",
+  "version": "v1",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blockingFindings": [],
+  "reader": {
+    "agent": "/root/sol_e40_independent_reader",
+    "role": "Original same-chain sole nonauthor reader",
+    "requestedModel": "gpt-6.1-sol",
+    "requestedReasoning": "ultra",
+    "nativeObservedModel": "UNKNOWN",
+    "attribution": "Personally read only the three fixed new material files via direct local-file MCP reads, verified their UTF8 bytes/SHA256 and file sizes, and performed document arithmetic. Existing e1c/b85/c9f9 facts reused at their held scope; no new source/object/content discovery."
+  },
+  "inputs": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/INDEX.v1.json",
+      "bytes": 3919,
+      "sha256": "44f6c70015fe3511e2eab99fde805171cabf476ae1e997a7567c3972a79fafda"
+    },
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+      "bytes": 19756,
+      "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+    },
+    "closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/SOURCE-CLOSURE.v1.json",
+      "bytes": 5831,
+      "sha256": "cb4ce07bab9881ee3f57d38bcf9c5c73fcf1e2f13db429b36b7ba0ffc6ac8c97"
+    },
+    "verification": "Complete tool-read text plus original final LF reconstructs exact pinned UTF8 bytes/SHA256; direct file-info sizes independently agree. SHA256 utility selfchecked against the known abc digest. No shell or external command was started."
+  },
+  "scope": "New immutable Git-object export proposal only: helper/source choice S, one source-read effect E and separate prospective P6-local input selection. No old source/build/material review reopened; no implementation, access grant, network call or runtime acceptance.",
+  "conclusions": [
+    "Fixed mayf3/dsh-agent-core commit72a097bd65f05adf26d7929dbb4d32384e124d37 is a held main-readback source candidate. Its APP eligibility remains UNPROVEN: exact e1c index and b85 bridge gates precede the three named new bodies. Failure has no alternate commit/path/tag/owner/current-main fallback.",
+    "Anchor equality proves two bodies, not whole APP/archive identity. Known expected9df/selectede1c/projectedba397 remain distinct. No original archive, failed live APP path, SourceRoot, payload/catalog/869b, installed prefix/config/environment/secret is in the proposed readset.",
+    "The finite same-commit tree walk derives only b85 source-side package/bundle candidate names and manifest presence/absence, never manifest bodies or actual installed links. No recursive tree/import fetching or code evaluation. Unsafe modes/names, duplicates/truncation, size/proof/object-integrity failures refuse.",
+    "Five exported bodies plus a separate P6-local copy are different roles. P6 copy from the verified plugin blob is expressly a new future candidate input selection, not proof of historical P6 equivalence or actual resolvePluginPeerLinks API compatibility.",
+    "EXPORT_COMPLETE is durable bounded source/inventory publication only. appImportApiQualified/originalArchiveEquivalent/runtimeAdopted remain false; missing additional API/import/integration/Lshared facts stay visible and are not silently auto-fetched.",
+    "The proposal identifies existing legal GitHub CLI/read identity as custody/transport only and requests positive read-purpose authority or explicit finite-effect acceptance within the original technical mandate. Docs merge, repository owner name, source hash, UID and lack of a previously located denial are not treated as automatic authority.",
+    "Independent S/E/P6 decisions and role-limit handling are sufficiently concrete for the original qualified role. No new credentials/Auth Client/Grant, OS identity/access change, generic Owner gate or presumptive permanent lack of authority is proposed."
+  ],
+  "requestBound": {
+    "commitAndPathTreeGETs": 5,
+    "fixedSourceBlobGETs": 5,
+    "packageChildTreeMaximum": 256,
+    "bundleChildTreeMaximum": 64,
+    "totalMaximum": 330,
+    "derivation": "One fixed commit plus root/packages/agent-provisioning/src trees, five named blobs, at most256 package child trees and64 root bundle trees. Already-read/cached identical tree objects may reduce calls; no duplicate retry. Package-child cap counts all examined entries, including absent manifests.",
+    "responseMaximumBytes": 1048576,
+    "aggregateTreeProofMaximumBytes": 4194304,
+    "newBodyMaximumBytes": 262144,
+    "contract": "Sequential bounded responses and nonrecursive complete tree proofs; canonical tree/blob identity checks and independent body SHA256, with source-origin/read-purpose authority kept separate. These are future implementation requirements, not currently observed Git/API behavior."
+  },
+  "cost": {
+    "proposedIndependentGrossCeiling": 20971520,
+    "declaredSourceRoleRoundedMaximum": 1081344,
+    "declaredOneCopyComponents": 6651904,
+    "twoCopies": 13303808,
+    "directoriesMaximum": 262144,
+    "separatelyBoundedResponseMemory": 1048576,
+    "declaredCombinedSumIncludingResponse": 14614528,
+    "arithmeticMarginToCeiling": 6356992,
+    "meaning": "Arithmetic of the named proposal components fits20MiB. It is not a measured allocation/RSS/free-space/remaining result or proof for an arbitrary future file topology. Actual helper/backups, per-leaf rounding, staging/final and failure-retained overlap must all fit the same stated hard gross ceiling before issue; no persistent transport dump/extra copy is free.",
+    "independentTerms": "Lshared remains null; exported candidate names/path lengths are inputs only. All potential created links/ancestors, conflict refusal and shadow/retained/rollback/evidence costs remain. Old4MiB/J, saved capacity, deletion, zero-write or H credit is not inherited.",
+    "noAdmission": "Floor50GiB, finalJ/G/remaining and immutable tuple/P0 are unchanged/unproved. No collection/df/context/gate was performed."
+  },
+  "onceAndFailure": {
+    "request": "E42_SELECTED_E1C_APP_GIT_EXPORT_V1",
+    "requestedExports": 1,
+    "consumption": "The first Git request consumes the single export allowance. Every later refusal/timeout/429/disconnect/mismatch/crash/incomplete proof/publication failure consumes it; no per-member retry or incomplete-batch resume. Same request native artifacts/prefix only after terminal, no new network recovery request.",
+    "custody": "Fixed new private0700 root, files0600/nlink1/no symlinks; source review and existing authority/current identity/budget/preimage lifecycle precede durable EXCL intent/readback. Bounded typed failures expose phase/member, not raw API/header/credential/stderr/exception values. UNKNOWN is not access success or absence.",
+    "publication": "Complete proof/body checks precede private staging, no-overwrite final publication, fsync/readback; unique failure/partial evidence retained. No repository/runtime rollback mutation.",
+    "countCompatibility": "Proposed different Git-object input/mechanism, no materializer/tar/869b/catalog/payload consumption. Packaging3/rem0/noFourth and collector2/rem0/noThird remain unchanged. This material review does not itself decide no-denied-access-retry compatibility; exact E/authority must be affirmatively decided, not inferred from a new name or input.",
+    "sourceImplementation": "Only the proposed <=500-line owned zeroarg nonproduction helper/publisher/typed diagnostic ceiling. It does not exist yet; no product source, Node import, npm, root helper or daemon is accepted by this receipt."
+  },
+  "nonblockingPrecision": [
+    {
+      "id": "N1",
+      "coordinate": "unit line30 complete=false/truncated=false discipline",
+      "issue": "Wording could be read as requiring successful output to remain incomplete.",
+      "authorClarification": "Author explicitly agreed in same-block message to keep frozen v1 bytes and front-load final READY/relay clarification: complete=false is initial/failure only; all finite walks/absence/proofs must be ready before EXPORT_COMPLETE; every tree requires truncated=false.",
+      "disposition": "Nonblocking with that explicit relay clarification; no readset/count/cost/authority change or new review round."
+    }
+  ],
+  "attributionBoundaries": {
+    "priorFacts": "e1c/b85/c9f9 retained facts reused without reopening bodies. Repository72a main-readback provenance is from held prior docs evidence. Current packaging3/rem0 and call3 PUBLISHED are author-supplied saved-terminal references; this reader did not reopen that new terminal or inspect catalog/payload/artifact.",
+    "retainedReferences": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+        "bytes": 3901,
+        "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9",
+        "use": "Declared held/canonical reference only; not freshly read in this block."
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+        "bytes": 21325,
+        "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+        "use": "Declared held/canonical reference only; not freshly read in this block."
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-repo-core-bridge.js",
+        "bytes": 4770,
+        "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+        "use": "Declared held/canonical reference only; not freshly read in this block."
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+        "bytes": 2280,
+        "sha256": "f616fdca970608ba4dca5cf681d27aca4487d2da0c0502e7046d00d188c13407",
+        "use": "Declared held/canonical reference only; not freshly read in this block."
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-cap-publication-v1/BUILD-TERMINAL-INDEX.v1.json",
+        "bytes": 9551,
+        "sha256": "0920635205629030d39f5cfb1528024b78a7d06ae8f15904cca09fe09d327d2d",
+        "use": "Declared held/canonical reference only; not freshly read in this block."
+      }
+    ],
+    "acceptance": "Only proposal material is ready for original qualified decision. Source eligibility mismatch is a defined future stop, not a hidden future-result prerequisite for accepting text. No source/read-effect/P6 integration/runtime grant is made here.",
+    "routing": "Frozen NOT_SENT/route_count0; exclusive new14c relay to original1378. Reader returns receipt to original author only and does not dispatch."
+  },
+  "readerEffects": {
+    "commandsStarted": 0,
+    "newSourceOrObjectReads": 0,
+    "GitOrNetworkCalls": 0,
+    "artifactCatalogPayloadPartialReads": 0,
+    "fixturesOrBuilderCalls": 0,
+    "productOrCandidateChanges": 0,
+    "productionEffects": 0,
+    "ownedReceiptOnly": true
+  }
+}

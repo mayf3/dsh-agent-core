@@ -1,0 +1,388 @@
+{
+  "P6_decision": {
+    "conditional": false,
+    "future_qualification": "Actual resolvePluginPeerLinks API/static import and finite side effects must be qualified by the later accepted integration/source review. Additional modules are precise new closure needs, not automatically fetched.",
+    "no_old_tuple_mutation": true,
+    "no_runtime_adoption": true,
+    "role_binding": "Selected-APP and P6-local roles get distinct output paths, actual length/SHA, common Git blob lineage and copy equality. The historical P6-local body/pin remains UNPROVEN; this does not discover or equate it.",
+    "selection": "One separate future candidate-local copy of verified exported packages/agent-provisioning/src/plugin-artifact.js from the same in-memory blob, with no extra remote request.",
+    "status": "ACCEPT_NEW_CANDIDATE_INPUT_SELECTION_ONLY",
+    "unacceptedDeltas": []
+  },
+  "acceptedReadProtocol": {
+    "bounds": {
+      "aggregate_saved_tree_proof_bytes": 4194304,
+      "each_new_body_bytes": 262144,
+      "single_JSON_response_bytes": 1048576,
+      "tree_entry_name_UTF8_bytes": 255
+    },
+    "commit_and_anchor_trees": "Fixed commit, root, packages, agent-provisioning, src:5 GET maximum before five fixed blobs. Trees must be040000, source blobs100644/100755; symlink120000/submodule160000 rejected.",
+    "fixed_bodies": [
+      "packages/agent-provisioning/src/index.js",
+      "packages/agent-provisioning/src/repo-core-bridge.js",
+      "packages/agent-provisioning/src/shared-codex.js",
+      "packages/agent-provisioning/src/plugin-artifact.js",
+      "packages/agent-provisioning/src/ensure-symlink.js"
+    ],
+    "inventory": "Every immediate packages child (including entries without manifest) is counted toward256; root bundle-* trees toward64. Complete nonrecursive immediate trees establish regular package.json presence or proven absence. No manifest body reads, recursive tree/import following, silent unsupported candidates or installed link observations.",
+    "max_requests": {
+      "commit_and_path_trees": 5,
+      "fixed_blobs": 5,
+      "package_children": 256,
+      "root_bundle_trees": 64,
+      "total": 330
+    },
+    "no_dynamic_inputs": [
+      "Contents API/symlink resolution",
+      "Recursive tree/clone/search/arbitrary HTTP",
+      "Local Git/worktree/SourceRoot",
+      "R30/R33/APP archives",
+      "869b/payload/catalog/materializer",
+      "Native/prefix/env/config/DB/credential data"
+    ],
+    "proof": "All tree responses truncated=false, complete bounded absence/membership proof, safe unique names, canonical Git tree/object reconstruction matching the referenced OIDs and Git blob reconstruction plus exported-body SHA256. This is integrity, not permission or complete APP equivalence.",
+    "request_accounting": "One export is not one HTTP call. Count every actual GET attempt, sequentially; cache identical object results to reduce count, never duplicate-object retry. No hidden transport retry, redirect/fallback to another endpoint/repository, auth probe or new network recovery request after terminal.",
+    "unit_lines": "25-34,64-68",
+    "unknowns": "Unobserved values null; inaccessible/unsupported/truncated/bound/object/mismatch/transport results REFUSED or UNKNOWN, not missing-as-zero or permission to seek another source."
+  },
+  "acceptedSourceCeiling": {
+    "contents": "Exporter, bounded existing-CLI Git-object transport, private EXCL publisher and typed diagnostics within this helper only; no additional product/root/DS service or executable.",
+    "file": "tools/fixed_selected_e1c_app_export.py",
+    "future_tests": "Entirely synthetic Git API envelopes/local deterministic transport; no live network/APP import or execution/original artifact/protected read. Test anchor match/mismatch, exact path/commit/no fallback, limits/object reconstruction/full inventory/absence, P6 role separation, safe output/EXCL/fsync/UNKNOWN/no retry. Same anchors plus different extra tree proves no whole-APP equivalence.",
+    "interface": "Zero arguments with fixed repository/commit/source paths/output root/limits/request allowance",
+    "lifecycle": "Accepted docs/base/finalHEAD/main then this helper DEVELOPMENT_PREFLIGHT, isolated implementation/owned synthetic evidence and same original affected reader closure.",
+    "max_lines": 500,
+    "no_selectors": [
+      "caller path/ref/command",
+      "environment/UID/channel override",
+      "alternate repository/commit",
+      "arbitrary HTTP endpoint"
+    ],
+    "placement": "Fixed owned isolated nonproduction workblock only",
+    "unchanged": "All product/runtime/P6 existing guards, packaging/collector code and business packet remain untouched. No git checkout/fetch/archive/npm/Node import/credential function execution."
+  },
+  "actor": {
+    "actor_thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "delegation_basis": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "source": "Original user technical delegation carried in this thread",
+        "text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "source": "Original user scope delegation carried in this thread",
+        "text": "授权范围内的问题你直接决策"
+      },
+      {
+        "scope": "Explicitly asks this original role to accept or identify an uncovered finite content-read effect for the selected B7 APP-source dependency; no new GitHub credential/Grant/ACL or production effect.",
+        "source": "Current exclusive E42_SELECTED_E1C_APP_EXPORT_V1 user route"
+      }
+    ],
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "model_attribution": {
+      "backend_execution_model": "NOT_EXPOSED",
+      "no_new_model_query": true,
+      "observed_stored_configuration": {
+        "configuration_changed": false,
+        "model": "gpt-6-astra",
+        "modelProvider": "openai",
+        "observed_at": "2026-10-19T19:24:28.216936Z",
+        "resume_performed": false,
+        "source": "User metadata correction: configuration was inside returned thread; top-level-only extraction previously missed it",
+        "thread_state": "idle"
+      },
+      "requested_decision_model": "gpt-6-astra"
+    },
+    "role": "Original B7/#386/#508 delegated technical source-preparation/source-choice/effect decision actor; not an OS permission or GitHub ACL issuer",
+    "sole_source_runtime_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3 / original source continuation"
+  },
+  "actualReadPurposeAuthority": {
+    "genuinely_uncovered_effects_in_exact_request": [],
+    "issuer": "01a1378d-e052-7021-9992-f0760eb9f9e7 acting under the original user-delegated B7 technical decision role",
+    "limiting_boundary": "Any broader repository/private input, recursive dependency fetch, alternative commit/identity, new source-access entitlement or product/runtime adoption is outside this decision; only such a concrete changed effect needs its responsible source/access authority.",
+    "new_credentials_or_access_grant_created": false,
+    "not_basis": [
+      "CLI/backend capability",
+      "UID502 alone",
+      "Docs merge alone",
+      "Hash/anchor equality alone",
+      "Absence of a previously located denial"
+    ],
+    "positive_scope_mapping": "The unresolved c9f9 dependency belongs to original B7 packaging/provisioning source preparation. Selecting five exact code bodies plus bounded source-side inventory from the already-known same repository is a finite candidate-input acquisition under that delegated work. The current route expressly asks this role to decide this concrete new effect. I accept that purpose now; I do not pretend the prior docs-read/merge authority already enumerated it.",
+    "ref": {
+      "current_route": "E42_SELECTED_E1C_APP_EXPORT_V1 expressly requests a separate finite source-read effect decision",
+      "decision_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+      "exact_decision_bytes_sha256": "Bound by companion decision index and final immutable readback; no self-hash cycle",
+      "exact_unit": {
+        "bytes": 19756,
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+        "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+      },
+      "original_user_delegation_ids": [
+        "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e"
+      ]
+    },
+    "repository_access_layer": {
+      "accessAuthorityRef_consumption": "Reference this precise finite-purpose decision and the original existing repository-identity/admission record. UID502, source hashes, a successful CLI command or docs merge alone are not the read-purpose authority.",
+      "actual_current_cli_principal_and_access": "NOT_OBSERVED_THIS_TURN; bind existing lawful identity/reference as an actual preissue fact, not a new ordinary Owner approval or an assertion of new repository entitlement",
+      "existing_transport": "Only the already-existing legal GitHub CLI/read identity used for this repository, as carried by the user/unit; no new token/client/Grant/scope/account or identity discovery in this turn",
+      "failure": "If existing legal identity is absent, not current, incapable or denied, stop; no auth repair, new credentials, alternate role or permission escalation is authorized. A request issued before denial consumes the export.",
+      "source_publication_access_role": "mayf3 repository owner or an already explicitly delegated exact-repository maintainer; separate from this technical-purpose issuer"
+    },
+    "role": "Approve the purpose and bounded effects of obtaining exact code/inventory inputs for this original B7 candidate; no claim to issue repository ACLs, credentials, tokens or OS access rights.",
+    "scope": {
+      "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+      "endpoint_base": "https://api.github.com/repos/mayf3/dsh-agent-core/git/",
+      "max_GET_attempts": 330,
+      "max_exports": 1,
+      "operator": "Original1437 unprivileged UID502 only",
+      "output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/actual-fixed-git-object-export-v1",
+      "repository": "mayf3/dsh-agent-core",
+      "request_forms": [
+        "GET fixed commit",
+        "GET derived nonrecursive trees",
+        "GET five fixed regular blobs"
+      ]
+    },
+    "status": "EXPLICIT_FINITE_READ_PURPOSE_EFFECT_ACCEPTED_WITHIN_ORIGINAL_B7_TECHNICAL_MANDATE",
+    "window": {
+      "actual_timestamps_and_identity": "Record at issue/result under original lifecycle; not invented from old docs/main timestamps",
+      "ends": "First terminal success/refusal/UNKNOWN, exhaustion, or original authority revocation; no remaining-member resume or second export",
+      "not_before": "Durable EXCL intent binding this decision/final helper/current existing legal CLI identity and fixed readset/preimage/budget",
+      "phase": "One isolated pre-candidate source-preparation export after accepted Spec/main/PREFLIGHT/affected review and owned admission, before APP integration/final tuple/P0",
+      "renewal": "No new path/ref/window/name replenishes the grant"
+    }
+  },
+  "actualRuntimeUseAuthorized": false,
+  "at_utc": "2026-10-19T19:30:24.095049+00:00",
+  "bindingInterpretation": {
+    "closed_result_schema_unchanged": true,
+    "coordinate": "unit section3(4), line30",
+    "frozen_unit_bytes_unchanged": true,
+    "id": "N1",
+    "new_read_count_cost_or_authority_effect": false,
+    "rule": "complete=false denotes initial or failure/incomplete proof state only. Every tree response must have truncated=false and a complete nonrecursive proof. EXPORT_COMPLETE is permitted only after every bounded walk, manifest absence proof, body/Git-object check and durable publication proof succeeds; success is not required to remain incomplete.",
+    "second_material_review_required": false,
+    "source": {
+      "current_user_relay": "Explicit N1 clarification supplied with actual route",
+      "field": "clarification_before_relay",
+      "ready": {
+        "bytes": 4388,
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/MATERIAL-READY.v1.json",
+        "sha256": "0e3c3ec79f38db721896ab2204a1f44b194c9b8a991564ded0c20c97d91bab61"
+      }
+    }
+  },
+  "boundedReasons": [
+    "A concrete source choice, helper/readset/ABI and explicit finite effect are specified; no source suitability is claimed before the fail-closed anchors.",
+    "E is a delegated B7 candidate-source acquisition purpose, separate from existing repository account rights and source/runtime acceptance. No actual credential/ACL change or broader private access is requested.",
+    "P6 is an explicit prospective source selection, not a historical identity theorem or automatic integration.",
+    "N1 clarifies successful proof completion without expanding readset/count/cost/authority; material PASS remains separate from this acceptance."
+  ],
+  "collectorCountAmendmentRequested": false,
+  "costAndPhase": {
+    "G": null,
+    "Lshared": null,
+    "Lshared_rule": "Exported finite source-side candidate names/path lengths are inputs, not installed state, writable branch or zero-write proof. All possible links/ancestors/conflict refusals/shadow/retained/rollback/source-evidence costs remain.",
+    "arithmetic_margin": 6356992,
+    "arithmetical_named_sum_including_separately_bounded_response_memory": 14614528,
+    "before_issue": "Actual isolated helper/source/evidence/temporary topology measured without a network export, original owned preimages/custody and legal read identity bound. If required cost exceeds20MiB, stop that effect for its exact cost delta; no arbitrary reserve/deletion credit.",
+    "candidate_identity": "Pre-candidate only. Later successful integration must follow original distinct coherent tuple/policy/pins derivation; no old5a07/490b/5cd/Q2plan rebinding or reserved runtime slot.",
+    "current_free_space_or_fit_claim": false,
+    "finalJ": null,
+    "floor_bytes": 53687091200,
+    "independent_gross_ceiling": 20971520,
+    "not_a_measurement_or_remaining": true,
+    "remaining": null,
+    "scope": "Named six source-role files, tree proofs, inventory, typed summary, intent/process/terminal, output staging/final overlap and owned directories; actual helper/backups/per-leaf rounding/temp/failure copies all fit this same gross ceiling before issue. Single response memory is bounded separately and is not claimed as disk allocation/RSS proof."
+  },
+  "countAndPublication": {
+    "collector": {
+      "issued": 2,
+      "new_allowance": 0,
+      "remaining": 0
+    },
+    "consumed_outcomes": "Any issued pre-read refusal, timeout/429/disconnect/mismatching anchor/crash/incomplete proof/object/bound/publication failure consumes it. No per-member retry or resume of an incomplete export.",
+    "current_export_issued_here": 0,
+    "export_max": 1,
+    "future_export_remaining_after_issue": 0,
+    "issue_barrier": "After source review and existing authority/identity/owned budget/preimage checks, create private0700 root and0600 EXCL intent; fsync/readback intent+parent before first GET. The first Git request consumes the export allowance.",
+    "output_ABI": "Exact closed E42_FIXED_SELECTED_APP_EXPORT_V1 and fixed enums from unit46-50; appImportApiQualified=false, originalArchiveEquivalent=false, runtimeAdopted=false in all cases. EXPORT_COMPLETE only means bounded source/inventory durable publication.",
+    "packaging": {
+      "issued": 3,
+      "new_allowance": 0,
+      "remaining": 0
+    },
+    "privacy": "No raw API headers/arbitrary exception/stderr/config/token capture. Only classified rc/time/request count and fixed phase/member failure; safe source bodies/proof are the explicitly accepted private exports.",
+    "publication": "Only full proof/body/absence/P6-copy checks may reach no-overwrite private staged/final fsync/readback publication. Exact files0600/nlink1/no symlinks. Retain unique failure/partial evidence; no repository or runtime rollback.",
+    "requestId": "E42_SELECTED_E1C_APP_GIT_EXPORT_V1"
+  },
+  "disposition": {
+    "E": "ACCEPT_ONE_FIXED_REPOSITORY_OBJECT_EXPORT",
+    "P6": "ACCEPT_NEW_CANDIDATE_INPUT_SELECTION_ONLY",
+    "S": "ACCEPT",
+    "accepted": true,
+    "actualAPPCompatibilityAccepted": false,
+    "actualReadOrExportPerformed": false,
+    "actualRuntimeUseAuthorized": false,
+    "conditional": false,
+    "exportCountMax": 1,
+    "implementationSpecReady": true,
+    "meaning": "Exact source/effect/P6 selection contracts are accepted with the N1 interpretation. Actual anchor/export/identity/owned-budget results are defined consumption conditions, not a second textual acceptance gate. E is separately issued below and is not derived from S, docs merge or CLI capability.",
+    "newMaterialReviewerRequired": false,
+    "numericAdmission": false,
+    "oneExportAccepted": true,
+    "ordinaryOwnerConfirmationRequired": false,
+    "proposedP6InputSelectionAccepted": true,
+    "sourceChoiceAccepted": true,
+    "sourceImplementationPass": false,
+    "unacceptedDeltas": []
+  },
+  "effectsThisTurn": {
+    "CLI_identity_or_secret_probes": 0,
+    "new_network_Git_requests": 0,
+    "new_product_or_exporter_source": 0,
+    "old_artifact_catalog_payload_source_reads": 0,
+    "packaging_or_collector_calls": 0,
+    "runtime_F_register_attempt_TX": 0,
+    "tests_or_builds": 0
+  },
+  "exactUnit": {
+    "bytes": 19756,
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+    "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+  },
+  "exportCountMax": 1,
+  "implementationSpecReady": true,
+  "kind": "ORIGINAL_FIXED_SELECTED_E1C_APP_GIT_EXPORT_TECHNICAL_DECISION_V1",
+  "materialPins": {
+    "READY": {
+      "bytes": 4388,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/MATERIAL-READY.v1.json",
+      "sha256": "0e3c3ec79f38db721896ab2204a1f44b194c9b8a991564ded0c20c97d91bab61"
+    },
+    "cleanup": {
+      "bytes": 482,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/OWN-CLEANUP-MATERIAL.v1.json",
+      "sha256": "50840c0ebd534933b2ab80fb14ad319fc74f1c997c9d5c29fa107b358da388ba"
+    },
+    "closure": {
+      "bytes": 5831,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/SOURCE-CLOSURE.v1.json",
+      "sha256": "cb4ce07bab9881ee3f57d38bcf9c5c73fcf1e2f13db429b36b7ba0ffc6ac8c97"
+    },
+    "index": {
+      "bytes": 3919,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/INDEX.v1.json",
+      "sha256": "44f6c70015fe3511e2eab99fde805171cabf476ae1e997a7567c3972a79fafda"
+    },
+    "material_review": {
+      "bytes": 11798,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/independent-sol-readback/FIXED-SELECTED-E1C-APP-EXPORT-MATERIAL-RECEIPT.v1.json",
+      "sha256": "d955aec1a839ac0d905089cb1065a71d944650a92d5f4a1ff4ce3d3284cb8d4b"
+    },
+    "unit": {
+      "bytes": 19756,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+      "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+    }
+  },
+  "next": [
+    {
+      "action": "Land exact unit+N1 interpretation+this separate S/E/P6 decision through normal docs-only accepted Spec/base/finalHEAD/main. Preserve frozen originals and actual-route overlay.",
+      "owner": "Original1437 source lane"
+    },
+    {
+      "action": "Emit exporter-specific DEVELOPMENT_PREFLIGHT; implement only fixed zeroarg<=500-line owned helper/closed ABI. Use synthetic envelopes/local transport only; no live API/source reads during tests.",
+      "owner": "Original1437 existing source continuation"
+    },
+    {
+      "action": "Close actual finite helper/limits/integrity/complete-proof/privacy/once/cost delta. Reuse old source/gates; no new reviewer or broad repeated audit.",
+      "owner": "Same original nonauthor affected reader"
+    },
+    {
+      "action": "Bind this explicit read-purpose decision, existing lawful repository CLI identity, actual owned budget/preimage and final source pins in durable EXCL intent. Then consume one fixed export, <=330 GET attempts; fail without fallback or second export. This turn performs none.",
+      "owner": "Original1437 sole source writer"
+    },
+    {
+      "action": "Use successful fixed bodies/inventory only as source evidence. Qualify APIs/imports/P6 separately and derive Lshared/new tuple/P0 under original rules; retain UNKNOWN or precise new closure delta without live search/automatic fetch.",
+      "owner": "Original1437 and original B7 technical integration chain"
+    }
+  ],
+  "noDeniedAccessRetryBasis": {
+    "no_fourth_packaging_preserved": true,
+    "no_third_collector_preserved": true,
+    "on_denial_or_UNKNOWN": "Stop this export, retain typed same-request evidence only; no identity change, per-member retry, othercommit/tag/current-main fallback, newwindow or second export.",
+    "permission_reason": "Compatibility rests on the positive finite E purpose accepted above and original lawful repository read identity, not merely lack of an old denial record. No channel/path/identity switch is authorized to obtain a previously refused same input.",
+    "positive_distinction": "This explicitly selected immutable repository source/readset supplies new candidate source inputs. It does not read a failed local SourceRoot/APP/native/prefix path, consume the old artifact, emulate DS source validation, or claim that original denied/current-runtime access succeeded. Known original source/P3 and runtime predicates remain independent.",
+    "user_denied_access_override": false
+  },
+  "noDeniedAccessRetryCompatible": true,
+  "oneExportAccepted": true,
+  "ownCleanup": {
+    "deleted_bytes": 0,
+    "deleted_files": 0,
+    "reason": "Only unique active decision/index/cleanup and planned callback records. No redundant temporary copy or outside scan; original source/artifact/payload/catalog/partial/release/production/thread/daemon protected."
+  },
+  "packagingCountAmendmentRequested": false,
+  "proposedP6InputSelectionAccepted": true,
+  "readAttribution": {
+    "Sol_assistance": "Existing capacity_a_sol only extracted new closure/index known commit/purpose-gap/read limits/P6 facts. It did not read the unit/READY N1; N1 is directly held by original actor. No new source review, artifact, network, CLI identity probe or callback.",
+    "model_metadata_correction": "Latest user correction replaces prior top-level-empty extraction with observed stored thread modelAstra/openai at19:24:28; no resume/config change or backend inference.",
+    "original_facts": "e1c/b85/c9f9, PR541/main72a and saved call3 publication/counts remain attributed to held source/author refs, not freshly checked by this decision.",
+    "root_direct": "Complete exact unit19756/READY4388/closure5831/index3919/original materialreceipt11798/cleanup482 read and pinned. N1 read from READY and actual relay. No old bodies/archive/terminal/source or network read.",
+    "same_chain_review": "d955 PASS_PROPOSAL_MATERIAL_ONLY/blocking[] is reused; it does not issue S/E/P6 acceptance or prove real Git/API behavior."
+  },
+  "savedStateNotRefreshed": {
+    "attempt": 0,
+    "business": "0/2",
+    "collector_issued": 2,
+    "collector_remaining": 0,
+    "e42": "UNREGISTERED",
+    "floor": 53687091200,
+    "packaging_issued": 3,
+    "packaging_remaining": 0,
+    "solewriter_fence": "UNCHANGED"
+  },
+  "sourceChoiceAccepted": true,
+  "sourceEligibilityConditions": {
+    "actual_anchor_match": "UNPROVEN_NOT_QUERIED",
+    "anchor_order": [
+      {
+        "bytes": 21325,
+        "gitPath": "packages/agent-provisioning/src/index.js",
+        "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01"
+      },
+      {
+        "bytes": 4770,
+        "gitPath": "packages/agent-provisioning/src/repo-core-bridge.js",
+        "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b"
+      }
+    ],
+    "before_three_new_bodies": "First index must match all21325bytes/SHA and then bridge4770bytes/SHA at the exact commit. Only after both may shared-codex.js/plugin-artifact.js/ensure-symlink.js be fetched.",
+    "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+    "commit_provenance": {
+      "bytes": 2280,
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "sha256": "f616fdca970608ba4dca5cf681d27aca4487d2da0c0502e7046d00d188c13407",
+      "use": "Held prior main readback repository+72a exact commit, not reread/rehash this turn."
+    },
+    "equality_scope": "Two anchor bodies only. No whole APP/archive equality, historical9df equivalence, projectedba397 installed proof or actual P6 compatibility.",
+    "mismatch_or_inaccessible": "Terminal stop on any missing/mismatching anchor, inaccessible commit, bound/integrity/custody failure; no alternate commit/ref/tag/path/owner/current-main or identity fallback.",
+    "provenance_limit": "Held PR541/main readback selects a real immutable repository commit; no new remote verification here and no current APP suitability follows from it.",
+    "repository": "mayf3/dsh-agent-core"
+  },
+  "terminalCallback": {
+    "ACK_meaning": "Coordination delivery only; not export source-read permission by itself, actual export success or business PASS",
+    "input": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TERMINAL-CALLBACK.v1.json",
+    "max_invocations": 1,
+    "on_UNKNOWN": "Preserve once attempt, no resend, never old1486",
+    "receipt": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TERMINAL-CALLBACK.v1.RECEIPT.json",
+    "state_at_freeze": "NOT_YET_CALLED",
+    "target": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38"
+  },
+  "unacceptedDeltas": [],
+  "unitSha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+}
