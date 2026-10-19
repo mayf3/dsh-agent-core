@@ -1,0 +1,145 @@
+✔ old owner config without the new operations keeps them closed (NO_ACCESS, zero reads) (6.073ms)
+✔ closed adapter stays NOT_PROVISIONED for the new operations (4.074791ms)
+✖ history returns the user projection and assistant reply with relations, stable ids and coverage (137.982291ms)
+✖ older/newer pagination has no dup or miss; empty newer keeps the cursor; growth is picked up (325.846667ms)
+✖ long reply bodies page through content_cursor within 6144 UTF-8 bytes (147.687416ms)
+✖ expired results keep their tombstone and history shows the expired state honestly (133.588208ms)
+✖ records from before the user-body projection keep their content not_projected (122.82175ms)
+✔ foreign or unknown session handles leak nothing (69.722208ms)
+✔ events are scope-monotonic with stable ids, survive restart, and dedupe repeated callbacks (114.86825ms)
+✖ event cursors below retention report EVENT_CURSOR_EXPIRED with retained coverage (92.596167ms)
+✖ cold and steady history/events reads do not create files, migrate, recover or read native source (27.02675ms)
+✖ frozen pages exclude growth; after_cursor finds late replies once, also after restart and duplicate callback (169.203209ms)
+✖ user and reply content cursors bind exact scope/version/part/generation/UTF8 and obey retention (135.984959ms)
+✖ pending user projection expires on its own bounded retention without deleting UNKNOWN (82.947792ms)
+✖ event pages resume at tail, bind filters and scope, reject explicit revoked target and stale binding (259.075833ms)
+✔ callback retry after commit failure preserves old durable state then atomically publishes one reply/event (234.795375ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 5
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1252.208458
+
+✖ failing tests:
+
+test at packages/product-api/test/conversation/history-events.test.js:37:1
+✖ history returns the user projection and assistant reply with relations, stable ids and coverage (137.982291ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  503 !== 200
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:47:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/conversation/history-events.test.js:67:1
+✖ older/newer pagination has no dup or miss; empty newer keeps the cursor; growth is picked up (325.846667ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:84:28)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-events.test.js:123:1
+✖ long reply bodies page through content_cursor within 6144 UTF-8 bytes (147.687416ms)
+  TypeError: Cannot read properties of undefined (reading 'find')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:132:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-events.test.js:160:1
+✖ expired results keep their tombstone and history shows the expired state honestly (133.588208ms)
+  TypeError: Cannot read properties of undefined (reading 'find')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:169:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-events.test.js:181:1
+✖ records from before the user-body projection keep their content not_projected (122.82175ms)
+  TypeError: Cannot read properties of undefined (reading 'find')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:194:27)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-events.test.js:239:1
+✖ event cursors below retention report EVENT_CURSOR_EXPIRED with retained coverage (92.596167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  200 !== 410
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-events.test.js:259:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 410,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/conversation/history-regressions.test.js:20:1
+✖ cold and steady history/events reads do not create files, migrate, recover or read native source (27.02675ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:25:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/product-api/test/conversation/history-regressions.test.js:59:1
+✖ frozen pages exclude growth; after_cursor finds late replies once, also after restart and duplicate callback (169.203209ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:65:28)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-regressions.test.js:98:1
+✖ user and reply content cursors bind exact scope/version/part/generation/UTF8 and obey retention (135.984959ms)
+  TypeError: page.items is not iterable
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:104:27)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-regressions.test.js:148:1
+✖ pending user projection expires on its own bounded retention without deleting UNKNOWN (82.947792ms)
+  TypeError: Cannot read properties of undefined (reading 'length')
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:153:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/product-api/test/conversation/history-regressions.test.js:161:1
+✖ event pages resume at tail, bind filters and scope, reject explicit revoked target and stale binding (259.075833ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + undefined
+  - null
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:186:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

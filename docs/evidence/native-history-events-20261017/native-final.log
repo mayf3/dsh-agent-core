@@ -1,0 +1,46 @@
+✔ old owner config without the new operations keeps them closed (NO_ACCESS, zero reads) (4.045ms)
+✔ closed adapter stays NOT_PROVISIONED for the new operations (0.737916ms)
+✔ history returns the user projection and assistant reply with relations, stable ids and coverage (167.695375ms)
+✔ older/newer pagination has no dup or miss; empty newer keeps the cursor; growth is picked up (452.764458ms)
+✔ long reply bodies page through content_cursor within 6144 UTF-8 bytes (114.077583ms)
+▶ expired results keep their tombstone and history shows the expired state honestly
+  ✔ result read after expiry reports RESULT_EXPIRED but keeps the tombstone (20.52175ms)
+✔ expired results keep their tombstone and history shows the expired state honestly (150.183833ms)
+✔ records from before the user-body projection keep their content not_projected (108.0095ms)
+✔ foreign or unknown session handles leak nothing (88.894792ms)
+✔ events are scope-monotonic with stable ids, survive restart, and dedupe repeated callbacks (156.88125ms)
+✔ event cursors below retention report EVENT_CURSOR_EXPIRED with retained coverage (93.85275ms)
+✔ cold and steady history/events reads do not create files, migrate, recover or read native source (167.137166ms)
+✔ frozen pages exclude growth; after_cursor finds late replies once, also after restart and duplicate callback (368.942417ms)
+✔ user and reply content cursors bind exact scope/version/part/generation/UTF8 and obey retention (131.990583ms)
+✔ pending user projection expires on its own bounded retention without deleting UNKNOWN (101.121166ms)
+✔ event pages resume at tail, bind filters and scope, reject explicit revoked target and stale binding (232.482958ms)
+✔ callback retry after commit failure preserves old durable state then atomically publishes one reply/event (211.347625ms)
+✔ large response obeys 1MiB and durable history positions survive actual event cap trimming (3595.272833ms)
+✔ closed read arguments reject mutually exclusive content/query fields and invalid limits (1.73575ms)
+✔ recovered native coordinates publish previously undiscoverable user content at a new durable position (72.043791ms)
+✔ real source turn-end disk fault is reported through original request; no perpetual pending and no replay (348.835583ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ native HTTP routes fail closed while unconfigured; no Router target read (40.623042ms)
+✔ principal-scoped request key survives restart, duplicates do not send, payload conflict is explicit (297.770792ms)
+✔ two reverse-order replies use native request coordinates; automatic callback persists results (197.454833ms)
+✔ authorization revalidated per request and grants/targets are not borrowed from a handle (7.950083ms)
+✔ reserved/unknown original is recovered from source after lost receipt, never routed again (157.366541ms)
+✔ missing auth and stale target are denied without sending or exposing source (34.737208ms)
+✔ pagination gives UTF8-safe complete reply with stable projection ID when native assistant ID is unknown (116.396ms)
+✔ a settled native turn with source still pending is an explicit unrecoverable failure, not perpetual pending (141.645792ms)
+✔ source retained but facade disk write fails: original result can be repaired, never resent (115.795333ms)
+✔ retained exact reply is readable while native execution stays unknown, then refreshes only original execution facts (172.848375ms)
+✔ B001: original native unknown, termination and source EIO preserve exact facts with diagnostics and zero replay (164.816375ms)
+✔ B002: completed wholly-empty native turn is not an available empty business reply (73.771042ms)
+✔ auth redirect rejection keeps the fixed canonical token endpoint and never follows a management target (4.860708ms)
+✔ B003: retained native main resolution and scoped lawful continuation survive result persistence (89.93075ms)
+✔ CTR004 regression: retained exact reply survives facade restart while original execution stays terminated/unknown (204.730875ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4999.223958

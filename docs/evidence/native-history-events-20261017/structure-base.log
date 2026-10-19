@@ -1,0 +1,44 @@
+verify-code-structure: STRUCTURE_VIOLATION (base=33ebceb9c8 head=33ebceb9c8)
+  in-scope files: 779; registry: 20 files / 4 directories; violations: 11; warnings: 106
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages
+  VIOLATION [DIRECTORY_OVER_CEILING] packages/agent-router/test
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages/agent-router/test/process-lifecycle
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages/broker/src/capabilities
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages/broker/test
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages/production-runtime/src
+  VIOLATION [DIRECTORY_OVER_CEILING] packages/production-runtime/test
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] packages/production-runtime/test/scheduler
+  VIOLATION [DIRECTORY_OVER_CEILING] scripts
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] scripts/lib
+  VIOLATION [UNREGISTERED_LEGACY_DIRECTORY] scripts/lib/hr-s256-one-shot
+  WARNING  [FILE_WARNING_LINES] packages/agent-credential-provisioning/src/rotation-seam.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-memory/src/memory.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-provisioning/src/index.js
+  WARNING  [GRANDFATHERED] packages/agent-provisioning/test/provisioning.test.js legacy over-limit file not listed in registry
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/index.js
+  WARNING  [GRANDFATHERED] packages/agent-router/src/ingress-delivery.js legacy over-limit file not listed in registry
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process-registry.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process/event-correlation.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/process/turn-execution.js
+  WARNING  [GRANDFATHERED] packages/agent-router/src/reconciliation/store.js legacy over-limit file not listed in registry
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/src/route-chain.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/binding-store.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/process-startup-wedge.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/route-chain/canary-seam.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/route-chain/quota-classifier.test.js
+  WARNING  [FILE_WARNING_LINES] packages/agent-router/test/route-chain/route-chain.test.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/src/capabilities/forum.js
+  WARNING  [TEST_LOGIC_IN_FIXTURE] packages/broker/src/fixtures/self-assert.js fixture file contains test-runner constructs
+  WARNING  [FILE_WARNING_LINES] packages/broker/src/relay.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/src/schema.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/agent-session-messaging.test.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/broker.test.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/capabilities/workflow-execute.test.js
+  WARNING  [GRANDFATHERED] packages/broker/test/forum-capabilities.test.js legacy over-limit file not listed in registry
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/gateway.test.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/scheduler-capability.test.js
+  WARNING  [FILE_WARNING_LINES] packages/broker/test/scheduler-reliability.test.js
+  WARNING  [FILE_WARNING_LINES] packages/development-execution/src/engine.js
+  ... 76 more warnings

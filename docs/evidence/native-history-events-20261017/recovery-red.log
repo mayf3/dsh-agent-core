@@ -1,0 +1,32 @@
+✖ recovered native coordinates publish previously undiscoverable user content at a new durable position (90.833958ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 186.281292
+
+✖ failing tests:
+
+test at packages/product-api/test/conversation/history-regressions.test.js:278:1
+✖ recovered native coordinates publish previously undiscoverable user content at a new durable position (90.833958ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+  -   'recovered own user',
+      'recovered reply'
+    ]
+
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core-native-history-events-20261017/packages/product-api/test/conversation/history-regressions.test.js:295:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'recovered reply' ],
+    expected: [ 'recovered own user', 'recovered reply' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
