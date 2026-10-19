@@ -1,0 +1,94 @@
+{
+ "kind": "FIRST_ANCHOR_PREDICATE_RECORDING_MATERIAL_RECEIPT",
+ "version": "v1 receipt / reviewed exact unit v1.1",
+ "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+ "blockingFindings": [],
+ "reader": {
+  "agent": "/root/sol_e40_independent_reader",
+  "role": "Original same-chain sole nonauthor material reader",
+  "requestedModel": "gpt-6.1-sol",
+  "requestedReasoning": "ultra",
+  "nativeObservedModel": "UNKNOWN",
+  "attribution": "Personally read only the new proposal/closure/index, c932 direction document and same-block provenance diff/new pins. Reused held96a1 source context/ab3b review; did not reopen old source, actual failed records/paths, input/API or tests."
+ },
+ "referenceBaseDirectory": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-first-anchor-blob-shape-predicate-recording-contract",
+ "exactInputs": {
+  "unit": {
+   "path": "PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.1.md",
+   "bytes": 15193,
+   "sha256": "20a1c8ef74415e4dc6dd7d4611f7859443189ff7ed9b0e7b7cdb33dd1ca6ddbe"
+  },
+  "closure": {
+   "path": "SOURCE-CLOSURE.v1.1.json",
+   "bytes": 7827,
+   "sha256": "6a875effdaed86b5a16fce5f2d8a5b6f75cbdd32801913eb0302dcb4b3110fa0"
+  },
+  "index": {
+   "path": "MATERIAL-INDEX.v1.1.json",
+   "bytes": 3427,
+   "sha256": "a37f5a9cfa815c62360d7421631d02a69762623d84a72c6a20c0b05050350a67"
+  },
+  "provenanceDelta": {
+   "path": "V1-TO-V1.1-PROVENANCE.diff",
+   "bytes": 3243,
+   "sha256": "4b9a7fb79e9d10634883ee0b88599b6cb0ff91222f79143ab7685d4fde461142"
+  },
+  "direction": {
+   "role": "newdirection; onlyprimarynewdocumentreadthisworkblock",
+   "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/actual-export-launch-v1/ORIGINAL-ACTUAL-BLOB-SHAPE-EXHAUSTED-E-TECHNICAL-DECISION.v1.json",
+   "bytes": 22404,
+   "sha256": "c932e3bd663d6a83af0f2e4152699072725ca65e746f5d20ba7528c00ed3c8c4"
+  },
+  "historicalUnit": {
+   "path": "PROPOSED-FIXED-FIRST-ANCHOR-BLOB-SHAPE-PREDICATE-RECORDING-CONTRACT.v1.md",
+   "bytes": 14908,
+   "sha256": "91dea0680d53589a03580fb93e59466eaef435cb239388b20613bd37c2e937fb"
+  }
+ },
+ "verification": "Complete direct-file MCP text/final LF reconstructed exact pinned UTF8 byte lengths/SHA256. New unit differs from v1 only lines47/61, the two provenance spans. Nine old failure-record pins in closure match c932.inputs as documentary values only; none was opened or statted.",
+ "directionBoundary": {
+  "c932Disposition": "EXHAUSTED_E_RETAINED_CAUSE_UNKNOWN_PREPARE_ONLY_FINITE_DIAGNOSTIC_CONTRACT",
+  "docsOnlyPreparationAuthorized": true,
+  "sourceImplementationAuthorized": false,
+  "newExportEffectsAuthorized": 0,
+  "role": "Original delegated technical1378 direction, not an OS/repository-access issuer or source-implementation acceptance."
+ },
+ "findings": [
+  {
+   "id": "F1",
+   "status": "CLOSED_IN_V1_1",
+   "original": "V1 required actual helperSha256 from sealed admission but also required closed NOT_REACHED/early-failure results when admission might not have obtained that hash; absent fact could not safely be supplied.",
+   "resolution": "V1.1 permits null unless actual hash was already obtained and bound by existing admission; forbids extra source/seal read or expected-hash substitution. Missing helper/ordinal yields appropriate NOT_REACHED/PARTIAL_UNKNOWN, never qualified RECORDED; valid RECORDED requires both actual bound facts. Exactly two spans change; guard/count/cost scope unchanged."
+  }
+ ],
+ "checkedConclusions": {
+  "orderedPredicates": "The four fixed checks retain original order: requested-OID equality, base64 equality, exact int-not-bool, then inclusive0..21325. First FAIL stops; all suffix states NOT_EVALUATED. Missing/ill-typed size never reaches range/conversion. firstFailed and failedPredicateSet derive from actually recorded states, not all possible failures. Size is emitted only when type/range PASS; unknown/unsafe values remain null.",
+  "acceptancePreserved": "Shape FAIL remains original BOUND/PROOF:BLOB_SHAPE without decode/body/hash/anchor work; shape PASS still requires all later original checks. Fixed anchors/order, requested-object derivation, transport/principal/readset/deadlines/timer/330/custody/publication/quota remain unchanged. Diagnostic is scoped to the fixed first-anchor subject and is no standalone getter.",
+  "closedV2": "One V2 result adds only the closed diagnostic. Fixed contract/parent/helper/member/requested-OID and local ordinal provenance are explicit; ordinal is reservation/evaluation context, not server receipt. NOT_REACHED, valid recorded prefix and PARTIAL_UNKNOWN dependencies are defined. V1 records never become V2 or gain invented old response values.",
+  "privacyAndCaps": "Only fixed predicate names/states and an already-available in-range integer may be recorded. No response hash/encoding string/body/base64/raw JSON/header/credential/env/exception values. Diagnostic<=2048B including LF and whole closed result<=65536B apply before publication. Invalid/overflow serialization becomes bounded UNKNOWN/DIAGNOSTIC_SERIALIZATION_BOUND with unqualified all-NOT_EVALUATED partial state, not a raw/truncated fallback.",
+  "publication": "Same canonical V2 object uses existing stdout/RESULT-or-FAILURE flow and exact stdout/durable-record join; no companion or new producer. Early failure/timeout/crash/publication UNKNOWN cannot manufacture completion; safe durable prefix may remain partial only. Older RESULT followed by FAILURE is not selected as successful evidence. Native terminal/same-request join and original inode/EXCL/fsync/readback/retention remain controlling.",
+  "costs": "Five explicitly bounded full-record carriers cover existing RESULT/FAILURE, their retained private temps and one stdout capture. Diagnostic2048 plus fixed embedding/key/version/error-code overhead stays below4096 additional bytes per carrier, so the proposed rounded increment<=5*4096=20480 is coherent. It is diagnostic-only; source/validator/recorder/pins/seal/temp/directory/test growth and phase overlaps require actual future accounting within the existing independent20MiB model. No old16023552 fit, J/free/remaining or deletion credit is inherited.",
+  "implementationBoundary": "Only this finite first-anchor extraction, pure constructor, blank/main V2 serialization and necessary existing validators/recorder-key/pin/publication joins are proposed. Normal exact accepted Spec/base/PREFLIGHT must precede future isolated implementation/owned synthetic validation. This material is neither that acceptance nor a test authorization."
+ },
+ "historicalFactsAndUncovered": {
+  "attribution": "Old execution facts are attributed to newly read c932 actualFacts/static mapping; no fresh native/process/body/absence/source observation.",
+  "known": "Saved PID86455/UID502 settled rc2 REFUSED/BOUND/PROOF:BLOB_SHAPE; composite guard did not pass. Six durable reservations are not server receipts. Reserved b6fad4... is requested OID, not validated response/body. stderr is DEVNULL_NOT_SAVED, not empty.",
+  "unknown": "Individual failed predicate/response sha/encoding/size/body and original cause remain NOT_CAPTURED/UNKNOWN. This establishes neither HTTP/OS denial, size overflow, incompatible anchor nor source defect. Future fixtures/new output cannot recover that old many-to-one record.",
+  "sourceReuse": "96a1/ab3b remains source-only PASS at original scope, not re-reviewed or promoted. APP/P6/import/API/Lshared/J/G/remaining/P0 remain unproven.",
+  "optional": "This optional diagnostic is not a new business prerequisite and does not revoke independent business authority under original conditions."
+ },
+ "authorityAndCount": {
+  "current": "Export issued1/rem0/max1/noSecond; packaging3/rem0/noFourth; collector2/rem0/noThird. New E requested NONE.",
+  "qualifiedDecision": "Original technical1378 may decide this exact source/result contract via exclusive new14c. It is not an access/OS/repository grant. Existing user no-denied-retry/identity/path/channel restrictions remain.",
+  "futureEffects": "Any later acquisition needs a separate concrete necessity/mechanism/subject/principal/readset/authority/custody/phase/revocation/count/cost unit and explicit compatible decision. No schema/name/window/PID/sourcePASS/fit/callback replenishes quota. No generic Owner requirement or future effect is inferred.",
+  "routing": "PROPOSED/NOT_SENT/route_count0; reader returns material receipt to original author only, not qualified dispatch."
+ },
+ "readerEffects": {
+  "sourceOrCandidateEdits": 0,
+  "oldFailedRecordOrPathReadsStats": 0,
+  "GitAPIInputOrSourceRequests": 0,
+  "testsOrFixtures": 0,
+  "runtimeOrProductionEffects": 0,
+  "ownedReceiptOnly": true
+ }
+}
