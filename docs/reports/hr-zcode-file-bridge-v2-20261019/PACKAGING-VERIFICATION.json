@@ -3,12 +3,11 @@
   "status": "PROPOSED_NOT_ACCEPTED",
   "base_commit": "88fe4a16a4a38c066d507d82c7020d52301c7aaa",
   "exact_contract": {
-    "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.md",
+    "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.1.md",
     "bytes": 23342,
     "sha256": "4d32dfa4973aff4a3d2c0ff7403f0bd3141be1d036dba66d9def71b96a00665e",
     "repository_path": "docs/specs/AGENT_CORE_FIXED_HR_ZCODE_FILE_BRIDGE_V2.md",
-    "embedded_inverse": "EXACT",
-    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.1.md"
+    "embedded_inverse": "EXACT"
   },
   "copies": [
     {
