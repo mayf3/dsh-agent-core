@@ -18,6 +18,7 @@
  */
 
 import { withTransportErrors } from '../transport.js'
+import { admissionErrors } from './admission-errors.js'
 
 export const baseErrors = [
   { code: 'invalid_arguments', description: 'Arguments did not satisfy the operation schema.' },
@@ -91,7 +92,7 @@ export const workflowDefinitionAuthoringManifest = withTransportErrors({
   name: 'Workflow Definition Authoring',
   description: 'Create a workflow definition, create its draft version, replace the draft using simple ordered steps or a complete graph, then publish the version. For a common linear workflow, create the draft explicitly with semanticModelVersion=3 and replace it with steps + terminalOutcome; the service validates the generated graph. Publish separately with domainId + definitionId + versionId; expectedRevision is optional and is a last-known definition digest, not a numeric revision. Omit expectedRevision unless an authoritative digest was obtained; never guess values such as "1" or "2". Instantiate the exact published version through workflow_execute. svc-workflow remains authoritative for identity, Domain Owner authorization, graph validation and lifecycle. Resolve the domainId argument first via workflow_my_domains (choose a domain where caller_role is DOMAIN_OWNER).',
   requiredScopes: ['workflow.execute'],
-  errors: [...baseErrors, ...authErrors, ...definitionAuthoringErrors],
+  errors: [...baseErrors, ...authErrors, ...definitionAuthoringErrors, ...admissionErrors],
   operations: [
     {
       name: 'create_definition',
