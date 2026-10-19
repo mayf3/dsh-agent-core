@@ -1,0 +1,44 @@
+# B7 P3 same-fallback bounded observability V1
+
+Status: accepted nonproduction implementation contract. Original qualified delegated technical actor 01a1378d-e052-7021-9992-f0760eb9f9e7 accepted this exact unit without conditions on 2026-10-19; this is not a human Owner signature.
+
+Decision: /Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/P3-READY-BATCH-B-ORIGINAL-QUALIFIED-DECISION-20261019.json (12216 bytes; SHA256 1b11bfb48fc5b6a228774ee5472b60d93760ce3f1bd2262058391b01588c4648).
+
+The embedded unit below retains its original PROPOSED wording as immutable provenance. The decision accepts its finite source/ownedfixture scope; it does not authorize live source access, E41 retry, new attempt, installation or production. Original successor authority remains independent. Mother7911 section6.3 governs finite adaptation; original access/mandate/phase requirements remain.
+
+Exact acceptance unit: 7842 bytes; SHA256 0149172813b784f8e1f6e44fee7fb9b88db6c36f025eba55197b4cbfd1684c95.
+
+<!-- BEGIN EXACT ACCEPTED UNIT -->
+# P3 business responsibility tuple and separate source-only proposal
+
+Existing facts only; bounded observability delta PROPOSED, NOT implementation or invocation authority. Independent of the E41 observer contract and cannot delay its acceptance. Direction: original qualified decision15999B/ce8881dea361516e3a05420dcfd8b127116c5e6f4538f5d004fdf2c4ddc5df27, P3_responsibility/immediate_source_only_NEXT. No source/OS probe, test, new attempt or permission change occurred in preparing this document.
+
+| Responsibility field | Held evidence / limit |
+|---|---|
+| Original chain | UID502 original client/delegated executor -> DS business stage -> pinned root worker1c10 -> installer e342743320a525f68a7022df6cce368d0707b08dc4e6f04e3b2dfc689787044d -> helper cab5749dadf03cf4598cb4c361c61f785627f7aa9d6978a02e499c4d3b81818a. DS PID50094 is the saved control observation, not an actual TCC responsibility-chain proof. |
+| Fixed source | /Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-app-idempotence-source; HEADb9395d2dd22330b07d55a9b628b3a4844ceaa83f; tree8cc0200931af7ad1be3d64f1792feb91de6d0277. No read/stat/Git call was made here. |
+| Distinct labels | INSTALL-PINS.appSource.label and pack-provenance source_label are textual `b7-reviewed-profile-idempotence`. validate_source sets GENERATION_LABEL_SHA to appSource.commit=`b9395d2dd22330b07d55a9b628b3a4844ceaa83f`; EXPECTED_SOURCE_SHA is that commit and EXPECTED_SOURCE_TREE is8cc0200.... These are separate fields, not aliases. |
+| Original call | stage377-382, first469/second492; `/bin/bash <original extracted tool root>/scripts/trusted-cp-deploy-install.sh --validate-source <app.root>`, cwd/, timeout20s, original sanitized environment and those three bindings. E41 reached first only. |
+| Owner delegation | helper18-65: directory/realpath -> actual stat owner UID -> actual caller UID -> same-caller env-i Git, or existing root-to-filesystem-owner sudo env-i Git. Original Git HEAD/tree/status probes and strong predicate remain. Actual source-owner UID and failed substep/PID are UNKNOWN; peer502/root-stage custody/fixture identities do not supply them. |
+| Actual result | e41 session75877 rc1; installer completed rc1/P3, stderr182B complete prefixSHA077719cb52bd3387905006a5a96a495eb96658f1769a4b3738c3093e39562fb2, stdout0. .git-directory testfalse plus fallbacknonzero; not proof source is non-Git, nor TCC/ACL/individual-syscall cause. |
+| Irrecoverable from this output | installer157 directed the fallback streams to /dev/null before the stage's typed diagnostic. Helper numeric rc/streams, failed substep and actual owner values are absent from the held result, not reconstructed. No already-held legal current-E41 audit/result-readback entry supplies them; this is a bounded material finding, not system-wide nonexistence. Another helper/validator run is not readback. |
+| Accountability | Original Sol lane keeps business source/tool wiring and failure evidence. Actual filesystem owner/access issuer is UNKNOWN. Original qualified actor assigned this technical tuple; that does not make it or peer502 the resource access authority. |
+
+Phase mapping (S=accepted Spec89c671d1; R=recovery proposalb4dcba87; U=its INDEXda923118; A=actual index4ce636f3; all canonical paths/pins are in observer INDEX):
+
+| Phase | Existing required condition | Evidence / unbound | Original producer |
+|---|---|---|---|
+| Before original writes/admission | Prior history, applicable single-apply mandate and other section3 access/custody/source/tool/packet/attempt/window/preimage/recovery bindings. | S38-54,68,70,74. A10-13 confirms prepare/register/real execution, not a complete fresh certification of every section3 obligation. Four later UNBOUND fields neither prove nor disprove a specific earlier breach. | Original trusted prepare/admission and responsible source/custody roles under original mandate. |
+| Same admitted attempt, before outer | First strong PASS before app/public-artifact/finalseed, second PASS before intent; existing durable TX mapping/ACK before outer. | S68-72. A32-49/105-116 records first refused/outerfalse/TXnull. No second PASS/ACK or prebind result is manufactured. | Original worker469/492 -> DS observe_line/atomic save -> original ACK -> outer. |
+| After E41 refusal: recovery observation | Proposed exact E41 scene raw/identity/absence plus lawful fixed observer qualification/entry; collect before binding recovery constants. | U38-40 and R19-21; PROPOSED, not accepted implementation. Raw registration partly predates the failure but the complete failed-scene instance cannot be precreated. The observer's future result is not its own qualification/contract-acceptance prerequisite. | Selected fixed observer route in ce8881; actual collection applicability still must be mapped. |
+| P3 resolution / any lawful future business call | Preserve existing result; determine actual responsibility/necessary finite change. Original business mandate/window/no-retry still governs any future actual call. | U41-42, R25-31. Inner cause/owner/next lawful responsibility entry unresolved. This is not absence of the known original worker/validator entry. | Original installer/helper/source-owner chain; no new call or alternate branch is authorized. |
+
+The four UNBOUND categories were listed at U3=04:23:59Z after the actual-result index A3=04:18:39Z. Their phase classification follows S/R semantics, not timestamp alone. A phase-correct offline evidence-to-producer mapping is useful; making every future same-attempt or post-refusal result a pre-attempt PASS would restore the ordering problem the accepted amendment removed. Do not describe E41 as proof that these four business pre-admission items were omitted.
+
+Separate proposed source-only delta: preserve bounded failure observability from the SAME originally occurring fallback invocation. Scope only installer157's discard boundary and the original helper's existing owner/Git failure branches. Preserve original number/order of fallback/Git calls, two stage validations,20s budget, exact source root/caller/owner delegation/env/paths, P1-P6 predicates, exit/refusal and all old modes/consumers. Never silently alter frozen e342/cab, weaken .git/P3, add a source call, new temp production file/API or permission repair. This proposal is not an accepted implementation Spec.
+
+Output contract to decide: a private <=1024B typed frame with phase=fallback, enumerated reached/failed step, actual returncode only when observed, actual observed caller/source-owner numeric context (otherwise null+reason), and stream counts/prefix-digest coverage only for bytes actually captured. Uncaptured inner streams stay null/NOT_CAPTURED, never zero/complete or a fabricated full hash. No arbitrary raw stdout/stderr, paths/env, credentials or human text in the frame. Keep existing final installer P3 refusal and stage diagnostic protocol, including ordinary diagnostic write/flush failures preserving the original refusal; no broad control-exception swallowing. Exact bounded capture/exit propagation must preserve original same-call responsibility context and legacy harness wire shape in isolated affected tests before source-only review. No live source test, adoption or next attempt is part of this delta.
+
+Request, if this separate finite change is selected: original qualified technical acceptance of this source-only contract before implementation; original actual mandate/no-retry applicability remains independent for any later business invocation. It cannot cure E41 retrospectively, infer OS cause, prove readiness, waive actual access restrictions or delay independent E41 close/preserve work. General original successor authority is preserved; no predetermined new Owner requirement or optional current-e40 adapter/F/keeper loop.
+
+<!-- END EXACT ACCEPTED UNIT -->
