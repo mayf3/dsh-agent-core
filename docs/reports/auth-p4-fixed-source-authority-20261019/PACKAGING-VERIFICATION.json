@@ -1,0 +1,41 @@
+{
+  "kind": "DOCS_ONLY_EXACT_PACKAGING",
+  "status": "PROPOSED_NOT_ACCEPTED",
+  "base_commit": "33ebceb9c80df668c27ad61d162ed9afa0c08da8",
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "originals": [
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/PROPOSED-AUTH-P4-FIXED-SOURCE-AND-AUTHORITY-CONTRACT.v2.md",
+      "bytes": 15353,
+      "sha256": "b1dd720b82dfa0da6ad3514e767ac4f51cc6c291c0896c41c241767d80e49174",
+      "repository_target": "docs/specs/AGENT_CORE_AUTH_P4_FIXED_SOURCE_AUTHORITY_CONTRACT_V1.md#exact-original-contract"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/SOURCE-CLOSURE-INDEX.v2.json",
+      "bytes": 14698,
+      "sha256": "8376f1960ff42481365d8a6970511413ce2e92297773eb0a4f82cc1eb110e82f",
+      "repository_target": "docs/reports/auth-p4-fixed-source-authority-20261019/SOURCE-CLOSURE-INDEX.v2.json"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/independent-sol-readback/AUTH-P4-FIXED-SOURCE-AUTHORITY-DOCS-RECEIPT.v2.json",
+      "bytes": 12313,
+      "sha256": "4959ccc0e9031e5b9dbd1c1cbf6c7571e946fbf42af479565fd8094eb7a9fc1d",
+      "repository_target": "docs/reports/auth-p4-fixed-source-authority-20261019/AUTH-P4-FIXED-SOURCE-AUTHORITY-DOCS-RECEIPT.v2.json"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/FINAL-INDEX.v2.json",
+      "bytes": 3888,
+      "sha256": "af57ac48a7bb32bb6ed020bc874a3279b89c67e2dd8e059ebc0945732a5d3fdf",
+      "repository_target": "docs/reports/auth-p4-fixed-source-authority-20261019/FINAL-INDEX.v2.json"
+    }
+  ],
+  "contract_embedded_inverse": "EXACT",
+  "closure_copied_inverse": "EXACT",
+  "original_review_scope": "PASS_PROPOSAL_MATERIAL_ONLY_AUTH_P4_B1_B6; not acceptance",
+  "products_changed": [],
+  "effects_authorized_by_packaging": [],
+  "originals_modified": false
+}

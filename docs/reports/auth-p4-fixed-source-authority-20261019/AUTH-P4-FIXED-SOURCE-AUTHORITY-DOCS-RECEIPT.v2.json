@@ -1,0 +1,139 @@
+{
+  "kind": "AUTH_P4_FIXED_SOURCE_AUTHORITY_DOCS_RECEIPT_V2",
+  "at_utc": "2026-10-19T10:34:26.706650+00:00",
+  "reader": "/root/sol_e40_independent_reader",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning_effort": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY_AUTH_P4_B1_B6",
+  "blocking_findings": [],
+  "contract": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/PROPOSED-AUTH-P4-FIXED-SOURCE-AND-AUTHORITY-CONTRACT.v2.md",
+    "bytes": 15353,
+    "sha256": "b1dd720b82dfa0da6ad3514e767ac4f51cc6c291c0896c41c241767d80e49174"
+  },
+  "source_closure_index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/SOURCE-CLOSURE-INDEX.v2.json",
+    "bytes": 14698,
+    "sha256": "8376f1960ff42481365d8a6970511413ce2e92297773eb0a4f82cc1eb110e82f"
+  },
+  "scope": "One original-lane independent docs-material assessment only. Not MC contract acceptance, implementation readiness, activation/profile approval or production permission; not B7/R41 review or authority.",
+  "actual_reads_and_checks": [
+    "Independently measured exact current contract and source-closure index byte counts/SHA256. Read the full v2 contract and index.",
+    "Verified all six indexed input-record pins. Fully read f0d8ed80 fixed preparation scope/B1-B6 and qualified-entry record and 0bbf6fca Auth counterparty constraints; read bounded relevant P4 projection, prior de1 source findings, f41 launcher findings and 0c35 profile-applicability sections. These are saved observations/decisions, not fresh runtime evidence.",
+    "Independently verified and read the three indexed finite source excerpts and checked their source line sequences against exactly declared spans.",
+    "The complete 46-line runtime excerpt reconstructs to 2269 bytes, SHA256 d272bee82cc3241ee30f7891aa30d1ed2b060f748627058a3201603ca4b82aa0, Git blob d3424fbec2e91eb9b29b180cd9d3fbbeba3be780; both match the index. No repository/Git call was made.",
+    "The parent RPC and messaging source excerpts are partial saved primary text; their exact excerpt hashes were verified. Their full-blob hashes, old13 source semantic observations and four metadata-only dependency pins remain attributed to the indexed original source investigations rather than a new whole-source reread.",
+    "No source/config/store/env/DB/profile/launcher/production access, caller/creator search, product/fixture/test execution, send/mint/restart or downstream dispatch occurred. Only this small review receipt was written."
+  ],
+  "finite_primary_excerpts": [
+    {
+      "source": "packages/agent-router/src/parent-rpc-relay.js",
+      "spans": [
+        [
+          57,
+          130
+        ]
+      ],
+      "excerpt": {
+        "bytes": 4893,
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/fixed-source-excerpts/packages__agent-router__src__parent-rpc-relay.js.txt",
+        "sha256": "1493cee2d253adc1cad8da2151c373261ef84ea2728a5054f478fe5f4d323fcd"
+      }
+    },
+    {
+      "source": "packages/production-runtime/src/agent-session/runtime.js",
+      "spans": [
+        [
+          1,
+          46
+        ]
+      ],
+      "excerpt": {
+        "bytes": 2444,
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/fixed-source-excerpts/packages__production-runtime__src__agent-session__runtime.js.txt",
+        "sha256": "520876c00c0d50ecb32b04a2cda32a2cc20c01ddcc604a2be70455be4e107bb6"
+      }
+    },
+    {
+      "source": "packages/production-runtime/src/agent-session-messaging.js",
+      "spans": [
+        [
+          1,
+          88
+        ],
+        [
+          131,
+          339
+        ],
+        [
+          354,
+          390
+        ]
+      ],
+      "excerpt": {
+        "bytes": 18965,
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-auth-p4-source-authority-contract/fixed-source-excerpts/packages__production-runtime__src__agent-session-messaging.js.txt",
+        "sha256": "961624c72cd888b734a47b7841cba20bbf3c052c9fabd66783931ac3181a2644"
+      }
+    }
+  ],
+  "B1_B6_assessment": {
+    "B1": {
+      "source": "parent-rpc-relay.js:57-130, with original Router/getProc/provenSourceTurn source findings reused through de1.",
+      "finding": "The parent supplies closure agentId; identity/scope/generation fields are not an authentication producer. Existing parent-owned proc/RPC and execution-map trust is a real available code model, not an authenticated external attach surface for the current standalone502 gateway. Contract lines20,26,28 explicitly retain that distinction and require an actual protected parent/activation/profile/origin/turn/generation/window/revocation tuple before use.",
+      "barrier_precision": "Lines65-68 reject observed stop/exit before gateway lookup; lines83-120 may pass absent ingress/source-turn context to the gateway. Contract correctly avoids claiming stale-source-turn rejection before credential/Grant use."
+    },
+    "B2": {
+      "source": "parent-rpc-relay.js:94-130 primary; prior de1 S1-S5/f41 reused for credential and launcher boundaries.",
+      "finding": "The exact execute input is {capabilityId,operation,args} plus parent context {agentId,ingressContext,sourceTurnExecutionId,invocationCorrelation?}. execute return is passed verbatim; the parent comment specifies the existing two-layer wire/child unwrap contract. No extra response envelope or external credential/token API is proposed. getCredential returning raw credentials is not turned into an installed delegation channel. Current505 activation/receiver is explicitly not proven.",
+      "evidence_limit": "Child relay/RPC wire implementation and all gateway internals were not independently reopened here. The two-layer ABI is established here by the saved parent primary plus prior source findings, not a new end-to-end runtime test."
+    },
+    "B3": {
+      "source": "runtime.js:9-46 and messaging.js:54-80,174-218,354-390 primary.",
+      "finding": "Send has exactly three model args, bounded UTF8/non-NUL/integer timeout, self-send denial, parent-derived caller/source turn, fresh generated requestId and one Router deliver to target main. lookup accepts exactly invocationCorrelation and looks up callerAgentId+correlation. sameRID, generated runtime requestId and invocationCorrelation are correctly distinguished. No new scope/Grant/Client/inspect authority is inferred.",
+      "owner_precision": "The shown lookup ownership key is sourceAgentId plus invocationCorrelation, not an added Session/generation predicate. Contract language forbidding a new child/Session from inheriting authority is a no-bypass ceiling, while explicitly preserving already authorized original owner lookup; it is not treated as a new source-enforced active-turn check."
+    },
+    "B4": {
+      "source": "messaging.js:174-339,354-380 and parent-rpc-relay.js:57-130 primary.",
+      "finding": "Original validation/intent-before-single-deliver/coordinate-outcome sequence and post-receipt UNKNOWN are accurately preserved. Intent failure yields deliver0; accepted effects are not reversed by audit/handle/response loss. Timeout does not cancel target or permit resend. Not-found/retention/lookup failure does not prove absence. The contract does not invent durable fsync, a new SSOT, idempotent resend or inherited result ownership.",
+      "scope_precision": "Lookup remains the existing independently granted caller-owned operation, with no new send source-turn barrier forced onto it."
+    },
+    "B5": {
+      "source": "Contract lines60-66; original f0d8 B5 and 0bbf conditional Auth constraints.",
+      "finding": "The Runtime/Router activation/trust exception is an explicit proposed clause, not a reinterpretation of existing NONE as permission. Existing actual caller, child secret/token exclusion, Client/Grant/scopes and G.1/H custody remain. G.1 metadata difference is not claimed causal proof or permission to change store ownership. Auth NONE_IDENTIFIED remains conditional on unchanged interfaces/claims/permissions/custody, not DB/current credential proof."
+    },
+    "B6": {
+      "source": "Contract lines20,28,68-84; original f0d8 immediate_technical_action and B6.",
+      "finding": "An empty product-source change set is coherent only for reuse of the existing genuine parent-owned R code path. The document does not equate that empty set with current attachability or recovery. It states current standalone502 cannot be restored under all retained constraints by a source-only patch; the minimum missing effect is real protected parent ownership and activation/profile enrollment of this fixed origin. Any required UID/root/domain/runtime/target effect outside the fixed ceiling remains unaccepted and cannot be executed.",
+      "unselected_I": "If standalone502 must remain independent, the three identified missing ABIs are an unforgeable ownership proof producer, protected receiver authentication/revocation entry and generation/stop/result-owner consumption. The text does not invent their trust root or claim they exist. I is unselected and has no implementation ceiling.",
+      "sufficiency_for_preparation": "This satisfies the original bounded preparation alternative: report infeasibility within current restrictions and the precise minimum trust/activation delta. No additional platform design or keeper/profile investigation is required merely to make the material reviewable."
+    }
+  },
+  "authority_and_lifecycle": {
+    "material_only": "The current unit is READY_FOR_DOCS_REVIEW only; B1/B2 runtime tuple, actual matching activated profile, current protected/loaded generation and live credential/DB validity remain unproven. No value is fabricated.",
+    "original_authority_refs": "The f0d8ed80 fixed preparation record and 0bbf6fca Auth constraints were read as primary decisions for this unit. Their accepted CredentialV1/FleetOAuthV3/PDC/localREADME citations remain their original documentary basis; those large accepted documents were not freshly reread in this task.",
+    "correct_acceptance_role": "Per f0d8 qualified_acceptance_entry and contract line82, exact new MC contract acceptance belongs to repository owner mayf3 or a maintainer explicitly delegated in that precise docs-only PR, bound to reviewed final head. Reader/author/B7 technical delegation/Root coordination and Auth custody counterparty do not substitute for that role. No route or message to another acceptor was sent.",
+    "not_a_new_general_owner_gate": "The proposed finite exception and any actual excess effect must receive the appropriate original-governance disposition. Ordinary already authorized restoration authority is not cancelled or generally reapproved; an unknown role/window/profile is not converted into permanent absence of rights.",
+    "window": "Only this fixed P4 plus revision4114 docs-preparation unit; no inheritance across origin/source/target/effect changes."
+  },
+  "source_closure_precision": {
+    "count": 19,
+    "prior_whole_source_files_reused": 13,
+    "new_business_source_files": 2,
+    "old_parent_RPC_finite_ABI_recapture": true,
+    "metadata_only_dependencies": 4,
+    "not_claimed": "Not a full transitive program, helper, deployment, installed/loaded or all-error-secret-sanitization audit. No test PASS or implementation/activation readiness is inferred from the metadata pins or the closed finite ABI."
+  },
+  "effects": {
+    "new_source_writes": 0,
+    "tests_or_fixtures_run": 0,
+    "production_reads": 0,
+    "send_mint_restart": 0,
+    "profile_identity_permission_changes": 0,
+    "R41_changes": 0,
+    "dispatch": 0,
+    "only_write": "This independent docs receipt"
+  },
+  "conclusion": "No material blocking finding in the exact v2 preparation document. It is suitable for the original correct qualified docs-contract decision on the finite proposed B5 exception and conditional R scope, while explicitly leaving actual activation inadmissible/unproven. This receipt is not acceptance of that exception or permission to implement/apply."
+}
