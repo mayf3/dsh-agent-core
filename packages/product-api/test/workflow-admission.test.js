@@ -223,3 +223,33 @@ test('admissionHealth payload is key-pinned and identity-free', async () => {
   })
   assert.deepEqual(Object.keys(handler.admissionHealth()).sort(), ['configured', 'state'])
 })
+
+test('unknown-kid refresh failure during a JWKS outage surfaces as auth_unavailable, not a silent bad token', async () => {
+  // Key rotation while the JWKS endpoint is down, inside the fresh-cache TTL:
+  // the request fails closed with the frozen 401, but the outage must surface
+  // in admissionHealth (state auth_unavailable + one bounded warn) instead of
+  // masquerading as an ordinary invalid token.
+  const warnings = []
+  let healthy = true
+  const handler = createWorkflowAdmissionHandler({
+    jwksUrl: 'http://127.0.0.1/jwks', nowMs: () => now,
+    fetchImpl: async () => {
+      if (!healthy) throw new Error('connect ECONNREFUSED')
+      return { ok: true, json: async () => ({ keys: [jwk] }) }
+    },
+    definition: { listAgents: () => [{ id: 'agt_test-agent', disabled: false }] },
+    log: { warn: line => warnings.push(line) },
+  })
+  assert.deepEqual(await handler(req(), url('/agt_test-agent')),
+    { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: true } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'ready' })
+  healthy = false
+  const rotatedInput = [JSON.stringify({ alg: 'RS256', kid: 'rotated-kid' }), JSON.stringify(agentBase)]
+    .map(v => Buffer.from(v).toString('base64url')).join('.')
+  const rotatedToken = rotatedInput + '.' + sign('RSA-SHA256', Buffer.from(rotatedInput), keys.privateKey).toString('base64url')
+  assert.deepEqual(await handler(req(rotatedToken), url('/agt_test-agent')),
+    { status: 401, body: { error: 'UNAUTHORIZED' } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'auth_unavailable' })
+  assert.equal(warnings.length, 1)
+  assert.match(warnings[0], /auth_unavailable/)
+})
