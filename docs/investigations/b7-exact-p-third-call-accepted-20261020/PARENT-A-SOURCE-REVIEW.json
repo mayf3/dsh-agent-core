@@ -1,0 +1,260 @@
+{
+  "kind": "ORIGINAL_LANE_CONTINUATION_A_AFFECTED_SOURCE_RECEIPT",
+  "version": "v1 receipt; final candidate/source delta v2",
+  "created_at": "2026-10-19T18:38:52.066827+00:00",
+  "disposition": "PASS_SOURCE_ONLY",
+  "blocking_findings": [],
+  "reader": {
+    "agent": "/root/sol_e40_independent_reader",
+    "role": "Original sole nonauthor affected reader; author remains /root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol",
+    "requested_reasoning": "ultra",
+    "native_observed_model": "UNKNOWN",
+    "attribution": "Source/diff/raw-file reads, exact inverse computation and the independent synthetic replay below are this reader's work. Author-run groups remain attributed to author; no claim another reviewer personally read these materials."
+  },
+  "scope": "Only the accepted continuation A build-mode implementation, typed nonproduction diagnostics, build dispatch and F1 metadata-read repair. Reuse the prior 00bb/b541 runtime/F1 conclusions; no new scope/authority/Owner decision or old-suite review.",
+  "frozen_inputs": {
+    "original_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/SOURCE-A-INDEX.v1.json",
+      "bytes": 10308,
+      "sha256": "d35a2dac5fd91d9ae577be46e3e5ff10401b853b2c92ccc35235f794406eaf26"
+    },
+    "final_delta_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/SOURCE-A-INDEX.v2.json",
+      "bytes": 7960,
+      "sha256": "f334bf9c85205f16f06104be3274087856ba9a6ce95ed86b35a80f77a4a4e193"
+    },
+    "final_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 35114,
+      "sha256": "883fa2a815a84438276113ad8e31bec2ce627b9dc43ff8fd5b4fccbe5766622b"
+    },
+    "preserved_initial_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/source-versions/b7-fixed-plugin-materializer-952f-before-metadata-guard.mjs",
+      "bytes": 33429,
+      "sha256": "952f2807120303e30e4af93fc6834604bf9850c482671550711c648c0bf12b0c"
+    },
+    "parent_source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 28557,
+      "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+    },
+    "parent_review": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/FRESH-CARRIER-AFFECTED-SOURCE-RECEIPT.v2.json",
+      "bytes": 14395,
+      "sha256": "b541d431a0d0c0514b3e4f5028d7db6cc230e70bbe63a317597c21ed1cce65eb"
+    },
+    "accepted_unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PROPOSED-FIXED-869B-OFFLINE-CARRIER-CONTINUATION.v2.1.md",
+      "bytes": 10752,
+      "sha256": "b75b0a0067c07b2dbb8dd08c46374bf4b0d3635ce4523d98034902c37f890f8e"
+    },
+    "qualified_decision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/ORIGINAL-FIXED-869B-OFFLINE-CARRIER-CONTINUATION-TECHNICAL-DECISION.v2.1.json",
+      "bytes": 27978,
+      "sha256": "dc465111190fab7fe88cf5c987950d40830c660836423bca67a2a929acd7d53c"
+    },
+    "docs_main_record": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "bytes": 3484,
+      "sha256": "9912c85e5ac237e193f580c45e46a011186d4d07ecb9e9ef1f8085f46cc9e5de"
+    },
+    "development_preflight": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/DEVELOPMENT_PREFLIGHT.json",
+      "bytes": 4302,
+      "sha256": "eca27a825097a3430ad003df6f906e1df1a2f7c58ddcf639522b1c2411ea5632"
+    }
+  },
+  "source_conclusions": [
+    "Build-only exact nofollow regular input length/hash/held-parent checks precede enumeration; no new source, Git, npm, network, identity or path authority is introduced.",
+    "Phase one bounds regular logical bytes, row count, canonical row/catalog bytes and safe paths/modes/types/links, keeps regular content in memory, and computes the complete conservative root/object charge before OUTPUT_STARTED. The unchanged P ceiling is 192720896. P refusal occurs before payload/catalog creation; early malformed/resource refusals do not fabricate complete quantities.",
+    "Accepted extension headers now pass nonnegative exact-integer size/type and cumulative padded extension-byte <=16777216 checks in BuildTarInfo._proc_member before stdlib body reads. Closed PAX parsing accepts only path/linkpath/mtime before applying them; size/GNU.sparse keys and unsupported sparse types are rejected. Ordinary bounded GNU longname/longlink continue through original stdlib parsing and final path/link guards.",
+    "Phase two creates exclusive output only after quantity decision, verifies the same catalog/tree, fsyncs and reads back before PUBLISHED. Failure may retain newly created partial output; no automatic resume/rebuild/deletion exists.",
+    "Typed stdout stage prefixes are flushed; a private build-result descriptor3 separates the final result from inherited diagnostics. Diagnostic write failure remains refusal/DURABILITY_UNKNOWN. Flushed timeout prefixes are not a successful or complete final result. Runtime journal descriptor3/held-home descriptor4 and nonbuild invoke behavior remain exact parent bytes after the finite inverse.",
+    "The metadata repair is only a class plus one tarfile.open argument relative to preserved 952f. Independently reversing only the contiguous builder region, the single main build call and six build-only JavaScript spans restores full 00bb bytes; the rest of ENGINE, global error/main and all runtime code were not replaced in that proof."
+  ],
+  "finding_F1": {
+    "status": "CLOSED_IN_FINAL_883f",
+    "initial_subject_sha256": "952f2807120303e30e4af93fc6834604bf9850c482671550711c648c0bf12b0c",
+    "initial_fact": "The exact embedded build plus stdlib tarfile dispatch on a new 89-byte synthetic gzip requested a 2000000000-byte PAX metadata read before the caller member checks. The read-size spy raised before allocation/body consumption; this does not establish an actual 2GB allocation, OOM, production exploit, or the original 869b failure cause.",
+    "original_driver": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax_metadata_read_bound_counterexample.v1.1.py",
+      "bytes": 3023,
+      "sha256": "6f048eaa09e144c5c8cb79fea644206fb6fb422034465436c5f2bc81962962bc"
+    },
+    "original_RED_report": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/PAX-METADATA-BOUND.v1.1.json",
+      "bytes": 1163,
+      "sha256": "02fb8b6ef2d0d126d273ba2bd32da7e9dd62c2148c4d8fbd48aeb9f0d31da570"
+    },
+    "original_RED_process": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/PAX-RED.v1.1.PROCESS.json",
+      "bytes": 2394,
+      "sha256": "602f1c7836bbd23d0b37fd65a5cf4e40eef38647ab3417f0350b5fe634b207c7"
+    },
+    "minimal_fix_diff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/METADATA-DELTA.v2.diff",
+      "bytes": 2853,
+      "sha256": "c0aa030d5a7ccb69de06d7114d8d74c3fdb1903ca77bc5f085c088607587d41f"
+    },
+    "independent_fixed_replay": {
+      "driver": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax-fixed-v2-independent/pax_metadata_read_bound_counterexample.v1.1.py",
+        "bytes": 3023,
+        "sha256": "6f048eaa09e144c5c8cb79fea644206fb6fb422034465436c5f2bc81962962bc"
+      },
+      "report": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax-fixed-v2-independent/PAX-METADATA-BOUND.v1.1.json",
+        "bytes": 1157,
+        "sha256": "19b736c88d77c0fc3d44fad31fd6e3193bc247068edc4d700375296850266917"
+      },
+      "process": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax-fixed-v2-independent/PROCESS.json",
+        "bytes": 2319,
+        "sha256": "fc80e2ff9eddd0290ab7dbefebf656622f8de657e3500232ec848958b31ab889"
+      },
+      "stdout": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax-fixed-v2-independent/stdout.raw",
+        "bytes": 362,
+        "sha256": "1ee36916510915aa21950c12423323550345bce9121489e89a44d90a30cde74c"
+      },
+      "stderr": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/pax-fixed-v2-independent/stderr.raw",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actual_returncode": 0,
+      "driver_bytes_unchanged": true,
+      "source_before_and_after_sha256": "883fa2a815a84438276113ad8e31bec2ce627b9dc43ff8fd5b4fccbe5766622b",
+      "oversized_requests": [],
+      "refusal": "CATALOG_LIMIT",
+      "payload_or_catalog_created": false,
+      "scope": "One independent execution, newly owned synthetic input only. No fixed input/partial/product/deployment reads or execution."
+    }
+  },
+  "independent_inverse": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/INDEPENDENT-STRICT-INVERSE.v2.json",
+    "bytes": 812,
+    "sha256": "21ae04f15b1edf40839462ef8e4a4be04241345ee796c57f73e71ea70f041c7a"
+  },
+  "author_test_evidence_read_and_reuse": [
+    {
+      "group": "Parent synthetic RED",
+      "subject": "00bb",
+      "observed_rc": 1,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/red-boundary-native/PROCESS.json",
+        "bytes": 1084,
+        "sha256": "119a1578c63dd07c2bfb4f2fb92419515c389e84c33bd4234f481a8ff3174214"
+      },
+      "meaning": "Actual old builder partial/no complete P on small owned model. Not original artifact evidence."
+    },
+    {
+      "group": "Initial synthetic GREEN",
+      "subject": "5d9 intermediate",
+      "observed_rc": 0,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/green-boundary-native-v1/PROCESS.json",
+        "bytes": 1079,
+        "sha256": "1e33f7061987e1c96ca82f4b58dcf99f7bbf8dfe3e3ef64c6582fb310d2aed31"
+      },
+      "meaning": "Retained intermediate-version evidence; not final source execution."
+    },
+    {
+      "group": "First boundary run",
+      "subject": "952f",
+      "observed_rc": 1,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/owned-boundaries-native-v1/PROCESS.json",
+        "bytes": 1412,
+        "sha256": "66c3193221f99def38c4428182d921e750a94246a27352fe5203d53fafabb2ea"
+      },
+      "meaning": "Retained fixture parser error around readonly diagnostic stderr; not hidden or relabeled as product success."
+    },
+    {
+      "group": "Final boundaries",
+      "subject": "952f",
+      "observed_rc": 0,
+      "cases": 22,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/owned-boundaries-native-v2/PROCESS.json",
+        "bytes": 1412,
+        "sha256": "532c752e72e89ae5356af62618cf803b36697ad13964c7c11ae6593fab5451f5"
+      },
+      "raw": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/owned-boundaries-native-v2/stdout.raw",
+        "bytes": 17630,
+        "sha256": "0aef1c305ea3692b487230a97cbbb1251ce1063c9012899bfb67c025622547e1"
+      },
+      "meaning": "Driver/raw source before-after checked. Newly synthetic copied entry/FS with small literal threshold models; below/equal/overcap, safe/unsafe archive cases, input mismatch, no-output refusal, readonly diagnostics, timeout prefix and runtime inverse. The readonly diagnostic catch-wrapper rc0 reports a refusal, not producer success. Timeout native rc2 with no final state is not complete result. Not rerun after v2."
+    },
+    {
+      "group": "Metadata copied-layout",
+      "subject": "883f",
+      "observed_rc": 0,
+      "cases": 12,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/metadata-native-v1/PROCESS.json",
+        "bytes": 1312,
+        "sha256": "fbc974ef9fffa7e3e8bbe00ccbd86a0c71c07d672ccc5c2de5ada28ae02f47f9"
+      },
+      "raw": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/metadata-native-v1/stdout.raw",
+        "bytes": 5114,
+        "sha256": "ece113b82133a14a83c4dd10b9e658456681bce34e68b70994f261f45b94820f"
+      },
+      "meaning": "Read driver/raw: bounded PAX mtime/global/GNU longname positives; duplicate path, unsupported size/sparse, huge PAX/longname/longlink and raw sparse negatives; runtime AST/source unchanged checks. Actual synthetic copied Node/Python entry, not actual fixed artifact."
+    },
+    {
+      "group": "Additional PAX long-path positive",
+      "subject": "883f",
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/PAX-PATH-POSITIVE.v2.json",
+        "bytes": 1152,
+        "sha256": "5cf23e66f17ca2dc04db85b8a8405520885f6545cad267b2544a59695d2a6f6b"
+      },
+      "meaning": "One selected existing fixture function, successful complete synthetic output. Kept separate from the 12; no rerun claimed."
+    },
+    {
+      "group": "Author replay of reader counter",
+      "subject": "883f",
+      "observed_rc": 0,
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/owned-pax-fixed-reader-driver/PROCESS.json",
+        "bytes": 945,
+        "sha256": "a68154faa8298022af1ae4de0c06684ecdd6e345403c7552b242e851a42174a1"
+      },
+      "meaning": "Separate author observation. Independent replay above supplies this reader's own confirmation."
+    },
+    {
+      "group": "Author exact strict inverse supplement",
+      "evidence": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/RUNTIME-STRICT-INVERSE.v2.json",
+        "bytes": 596,
+        "sha256": "70d965eaac7a4bfce2813b5e3dd4b863360c9de21d2debed414478901e34d43e"
+      },
+      "meaning": "Source proof, not runtime test. Independently rederived by this reader in INDEPENDENT-STRICT-INVERSE.v2.json."
+    }
+  ],
+  "evidence_boundaries": {
+    "no_aggregate_suite": "22 on 952f, 12 on 883f, one extra positive and the independent counter are separate versioned observations; no combined final/full-suite PASS.",
+    "historical_path_resolution": "The frozen v1 INDEX and original process records refer to the then-current module path/hash 952f. Author later replaced that current coordinate with 883f, preserved exact 952f and old generator in source-versions, and recorded this overlay in v2 INDEX. Initial 24 pins were checked while 952f was current; v2 delta pins checked separately. Do not pretend the old current-path pin still resolves to 952f.",
+    "test_model": "Synthetic artifacts/owned copied layouts and small cap literals. Actual root, protected custody, installed APP/current generation, native target homes and actual source/npm behavior are not established.",
+    "old_actual_build": "Original one-shot 869b build is settled PAYLOAD_BINDING with failed inner predicate NOT_CAPTURED. Old partial remains retained and untouched. Partial rounded size at the ceiling does not prove cause or complete P. The synthetic metadata finding does not explain that historical failure.",
+    "not_proven": [
+      "Actual fixed artifact complete catalog/P/object quantities",
+      "APP direct dependency closure and P6-local binding",
+      "Actual finite L_shared and lifecycle P/C/M/J/final tuple or capacity admission",
+      "F adoption/loading, runtime/production behavior, six-target business completion"
+    ],
+    "issued_counts_as_frozen": "Additional B not issued (0 of accepted 1); existing collector total2/remaining0 unchanged. This receipt does not issue a call or extend any quota.",
+    "next_step_scope": "Accepted B lifecycle may continue through its existing exact-once binding/custody/owned-budget conditions after A closure. This source receipt supplies no new runtime/access authority and is not evidence that B or artifact readiness passed."
+  },
+  "reader_effects": {
+    "candidate_modifications": 0,
+    "F_or_protected_writes": 0,
+    "original_input_or_partial_reads": 0,
+    "new_production_or_collector_calls": 0,
+    "owned_evidence_only": true
+  }
+}
