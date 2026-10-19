@@ -485,6 +485,50 @@ export function apply(ctx, config) {
   }
 
   /**
+   * PRODUCT_523 binding-switch guard (agent-turn admission, R1): an agent
+   * turn — the SWITCH parent-RPC relay above is the only agent-owned switch
+   * entry — must not persistently move a conversation to an Agent whose
+   * primary workspace does not own the conversation's CURRENT effective
+   * workspace. This is the write-time mirror of the v2-ingress-gate equality
+   * (resolveEffectiveWorkspace(binding).workspacePath vs
+   * resolveWorkspace(activeAgentId), AGENT_CORE_BINDING_WORKSPACE_V1 /
+   * AGENT_WORKSPACE_SESSION_MODEL_V2 cross-workspace rejection semantics):
+   * STRUCTURED_REJECT with code `SWITCH_WORKSPACE_MISMATCH`, one audit log
+   * line, and the Binding row left untouched (D-004 atomicity — a rejected
+   * switch never half-writes).
+   *
+   * Deliberately NOT applied to the domain operation itself: the operator
+   * entry (product-api POST /v1/switch-agent -> Router.switchAgent directly)
+   * is the explicit operator-authorized handoff path and stays unguarded.
+   * No channel branching — the guard discriminates on the caller entry
+   * (agent turn vs operator), not on Feishu/mobile. The equality predicate
+   * goes through the single path authority (workspaceBootstrap.resolveWorkspace),
+   * so imported primary workspaces (primaryWorkspaces.json) are honored
+   * without a second mapping.
+   *
+   * @param {string} ccId - the routed turn's ChannelConversation id.
+   * @param {string} targetAgentRef - target agentId or display name.
+   * @throws {Error} code `AGENT_NOT_FOUND` (unknown target, per the domain
+   *   operation's own validation) or `SWITCH_WORKSPACE_MISMATCH` (cross-
+   *   workspace agent-turn switch). The code token is embedded in the message:
+   *   the parent-RPC failure channel carries only the message string
+   *   (process.js handleRpcRequest), so that is what reaches the child tool.
+   */
+  function assertAgentTurnSwitchAllowed(ccId, targetAgentRef) {
+    const current = store.get(ccId)
+    if (current === undefined) return // first contact: no Binding row to protect
+    const target = resolveAgentRef(targetAgentRef)
+    const currentWorkspacePath = resolveEffectiveWorkspace(current).workspacePath
+    const targetPrimaryPath = workspaceBootstrap.resolveWorkspace(target.id)
+    if (targetPrimaryPath === currentWorkspacePath) return
+    log.log(`[router] switch-rejected: ${ccId} ${current.activeAgentId} -> ${target.id} code=SWITCH_WORKSPACE_MISMATCH current_workspace=${currentWorkspacePath} target_primary=${targetPrimaryPath} (an agent turn may not move a conversation out of its current workspace; operator entry: product-api POST /v1/switch-agent)`)
+    throw Object.assign(
+      new Error(`agent-router: SWITCH_WORKSPACE_MISMATCH — agent turns cannot switch ${ccId} to ${target.id}: the target Agent's primary workspace (${targetPrimaryPath}) does not own the conversation's current workspace (${currentWorkspacePath}); ask the operator to hand over via product-api POST /v1/switch-agent`),
+      { code: 'SWITCH_WORKSPACE_MISMATCH' },
+    )
+  }
+
+  /**
    * DISABLED_ENFORCEMENT (merge review FIX 1): the Agent Definition config
    * is the ONLY authority for which agents may RUN. Unknown or disabled
    * agents get a structured rejection at the LIFECYCLE ENTRY — NEVER
@@ -614,6 +658,7 @@ export function apply(ctx, config) {
       if (proc.activeBindingContext === undefined) {
         throw new Error('agent-router: no active binding context for this process (switch tool called outside a routed turn)')
       }
+      assertAgentTurnSwitchAllowed(proc.activeBindingContext, params?.targetAgentId)
       return switchAgent(proc.activeBindingContext, params?.targetAgentId, {
         targetSessionId: params?.targetSessionId,
         workspace: params?.workspace,
