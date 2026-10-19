@@ -2294,7 +2294,7 @@ Auth #92 委托不自动授予 DSH 接受资格。本次用户已授权实际失
 实例只能绑定以下两类之一的一条真实失败 invocation，本次仍只恢复其中一个经证明的既有 active identity：
 1. 原 ZCode 本次 agent_session_send / credential_unavailable 历史失败的可信安全投影；或
 2. 由既有绑定 runtime / 已存在 capability 产生的一次新受控纯只读 session/identity/status 实际调用，证明 effective caller，且实际结果确为 credential_unavailable。
-第二类必须按实际加载代码和该调用路径证明无 mint/token acquisition、send、身份/Session 创建、env/权限变动及 audit/ACK 等状态写效果；不得只凭能力名为只读即推定。不得创建新 Agent/Client/Session/runtime/tunnel，不冒认它是原 ZCode caller 或全部 caller；只有随后同一 identity 的精确 DB 映射证明成立才可合并两者证据。
+第二类必须按实际加载代码和该调用路径证明无 mint/token acquisition、send、身份/Session 创建、env/权限变动及业务状态写入、业务 ACK 或既有 Auth/业务审计的补写修补。基础设施对本次读取事实的正常记录及必要脱敏诊断留痕不属于此禁令；不得只凭能力名为只读即推定。不得创建新 Agent/Client/Session/runtime/tunnel，不冒认它是原 ZCode caller 或全部 caller；只有随后同一 identity 的精确 DB 映射证明成立才可合并两者证据。
 两类安全投影均须有 {toolName=实际已装入口名称, failureCode=credential_unavailable, invocationTime, toolCallId或recordId, callerAgentId或可连接的sourceSessionId/child-generation/PID, projection来源}；第一类 toolName 固定为 agent_session_send。
 不得输出 prompt/body/token。多 caller 必须来自真实记录逐项映射；本次一次只能选其一，不能从默认 Agent、名字或 Client 列表猜选。当前投影未到，故实例不 ready；设计不以未填事实冒充可执行。
 
