@@ -159,3 +159,23 @@ test('Auth V1 trusted JWKS cache is usable only inside max-stale', async () => {
   const principal = await auth.verify(token)
   assert.equal(principal.principalId, AGENT_SUB)
 })
+
+test('unknown-kid refresh failure keeps the AUTH_JWKS_UNAVAILABLE kind — infra evidence, not a bad token', async () => {
+  // Key rotation while the JWKS endpoint is down, inside the fresh-cache TTL:
+  // the unknown-kid immediate refresh fails, and that failure is the JWKS seam
+  // being unreachable (infra) — not the token being invalid. Both gate to 401,
+  // but observability consumers key on the kind.
+  let available = true
+  const auth = verifier({
+    fetchImpl: async () => {
+      if (!available) throw new Error('offline')
+      return { ok: true, json: async () => ({ keys: [jwk] }) }
+    },
+  })
+  await auth.verify(signToken(baseClaims()))  // cache warm: JWKS fetch succeeded once
+  available = false
+  await assert.rejects(
+    () => auth.verify(signToken(baseClaims(), { alg: 'RS256', kid: 'rotated-kid' })),
+    (error) => error?.kind === 'AUTH_JWKS_UNAVAILABLE',
+  )
+})

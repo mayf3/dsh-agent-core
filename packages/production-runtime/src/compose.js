@@ -237,6 +237,8 @@ export async function composeProductionRuntime(options = {}) {
     throw Object.assign(new Error(`production-runtime: agent definition ${layout.agentsConfig} has no default agent (nothing to route to)`), { code: 'CONFIG_INVALID' })
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
+  const productApiCfg = opts.productApi ?? {}
+  const productApiAdmission = mountProductApiAdmission({ definition, productApiCfg, log })
 
   // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
   // owned static route chain config (agent-model-overrides.json version 3).
@@ -385,11 +387,9 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
-  const productApiCfg = opts.productApi ?? {}
   mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
-  // PRODUCT #525 P1: admission mount contract (JWKS seam REQUIRED, enabled-gated) lives in product-api-admission.js — compose.js is MUST_NOT_GROW.
   const productApi = applyProductApi(ctx, {
-    ...mountProductApiAdmission({ definition, productApiCfg, log }),
+    ...productApiAdmission,
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
     // Dedicated history-only Tailnet config remains pass-through/default-OFF.
