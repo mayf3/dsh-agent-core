@@ -20,8 +20,6 @@ import {
 import { writeTerminalToHistory, writeToHistory } from './history/history-sink.js'
 import {
   applyTrustedTermination,
-  applyTerminationSettlement,
-  classifyNeverMaterialized,
   classifyOccurrenceOutcome,
   hasTerminationProof,
   TIMEOUT_ERROR_TEXT,
@@ -512,22 +510,13 @@ async function settleFromReadback(engine, record, resolveCallerCorrelation, nowM
   // The exact trusted classification the self-ops use, against the
   // occurrence's own owner identity — never a caller-supplied one.
   const classified = classifyRouter(readbackResult, record, record.ownerAgentId)
-  // WORKFLOW_546_D2: a dispatched run whose exact-triple readback proves the
-  // turn was never minted (start evidence + elapsed accepted deadline) is a
-  // trusted TERMINATION proof — routed through the existing termination-only
-  // arm; every unproven state below still falls to the bare-identity
-  // quarantine (zero-write, fail-closed).
-  const neverMaterialized = classified.disposition === 'never_existed'
-    ? classifyNeverMaterialized(record, readbackResult, nowMs)
-    : null
   const identity = { jobId: record.jobId, occurrenceId: record.occurrenceId, runId: record.runId, epoch: requestId }
   const exact = (value) => ({ trusted: true, fresh: true, source: 'router-current-readback', ...identity, observedAt: nowMs, ...value })
   const evidence = classified.disposition === 'late_completed' ? { identity, businessOutcome: exact({ status: 'succeeded' }) }
     : classified.disposition === 'late_failed' ? { identity, businessOutcome: exact({ status: 'failed' }) }
       : classified.disposition === 'terminated_without_outcome' ? { identity, termination: exact({ terminated: true }) }
-        : neverMaterialized !== null ? { identity, termination: exact({ terminated: true }) }
-          : classified.disposition === 'pending' ? { identity, live: exact({ live: true }) }
-            : { identity }
+        : classified.disposition === 'pending' ? { identity, live: exact({ live: true }) }
+          : { identity }
   const dispatched = await dispatchReconciliation({
     evidence,
     nowMs,
@@ -540,12 +529,6 @@ async function settleFromReadback(engine, record, resolveCallerCorrelation, nowM
       )
     },
     settleTermination: async () => {
-      if (neverMaterialized !== null) {
-        await applyTerminationSettlement.call(engine, record, neverMaterialized, {
-          actorProvenance: 'engine-never-materialized-readback',
-        })
-        return
-      }
       // The same accepted proof shape the bridge stamps from this readback
       // surface (source 'router_disposition_readback' + trusted evidence
       // kind) — applyTrustedTermination re-recognizes it, settle-once.

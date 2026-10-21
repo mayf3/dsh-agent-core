@@ -29,6 +29,8 @@
 
 import { randomUUID } from 'node:crypto'
 
+import { hasExactDeathEvidence } from './process-registry-death-evidence.js'
+
 /**
  * CAS(EMPTY -> STARTUP) — synchronous, before any further async work.
  *
@@ -97,17 +99,11 @@ function busyProcess(proc) {
  * Create the route-aware ensureRunning variant bound to one registry's slot
  * machinery. All slot mutations stay inside the registry's identity-CAS
  * discipline; this gate only adds the route-identity comparison and the
- * mismatched-idle controlled shutdown.
- *
- * `hasExactDeathEvidence` (WORKFLOW_546_D1, injected by the registry):
- * exact process-death evidence on a slot's processRef (observed exit,
- * terminal EXITED state, or an OS-proven dead child). Direct callers without
- * the injection keep the historical observed-exit-only behavior.
+ * mismatched-idle controlled shutdown. The READY reuse gate runs the shared
+ * exact-death-evidence predicate (process-registry-death-evidence.js).
  */
 export function createRouteGate({
   log, lifecycleSlots, installStartup, bootstrapStartup, assertRunnable, isDisposing,
-  hasExactDeathEvidence = (proc) => proc !== null && proc !== undefined
-    && (proc.exit !== undefined || proc.state === 'EXITED'),
 }) {
   /**
    * Bounded slot resolution: the same slot object may be re-entered only
@@ -160,20 +156,10 @@ export function createRouteGate({
       await slot.resultPromise.catch(() => {})
       return resolveSlot(agentId, wanted, seenStates)
     } else if (slot?.state === 'REAP') {
-      // WORKFLOW_546_D1: a stale fence over a proven-dead generation (full
-      // REAP identity + exact death evidence) is invalidated so the next
-      // attempt rebuilds through the ordinary EMPTY -> STARTUP path; a fence
-      // whose process is not proven dead still reports 'reaping' and the
-      // executor keeps its bounded convergence wait.
-      const proc = slot.processRef
-      if (proc !== null && proc !== undefined
-          && slot.generation === proc.processGeneration
-          && slot.ownershipToken === (proc.ownershipToken ?? null)
-          && hasExactDeathEvidence(proc)) {
-        lifecycleSlots.delete(agentId)
-        log.log(`stale REAP fence for ${agentId} generation ${slot.generation} over a proven-dead process; will respawn`)
-        return resolveSlot(agentId, wanted, seenStates)
-      }
+      // V4 C-007: every REAP slot reports 'reaping' — the executor keeps its
+      // bounded convergence wait. The exact REAP -> EMPTY cleanup belongs to
+      // the process exit sequence alone (C-009); this gate never deletes a
+      // fence, not even over a proven-dead process.
       return { status: 'reaping', generation: slot.generation }
     }
     const entry = installStartup(agentId)

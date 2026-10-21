@@ -28,8 +28,13 @@ import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
+import { hasExactDeathEvidence } from './process-registry-death-evidence.js'
 import { convergeStartedStartup, disposeProcessSlots, failNoChildStartup, reapExitedSlot,
   settleStartupEntry } from './process-registry-startup.js'
+
+// Re-exported for the lifecycle tests: the exact-death-evidence predicate the
+// registry's reuse gates run (see process-registry-death-evidence.js).
+export { hasExactDeathEvidence }
 
 function assertRecoveryAdmission(store, agentId) {
   store.assertBusinessAdmissionReady?.()
@@ -46,35 +51,6 @@ function ownsReapSlot(slots, agentId, proc, requireGeneration = false) {
   const slot = slots.get(agentId)
   return slot?.state === 'REAP' && slot.processRef === proc
     && (!requireGeneration || slot.generation === proc.processGeneration)
-    && slot.ownershipToken === (proc.ownershipToken ?? null)
-}
-
-/**
- * Exact process-death evidence on a slot's processRef (WORKFLOW_546_D1):
- * observed real exit, the terminal EXITED state (reachable with `exit`
- * unset on the no-child logical path), or an OS-proven dead child
- * (kill(0) === false ⇒ ESRCH). Registration invalidation on these evidences
- * never creates a pre-exit EMPTY window — death is already proven — and a
- * probe failure / absent probe surface is never evidence (fail-closed).
- */
-export function hasExactDeathEvidence(proc) {
-  if (proc === null || proc === undefined) return true // nothing to reuse
-  if (proc.exit !== undefined || proc.state === 'EXITED') return true
-  const child = proc.child ?? proc.ownership?.childObject
-  if (child !== null && child !== undefined && typeof child.kill === 'function'
-      && Number.isInteger(proc.pid) && proc.pid > 0) {
-    try {
-      if (child.kill(0) === false) return true // ESRCH: the OS child is gone
-    } catch { /* a failed probe is never death evidence */ }
-  }
-  return false
-}
-
-/** Full REAP-fence identity (the same comparison the REAP->EMPTY CAS uses). */
-function reapsSameProcess(slot) {
-  const proc = slot?.processRef
-  return proc !== null && proc !== undefined
-    && slot.generation === proc.processGeneration
     && slot.ownershipToken === (proc.ownershipToken ?? null)
 }
 
@@ -108,7 +84,6 @@ export function createProcessRegistry({
     bootstrapStartup,
     assertRunnable,
     isDisposing: () => disposing,
-    hasExactDeathEvidence,
   })
 
   function auditStaleSlot(detail) {
@@ -268,19 +243,13 @@ export function createProcessRegistry({
     } else if (initial?.state === 'STARTUP') {
       return initial.resultPromise
     } else if (initial?.state === 'REAP') {
-      // WORKFLOW_546_D1: a REAP fence over a generation whose real exit is
-      // already proven (on the processRef) but whose cleanup CAS was missed
-      // is a stale registration — invalidate it so the ordinary EMPTY ->
-      // STARTUP path below rebuilds. No pre-exit EMPTY window exists: death
-      // is proven; the fence's whole purpose is already served. A fence with
-      // a live/unproven processRef (or mismatched identity) still rejects
-      // AGENT_PROCESS_REAPING immediately (C-007, unchanged).
-      if (reapsSameProcess(initial) && hasExactDeathEvidence(initial.processRef)) {
-        lifecycleSlots.delete(agentId)
-        log.log(`stale REAP fence for ${agentId} generation ${initial.generation} over a proven-dead process; will respawn`)
-      } else {
-        return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
-      }
+      // V4 C-007: EVERY REAP admission rejects, over a live and a proven-dead
+      // process alike. The exact REAP -> EMPTY cleanup (real exit +
+      // reconciliation visible -> generation + entryId + processRef +
+      // ownershipToken identity CAS) belongs to the process exit sequence
+      // alone (C-009); admission never deletes a fence and never mints a
+      // parallel generation around one.
+      return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
     const entry = installStartup(agentId)
     void bootstrapStartup(agentId, entry)
