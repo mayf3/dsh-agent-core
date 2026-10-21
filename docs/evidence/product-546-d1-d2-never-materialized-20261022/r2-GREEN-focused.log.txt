@@ -1,0 +1,51 @@
+✔ P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence (2.096542ms)
+✔ P1-1 an EPERM probe failure is never death evidence (fail closed) (0.648834ms)
+✔ P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence (0.109542ms)
+✔ P1-1 an explicit OS not-found verdict (ESRCH) IS death evidence (0.703958ms)
+✔ P1-1 any other probe throw is never death evidence; no probe surface or bad pid is never evidence (0.495875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-reap-upyT0s/bindings-c47e3b01de4a6.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9101 (0ms)
+✔ D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed) (12.702833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-exited-TCWWEY/bindings-add48301d55198.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9102 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9103 (0ms)
+✔ D1-b a terminal-EXITED process in a READY slot never serves admission again (5.189833ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-esrch-dqeMel/bindings-d28f21ea7e6b28.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9104 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state READY); will respawn
+[router] [router] agent agt_stale-reg ready pid=9105 (0ms)
+[router] reuse process for agt_stale-reg (pid 9105)
+✔ D1-c an OS-proven dead child (exact-pid ESRCH) in a READY slot rebuilds exactly once, then stable reuse (3.68925ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-live-hKplwt/bindings-93d30159cfe1f8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9106 (0ms)
+[router] reuse process for agt_stale-reg (pid 9106)
+✔ D1-negative a LIVE process keeps the exact current semantics (no premature invalidation) (4.01475ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-audit-M6XgH9/bindings-96c71885050ca8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9107 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9108 (0ms)
+[router] reuse process for agt_stale-reg (pid 9108)
+✔ D1-stale the dead old generation stays audit-only after rebuild (no slot mutation) (4.055708ms)
+✔ D2 guard (C-040): the exact incident shape — start evidence + elapsed deadline + never_existed readback — stays termination_not_proven, zero-write, fenced (137.752042ms)
+✔ D2 guard: the engine readback consult never settles never_existed (settle-once, zero-write) (130.716666ms)
+✔ D2 guard: retention-ambiguity dispositions (pending/evicted/restart_lost) stay UNKNOWN + fenced before and after the deadline (468.641708ms)
+✔ D2 guard regression: the ACCEPTED router-reported termination evidence (child_real_exit) still settles termination-only (164.152042ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 947.011208

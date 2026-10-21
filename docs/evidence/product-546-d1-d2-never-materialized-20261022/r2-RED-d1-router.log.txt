@@ -1,0 +1,108 @@
+✖ P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence (2.470792ms)
+✔ P1-1 an EPERM probe failure is never death evidence (fail closed) (1.384792ms)
+✖ P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence (0.133625ms)
+✔ P1-1 an explicit OS not-found verdict (ESRCH) IS death evidence (0.978375ms)
+✔ P1-1 any other probe throw is never death evidence; no probe surface or bad pid is never evidence (0.509667ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-reap-L17DyC/bindings-1adc9af3a9131.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9101 (0ms)
+[router] stale REAP fence for agt_stale-reg generation 1 over a proven-dead process; will respawn
+✖ D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed) (2008.813375ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-exited-LpVpLC/bindings-b2e75767af9cb8.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9103 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9104 (0ms)
+✔ D1-b a terminal-EXITED process in a READY slot never serves admission again (4.991041ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-esrch-5ZH6tF/bindings-ede09a1bbb13b.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9105 (1ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state READY); will respawn
+[router] [router] agent agt_stale-reg ready pid=9106 (0ms)
+[router] reuse process for agt_stale-reg (pid 9106)
+✔ D1-c an OS-proven dead child (exact-pid ESRCH) in a READY slot rebuilds exactly once, then stable reuse (4.402541ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-live-2fcEFy/bindings-af1f8ae834aa78.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9107 (0ms)
+[router] reuse process for agt_stale-reg (pid 9107)
+✔ D1-negative a LIVE process keeps the exact current semantics (no premature invalidation) (4.035834ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/stale-reg-audit-NGxY2p/bindings-eb6da66c24d448.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_stale-reg ready pid=9108 (0ms)
+[router] process for agt_stale-reg is dead (exit unobserved, state EXITED); will respawn
+[router] [router] agent agt_stale-reg ready pid=9109 (0ms)
+[router] reuse process for agt_stale-reg (pid 9109)
+✔ D1-stale the dead old generation stays audit-only after rebuild (no slot mutation) (3.111584ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 7
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2092.377875
+
+✖ failing tests:
+
+test at packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:188:1
+✖ P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence (2.470792ms)
+  AssertionError [ERR_ASSERTION]: an undeliverable probe on a live process is never death evidence
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:194:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:209:1
+✖ P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence (0.133625ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:215:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:240:1
+✖ D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed) (2008.813375ms)
+  AssertionError [ERR_ASSERTION]: ensureRunning: expected AGENT_PROCESS_REAPING, got: ensureRunning: neither resolved nor rejected within 2s (an admission path side effect ran)
+  + actual - expected
+  
+  + undefined
+  - 'AGENT_PROCESS_REAPING'
+  
+      at assertRejectsReaping (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:168:10)
+      at async TestContext.<anonymous> (file:///Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-547-review-fix/packages/agent-router/test/process-lifecycle/stale-registration-recovery.test.js:259:3)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'AGENT_PROCESS_REAPING',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

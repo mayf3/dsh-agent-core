@@ -1,0 +1,41 @@
+✔ invoker: happy path maps turn reply into the scheduler outcome envelope (0.905167ms)
+✔ invoker: post-dispatch failure without termination proof is outcome_unknown (0.135625ms)
+✔ invoker: exact terminal failure proof remains ordinary error (0.079625ms)
+✔ invoker: unrecognized termination evidence cannot downgrade unknown to failed (0.083416ms)
+✔ invoker: occurrence/run/request correlation reaches AgentProcess (0.084ms)
+✔ C-008 same requestId/payload enqueues once; different payload conflicts pre-start (0.087667ms)
+✔ B15 invoker preserves outcome_unknown handle/deadline/evidence (0.452709ms)
+✔ invoker: definition validation rejects an unknown agent as error outcome (0.101834ms)
+✔ invoker: an aborted signal is recorded on the call log (0.122625ms)
+✔ invoker: turn poll gets a margin over the scheduler timeout so the scheduler race wins (0.093416ms)
+✔ chatIdFromDeliveryTo: accepts chat: prefix and bare chat id, rejects others (0.20625ms)
+✔ deliver: announce maps job.delivery.to onto the feishu.reply seam (0.139791ms)
+✔ deliver: SCHEDULER_SUCCESS_CARD_ELIGIBLE — a terminal ok announce carries EXACTLY the narrow presentation intent (0.060542ms)
+✔ deliver: successful silent delivery sends with NO opts (generic proactive stays on the plain-text plan) (0.042292ms)
+✔ deliver: error and outcome_unknown announces send with NO opts (stay on the plain-text plan) (0.055959ms)
+✔ deliver: non-feishu channel throws -> scheduler marks not-delivered (0.103542ms)
+✔ deliver: feishu.reply failure propagates -> not-delivered (0.046792ms)
+✔ invoker: a DISABLED agent is rejected BEFORE the chain seam (runnable-agent semantics) (0.055792ms)
+✔ CTR-IMPL-002: the bridge calls ONLY the published runTurnWithRouteChain seam (no ensureRunning) (0.047667ms)
+✔ DEC-IMPL-005: an explicit request.model selects STRICT_CHAIN_MODE; absent model inherits the agent chain (0.044ms)
+✔ CTR-IMPL-005: onStart fires EXACTLY once at the first dispatched attempt and drives `started` (0.052416ms)
+✔ CTR-IMPL-005: a pre-start rejection (no attempt ever dispatched) keeps started:false (0.046834ms)
+✔ CONTAINMENT: a post-dispatch not_admitted fence rejection is a deterministic pre-start error, never outcome_unknown (1.991166ms)
+✔ TERMINAL_PROOF: an authoritative terminal RPC error envelope settles as error even without a terminationEvidence kind (0.362ms)
+✔ TERMINATION_ONLY: outcome_unknown + trusted router readback (child_real_exit) stays outcome_unknown and stamps the proof (0.157042ms)
+✔ RQ-009 bridge carries restart quiescence proof while business outcome stays unknown (0.090084ms)
+✔ FAIL_CLOSED: outcome_unknown with a live (pending) router disposition stays outcome_unknown (0.076666ms)
+✔ FAIL_CLOSED: outcome_unknown without a correlation readback surface stays outcome_unknown (0.078291ms)
+✔ SCOPE: a settled router business outcome (late_completed) is NOT consumed by the termination readback (0.078375ms)
+✔ FAIL_CLOSED: a bare post-dispatch error without any envelope still stays outcome_unknown (0.0635ms)
+✔ terminal provider failure skips a round and next natural slot succeeds (retry absent) (606.666041ms)
+✔ terminal provider failure skips a round and next natural slot succeeds (retry disabled) (592.022709ms)
+✔ missing termination proof remains unknown and blocks only its job without replay (469.179583ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1729.988083
