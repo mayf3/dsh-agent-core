@@ -10,6 +10,7 @@
 // summary field-list documentation).
 import { withTransportErrors } from '../transport.js'
 import { authErrors, baseErrors } from './workflow-definition-authoring.js'
+import { admissionErrors } from './admission-errors.js'
 
 /** Shared read-side query codes (error.rs from_query WorkflowQueryError). */
 export const queryErrors = [
@@ -91,6 +92,10 @@ export const workflowExecuteManifest = withTransportErrors({
     { code: 'instance_not_terminal', description: 'Instance is not in a terminal state (HTTP 409).' },
     { code: 'already_archived', description: 'Instance is already archived (HTTP 409).' },
     { code: 'active_activation_exists', description: 'Instance has an active canonical activation and cannot be archived (HTTP 409).' },
+    // Sanitized svc admission family (CTR-CIR-003; AGENT_CORE_WORKFLOW_ADMISSION_ERROR_PRESERVATION_V1):
+    // shared rows in admission-errors.js so the mapping layer never degrades
+    // these to http_4xx/http_5xx. commit_outcome_unknown stays 503 fail-closed.
+    ...admissionErrors,
   ],
   operations: [
     {
