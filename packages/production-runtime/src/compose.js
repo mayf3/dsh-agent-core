@@ -67,6 +67,7 @@ import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
 import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
 import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { mountWebsiteInquiryRuntime } from './agent-session/website-inquiry/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -350,9 +351,8 @@ export async function composeProductionRuntime(options = {}) {
   })
 
   // V2 PREBOUND_ONLY Feishu ingress gate (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
-  // §4.5/§5.5): composition-layer product wiring over the Router's GENERIC
-  // read APIs only (getBinding + channelConversationId — zero Router change,
-  // zero Feishu special-case in the Router). Unknown/unbound conversations
+  // §4.5/§5.5): generic Router read APIs only (getBinding + channelConversationId).
+  // Unknown/unbound conversations
   // fail closed BEFORE the Router's first-contact path (no default Binding);
   // non-primary Binding.workspace compatibility rows stay on disk but are
   // blocked from the V2 normal path.
@@ -385,6 +385,7 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
+  await mountWebsiteInquiryRuntime({ ctx, config: opts.websiteInquiry, router, definition, workspaceBootstrap })
   const productApiCfg = opts.productApi ?? {}
   mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
@@ -392,7 +393,6 @@ export async function composeProductionRuntime(options = {}) {
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
-    // Dedicated history-only Tailnet config remains pass-through/default-OFF.
     history: productApiCfg.history,
   })
 
