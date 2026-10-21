@@ -47,6 +47,41 @@ export function trustedTerminationProof(outcome) {
 }
 
 /**
+ * WORKFLOW_546_D2 — the "queued-but-never-materialized" termination proof
+ * (Product #546, 2026-10-21: start evidence recorded, turn record never
+ * materialized). ALL of the following must hold mechanically — the absence
+ * of any one keeps the fail-closed outcome_unknown + fence:
+ *   - the exact-triple Router readback state is `never_existed`: no turn
+ *     record was ever minted for (occurrenceId, runId, requestId) in the
+ *     Router store's durable history (mint precedes every prompt byte, so
+ *     the dispatched turn provably never started — restart_lost/evicted are
+ *     retention ambiguity and NEVER qualify);
+ *   - durable start evidence exists (startedAt from the invoker seam):
+ *     the run was dispatched, so `never_existed` means the turn never
+ *     materialized rather than never being admitted;
+ *   - the occurrence's accepted execution deadline has elapsed (the already-
+ *     accepted bounded condition — no new timer, watcher or cadence).
+ * The proof is TERMINATION-only: it can never distinguish a business
+ * outcome, so it settles through the existing C-039 termination-only
+ * settlement with evidenceKind `never_materialized`.
+ */
+export function classifyNeverMaterialized(record, readback, nowMs) {
+  if (!record || typeof record !== 'object') return null
+  if (!readback || typeof readback !== 'object' || readback.state !== 'never_existed') return null
+  if (!Number.isFinite(record.startedAt)) return null // dispatch not proven
+  if (!Number.isFinite(nowMs)) return null
+  if (!Number.isFinite(record.executionDeadlineAtMs) || nowMs < record.executionDeadlineAtMs) return null
+  if (record.state !== 'outcome_unknown'
+    || record.lateSettlement !== undefined || record.terminationSettlement !== undefined) return null
+  return {
+    evidenceKind: 'never_materialized',
+    handle: null,
+    detail: `dispatched run never minted a Router turn record: start evidence ${record.startedAt}, `
+      + `accepted execution deadline ${record.executionDeadlineAtMs} elapsed with exact-triple readback never_existed`,
+  }
+}
+
+/**
  * Classify one bridge outcome into the durable occurrence classification.
  * Bridge-carried Router closed-union envelopes are authoritative for the
  * exact run and outrank the premature dispatch-time start evidence:
@@ -133,8 +168,14 @@ export async function applyTrustedTermination(record, outcome) {
  * appended only for a real commit — race losers, already-settled records,
  * missing fence and ownership mismatches stay silent (no fabricated
  * evidence; authoritative store unchanged).
+ *
+ * WORKFLOW_546_D2: the proof may also be the mechanical never-materialized
+ * proof (classifyNeverMaterialized); `opts.actorProvenance` then records
+ * WHICH trusted readback produced the evidence (default unchanged).
  */
-export async function applyTerminationSettlement(record, proof) {
+export async function applyTerminationSettlement(record, proof, opts = {}) {
+  const provenance = typeof opts.actorProvenance === 'string' && opts.actorProvenance !== ''
+    ? opts.actorProvenance : 'engine-trusted-readback'
   const now = this.nowMs()
   let committed = false
   try {
@@ -157,7 +198,7 @@ export async function applyTerminationSettlement(record, proof) {
         evidenceId: evidenceIdFor(proof.handle ?? current.occurrenceId, proof.evidenceKind),
         actorKind: 'self-agent',
         actorId: current.ownerAgentId,
-        actorProvenance: 'engine-trusted-readback',
+        actorProvenance: provenance,
         operationId: deriveSelfReconcileOperationId(current.ownerAgentId, current.occurrenceId, current.runId),
         fenceBefore,
         fenceAfter: false,

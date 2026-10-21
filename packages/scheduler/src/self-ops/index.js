@@ -6,6 +6,7 @@ import { isUnresolvedUnknown, rebuildFences } from '../occurrence-model.js'
 import { deriveJobStateSummary } from '../eligibility.js'
 import { classifyReconciliationEvidence } from '../watchdog/reconciliation.js'
 import { filterHealthForPrincipal } from '../watchdog/health.js'
+import { classifyNeverMaterialized } from './invoker-outcome.js'
 import { classifyRouter, createJobDisposition, opaqueDenied, requestIdFor } from './diagnosis.js'
 
 class NoWrite extends Error {
@@ -39,7 +40,9 @@ function failure(code, detail) {
 function receipt(record) {
   const settlement = record.terminationSettlement
   return {
-    disposition: 'reconciled_terminated_without_outcome',
+    disposition: settlement.evidenceKind === 'never_materialized'
+      ? 'reconciled_never_materialized'
+      : 'reconciled_terminated_without_outcome',
     operationId: settlement.operationId,
     callerAgentId: settlement.actorId,
     jobId: record.jobId,
@@ -47,6 +50,7 @@ function receipt(record) {
     runId: record.runId,
     businessState: settlement.businessStateAtCommit,
     terminationKind: settlement.kind,
+    evidenceKind: settlement.evidenceKind,
     fenceBefore: settlement.fenceBefore,
     fenceAfter: settlement.fenceAfter,
     scheduleDisposition: settlement.scheduleDisposition,
@@ -100,11 +104,12 @@ export function createSelfOpsAccess({
     const unknowns = occurrences.filter(isUnresolvedUnknown)
     const rows = []
     for (const record of unknowns.slice().sort((a, b) => b.admittedAt - a.admittedAt)) {
-      const classified = classifyRouter(resolveCallerCorrelation({
+      const readback = resolveCallerCorrelation({
         occurrenceId: record.occurrenceId,
         runId: record.runId,
         requestId: requestIdFor(record),
-      }), record, callerAgentId)
+      })
+      const classified = classifyRouter(readback, record, callerAgentId)
       const epoch = requestIdFor(record)
       const identity = { jobId: record.jobId, occurrenceId: record.occurrenceId, runId: record.runId, epoch }
       const reconciliationObservedAt = clock()
@@ -115,6 +120,12 @@ export function createSelfOpsAccess({
             : classified.disposition === 'pending' ? { identity, live: exact({ live: true }) }
               : { identity }
       const reconciliation = classifyReconciliationEvidence(evidence, { nowMs: reconciliationObservedAt })
+      // WORKFLOW_546_D2: the mechanical never-materialized proof is the
+      // second accepted reconcile_turn evidence (existing termination-only
+      // settlement; UNKNOWN preserved for every unproven state).
+      const neverMaterialized = classified.disposition === 'never_existed'
+        ? classifyNeverMaterialized(record, readback, clock())
+        : null
       rows.push({
         jobId: record.jobId,
         occurrenceId: record.occurrenceId,
@@ -122,11 +133,13 @@ export function createSelfOpsAccess({
         businessState: 'outcome_unknown',
         fenceActive: doc.fences[record.jobId] !== undefined,
         routerDisposition: classified.disposition,
-        selfReconcileEligible: isUnresolvedUnknown(record)
-          && classified.disposition === 'terminated_without_outcome',
+        selfReconcileEligible: (isUnresolvedUnknown(record) && classified.disposition === 'terminated_without_outcome')
+          || neverMaterialized !== null,
         blockerCode: classified.disposition === 'terminated_without_outcome'
           ? 'safe_reconcile_available'
-          : classified.disposition,
+          : neverMaterialized !== null
+            ? 'never_materialized_reconcile_available'
+            : classified.disposition,
         reconciliationState: reconciliation.classification ?? 'TERMINATION_ONLY_SETTLEMENT_AVAILABLE',
         reconciliationObservedAt: evidence.businessOutcome?.observedAt ?? evidence.termination?.observedAt ?? evidence.live?.observedAt ?? null,
       })
@@ -171,8 +184,14 @@ export function createSelfOpsAccess({
     }
     if (!isUnresolvedUnknown(record)) return failure('not_reconcilable', 'run is not an unresolved unknown')
 
-    const preflight = classifyRouter(resolveCallerCorrelation({ occurrenceId, runId, requestId: requestIdFor(record) }), record, callerAgentId)
-    if (preflight.disposition !== 'terminated_without_outcome') return routerFailure(preflight.disposition)
+    const preflightReadback = resolveCallerCorrelation({ occurrenceId, runId, requestId: requestIdFor(record) })
+    const preflight = classifyRouter(preflightReadback, record, callerAgentId)
+    const preflightNeverMaterialized = preflight.disposition === 'never_existed'
+      ? classifyNeverMaterialized(record, preflightReadback, clock())
+      : null
+    if (preflight.disposition !== 'terminated_without_outcome' && preflightNeverMaterialized === null) {
+      return routerFailure(preflight.disposition)
+    }
 
     try {
       const { value } = await store.mutateDoc((latest) => {
@@ -190,17 +209,26 @@ export function createSelfOpsAccess({
         if (!isUnresolvedUnknown(lockedRecord)) {
           throw new NoWrite(failure('not_reconcilable', 'run is not an unresolved unknown'))
         }
-        const classified = classifyRouter(resolveCallerCorrelation({
+        const now = clock()
+        const lockedReadback = resolveCallerCorrelation({
           occurrenceId, runId, requestId: requestIdFor(lockedRecord),
-        }), lockedRecord, callerAgentId)
-        if (classified.disposition !== 'terminated_without_outcome') {
+        })
+        const classified = classifyRouter(lockedReadback, lockedRecord, callerAgentId)
+        // WORKFLOW_546_D2: two accepted positive evidences — the router-
+        // reported exact termination, or the mechanical never-materialized
+        // proof (re-checked under the lock). Everything else refuses.
+        const lockedNeverMaterialized = classified.disposition === 'never_existed'
+          ? classifyNeverMaterialized(lockedRecord, lockedReadback, now)
+          : null
+        if (classified.disposition !== 'terminated_without_outcome' && lockedNeverMaterialized === null) {
           throw new NoWrite(routerFailure(classified.disposition))
         }
-        const now = clock()
         const fenceBefore = latest.fences[jobId] !== undefined
         const oneShot = lockedJob.schedule?.kind === 'at'
         const operationId = deriveSelfReconcileOperationId(callerAgentId, occurrenceId, runId)
-        const evidenceKind = classified.snapshot.terminationEvidence
+        const evidenceKind = classified.disposition === 'terminated_without_outcome'
+          ? classified.snapshot.terminationEvidence
+          : lockedNeverMaterialized.evidenceKind
         lockedRecord.terminationSettlement = {
           kind: 'terminated_without_outcome',
           businessStateAtCommit: 'outcome_unknown',
