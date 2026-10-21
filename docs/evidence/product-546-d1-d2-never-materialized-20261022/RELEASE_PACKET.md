@@ -74,3 +74,56 @@ Non-blocking notes recorded (to ride the spec amendment): (1) a SETTLED-then-cap
 - PR-ready candidate: merge branch `ac-task/1244-d1d2` at 790a034e (tests + evidence included).
 - Spec amendment lane (required before production adoption): one-point amendment declaring `never_materialized` in the V3/self-ops evidence vocabularies + the retention-race caveat and the C-007 REAP-refinement note.
 - Deployment/drain compatibility evidence for #525: not required by this candidate; nothing added.
+
+---
+
+# REVIEW_RECONCILIATION r2 — PR #547 review findings (2026-10-22)
+
+- TRIGGER = PR #547 independent review (codex, exact head `3a2df33d4f5b01623cfba0551f4090fe0bf980ce`, 2026-10-21): four unresolved P1 findings.
+- SCOPE = reconcile ONLY the PR #547 findings on the SAME PR; no duplicate PR, no merge, **PRODUCTION_MUTATION = NO**; D3 stays owned by #525.
+- R2_HEAD = this packet's commit (parent = `3a2df33d`, the reviewed head — additive only).
+
+## 11. FINDINGS → DISPOSITIONS (all four reproduced before any code change)
+
+**P1-1 kill(0)/`ChildProcess.kill() === false` treated as ESRCH/death — CONFIRMED, FIXED.**
+`hasExactDeathEvidence` read any `child.kill(0) === false` as death. `ChildProcess.kill()` reports EVERY undeliverable signal 0 as `false` — EPERM (the process EXISTS, this uid may not signal it) exactly like ESRCH — so a LIVE foreign-uid child would have its registration deleted and a parallel generation spawned.
+RED at `3a2df33d` (r2-RED-d1-router.log): "P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape…)" + "P1-1 …duck-typed (non-ChildProcess) child…".
+FIX: the predicate moved to `process-registry-death-evidence.js`; the OS probe is `process.kill(pid, 0)` — the ONLY surface with an explicit errno — and death requires **exactly `code === 'ESRCH'`**; a delivered probe (success), EPERM, any other throw, a duck-typed/fake child surface (gated on `instanceof ChildProcess`), or a missing/bad pid is NEVER evidence (fail closed). PID reuse can only ever mask a death, never fabricate one. `child.kill(0)` is no longer consulted anywhere.
+
+**P1-2 `never_existed` promoted to termination proof — CONFIRMED, REMOVED (unaccepted settlement behavior).**
+The r1 candidate settled `never_existed` (+ startedAt + elapsed deadline) as `never_materialized` termination evidence via the engine consult AND `reconcile_turn`. The accepted contracts say otherwise: SCHEDULER_TIMEOUT_OUTCOME_V3 **C-040**: "pending/restart_lost/evicted/**never_existed**/mismatch/conflict/unsupported 均不是 proof"; SELF_SERVICE_V4 **CTR-V3-RECON-002**: `never_existed` → `termination_not_proven`. The Router also reports `never_existed` after capacity eviction removes a settled record's correlation index, so the state cannot mechanically establish "never materialized" (the r1 packet's own non-blocking note 8(1)).
+DISPOSITION: the settlement behavior is **REMOVED from the merge candidate** — `occurrence-model.js`, `occurrence.js`, `self-ops/index.js`, `self-ops/invoker-outcome.js` are reverted byte-for-byte to the accepted base (fail-closed UNKNOWN + fence preserved; `never_existed` → `termination_not_proven`, zero-write). §5 SETTLEMENT_RULE and the §9 "declared spec-bearing delta" are **VACATED** — authority was NOT widened by implementation and no acceptance is invented.
+RED at `3a2df33d` (r2-RED-d2-scheduler.log): "D2 guard (C-040): the exact incident shape … stays termination_not_proven" + "D2 guard: the engine readback consult never settles never_existed".
+**INTERNAL_DEPENDENCY (exact):** D2's deterministic never-materialized settlement is BLOCKED on an accepted Spec amendment that (a) adds `never_materialized` (or an equivalent mechanically-provable evidence kind that survives router retention eviction) to the V3 termination-evidence vocabulary (`TERMINATION_EVIDENCE_KINDS` / C-040 positive set), and (b) extends the SELF_SERVICE_V4 CTR-V3-RECON-002 negative mapping accordingly. WAKE CONDITION = the existing SCHEDULER_TIMEOUT_OUTCOME_V3 / AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4 Spec owner records durable acceptance of that amendment (or an explicit rejection); only then may the settlement behavior return to this Product's candidate. Until then every `never_existed` unknown stays `outcome_unknown` + fenced (operator C-029 reconcile remains the only release path, as accepted).
+The replacement test file `never-materialized-fail-closed.test.js` pins this fail-closed posture INCLUDING the exact incident shape (start evidence + elapsed deadline + `never_existed`) so the settlement cannot silently return without its amendment; the ACCEPTED path (router-reported `terminated_without_outcome`, e.g. `child_real_exit`) is pinned as still settling (regression guard).
+
+**P1-3 REAP-fence cleanup bypassed the exact identity CAS — CONFIRMED, FIXED.**
+Both `ensureRunning` and route-gate `resolveSlot` deleted a REAP fence whose full identity matched a proven-dead processRef and immediately minted a new generation. V4 C-007 requires EVERY REAP admission to reject; C-009 permits `REAP → EMPTY` only through the exact identity CAS (generation + entryId + processRef + ownershipToken) as the final step of the process exit sequence after real exit AND reconciliation visibility — and the fence's `reapPromise` must be resolved by that path, not left dangling by an admission-side `delete`. The bypass also omitted `entryId` entirely.
+RED at `3a2df33d` (r2-RED-d1-router.log): "D1-a a REAP fence whose cleanup CAS was missed still rejects admission…" (the bounded race fired: admission ran a startup side effect instead of rejecting).
+FIX: both sites reverted to the unconditional `AGENT_PROCESS_REAPING` rejection / `{status:'reaping'}` report. A missed cleanup (blocked CAS, crashed exit sequence) now fails closed and loud — every admission rejects until the process-owned cleanup completes or the runtime restarts (the in-memory registry rebuilds empty). The D1 incident fix itself (READY-reuse death-evidence gate) is untouched by this: the 2026-10-21 pin was a READY slot, not a REAP fence.
+
+**P1-4 process-registry.js crossed the 500-line hard limit — CONFIRMED, FIXED.**
+467 → 509 physical lines at `3a2df33d`; `CODE_STRUCTURE_GUARDRAILS_V1` §6: a base ≤500 file crossing >500 at head is a hard violation (`NEW_LEGACY_VIOLATION_CROSSED_500`, machine verifier exit 1 — reproduced at `3a2df33d`, r2-RED-structure.log).
+FIX: smallest responsibility-preserving split — the death-evidence predicate moved whole to the new 44-line `process-registry-death-evidence.js` (single cohesive responsibility: exact-death-evidence semantics for the reuse gates); `process-registry.js` is now **478 physical lines**; the route gate imports the module directly (its transient injection parameter removed). No broad refactor, no behavior change beyond P1-1/P1-3. Verifier at r2 head: violation set **byte-identical to main's 11 pre-existing directory-class entries** (r2-GREEN-structure.log; base-vs-base fails identically) — this PR introduces ZERO new structure violations.
+
+## 12. R2 GREEN MATRIX (node v26.7.0, this worktree)
+
+- Focused new tests: **14/14** (D1 `stale-registration-recovery.test.js` 10 — probe units + rig fail-closed/rebuild semantics; D2 `never-materialized-fail-closed.test.js` 4) — r2-GREEN-focused.log.
+- agent-router process-lifecycle + generation-restart-safety + registry + startup-wedge: **257 pass / 0 fail / 1 skipped** — r2-GREEN-router-lifecycle.log.
+- scheduler full tree (core + self-service + watchdog + cross-agent): **425/425** (r1's 428 minus the removed 7 settlement tests plus the 4 fail-closed guards) — r2-GREEN-scheduler.log.
+- scheduler-router: **33/33** — r2-GREEN-scheduler-router.log.
+- agent-router full tree: 494 pass / 5 fail / 2 skipped, failure set **identical to the pre-fix reviewed head `3a2df33d`** (pre-existing environmental gateway-seam/credential-chain failures, untouched surface) — r2-GREEN-router-full.log.
+- Structure verifier: base-relative violation set identical to main (zero new; P1-4 repaired).
+
+## 13. R2 NO_REPLAY / PARALLEL_WRITER PROOF (unchanged invariants, re-pinned)
+
+- D2 fail-closed guards assert `invoker.calls.length === 1` and `listOccurrences().length === 1` after every refused reconcile (the turn is never re-invoked, no parallel admission), plus zero history growth and the fence still up; the accepted-path regression still asserts C-045 settle-once replay (same operationId, zero history growth) and original-history-prefix preservation.
+- D1's rebuild still only invalidates a dead READY registration into the ordinary EMPTY→STARTUP CAS path (new generation, no turn replay); late old-generation callbacks stay audit-only (D1-stale).
+
+## 14. R2 REVIEW
+
+See the PR record for the r2 independent exact-head changed-surface review verdict (this packet is updated again only if that review demands changes). R2 SPEC_COMPLIANCE = PASS: the candidate now contains NO spec-bearing delta — D1 operates entirely within AGENT_PROCESS_LIFECYCLE_HARDENING_V4 C-006..C-009 semantics (reuse-gate death evidence + unconditional REAP rejection), and the scheduler tree is byte-identical to the accepted base. No governing Spec file is modified by this branch.
+
+## 15. R2 EVIDENCE FILES
+
+r2-RED-d1-router.log.txt, r2-RED-d2-scheduler.log.txt, r2-RED-structure.log.txt, r2-GREEN-focused.log.txt, r2-GREEN-router-lifecycle.log.txt, r2-GREEN-scheduler.log.txt, r2-GREEN-scheduler-router.log.txt, r2-GREEN-router-full.log.txt, r2-GREEN-structure.log.txt (+ the base/head violation-set listings r2-GREEN-structure-{base,head}-violations.txt, `diff` = empty). All captured 2026-10-22 at the exact commits named above (`.log.txt` because `*.log` is gitignored repo-wide).
