@@ -393,3 +393,12 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Lifecycle | Scope | Activation |
 |---|---|---|---|
 | [AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3](AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3.md) | accepted by mayf3 2026-10-15; V2 superseded | exact upstream PR #21 fixes plus local bounded-development routing; no product implementation or production effect | docs-only activation separately approved from #497 CI; effective after final-head review and main merge |
+
+## Agent credential provisioning successor candidate
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1](AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V1.md) | accepted / active, unchanged | existing accepted scope | complete predecessor remains governing until qualified atomic V2 lifecycle acceptance and main merge |
+| [AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2](AGENT_CORE_AGENT_CREDENTIAL_PROVISIONING_V2.md) | proposed / docs-only Draft candidate | contracts only after qualified acceptance and authority-branch merge | complete successor; only added scope is one existing Client State E independent operator and protected pending carrier; other Phase B frozen; no production effect |
+
+[Acceptance packet and future atomic lifecycle plan](../reports/AGENT_CREDENTIAL_PROVISIONING_V2_DOCS_ACCEPTANCE_PACKET_20261019.md).
