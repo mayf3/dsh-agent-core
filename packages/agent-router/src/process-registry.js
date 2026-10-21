@@ -49,6 +49,35 @@ function ownsReapSlot(slots, agentId, proc, requireGeneration = false) {
     && slot.ownershipToken === (proc.ownershipToken ?? null)
 }
 
+/**
+ * Exact process-death evidence on a slot's processRef (WORKFLOW_546_D1):
+ * observed real exit, the terminal EXITED state (reachable with `exit`
+ * unset on the no-child logical path), or an OS-proven dead child
+ * (kill(0) === false ⇒ ESRCH). Registration invalidation on these evidences
+ * never creates a pre-exit EMPTY window — death is already proven — and a
+ * probe failure / absent probe surface is never evidence (fail-closed).
+ */
+export function hasExactDeathEvidence(proc) {
+  if (proc === null || proc === undefined) return true // nothing to reuse
+  if (proc.exit !== undefined || proc.state === 'EXITED') return true
+  const child = proc.child ?? proc.ownership?.childObject
+  if (child !== null && child !== undefined && typeof child.kill === 'function'
+      && Number.isInteger(proc.pid) && proc.pid > 0) {
+    try {
+      if (child.kill(0) === false) return true // ESRCH: the OS child is gone
+    } catch { /* a failed probe is never death evidence */ }
+  }
+  return false
+}
+
+/** Full REAP-fence identity (the same comparison the REAP->EMPTY CAS uses). */
+function reapsSameProcess(slot) {
+  const proc = slot?.processRef
+  return proc !== null && proc !== undefined
+    && slot.generation === proc.processGeneration
+    && slot.ownershipToken === (proc.ownershipToken ?? null)
+}
+
 function restoreRecoveryFences(store) {
   for (const record of store.unresolvedRecoveryRecords?.() ?? []) {
     store.markRecoveryBlocked(record.handle, ['live_generation_ownership'], 'runtime_restart_ownership_unavailable')
@@ -79,6 +108,7 @@ export function createProcessRegistry({
     bootstrapStartup,
     assertRunnable,
     isDisposing: () => disposing,
+    hasExactDeathEvidence,
   })
 
   function auditStaleSlot(detail) {
@@ -229,16 +259,28 @@ export function createProcessRegistry({
     }
     const initial = lifecycleSlots.get(agentId)
     if (initial?.state === 'READY') {
-      if (initial.processRef?.exit === undefined) {
+      if (!hasExactDeathEvidence(initial.processRef)) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
         return Promise.resolve(initial.processRef)
       }
       lifecycleSlots.delete(agentId)
-      log.log(`process for ${agentId} exited (${initial.processRef.exit?.code ?? 'signal'}); will respawn`)
+      log.log(`process for ${agentId} is dead (exit ${initial.processRef?.exit?.code ?? 'unobserved'}, state ${initial.processRef?.state ?? 'n/a'}); will respawn`)
     } else if (initial?.state === 'STARTUP') {
       return initial.resultPromise
     } else if (initial?.state === 'REAP') {
-      return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
+      // WORKFLOW_546_D1: a REAP fence over a generation whose real exit is
+      // already proven (on the processRef) but whose cleanup CAS was missed
+      // is a stale registration — invalidate it so the ordinary EMPTY ->
+      // STARTUP path below rebuilds. No pre-exit EMPTY window exists: death
+      // is proven; the fence's whole purpose is already served. A fence with
+      // a live/unproven processRef (or mismatched identity) still rejects
+      // AGENT_PROCESS_REAPING immediately (C-007, unchanged).
+      if (reapsSameProcess(initial) && hasExactDeathEvidence(initial.processRef)) {
+        lifecycleSlots.delete(agentId)
+        log.log(`stale REAP fence for ${agentId} generation ${initial.generation} over a proven-dead process; will respawn`)
+      } else {
+        return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
+      }
     }
     const entry = installStartup(agentId)
     void bootstrapStartup(agentId, entry)
