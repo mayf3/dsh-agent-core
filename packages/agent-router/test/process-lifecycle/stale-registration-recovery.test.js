@@ -5,25 +5,29 @@
  * for 5.5h failed against the same dead generation across deployment windows;
  * repeated `RPC initialize rejected: AGENT_PROCESS_EXITED`).
  *
- * The registry's reuse gates trusted ONLY the observed-exit flag. Three exact
- * death evidences must mechanically invalidate the dead registration and
- * rebuild through the EXISTING CAS admission path (no second registry, no
- * watcher, no timers, and no EMPTY window before real exit — V4 C-006..C-009):
- *   a. a REAP fence whose processRef carries observed exit but whose exit
- *      callback never completed the REAP->EMPTY cleanup (exitPromise never
- *      settles — the registryCleanupBlocked shape) — admission stayed pinned
- *      to AGENT_PROCESS_REAPING forever;
- *   b. a process in the terminal EXITED state reachable with exit unset
- *      (logical no-child EXITED shape) sitting in a READY slot — admission
- *      kept reusing the dead registration;
- *   c. an OS-proven dead child (kill(0) === false ⇒ ESRCH) with the exit
- *      callback not yet observed — the 2026-10-21 pin: the same dead
- *      generation was handed out on every attempt.
- * Negative: a LIVE process (no death evidence) must keep the exact current
- * semantics — REAP still rejects, READY still reuses (fail-closed preserved).
+ * Review-reconciliation r2 (PR #547 findings 1+3, 2026-10-22): death evidence
+ * is FAIL-CLOSED and the REAP fence is untouchable from admission.
+ *   - P1-1: a `ChildProcess.kill(0)` / `kill(0) === false` result is NOT death
+ *     evidence — signal delivery fails for EPERM (a LIVE process this uid may
+ *     not signal) exactly as it fails for ESRCH. Only an explicit OS
+ *     not-found verdict on the exact pid (process.kill(pid, 0) throwing
+ *     code=ESRCH) is death; every probe failure and every ambiguous probe
+ *     surface fail closed. PID reuse can only ever make a dead child look
+ *     alive — never a live child look dead.
+ *   - P1-3: a REAP fence ALWAYS rejects admission (V4 C-007). The exact
+ *     REAP->EMPTY cleanup stays owned by the process exit sequence
+ *     (C-009: real exit + reconciliation visible -> exact identity CAS);
+ *     admission never deletes a fence and never mints a parallel generation.
+ *   - Death evidence that IS mechanical: observed real exit on the process
+ *     and the terminal EXITED state (reachable with `exit` unset on the
+ *     logical no-child path) invalidate a READY registration through the
+ *     ordinary EMPTY -> STARTUP rebuild.
+ * Negative: LIVE processes keep the exact current semantics (reuse, REAP
+ * rejects) — no premature invalidation, fail-closed preserved.
  */
 
 import assert from 'node:assert/strict'
+import { spawn } from 'node:child_process'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -32,6 +36,7 @@ import { test } from 'node:test'
 import { AgentDefinition } from '../../../agent-definition/src/definition.js'
 import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
 import { AgentProcess } from '../../src/process.js'
+import { hasExactDeathEvidence } from '../../src/process-registry.js'
 import { makeFakeChild } from '../helpers/fake-child.js'
 import { apply as applyRouter } from '../../src/index.js'
 
@@ -59,25 +64,16 @@ function stubBootstrap() {
 }
 
 /**
- * FakeChildAgentProcess with controllable evidence seams:
- *   - osProbe(spawnIndex): what child.kill(0) reports for THIS spawn
- *     (undefined = legacy fake behavior — no evidence; false = ESRCH,
- *     OS-proven dead; true = alive);
- *   - blockCasEmpty: the exact REAP->EMPTY cleanup CAS always fails (the
- *     missed-cleanup wedge — exitPromise never settles).
+ * FakeChildAgentProcess with the exact cleanup-failure seam:
+ * `blockCasEmpty: the exact REAP->EMPTY cleanup CAS always fails (the
+ * missed-cleanup wedge — exitPromise never settles). The fence's fate is
+ * then the process-owned cleanup order's business — NEVER admission's.
  */
 class ProbeChildAgentProcess extends AgentProcess {
   spawn() {
     this.counters.spawnAttempts += 1
     fakePidSeq += 1
     const child = makeFakeChild({ pid: fakePidSeq })
-    const probe = this.osProbe?.(this.spawnIndex ?? 0)
-    const rawKill = child.kill.bind(child)
-    child.kill = (signal) => {
-      rawKill(signal)
-      if (signal === 0) return probe
-      return undefined
-    }
     if (this.blockCasEmpty === true) {
       // The exact REAP->EMPTY CAS fails WITHOUT consuming the fence (the
       // stale/foreign-identity shape): the fence stays installed forever.
@@ -98,10 +94,9 @@ async function writeRoster(dir, agentIds) {
 }
 
 /** Router rig on the REAL registry + route gate (fake OS children). */
-async function freshRig(t, dir, agentIds, { osProbe, blockCasEmpty = false } = {}) {
+async function freshRig(t, dir, agentIds, { blockCasEmpty = false } = {}) {
   const definition = await writeRoster(dir, agentIds)
   const spawned = []
-  let spawnIndex = 0
   const ctx = fakeCtx(new Map([
     ['workspaceBootstrap', stubBootstrap()],
     ['agentDefinition', {
@@ -118,10 +113,7 @@ async function freshRig(t, dir, agentIds, { osProbe, blockCasEmpty = false } = {
     defaultAgentId: agentIds[0],
     processFactory: (opts) => {
       const proc = new ProbeChildAgentProcess(opts)
-      proc.osProbe = osProbe
       proc.blockCasEmpty = blockCasEmpty
-      proc.spawnIndex = spawnIndex
-      spawnIndex += 1
       spawned.push(proc)
       return proc
     },
@@ -159,7 +151,93 @@ async function admitAgain(router, spawned, agentId) {
   return pending
 }
 
-test('D1-a blocked REAP cleanup over a proven-dead generation rebuilds through the existing admission path', async (t) => {
+/**
+ * Bounded rejection assertion: admission must settle with AGENT_PROCESS_REAPING.
+ * A promise that neither resolves nor rejects (a minted startup hanging on its
+ * initialize) is itself the defect — reported as a clean failure, not a hang.
+ */
+async function assertRejectsReaping(promise, label = 'admission') {
+  const outcome = await Promise.race([
+    promise.then(
+      (value) => new Error(`${label}: expected AGENT_PROCESS_REAPING rejection, got a resolved generation ${value?.processGeneration}`),
+      (error) => error,
+    ),
+    new Promise((resolve) => setTimeout(() => resolve(new Error(`${label}: neither resolved nor rejected within 2s (an admission path side effect ran)`)), 2000)),
+  ])
+  assert.ok(outcome instanceof Error, `${label}: rejection shape`)
+  assert.equal(outcome.code, 'AGENT_PROCESS_REAPING', `${label}: expected AGENT_PROCESS_REAPING, got: ${outcome.message}`)
+}
+
+/**
+ * A REAL OS child (real ChildProcess instance) that stays alive until
+ * explicitly killed; `await realExit` resolves after its true OS exit.
+ */
+async function realOsChild(t) {
+  const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1e6)'], { stdio: 'ignore' })
+  const realExit = new Promise((resolve) => child.once('exit', resolve))
+  t.after(() => { try { child.kill('SIGKILL') } catch { /* already gone */ } })
+  await tick()
+  assert.ok(child.pid > 0, 'the real child has an OS pid')
+  return { child, realExit }
+}
+
+// ---------------------------------------------------------------------------
+// P1-1: the death probe is ESRCH-exact and fails closed (unit level).
+// ---------------------------------------------------------------------------
+
+test('P1-1 a kill(0) === false on a REAL ChildProcess (the EPERM shape: live process, undeliverable signal) is NOT death evidence', async (t) => {
+  const { child } = await realOsChild(t)
+  // Model exactly the finding: signal 0 could not be delivered (EPERM — the
+  // process exists but is not ours to signal); ChildProcess.kill() reports
+  // that identically to ESRCH, as `false`.
+  child.kill = () => false
+  assert.equal(hasExactDeathEvidence({ pid: child.pid, child }), false,
+    'an undeliverable probe on a live process is never death evidence')
+})
+
+test('P1-1 an EPERM probe failure is never death evidence (fail closed)', async (t) => {
+  const { child } = await realOsChild(t)
+  t.mock.method(process, 'kill', (pid, signal) => {
+    assert.equal(pid, child.pid)
+    assert.equal(signal, 0)
+    throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' })
+  })
+  assert.equal(hasExactDeathEvidence({ pid: child.pid, child }), false,
+    'EPERM means the OS process EXISTS — fail closed')
+})
+
+test('P1-1 a kill(0) === false on a duck-typed (non-ChildProcess) child is NOT evidence', () => {
+  // The exact pre-fix defect shape: any object with a kill() surface returning
+  // false was read as ESRCH. Without a REAL OS child identity there is no OS
+  // evidence at all.
+  const fake = makeFakeChild({ pid: 424242 })
+  fake.kill = () => false
+  assert.equal(hasExactDeathEvidence({ pid: 424242, child: fake }), false)
+})
+
+test('P1-1 an explicit OS not-found verdict (ESRCH) IS death evidence', async (t) => {
+  const { child, realExit } = await realOsChild(t)
+  child.kill('SIGKILL')
+  await realExit
+  assert.equal(hasExactDeathEvidence({ pid: child.pid, child }), true,
+    'ESRCH on the exact pid is mechanically proven death')
+})
+
+test('P1-1 any other probe throw is never death evidence; no probe surface or bad pid is never evidence', async (t) => {
+  const { child } = await realOsChild(t)
+  t.mock.method(process, 'kill', () => { throw new Error('probe exploded') })
+  assert.equal(hasExactDeathEvidence({ pid: child.pid, child }), false)
+  assert.equal(hasExactDeathEvidence({ pid: child.pid }), false, 'no child object: no OS evidence')
+  assert.equal(hasExactDeathEvidence({ pid: 0, child }), false, 'pid 0 is not an exact child identity')
+  assert.equal(hasExactDeathEvidence({ pid: -3, child }), false)
+})
+
+// ---------------------------------------------------------------------------
+// P1-3: REAP fences always reject admission (C-007); the exact cleanup stays
+// with the process exit sequence (C-009). Admission never deletes a fence.
+// ---------------------------------------------------------------------------
+
+test('D1-a a REAP fence whose cleanup CAS was missed still rejects admission — no fence deletion, no parallel generation (fail closed)', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'stale-reg-reap-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const { router, spawned } = await freshRig(t, dir, [AGT_ID], { blockCasEmpty: true })
@@ -174,20 +252,17 @@ test('D1-a blocked REAP cleanup over a proven-dead generation rebuilds through t
   assert.equal(dead.exit?.code, 1, 'exit evidence recorded on the process')
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'REAP')
 
-  // Incident shape: admission pinned to the dead generation forever. The fix
-  // must invalidate the stale fence on the exact exit evidence and rebuild a
-  // fresh generation through the same CAS path (no pre-exit EMPTY window —
-  // real exit is already proven).
-  const rebuilt = await admitAgain(router, spawned, AGT_ID)
-  assert.equal(rebuilt.processGeneration, dead.processGeneration + 1, 'a NEW generation serves admission')
-  assert.equal(rebuilt, spawned.at(-1))
-  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'READY')
-  assert.notEqual(rebuilt, dead, 'the dead registration never serves admission again')
-  // Route-gate entry (the scheduler chain path) agrees with the same rebuild.
+  // V4 C-007: EVERY REAP admission rejects. Admission never turns a still-REAP
+  // slot into EMPTY — even over a proven-dead process — because the exact
+  // REAP->EMPTY identity CAS (after real exit AND reconciliation visibility)
+  // is the cleanup order's alone (C-009).
+  await assertRejectsReaping(router.ensureRunning(AGT_ID), 'ensureRunning')
+  await assertRejectsReaping(router.ensureRunning(AGT_ID), 'repeated ensureRunning')
   const viaRoute = await router.ensureRunningForRoute(AGT_ID)
-  assert.equal(viaRoute.status, 'ready')
-  assert.equal(viaRoute.proc, rebuilt, 'the rebuilt generation is reused, not re-spawned')
-
+  assert.deepEqual(viaRoute, { status: 'reaping', generation: dead.processGeneration },
+    'the route gate reports the same fence')
+  assert.equal(spawned.length, 1, 'no parallel generation was ever minted')
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'REAP', 'the fence still stands')
 })
 
 test('D1-b a terminal-EXITED process in a READY slot never serves admission again', async (t) => {
@@ -208,23 +283,27 @@ test('D1-b a terminal-EXITED process in a READY slot never serves admission agai
   const rebuilt = await admitAgain(router, spawned, AGT_ID)
   assert.equal(rebuilt.processGeneration, dead.processGeneration + 1)
   assert.notEqual(rebuilt, dead)
-
 })
 
-test('D1-c OS-proven dead child (kill(0) ESRCH) invalidates the pinned registration — repeated attempts never see the dead generation again', async (t) => {
+test('D1-c an OS-proven dead child (exact-pid ESRCH) in a READY slot rebuilds exactly once, then stable reuse', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'stale-reg-esrch-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  // First spawn reports ESRCH (dead, exit callback unobserved — the
-  // 2026-10-21 pinned-generation shape); rebuilt generations are alive.
-  const { router, spawned } = await freshRig(t, dir, [AGT_ID], {
-    osProbe: (index) => (index === 0 ? false : true),
-  })
+  const { router, spawned } = await freshRig(t, dir, [AGT_ID])
   const dead = await startAgent(router, spawned, AGT_ID, 1)
-  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'READY')
+
+  // Attach the REAL OS death evidence to the READY registration: the actual
+  // child object of a truly exited OS process (observed-exit flag NOT set —
+  // the missed-exit-callback incident shape).
+  const { child, realExit } = await realOsChild(t)
+  child.kill('SIGKILL')
+  await realExit
+  dead.child = child
+  dead.pid = child.pid
 
   // Repeated admissions (the every-slot retry) must observe the exact death
   // evidence once and rebuild — never hand out the same dead generation again.
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     const proc = await admitAgain(router, spawned, AGT_ID)
     assert.notEqual(proc, dead, `attempt ${attempt}: the dead generation is never reused`)
     assert.equal(proc.processGeneration, 2, `attempt ${attempt}: one rebuild, then stable reuse`)
@@ -233,16 +312,15 @@ test('D1-c OS-proven dead child (kill(0) ESRCH) invalidates the pinned registrat
   const viaRoute = await router.ensureRunningForRoute(AGT_ID)
   assert.equal(viaRoute.status, 'ready')
   assert.equal(viaRoute.proc.processGeneration, 2)
-
 })
 
 test('D1-negative a LIVE process keeps the exact current semantics (no premature invalidation)', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'stale-reg-live-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const { router, spawned } = await freshRig(t, dir, [AGT_ID], { osProbe: () => true })
+  const { router, spawned } = await freshRig(t, dir, [AGT_ID])
   const live = await startAgent(router, spawned, AGT_ID, 1)
 
-  // READY + alive probe + no exit evidence: reuse (zero new generations).
+  // READY + no death evidence: reuse (zero new generations).
   const reused = await router.ensureRunning(AGT_ID)
   assert.equal(reused, live)
   const viaRoute = await router.ensureRunningForRoute(AGT_ID)
@@ -259,16 +337,17 @@ test('D1-negative a LIVE process keeps the exact current semantics (no premature
   const reaping = await router.ensureRunningForRoute(AGT_ID)
   assert.deepEqual(reaping, { status: 'reaping', generation: live.processGeneration })
   assert.equal(spawned.length, 1, 'live REAP never spawns a new generation')
-
 })
 
 test('D1-stale the dead old generation stays audit-only after rebuild (no slot mutation)', async (t) => {
   const dir = await mkdtemp(join(tmpdir(), 'stale-reg-audit-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
-  const { router, spawned } = await freshRig(t, dir, [AGT_ID], {
-    osProbe: (index) => (index === 0 ? false : true),
-  })
+  const { router, spawned } = await freshRig(t, dir, [AGT_ID])
   const dead = await startAgent(router, spawned, AGT_ID, 1)
+
+  // Rebuild via the terminal-EXITED evidence (D1-b shape).
+  dead.transition('DRAINING')
+  dead.transition('EXITED')
   const rebuilt = await admitAgain(router, spawned, AGT_ID)
   assert.equal(rebuilt.processGeneration, 2)
 
@@ -281,5 +360,4 @@ test('D1-stale the dead old generation stays audit-only after rebuild (no slot m
   assert.ok(router.staleSlotAuditsSnapshot().length >= auditsBefore)
   const stillServed = await router.ensureRunning(AGT_ID)
   assert.equal(stillServed, rebuilt, 'admission continues on the rebuilt generation')
-
 })

@@ -29,12 +29,6 @@ export const TERMINAL_EVIDENCE_KINDS = new Set([
 export const TERMINATION_EVIDENCE_KINDS = new Set([
   'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',
   'operator-trusted-evidence',
-  // WORKFLOW_546_D2: the dispatched run provably never minted a Router turn
-  // record (exact-triple readback never_existed) after durable start evidence
-  // and an elapsed accepted execution deadline — the run can never continue,
-  // so the existing termination-only settlement applies. Never a business
-  // outcome: UNKNOWN/fence is preserved for every unproven readback state.
-  'never_materialized',
   'restart_quiescence_proven',
 ])
 export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator'])
