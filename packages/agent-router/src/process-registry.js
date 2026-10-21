@@ -28,8 +28,13 @@ import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
 import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
+import { hasExactDeathEvidence } from './process-registry-death-evidence.js'
 import { convergeStartedStartup, disposeProcessSlots, failNoChildStartup, reapExitedSlot,
   settleStartupEntry } from './process-registry-startup.js'
+
+// Re-exported for the lifecycle tests: the exact-death-evidence predicate the
+// registry's reuse gates run (see process-registry-death-evidence.js).
+export { hasExactDeathEvidence }
 
 function assertRecoveryAdmission(store, agentId) {
   store.assertBusinessAdmissionReady?.()
@@ -229,15 +234,21 @@ export function createProcessRegistry({
     }
     const initial = lifecycleSlots.get(agentId)
     if (initial?.state === 'READY') {
-      if (initial.processRef?.exit === undefined) {
+      if (!hasExactDeathEvidence(initial.processRef)) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
         return Promise.resolve(initial.processRef)
       }
       lifecycleSlots.delete(agentId)
-      log.log(`process for ${agentId} exited (${initial.processRef.exit?.code ?? 'signal'}); will respawn`)
+      log.log(`process for ${agentId} is dead (exit ${initial.processRef?.exit?.code ?? 'unobserved'}, state ${initial.processRef?.state ?? 'n/a'}); will respawn`)
     } else if (initial?.state === 'STARTUP') {
       return initial.resultPromise
     } else if (initial?.state === 'REAP') {
+      // V4 C-007: EVERY REAP admission rejects, over a live and a proven-dead
+      // process alike. The exact REAP -> EMPTY cleanup (real exit +
+      // reconciliation visible -> generation + entryId + processRef +
+      // ownershipToken identity CAS) belongs to the process exit sequence
+      // alone (C-009); admission never deletes a fence and never mints a
+      // parallel generation around one.
       return Promise.reject(Object.assign(new Error(`agent-router: agent ${agentId} generation ${initial.generation} is reaping (${initial.cause ?? 'fatal'}) — new startup forbidden until its real exit`), { code: 'AGENT_PROCESS_REAPING' }))
     }
     const entry = installStartup(agentId)
