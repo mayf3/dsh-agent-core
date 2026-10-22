@@ -1,12 +1,17 @@
 ---
 spec_id: B7_DIAGNOSTIC_TOOL_FAIL_CLOSED_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 owners:
   - mayf3
 repository: mayf3/dsh-agent-core
+accepted_by: root-authorized-non-author-technical-actor
+accepted_date: 2026-10-22
+accepted_reviewed_spec_commit: 6a762883d21fbfc6d67423c5a6e8a030344225b8
+acceptance_receipt_sha256: 27f2299c009253c28a3bcca6d592891deb326a9fdcacd94019fe90bdff1317c3
+acceptance_scope: isolated_source_only_no_merge_adoption_or_production
 authoring_base: 45cdd5ebcaf5c981973d0a86947dd17aa73ee60f
 tracking_issue: https://github.com/mayf3/agent-control/issues/1256
 production_apply_authority: none
@@ -20,16 +25,19 @@ superseded_by: null
 
 # B7 diagnostic tool failure behavior V1
 
-This is a concrete proposal for independent technical disposition. It does not
+This finite source contract was independently accepted by root at the reviewed
+docs commit, as recorded in
+`docs/evidence/ac1256/b7-source-contract-acceptance.json`. It does not
 change the deployment queue, installed tool, production journal, authority,
 operation, lock, privilege or original deployment writer. The source repository is `mayf3/dsh-agent-core`, authoring base
-`45cdd5ebcaf5c981973d0a86947dd17aa73ee60f`. This is not an accepted Spec.
+`45cdd5ebcaf5c981973d0a86947dd17aa73ee60f`. The acceptance is source-only under the existing atomic route, not main
+activation, automatic merge or adoption.
 Root, as the authorized non-author technical actor, reviews the frozen docs
 commit. The existing main-active AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
 CTR-AD3-003 permits bounded NEW + DURABLE atomic Spec/code work under the Owner
-task mandate, with independent acceptance before merge. This proposal alone
-authorizes no code: root must first accept the exact frozen source-only
-contract delta as the non-author authorized technical actor. Implementation
+task mandate, with independent acceptance before merge. Root accepted the exact frozen source-only
+contract delta as the non-author authorized technical actor; the acceptance
+receipt above binds the reviewed bytes and the explicit mandate. Implementation
 then branches from the accepted docs commit; docs and implementation commits
 remain separate. This does not claim the new unmerged Spec is main-active or
 grant merge, adoption or production authority; the final PR retains its gate.
@@ -198,8 +206,9 @@ verification remain separate and initially NOT_DONE.
 ## Technical disposition required
 
 The root non-author technical actor has selected CTR-B7D-003's explicit
-fail-closed mitigation as the immediate F03 safety repair direction; independent
-acceptance still binds the exact final docs commit. It does not
+fail-closed mitigation as the immediate F03 safety repair direction; independent acceptance binds reviewed commit
+`6a762883d21fbfc6d67423c5a6e8a030344225b8`; this metadata commit records that
+existing decision and does not expand the frozen semantic body. It does not
 claim functional recovery is complete. If actual restore is required now, first
 supply the exact governing restore/append-tail contract and replace this
 mitigation with a separately reviewed bounded recovery design. Ordinary source
@@ -213,7 +222,8 @@ ROUTE_STAGE = AUTHORITY_AUTHORING
 PLAN_LEVEL = BRIEF
 ASSURANCE_LEVEL = DURABLE (source import/failure behavior only; no new privilege, Secret/Grant change, destructive data change or production access)
 EXISTING_ROUTE_AUTHORITY_IN_BASE = YES (ADOPTION_V3 CTR-AD3-003)
-NEW_CONTRACT_ACCEPTANCE = REQUIRED_BEFORE_IMPLEMENTATION_AND_MERGE
+NEW_CONTRACT_ACCEPTANCE = RECORDED_BY_NON_AUTHOR_FOR_ISOLATED_SOURCE_IMPLEMENTATION
+MAIN_INTEGRATION_AND_FINAL_REVIEW = STILL_REQUIRED
 ATOMIC_SPEC_CODE_ROUTE = PERMITTED_BY_EXISTING_MAIN_AUTHORITY
 IMPLEMENTATION_PERFORMED = NO
 PRODUCTION_EFFECTS = NONE
