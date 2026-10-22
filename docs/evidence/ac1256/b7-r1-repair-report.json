@@ -55,5 +55,22 @@
   "production_writes": 0,
   "historical_baseline_qualification": "b7-baseline-fixture-correction.json",
   "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256",
-  "implementation_pr": "https://github.com/mayf3/dsh-agent-core/pull/551"
+  "implementation_pr": "https://github.com/mayf3/dsh-agent-core/pull/551",
+  "native_shape_followup": {
+    "head": "7ebdd7893d88565548ed9987877794b4846cf5c9",
+    "source": "canonical45cdd packages/agent-router/src/binding-store.js:26-32,217-231",
+    "repair": "bindings rows use activeAgentId; freshSessions agentId is not a binding",
+    "qualified_red": "15 tests, 2 native positive-control failures before field correction",
+    "green": "15 tests, zero failures; existing typed-error cases remain failed checks",
+    "logs": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-native-shape-red.log",
+        "sha256": "5ceaa9afcd6bb3dc5a2af5319e5659d2f713c6d7919c5903eb7abc90114914ac"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-native-shape-green.log",
+        "sha256": "e4fd9cb2c74915b45c22ae76e027eb36c7ebd47769e946b60d98342ddbb9511d"
+      }
+    ]
+  }
 }
