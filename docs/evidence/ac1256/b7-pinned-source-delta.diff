@@ -1,0 +1,349 @@
+--- pinned-original/b7ctl.py
++++ scripts/b7ctl/b7ctl.py
+@@ -60,35 +60,61 @@
+     print(msg, flush=True)
+ 
+ 
++# Typed observation uses the existing root runner and fixed affected paths.
++# lstat treats a broken symlink as PRESENT; only errno.ENOENT means absent.
++ABSENCE_PROBE = r"""
++import errno, json, os, sys
++try:
++    os.lstat(sys.argv[1])
++    state = "PRESENT"
++except OSError as error:
++    state = "ABSENT_ENOENT" if error.errno == errno.ENOENT else "ERROR"
++print(json.dumps({"state": state}))
++sys.exit(2 if state == "ERROR" else 0)
++"""
++
++
++def observe_absence(path):
++    observation = root(["/usr/bin/python3", "-c", ABSENCE_PROBE, path])
++    if observation.returncode != 0:
++        return "ERROR"
++    def unique(pairs):
++        data = {}
++        for key, value in pairs:
++            if key in data:
++                raise ValueError("duplicate observation key")
++            data[key] = value
++        return data
++    try:
++        data = json.loads(observation.stdout, object_pairs_hook=unique)
++    except (TypeError, ValueError):
++        return "ERROR"
++    if not isinstance(data, dict) or set(data) != {"state"}:
++        return "ERROR"
++    return data["state"] if data["state"] in ("PRESENT", "ABSENT_ENOENT") else "ERROR"
++
++
+ # ---------------------------------------------------------------- preflight
+ def cmd_preflight(args):
+     """EXECUTE 前终检。任何 FAIL 都不应发射。"""
+     op = args.op
+     fails = []
+     p("== EXECUTE 前终检 ==")
+-    # 1) 8 项缺席
+-    for f in ABSENCE_ITEMS:
+-        pth = f"{MIG}/{f}"
+-        r = root(["test", "-e", pth])
+-        if r.returncode == 0:
+-            p(f"  FAIL PRESENT: {f}")
+-            fails.append(f)
++    # 1) Only a successful typed ENOENT observation proves absence.
++    for pth in [*(f"{MIG}/{name}" for name in ABSENCE_ITEMS), *ABSENCE_EXTRA]:
++        state = observe_absence(pth)
++        if state == "ABSENT_ENOENT":
++            p(f"  absent ok: {pth}")
+         else:
+-            p(f"  absent ok: {f}")
+-    for pth in ABSENCE_EXTRA:
+-        r = root(["test", "-e", pth])
+-        if r.returncode == 0:
+-            p(f"  FAIL PRESENT: {pth}")
++            p(f"  FAIL {state}: {pth}")
+             fails.append(pth)
+-        else:
+-            p(f"  absent ok: {pth}")
+     # 2) 日志 pin（append-only 前缀语义：era 钉字节必须是当前日志的精确前缀；
+     #    隔离期闭合后日志按代际合法追加，等值断言只在开放时代适用）
+     r = root(["stat", "-f", "%z", JOURNAL])
+     d = root(["sh", "-c", f"head -c {JOURNAL_PIN_BYTES} {JOURNAL} | shasum -a 256"])
+     sha = d.stdout.split()[0] if d.stdout else "?"
+     size = r.stdout.strip()
+-    if not size.isdigit() or int(size) < JOURNAL_PIN_BYTES:
++    if r.returncode != 0 or d.returncode != 0 or not size.isdigit() or int(size) < JOURNAL_PIN_BYTES:
+         p(f"  FAIL journal shrunk below era pin: {size} < {JOURNAL_PIN_BYTES}")
+         fails.append("journal")
+     elif sha == JOURNAL_PIN_SHA:
+@@ -101,7 +127,7 @@
+     try:
+         st = json.loads(r.stdout)
+         data = st.get("data", {})
+-        ok = st.get("ok") and data.get("phase") == "NO_EXECUTION_RECORD" \
++        ok = r.returncode == 0 and st.get("ok") is True and isinstance(data, dict) and data.get("phase") == "NO_EXECUTION_RECORD" \
+             and data.get("output_available") is False and data.get("execution_enabled") is True
+         p(f"  DS admission: {'OK' if ok else 'FAIL ' + json.dumps({k: data.get(k) for k in ('phase', 'output_available', 'execution_enabled')})}")
+         if not ok:
+@@ -112,8 +138,8 @@
+     # 4) 生产运行时
+     r = sh(["pgrep", "-f", "production-runtime.mjs --root /Users/authsvc"])
+     p(f"  production runtime: {'pid ' + r.stdout.strip().splitlines()[0] if r.stdout.strip() else 'DOWN (!)'}")
+-    if not r.stdout.strip():
+-        fails.append("runtime-down")
++    if r.returncode != 0 or not r.stdout.strip() or not all(line.isdigit() for line in r.stdout.strip().splitlines()):
++        fails.append("runtime-check-failed")
+     # 结论
+     if fails:
+         p(f"\n== 终检 FAIL：{len(fails)} 项 — 禁止发射 ==")
+@@ -225,25 +251,22 @@
+ 
+ # ---------------------------------------------------------------- restore-journal
+ def cmd_restore_journal(args):
++    # The old recipe has no exact operation/preimage/tail-disposal authority.
++    # Refuse before even issuing a runner call; inspection is a separate path.
++    if args.apply:
++        p("RECOVERY_AUTHORITY_REQUIRED: unbound journal mutation is disabled")
++        sys.exit(1)
+     r = root(["stat", "-f", "%z", JOURNAL])
+-    sz = r.stdout.strip()
+-    p(f"journal 现状: {sz} bytes")
+-    if sz == str(JOURNAL_PIN_BYTES):
+-        d = root(["sh", "-c", f"head -c {JOURNAL_PIN_BYTES} {JOURNAL} | shasum -a 256"])
+-        sha = d.stdout.split()[0]
+-        p(f"sha256: {sha}")
+-        p("MATCH pin" if sha == JOURNAL_PIN_SHA else "MISMATCH pin(!)")
+-        return
+-    if not args.apply:
+-        p(f"（--apply 执行：归档现文件并截断回 {JOURNAL_PIN_BYTES}B pin）")
+-        return
+-    root(["mv", JOURNAL, JOURNAL + f".oversize-retired-{int(time.time())}"])
+-    root(["/bin/sh", "-c", f"head -c {JOURNAL_PIN_BYTES} '{JOURNAL}.oversize-retired-{int(time.time())}' > '{JOURNAL}'"])
+-    root(["chmod", "600", JOURNAL])
+-    root(["chown", "root:wheel", JOURNAL])
+-    p("restored")
+-    p(f"new sha: {root(['shasum', '-a', '256', JOURNAL]).stdout.split()[0]}")
+-    p("必须 == 9d66242a1093259af92c1dc0792eadbdb2a0b42d54fec54f78405f5e628e904a")
++    size = r.stdout.strip()
++    if r.returncode != 0 or not size.isdigit() or int(size) < JOURNAL_PIN_BYTES:
++        p("FAIL journal size unreadable or shorter than pin")
++        sys.exit(1)
++    d = root(["sh", "-c", f"head -c {JOURNAL_PIN_BYTES} {JOURNAL} | shasum -a 256"])
++    fields = d.stdout.split() if isinstance(d.stdout, str) else []
++    if d.returncode != 0 or not fields or fields[0] != JOURNAL_PIN_SHA:
++        p("FAIL journal prefix unreadable or mismatched")
++        sys.exit(1)
++    p("MATCH_PIN_NO_MUTATION" if int(size) == JOURNAL_PIN_BYTES else "APPENDED_TAIL_RETAINED")
+ 
+ 
+ # ---------------------------------------------------------------- rollback
+@@ -426,32 +449,44 @@
+ 
+ 
+ # ---------------------------------------------------------------- harden
+-REGISTER_GLOB = ("/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/"
+-                 "answers/sol-r41-r2-20261020/r15-receipts/REGISTER-RECEIPT-*.json")
+-
+-
+ def cmd_harden(args):
+-    """安装器加固四项（RUNBOOK §6 第 1-4 项）：三层访问/属主物化/钉/uid502。"""
++    """Check exact current evidence; final failures always return nonzero."""
+     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+     import installer_hardening as ih
+-    failures, repairs = ih.check_access_layers()
+-    for item in ih.check_registration(REGISTER_GLOB):
+-        if item["check"] != "registration_ok":
+-            failures.append(item)
+-    if failures:
+-        p(f"FAIL: {len(failures)} 项不满足")
+-        for f in failures:
+-            p(f"  [{f['check']}] {f['path']}: {f['detail']}")
+-    else:
+-        p("ALL GREEN: 三层访问 + 属主物化 + 注册身份")
+-    if args.apply and repairs:
+-        def run(cmd):
+-            p("+ " + " ".join(cmd))
+-            return os.system(" ".join(cmd))
+-        done = ih.apply_repairs(repairs, run)
+-        p(f"applied {sum(1 for d in done if d['ok'])}/{len(done)}；复检用 b7ctl harden")
+-    elif repairs:
+-        p(f"（{len(repairs)} 条可选卫生修复未执行；--apply 执行）")
++
++    def check():
++        failures, repairs = ih.check_access_layers()
++        registration = ih.check_registration(
++            args.registration_receipt, expected_operation=args.op,
++            expected_manifest=args.manifest_sha256,
++            expected_sha256=args.registration_receipt_sha256)
++        registration_failures = [item for item in registration if item["check"] != "registration_ok"]
++        failures.extend(registration_failures)
++        return failures, repairs, bool(registration_failures)
++
++    failures, repairs, registration_failed = check()
++    if args.apply and registration_failed:
++        p("FAIL: required registration binding; repairs not attempted")
++        sys.exit(1)
++    repair_failed = False
++    if args.apply:
++        if repairs:
++            def run(cmd):
++                p("+ " + " ".join(cmd))
++                return sh(cmd, capture=False).returncode
++            done = ih.apply_repairs(repairs, run)
++            repair_failed = len(done) != len(repairs) or any(not d["ok"] for d in done)
++            p(f"applied {sum(1 for d in done if d['ok'])}/{len(done)}")
++        # Always re-read every check; pre-apply success never survives by assumption.
++        failures, _, _ = check()
++    if failures or repair_failed:
++        p(f"FAIL: {len(failures)} checks; repair_failed={repair_failed}")
++        for item in failures:
++            p(f"  [{item['check']}] {item['path']}: {item['detail']}")
++        sys.exit(1)
++    p("ALL GREEN: 三层访问 + 属主物化 + 精确当前注册身份")
++    if repairs and not args.apply:
++        p(f"（{len(repairs)} 条可选卫生修复未执行）")
+ 
+ 
+ # ---------------------------------------------------------------- main
+@@ -479,6 +514,15 @@
+     s.add_argument("--amend-draft", action="store_true",
+                    help="为最新 RETAINED 事务生成 fixed-subject 恢复修订草案（E23 先例模式）")
+     s = sub.add_parser("harden", help="安装器加固四项断言（--apply 执行权限级修复）")
++    s.add_argument("--op", required=True)
++    def digest(value):
++        import re
++        if re.fullmatch(r"[0-9a-f]{64}", value) is None:
++            raise argparse.ArgumentTypeError("expected 64 lowercase hexadecimal characters")
++        return value
++    s.add_argument("--manifest-sha256", type=digest, required=True)
++    s.add_argument("--registration-receipt", required=True)
++    s.add_argument("--registration-receipt-sha256", type=digest, required=True)
+     s.add_argument("--apply", action="store_true")
+     s = sub.add_parser("pong", help="发送 PONG 验收消息")
+     s.add_argument("--chat")
+--- pinned-original/installer_hardening.py
++++ scripts/b7ctl/installer_hardening.py
+@@ -27,6 +27,8 @@
+ （mkdir/chown/chmod 最小动作，逐项回执）。绝不改事务/DS 状态。
+ """
+ import argparse
++import hashlib
++import re
+ import json
+ import os
+ import stat
+@@ -207,26 +209,46 @@
+     return gens[-1] if gens else None
+ 
+ 
+-def check_registration(receipts_glob):
+-    """项 4：注册身份 peer==502；顺带返回 binding.manifestSha256 供项 3 用。"""
+-    import glob as _glob
+-    out = []
+-    for path in sorted(_glob.glob(receipts_glob), reverse=True)[:1]:
+-        try:
+-            d = json.load(open(path))
+-        except Exception as e:
+-            out.append({"check": "registration", "path": path, "detail": f"unreadable: {e}"})
+-            continue
+-        reg = d.get("registration", d)
+-        peer = reg.get("registered_peer_uid") or reg.get("peer")
+-        if peer != WORKER_UID:
+-            out.append({"check": "registration_uid", "path": path,
+-                        "detail": f"registered_peer_uid={peer} != {WORKER_UID}（root 注册=后续 worker 全灭）"})
+-        binding = reg.get("binding", {})
+-        out_manifest = binding.get("manifestSha256")
+-        out.append({"check": "registration_ok", "path": path,
+-                    "manifest": out_manifest, "peer": peer})
+-    return out
++def check_registration(receipt_path, *, expected_operation=None,
++                       expected_manifest=None, expected_sha256=None):
++    """Check one pinned native receipt. An empty selection is never success."""
++    def fail(detail):
++        return [{"check": "registration", "path": str(receipt_path), "detail": detail}]
++
++    if not isinstance(expected_operation, str) or not expected_operation or len(expected_operation) > 256:
++        return fail("required current operation missing or invalid")
++    if any(not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None
++           for value in (expected_manifest, expected_sha256)):
++        return fail("required manifest/receipt digest missing or invalid")
++    def unique(pairs):
++        data = {}
++        for key, value in pairs:
++            if key in data:
++                raise ValueError("duplicate key")
++            data[key] = value
++        return data
++    try:
++        with open(receipt_path, "rb") as handle:
++            raw = handle.read(1048577)
++        if len(raw) > 1048576 or hashlib.sha256(raw).hexdigest() != expected_sha256:
++            return fail("receipt bytes do not match required digest or size bound")
++        data = json.loads(raw, object_pairs_hook=unique)
++    except (OSError, TypeError, ValueError):
++        return fail("required receipt unreadable or malformed")
++    if not isinstance(data, dict):
++        return fail("receipt must be a native object")
++    binding = data.get("binding")
++    valid = (data.get("kind") == "DS_B7_PACKET_REGISTRATION_V1"
++             and type(data.get("version")) is int and data["version"] == 1
++             and data.get("action") == "B7_PACKET_REGISTER_V1"
++             and data.get("state") == "REGISTERED_ONLY"
++             and data.get("operation_id") == expected_operation
++             and type(data.get("registered_peer_uid")) is int and data["registered_peer_uid"] == WORKER_UID
++             and isinstance(binding, dict) and binding.get("manifestSha256") == expected_manifest)
++    if not valid:
++        return fail("native operation/manifest/peer/envelope binding mismatch")
++    return [{"check": "registration_ok", "path": str(receipt_path),
++             "manifest": expected_manifest, "peer": WORKER_UID}]
+ 
+ 
+ def apply_repairs(repairs, run):
+@@ -246,12 +268,17 @@
+     ap = argparse.ArgumentParser(description=__doc__)
+     ap.add_argument("--root", default=DEFAULT_ROOT)
+     ap.add_argument("--dsh-root", default=DEFAULT_DSH_ROOT)
+-    ap.add_argument("--receipts-glob", default="/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r15-receipts/REGISTER-RECEIPT-*.json")
++    ap.add_argument("--op", required=True)
++    ap.add_argument("--manifest-sha256", required=True)
++    ap.add_argument("--registration-receipt", required=True)
++    ap.add_argument("--registration-receipt-sha256", required=True)
+     ap.add_argument("--apply", action="store_true", help="执行修复（默认只断言）")
+     args = ap.parse_args(argv)
+ 
+     failures, repairs = check_access_layers(args.root, args.dsh_root)
+-    reg = check_registration(args.receipts_glob)
++    reg = check_registration(args.registration_receipt, expected_operation=args.op,
++                             expected_manifest=args.manifest_sha256,
++                             expected_sha256=args.registration_receipt_sha256)
+     for item in reg:
+         if item["check"] != "registration_ok":
+             failures.append(item)
+@@ -266,7 +293,9 @@
+         print(f"\n可修复项 {len(repairs)} 条" + ("（--apply 未加，仅列出）" if not args.apply else "："))
+         for r in repairs:
+             print("  " + " && ".join([" ".join(c) for c in [r["cmd"]] + r.get("post", [])]))
+-    if args.apply and repairs:
++    if args.apply:
++        if any(item["check"] != "registration_ok" for item in reg):
++            return 1
+         def run(cmd):
+             print("+ " + " ".join(cmd))
+             return os.system(" ".join(cmd))
+@@ -274,8 +303,13 @@
+         ok = sum(1 for r in result if r["ok"])
+         print(f"applied {ok}/{len(result)}")
+         failures2, _ = check_access_layers(args.root, args.dsh_root)
+-        print("复检：" + ("ALL GREEN" if not failures2 else f"仍有 {len(failures2)} 项失败（见上）"))
+-        return 1 if failures2 else 0
++        failures2.extend(item for item in check_registration(
++            args.registration_receipt, expected_operation=args.op,
++            expected_manifest=args.manifest_sha256,
++            expected_sha256=args.registration_receipt_sha256) if item["check"] != "registration_ok")
++        repair_failed = any(not item["ok"] for item in result) or len(result) != len(repairs)
++        print("复检：" + ("ALL GREEN" if not failures2 and not repair_failed else "FAIL"))
++        return 1 if failures2 or repair_failed else 0
+     return 1 if failures else 0
+ 
+ 

@@ -1,0 +1,76 @@
+{
+  "schema": "AC1256_B7_SOURCE_CONFORMANCE_V1",
+  "at": "2026-10-22T13:21:24.951054+00:00",
+  "repo": "mayf3/dsh-agent-core",
+  "code_commit": "801d4b5f6e75c69cf997f897e6749c83f7d78a95",
+  "accepted_docs_base": "9934105ffda28a3414b7a5bf6bd35d12574f8969",
+  "spec": {
+    "path": "docs/specs/B7_DIAGNOSTIC_TOOL_FAIL_CLOSED_V1.md",
+    "sha256": "7395d3ad5daff4a331c1c8a51b22a893207dec7cd2f6b2e2f0682dcdb53b5b2d",
+    "independent_acceptance_receipt_sha256": "27f2299c009253c28a3bcca6d592891deb326a9fdcacd94019fe90bdff1317c3",
+    "new_spec_main_active": false,
+    "existing_main_route": "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3 CTR-AD3-003"
+  },
+  "scope": [
+    "F03 unbound mutation disabled (safety mitigation; functional recovery remains outside scope)",
+    "F04 typed absence and failed required-check status",
+    "F09 exact current native receipt, final failure exit, fresh post-apply checks"
+  ],
+  "source_provenance": "scripts/b7ctl/SOURCE-PROVENANCE.json",
+  "contract_self_check": {
+    "CTR-B7D-001": "PASS_OWNED_SOURCE_FIXTURES_PENDING_INDEPENDENT_REVIEW",
+    "CTR-B7D-002": "PASS_OWNED_SOURCE_FIXTURES_PENDING_INDEPENDENT_REVIEW",
+    "CTR-B7D-003": "PASS_OWNED_SOURCE_FIXTURES_PENDING_INDEPENDENT_REVIEW",
+    "CTR-B7D-004": "PASS_OWNED_SOURCE_FIXTURES_PENDING_INDEPENDENT_REVIEW"
+  },
+  "tests": {
+    "command": "python3 -m unittest discover -s scripts/b7ctl/tests -v",
+    "python": "3.14.7",
+    "count": 14,
+    "result": "PASS",
+    "py_compile": "PASS for both imported modules and test file",
+    "git_diff_check": "PASS",
+    "logs": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-red.log",
+        "sha256": "ff94d37d305fa6693a877d578cb1a516c9df5fd4a0402be1e10cf8afe3cae9ad",
+        "result": "10 tests, 12 expected failures against pinned original"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-edge-red.log",
+        "sha256": "09ca56174cad3db634a28bd1d2238abe93bdc9d9880299376a419325d542f624",
+        "result": "14 tests, 2 expected failures for invalid-receipt repairs and standalone post-apply recheck"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-typed-red.log",
+        "sha256": "a9488ccc9043412eb973e9729ffa069c24fb610b29952cff5281426ad814b9b7",
+        "result": "14 tests, 1 expected failure for duplicate observation key"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-green-final.log",
+        "sha256": "6be9b4cefef5f004cce858f9b52e33d01c89faf5c03aea7d288e3321238bdee0",
+        "result": "14 tests, zero failures"
+      }
+    ],
+    "owned_files": "TemporaryDirectory only; typed lstat tested on missing/broken-symlink and injected EACCES",
+    "runners": "All privilege/deployment/native command runners mocked before invocation",
+    "broader_suite": "Not run: unrelated Node repository suite; full affected standalone tool suite is the 14 unittest cases"
+  },
+  "limits": [
+    "Access-layer environmental checks are mocked; no production permission/registration assurance",
+    "No real restore capability implemented or tested",
+    "Untouched sweep/rollback/pong and generation tools are outside repair scope",
+    "Imported source is not adopted into original tool directory"
+  ],
+  "review": "PENDING_ROOT_ASSIGNED_NON_AUTHOR",
+  "merge": "NOT_MERGED",
+  "installed": false,
+  "loaded": false,
+  "enabled": false,
+  "business_verified": false,
+  "production_reads": 0,
+  "production_writes": 0,
+  "deployment_writer_claimed": false,
+  "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256",
+  "docs_pr": "https://github.com/mayf3/dsh-agent-core/pull/549"
+}
