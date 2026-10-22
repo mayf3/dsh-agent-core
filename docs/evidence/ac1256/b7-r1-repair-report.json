@@ -1,0 +1,76 @@
+{
+  "schema": "AC1256_B7_R1_REPAIR_V1",
+  "at": "2026-10-22T13:35:34.826282+00:00",
+  "FIX_BASE": "801d4b5f6e75c69cf997f897e6749c83f7d78a95",
+  "FIX_HEAD": "7f216a5d39ecd51d06531a7684152ea577664202",
+  "frozen_blocker_union": [
+    "B7-R1"
+  ],
+  "changed_files": [
+    "scripts/b7ctl/installer_hardening.py",
+    "scripts/b7ctl/tests/test_fail_closed.py",
+    "scripts/b7ctl/SOURCE-PROVENANCE.json"
+  ],
+  "repair": "Required homes/bindings/stat observation failures remain named failures; unknown bindings cannot classify a home dormant; invalid native binding shapes fail; final apply outcome determines printed success.",
+  "tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/b7ctl/tests -v",
+    "count": 15,
+    "real_access_helper_cases": "7 error scenarios across both entrypoints plus 2 positive controls; initial and final checks",
+    "qualified_red": "b7-r1-red-qualified.log: 15 tests, 14 expected failed subcases on prior code",
+    "green": "b7-r1-green.log: 15 tests, zero failures",
+    "compile": "PASS using compile() for both modules and test file; no pycache writes",
+    "diff_check": "PASS"
+  },
+  "evidence": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-r1-red-qualified.log",
+      "bytes": 15195,
+      "sha256": "07a7d259074f1961b493959be815ce876f1357329dfc52a60e74495c95a8c4ed"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-r1-green.log",
+      "bytes": 2487,
+      "sha256": "8f7c02dcce804b00b7218e40489d67816c7b24d17e216612df22474884d0e7d7"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-r1-scoped.diff",
+      "bytes": 16138,
+      "sha256": "d61f60a519b495c672d56e5ce51d6639d88fa0a98ca2bd5cfd0fe70063c25582"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-independent-review-801d4b5.md",
+      "bytes": 9599,
+      "sha256": "aebd84ae1a8ecd911e569efdeaffaf8e0e03b9ea5d51faafb08b1f1e39ca787c"
+    }
+  ],
+  "scope": "F09 existing four source Contracts; no governing Spec changes",
+  "review": "PENDING_SAME_NON_AUTHOR_SCOPED_REVIEW",
+  "merge": "NOT_MERGED",
+  "installed": false,
+  "loaded": false,
+  "enabled": false,
+  "business_verified": false,
+  "source_native_runner_calls": 0,
+  "production_reads": 0,
+  "production_writes": 0,
+  "historical_baseline_qualification": "b7-baseline-fixture-correction.json",
+  "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256",
+  "implementation_pr": "https://github.com/mayf3/dsh-agent-core/pull/551",
+  "native_shape_followup": {
+    "head": "7ebdd7893d88565548ed9987877794b4846cf5c9",
+    "source": "canonical45cdd packages/agent-router/src/binding-store.js:26-32,217-231",
+    "repair": "bindings rows use activeAgentId; freshSessions agentId is not a binding",
+    "qualified_red": "15 tests, 2 native positive-control failures before field correction",
+    "green": "15 tests, zero failures; existing typed-error cases remain failed checks",
+    "logs": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-native-shape-red.log",
+        "sha256": "5ceaa9afcd6bb3dc5a2af5319e5659d2f713c6d7919c5903eb7abc90114914ac"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-native-shape-green.log",
+        "sha256": "e4fd9cb2c74915b45c22ae76e027eb36c7ebd47769e946b60d98342ddbb9511d"
+      }
+    ]
+  }
+}

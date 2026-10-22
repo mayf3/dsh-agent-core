@@ -1,0 +1,28 @@
+{
+  "schema": "B7CTL_PINNED_SOURCE_IMPORT_V1",
+  "canonical_repo": "mayf3/dsh-agent-core",
+  "base": "45cdd5ebcaf5c981973d0a86947dd17aa73ee60f",
+  "accepted_docs_base": "9934105ffda28a3414b7a5bf6bd35d12574f8969",
+  "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256",
+  "inputs": [
+    {
+      "name": "b7ctl.py",
+      "source_path": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/b7ctl.py",
+      "source_bytes": 24261,
+      "source_sha256": "38f3abfb474ca5dd4500c34aa83d9fb3478e32ddd291df44b4d845ffdd5d19af",
+      "imported_path": "scripts/b7ctl/b7ctl.py",
+      "result_bytes": 26483,
+      "result_sha256": "86bc32d8f991635c52ef9cb29eea64d781ac175f01f19aa0b0726879746d4884"
+    },
+    {
+      "name": "installer_hardening.py",
+      "source_path": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/installer_hardening.py",
+      "source_bytes": 12556,
+      "source_sha256": "ef320fbeb7b4e3ee5fe28c6bdb373c477cdf3d3c0291f14cc2ae219a451bd7b0",
+      "imported_path": "scripts/b7ctl/installer_hardening.py",
+      "result_bytes": 15780,
+      "result_sha256": "5b226b8758a99b7f8cb308d743fb30e813cc70ad789c75d5560f36a068dacdec"
+    }
+  ],
+  "effects": "source-only; originals preserved; no adoption or production effects"
+}

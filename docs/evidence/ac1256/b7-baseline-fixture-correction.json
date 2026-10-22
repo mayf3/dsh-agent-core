@@ -1,0 +1,23 @@
+{
+  "schema": "AC1256_BASELINE_FIXTURE_CORRECTION_V1",
+  "at": "2026-10-22T13:28:30.886581+00:00",
+  "acknowledgement": "The initial imported-original unittest RED run did not confine every file read to owned fixtures. The old hardcoded REGISTER_GLOB ignored future-interface arguments and the original registration helper opened a saved Documents r15 receipt. Earlier blanket all-fixtures-owned wording for that RED run is withdrawn.",
+  "affected_log": "b7-red.log",
+  "affected_log_sha256": "ff94d37d305fa6693a877d578cb1a516c9df5fd4a0402be1e10cf8afe3cae9ad",
+  "observed_lines": [
+    "test_harden_apply_uses_fresh_checks_and_failed_repair_is_failure (test_fail_closed.FailClosedTests.test_harden_apply_uses_fresh_checks_and_failed_repair_is_failure) ... /Users/yanfenma/.codex/worktrees/ac1256-b7-spec/dsh-agent-core/scripts/b7ctl/installer_hardening.py:216: ResourceWarning: unclosed file <_io.TextIOWrapper name='/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/sol-r41-r2-20261020/r15-receipts/REGISTER-RECEIPT-r15.json' mode='r' encoding='UTF-8'>",
+    "ResourceWarning: Enable tracemalloc to get the object allocation traceback"
+  ],
+  "saved_evidence_external_read": "Documents/zcode-assist/answers/.../r15-receipts/REGISTER-RECEIPT-r15.json",
+  "external_saved_read_count": "UNKNOWN; warning filters do not count opens",
+  "runtime_production_reads": 0,
+  "native_commands_executed": 0,
+  "production_writes": 0,
+  "saved_receipt_write": "No write path in original check_registration; no mutation was invoked",
+  "historical_logs": "Preserved unchanged",
+  "unaffected_evidence": [
+    "owned-b7-baseline-repro.py used an injected module and every runner was synthetic",
+    "Patched-helper GREEN consumes exact owned receipt paths, but pending independent F09 error-swallowing findings remain blocking"
+  ],
+  "next": "Path/selection guards added in test_fail_closed.py; qualified R1 red/green complete. Historical log retained."
+}
