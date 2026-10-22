@@ -1,0 +1,63 @@
+{
+  "kind": "OWNED_B7_SOURCE_CHARACTERIZATION",
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/b7ctl.py",
+  "source_sha256": "38f3abfb474ca5dd4500c34aa83d9fb3478e32ddd291df44b4d845ffdd5d19af",
+  "F03": {
+    "exit": 0,
+    "output": "journal 现状: 11 bytes\nrestored\nnew sha: OWNED_SYNTHETIC_DIGEST\n必须 == 9d66242a1093259af92c1dc0792eadbdb2a0b42d54fec54f78405f5e628e904a\n",
+    "runner_calls": [
+      [
+        "stat",
+        "-f",
+        "%z",
+        "/owned/journal"
+      ],
+      [
+        "mv",
+        "/owned/journal",
+        "/owned/journal.oversize-retired-100"
+      ],
+      [
+        "/bin/sh",
+        "-c",
+        "head -c 10 '/owned/journal.oversize-retired-101' > '/owned/journal'"
+      ],
+      [
+        "chmod",
+        "600",
+        "/owned/journal"
+      ],
+      [
+        "chown",
+        "root:wheel",
+        "/owned/journal"
+      ],
+      [
+        "shasum",
+        "-a",
+        "256",
+        "/owned/journal"
+      ]
+    ],
+    "confirms_bug": true
+  },
+  "F04": {
+    "exit": 0,
+    "output": "== EXECUTE 前终检 ==\n  absent ok: a\n  absent ok: b\n  absent ok: c\n  absent ok: d\n  absent ok: e\n  absent ok: f\n  absent ok: /owned/lock\n  absent ok: /owned/artifacts\n  journal pin OK (append-only prefix 10B = OWNED_PIN…, live 10B)\n  DS admission: OK\n  production runtime: pid 12345\n\n== 终检全绿。发射需人工确认（本工具不自动发射 EXECUTE）。==\n",
+    "injected_rc": 2,
+    "absence_checks": 8,
+    "confirms_bug": true
+  },
+  "F09": {
+    "exit": 0,
+    "output": "FAIL: 1 项不满足\n  [OWNED_FAILURE] /owned/file: synthetic\n",
+    "confirms_bug": true
+  },
+  "actual_native_commands": 0,
+  "actual_production_reads": 0,
+  "actual_mutations": 0,
+  "fixture_sha256": "fe75c037ad69b88b4f7cc7c30ed3eb51dc7d6858ca0b9e41e2102d07ad3e26b1",
+  "authoring_base": "45cdd5ebcaf5c981973d0a86947dd17aa73ee60f",
+  "fixture_path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/owned-b7-baseline-repro.py",
+  "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256"
+}
