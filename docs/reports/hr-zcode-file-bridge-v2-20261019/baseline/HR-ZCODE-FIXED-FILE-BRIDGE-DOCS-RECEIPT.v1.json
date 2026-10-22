@@ -1,0 +1,57 @@
+{
+  "kind": "FIXED_HR_ZCODE_FILE_BRIDGE_PROPOSAL_DOCS_RECEIPT_V1",
+  "at_utc": "2026-10-19T11:02:36.007012+00:00",
+  "reader": "/root/sol_e40_independent_reader",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning_effort": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "disposition": "PASS_PROPOSED_CONTRACT_MATERIAL_ONLY_FIXED_HR_FILE_BRIDGE",
+  "blocking_findings": [],
+  "index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/INDEX.v1.json",
+    "bytes": 1568,
+    "sha256": "a872a5b9d3d78f302bf753da4bfcdcae1f870985f51cbb562646975b52f274c8"
+  },
+  "contract": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v1.md",
+    "bytes": 14261,
+    "sha256": "8bd57a6795bba395232f97f77c7fbbfa194c3604aa170edd897ce97af1169370"
+  },
+  "source_closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/SOURCE-CLOSURE-INDEX.v1.json",
+    "bytes": 7528,
+    "sha256": "6f84e239c646a8d3b3b9e0d07c35e42fdc0274f226f9ce0c13f9079d6c8aec49"
+  },
+  "actual_read_scope": [
+    "Independently verified exact INDEX, full contract and source-closure pins; read their full text.",
+    "Verified and fully read the three fixed handoff/investigation/README inputs: c3defd6095e8b03f8f5f5226ebc0c32fe0d39964aee1b08164ecf05099a16fc0, bf88e7cce7fb896788c7a52b1384205d0cc71be6b698b01ec8cf9d730cfcba04,181772d2b5ce142bd3e1debe32fd467020c2c9d02334ca499b1a9a8e6d1dd508.",
+    "Verified and read only the five exact saved-git excerpts listed in the source-closure index: fixed profile, provisioning297-315/345-429, compose376-388/433-445, LocalFS40-67/113-128 and filesystem docs114-149/198-220/272-278. No repository source or live target was newly opened.",
+    "Checked numbered excerpt coordinates. The whole short profile actually contains19 lines within requested1-24; reconstruction equals815 bytes, SHA25619cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33 and Git blob6c7c4ca118ace60f032ead0508366778594b34a8. Other full-source pins remain original author observations; their finite excerpt hashes were independently checked.",
+    "No implementation, test/fixture, home/config/secret/DB read, Message/tool/helper invocation, route, production probe or Goal action occurred. Only this external receipt was written."
+  ],
+  "material_assessment": {
+    "fixed_scope": "Contract fixes agt_hr-agent, original home and original ZCode root. The selected adapter grants only snapshot read, same-ID outbox read and unique request creation. Other Agent/profile/global bundle enablement, generic shell/path/FS, Codex socket, production/deploy and Auth/token effects are excluded. This matches the fixed handoff and README purpose.",
+    "existing_vs_proposed": "The provisioner primary requires an existing known profile and handles normal profile/credential references; it does not establish the new exact bridge generator. LocalFS primary expressly says cwd is not containment; docs show unconditional overwrite and observed-version replacement are available generically. The bounded absence statement is accurate and is not made global. The three new files and necessary HR-only enrollment/loader joins are explicitly proposed, not existing commands or accepted source.",
+    "identity_boundary": "Lines32-34 identify a new required canonical Definition/Router/home/lifecycle enrollment producer and internal accessor/loader mapping. The FS actor primary only carries opaque session identity and proves no Agent-ID accessor. Native tuple, stop/revocation and loaded-generation mapping are not claimed existing. PID/UID/env/socket/from/JWT or config0600 cannot substitute for it; helper containment is explicitly not caller authentication.",
+    "file_schema_and_containment": "Lines38-50 give one closed typed no-path tool, fixed leaf sets, requestId basename rules, fixed from=hr-agent, README enums and inert contextPaths, bounded65536-byte IO, anchored/no-follow regular-file reads and identity checks. Fully serialized no-replace submit with fsync/readback, no preexisting request replacement/deletion and no README tool target fit the requested write-only-new-request scope. No listing, recursive export or shell fallback is introduced.",
+    "formal_generation": "Lines54-58 specify a new formal out-of-git0600 generation with canonical tuple, exact current preimage, private staged output, parent durability/readback and bounded rollback. Private parent creation is an explicit proposed HR enrollment effect, not an implicit permission repair. No current native accessor, loaded artifact, actual activation entry or CLI is invented; no manual-file fallback can activate the adapter.",
+    "wake_and_delivery": "Lines62-66 require effective configuration before original accepted MessageV2 send, actual caller/sourceTurn and original Grant, target HR, positive bounded wait, exact README delivery and one query/all roundtrip. They reject agent_wake, arbitrary notification ingress, direct spawn and old phone/Codex-session substitution. Configuration, native Message/target receipt, bridge request, ZCode reply and final HR response remain separate proofs; exposed/queued or timeout0 is not completion.",
+    "request_and_UNKNOWN": "Original observed Message/Run and bridge IDs must be retained in their own layers; a missing later business ID does not erase an already observed native RID. No generated bridge ID is invented after a failure. Existing/ambiguous publication never authorizes another create or a new-ID resend; absent reply stays PENDING/UNKNOWN and any available recovery is same-ID readback/result consumption only. The proposal does not establish a currently callable recovery API or grant broad inbox reads. Best-effort cancellation does not promise syscall rollback/deadline.",
+    "protocol_authority": "ZCode remains sole Codex-line writer and decides throttle/relay. Nudge per-line/hour constraints and all handling remain receiver-owned; initial exercise is query/all only. Auth NONE_IDENTIFIED is conditional and does not supply a caller/Grant or production permission. A/B/e42 work and inputs remain independent.",
+    "concrete_acceptance_points": "This is a real bounded new-interface proposal: HR-only tool registration; trusted native enrollment/accessor and lifecycle loader join; fixed helper read/create/no-replace semantics; formal private generator/preimage/rollback; exact HR-only enablement while other profiles remain unchanged. Section70 puts these before product code under correct original DSH repository authority or permits a genuinely located exact equivalent instead. It does not end at NOT_HELD or preselect a new Auth/token platform."
+  },
+  "attribution_and_reuse": {
+    "author": "/root/sol_execution_continuation, original DSH source/runtime writing lane; this reader made no product/source edits.",
+    "Auth_handoff": "c3defd is the original Auth custody counterparty constraints, not DSH source acceptance or actual configuration/wake.",
+    "original_independent_observer": "bf88e7 was produced by /root/critical_path_sol. Its home/snapshot metadata, formal Message schema and bounded locator observations are saved primary records read here, not this reader personally statting HR home, measuring current tools or locating the full repository graph.",
+    "new_finite_source_capture": "Five excerpts were captured by the original author and directly read/hash-verified by this reader. Their source text is not installed/loaded-code proof or a full dependency/security audit.",
+    "acceptance": "This material review is neither B7/MC acceptance nor repository-authority acceptance, implementation permission, profile activation or actual collection/wake grant. No extra reviewer or generic Owner loop is created."
+  },
+  "still_unproven": [
+    "Actual HR definition/profile/process/current tool set and unchanged runtime root/domain; the saved502:20/0700 home metadata and snapshot updatedAt are not those proofs.",
+    "Actual trusted tuple accessors, enrollment loader and generator implementation/registration, protection and loaded generation.",
+    "Actual legally bound Message caller/Grant/sourceTurn, target delivery/home/session/Run receipt, same-ID file publication/reply and HR acknowledgement.",
+    "Owned fixture/source proof, future accepted implementation and actual maintenance admission. No product/source/tests/config were created or run by this document task."
+  ],
+  "conclusion": "The exact v1 unit is suitable for the original qualified decision on the finite proposed HR-only mechanism. No material blocking revision identified. It remains PROPOSED_CONTRACT_MATERIAL_ONLY; successful material review does not make any current command or activation executable."
+}
