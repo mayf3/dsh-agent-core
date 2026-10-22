@@ -62,7 +62,7 @@ def _worker_can_read(st_mode, st_uid, st_gid):
 def _stat(path):
     try:
         return os.stat(path, follow_symlinks=False)
-    except OSError:
+    except FileNotFoundError:
         return None
 
 
@@ -82,15 +82,24 @@ def _chain_upto(path, stop):
 def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
     """三层访问断言。返回 (failures, repairs)；failures 为结构化 dict 列表。"""
     failures, repairs = [], []
+    failed_stat_paths = set()
 
     def fail(check, path, detail, repair=None):
         failures.append({"check": check, "path": path, "detail": detail})
         if repair:
             repairs.append(repair)
 
+    def observe_stat(path):
+        try:
+            return _stat(path)
+        except OSError as error:
+            failed_stat_paths.add(path)
+            fail("stat_observation", path, f"unreadable errno={error.errno}")
+            return None
+
     # --- 层 a：control 穿越链（/ → root → control） -----------------------
     for p in _chain_upto(os.path.join(root, "control"), "/"):
-        st = _stat(p)
+        st = observe_stat(p)
         if st is None:
             fail("control_traverse", p, "missing")
             continue
@@ -101,7 +110,7 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
 
     # --- 层 b：中央 gen 树 ------------------------------------------------
     gen_root = os.path.join(root, "control", "codex-plugin-runtime")
-    st = _stat(gen_root)
+    st = observe_stat(gen_root)
     if st is None:
         fail("gen_tree", gen_root, "missing (no codex-plugin-runtime gen tree)")
     else:
@@ -116,7 +125,7 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
         current = _current_gen(gens)
         for g in gens:
             gp = os.path.join(gen_root, g)
-            gst = _stat(gp)
+            gst = observe_stat(gp)
             if gst is None:
                 continue
             # gen 目录只要求 worker 可穿越（o=x / g=x@20 / 属主=502）：worker 按
@@ -133,14 +142,14 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
             if g == current:
                 for name in ("node_modules",):
                     entry = os.path.join(gp, name)
-                    est = _stat(entry)
+                    est = observe_stat(entry)
                     if est is not None and not _worker_can_traverse(est.st_mode, est.st_uid, est.st_gid):
                         fail("gen_tree", entry, "current gen entry not traversable by worker",
                              {"cmd": ["chmod", "o+rx", entry]})
 
     # --- 层 c：.dsh 穿越 + 每 agent memory 预建 ---------------------------
     for p in _chain_upto(dsh_root, "/"):
-        st = _stat(p)
+        st = observe_stat(p)
         if st is None:
             continue
         if not _worker_can_traverse(st.st_mode, st.st_uid, st.st_gid):
@@ -149,16 +158,19 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
     homes_dir = os.path.join(root, "homes")
     try:
         agents = sorted(a for a in os.listdir(homes_dir) if a.startswith("agt_"))
-    except OSError:
-        agents = []
+    except OSError as error:
+        agents = None
+        fail("homes_list", homes_dir, f"unreadable errno={error.errno}")
     ws_root = os.path.join(dsh_root, "workspaces")
-    ws_stat = _stat(ws_root)
+    ws_stat = observe_stat(ws_root)
     if ws_stat is not None and not _worker_can_traverse(ws_stat.st_mode, ws_stat.st_uid, ws_stat.st_gid):
         fail("dsh_workspaces", ws_root, "workspaces root not traversable by worker",
              {"cmd": ["chmod", "o+x", ws_root]})
-    for agent in agents:
+    for agent in agents or []:
         mem = os.path.join(ws_root, agent, "memory")
-        mst = _stat(mem)
+        mst = observe_stat(mem)
+        if mem in failed_stat_paths:
+            continue
         if mst is None:
             fail("memory_dir", mem, "missing (worker memory spill dir)",
                  {"cmd": ["mkdir", "-p", mem], "post": [["chown", f"{WORKER_UID}:{WORKER_GID}", mem],
@@ -169,13 +181,18 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
 
     # --- 项 2：属主物化（home 入口可读性抽查） ----------------------------
     # 分级：有绑定（bindings.json 提及）的 agent = FAIL；休眠 home = note。
-    bound = _bound_agents(root)
-    for agent in agents[:8]:  # 抽查前 8 个（全量成本高；安装器全量跑）
+    try:
+        bound = _bound_agents(root)
+    except (OSError, ValueError, TypeError) as error:
+        bound = None
+        fail("bindings_read", os.path.join(root, "bindings", "bindings.json"),
+             f"unavailable or malformed ({type(error).__name__})")
+    for agent in (agents or [])[:8]:  # 抽查前 8 个（全量成本高；安装器全量跑）
         home = os.path.join(homes_dir, agent)
         for name in ("settings.yaml", ".credentials.yaml"):
-            st = _stat(os.path.join(home, name))
+            st = observe_stat(os.path.join(home, name))
             if st is not None and not _worker_can_read(st.st_mode, st.st_uid, st.st_gid):
-                if agent in bound:
+                if bound is None or agent in bound:
                     fail("home_materialization", os.path.join(home, name),
                          "worker cannot read home entry (安装器必须以 worker 身份物化)", None)
                 else:
@@ -186,14 +203,20 @@ def check_access_layers(root=DEFAULT_ROOT, dsh_root=DEFAULT_DSH_ROOT):
 
 
 def _bound_agents(root):
-    """bindings.json 里出现过的 agentId 集合（读不到 = 空集，只影响分级）。"""
+    """Return positively observed bound agents; unknown evidence raises."""
     path = os.path.join(root, "bindings", "bindings.json")
-    try:
-        with open(path, encoding="utf-8") as fh:
-            text = fh.read()
-    except OSError:
-        return set()
-    return {a for a in text.split('"') if a.startswith("agt_")}
+    with open(path, encoding="utf-8") as handle:
+        data = json.load(handle)
+    if (not isinstance(data, dict) or type(data.get("version")) is not int
+            or data["version"] != 1 or not isinstance(data.get("bindings"), dict)):
+        raise ValueError("invalid native binding document")
+    bound = set()
+    for row in data["bindings"].values():
+        if not isinstance(row, dict) or not isinstance(row.get("agentId"), str) or not row["agentId"]:
+            raise ValueError("invalid native binding row")
+        if row["agentId"].startswith("agt_"):
+            bound.add(row["agentId"])
+    return bound
 
 
 def _current_gen(gens):
@@ -288,7 +311,8 @@ def main(argv=None):
         for f in failures:
             print(f"  [{f['check']}] {f['path']}: {f['detail']}")
     else:
-        print("ALL GREEN: 三层访问 + 属主物化 + 注册身份 全部满足")
+        print("PRECHECK PASSED: final recheck pending" if args.apply
+              else "ALL GREEN: 三层访问 + 属主物化 + 注册身份 全部满足")
     if repairs:
         print(f"\n可修复项 {len(repairs)} 条" + ("（--apply 未加，仅列出）" if not args.apply else "："))
         for r in repairs:
