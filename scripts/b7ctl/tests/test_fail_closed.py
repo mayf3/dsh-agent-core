@@ -263,7 +263,19 @@ class FailClosedTests(unittest.TestCase):
                                 return io.StringIO('[]')
                             if scenario == 'bindings_bad_row':
                                 return io.StringIO('{"version":1,"bindings":{"channel":null}}')
-                            return io.StringIO('{"version":1,"bindings":{"channel":{"agentId":"agt_OWNED"}}}')
+                            return io.StringIO(json.dumps({
+                                'version': 1,
+                                'bindings': {'channel': {
+                                    'channelConversationId': 'channel', 'activeAgentId': 'agt_OWNED',
+                                    'activeSessionId': 'owned-session', 'workspace': None,
+                                    'updatedAt': '2026-10-22T00:00:00Z',
+                                }},
+                                'lastSessions': {'channel': {'agt_OWNED': 'owned-session'}},
+                                'freshSessions': {'agt_OTHER': {'owned-request': {
+                                    'agentId': 'agt_OTHER', 'requestId': 'owned-request',
+                                    'sessionId': 'other-session', 'createdAt': '2026-10-22T00:00:00Z',
+                                }}},
+                            }))
                         if str(path) == args.registration_receipt:
                             return real_open(path, *a, **kw)
                         raise AssertionError('unexpected file observation: ' + str(path))
