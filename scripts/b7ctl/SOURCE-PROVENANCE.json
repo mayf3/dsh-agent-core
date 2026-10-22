@@ -20,8 +20,8 @@
       "source_bytes": 12556,
       "source_sha256": "ef320fbeb7b4e3ee5fe28c6bdb373c477cdf3d3c0291f14cc2ae219a451bd7b0",
       "imported_path": "scripts/b7ctl/installer_hardening.py",
-      "result_bytes": 15756,
-      "result_sha256": "4b7888b2dc23f4836b2d0ec302abf4a64692c8f1fd8d995930b0e9fc5e0d34dc"
+      "result_bytes": 15780,
+      "result_sha256": "5b226b8758a99b7f8cb308d743fb30e813cc70ad789c75d5560f36a068dacdec"
     }
   ],
   "effects": "source-only; originals preserved; no adoption or production effects"

@@ -212,10 +212,10 @@ def _bound_agents(root):
         raise ValueError("invalid native binding document")
     bound = set()
     for row in data["bindings"].values():
-        if not isinstance(row, dict) or not isinstance(row.get("agentId"), str) or not row["agentId"]:
+        if not isinstance(row, dict) or not isinstance(row.get("activeAgentId"), str) or not row["activeAgentId"]:
             raise ValueError("invalid native binding row")
-        if row["agentId"].startswith("agt_"):
-            bound.add(row["agentId"])
+        if row["activeAgentId"].startswith("agt_"):
+            bound.add(row["activeAgentId"])
     return bound
 
 
