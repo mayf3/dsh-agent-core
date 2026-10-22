@@ -72,5 +72,10 @@
   "production_writes": 0,
   "deployment_writer_claimed": false,
   "tracking_issue": "https://github.com/mayf3/agent-control/issues/1256",
-  "docs_pr": "https://github.com/mayf3/dsh-agent-core/pull/549"
+  "docs_pr": "https://github.com/mayf3/dsh-agent-core/pull/549",
+  "pinned_source_delta": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-22/p1-remediation/b7-pinned-source-delta.diff",
+    "sha256": "9b368b4a5d96aeb17c394aa8b62fb3c8672c71945c594fbc11b5b5b4f14bdea5",
+    "note": "Owned valid unified diff kept outside Git to preserve mandatory context-space bytes; source import provenance is committed."
+  }
 }
