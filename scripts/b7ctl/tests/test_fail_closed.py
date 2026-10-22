@@ -4,7 +4,9 @@ import importlib.util
 import io
 import json
 import errno
+import glob
 import os
+import stat
 from pathlib import Path
 import sys
 import tempfile
@@ -35,6 +37,22 @@ def invoke(fn, args):
 
 
 class FailClosedTests(unittest.TestCase):
+    def setUp(self):
+        self.owned_receipts = set()
+        real_open = open
+        real_glob = glob.glob
+        def owned_open(path, *args, **kwargs):
+            if str(path) not in self.owned_receipts:
+                raise AssertionError('fixture blocked external file: ' + str(path))
+            return real_open(path, *args, **kwargs)
+        def owned_glob(pattern, *args, **kwargs):
+            if str(pattern) not in self.owned_receipts:
+                raise AssertionError('fixture blocked external selection: ' + str(pattern))
+            return real_glob(pattern, *args, **kwargs)
+        self.addCleanup(patch.stopall)
+        patch.object(ih, 'open', side_effect=owned_open, create=True).start()
+        patch.object(glob, 'glob', side_effect=owned_glob).start()
+
     def preflight(self, observation, root_rc=0, ds_rc=0, runtime_rc=0):
         def root(argv, **unused):
             if argv[0] == 'stat':
@@ -125,6 +143,7 @@ class FailClosedTests(unittest.TestCase):
                 'binding': {'manifestSha256': 'a' * 64}}
         data.update(changes or {})
         path = Path(directory) / 'receipt.json'
+        self.owned_receipts.add(str(path))
         path.write_text(json.dumps(data))
         return SimpleNamespace(op='OWNED_OP', manifest_sha256='a' * 64,
                                registration_receipt=str(path),
@@ -132,8 +151,11 @@ class FailClosedTests(unittest.TestCase):
                                apply=False)
 
     def harden(self, args, layers=None, repaired=None):
+        # An original-baseline discriminator must also redirect the historical
+        # fixed selection; it may never inspect a saved Documents receipt.
+        selection = patch.object(b7, 'REGISTER_GLOB', args.registration_receipt) if hasattr(b7, 'REGISTER_GLOB') else contextlib.nullcontext()
         with patch.object(ih, 'check_access_layers', side_effect=layers or [([], [])]), \
-             patch.object(ih, 'apply_repairs', return_value=repaired or []):
+             patch.object(ih, 'apply_repairs', return_value=repaired or []), selection:
             return invoke(b7.cmd_harden, args)
 
     def test_harden_requires_exact_native_receipt_not_empty_old_glob(self):
@@ -199,6 +221,78 @@ class FailClosedTests(unittest.TestCase):
                 with self.assertRaises(SystemExit) as raised:
                     b7.main()
                 self.assertEqual(raised.exception.code, 2)
+
+    def test_real_access_helper_propagates_required_observation_failures(self):
+        root, dsh = ih.DEFAULT_ROOT, ih.DEFAULT_DSH_ROOT
+        homes = root + '/homes'
+        gens = root + '/control/codex-plugin-runtime'
+        bindings = root + '/bindings/bindings.json'
+        regular = SimpleNamespace(st_mode=stat.S_IFDIR | 0o755, st_uid=502, st_gid=20)
+        private = SimpleNamespace(st_mode=stat.S_IFREG | 0o600, st_uid=0, st_gid=0)
+        real_open = open
+        scenarios = ['all_positive', 'homes_initial', 'homes_final', 'bindings_initial', 'bindings_final',
+                     'bindings_array', 'bindings_bad_row', 'home_stat_EACCES']
+        for scenario in scenarios:
+            for entrypoint in ['b7ctl', 'standalone']:
+                with self.subTest(scenario=scenario, entrypoint=entrypoint), tempfile.TemporaryDirectory() as directory:
+                    args = self.receipt(directory)
+                    args.apply = scenario.endswith('_final')
+                    counts = {'homes': 0, 'bindings': 0}
+                    def listing(path):
+                        if path == gens:
+                            return ['gen-owned']
+                        if path == homes:
+                            counts['homes'] += 1
+                            if scenario == 'homes_initial' or (scenario == 'homes_final' and counts['homes'] > 1):
+                                raise PermissionError(errno.EACCES, 'owned homes denial')
+                            return ['agt_OWNED']
+                        raise AssertionError('unexpected directory observation: ' + path)
+                    def metadata(path, **kwargs):
+                        if path in [homes + '/agt_OWNED/settings.yaml', homes + '/agt_OWNED/.credentials.yaml']:
+                            if scenario == 'home_stat_EACCES':
+                                raise PermissionError(errno.EACCES, 'owned stat denial')
+                            if scenario.startswith('bindings') and (scenario != 'bindings_final' or counts['bindings'] > 1):
+                                return private
+                        return regular
+                    def reading(path, *a, **kw):
+                        if str(path) == bindings:
+                            counts['bindings'] += 1
+                            if scenario == 'bindings_initial' or (scenario == 'bindings_final' and counts['bindings'] > 1):
+                                raise PermissionError(errno.EACCES, 'owned binding denial')
+                            if scenario == 'bindings_array':
+                                return io.StringIO('[]')
+                            if scenario == 'bindings_bad_row':
+                                return io.StringIO('{"version":1,"bindings":{"channel":null}}')
+                            return io.StringIO('{"version":1,"bindings":{"channel":{"agentId":"agt_OWNED"}}}')
+                        if str(path) == args.registration_receipt:
+                            return real_open(path, *a, **kw)
+                        raise AssertionError('unexpected file observation: ' + str(path))
+                    with patch.object(ih, '_chain_upto', side_effect=lambda path, stop: [path]), \
+                         patch.object(ih.os, 'stat', side_effect=metadata), \
+                         patch.object(ih.os, 'listdir', side_effect=listing), \
+                         patch.object(ih.os, 'readlink', return_value='gen-owned'), \
+                         patch.object(ih, 'open', side_effect=reading, create=True), \
+                         patch.object(ih.os, 'system', side_effect=AssertionError('no native repair')), \
+                         patch.object(b7, 'root', side_effect=AssertionError('no runner')), \
+                         patch.object(b7, 'sh', side_effect=AssertionError('no runner')):
+                        if entrypoint == 'b7ctl':
+                            code, output = invoke(b7.cmd_harden, args)
+                        else:
+                            argv = ['--op', args.op, '--manifest-sha256', args.manifest_sha256,
+                                    '--registration-receipt', args.registration_receipt,
+                                    '--registration-receipt-sha256', args.registration_receipt_sha256]
+                            if args.apply:
+                                argv.append('--apply')
+                            captured = io.StringIO()
+                            with contextlib.redirect_stdout(captured):
+                                code = ih.main(argv)
+                            output = captured.getvalue()
+                    if scenario == 'all_positive':
+                        self.assertEqual(code, 0)
+                        self.assertIn('ALL GREEN', output)
+                    else:
+                        self.assertNotEqual(code, 0)
+                        self.assertNotIn('ALL GREEN', output)
 
 
 if __name__ == '__main__':
