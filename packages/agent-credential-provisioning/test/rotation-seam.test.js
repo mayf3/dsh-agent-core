@@ -322,3 +322,65 @@ test('generation helpers: auth secret.ts format round-trip', () => {
   assert.match(secretHash, /^[0-9a-f]{32}:[0-9a-f]{128}$/)
   assert.equal(hashMachineSecret(secret, secretHash.split(':')[0]), secretHash)
 })
+
+// ── T13: shared reader-owner face (Product #552) ──────────────────────────
+
+test('T13: the shared reader-owner face flows through the GATE read (storeWriteOptions plumbing)', async (t) => {
+  // The shared store lives under a path the REAL fs does not have; the
+  // injected reader-face surface (root-driven channel, reader uid/gid 502:20)
+  // serves the gate read. Before the plumbing fix the gate ignored
+  // storeWriteOptions, hit the real fs, and died with CREDENTIALS_STORE_ERROR
+  // — a reader-owned shared store could never pass its own seam gate. After
+  // the fix the gate reads through the injected reader face and reaches APPLY,
+  // which refuses with the receipted external_prerequisite_missing(e) —
+  // zero mutation, fail-closed NOW behavior unchanged.
+  const storeFile = '/shared-openai-codex-harness/credentials.json'
+  const receiptsDir = mkdtempSync(join(tmpdir(), 'rotation-seam-reader-face-'))
+  const receiptsFile = join(receiptsDir, 'rotation-receipts.jsonl')
+  t.after(() => rmSync(receiptsDir, { recursive: true, force: true }))
+
+  const readerUid = 502
+  const readerGid = 20
+  const directoryStat = {
+    dev: 11, ino: 22, mode: 0o40700, uid: readerUid, gid: readerGid,
+    isDirectory: () => true, isFile: () => false, isSymbolicLink: () => false,
+  }
+  const fileStat = {
+    dev: 11, ino: 33, mode: 0o100600, uid: readerUid, gid: readerGid, nlink: 1,
+    isDirectory: () => false, isFile: () => true, isSymbolicLink: () => false,
+  }
+  const document = `${JSON.stringify({
+    version: 1,
+    credentials: { [AGENT]: { clientId: CLIENT, clientSecret: INITIAL_SECRET } },
+  })}\n`
+  const touched = []
+  const readerFaceFileSystem = {
+    async lstat(path) { touched.push(`lstat:${path}`); return path === storeFile ? fileStat : directoryStat },
+    async open(path) {
+      touched.push(`open:${path}`)
+      return {
+        stat: async () => (path === storeFile ? fileStat : directoryStat),
+        readFile: async () => Buffer.from(document),
+        close: async () => {},
+      }
+    },
+  }
+  let threw
+  try {
+    await executeRotation({
+      agentId: AGENT, clientId: CLIENT, storeFile, receiptsFile,
+      readDbState: async () => ({ clientId: CLIENT, secretHash: hashMachineSecret(INITIAL_SECRET, 'aabbccdd00112233') }),
+      storeWriteOptions: {
+        readerOwner: { uid: readerUid, gid: readerGid },
+        identity: { getuid: () => 0, getgid: () => 0 },
+        fileSystem: readerFaceFileSystem,
+      },
+    })
+  } catch (error) { threw = error }
+
+  assert.ok(threw !== undefined, 'the default (e)-less channel refuses')
+  assert.equal(threw.code, 'external_prerequisite_missing', `gate read succeeded through the reader face (got ${threw.code}: ${threw.message})`)
+  assert.ok(touched.some((entry) => entry === `lstat:${storeFile}`), 'the store read was served by the injected reader-face surface')
+  const outcomes = readFileSync(receiptsFile, 'utf8').trim().split('\n').map((line) => JSON.parse(line).outcome)
+  assert.ok(outcomes.includes(ROTATION_OUTCOMES.REFUSED_EXTERNAL_PREREQUISITE), `refusal receipted: ${outcomes.join(',')}`)
+})

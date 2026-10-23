@@ -24,6 +24,14 @@
  * hash column), the seam's GATE reads the DB secret_hash VALUE — it is the
  * mechanical single-generation proof input (scrypt linkage) and stays within
  * the receipted operator seam.
+ *
+ * Shared-store face (Product #552 corrected contract): pass
+ * --reader-uid/--reader-gid (the credential consumer's uid/gid, e.g. the
+ * fleet worker) when rotating a store whose READER is a different account
+ * than the writer channel — the rotation then finalizes owner=reader,
+ * mode=0600 atomically and fails closed on any failed ownership
+ * finalization. Root channel required; without it the seam refuses loud
+ * before any mutation.
  */
 
 import { homedir, tmpdir } from 'node:os'
@@ -67,6 +75,26 @@ function requireAgentId() {
   const agentId = val('--agent')
   if (typeof agentId !== 'string' || agentId === '') die('--agent <agt_*> is required')
   return agentId
+}
+
+/**
+ * Shared-store reader-owner face (Product #552 corrected contract): the
+ * committed store must finally be owned by the READER account (the credential
+ * consumer, e.g. the fleet worker uid) at mode 0600. Supplied as a paired
+ * --reader-uid/--reader-gid; the store-writer enforces the rest (root-only
+ * channel, fail-closed finalization, mutual exclusion with owner options).
+ */
+function storeWriteOptionsFromArgs() {
+  const uid = val('--reader-uid')
+  const gid = val('--reader-gid')
+  if (uid === undefined && gid === undefined) return {}
+  if (uid === undefined || gid === undefined) die('--reader-uid and --reader-gid must be supplied together')
+  const readerOwner = { uid: Number(uid), gid: Number(gid) }
+  if (!Number.isInteger(readerOwner.uid) || readerOwner.uid < 0
+    || !Number.isInteger(readerOwner.gid) || readerOwner.gid < 0) {
+    die('--reader-uid/--reader-gid must be non-negative integers')
+  }
+  return { readerOwner }
 }
 
 async function readDbStateViaPsql({ dbUrl, clientId }) {
@@ -180,6 +208,7 @@ async function cmdRotate() {
       rollbackDbRotation: channel.rollbackDbRotation,
       ...(mintVerify === undefined ? {} : { mintVerify }),
       ...(realAuthCallVerify === undefined ? {} : { realAuthCallVerify }),
+      storeWriteOptions: storeWriteOptionsFromArgs(),
       log: { log: (m) => process.stdout.write(`${m}\n`) },
     })
     process.stdout.write(`ROTATION_${result.outcome} operation=${result.receipt.operationId} agent=${agentId} receipt=${receiptsFile}\n`)
@@ -202,7 +231,7 @@ async function cmdGate() {
   if (dbUrl === undefined) die('--db-url <postgres://...> is required')
   const db = await readDbStateViaPsql({ dbUrl, clientId })
   const { readCredentialStoreDocument } = await import('../packages/agent-credential-provisioning/src/store-writer.js')
-  const doc = await readCredentialStoreDocument(storeFile)
+  const doc = await readCredentialStoreDocument(storeFile, storeWriteOptionsFromArgs())
   const storeSecret = doc.credentials?.[agentId]?.clientSecret
   const ledger = new RotationReceiptLedger(val('--receipts') ?? `${storeFile}.rotation-receipts.jsonl`)
   const gate = evaluateSeamGate({ dbSecretHash: db.secretHash, storeSecret, receipts: ledger.list() })
@@ -301,6 +330,6 @@ switch (command) {
   case 'receipts': await cmdReceipts(); break
   case 'selftest': cmdSelftest(); break
   default:
-    process.stdout.write(`usage: agent-credential-rotate.mjs <rotate|gate|receipts|selftest> [--agent <agt_*>] [--client-id <mc_*>] [--store <path>] [--receipts <path>] [--db-url <url>] [--auth-origin <url>] [--real-call-url <url>] [--operation-id <id>]\n`)
+    process.stdout.write(`usage: agent-credential-rotate.mjs <rotate|gate|receipts|selftest> [--agent <agt_*>] [--client-id <mc_*>] [--store <path>] [--receipts <path>] [--db-url <url>] [--auth-origin <url>] [--real-call-url <url>] [--operation-id <id>] [--reader-uid <n> --reader-gid <n>]\n`)
     process.exit(command === undefined ? 0 : 2)
 }
