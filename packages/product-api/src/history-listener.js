@@ -209,7 +209,21 @@ export function startHistoryListener({
   // async 'error' event. Without a handler it escapes as an uncaught
   // exception and kills the WHOLE runtime — taking the admission core
   // (served by the same process) down with it. Log and stay up instead.
+  // Transient bind conditions (pinned IP not yet back, brief port contention)
+  // retry on a fixed cadence before the surface degrades for good. The
+  // admission core served by this same process is unaffected either way.
+  const BIND_RETRY_LIMIT = 30
+  const BIND_RETRY_DELAY_MS = 60_000
+  const BIND_RETRY_CODES = new Set(['EADDRNOTAVAIL', 'EADDRINUSE', 'EACCES'])
+  let bindRetries = 0
   server.on('error', (error) => {
+    if (BIND_RETRY_CODES.has(error?.code) && bindRetries < BIND_RETRY_LIMIT) {
+      bindRetries += 1
+      console.error(`[history-listener] bind failed (${error?.code}); retry ${bindRetries}/${BIND_RETRY_LIMIT} in ${BIND_RETRY_DELAY_MS / 1000}s; admission core unaffected`)
+      const retryTimer = setTimeout(() => server.listen(port, host), BIND_RETRY_DELAY_MS)
+      retryTimer.unref?.()
+      return
+    }
     console.error(`[history-listener] bind/serve failed; history route unavailable: ${error?.code ?? ''} ${error?.message ?? error}`)
   })
   server.listen(port, host)
