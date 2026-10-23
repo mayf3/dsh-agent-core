@@ -259,7 +259,11 @@ export async function executeRotation({
     error.receipt = receipt
     throw error
   }
-  const storeDoc = await readCredentialStoreDocument(storeFile)
+  // The GATE read carries the SAME trust face as the swap (storeWriteOptions
+  // flows owner options through): a shared store finally owned by its reader
+  // account (Product #552 readerOwner face) is only readable under that face,
+  // and the gate must not fall back to the driver's process identity.
+  const storeDoc = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const storeEntry = storeDoc.credentials?.[agentId]
   const dbHashFingerprint = hashFingerprint(db.secretHash)
   const storeSecret = storeEntry?.clientSecret
@@ -382,7 +386,9 @@ export async function executeRotation({
   }
 
   // ── VERIFY: readback + MINT + REAL CALL ────────────────────────────────
-  const reread = await readCredentialStoreDocument(storeFile)
+  // Same trust face as the GATE read (see above): the post-swap readback must
+  // validate under the rotation's own owner options, not the process identity.
+  const reread = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const readbackOk = reread.credentials?.[agentId]?.clientId === clientId
     && secretFingerprint(reread.credentials[agentId].clientSecret) === newStoreFingerprint
   const dbAfter = await readDbState()
