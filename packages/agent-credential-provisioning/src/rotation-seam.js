@@ -47,7 +47,7 @@ import {
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { readCredentialStoreDocument, replaceCredentialForAgent, withCredentialStoreLock } from './store-writer.js'
+import { readCredentialStoreDocument, finalizeReaderOwnedRestore, replaceCredentialForAgent, withCredentialStoreLock } from './store-writer.js'
 
 export const ROTATION_OUTCOMES = Object.freeze({
   COMPLETED: 'COMPLETED',
@@ -259,7 +259,11 @@ export async function executeRotation({
     error.receipt = receipt
     throw error
   }
-  const storeDoc = await readCredentialStoreDocument(storeFile)
+  // The GATE read carries the SAME trust face as the swap (storeWriteOptions
+  // flows owner options through): a shared store finally owned by its reader
+  // account (Product #552 readerOwner face) is only readable under that face,
+  // and the gate must not fall back to the driver's process identity.
+  const storeDoc = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const storeEntry = storeDoc.credentials?.[agentId]
   const dbHashFingerprint = hashFingerprint(db.secretHash)
   const storeSecret = storeEntry?.clientSecret
@@ -349,7 +353,19 @@ export async function executeRotation({
     }
     if (rollbackError === undefined) {
       try {
-        await withCredentialStoreLock(storeFile, storeWriteOptions, () => {
+        await withCredentialStoreLock(storeFile, storeWriteOptions, async (lock) => {
+          // The backup was copied by the driver process; under the shared
+          // reader-owner face that driver is the ROOT channel — restoring it
+          // as-is would commit a root-owned store the reader cannot open and
+          // this face's own gate would then refuse forever. Finalize the
+          // backup to the reader (same discipline as the swap temp) before
+          // the atomic restore; a failed finalization throws into the
+          // recovery path and receipts SPLIT_STATE_OPEN (fail closed).
+          if (storeWriteOptions.readerOwner !== undefined) {
+            await finalizeReaderOwnedRestore(backupFile, lock.owner, {
+              fileSystem: storeWriteOptions.fileSystem,
+            })
+          }
           renameSync(backupFile, storeFile) // atomic restore of the preimage store
         })
       } catch (restoreError) {
@@ -382,7 +398,9 @@ export async function executeRotation({
   }
 
   // ── VERIFY: readback + MINT + REAL CALL ────────────────────────────────
-  const reread = await readCredentialStoreDocument(storeFile)
+  // Same trust face as the GATE read (see above): the post-swap readback must
+  // validate under the rotation's own owner options, not the process identity.
+  const reread = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const readbackOk = reread.credentials?.[agentId]?.clientId === clientId
     && secretFingerprint(reread.credentials[agentId].clientSecret) === newStoreFingerprint
   const dbAfter = await readDbState()

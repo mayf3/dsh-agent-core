@@ -37,7 +37,43 @@ function validateStorePath(storeFile) {
   }
 }
 
-function trustedOwner({ ownerUid, ownerGid, identity = process } = {}) {
+/**
+ * Validate the shared-store reader-owner face (Product #552 corrected
+ * contract): a store whose CONSUMER is a different account than the writer
+ * (the fleet worker reads the shared openai-codex store; the rotating
+ * provisioning channel runs cross-uid). The final store file MUST carry
+ * owner = reader + mode 0600 — the dsh-codex reader strict-checks both
+ * (mode != 600 or owner != its own euid refuses the credential) — so the
+ * writer may not keep ownership. Only the root-driven privileged channel can
+ * finalize a foreign reader owner; any other writer shape refuses loud.
+ * Returns the reader identity (the store's final owner) plus writerUid.
+ */
+function sharedReaderOwner(readerOwner, { ownerUid, ownerGid, identity = process } = {}) {
+  if (readerOwner === null || typeof readerOwner !== 'object'
+    || !Number.isInteger(readerOwner.uid) || readerOwner.uid < 0
+    || !Number.isInteger(readerOwner.gid) || readerOwner.gid < 0) {
+    throw storeError('credential provisioning: readerOwner must supply a non-negative integer uid/gid pair')
+  }
+  if (ownerUid !== undefined || ownerGid !== undefined) {
+    throw storeError('credential provisioning: readerOwner and ownerUid/ownerGid are mutually exclusive trust faces')
+  }
+  // A root-owned store is never trusted (same rule as the trusted-CP face);
+  // the reader is a real consumer account.
+  if (readerOwner.uid === 0) {
+    throw storeError('credential provisioning: shared-store reader owner must not be root')
+  }
+  const writerUid = identity.getuid?.()
+  if (writerUid !== 0) {
+    throw storeError('credential provisioning: finalizing a shared-store reader owner requires the root provisioning channel')
+  }
+  return { uid: readerOwner.uid, gid: readerOwner.gid, writerUid }
+}
+
+function trustedOwner(options = {}) {
+  const { ownerUid, ownerGid, identity = process } = options
+  if (options.readerOwner !== undefined) {
+    return sharedReaderOwner(options.readerOwner, options)
+  }
   const processUid = identity.getuid?.()
   const processGid = identity.getgid?.()
   const uid = ownerUid ?? processUid
@@ -97,6 +133,10 @@ async function removeOwnedPath(file, expectedObject, directory, expectedDirector
 
 async function assertTrustedDirectory(directory, owner, {
   create = false,
+  // Shared-store reader face (Product #552): a root-owned leftover directory
+  // is this privileged channel's own artifact — converge it to the reader
+  // instead of failing. Any OTHER foreign ownership still refuses loud below.
+  adoptRootOwnedDirectory = false,
   fileSystem = defaultFileSystem,
 } = {}) {
   let pathStat
@@ -130,6 +170,18 @@ async function assertTrustedDirectory(directory, owner, {
       }
     }
   }
+  // Adoption is type-scoped to a real directory: chown/chmod follow symlinks,
+  // so a root-owned symlink at the directory path must fall through to the
+  // loud non-symlink refusal below, never mutate its resolved target.
+  if (adoptRootOwnedDirectory && pathStat.uid === 0 && pathStat.isDirectory() && !pathStat.isSymbolicLink()) {
+    try {
+      await fileSystem.chown(directory, owner.uid, owner.gid)
+      await fileSystem.chmod(directory, PRIVATE_DIRECTORY_MODE)
+      pathStat = await fileSystem.lstat(directory)
+    } catch {
+      throw storeError(`credential provisioning: cannot hand off credential store directory: ${directory}`)
+    }
+  }
   assertMetadata(pathStat, {
     kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
   })
@@ -161,6 +213,7 @@ export async function preflightTrustedCredentialDirectory(storeFile, options = {
   const owner = trustedOwner(options)
   const directoryIdentity = await assertTrustedDirectory(dirname(storeFile), owner, {
     create: true,
+    adoptRootOwnedDirectory: options.readerOwner !== undefined,
     fileSystem: options.fileSystem ?? defaultFileSystem,
   })
   return { owner, directoryIdentity }
@@ -231,17 +284,24 @@ function locateCredentialsObject(raw) {
   return { start: match.valueStart, end: match.valueEnd }
 }
 
-async function readTrustedStore(storeFile, owner, { expectedDirectoryIdentity } = {}) {
+async function readTrustedStore(storeFile, owner, {
+  expectedDirectoryIdentity,
+  adoptRootOwnedDirectory = false,
+  fileSystem = defaultFileSystem,
+} = {}) {
   validateStorePath(storeFile)
   const directory = dirname(storeFile)
-  const directoryIdentity = await assertTrustedDirectory(directory, owner)
+  const directoryIdentity = await assertTrustedDirectory(directory, owner, {
+    adoptRootOwnedDirectory,
+    fileSystem,
+  })
   if (expectedDirectoryIdentity !== undefined) {
     assertSameObject(directoryIdentity, expectedDirectoryIdentity, 'credential store directory', directory)
   }
 
   let pathStat
   try {
-    pathStat = await lstat(storeFile)
+    pathStat = await fileSystem.lstat(storeFile)
   } catch (error) {
     if (error?.code === 'ENOENT') {
       return {
@@ -262,7 +322,7 @@ async function readTrustedStore(storeFile, owner, { expectedDirectoryIdentity } 
   let raw
   let openedStat
   try {
-    handle = await open(storeFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+    handle = await fileSystem.open(storeFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
     openedStat = await handle.stat()
     assertMetadata(openedStat, {
       kind: 'file', path: storeFile, mode: PRIVATE_FILE_MODE, owner,
@@ -310,6 +370,8 @@ export async function readCredentialStoreDocument(storeFile, options = {}) {
   const owner = trustedOwner(options)
   return readTrustedStore(storeFile, owner, {
     expectedDirectoryIdentity: options.expectedDirectoryIdentity,
+    adoptRootOwnedDirectory: options.readerOwner !== undefined,
+    fileSystem: options.fileSystem ?? defaultFileSystem,
   })
 }
 
@@ -465,11 +527,47 @@ export async function writeCredentialForAgent(storeFile, agentId, credential, op
 }
 
 /**
+ * Shared-store reader face (options.readerOwner = {uid, gid}; Product #552
+ * corrected contract): finalize a RESTORE candidate (the rotation seam's
+ * preimage backup) to the reader owner before it is renamed onto the store.
+ * The backup was copied by the driver process — under the reader face that is
+ * the root channel — so restoring it as-is would commit a channel-owned store
+ * that the reader cannot open and that this face's own gate then refuses.
+ * Verifies the post-chown metadata; ANY failure throws the
+ * CREDENTIALS_STORE_ERROR family so the caller's recovery receipts the
+ * failure instead of committing an unownable store (fail closed).
+ */
+export async function finalizeReaderOwnedRestore(file, owner, { fileSystem = defaultFileSystem } = {}) {
+  if (owner?.writerUid !== 0) {
+    throw storeError('credential provisioning: reader-owner restore finalization requires the root channel owner')
+  }
+  try {
+    await fileSystem.chown(file, owner.uid, owner.gid)
+    const stat = await fileSystem.lstat(file)
+    assertMetadata(stat, { kind: 'file', path: file, mode: PRIVATE_FILE_MODE, owner })
+    return stat
+  } catch (error) {
+    if (error?.code === CREDENTIALS_STORE_ERROR) throw error
+    throw storeError(`credential provisioning: cannot finalize reader-owned restore candidate: ${file}`)
+  }
+}
+
+/**
  * AMENDMENT_7 rotation seam write face: replace an EXISTING credential entry
  * in place under the same trusted-store discipline as
  * writeCredentialForAgent (lock, metadata assertions, temp + fsync + atomic
  * rename, every other byte preserved). Refuses when the entry is ABSENT —
  * rotation never fabricates an identity.
+ *
+ * Shared-store reader-owner face (options.readerOwner = {uid, gid}; Product
+ * #552 corrected contract): the committed store must finally be owned by the
+ * READER account (the credential consumer, e.g. the fleet worker uid) at mode
+ * 0600 — the dsh-codex reader refuses anything else — so a root-driven
+ * rotation chowns temp/dir/lock to the reader BEFORE the atomic rename and
+ * any failed ownership finalization leaves the preimage store untouched
+ * (fail closed). Root-only; mutually exclusive with ownerUid/ownerGid; the
+ * default (per-agent trusted-CP) face is unchanged when readerOwner is
+ * absent.
  */
 export async function replaceCredentialForAgent(storeFile, agentId, credential, options = {}) {
   return trustedCredentialStoreWrite(storeFile, agentId, credential, options, 'replace')
@@ -486,6 +584,8 @@ async function trustedCredentialStoreWrite(storeFile, agentId, credential, optio
     const { owner, directoryIdentity } = lock
     const current = await readTrustedStore(storeFile, owner, {
       expectedDirectoryIdentity: directoryIdentity,
+      adoptRootOwnedDirectory: options.readerOwner !== undefined,
+      fileSystem: options.fileSystem ?? defaultFileSystem,
     })
     if (writeMode === 'add' && current.credentials[agentId] !== undefined) {
       throw storeError(`credential provisioning: target credential entry already exists for ${agentId}`)

@@ -10,8 +10,10 @@ import { join } from 'node:path'
 import test from 'node:test'
 
 import {
+  finalizeReaderOwnedRestore,
   preflightTrustedCredentialDirectory,
   readCredentialStoreDocument,
+  replaceCredentialForAgent,
   writeCredentialForAgent,
 } from '../src/store-writer.js'
 
@@ -341,6 +343,257 @@ test('writer refuses a group/world-accessible credential directory', async (t) =
   await chmod(directory, 0o755)
   await assert.rejects(
     writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+})
+
+// ── SHARED_READER_OWNER face (Product #552 corrected contract) ────────────
+// The shared openai-codex store's READER is a different account than the
+// rotating writer channel; the committed store must finally be owned by the
+// reader at mode 0600 (the dsh-codex reader strict-checks both) and a failed
+// ownership finalization must fail closed on the preimage. The harness uses
+// the process's own uid/gid as the reader so real chown(2) calls stay legal
+// without root; the root-writer path itself is exercised via the injectable
+// identity.
+
+const rootIdentity = Object.freeze({ getuid: () => 0, getgid: () => 0 })
+const readerOwnerOptions = () => ({
+  readerOwner: { uid: process.getuid(), gid: process.getgid() },
+  identity: rootIdentity,
+})
+
+test('SHARED_READER_OWNER: root rotation replaces the entry and finalizes reader-owned 0600', async (t) => {
+  const otherSecret = opaque()
+  const { directory, file } = await fixture(t, {
+    version: 1,
+    credentials: {
+      agt_other: { clientId: 'mc_other', clientSecret: otherSecret },
+      agt_target: { clientId: 'mc_target', clientSecret: opaque() },
+    },
+  })
+  const nextSecret = opaque()
+  await replaceCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: nextSecret }, readerOwnerOptions())
+
+  const raw = await readFile(file, 'utf8')
+  const document = JSON.parse(raw)
+  assert.equal(document.credentials.agt_target.clientSecret, nextSecret)
+  assert.equal(document.credentials.agt_target.clientId, 'mc_target')
+  assertContainsExactBytes(raw, [JSON.stringify({ clientId: 'mc_other', clientSecret: otherSecret })])
+
+  const reader = process.getuid()
+  const fileStat = await stat(file)
+  assert.equal(fileStat.mode & 0o7777, 0o600, 'final store mode is exactly 0600 — no group/other/special bits')
+  assert.equal(fileStat.uid, reader, 'final store owner is the reader uid')
+  assert.equal(fileStat.gid, process.getgid(), 'final store group is the reader group')
+  const dirStat = await stat(directory)
+  assert.equal(dirStat.mode & 0o7777, 0o700, 'shared directory stays exactly 0700 — traversal never widened')
+  assert.equal(dirStat.uid, reader)
+  assert.deepEqual(await readdir(directory), [join(file).slice(directory.length + 1)], 'no temp or lock leftovers')
+})
+
+test('SHARED_READER_OWNER directory contract: fresh create reader-owned; root-owned leftover adopted; foreign owner refused untouched', async (t) => {
+  // (1) fresh shared directory is created reader-owned 0700 by the root face.
+  const { directory } = await fixture(t, undefined)
+  const freshDirectory = join(directory, 'shared-openai-codex')
+  const freshFile = join(freshDirectory, 'credentials.json')
+  await writeCredentialForAgent(freshFile, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }, readerOwnerOptions())
+  const freshStat = await stat(freshDirectory)
+  assert.equal(freshStat.mode & 0o7777, 0o700)
+  assert.equal(freshStat.uid, process.getuid(), 'created directory lands reader-owned')
+
+  // (2) a root-owned leftover directory (this channel's own artifact) is
+  // adopted to the reader before the trust assertion.
+  const operations = []
+  const rootOwnedStat = {
+    dev: 10, ino: 20, mode: 0o40700, uid: 0, gid: 0,
+    isDirectory: () => true, isFile: () => false, isSymbolicLink: () => false,
+  }
+  const adoptionFileSystem = {
+    async lstat(path) { operations.push(`lstat:${path}`); return rootOwnedStat },
+    async chown(path, uid, gid) { operations.push(`chown:${uid}:${gid}`); rootOwnedStat.uid = uid; rootOwnedStat.gid = gid },
+    async chmod(path, mode) { operations.push(`chmod:${mode.toString(8)}`) },
+    async open(path) {
+      operations.push(`open:${path}`)
+      return { stat: async () => ({ ...rootOwnedStat }), close: async () => {} }
+    },
+  }
+  const result = await preflightTrustedCredentialDirectory('/shared/credentials.json', {
+    ...readerOwnerOptions(),
+    fileSystem: adoptionFileSystem,
+  })
+  assert.deepEqual(result.owner, { uid: process.getuid(), gid: process.getgid(), writerUid: 0 })
+  assert.deepEqual(operations, [
+    'lstat:/shared',
+    `chown:${process.getuid()}:${process.getgid()}`,
+    'chmod:700',
+    'lstat:/shared',
+    'open:/shared',
+  ])
+
+  // (3) a foreign-owned directory refuses loud with ZERO mutation (fail
+  // closed on ownership the channel does not own).
+  const foreignStat = { ...rootOwnedStat, uid: 999, gid: 999 }
+  const refusedOperations = []
+  const foreignFileSystem = {
+    async lstat() { refusedOperations.push('lstat'); return foreignStat },
+    async chown() { refusedOperations.push('chown'); return assert.fail('foreign directory must not be mutated') },
+    async chmod() { refusedOperations.push('chmod'); return assert.fail('foreign directory must not be mutated') },
+    async open() { refusedOperations.push('open'); return assert.fail('foreign directory must not be opened') },
+  }
+  await assert.rejects(
+    preflightTrustedCredentialDirectory('/shared/credentials.json', {
+      ...readerOwnerOptions(),
+      fileSystem: foreignFileSystem,
+    }),
+    /has untrusted owner/,
+  )
+  assert.deepEqual(refusedOperations, ['lstat'], 'refusal mutates nothing')
+})
+
+test('SHARED_READER_OWNER: failed temp chown fails closed on the preimage with zero leftovers', async (t) => {
+  const originalSecret = opaque()
+  const { directory, file } = await fixture(t, {
+    version: 1,
+    credentials: { agt_target: { clientId: 'mc_target', clientSecret: originalSecret } },
+  })
+  const original = await readFile(file)
+  const injected = Object.assign(new Error('injected chown failure'), { code: 'EPERM' })
+  let chownAttempts = 0
+  const failingChownFileSystem = {
+    ...fileSystem,
+    async open(path, flags, mode) {
+      const handle = await fileSystem.open(path, flags, mode)
+      if (!String(path).includes('.tmp-')) return handle
+      return new Proxy(handle, {
+        get(target, prop, receiver) {
+          if (prop === 'chown') {
+            return async (...args) => {
+              chownAttempts += 1
+              throw injected
+            }
+          }
+          const value = Reflect.get(target, prop, target)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+      })
+    },
+  }
+  await assert.rejects(
+    replaceCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }, {
+      ...readerOwnerOptions(),
+      fileSystem: failingChownFileSystem,
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  // Discriminator: the refusal is the CHOWN failure on the temp finalization
+  // (attempted exactly once — the reader face reached the temp), not an
+  // earlier validation refusal, which would attempt zero chowns.
+  assert.equal(chownAttempts, 1)
+  assert.deepEqual(await readFile(file), original, 'preimage store bytes survive the failed finalization')
+  const raw = JSON.parse(await readFile(file, 'utf8'))
+  assert.equal(raw.credentials.agt_target.clientSecret, originalSecret, 'rotation did not land')
+  assert.deepEqual(await readdir(directory), [join(file).slice(directory.length + 1)], 'temp and lock cleaned up')
+})
+
+test('SHARED_READER_OWNER: idempotent repeated rotations keep the reader-owner contract', async (t) => {
+  const { directory, file } = await fixture(t, {
+    version: 1,
+    credentials: { agt_target: { clientId: 'mc_target', clientSecret: opaque() } },
+  })
+  const first = opaque()
+  const second = opaque()
+  await replaceCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: first }, readerOwnerOptions())
+  await replaceCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: second }, readerOwnerOptions())
+
+  const document = JSON.parse(await readFile(file, 'utf8'))
+  assert.equal(document.credentials.agt_target.clientSecret, second, 'the newest generation is committed')
+  const fileStat = await stat(file)
+  assert.equal(fileStat.mode & 0o7777, 0o600)
+  assert.equal(fileStat.uid, process.getuid())
+  const dirStat = await stat(directory)
+  assert.equal(dirStat.mode & 0o7777, 0o700)
+  assert.deepEqual(await readdir(directory), [join(file).slice(directory.length + 1)], 'converges with zero leftovers')
+})
+
+test('SHARED_READER_OWNER validation: non-root writer, root reader, mixed owner options, malformed input all refuse pre-mutation', async (t) => {  const { directory, file } = await fixture(t, undefined)
+  const reader = { uid: process.getuid(), gid: process.getgid() }
+  const refusals = [
+    // A non-root channel can never finalize a foreign reader owner — it must
+    // not fall back to a writer-owned write either.
+    { options: { readerOwner: reader } },
+    // A root-owned store is never trusted (same rule as the trusted-CP face).
+    { options: { readerOwner: { uid: 0, gid: 0 }, identity: rootIdentity } },
+    // The two owner faces are mutually exclusive.
+    { options: { readerOwner: reader, ownerUid: reader.uid, ownerGid: reader.gid, identity: rootIdentity } },
+    // Malformed reader identities.
+    { options: { readerOwner: { uid: -1, gid: reader.gid }, identity: rootIdentity } },
+    { options: { readerOwner: { uid: reader.uid }, identity: rootIdentity } },
+    { options: { readerOwner: null, identity: rootIdentity } },
+    { options: { readerOwner: { uid: 1.5, gid: reader.gid }, identity: rootIdentity } },
+  ]
+  for (const { options } of refusals) {
+    await assert.rejects(
+      writeCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }, options),
+      { code: 'CREDENTIALS_STORE_ERROR' },
+    )
+  }
+  // Every refusal happened before any store byte existed — no fallback write.
+  assert.equal(await readdir(directory).then((names) => names.length), 0)
+
+  // No exposure widening: an existing group-readable store is refused under
+  // the reader face too — the face never relaxes the exact-mode contract.
+  await writeFile(file, `${JSON.stringify({ version: 1, credentials: {} })}\n`, { mode: 0o640 })
+  await assert.rejects(
+    replaceCredentialForAgent(file, 'agt_target', { clientId: 'mc_target', clientSecret: opaque() }, readerOwnerOptions()),
+    /unsafe mode/,
+  )
+  assert.equal((await stat(file)).mode & 0o777, 0o640, 'refused store left byte- and mode-untouched')
+})
+
+test('SHARED_READER_OWNER restore finalization: channel-owned backup is converged to the reader or refuses loud', async (t) => {
+  // The bounded-recovery restore candidate is copied by the DRIVER process —
+  // under the reader face that is the root channel — so restoring it as-is
+  // would commit a root-owned store the reader cannot open and the face's own
+  // gate would refuse forever. finalizeReaderOwnedRestore must converge it
+  // (and verify) BEFORE any rename, refusing loud on failure.
+  const readerOwner = { uid: process.getuid(), gid: process.getgid(), writerUid: 0 }
+  const operations = []
+  const backupStat = { dev: 7, ino: 9, mode: 0o100600, uid: 0, gid: 0, nlink: 1, isDirectory: () => false, isFile: () => true, isSymbolicLink: () => false }
+  const recordingFileSystem = {
+    async chown(path, uid, gid) {
+      operations.push(`chown:${uid}:${gid}`)
+      backupStat.uid = uid
+      backupStat.gid = gid
+    },
+    async lstat() { operations.push('lstat'); return backupStat },
+  }
+  const finalized = await finalizeReaderOwnedRestore('/shared/credentials.json.preimage.bak', readerOwner, { fileSystem: recordingFileSystem })
+  assert.equal(finalized.uid, readerOwner.uid)
+  assert.equal(finalized.gid, readerOwner.gid)
+  assert.deepEqual(operations, [`chown:${readerOwner.uid}:${readerOwner.gid}`, 'lstat'], 'chown lands before the verified lstat; no rename happens here')
+
+  // A failed chown refuses in the CREDENTIALS_STORE_ERROR family — the
+  // caller's recovery then receipts instead of committing an unownable store.
+  await assert.rejects(
+    finalizeReaderOwnedRestore('/shared/credentials.json.preimage.bak', readerOwner, {
+      fileSystem: { ...recordingFileSystem, async chown() { throw Object.assign(new Error('EPERM'), { code: 'EPERM' }) } },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  // A post-chown stat that still disagrees with the reader refuses loud too —
+  // the restore candidate is never committed unverified.
+  await assert.rejects(
+    finalizeReaderOwnedRestore('/shared/credentials.json.preimage.bak', readerOwner, {
+      fileSystem: {
+        async chown() {},
+        async lstat() { return { ...backupStat, uid: 0 } },
+      },
+    }),
+    { code: 'CREDENTIALS_STORE_ERROR' },
+  )
+  // The helper is the root channel's face only.
+  await assert.rejects(
+    finalizeReaderOwnedRestore('/shared/credentials.json.preimage.bak', { uid: 1, gid: 2, writerUid: 1 }),
     { code: 'CREDENTIALS_STORE_ERROR' },
   )
 })
