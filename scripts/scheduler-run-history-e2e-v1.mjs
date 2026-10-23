@@ -134,6 +134,10 @@ class FakeProc {
 // ── compose the real production runtime ─────────────────────────────────────
 const root = await mkdtemp(join(tmpdir(), 'sched-history-e2e-'))
 const layout = paths.resolveProductionLayout(root)
+// PRODUCT #525 P1: an enabled product API requires the admission JWKS seam at
+// composition. This e2e never exercises the admission route, so default a
+// lazy, unreachable seam unless the operator env already provides one.
+process.env.AGENT_DIRECTORY_AUTH_JWKS_URL ??= 'http://127.0.0.1:1/.well-known/jwks.json'
 await writeAgentDefinition(layout.agentsConfig, {
   defaultAgentId: AGT_A,
   agents: [{ id: AGT_A, name: 'E2E A' }, { id: AGT_B, name: 'E2E B' }],
