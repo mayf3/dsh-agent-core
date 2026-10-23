@@ -1,0 +1,74 @@
+{
+  "schema": "AC1256_SOURCE_CONTRACT_ACCEPTANCE_V1",
+  "at_utc": "2026-10-22T13:13:26.665168+00:00",
+  "actor": "/root",
+  "author": "/root/p1_repair_sol",
+  "author_independence": true,
+  "authority": "Current user instruction to perform necessary Spec revisions and isolated P1 repairs, followed by explicit independent-development/no-deployment-writer clarification. Limited repository technical acceptance; no production or installation authority.",
+  "issue": "https://github.com/mayf3/agent-control/issues/1256",
+  "decision": "ACCEPT_FINITE_SOURCE_CONTRACT",
+  "reviewed_commit": "6a762883d21fbfc6d67423c5a6e8a030344225b8",
+  "base": "45cdd5ebcaf5c981973d0a86947dd17aa73ee60f",
+  "unit": {
+    "path": "/Users/yanfenma/.codex/worktrees/ac1256-b7-spec/dsh-agent-core/docs/specs/B7_DIAGNOSTIC_TOOL_FAIL_CLOSED_V1.md",
+    "bytes": 12350,
+    "sha256": "083167e6a1ddc7ba0f109a27762fc008bbb4bb02444faf9dd51190e11261e98a"
+  },
+  "classification": {
+    "authority_action": "NEW",
+    "assurance": "DURABLE",
+    "plan": "BRIEF",
+    "permitted_existing_route": "main accepted AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3 CTR-AD3-003 and .agents/local/README.md bounded atomic Spec/code route"
+  },
+  "accepted_contracts": [
+    "CTR-B7D-001",
+    "CTR-B7D-002",
+    "CTR-B7D-003",
+    "CTR-B7D-004"
+  ],
+  "rulings": [
+    {
+      "finding": "F03",
+      "decision": "Disable unbound restore --apply before every mutation; truthful no-mutation inspection remains. This closes the immediate unsafe-mutation defect, not the missing authorized recovery feature.",
+      "cost_if_wrong": "A workflow expecting legacy unsafe truncation must use an independently authorized recovery path; it must not silently regain mutation."
+    },
+    {
+      "finding": "F04",
+      "decision": "Only positive typed ENOENT establishes absence; transport/stat/type/error cases fail. Broken links are present."
+    },
+    {
+      "finding": "F09",
+      "decision": "Require exact caller-supplied reviewed op/manifest/receipt/raw hash predicates, nonzero failure and complete post-apply checks in mocked fixtures. Inputs are not execution authority."
+    }
+  ],
+  "source_ceiling": [
+    "scripts/b7ctl/b7ctl.py from pinned38f3 parent",
+    "scripts/b7ctl/installer_hardening.py from pinned ef320 parent",
+    "owned scripts/b7ctl/tests/test_fail_closed.py",
+    "necessary source provenance, preflight, compliance and test/review evidence"
+  ],
+  "unaccepted_deltas": [],
+  "conditional_acceptance": false,
+  "implementation_authorized_in_isolated_branch": true,
+  "adoption_or_production_authorized": false,
+  "main_merge_authorized_by_this_record": false,
+  "new_spec_already_active_on_main": false,
+  "next": [
+    "Mechanically record this independent acceptance in Spec metadata/proposal wording, preserving frozen semantics and reference to reviewed commit and this decision.",
+    "Commit accepted docs separately; implement from that exact docs baseline in isolated codex branch under already-active bounded atomic route.",
+    "Emit DEVELOPMENT_PREFLIGHT, red/green owned tests, and SPEC_COMPLIANCE.",
+    "Non-author review final diff/commit before delivery. No automatic shared-main merge or adoption."
+  ],
+  "constraints": [
+    "No deployment writer claim or deployment lock",
+    "No shared candidate/live tool/installed controller changes",
+    "No sudo, native/prod probe, live journal or permissions changes",
+    "No timer/restart/operation/attempt/TX/replay/business send",
+    "Preserve original evidence and failed outcomes"
+  ],
+  "cleanup": {
+    "deleted_files": 0,
+    "deleted_bytes": 0,
+    "retained": "All active source/docs/test originals and unique evidence"
+  }
+}
