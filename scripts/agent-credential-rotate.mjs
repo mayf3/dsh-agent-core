@@ -87,7 +87,14 @@ function requireAgentId() {
 function storeWriteOptionsFromArgs() {
   const uid = val('--reader-uid')
   const gid = val('--reader-gid')
-  if (uid === undefined && gid === undefined) return {}
+  if (uid === undefined && gid === undefined) {
+    // A dangling flag (present without a value, e.g. as the trailing argv
+    // element) must never silently degrade to the default writer-owned face.
+    if (args.includes('--reader-uid') || args.includes('--reader-gid')) {
+      die('--reader-uid/--reader-gid require explicit values and must be supplied together')
+    }
+    return {}
+  }
   if (uid === undefined || gid === undefined) die('--reader-uid and --reader-gid must be supplied together')
   const readerOwner = { uid: Number(uid), gid: Number(gid) }
   if (!Number.isInteger(readerOwner.uid) || readerOwner.uid < 0
@@ -229,9 +236,10 @@ async function cmdGate() {
   const dbUrl = val('--db-url')
   if (clientId === undefined) die('--client-id <mc_*> is required')
   if (dbUrl === undefined) die('--db-url <postgres://...> is required')
+  const storeWriteOptions = storeWriteOptionsFromArgs() // validated before any DB contact
   const db = await readDbStateViaPsql({ dbUrl, clientId })
   const { readCredentialStoreDocument } = await import('../packages/agent-credential-provisioning/src/store-writer.js')
-  const doc = await readCredentialStoreDocument(storeFile, storeWriteOptionsFromArgs())
+  const doc = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const storeSecret = doc.credentials?.[agentId]?.clientSecret
   const ledger = new RotationReceiptLedger(val('--receipts') ?? `${storeFile}.rotation-receipts.jsonl`)
   const gate = evaluateSeamGate({ dbSecretHash: db.secretHash, storeSecret, receipts: ledger.list() })

@@ -170,7 +170,10 @@ async function assertTrustedDirectory(directory, owner, {
       }
     }
   }
-  if (adoptRootOwnedDirectory && pathStat.uid === 0) {
+  // Adoption is type-scoped to a real directory: chown/chmod follow symlinks,
+  // so a root-owned symlink at the directory path must fall through to the
+  // loud non-symlink refusal below, never mutate its resolved target.
+  if (adoptRootOwnedDirectory && pathStat.uid === 0 && pathStat.isDirectory() && !pathStat.isSymbolicLink()) {
     try {
       await fileSystem.chown(directory, owner.uid, owner.gid)
       await fileSystem.chmod(directory, PRIVATE_DIRECTORY_MODE)
@@ -521,6 +524,32 @@ function assertExactTempStat(stat, tempFile, owner, expectedSize) {
 /** Add exactly one absent target entry while preserving every pre-existing byte. */
 export async function writeCredentialForAgent(storeFile, agentId, credential, options = {}) {
   return trustedCredentialStoreWrite(storeFile, agentId, credential, options, 'add')
+}
+
+/**
+ * Shared-store reader face (options.readerOwner = {uid, gid}; Product #552
+ * corrected contract): finalize a RESTORE candidate (the rotation seam's
+ * preimage backup) to the reader owner before it is renamed onto the store.
+ * The backup was copied by the driver process — under the reader face that is
+ * the root channel — so restoring it as-is would commit a channel-owned store
+ * that the reader cannot open and that this face's own gate then refuses.
+ * Verifies the post-chown metadata; ANY failure throws the
+ * CREDENTIALS_STORE_ERROR family so the caller's recovery receipts the
+ * failure instead of committing an unownable store (fail closed).
+ */
+export async function finalizeReaderOwnedRestore(file, owner, { fileSystem = defaultFileSystem } = {}) {
+  if (owner?.writerUid !== 0) {
+    throw storeError('credential provisioning: reader-owner restore finalization requires the root channel owner')
+  }
+  try {
+    await fileSystem.chown(file, owner.uid, owner.gid)
+    const stat = await fileSystem.lstat(file)
+    assertMetadata(stat, { kind: 'file', path: file, mode: PRIVATE_FILE_MODE, owner })
+    return stat
+  } catch (error) {
+    if (error?.code === CREDENTIALS_STORE_ERROR) throw error
+    throw storeError(`credential provisioning: cannot finalize reader-owned restore candidate: ${file}`)
+  }
 }
 
 /**
