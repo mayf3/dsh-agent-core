@@ -33,6 +33,7 @@ import {
   ROTATION_OUTCOMES,
   secretFingerprint,
 } from '../src/rotation-seam.js'
+import { readCredentialStoreDocument } from '../src/store-writer.js'
 
 const AGENT = 'agt_rotation-fixture-agent'
 const BUSINESS_AGENT = 'agt_book-deconstructor-agent'
@@ -383,4 +384,43 @@ test('T13: the shared reader-owner face flows through the GATE read (storeWriteO
   assert.ok(touched.some((entry) => entry === `lstat:${storeFile}`), 'the store read was served by the injected reader-face surface')
   const outcomes = readFileSync(receiptsFile, 'utf8').trim().split('\n').map((line) => JSON.parse(line).outcome)
   assert.ok(outcomes.includes(ROTATION_OUTCOMES.REFUSED_EXTERNAL_PREREQUISITE), `refusal receipted: ${outcomes.join(',')}`)
+})
+
+test('T13b: bounded recovery under the shared reader-owner face restores a gate-readable reader-owned store', async (t) => {
+  // Harness honesty: the reader here IS the process uid (cross-uid chown is
+  // impossible without a real root channel), so the ownership end-state does
+  // not by itself discriminate parent vs HEAD. What this test proves is that
+  // the recovery path is reader-face-aware end to end: the restored preimage
+  // is finalized through finalizeReaderOwnedRestore (cross-uid transition
+  // covered by the store-writer unit test), stays mode 0600 owned by the
+  // reader, and the face's own gate reads it cleanly afterwards — the
+  // reviewed failure mode (a channel-owned restore bricking the reader gate)
+  // cannot recur through this path.
+  const fx = fixture(t)
+  const readerFaceOptions = {
+    readerOwner: { uid: process.getuid(), gid: process.getgid() },
+    identity: { getuid: () => 0, getgid: () => 0 },
+    beforeRename: async () => {
+      throw Object.assign(new Error('injected swap failure'), { code: 'CREDENTIALS_STORE_ERROR' })
+    },
+  }
+  let threw
+  try {
+    await executeRotation({
+      agentId: AGENT, clientId: CLIENT, storeFile: fx.storeFile, receiptsFile: fx.receiptsFile,
+      ...fx.channels, ...authorizedVerifyFaces(),
+      storeWriteOptions: readerFaceOptions,
+    })
+  } catch (error) { threw = error }
+  assert.equal(threw?.code, 'rotation_rolled_back', `bounded recovery completed (got ${threw?.code}: ${threw?.message})`)
+
+  const restoredStat = statSync(fx.storeFile)
+  assert.equal(restoredStat.uid, process.getuid(), 'restored store is reader-owned')
+  assert.equal(restoredStat.mode & 0o7777, 0o600, 'restored store is exactly 0600')
+  const reread = await readCredentialStoreDocument(fx.storeFile, {
+    readerOwner: readerFaceOptions.readerOwner,
+    identity: readerFaceOptions.identity,
+  })
+  assert.equal(reread.credentials[AGENT].clientSecret, INITIAL_SECRET, 'the preimage generation is what came back')
+  assert.equal(fx.db.state.secretHash, hashMachineSecret(INITIAL_SECRET, 'aabbccdd00112233'), 'DB rolled back to the same generation')
 })
