@@ -47,7 +47,8 @@ import {
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { readCredentialStoreDocument, finalizeReaderOwnedRestore, replaceCredentialForAgent, withCredentialStoreLock } from './store-writer.js'
+import { finalizeReaderOwnedRestore } from './store-reader-owner.js'
+import { readCredentialStoreDocument, replaceCredentialForAgent, withCredentialStoreLock } from './store-writer.js'
 
 export const ROTATION_OUTCOMES = Object.freeze({
   COMPLETED: 'COMPLETED',
@@ -340,6 +341,7 @@ export async function executeRotation({
     // Bounded recovery: restore the preimage store bytes; roll the DB back
     // through the same privileged channel; receipt records the path taken.
     let dbRolledBack = false
+    let storeRestored = false
     let rollbackError
     let preimageSecret
     try {
@@ -351,28 +353,26 @@ export async function executeRotation({
         dbRolledBack = true
       } catch (error) { rollbackError = error }
     }
-    if (rollbackError === undefined) {
+    // Restore only after the DB is PROVEN back at the preimage.
+    if (dbRolledBack) {
       try {
         await withCredentialStoreLock(storeFile, storeWriteOptions, async (lock) => {
-          // The backup was copied by the driver process; under the shared
-          // reader-owner face that driver is the ROOT channel — restoring it
-          // as-is would commit a root-owned store the reader cannot open and
-          // this face's own gate would then refuse forever. Finalize the
-          // backup to the reader (same discipline as the swap temp) before
-          // the atomic restore; a failed finalization throws into the
-          // recovery path and receipts SPLIT_STATE_OPEN (fail closed).
+          // Reader face (Product #552): the root-copied backup must reach the
+          // reader pre-rename; a failed finalization throws fail-closed.
           if (storeWriteOptions.readerOwner !== undefined) {
-            await finalizeReaderOwnedRestore(backupFile, lock.owner, {
-              fileSystem: storeWriteOptions.fileSystem,
-            })
+            await finalizeReaderOwnedRestore(backupFile, lock.owner, { fileSystem: storeWriteOptions.fileSystem })
           }
           renameSync(backupFile, storeFile) // atomic restore of the preimage store
         })
+        storeRestored = true
       } catch (restoreError) {
         rollbackError = restoreError
       }
     }
-    if (dbRolledBack) {
+    // ROLLED_BACK requires BOTH halves proven: a succeeded DB rollback whose
+    // store restore then failed leaves the store on the NEW generation — that
+    // is a split state, receipted as SPLIT_STATE_OPEN (never ROLLED_BACK).
+    if (dbRolledBack && storeRestored) {
       const receipt = ledger.append({
         kind: 'rotation', ...plan,
         outcome: ROTATION_OUTCOMES.ROLLED_BACK,
@@ -387,11 +387,11 @@ export async function executeRotation({
     const receipt = ledger.append({
       kind: 'rotation', ...plan,
       outcome: ROTATION_OUTCOMES.SPLIT_STATE_OPEN,
-      reason: `store swap failed AND rollback incomplete — recovery available: preimage backup ${backupFile}; ${String(rollbackError?.message ?? rollbackError).slice(0, 160)}`,
+      reason: `store swap failed AND ${dbRolledBack ? 'restore' : 'rollback'} incomplete — DB is ${dbRolledBack ? 'at the PREIMAGE while the store may carry the NEW generation' : 'on the NEW generation'}; recovery available: preimage backup ${backupFile}; ${String(rollbackError?.message ?? rollbackError).slice(0, 160)}`,
       recovery: { backupFile, available: existsSync(backupFile) },
       atMs: Date.now(),
     })
-    const split = new Error(`rotation-seam: SPLIT_STATE_OPEN — DB carries the new generation while the store could not be swapped; recovery artifacts recorded (${receipt.operationId})`)
+    const split = new Error(`rotation-seam: SPLIT_STATE_OPEN — ${dbRolledBack ? 'DB rolled back but the store restore failed; the store may still carry the new generation' : 'DB carries the new generation while the store could not be swapped'}; recovery artifacts recorded (${receipt.operationId})`)
     split.code = 'split_state_open'
     split.receipt = receipt
     throw split
