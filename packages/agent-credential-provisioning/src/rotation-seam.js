@@ -47,6 +47,7 @@ import {
 } from 'node:fs'
 import { dirname, join } from 'node:path'
 
+import { finalizeReaderOwnedRestore } from './store-reader-owner.js'
 import { readCredentialStoreDocument, replaceCredentialForAgent, withCredentialStoreLock } from './store-writer.js'
 
 export const ROTATION_OUTCOMES = Object.freeze({
@@ -259,7 +260,11 @@ export async function executeRotation({
     error.receipt = receipt
     throw error
   }
-  const storeDoc = await readCredentialStoreDocument(storeFile)
+  // The GATE read carries the SAME trust face as the swap (storeWriteOptions
+  // flows owner options through): a shared store finally owned by its reader
+  // account (Product #552 readerOwner face) is only readable under that face,
+  // and the gate must not fall back to the driver's process identity.
+  const storeDoc = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const storeEntry = storeDoc.credentials?.[agentId]
   const dbHashFingerprint = hashFingerprint(db.secretHash)
   const storeSecret = storeEntry?.clientSecret
@@ -336,6 +341,7 @@ export async function executeRotation({
     // Bounded recovery: restore the preimage store bytes; roll the DB back
     // through the same privileged channel; receipt records the path taken.
     let dbRolledBack = false
+    let storeRestored = false
     let rollbackError
     let preimageSecret
     try {
@@ -347,16 +353,26 @@ export async function executeRotation({
         dbRolledBack = true
       } catch (error) { rollbackError = error }
     }
-    if (rollbackError === undefined) {
+    // Restore only after the DB is PROVEN back at the preimage.
+    if (dbRolledBack) {
       try {
-        await withCredentialStoreLock(storeFile, storeWriteOptions, () => {
+        await withCredentialStoreLock(storeFile, storeWriteOptions, async (lock) => {
+          // Reader face (Product #552): the root-copied backup must reach the
+          // reader pre-rename; a failed finalization throws fail-closed.
+          if (storeWriteOptions.readerOwner !== undefined) {
+            await finalizeReaderOwnedRestore(backupFile, lock.owner, { fileSystem: storeWriteOptions.fileSystem })
+          }
           renameSync(backupFile, storeFile) // atomic restore of the preimage store
         })
+        storeRestored = true
       } catch (restoreError) {
         rollbackError = restoreError
       }
     }
-    if (dbRolledBack) {
+    // ROLLED_BACK requires BOTH halves proven: a succeeded DB rollback whose
+    // store restore then failed leaves the store on the NEW generation — that
+    // is a split state, receipted as SPLIT_STATE_OPEN (never ROLLED_BACK).
+    if (dbRolledBack && storeRestored) {
       const receipt = ledger.append({
         kind: 'rotation', ...plan,
         outcome: ROTATION_OUTCOMES.ROLLED_BACK,
@@ -371,18 +387,20 @@ export async function executeRotation({
     const receipt = ledger.append({
       kind: 'rotation', ...plan,
       outcome: ROTATION_OUTCOMES.SPLIT_STATE_OPEN,
-      reason: `store swap failed AND rollback incomplete — recovery available: preimage backup ${backupFile}; ${String(rollbackError?.message ?? rollbackError).slice(0, 160)}`,
+      reason: `store swap failed AND ${dbRolledBack ? 'restore' : 'rollback'} incomplete — DB is ${dbRolledBack ? 'at the PREIMAGE while the store may carry the NEW generation' : 'on the NEW generation'}; recovery available: preimage backup ${backupFile}; ${String(rollbackError?.message ?? rollbackError).slice(0, 160)}`,
       recovery: { backupFile, available: existsSync(backupFile) },
       atMs: Date.now(),
     })
-    const split = new Error(`rotation-seam: SPLIT_STATE_OPEN — DB carries the new generation while the store could not be swapped; recovery artifacts recorded (${receipt.operationId})`)
+    const split = new Error(`rotation-seam: SPLIT_STATE_OPEN — ${dbRolledBack ? 'DB rolled back but the store restore failed; the store may still carry the new generation' : 'DB carries the new generation while the store could not be swapped'}; recovery artifacts recorded (${receipt.operationId})`)
     split.code = 'split_state_open'
     split.receipt = receipt
     throw split
   }
 
   // ── VERIFY: readback + MINT + REAL CALL ────────────────────────────────
-  const reread = await readCredentialStoreDocument(storeFile)
+  // Same trust face as the GATE read (see above): the post-swap readback must
+  // validate under the rotation's own owner options, not the process identity.
+  const reread = await readCredentialStoreDocument(storeFile, storeWriteOptions)
   const readbackOk = reread.credentials?.[agentId]?.clientId === clientId
     && secretFingerprint(reread.credentials[agentId].clientSecret) === newStoreFingerprint
   const dbAfter = await readDbState()
