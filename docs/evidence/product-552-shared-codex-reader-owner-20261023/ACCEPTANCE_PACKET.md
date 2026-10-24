@@ -285,3 +285,72 @@ ACCEPTANCE_RECORD = PENDING (Owner) — this packet authorizes NOTHING by itself
 PRODUCTION_MUTATION = NO (this action). NEXT = separate closure action: Owner acceptance
 → merge → deployment-line wiring (§6) → A1–A6 evidence → status flip.
 ```
+
+## 9. REVIEW ROUND 2 ADDENDUM (blocker convergence @ f73e8db7 — this section is the only edit on top of the frozen §1–§8)
+
+Independent exact-head review of de10045e (PR #553) returned a 5-thread blocker union;
+Owner contract authority was frozen durably in the meantime (issue #552 comments
+6386046168 "当前有效契约（唯一视图，2026-10-24 固化）" + 6386637512:
+CONTRACT_AUTHORITY=ACCEPTED_BY_OWNER), dissolving the governance thread (4355526922)
+without reopening it. The four remaining blockers are converged in ONE pass on the SAME
+branch/lineage:
+
+```text
+B1  (thread 4355526928, P1) restore-candidate symlink chown redirect:
+    finalizeReaderOwnedRestore now lstat-validates the candidate WITHOUT following
+    links (non-symlink single-link regular file) and refuses BEFORE the first
+    privileged call, then opens O_NOFOLLOW and re-owns through the pinned fd
+    (fchown); post-chown fd AND path identity are verified (assertMetadata +
+    assertSameObject). The reader-owned-directory symlink swap can no longer redirect
+    the privileged ownership mutation to an arbitrary target. (Residual N2 absorbed.)
+B2  (thread 4355526935, P2) false ROLLED_BACK on unproven restore:
+    the recovery path now tracks storeRestored; ROLLED_BACK is receipted ONLY when
+    BOTH the DB rollback AND the store restore are proven (restore is attempted only
+    after a proven DB rollback). Any other combination receipts SPLIT_STATE_OPEN with
+    the direction named (DB at PREIMAGE / store may carry NEW generation vs DB on NEW
+    generation) and the inherited gate then refuses until reconciliation. (Residual
+    N1 absorbed — the receipt no longer claims a preimage store that never landed.)
+B3  (thread 4355526939, P1) store-writer.js MUST_NOT_GROW / MUST_SPLIT:
+    split per the registry's split_followup — reader-owner face (sharedReaderOwner,
+    type-scoped directory adoption, finalizeReaderOwnedRestore) → store-reader-owner.js;
+    trusted metadata vocabulary → store-trust.js; byte-level document scan/serialize →
+    store-document.js. store-writer.js: 666 → 458 physical lines (base 566, registry
+    ceiling 516 — below every ceiling).
+B4  (thread 4355526943, P1) store-writer.test.js crossed 500:
+    the SHARED_READER_OWNER cases moved to new test/store-reader-owner.test.js —
+    5 tests byte-verbatim, and the old restore-finalization test superseded (not
+    carried) because B1 removed the path-chown behavior it asserted, replaced by the
+    fd-ordering/no-path-chown test; store-writer.test.js restored BYTE-IDENTICAL to
+    its 346-line baseline (empty diff).
+```
+
+CHANGED_SURFACE (round-2 commit f73e8db7 on top of de10045e): 7 files —
+src/store-writer.js (net −208), src/store-reader-owner.js (NEW 122),
+src/store-trust.js (NEW 44), src/store-document.js (NEW 137), src/rotation-seam.js
+(recovery-path two-proofs gate; 499 physical lines), test/store-reader-owner.test.js
+(NEW 491), test/store-writer.test.js (−253, = baseline).
+
+TESTS (re-verified at f73e8db7):
+
+```text
+agent-credential-provisioning: 89 tests = 84 pass / 0 fail / 5 env-skip
+broker: 534/534 · rotate CLI selftest: 5/5
+structure verifier (--base 6d96f6d6 --head f73e8db7): violations 13 -> 11 — BOTH
+  PR-introduced file violations eliminated; the 11 remaining directory findings are
+  byte-identical to the PR base and current main (pre-existing unregistered legacy
+  directories, outside this PR's blocker union).
+New coverage: fd-ordering proof (no path-based chown exists on the restore face),
+  symlink/directory/hardlinked candidate refusals before ANY privileged call (target
+  untouched), real-fs finalize happy path, post-chown fd/path mismatch refusals,
+  T13c: restore-finalization failure after a proven DB rollback receipts
+  SPLIT_STATE_OPEN (DB at preimage, store on NEW generation, gate unreconciled).
+Preserved: contract R1–R8, atomic fail-closed rotation, same-UID default face, dir
+  0700 / file 0600 exactness, no credential-content reads in the new face, no
+  permission widening, no new platform/state machine.
+```
+
+REVIEW round-2 chain: independent exact-head re-review of f73e8db7 recorded in PR #553
+(prior chain: REVISE d6a6d456 → fixes 425da336 → PASS, superseded by the de10045e
+5-thread union above). MERGE_DEPLOY remains FORBIDDEN from authoring actions — merge is
+the separate closure action carrying the Owner-accepted amendment (§8, accepted at
+contract level per issue #552 comment 6386637512). PRODUCTION_MUTATION = NO.
