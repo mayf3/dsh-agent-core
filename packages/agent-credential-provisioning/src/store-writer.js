@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { constants, fstatSync, lstatSync, renameSync } from 'node:fs'
-import { chmod, chown, lstat, mkdir, open, rm } from 'node:fs/promises'
 import { dirname, isAbsolute } from 'node:path'
-import { TextDecoder } from 'node:util'
 
 import {
   CREDENTIALS_STORE_ERROR,
@@ -10,63 +8,26 @@ import {
   normalizeCredential,
 } from '../../broker/src/credential-store.js'
 
+import {
+  decodeTrustedStoreUtf8, locateCredentialsObject,
+  serializeWithAddedCredential, serializeWithReplacedCredential,
+} from './store-document.js'
+import { adoptRootOwnedStoreDirectory, sharedReaderOwner } from './store-reader-owner.js'
+import {
+  PRIVATE_DIRECTORY_MODE, PRIVATE_FILE_MODE,
+  assertMetadata, assertSameObject, defaultFileSystem, sameObject, storeError,
+} from './store-trust.js'
+
 const LOCK_RETRY_MS = 10
 // One Phase A operation can legitimately span token preflight plus three
 // bounded HTTPS calls. Waiters must outlive that window and then reclassify.
 const LOCK_RETRIES = 18000
-const PRIVATE_DIRECTORY_MODE = 0o700
-const PRIVATE_FILE_MODE = 0o600
 const activeLocks = new WeakSet()
-const defaultFileSystem = Object.freeze({ chmod, chown, lstat, mkdir, open, rm })
-
-function storeError(message) {
-  return Object.assign(new Error(message), { code: CREDENTIALS_STORE_ERROR })
-}
-
-function decodeTrustedStoreUtf8(bytes, storeFile) {
-  try {
-    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes)
-  } catch {
-    throw storeError(`credential provisioning: credentials store contains invalid UTF-8: ${storeFile}`)
-  }
-}
 
 function validateStorePath(storeFile) {
   if (typeof storeFile !== 'string' || storeFile === '' || !isAbsolute(storeFile)) {
     throw storeError('credential provisioning: AGENT_CORE_CREDENTIALS_FILE must be an absolute path')
   }
-}
-
-/**
- * Validate the shared-store reader-owner face (Product #552 corrected
- * contract): a store whose CONSUMER is a different account than the writer
- * (the fleet worker reads the shared openai-codex store; the rotating
- * provisioning channel runs cross-uid). The final store file MUST carry
- * owner = reader + mode 0600 — the dsh-codex reader strict-checks both
- * (mode != 600 or owner != its own euid refuses the credential) — so the
- * writer may not keep ownership. Only the root-driven privileged channel can
- * finalize a foreign reader owner; any other writer shape refuses loud.
- * Returns the reader identity (the store's final owner) plus writerUid.
- */
-function sharedReaderOwner(readerOwner, { ownerUid, ownerGid, identity = process } = {}) {
-  if (readerOwner === null || typeof readerOwner !== 'object'
-    || !Number.isInteger(readerOwner.uid) || readerOwner.uid < 0
-    || !Number.isInteger(readerOwner.gid) || readerOwner.gid < 0) {
-    throw storeError('credential provisioning: readerOwner must supply a non-negative integer uid/gid pair')
-  }
-  if (ownerUid !== undefined || ownerGid !== undefined) {
-    throw storeError('credential provisioning: readerOwner and ownerUid/ownerGid are mutually exclusive trust faces')
-  }
-  // A root-owned store is never trusted (same rule as the trusted-CP face);
-  // the reader is a real consumer account.
-  if (readerOwner.uid === 0) {
-    throw storeError('credential provisioning: shared-store reader owner must not be root')
-  }
-  const writerUid = identity.getuid?.()
-  if (writerUid !== 0) {
-    throw storeError('credential provisioning: finalizing a shared-store reader owner requires the root provisioning channel')
-  }
-  return { uid: readerOwner.uid, gid: readerOwner.gid, writerUid }
 }
 
 function trustedOwner(options = {}) {
@@ -93,29 +54,6 @@ function trustedOwner(options = {}) {
     throw storeError('credential provisioning: non-root writer cannot nominate a different trusted owner')
   }
   return { uid, gid, writerUid: processUid }
-}
-
-function assertMetadata(stat, { kind, path, mode, owner }) {
-  const typeOk = kind === 'directory' ? stat.isDirectory() : stat.isFile()
-  if (!typeOk || stat.isSymbolicLink() || (kind === 'file' && stat.nlink !== 1)) {
-    throw storeError(`credential provisioning: ${kind} must be a non-symlink single-link ${kind}: ${path}`)
-  }
-  if ((stat.mode & 0o7777) !== mode) {
-    throw storeError(`credential provisioning: ${kind} has unsafe mode: ${path}`)
-  }
-  if (stat.uid !== owner.uid || stat.gid !== owner.gid) {
-    throw storeError(`credential provisioning: ${kind} has untrusted owner: ${path}`)
-  }
-}
-
-function sameObject(left, right) {
-  return left.dev === right.dev && left.ino === right.ino
-}
-
-function assertSameObject(actual, expected, kind, path) {
-  if (!sameObject(actual, expected)) {
-    throw storeError(`credential provisioning: ${kind} changed during trusted operation: ${path}`)
-  }
 }
 
 async function removeOwnedPath(file, expectedObject, directory, expectedDirectory, fileSystem) {
@@ -170,17 +108,8 @@ async function assertTrustedDirectory(directory, owner, {
       }
     }
   }
-  // Adoption is type-scoped to a real directory: chown/chmod follow symlinks,
-  // so a root-owned symlink at the directory path must fall through to the
-  // loud non-symlink refusal below, never mutate its resolved target.
-  if (adoptRootOwnedDirectory && pathStat.uid === 0 && pathStat.isDirectory() && !pathStat.isSymbolicLink()) {
-    try {
-      await fileSystem.chown(directory, owner.uid, owner.gid)
-      await fileSystem.chmod(directory, PRIVATE_DIRECTORY_MODE)
-      pathStat = await fileSystem.lstat(directory)
-    } catch {
-      throw storeError(`credential provisioning: cannot hand off credential store directory: ${directory}`)
-    }
+  if (adoptRootOwnedDirectory) {
+    pathStat = await adoptRootOwnedStoreDirectory(pathStat, directory, owner, fileSystem)
   }
   assertMetadata(pathStat, {
     kind: 'directory', path: directory, mode: PRIVATE_DIRECTORY_MODE, owner,
@@ -217,71 +146,6 @@ export async function preflightTrustedCredentialDirectory(storeFile, options = {
     fileSystem: options.fileSystem ?? defaultFileSystem,
   })
   return { owner, directoryIdentity }
-}
-
-function scanString(raw, start) {
-  if (raw[start] !== '"') throw storeError('credential provisioning: internal JSON scan failed')
-  let index = start + 1
-  for (; index < raw.length; index += 1) {
-    if (raw[index] === '\\') {
-      index += 1
-      if (raw[index] === 'u') index += 4
-    } else if (raw[index] === '"') {
-      return index + 1
-    }
-  }
-  throw storeError('credential provisioning: internal JSON scan failed')
-}
-
-function skipWhitespace(raw, start) {
-  let index = start
-  while (/\s/u.test(raw[index] ?? '')) index += 1
-  return index
-}
-
-function scanValue(raw, start) {
-  const index = skipWhitespace(raw, start)
-  if (raw[index] === '"') return scanString(raw, index)
-  if (raw[index] === '{' || raw[index] === '[') {
-    const close = raw[index] === '{' ? '}' : ']'
-    let cursor = index + 1
-    while (cursor < raw.length) {
-      if (raw[cursor] === '"') cursor = scanString(raw, cursor)
-      else if (raw[cursor] === '{' || raw[cursor] === '[') cursor = scanValue(raw, cursor)
-      else if (raw[cursor] === close) return cursor + 1
-      else cursor += 1
-    }
-    throw storeError('credential provisioning: internal JSON scan failed')
-  }
-  let cursor = index
-  while (cursor < raw.length && !/[\s,}\]]/u.test(raw[cursor])) cursor += 1
-  return cursor
-}
-
-function locateCredentialsObject(raw) {
-  let cursor = skipWhitespace(raw, 0)
-  if (raw[cursor] !== '{') throw storeError('credential provisioning: internal JSON scan failed')
-  cursor += 1
-  let match
-  while (true) {
-    cursor = skipWhitespace(raw, cursor)
-    if (raw[cursor] === '}') break
-    const keyStart = cursor
-    const keyEnd = scanString(raw, keyStart)
-    const key = JSON.parse(raw.slice(keyStart, keyEnd))
-    cursor = skipWhitespace(raw, keyEnd)
-    if (raw[cursor] !== ':') throw storeError('credential provisioning: internal JSON scan failed')
-    const valueStart = skipWhitespace(raw, cursor + 1)
-    const valueEnd = scanValue(raw, valueStart)
-    if (key === 'credentials') match = { valueStart, valueEnd }
-    cursor = skipWhitespace(raw, valueEnd)
-    if (raw[cursor] === ',') cursor += 1
-    else if (raw[cursor] !== '}') throw storeError('credential provisioning: internal JSON scan failed')
-  }
-  if (match === undefined || raw[match.valueStart] !== '{' || raw[match.valueEnd - 1] !== '}') {
-    throw storeError('credential provisioning: internal JSON scan failed')
-  }
-  return { start: match.valueStart, end: match.valueEnd }
 }
 
 async function readTrustedStore(storeFile, owner, {
@@ -448,53 +312,6 @@ export async function withCredentialStoreLock(storeFile, options = {}, operation
   }
 }
 
-/** Replace exactly one existing entry in place, preserving every other byte. */
-function serializeWithReplacedCredential(current, agentId, credential) {
-  const replacement = `${JSON.stringify(agentId)}:${JSON.stringify({
-    clientId: credential.clientId,
-    clientSecret: credential.clientSecret,
-  })}`
-  const raw = current.raw
-  let index = current.credentialsSpan.start + 1
-  const end = current.credentialsSpan.end - 1
-  while (index < end) {
-    index = skipWhitespace(raw, index)
-    const ch = raw[index]
-    if (ch === undefined || ch === '}') break
-    if (ch === ',') { index += 1; continue }
-    if (ch !== '"') throw storeError('credential provisioning: internal JSON scan failed')
-    const keyStart = index
-    index = scanString(raw, index)
-    const key = JSON.parse(raw.slice(keyStart, index))
-    index = skipWhitespace(raw, index)
-    if (raw[index] !== ':') throw storeError('credential provisioning: internal JSON scan failed')
-    index = skipWhitespace(raw, index + 1)
-    const valueStart = index
-    index = scanValue(raw, index)
-    if (key === agentId) {
-      return raw.slice(0, keyStart) + replacement + raw.slice(index)
-    }
-  }
-  throw storeError(`credential provisioning: target credential entry does not exist for ${agentId}`)
-}
-
-function serializeWithAddedCredential(current, agentId, credential) {
-  const entry = `${JSON.stringify(agentId)}:${JSON.stringify({
-    clientId: credential.clientId,
-    clientSecret: credential.clientSecret,
-  })}`
-  if (current.raw === undefined) {
-    return `${JSON.stringify({
-      version: CREDENTIALS_STORE_VERSION,
-      credentials: { [agentId]: { clientId: credential.clientId, clientSecret: credential.clientSecret } },
-    }, null, 2)}\n`
-  }
-  const { start, end } = current.credentialsSpan
-  const body = current.raw.slice(start + 1, end - 1)
-  const separator = body.trim() === '' ? '' : ','
-  return `${current.raw.slice(0, end - 1)}${separator}${entry}${current.raw.slice(end - 1)}`
-}
-
 function assertTargetUnchangedSync(storeFile, expectedIdentity, owner) {
   let current
   try {
@@ -527,32 +344,6 @@ export async function writeCredentialForAgent(storeFile, agentId, credential, op
 }
 
 /**
- * Shared-store reader face (options.readerOwner = {uid, gid}; Product #552
- * corrected contract): finalize a RESTORE candidate (the rotation seam's
- * preimage backup) to the reader owner before it is renamed onto the store.
- * The backup was copied by the driver process — under the reader face that is
- * the root channel — so restoring it as-is would commit a channel-owned store
- * that the reader cannot open and that this face's own gate then refuses.
- * Verifies the post-chown metadata; ANY failure throws the
- * CREDENTIALS_STORE_ERROR family so the caller's recovery receipts the
- * failure instead of committing an unownable store (fail closed).
- */
-export async function finalizeReaderOwnedRestore(file, owner, { fileSystem = defaultFileSystem } = {}) {
-  if (owner?.writerUid !== 0) {
-    throw storeError('credential provisioning: reader-owner restore finalization requires the root channel owner')
-  }
-  try {
-    await fileSystem.chown(file, owner.uid, owner.gid)
-    const stat = await fileSystem.lstat(file)
-    assertMetadata(stat, { kind: 'file', path: file, mode: PRIVATE_FILE_MODE, owner })
-    return stat
-  } catch (error) {
-    if (error?.code === CREDENTIALS_STORE_ERROR) throw error
-    throw storeError(`credential provisioning: cannot finalize reader-owned restore candidate: ${file}`)
-  }
-}
-
-/**
  * AMENDMENT_7 rotation seam write face: replace an EXISTING credential entry
  * in place under the same trusted-store discipline as
  * writeCredentialForAgent (lock, metadata assertions, temp + fsync + atomic
@@ -567,7 +358,8 @@ export async function finalizeReaderOwnedRestore(file, owner, { fileSystem = def
  * any failed ownership finalization leaves the preimage store untouched
  * (fail closed). Root-only; mutually exclusive with ownerUid/ownerGid; the
  * default (per-agent trusted-CP) face is unchanged when readerOwner is
- * absent.
+ * absent. Face resolution and restore finalization live in
+ * store-reader-owner.js.
  */
 export async function replaceCredentialForAgent(storeFile, agentId, credential, options = {}) {
   return trustedCredentialStoreWrite(storeFile, agentId, credential, options, 'replace')
