@@ -354,6 +354,13 @@ export function parseServiceErrorBody(bodyText) {
       break
     }
   }
+  // Structured `details` (e.g. svc-workflow's InvalidReturnReferences carries
+  // the full engine-contract text in details.detail — mayf3/svc-workflow#84
+  // D2): preserve it so the mapping layer can surface actionable diagnostics
+  // instead of a generic message the caller cannot act on.
+  if (source.details !== null && typeof source.details === 'object' && !Array.isArray(source.details)) {
+    out.details = source.details
+  }
   return out
 }
 

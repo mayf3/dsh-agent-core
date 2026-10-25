@@ -190,7 +190,14 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
     const detail = (authoringDiagnostic || manifest.renderErrorDetail === true)
       && typeof error.detail === 'string' && error.detail.length > 0
       ? `: ${sanitizeErrorDetail(error.detail)}` : ''
-    return `${error?.code ?? 'unknown_error'}${suffix}${detail}`
+    // Structured service diagnostics (svc-workflow details.detail et al.)
+    // render for EVERY failure when present: a generic message like "return
+    // references are invalid" is unactionable, while the service's detail
+    // names exactly what to fix (#84 D2 — the 2026-10-25 blocker).
+    const structuredDetail = detail === ''
+      && typeof error?.details?.detail === 'string' && error.details.detail.length > 0
+      ? `: ${sanitizeErrorDetail(error.details.detail)}` : ''
+    return `${error?.code ?? 'unknown_error'}${suffix}${detail}${structuredDetail}`
   }
 
   return {
