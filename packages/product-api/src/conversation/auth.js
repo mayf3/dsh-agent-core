@@ -23,7 +23,8 @@ export function validateConfig(config) {
   for (const key of ['clientId','subject_id','communication_scope_id','principal_id']) {
     if (typeof client[key] !== 'string' || !client[key] || client[key].length > 256) throw fault('NOT_PROVISIONED', 503)
   }
-  if (!Array.isArray(client.operations) || client.operations.some(op => !['resolve','send','result'].includes(op))
+  const KNOWN_OPERATIONS = ['resolve', 'send', 'result', 'history', 'events']
+  if (!Array.isArray(client.operations) || client.operations.some(op => !KNOWN_OPERATIONS.includes(op))
     || !Array.isArray(client.targets) || client.targets.length !== 1) throw fault('NOT_PROVISIONED', 503)
   const target = client.targets[0]
   for (const key of ['agent_id','principal_id','domain_id','binding_id','routing_version']) {

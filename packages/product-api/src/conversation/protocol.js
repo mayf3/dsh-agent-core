@@ -33,5 +33,24 @@ export function validateArgs(operation, body) {
   } else if (operation === 'result') {
     exactObject(body, ['request_id'], ['reply_cursor'])
     if (!requestIdValid(body.request_id) || (body.reply_cursor !== undefined && !opaque(body.reply_cursor))) throw fault('INVALID_ARGUMENTS')
+  } else if (operation === 'history') {
+    // CTR-NC-006: a message page (session_handle + direction, optional cursor/limit)
+    // XOR a content page (content_cursor alone). limit defaults to 50, max 200.
+    exactObject(body, [], ['session_handle', 'direction', 'cursor', 'limit', 'content_cursor'])
+    if (body.content_cursor !== undefined) {
+      if (Object.keys(body).length !== 1) throw fault('INVALID_ARGUMENTS')
+      if (!opaque(body.content_cursor)) throw fault('INVALID_ARGUMENTS')
+      return
+    }
+    if (typeof body.session_handle !== 'string' || !opaque(body.session_handle)) throw fault('INVALID_ARGUMENTS')
+    if (body.direction !== 'older' && body.direction !== 'newer') throw fault('INVALID_ARGUMENTS')
+    if (body.cursor !== undefined && !opaque(body.cursor)) throw fault('INVALID_ARGUMENTS')
+    if (body.limit !== undefined && (!Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 200)) throw fault('INVALID_ARGUMENTS')
+  } else if (operation === 'events') {
+    // CTR-NC-007: cursor resume with optional request binding; limit max 100.
+    exactObject(body, [], ['cursor', 'request_id', 'limit'])
+    if (body.cursor !== undefined && !opaque(body.cursor)) throw fault('INVALID_ARGUMENTS')
+    if (body.request_id !== undefined && !requestIdValid(body.request_id)) throw fault('INVALID_ARGUMENTS')
+    if (body.limit !== undefined && (!Number.isSafeInteger(body.limit) || body.limit < 1 || body.limit > 100)) throw fault('INVALID_ARGUMENTS')
   } else throw fault('NOT_SUPPORTED', 501)
 }
