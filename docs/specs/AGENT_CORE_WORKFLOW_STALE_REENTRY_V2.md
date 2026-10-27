@@ -1,7 +1,28 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_STALE_REENTRY_V2
 title: Stale re-entry with separate explicit Owner-resume authorization
-status: proposed
+status: accepted
+accepted_date: 2026-10-28
+accepted_at: 2026-10-27T17:37:27.570181+00:00
+accepted_by: Codex root (explicitly delegated by mayf3)
+accepted_reviewed_head: 62e9d263acd48c554bfeb47727eab4e3048aff73
+acceptance_review_verdict: PASS
+independent_semantic_reviewer: /root/recovery_contract_review_luna
+acceptance_delta_class: whole_authority_successor
+semantic_delta_from_reviewed_head: none; body SHA-256 bab05faf378851d6a63ddf857eadc689d8927b4e75f5ebfa95ce0e09acee5992
+accepted_proposal_patch_sha256: 6b11cbccc3f8f2d5dbc4140f9ee71705ba6147e115c94b921c008dae2b6ca563
+acceptance_receipt: docs/reports/OWNER_ASSISTANCE_RESUME_CONTRACT_ACCEPTANCE_20261028.json
+acceptance_receipt_sha256: 38cad7f44a23d5c10b1af71a1680e9134718f446c1b0b0644d08e0c340b7048c
+acceptance_authority_basis: >-
+  Root accepted this exact reviewed semantic body under the user's explicit
+  delegation to complete source and isolated unattended-workflow mechanisms.
+  Independent reviewer /root/recovery_contract_review_luna returned PASS on
+  this exact candidate and independently scratch-applied the complete patch.
+  The predecessor V1 retains its original acceptance lineage and unchanged
+  body; this transaction supersedes the whole authority with atomic backlinks.
+  This acceptance changes lifecycle metadata only after review. Authority
+  activates on merge; implementation is a subsequent REUSE task. Production
+  apply authority remains NONE.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -25,7 +46,7 @@ owners:
 external_authorities:
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1
-    revision: f0188b7c14ee786575b6b8aa6fb08c36444fef05
+    revision: 2c7e59a14d5d84ecc0688c47c30c5f04d0f05900
     relation: interoperates_with
     note: CTR-SWEC-010 companion proposal must be separately accepted before implementation
   - repository: mayf3/agent-forum
