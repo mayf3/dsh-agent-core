@@ -6,8 +6,23 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-14
-revision: r4
-revision_date: 2026-09-14
+revision: r5
+revision_date: 2026-10-27
+amendment:
+  id: ASM2-OWNED-DISPATCH-STATUS-20261027
+  status: accepted
+  route: AMEND
+  base: c1cbd7506ca58c0abace216e651e1cceb98e030d
+  section: "14"
+  contracts: CTR-ASM2-018..023
+  acceptance: ACC-ASM2-008..013
+  implementation_allowed: true
+  production_apply_authority: none
+  note: >-
+    Additive amendment accepted by the delegated maintainer after independent
+    exact-head review. Existing r4 Contracts and acceptance history remain
+    unchanged. Section 14.4 records the separate attributable acceptance act.
+    This grants source implementation authority, not production activation.
 scope:
   - target Agent canonical main Session messaging
   - receipt-only and bounded one-reply delivery
@@ -1197,3 +1212,353 @@ PRODUCTION_CHANGE = NONE
 IMPLEMENTATION_ALLOWED_NOW = NO
 READY_FOR_INDEPENDENT_REVIEW = YES
 ```
+
+## 14. Accepted additive amendment: bounded owned-dispatch status
+
+### 14.1 Lifecycle, ownership, and evidence
+
+```text
+AMENDMENT_ID = ASM2-OWNED-DISPATCH-STATUS-20261027
+AMENDMENT_STATUS = accepted
+AUTHORITY_ACTION = AMEND
+ROUTE_STAGE = AUTHORITY_AUTHORING
+AMENDMENT_ACCEPTED_IN_BASE = NO
+IMPLEMENTATION_ALLOWED_NOW = YES after docs merge
+PRODUCTION_APPLY_AUTHORITY = none
+BASE = c1cbd7506ca58c0abace216e651e1cceb98e030d
+```
+
+This section is the accepted additive amendment. Existing r4 Contracts and
+§§0–13 remain unchanged, including historical authoring and acceptance records.
+The exact proposed docs candidate passed independent review; the delegated
+maintainer acceptance act is recorded in §14.4. A lifecycle-only final-head
+recheck must precede the docs merge. Implementation begins only after that merge
+and a separate implementation preflight routing the accepted Contracts as REUSE.
+
+The amendment stays inside DEC-ASM2-001 through DEC-ASM2-004: the existing native
+message coordinate, caller-owned read authorization, a bounded exact-turn
+projection, and observability without delivery recovery. It adds independent
+capability Contracts; it does not reinterpret or replace CTR-ASM2-001 through
+CTR-ASM2-017 or ACC-ASM2-001 through ACC-ASM2-007. In particular the exact three
+arguments and full result of `agent_session_turn_inspect` remain unchanged.
+`AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3` governs this authoring route;
+`AGENT_PROCESS_LIFECYCLE_HARDENING_V4` C-015/C-016 remains the owner of Router
+terminal outcome/recovery semantics. This amendment does not repair or redefine
+that separate classifier. It reads the native exact-turn terminal fact.
+
+**OBS-ASM2-STATUS-001:** isolated trial a8 returned three full owned inspections
+with `originalBytes` 60,841 / 93,944 / 34,097. Its coordinator then streamed
+53,408 UTF-8 bytes of an incomplete `write(dispatch-ledger.json)` argument over
+224,935 ms, without a completed tool call or result, before the existing hard
+deadline ended the turn as `aborted/disposed`. No actual ledger write is claimed.
+The trial did not complete its business workflows.
+
+**CLM-ASM2-STATUS-001 (SUPPORTED):** a compact exact-turn status projection can
+bound the amount of transcript data returned for ordinary coordination without
+changing existing read ownership. **OPEN_ASSUMPTION:** this improves unattended
+completion in a fresh trial. Neither the size observation nor this design proves
+that input volume caused the abort or that a weaker model is generally reliable.
+
+**EVD-ASM2-STATUS-001:** observation-to-claim support is the public-only analysis
+`/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/a8-hr-turn7-public-metadata-analysis.json`,
+SHA-256 `169e66c682dc27f68d998770c8e12b0f567c5216e0a5bf4c5fd61720f70c7bb5`,
+sampled 2026-10-27T10:22:05.250735Z. It binds the original Session hash, public
+event coordinates, Broker call/result lines and the independent terminal audit.
+It is read-only incident evidence, not conformance evidence for this proposal.
+The companion Brief records the exact base, review scope and prospective a9
+fixture; that fixture is not Product Authority or an execution authorization.
+
+### 14.2 Accepted Contracts
+
+### CTR-ASM2-018 — separate small read capability
+
+Expose one additional LOCAL read-only capability:
+
+```text
+capability/toolName = agent_session_dispatch_status
+operation = status
+arguments = {targetAgentId, sessionId, messageId}
+resource = agent-session-messaging
+requiredScope = agent.session.inspect_own_dispatch
+```
+
+The argument object has exactly those three required non-empty string fields.
+The Agent ID grammar is the same as CTR-ASM2-010. Session/message values remain
+opaque exact IDs: never normalize, truncate, interpret as paths, or substitute
+`main` for a supplied ID. The new capability accepts at most **2,048 UTF-8 bytes**
+for compact JSON of the argument object in the displayed field order. Violations
+are `invalid_arguments`. This new bound does not change the existing inspector.
+
+The caller identity comes only from trusted runtime binding. No caller, Principal,
+path, credential, business ID, limit, summary mode or authorization input is
+accepted. The existing inspection scope grants this subset of the same owned
+read; the send scope alone still grants neither read capability. No new Grant
+inheritance or automatic Grant issuance is introduced. Calls are independent
+one-shot reads, without a subscription, wait, watch, or target process contact.
+
+### CTR-ASM2-019 — reuse exact ownership and canonical reads
+
+The new reader MUST apply CTR-ASM2-011 and CTR-ASM2-012 unchanged: trusted caller
+ownership, both retained ASM audit generations scanned to the end, opaque denial,
+canonical target/home/workspace resolution, one directly selected retained
+artifact, and exact native sequence association. Grant denial still performs zero
+audit/Session reads. Missing, foreign, duplicate, wrong-coordinate and unsupported
+origin requests still perform the same bounded audit stages, zero target Session
+reads, and return byte-identical `not_found_or_not_owned`.
+
+Reuse the existing authorized exact-trace resolver rather than a second identity,
+ownership or Session-search path. The source bounds remain **8,388,608 bytes per
+audit generation**, **8,388,608 Session bytes**, **10,000 complete Session
+records**, and **1,048,576 bytes per Session record**. Unavailable, malformed or
+over-cap read surfaces fail closed; do not emit a partial status success. Read
+only an already available persistence surface; never launch a target to obtain
+its records. Retention and archive/reset limitations remain those of r4.
+
+The compact projection may share parsed records and sequence resolution with the
+inspector. It MUST NOT materialize the full messages/toolCalls/toolResults result
+and then serialize or truncate it into a status result. No new persistent index
+or ledger is needed or authorized by this Contract.
+
+### CTR-ASM2-020 — exact state and typed terminal reason
+
+Derive state solely from the exact native association of CTR-ASM2-012. A durable
+owned receipt without start is `accepted_not_started`; start without matching end
+is `running`. Only a matching `turn/end` whose `reason.kind` is exactly
+`completed` is `completed`. Every other well-formed terminal kind is `failed`.
+Do not promote an ACK, process exit code zero, idle notification, Router label
+such as `late_completed`, or a partial assistant message into completion.
+
+For nonterminal states `stopReason` and `endedAt` are null. For a terminal state,
+`stopReason` is the closed object `{kind, abortCause}`:
+
+```text
+kind = completed | aborted | blocked | error | max-tokens | interrupted | other
+abortCause = null | user | parent | hook | disposed | legacy | other
+```
+
+A known `reason.kind` maps literally. A nonempty unrecognized native terminal
+kind maps to `other` and state `failed`, without echoing its raw text. Missing or
+malformed terminal association is `trace_unresolvable`, never success. For
+`aborted`, map only the exact nested `reason.reason.kind` enum above; unavailable
+or unrecognized cause maps to `other`. For all other terminal kinds, `abortCause`
+is null. Free-form errors, hook/cancellation reasons and provider details are
+excluded. Thus `aborted/disposed`, including a late end after a deadline, cannot
+be reported as completed by this capability.
+
+`failed` describes the observed turn termination, not a negative business verdict
+or proof that tools had no effects. This projection does not prove process/tool
+quiescence, revoke authority, settle an unknown mutation, or permit a resend.
+
+### CTR-ASM2-021 — closed bounded result and reply reference
+
+The complete result object has exactly these fields in this serialization order:
+
+```text
+{
+  status: 'found',
+  targetAgentId,
+  sessionId,
+  messageId,
+  resolvedTurnId,
+  turnState,
+  startedAt,
+  endedAt,
+  stopReason,
+  reply: {state, reference}
+}
+
+resolvedTurnId = non-negative safe integer | null
+startedAt / endedAt = non-negative safe integer Unix milliseconds | null
+turnState = accepted_not_started | running | completed | failed
+reply.state = pending | available | absent | not_successful
+reply.reference = null | {assistantMessageSeq: non-negative safe integer}
+```
+
+Coordinates are exactly the requested authorized IDs. `resolvedTurnId` and
+`startedAt` are null only for `accepted_not_started`; `endedAt` is null only until
+an end is proven. Malformed required native numbers fail as `trace_unresolvable`.
+
+Reply classification uses only complete visible `assistant/message` events
+belonging to the exact resolved turn, through its terminal boundary; chunks and
+hidden/reasoning content never qualify. `pending` with a null reference applies
+to both nonterminal states, even if intermediate visible text exists. For
+`completed`, examine the last such assistant record by journal sequence using
+the existing visible-text extraction and redaction: a nonempty text is
+`available`, with that record's exact sequence reference; no such record or empty
+text is `absent` with null reference. Do not substitute an earlier nonempty record
+when the last is empty. For every `failed` turn use `not_successful` with null
+reference, even if a partial visible reply exists.
+
+`available` means visible text was present at this read, not reply delivery,
+business acceptance, evidence sufficiency, or indefinite retention. The sequence
+reference is interpreted only with this result's three trace coordinates; it
+mints no identifier. The unchanged full inspector can be explicitly called with
+those coordinates when visible original content is needed. Its existing limits
+and omission/retention behavior still apply; the reference is not a new retrieval
+endpoint or a promise that a later call returns the body.
+
+The compact UTF-8 JSON of the result MUST be at most **4,096 bytes**. There is no
+body, summary, tool name/argument/result, transcript, raw error, workflow field,
+semantic verdict, usage, hidden state, path, truncation field, or omission array.
+All nested objects are closed. Use the displayed key order, no whitespace and
+ordinary JSON string escaping; no new canonical-JSON library or client hash
+algorithm is required. Never cut a string or silently omit a required field. If
+the complete allowed result cannot fit, return `inspection_unavailable`.
+
+### CTR-ASM2-022 — errors, non-effects and compatibility
+
+The new capability's handler error codes are exactly CTR-ASM2-016's eight codes.
+Its Broker manifest also declares the existing gateway-level
+`transport_failure` and `unsupported_operation` errors, so a grant transport
+outage or missing handler is not relabeled as an argument fault. Error payloads
+are sanitized, contain no raw record/path/reason/body, and their compact UTF-8
+JSON is also at most 4,096 bytes. No error means not received, not started, safe to
+resend, or a business failure. A missing runtime capability is unavailable; no
+automatic full-inspection fallback or hidden send is allowed.
+
+CTR-ASM2-014/015's zero-mutation and non-goal constraints apply in full. No target
+send/wake/cancel, Session/audit repair/consumption, workflow call, Scheduler call,
+new task, automatic retry/replay, dispatch ledger, claim/lease, general Session
+browse, or new actor privilege is introduced. Ordinary existing Broker access
+audit is allowed; the read never changes the trace's ownership or delivery state.
+
+Existing send and `agent_session_turn_inspect` inputs, outputs, error behavior,
+grants and full-projection rules remain unchanged. In particular do not add
+`summaryOnly`, `maxBytes`, pagination, or status fields to the original API. The
+status capability does not alter the lifecycle V4 terminal classifier. It must
+not depend on that classifier falsely calling an aborted turn successful.
+
+### CTR-ASM2-023 — acceptance and implementation boundary
+
+After explicit amendment acceptance, implementation is confined to the existing
+ASM manifest/relay/runtime and exact-turn reader seams plus affected tests. Reuse
+their canonical authorization and persistence reads; do not introduce a parallel
+reader service, ledger, workflow engine or dispatcher. A shared resolver refactor
+must preserve the original inspection behavior and byte-equivalent existing
+fixtures. Implementation, installation/callability and unattended business
+completion must be reported separately.
+
+The acceptance matrix below is mandatory implementation evidence, not executed
+evidence in this proposal. Production activation still requires separate current
+release authority. Before amendment acceptance, rollback is discarding this docs
+delta; after acceptance, withdrawing an accepted Contract requires the applicable
+governance route. Disabling an unadopted runtime capability does not rewrite the
+accepted Contract or justify claiming conformance.
+
+### 14.3 Acceptance
+
+### ACC-ASM2-008 — closed capability and independent read grant
+
+- **Contracts:** CTR-ASM2-018, CTR-ASM2-022.
+- **Method:** real manifest/gateway/handler tests for exact three coordinates,
+  independent send versus inspect grants, UTF-8 input boundary and extra fields.
+- **Environment:** isolated synthetic agents and retained native/audit fixtures;
+  no provider, production credentials or actual target start.
+- **Required evidence:** exact source Head, command/actual exit and request/result
+  assertions including the 2,048-byte boundary and a multibyte counterexample.
+- **Expected result:** authorized owned read works; send-only grant fails; unknown
+  fields, caller/path injection and over-cap input fail; old API is unchanged.
+- **Failure condition:** any implicit grant, normalized/truncated ID, unknown
+  field accepted, or old inspector argument semantics changed.
+
+### ACC-ASM2-009 — owned exact trace and opaque denial
+
+- **Contracts:** CTR-ASM2-019, CTR-ASM2-022.
+- **Method:** instrument actual read seams for eligible, missing, foreign,
+  wrong-coordinate, duplicate and unsupported-origin rows; causal fixtures include
+  competing insertion/start, duplicate message, wrong Session and ambiguous turn.
+- **Environment:** task-owned temporary canonical homes/audit generations.
+- **Required evidence:** read counters, exact sanitized error bytes and existing
+  audit/source caps, bound to source Head and actual test exit.
+- **Expected result:** all non-owned coordinates share denial bytes and bounded
+  audit stages with zero Session reads; denied grants cause zero audit reads;
+  causal ambiguity is `trace_unresolvable`, without searching adjacent artifacts.
+- **Failure condition:** foreign existence leak, early audit-match exit, wrong
+  turn selected, directory enumeration or target contact.
+
+### ACC-ASM2-010 — typed terminal truth and reply state
+
+- **Contracts:** CTR-ASM2-020, CTR-ASM2-021.
+- **Method:** run native-producer-shaped fixtures for not-started, running,
+  completed, aborted with each known/missing/unknown cause, blocked, error,
+  max-tokens, interrupted and a future terminal kind. Include aborted/disposed
+  with an unrelated `late_completed` label and partial assistant text.
+- **Environment:** isolated exact-turn reader; no lifecycle recovery is executed.
+- **Required evidence:** table of raw terminal fact to DTO and actual test exit;
+  include final-empty after earlier-nonempty text and text from another turn.
+- **Expected result:** only native `completed` yields completed; only its last
+  nonempty visible record yields available with exact seq. Unknown/malformed data
+  never becomes success; unsupported well-formed terminal kind becomes failed/other.
+- **Failure condition:** ACK, exit zero, aborted, unknown, hidden content, another
+  turn's text, or intermediate text creates a successful final reply.
+
+### ACC-ASM2-011 — small output regardless of retained transcript volume
+
+- **Contracts:** CTR-ASM2-019, CTR-ASM2-021, CTR-ASM2-022.
+- **Method:** use a valid owned trace with over 100 KiB visible tool transcript,
+  secret-marker and multibyte content; separately exercise every source cap,
+  malformed/unavailable reads and maximum admitted coordinate sizes.
+- **Environment:** isolated retained files within/exceeding the specified limits.
+- **Required evidence:** actual serialized bytes, allowed-key assertions,
+  read/projection instrumentation and source-bound test result.
+- **Expected result:** every status result/error is at most 4,096 UTF-8 bytes;
+  no bodies, tool content, paths or raw reason strings leak. Source caps still
+  fail closed; no full transcript result is materialized for the small projection.
+- **Failure condition:** over-cap output, string cutting, partial status success
+  after a source-limit failure, or forbidden data copied into a field/error.
+
+### ACC-ASM2-012 — read-only execution and old API regression
+
+- **Contracts:** CTR-ASM2-018, CTR-ASM2-022, CTR-ASM2-023.
+- **Method:** exercise actual gateway/relay/provider route; spy on all mutation,
+  target-start and workflow/Scheduler seams; compare existing inspector fixtures
+  byte-for-byte before/after the shared-reader change, including its large result.
+- **Environment:** isolated adapters and task-owned persistence; no real messages.
+- **Required evidence:** source/build identity, focused test actual exit, zero
+  side-effect counts, unchanged legacy fixture hashes and new DTO round trip.
+- **Expected result:** new status travels unchanged through the supported route;
+  old full inspector remains full/exact-three-args; pipeline outages retain their
+  proper codes; no fallback, dispatch, trace mutation or new durable ledger.
+- **Failure condition:** truncated old output, changed old contract, hidden resend,
+  widened grant, or an unavailable status misrepresented as completed/not-started.
+
+### ACC-ASM2-013 — bounded integration evidence and honest release claim
+
+- **Contracts:** CTR-ASM2-018 through CTR-ASM2-023.
+- **Method:** independently run the new callable capability against an isolated
+  retained native exact turn through the real trusted caller/Broker/runtime path,
+  recording small pending and terminal projections plus a foreign denial.
+- **Environment:** a fresh task-owned fixture; target processing may be seeded
+  before the read; the status call itself cannot start or message a target.
+- **Required evidence:** accepted amendment/source/build pins, caller binding,
+  raw public request/result bytes, callability, denied-read counters and actual
+  command exit. Automated fixture results are labeled mechanism evidence.
+- **Expected result:** every assertion in the first five cases holds at the
+  actual integration boundary; independent review can retrieve originals.
+- **Failure condition:** claiming installation, production or unattended business
+  completion from source/unit PASS alone, or using a manually steered trial as
+  unattended evidence. A future a9 trial is separately scoped, not a hidden gate
+  for this read-only capability or authority to start one now.
+
+
+### 14.4 Delegated maintainer acceptance act — 2026-10-27
+
+The root maintainer records **ACCEPTED** for the exact additive Contracts and
+Acceptance definitions reviewed at `caf21a2cf4a11373acf3cdcb87faa931003e2392`.
+The reviewed Spec SHA-256 is
+`781c31fee0fdb8f029ff26eacbc590d19d18da182b4464a4a0a7381cb657c723`.
+Independent review `owned-dispatch-status-independent-review-caf21a2.json`
+(SHA-256 `7115a8485a58d690a9561b1daf0dae15a77c9dc8959a450848b9bb74a8da4569`)
+returned `PASS_FOR_EXACT_AMENDMENT_ACCEPTANCE`, zero blockers and zero Spec gaps.
+
+Acceptance actor: root coding maintainer, acting under the user's continuing
+instruction “接受，全权交给你定就行” and subsequent explicit instruction to keep
+implementing and validating unattended workflow completion. This is a delegated
+maintainer act, not a claim that the user separately reviewed this new text or
+that the proposal author accepted its own contract. The scoped decision adds
+only the reviewed read-only capability; production apply remains **none**.
+
+This lifecycle revision changes no CTR-ASM2-018–023 or ACC-ASM2-008–013 content.
+The independent final-head recheck and docs-only merge receipt must be retained
+before source implementation. Source/test completion, callable installation and
+unattended business completion remain separate evidence gates.
