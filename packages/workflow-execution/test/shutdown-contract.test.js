@@ -66,7 +66,11 @@ function buildEngine(ledger, { gatePage1, timeline, disposeRouterBeforeDeliver }
     getTurnReconciliation: () => ({ state: 'pending' }),
     readInstanceDetail: async () => ({
       ok: true,
-      body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } },
+      body: { visibility: 'full', detail: {
+        instance: { workflow_instance_id: INSTANCE, workflow_state_version: 1, is_terminal: false },
+        current_node_visit_id: VISIT,
+        current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+      } },
     }),
   })
   return { engine, releasePage1, parked, timeline }

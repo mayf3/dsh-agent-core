@@ -22,6 +22,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine, DUE_PAGE_LIMIT } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
@@ -35,7 +36,7 @@ function makeIntents(start, count) {
     out.push({
       dispatchIntentId: `bd5c2f0a-3f19-4a7e-9a3f-${hex}`.slice(0, 36),
       nodeVisitId: `cd5c2f0a-3f19-4a7e-9a3f-${hex}`.slice(0, 36),
-      workflowInstanceId: INSTANCE,
+      workflowInstanceId: `ed5c2f0a-3f19-4a7e-9a3f-${hex}`,
       ownerPrincipalId: OWNER,
       nextEligibleAt: `2026-09-09T00:00:${String(i % 60).padStart(2, '0')}.${String(i).padStart(6, '0')}Z`,
       createdAt: '2026-09-09T00:00:00Z',
@@ -74,7 +75,12 @@ function pageEngine({
       return deliver(req)
     },
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
+    readInstanceDetail: async ({ workflowInstanceId }) => ({ ok: true, body: completeCurrentActivationDetail({
+      visibility: 'full', detail: {
+        instance: { workflow_state_version: 1 },
+        current_node_visit_id: pages.flat().find((intent) => intent.workflowInstanceId === workflowInstanceId)?.nodeVisitId,
+      },
+    }, { workflowInstanceId, ownerPrincipalId: OWNER }) }),
     config,
   })
   return { engine, ledger, calls, cleanup: () => rmSync(dir, { recursive: true, force: true }) }

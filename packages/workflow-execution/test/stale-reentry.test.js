@@ -108,8 +108,9 @@ function fullDetail({ version, visit, isTerminal = false, visibility = 'full' } 
   return {
     visibility: 'full',
     detail: {
-      instance: { workflow_state_version: version, is_terminal: isTerminal },
+      instance: { workflow_instance_id: INSTANCE, workflow_state_version: version, is_terminal: isTerminal },
       current_node_visit_id: visit,
+      current_visit: { node_visit_id: visit, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
     },
   }
 }

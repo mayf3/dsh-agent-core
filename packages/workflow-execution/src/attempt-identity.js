@@ -23,3 +23,14 @@ export function validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInsta
     }
   }
 }
+
+export function sameAttemptIdentity(current, { dispatchIntentId, workflowInstanceId, ownerPrincipalId }) {
+  return current.dispatchIntentId === dispatchIntentId.toLowerCase()
+    && current.workflowInstanceId === workflowInstanceId.toLowerCase()
+    && current.ownerPrincipalId === ownerPrincipalId.toLowerCase()
+}
+
+export function assertSameAttemptIdentity(current, identity, nodeVisitId) {
+  if (sameAttemptIdentity(current, identity)) return
+  throw new Error(`workflow-execution: refusing generation ${(current.generation ?? 1) + 1} attempt_planned for nodeVisit ${nodeVisitId.toLowerCase()} — identity triple differs from the stale-superseded attempt (corrupt feed or ledger)`)
+}

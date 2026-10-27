@@ -59,8 +59,9 @@ function dueIntent(overrides = {}) {
 const unchangedWorld = {
   visibility: 'full',
   detail: {
-    instance: { workflow_state_version: 9, is_terminal: false },
+    instance: { workflow_instance_id: INSTANCE, workflow_state_version: 9, is_terminal: false },
     current_node_visit_id: VISIT,
+    current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
   },
 }
 
