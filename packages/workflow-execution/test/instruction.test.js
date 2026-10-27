@@ -39,6 +39,8 @@ test('instruction states the special semantics (acks are not facts; transition r
   assert.match(text, /workflow_instance_detail/)
   assert.match(text, /workflow_execute\.transition/)
   assert.match(text, /expectedWorkflowStateVersion/)
+  assert.match(text, /detail\.outgoing_transitions\[\]\.executable_for_actor.*仅供参考/)
+  assert.doesNotMatch(text, /detail\.current_visit\.executable_for_actor/)
   assert.match(text, /assignee_principal_id/)
   assert.match(text, /assignee_canonical_agent_id/)
   assert.match(text, /后继身份链路元数据/)
