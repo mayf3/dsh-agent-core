@@ -295,3 +295,42 @@ The existing workflow schemas allowed these last two omissions because only a sh
 | `a10-business-audit-preparation/final-business-review.json` | `2f531870d41dfd558b987aa0a3e3a19edc5c38261cfd10de32179a9cff385557` |
 | `a10-business-audit-preparation/final-receipt.json` | `4d38eaccf4aee0c2f5cf97f7e125ee704cbf46c5cdef371446b00db06775935d` |
 | `e2e-runs/trial-20261027-a10/runtime-execution.json` | `66dee3d818e868e02119b187352138434781c9a2b4c183e1dbab5fc8f04d14fe` |
+
+## Mechanism lessons from the observed failures
+
+The repeated failures occurred at different boundaries. A workflow's terminal state does not entail complete source delivery, a valid measurement reference, or a justified role judgment. A10 is a concrete counterexample: every post-cutoff transition joins correctly while eleven originals are truncated. The earlier original-governance MERGE_REPORT is another counterexample: a real Spec merge is not the implementation merge required by that stage. Neither gap is closed by another coordinator reminder.
+
+For this bounded experiment, full acceptance requires the conjunction of single-trigger provenance, automatic native continuation, exact authoritative inputs delivered to the deciding roles, source-specific judgments and actual stage effects, valid evidence references, and observed cleanup. The individual factors have independent evidence. `done`, a tool's `ok`, a matching digest, and native `completed` each prove a different part; none implies the conjunction. This is a finite recorded counterexample argument and an executable acceptance relation, not a proof of liveness under arbitrary network failures or model choices.
+
+| Responsibility | Mechanism, including source-reviewed follow-up repairs | Residual duty |
+| --- | --- | --- |
+| Continue after a coordinator turn | Parent-owned native continuation joins prior settlement and admits the next real turn | Bounded rounds, actual service availability and attributable stopping reasons still matter |
+| Read current work | Actor-authorized current input and complete-body reader bind Visit, Context, definition version and full byte SHA | The role must evaluate the original; retrieval is not agreement |
+| Deliver the complete read | Follow-up candidate: narrow native tool-owned value projection with existing size/binding checks | Later history compaction remains active; inspect actual delivery and next-step retention |
+| Produce measurements | Program computes real report bytes and hashes; tool returns an exact reference | Installation, loaded process, health and business verdict remain distinct observations |
+| Require stage evidence | Follow-up configuration: versioned workflow submission schema rejects missing fields | Syntactically valid findings/hashes may still be wrong; independent checks must compare actual sources |
+| Recover a failed submission | Exact refusal, fresh state and settled previous execution allow bounded role correction | UNKNOWN outcomes never authorize blind retries; corrections do not change the chosen semantic exit |
+| Decide release acceptance | Independent audit joins role calls, workflow records, originals and measured artifacts | A finite isolated run does not authorize production activation or prove universal self-repair |
+
+Weak models benefit from fewer discretionary bookkeeping steps: exact current input, small status responses, one authoritative dispatch record, machine-generated hashes, and stage-specific required fields. Adding more monitoring roles while leaving these boundaries implicit increases messages without establishing progress. The coordinator should react to changed prerequisites and attributable refusals; it should not manufacture a second ledger, select another role's verdict or repeatedly resend an uncertain operation.
+
+The self-iteration demonstrated so far is the development method: preserve a failed run, identify its concrete violated boundary, reuse the accepted contract or explicitly amend it, implement the minimum repair, review the affected surface, and run a new frozen trial. Root performed these development repairs. They are not evidence that the deployed agent system can independently modify its own architecture. A future unattended repair claim must itself show that entire governance path, including scope/authority, implementation, independent review, candidate activation and fresh outcome verification, without external per-node intervention. This does not add such a claim to the current experiment.
+
+## A11 final result: delivery repaired, evidence prose still inconsistent
+
+A11 used clean core `b38a4ecb8d245becbec12044f7a60b8ef8f5aceb`, the same native and combined service candidates, and `openai-codex/gpt-5.6-luna`. Freeze SHA is `1fdef9c168e5a7027dd89ad7932d7964e409c3c5cadbd51bf909881eb11211d1`. After cutoff `2026-10-27T14:08:14.929Z`, only one initial external task entered the nine roles. No root node message, transition, role restart or evidence repair intervened. A reached done/v14 through all14 nodes and13 real submissions; B reached done/v19 through6 real submissions, excluding12 historical fixture submissions. All19 exact Broker/database actor, assignment, Visit, Context, payload SHA, CAS and receipt joins pass.
+
+The narrow delivery repair passes in the actual run: all29 successful complete-body results reached native tool output intact, and all29 were retained in the first subsequent model step. This includes B's54516-byte corrected Submission and1001-byte stale RETURN for all four required reviewing roles. There are no spills or Broker body errors. The audit observes23 automatic continuation admissions,48 compact status results,45 settled executions and nine actual role exits0. Runtime exited0 at `2026-10-27T14:31:30.261217Z`; service and infra worker exited0 automatically and both localhost endpoints closed. Supervisor self-exit remains UNKNOWN. Later pruning of five old results does not negate first-step delivery or prove indefinite retention. PM's nonce replies retain a protocol prefix; the exact peer/nonce joins pass, while the reply-only format deviation remains recorded. Of118 frozen inputs,117 are unchanged; the sole case-bindings change consists of the two cutoff fields written by the already-frozen runner.
+
+B QA made both required source-specific findings using the exact corrected and stale originals. All three deployment submissions supplied exact measurement-file paths and actual file SHA values, joined to assigned-role helper invocations before submission. B performed the real task-local fast-forward, and A freshly observed ALREADY_PRESENT.
+
+Strict result is **PARTIAL_SEMANTIC_EVIDENCE_CONSISTENCY_WITH_TARGETED_ACCEPTANCE_PASSES**. Three QA free-text reports contain an incorrect binary SHA: A twice presents it as an actual identity, and B's optional third finding adds a question mark. These are distinct from the correct required source hashes and measured report references. CTO later supplies the correct binary SHA but does not explicitly resolve the earlier inconsistency. Syntactically valid fields do not prove truthful prose.
+
+No role created a local-install copy or requested installed-file measurement in A11; the three generated reports truthfully retain installedBinary UNKNOWN. The frozen Context describes deployment as task-owned installation, but target.localInstallation says each case *may* copy, while the formal installation acceptance binds the prestarted localhost candidate and its actual health/version. This ambiguity is recorded rather than retrospectively imposing a per-case copy gate. A12 will prospectively require a real task-owned installed file and a program-generated installedArtifact reference at deployment stages, preserving the difference between installed bytes and the prestarted serving process. Historical bootstrap artifacts remain excluded from autonomous progress. No A11 artifact is repaired or relabeled.
+
+| Sealed artifact under the artifact root | SHA-256 |
+| --- | --- |
+| `a11-native-audit-preparation/a11-native-body-nextstep-independent-final-v2.json` | `cb990ed3b1d25a048bde602aaf4bd2403cc11adcfe8b93a783af46f3fdd736f3` |
+| `a11-business-audit-preparation/final-business-review-v2.json` | `0a1d2c8fe1321e5e2841b9c7a95c106b3c15e637daf90cd090fc1f04ff7f68ef` |
+| `a11-business-audit-preparation/final-receipt.json` | `9e41a2dc45c673d6d1ca74da515cce21fc79e26851dd2a9fe08928261e99cbb4` |
+| `a11-root-structural-review/execution-receipt.json` | `83d8c7ebe5053335f398596e4639b6e656b9113b17417cd6623314f87e021688` |
