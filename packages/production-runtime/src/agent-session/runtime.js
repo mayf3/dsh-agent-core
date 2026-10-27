@@ -4,6 +4,7 @@ import { appendFileSync } from 'node:fs'
 import { createAgentSessionMessagingAccess } from '../agent-session-messaging.js'
 import { createAgentSessionMessagingAudit } from './audit.js'
 import { inspectAgentSessionTurn } from './turn-inspection.js'
+import { readAgentSessionDispatchStatus } from './dispatch-status.js'
 
 /** Minimal composition helper for the independently granted send/inspect pair. */
 export function createAgentSessionRuntime({ layout, definition, workspaceBootstrap, router, log }) {
@@ -22,7 +23,7 @@ export function createAgentSessionRuntime({ layout, definition, workspaceBootstr
   })
   return {
     auditDenial(info) {
-      if (!['agent_session_send', 'agent_session_send_reconcile', 'agent_session_turn_inspect'].includes(info?.capabilityId)) return
+      if (!['agent_session_send', 'agent_session_send_reconcile', 'agent_session_turn_inspect', 'agent_session_dispatch_status'].includes(info?.capabilityId)) return
       if (audit.appendDenial(info) !== 'appended') log.error('[agent-session-messaging] L0 denial audit append failed')
     },
     mount(ctx) {
@@ -30,6 +31,14 @@ export function createAgentSessionRuntime({ layout, definition, workspaceBootstr
         router,
         audit,
         inspectTurn: ({ args, callerAgentId }) => inspectAgentSessionTurn({
+          args,
+          callerAgentId,
+          auditFile,
+          resolveTarget: (agentId) => definition.getAgent(agentId),
+          resolveDshHome: (agentId) => workspaceBootstrap.resolveDshHome(agentId),
+          resolveCanonicalWorkspace: (agentId) => workspaceBootstrap.resolveWorkspace(agentId),
+        }),
+        dispatchStatus: ({ args, callerAgentId }) => readAgentSessionDispatchStatus({
           args,
           callerAgentId,
           auditFile,
