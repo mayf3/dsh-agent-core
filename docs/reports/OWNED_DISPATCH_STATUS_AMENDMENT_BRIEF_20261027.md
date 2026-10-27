@@ -202,3 +202,16 @@ block and appended §14 and reconstructed all 56,320 baseline bytes with SHA-256
 It also verified six unique new CTR headings and six unique new ACC headings,
 and fresh-hashed the two evidence originals to the values above. These are
 authoring checks only; no product test, model call or a9 execution occurred.
+
+
+## Subsequent delegated acceptance record
+
+The authoring sections above preserve the proposed-candidate history and its
+original no-implementation mandate. The root maintainer has now accepted the
+reviewed additive amendment at proposed head
+`caf21a2cf4a11373acf3cdcb87faa931003e2392`, under the user's continuing delegated
+mandate. The governing acceptance act is ASM V2 §14.4; independent review was
+`PASS_FOR_EXACT_AMENDMENT_ACCEPTANCE` with no blockers or Spec gaps. This later
+act supersedes the earlier proposed-only status for the new Contracts after the
+lifecycle-only final-head review and docs merge. It does not claim implementation,
+a9 execution or production authorization. The author did not self-accept.
