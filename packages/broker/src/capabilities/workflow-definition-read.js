@@ -26,6 +26,7 @@
 
 import { withTransportErrors } from '../transport.js'
 import { authErrors, baseErrors } from './workflow-definition-authoring.js'
+import { queryErrors } from './workflow-execute.js'
 
 /** Same pagination error rows the other workflow read capabilities declare. */
 const paginationErrors = [
@@ -138,4 +139,67 @@ export const workflowDefinitionReadManifest = withTransportErrors({
       },
     },
   ],
+})
+
+// Instance-input reads share the generic read-only transport with definition
+// reads. Selection, authorization and conditional argument validation stay in
+// svc-workflow; this manifest must not reconstruct history or interpret it.
+export const workflowCurrentTaskInputManifest = withTransportErrors({
+  id: 'workflow_current_task_input',
+  toolName: 'workflow_current_task_input',
+  name: 'Workflow Current Task Input',
+  description:
+    'Read current task input for your exact assigned workflow instance BEFORE evaluating it, including after compaction. ' +
+    'Use the returned current coordinates, entry source, recent submissions, RETURN feedback and original body descriptors instead of a remembered opinion. ' +
+    'The bounded selection is NOT all history: preserve input_status, content_complete, history_window_complete and truncation qualifications. ' +
+    'For omitted/truncated bodies, read view=body using the complete binding tuple and expectedBodySha256 from the descriptor; ' +
+    'follow next_offset, assemble original UTF-8 bytes from offset zero, then verify the complete SHA-256 before treating a body as complete. ' +
+    'A suffix alone is not a complete body. On current_task_input_stale reread input. On current_task_body_changed discard old chunks and obtain a new descriptor. ' +
+    'Neither a read nor COMPLETE_FOR_SELECTION proves evidence correctness or authorizes a transition: independently evaluate evidence and use existing workflow_execute CAS. ' +
+    'A missing capability, invisible source or unavailable service is an input/environment failure, not a business rejection. No automatic retry or history fallback.',
+  requiredScopes: ['workflow.read'],
+  errors: [
+    ...baseErrors,
+    ...authErrors,
+    ...queryErrors,
+    { code: 'invalid_current_task_input', description: 'Current-input parameters or conditional combinations are invalid (HTTP 422).' },
+    { code: 'current_task_input_stale', description: 'Current visit/state/context differs from the expected tuple; reread input (HTTP 409).' },
+    { code: 'current_task_body_changed', description: 'Body digest changed; discard assembled chunks and obtain a new descriptor (HTTP 409).' },
+    { code: 'current_task_body_not_found_or_not_visible', description: 'Body is absent or not visible for this instance (HTTP 404).' },
+    { code: 'workflow_instance_not_found_or_not_visible', description: 'Instance is absent or not visible (HTTP 404).' },
+    { code: 'restricted_history_not_visible', description: 'Full current-input history is not visible to the caller (HTTP 403).' },
+  ],
+  operations: [{
+    name: 'read',
+    description:
+      'Read one current input snapshot (default view=input) or one original body chunk (view=body). ' +
+      'body requires all three expected coordinates plus bodyKind, bodyId and expectedBodySha256 from the descriptor; offset defaults to zero. ' +
+      'input may supply all three expected coordinates together and up to eight explicit submissionIds. Conditional combinations are validated by the service.',
+    arguments: {
+      additionalProperties: false,
+      properties: {
+        workflowInstanceId: { type: 'string', description: 'Exact assigned workflow instance UUID; never substitute another instance.' },
+        view: { type: 'string', enum: ['input', 'body'], description: 'input (default) selects current sources; body retrieves one original byte chunk.' },
+        expectedNodeVisitId: { type: 'string', description: 'binding.node_visit_id UUID; all three expected coordinates must be supplied together.' },
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'binding.workflow_state_version, copied exactly.' },
+        expectedContextRevisionId: { type: 'string', description: 'binding.context_revision_id UUID, copied exactly.' },
+        submissionIds: { type: 'string', description: 'input only: comma-separated list of 1-8 distinct submission UUIDs explicitly needed for evaluation.' },
+        bodyKind: { type: 'string', enum: ['CURRENT_DETAIL', 'SUBMISSION_PAYLOAD'], description: 'body only: kind from the returned body descriptor.' },
+        bodyId: { type: 'string', description: 'body only: UUID from the returned body descriptor.' },
+        expectedBodySha256: { type: 'string', description: 'Required for body: exact 64-character lowercase SHA-256 from the descriptor.' },
+        offset: { type: 'integer', minimum: 0, description: 'body only: UTF-8 byte offset, initially zero; then use next_offset exactly.' },
+      },
+      required: ['workflowInstanceId'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments'],
+    http: {
+      target: 'svc-workflow',
+      method: 'GET',
+      path: '/internal/v1/workflow-instances/{workflowInstanceId}/current-task-input',
+      pathParams: ['workflowInstanceId'],
+      query: ['view', 'expectedNodeVisitId', 'expectedWorkflowStateVersion', 'expectedContextRevisionId',
+        'submissionIds', 'bodyKind', 'bodyId', 'offset', 'expectedBodySha256'],
+    },
+  }],
 })

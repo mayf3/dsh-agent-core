@@ -61,3 +61,35 @@ All test execution uses task-owned worktrees, homes, database names, ports and s
 ## Delivery state
 
 Authority authoring underway. Neither mechanism is yet implemented, deployed, or autonomously validated. Source PR88 for the earlier acceptance-binding slice remains independently verified but unmerged at the fresh read; its existing evidence is reused, not regenerated as a new success claim.
+
+## Broker implementation preflight — 2026-10-27
+
+```text
+DEVELOPMENT_PREFLIGHT = REUSE / IMPLEMENTATION / BRIEF / CONTROLLED
+BASE_HEAD = c1cbd7506ca58c0abace216e651e1cceb98e030d
+PRIMARY_AUTHORITY = AGENT_CORE_WORKFLOW_CURRENT_INPUT_BROKER_V1 at BASE_HEAD
+AUTHORITY_ACCEPTED_IN_BASE = YES (PR558; svc protocol PR89 at 52fcb13e63ac7c6696f2c3353ab5a09302cf2014)
+IMPLEMENTATION_AUTHORITY = contracts
+EXECUTION_MANDATE = VALID (owner mandate above)
+ISOLATED_WRITE_SURFACE = codex/workflow-current-input-broker-impl-20261027
+IMPLEMENTATION_ALLOWED = YES (new manifest, default registration, focused transport tests, this record)
+OPERATION_ALLOWED = NO (production)
+ACCEPTED_SPEC_MUTATION = FORBIDDEN
+DONE_WHEN = affected Broker contracts verified, independently reviewed source integrated, paired isolated trial evidence attached
+NEXT_REAL_ACTION = failing current-input capability tests, implementation, generic-transport regression, independent source review
+```
+
+Native admission and service implementation use separate worktrees and writers. Root implements only this Broker slice. Original authority-authoring state above is retained as history, not a current blocker. Required composed model/workflow validation is still NOT_RUN.
+
+## Broker implementation evidence — 2026-10-27
+
+The candidate adds `workflow_current_task_input` once to the default inventory and binds the accepted GET protocol through the existing generic transport. It preserves service qualification/errors and gives body assembly, digest and stale-input guidance. It adds no write, identity input, retry or semantic verdict.
+
+Executed evidence is under `/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/`:
+
+- `broker-red-capability.log` / `.json`: four new cases fail against the missing capability (exit 1). The earlier dependency-import failure is separately retained in `broker-red.log`, not counted as behavioral RED.
+- `broker-regression-final.log` / `.json`: 538 Broker tests pass, zero failures/skips, exit 0. The JSON binds the tested file hashes. Log SHA-256: `6460f87e8739c38d701060fadfc5670f84e6c1f6aef32c609d6132c1f9bf35ea`.
+- `packages/broker/test-support/current-task-input-responses.json` preserves two actual isolated service HTTP response captures with provenance. Tests replay them through real loopback HTTP and the generic Broker transport, including an 8190-byte Unicode chunk. This proves transport fidelity, not a live composed workflow verdict.
+- `structure-baseline-result.json` records the unmodified integration base `c1cbd750` failing the structure verifier with exit 2: a stale registry entry for `packages/agent-credential-provisioning/src/store-writer.js`. This is an existing configuration failure, not PASS. Affected source/test files remain below 500 lines; no new child is added to the existing 26-child capability directory or 20-child capability-test directory. Existing read-manifest and instance-test modules are reused. Registry repair and unrelated directory migration are outside this bounded capability change.
+
+Source review and actual paired autonomous validation remain pending at this record. No installed or production remediation is claimed.
