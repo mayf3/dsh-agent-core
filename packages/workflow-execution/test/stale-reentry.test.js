@@ -33,6 +33,7 @@ import { applyLedgerEvent } from '../src/ledger-events.js'
 import { ExecutionLedger, attemptIdFor, STALE_NO_PROGRESS_JUDGMENT } from '../src/ledger.js'
 import { judgeStaleFromDetail, judgeDispatchVersionFromDetail } from '../src/judgment.js'
 import { createWorkflowExecutionEngine, DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const VISIT_NEXT = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
@@ -105,14 +106,10 @@ function makeStaleDeps({
 
 function fullDetail({ version, visit, isTerminal = false, visibility = 'full' } = {}) {
   if (visibility !== 'full') return { visibility, detail: { instance: {} } }
-  return {
-    visibility: 'full',
-    detail: {
-      instance: { workflow_instance_id: INSTANCE, workflow_state_version: version, is_terminal: isTerminal },
-      current_node_visit_id: visit,
-      current_visit: { node_visit_id: visit, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
-    },
-  }
+  return completeCurrentActivationDetail({ visibility: 'full', detail: {
+    instance: { workflow_state_version: version, is_terminal: isTerminal },
+    current_node_visit_id: visit,
+  } }, { workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
 }
 
 async function dispatchOnce(fixture) {
