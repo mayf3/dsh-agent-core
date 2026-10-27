@@ -60,7 +60,7 @@ All test execution uses task-owned worktrees, homes, database names, ports and s
 
 ## Delivery state
 
-Authority authoring underway. Neither mechanism is yet implemented, deployed, or autonomously validated. Source PR88 for the earlier acceptance-binding slice remains independently verified but unmerged at the fresh read; its existing evidence is reused, not regenerated as a new success claim.
+Both mechanisms are implemented and independently source-reviewed. The first actual real-provider trial failed before model progress because normal canonical credential refresh required Owner reauthentication. Complete unattended acceptance is NOT_PROVEN; no production deployment or old-instance remediation is claimed. See the final paired evidence below. The earlier acceptance-binding PR88 is separate and is not present in the current-input service candidate.
 
 ## Broker implementation preflight — 2026-10-27
 
@@ -93,3 +93,39 @@ Executed evidence is under `/Users/yanfenma/workspace/artifacts/workflow-unatten
 - `structure-baseline-result.json` records the unmodified integration base `c1cbd750` failing the structure verifier with exit 2: a stale registry entry for `packages/agent-credential-provisioning/src/store-writer.js`. This is an existing configuration failure, not PASS. Affected source/test files remain below 500 lines; no new child is added to the existing 26-child capability directory or 20-child capability-test directory. Existing read-manifest and instance-test modules are reused. Registry repair and unrelated directory migration are outside this bounded capability change.
 
 Source review and actual paired autonomous validation remain pending at this record. No installed or production remediation is claimed.
+
+
+## Paired implementation and real trial — 2026-10-27
+
+The Agent Core integration combines reviewed Broker `1d8bcc91be4e6593ac77093942901842876493c8` and native admission bridge `489d6a203b91783b6ff2b51dbbe6401c10eb51df` into `4231c9f1532f8e4740d8becbe45953d872b2c8ae`. Real profile boot then exposed an identical duplicate YAML key already present in the base. Mechanical commit `3e7816929845df82850757ece40339647c519ab9` removes that duplicate, preserves its original value, and passed independent Luna review and actual child READY/exit checks.
+
+Paired source coordinates:
+
+- native harness fork PR5: `9d8678057be9bdbcc37b640ad8cb18279dc5f971`, clean post-commit build and actual `readHarnessIdentity` match. Native goal ownership remains in the original driver; an awaited external admission hook supplies the existing Router queue with the original message and a fresh execution handle. Cancellation removes the exact queued parent request; monotonically ordered reservations prevent replay after old reconciliation records expire.
+- svc-workflow PR90: `4eabe824cc4a36bd4c8ac6584adb0aa5a56cd266`, independently reviewed. Actual clean candidate binary SHA-256 `7a26fc4e21a86d4fa5a84c44a392d3c2a9d724e9822266a9f980f81a19dfbce3`; real localhost `/version` reports this commit. The snapshot read supplies exact entry/current Context, bounded recent/RETURN/explicit originals, complete body retrieval and stale-coordinate checks without changing workflow writes.
+
+Executed checks: 538 Broker tests; 25 new real service HTTP/database cases plus 38 query, 12 submission, 9 model3 and 212 library regression cases; 413 native related cases and 2 assembled snapshot cases. Root independently ran 22 native enqueue cases and 14 integrated pair cases, all passing with actual exit 0. These tests use scripted models where documented and do not establish real-provider autonomy. The expanded Agent Core regression retained 337 pass, 1 skip and 1 optional Feishu dependency import failure; structure verification retains its unrelated baseline registry error. No aggregate full-suite PASS is claimed.
+
+Independent source reports under the artifact root:
+
+- `broker-source-review-1d8bcc9.json`
+- `svc-current-input-source-review-4eabe82.json`
+- `native-admission-source-review-489d6a2.json`
+- `native-upstream-source-review-9d86780.json`
+- `integration-mechanical-fix-3e78169.json`
+
+### Actual unattended trial outcome
+
+`e2e-runs/trial-20261027-a2` used the exact published existing governance graph: 14 nodes, 15 transitions, semantic model 1, with only fixed role principal IDs mapped to isolated test identities. A began at draft/v1 with no submissions. B began at testing/v13 with 12 explicitly excluded fixture submissions, including an obsolete RETURN and a later corrected original exceeding the old history window. Stage contracts refer to actual reviewed artifacts, a task-owned local merge target and localhost installation/health checks. They never predeclare a role verdict or require an early node to prove a future stage.
+
+The frozen pair was Agent Core `3e781692`, native `9d867805`, service `4eabe824`, actual catalog model `openai-codex/gpt-5.6-luna`. The runner issued exactly one external HR instruction at 02:22:18Z. It did not supply node prompts, transitions, forced retries or workflow repairs. The first HR execution failed at 02:22:18.468Z with the public error:
+
+> canonical credential outcome is unknown; Owner reauth is required
+
+The exact execution settled `failed` with `exact_terminal_then_idle`. No goal was created, no native continuation was admitted and no Broker tool was called. Final A remains draft/v1/zero submissions; B remains testing/v13 with only its 12 bootstrap submissions. Consequently `ACC-NGC-006` and the complete autonomous governance acceptance remain **NOT_PROVEN**. The run classification is **FAIL_PROVIDER_AUTH_BEFORE_MODEL_PROGRESS**, not successful unattended closure.
+
+Non-secret filesystem metadata shows the refresh intent was created during this trial, while the canonical credential file generation was not replaced and no lock remained. The refresh wrapper hides the underlying provider exception; the specific refresh failure cause remains UNKNOWN. No credential contents were read/copied into evidence, no pending marker was removed, and the unknown refresh was not replayed. Continuing requires the existing Owner reauthentication flow and a separately frozen fresh trial.
+
+After recording the already-failed idle execution, root stopped only the owned HR test child. Its actual exit, runtime exit and service/auth cleanup are recorded; runtime exit 0 means successful cleanup, not business success. All test databases and failed-attempt evidence remain preserved. Production installations and existing workflows were not mutated by this trial.
+
+Raw evidence: `run-freeze.json` SHA-256 `00fad768230d7bc28cbb07ca9cc10e2040287c643f07c6510f83c2518e302817`; `control/native-public.jsonl` records the error and exact terminal events; `failed-trial-stop.json`, `runtime-execution.json`, `final-db-facts.json`, and `infra-final-cleanup.json` preserve the outcome and actual cleanup. The current next action is account Owner reauthentication followed by a fresh one-trigger trial; registration and source PASS do not close this task.
