@@ -145,7 +145,11 @@ test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', 
       resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
       deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:h1' }),
       getTurnReconciliation: () => ({ state: 'settled' }),
-      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1, is_terminal: false }, current_node_visit_id: VISIT } } }),
+      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: {
+        instance: { workflow_instance_id: INSTANCE, workflow_state_version: 1, is_terminal: false },
+        current_node_visit_id: VISIT,
+        current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+      } } }),
       escalateAttemptLimit: async (payload) => {
         escalations.push(payload)
         return { ok: true, escalated: true, assistanceCaseId: 'case-1' }
@@ -206,7 +210,11 @@ test('Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: o
       resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
       deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: `turn:h${clock()}` }),
       getTurnReconciliation: () => ({ state: 'settled' }),
-      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1, is_terminal: false }, current_node_visit_id: VISIT } } }),
+      readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: {
+        instance: { workflow_instance_id: INSTANCE, workflow_state_version: 1, is_terminal: false },
+        current_node_visit_id: VISIT,
+        current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+      } } }),
       escalateAttemptLimit: async (payload) => {
         escalations.push(payload)
         return { ok: true, escalated: true }

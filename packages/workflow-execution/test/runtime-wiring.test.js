@@ -24,7 +24,11 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
   const handle = 'turn:runtime:a1:g1:s1'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { current_node_visit_id: VISIT } } }),
+    execute: async () => ({ ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
   }
   const principalAccess = {
     handlers: {
@@ -112,7 +116,9 @@ function executionContext() {
       assert.equal(request.capabilityId, 'workflow_instance_detail')
       assert.equal(caller.agentId, AGENT)
       return { ok: true, result: { visibility: 'full', detail: {
-        current_node_visit_id: VISIT, instance: { is_terminal: false, workflow_state_version: 7 },
+        current_node_visit_id: VISIT,
+        current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+        instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
       } } }
     } },
     agentPrincipalResolutionAccess: { handlers: { agent_resolve_principal: {
@@ -341,7 +347,11 @@ test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over t
   let turnState = 'pending'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { instance: { workflow_state_version: 7 }, current_node_visit_id: VISIT } } }),
+    execute: async () => ({ ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
   }
   const principalAccess = {
     handlers: { agent_resolve_principal: { resolve: async () => ({ ok: true, result: { principalId: OWNER, agentId: AGENT } }) } },

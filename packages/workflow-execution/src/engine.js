@@ -10,7 +10,7 @@ import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
 import { STALE_NO_PROGRESS_JUDGMENT, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
-
+import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -38,6 +38,7 @@ export function createWorkflowExecutionEngine({
   getTurnReconciliation,
   resolveCallerCorrelation,
   readInstanceDetail,
+  readOwnerAssistanceResumeEvidence,
   escalateAttemptLimit: escalateAttemptLimitDep,
   buildInstruction = buildExecutionInstruction,
   log = {},
@@ -160,8 +161,11 @@ export function createWorkflowExecutionEngine({
           reason: `engine_error:${error?.code ?? error?.name ?? 'Error'}:${String(error?.message ?? error).slice(0, 160)}`,
         }
       }
-    }, hasQuiescentTurn)
+    }, hasQuiescentTurn, ownerResumeOps.prepareAttemptPlan, (attempt) => ownerResumeOps.canOwnerResume(attempt, ownerResumeOps.queryTurnReconciliation))
     if (!attemptResult.created) {
+      if (attemptResult.cause === 'pre_plan_unavailable' || attemptResult.cause === 'owner_resume_proof_unavailable') {
+        return { action: 'pre_plan_unavailable', nodeVisitId: rawIntent.nodeVisitId, ...(attemptResult.attempt?.attemptId === undefined ? {} : { attemptId: attemptResult.attempt.attemptId }) }
+      }
       if (attemptResult.cause === 'deferred_quiescence') {
         log.warn?.(`workflow-execution: re-entry deferred for ${attemptResult.attempt.nodeVisitId} — execution quiescence unproven (fence stands; C-013); rechecked next sweep`)
         return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
@@ -186,34 +190,20 @@ export function createWorkflowExecutionEngine({
     return { action: 'admitted', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, agentId: attempt.delivered.agentId, sessionId: attempt.delivered.sessionId }
   }
 
-  /** Full reconciliation evidence for a delivered attempt (handle first, then
-   *  the exact requestId correlation as the restart-recovery fallback). */
-  function queryTurnReconciliation(attempt) {
-    const delivered = attempt.delivered
-    if (delivered === undefined) return undefined
-    let result
-    if (typeof delivered.reconciliationHandle === 'string') {
-      try { result = getTurnReconciliation(delivered.reconciliationHandle) } catch { result = undefined }
-    }
-    if ((result === undefined || ['evicted', 'restart_lost', 'never_existed'].includes(result?.state))
-      && typeof resolveCallerCorrelation === 'function') {
-      try {
-        const correlated = resolveCallerCorrelation({ requestId: delivered.requestId })
-        if (correlated?.state !== undefined && correlated.state !== 'never_existed') result = correlated
-      } catch { /* keep the primary answer */ }
-    }
-    return result
+  function queryTurnState(attempt) {
+    return ownerResumeOps.queryTurnReconciliation(attempt)?.state
   }
 
-  function queryTurnState(attempt) {
-    return queryTurnReconciliation(attempt)?.state
-  }
+  const ownerResumeOps = createOwnerAssistanceResumeOperations({
+    fetchDuePage, resolvePrincipalToAgent, readInstanceDetail, readOwnerAssistanceResumeEvidence,
+    resolveCallerCorrelation, getTurnReconciliation, deliverRun, buildInstruction, provenanceFor, duePageLimit: DUE_PAGE_LIMIT,
+  })
 
   // Called under the ledger admission lock, before any generation mint.
   // Settlement may precede registry/fence cleanup. Retain legacy state-only
   // proof and Router's nullable defaults; explicit unknown evidence defers.
   function hasQuiescentTurn(attempt) {
-    const result = queryTurnReconciliation(attempt)
+    const result = ownerResumeOps.queryTurnReconciliation(attempt)
     if (result === null || typeof result !== 'object' || Array.isArray(result)
       || !['settled', 'evicted', 'restart_lost', 'never_existed'].includes(result.state)) return false
     const snapshot = result.snapshot
@@ -256,6 +246,16 @@ export function createWorkflowExecutionEngine({
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
+    for (const attempt of await ledger.listActiveFresh()) {
+      if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
+      try {
+        await ledger.continuePlannedOwnerResume(attempt.nodeVisitId,
+          (fresh) => ownerResumeOps.verifyPlannedOwnerResume(fresh),
+          (fresh, { recordDeliveryStarted }) => ownerResumeOps.continuePlannedOwnerResume(fresh, recordDeliveryStarted))
+      } catch (error) {
+        log.error?.(`workflow-execution: planned Owner-resume recovery failed for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+      }
+    }
     // Cross-process failover must not reconcile a cached projection. Refresh
     // under the ledger's existing OwnerLock before enumerating this pass.
     for (const attempt of await ledger.listActiveFresh()) {
@@ -269,7 +269,7 @@ export function createWorkflowExecutionEngine({
         const verdict = judgeAttempt(attempt, { turnState })
         if (verdict.state === 'ACTIVE') {
           // A live-looking stale run requires positive business evidence; never settle on age alone.
-          if (attempt.phase === 'run_delivered'
+          if (attempt.retryReason !== 'owner_assistance_resolved' && attempt.phase === 'run_delivered'
             && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
             const stale = await judgeStale(attempt)
             if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {

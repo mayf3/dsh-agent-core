@@ -158,6 +158,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   }
   const gateway = ctx.get('brokerGateway')
   const principalAccess = ctx.get('agentPrincipalResolutionAccess')
+  const assistanceResumeEvidenceAccess = ctx.get('workflowAssistanceResumeEvidenceAccess')
   // Runtime-owned Workflow execution context: the exact Router turn is bound
   // to the trusted workflow_execution provenance at delivery time. Fixed
   // Operations and Progress Checkpoints both resolve this mapping; model args
@@ -289,10 +290,14 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     readInstanceDetail: async ({ agentId, workflowInstanceId }) => {
       const res = await gateway.execute(
         { capabilityId: 'workflow_instance_detail', operation: 'read', args: { workflowInstanceId } },
-        { agentId },
+        { agentId: agentId ?? pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'instance_detail_failed', detail: res.error?.detail }
       return { ok: true, body: res.result }
+    },
+    readOwnerAssistanceResumeEvidence: async (args) => {
+      if (!enabled || typeof assistanceResumeEvidenceAccess !== 'function') return { ok: false, code: 'poller_unconfigured' }
+      return assistanceResumeEvidenceAccess({ callerAgentId: pollerAgentId, ...args })
     },
     // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation seam —
     // svc-workflow's system execution-escalation ingress, called as the
