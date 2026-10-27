@@ -32,6 +32,7 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { createNativeGoalAdmission } from './native-goal-admission.js'
 
 import z from '@deepseek-ai/schemastery'
 
@@ -48,8 +49,8 @@ export { SESSION_WORKSPACE_MISMATCH }
 /** The agent factory is the only hard dependency; everything else is optional. */
 export const inject = ['agents']
 
-/** Server config: none today (transport hooks would mirror the SDK server). */
-export const Config = z.object({})
+/** Required paired-runtime native continuation admission; optional for legacy consumers. */
+export const Config = z.object({ nativeGoalContinuation: z.boolean().default(false) })
 
 /** Wire protocol method → handler. */
 const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.response'])
@@ -58,7 +59,7 @@ const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.respon
  * Serve the demo protocol over process stdio for the process lifetime.
  * @param ctx - plugin context carrying the agent factory and optional services.
  */
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
   const pendingRpc = new Map() // requestId -> { resolve, reject }
   // Parent mints one opaque execution handle per prompt. AsyncLocalStorage
   // preserves its origin across delayed async work, so an RPC born in turn A
@@ -77,13 +78,22 @@ export function apply(ctx) {
    * server neither knows nor validates the method names.
    */
   const agentRpc = {
-    request(method, params) {
+    request(method, params, options = {}) {
       if (typeof method !== 'string' || method === '') {
         return Promise.reject(new TypeError('agentRpc.request: method must be a non-empty string'))
       }
       return new Promise((resolveRequest, rejectRequest) => {
         const requestId = `rpc-${++rpcSeq}`
-        pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest })
+        const signal = options.signal
+        const abort = () => {
+          pendingRpc.delete(requestId)
+          if (method === 'agent-core/nativeGoalContinuation') notify('rpc.cancel', { requestId })
+          rejectRequest(Object.assign(new Error('parent RPC admission cancelled'), { code: 'NATIVE_GOAL_ADMISSION_CANCELLED' }))
+        }
+        if (signal?.aborted) { abort(); return }
+        const cleanup = () => signal?.removeEventListener('abort', abort)
+        signal?.addEventListener('abort', abort, { once: true })
+        pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest, cleanup })
         notify('rpc.request', {
           requestId,
           method,
@@ -115,6 +125,12 @@ export function apply(ctx) {
     },
   })
   const { handles, pendingCreations, prompt } = seam
+  const nativeGoal = createNativeGoalAdmission({
+    request: (...args) => agentRpc.request(...args),
+    getAgent: sessionId => handles.get(sessionId)?.agent,
+    audit: evidence => process.stderr.write(`[demo-server] ${JSON.stringify(evidence)}\n`),
+  })
+  if (config.nativeGoalContinuation) ctx.provide('goalRoundEnqueue', nativeGoal)
 
   // Mirror the SDK server's event fan-out: every durable fact streams as
   // session.event, every whole-agent lifecycle transition as session.status.
@@ -128,6 +144,7 @@ export function apply(ctx) {
 
   /** Dispose every owned agent and flush sessions, then exit 0. */
   async function shutdown() {
+    nativeGoal.dispose()
     const live = [...handles.values()]
     handles.clear()
     pendingCreations.clear()
@@ -187,11 +204,15 @@ export function apply(ctx) {
         provider = params?.provider ?? provider
         model = params?.model ?? model
         maxTokens = params?.maxTokens
+        if (config.nativeGoalContinuation) await ctx.get('loader')?.await()
+        const nativeGoalContinuation = config.nativeGoalContinuation
+          ? nativeGoal.activate({ parentVersion: params?.nativeGoalContinuation?.version, driver: ctx.get('goalRoundDriver') }) : null
         const registeredProviders = ctx.get('llm')?.listProviders().map((entry) => entry.id) ?? []
         result = {
           serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
           route: { provider, model },
           registeredProviders,
+          nativeGoalContinuation,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
         }
@@ -203,13 +224,17 @@ export function apply(ctx) {
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource),
+          () => params?.nativeGoalContinuation === undefined
+            ? prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource)
+            : nativeGoal.commit({ sessionId: params.sessionId, contentBlocks: params.contentBlocks,
+              cwd: params.cwd, turnExecutionId: params.turnExecutionId, reservation: params.nativeGoalContinuation }),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
         const waiter = pendingRpc.get(params?.requestId)
         if (waiter !== undefined) {
           pendingRpc.delete(params.requestId)
+          waiter.cleanup()
           if (params?.ok === true) waiter.resolve({ ok: true, result: params.result })
           else waiter.reject(new Error(params?.error ?? 'parent RPC failed'))
         }

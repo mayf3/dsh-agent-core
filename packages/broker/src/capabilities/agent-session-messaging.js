@@ -60,6 +60,7 @@ const errorTable = [
 /** Wire capability id (also the provider handlers key — see index.js F9). */
 export const AGENT_SESSION_SEND_CAPABILITY_ID = 'agent_session_send'
 export const AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID = 'agent_session_turn_inspect'
+export const AGENT_SESSION_DISPATCH_STATUS_CAPABILITY_ID = 'agent_session_dispatch_status'
 
 export const agentSessionMessagingManifest = {
   id: AGENT_SESSION_SEND_CAPABILITY_ID,
@@ -125,8 +126,36 @@ export const agentSessionTurnInspectManifest = {
   }],
 }
 
+/** ASM V2 r5: independent small projection; the full inspector is unchanged. */
+export const agentSessionDispatchStatusManifest = {
+  id: AGENT_SESSION_DISPATCH_STATUS_CAPABILITY_ID,
+  toolName: AGENT_SESSION_DISPATCH_STATUS_CAPABILITY_ID,
+  selector: 'operation',
+  name: 'Owned Dispatch Status',
+  description: 'Read at most 4096 UTF-8 bytes of native state and reply reference for one exact caller-owned dispatch. No reply body or tool details. Completed describes the native turn, never business acceptance or permission to resend. This does not send, wake, retry or browse.',
+  local: { resource: 'agent-session-messaging' },
+  requiredScopes: ['agent.session.inspect_own_dispatch'],
+  errors: inspectErrors,
+  operations: [{
+    name: 'status',
+    description: 'Read one exact owned trace; argument compact JSON is at most 2048 UTF-8 bytes.',
+    arguments: {
+      additionalProperties: false,
+      properties: {
+        targetAgentId: agentId('Exact target Agent id from a proven send receipt.'),
+        sessionId: { type: 'string', minLength: 1, description: 'Exact opaque target-scoped Session id; never substituted.' },
+        messageId: { type: 'string', minLength: 1, description: 'Exact opaque native message id from the receipt.' },
+      },
+      required: ['targetAgentId', 'sessionId', 'messageId'],
+    },
+    result: { type: 'json' },
+    errors: inspectErrors.map(entry => entry.code),
+  }],
+}
+
 export const manifests = [
   agentSessionMessagingManifest,
   agentSessionReconcileManifest,
   agentSessionTurnInspectManifest,
+  agentSessionDispatchStatusManifest,
 ]

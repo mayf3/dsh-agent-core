@@ -150,7 +150,20 @@ export const turnExecutionMethods = {
           `agent ${this.agentId}: queued prompt caps exceeded (${this.turnQueueEntries.length} entries / ${this.queuedPromptBytes}B)`))
         return
       }
-      this.turnQueueEntries.push({ mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject })
+      const entry = { mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject }
+      if (opts?.nativeGoalContinuation && opts.admissionSignal) {
+        const abort = () => {
+          const index = this.turnQueueEntries.indexOf(entry)
+          if (index < 0) return
+          this.turnQueueEntries.splice(index, 1)
+          this.queuedPromptBytes -= entry.promptBytes
+          entry.detachAdmissionAbort?.()
+          reject(envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission cancelled before write'))
+        }
+        opts.admissionSignal.addEventListener('abort', abort, { once: true })
+        entry.detachAdmissionAbort = () => opts.admissionSignal.removeEventListener('abort', abort)
+      }
+      this.turnQueueEntries.push(entry)
       this.queuedPromptBytes += promptBytes
       this.drainTurnQueue()
     })
@@ -158,6 +171,10 @@ export const turnExecutionMethods = {
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
+    if (opts?.nativeGoalContinuation && (opts.admissionSignal?.aborted
+        || (opts.admissionDeadlineMono !== undefined && monotonicNowMs() >= opts.admissionDeadlineMono))) {
+      return envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission expired before write')
+    }
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) return lineageError
     if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
@@ -189,6 +206,7 @@ export const turnExecutionMethods = {
       return
     }
     const entry = this.turnQueueEntries.shift()
+    entry.detachAdmissionAbort?.()
     this.queuedPromptBytes -= entry.promptBytes
     this.turnInFlight = true
     void this.runPromptExecution(entry).catch((cause) => {
@@ -202,6 +220,7 @@ export const turnExecutionMethods = {
 
   rejectQueuedTurns(code, detail, fenceHandle) {
     for (const entry of this.turnQueueEntries.splice(0)) {
+      entry.detachAdmissionAbort?.()
       this.queuedPromptBytes -= entry.promptBytes
       entry.reject(envelopeCarrier('not_admitted', null, code,
         `agent ${this.agentId}: queued turn rejected (${detail})`, { fencedBy: fenceHandle ?? null }))
@@ -243,6 +262,9 @@ export const turnExecutionMethods = {
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
+    // Native's original message identity is known before write, but is not an acceptance receipt.
+    execution.nativeGoalMessageId = opts?.nativeGoalContinuation?.messageId ?? null
+    if (execution.nativeGoalMessageId !== null) execution.receiptMessageId = execution.nativeGoalMessageId
     execution.promptRequestId = `req-${this.processGeneration}-${this.seq + 1}`
     try {
       this.store.markAdmitted(handle, {
@@ -328,7 +350,8 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) throw lineageError
-    const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
+    const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono,
+      opts?.admissionDeadlineMono ?? Infinity)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'
     this.store.markPromptWriteAttempted(execution.handle)
@@ -347,10 +370,14 @@ export const turnExecutionMethods = {
       // validated upstream (deliver) and consumed by the session seam.
       ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
       ...(opts?.conversationSource === undefined ? {} : {conversationSource:opts.conversationSource}),
+      ...(opts?.nativeGoalContinuation === undefined ? {} : { nativeGoalContinuation: opts.nativeGoalContinuation }),
     }, undefined, {
       deadlineMono: receiptDeadlineMono,
       execution,
     })
+    if (opts?.nativeGoalContinuation && receipt?.messageId !== opts.nativeGoalContinuation.messageId) {
+      throw envelopeCarrier('outcome_unknown', execution.handle, 'NATIVE_GOAL_RECEIPT_MISMATCH', 'native receipt did not prove the reserved message')
+    }
     execution.receiptMessageId = receipt?.messageId ?? null
     execution.promptReceipt = receipt?.messageId !== undefined ? 'accepted' : 'unknown'
     this.store.markPromptReceipt(execution.handle, { messageId: execution.receiptMessageId })

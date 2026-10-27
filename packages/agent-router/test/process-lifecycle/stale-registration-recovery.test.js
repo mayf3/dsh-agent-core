@@ -175,7 +175,8 @@ async function assertRejectsReaping(promise, label = 'admission') {
 async function realOsChild(t) {
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1e6)'], { stdio: 'ignore' })
   const realExit = new Promise((resolve) => child.once('exit', resolve))
-  t.after(() => { try { child.kill('SIGKILL') } catch { /* already gone */ } })
+  const ownedKill = child.kill.bind(child) // Tests may replace child.kill to model EPERM.
+  t.after(() => { try { ownedKill('SIGKILL') } catch { /* already gone */ } })
   await tick()
   assert.ok(child.pid > 0, 'the real child has an OS pid')
   return { child, realExit }

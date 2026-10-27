@@ -184,6 +184,7 @@ export class AgentProcess {
       try {
         const initialized = await this.request('initialize', {
           cwd: this.workspace,
+          nativeGoalContinuation: { version: 1 },
           provider: this.provider,
           model: this.model,
           maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),
