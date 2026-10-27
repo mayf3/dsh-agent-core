@@ -258,3 +258,111 @@ test('late output remains readable through the reconciliation handle after the g
   assert.equal(output.text, 'RESPAWN-READABLE')
   assert.equal(fx.store.getTurnReconciliation(observed.reconciliationHandle).snapshot.lateOutcome, 'late_completed')
 })
+
+// Real a8 input: turn/end aborted(disposed) after the caller became unknown.
+for (const reason of [
+  { kind: 'aborted', reason: { kind: 'disposed' } },
+  { kind: 'blocked' }, { kind: 'max-tokens' }, { kind: 'interrupted' },
+  { kind: 'future-reason' }, null,
+]) {
+  test(`NON_OUTCOME_LATE ${JSON.stringify(reason)}: termination proof never becomes late success`, async (t) => {
+    const fx = makeFx({ deadlines: { turnTimeoutMs: 1000 } })
+    t.after(() => fx.childExit())
+    await fx.readyNow()
+    const turn = fx.proc.turn('main', 'late-abort', {}, 30)
+    await fx.tick()
+    fx.respondTo('session/prompt', { messageId: 'm-late-abort' })
+    const error = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+    const handle = error.reconciliationHandle
+    fx.emitEvent('main', { type: 'turn/start', data: { turn: 7 } })
+    fx.emitEvent('main', { type: 'user/message', data: { id: 'm-late-abort' } })
+    fx.emitEvent('main', { type: 'assistant/message', data: { message: { content: [{ type: 'text', text: 'PARTIAL' }] } } })
+    fx.emitEvent('main', { type: 'turn/end', data: { turn: 7, reason } })
+    assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending')
+    assert.equal(fx.fence(), handle)
+    fx.emitStatus('main', 'idle')
+    const snapshot = fx.store.getTurnReconciliation(handle).snapshot
+    assert.equal(snapshot.lateOutcome, 'terminated_without_outcome')
+    assert.equal(snapshot.outcomeEvidence, null)
+    assert.equal(snapshot.terminationEvidence, 'exact_terminal_then_idle')
+    assert.equal(fx.store.readFinalAssistantOutput(handle).text, 'PARTIAL', 'partial output retained without success claim')
+    fx.emitEvent('main', { type: 'turn/end', data: { turn: 7, reason: { kind: 'completed' } } })
+    assert.deepEqual(fx.store.getTurnReconciliation(handle).snapshot, snapshot, 'settle once')
+    assert.equal(fx.fence(), false)
+    assert.equal(fx.writes.filter(w => w.method === 'session/prompt').length, 1)
+    assert.equal(fx.counts().replayAdmissions, 0)
+  })
+}
+
+for (const [reason, lateOutcome, outcomeEvidence] of [
+  [{ kind: 'aborted', reason: { kind: 'disposed' } }, 'terminated_without_outcome', null],
+  [{ kind: 'blocked' }, 'terminated_without_outcome', null],
+  [{ kind: 'max-tokens' }, 'terminated_without_outcome', null],
+  [{ kind: 'interrupted' }, 'terminated_without_outcome', null],
+  [{ kind: 'future-reason' }, 'terminated_without_outcome', null],
+  [undefined, 'terminated_without_outcome', null],
+  [null, 'terminated_without_outcome', null],
+  ['completed', 'terminated_without_outcome', null],
+  [{ kind: 'completed' }, 'late_completed', 'exact_turn_end_success'],
+  [{ kind: 'error', error: { code: 'QUOTA', message: 'insufficient_quota' } }, 'late_failed', 'exact_turn_end_failure'],
+]) {
+  test(`EXIT_REASON ${JSON.stringify(reason)}: frozen parser evidence uses exact outcome precedence`, async () => {
+    const fx = makeFx()
+    await fx.readyNow()
+    const turn = fx.proc.turn('main', 'same-stack-reason', {})
+    await fx.tick()
+    const prompt = fx.writes.find(w => w.method === 'session/prompt')
+    const frames = [
+      { id: prompt.id, result: { messageId: 'm-exit-reason' } },
+      ...[
+        { type: 'turn/start', data: { turn: 7 } },
+        { type: 'user/message', data: { id: 'm-exit-reason' } },
+        { type: 'turn/end', data: { turn: 7, reason } },
+      ].map(event => ({ method: 'session.event', params: { sessionId: 'main', event } })),
+    ]
+    fx.child.stdout.handler(frames.map(frame => `${JSON.stringify(frame)}\n`).join(''))
+    fx.childExit(0, null) // no idle and no prompt-receipt Promise continuation
+    const error = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+    await fx.proc.exitPromise
+    const record = fx.store.getTurnReconciliation(error.reconciliationHandle)
+    assert.equal(record.state, 'settled')
+    assert.equal(record.snapshot.initialOutcome, 'outcome_unknown')
+    assert.equal(record.snapshot.lateOutcome, lateOutcome)
+    assert.equal(record.snapshot.outcomeEvidence, outcomeEvidence)
+    assert.equal(record.snapshot.terminationEvidence, 'child_real_exit')
+    assert.deepEqual(slotSeq(fx), ['casReap:g1', 'casEmpty:g1'])
+    assert.equal(fx.fence(), false)
+  })
+}
+
+test('NON_OUTCOME_CORRELATION: unrelated aborted events and stale idle cannot release the original fence', async (t) => {
+  const fx = makeFx({ deadlines: { turnTimeoutMs: 1000 } })
+  t.after(() => fx.childExit())
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'correlate-abort', {}, 30)
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-exact' })
+  const error = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  const handle = error.reconciliationHandle
+  const reason = { kind: 'aborted', reason: { kind: 'disposed' } }
+  fx.emitStatus('main', 'idle') // stale before matched start
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 4 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'wrong-receipt' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 4, reason } })
+  fx.emitEvent('other', { type: 'turn/end', data: { turn: 4, reason } })
+  fx.emitStatus('other', 'idle')
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-exact' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 99, reason } })
+  await fx.tick()
+  assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending')
+  assert.equal(fx.fence(), handle)
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 4, reason } })
+  assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending', 'pre-start idle remains stale')
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 5 } })
+  fx.emitStatus('main', 'idle')
+  await fx.tick()
+  assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending', 'later start invalidates idle proof')
+  assert.equal(fx.fence(), handle)
+  fx.childExit()
+  assert.equal(fx.store.getTurnReconciliation(handle).snapshot.lateOutcome, 'terminated_without_outcome')
+})
