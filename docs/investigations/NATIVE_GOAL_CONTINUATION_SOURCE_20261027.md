@@ -15,12 +15,12 @@ the queued entry. Written/uncertain work retains the existing UNKNOWN machinery.
 
 The original native message ID seeds the exact matcher before write without
 claiming an accepted receipt. Native events or a matching receipt prove acceptance.
-A wrong-ID receipt or uncertain commit response remains UNKNOWN. A bounded
-process-local seen-reservation set survives reconciliation-record eviction; it
-never forgets an old reservation to admit another one. At the existing late-receipt
-capacity (256 attempts per process generation), further automatic admission fails
-closed with `NATIVE_GOAL_RESERVATION_CAPACITY`; this is visible disarming, not an
-automatic restart or new goal policy. Queue/RPC caps still apply independently.
+A wrong-ID receipt or uncertain commit response remains UNKNOWN. A monotonic
+child transport sequence and process-generation-bound high-water mark reject old
+reservations even after reconciliation records are evicted. Stdio ordering owns
+this transport correlation; no goal ledger or cumulative attempt limit is added.
+Sequence overflow fails closed, and cleanup never resets the parent watermark.
+Queue/RPC caps still apply independently.
 
 Validation originals are under the task artifact directory
 `workflow-unattended-mechanisms-20261027/native-implementation`:
