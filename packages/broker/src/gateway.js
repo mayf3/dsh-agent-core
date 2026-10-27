@@ -31,6 +31,7 @@
 import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
 import { buildTargetMap } from './targets.js'
 import { invoke, validateInvocation } from './mapping.js'
+import { sanitizeDispatchStatusError } from './agent-session-status-result.js'
 import { loadCredentialFor } from './credential-store.js'
 import { validateSchedulerTrustedContext } from './scheduler-validation.js'
 import { prepareWorkflowDraft } from './capabilities/workflow-linear-authoring.js'
@@ -222,7 +223,7 @@ export function createBrokerGateway({
    * @returns {Promise<{ok:boolean, result?:unknown,
    *   error?:{code:string, status?:number, detail?:string}}>}
    */
-  async function execute(call, context = {}) {
+  async function executeCore(call, context = {}) {
     const agentId = context?.agentId
     // ── reserved read-only discovery op (SCHEDULER_CONTROL_PLANE_RELIABILITY_V1
     //    §5.3.1): answers BEFORE any credential gate so a not-ready runtime can
@@ -390,6 +391,16 @@ export function createBrokerGateway({
       // the HTTP pipeline (identity travels in the credential, not here).
       resolvePrincipal: () => undefined,
     })
+  }
+
+  async function execute(call, context = {}) {
+    if (call?.capabilityId !== 'agent_session_dispatch_status') return executeCore(call, context)
+    try {
+      const result = await executeCore(call, context)
+      return result?.ok === false ? { ok: false, error: sanitizeDispatchStatusError(result.error) } : result
+    } catch {
+      return { ok: false, error: sanitizeDispatchStatusError({ code: 'internal_error' }) }
+    }
   }
 
   return { execute }

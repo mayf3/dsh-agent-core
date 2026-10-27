@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { DEFAULT_MANIFESTS } from '../src/index.js'
-import { validateManifest } from '../src/schema.js'
-import { createRelayHandlers } from '../src/relay.js'
-import { invoke } from '../src/mapping.js'
-import * as manifests from '../src/capabilities/agent-session-messaging.js'
+import { DEFAULT_MANIFESTS } from '../../src/index.js'
+import { validateManifest } from '../../src/schema.js'
+import { createRelayHandlers } from '../../src/relay.js'
+import { invoke } from '../../src/mapping.js'
+import { createBrokerGateway } from '../../src/gateway.js'
+import * as manifests from '../../src/capabilities/agent-session-messaging.js'
 
 const TRACE = { targetAgentId: 'agt_target-agent', sessionId: 'main', messageId: 'owned' }
 const DTO = { status: 'found', ...TRACE, resolvedTurnId: 7, turnState: 'completed', startedAt: 10, endedAt: 20,
@@ -67,4 +68,22 @@ test('ACC-012: declared error codes survive relay but raw error metadata never d
     assert.equal(JSON.stringify(out).includes('SECRET'), false)
     assert.equal(JSON.stringify(out).includes('untrusted'), false)
   }
+})
+
+test('ACC-008/012: model-side unknown keys are already closed and never echo supplied text', async () => {
+  let calls = 0
+  const out = await call(async () => { calls += 1 }, { ...TRACE, ['/private/' + 'SECRET'.repeat(1000)]: true })
+  assert.deepEqual(out, { ok: false, error: { code: 'invalid_arguments' } })
+  assert.equal(calls, 0)
+})
+
+test('ACC-012: direct trusted gateway unsupported operation error is bounded and body-free', async () => {
+  const gateway = createBrokerGateway({ manifests: [manifest()], targets: [], localHandlers: {
+    agent_session_dispatch_status: { status() { throw new Error('must not run') } },
+  } })
+  const out = await gateway.execute({ capabilityId: 'agent_session_dispatch_status',
+    operation: '/private/' + 'SECRET'.repeat(1000), args: TRACE }, { agentId: 'agt_caller' })
+  assert.equal(out.error.code, 'unsupported_operation')
+  assert.ok(Buffer.byteLength(JSON.stringify(out.error)) <= 4096)
+  assert.equal(JSON.stringify(out).includes('SECRET'), false)
 })
