@@ -1,15 +1,24 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_CURRENT_INPUT_BROKER_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
+accepted_by: mayf3-delegated-codex-maintainer
+accepted_at: 2026-10-27
+accepted_reviewed_head: 92bf0ff2958052c39def7e9b346286de4707ae89
+acceptance_record: https://github.com/mayf3/dsh-agent-core/pull/558
+independent_review_result: PASS
 scope:
   - read-only current Workflow task input capability
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
-external_authorities: []
+external_authorities:
+  - repository: mayf3/svc-workflow
+    authority_id: SVC_WORKFLOW_CURRENT_TASK_INPUT_V1
+    revision: 52fcb13e63ac7c6696f2c3353ab5a09302cf2014
+    relation: interoperates_with
 supersedes: []
 superseded_by: null
 owners:
@@ -30,7 +39,7 @@ One read-only Broker capability and its default registration, tool guidance, tra
 
 Architecture retains external Workflow ownership and the generic manifest-to-tool bridge. `AGENT_CORE_WORKFLOW_BROKER_ERROR_PRESERVATION_V1` describes the existing declared-error transport family; this Spec does not change its IDs or authorize a history cursor under its excluded scope.
 
-The external service contract is `SVC_WORKFLOW_CURRENT_TASK_INPUT_V1`, owned by `mayf3/svc-workflow`. Its exact accepted revision must be recorded in `external_authorities` before this proposal is accepted. Service identity, snapshot, visibility, selection, digest, completeness, stale and body-change behavior remain service-owned. This Spec only binds the consumer protocol; it cannot authorize changes in svc-workflow.
+The external service contract is `SVC_WORKFLOW_CURRENT_TASK_INPUT_V1`, owned by `mayf3/svc-workflow`. Its accepted revision is recorded in `external_authorities` following svc-workflow PR #89. Service identity, snapshot, visibility, selection, digest, completeness, stale and body-change behavior remain service-owned. This Spec only binds the consumer protocol; it cannot authorize changes in svc-workflow.
 
 ## 4. Current State
 
@@ -93,4 +102,4 @@ Additive source capability. Existing endpoints and write semantics remain unchan
 
 ## 13. Open questions
 
-The external accepted-revision pin and exact external error list are pending proposal finalization, not delegated to implementation. No other owner decisions are open. This proposal MUST NOT be accepted until those protocol dependencies are frozen and independent semantic review has passed.
+No open owner decisions or normative placeholders remain. The service contract was accepted and merged in svc-workflow PR #89; its exact revision is pinned above. Independent review and delegated acceptance are recorded in PR #558. Implementation requires this accepted authority to be merged into main.
