@@ -13,6 +13,12 @@ import { json, mockTargets, startMockServer, startTokenServer, wire } from '../.
 // ─── Fixture 2: Workflow instance detail (GET, path param, workflow.read) ───
 
 test('workflow_instance_detail: GET with path param mapping + workflow.read scope', async () => {
+  const detailManifest = workflowManifests.find((m) => m.id === 'workflow_instance_detail')
+  assert.match(detailManifest.description, /current_visit\.assignee_principal_id/)
+  assert.match(detailManifest.description, /assignee_canonical_agent_id/)
+  assert.match(detailManifest.description, /optional successor-lineage metadata/)
+  assert.match(detailManifest.description, /null canonical id alone does not mean the caller is not the assignee/)
+  assert.match(detailManifest.description, /executable_for_actor.*advisory only/)
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'GET' && entry.pathname === '/internal/v1/workflow-instances/9c7f3b0a-0000-4000-8000-000000000001') {
@@ -26,7 +32,7 @@ test('workflow_instance_detail: GET with path param mapping + workflow.read scop
     targets: mockTargets({ 'svc-workflow': workflow.origin }),
     authServiceOrigin: tokenServer.origin,
   })
-  const manifest = workflowManifests.find((m) => m.id === 'workflow_instance_detail')
+  const manifest = detailManifest
   const { definition } = wire(manifest, transport)
 
   const res = await definition.execute({
