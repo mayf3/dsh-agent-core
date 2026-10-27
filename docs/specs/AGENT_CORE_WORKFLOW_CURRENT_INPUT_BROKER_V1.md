@@ -10,21 +10,21 @@ accepted_at: 2026-10-27
 accepted_reviewed_head: 92bf0ff2958052c39def7e9b346286de4707ae89
 acceptance_record: https://github.com/mayf3/dsh-agent-core/pull/558
 independent_review_result: PASS
-proposed_amendment:
+amendment:
   id: CIB-COMPLETE-BODY-20261027
-  status: proposed
+  status: accepted
   route: AMEND
   base: 4716a9142dbd84fe6aafe0e0dde4fa705481d980
   section: "14"
   contracts: CTR-CIB-006..011
   acceptance: ACC-CIB-004..009
-  implementation_allowed: false
+  implementation_allowed: true
   production_apply_authority: none
   note: >-
-    Additive complete-body consumer proposal under the existing current-input
-    read decision. The accepted baseline and acceptance history remain unchanged.
-    New Contracts require independent review, attributable exact-head acceptance,
-    and docs merge before implementation; the author does not self-accept.
+    Additive complete-body consumer accepted under the existing current-input
+    read decision after independent exact-head review. Baseline Contracts and
+    acceptance history remain unchanged. Section 14.4 records delegated
+    acceptance; final-head review and docs merge precede source implementation.
 scope:
   - read-only current Workflow task input capability
 governed_by:
@@ -120,9 +120,10 @@ Additive source capability. Existing endpoints and write semantics remain unchan
 No open owner decisions or normative placeholders remain. The service contract was accepted and merged in svc-workflow PR #89; its exact revision is pinned above. Independent review and delegated acceptance are recorded in PR #558. Implementation requires this accepted authority to be merged into main.
 
 
-## 14. Proposed amendment: bounded verified complete-body read
+## 14. Accepted amendment: bounded verified complete-body read
 
-**Proposal status:** `CIB-COMPLETE-BODY-20261027` is **proposed**, not accepted.
+**Amendment status:** `CIB-COMPLETE-BODY-20261027` is **accepted** by the
+delegated maintainer act in §14.4; docs merge remains required before implementation.
 The top-level accepted status and §§1–13 describe the unchanged baseline.
 This section adds a separately named read capability; it does not change the
 one transparent HTTP capability governed by DEC-CIB-001/CTR-CIB-001–005.
@@ -170,7 +171,7 @@ identities. The former independently recounts the missing continuation and
 records the frozen task. Neither is conformance Evidence for this unimplemented
 proposal; neither proves long-term model reliability.
 
-`DEC-CIB-002` (**proposed**): add a manifest-backed LOCAL handler that composes
+`DEC-CIB-002` (**accepted**): add a manifest-backed LOCAL handler that composes
 existing generic authorized HTTP **body reads** for one exact original. It
 starts at byte zero, buffers only bounded memory, validates every page, and
 returns the complete verified text or one failure. Existing service selection,
@@ -373,7 +374,7 @@ and ordinary schema; they are not a new authority ledger or an automatic truth
 oracle. This Spec does not add a mandatory read-to-ADVANCE gate, change ACB,
 force future-stage evidence on earlier nodes, or authorize production adoption.
 
-### 14.2 Acceptance for the proposed amendment
+### 14.2 Acceptance for the additive amendment
 
 All six cases bind exact Spec/candidate/service revisions, environment,
 request/result originals and actual command exits. Definitions below are not
@@ -497,3 +498,23 @@ reviewed head, lifecycle-final-head checked and merged into the authority base.
 The author cannot accept it. Acceptance, source implementation, isolated
 verification, broader business closure and production adoption are separate.
 Stop this authoring task at the clean reviewable docs commit and its checks.
+
+### 14.4 Delegated maintainer acceptance act — 2026-10-27
+
+The root maintainer records **ACCEPTED** for the exact additive Contracts and
+Acceptance definitions independently reviewed at
+`66ec1202717a221cf74d0571fc1cf0387fbbe099`. The proposed Spec SHA-256 was
+`ba1afec92fa625a2aa010d12e92d16fc67bb342e6346e5261cbf865005e299e2`.
+Independent non-author review `independent-review-66ec1202.json`
+(SHA-256 `aa8cb1abe39f02051716e16ce163c7ffd0c6ca518f76c36e8b7c4ab4488a842e`)
+returned PASS with no blocking findings.
+
+Acceptance actor: root coding maintainer under the user's explicit continuing
+delegation “接受，全权交给你定就行” and instruction to implement and validate
+unattended Workflow completion. This is the delegated maintainer's act, not a
+claim that the user separately reviewed this text or that the author self-accepted.
+The exact reviewed bounded read capability is accepted; production apply remains
+**none**. No CTR-CIB-006–011 or ACC-CIB-004–009 text changes in this lifecycle act.
+The independent final-head lifecycle delta check and docs merge receipt are
+required before source implementation. Retrieval, business evaluation, autonomous
+full acceptance, and production adoption remain separate claims.
