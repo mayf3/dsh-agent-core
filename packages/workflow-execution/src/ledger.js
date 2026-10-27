@@ -31,14 +31,18 @@
  * trying to re-run a settled/reviewed NodeVisit — visible, never absorbed.
  */
 
-import { createHash } from 'node:crypto'
 import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { OwnerLock } from '../../scheduler/src/lock.js'
 
-import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, buildStaleSupersededEvent, terminalRefusal } from './ledger-events.js'
+import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, buildStaleSupersededEvent, ownerResumePlanIsValid, terminalRefusal } from './ledger-events.js'
 import { normalizeProgressCheckpoint } from './progress.js'
+import { continuePlannedOwnerResume as continuePlannedOwnerResumeMutation, ownerResumeEligible, recordDeliveryCompletion } from './owner-assistance-resume-ledger.js'
+import { UUID_RE, AGENT_ID_RE, ATTEMPT_ID_RE, assertSameAttemptIdentity, attemptIdFor, validateIntentIds } from './attempt-identity.js'
+import { buildAttemptPlannedEvent, ledgerAttemptPlanContext, prepareLedgerAttemptPlan } from './ledger-plan.js'
+
+export { attemptIdFor } from './attempt-identity.js'
 
 export const LEDGER_EVENTS_FILE = 'attempts.jsonl'
 export const LEDGER_LOCK_FILE = 'attempts.lock'
@@ -60,37 +64,6 @@ export const DEFAULT_MAX_ATTEMPTS_PER_VISIT = 3
 
 /** The ONE escalation fact (CTR-WEC1-005): recorded at most once per visit. */
 export const ESCALATION_REQUESTED_KIND = 'escalation_requested'
-
-const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
-const ATTEMPT_ID_RE = /^wfeat-[0-9a-f]{24}$/
-
-/**
- * Deterministic attempt id for one NodeVisit generation: stable across
- * pollers, restarts and re-polls, so "already attempted" needs no clock and
- * no coordination beyond the ledger itself. Generation 1 keeps the V2
- * formula byte-identically (existing files replay unchanged); generation
- * N > 1 exists only via the CTR-SRE-003 stale re-entry path.
- */
-export function attemptIdFor(nodeVisitId, generation = 1) {
-  if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
-    throw new TypeError(`workflow-execution: attemptIdFor requires a UUID nodeVisitId (got ${JSON.stringify(nodeVisitId)})`)
-  }
-  if (!Number.isInteger(generation) || generation < 1) {
-    throw new TypeError(`workflow-execution: attemptIdFor requires a positive integer generation (got ${JSON.stringify(generation)})`)
-  }
-  const base = nodeVisitId.toLowerCase()
-  const material = generation === 1 ? base : `${base}#gen${generation}`
-  return `wfeat-${createHash('sha256').update(material).digest('hex').slice(0, 24)}`
-}
-
-function validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }) {
-  for (const [name, value] of Object.entries({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })) {
-    if (typeof value !== 'string' || !UUID_RE.test(value)) {
-      throw new TypeError(`workflow-execution: ${name} must be a UUID string (got ${JSON.stringify(value)})`)
-    }
-  }
-}
 
 /**
  * The execution ledger. All mutations go through mutate() — in-process FIFO
@@ -288,39 +261,46 @@ export class ExecutionLedger {
    * @returns {Promise<{created:true, attempt:object, completion?:object}
    *   | {created:false, attempt:object, cause:string}>}
    */
-  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete, canReenter) {
+  async beginAttemptIfAbsent({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId }, complete, canReenter, preparePlan, canOwnerResume) {
     validateIntentIds({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId })
     if (complete !== undefined && typeof complete !== 'function') {
       throw new TypeError('workflow-execution: admission completion callback must be a function when provided')
     }
+    if (preparePlan !== undefined && typeof preparePlan !== 'function') {
+      throw new TypeError('workflow-execution: preparePlan must be a function when provided')
+    }
+    if (canOwnerResume !== undefined && typeof canOwnerResume !== 'function') {
+      throw new TypeError('workflow-execution: canOwnerResume must be a function when provided')
+    }
     return this.mutate(async () => {
       const existing = this.#attempt(nodeVisitId)
+      const ownerResume = existing === undefined ? false
+        : await ownerResumeEligible(existing,
+          existing.state !== 'ACTIVE' && existing.judgment === STALE_NO_PROGRESS_JUDGMENT, canOwnerResume)
       if (existing !== undefined) {
-        if (!(existing.state !== 'ACTIVE' && existing.judgment === STALE_NO_PROGRESS_JUDGMENT)) {
+        const staleReentry = existing.state !== 'ACTIVE' && existing.judgment === STALE_NO_PROGRESS_JUDGMENT
+        if (!staleReentry && !ownerResume) {
           return { created: false, attempt: { ...existing }, cause: 'already_attempted' }
         }
         // CTR-SRE-003: reject contradictory identity before any append.
-        const sameIdentity = existing.dispatchIntentId === dispatchIntentId.toLowerCase()
-          && existing.workflowInstanceId === workflowInstanceId.toLowerCase()
-          && existing.ownerPrincipalId === ownerPrincipalId.toLowerCase()
-        if (!sameIdentity) {
-          throw new Error(`workflow-execution: refusing generation ${(existing.generation ?? 1) + 1} attempt_planned for nodeVisit ${nodeVisitId.toLowerCase()} — identity triple differs from the stale-superseded attempt (corrupt feed or ledger)`)
-        }
+        assertSameAttemptIdentity(existing, { dispatchIntentId, workflowInstanceId, ownerPrincipalId }, nodeVisitId)
         // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the policy limit is
         // enforced INSIDE the fence, so no poller, race or double trigger can
         // mint past it. Refusal is a clean non-created outcome — the engine
         // turns it into the one-time escalation (CTR-WEC1-005).
         const nextGeneration = (existing.generation ?? 1) + 1
-        if (nextGeneration > this.maxAttemptsPerVisit) {
+        if (!ownerResume && nextGeneration > this.maxAttemptsPerVisit) {
           return { created: false, attempt: { ...existing }, cause: 'attempt_limit_reached' }
         }
-        let quiescent = false
-        try {
-          const proof = typeof canReenter === 'function' ? canReenter({ ...existing }) : undefined
-          if (proof instanceof Promise) void proof.catch(() => {})
-          quiescent = proof === true
-        } catch { /* unavailable proof cannot authorize a new execution */ }
-        if (!quiescent) return { created: false, attempt: { ...existing }, cause: 'deferred_quiescence' }
+        if (!ownerResume) {
+          let quiescent = false
+          try {
+            const proof = typeof canReenter === 'function' ? canReenter({ ...existing }) : undefined
+            if (proof instanceof Promise) void proof.catch(() => {})
+            quiescent = proof === true
+          } catch { /* unavailable proof cannot authorize a new execution */ }
+          if (!quiescent) return { created: false, attempt: { ...existing }, cause: 'deferred_quiescence' }
+        }
       }
       // WORKFLOW_STALE_REENTRY_V1 CTR-SRE-003: a terminal attempt with
       // judgment 'stale_no_progress' is superseded by generation N+1 (the
@@ -328,15 +308,16 @@ export class ExecutionLedger {
       // on both live append and replay). Every other existing attempt keeps
       // the V2 fence semantics byte-for-byte.
       const generation = existing === undefined ? 1 : (existing.generation ?? 1) + 1
-      const event = {
-        kind: 'attempt_planned',
-        attemptId: attemptIdFor(nodeVisitId, generation),
-        nodeVisitId: nodeVisitId.toLowerCase(),
-        dispatchIntentId: dispatchIntentId.toLowerCase(),
-        workflowInstanceId: workflowInstanceId.toLowerCase(),
-        ownerPrincipalId: ownerPrincipalId.toLowerCase(),
-        atMs: this.clock(),
-        ...(generation === 1 ? {} : { generation }),
+      const prepared = await prepareLedgerAttemptPlan(preparePlan,
+        ledgerAttemptPlanContext({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId, existing, generation, ownerResume }))
+      if (!prepared.ok) return { created: false, attempt: existing === undefined ? undefined : { ...existing }, cause: ownerResume ? 'already_attempted' : 'pre_plan_unavailable' }
+      const plan = prepared.plan
+      const event = buildAttemptPlannedEvent({
+        attemptId: attemptIdFor(nodeVisitId, generation), nodeVisitId, dispatchIntentId,
+        workflowInstanceId, ownerPrincipalId, generation, existing, ownerResume, plan, atMs: this.clock(),
+      })
+      if (ownerResume && !ownerResumePlanIsValid(existing, event, generation, true)) {
+        return { created: false, attempt: { ...existing }, cause: 'owner_resume_proof_unavailable' }
       }
       this.#appendEvent(event)
       this.#applyEvent(event)
@@ -348,16 +329,33 @@ export class ExecutionLedger {
       const completion = await complete({ ...this.#attempt(nodeVisitId) }, {
         recordDeliveryStarted: () => { this.#recordDeliveryStarted(nodeVisitId) },
       })
-      if (completion?.kind === 'run_delivered') {
-        this.#recordRunDelivered(nodeVisitId, completion)
-      } else if (completion?.kind === 'delivery_failed') {
-        this.#recordDeliveryFailed(nodeVisitId, completion.reason)
-      } else if (completion?.kind === 'resolution_blocked') {
-        this.#recordResolutionBlocked(nodeVisitId, completion.code)
-      } else {
-        throw new TypeError('workflow-execution: admission callback must return run_delivered, delivery_failed or resolution_blocked')
-      }
+      recordDeliveryCompletion({ completion, nodeVisitId,
+        recordRunDelivered: (fields) => this.#recordRunDelivered(nodeVisitId, fields),
+        recordDeliveryFailed: (reason) => this.#recordDeliveryFailed(nodeVisitId, reason),
+        recordResolutionBlocked: (code) => this.#recordResolutionBlocked(nodeVisitId, code),
+      })
       return { created: true, attempt: { ...this.#attempt(nodeVisitId) }, completion }
+    })
+  }
+
+  /** Continue only an Owner-resume plan whose delivery write-ahead fence is absent. */
+  async continuePlannedOwnerResume(nodeVisitId, verify, complete) {
+    if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
+      throw new TypeError('workflow-execution: planned Owner-resume nodeVisitId must be a UUID')
+    }
+    if (typeof verify !== 'function' || typeof complete !== 'function') {
+      throw new TypeError('workflow-execution: planned Owner-resume callbacks are required')
+    }
+    return this.mutate(async () => {
+      const current = this.#attempt(nodeVisitId)
+      const result = await continuePlannedOwnerResumeMutation({
+        current, verify, complete,
+        recordDeliveryStarted: () => this.#recordDeliveryStarted(nodeVisitId),
+        recordRunDelivered: (fields) => this.#recordRunDelivered(nodeVisitId, fields),
+        recordDeliveryFailed: (reason) => this.#recordDeliveryFailed(nodeVisitId, reason),
+        recordResolutionBlocked: (code) => this.#recordResolutionBlocked(nodeVisitId, code),
+      })
+      return { ...result, ...(result.resumed ? { attempt: { ...this.#attempt(nodeVisitId) } } : {}) }
     })
   }
 
@@ -669,6 +667,7 @@ export class ExecutionLedger {
     }
     return this.mutate(() => [...this.attempts.values()]
       .filter((attempt) => attempt.delivered !== undefined
+        && attempt.retryReason !== 'owner_assistance_resolved'
         && nowMs - attempt.delivered.atMs >= thresholdMs
         && ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered') || (attempt.state === 'NEEDS_REVIEW' && attempt.judgment === 'run_ended_no_submission')))
       .map((attempt) => ({ ...attempt })))
@@ -725,6 +724,7 @@ export class ExecutionLedger {
     }
     return this.mutate(() => [...this.attempts.values()]
       .filter((attempt) => attempt.state === 'NEEDS_REVIEW'
+        && attempt.retryReason !== 'owner_assistance_resolved'
         && attempt.judgment === 'run_ended_no_submission'
         && Number.isInteger(attempt.reconciledAtMs)
         && nowMs - attempt.reconciledAtMs >= retryDelayMs)
