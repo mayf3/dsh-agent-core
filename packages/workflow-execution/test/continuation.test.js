@@ -74,7 +74,7 @@ function pageEngine({
       return deliver(req)
     },
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
     config,
   })
   return { engine, ledger, calls, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
@@ -197,7 +197,7 @@ test('per-request error stops the sweep loud; page-1 admissions stand', async ()
     resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
     deliverRun: async (req) => { fixture.calls.delivers.push(req); return { ok: true, sessionId: 'main' } },
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
   })
   try {
     const result = await engine.pollOnce()
@@ -223,7 +223,7 @@ test('a feed that ignores the cursor (identical full page repeated) stops loud i
     resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
     deliverRun: async () => ({ ok: true, sessionId: 'main' }),
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
     config: { maxAdmissionsPerPoll: 0 },
   })
   try {
@@ -250,7 +250,7 @@ test('cursor protocol violation: a full page whose last record is malformed stop
     resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
     deliverRun: async () => ({ ok: true, sessionId: 'main' }),
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: 'aaaaaaaa-3f19-4a7e-9a3f-5d1c2b0a9e11' } } }),
     config: { maxAdmissionsPerPoll: 0 },
   })
   try {

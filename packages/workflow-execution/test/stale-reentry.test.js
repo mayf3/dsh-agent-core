@@ -273,13 +273,14 @@ test('CASE 5c — no dispatch-time baseline (probe failed at delivery): never st
     detail: () => ({ ok: false, code: 'instance_detail_failed' }),
   })
   try {
-    await fixture.engine.pollOnce()
-    assert.equal(fixture.ledger.get(VISIT).workflowStateVersionAtDispatch, undefined)
+    const pass = await fixture.engine.pollOnce()
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(fixture.ledger.get(VISIT), undefined, 'the accepted pre-plan baseline is required before an attempt can be written')
     fixture.state.now += 61 * 60_000
     fixture.mutable.detail = () => ({ ok: true, body: fullDetail({ version: 7, visit: VISIT }) })
     const reconciled = await fixture.engine.reconcileOnce()
     assert.deepEqual(reconciled.staleReentry, [], 'no baseline ⇒ no stale evidence ⇒ V2 behaviour')
-    assert.equal(reconciled.running, 1)
+    assert.equal(reconciled.running, 0)
   } finally {
     fixture.cleanup()
   }
