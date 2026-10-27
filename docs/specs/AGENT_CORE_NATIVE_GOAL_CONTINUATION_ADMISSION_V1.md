@@ -1,10 +1,15 @@
 ---
 spec_id: AGENT_CORE_NATIVE_GOAL_CONTINUATION_ADMISSION_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
+accepted_by: mayf3-delegated-codex-maintainer
+accepted_at: 2026-10-27
+accepted_reviewed_head: 92bf0ff2958052c39def7e9b346286de4707ae89
+acceptance_record: https://github.com/mayf3/dsh-agent-core/pull/558
+independent_review_result: PASS
 owners: [mayf3]
 date: 2026-10-27
 repository: mayf3/dsh-agent-core
@@ -35,7 +40,7 @@ Architecture remains controlling: DSH owns goal/loop/inbox/session history; Rout
 
 ## 3. Authority and dependencies
 
-**Proposed, docs-first; no implementation or production activation is authorized by this draft.** On acceptance and merge, this independent integration Contract permits Agent Core to consume one awaited native goal enqueue extension and route each continuation through its existing Router admission owner. It does not replace the native goal driver or make an entire goal one execution.
+**Accepted under the delegated-maintainer record in PR #558; active implementation authority requires merge into main. Production activation remains excluded.** On acceptance and merge, this independent integration Contract permits Agent Core to consume one awaited native goal enqueue extension and route each continuation through its existing Router admission owner. It does not replace the native goal driver or make an entire goal one execution.
 
 `AUTHORITY_ACTION=NEW`, `PLAN_LEVEL=EXEC_PLAN`, `ASSURANCE_LEVEL=CONTROLLED`, `ROUTE_STAGE=AUTHORITY_AUTHORING`, `AUTHORITY_ACCEPTED_IN_BASE=NO`. The task authorizes this draft and isolated documentation only. Exact-head acceptance belongs to `mayf3` or an explicitly delegated maintainer under repository-local rules; independent review is not acceptance.
 
@@ -143,4 +148,4 @@ CTR-NGC-005 is the compatibility gate: pair activation is required for Agent Cor
 
 No unresolved normative choice is delegated to implementation: DEC-NGC-001 and CTR-NGC-001–006 freeze the selected boundary. Candidate hook API spelling, built hashes and test run receipts are delivery inputs, presently NOT_RUN, not accepted evidence. The historical missing/stale distinction remains explicitly UNKNOWN. A need to change V4 execution units, native goal policy or permissions triggers re-PREFLIGHT.
 
-Ready for independent authority review when this exact draft and its evidence are available. Implementation readiness remains NO until acceptance is merged in the governing base and a new implementation preflight binds both candidates. Completion of this slice requires the acceptance matrix and independent review; it does not require or authorize production deployment or a business workflow PASS.
+Independent authority review passed at the exact reviewed head recorded above; lifecycle-only finalization and acceptance are recorded in PR #558. Implementation readiness remains NO until acceptance is merged in the governing base and a new implementation preflight binds both candidates. Completion of this slice requires the acceptance matrix and independent review; it does not require or authorize production deployment or a business workflow PASS.
