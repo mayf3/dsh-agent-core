@@ -15,6 +15,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const VISIT_NEXT = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
@@ -45,15 +46,14 @@ function makeDeps({
   deliver = () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:handle-1' }),
   turnState = () => 'pending',
   correlatedState = () => undefined,
-  resumeEvidence = () => ({ ok: true, evidence: null }),
   detailBody = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
 } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-engine-'))
   const ledger = new ExecutionLedger({ dir })
-  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [], resumeReads: [] }
+  const calls = { delivers: [], resolves: [], detailReads: [], instructions: [], dueRequests: [] }
   // Mid-test re-pointable seams (tests reassign fixture.turnState etc. to
   // advance time without rebuilding the engine).
-  const mutable = { turnState, detailBody, resumeEvidence }
+  const mutable = { turnState, detailBody }
   const engine = createWorkflowExecutionEngine({
     ledger,
     log: { log: () => {}, warn: () => {}, error: () => {} },
@@ -84,11 +84,10 @@ function makeDeps({
     },
     readInstanceDetail: async (req) => {
       calls.detailReads.push(req)
-      return mutable.detailBody(req)
-    },
-    readOwnerAssistanceResumeEvidence: async (req) => {
-      calls.resumeReads.push(req)
-      return mutable.resumeEvidence(req)
+      const read = mutable.detailBody(req)
+      return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
+        workflowInstanceId: req.workflowInstanceId, ownerPrincipalId: OWNER,
+      }) } : read
     },
     buildInstruction: (input) => {
       calls.instructions.push(input)
@@ -98,33 +97,6 @@ function makeDeps({
   return {
     engine, ledger, calls, dir, mutable,
     cleanup: () => rmSync(dir, { recursive: true, force: true }),
-  }
-}
-
-async function seedRunEndedPredecessor(ledger) {
-  const first = await ledger.beginAttemptIfAbsent(dueIntent(), async (attempt, { recordDeliveryStarted }) => {
-    recordDeliveryStarted()
-    return { kind: 'run_delivered', agentId: AGENT, requestId: attempt.attemptId, sessionId: 'main', reconciliationHandle: 'turn:prior' }
-  }, undefined, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
-  assert.equal(first.created, true)
-  await ledger.recordReconciled({
-    nodeVisitId: VISIT,
-    expectedPhase: 'run_delivered',
-    verdict: 'NEEDS_REVIEW',
-    judgment: 'run_ended_no_submission',
-    reason: 'run ended without submission',
-  })
-  return first.attempt
-}
-
-function ownerEvidence(version = 12) {
-  return {
-    dispatchIntentId: INTENT, workflowInstanceId: INSTANCE, nodeVisitId: VISIT, ownerPrincipalId: OWNER,
-    activationState: 'ACTIVE', workflowStateVersion: version,
-    assistanceCaseId: '6d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77',
-    requestEventSequence: 10, resolutionEventSequence: 11,
-    requesterPrincipalId: OWNER, resolverPrincipalId: '7d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e88',
-    ingress: 'assignee', reason: null, lastAttemptId: null,
   }
 }
 
@@ -214,7 +186,11 @@ test('cross-process reconcile cannot terminalize another poller during planned-t
     fetchDuePage: async () => ({ ok: true, items: [] }),
     deliverRun: async () => ({ ok: true, sessionId: 'main', reconciliationHandle: 'turn:race' }),
     getTurnReconciliation: () => ({ state: 'pending' }),
-    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
+    readInstanceDetail: async () => ({ ok: true, body: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
     log: { log: () => {}, warn: () => {}, error: () => {} },
   }
   const admitting = createWorkflowExecutionEngine({
@@ -346,7 +322,7 @@ test('settle probe fails (credential/read error) => NEEDS_REVIEW settle_check_un
   }
 })
 
-test('assignee unresolvable after a trusted pre-plan baseline is recoverably blocked with zero Runs', async () => {
+test('assignee unresolvable after exact pre-plan baseline is recoverably blocked with zero Runs', async () => {
   const fixture = makeDeps({
     resolve: () => ({ ok: false, code: 'agent_mapping_missing' }),
   })
@@ -358,6 +334,22 @@ test('assignee unresolvable after a trusted pre-plan baseline is recoverably blo
     assert.equal(ledger.get(VISIT).phase, 'resolution_blocked')
     const next = await engine.pollOnce()
     assert.equal(next.admissions[0].action, 'already_attempted')
+  } finally {
+    fixture.cleanup()
+  }
+})
+
+test('pre-plan exact current-visit mismatch mints and delivers nothing', async () => {
+  const fixture = makeDeps({
+    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: {
+      instance: { workflow_state_version: 2 }, current_node_visit_id: VISIT_NEXT,
+    } } }),
+  })
+  try {
+    const { engine, ledger, calls } = fixture
+    const pass = await engine.pollOnce()
+    assert.equal(pass.admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(ledger.get(VISIT), undefined)
     assert.equal(calls.delivers.length, 0)
   } finally {
     fixture.cleanup()
@@ -460,7 +452,12 @@ test('maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admis
         resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
         deliverRun: async () => ({ ok: true, sessionId: 'main' }),
         getTurnReconciliation: () => ({ state: 'pending' }),
-        readInstanceDetail: async ({ workflowInstanceId }) => detailBody({ workflowInstanceId }),
+        readInstanceDetail: async ({ workflowInstanceId }) => {
+          const read = detailBody({ workflowInstanceId })
+          return { ...read, body: completeCurrentActivationDetail(read.body, {
+            workflowInstanceId, ownerPrincipalId: OWNER,
+          }) }
+        },
         config: { maxAdmissionsPerPoll: 2 },
       })
       const boundedPass = await bounded.pollOnce()
@@ -470,139 +467,5 @@ test('maxAdmissionsPerPoll bounds a burst; excess due intents stay due (no admis
     }
   } finally {
     fixture.cleanup()
-  }
-})
-
-test('settled Owner assistance resumes the exact visit once, with a fresh proof and cap bypass', async () => {
-  const fixture = makeDeps({
-    turnState: () => 'settled',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-    resumeEvidence: () => ({ ok: true, evidence: ownerEvidence(12) }),
-  })
-  try {
-    const predecessor = await seedRunEndedPredecessor(fixture.ledger)
-    fixture.ledger.maxAttemptsPerVisit = 1
-    const result = await fixture.engine.pollOnce()
-    assert.equal(result.admissions[0].action, 'admitted')
-    assert.equal(result.admissions[0].attemptId, attemptIdFor(VISIT, 2))
-    assert.equal(fixture.calls.delivers.length, 1)
-    assert.equal(fixture.calls.delivers[0].requestId, attemptIdFor(VISIT, 2))
-    assert.deepEqual(fixture.calls.resumeReads[0], {
-      dispatchIntentId: INTENT, previousAttemptId: predecessor.attemptId, preDeliveryWorkflowStateVersion: 1,
-    })
-    const current = fixture.ledger.snapshot()[0]
-    assert.equal(current.retryReason, 'owner_assistance_resolved')
-    assert.equal(current.preDeliveryWorkflowStateVersion, 12)
-    assert.equal(current.assistanceResume.assistanceCaseId, ownerEvidence().assistanceCaseId)
-    assert.deepEqual(current.consumedAssistanceCaseIds, [ownerEvidence().assistanceCaseId])
-    await fixture.ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
-      judgment: 'run_ended_no_submission', reason: 'owner resumed run ended without submission',
-    })
-    assert.deepEqual(await fixture.ledger.listStaleCandidatesFresh(1), [])
-    assert.deepEqual(await fixture.ledger.listRunEndedCandidatesFresh(1), [])
-  } finally { fixture.cleanup() }
-})
-
-test('unsettled predecessor cannot use Owner evidence or bypass the attempt fence', async () => {
-  const fixture = makeDeps({
-    turnState: () => 'pending',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-    resumeEvidence: () => ({ ok: true, evidence: ownerEvidence(12) }),
-  })
-  try {
-    await seedRunEndedPredecessor(fixture.ledger)
-    const result = await fixture.engine.pollOnce()
-    assert.equal(result.admissions[0].action, 'already_attempted')
-    assert.equal(fixture.calls.resumeReads.length, 0)
-    assert.equal(fixture.calls.delivers.length, 0)
-    assert.equal(fixture.ledger.snapshot()[0].generation, 1)
-  } finally { fixture.cleanup() }
-})
-
-test('execution-policy Assistance proof is bound to the exact persisted opaque predecessor ID', async () => {
-  const policyEvidence = ownerEvidence(12)
-  Object.assign(policyEvidence, {
-    assistanceCaseId: '6d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e78',
-    requesterPrincipalId: '8d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e99',
-    ingress: 'execution_policy', reason: 'ATTEMPTS_EXHAUSTED', lastAttemptId: attemptIdFor(VISIT),
-  })
-  const fixture = makeDeps({
-    turnState: () => 'settled',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-    resumeEvidence: () => ({ ok: true, evidence: policyEvidence }),
-  })
-  try {
-    const predecessor = await seedRunEndedPredecessor(fixture.ledger)
-    const result = await fixture.engine.pollOnce()
-    assert.equal(result.admissions[0].action, 'admitted')
-    assert.equal(fixture.calls.resumeReads[0].previousAttemptId, predecessor.attemptId)
-    assert.equal(fixture.ledger.snapshot()[0].assistanceResume.ingress, 'execution_policy')
-    assert.equal(fixture.ledger.snapshot()[0].assistanceResume.lastAttemptId, predecessor.attemptId)
-  } finally { fixture.cleanup() }
-})
-
-test('planned Owner-resume crash continues the same attempt only on exact never_existed proof', async () => {
-  const fixture = makeDeps({
-    turnState: () => 'pending',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-  })
-  try {
-    const predecessor = await seedRunEndedPredecessor(fixture.ledger)
-    const planned = await fixture.ledger.beginAttemptIfAbsent(dueIntent(), undefined, undefined,
-      async () => ({ preDeliveryWorkflowStateVersion: 12, assistanceResume: ownerEvidence(12) }),
-      async () => true)
-    assert.equal(planned.created, true)
-    assert.equal(planned.attempt.attemptId, attemptIdFor(VISIT, 2))
-    const result = await fixture.engine.reconcileOnce()
-    assert.equal(fixture.calls.delivers.length, 1)
-    assert.equal(fixture.calls.delivers[0].requestId, planned.attempt.attemptId)
-    assert.equal(fixture.ledger.snapshot()[0].attemptId, planned.attempt.attemptId)
-    assert.equal(fixture.ledger.snapshot()[0].retryReason, 'owner_assistance_resolved')
-    assert.equal(fixture.ledger.snapshot()[0].delivered.requestId, planned.attempt.attemptId)
-    assert.equal(result.needsReview.length, 0)
-    assert.equal(predecessor.attemptId, attemptIdFor(VISIT))
-  } finally { fixture.cleanup() }
-})
-
-test('planned Owner-resume with contradictory never_existed fields is fenced without replay', async () => {
-  const fixture = makeDeps({
-    turnState: () => 'pending',
-    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-    correlatedState: () => 'never_existed',
-  })
-  try {
-    await seedRunEndedPredecessor(fixture.ledger)
-    await fixture.ledger.beginAttemptIfAbsent(dueIntent(), undefined, undefined,
-      async () => ({ preDeliveryWorkflowStateVersion: 12, assistanceResume: ownerEvidence(12) }),
-      async () => true)
-    const original = fixture.engine
-    // The fixture intentionally adds an attributable Router handle to its correlation result.
-    assert.ok(original)
-    const result = await fixture.engine.reconcileOnce()
-    assert.equal(fixture.calls.delivers.length, 0)
-    assert.equal(result.needsReview.includes(VISIT), true)
-    assert.equal(fixture.ledger.snapshot()[0].judgment, 'delivery_unverified')
-  } finally { fixture.cleanup() }
-})
-
-test('planned Owner-resume stays fenced for pending or unknown Router correlation', async (t) => {
-  for (const state of ['pending', 'unknown', 'settled']) {
-    await t.test(state, async () => {
-      const fixture = makeDeps({
-        correlatedState: () => state,
-        detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
-      })
-      try {
-        await seedRunEndedPredecessor(fixture.ledger)
-        const planned = await fixture.ledger.beginAttemptIfAbsent(dueIntent(), undefined, undefined,
-          async () => ({ preDeliveryWorkflowStateVersion: 12, assistanceResume: ownerEvidence(12) }),
-          async () => true)
-        await fixture.engine.reconcileOnce()
-        assert.equal(fixture.calls.delivers.length, 0)
-        assert.equal(fixture.ledger.snapshot()[0].attemptId, planned.attempt.attemptId)
-        assert.equal(fixture.ledger.snapshot()[0].judgment, 'delivery_unverified')
-      } finally { fixture.cleanup() }
-    })
   }
 })

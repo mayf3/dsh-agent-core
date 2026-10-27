@@ -17,6 +17,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = 'ca11ef0a-0000-4a7e-9a3f-5d1c2b0a9e11'
 const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
@@ -66,10 +67,12 @@ function makeFixture({
     },
     getTurnReconciliation: () => ({ state: 'never_existed' }),
     resolveCallerCorrelation: ({ requestId }) => state.correlation({ requestId }),
-    readInstanceDetail: async () => {
+    readInstanceDetail: async ({ workflowInstanceId }) => {
       calls.probes += 1
-      if (calls.probes === 1) return STILL_CURRENT()
-      return state.detail()
+      const read = calls.probes === 1 ? STILL_CURRENT() : state.detail()
+      return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
+        workflowInstanceId, ownerPrincipalId: OWNER,
+      }) } : read
     },
   })
   const eventsFile = () => join(dir, 'attempts.jsonl')

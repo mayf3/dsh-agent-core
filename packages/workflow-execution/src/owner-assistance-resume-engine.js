@@ -1,6 +1,23 @@
 import { judgeDispatchVersionFromDetail, normalizeDueIntent } from './judgment.js'
 import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
 
+function sameId(left, right) {
+  return typeof left === 'string' && typeof right === 'string' && left.toLowerCase() === right.toLowerCase()
+}
+
+function detailMatchesActivation(body, identity) {
+  const detail = body?.detail
+  const visit = detail?.current_visit
+  const instance = detail?.instance
+  return body?.visibility === 'full'
+    && instance?.is_terminal === false
+    && sameId(instance?.workflow_instance_id, identity.workflowInstanceId)
+    && sameId(detail?.current_node_visit_id, identity.nodeVisitId)
+    && sameId(visit?.node_visit_id, identity.nodeVisitId)
+    && sameId(visit?.workflow_instance_id, identity.workflowInstanceId)
+    && sameId(visit?.assignee_principal_id, identity.ownerPrincipalId)
+}
+
 export function createOwnerAssistanceResumeOperations({
   fetchDuePage, resolvePrincipalToAgent, readInstanceDetail,
   readOwnerAssistanceResumeEvidence, resolveCallerCorrelation, getTurnReconciliation, deliverRun,
@@ -14,7 +31,8 @@ export function createOwnerAssistanceResumeOperations({
         workflowInstanceId: intent.workflowInstanceId,
       })
       const version = read?.body?.detail?.instance?.workflow_state_version
-      if (!read?.ok || read.body?.visibility !== 'full' || !Number.isInteger(version) || version < 1) return undefined
+      if (!read?.ok || !detailMatchesActivation(read.body, intent)
+        || !Number.isInteger(version) || version < 1) return undefined
       const plan = { preDeliveryWorkflowStateVersion: version }
       if (retryReason === 'owner_assistance_resolved') {
         if (typeof readOwnerAssistanceResumeEvidence !== 'function' || existing === undefined) return undefined
@@ -89,7 +107,7 @@ export function createOwnerAssistanceResumeOperations({
         const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
         const detail = read?.body?.detail
         return read?.ok === true && read.body?.visibility === 'full'
-          && detail?.current_node_visit_id?.toLowerCase() === attempt.nodeVisitId
+          && detailMatchesActivation(read.body, attempt)
           && detail?.instance?.workflow_state_version === attempt.preDeliveryWorkflowStateVersion
       }
       if (items.length < duePageLimit) return false
@@ -103,18 +121,20 @@ export function createOwnerAssistanceResumeOperations({
   }
 
   async function continuePlannedOwnerResume(attempt, recordDeliveryStarted) {
+    let deliveryStarted = false
     try {
       const resolved = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
       if (!resolved?.ok || typeof resolved.agentId !== 'string') {
-        return { kind: 'delivery_failed', reason: `delivery_unverified: owner-resume assignee resolution unavailable (${resolved?.code ?? 'unknown'})` }
+        return { kind: 'resume_proof_unavailable' }
       }
       const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
       if (!read?.ok || read.body?.visibility !== 'full'
-        || read.body.detail?.current_node_visit_id?.toLowerCase() !== attempt.nodeVisitId
+        || !detailMatchesActivation(read.body, attempt)
         || read.body.detail?.instance?.workflow_state_version !== attempt.preDeliveryWorkflowStateVersion) {
-        return { kind: 'delivery_failed', reason: 'delivery_unverified: owner-resume activation changed before delivery' }
+        return { kind: 'resume_proof_unavailable' }
       }
       recordDeliveryStarted()
+      deliveryStarted = true
       const delivery = await deliverRun({
         requestId: attempt.attemptId,
         agentId: resolved.agentId,
@@ -134,6 +154,7 @@ export function createOwnerAssistanceResumeOperations({
         reconciliationHandle: delivery.reconciliationHandle, messageId: delivery.messageId,
         ...(workflowStateVersionAtDispatch === undefined ? {} : { workflowStateVersionAtDispatch }) }
     } catch (error) {
+      if (!deliveryStarted) return { kind: 'resume_proof_unavailable' }
       return { kind: 'delivery_failed', reason: `delivery_unverified: owner-resume continuation failed (${error?.code ?? error?.name ?? 'Error'})` }
     }
   }
