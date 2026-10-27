@@ -28,6 +28,8 @@
  * (and logged) by the caller.
  */
 
+import { COMPLETE_BODY_ID, completeFailure } from './capabilities/workflow-definition-read/complete-contract.js'
+import { readCompleteBody } from './capabilities/workflow-definition-read/complete-reader.js'
 import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
 import { buildTargetMap } from './targets.js'
 import { invoke, validateInvocation } from './mapping.js'
@@ -394,6 +396,11 @@ export function createBrokerGateway({
   }
 
   async function execute(call, context = {}) {
+    if (call?.capabilityId === COMPLETE_BODY_ID) {
+      const manifest = byCapability.get(COMPLETE_BODY_ID)
+      if (!manifest) return completeFailure({ code: 'unsupported_operation' }, { errors: [{ code: 'unsupported_operation' }] })
+      return readCompleteBody({ call, manifest, context, transport: transportFor(context?.agentId) })
+    }
     if (call?.capabilityId !== 'agent_session_dispatch_status') return executeCore(call, context)
     try {
       const result = await executeCore(call, context)

@@ -54,7 +54,7 @@ import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
   forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowDefinitionReadManifest,
-  workflowAssistanceManifests, workflowCurrentTaskInputManifest, okrManifests,
+  workflowAssistanceManifests, workflowCurrentTaskInputManifest, workflowCurrentTaskBodyCompleteManifest, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
@@ -92,6 +92,7 @@ export const DEFAULT_MANIFESTS = [
   ...workflowManifests,
   workflowDefinitionReadManifest,
   workflowCurrentTaskInputManifest,
+  workflowCurrentTaskBodyCompleteManifest,
   ...workflowAssistanceManifests,
   ...okrManifests,
   ...agentDefinitionManifests,

@@ -24,9 +24,10 @@
  * instance creation — dedup stays on the existing same-domain contracts.
  */
 
-import { withTransportErrors } from '../transport.js'
-import { authErrors, baseErrors } from './workflow-definition-authoring.js'
-import { queryErrors } from './workflow-execute.js'
+import { withTransportErrors } from '../../transport.js'
+import { authErrors, baseErrors } from '../workflow-definition-authoring.js'
+import { COMPLETE_BODY_ID, COMPLETE_ERRORS } from './complete-contract.js'
+import { queryErrors } from '../workflow-execute.js'
 
 /** Same pagination error rows the other workflow read capabilities declare. */
 const paginationErrors = [
@@ -203,3 +204,27 @@ export const workflowCurrentTaskInputManifest = withTransportErrors({
     },
   }],
 })
+
+
+/** Separate LOCAL consumer; the existing HTTP reader remains unchanged. */
+export const workflowCurrentTaskBodyCompleteManifest = {
+  id: COMPLETE_BODY_ID, toolName: COMPLETE_BODY_ID, name: 'Workflow Complete Original',
+  local: true, requiredScopes: ['workflow.read'],
+  description: 'First obtain an authoritative current-input descriptor. Supply its exact full binding, body identity and digest to retrieve one complete original from offset zero. '
+    + 'Fetch every distinct required original separately. The Broker verifies full UTF-8 bytes and SHA-256; it does not evaluate meaning or evidence sufficiency. '
+    + 'Failure provides no partial original and does not authorize a transition or automatic retry. Existing actor/CAS rules remain required.',
+  errors: [...workflowCurrentTaskInputManifest.errors,
+    ...COMPLETE_ERRORS.map(code => ({ code, description: 'Complete original read failed without partial data.' }))],
+  operations: [{ name: 'read', description: 'Return exactly one bounded complete original, or one failure; no retries or descriptor refresh.',
+    arguments: { additionalProperties: false, properties: {
+      workflowInstanceId: { type: 'string', description: 'Exact binding.workflow_instance_id UUID.' },
+      expectedDefinitionVersionId: { type: 'string', description: 'Exact binding.definition_version_id UUID.' },
+      expectedNodeVisitId: { type: 'string', description: 'Exact binding.node_visit_id UUID.' },
+      expectedWorkflowStateVersion: { type: 'integer', minimum: 1, maximum: Number.MAX_SAFE_INTEGER, description: 'Exact binding.workflow_state_version.' },
+      expectedContextRevisionId: { type: 'string', description: 'Exact binding.context_revision_id UUID.' },
+      bodyKind: { type: 'string', enum: ['CURRENT_DETAIL', 'SUBMISSION_PAYLOAD'], description: 'Exact descriptor.kind.' },
+      bodyId: { type: 'string', description: 'Exact descriptor.id UUID; CURRENT_DETAIL requires node visit ID.' },
+      expectedBodySha256: { type: 'string', description: 'Exact descriptor.sha256, 64 lowercase hex characters.' },
+    }, required: ['workflowInstanceId', 'expectedDefinitionVersionId', 'expectedNodeVisitId', 'expectedWorkflowStateVersion',
+      'expectedContextRevisionId', 'bodyKind', 'bodyId', 'expectedBodySha256'] }, result: { type: 'json' }, errors: ['invalid_arguments'] }],
+}

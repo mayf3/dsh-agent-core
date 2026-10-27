@@ -1,3 +1,5 @@
+import { COMPLETE_BODY_ID } from './capabilities/workflow-definition-read/complete-contract.js'
+import { relayCompleteBody } from './capabilities/workflow-definition-read/complete-relay.js'
 /**
  * @agent-core/broker/src/relay.js — child-side broker RELAY (trusted
  * credential broker model).
@@ -344,6 +346,7 @@ export function createRelayHandlers(manifest, requestFn) {
   for (const op of manifest.operations) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
+      if (manifest.id === COMPLETE_BODY_ID) return relayCompleteBody(manifest, requestFn, op.name, args)
       if (manifest.id === 'agent_session_dispatch_status') return relayDispatchStatus(requestFn, manifest, op.name, args)
       const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
       const uncertainSessionSend = manifest.id === 'agent_session_send' && op.name === 'send'
