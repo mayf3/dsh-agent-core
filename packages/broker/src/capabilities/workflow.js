@@ -97,7 +97,7 @@ export const workflowInstanceDetailManifest = withTransportErrors({
     'For the current visit, `current_visit.assignee_principal_id` is the assignment fact; ' +
     '`current_visit.assignee_canonical_agent_id` is optional successor-lineage metadata and may be null; ' +
     'a null canonical id alone does not mean the caller is not the assignee. ' +
-    '`executable_for_actor` is advisory only and does not grant permission or guarantee success; ' +
+    '`outgoing_transitions[].executable_for_actor` is advisory only and does not grant permission or guarantee success; ' +
     'svc-workflow remains the authorization authority. ' +
     'Returns {ok: true, result: <instance>} on success.',
   requiredScopes: ['workflow.read'],
