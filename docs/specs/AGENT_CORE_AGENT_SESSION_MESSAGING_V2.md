@@ -6,24 +6,23 @@ authority_level: governing_spec
 implementation_authority: contracts
 production_apply_authority: none
 date: 2026-09-14
-revision: r4
-revision_date: 2026-09-14
-proposed_amendment:
+revision: r5
+revision_date: 2026-10-27
+amendment:
   id: ASM2-OWNED-DISPATCH-STATUS-20261027
-  status: proposed
+  status: accepted
   route: AMEND
   base: c1cbd7506ca58c0abace216e651e1cceb98e030d
   section: "14"
   contracts: CTR-ASM2-018..023
   acceptance: ACC-ASM2-008..013
-  implementation_allowed: false
+  implementation_allowed: true
   production_apply_authority: none
   note: >-
-    The accepted r4 metadata and sections 0 through 13 remain historical and
-    normative baseline bytes. Section 14 is a proposed additive amendment only;
-    the accepted header does not accept its new Contracts or authorize their
-    implementation. Acceptance requires an attributable exact-head act after
-    independent review, recorded separately from the r4 acceptance history.
+    Additive amendment accepted by the delegated maintainer after independent
+    exact-head review. Existing r4 Contracts and acceptance history remain
+    unchanged. Section 14.4 records the separate attributable acceptance act.
+    This grants source implementation authority, not production activation.
 scope:
   - target Agent canonical main Session messaging
   - receipt-only and bounded one-reply delivery
@@ -1210,17 +1209,17 @@ SESSION_ID = target-scoped native main
 TURN_ANCHOR = native receipt messageId
 PRODUCT_CODE_CHANGE = NONE
 PRODUCTION_CHANGE = NONE
-IMPLEMENTATION_ALLOWED_NOW = NO
+IMPLEMENTATION_ALLOWED_NOW = YES after docs merge
 READY_FOR_INDEPENDENT_REVIEW = YES
 ```
 
-## 14. Proposed additive amendment: bounded owned-dispatch status
+## 14. Accepted additive amendment: bounded owned-dispatch status
 
 ### 14.1 Lifecycle, ownership, and evidence
 
 ```text
 AMENDMENT_ID = ASM2-OWNED-DISPATCH-STATUS-20261027
-AMENDMENT_STATUS = proposed
+AMENDMENT_STATUS = accepted
 AUTHORITY_ACTION = AMEND
 ROUTE_STAGE = AUTHORITY_AUTHORING
 AMENDMENT_ACCEPTED_IN_BASE = NO
@@ -1229,14 +1228,12 @@ PRODUCTION_APPLY_AUTHORITY = none
 BASE = c1cbd7506ca58c0abace216e651e1cceb98e030d
 ```
 
-Only this section is the new proposal. The accepted r4 metadata and §§0–13 are
-preserved, including their historical authoring and acceptance records. Their
-accepted status does not accept this amendment. An independent review binds the
-exact docs candidate; the authorized maintainer then records an attributable
-acceptance act for that exact amendment and a lifecycle-only final-head recheck.
-No authoring or review statement self-accepts it. Until that transaction, the new
-Contracts are proposed and implementation is forbidden. After acceptance, a
-separate implementation preflight routes their implementation as REUSE.
+This section is the accepted additive amendment. Existing r4 Contracts and
+§§0–13 remain unchanged, including historical authoring and acceptance records.
+The exact proposed docs candidate passed independent review; the delegated
+maintainer acceptance act is recorded in §14.4. A lifecycle-only final-head
+recheck must precede the docs merge. Implementation begins only after that merge
+and a separate implementation preflight routing the accepted Contracts as REUSE.
 
 The amendment stays inside DEC-ASM2-001 through DEC-ASM2-004: the existing native
 message coordinate, caller-owned read authorization, a bounded exact-turn
@@ -1271,7 +1268,7 @@ It is read-only incident evidence, not conformance evidence for this proposal.
 The companion Brief records the exact base, review scope and prospective a9
 fixture; that fixture is not Product Authority or an execution authorization.
 
-### 14.2 Proposed Contracts
+### 14.2 Accepted Contracts
 
 ### CTR-ASM2-018 — separate small read capability
 
@@ -1448,7 +1445,7 @@ delta; after acceptance, withdrawing an accepted Contract requires the applicabl
 governance route. Disabling an unadopted runtime capability does not rewrite the
 accepted Contract or justify claiming conformance.
 
-### 14.3 Proposed Acceptance
+### 14.3 Acceptance
 
 ### ACC-ASM2-008 — closed capability and independent read grant
 
@@ -1542,3 +1539,26 @@ accepted Contract or justify claiming conformance.
   completion from source/unit PASS alone, or using a manually steered trial as
   unattended evidence. A future a9 trial is separately scoped, not a hidden gate
   for this read-only capability or authority to start one now.
+
+
+### 14.4 Delegated maintainer acceptance act — 2026-10-27
+
+The root maintainer records **ACCEPTED** for the exact additive Contracts and
+Acceptance definitions reviewed at `caf21a2cf4a11373acf3cdcb87faa931003e2392`.
+The reviewed Spec SHA-256 is
+`781c31fee0fdb8f029ff26eacbc590d19d18da182b4464a4a0a7381cb657c723`.
+Independent review `owned-dispatch-status-independent-review-caf21a2.json`
+(SHA-256 `7115a8485a58d690a9561b1daf0dae15a77c9dc8959a450848b9bb74a8da4569`)
+returned `PASS_FOR_EXACT_AMENDMENT_ACCEPTANCE`, zero blockers and zero Spec gaps.
+
+Acceptance actor: root coding maintainer, acting under the user's continuing
+instruction “接受，全权交给你定就行” and subsequent explicit instruction to keep
+implementing and validating unattended workflow completion. This is a delegated
+maintainer act, not a claim that the user separately reviewed this new text or
+that the proposal author accepted its own contract. The scoped decision adds
+only the reviewed read-only capability; production apply remains **none**.
+
+This lifecycle revision changes no CTR-ASM2-018–023 or ACC-ASM2-008–013 content.
+The independent final-head recheck and docs-only merge receipt must be retained
+before source implementation. Source/test completion, callable installation and
+unattended business completion remain separate evidence gates.
