@@ -12,6 +12,7 @@ function rejected(message, code = 'NATIVE_GOAL_RESERVATION_REJECTED') {
 export function createNativeGoalAdmission({ request, getAgent, audit = () => {} }) {
   const pending = new Map()
   let active = false
+  let reservationSeq = 0
   function activate({ parentVersion, driver }) {
     if (parentVersion !== 1 || driver?.protocolVersion !== 1 || driver?.enqueueMode !== 'external') {
       throw rejected('native goal admission protocol is unavailable', 'NATIVE_GOAL_PROTOCOL_UNAVAILABLE')
@@ -22,9 +23,10 @@ export function createNativeGoalAdmission({ request, getAgent, audit = () => {} 
 
   async function enqueue({ agent, message, signal, commit }) {
     if (!active || signal.aborted || getAgent(String(agent.session.id)) !== agent
+        || reservationSeq === Number.MAX_SAFE_INTEGER
         || pending.size >= PROCESS_EVIDENCE_CAPS.MAX_QUEUED_TURNS_PER_PROCESS) return { kind: 'not_enqueued' }
     const reservation = {
-      version: 1, reservationId: randomUUID(), sessionId: String(agent.session.id), messageId: message.id,
+      version: 1, reservationId: randomUUID(), reservationSeq: ++reservationSeq, sessionId: String(agent.session.id), messageId: message.id,
       goal: { goalId: message.source.goalId, revision: message.source.revision, round: message.source.round },
       contentBlocks: structuredClone(message.content),
       contentSha256: createHash('sha256').update(JSON.stringify(message.content)).digest('hex'),

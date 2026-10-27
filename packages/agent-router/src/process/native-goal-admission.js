@@ -4,7 +4,7 @@ import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
 export const NATIVE_GOAL_RPC_METHOD = 'agent-core/nativeGoalContinuation'
 export const NATIVE_GOAL_PROTOCOL_VERSION = 1
-const fields = ['version', 'reservationId', 'sessionId', 'messageId', 'goal', 'contentBlocks', 'contentSha256'].sort().join(',')
+const fields = ['version', 'reservationId', 'reservationSeq', 'sessionId', 'messageId', 'goal', 'contentBlocks', 'contentSha256'].sort().join(',')
 const boundedText = value => typeof value === 'string' && value.length > 0 && value.length <= 256
 
 /** Validate the complete process-wire reservation; never derives caller identity. */
@@ -12,6 +12,7 @@ export function validateNativeGoalReservation(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)
       || Object.keys(value).sort().join(',') !== fields || value.version !== 1
       || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value.reservationId ?? '')
+      || !Number.isSafeInteger(value.reservationSeq) || value.reservationSeq < 1
       || !boundedText(value.sessionId) || !boundedText(value.messageId)) return false
   const goal = value.goal
   if (!goal || Object.keys(goal).sort().join(',') !== 'goalId,revision,round'
@@ -31,12 +32,10 @@ export async function admitNativeGoalContinuation(proc, params, rpcMeta = {}) {
   if (!validateNativeGoalReservation(params)) return deny('NATIVE_GOAL_INVALID_RESERVATION')
   if (proc?.initializeEvidence?.nativeGoalContinuation?.version !== 1) return deny('NATIVE_GOAL_PROTOCOL_UNAVAILABLE')
   if (!Object.hasOwn(proc.status ?? {}, params.sessionId)) return deny('NATIVE_GOAL_SESSION_NOT_LIVE')
-  // Process-local transport dedup survives reconciliation retention eviction.
-  // Saturation denies new automatic admission; no remembered attempt is evicted.
-  proc.nativeGoalReservationsSeen ??= new Set()
-  if (proc.nativeGoalReservationsSeen.has(params.reservationId)) return deny('NATIVE_GOAL_RESERVATION_ALREADY_SEEN')
-  if (proc.nativeGoalReservationsSeen.size >= PROCESS_EVIDENCE_CAPS.MAX_LATE_PROMPT_TOMBSTONES) return deny('NATIVE_GOAL_RESERVATION_CAPACITY')
-  proc.nativeGoalReservationsSeen.add(params.reservationId)
+  // The bound child's stdio preserves order; a monotonic transport watermark
+  // survives reconciliation eviction without retaining a second goal ledger.
+  if (params.reservationSeq <= (proc.nativeGoalReservationWatermark ?? 0)) return deny('NATIVE_GOAL_RESERVATION_ALREADY_SEEN')
+  proc.nativeGoalReservationWatermark = params.reservationSeq
   const reservation = JSON.parse(JSON.stringify(params))
   // requestId is the existing generic caller correlation. No Scheduler
   // occurrence/run identity is invented; generation and Agent are parent-owned.

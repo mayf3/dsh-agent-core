@@ -6,9 +6,9 @@ import { makeFx } from '../helpers/fake-child.js'
 
 const METHOD = 'agent-core/nativeGoalContinuation'
 const text = '<goal_round>isolated round one</goal_round>'
-function request() {
+function request(reservationSeq = 1) {
   const contentBlocks = [{ type: 'text', text }]
-  return { version: 1, reservationId: randomUUID(), sessionId: 'main', messageId: 'native-message-1',
+  return { version: 1, reservationId: randomUUID(), reservationSeq, sessionId: 'main', messageId: 'native-message-1',
     goal: { goalId: 'goal-test', revision: 1, round: 1 }, contentBlocks,
     contentSha256: createHash('sha256').update(JSON.stringify(contentBlocks)).digest('hex') }
 }
@@ -132,4 +132,23 @@ test('a duplicate reservation remains rejected after its reconciled record is ev
   await fx.tick()
   assert.equal(fx.writes.filter(value => value.method === 'session/prompt').length, 2)
   assert.equal((await duplicate).kind, 'not_enqueued')
+})
+
+
+test('transport watermark rejects invalid, duplicate and out-of-order sequences before write', async t => {
+  const { fx, handler } = await prepared(t)
+  for (const value of [0, -1, 1.5, '1', Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal((await handler(METHOD, request(value), {})).code, 'NATIVE_GOAL_INVALID_RESERVATION')
+  }
+  for (const sequence of [2, 3]) {
+    const req = request(sequence), pending = handler(METHOD, req, {})
+    await fx.tick()
+    fx.respondTo('session/prompt', { messageId: req.messageId })
+    await pending
+    fx.completeTurn('main', req.messageId, 'done', { turn: sequence })
+    await fx.tick()
+  }
+  for (const sequence of [1, 2, 3]) assert.equal((await handler(METHOD, request(sequence), {})).code, 'NATIVE_GOAL_RESERVATION_ALREADY_SEEN')
+  assert.equal(fx.proc.nativeGoalReservationWatermark, 3)
+  assert.equal(fx.writes.filter(value => value.method === 'session/prompt').length, 3)
 })
