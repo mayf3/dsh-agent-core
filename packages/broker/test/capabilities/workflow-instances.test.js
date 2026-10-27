@@ -18,11 +18,25 @@ test('workflow_instance_detail: GET with path param mapping + workflow.read scop
   assert.match(detailManifest.description, /assignee_canonical_agent_id/)
   assert.match(detailManifest.description, /optional successor-lineage metadata/)
   assert.match(detailManifest.description, /null canonical id alone does not mean the caller is not the assignee/)
-  assert.match(detailManifest.description, /executable_for_actor.*advisory only/)
+  assert.match(detailManifest.description, /outgoing_transitions\[\]\.executable_for_actor.*advisory only/)
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res, entry) => {
     if (entry.method === 'GET' && entry.pathname === '/internal/v1/workflow-instances/9c7f3b0a-0000-4000-8000-000000000001') {
-      return json(res, 200, { visibility: 'assigned', detail: { status: 'in_progress' }, outgoingTransitions: ['approve', 'reject'] })
+      return json(res, 200, {
+        visibility: 'full',
+        detail: {
+          current_node_visit_id: '98dc3b0a-0000-4000-8000-000000000001',
+          current_visit: {
+            node_visit_id: '98dc3b0a-0000-4000-8000-000000000001',
+            assignee_principal_id: '98dc3b0a-0000-4000-8000-000000000002',
+            assignee_canonical_agent_id: null,
+          },
+          outgoing_transitions: [{
+            transition_id: '98dc3b0a-0000-4000-8000-000000000003',
+            executable_for_actor: true,
+          }],
+        },
+      })
     }
     json(res, 404, { error: 'not_found' })
   })
@@ -40,7 +54,10 @@ test('workflow_instance_detail: GET with path param mapping + workflow.read scop
     workflowInstanceId: '9c7f3b0a-0000-4000-8000-000000000001',
   })
   assert.equal(res.ok, true)
-  assert.deepEqual(res.result.outgoingTransitions, ['approve', 'reject'])
+  assert.equal(res.result.detail.current_visit.assignee_principal_id, '98dc3b0a-0000-4000-8000-000000000002')
+  assert.equal(res.result.detail.current_visit.assignee_canonical_agent_id, null)
+  assert.equal(Object.hasOwn(res.result.detail.current_visit, 'executable_for_actor'), false)
+  assert.equal(res.result.detail.outgoing_transitions[0].executable_for_actor, true)
 
   assert.equal(tokenServer.requests[0].body.resource, 'svc-workflow')
   assert.equal(tokenServer.requests[0].body.scope, 'workflow.read')
