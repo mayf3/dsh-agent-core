@@ -13,6 +13,7 @@
 
 import { envelopeCarrier, monotonicNowMs } from './state-machine.js'
 import { redactSensitiveText, sanitizeProviderError } from './provider-errors.js'
+import { nativeGoalResponseError, registerNativeGoalCancellation, cancelNativeGoalRpc } from './native-goal-admission.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 
 export const rpcChannelMethods = {
@@ -49,6 +50,8 @@ export const rpcChannelMethods = {
         this.onSessionEvent(message.params)
       } else if (message.method === 'session.status') {
         this.onSessionStatus(message.params)
+      } else if (message.method === 'rpc.cancel') {
+        cancelNativeGoalRpc(this, message.params)
       } else if (message.method === 'rpc.request') {
         // A per-agent plugin asks the Control Plane to run a Router domain
         // operation; the answer goes back over stdin as rpc.response.
@@ -66,7 +69,7 @@ export const rpcChannelMethods = {
       const tombstone = this.latePromptTombstones.get(message.id)
       if (tombstone !== undefined) {
         this.latePromptTombstones.delete(message.id)
-        const messageId = message.result?.messageId
+        const messageId = nativeGoalResponseError(tombstone.execution, message) === null ? message.result?.messageId : undefined
         if (tombstone.execution !== undefined && messageId !== undefined) {
           tombstone.execution.receiptMessageId = messageId
           tombstone.execution.promptReceipt = 'accepted'
@@ -76,6 +79,12 @@ export const rpcChannelMethods = {
           this.auditBounded({ kind: 'late_receipt_correlated', detail: `request ${message.id} -> ${messageId}` })
         }
       }
+      return
+    }
+    const nativeError = nativeGoalResponseError(waiter.execution, message)
+    if (nativeError !== null) {
+      this.settlePendingEntry(waiter, 'reject', envelopeCarrier('outcome_unknown', waiter.execution.handle,
+        nativeError, 'native enqueue acceptance cannot be proven from the callback', { source: 'native_goal_callback' }))
       return
     }
     // B09 / C-017: bind parser-received prompt evidence synchronously, before
@@ -120,6 +129,11 @@ export const rpcChannelMethods = {
     if (!timedOut) {
       handlerStarted = true
       const controller = new AbortController()
+      const releaseCancellation = registerNativeGoalCancellation(this, method, requestId, controller)
+      if (releaseCancellation === null) {
+        this.auditBounded({ kind: 'native_goal_rpc_rejected', detail: 'duplicate or capacity' })
+        return
+      }
       let abortTimer
       const timeout = new Promise((resolveTimeout) => {
         abortTimer = setTimeout(() => {
@@ -145,6 +159,7 @@ export const rpcChannelMethods = {
       )
       const winner = await Promise.race([handler, timeout])
       clearTimeout(abortTimer)
+      releaseCancellation()
       if (winner.kind === 'timeout') timedOut = true
       else if (winner.kind === 'error') error = winner.cause
       else result = winner.value

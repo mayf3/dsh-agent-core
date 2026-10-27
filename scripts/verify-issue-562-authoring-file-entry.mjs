@@ -257,7 +257,7 @@ await writeFile(join(outDir, 'sh562-pipe-negative-results.json'), JSON.stringify
 // The read capability flows the SAME real pipeline (child tool → parent
 // handler → gateway → transport). Allow / deny / honest-not-found against
 // the mock svc; identity stays the ACTUAL caller (agt_family-steward-agent).
-import { workflowDefinitionReadManifest } from '../packages/broker/src/capabilities/workflow-definition-read.js'
+import { workflowDefinitionReadManifest } from '../packages/broker/src/capabilities/workflow-definition-read/index.js'
 const readTool = registered.find((tool) => tool?.name === 'workflow_definition_read')
 assert.ok(readTool, 'workflow_definition_read must be registered in child mode')
 const readCalls = []

@@ -45,6 +45,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import z from '@deepseek-ai/schemastery'
 
 import { registerCapabilities } from './registry.js'
+import { registerCompleteBodyDelivery } from './capabilities/workflow-definition-read/complete-delivery.js'
 import { createIdentityResolver } from './identity.js'
 import { targets as defaultTargets, buildTargetMap } from './targets.js'
 import { BROKER_RPC_METHOD, SCHEDULER_MUTATIONS, createRelayHandlers } from './relay.js'
@@ -54,7 +55,7 @@ import { createSelfAssertFixtureTool } from './fixtures/self-assert.js'
 import { manifest as calculatorManifest, handlers as calculatorHandlers } from './calculator.manifest.js'
 import {
   forumManifests, forumNormalManifests, forumModeratorManifests, workflowManifests, workflowDefinitionReadManifest,
-  workflowAssistanceManifests, okrManifests,
+  workflowAssistanceManifests, workflowCurrentTaskInputManifest, workflowCurrentTaskBodyCompleteManifest, okrManifests,
   agentDefinitionManifests, schedulerManifests, selfOpsManifests, developmentExecuteManifest,
   agentSessionMessagingManifests,
   agentPrincipalResolutionManifests, agentPrincipalReverseResolutionManifests, agentDirectoryManifests,
@@ -91,6 +92,8 @@ export const DEFAULT_MANIFESTS = [
   ...forumNormalManifests,
   ...workflowManifests,
   workflowDefinitionReadManifest,
+  workflowCurrentTaskInputManifest,
+  workflowCurrentTaskBodyCompleteManifest,
   ...workflowAssistanceManifests,
   ...okrManifests,
   ...agentDefinitionManifests,
@@ -370,7 +373,8 @@ export function apply(ctx, config = {}) {
     log: (msg) => process.stderr.write(`${msg}\n`),
   })
 
-  registerCapabilities(ctx, defineTool, registeredCapabilities)
+  const registeredTools = registerCapabilities(ctx, defineTool, registeredCapabilities)
+  registerCompleteBodyDelivery(ctx, registeredCapabilities, registeredTools)
 
   // AGENT_CORE_WORKFLOW_AUTHORING_FILE_ENTRY_V1 (candidate): the narrow
   // lossless file entry for the EXISTING replace_draft_graph operation.

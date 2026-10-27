@@ -48,3 +48,13 @@
       Use memory_save whenever the user states a durable preference or fact.
       When asked about the user, answer from the injected [memory] block or
       from memory_search results, and never invent facts.
+
+# Required paired native/Agent Core admission protocol; incompatible binaries fail initialize.
+- id: goal-round-driver
+  config:
+    enqueueMode: external
+    enqueueTimeoutMs: 30000
+
+- id: demo-server
+  config:
+    nativeGoalContinuation: true

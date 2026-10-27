@@ -15,7 +15,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { sanitizeProviderError } from './provider-errors.js'
-import { monotonicNowMs } from './state-machine.js'
+import { envelopeCarrier, exactTurnOutcome, monotonicNowMs } from './state-machine.js'
 
 /**
  * Bounded, secret-free classifications of one unresolved-unknown execution
@@ -180,22 +180,35 @@ export const eventCorrelationMethods = {
       return
     }
     if (!idleObservedAfterTerminal && !currentIdlePastTurnStart) return
-    const failed = execution.terminalReason?.kind === 'error'
+    const outcome = exactTurnOutcome(execution.terminalReason)
+    if (outcome === null && !execution.unknownMarked) {
+      // Publish unknown before late settlement. This call re-enters here
+      // synchronously; the late branch also settles the original waiter.
+      this.markExecutionUnknown(execution, 'terminal_without_outcome')
+      return
+    }
     if (execution.unknownMarked) {
       this.store.settleLate(execution.handle, {
-        lateOutcome: failed ? 'late_failed' : 'late_completed',
-        outcomeEvidence: failed ? 'exact_turn_end_failure' : 'exact_turn_end_success',
+        lateOutcome: outcome === null ? 'terminated_without_outcome' : outcome === 'failed' ? 'late_failed' : 'late_completed',
+        outcomeEvidence: outcome === null ? undefined : outcome === 'failed' ? 'exact_turn_end_failure' : 'exact_turn_end_success',
         terminationEvidence: 'exact_terminal_then_idle',
         finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
       })
       execution.settled = true
       execution.terminationEvidence = 'exact_terminal_then_idle'
       execution.phase = 'terminal'
+      if (outcome === null) {
+        execution.terminalReject?.(envelopeCarrier('outcome_unknown', execution.handle, 'AGENT_PROCESS_TURN_OUTCOME_UNKNOWN',
+          `turn for session ${execution.sessionId} (agent ${this.agentId}) terminated without an exact outcome`,
+          { source: 'terminal_without_outcome', evidence: execution.evidenceSnapshot() }))
+        execution.terminalReject = undefined
+        execution.terminalResolve = undefined
+      }
       this.finishExecution(execution)
       this.releaseFence(execution.handle)
       return
     }
-    if (failed) {
+    if (outcome === 'failed') {
       const error = sanitizeProviderError(execution.terminalReason.error, {
         agentId: this.agentId,
         provider: this.provider,
