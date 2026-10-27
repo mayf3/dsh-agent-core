@@ -60,7 +60,7 @@ All test execution uses task-owned worktrees, homes, database names, ports and s
 
 ## Delivery state
 
-Both mechanisms are implemented and independently source-reviewed. The first actual real-provider trial failed before model progress because normal canonical credential refresh required Owner reauthentication. Complete unattended acceptance is NOT_PROVEN; no production deployment or old-instance remediation is claimed. See the final paired evidence below. The earlier acceptance-binding PR88 is separate and is not present in the current-input service candidate.
+Both mechanisms are implemented and independently source-reviewed. Trial a6 recorded actual native rounds 1 and 2 with distinct peer nonces and complete current-input byte delivery, but the full business run failed at a recoverable role-input error and an overly restrictive fixture deduplication rule. Subsequent investigation also found that production-managed plugin projection touched the test homes; complete filesystem isolation and historical module-path provenance are not established. Complete unattended business acceptance remains NOT_PROVEN. The prior account-wide request for Owner reauthentication was incorrect and is withdrawn: a2 used a different deployment credential domain from working HR. No production deployment or old-instance remediation is claimed. The earlier acceptance-binding PR88 is separate and is not present in the current-input service candidate.
 
 ## Broker implementation preflight — 2026-10-27
 
@@ -79,7 +79,7 @@ DONE_WHEN = affected Broker contracts verified, independently reviewed source in
 NEXT_REAL_ACTION = failing current-input capability tests, implementation, generic-transport regression, independent source review
 ```
 
-Native admission and service implementation use separate worktrees and writers. Root implements only this Broker slice. Original authority-authoring state above is retained as history, not a current blocker. Required composed model/workflow validation is still NOT_RUN.
+Native admission and service implementation use separate worktrees and writers. Root implements only this Broker slice. Original authority-authoring state above is retained as history, not a current blocker. At that historical point, composed model/workflow validation was NOT_RUN; subsequent actual trials are recorded below.
 
 ## Broker implementation evidence — 2026-10-27
 
@@ -92,7 +92,7 @@ Executed evidence is under `/Users/yanfenma/workspace/artifacts/workflow-unatten
 - `packages/broker/test-support/current-task-input-responses.json` preserves two actual isolated service HTTP response captures with provenance. Tests replay them through real loopback HTTP and the generic Broker transport, including an 8190-byte Unicode chunk. This proves transport fidelity, not a live composed workflow verdict.
 - `structure-baseline-result.json` records the unmodified integration base `c1cbd750` failing the structure verifier with exit 2: a stale registry entry for `packages/agent-credential-provisioning/src/store-writer.js`. This is an existing configuration failure, not PASS. Affected source/test files remain below 500 lines; no new child is added to the existing 26-child capability directory or 20-child capability-test directory. Existing read-manifest and instance-test modules are reused. Registry repair and unrelated directory migration are outside this bounded capability change.
 
-Source review and actual paired autonomous validation remain pending at this record. No installed or production remediation is claimed.
+Source review and actual paired autonomous validation were pending at that historical record. Subsequent reviews and trials follow; no installed or production remediation is claimed.
 
 
 ## Paired implementation and real trial — 2026-10-27
@@ -124,8 +124,50 @@ The frozen pair was Agent Core `3e781692`, native `9d867805`, service `4eabe824`
 
 The exact execution settled `failed` with `exact_terminal_then_idle`. No goal was created, no native continuation was admitted and no Broker tool was called. Final A remains draft/v1/zero submissions; B remains testing/v13 with only its 12 bootstrap submissions. Consequently `ACC-NGC-006` and the complete autonomous governance acceptance remain **NOT_PROVEN**. The run classification is **FAIL_PROVIDER_AUTH_BEFORE_MODEL_PROGRESS**, not successful unattended closure.
 
-Non-secret filesystem metadata shows the refresh intent was created during this trial, while the canonical credential file generation was not replaced and no lock remained. The refresh wrapper hides the underlying provider exception; the specific refresh failure cause remains UNKNOWN. No credential contents were read/copied into evidence, no pending marker was removed, and the unknown refresh was not replayed. Continuing requires the existing Owner reauthentication flow and a separately frozen fresh trial.
+Non-secret filesystem metadata shows the refresh intent was created during this trial, while the canonical credential file generation was not replaced and no lock remained. The refresh wrapper hides the underlying provider exception; the specific refresh failure cause remains UNKNOWN. No credential contents were read/copied into evidence, no pending marker was removed, and the unknown refresh was not replayed. The original inference that the user must reauthenticate is withdrawn. Fresh routing evidence below distinguishes this separate credential domain from the working HR domain; the unknown a2 refresh was not replayed.
 
 After recording the already-failed idle execution, root stopped only the owned HR test child. Its actual exit, runtime exit and service/auth cleanup are recorded; runtime exit 0 means successful cleanup, not business success. All test databases and failed-attempt evidence remain preserved. Production installations and existing workflows were not mutated by this trial.
 
-Raw evidence: `run-freeze.json` SHA-256 `00fad768230d7bc28cbb07ca9cc10e2040287c643f07c6510f83c2518e302817`; `control/native-public.jsonl` records the error and exact terminal events; `failed-trial-stop.json`, `runtime-execution.json`, `final-db-facts.json`, and `infra-final-cleanup.json` preserve the outcome and actual cleanup. The current next action is account Owner reauthentication followed by a fresh one-trigger trial; registration and source PASS do not close this task.
+Raw evidence: `run-freeze.json` SHA-256 `00fad768230d7bc28cbb07ca9cc10e2040287c643f07c6510f83c2518e302817`; `control/native-public.jsonl` records the error and exact terminal events; `failed-trial-stop.json`, `runtime-execution.json`, `final-db-facts.json`, and `infra-final-cleanup.json` preserve the outcome and actual cleanup. This is historical a2 evidence, not an account-wide reauthentication requirement. Registration and source PASS do not close this task.
+
+
+### Route correction and subsequent actual trials
+
+Production HR completed a real `openai-codex/gpt-5.6-luna` turn at 04:50:45Z through the `authsvc` deployment. A2 had selected the separate `yanfenma` deployment credential. `auth-route-correction-20261027.json` (SHA-256 `83d89d233627de2e0623ed89087ae0b32c4f949e3cc39540f123ee4cbec7263b`) withdraws the request for user re-login. Existing canonical credential references are reused normally; no credential contents were copied/read into evidence, no OS identity switch or existing Agent restart occurred.
+
+- **A3:** corrected domain, transport failure before model progress. Its isolated configuration lacked provider proxy settings; the specific provider failure cause remains UNKNOWN.
+- **A4:** explicit public macOS proxy configuration passed a credential-free connectivity check, but required Node 25.6.1 x64 exposed missing exact optional native dependencies before model progress. Four version/integrity-pinned packages were installed only into task-owned artifacts and ignored candidate dependencies. Tracked source, locks and original build outputs stayed unchanged.
+- **A5:** actual model ran four automatic rounds and retrieved complete current input. The isolated auth/service processes disappeared; actual exit/signal/cause remains UNKNOWN. The second peer probe failed because its token endpoint was unreachable, not a demonstrated fresh-session permission loss. HR autonomously blocked and model/runtime cleanup completed.
+- **A6:** detached task-only service and runtime supervisors survived launch-tool exit and autonomously recorded actual exits. A preliminary real service survived 333.577 seconds and cleaned up normally. The actual model trial entered five native rounds, proved the first two distinct-nonce peer exchanges, and made three real workflow submissions without root intervention. A stopped at PM/v2; B reconciled the old RETURN against the corrected original and reached QA pre-release/v15. Neither case became terminal; local merge/install were not performed.
+
+A6's PM requested a transition ID with one incorrect character (`...b94f74f0600a` instead of the authoritative `...b94e74f0600a`). The service correctly rejected it. The fixture's instruction to dispatch each visit at most once then prevented bounded correction, and HR incorrectly repeated the role's claim of a service gate. This identifies an isolated fixture-policy defect, not a demonstrated production policy defect. A separate fixture helper also discarded the exact first preview bytes when assembling later body pages; real delivered bytes were complete. Models' prose hash claims were not promoted into executed hash checks.
+
+A6 independent evidence:
+
+| Artifact | SHA-256 | Result |
+| --- | --- | --- |
+| e2e-runs/trial-20261027-a6/trial-result.json | 81659f3d355bb5ab2b03eab1ef93180c1d111ab6687264a407458ee338d770cb | FAIL_GOVERNANCE_FIXTURE_RECOVERY_POLICY |
+| e2e-runs/trial-20261027-a6/native-terminal-independent-review.json | 0e49568fa0e687856939b4e8d5a088e9d621c3371373a8c24f51e47b5942ea77 | Real native continuation PASS; goal BLOCKED |
+| e2e-runs/trial-20261027-a6/independent-business-audit.json | 438836b30aa9f48a589e596f47fac4866a7ba4b44bafd164107dd7a0cfbaf135 | Three Broker-to-database submission joins; full business E2E FAIL |
+| e2e-runs/trial-20261027-a6/independent-business-audit-helper-supplement.json | 43c95195defdc6ddc7e4dff0cf04455542081718db06bbc3f29524eb5d3438b8 | Preview-prefix helper limitation, not missing service bytes |
+
+A6 ended without external rescue: 12 executions settled, all five owned model children exited with code 0, runtime exit 0 and owned service/auth cleanup were observed. These are termination facts, not business completion. Forty-eight frozen files stayed unchanged; the remaining case-bindings file received only the two cutoff annotations from the already-frozen startup code before initial delivery.
+
+### Bounded fixture correction pending a fresh trial
+
+`governance-recovery-policy-v1.md` replaces per-visit at-most-once dispatch with receipt-based deduplication. Running or unknown attempts remain non-replayable. Only an exact rejection proving no business transition, settled prior execution, and a fresh unchanged visit/state/assignee permit at most two corrective followups per visit across all native rounds. Failed receipt/audit writes may exist; this is not a claim of zero storage writes. A read-only helper compares the actual rejected request against authoritative outgoing IDs without choosing a business verdict or a fuzzy match. The role still makes every explicit write under existing CAS and permissions. The body assembler is corrected to include matching preview bytes and reject conflicting overlaps, gaps or mixed bindings.
+
+This changes task-owned role guidance and verification helpers only. The published 14-node/15-transition graph and the reviewed product candidates remain fixed. A fresh a7 trial is required; this section does not predeclare its outcome.
+
+
+### A7 pre-admission failure and isolation-scope correction
+
+A7 froze the reviewed recovery policy and helpers but failed before any role child or model call: `provisionHome` could not write `.agent-core-artifact-identity.json.tmp-59828` through the test home's redirected plugin path. Runtime actual exit was 1. A/B retained their bootstrap states, and the owned service/worker automatically exited 0 with auth closed. The model recovery policy was not exercised. `e2e-runs/trial-20261027-a7/trial-result.json` SHA-256: `9f92aa5a5e0f7aedb8c8208b445963ae005d6a11bf13f3fb495727cb6104eef3`.
+
+The installed `artifacts-watchdog.sh` scans `/Users/authsvc/.agent-core/homes/agt_*/profiles/node_modules` without consulting agent registration, every 120 seconds. A6 and A7 task homes matched that scope. Their original plugin directories have the watchdog's backup naming pattern and are now root-owned links whose raw target is `control/codex-plugin-runtime/current/dsh-codex`; the resolved target is a shared generation. A6's five actual roles were redirected after their first observed native session status; A7 was redirected during provisioning before admission. The exact executing writer PID is UNKNOWN. No watchdog, permission or existing production Agent was changed by this task.
+
+This withdraws any implication that unregistered homes were necessarily outside production management, or that the top-level freeze covered every runtime path. The top-level freezes contained 49/52 entries with indirect native151 and Agent Core318 source/artifact pins; they did not continuously record task-home links or historical module URLs/hashes. A read-only comparison found the current shared plugin payload's 21,737 entries identical to the frozen archive, with archive SHA-256 `869b8e64095a796a0fe6cfbe7bc09e5cf49dfa35defba7b69d621cfec0d0290f`. There is no observed payload-byte substitution, but current equality is not historical in-memory load proof. A6's actual native/peer and workflow receipts remain facts; they cannot support a complete isolation/provenance claim.
+
+Scope correction: `a6-a7-loaded-provenance-correction.json`, SHA-256 `e8cc718dd25560ae24622bb63a225ec5a9cd429b126beee6cb6900902b17e247`. Scanner/layout investigation: `a7-home-projection-isolation-investigation.json`, SHA-256 `06925ec97291db05dd25d20a429809eef8d4140b96d5c4f29a89649bc9cec3c2`. The original reports retain their bytes and hashes; the explicit scope correction supersedes only overbroad isolation/loading statements.
+
+The existing provisioning code supports a same-domain flat layout directly under the deployment root. It preserves canonical credential/artifact checks and falls outside the identified scanner glob. However, that root is UID505/mode0755 and the current UID502 cannot create new flat homes. Preparing nine fresh, unregistered, task-only directories requires an explicit administrator operation; no chmod/chown, identity switch, credential relocation or further trial has been performed. A concrete bounded setup is being prepared. User re-login is not indicated. Complete unattended end-to-end acceptance remains NOT_PROVEN, and production activation is excluded.
