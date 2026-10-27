@@ -56,6 +56,7 @@ import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/sr
 // Identity capability providers via the package's TRACKED PUBLIC ENTRY (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 closure amendment): a tracked relative path closes under plain source resolution in every checkout — no untracked node_modules bridge, no manual link step. package.json exports["."] exposes the same file.
 import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
 import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
+import { provideOwnerAssistanceResumeEvidenceAccess } from './workflow/owner-assistance-resume-evidence.js'
 import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
 import { mountWorkflowExecutionContextRuntime } from './workflow-execution-context-runtime.js'
 import { mountWorkflowProgressRuntime } from './workflow-progress-runtime.js'
@@ -94,11 +95,9 @@ export {
   resolveReplyRenderMode,
   warnInvalidUnconfiguredFeishuEnv,
 } from './feishu-env.js'
-
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
 export const TARGET_PROXY_NODE_VERSION = 'v25.6.1'
-
 function invalidProxyRuntime(key, invalidClass) {
   return Object.assign(
     new Error(`production-runtime: invalid agent model overrides: ${key}: ${invalidClass}`),
@@ -114,7 +113,6 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
     throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
   }
 }
-
 // The fleet shared-Codex migration functions live in their own module
 // (structure-only move; compose keeps the stable re-export surface for the
 // existing tests and the executable).
@@ -534,6 +532,8 @@ export async function composeProductionRuntime(options = {}) {
       }
     },
   }))
+
+  provideOwnerAssistanceResumeEvidenceAccess({ ctx, workflowOrigin: workflowServiceOrigin, brokerCredentialsFile, brokerAuthServiceOrigin })
   // AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: shared local coding-executor
   // capability. Additive and agent-agnostic; refuses honestly (config_missing)
   // until the Operator provisions dev-execution/{repos.json,backend.json}.

@@ -24,7 +24,7 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
   const handle = 'turn:runtime:a1:g1:s1'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { current_node_visit_id: VISIT } } }),
+    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } }),
   }
   const principalAccess = {
     handlers: {

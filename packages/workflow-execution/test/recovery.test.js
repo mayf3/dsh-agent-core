@@ -24,7 +24,7 @@ const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 const AGENT = 'agt_writing-style-analyst-agent'
 const AUTHORITY = 'OWNER_RULING_TEST_AUTHORITATION'
-const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } })
+const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } })
 
 /**
  * Engine fixture with fully mutable seams. `state.resolve.ok` models the
@@ -68,6 +68,7 @@ function makeFixture({
     resolveCallerCorrelation: ({ requestId }) => state.correlation({ requestId }),
     readInstanceDetail: async () => {
       calls.probes += 1
+      if (calls.probes === 1) return STILL_CURRENT()
       return state.detail()
     },
   })
