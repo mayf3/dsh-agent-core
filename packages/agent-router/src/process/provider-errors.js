@@ -27,7 +27,7 @@ export function classifyProviderError({ code, message } = {}) {
   if (/credential[_ -]?missing|auth(?:entication)? file.*(?:missing|not found)|provider is not configured/u.test(text)) return 'credential_missing'
   if (/model[_ -]?(?:unavailable|not[_ -]?found)|unknown model|unsupported model/u.test(text)) return 'model_unavailable'
   if (/provider[_ -]?unavailable|service unavailable|econnrefused|enotfound|network.*unavailable/u.test(text)) return 'provider_unavailable'
-  if (code === 'SESSION_WORKSPACE_MISMATCH') return code
+  if (code === 'SESSION_WORKSPACE_MISMATCH' || code === 'NATIVE_GOAL_PROTOCOL_UNAVAILABLE') return code
   return 'provider_runtime_rejection'
 }
 
@@ -57,6 +57,7 @@ export function sanitizeProviderError(providerError, { agentId, provider, model 
 
 /** Provider error classes that fail loud at initialize (no retry masking). */
 export const FAIL_LOUD_PROVIDER_ERRORS = new Set([
+  'NATIVE_GOAL_PROTOCOL_UNAVAILABLE',
   'credential_missing',
   'oauth_expired_or_revoked',
   'provider_unavailable',
