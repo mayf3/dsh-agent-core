@@ -36,7 +36,7 @@ export async function readCompleteBody({ call, manifest, transport, context = {}
   const args = completeArguments(call?.args)
   if (call?.operation !== 'read') return completeFailure({ code: 'unsupported_operation' }, manifest)
   if (!args) return completeFailure({ code: 'invalid_arguments' }, manifest)
-  if (typeof context.agentId !== 'string' || !context.agentId) return completeFailure({ code: 'credential_unavailable' }, manifest)
+  if (typeof context?.agentId !== 'string' || !context.agentId) return completeFailure({ code: 'credential_unavailable' }, manifest)
   const owned = control ?? createTransportControl({ deadlineMs: L.deadline, maxEntityBytes: L.entity,
     maxTotalBytes: L.total, maxAttempts: L.attempts, signal: context.signal })
   const binding = bindingFor(args), chunks = []

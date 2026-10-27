@@ -264,3 +264,14 @@ test('parsed UUID spellings use canonical wire/output identity', async t => {
   const r = await f.execute(a)
   assert.equal(r.ok, true); assert.deepEqual(r.result.binding, binding)
 })
+
+
+for (const context of [null, undefined, {}, { agentId: null }, { agentId: '' }]) {
+  test(`missing trusted context ${JSON.stringify(context)} fails without credential or HTTP`, async t => {
+    const f = await fixture(t, '{}')
+    const r = await f.gateway.execute({ capabilityId: id, operation: 'read', args: argsFor('{}') }, context)
+    assert.equal(r.ok, false); assert.equal(r.error.code, 'credential_unavailable')
+    assert.equal(f.tokens.length, 0); assert.equal(f.requests.length, 0)
+    assert.ok(Buffer.byteLength(JSON.stringify(r)) < 4096)
+  })
+}
