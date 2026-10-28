@@ -12,6 +12,7 @@ revision: r1
 candidate_base: 01c1cd0c4a980e1a37878ea5ad05f4d46fb3ba99
 scope:
   - packages/broker/src/capabilities/workflow-assistance.js
+  - packages/broker/src/capabilities/workflow.js
   - packages/production-runtime/src/workflow-execution-runtime.js
 governed_by:
   - AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1
@@ -20,11 +21,7 @@ supersedes: []
 superseded_by: null
 owners:
   - mayf3
-external_authorities:
-  - repository: mayf3/svc-workflow
-    authority_id: SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
-    revision: c8937e567a429160779ee7db0cb7b53efbe8ed3e
-    relation: interoperates_with
+external_authorities: []
 ---
 
 # AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
@@ -33,8 +30,10 @@ This proposed Contract authorizes a later bounded Core implementation of two
 behaviors: a running Domain Owner Agent may use existing published-definition
 reads and one atomic Svc operation to create and bind a governance child; and
 the normal due poll admits only work for which Svc reports typed `READY`.
-The paired Svc Spec is required. This candidate grants no production authority
-and does not claim unattended end-to-end business success.
+The paired Svc Spec is required and its exact reviewed head must be pinned by
+the paired acceptance record. This candidate does not bind a companion base or
+claim a candidate file exists at its predecessor base. It grants no production
+authority and does not claim unattended end-to-end business success.
 
 ## 1. Goal
 
@@ -56,9 +55,9 @@ recovery of `CLOSED`/`UNKNOWN`/indefinite `WAITING`, or production apply.
 This is `AUTHORITY_ACTION=NEW`, `PLAN_LEVEL=EXEC_PLAN`,
 `ASSURANCE_LEVEL=CONTROLLED`; route stage is `AUTHORITY_AUTHORING` and the new
 authority is not accepted in this base. Governing parents are Core GCR V1 and
-WEC V2. Paired Svc `SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1` at candidate
-base `c8937e567a429160779ee7db0cb7b53efbe8ed3e` is required for the atomic
-command and readiness wire contract. Acceptance in a docs-only branch does
+WEC V2. Paired Svc `SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1` is required for the atomic
+command and readiness wire contract; its exact reviewed head must be bound in
+the paired acceptance record. Acceptance in a docs-only branch does
 not activate implementation authority; production apply stays none.
 
 ## 4. Current State
@@ -146,9 +145,15 @@ capability. It MUST select one exact published same-Domain child
 `definitionVersionId` and one exact terminal `acceptanceTransitionId` whose
 published schema declares the closed GCR acceptance envelope required by GCR
 V1. It MUST NOT infer a Definition ID from a name, workflow text, or model
-output alone. Zero or multiple compatible candidates, unreadable schema,
-foreign/disabled Domain, or unclear fit stops before mutation and leaves the
-existing Assistance path unchanged. This is a bounded use of the Owner's
+output alone. The agent compares exact case source facts, published schemas,
+terminal-transition shape, and acceptance-task fit. If those facts select one
+candidate, it proceeds even if other published Definitions pass generic
+schema checks. If multiple candidates remain compatible after that comparison
+and no exact choice is present in authoritative case/input facts, unresolved
+ambiguity stops before mutation. Unreadable schema, foreign/disabled Domain,
+or unclear fit also stops before mutation and leaves the existing Assistance
+path unchanged. No ranking heuristic, ID/name convention, or selector registry
+is introduced. This is a bounded use of the Owner's
 existing create-and-bind authorization, not a new policy registry or approval.
 
 Core exposes one closed operation on the existing
@@ -197,25 +202,30 @@ child for ordinary work.
 
 ### CTR-WPOC-002 — READY-only due admission
 
-The existing Core due poll MUST read the paired Svc
-`GET /internal/v1/dispatchable-intents` projection, which contains only due,
-active intents whose per-row readiness status is `READY`. The request uses
-the existing scheduler read authentication and bounded `limit`/opaque cursor;
-each row preserves the existing due-intent coordinates and adds the literal
-typed readiness status. Core MUST NOT call the legacy raw due endpoint
-as an automatic fallback if the new endpoint fails, is unavailable, returns an
-unknown status, or has an invalid page. Such work remains undispatched; report
-the read failure through the existing scheduler error path. The raw due API
-continues to serve its existing time-only consumers and is not reinterpreted.
+The existing Core due poll MUST use the additive Broker operation
+`workflow_dispatch_intents.list_ready`, mapped to the paired Svc
+`GET /internal/v1/dispatch-intents/ready` projection. This distinct closed
+route returns only active, time-due intents whose prerequisite is `READY`.
+Existing `workflow_dispatch_intents.list` retains the raw time-only due
+meaning. The request uses the existing scheduler read authentication and
+bounded `limit`, `afterNextEligibleAt`, and `afterDispatchIntentId` keyset
+arguments; the pair is both-or-neither and copied exactly from the last
+returned row. Each row preserves the existing due-intent coordinates and adds
+literal `readinessStatus: "READY"`. Core MUST NOT call the legacy raw due
+endpoint as an automatic fallback if the new endpoint fails, is unavailable,
+returns an unknown status, or has an invalid page. Such work remains
+undispatched; report the read failure through the existing scheduler error
+path. The raw due API continues to serve its existing time-only consumers and
+is not reinterpreted.
 
-The dispatchable projection includes dependency-free, time-due work as
-`READY`, preserving ordinary workflows. Its page is ordered by a stable due
-tuple and the Svc filters for `READY` before applying page size. A continuation
-token is scoped to one poll scan; a new ordinary poll starts from the first
-page and recomputes readiness. Thus WAITING/CLOSED/UNKNOWN rows ahead of a
-READY row cannot fill a page or starve it. Core drains the returned pages for
-that poll and stops on the typed empty terminal page. Malformed/repeated
-continuation tokens fail closed for that poll.
+Dependency-free, time-due work remains included. Svc orders by
+`(nextEligibleAt, dispatchIntentId)`, filters active + time-due + prerequisite
+READY before applying `limit`, and accepts the existing both-or-neither
+keyset pair `afterNextEligibleAt`/`afterDispatchIntentId`. Core drains pages for
+one poll, setting the pair to the exact last row returned, and stops when the
+returned page is shorter than the requested limit. A WAITING/CLOSED/UNKNOWN
+prefix therefore cannot consume a page or starve a later READY row. A new normal poll starts from the first page and recomputes readiness;
+malformed/repeated cursor handling remains fail-closed.
 
 Only returned `READY` intents may enter existing WEC attempt planning, Router
 delivery, or retry logic. `WAITING`, `CLOSED`, `UNKNOWN`, missing status, and
@@ -312,9 +322,14 @@ review; neither is a license to weaken the Contract.
 
 Implementation surface and stop conditions
 
-Expected Core touch points are limited to the existing assistance Broker
-capability and `workflow-execution-runtime.js` due-page reader, with focused
-capability/runtime tests. Do not add WEC state or change attempt-ledger
+Expected Core touch points are limited to the existing assistance and
+dispatch-intent Broker capabilities and
+`workflow-execution-runtime.js` due-page reader, with focused capability and
+runtime tests. Before attempt planning, Core rechecks the exact dependent
+tuple, configured runtime binding, Domain enablement, and current authorization
+through existing WEC/Svc validation. An exact upstream terminal proof is
+immutable once committed; later source archival cannot revoke readiness. No
+Core wait truth or lease is added. Do not add WEC state or change attempt-ledger
 semantics. If Core cannot enforce READY-only polling without a bypassing raw
 fallback, stop and revise this Contract before implementation. If published
 Definition reads cannot establish one exact compatible candidate, stop before

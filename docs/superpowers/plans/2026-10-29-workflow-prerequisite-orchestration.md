@@ -35,7 +35,7 @@ existing focused tests. Do not change WEC storage or GCR's existing bind,
 review, or resolve semantics.
 
 Stop if paired authority is not accepted at exact implementation bases, if
-Definition reads do not identify exactly one compatible published Version,
+case facts/schema/task fit do not resolve one exact compatible published Definition,
 if unknown create-bind cannot be safely read back, or if the runtime can use a
 raw-due fallback. CLOSED/UNKNOWN and indefinitely WAITING remain readable stop
 states; no automatic recovery claim. Production apply requires separate
