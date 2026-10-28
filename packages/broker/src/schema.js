@@ -19,7 +19,7 @@
  * keyed by capability id / operation name. This keeps docs/reports/broker-v1.md
  * honest: trusted outbound bindings, including static body projections, remain manifest data.
  */
-import { validateHttpBodyProjections } from './transport/body-projection.js'
+import { validateHttpBodyProjections, validateHttpReadProjection } from './transport/body-projection.js'
 
 /**
  * Validate a capability manifest object into its canonical form.
@@ -482,7 +482,7 @@ function validateHttpBinding(http, at, properties) {
     }
   }
 
-  const projectionError = validateHttpBodyProjections(http, at, properties); if (projectionError) return projectionError
+  const projectionError = validateHttpBodyProjections(http, at, properties) ?? validateHttpReadProjection(http, at, properties); if (projectionError) return projectionError
   if (http.idempotencyKey !== undefined && typeof http.idempotencyKey !== 'boolean') {
     return `${at}.idempotencyKey must be a boolean`
   }

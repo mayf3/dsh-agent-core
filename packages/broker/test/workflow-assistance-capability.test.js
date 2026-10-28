@@ -19,7 +19,7 @@ test('Domain Owner assistance read/action are split by least-privilege scope', (
   assert.deepEqual(read.requiredScopes, ['workflow.read'])
   assert.deepEqual(action.requiredScopes, ['workflow.execute'])
   assert.deepEqual(read.operations.map((op) => op.name), ['owner_inbox', 'detail'])
-  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'escalate_to_human', 'bind_governance'])
+  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'resolve_current_governance_review', 'escalate_to_human', 'bind_governance'])
   assert.equal(read.operations[0].http.path, '/internal/v1/assistance-cases/owner-inbox')
   assert.equal(read.operations[1].http.path, '/internal/v1/assistance-cases/{assistanceCaseId}')
 })
