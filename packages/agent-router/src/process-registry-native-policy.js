@@ -11,7 +11,7 @@ function resolveProcessConfigForAgent(agentId, processConfig, resolveNativeToolP
     : { ...trustedConfig, nativeToolPolicy }
 }
 
-export function createNativePolicyRegistryBinding({ resolveNativeToolPolicy, resolveProcessConfig }) {
+export function createNativePolicyRegistryBinding({ resolveNativeToolPolicy, resolveProcessConfig, getCurrentPolicy }) {
   function hasPolicy(agentId) {
     return resolveTrustedNativeToolPolicy(resolveNativeToolPolicy?.(agentId), agentId) !== undefined
   }
@@ -19,10 +19,12 @@ export function createNativePolicyRegistryBinding({ resolveNativeToolPolicy, res
   function prepareWanted(agentId, wanted) {
     const sourceConfig = wanted.processConfig ?? resolveProcessConfig(agentId) ?? {}
     const processConfig = resolveProcessConfigForAgent(agentId, sourceConfig, resolveNativeToolPolicy)
+    const policyWasRemoved = processConfig.nativeToolPolicy === undefined
+      && getCurrentPolicy(agentId) !== undefined
     return {
       ...wanted,
       processConfig,
-      ...(processConfig.nativeToolPolicy === undefined
+      ...(!policyWasRemoved && processConfig.nativeToolPolicy === undefined
         ? {}
         : { routeIdentity: canonicalRouteIdentity(processConfig) }),
     }
@@ -50,5 +52,14 @@ export function createNativePolicyRegistryBinding({ resolveNativeToolPolicy, res
     })
   }
 
-  return { hasPolicy, prepareWanted, prepareStartupConfig, ensureRunning }
+  function ensureIfBound(agentId, currentProcess, routeGate) {
+    try {
+      if (!hasPolicy(agentId) && currentProcess?.nativeToolPolicy === undefined) return undefined
+      return ensureRunning(agentId, routeGate)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
+  return { prepareWanted, prepareStartupConfig, ensureIfBound }
 }
