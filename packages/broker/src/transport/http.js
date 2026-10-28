@@ -1,6 +1,12 @@
 import { TransportControlError } from './control.js'
 import { requestAccessToken, DEFAULT_TIMEOUT_MS } from './token.js'
 import { TransportBindingError, buildPath, buildQuery, buildRequestHeaders, createIdempotencyKey } from './binding.js'
+import {
+  applyHttpBodyProjections,
+  applyHttpReadBodyProjections,
+  assertHttpReadProjectionTargetsAbsent,
+  evaluateHttpReadResponseChecks,
+} from './body-projection.js'
 import { buildDownstreamError, extractRequestId } from './errors.js'
 import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
 
@@ -101,15 +107,15 @@ export function createHttpTransport(opts = {}) {
     }
 
     const body = {}
-    let hasBody = false
     for (const name of http.body || []) {
       const value = args[name]
       if (value !== undefined) {
         body[name] = value
-        hasBody = true
       }
     }
-    return { path, query, body: hasBody ? body : undefined }
+    const projectedBody = applyHttpBodyProjections(http, args, body)
+    assertHttpReadProjectionTargetsAbsent(http, projectedBody)
+    return { path, query, body: Object.keys(projectedBody).length > 0 ? projectedBody : undefined }
   }
 
   // ── Execute ─────────────────────────────────────────────────────────────
@@ -123,7 +129,7 @@ export function createHttpTransport(opts = {}) {
    * @returns {Promise<unknown>} the parsed business response (JSON or text),
    *   or an error object `{ errorCode, status?, detail? }`.
    */
-  async function executeCore({ manifest, operation, args, control }) {
+  async function executeCore({ manifest, operation, args, control, executeRead }) {
     const op = manifest.operations.find((o) => o.name === operation)
     const http = op && op.http
     if (!http) return { errorCode: 'unsupported_operation' }
@@ -136,22 +142,6 @@ export function createHttpTransport(opts = {}) {
     // Identity: the credential comes ONLY from the injected seam. Arguments
     // carrying agentId / principalId / sessionKey / credential are never read
     // here — they are not in the binding lists and cannot reach the wire.
-    let credential
-    try {
-      credential = control ? await control.wait(() => credentialProvider.getCredential()) : await credentialProvider.getCredential()
-    } catch (error) {
-      if (!control || error instanceof TransportControlError) throw error
-      return { errorCode: 'credential_unavailable' }
-    }
-    if (credential === undefined) {
-      return { errorCode: 'credential_unavailable' }
-    }
-    if (typeof credential.clientId !== 'string' || credential.clientSecret === undefined || typeof credential.clientSecret !== 'string') {
-      return { errorCode: 'credential_unavailable', detail: 'identity seam returned a malformed credential' }
-    }
-
-    const scope = (manifest.requiredScopes || []).join(' ')
-
     let binding
     try {
       binding = bindRequest(http, args)
@@ -161,6 +151,20 @@ export function createHttpTransport(opts = {}) {
       }
       throw err
     }
+
+    let credential
+    try {
+      credential = control ? await control.wait(() => credentialProvider.getCredential()) : await credentialProvider.getCredential()
+    } catch (error) {
+      if (!control || error instanceof TransportControlError) throw error
+      return { errorCode: 'credential_unavailable' }
+    }
+    if (credential === undefined) return { errorCode: 'credential_unavailable' }
+    if (typeof credential.clientId !== 'string' || credential.clientSecret === undefined || typeof credential.clientSecret !== 'string') {
+      return { errorCode: 'credential_unavailable', detail: 'identity seam returned a malformed credential' }
+    }
+
+    const scope = (manifest.requiredScopes || []).join(' ')
 
     // Idempotency-Key: generated in the trusted zone when the capability asks
     // for it; reused verbatim on the 401 retry (server-side dedup).
@@ -172,6 +176,40 @@ export function createHttpTransport(opts = {}) {
     } catch (err) {
       if (err instanceof TransportControlError) throw err
       return { errorCode: err?.errorCode ?? 'transport_failure', status: err?.status, detail: sanitizeErrorDetail(`token acquisition failed: ${err.message}`) }
+    }
+
+    if (http.readProjection) {
+      const read = http.readProjection
+      if (typeof executeRead !== 'function') {
+        return { errorCode: 'authoritative_reference_unavailable', detail: 'read projection gateway executor is unavailable' }
+      }
+      const sourceArgs = {}
+      for (const { sourceArg, targetArg } of read.argumentBindings) {
+        if (!Object.hasOwn(args, sourceArg) || args[sourceArg] === undefined) {
+          return { errorCode: 'invalid_arguments', detail: `read projection source argument is missing: ${sourceArg}` }
+        }
+        sourceArgs[targetArg] = args[sourceArg]
+      }
+      let sourceEnvelope
+      try {
+        sourceEnvelope = await executeRead({ capabilityId: read.capabilityId, operation: read.operation, args: sourceArgs })
+      } catch (error) {
+        if (error instanceof TransportControlError) throw error
+        return { errorCode: 'transport_failure', detail: sanitizeErrorDetail(`authorized source read failed: ${error.message}`) }
+      }
+      if (sourceEnvelope?.ok !== true) {
+        const error = sourceEnvelope?.error
+        return { errorCode: error?.code ?? 'authoritative_reference_unavailable', status: error?.status, detail: error?.detail }
+      }
+      const sourceResult = sourceEnvelope.result
+      const failedCheck = evaluateHttpReadResponseChecks(read, args, sourceResult)
+      if (failedCheck) return { errorCode: failedCheck }
+      try {
+        binding.body = applyHttpReadBodyProjections(read, sourceResult, binding.body || {})
+      } catch (err) {
+        if (err instanceof TransportBindingError) return { errorCode: 'authoritative_reference_unavailable', detail: err.message }
+        throw err
+      }
     }
 
     // Transport-controlled headers (Authorization / Content-Type / Accept) are
@@ -276,12 +314,12 @@ export function createHttpTransport(opts = {}) {
  * @param {{ execute: Function }} transport - a transport instance.
  * @returns {Record<string, (operation: string, args: object, principal: unknown) => Promise<unknown>>}
  */
-export function createHttpHandlers(manifest, transport) {
+export function createHttpHandlers(manifest, transport, { executeRead } = {}) {
   const handlers = {}
   for (const op of manifest.operations) {
     if (!op.http) continue
     handlers[op.name] = async (_operation, args) => {
-      const res = await transport.execute({ manifest, operation: op.name, args })
+      const res = await transport.execute({ manifest, operation: op.name, args, executeRead })
       return res
     }
   }
