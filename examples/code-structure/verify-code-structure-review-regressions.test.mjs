@@ -119,6 +119,25 @@ test('moving an over-limit in-scope file to excluded docs or an unsupported exte
   }
 });
 
+test('moving an over-limit file with a small comment edit to excluded docs stays blocked', (t) => {
+  const work = fixture(t);
+  const oldPath = 'examples/review-edited-move.js';
+  const destination = 'docs/review-edited-move.js';
+  write(work, oldPath, sourceLines());
+  commit(work, 'create edited move fixture');
+  const base = currentRef(work);
+  execFileSync('git', ['mv', oldPath, destination], { cwd: work });
+  const movedPath = path.join(work, destination);
+  writeFileSync(movedPath, readFileSync(movedPath, 'utf8').replace('// source 0', '// edited source 0'));
+  commit(work, 'move over-limit source and edit one comment');
+
+  const result = run(work, base);
+  assert.equal(result.status, 1, result.stderr);
+  const report = JSON.parse(result.stdout);
+  assert.ok(report.findings.some((item) => item.path === destination && item.rule === 'EXCLUDED_ROOT_MOVE'));
+  assert.ok(!report.resolved_debt.some((item) => item.path === oldPath));
+});
+
 test('registry expiry must be strictly future and malformed roots or entries exit 2', (t) => {
   const work = fixture(t);
   const registryPath = path.join(work, '.agents/structure-registry.json');
