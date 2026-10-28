@@ -106,6 +106,21 @@ function diff(base, head) {
   }
   return result;
 }
+function renameTargets(base, head) {
+  const fields = git(['diff', '--name-status', '-z', '--find-renames=50%', base, head]).split('\0').filter(Boolean);
+  const targets = new Map();
+  for (let index = 0; index < fields.length;) {
+    const status = fields[index++];
+    if (status.startsWith('R')) {
+      const source = fields[index++], destination = fields[index++];
+      if (!source || !destination) stop('Git returned malformed NUL-delimited rename status');
+      targets.set(source, destination);
+    } else {
+      if (!fields[index++]) stop('Git returned malformed NUL-delimited name-status');
+    }
+  }
+  return targets;
+}
 function tree(ref, fileList) {
   const files = new Set(fileList);
   const children = new Map();
@@ -271,8 +286,10 @@ function affectedFinding(item, changed, affectedDirs, baseTree, headTree) {
   }
   return changed.has(item.path);
 }
-function excludedMoveDestination(old, base, head, headFiles, changed, vendored, allowlist) {
+function excludedMoveDestination(old, base, head, headFiles, changed, renames, vendored, allowlist) {
   if (old.classification === 'directory' || old.physicalLines <= LIMIT.file) return null;
+  const renamed = renames.get(old.path);
+  if (renamed && headFiles.has(renamed) && !inScope(renamed, vendored, allowlist)) return renamed;
   const content = readAt(base, old.path);
   for (const [candidate, change] of changed) {
     if (change.status !== 'A' || inScope(candidate, vendored, allowlist)) continue;
@@ -282,7 +299,7 @@ function excludedMoveDestination(old, base, head, headFiles, changed, vendored, 
 }
 function main() {
   const args = argsOf(process.argv.slice(2)), base = resolve(args.base), head = resolve(args.head);
-  const fixed = resolve(BASELINE), changes = diff(base, head), baseFiles = filesAt(base), headFiles = filesAt(head);
+  const fixed = resolve(BASELINE), changes = diff(base, head), renames = renameTargets(base, head), baseFiles = filesAt(base), headFiles = filesAt(head);
   const baseRegistry = registryAt(base), headRegistry = registryAt(head);
   if (baseRegistry.raw !== headRegistry.raw) stop('registry or generated allowlist changed between base and head');
   const ruleText = readAt(head, RULE);
@@ -315,7 +332,7 @@ function main() {
   for (const [key, old] of baseMap) {
     if (old.severity !== 'VIOLATION') continue;
     if (!headMap.has(key)) {
-      const movedTo = excludedMoveDestination(old, base, head, new Set(headFiles), changes, vendoredAt(head), headRegistry.reg.generated_allowlist);
+      const movedTo = excludedMoveDestination(old, base, head, new Set(headFiles), changes, renames, vendoredAt(head), headRegistry.reg.generated_allowlist);
       if (movedTo) {
         candidate.push({ ...old, check: 'FILE_LINE_LIMIT', rule: 'EXCLUDED_ROOT_MOVE', path: movedTo,
           classification: 'excluded-moved-code', detail: `over-limit in-scope content moved from ${old.path}`,
