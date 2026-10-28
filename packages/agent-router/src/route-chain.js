@@ -151,6 +151,7 @@ export function canonicalRouteIdentity(processConfig = {}) {
     subscription?.pluginVersion ?? null,
     ...(subscription?.reasoningEffort === undefined ? [] : [subscription.reasoningEffort]),
     subscription?.credentialFile === undefined ? 'ABSENT' : resolve(subscription.credentialFile),
+    ...(processConfig.nativeToolPolicy === undefined ? [] : [processConfig.nativeToolPolicy.policyDigest]),
     providerEnv === undefined
       ? 'ABSENT'
       : PROVIDER_ENV_IDENTITY_KEYS.map((key) => [key, providerEnv[key] ?? null]),

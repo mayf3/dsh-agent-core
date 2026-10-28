@@ -26,6 +26,7 @@ import { redactSensitiveText } from './process/index.js'
 import { fencedRejection } from './process/state-machine.js'
 import { createParentRpcHandler } from './parent-rpc-relay.js'
 import { canonicalRouteIdentity } from './route-chain.js'
+import { createNativePolicyRegistryBinding } from './process-registry-native-policy.js'
 import { resolveProductionRoot } from './deadline-config.js'
 import { createRouteGate, installStartupSlot } from './process-registry-route-gate.js'
 import { hasExactDeathEvidence } from './process-registry-death-evidence.js'
@@ -63,7 +64,7 @@ function restoreRecoveryFences(store) {
 /** Create the per-Agent process registry bound to one router mount. */
 export function createProcessRegistry({
   log, cfg, workspaceBootstrap, agentDefinition, deadlineConfig, reconciliationStore,
-  processFactory, resolveProcessConfig, provisionHome, switchAgent, getBrokerGateway,
+  processFactory, resolveProcessConfig, resolveNativeToolPolicy, provisionHome, switchAgent, getBrokerGateway,
 }) {
   /** agentId -> lifecycle slot (one live owner per agent). */
   const lifecycleSlots = new Map()
@@ -74,6 +75,14 @@ export function createProcessRegistry({
   let disposing = false
 
   restoreRecoveryFences(reconciliationStore)
+  const nativePolicyBinding = createNativePolicyRegistryBinding({
+    resolveNativeToolPolicy,
+    resolveProcessConfig,
+    getCurrentPolicy: (agentId) => {
+      const slot = lifecycleSlots.get(agentId)
+      return slot?.processRef?.nativeToolPolicy ?? slot?.spawnConfig?.processConfig?.nativeToolPolicy
+    },
+  })
 
   // DEC-IMPL-004 route-aware reuse gate (ordered route chain Q-4): the
   // route-aware ensureRunning variant the unified chain executor calls.
@@ -84,6 +93,7 @@ export function createProcessRegistry({
     bootstrapStartup,
     assertRunnable,
     isDisposing: () => disposing,
+    prepareWanted: nativePolicyBinding.prepareWanted,
   })
 
   function auditStaleSlot(detail) {
@@ -222,6 +232,9 @@ export function createProcessRegistry({
    */
   function ensureRunning(agentId) {
     if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
+    const policyStartup = resolveNativeToolPolicy === undefined ? undefined
+      : nativePolicyBinding.ensureIfBound(agentId, lifecycleSlots.get(agentId)?.processRef, routeGate)
+    if (policyStartup !== undefined) return policyStartup
     // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous
     // and precedes every asynchronous bootstrap step, including workspace
     // seeding. Returning the entry's exact resultPromise (rather than an
@@ -300,6 +313,9 @@ export function createProcessRegistry({
       // slot at turn-start snapshot time (parent CTR-007); legacy spawns keep
       // resolving the default route here (process-boundary re-read only).
       processConfig = entry.spawnConfig?.processConfig ?? resolveProcessConfig(agentId) ?? {}
+      if (entry.spawnConfig === null) {
+        processConfig = nativePolicyBinding.prepareStartupConfig(agentId, processConfig)
+      }
       // DEC-IMPL-004 reuse identity: recorded on the slot so the route gate
       // can compare later attempts against this process's frozen route.
       entry.routeIdentity = entry.spawnConfig?.routeIdentity ?? canonicalRouteIdentity(processConfig)
@@ -340,6 +356,7 @@ export function createProcessRegistry({
         model: processConfig.model,
         providerEnv: processConfig.providerEnv,
         omitEnv: processConfig.omitEnv,
+        nativeToolPolicy: processConfig.nativeToolPolicy,
         log,
         // The per-agent process must know its own identity: the memory plugin
         // and the switch tool resolve agentId from $DSH_AGENT_ID when set.

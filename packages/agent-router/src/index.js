@@ -263,6 +263,7 @@ export function apply(ctx, config) {
     reconciliationStore,
     processFactory,
     resolveProcessConfig,
+    resolveNativeToolPolicy: cfg.resolveNativeToolPolicy,
     provisionHome,
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
