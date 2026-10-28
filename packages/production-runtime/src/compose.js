@@ -337,7 +337,7 @@ export async function composeProductionRuntime(options = {}) {
     agentProfile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
-    resolveProcessConfig,
+    resolveProcessConfig, resolveNativeToolPolicy: opts.resolveNativeToolPolicy,
     resolveRouteChain,
     // CTR-I2-015 (IMPL V2): the production runtime root instantiates the
     // default-off one-shot canary seam at
