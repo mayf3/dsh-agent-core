@@ -36,7 +36,7 @@ const REVIEW_WAKE_REQUIRED_FIELDS = [
   'ownerBindingId', 'reviewWakeId', 'bindingId', 'governanceChildInstanceId',
   'childNodeVisitId', 'childDefinitionVersionId', 'childTerminalEventId', 'acceptanceTransitionId',
 ]
-const REVIEW_WAKE_OPTIONAL_FIELDS = ['acceptanceContractDigest', 'childSubmissionId', 'childSubmissionDigest']
+const REVIEW_WAKE_OPTIONAL_FIELDS = ['childSubmissionId', 'childSubmissionDigest']
 
 class HttpError extends Error {
   constructor(status, code, message) {
@@ -198,9 +198,12 @@ export async function handleWorkflowExecutionRequest({ req, url, access, verifie
     const body = await readJsonBody(req)
     let wake
     if (body?.phase === REVIEW_WAKE_PHASE) {
-      requireClosedBody(body, new Set(['phase', ...REVIEW_WAKE_REQUIRED_FIELDS, ...REVIEW_WAKE_OPTIONAL_FIELDS]))
+      requireClosedBody(body, new Set(['phase', 'acceptanceContractDigest', ...REVIEW_WAKE_REQUIRED_FIELDS, ...REVIEW_WAKE_OPTIONAL_FIELDS]))
       for (const field of REVIEW_WAKE_REQUIRED_FIELDS) requireUuidBodyField(body, field)
-      for (const field of ['acceptanceContractDigest', 'childSubmissionDigest']) {
+      if (typeof body.acceptanceContractDigest !== 'string' || !SHA256_RE.test(body.acceptanceContractDigest)) {
+        throw new HttpError(400, 'invalid_arguments', 'acceptanceContractDigest must be a 64-character SHA-256 digest')
+      }
+      for (const field of ['childSubmissionDigest']) {
         if (body[field] !== undefined && (typeof body[field] !== 'string' || !SHA256_RE.test(body[field]))) {
           throw new HttpError(400, 'invalid_arguments', `${field} must be a 64-character SHA-256 digest`)
         }
