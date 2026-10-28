@@ -15,17 +15,25 @@ import { validateManifest } from '../src/schema.js'
 
 const ID = Object.freeze({
   caller: 'agt_current-review-owner',
-  case: '11111111-1111-4111-8111-111111111111',
-  sourceWorkflow: '22222222-2222-4222-8222-222222222222',
-  sourceVisit: '33333333-3333-4333-8333-333333333333',
-  binding: '44444444-4444-4444-8444-444444444444',
-  childDefinitionVersion: '55555555-5555-4555-8555-555555555555',
-  transition: '66666666-6666-4666-8666-666666666666',
-  terminalEvent: '77777777-7777-4777-8777-777777777777',
-  submission: '88888888-8888-4888-8888-888888888888',
+  case: 'c5f1ce95-5938-4fae-81e5-171f38b45c5b',
+  sourceWorkflow: 'eab83afb-cf78-4cca-a426-0952ed8a5baa',
+  sourceVisit: 'fbbbde10-cb0b-46e7-8e98-f3041589606a',
+  binding: '543f602a-2c46-46d3-af99-a361d97eb8ca',
+  childDefinitionVersion: 'b612f2a2-204d-46d8-b222-4e430d4d1e97',
+  transition: 'f08591b0-b5d7-4674-8f8f-9a2a7ec75b0c',
+  terminalEvent: '22b20ba8-d31e-4ee8-8c33-70013cd52b85',
+  submission: 'ac7ec06e-7e43-4e96-a154-43b71add4684',
 })
-const ACCEPTANCE_DIGEST = '9'.repeat(64)
-const SUBMISSION_DIGEST = 'a'.repeat(64)
+const ACCEPTANCE_DIGEST = '9f6f81160cc724ba102fb71007e948a9ffaef219c737b2b1784de1fa2c8db570'
+const SUBMISSION_DIGEST = 'd532cb26d292de518f3a5b9890c15147c50895520319d4a5a265555868b1934a'
+
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    for (const child of Object.values(value)) deepFreeze(child)
+    Object.freeze(value)
+  }
+  return value
+}
 
 function detailDto(overrides = {}) {
   return {
@@ -59,7 +67,7 @@ function detailDto(overrides = {}) {
   }
 }
 
-async function gatewayFixture(t, { detail = detailDto(), detailStatus = 200, denyScopes = [] } = {}) {
+async function gatewayFixture(t, { detail = detailDto(), detailStatus = 200, denyScopes = [], unknownPostOutcome = false } = {}) {
   const tokenRequests = []
   const svcRequests = []
   const tokenServer = createServer((req, res) => {
@@ -94,7 +102,12 @@ async function gatewayFixture(t, { detail = detailDto(), detailStatus = 200, den
       svcRequests.push(entry)
       if (req.method === 'GET') {
         res.writeHead(detailStatus, { 'content-type': 'application/json' })
-        res.end(detailStatus === 200 ? JSON.stringify(typeof detail === 'function' ? detail() : detail) : JSON.stringify({ error: { code: 'http_503' } }))
+        const errorCode = detailStatus === 404 ? 'assistance_case_not_found_or_not_visible' : 'http_503'
+        res.end(detailStatus === 200 ? JSON.stringify(typeof detail === 'function' ? detail() : detail) : JSON.stringify({ error: { code: errorCode } }))
+        return
+      }
+      if (unknownPostOutcome) {
+        req.socket.destroy()
         return
       }
       res.writeHead(200, { 'content-type': 'application/json' })
@@ -209,7 +222,7 @@ test('gateway registration rejects unresolved or undeclared read sources and arg
 
 test('gateway reads the exact current proof then resolves as the same actual caller with separate scopes', async (t) => {
   const { gateway, tokenRequests, svcRequests } = await gatewayFixture(t)
-  const result = await gateway.execute({
+  const call = deepFreeze({
     capabilityId: 'workflow_assistance_action',
     operation: 'resolve_current_governance_review',
     args: {
@@ -217,7 +230,9 @@ test('gateway reads the exact current proof then resolves as the same actual cal
       expectedWorkflowStateVersion: 3,
       resolution: { message: 'Owner explicitly accepted the reviewed child result.', supportingPayload: { preserved: true } },
     },
-  }, { agentId: ID.caller })
+  })
+  const originalArgs = structuredClone(call.args)
+  const result = await gateway.execute(call, { agentId: ID.caller })
 
   assert.deepEqual(result, { ok: true, result: { status: 'RESOLVED' } })
   assert.deepEqual(tokenRequests.map(({ scope }) => scope).sort(), ['workflow.execute', 'workflow.read'])
@@ -241,6 +256,20 @@ test('gateway reads the exact current proof then resolves as the same actual cal
     },
   })
   assert.match(svcRequests[1].idempotencyKey, /^ik-workflow-assistance-action-/)
+  assert.deepEqual(call.args, originalArgs, 'the trusted read projection must not mutate the caller-owned argument object')
+})
+
+test('invalid current-review invocation fails before source GET or resolve POST', async (t) => {
+  const { gateway, tokenRequests, svcRequests } = await gatewayFixture(t)
+  const result = await gateway.execute({
+    capabilityId: 'workflow_assistance_action', operation: 'resolve_current_governance_review',
+    args: { assistanceCaseId: ID.case, expectedWorkflowStateVersion: 3 },
+  }, { agentId: ID.caller })
+
+  assert.equal(result.ok, false)
+  assert.equal(result.error.code, 'invalid_arguments')
+  assert.deepEqual(tokenRequests, [])
+  assert.deepEqual(svcRequests, [])
 })
 
 test('read-scope denial uses the same actual credential and sends no detail GET or resolve POST', async (t) => {
@@ -291,6 +320,36 @@ test('failed authoritative read never reaches resolve POST', async (t) => {
   assert.deepEqual(svcRequests.map(({ method }) => method), ['GET'])
 })
 
+test('source 404 preserves its declared error and never reaches resolve POST', async (t) => {
+  const { gateway, svcRequests } = await gatewayFixture(t, { detailStatus: 404 })
+  const result = await gateway.execute({
+    capabilityId: 'workflow_assistance_action', operation: 'resolve_current_governance_review',
+    args: {
+      assistanceCaseId: ID.case, expectedWorkflowStateVersion: 3,
+      resolution: { message: 'Owner decision.' },
+    },
+  }, { agentId: ID.caller })
+
+  assert.equal(result.ok, false)
+  assert.equal(result.error.code, 'assistance_case_not_found_or_not_visible')
+  assert.deepEqual(svcRequests.map(({ method }) => method), ['GET'])
+})
+
+test('unknown resolve POST outcome is never replayed or followed by a read', async (t) => {
+  const { gateway, svcRequests } = await gatewayFixture(t, { unknownPostOutcome: true })
+  const result = await gateway.execute({
+    capabilityId: 'workflow_assistance_action', operation: 'resolve_current_governance_review',
+    args: {
+      assistanceCaseId: ID.case, expectedWorkflowStateVersion: 3,
+      resolution: { message: 'Owner decision.' },
+    },
+  }, { agentId: ID.caller })
+
+  assert.equal(result.ok, false)
+  assert.equal(result.error.code, 'transport_failure')
+  assert.deepEqual(svcRequests.map(({ method }) => method), ['GET', 'POST'])
+})
+
 test('stale version and inconsistent current-review detail stop after one GET and before POST', async (t) => {
   const wrongCase = detailDto({ assistanceCaseId: '99999999-9999-4999-8999-999999999999' })
   const staleVersion = detailDto({ workflowStateVersion: 4 })
@@ -300,18 +359,31 @@ test('stale version and inconsistent current-review detail stop after one GET an
   closedReview.governanceBinding.currentReview.reviewStatus = 'SETTLED'
   const nonAccepted = detailDto()
   nonAccepted.governanceTerminalProof.verdict = 'REJECTED'
+  const missingBinding = detailDto()
+  delete missingBinding.governanceBinding.bindingId
+  const missingTerminalRef = detailDto()
+  delete missingTerminalRef.governanceTerminalProof.terminalEventId
+  const nonStringSubmissionRef = detailDto()
+  nonStringSubmissionRef.governanceTerminalProof.submissionId = 123
+  const wrongDefinition = detailDto()
+  wrongDefinition.governanceTerminalProof.definitionVersionId = '99999999-9999-4999-8999-999999999999'
+  const wrongTransition = detailDto()
+  wrongTransition.governanceTerminalProof.transitionId = '99999999-9999-4999-8999-999999999999'
+  const wrongContractDigest = detailDto()
+  wrongContractDigest.governanceTerminalProof.acceptanceContractDigest = '8f6f81160cc724ba102fb71007e948a9ffaef219c737b2b1784de1fa2c8db570'
   const incompleteProof = detailDto()
   delete incompleteProof.governanceTerminalProof.submissionDigest
-  const responses = [wrongCase, staleVersion, wrongSource, closedReview, nonAccepted, incompleteProof]
+  const nonStringBindingRef = detailDto()
+  nonStringBindingRef.governanceBinding.bindingId = 123
+  const responses = [wrongCase, staleVersion, wrongSource, closedReview, nonAccepted, missingBinding,
+    missingTerminalRef, nonStringSubmissionRef, wrongDefinition, wrongTransition, wrongContractDigest,
+    incompleteProof, nonStringBindingRef]
   let detailIndex = 0
   const { gateway, svcRequests } = await gatewayFixture(t, { detail: () => responses[detailIndex++] })
   const expectedErrors = [
     'authoritative_reference_unavailable',
     'workflow_state_version_conflict',
-    'authoritative_reference_unavailable',
-    'authoritative_reference_unavailable',
-    'authoritative_reference_unavailable',
-    'authoritative_reference_unavailable',
+    ...Array(responses.length - 2).fill('authoritative_reference_unavailable'),
   ]
   for (const expectedCode of expectedErrors) {
     const result = await gateway.execute({
@@ -324,5 +396,5 @@ test('stale version and inconsistent current-review detail stop after one GET an
     assert.equal(result.ok, false)
     assert.equal(result.error.code, expectedCode)
   }
-  assert.deepEqual(svcRequests.map(({ method }) => method), ['GET', 'GET', 'GET', 'GET', 'GET', 'GET'])
+  assert.deepEqual(svcRequests.map(({ method }) => method), responses.map(() => 'GET'))
 })
