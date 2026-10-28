@@ -31,6 +31,7 @@ const actionErrors = [
   { code: 'assistance_case_not_found_or_not_visible', description: 'Case is absent or not visible.' },
   { code: 'assistance_status_conflict', description: 'Case status does not admit this action.' },
   { code: 'workflow_state_version_conflict', description: 'Workflow version CAS failed.' },
+  { code: 'authoritative_reference_unavailable', description: 'Current governance review evidence is absent, inconsistent, or no longer eligible.' },
   { code: 'invalid_assistance_payload', description: 'Assistance payload is invalid.' },
   { code: 'size_limit_exceeded', description: 'Assistance payload is too large.' },
   { code: 'idempotency_conflict', description: 'Idempotency key conflicts with an earlier request.' },
@@ -48,6 +49,19 @@ const payload = (label) => ({
   },
   required: ['message'],
 })
+
+const governanceChildReviewSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    bindingId: { type: 'string', description: 'Exact service-provided governance binding id.' },
+    terminalEventId: { type: 'string', description: 'Exact service-provided child terminal event id.' },
+    submissionId: { type: 'string', description: 'Exact service-provided acceptance submission id.' },
+    submissionDigest: { type: 'string', description: 'Exact service-provided submission digest.' },
+    acceptanceContractDigest: { type: 'string', description: 'Exact service-provided acceptance contract digest.' },
+  },
+  required: ['bindingId', 'terminalEventId', 'submissionId', 'submissionDigest', 'acceptanceContractDigest'],
+}
 
 export const workflowAssistanceReadManifest = withTransportErrors({
   id: 'workflow_assistance_read',
@@ -102,12 +116,15 @@ export const workflowAssistanceActionManifest = withTransportErrors({
   requiredScopes: ['workflow.execute'],
   errors: actionErrors,
   operations: [{    name: 'resolve',
-    description: 'Resolve an open assistance case after the Domain Owner handles the blocker.',
+    description:
+      'Resolve an open assistance case after the Domain Owner handles the blocker. '
+      + 'For a linked governance-child case, provide the exact five-field governanceChildReview reference at the top level, using service-provided values from workflow_assistance_read.detail; do not put rich child proof into the opaque supportingPayload.',
     arguments: {
       properties: {
         assistanceCaseId: uuid('Assistance case id'),
         expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
         resolution: payload('Resolution'),
+        governanceChildReview: governanceChildReviewSchema,
       },
       required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'resolution'],
     },
@@ -119,7 +136,64 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       path: '/internal/v1/assistance-cases/{assistanceCaseId}/resolve',
       pathParams: ['assistanceCaseId'],
       body: ['expectedWorkflowStateVersion', 'resolution'],
+      bodyProjections: [{
+        sourceArg: 'governanceChildReview',
+        destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+      }],
       idempotencyKey: true,
+    },
+  }, {
+    name: 'resolve_current_governance_review',
+    description:
+      'Resolve a linked accepted governance-child review only after the Domain Owner has inspected the exact child terminal event and submission and explicitly decides to resolve. '
+      + 'The Broker reads the current case detail as this same caller and projects its exact service-owned review references; do not copy or guess reference values. '
+      + 'If the evidence does not support resolution, explicitly use escalate_to_human.',
+    arguments: {
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Original workflow version for the existing Svc CAS; sent unchanged.' },
+        resolution: payload('Resolution'),
+      },
+      required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'resolution'],
+      additionalProperties: false,
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict', 'authoritative_reference_unavailable'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/resolve',
+      pathParams: ['assistanceCaseId'],
+      body: ['expectedWorkflowStateVersion', 'resolution'],
+      idempotencyKey: true,
+      readProjection: {
+        capabilityId: 'workflow_assistance_read',
+        operation: 'detail',
+        argumentBindings: [{ targetArg: 'assistanceCaseId', sourceArg: 'assistanceCaseId' }],
+        responseChecks: [
+          { responsePath: ['assistanceCaseId'], equalsArg: 'assistanceCaseId', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['status'], equals: 'OWNER_PENDING', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['workflowStateVersion'], equalsArg: 'expectedWorkflowStateVersion', errorCode: 'workflow_state_version_conflict' },
+          { responsePath: ['governanceBinding', 'assistanceCaseId'], equalsArg: 'assistanceCaseId', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'status'], equals: 'BOUND', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'source', 'workflowInstanceId'], equalsResponsePath: ['workflowInstanceId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'source', 'nodeVisitId'], equalsResponsePath: ['nodeVisitId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'child', 'definitionVersionId'], equalsResponsePath: ['governanceTerminalProof', 'definitionVersionId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'child', 'acceptanceTransitionId'], equalsResponsePath: ['governanceTerminalProof', 'transitionId'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'acceptanceContractDigest'], equalsResponsePath: ['governanceTerminalProof', 'acceptanceContractDigest'], errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'currentReview', 'deliveryStatus'], equals: 'DELIVERED', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceBinding', 'currentReview', 'reviewStatus'], equals: 'OUTSTANDING', errorCode: 'authoritative_reference_unavailable' },
+          { responsePath: ['governanceTerminalProof', 'verdict'], equals: 'ACCEPTED', errorCode: 'authoritative_reference_unavailable' },
+        ],
+        collisionBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+        bodyProjections: [
+          { responsePath: ['governanceBinding', 'bindingId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'bindingId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'terminalEventId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'terminalEventId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'submissionId'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'submissionId'], valueType: 'string' },
+          { responsePath: ['governanceTerminalProof', 'submissionDigest'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'submissionDigest'], valueType: 'string' },
+          { responsePath: ['governanceBinding', 'acceptanceContractDigest'], destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview', 'acceptanceContractDigest'], valueType: 'string' },
+        ],
+      },
     },
   }, {
     name: 'escalate_to_human',
