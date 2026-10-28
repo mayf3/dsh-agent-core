@@ -143,7 +143,15 @@ export const workflowAssistanceActionManifest = withTransportErrors({
     },
   }, {
     name: 'bind_governance',
-    description: 'Bind one existing same-Domain nonterminal governance child to this open case for later Owner review.',
+    description:
+      'Bind one existing same-Domain nonterminal governance child to this open case for later Owner review. '
+      + 'If the bind response is lost or returns transport_failure, read the exact case with workflow_assistance_read.detail. '
+      + 'Reconcile its assistanceCaseId and governanceBinding against the intended child instance and selected acceptance transition, '
+      + 'the acceptanceContractDigest, and persisted source/request and child-bind provenance: source workflowInstanceId, nodeVisitId, '
+      + 'requestContextRevisionId, definitionVersionId, requestPayloadDigest, requestCommandId and requestEventSequence; child '
+      + 'workflowInstanceId, definitionVersionId, contextRevisionAtBind and acceptanceTransitionId. Reuse a confirmed existing binding. '
+      + 'If readback is inconclusive, report UNKNOWN; do not invoke bind_governance again, create a replacement child, or use a new '
+      + 'idempotency key. The trusted transport key is hidden and must not be inferred from tool text.',
     arguments: {
       type: 'object',
       additionalProperties: false,

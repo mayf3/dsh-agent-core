@@ -26,6 +26,9 @@ test('Domain Owner assistance read/action are split by least-privilege scope', (
 test('governance bind is a closed typed workflow.execute mutation', () => {
   const action = assertValidManifest(workflowAssistanceActionManifest)
   const bind = action.operations.find((op) => op.name === 'bind_governance')
+  assert.match(bind.description, /If the bind response is lost or returns transport_failure, read the exact case with workflow_assistance_read\.detail/)
+  assert.match(bind.description, /selected acceptance transition, the acceptanceContractDigest, and persisted source\/request and child-bind provenance/)
+  assert.match(bind.description, /If readback is inconclusive, report UNKNOWN; do not invoke bind_governance again, create a replacement child, or use a new idempotency key/)
   assert.deepEqual(bind.arguments.required, [
     'assistanceCaseId', 'governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion',
   ])
@@ -128,6 +131,75 @@ test('bind_governance forwards only typed fields with trusted idempotency and pr
   assert.equal(extra.ok, false)
   assert.equal(extra.error.code, 'invalid_arguments')
   assert.equal(workflow.requests.length, 1)
+  await tokenServer.close()
+  await workflow.close()
+})
+
+test('lost bind response is reconciled through exact case detail without another mutation', async () => {
+  const tokenServer = await startTokenServer()
+  const receipt = {
+    bindingId: '44444444-4444-4444-8444-444444444444',
+    assistanceCaseId: BIND_IDS.case,
+    source: {
+      workflowInstanceId: '55555555-5555-4555-8555-555555555555',
+      nodeVisitId: '66666666-6666-4666-8666-666666666666',
+      requestContextRevisionId: '77777777-7777-4777-8777-777777777777',
+      definitionVersionId: '88888888-8888-4888-8888-888888888888',
+      requestPayloadDigest: 'b'.repeat(64),
+      requestCommandId: '99999999-9999-4999-8999-999999999999',
+      requestEventSequence: 12,
+    },
+    child: {
+      workflowInstanceId: BIND_IDS.child,
+      definitionVersionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      contextRevisionAtBind: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      acceptanceTransitionId: BIND_IDS.transition,
+    },
+    acceptanceContractDigest: 'a'.repeat(64),
+    status: 'BOUND',
+    currentReview: null,
+  }
+  let bindCommitted = false
+  const workflow = await startMockServer((_req, res, entry) => {
+    if (entry.method === 'POST') {
+      bindCommitted = true
+      // Model a service commit followed by a lost response.
+      res.destroy()
+      return
+    }
+    if (entry.method === 'GET' && entry.pathname === `/internal/v1/assistance-cases/${BIND_IDS.case}` && bindCommitted) {
+      json(res, 200, { assistanceCaseId: BIND_IDS.case, governanceBinding: receipt, governanceTerminalProof: null })
+      return
+    }
+    json(res, 404, { error: 'not_found' })
+  })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition: action } = wire(workflowAssistanceActionManifest, transport)
+  const { definition: read } = wire(workflowAssistanceReadManifest, transport)
+
+  const bindResult = await action.execute({
+    operation: 'bind_governance', assistanceCaseId: BIND_IDS.case,
+    governanceChildInstanceId: BIND_IDS.child, acceptanceTransitionId: BIND_IDS.transition,
+    expectedWorkflowStateVersion: 7,
+  })
+  assert.equal(bindResult.ok, false)
+  assert.equal(bindResult.error.code, 'transport_failure')
+
+  const detail = await read.execute({ operation: 'detail', assistanceCaseId: BIND_IDS.case })
+  assert.deepEqual(detail, { ok: true, result: {
+    assistanceCaseId: BIND_IDS.case,
+    governanceBinding: receipt,
+    governanceTerminalProof: null,
+  } })
+  assert.equal(workflow.requests.filter((request) => request.method === 'POST').length, 1)
+  assert.equal(workflow.requests.filter((request) => request.method === 'GET').length, 1)
+  assert.equal(workflow.requests[0].headers['idempotency-key'].startsWith('ik-workflow-assistance-action-'), true)
+  assert.equal(workflow.requests[0].headers['idempotency-key'].includes(BIND_IDS.case), false)
+  assert.equal(workflow.requests[1].pathname, `/internal/v1/assistance-cases/${BIND_IDS.case}`)
   await tokenServer.close()
   await workflow.close()
 })
