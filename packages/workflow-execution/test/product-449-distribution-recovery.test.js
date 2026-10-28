@@ -108,7 +108,9 @@ test('AC2: a no-progress visit is dispatched at most maxAttempts times, then esc
     assert.equal(escalations.length, 1, 'exactly ONE durable escalation')
     assert.equal(escalations[0].reason, 'ATTEMPTS_EXHAUSTED')
     assert.equal(ledger.get(VISIT).escalation?.reason, 'ATTEMPTS_EXHAUSTED')
-    assert.ok(actions.includes('attempt_limit_reached'), 'the fence refusal is observable')
+    assert.ok(actions.includes('already_attempted'), 'the preserved terminal predecessor stays fenced after escalation')
+    assert.equal(ledger.get(VISIT).state, 'NEEDS_REVIEW')
+    assert.equal(ledger.get(VISIT).judgment, 'run_ended_no_submission')
     // After the cap: no further dispatch happens on later sweeps.
     const deliveriesAtCap = deliveries.length
     for (let sweep = 0; sweep < 3; sweep++) {

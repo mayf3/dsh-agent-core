@@ -129,7 +129,7 @@ test('CTR-WEC1-004: the fence refuses a mint past maxAttemptsPerVisit (default 3
 
 // ── CTR-WEC1-005: ONE escalation per visit, ledger fact as the marker ──────
 
-test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', async () => {
+test('CTR-WEC1-005: a terminal generation at the cap escalates once before stale supersession', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-esc-'))
   const escalations = []
   try {
@@ -156,16 +156,19 @@ test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', 
       },
     })
     // generation 1: admitted, run delivered, then the run ends without a
-    // submission → the stale clock settles it stale (generation == limit).
+    // submission → at the cap, escalation preserves the exact NEEDS_REVIEW predecessor.
     await engine.admitDueIntent(dueIntent())
     const attempt = ledger.get(VISIT)
     t = attempt.delivered.atMs + 3_600_000
     const summary = await engine.reconcileOnce()
-    assert.deepEqual(summary.staleReentry, [VISIT])
+    assert.deepEqual(summary.staleReentry, [])
+    assert.equal(ledger.get(VISIT).state, 'NEEDS_REVIEW')
+    assert.equal(ledger.get(VISIT).judgment, 'run_ended_no_submission')
 
-    // The visit is re-offered: the fence (limit 1) refuses → ONE escalation.
+    // The visit is re-offered: the terminal attempt stays fenced while its
+    // recorded assistance case remains the single escalation.
     const result = await engine.admitDueIntent(dueIntent())
-    assert.equal(result.action, 'attempt_limit_reached')
+    assert.equal(result.action, 'already_attempted')
     assert.equal(escalations.length, 1)
     assert.equal(escalations[0].nodeVisitId, VISIT)
     assert.equal(escalations[0].attemptCount, 1)
@@ -174,16 +177,13 @@ test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', 
 
     // A later pass re-offers the visit: NO second escalation call or event.
     const again = await engine.admitDueIntent(dueIntent())
-    assert.equal(again.action, 'attempt_limit_reached')
+    assert.equal(again.action, 'already_attempted')
     assert.equal(escalations.length, 1)
 
-    // The projection surfaces the escalation fact; per the CTR-WEC1-002
-    // table the SETTLED/stale chain keeps its judgment class
-    // (STALE_NO_PROGRESS) — the escalation object is the OWNER_PENDING
-    // marker (a NEEDS_REVIEW chain would read OWNER_PENDING; HUMAN_REQUIRED
-    // is only an explicit svc-workflow Domain Owner action).
+    // The projection surfaces the escalation fact as OWNER_PENDING;
+    // HUMAN_REQUIRED is only an explicit svc-workflow Domain Owner action.
     const trace = projectExecutionTrace(await ledger.snapshotFresh(), { workflowInstanceId: INSTANCE })
-    assert.equal(trace.nodeVisits[0].executionState, 'STALE_NO_PROGRESS')
+    assert.equal(trace.nodeVisits[0].executionState, 'OWNER_PENDING')
     assert.equal(trace.nodeVisits[0].escalation.reason, 'ATTEMPTS_EXHAUSTED')
   } finally {
     rmSync(dir, { recursive: true, force: true })

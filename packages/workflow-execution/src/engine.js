@@ -312,9 +312,15 @@ export function createWorkflowExecutionEngine({
       try {
         const stale = await judgeStale(attempt)
         if (stale.kind !== 'stale_confirmed') continue
+        // CTR-WEC1-005 can escalate this terminal generation at the cap.
+        // Preserve the exact NEEDS_REVIEW predecessor so CTR-WEC1-008 can
+        // authorize a later Owner-resume; stale supersession would erase it.
+        if (isAtAttemptLimit(attempt)) {
+          await maybeEscalateAtLimit(attempt)
+          continue
+        }
         if (await settleStale(attempt)) {
           summary.staleReentry.push(attempt.nodeVisitId)
-          await maybeEscalateAtLimit(attempt)
         }
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
@@ -325,9 +331,12 @@ export function createWorkflowExecutionEngine({
       try {
         const stale = await judgeStale(attempt)
         if (stale.kind !== 'stale_confirmed') continue
+        if (isAtAttemptLimit(attempt)) {
+          await maybeEscalateAtLimit(attempt)
+          continue
+        }
         if (await settleStale(attempt)) {
           summary.staleReentry.push(attempt.nodeVisitId)
-          await maybeEscalateAtLimit(attempt)
         }
       } catch (error) {
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
@@ -336,10 +345,15 @@ export function createWorkflowExecutionEngine({
     return summary
   }
 
-  /** CTR-WEC1-005: escalate once when a stale-settled visit has exhausted its attempt cap. */
-  async function maybeEscalateAtLimit(settledAttempt) {
-    if ((settledAttempt.generation ?? 1) < (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)) return
-    await escalateAttemptLimit({ attempt: settledAttempt, reason: 'ATTEMPTS_EXHAUSTED' })
+  /** CTR-WEC1-005: identify a terminal generation at the automatic attempt cap. */
+  function isAtAttemptLimit(attempt) {
+    return (attempt.generation ?? 1) >= (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)
+  }
+
+  /** CTR-WEC1-005: escalate once when a visit has exhausted its attempt cap. */
+  async function maybeEscalateAtLimit(attempt) {
+    if (!isAtAttemptLimit(attempt) || attempt.escalation !== undefined) return
+    await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
   }
 
   /** Reconcile, then sweep due intents; malformed entries fail loudly. stop() drains this work. */
