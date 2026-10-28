@@ -102,16 +102,14 @@ export function createHttpTransport(opts = {}) {
     }
 
     const body = {}
-    let hasBody = false
     for (const name of http.body || []) {
       const value = args[name]
       if (value !== undefined) {
         body[name] = value
-        hasBody = true
       }
     }
-    const projectedBody = hasBody ? applyHttpBodyProjections(http, args, body) : undefined
-    return { path, query, body: projectedBody }
+    const projectedBody = applyHttpBodyProjections(http, args, body)
+    return { path, query, body: Object.keys(projectedBody).length > 0 ? projectedBody : undefined }
   }
 
   // ── Execute ─────────────────────────────────────────────────────────────
