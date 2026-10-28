@@ -366,6 +366,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1` | accepted in this candidate; effective after merge | contracts; production apply none | execution trace read model, bounded continuation and escalation, push kick, Forum projection |
+| `AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` | accepted in candidate; reviewed semantic head `599107b`; effective after both companion Specs merge | contracts; production apply none | one immutable same-Domain governance child per open Assistance case, distinct child-terminal Owner review wake, explicit evidence-bound resolve, and existing exact same-visit resume |
 | `AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1` | accepted 2026-09-24 at reviewed head `e3393e7c`; pending latest-main integration | contracts (production apply none) | shared backend-abstracted development_execute: system-owned execution ledger, repo/worktree authority, codex exec adapter (workspace-write, CODEX_HOME operator credential), failure matrix A-G |
 
 ## Fixed HR causal qualification completion seam
