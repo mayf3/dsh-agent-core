@@ -19,7 +19,7 @@
 - `MAX_STATEMENTS_PER_LINE = 3`; `BARREL_MAX_LINES = 60`; `BARREL_MAX_REEXPORTS = 20`.
 - `NEW_FILE_OVER_500 = HARD_FAIL`; touched legacy files MUST NOT GROW; major change threshold remains added lines >100 OR changed lines >20% of base file.
 - Preserve registry schema, rows, baseline, allowlist, and caps exactly. The registry's V1 rules label identifies its format; verifier output reports V2 rule semantics.
-- Any registry row/allowlist delta between exact base/head fails closed. An accepted registry-only change may be consumed only after it is already present at comparison base.
+- Any registry row/allowlist delta between exact base/head fails closed. An accepted registry-only change may be consumed only after it is already present at comparison base; the separate Owner-reviewed route is a nonblocking FOLLOW_UP outside this gate and must not be described as a gate PASS.
 - Unchanged unrelated debt may be reported without blocking the candidate, but it is never a valid exception or global PASS.
 - `packages/broker/test/transport.test.js` growth 912 -> 946 and `packages/workflow-execution/src/engine.js` growth 511 -> 525 MUST fail until source deltas are split or reduced.
 - Do not start this plan until both authorities are accepted and merged in the implementation base.
@@ -27,7 +27,7 @@
 ## Review Focus
 
 - Fixed eligibility anchor is evaluated independently from moving comparison base/head.
-- Identical invalid-eligibility or over-cap findings remain visible debt only when the corresponding registry row is unchanged and the surface is unaffected.
+- Identical invalid-eligibility, numeric file-cap mismatch, or over-cap findings remain visible debt only when the corresponding registry row is unchanged and the surface is unaffected. The provisioning.test.js fixed-baseline count is 797 versus preserved numeric cap 824; neither that mismatch nor that cap grants allowance.
 - Any affected file/depth, changed directory immediate-child set, config mutation, or registry-row delta blocks or fails closed.
 - A resolved finding is emitted from base/head evidence without writing a self-referential head OID into registry state.
 - A content-only edit does not affect directory width; child add/remove/rename does.
@@ -47,9 +47,9 @@
 - Consumes the verifier CLI: `node scripts/verify-code-structure.mjs --base <ref> --head <ref> --json`.
 - Asserts full OID binding, `candidate_result`, `baseline_debt[]`, `resolved_debt[]`, and exits 0/1/2.
 
-- [ ] Add temp-Git fixture tests for moving PR refs versus fixed anchor and byte-identical V1 registry input.
+- [ ] Add temp-Git fixture tests for moving PR refs versus fixed anchor and byte-identical V1 registry input; include provisioning.test.js at 797 fixed-baseline lines with unchanged integer cap 824.
 - [ ] Add unchanged unrelated debt expecting candidate pass plus visible debt; add affected file, changed child-set, and module-depth cases expecting exit 1.
-- [ ] Add registry-row/allowlist mutation, malformed/unknown schema, invalid baseline, invalid actor/metric, and expired active entry cases expecting exit 2.
+- [ ] Add registry-row/allowlist mutation, malformed/unknown schema, invalid baseline, invalid actor/metric, nonnumeric cap, and expired active entry cases expecting exit 2; assert the well-formed 797/824 cap mismatch is computed debt instead.
 - [ ] Add delete/rename resolution cases that assert deterministic output includes the base finding key and exact head OID without registry writes.
 - [ ] Add V1 threshold regression cases and both PR573 growth shapes expecting candidate failure.
 - [ ] Run `node --test --test-reporter=spec packages/agent-credential-provisioning/test/structure-verifier-v2.test.mjs`; confirm the new behavior is red against the current V1 verifier.
@@ -82,7 +82,7 @@
 
 - [ ] Compute file changes with rename detection disabled, exact immediate-child-set deltas for directories, and module-root/depth changes; content-only edits do not mark parent width affected.
 - [ ] Recompute debt when rules, verifier semantics, registry, allowlist, or governance lock changes; fail closed for candidate-side registry/allowlist changes.
-- [ ] Classify only identical, unaffected inherited findings as `BASELINE_DEBT`; emit resolved findings with exact base key/head OID and evidence; make new or affected findings hard candidate violations.
+- [ ] Classify only identical, unaffected inherited findings as `BASELINE_DEBT`; emit resolved findings with exact base key/head OID and evidence; make new or affected findings hard candidate violations. Verify that an affected provisioning.test.js still over 500 lines fails regardless of cap 824.
 - [ ] Preserve all V1 line, directory, depth, barrel, statement-density, generated-claim, and test-fixture checks; keep comparison-base growth checks exact.
 - [ ] Run focused tests and verify the two PR573 growth examples still exit 1.
 

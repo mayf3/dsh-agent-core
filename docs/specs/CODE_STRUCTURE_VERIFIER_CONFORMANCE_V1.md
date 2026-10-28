@@ -66,6 +66,13 @@ The V1 verifier uses `--base..--head` both for candidate change checks and regis
 - Result: six current registry file measurements exceed their recorded caps, including three files that qualify at d506 and three later-baseline rows. The V1 verifier compares touched-file growth against the supplied base rather than enforcing all recorded caps as a current-tree ceiling.
 - Limitation: this is a verifier/prose interpretation gap; it does not authorize increasing any cap.
 
+### OBS-CSV-006 — Preserved file cap disagrees with fixed-baseline count
+
+- Source revision: reviewed registry at `3ecbb4c708649f2cd8371c3f874d420c1a47daa2` and fixed baseline `d506f81105e8aa05177a01b817ebe11dcc076ba5`
+- Source: `.agents/structure-registry.json` row for `packages/agent-credential-provisioning/test/provisioning.test.js`; exact file blob at the fixed baseline
+- Result: the baseline file has 797 physical lines, while the unchanged registry row has integer `approved_max_lines: 824`. The numeric cap is well formed but is not the fixed-baseline ceiling.
+- Required interpretation: preserve the row and cap bytes, classify the mismatch as invalid-exception authority debt when unchanged/unaffected, never use 824 as an effective ceiling, and keep malformed/nonnumeric caps as configuration failures.
+
 ### OBS-CSV-003 — PR573 contains separate candidate growth
 
 - Source revision: PR573 candidate/base coordinates are supplied in the active implementation handoff.
@@ -74,7 +81,7 @@ The V1 verifier uses `--base..--head` both for candidate change checks and regis
 
 ### EVD-CSV-001 — Fixed-anchor registry conflict and affected-surface requirements
 
-- Source observations: `OBS-CSV-001` through `OBS-CSV-005`
+- Source observations: `OBS-CSV-001` through `OBS-CSV-006`
 - Target: `CLM-CSV-001`
 - Relation: SUPPORTS
 - Sufficiency: sufficient to specify deterministic verifier behavior and known required regression classes.
@@ -93,7 +100,7 @@ The verifier will calculate candidate violations and inherited historical debt a
 
 ### DEC-CSV-002 — Preserve the registry and derive historical debt from exact trees
 
-Keep the existing V1-format registry bytes and caps unchanged. The verifier derives fixed-baseline-ineligible and over-cap findings from the exact comparison base/head and reports only identical, unaffected findings as `BASELINE_DEBT`; no persistent debt ledger, schema migration, or tombstone is introduced. The registry is not immutable forever: expiry renewal, generated-allowlist housekeeping, and recording completed splits retain the separate Owner-reviewed registry-only route; new exceptions or cap changes require a separately accepted Owner-authorized path with fixed-baseline evidence. Such changes cannot hide unresolved findings or be combined with dependent source changes. The V2 candidate verifier rejects registry deltas; separately accepted registry-only changes may be consumed once present at the exact comparison base.
+Keep the existing V1-format registry bytes and caps unchanged. The verifier derives fixed-baseline-ineligible rows, well-formed numeric file-cap mismatches, and over-cap findings from the exact comparison base/head and reports only identical, unaffected findings as `BASELINE_DEBT`; no persistent debt ledger, schema migration, or tombstone is introduced. The registry is not immutable forever: expiry renewal, generated-allowlist housekeeping, and recording completed splits retain the separate Owner-reviewed registry-only route; new exceptions or cap changes require a separately accepted Owner-authorized path with fixed-baseline evidence. Such changes cannot hide unresolved findings or be combined with dependent source changes. The V2 candidate verifier rejects registry deltas; separately accepted registry-only changes may be consumed once present at the exact comparison base. The separate Owner-reviewed route is a nonblocking `FOLLOW_UP` outside this gate; its candidate-gate exit 2 must not be called PASS.
 
 ### DEC-CSV-003 — Affected violations remain hard blockers
 
@@ -107,11 +114,11 @@ The CLI MUST accept `--base <ref>` and `--head <ref>`, resolve both once to full
 
 ### CTR-CSV-002 — Registry validation without migration
 
-The V2 verifier MUST validate the existing registry JSON shape, `schema_version: 1`, accepted V1 registry `rules_version`, fixed baseline match, unique paths, accepted actors, metric types, expiries, and all existing fields. The V1 schema (`files`, `directories`, `generated_allowlist`, `baseline_commit`) remains byte-identical between `--base` and `--head`. The V1 rules label is accepted only as registry-format identity; verifier output reports `rules_version = CODE_STRUCTURE_GUARDRAILS_V2`. Any row/allowlist mutation or removal between base and head, unknown/malformed config, missing/expired active entry, or hash/ref evidence failure exits 2. V2 adds no inline bypass: a separate Owner-reviewed/accepted registry-only route remains available, but its result must already be present at the exact comparison base before dependent source changes.
+The V2 verifier MUST validate the existing registry JSON shape, `schema_version: 1`, accepted V1 registry `rules_version`, fixed baseline match, unique paths, accepted actors, metric types, expiries, and all existing fields. A well-formed integer `approved_max_lines` that differs from its exact fixed-baseline measurement is an invalid-exception authority finding, not a configuration error or active exception; a nonnumeric or malformed cap remains exit 2. The V1 schema (`files`, `directories`, `generated_allowlist`, `baseline_commit`) remains byte-identical between `--base` and `--head`. The V1 rules label is accepted only as registry-format identity; verifier output reports `rules_version = CODE_STRUCTURE_GUARDRAILS_V2`. Any row/allowlist mutation or removal between base and head, unknown/malformed config, missing/expired active entry, malformed/nonnumeric cap, or hash/ref evidence failure exits 2. A well-formed numeric file-cap mismatch is computed authority debt under `CTR-CSV-003`, not exit 2. V2 adds no inline bypass: a separate Owner-reviewed/accepted registry-only route remains available, but its result must already be present at the exact comparison base before dependent source changes.
 
 ### CTR-CSV-003 — Candidate delta and baseline debt classification
 
-The verifier MUST evaluate file, directory, depth, registry, and anti-evasion findings at both exact trees and against the immutable fixed baseline. An inherited finding is `BASELINE_DEBT` only if rule identity, path, metric, and corresponding unchanged V1 registry row are identical at base/head and its surface is unaffected. New, changed, or affected findings are `CANDIDATE_VIOLATION`. A base finding resolved by head MUST appear in `resolved_debt[]` with its exact finding key, exact head OID, and observed head metric/path state. This is output only and does not write registry state. Existing V1 hard limits remain hard failures for the candidate.
+The verifier MUST evaluate file, directory, depth, registry, and anti-evasion findings at both exact trees and against the immutable fixed baseline. An inherited finding is `BASELINE_DEBT` only if rule identity, path, metric, and corresponding unchanged V1 registry row are identical at base/head and its surface is unaffected. A numeric file-cap mismatch such as provisioning.test.js 797-at-baseline/824-in-registry must never create an effective allowance; if that path is affected and remains over 500 lines it is a candidate violation. New, changed, or affected findings are `CANDIDATE_VIOLATION`. A base finding resolved by head MUST appear in `resolved_debt[]` with its exact finding key, exact head OID, and observed head metric/path state. This is output only and does not write registry state. Existing V1 hard limits remain hard failures for the candidate.
 
 ### CTR-CSV-004 — Affected-surface closure
 
@@ -136,14 +143,14 @@ A V1 runner/output is `V1_LEGACY_UNQUALIFIED`; it cannot satisfy or claim V2 con
 ### ACC-CSV-001 — Fixed baseline and registry integrity
 
 - Contracts: `CTR-CSV-001`, `CTR-CSV-002`
-- Method: focused tests for moving comparison refs, exact registry byte preservation, fixed-baseline file and directory eligibility (including the 38-child `scripts/` baseline with its existing cap unchanged), computed invalid-row debt identity, malformed schema, baseline mismatch, unknown state, expired active entry, duplicate paths, and any base/head registry mutation.
-- Required result: fixed anchor remains d506; registry schema/bytes and all caps are unchanged; no current-size re-baseline or cap increase is possible; invalid inputs exit 2.
+- Method: focused tests for moving comparison refs, exact registry byte preservation, fixed-baseline file and directory eligibility (including the 38-child `scripts/` baseline with its existing cap unchanged), computed invalid-row debt identity, malformed schema, baseline mismatch, unknown state, expired active entry, duplicate paths, and any base/head registry mutation. Include the unchanged provisioning.test.js row: 797 baseline lines, integer cap 824.
+- Required result: fixed anchor remains d506; registry schema/bytes and all caps are unchanged; no current-size re-baseline or cap increase is possible. The unchanged 797/824 row is visible authority debt, never an active 824-line allowance; if affected while over 500 lines it exits 1. Nonnumeric/malformed caps exit 2.
 
 ### ACC-CSV-002 — Debt and affected surface behavior
 
 - Contracts: `CTR-CSV-003`, `CTR-CSV-004`, `CTR-CSV-005`
 - Method: base/head fixtures for unchanged unrelated file debt, touched debt, changed directory children, changed module depth, delete, rename, path alias, registry mutation, resolved-debt output, and new >500 files.
-- Required result: only exact unchanged unrelated debt is non-blocking; affected/new violations fail; resolved-debt output preserves the base finding identity and exact head evidence without persistent registry state.
+- Required result: only exact unchanged unrelated debt is non-blocking; affected/new violations fail; resolved-debt output preserves the base finding identity and exact head evidence without persistent registry state. Affected provisioning.test.js at 824 lines must fail even though the unchanged registry row says 824.
 
 ### ACC-CSV-003 — Existing limits and PR573 hard failures
 
