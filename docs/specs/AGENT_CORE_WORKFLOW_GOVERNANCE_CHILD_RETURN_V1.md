@@ -208,10 +208,12 @@ Owner decisions. For a linked case, resolve forwards a closed typed
 `governanceChildReview` reference containing `bindingId`, terminal event ID,
 acceptance submission ID, submission digest, and acceptance contract digest.
 The reference is nested under `resolution.supportingPayload` in the existing
-`workflow_assistance_action` call; the Broker validates its reserved closed
-shape and transports it without extracting authority from surrounding prose.
-Core does not manufacture these values from prose. Svc validates them and the
-current Owner/case/source coordinates. A linked resolve without a valid exact
+`workflow_assistance_action` call. Core forwards that historically opaque
+payload unchanged; it cannot identify linked cases from the payload and MUST
+not newly reject fields for unlinked cases. Svc first determines whether the
+case is linked, then validates the reserved object's closed shape for linked
+resolve. Core does not manufacture these values from prose. Svc validates them
+and the current Owner/case/source coordinates. A linked resolve without a valid exact
 review reference is rejected. If resolve returns `transport_failure` or its
 outcome is otherwise unknown, the Owner reads case detail and the existing WEC
 resume evidence to establish whether the case resolved and whether the
