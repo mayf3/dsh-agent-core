@@ -15,7 +15,7 @@ const CODE = /\.(js|mjs|cjs|ts|mts|cts|c|h|py|sh|bash|zsh)$/;
 const SKIP_PATH = /^(docs\/|\.agents\/|node_modules\/|\.git)/;
 const SKIP_FILE = /(-lock\.(json|yaml|yml)|\.lock|\.snap)$/;
 const GEN = /(@generated|auto-generated|code generated|do not edit)/i;
-const REEXPORT = /^\s*(export\s+\*|export\s*\{[^}]*\}\s*from|import\s+[^ (]{0,120}from\s)/;
+const REEXPORT = /^\s*(export\s+\*|export\s*\{[^}]*\}\s*from|import\s+[^(]{0,120}from\s)/;
 const TEST_LOGIC = /\b(node:test|describe\s*\(|\bit\s*\(|\btest\s*\(|\bassert[.(])/;
 
 function stop(message) { process.stderr.write(`verify-code-structure: ${message}\n`); process.exit(2); }
@@ -68,8 +68,9 @@ function snapshot(ref) {
 function filesAt(ref) { return [...snapshot(ref).keys()]; }
 function readAt(ref, file) { return snapshot(ref).get(file) ?? null; }
 function lines(text) { return text === '' ? 0 : text.endsWith('\n') ? text.split('\n').length - 1 : text.split('\n').length; }
-function inScope(file, vendored) {
-  return CODE.test(file) && !SKIP_PATH.test(file) && !SKIP_FILE.test(file) && !vendored.has(file)
+function inScope(file, vendored, generatedAllowlist = []) {
+  return CODE.test(file) && !SKIP_PATH.test(file) && !SKIP_FILE.test(file)
+    && !vendored.has(file) && !generatedAllowlist.includes(file)
     && (/^packages\/[^/]+\/(src|test)\//.test(file) || /^(scripts|examples)\//.test(file));
 }
 function classification(file, text, allowlist) {
@@ -90,12 +91,17 @@ function statements(line) {
 }
 function diff(base, head) {
   const result = new Map();
-  for (const row of git(['diff', '--numstat', '--no-renames', base, head]).trim().split('\n').filter(Boolean)) {
-    const [added, deleted, file] = row.split('\t');
+  const numstat = git(['diff', '--numstat', '-z', '--no-renames', base, head]);
+  for (const row of numstat.split('\0').filter(Boolean)) {
+    const first = row.indexOf('\t'), second = row.indexOf('\t', first + 1);
+    if (first < 0 || second < 0) stop('Git returned malformed NUL-delimited numstat');
+    const added = row.slice(0, first), deleted = row.slice(first + 1, second), file = row.slice(second + 1);
     result.set(file, { status: 'M', added: added === '-' ? 0 : +added, deleted: deleted === '-' ? 0 : +deleted });
   }
-  for (const row of git(['diff', '--name-status', '--no-renames', base, head]).trim().split('\n').filter(Boolean)) {
-    const [status, file] = row.split('\t');
+  const statuses = git(['diff', '--name-status', '-z', '--no-renames', base, head]).split('\0').filter(Boolean);
+  for (let index = 0; index < statuses.length;) {
+    const status = statuses[index++], file = statuses[index++];
+    if (!file) stop('Git returned malformed NUL-delimited name-status');
     if (!result.has(file)) result.set(file, { status, added: 0, deleted: 0 }); else result.get(file).status = status;
   }
   return result;
@@ -121,25 +127,29 @@ function tree(ref, fileList) {
     const root = rootOf(dir);
     return dir === root ? 0 : dir.slice(root ? root.length + 1 : 0).split('/').filter(Boolean).length;
   };
-  return { files, children, roots, depthOf };
+  return { files, children, roots, rootOf, depthOf };
 }
 function registryAt(ref) {
   const raw = readAt(ref, REGISTRY);
   if (raw === null) stop(`registry missing at ${ref}:${REGISTRY}`);
   let reg;
   try { reg = JSON.parse(raw); } catch { stop('registry is not valid JSON'); }
-  if (reg.schema_version !== 1 || reg.rules_version !== 'CODE_STRUCTURE_GUARDRAILS_V1'
+  if (!reg || typeof reg !== 'object' || Array.isArray(reg)
+      || reg.schema_version !== 1 || reg.rules_version !== 'CODE_STRUCTURE_GUARDRAILS_V1'
       || reg.baseline_commit !== BASELINE || !Array.isArray(reg.files) || !Array.isArray(reg.directories)
-      || !Array.isArray(reg.generated_allowlist)) stop('registry schema, label, arrays, or fixed baseline invalid');
+      || !Array.isArray(reg.generated_allowlist)
+      || reg.generated_allowlist.some((file) => typeof file !== 'string' || file === ''))
+    stop('registry schema, label, arrays, or fixed baseline invalid');
   const today = new Date().toISOString().slice(0, 10), seen = new Set();
   const fields = ['path', 'reason', 'approved_by', 'expires_at', 'split_followup'];
   for (const [entries, cap] of [[reg.files, 'approved_max_lines'], [reg.directories, 'approved_max_children']]) {
     for (const entry of entries) {
-      for (const field of fields) if (typeof entry[field] !== 'string' || !entry[field]) stop(`registry entry missing ${field}: ${entry.path}`);
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) stop('registry entry must be an object');
+      for (const field of fields) if (typeof entry[field] !== 'string' || !entry[field]) stop(`registry entry missing ${field}: ${entry.path ?? '<unknown>'}`);
       if (!Number.isSafeInteger(entry[cap]) || entry[cap] < 1) stop(`registry entry has invalid ${cap}: ${entry.path}`);
       if (!ACTORS.includes(entry.approved_by)) stop(`registry actor invalid: ${entry.path}`);
       const date = new Date(`${entry.expires_at}T00:00:00Z`);
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.expires_at) || Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 10) !== entry.expires_at || entry.expires_at < today)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.expires_at) || Number.isNaN(date.valueOf()) || date.toISOString().slice(0, 10) !== entry.expires_at || entry.expires_at <= today)
         stop(`registry expiry invalid or expired: ${entry.path}`);
       if (seen.has(entry.path)) stop(`registry duplicate path: ${entry.path}`);
       seen.add(entry.path);
@@ -152,7 +162,8 @@ function vendoredAt(ref) {
   if (raw === null) return new Set();
   let lock;
   try { lock = JSON.parse(raw); } catch { stop(`governance lock is invalid JSON at ${ref}`); }
-  if (!Array.isArray(lock.files) || lock.files.some((entry) => typeof entry.path !== 'string'))
+  if (!lock || typeof lock !== 'object' || Array.isArray(lock) || !Array.isArray(lock.files)
+      || lock.files.some((entry) => !entry || typeof entry.path !== 'string'))
     stop(`governance lock has invalid file entries at ${ref}`);
   return new Set(lock.files.map((entry) => entry.path));
 }
@@ -161,7 +172,28 @@ function finding(check, severity, rule, file, extra = {}) {
   return { check, severity, rule, path: file, physicalLines: null, directChildren: null, depth: null, classification: null,
     baselineValue: null, headValue: null, exception: null, detail: null, ...extra };
 }
-function stableId(finding) { return createHash('sha256').update(keyOf(finding)).digest('hex'); }
+function findingMetric(item) {
+  if (item.rule === 'DIRECTORY_DEPTH_LIMIT' || item.rule === 'DIRECTORY_DEPTH_WARNING') return { depth: item.depth };
+  if (item.rule.includes('DIRECTORY') || item.classification === 'directory') return { directChildren: item.directChildren };
+  if (item.rule === 'STATEMENTS_PER_LINE' || item.rule === 'STATEMENTS_PER_LINE_BASELINE') return { headValue: item.headValue };
+  if (item.rule === 'BARREL_LIMIT') return { physicalLines: item.physicalLines, headValue: item.headValue };
+  return { physicalLines: item.physicalLines, classification: item.classification, detail: item.detail };
+}
+function stableId(item, registry) {
+  const collection = registry.files.has(item.path) ? 'files'
+    : registry.dirs.has(item.path) ? 'directories' : 'unregistered';
+  const row = collection === 'files' ? registry.files.get(item.path)
+    : collection === 'directories' ? registry.dirs.get(item.path) : null;
+  return createHash('sha256').update(JSON.stringify({
+    collection, row, check: item.check, rule: item.rule, path: item.path, metric: findingMetric(item),
+  })).digest('hex');
+}
+function sameFindingEvidence(left, right) {
+  return left.check === right.check && left.rule === right.rule && left.path === right.path
+    && left.severity === right.severity
+    && JSON.stringify(findingMetric(left)) === JSON.stringify(findingMetric(right));
+}
+function comparePaths(left, right) { return left.path < right.path ? -1 : left.path > right.path ? 1 : 0; }
 function validateRegistryAgainstAnchor(reg, baselineTree) {
   const invalidFiles = new Map(), invalidDirs = new Map();
   for (const [file, row] of reg.files) {
@@ -178,8 +210,9 @@ function validateRegistryAgainstAnchor(reg, baselineTree) {
 function collect(ref, otherRef, changed, invalid, comparisonTree) {
   const names = filesAt(ref), current = tree(ref, names), vendored = vendoredAt(ref);
   const { reg, files: rows, dirs: dirRows } = registryAt(ref), findings = [];
-  const scoped = names.filter((file) => inScope(file, vendored));
+  const scoped = names.filter((file) => inScope(file, vendored, reg.generated_allowlist));
   const texts = new Map(scoped.map((file) => [file, readAt(ref, file) ?? '']));
+  const contentHashes = new Map();
   for (const file of scoped) {
     const text = texts.get(file), count = lines(text), baseText = readAt(otherRef, file), baseCount = baseText === null ? null : lines(baseText);
     const change = changed.get(file), dir = file.slice(0, file.lastIndexOf('/')), depth = current.depthOf(dir), cls = classification(file, text, reg.generated_allowlist);
@@ -207,7 +240,13 @@ function collect(ref, otherRef, changed, invalid, comparisonTree) {
     else if (denseAll) findings.push(finding('FILE_LINE_LIMIT', 'INFO', 'STATEMENTS_PER_LINE_BASELINE', file, { ...common, headValue: denseAll }));
     if (depth > LIMIT.depth) findings.push(finding('DIRECTORY_DEPTH_LIMIT', 'VIOLATION', 'DIRECTORY_DEPTH_LIMIT', file, common));
     else if (depth === LIMIT.depth) findings.push(finding('DIRECTORY_DEPTH_LIMIT', 'WARNING', 'DIRECTORY_DEPTH_WARNING', file, common));
+    const digest = createHash('sha256').update(text).digest('hex');
+    (contentHashes.get(digest) ?? contentHashes.set(digest, []).get(digest)).push(file);
   }
+  for (const paths of contentHashes.values()) if (paths.length > 1)
+    findings.push(finding('FILE_LINE_LIMIT', 'WARNING', 'DUPLICATED_IMPLEMENTATION', paths[0], {
+      classification: 'duplicate-content', headValue: paths.length, detail: `identical content in: ${paths.join(', ')}`,
+    }));
   for (const [dir, kids] of current.children) {
     if (!scoped.some((file) => file.startsWith(`${dir}/`))) continue;
     const count = kids.size, previous = comparisonTree.children.get(dir) ?? new Set(), baseCount = previous.size;
@@ -221,6 +260,25 @@ function collect(ref, otherRef, changed, invalid, comparisonTree) {
     } else if (count > LIMIT.dirWarning) findings.push(finding('DIRECTORY_CHILD_LIMIT', 'WARNING', 'DIRECTORY_CHILDREN_WARNING', dir, common));
   }
   return { names, current, scoped, findings };
+}
+function affectedFinding(item, changed, affectedDirs, baseTree, headTree) {
+  if (item.classification === 'directory' || item.rule.includes('DIRECTORY_CHILD'))
+    return affectedDirs.has(item.path);
+  if (item.rule === 'DIRECTORY_DEPTH_LIMIT' || item.rule === 'DIRECTORY_DEPTH_WARNING') {
+    if (changed.has(item.path)) return true;
+    const dir = item.path.slice(0, item.path.lastIndexOf('/'));
+    return baseTree.rootOf(dir) !== headTree.rootOf(dir) || baseTree.depthOf(dir) !== headTree.depthOf(dir);
+  }
+  return changed.has(item.path);
+}
+function excludedMoveDestination(old, base, head, headFiles, changed, vendored, allowlist) {
+  if (old.classification === 'directory' || old.physicalLines <= LIMIT.file) return null;
+  const content = readAt(base, old.path);
+  for (const [candidate, change] of changed) {
+    if (change.status !== 'A' || inScope(candidate, vendored, allowlist)) continue;
+    if (headFiles.has(candidate) && readAt(head, candidate) === content) return candidate;
+  }
+  return null;
 }
 function main() {
   const args = argsOf(process.argv.slice(2)), base = resolve(args.base), head = resolve(args.head);
@@ -246,39 +304,39 @@ function main() {
   const invalid = validateRegistryAgainstAnchor(headRegistry, baselineTree);
   const baseResult = collect(base, base, new Map(), invalid, baseTree);
   const headResult = collect(head, base, changes, invalid, baseTree);
-  const affectedFiles = new Set(changes.keys());
   const dirs = new Set([...baseTree.children.keys(), ...headTree.children.keys()]);
   const affectedDirs = new Set([...dirs].filter((dir) => {
     const a = baseTree.children.get(dir) ?? new Set(), b = headTree.children.get(dir) ?? new Set();
     return [...a].some((item) => !b.has(item)) || [...b].some((item) => !a.has(item));
   }));
-  const moduleChanged = [...changes.keys()].filter((file) => file.endsWith('/package.json'));
   const baseMap = new Map(baseResult.findings.map((f) => [keyOf(f), f]));
   const headMap = new Map(headResult.findings.map((f) => [keyOf(f), f]));
   const debt = [], resolved = [], candidate = [];
   for (const [key, old] of baseMap) {
     if (old.severity !== 'VIOLATION') continue;
     if (!headMap.has(key)) {
-      const exists = headResult.names.includes(old.path);
-      const directory = old.check === 'DIRECTORY_CHILD_LIMIT';
-      resolved.push({ ...old, finding_key: stableId(old), head_oid: head, observed_head: {
+      const movedTo = excludedMoveDestination(old, base, head, new Set(headFiles), changes, vendoredAt(head), headRegistry.reg.generated_allowlist);
+      if (movedTo) {
+        candidate.push({ ...old, check: 'FILE_LINE_LIMIT', rule: 'EXCLUDED_ROOT_MOVE', path: movedTo,
+          classification: 'excluded-moved-code', detail: `over-limit in-scope content moved from ${old.path}`,
+          finding_key: stableId({ ...old, rule: 'EXCLUDED_ROOT_MOVE', path: movedTo, classification: 'excluded-moved-code' }, headRegistry) });
+        continue;
+      }
+      const directory = old.classification === 'directory';
+      const exists = directory ? headTree.children.has(old.path) : headResult.names.includes(old.path);
+      resolved.push({ ...old, finding_key: stableId(old, baseRegistry), head_oid: head, observed_head: {
         path_exists: exists,
         physical_lines: exists && !directory ? lines(readAt(head, old.path) ?? '') : null,
-        direct_children: directory ? headResult.current.children.get(old.path)?.size ?? 0 : null,
+        direct_children: directory && exists ? headTree.children.get(old.path)?.size ?? 0 : null,
       } });
     }
   }
   for (const [key, item] of headMap) {
     if (item.severity !== 'VIOLATION') continue;
-    const same = baseMap.get(key), isAffected = affectedFiles.has(item.path) || affectedDirs.has(item.path)
-      || moduleChanged.some((file) => {
-        const moduleDir = file.slice(0, -13);
-        return moduleDir ? item.path.startsWith(`${moduleDir}/`) : true;
-      })
-      || baseTree.depthOf(item.path.slice(0, item.path.lastIndexOf('/'))) !== headTree.depthOf(item.path.slice(0, item.path.lastIndexOf('/')));
-    if (same && same.severity === 'VIOLATION' && !isAffected && JSON.stringify({ ...same, baselineValue: null, headValue: null }) === JSON.stringify({ ...item, baselineValue: null, headValue: null }))
-      debt.push({ ...item, finding_key: stableId(item), debt_classification: 'BASELINE_DEBT' });
-    else candidate.push({ ...item, finding_key: stableId(item), classification: 'CANDIDATE_VIOLATION' });
+    const same = baseMap.get(key), isAffected = affectedFinding(item, changes, affectedDirs, baseTree, headTree);
+    if (same && same.severity === 'VIOLATION' && !isAffected && sameFindingEvidence(same, item))
+      debt.push({ ...item, finding_key: stableId(item, headRegistry), debt_classification: 'BASELINE_DEBT' });
+    else candidate.push({ ...item, finding_key: stableId(item, headRegistry), classification: 'CANDIDATE_VIOLATION' });
   }
   const outputFindings = [...candidate, ...headResult.findings.filter((f) => f.severity !== 'VIOLATION')];
   const exitCode = candidate.length ? 1 : 0;
@@ -290,7 +348,11 @@ function main() {
   else {
     console.log(`verify-code-structure: ${candidateResult} (base=${base} head=${head})`);
     console.log(`  candidate violations: ${candidate.length}; baseline debt: ${debt.length}; resolved debt: ${resolved.length}`);
-    for (const item of candidate) console.log(`  VIOLATION [${item.rule}] ${item.path} ${item.detail ?? ''}`.trimEnd());
+    for (const item of candidate) console.log(`  VIOLATION [${item.rule}] ${JSON.stringify(item.path)} ${item.detail ?? ''}`.trimEnd());
+    for (const item of debt.sort(comparePaths))
+      console.log(`  BASELINE_DEBT [${item.rule}] ${JSON.stringify(item.path)}`);
+    for (const item of resolved.sort(comparePaths))
+      console.log(`  RESOLVED_DEBT [${item.rule}] ${JSON.stringify(item.path)}`);
   }
   process.exitCode = exitCode;
 }
