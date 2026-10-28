@@ -222,3 +222,15 @@ accepted actor, and expire after one year unless renewed by a rule change.
   `SPEC_ACCEPTANCE_ACTORS`; registry housekeeping (expiry renewal, adding a
   generatedAllowlist entry, listing a newly split file) is an owner-reviewed PR
   that does not change frozen values.
+
+## Successor proposal (not an acceptance or lifecycle transition)
+
+```text
+PROPOSED_SUCCESSOR = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
+PROPOSED_SUCCESSOR_STATUS = PROPOSED
+SUPERSEDED_BY = NONE_UNTIL_V2_IS_ACCEPTED_AND_MERGED
+```
+
+The proposed successor is authored docs-first. This backlink records navigation
+only; V1 remains the binding rule until the repository Owner accepts and merges
+the exact V2 rule with the atomic V1 lifecycle transition.
