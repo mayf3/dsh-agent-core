@@ -1,7 +1,23 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
 title: Owner-selected governance child creation and prerequisite-ready dispatch
-status: proposed
+status: accepted
+accepted_date: 2026-10-29
+accepted_by: Codex root (explicitly delegated by mayf3)
+accepted_reviewed_head: 32d677a631c0f7d25de3450271ef295f8d432840
+acceptance_review_verdict: PASS
+independent_semantic_reviewer: /root/structure_v2_semantic_review
+acceptance_delta_class: new_standalone_contract
+semantic_delta_after_review: NONE
+acceptance_record: docs/reports/WORKFLOW_PREREQUISITE_ORCHESTRATION_ACCEPTANCE_20261029.md
+acceptance_authority_basis: >-
+  Root accepted the exact independently reviewed semantic head under mayf3's
+  explicit delegation to complete source work and isolated validation only.
+  The final semantic review SHA-256 is
+  4baa1f24202e3d9f1544d0ebd95eb5dc42ce9febedb243c45819f751aa09204f. This is
+  the paired lifecycle acceptance; implementation still requires both
+  accepted authorities in the implementation base and a separate mandate.
+  Production apply authority is none.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -26,14 +42,15 @@ external_authorities: []
 
 # AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
 
-This proposed Contract authorizes a later bounded Core implementation of two
+This accepted Contract authorizes a later bounded Core implementation of two
 behaviors: a running Domain Owner Agent may use existing published-definition
 reads and one atomic Svc operation to create and bind a governance child; and
 the normal due poll admits only work for which Svc reports typed `READY`.
-The paired Svc Spec is required and its exact reviewed head must be pinned by
-the paired acceptance record. This candidate does not bind a companion base or
-claim a candidate file exists at its predecessor base. It grants no production
-authority and does not claim unattended end-to-end business success.
+The paired Svc Spec is required and its exact reviewed head is pinned by the
+paired acceptance record: `19593b4dc4d48b8341c8a759d07b9e575afeb08e`.
+both authorities remain inactive for implementation until present in their
+respective implementation bases. This grants no production authority and
+does not claim unattended end-to-end business success.
 
 ## 1. Goal
 
@@ -335,7 +352,7 @@ fallback, stop and revise this Contract before implementation. If published
 Definition reads cannot establish one exact compatible candidate, stop before
 create.
 
-This Spec is a proposed new authority. Implementation requires this exact Spec
-and its Svc companion to be accepted in the implementation base, followed by
-an exact-scope implementation mandate. Production apply authority remains
-`none`.
+This Spec and its Svc companion are accepted in the paired candidate branches.
+Implementation requires both exact accepted authorities in the implementation
+base, followed by an exact-scope implementation mandate. Production apply
+authority remains `none`.
