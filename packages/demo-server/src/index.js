@@ -108,6 +108,8 @@ export function apply(ctx, config = {}) {
   let provider = CANONICAL_DEFAULT_MODEL_ROUTE.provider
   let model = CANONICAL_DEFAULT_MODEL_ROUTE.model
   let maxTokens
+  let initializePolicyEstablished = false
+  let nativeToolPolicyAck
 
   // The per-session resolution seam (AGENT_CORE_BINDING_WORKSPACE_V1
   // SESSION_WRITE_CONTRACT R1/R2/R3): create freezes the resolved effective
@@ -200,6 +202,37 @@ export function apply(ctx, config = {}) {
     try {
       let result
       if (method === 'initialize') {
+        const requestedPolicy = params !== null && typeof params === 'object'
+          && Object.hasOwn(params, 'nativeToolPolicy')
+        if (initializePolicyEstablished) {
+          const establishedPolicy = nativeToolPolicyAck !== undefined
+          const samePolicy = requestedPolicy && establishedPolicy
+            && params.nativeToolPolicy?.version === nativeToolPolicyAck.version
+            && params.nativeToolPolicy?.agentId === nativeToolPolicyAck.agentId
+            && params.nativeToolPolicy?.policyDigest === nativeToolPolicyAck.policyDigest
+          if (requestedPolicy !== establishedPolicy || (requestedPolicy && !samePolicy)) {
+            throw new Error('nativeToolPolicy cannot change after process initialization')
+          }
+        } else if (requestedPolicy) {
+          const tools = ctx.get('tools')
+          if (typeof tools?.configureTrustedNativeToolPolicy !== 'function') {
+            throw new Error('nativeToolPolicy requires the DSH ToolRuntime service')
+          }
+          const ack = tools.configureTrustedNativeToolPolicy(params.nativeToolPolicy)
+          if (ack?.version !== params.nativeToolPolicy?.version
+            || ack?.agentId !== params.nativeToolPolicy?.agentId
+            || ack?.policyDigest !== params.nativeToolPolicy?.policyDigest) {
+            throw new Error('DSH ToolRuntime returned a mismatched nativeToolPolicy acknowledgement')
+          }
+          nativeToolPolicyAck = {
+            version: ack.version,
+            agentId: ack.agentId,
+            policyDigest: ack.policyDigest,
+          }
+          initializePolicyEstablished = true
+        } else {
+          initializePolicyEstablished = true
+        }
         cwd = params?.cwd ?? process.cwd()
         provider = params?.provider ?? provider
         model = params?.model ?? model
@@ -215,6 +248,7 @@ export function apply(ctx, config = {}) {
           nativeGoalContinuation,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
+          ...(nativeToolPolicyAck === undefined ? {} : { nativeToolPolicy: nativeToolPolicyAck }),
         }
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
