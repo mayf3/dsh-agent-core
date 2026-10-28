@@ -199,4 +199,3 @@ export function assertTrustedNativeToolPolicyAck(policy, acknowledgement) {
     })
   }
 }
-
