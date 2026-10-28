@@ -17,9 +17,9 @@
  * The "handler" that actually performs an operation is deliberately NOT part of
  * the manifest (a manifest must stay data); it lives next to it in code and is
  * keyed by capability id / operation name. This keeps docs/reports/broker-v1.md
- * honest: Forum / Workflow / OKR will only ever provide manifest data + a
- * handler (or an `http` binding), no new generic machinery.
+ * honest: trusted outbound bindings, including static body projections, remain manifest data.
  */
+import { validateHttpBodyProjections } from './transport/body-projection.js'
 
 /**
  * Validate a capability manifest object into its canonical form.
@@ -482,6 +482,7 @@ function validateHttpBinding(http, at, properties) {
     }
   }
 
+  const projectionError = validateHttpBodyProjections(http, at, properties); if (projectionError) return projectionError
   if (http.idempotencyKey !== undefined && typeof http.idempotencyKey !== 'boolean') {
     return `${at}.idempotencyKey must be a boolean`
   }

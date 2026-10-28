@@ -8,6 +8,7 @@ import {
 import { workflowExecutionEscalationManifest } from '../src/capabilities/workflow.js'
 import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { assertValidManifest } from '../src/mapping.js'
+import { validateManifest } from '../src/schema.js'
 import { createHttpTransport } from '../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../test-support/capability-fixtures.js'
 
@@ -226,4 +227,175 @@ test('resolve transports arbitrary supportingPayload unchanged for existing unli
   })
   await tokenServer.close()
   await workflow.close()
+})
+
+const REVIEW_REF = {
+  bindingId: '44444444-4444-4444-8444-444444444444',
+  terminalEventId: '55555555-5555-4555-8555-555555555555',
+  submissionId: '66666666-6666-4666-8666-666666666666',
+  submissionDigest: 'a'.repeat(64),
+  acceptanceContractDigest: 'b'.repeat(64),
+}
+
+test('resolve exposes only the statically declared typed review projection', () => {
+  const manifest = assertValidManifest(workflowAssistanceActionManifest)
+  const resolve = manifest.operations.find((op) => op.name === 'resolve')
+  assert.deepEqual(resolve.arguments.properties.governanceChildReview.required, [
+    'bindingId', 'terminalEventId', 'submissionId', 'submissionDigest', 'acceptanceContractDigest',
+  ])
+  assert.equal(resolve.arguments.properties.governanceChildReview.additionalProperties, false)
+  assert.match(resolve.description, /top level.*service-provided values from workflow_assistance_read\.detail/)
+  assert.deepEqual(resolve.http.bodyProjections, [{
+    sourceArg: 'governanceChildReview',
+    destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+  }])
+
+  for (const bodyProjections of [
+    [{ sourceArg: 'unknown', destinationBodyPath: ['resolution', 'supportingPayload', 'review'] }],
+    [{ sourceArg: 'governanceChildReview', destinationBodyPath: ['resolution', '__proto__', 'review'] }],
+    [{ sourceArg: 'governanceChildReview', destinationBodyPath: ['unbound', 'supportingPayload', 'review'] }],
+    [{ sourceArg: 'governanceChildReview', destinationBodyPath: ['resolution', 'supportingPayload', 'review'] }, {
+      sourceArg: 'other', destinationBodyPath: ['resolution', 'supportingPayload', 'review'],
+    }],
+    [{ sourceArg: 'governanceChildReview', destinationBodyPath: ['resolution', 'message', 'review'] }],
+  ]) {
+    const input = structuredClone(workflowAssistanceActionManifest)
+    input.operations.find((op) => op.name === 'resolve').http.bodyProjections = bodyProjections
+    assert.equal(validateManifest(input).ok, false)
+  }
+  const overlapping = structuredClone(workflowAssistanceActionManifest)
+  const resolveInput = overlapping.operations.find((op) => op.name === 'resolve')
+  resolveInput.arguments.properties.governanceChildReviewAlias = structuredClone(
+    resolveInput.arguments.properties.governanceChildReview,
+  )
+  resolveInput.http.bodyProjections = [
+    { sourceArg: 'governanceChildReview', destinationBodyPath: ['resolution', 'supportingPayload'] },
+    { sourceArg: 'governanceChildReviewAlias', destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'] },
+  ]
+  assert.equal(validateManifest(overlapping).ok, false)
+})
+
+test('resolve projects typed review copy-on-write and preserves input and siblings', async (t) => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((_req, res) => json(res, 200, { status: 'RESOLVED' }))
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(workflowAssistanceActionManifest, transport)
+  assert.equal(definition.parameters.governanceChildReview.type, 'object')
+  assert.deepEqual(definition.parameters.governanceChildReview.properties.bindingId, {
+    description: 'Exact service-provided governance binding id.', required: true, type: 'string',
+  })
+  const originalPayload = { custom: ['preserve', { nested: true }] }
+  const resolution = { message: 'reviewed', supportingPayload: originalPayload }
+  const args = {
+    operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+    resolution, governanceChildReview: { ...REVIEW_REF },
+  }
+  const before = structuredClone(args)
+  const result = await definition.execute(args)
+
+  assert.deepEqual(result, { ok: true, result: { status: 'RESOLVED' } })
+  assert.deepEqual(workflow.requests[0].body, {
+    expectedWorkflowStateVersion: 9,
+    resolution: { message: 'reviewed', supportingPayload: { ...originalPayload, governanceChildReview: REVIEW_REF } },
+  })
+  assert.deepEqual(args, before)
+  assert.equal(args.resolution.supportingPayload, originalPayload)
+  assert.equal(Object.hasOwn(originalPayload, 'governanceChildReview'), false)
+  assert.equal(tokenServer.requests[0].body.scope, 'workflow.execute')
+  assert.match(workflow.requests[0].headers['idempotency-key'], /^ik-workflow-assistance-action-/)
+})
+
+test('resolve creates absent supportingPayload only in the projected body', async (t) => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((_req, res) => json(res, 200, { status: 'RESOLVED' }))
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(workflowAssistanceActionManifest, transport)
+  const resolution = { message: 'reviewed' }
+  const args = {
+    operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+    resolution, governanceChildReview: { ...REVIEW_REF },
+  }
+  const before = structuredClone(args)
+  const result = await definition.execute(args)
+  assert.equal(result.ok, true)
+  assert.deepEqual(workflow.requests[0].body.resolution, {
+    message: 'reviewed', supportingPayload: { governanceChildReview: REVIEW_REF },
+  })
+  assert.deepEqual(args, before)
+  assert.equal(Object.hasOwn(resolution, 'supportingPayload'), false)
+})
+
+test('resolve rejects malformed typed/container input before credential or HTTP', async (t) => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((_req, res) => json(res, 200, { status: 'RESOLVED' }))
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(workflowAssistanceActionManifest, transport)
+  const malformed = [
+    { ...REVIEW_REF, verdict: 'ACCEPTED' },
+    { ...REVIEW_REF, acceptanceContractDigest: undefined },
+    null,
+    'invalid',
+    [],
+  ]
+  const invalidCalls = malformed.map((governanceChildReview) => ({
+    operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+    resolution: { message: 'reviewed' }, governanceChildReview,
+  }))
+  for (const supportingPayload of [null, 'bad', []]) {
+    invalidCalls.push({
+      operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+      resolution: { message: 'reviewed', supportingPayload }, governanceChildReview: { ...REVIEW_REF },
+    })
+  }
+  for (const resolution of [null, 'bad', []]) {
+    invalidCalls.push({
+      operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+      resolution, governanceChildReview: { ...REVIEW_REF },
+    })
+  }
+  for (const call of invalidCalls) {
+    const result = await definition.execute(call)
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, 'invalid_arguments')
+  }
+  assert.equal(tokenServer.requests.length, 0)
+  assert.equal(workflow.requests.length, 0)
+})
+
+test('resolve rejects any pre-existing projection target as binding_error before HTTP', async (t) => {
+  const tokenServer = await startTokenServer()
+  const workflow = await startMockServer((_req, res) => json(res, 200, { status: 'RESOLVED' }))
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(workflowAssistanceActionManifest, transport)
+  for (const existing of [REVIEW_REF, { different: true }, null, 'owner-value']) {
+    const result = await definition.execute({
+      operation: 'resolve', assistanceCaseId: BIND_IDS.case, expectedWorkflowStateVersion: 9,
+      resolution: { message: 'reviewed', supportingPayload: { governanceChildReview: existing } },
+      governanceChildReview: { ...REVIEW_REF },
+    })
+    assert.equal(result.ok, false)
+    assert.equal(result.error.code, 'binding_error')
+  }
+  assert.equal(tokenServer.requests.length, 0)
+  assert.equal(workflow.requests.length, 0)
 })

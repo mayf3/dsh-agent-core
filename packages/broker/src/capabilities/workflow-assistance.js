@@ -49,6 +49,19 @@ const payload = (label) => ({
   required: ['message'],
 })
 
+const governanceChildReviewSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    bindingId: { type: 'string', description: 'Exact service-provided governance binding id.' },
+    terminalEventId: { type: 'string', description: 'Exact service-provided child terminal event id.' },
+    submissionId: { type: 'string', description: 'Exact service-provided acceptance submission id.' },
+    submissionDigest: { type: 'string', description: 'Exact service-provided submission digest.' },
+    acceptanceContractDigest: { type: 'string', description: 'Exact service-provided acceptance contract digest.' },
+  },
+  required: ['bindingId', 'terminalEventId', 'submissionId', 'submissionDigest', 'acceptanceContractDigest'],
+}
+
 export const workflowAssistanceReadManifest = withTransportErrors({
   id: 'workflow_assistance_read',
   toolName: 'workflow_assistance_read',
@@ -102,12 +115,15 @@ export const workflowAssistanceActionManifest = withTransportErrors({
   requiredScopes: ['workflow.execute'],
   errors: actionErrors,
   operations: [{    name: 'resolve',
-    description: 'Resolve an open assistance case after the Domain Owner handles the blocker.',
+    description:
+      'Resolve an open assistance case after the Domain Owner handles the blocker. '
+      + 'For a linked governance-child case, provide the exact five-field governanceChildReview reference at the top level, using service-provided values from workflow_assistance_read.detail; do not put rich child proof into the opaque supportingPayload.',
     arguments: {
       properties: {
         assistanceCaseId: uuid('Assistance case id'),
         expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
         resolution: payload('Resolution'),
+        governanceChildReview: governanceChildReviewSchema,
       },
       required: ['assistanceCaseId', 'expectedWorkflowStateVersion', 'resolution'],
     },
@@ -119,6 +135,10 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       path: '/internal/v1/assistance-cases/{assistanceCaseId}/resolve',
       pathParams: ['assistanceCaseId'],
       body: ['expectedWorkflowStateVersion', 'resolution'],
+      bodyProjections: [{
+        sourceArg: 'governanceChildReview',
+        destinationBodyPath: ['resolution', 'supportingPayload', 'governanceChildReview'],
+      }],
       idempotencyKey: true,
     },
   }, {

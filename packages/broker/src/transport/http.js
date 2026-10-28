@@ -1,6 +1,7 @@
 import { TransportControlError } from './control.js'
 import { requestAccessToken, DEFAULT_TIMEOUT_MS } from './token.js'
 import { TransportBindingError, buildPath, buildQuery, buildRequestHeaders, createIdempotencyKey } from './binding.js'
+import { applyHttpBodyProjections } from './body-projection.js'
 import { buildDownstreamError, extractRequestId } from './errors.js'
 import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
 
@@ -109,7 +110,8 @@ export function createHttpTransport(opts = {}) {
         hasBody = true
       }
     }
-    return { path, query, body: hasBody ? body : undefined }
+    const projectedBody = hasBody ? applyHttpBodyProjections(http, args, body) : undefined
+    return { path, query, body: projectedBody }
   }
 
   // ── Execute ─────────────────────────────────────────────────────────────
