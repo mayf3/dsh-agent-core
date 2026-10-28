@@ -16,9 +16,29 @@ test('Domain Owner assistance read/action are split by least-privilege scope', (
   assert.deepEqual(read.requiredScopes, ['workflow.read'])
   assert.deepEqual(action.requiredScopes, ['workflow.execute'])
   assert.deepEqual(read.operations.map((op) => op.name), ['owner_inbox', 'detail'])
-  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'escalate_to_human'])
+  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'escalate_to_human', 'bind_governance'])
   assert.equal(read.operations[0].http.path, '/internal/v1/assistance-cases/owner-inbox')
   assert.equal(read.operations[1].http.path, '/internal/v1/assistance-cases/{assistanceCaseId}')
+})
+
+test('governance bind is a closed typed workflow.execute mutation', () => {
+  const action = assertValidManifest(workflowAssistanceActionManifest)
+  const bind = action.operations.find((op) => op.name === 'bind_governance')
+  assert.deepEqual(bind.arguments.required, [
+    'assistanceCaseId', 'governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion',
+  ])
+  assert.equal(bind.arguments.additionalProperties, false)
+  assert.deepEqual(bind.http, {
+    target: 'svc-workflow', method: 'POST',
+    path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child',
+    pathParams: ['assistanceCaseId'],
+    body: ['governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    idempotencyKey: true,
+  })
+  const args = JSON.stringify(bind.arguments)
+  for (const forbidden of ['ownerPrincipalId', 'workflowInstanceId', 'nodeVisitId', 'contextRevisionId', 'definitionVersionId', 'requestDigest', 'domainId', 'acceptanceContractDigest']) {
+    assert.equal(args.includes(forbidden), false, `Svc-derived field must not be model input: ${forbidden}`)
+  }
 })
 
 test('Domain Owner assistance actions reuse authoritative svc endpoints and idempotency', () => {
