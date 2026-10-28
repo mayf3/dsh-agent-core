@@ -416,13 +416,17 @@ additional fields:
 
 When this argument is present, Core MUST project those five fields into
 `resolution.supportingPayload.governanceChildReview` before sending the
-existing resolve request. Projection MUST preserve the caller's resolution
-message and every unrelated supporting-payload member, and MUST NOT derive,
-rewrite, or synthesize any reference value. Core MUST reject the call locally
-with the existing `invalid_arguments` error, before an HTTP request, if
-`resolution` or `supportingPayload` is not an object, or if
-`supportingPayload.governanceChildReview` is already present, regardless of
-its value. It MUST NOT overwrite a supplied nested value or silently remove
+existing resolve request. If `supportingPayload` is absent, Core MUST create it
+in a copy-on-write request projection. If it is present as `null`, a primitive,
+or an array, Core MUST reject the invocation with `invalid_arguments` before
+HTTP. The same `invalid_arguments` result applies when the typed object or
+`resolution` has an invalid schema/container shape. A pre-existing
+`supportingPayload.governanceChildReview` target, regardless of its value,
+MUST instead fail as `binding_error` during request binding, before HTTP; Core
+MUST NOT overwrite it. The projection MUST NOT mutate the input arguments, the
+caller-owned `resolution`, or an existing `supportingPayload` object. It MUST
+preserve the resolution message and every unrelated payload member, and MUST
+NOT derive, rewrite, or synthesize any reference value or silently remove
 unknown fields. The service remains authoritative for exact UUID, digest,
 case, Owner, binding, terminal event, and submission validation.
 
@@ -441,9 +445,9 @@ continues to follow the existing exact detail/readback and no-replay rules.
 
 | Contracts | Method | Environment | Required evidence | Expected result | Failure condition |
 |---|---|---|---|---|---|
-| `CTR-GCR-005` | Broker capability schema and HTTP-body projection tests, plus an isolated Core-to-Svc acceptance of the existing explicit Owner resolve | Local focused tests and isolated service fixture; no production | Exact input/output bodies, HTTP call count, error code, and existing idempotency behavior | Typed five-field input is deterministically projected; omitted input is passed unchanged; siblings and message are preserved; malformed/conflicting inputs fail before HTTP | Any extra field accepted, value inferred/changed, sibling lost, nested input overwritten, malformed container forwarded, or omission changes legacy behavior |
+| `CTR-GCR-005` | Broker capability schema and HTTP-body projection tests, plus an isolated Core-to-Svc acceptance of the existing explicit Owner resolve | Local focused tests and isolated service fixture; no production | Exact input/output bodies, request count, error codes, input-object immutability, and existing idempotency behavior | Typed five-field input is deterministically projected; absent payload is created in a copy; omitted typed input is passed unchanged; siblings and message are preserved; invalid shapes return `invalid_arguments`; target collision returns `binding_error`; both error classes stop before HTTP | Any extra field accepted, value inferred/changed, input mutated, sibling lost, nested input overwritten, malformed container forwarded, incorrect error classification, or omission changes legacy behavior |
 
-Required negatives include a sixth field in the typed object; each missing required field; non-object/null/array typed value; non-object/null/array `resolution` or `supportingPayload` when typed input is present; a pre-existing nested target with equal, different, null, or primitive value; and assertion that all these failures cause zero downstream requests. The positive case MUST show all five fields unchanged in the service body while unrelated resolution and payload siblings remain byte/JSON-value equivalent. The omitted-input case MUST show the existing nested opaque form forwarded unchanged. The existing Svc contract remains responsible for rejecting semantically invalid UUIDs, digests, and mismatched service references.
+Required negatives include a sixth field in the typed object; each missing required field; non-object/null/array typed value; invalid `resolution`; present `supportingPayload` values of null, primitive, or array; and a pre-existing nested target with equal, different, null, or primitive value. Invalid typed/container shapes MUST return `invalid_arguments`; target collisions MUST return `binding_error`. Each must show zero downstream HTTP requests. Positive cases MUST show that an absent `supportingPayload` is created only in the projected copy and that all five fields reach the service unchanged; unrelated resolution and payload siblings remain byte/JSON-value equivalent, and the input args, resolution, and existing payload objects remain unchanged. The omitted-input case MUST show the existing nested opaque form forwarded unchanged. The existing Svc contract remains responsible for rejecting semantically invalid UUIDs, digests, and mismatched service references.
 
 The end-to-end acceptance under `ACC-GCR-001` remains the protocol acceptance. `ACC-GCR-002` is an added focused contract acceptance and does not by itself establish autonomous business completion or production readiness.
 
