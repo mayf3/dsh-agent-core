@@ -88,18 +88,16 @@ EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 
 ## Code structure rules
 
-Current binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md`](CODE_STRUCTURE_GUARDRAILS_V1.md)
-(frozen file/directory/depth limits, legacy policy, exception registry, anti-evasion
-rules). A whole-version successor is proposed at
-[`.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md`](CODE_STRUCTURE_GUARDRAILS_V2.md);
-it has no effect until the Owner accepts and merges it. V1 remains binding meanwhile.
-The verifier's proposed implementation contract is
-[`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md)
-and likewise authorizes no code before acceptance in the implementation base.
-Entry point for the currently binding rule:
+Current binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md`](CODE_STRUCTURE_GUARDRAILS_V2.md)
+(frozen limits, fixed-baseline registry validation, candidate-delta gate and visible
+historical debt). V2 and its V1 supersession activate atomically on main.
+The implementation contract is
+[`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md).
+Implementation starts only after both accepted authorities are in its base.
+The existing V1 runner remains unqualified for V2 until the implementation lands.
 
 ```text
-RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md
+RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
 EXCEPTION_REGISTRY = .agents/structure-registry.json
 VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
 NPM = npm run verify:structure
