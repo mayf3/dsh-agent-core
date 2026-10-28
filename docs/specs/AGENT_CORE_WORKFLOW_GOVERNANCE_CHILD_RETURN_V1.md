@@ -130,10 +130,15 @@ relationship creation.
 The Core capability response preserves the Svc binding receipt fields without
 summarization. The Owner receives an immutable `bindingId`, source and child
 coordinates, child acceptance contract digest, and initial binding status.
-If the mutation response is lost or the Owner changes, the Owner can recover
-the exact relation and child terminal proof through the existing
-`workflow_assistance_read.detail` projection, which Svc extends under the same
-visibility check. Core MUST NOT synthesize or infer any missing field.
+The idempotency key is generated inside the trusted HTTP transport and is not
+visible to the Agent; no receipt-query tool is added. If bind returns
+`transport_failure` or its outcome is otherwise unknown, the Owner reads the
+existing `workflow_assistance_read.detail` projection and matches the exact
+case, child instance and contract digest. A matching relation proves the bind.
+If detail establishes neither a committed relation nor an authoritative
+rejection, the outcome remains UNKNOWN: do not invoke bind again with a new
+key, create a replacement child, or infer success/failure from tool text.
+Core MUST NOT synthesize or infer any missing field.
 
 ## 3. Two distinct wake phases — `CTR-GCR-002`
 
@@ -207,7 +212,12 @@ The reference is nested under `resolution.supportingPayload` in the existing
 shape and transports it without extracting authority from surrounding prose.
 Core does not manufacture these values from prose. Svc validates them and the
 current Owner/case/source coordinates. A linked resolve without a valid exact
-review reference is rejected. Escalation remains available without acceptance
+review reference is rejected. If resolve returns `transport_failure` or its
+outcome is otherwise unknown, the Owner reads case detail and the existing WEC
+resume evidence to establish whether the case resolved and whether the
+original visit resumed. The transport-generated idempotency key is not exposed
+for caller replay; absent authoritative readback, retain UNKNOWN and do not
+submit a new resolve action. Escalation remains available without acceptance
 proof and follows current Svc semantics. For an unlinked case, current
 CTR-SWEC-010 request shape and behavior are unchanged.
 
@@ -286,8 +296,9 @@ submission, Owner change before delivery and after successful delivery,
 reassignment away and back to the same Principal, no-op Owner replacement,
 case resolved before delivery, and linked resolve without exact evidence. It
 must also show same-visit source Context revision preserves the original
-request provenance and remains reviewable, and detail readback recovers an
-unknown bind response. A real isolated test must also show
+request provenance and remains reviewable, detail readback recovers a committed
+bind after a lost response, and inconclusive bind/resolve readback remains
+UNKNOWN without a second mutation call. A real isolated test must also show
 that existing unlinked Assistance resolution is unchanged.
 
 The acceptance establishes protocol and evidence binding, not natural-language
