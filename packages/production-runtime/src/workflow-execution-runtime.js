@@ -40,6 +40,7 @@
  */
 
 import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
+import { wakeDomainOwnerAssistanceReview } from './workflow/owner-assistance-review-wake.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
@@ -87,16 +88,10 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
-export async function wakeDomainOwnerAssistance({
-  router,
-  principalAccess,
-  pollerAgentId,
-  workflowInstanceId,
-  nodeVisitId,
-  assistanceCaseId,
-  ownerPrincipalId,
-  reason,
-}) {
+export async function wakeDomainOwnerAssistance(payload) {
+  const { router, principalAccess, pollerAgentId, workflowInstanceId, nodeVisitId, assistanceCaseId, ownerPrincipalId, reason, phase } = payload
+  if (phase === 'GOVERNANCE_CHILD_REVIEW') return wakeDomainOwnerAssistanceReview(payload)
+  if (phase !== undefined) return { ok: false, code: 'invalid_owner_wake_phase' }
   if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
     return { ok: false, code: 'assistance_case_missing' }
   }
@@ -205,6 +200,18 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       assistanceCaseId: payload.assistanceCaseId,
       ownerPrincipalId: payload.ownerPrincipalId,
       reason: payload.reason,
+      phase: payload.phase,
+      ownerBindingId: payload.ownerBindingId,
+      reviewWakeId: payload.reviewWakeId,
+      bindingId: payload.bindingId,
+      governanceChildInstanceId: payload.governanceChildInstanceId,
+      childNodeVisitId: payload.childNodeVisitId,
+      childDefinitionVersionId: payload.childDefinitionVersionId,
+      childTerminalEventId: payload.childTerminalEventId,
+      acceptanceTransitionId: payload.acceptanceTransitionId,
+      acceptanceContractDigest: payload.acceptanceContractDigest,
+      childSubmissionId: payload.childSubmissionId,
+      childSubmissionDigest: payload.childSubmissionDigest,
     })
   }
 
