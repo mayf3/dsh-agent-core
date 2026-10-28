@@ -287,6 +287,31 @@ test('route acquisition without an identity closes policy removal instead of reu
   assert.equal(spawned.length, 2)
 })
 
+test('legacy acquisition rechecks policy removal while a policy-bound route startup is pending', async (t) => {
+  let policyEnabled = true
+  const resolveNativeToolPolicy = (agentId) => policyEnabled ? ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }) : undefined
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => GLM_CONFIG,
+    resolveNativeToolPolicy,
+  })
+
+  const optedInPromise = router.ensureRunningForRoute(AGT_ID, { processConfig: GLM_CONFIG })
+  policyEnabled = false
+  const legacyPromise = router.ensureRunning(AGT_ID)
+  const [optedIn, legacy] = await Promise.all([optedInPromise, legacyPromise])
+
+  assert.notEqual(legacy, optedIn.proc)
+  assert.equal(legacy.nativeToolPolicy, undefined)
+  assert.equal(optedIn.proc.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
 test('concurrent route acquisition converges a STARTUP policy removal through the same generation gate', async (t) => {
   let policyEnabled = true
   const resolveNativeToolPolicy = (agentId) => policyEnabled ? ({
