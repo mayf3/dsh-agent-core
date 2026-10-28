@@ -203,6 +203,7 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         `Supported operations: ${manifest.operations.map((o) => o.name).join(', ')}.` +
         renderPerOperationRequired(manifest.operations),
       parameters,
+      nativePolicyDiscriminators: [selector],
       output: {
         schema: outputSchema,
         render: (args, value) =>
