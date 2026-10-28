@@ -223,14 +223,13 @@ accepted actor, and expire after one year unless renewed by a rule change.
   generatedAllowlist entry, listing a newly split file) is an owner-reviewed PR
   that does not change frozen values.
 
-## Successor proposal (not an acceptance or lifecycle transition)
+## Whole-version successor lifecycle
 
 ```text
-PROPOSED_SUCCESSOR = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
-PROPOSED_SUCCESSOR_STATUS = PROPOSED
-SUPERSEDED_BY = NONE_UNTIL_V2_IS_ACCEPTED_AND_MERGED
+LIFECYCLE = SUPERSEDED upon this transaction merging into main
+SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V2
+SUCCESSOR_PATH = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
 ```
 
-The proposed successor is authored docs-first. This backlink records navigation
-only; V1 remains the binding rule until the repository Owner accepts and merges
-the exact V2 rule with the atomic V1 lifecycle transition.
+The original V1 body remains historical evidence. The accepted V2 successor and
+this backlink activate together on main; no V1 registry row is rewritten.

@@ -1,6 +1,6 @@
 ---
 spec_id: CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -22,7 +22,7 @@ date: 2026-10-29
 
 ## 1. Goal
 
-Define the machine-readable implementation contract for the structural rules in the proposed repository-local `CODE_STRUCTURE_GUARDRAILS_V2`. This Spec defines verifier coordinates, existing-registry validation, computed debt reporting, affected-surface gating, and exit behavior. Thresholds and structural policy live only in the V2 rule.
+Define the machine-readable implementation contract for the structural rules in the accepted repository-local `CODE_STRUCTURE_GUARDRAILS_V2`. This Spec defines verifier coordinates, existing-registry validation, computed debt reporting, affected-surface gating, and exit behavior. Thresholds and structural policy live only in the V2 rule.
 
 ## 2. Scope and non-goals
 
@@ -177,9 +177,9 @@ After both authorities are accepted into the implementation base, implement the 
 ## 12. Open questions
 
 ```text
-OPEN_OWNER_DECISIONS = NONE (within the owner-selected route; acceptance remains pending)
+OPEN_OWNER_DECISIONS = NONE (accepted under explicit Owner delegation)
 NORMATIVE_TBD = NONE
-UNRESOLVED_AUTHORITY_CONFLICT = NONE for this proposed contract
+UNRESOLVED_AUTHORITY_CONFLICT = NONE
 ```
 
-Acceptance of this proposed Spec or V2 rule is not claimed here. The affected PR573 growth remains a separate source blocker and must not be waived by the authority transaction.
+Acceptance is recorded in `docs/reports/CODE_STRUCTURE_V2_ACCEPTANCE_20261029.md`; activation requires main merge. The historical PR573 growth examples remain negative controls and are not waived by this authority transaction.

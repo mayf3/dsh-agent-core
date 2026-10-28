@@ -1,11 +1,11 @@
-# Code Structure Guardrails V2 — proposed repository-local binding rule
+# Code Structure Guardrails V2 — repository-local binding rule
 
 ```text
 RULE_ID = CODE_STRUCTURE_GUARDRAILS_V2
 RULE_KIND = repository-local binding rule (carried by .agents/local/, not a docs/specs authority)
-LIFECYCLE = PROPOSED
-EFFECTIVE_RULE = CODE_STRUCTURE_GUARDRAILS_V1 until this exact V2 is accepted and merged into main
-SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (only upon V2 acceptance and merge)
+LIFECYCLE = ACCEPTED
+EFFECTIVE_RULE = CODE_STRUCTURE_GUARDRAILS_V2 upon this accepted transaction merging into main
+SUPERSEDES = CODE_STRUCTURE_GUARDRAILS_V1 (effective upon merge into main)
 IMPLEMENTATION_CONTRACTS = CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
 ENFORCEMENT = machine verifier (scripts/verify-code-structure.mjs) + manual review
 BASELINE_COMMIT = d506f81105e8aa05177a01b817ebe11dcc076ba5 (unchanged from V1)
@@ -13,7 +13,7 @@ ACCEPTANCE_ACTORS = mayf3 or an explicitly authorized maintainer recorded in the
 REGISTRY_APPROVAL_ACTORS = [mayf3] (a different actor requires an accepted rule change; prose alone cannot extend this list)
 ```
 
-This is a proposed whole-version successor to the accepted local V1 rule. It has no effect before Owner acceptance and merge. The implementation contracts are defined once in `docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md`; this file remains the single authority for structural thresholds and rule semantics.
+This is the accepted whole-version successor to local V1, under the Owner's explicit maintainer delegation. It becomes effective on merge into main. The implementation contracts are defined once in `docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md`; this file remains the single authority for structural thresholds and rule semantics.
 
 ## 1. Goal and scope
 
