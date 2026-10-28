@@ -54,7 +54,9 @@ export function createNativePolicyRegistryBinding({ resolveNativeToolPolicy, res
 
   function ensureIfBound(agentId, currentProcess, routeGate) {
     try {
-      if (!hasPolicy(agentId) && currentProcess?.nativeToolPolicy === undefined) return undefined
+      if (!hasPolicy(agentId)
+        && currentProcess?.nativeToolPolicy === undefined
+        && getCurrentPolicy(agentId) === undefined) return undefined
       return ensureRunning(agentId, routeGate)
     } catch (error) {
       return Promise.reject(error)
