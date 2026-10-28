@@ -40,6 +40,7 @@
  */
 
 import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
+import { wakeDomainOwnerAssistanceReview } from './workflow/owner-assistance-review-wake.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
@@ -87,28 +88,10 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
-export async function wakeDomainOwnerAssistance({
-  router,
-  principalAccess,
-  pollerAgentId,
-  workflowInstanceId,
-  nodeVisitId,
-  assistanceCaseId,
-  ownerPrincipalId,
-  reason,
-  phase,
-  ownerBindingId,
-  reviewWakeId,
-  bindingId,
-  governanceChildInstanceId,
-  childNodeVisitId,
-  childDefinitionVersionId,
-  childTerminalEventId,
-  acceptanceTransitionId,
-  acceptanceContractDigest,
-  childSubmissionId,
-  childSubmissionDigest,
-}) {
+export async function wakeDomainOwnerAssistance(payload) {
+  const { router, principalAccess, pollerAgentId, workflowInstanceId, nodeVisitId, assistanceCaseId, ownerPrincipalId, reason, phase } = payload
+  if (phase === 'GOVERNANCE_CHILD_REVIEW') return wakeDomainOwnerAssistanceReview(payload)
+  if (phase !== undefined) return { ok: false, code: 'invalid_owner_wake_phase' }
   if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
     return { ok: false, code: 'assistance_case_missing' }
   }
@@ -124,24 +107,8 @@ export async function wakeDomainOwnerAssistance({
   }
 
   const ownerAgentId = resolved.result.agentId
-  const review = phase === 'GOVERNANCE_CHILD_REVIEW'
-  const reviewCoordinates = {
-    ownerBindingId, reviewWakeId, bindingId, governanceChildInstanceId,
-    childNodeVisitId, childDefinitionVersionId, childTerminalEventId, acceptanceTransitionId,
-  }
-  if (review && Object.values(reviewCoordinates).some((value) => typeof value !== 'string' || value === '')) {
-    return { ok: false, code: 'invalid_governance_child_review_wake' }
-  }
-  if (!review && phase !== undefined) return { ok: false, code: 'invalid_owner_wake_phase' }
-  if (review && ((childSubmissionId === undefined) !== (childSubmissionDigest === undefined))) {
-    return { ok: false, code: 'invalid_governance_child_review_wake' }
-  }
-  const requestId = review
-    ? `wfassist-review-${bindingId}-${childTerminalEventId}-${ownerPrincipalId}-${reviewWakeId}`
-    : `wfassist-${assistanceCaseId}`
-  const correlation = review
-    ? `workflow-assistance-review:${assistanceCaseId}:${bindingId}:${childTerminalEventId}:${ownerPrincipalId}:${reviewWakeId}`
-    : `workflow-assistance:${assistanceCaseId}`
+  const requestId = `wfassist-${assistanceCaseId}`
+  const correlation = `workflow-assistance:${assistanceCaseId}`
   const existing = typeof router.resolveCallerCorrelation === 'function'
     ? router.resolveCallerCorrelation({ requestId })
     : undefined
@@ -149,31 +116,15 @@ export async function wakeDomainOwnerAssistance({
     return { ok: true, ownerAgentId, requestId, reused: true }
   }
 
-  const message = review
-    ? [
-      '[WORKFLOW_GOVERNANCE_CHILD_REVIEW]',
-      `Assistance case: ${assistanceCaseId}; source workflow ${workflowInstanceId}, visit ${nodeVisitId}.`,
-      `Binding ${bindingId}; governance child ${governanceChildInstanceId}, visit ${childNodeVisitId}, DefinitionVersion ${childDefinitionVersionId}.`,
-      `Exact child terminal event: ${childTerminalEventId}; acceptance transition: ${acceptanceTransitionId}.`,
-      ...(childSubmissionId === undefined ? ['No exact selected-transition submission is recorded. Inspect the terminal event and escalate if acceptance cannot be established.'] : [
-        `Exact child submission: ${childSubmissionId}; digest: ${childSubmissionDigest}.`,
-      ]),
-      ...(acceptanceContractDigest === undefined ? [] : [`Acceptance contract digest: ${acceptanceContractDigest}.`]),
-      'You are the current enabled Domain Owner. First use workflow_assistance_read detail to re-read the case and its binding/terminal proof.',
-      'Then use workflow_instance_detail and workflow_submission_history to inspect this exact child terminal event and submission under your existing Svc visibility.',
-      'If the exact evidence supports resolution, use workflow_assistance_action resolve with the exact governanceChildReview reference from case detail. If it does not, explicitly use escalate_to_human.',
-      'If a mutation outcome is unknown, read case detail and the existing Workflow resume evidence before deciding; if they do not establish the result, leave it UNKNOWN and do not submit a new mutation.',
-      'Delivery is only a review request. Do not infer that the original case is resolved or that the original Workflow resumed.',
-    ].join('\n')
-    : [
-      '[WORKFLOW_OWNER_ASSISTANCE]',
-      `Workflow ${workflowInstanceId} node visit ${nodeVisitId} is OWNER_PENDING (${reason ?? 'ATTENTION_REQUIRED'}).`,
-      `Assistance case: ${assistanceCaseId}.`,
-      'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
-      'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
-      'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
-      'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
-    ].join('\n')
+  const message = [
+    '[WORKFLOW_OWNER_ASSISTANCE]',
+    `Workflow ${workflowInstanceId} node visit ${nodeVisitId} is OWNER_PENDING (${reason ?? 'ATTENTION_REQUIRED'}).`,
+    `Assistance case: ${assistanceCaseId}.`,
+    'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
+    'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
+    'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
+    'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
+  ].join('\n')
 
   try {
     const receipt = await router.deliver(

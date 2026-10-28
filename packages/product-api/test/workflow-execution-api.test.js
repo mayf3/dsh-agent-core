@@ -311,6 +311,13 @@ test('governance child review wake accepts the closed typed phase and paired opt
   assert.equal(noSubmission.status, 200)
   assert.deepEqual(access.calls.ownerWakes[1], withoutSubmission)
 
+  const missingContractDigest = { ...withoutSubmission }
+  delete missingContractDigest.acceptanceContractDigest
+  const missingDigest = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: missingContractDigest,
+  })
+  assert.equal(missingDigest.status, 400)
+
   const invalidDigest = await call(base, '/workflow-execution/owner-assistance-wakes', {
     token: OK_TOKEN, method: 'POST', body: { ...body, childSubmissionDigest: 'not-a-sha256' },
   })
