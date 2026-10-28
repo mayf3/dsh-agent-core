@@ -494,18 +494,23 @@ typed reference fields match. The service returned HTTP 409
 immutable selection from append-only public logs, not a claim about later run
 state.
 
-`OBS-GCR-004` — At Core main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`,
-`workflow_assistance_read.detail` is a separate `GET` capability using the
-existing `workflow.read` scope, while `workflow_assistance_action.resolve` is
-a `POST` using `workflow.execute` and the static `bodyProjections` mechanism
-accepts only a declared argument as its source. `body-projection.js` binds from
-the current invocation's `args`; the HTTP handler receives one operation and
-its current arguments, with no read-result association or persistent result
-store. The accepted Svc detail projection already returns immutable
-`governanceBinding` and `governanceTerminalProof` references under the existing
-Owner visibility predicate (`SVC_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1`,
-`CTR-GCRS-003`, §4, lines 247–267); its exact five-field resolve validation
-remains authoritative (`CTR-GCRS-006`, lines 406–447).
+`OBS-GCR-004` — Accepted Core main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`
+contains the `CTR-GCR-005` contract for caller-supplied typed resolve values
+(§A1.2, lines 412–436); this is authority text, not evidence that a source
+projection implementation is present on that main commit. The accepted Svc
+detail and resolve contracts remain the source of the immutable review
+references and exact five-field validation (`SVC_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1`,
+`CTR-GCRS-003`, §4, lines 247–267; `CTR-GCRS-006`, lines 406–447).
+
+`OBS-GCR-005` — Read-only source inspection at the separate, unmerged Core
+candidate `be067723947786b392dfe1ac178a98fb5386bad2` found
+`packages/broker/src/transport/body-projection.js` and
+`packages/broker/src/transport/http.js`. That candidate's body projection
+accepts declared current-operation arguments as sources, and its HTTP handler
+binds one operation and its current arguments; it has no read-result
+association or persistent result store. The file does not exist at accepted
+main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`. This source observation is
+not accepted-main behavior or implementation authority.
 
 `CLM-GCR-002` — SUPPORTED: an explicitly selected static, same-caller read to
 the existing case-detail operation can eliminate model transcription of the
@@ -513,8 +518,9 @@ service-owned long digest while preserving both the exact-input behavior of
 `CTR-GCR-005` and Svc's strict reference validation. A persistent read-result
 vault, model-chosen lookup path, and automatic resolve are unnecessary.
 
-`EVD-GCR-002` — `OBS-GCR-003/004` support this bounded caller-input
-interoperability delta only. They do not prove that this operation is
+`EVD-GCR-002` — `OBS-GCR-003/004/005` support this bounded caller-input
+interoperability delta only; OBS-GCR-005 describes an unmerged source candidate,
+not accepted-main implementation. They do not prove that this operation is
 implemented, installed, or successful in a native run.
 
 This amendment adds one explicit Broker operation to the existing
@@ -590,20 +596,36 @@ It MUST use an invocation-local response; it MUST NOT use a cached result from
 another call, case, Agent, process, or runtime. It MUST NOT return the full
 internal read result as a substitute for the normal read operation.
 
-Before sending the resolve POST, Core MUST verify that the read result identifies
-the requested `assistanceCaseId`, remains `OWNER_PENDING`, and has a
-`workflowStateVersion` equal to the caller-supplied
-`expectedWorkflowStateVersion`. It MUST require one linked binding for this
-case, `currentReview.deliveryStatus == DELIVERED` and
-`currentReview.reviewStatus == OUTSTANDING`, and one terminal proof with
-verdict `ACCEPTED`. The binding and proof must agree on the exact binding and
-acceptance-contract digest, and all five mapped values must be present as
-strings. Missing, ambiguous, malformed, mismatched, stale, or non-accepted
-source evidence MUST stop before POST. A source-state-version mismatch MUST
-return `workflow_state_version_conflict`; unusable or inconsistent review
-evidence MUST return `authoritative_reference_unavailable`. Read authorization,
-visibility, and transport failures MUST retain their declared read failure
-semantics. None of these failures may send the resolve request.
+Before sending the resolve POST, Core MUST verify these predicates against the
+single detail response (all paths are relative to that response):
+
+- `detail.assistanceCaseId == requested assistanceCaseId` and
+  `detail.status == OWNER_PENDING`.
+- `detail.workflowStateVersion == caller expectedWorkflowStateVersion`.
+- `detail.governanceBinding.assistanceCaseId == requested assistanceCaseId`
+  and `detail.governanceBinding.status == BOUND`.
+- `detail.governanceBinding.source.workflowInstanceId == detail.workflowInstanceId`
+  and `detail.governanceBinding.source.nodeVisitId == detail.nodeVisitId`.
+- `detail.governanceBinding.child.definitionVersionId ==
+  detail.governanceTerminalProof.definitionVersionId` and
+  `detail.governanceBinding.child.acceptanceTransitionId ==
+  detail.governanceTerminalProof.transitionId`.
+- `detail.governanceBinding.acceptanceContractDigest ==
+  detail.governanceTerminalProof.acceptanceContractDigest`.
+- `detail.governanceBinding.currentReview.deliveryStatus == DELIVERED` and
+  `detail.governanceBinding.currentReview.reviewStatus == OUTSTANDING`.
+- `detail.governanceTerminalProof.verdict == ACCEPTED`.
+
+The five mapped source values in the table above MUST each be present as
+strings. The DTO's proof object has no `bindingId`; Core MUST NOT require one or
+invent any other proof-to-binding field. The Svc detail contract binds the
+proof to the immutable governance relation. Missing, malformed, mismatched,
+stale, or non-accepted source evidence MUST stop before POST. A source-state-
+version mismatch MUST return `workflow_state_version_conflict`; unusable or
+inconsistent review evidence MUST return
+`authoritative_reference_unavailable`. Read authorization, visibility, and
+transport failures MUST retain their declared failure semantics. None of these
+failures may send the resolve request.
 
 For a valid read, Core MUST project the five service-owned values directly into
 the existing `resolution.supportingPayload.governanceChildReview` body slot,
@@ -644,27 +666,42 @@ resolved case and same-visit resume evidence using the existing acceptance
 fixture.
 
 The operation MUST be admitted only when the exact operation is present in the
-caller's frozen native-tool policy and current runtime tool snapshot; a policy
-that allows only the existing `resolve` operation MUST NOT implicitly allow
-this operation. The policy digest MUST bind the new exact operation, and a
-process using it MUST acknowledge the matching policy digest and tool snapshot
-before invocation. A stale generation or missing acknowledgement MUST fail
-closed before either request. Its Owner review-wake instructions and operation
-description MUST identify this operation as the path for resolving a linked
-accepted child review, while leaving the Owner's explicit decision requirement
-intact.
+caller's frozen native-tool policy; a policy that allows only the existing
+`resolve` operation MUST NOT implicitly allow this operation. The changed
+`allowedCalls` MUST be covered by the existing `policyDigest`, and the process
+MUST use the existing native-policy initialization acknowledgement for the
+matching `{version, agentId, policyDigest}` before model work. This amendment
+MUST NOT extend that acknowledgement shape with a tool-snapshot field. Broker
+manifest registration and generated tool-schema conformance MUST prove that
+`resolve_current_governance_review` is an actually registered operation with
+the declared arguments; a policy entry alone MUST NOT create a tool operation.
+Its Owner review-wake instructions and operation description MUST identify
+this operation as the path for resolving a linked accepted child review, while
+leaving the Owner's explicit decision requirement intact.
 
-Required negatives MUST assert request counts, not only final errors:
+Required negatives MUST assert logical operation invocations separately from
+wire requests, not only final errors:
 
-| Condition | Detail GETs | Resolve POSTs |
-|---|---:|---:|
-| Invalid arguments or pre-existing reserved nested target | 0 | 0 |
-| Native policy lacks the exact operation, its digest is stale, runtime snapshot omits it, or current generation has not acknowledged the matching policy/tool snapshot | 0 | 0 |
-| Read authorization denied, read transport/HTTP failure, or non-visible case | 1 | 0 |
-| Wrong case ID, unexpected case status, or state-version mismatch | 1 | 0 |
-| Absent/ambiguous binding or proof, non-`ACCEPTED` verdict, or undelivered/non-outstanding review | 1 | 0 |
-| Mismatched binding/contract digest; missing, non-string, or ambiguous mapped values | 1 | 0 |
-| Unsafe or undeclared static mapping | 0 (registration rejection) | 0 |
+| Condition | Internal detail-operation invocations | Detail GETs sent downstream | Resolve POSTs |
+|---|---:|---:|---:|
+| Invalid arguments or pre-existing reserved nested target | 0 | 0 | 0 |
+| Native policy lacks the exact operation, policy digest/initialization acknowledgement is stale, or Broker registration/schema omits the operation | 0 | 0 | 0 |
+| Read-scope authorization or token denial before HTTP | 1 | 0 | 0 |
+| Service 404/non-visible case response | 1 | 1 | 0 |
+| Read transport failure before request emission | 1 | 0 | 0 |
+| Read transport failure after request emission or read HTTP error | 1 | 1 | 0 |
+| Wrong case ID, unexpected case status, or state-version mismatch | 1 | 1 | 0 |
+| Absent binding/proof, non-`ACCEPTED` verdict, or undelivered/non-outstanding review | 1 | 1 | 0 |
+| Mismatched binding/contract digest; missing, non-string, or ambiguous mapped values | 1 | 1 | 0 |
+| Unsafe or undeclared static mapping | 0 (registration rejection) | 0 | 0 |
+
+A read authorization denial counts as an attempted internal detail-operation
+invocation but MUST NOT be represented as a wire GET. For transport failures,
+tests MUST count a GET only if the test transport observed request emission;
+all such failures still require zero resolve POSTs. The native policy ack is
+only the existing `{version, agentId, policyDigest}` tuple. Broker registration
+and generated-schema checks, not an added native-ack field, establish that the
+operation is actually exposed.
 
 They MUST also show that the original `resolve` operation does not silently
 select this mode, that a bad explicit `CTR-GCR-005` reference is passed to Svc
