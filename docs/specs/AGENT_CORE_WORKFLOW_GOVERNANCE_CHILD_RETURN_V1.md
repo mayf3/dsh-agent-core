@@ -472,13 +472,22 @@ amendment becomes implementation authority only after merge into the authority
 branch; implementation authorization remains a separate action. Production
 apply authority remains none.
 
-## AMENDMENT_2 — TRUSTED CURRENT GOVERNANCE-REVIEW REFERENCE (proposed)
+## AMENDMENT_2 — TRUSTED CURRENT GOVERNANCE-REVIEW REFERENCE (2026-10-29, accepted)
 
-> **AMENDMENT_STATUS = proposed.** This additive candidate is authored against
-> accepted Core main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`. It changes no
-> Svc Contract and grants no production authority. Implementation is forbidden
-> until this amendment is independently reviewed and accepted in the relevant
-> authority branch; implementation then requires its own REUSE preflight.
+> **AMENDMENT_STATUS = accepted.** Codex root accepts this additive delta under
+> mayf3's explicit delegation on 2026-10-29. Independent reviewer
+> `/root/a67_resume_gap_luna` returned PASS on reviewed head
+> `7677448c2dfa8ee0cdc511cbc7acca6f83e36718`, candidate Spec SHA-256
+> `d51c3a69852b1f1cacb73b43c9b4609fd30560d8e078c0835b18cc307fb2afb9`.
+> The bounded review receipt is
+> `ART/gcr-current-reference-spec-review-20261029/review-delta.md`, SHA-256
+> `f7d5cbf8866f5545e5dafd294fda531759c8538350b87e6b14d197566a5ac029`.
+> All four frozen blockers are closed. This acceptance-only commit changes no
+> reviewed contract semantics. The amendment becomes active after merge to
+> `main`; implementation requires a separate REUSE preflight and remains
+> limited to source work and isolated validation. It changes no Svc Contract.
+> Production apply authority is none. CTR-GCR-001 through CTR-GCR-005 and
+> ACC-GCR-001/002 retain their accepted meanings.
 
 ### A2.1 Trigger and bounded decision
 
