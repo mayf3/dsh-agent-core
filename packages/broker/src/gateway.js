@@ -31,6 +31,7 @@
 import { COMPLETE_BODY_ID, completeFailure } from './capabilities/workflow-definition-read/complete-contract.js'
 import { readCompleteBody } from './capabilities/workflow-definition-read/complete-reader.js'
 import { createHttpTransport, createHttpHandlers, requestAccessToken } from './transport.js'
+import { validateHttpReadProjectionSource } from './transport/body-projection.js'
 import { buildTargetMap } from './targets.js'
 import { invoke, validateInvocation } from './mapping.js'
 import { sanitizeDispatchStatusError } from './agent-session-status-result.js'
@@ -90,6 +91,12 @@ export function createBrokerGateway({
     const hasHttp = Array.isArray(manifest.operations) && manifest.operations.some((o) => o && o.http)
     const isLocal = manifest?.local !== undefined
     if (hasHttp || isLocal) byCapability.set(manifest.id, manifest)
+  }
+  for (const manifest of byCapability.values()) {
+    for (const operation of manifest.operations || []) {
+      const issue = validateHttpReadProjectionSource(operation.http || {}, operation.arguments?.properties || {}, byCapability)
+      if (issue) throw new Error(`invalid read projection in ${manifest.id}.${operation.name}: ${issue}`)
+    }
   }
 
   /**
@@ -387,7 +394,9 @@ export function createBrokerGateway({
 
     // ── HTTP-bound capability: the existing generic authorized transport. ─
     const transport = transportFor(agentId)
-    const handlers = createHttpHandlers(manifest, transport)
+    const handlers = createHttpHandlers(manifest, transport, {
+      executeRead: (readCall) => executeCore(readCall, trustedContext),
+    })
     return invoke(manifest, handlers, { operation, args: localArgs }, {
       // The parent decides the caller; the local identity stub is unused by
       // the HTTP pipeline (identity travels in the credential, not here).
