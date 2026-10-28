@@ -1,8 +1,26 @@
 ---
 spec_id: AGENT_CORE_TRUSTED_NATIVE_TOOL_POLICY_V1
-status: proposed
+status: accepted
+accepted_date: 2026-10-28
+accepted_by: Owner-delegated Codex (/root)
+accepted_reviewed_head: 3bf9e9d4f58bd198161cf3046c54645ef25f5002
+acceptance_review_verdict: PASS
+acceptance_authority_basis: >-
+  User-delegated design authority covers establishment of the generic
+  mechanism and leaves this design choice to the delegated agent (“接受，
+  全权交给你定就行”); the user also authorized continued work on the
+  generic underlying mechanism/workflow with Luna preference. Root selected
+  this narrow opt-in native-tool-channel policy and bounded it to trusted
+  startup identity+digest, final DSH native dispatch enforcement, explicit
+  fail-closed behavior, and no production changes. Trial-ops independently
+  reviewed the paired Core Spec and DSH Note at exact document hashes pinned
+  by manifest 59609e370098bb2586a1fb7628361701ea0a341d2ff0acea92124e96f5711465
+  (PASS). Root performed HEAD-SPECIFIC acceptance for reviewed Core head
+  3bf9e9d4f58bd198161cf3046c54645ef25f5002 and paired DSH head
+  3910d108a430a30fe019aedd98566cd2d0f117b4. This acceptance record does not
+  claim that the user personally reviewed these exact heads.
 date: 2026-10-28
-implementation_authority: none
+implementation_authority: contracts
 paired_runtime_authority: deepseek-harness Agent Note 2026-10-28-trusted-native-tool-policy
 ---
 
@@ -13,7 +31,7 @@ paired_runtime_authority: deepseek-harness Agent Note 2026-10-28-trusted-native-
 ```text
 Problem = Workflow role text and declared capabilities do not restrict native dispatch; A43 dev used a native write tool for an Owner-owned repair.
 Governing Spec = AGENT_CORE_HARDENING_PROGRAM_V1 (accepted; program-level only, implementation_authority none).
-Spec status = proposed; this document grants no implementation authority until independently reviewed, marked accepted, and merged.
+Spec status = accepted at reviewed head 3bf9e9d4f58bd198161cf3046c54645ef25f5002; implementation authority is limited to the Contracts below and the recorded scope.
 
 Relevant investigations = A43 task-local runtime/config and native-candidate inspection (task-local evidence only; no repository investigation path is asserted).
 Relevant decisions = AGENT_CORE_PRODUCT_ARCHITECTURE_V1; AGENT_CORE_HARDENING_PROGRAM_V1 cooperative shared-host trust model.
@@ -113,8 +131,8 @@ This contract limits calls made through the DSH native tool dispatcher. It does 
 ## 9. Status
 
 ```text
-SPEC_STATUS = proposed
-IMPLEMENTATION_AUTHORITY = NONE
+SPEC_STATUS = accepted
+IMPLEMENTATION_AUTHORITY = contracts
 ROOT_SCOPE_RULING = paired trusted-config/native-dispatch contract only
 PRODUCTION_CHANGE = NONE
 OS_ISOLATION = NONE
