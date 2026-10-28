@@ -375,12 +375,21 @@ commits. This authority becomes active only after both merge into their
 owning authority branches; source implementation requires its separate
 authorization, and production apply authority remains none.
 
-## AMENDMENT_1 — TYPED GOVERNANCE REVIEW INPUT (2026-10-29, proposed)
+## AMENDMENT_1 — TYPED GOVERNANCE REVIEW INPUT (2026-10-29, accepted)
 
-> **AMENDMENT_STATUS = proposed.** This additive delta is not active Product
-> Authority and grants no implementation or production authority until its own
-> independent semantic review and explicit owner acceptance. The accepted
-> contract above, including `CTR-GCR-003` and `ACC-GCR-001`, remains unchanged.
+> **AMENDMENT_STATUS = accepted.** Codex root accepts this additive delta under
+> mayf3's explicit delegation on 2026-10-29. Independent reviewer
+> `/root/assistance_resume_core_impl_luna` returned PASS on reviewed head
+> `c4a81f2fd2984a3f458dc5a673a127909ac14bed`, candidate Spec SHA-256
+> `6854c942a6b9b0e492e92c955efb3ae3a3f2c3e1782955f2181aa2a29cc92f66`.
+> The review receipt is `ART/gcr-typed-review-spec-20261029/review-delta.md`
+> under the task artifact root, SHA-256
+> `56c50091d722a20c35fa55a503670e4fa49122b33a9b79fa038acd82bcb37e3d`.
+> This acceptance-only commit changes no reviewed contract semantics. The
+> amendment becomes active after merge to `main`; implementation requires a
+> separate REUSE preflight and remains limited to source and isolated tests.
+> Production apply authority is none. The accepted contract above, including
+> `CTR-GCR-003` and `ACC-GCR-001`, remains unchanged.
 
 ### A1.1 Trigger and bounded decision
 
@@ -458,6 +467,7 @@ This is strictly additive to the accepted Core contract: `CTR-GCR-001` through
 meaning. `CTR-GCR-003` continues to define the existing opaque nested path and
 Svc linked-case authority; `CTR-GCR-005` supplies an explicit opt-in typed
 caller path while preserving the legacy path when omitted. The Svc Spec and
-implementation are unchanged. No migration is required. Implementation is not
-authorized by this proposed amendment; acceptance must bind the exact reviewed
-candidate and implementation authorization remains a separate action.
+implementation are unchanged. No migration is required. This accepted
+amendment becomes implementation authority only after merge into the authority
+branch; implementation authorization remains a separate action. Production
+apply authority remains none.
