@@ -1,7 +1,22 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1
 title: Owner-bound governance child and return to the originating Workflow visit
-status: proposed
+status: accepted
+accepted_date: 2026-10-28
+accepted_at: 2026-10-28T06:04:48Z
+accepted_by: Codex root (explicitly delegated by mayf3)
+accepted_reviewed_head: 599107b6909e5f3153afd29bc846a122e50ebfd7
+accepted_candidate_file_sha256: 44dd889d644b4253c4d516d35665f09a578a584b19fb2db54ecb119758bdd31b
+acceptance_review_verdict: PASS
+independent_semantic_reviewer: /root/assistance_resume_core_impl_luna
+acceptance_delta_class: new_standalone_contract
+semantic_delta_after_review: NONE
+acceptance_authority_basis: >-
+  Root accepted the exact independently reviewed contract under mayf3's explicit
+  delegation to complete source work and isolated validation only. The Core
+  reviewer returned PASS on accepted_reviewed_head. This lifecycle commit records
+  acceptance only; authority is effective after both companion Specs merge, and
+  implementation remains separately authorized. Production apply authority is none.
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,7 +35,7 @@ governed_by:
 external_authorities:
   - repository: mayf3/svc-workflow
     authority_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1
-    revision: ed9344f4701b416e8cf6d7cd10cc4ae28969ff3f
+    revision: 1f191156a03d9397b2fb2fdb6c28d6a9621ace95
     relation: interoperates_with
 supersedes: []
 superseded_by: null
@@ -30,13 +45,15 @@ owners:
 
 # AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1
 
-This proposed additive contract lets a Domain Owner bind one existing,
+This accepted additive contract lets a Domain Owner bind one existing,
 same-Domain governance WorkflowInstance to one open Assistance case, then
 receive a distinct review wake when that child reaches a terminal event. The
 Owner must inspect the child's exact final acceptance evidence and explicitly
 resolve or escalate the original case. A valid explicit resolve continues to
 use the existing WEC V2 / SWEC CTR-SWEC-010 same-visit resume contract. This
-proposal is not accepted and authorizes no implementation or production action.
+accepted candidate becomes active when it and the accepted Svc companion merge
+to their authority branches. Implementation remains separately authorized;
+production apply authority is none.
 
 ## 0. Current state and evidence
 
@@ -94,7 +111,7 @@ The bind operation accepts only an already-created child instance. Existing
 `workflow_definition_read` and `workflow_execute.create_instance` remain the
 available Definition read/create path, with the service resolving the entry
 assignee. Instance creation may make the child eligible for ordinary dispatch
-before a separate bind call; this proposal does not add atomic create-and-bind
+before a separate bind call; this contract does not add atomic create-and-bind
 or prevent an unbound child from starting. If that child reaches terminal
 before bind, bind refuses and no automatic replacement is created. A
 successful bind requires the exact child to remain nonterminal. Automatic
@@ -312,8 +329,9 @@ completion or production readiness.
 
 ## 7. Compatibility and activation
 
-This is additive and inactive until both companion Specs are accepted in their
-respective repositories and implementation is separately authorized. Existing
+This is additive and becomes active only after both accepted companion Specs
+merge into their respective authority branches; implementation is separately
+authorized. Existing
 outbox rows, initial wake keys, ordinary cases, routes and WEC2 resume behavior
 remain unchanged. A partial deployment must fail closed for the new typed
 operation; it must not silently emulate a linked review with the initial wake.
@@ -325,9 +343,9 @@ decisions delegated to an implementer.
 
 `DEC-GCR-001` — Add only one immutable relationship edge and one distinct
 review-wake phase to existing Owner Assistance and WEC resume machinery.
-Decision owner: delegated contract author under explicit root mandate; this
-proposed text requires independent semantic review and acceptance before any
-implementation. Rejected: automatically accepting a child terminal,
+Decision owner: root accepted this contract under mayf3's explicit delegation
+after independent semantic review. Implementation remains separately
+authorized. Rejected: automatically accepting a child terminal,
 automatic source transition, generic obligation/budget platform, recursive
 governance, or reusing the initial wake identity. Each either removes the
 Owner decision, broadens authority beyond the observed gap, or can lose the
@@ -349,6 +367,8 @@ fails closed.
 
 ## 10. Open questions
 
-None. The implementation is not authorized until this Spec and its named Svc
-companion `SVC_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` are independently reviewed,
-accepted, and merged in their owning bases.
+None. This Spec and its named Svc companion
+`SVC_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` are accepted in their candidate
+commits. This authority becomes active only after both merge into their
+owning authority branches; source implementation requires its separate
+authorization, and production apply authority remains none.
