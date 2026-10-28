@@ -75,7 +75,14 @@ export function createProcessRegistry({
   let disposing = false
 
   restoreRecoveryFences(reconciliationStore)
-  const nativePolicyBinding = createNativePolicyRegistryBinding({ resolveNativeToolPolicy, resolveProcessConfig })
+  const nativePolicyBinding = createNativePolicyRegistryBinding({
+    resolveNativeToolPolicy,
+    resolveProcessConfig,
+    getCurrentPolicy: (agentId) => {
+      const slot = lifecycleSlots.get(agentId)
+      return slot?.processRef?.nativeToolPolicy ?? slot?.spawnConfig?.processConfig?.nativeToolPolicy
+    },
+  })
 
   // DEC-IMPL-004 route-aware reuse gate (ordered route chain Q-4): the
   // route-aware ensureRunning variant the unified chain executor calls.
@@ -225,17 +232,9 @@ export function createProcessRegistry({
    */
   function ensureRunning(agentId) {
     if (disposing) return Promise.reject(Object.assign(new Error('agent-router: process registry is disposing'), { code: 'AGENT_PROCESS_DRAINING' }))
-    if (resolveNativeToolPolicy !== undefined) {
-      try {
-        const hasPolicy = nativePolicyBinding.hasPolicy(agentId)
-        const currentProcess = lifecycleSlots.get(agentId)?.processRef
-        if (hasPolicy || currentProcess?.nativeToolPolicy !== undefined) {
-          return nativePolicyBinding.ensureRunning(agentId, routeGate)
-        }
-      } catch (error) {
-        return Promise.reject(error)
-      }
-    }
+    const policyStartup = resolveNativeToolPolicy === undefined ? undefined
+      : nativePolicyBinding.ensureIfBound(agentId, lifecycleSlots.get(agentId)?.processRef, routeGate)
+    if (policyStartup !== undefined) return policyStartup
     // B01 / C-007: the EMPTY -> STARTUP linearization point is synchronous
     // and precedes every asynchronous bootstrap step, including workspace
     // seeding. Returning the entry's exact resultPromise (rather than an
@@ -314,7 +313,7 @@ export function createProcessRegistry({
       // slot at turn-start snapshot time (parent CTR-007); legacy spawns keep
       // resolving the default route here (process-boundary re-read only).
       processConfig = entry.spawnConfig?.processConfig ?? resolveProcessConfig(agentId) ?? {}
-      if (entry.spawnConfig === null && resolveNativeToolPolicy !== undefined) {
+      if (entry.spawnConfig === null) {
         processConfig = nativePolicyBinding.prepareStartupConfig(agentId, processConfig)
       }
       // DEC-IMPL-004 reuse identity: recorded on the slot so the route gate

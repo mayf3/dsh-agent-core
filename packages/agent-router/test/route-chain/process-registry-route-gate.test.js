@@ -264,6 +264,69 @@ test('trusted native policy resolver identity mismatch fails before process crea
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'EMPTY')
 })
 
+test('route acquisition without an identity closes policy removal instead of reusing the old generation', async (t) => {
+  let policyEnabled = true
+  const resolveNativeToolPolicy = (agentId) => policyEnabled ? ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }) : undefined
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => GLM_CONFIG,
+    resolveNativeToolPolicy,
+  })
+  const optedIn = await router.ensureRunningForRoute(AGT_ID, { processConfig: GLM_CONFIG })
+  policyEnabled = false
+  const legacy = await router.ensureRunningForRoute(AGT_ID, {})
+
+  assert.notEqual(legacy.proc, optedIn.proc)
+  assert.equal(legacy.proc.nativeToolPolicy, undefined)
+  assert.equal(optedIn.proc.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
+test('concurrent route acquisition converges a STARTUP policy removal through the same generation gate', async (t) => {
+  let policyEnabled = true
+  const resolveNativeToolPolicy = (agentId) => policyEnabled ? ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }) : undefined
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => GLM_CONFIG,
+    resolveNativeToolPolicy,
+  })
+  const optedInPromise = router.ensureRunningForRoute(AGT_ID, { processConfig: GLM_CONFIG })
+  policyEnabled = false
+  const legacyPromise = router.ensureRunningForRoute(AGT_ID, {})
+  const [optedIn, legacy] = await Promise.all([optedInPromise, legacyPromise])
+
+  assert.notEqual(legacy.proc, optedIn.proc)
+  assert.equal(legacy.proc.nativeToolPolicy, undefined)
+  assert.equal(optedIn.proc.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
+test('process config cannot opt in when the trusted resolver is absent', async (t) => {
+  const injectedPolicy = {
+    version: 1,
+    agentId: AGT_ID,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => ({ ...GLM_CONFIG, nativeToolPolicy: injectedPolicy }),
+  })
+  const process = await router.ensureRunning(AGT_ID)
+
+  assert.equal(process.nativeToolPolicy, undefined)
+  assert.equal(spawned[0].nativeToolPolicy, undefined)
+})
+
 test('DEC-IMPL-004: mismatched BUSY process is never killed and never reused', async (t) => {
   const { router, spawned } = await freshRig(t)
   const glm = await router.ensureRunningForRoute(AGT_ID, { routeIdentity: GLM_IDENTITY, processConfig: GLM_CONFIG })

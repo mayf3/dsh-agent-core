@@ -78,7 +78,12 @@ test('composition forwards the trusted exact-agent native policy resolver into p
     layout,
     productApi: { enabled: false, port: 0 },
     notificationIngress: { enabled: false, port: 0 },
-    processFactory: (opts) => { const proc = new FakeProc(opts); spawned.push(proc); return proc },
+    processFactory: (opts) => {
+      const proc = new FakeProc(opts)
+      proc.nativeToolPolicy = opts.nativeToolPolicy
+      spawned.push(proc)
+      return proc
+    },
     resolveNativeToolPolicy: (agentId) => {
       resolvedAgentIds.push(agentId)
       return {
