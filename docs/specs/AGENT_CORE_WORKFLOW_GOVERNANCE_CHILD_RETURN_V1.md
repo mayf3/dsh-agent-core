@@ -471,3 +471,216 @@ implementation are unchanged. No migration is required. This accepted
 amendment becomes implementation authority only after merge into the authority
 branch; implementation authorization remains a separate action. Production
 apply authority remains none.
+
+## AMENDMENT_2 — TRUSTED CURRENT GOVERNANCE-REVIEW REFERENCE (proposed)
+
+> **AMENDMENT_STATUS = proposed.** This additive candidate is authored against
+> accepted Core main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`. It changes no
+> Svc Contract and grants no production authority. Implementation is forbidden
+> until this amendment is independently reviewed and accepted in the relevant
+> authority branch; implementation then requires its own REUSE preflight.
+
+### A2.1 Trigger and bounded decision
+
+`OBS-GCR-003` — The immutable A68 excerpt
+`ART/a68-typed-reference-diagnosis-20261029/a68-typed-resolve-excerpt.json`
+(SHA-256
+`ba18c78480b38f229d6c063735a4bf075fdea34779c52318ec9737237aeaeeef`)
+records a successful Owner detail read with the service's terminal-proof
+`submissionDigest`, followed 14 seconds later by an explicit resolve whose
+typed `submissionDigest` differs at one hexadecimal character. The other four
+typed reference fields match. The service returned HTTP 409
+`assistance_status_conflict`; the case was not resolved. The excerpt is an
+immutable selection from append-only public logs, not a claim about later run
+state.
+
+`OBS-GCR-004` — At Core main `f63eaf6e000d2bbf4343c727d38474147db7f6cb`,
+`workflow_assistance_read.detail` is a separate `GET` capability using the
+existing `workflow.read` scope, while `workflow_assistance_action.resolve` is
+a `POST` using `workflow.execute` and the static `bodyProjections` mechanism
+accepts only a declared argument as its source. `body-projection.js` binds from
+the current invocation's `args`; the HTTP handler receives one operation and
+its current arguments, with no read-result association or persistent result
+store. The accepted Svc detail projection already returns immutable
+`governanceBinding` and `governanceTerminalProof` references under the existing
+Owner visibility predicate (`SVC_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1`,
+`CTR-GCRS-003`, §4, lines 247–267); its exact five-field resolve validation
+remains authoritative (`CTR-GCRS-006`, lines 406–447).
+
+`CLM-GCR-002` — SUPPORTED: an explicitly selected static, same-caller read to
+the existing case-detail operation can eliminate model transcription of the
+service-owned long digest while preserving both the exact-input behavior of
+`CTR-GCR-005` and Svc's strict reference validation. A persistent read-result
+vault, model-chosen lookup path, and automatic resolve are unnecessary.
+
+`EVD-GCR-002` — `OBS-GCR-003/004` support this bounded caller-input
+interoperability delta only. They do not prove that this operation is
+implemented, installed, or successful in a native run.
+
+This amendment adds one explicit Broker operation to the existing
+`workflow_assistance_action` capability. It does not change the existing
+`resolve` operation or its exact typed-input semantics under `CTR-GCR-005`;
+does not change the historically opaque behavior when `resolve` omits the typed
+input; and does not change the Svc request shape or authority. The new operation
+is a separate, explicit Owner action so the `MUST NOT derive` rule for the
+caller-supplied `CTR-GCR-005` input remains intact.
+
+Decision: add a separate operation with a static read source. Leaving the
+direct path unchanged leaves the demonstrated transcription error reachable;
+correcting explicit values or loosening Svc would contradict exact projection
+and the service's closed-reference authority; a persistent cache could bind a
+stale or other caller's result. A fresh same-caller read inside this distinct
+explicit operation avoids those alternatives without changing the old
+operation's meaning, so this is an additive `AMEND`, not a partial
+supersession.
+
+### A2.2 `CTR-GCR-006` — Explicit resolve from current service review
+
+The existing capability MAY add this distinct operation:
+
+```json
+{
+  "operation": "resolve_current_governance_review",
+  "assistanceCaseId": "<uuid>",
+  "expectedWorkflowStateVersion": 3,
+  "resolution": {
+    "message": "<Owner's explicit resolution>",
+    "supportingPayload": { "otherEvidence": "preserved" }
+  }
+}
+```
+
+Calling this operation is the Owner's explicit resolve decision. It MUST NOT
+be invoked automatically from a terminal child, a read, an accepted verdict,
+elapsed time, or an execution-engine reconciliation. The model-facing
+operation MUST instruct the Owner to inspect the exact child terminal event and
+Submission through the existing authorized read tools and decide whether to
+resolve or escalate before calling it.
+
+The operation MUST use a trusted static read-to-body projection declared in
+the Broker manifest. The declaration MUST name exactly the existing
+`workflow_assistance_read.detail` read operation and statically bind its
+`assistanceCaseId` argument from this operation's `assistanceCaseId`. The
+mapping MUST select only these fields from that single fresh response:
+
+| Svc detail source | Existing resolve-body destination |
+|---|---|
+| `governanceBinding.bindingId` | `resolution.supportingPayload.governanceChildReview.bindingId` |
+| `governanceTerminalProof.terminalEventId` | `resolution.supportingPayload.governanceChildReview.terminalEventId` |
+| `governanceTerminalProof.submissionId` | `resolution.supportingPayload.governanceChildReview.submissionId` |
+| `governanceTerminalProof.submissionDigest` | `resolution.supportingPayload.governanceChildReview.submissionDigest` |
+| `governanceBinding.acceptanceContractDigest` | `resolution.supportingPayload.governanceChildReview.acceptanceContractDigest` |
+
+The Broker MUST perform the read for the same actual caller as the resolve
+action through the normal gateway authorization path for
+`workflow_assistance_read.detail`, including its existing `workflow.read`
+authorization. It MUST separately enforce the existing `workflow.execute`
+authorization for the resolve action. Both scopes and the Domain Owner check
+already exist; this amendment adds no scope, Grant, role, credential, identity
+override, service route, or Svc API. A missing read capability or denied read
+MUST fail before the resolve POST and MUST NOT fall back to a broader identity
+or direct unscoped fetch.
+
+The read-to-body mapping MUST be static trusted manifest data. The caller MUST
+not choose a source capability, service route, response path, destination
+path, or field mapping. The implementation MUST validate the source operation
+as the declared read operation, bind only declared invocation arguments, and
+reject unsafe, undeclared, overlapping, or invalid paths before registration.
+It MUST use an invocation-local response; it MUST NOT use a cached result from
+another call, case, Agent, process, or runtime. It MUST NOT return the full
+internal read result as a substitute for the normal read operation.
+
+Before sending the resolve POST, Core MUST verify that the read result identifies
+the requested `assistanceCaseId`, remains `OWNER_PENDING`, and has a
+`workflowStateVersion` equal to the caller-supplied
+`expectedWorkflowStateVersion`. It MUST require one linked binding for this
+case, `currentReview.deliveryStatus == DELIVERED` and
+`currentReview.reviewStatus == OUTSTANDING`, and one terminal proof with
+verdict `ACCEPTED`. The binding and proof must agree on the exact binding and
+acceptance-contract digest, and all five mapped values must be present as
+strings. Missing, ambiguous, malformed, mismatched, stale, or non-accepted
+source evidence MUST stop before POST. A source-state-version mismatch MUST
+return `workflow_state_version_conflict`; unusable or inconsistent review
+evidence MUST return `authoritative_reference_unavailable`. Read authorization,
+visibility, and transport failures MUST retain their declared read failure
+semantics. None of these failures may send the resolve request.
+
+For a valid read, Core MUST project the five service-owned values directly into
+the existing `resolution.supportingPayload.governanceChildReview` body slot,
+using copy-on-write and preserving the Owner's message and every unrelated
+payload member. This new operation MUST reject a caller-supplied
+`supportingPayload.governanceChildReview` target before the read; it MUST NOT
+overwrite, merge, compare-and-correct, or delete one. Its arguments do not
+accept a top-level `governanceChildReview` value. The operation MUST send the
+caller's original `expectedWorkflowStateVersion` unchanged; it MUST NOT replace
+it with the version returned by the read. Svc's existing case, current Owner,
+CAS, binding, terminal-event, submission, digest, and `ACCEPTED` checks remain
+the final mutation authority. A race after the read is handled by those
+existing Svc checks; Core MUST NOT automatically reread and retry.
+
+The operation uses the existing Svc resolve route, payload, `workflow.execute`
+action, and transport idempotency behavior. A POST with unknown outcome MUST
+follow the existing exact detail/readback and no-new-key/no-replay rules. This
+operation adds no automatic transition, no automatic resolve, and no
+acceptance decision by Core.
+
+The existing `resolve` operation remains unchanged: when the explicit typed
+object is supplied it is projected exactly as supplied under `CTR-GCR-005`,
+without read-derived correction; when omitted, legacy resolution input is
+forwarded unchanged. The new operation is the only path that performs the
+declared current-detail read and read-derived projection.
+
+### A2.3 `ACC-GCR-003` — Current-review read projection conformance
+
+| Contracts | Method | Environment | Required evidence | Expected result | Failure condition |
+|---|---|---|---|---|---|
+| `CTR-GCR-006` | Static manifest validation, focused Broker tests, then isolated Core-to-Svc linked resolve using the existing service fixture | Local tests and task-owned service/database only; no production | Exact source GET and resolve POST identities/bodies/counts; caller/scope authorization; input immutability; returned Svc receipt and authoritative readback | One explicit `resolve_current_governance_review` call performs one same-caller authorized detail read, projects exactly the five returned service fields, preserves the caller's original expected version and unrelated resolution content, and reaches the unchanged strict Svc resolve successfully when evidence remains current | Any model-selected source/path/mapping; missing or failed read followed by POST; wrong-case/stale/non-accepted source projected; any copied or rewritten version; source data leaked from shared cache; duplicate/implicit resolve; Svc validation weakened; any failure path that sends POST |
+
+Required positive tests MUST assert that a deliberately nontrivial digest read
+from Svc reaches the resolve request byte-for-byte, with exactly one source
+read and one resolve POST, the original expected version unchanged, siblings
+preserved, and no input mutation. The isolated service test MUST read back the
+resolved case and same-visit resume evidence using the existing acceptance
+fixture.
+
+The operation MUST be admitted only when the exact operation is present in the
+caller's frozen native-tool policy and current runtime tool snapshot; a policy
+that allows only the existing `resolve` operation MUST NOT implicitly allow
+this operation. The policy digest MUST bind the new exact operation, and a
+process using it MUST acknowledge the matching policy digest and tool snapshot
+before invocation. A stale generation or missing acknowledgement MUST fail
+closed before either request. Its Owner review-wake instructions and operation
+description MUST identify this operation as the path for resolving a linked
+accepted child review, while leaving the Owner's explicit decision requirement
+intact.
+
+Required negatives MUST assert request counts, not only final errors:
+
+| Condition | Detail GETs | Resolve POSTs |
+|---|---:|---:|
+| Invalid arguments or pre-existing reserved nested target | 0 | 0 |
+| Native policy lacks the exact operation, its digest is stale, runtime snapshot omits it, or current generation has not acknowledged the matching policy/tool snapshot | 0 | 0 |
+| Read authorization denied, read transport/HTTP failure, or non-visible case | 1 | 0 |
+| Wrong case ID, unexpected case status, or state-version mismatch | 1 | 0 |
+| Absent/ambiguous binding or proof, non-`ACCEPTED` verdict, or undelivered/non-outstanding review | 1 | 0 |
+| Mismatched binding/contract digest; missing, non-string, or ambiguous mapped values | 1 | 0 |
+| Unsafe or undeclared static mapping | 0 (registration rejection) | 0 |
+
+They MUST also show that the original `resolve` operation does not silently
+select this mode, that a bad explicit `CTR-GCR-005` reference is passed to Svc
+unchanged and receives Svc's existing rejection, that unlinked opaque resolve
+remains unchanged, and that post-POST unknown still follows the current
+no-replay behavior.
+
+### A2.4 Compatibility, authority, and lifecycle
+
+This amendment adds only `CTR-GCR-006` and `ACC-GCR-003`. `CTR-GCR-001` through
+`CTR-GCR-005`, `ACC-GCR-001` and `ACC-GCR-002`, WEC V2 resume, and the accepted
+Svc companion retain their accepted meaning. The operation is an additive
+caller-input path to the same explicit Owner action and existing Svc endpoint;
+it adds no Service contract, permission, Grant, role, Auth scope, data record,
+cache, route, or production authorization. No migration or backfill is
+required. The Spec establishes interface authority only; it does not establish
+implementation, installation, A68 completion, production adoption, or
+business correctness. Any later implementation requires a separate REUSE
+preflight after this amendment is accepted.
