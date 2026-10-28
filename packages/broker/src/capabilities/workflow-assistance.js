@@ -98,7 +98,7 @@ export const workflowAssistanceActionManifest = withTransportErrors({
   name: 'Workflow Assistance Action',
   description:
     'Domain Owner action on an existing assistance case: resolve the blocker '
-    + 'or explicitly escalate OWNER_PENDING to HUMAN_REQUIRED.',
+    + 'explicitly escalate OWNER_PENDING to HUMAN_REQUIRED, or bind one existing governance child for review.',
   requiredScopes: ['workflow.execute'],
   errors: actionErrors,
   operations: [{    name: 'resolve',
@@ -139,6 +139,30 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       path: '/internal/v1/assistance-cases/{assistanceCaseId}/escalate-to-human',
       pathParams: ['assistanceCaseId'],
       body: ['expectedWorkflowStateVersion', 'escalation'],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'bind_governance',
+    description: 'Bind one existing same-Domain nonterminal governance child to this open case for later Owner review.',
+    arguments: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        governanceChildInstanceId: uuid('Existing governance child instance id'),
+        acceptanceTransitionId: uuid('Published child terminal acceptance transition id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
+      },
+      required: ['assistanceCaseId', 'governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child',
+      pathParams: ['assistanceCaseId'],
+      body: ['governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
       idempotencyKey: true,
     },
   }],

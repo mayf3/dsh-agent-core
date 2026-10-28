@@ -29,6 +29,14 @@
  */
 
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+const SHA256_RE = /^[0-9a-f]{64}$/i
+const REVIEW_WAKE_PHASE = 'GOVERNANCE_CHILD_REVIEW'
+const REVIEW_WAKE_REQUIRED_FIELDS = [
+  'workflowInstanceId', 'nodeVisitId', 'assistanceCaseId', 'ownerPrincipalId',
+  'ownerBindingId', 'reviewWakeId', 'bindingId', 'governanceChildInstanceId',
+  'childNodeVisitId', 'childDefinitionVersionId', 'childTerminalEventId', 'acceptanceTransitionId',
+]
+const REVIEW_WAKE_OPTIONAL_FIELDS = ['acceptanceContractDigest', 'childSubmissionId', 'childSubmissionDigest']
 
 class HttpError extends Error {
   constructor(status, code, message) {
@@ -188,20 +196,37 @@ export async function handleWorkflowExecutionRequest({ req, url, access, verifie
       throw new HttpError(503, 'not_ready', 'owner assistance wake seam is not wired')
     }
     const body = await readJsonBody(req)
-    requireClosedBody(body, new Set([
-      'workflowInstanceId', 'nodeVisitId', 'assistanceCaseId', 'ownerPrincipalId', 'reason',
-    ]))
-    const reason = body.reason
-    if (reason !== undefined && (typeof reason !== 'string' || reason === '' || reason.length > 128)) {
-      throw new HttpError(400, 'invalid_arguments', 'reason must be a non-empty string <= 128 chars when present')
+    let wake
+    if (body?.phase === REVIEW_WAKE_PHASE) {
+      requireClosedBody(body, new Set(['phase', ...REVIEW_WAKE_REQUIRED_FIELDS, ...REVIEW_WAKE_OPTIONAL_FIELDS]))
+      for (const field of REVIEW_WAKE_REQUIRED_FIELDS) requireUuidBodyField(body, field)
+      for (const field of ['acceptanceContractDigest', 'childSubmissionDigest']) {
+        if (body[field] !== undefined && (typeof body[field] !== 'string' || !SHA256_RE.test(body[field]))) {
+          throw new HttpError(400, 'invalid_arguments', `${field} must be a 64-character SHA-256 digest`)
+        }
+      }
+      if ((body.childSubmissionId === undefined) !== (body.childSubmissionDigest === undefined)) {
+        throw new HttpError(400, 'invalid_arguments', 'childSubmissionId and childSubmissionDigest must be provided together')
+      }
+      if (body.childSubmissionId !== undefined) requireUuidBodyField(body, 'childSubmissionId')
+      wake = { ...body }
+    } else {
+      requireClosedBody(body, new Set([
+        'workflowInstanceId', 'nodeVisitId', 'assistanceCaseId', 'ownerPrincipalId', 'reason',
+      ]))
+      const reason = body.reason
+      if (reason !== undefined && (typeof reason !== 'string' || reason === '' || reason.length > 128)) {
+        throw new HttpError(400, 'invalid_arguments', 'reason must be a non-empty string <= 128 chars when present')
+      }
+      wake = {
+        workflowInstanceId: requireUuidBodyField(body, 'workflowInstanceId'),
+        nodeVisitId: requireUuidBodyField(body, 'nodeVisitId'),
+        assistanceCaseId: requireUuidBodyField(body, 'assistanceCaseId'),
+        ownerPrincipalId: requireUuidBodyField(body, 'ownerPrincipalId'),
+        ...(reason === undefined ? {} : { reason }),
+      }
     }
-    const outcome = await store.ownerAssistanceWake({
-      workflowInstanceId: requireUuidBodyField(body, 'workflowInstanceId'),
-      nodeVisitId: requireUuidBodyField(body, 'nodeVisitId'),
-      assistanceCaseId: requireUuidBodyField(body, 'assistanceCaseId'),
-      ownerPrincipalId: requireUuidBodyField(body, 'ownerPrincipalId'),
-      ...(reason === undefined ? {} : { reason }),
-    })
+    const outcome = await store.ownerAssistanceWake(wake)
     if (!outcome?.ok) {
       throw new HttpError(503, outcome?.code ?? 'owner_wake_failed', 'Domain Owner wake was not admitted')
     }
