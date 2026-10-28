@@ -11,6 +11,21 @@ import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
 
 const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
+
+test('Broker exposes only the validated operation selector as a trusted native discriminator', () => {
+  const { definition } = buildToolDefinition({ manifest: executeManifest(), handlers: {} })
+  assert.deepEqual(definition.nativePolicyDiscriminators, ['operation'])
+
+  const ordinaryTool = defineTool({
+    name: 'ordinary_tool',
+    description: 'A direct tool with no operation selector contract.',
+    parameters: {},
+    output: { schema: { type: 'string' }, render: () => [{ type: 'text', text: 'ok' }] },
+    execute: async () => 'ok',
+  })
+  assert.equal(ordinaryTool.nativePolicyDiscriminators, undefined)
+})
+
 // Read-ONLY tools (scope set exactly workflow.read). The coordinator
 // control-plane family (AGENT_CORE_WORKFLOW_COORDINATOR_CONTROL_PLANE_BROKER_V1)
 // carries the union scope set and is asserted separately in its own homes.
