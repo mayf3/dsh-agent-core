@@ -103,7 +103,7 @@ function busyProcess(proc) {
  * exact-death-evidence predicate (process-registry-death-evidence.js).
  */
 export function createRouteGate({
-  log, lifecycleSlots, installStartup, bootstrapStartup, assertRunnable, isDisposing,
+  log, lifecycleSlots, installStartup, bootstrapStartup, assertRunnable, isDisposing, prepareWanted,
 }) {
   /**
    * Bounded slot resolution: the same slot object may be re-entered only
@@ -184,6 +184,7 @@ export function createRouteGate({
     }
     try {
       assertRunnable(agentId)
+      wanted = prepareWanted?.(agentId, wanted) ?? wanted
     } catch (error) {
       return Promise.reject(error)
     }

@@ -15,6 +15,7 @@ import { join } from 'node:path'
 import { test } from 'node:test'
 
 import { writeAgentDefinition } from '../../../agent-definition/src/config.js'
+import { resolveTrustedNativeToolPolicy } from '../../../agent-provisioning/src/trusted-native-tool-policy.js'
 import { canonicalRouteIdentity } from '../../src/route-chain.js'
 import { apply as applyRouter } from '../../src/index.js'
 
@@ -26,6 +27,22 @@ const GLM_IDENTITY = canonicalRouteIdentity(GLM_CONFIG)
 const LUNA_IDENTITY = canonicalRouteIdentity(LUNA_CONFIG)
 const PER_HOME_LUNA_CONFIG = Object.freeze({ ...LUNA_CONFIG, subscription: { ...LUNA_CONFIG.subscription, credentialFile: '/tmp/home/agt_gate-fx/.openai-codex-auth.json' } })
 const CANONICAL_LUNA_CONFIG = Object.freeze({ ...LUNA_CONFIG, subscription: { ...LUNA_CONFIG.subscription, credentialFile: '/Users/authsvc/.agent-core/shared-credentials/openai-codex/.openai-codex-auth.json' } })
+
+test('native tool policy digest participates in process reuse identity while legacy identity stays stable', () => {
+  const legacy = canonicalRouteIdentity(GLM_CONFIG)
+  const first = canonicalRouteIdentity({
+    ...GLM_CONFIG,
+    nativeToolPolicy: { policyDigest: 'a'.repeat(64) },
+  })
+  const second = canonicalRouteIdentity({
+    ...GLM_CONFIG,
+    nativeToolPolicy: { policyDigest: 'b'.repeat(64) },
+  })
+
+  assert.equal(legacy, canonicalRouteIdentity({ ...GLM_CONFIG, nativeToolPolicy: undefined }))
+  assert.notEqual(first, legacy)
+  assert.notEqual(first, second)
+})
 
 function fakeCtx(services) {
   const provided = new Map()
@@ -82,7 +99,7 @@ class FakeProc {
   async turn() { return { status: 'completed', reply: 'ok', messageId: 'm' } }
 }
 
-async function freshRig(t, { resolveProcessConfig } = {}) {
+async function freshRig(t, { resolveProcessConfig, resolveNativeToolPolicy } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'acr-gate-'))
   t.after(() => rm(dir, { recursive: true, force: true }))
   const configFile = join(dir, 'agents.json')
@@ -103,6 +120,7 @@ async function freshRig(t, { resolveProcessConfig } = {}) {
     processFactory: (opts) => { const proc = new FakeProc(opts); spawned.push(proc); return proc },
     provisionHome: () => {},
     ...(resolveProcessConfig === undefined ? {} : { resolveProcessConfig }),
+    ...(resolveNativeToolPolicy === undefined ? {} : { resolveNativeToolPolicy }),
   })
   return { router, spawned }
 }
@@ -148,6 +166,102 @@ test('credential path switch never reuses the per-home OAuth child', async (t) =
   assert.equal(spawned.length, 2)
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
   assert.equal(router.lifecycleSlotSnapshot(AGT_ID).routeIdentity, canonicalRouteIdentity(CANONICAL_LUNA_CONFIG))
+})
+
+test('trusted native policy is bound to exact-agent process identity and changes require a new generation', async (t) => {
+  let allowedTool = 'read'
+  const resolveNativeToolPolicy = (agentId) => ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: allowedTool }],
+  })
+  const { router, spawned } = await freshRig(t, { resolveNativeToolPolicy })
+  const first = await router.ensureRunningForRoute(AGT_ID, {
+    routeIdentity: GLM_IDENTITY,
+    processConfig: { ...GLM_CONFIG, nativeToolPolicy: { agentId: 'attacker', policyDigest: '0'.repeat(64) } },
+  })
+  assert.equal(first.proc.nativeToolPolicy.allowedCalls[0].toolName, 'read')
+  assert.equal(first.proc.nativeToolPolicy.agentId, AGT_ID)
+  assert.equal(first.proc.nativeToolPolicy.policyDigest,
+    resolveTrustedNativeToolPolicy(resolveNativeToolPolicy(AGT_ID), AGT_ID).policyDigest)
+
+  allowedTool = 'glob'
+  const second = await router.ensureRunningForRoute(AGT_ID, {
+    routeIdentity: GLM_IDENTITY,
+    processConfig: GLM_CONFIG,
+  })
+  assert.notEqual(second.proc, first.proc)
+  assert.equal(second.proc.nativeToolPolicy.allowedCalls[0].toolName, 'glob')
+  assert.equal(first.proc.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
+test('legacy ensureRunning applies the trusted resolver before reuse when native policy is configured', async (t) => {
+  let allowedTool = 'read'
+  const resolveNativeToolPolicy = (agentId) => ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: allowedTool }],
+  })
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => GLM_CONFIG,
+    resolveNativeToolPolicy,
+  })
+  const first = await router.ensureRunning(AGT_ID)
+  allowedTool = 'glob'
+  const second = await router.ensureRunning(AGT_ID)
+
+  assert.notEqual(second, first)
+  assert.equal(first.nativeToolPolicy.allowedCalls[0].toolName, 'read')
+  assert.equal(second.nativeToolPolicy.allowedCalls[0].toolName, 'glob')
+  assert.equal(first.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
+test('removing a trusted native policy also requires a fresh process generation', async (t) => {
+  let policyEnabled = true
+  const resolveNativeToolPolicy = (agentId) => policyEnabled ? ({
+    version: 1,
+    agentId,
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }) : undefined
+  const { router, spawned } = await freshRig(t, {
+    resolveProcessConfig: () => GLM_CONFIG,
+    resolveNativeToolPolicy,
+  })
+  const optedIn = await router.ensureRunning(AGT_ID)
+  policyEnabled = false
+  const legacy = await router.ensureRunning(AGT_ID)
+
+  assert.notEqual(legacy, optedIn)
+  assert.equal(optedIn.nativeToolPolicy.allowedCalls[0].toolName, 'read')
+  assert.equal(legacy.nativeToolPolicy, undefined)
+  assert.equal(optedIn.shutdownCalls, 1)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).generation, 2)
+  assert.equal(spawned.length, 2)
+})
+
+test('trusted native policy resolver identity mismatch fails before process creation', async (t) => {
+  const { router, spawned } = await freshRig(t, {
+    resolveNativeToolPolicy: () => ({
+      version: 1,
+      agentId: 'agt_other',
+      mode: 'native-allowlist',
+      allowedCalls: [{ toolName: 'read' }],
+    }),
+  })
+
+  await assert.rejects(
+    router.ensureRunningForRoute(AGT_ID, { routeIdentity: GLM_IDENTITY, processConfig: GLM_CONFIG }),
+    (error) => error.code === 'NATIVE_TOOL_POLICY_INVALID',
+  )
+  assert.equal(spawned.length, 0)
+  assert.equal(router.lifecycleSlotSnapshot(AGT_ID).state, 'EMPTY')
 })
 
 test('DEC-IMPL-004: mismatched BUSY process is never killed and never reused', async (t) => {
