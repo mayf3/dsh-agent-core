@@ -58,6 +58,7 @@ test('governance child review wake carries exact evidence instructions and recip
   assert.match(delivery.req.message, new RegExp(REVIEW.childSubmissionId))
   assert.match(delivery.req.message, /workflow_instance_detail/)
   assert.match(delivery.req.message, /workflow_submission_history/)
+  assert.match(delivery.req.message, /resolve_current_governance_review/)
   assert.match(delivery.req.message, /explicitly use/)
   assert.match(delivery.req.message, /escalate_to_human/)
   assert.match(delivery.req.message, /UNKNOWN/)

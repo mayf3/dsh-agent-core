@@ -64,7 +64,7 @@ export async function wakeDomainOwnerAssistanceReview({
     `Acceptance contract digest: ${acceptanceContractDigest}.`,
     'You are the current enabled Domain Owner. First use workflow_assistance_read detail to re-read the case and its binding/terminal proof.',
     'Then use workflow_instance_detail and workflow_submission_history to inspect this exact child terminal event and submission under your existing Svc visibility.',
-    'If the exact evidence supports resolution, use workflow_assistance_action resolve with the exact governanceChildReview reference from case detail. If it does not, explicitly use escalate_to_human.',
+    'If the exact evidence supports resolution, explicitly call workflow_assistance_action resolve_current_governance_review; the Broker reads current case detail and supplies exact service-owned review references. Do not copy or guess reference values. If it does not, explicitly use workflow_assistance_action escalate_to_human.',
     'If a mutation outcome is unknown, read case detail and the existing Workflow resume evidence before deciding; if they do not establish the result, leave it UNKNOWN and do not submit a new mutation.',
     'Delivery is only a review request. Do not infer that the original case is resolved or that the original Workflow resumed.',
   ].join('\n')
