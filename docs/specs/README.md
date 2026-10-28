@@ -103,6 +103,12 @@ runtime change, credential change, or real HR dispatch.
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Proposed structure verifier implementation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | proposed; not active before Owner acceptance and merge | contracts only after accepted in implementation base; production apply none | verifier CLI coordinates, exact V1-to-V2 registry migration, visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for the proposed local `CODE_STRUCTURE_GUARDRAILS_V2` |
+
 ## Agent primary Workspace authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
