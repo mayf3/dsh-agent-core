@@ -274,6 +274,40 @@ test('POST authorized request: JSON body mapped from declared args', async () =>
   await bizServer.close()
 })
 
+test('optional projection source creates an optional body root; absent root and source send no body', async (t) => {
+  const tokenServer = await startTokenServer()
+  const bizServer = await startMockServer((_req, res, entry) => json(res, 200, { body: entry.body }))
+  t.after(async () => { await tokenServer.close(); await bizServer.close() })
+
+  const manifest = makeManifest({
+    operation: 'project',
+    requiredScopes: ['demo.write'],
+    arguments: {
+      properties: {
+        id: { type: 'string' },
+        optionalEnvelope: { type: 'object', additionalProperties: false, properties: { label: { type: 'string' } } },
+        reviewRef: { type: 'object', additionalProperties: false, properties: { bindingId: { type: 'string' } }, required: ['bindingId'] },
+      },
+      required: ['id'],
+    },
+    http: {
+      target: 'demo-target', method: 'POST', path: '/v1/items/{id}', pathParams: ['id'],
+      body: ['optionalEnvelope'],
+      bodyProjections: [{ sourceArg: 'reviewRef', destinationBodyPath: ['optionalEnvelope', 'review'] }],
+    },
+  })
+  const transport = await makeTransport({ tokenOrigin: tokenServer.origin, target: { ...DEMO_TARGET, allowedOrigin: bizServer.origin } })
+
+  const withProjection = await run(manifest, transport, { id: 'item-1', reviewRef: { bindingId: 'binding-1' } })
+  assert.deepEqual(withProjection.result, { body: { optionalEnvelope: { review: { bindingId: 'binding-1' } } } })
+  assert.deepEqual(bizServer.requests[0].body, { optionalEnvelope: { review: { bindingId: 'binding-1' } } })
+
+  const withoutBody = await run(manifest, transport, { id: 'item-2' })
+  assert.deepEqual(withoutBody.result, {})
+  assert.equal(bizServer.requests[1].body, undefined)
+  assert.equal(bizServer.requests[1].headers['content-type'], undefined)
+})
+
 // ─── Credential / identity seam ─────────────────────────────────────────────
 
 test('credential: transport uses the seam credential (spy invoked, Basic auth on wire)', async () => {

@@ -54,3 +54,10 @@ TDD begins with the exact A65 shape plus missing/extra fields, invalid container
 - `git diff --check` — PASS. Changed-file line counts: schema.js 499; body-projection.js 97; workflow-assistance.js 272; http.js 291; focused test 401.
 - Structure guard was run against base `f63eaf6e000d2bbf4343c727d38474147db7f6cb`; it stopped on the existing registry inconsistency that `packages/agent-credential-provisioning/src/store-writer.js` is registered as a baseline file over 500 lines. That unrelated registry/file was not changed. The full repository `npm test` attempt was interrupted after its production-runtime tests rejected ambient `HTTP_PROXY` (`AGENT_MODEL_OVERRIDE_INVALID`); it is not used as a pass/fail claim for this change.
 - A67 linked Core-to-Svc acceptance and independent source review remain pending. This candidate has not been merged, and no production or A65 operation was performed.
+
+## Independent review delta — optional projection-only body
+
+- Reviewer found that `bindRequest` gated projections on at least one direct body argument. A valid manifest with an optional object body root and an optional projection source therefore silently omitted a supplied projection.
+- RED wire regression: `node --test --test-reporter=spec packages/broker/test/transport.test.js --test-name-pattern='optional projection source creates'` failed because the observed response lacked the projected body.
+- Fix: always apply trusted projections to the copy-on-write body, then serialize only when the final body has at least one own key. With both direct body values and projection sources absent, the result remains `undefined` and no body/content-type is sent.
+- GREEN: `env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u http_proxy -u https_proxy -u all_proxy node --test --test-reporter=spec packages/broker/test/transport.test.js` — 37 passed, 0 failed; same command for `packages/broker/test/workflow-assistance-capability.test.js` — 13 passed, 0 failed.
