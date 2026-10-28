@@ -8,9 +8,9 @@
 
 import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
-import { STALE_NO_PROGRESS_JUDGMENT, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+import { createTerminalAttemptOperations } from './terminal-attempt-operations.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -99,6 +99,9 @@ export function createWorkflowExecutionEngine({
       log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
     }
   }
+
+  const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
+    createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
 
   /**
    * CTR-WAE-012/013: resolution may block recoverably, but delivery_started
@@ -233,16 +236,6 @@ export function createWorkflowExecutionEngine({
     return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
   }
 
-  /** Business-only CAS settlement; Router termination/fences remain untouched (C-013/015/016/017). */
-  async function settleStale(attempt) {
-    const recorded = await ledger.recordStaleSuperseded({
-      nodeVisitId: attempt.nodeVisitId,
-      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
-      observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch,
-    })
-    return recorded.committed
-  }
-
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
@@ -311,17 +304,7 @@ export function createWorkflowExecutionEngine({
       if (attempt.state !== 'NEEDS_REVIEW') continue
       try {
         const stale = await judgeStale(attempt)
-        if (stale.kind !== 'stale_confirmed') continue
-        // CTR-WEC1-005 can escalate this terminal generation at the cap.
-        // Preserve the exact NEEDS_REVIEW predecessor so CTR-WEC1-008 can
-        // authorize a later Owner-resume; stale supersession would erase it.
-        if (isAtAttemptLimit(attempt)) {
-          await maybeEscalateAtLimit(attempt)
-          continue
-        }
-        if (await settleStale(attempt)) {
-          summary.staleReentry.push(attempt.nodeVisitId)
-        }
+        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
@@ -330,30 +313,12 @@ export function createWorkflowExecutionEngine({
     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
       try {
         const stale = await judgeStale(attempt)
-        if (stale.kind !== 'stale_confirmed') continue
-        if (isAtAttemptLimit(attempt)) {
-          await maybeEscalateAtLimit(attempt)
-          continue
-        }
-        if (await settleStale(attempt)) {
-          summary.staleReentry.push(attempt.nodeVisitId)
-        }
+        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
       } catch (error) {
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     return summary
-  }
-
-  /** CTR-WEC1-005: identify a terminal generation at the automatic attempt cap. */
-  function isAtAttemptLimit(attempt) {
-    return (attempt.generation ?? 1) >= (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)
-  }
-
-  /** CTR-WEC1-005: escalate once when a visit has exhausted its attempt cap. */
-  async function maybeEscalateAtLimit(attempt) {
-    if (!isAtAttemptLimit(attempt) || attempt.escalation !== undefined) return
-    await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
   }
 
   /** Reconcile, then sweep due intents; malformed entries fail loudly. stop() drains this work. */
