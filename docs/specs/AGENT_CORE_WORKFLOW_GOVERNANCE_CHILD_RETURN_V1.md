@@ -170,8 +170,10 @@ as currently defined, with no phase field. Review DTOs carry the existing
 source `workflowInstanceId`, `nodeVisitId`, `assistanceCaseId`,
 `ownerPrincipalId`, plus exact `bindingId`, child instance/visit/
 DefinitionVersion, terminal event, acceptance transition, current Owner
-binding ID as informational metadata, `reviewWakeId`, and optional submission
-ID/digest and contract digest. Its request identity and correlation MUST include the exact binding,
+binding ID as informational metadata, `reviewWakeId`, and the required
+`acceptanceContractDigest`. Only `childSubmissionId` and
+`childSubmissionDigest` are optional, and they MUST be supplied together.
+Its request identity and correlation MUST include the exact binding,
 terminal event and recipient identity, and MUST differ from the initial case
 wake, for example:
 

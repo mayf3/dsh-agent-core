@@ -98,7 +98,7 @@ export const workflowAssistanceActionManifest = withTransportErrors({
   name: 'Workflow Assistance Action',
   description:
     'Domain Owner action on an existing assistance case: resolve the blocker '
-    + 'or explicitly escalate OWNER_PENDING to HUMAN_REQUIRED.',
+    + 'explicitly escalate OWNER_PENDING to HUMAN_REQUIRED, or bind one existing governance child for review.',
   requiredScopes: ['workflow.execute'],
   errors: actionErrors,
   operations: [{    name: 'resolve',
@@ -139,6 +139,38 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       path: '/internal/v1/assistance-cases/{assistanceCaseId}/escalate-to-human',
       pathParams: ['assistanceCaseId'],
       body: ['expectedWorkflowStateVersion', 'escalation'],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'bind_governance',
+    description:
+      'Bind one existing same-Domain nonterminal governance child to this open case for later Owner review. '
+      + 'If the bind response is lost or returns transport_failure, read the exact case with workflow_assistance_read.detail. '
+      + 'Reconcile its assistanceCaseId and governanceBinding against the intended child instance and selected acceptance transition, '
+      + 'the acceptanceContractDigest, and persisted source/request and child-bind provenance: source workflowInstanceId, nodeVisitId, '
+      + 'requestContextRevisionId, definitionVersionId, requestPayloadDigest, requestCommandId and requestEventSequence; child '
+      + 'workflowInstanceId, definitionVersionId, contextRevisionAtBind and acceptanceTransitionId. Reuse a confirmed existing binding. '
+      + 'If readback is inconclusive, report UNKNOWN; do not invoke bind_governance again, create a replacement child, or use a new '
+      + 'idempotency key. The trusted transport key is hidden and must not be inferred from tool text.',
+    arguments: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        assistanceCaseId: uuid('Assistance case id'),
+        governanceChildInstanceId: uuid('Existing governance child instance id'),
+        acceptanceTransitionId: uuid('Published child terminal acceptance transition id'),
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Workflow version for CAS.' },
+      },
+      required: ['assistanceCaseId', 'governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible',
+      'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child',
+      pathParams: ['assistanceCaseId'],
+      body: ['governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
       idempotencyKey: true,
     },
   }],
