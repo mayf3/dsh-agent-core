@@ -374,3 +374,86 @@ None. This Spec and its named Svc companion
 commits. This authority becomes active only after both merge into their
 owning authority branches; source implementation requires its separate
 authorization, and production apply authority remains none.
+
+## AMENDMENT_1 — TYPED GOVERNANCE REVIEW INPUT (2026-10-29, proposed)
+
+> **AMENDMENT_STATUS = proposed.** This additive delta is not active Product
+> Authority and grants no implementation or production authority until its own
+> independent semantic review and explicit owner acceptance. The accepted
+> contract above, including `CTR-GCR-003` and `ACC-GCR-001`, remains unchanged.
+
+### A1.1 Trigger and bounded decision
+
+A65's frozen Broker trace records the Owner supplying an 11-member
+`governanceChildReview` object to `workflow_assistance_action.resolve`; the
+accepted Svc shape is closed to five members. Svc rejected the six additional
+members before resolving the Assistance case. The five Svc-owned reference
+fields were already present. This is a caller-shape interoperability gap: the
+accepted Core contract describes a nested opaque reference forwarded unchanged,
+while the service accepts only its five-field closed reference. It does not
+justify weakening Svc validation or inferring an acceptance from child state.
+
+This amendment adds one opt-in, typed caller input to the existing resolve
+operation and a deterministic projection into the existing service request.
+It does not change the Owner decision, service authority, or existing action
+scope. It does not create a route, API, grant, or automatic resolution path.
+
+### A1.2 `CTR-GCR-005` — Typed resolve projection
+
+`workflow_assistance_action.resolve` MAY accept an optional top-level
+`governanceChildReview` object with exactly these required string fields and no
+additional fields:
+
+```json
+{
+  "bindingId": "<uuid>",
+  "terminalEventId": "<uuid>",
+  "submissionId": "<uuid>",
+  "submissionDigest": "<sha256>",
+  "acceptanceContractDigest": "<sha256>"
+}
+```
+
+When this argument is present, Core MUST project those five fields into
+`resolution.supportingPayload.governanceChildReview` before sending the
+existing resolve request. Projection MUST preserve the caller's resolution
+message and every unrelated supporting-payload member, and MUST NOT derive,
+rewrite, or synthesize any reference value. Core MUST reject the call locally
+with the existing `invalid_arguments` error, before an HTTP request, if
+`resolution` or `supportingPayload` is not an object, or if
+`supportingPayload.governanceChildReview` is already present, regardless of
+its value. It MUST NOT overwrite a supplied nested value or silently remove
+unknown fields. The service remains authoritative for exact UUID, digest,
+case, Owner, binding, terminal event, and submission validation.
+
+When the top-level typed argument is omitted, Core MUST preserve the existing
+`resolution` argument unchanged, including its historically opaque
+`supportingPayload`. In particular, Core MUST NOT newly reject opaque fields
+for unlinked cases or infer linked status. Existing unlinked behavior and the
+Svc linked-case strict validation under `CTR-GCR-003` remain in force.
+
+This operation retains the existing `workflow.execute` scope, Owner action,
+CAS, request route, and transport idempotency behavior. It does not auto-resolve,
+change escalation, or authorize production apply. An unknown transport outcome
+continues to follow the existing exact detail/readback and no-replay rules.
+
+### A1.3 `ACC-GCR-002` — Projection conformance
+
+| Contracts | Method | Environment | Required evidence | Expected result | Failure condition |
+|---|---|---|---|---|---|
+| `CTR-GCR-005` | Broker capability schema and HTTP-body projection tests, plus an isolated Core-to-Svc acceptance of the existing explicit Owner resolve | Local focused tests and isolated service fixture; no production | Exact input/output bodies, HTTP call count, error code, and existing idempotency behavior | Typed five-field input is deterministically projected; omitted input is passed unchanged; siblings and message are preserved; malformed/conflicting inputs fail before HTTP | Any extra field accepted, value inferred/changed, sibling lost, nested input overwritten, malformed container forwarded, or omission changes legacy behavior |
+
+Required negatives include a sixth field in the typed object; each missing required field; non-object/null/array typed value; non-object/null/array `resolution` or `supportingPayload` when typed input is present; a pre-existing nested target with equal, different, null, or primitive value; and assertion that all these failures cause zero downstream requests. The positive case MUST show all five fields unchanged in the service body while unrelated resolution and payload siblings remain byte/JSON-value equivalent. The omitted-input case MUST show the existing nested opaque form forwarded unchanged. The existing Svc contract remains responsible for rejecting semantically invalid UUIDs, digests, and mismatched service references.
+
+The end-to-end acceptance under `ACC-GCR-001` remains the protocol acceptance. `ACC-GCR-002` is an added focused contract acceptance and does not by itself establish autonomous business completion or production readiness.
+
+### A1.4 Compatibility, scope, and lifecycle
+
+This is strictly additive to the accepted Core contract: `CTR-GCR-001` through
+`CTR-GCR-004`, `ACC-GCR-001`, and `DEC-GCR-001` retain their accepted text and
+meaning. `CTR-GCR-003` continues to define the existing opaque nested path and
+Svc linked-case authority; `CTR-GCR-005` supplies an explicit opt-in typed
+caller path while preserving the legacy path when omitted. The Svc Spec and
+implementation are unchanged. No migration is required. Implementation is not
+authorized by this proposed amendment; acceptance must bind the exact reviewed
+candidate and implementation authorization remains a separate action.
