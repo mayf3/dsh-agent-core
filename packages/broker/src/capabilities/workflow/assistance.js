@@ -5,9 +5,9 @@
  * Read and mutation are split because broker scopes are capability-level:
  * owner inbox/detail need workflow.read; resolve/escalate need workflow.execute.
  */
-import { withTransportErrors } from '../transport.js'
-import { authErrors, baseErrors } from './workflow-definition-authoring.js'
-import { queryErrors } from './workflow-execute.js'
+import { withTransportErrors } from '../../transport.js'
+import { authErrors, baseErrors } from './definition-authoring.js'
+import { queryErrors } from './execute.js'
 
 const uuid = (description) => ({ type: 'string', description: description + ' (UUID).' })
 const limit = {
@@ -245,6 +245,34 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child',
       pathParams: ['assistanceCaseId'],
       body: ['governanceChildInstanceId', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+      idempotencyKey: true,
+    },
+  }, {
+    name: 'create_and_bind_governance_child',
+    description:
+      'For an open case, inspect authoritative source facts and workflow_definition_read published versions with exact Context and terminal-transition schemas. '
+      + 'Select one exact published same-Domain definitionVersionId and acceptanceTransitionId with the closed GCR acceptance envelope and acceptance-task fit. '
+      + 'Never infer IDs from names or text. Proceed when authoritative facts select one candidate even if others pass generic schema checks; unresolved ambiguity, unreadable schema, foreign/disabled Domain or unclear fit stops before mutation. '
+      + 'Create and bind once atomically; never use separate create/bind as fallback. On timeout, transport failure or ambiguous result, read workflow_assistance_read detail for the exact case and match child instance, Definition version, binding, acceptance digest and prerequisite coordinates. '
+      + 'A matching durable receipt proves commit. Otherwise preserve UNKNOWN until authoritative rejection or commit is proven; no new-key call, replacement child or inferred success. The trusted transport idempotency key is hidden.',
+    arguments: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        assistanceCaseId: { ...uuid('Exact assistance case'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        definitionVersionId: { ...uuid('Exact published child Version'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        contextPayload: { type: 'object', description: 'Exact immutable Context matching the selected published schema; prerequisite, if opted in, uses the actual preexisting supplier coordinates.' },
+        acceptanceTransitionId: { ...uuid('Exact published terminal acceptance transition'), pattern: '^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$' },
+        expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Exact source workflow state version for CAS.' },
+      },
+      required: ['assistanceCaseId', 'definitionVersionId', 'contextPayload', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
+    },
+    result: { type: 'json' },
+    errors: ['invalid_arguments', 'not_domain_owner', 'assistance_case_not_found_or_not_visible', 'assistance_status_conflict', 'workflow_state_version_conflict'],
+    http: {
+      target: 'svc-workflow', method: 'POST',
+      path: '/internal/v1/assistance-cases/{assistanceCaseId}/governance-child:create-and-bind',
+      pathParams: ['assistanceCaseId'],
+      body: ['definitionVersionId', 'contextPayload', 'acceptanceTransitionId', 'expectedWorkflowStateVersion'],
       idempotencyKey: true,
     },
   }],

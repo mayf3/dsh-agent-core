@@ -298,7 +298,7 @@ test('T11: p4-form proof against an ordinary business Agent fails BEFORE any mut
 test('T1: the credential consumption path reads the store and leaves it byte-identical', async (t) => {
   const fx = fixture(t)
   const { createBrokerGateway } = await import('../../broker/src/gateway.js')
-  const manifest = (await import('../../broker/src/capabilities/workflow.js')).workflowMyTasksManifest
+  const manifest = (await import('../../broker/src/capabilities/workflow/index.js')).workflowMyTasksManifest
   const before = readFileSync(fx.storeFile)
   const statBefore = statSync(fx.storeFile)
   const gateway = createBrokerGateway({

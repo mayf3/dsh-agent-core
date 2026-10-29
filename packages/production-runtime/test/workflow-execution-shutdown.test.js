@@ -42,7 +42,7 @@ test('runtime stop(): the engine drain stays pending while a poll is in flight, 
   const deliveries = []
   const gateway = {
     execute: async (call) => {
-      if (call?.capabilityId === 'workflow_dispatch_intents' && call?.operation === 'list') {
+      if (call?.capabilityId === 'workflow_dispatch_intents' && call?.operation === 'list_ready') {
         fetches.push(call)
         signalInFlight()
         await pageParked

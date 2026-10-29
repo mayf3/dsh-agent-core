@@ -5,7 +5,7 @@
  * This file owns ONLY the real-I/O seam injection; every semantic lives in
  * packages/workflow-execution (engine/ledger/judgment) and the reused seams:
  *
- *   due feed          broker gateway `workflow_dispatch_intents.list`
+ *   due feed          broker gateway `workflow_dispatch_intents.list_ready`
  *                     (the poller Principal holds the GLOBAL_SCHEDULER_READ
  *                     binding server-side; the gateway does token+HTTP —
  *                     no second HTTP client, no new scope handling). The
@@ -40,6 +40,7 @@
  */
 
 import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
+import { normalizeDueIntent } from '../../workflow-execution/src/judgment.js'
 import { wakeDomainOwnerAssistanceReview } from './workflow/owner-assistance-review-wake.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
@@ -122,6 +123,7 @@ export async function wakeDomainOwnerAssistance(payload) {
     `Assistance case: ${assistanceCaseId}.`,
     'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
     'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
+    'If governance work is needed, inspect exact published Definition Context/terminal schemas and case facts with workflow_definition_read; select one same-Domain version and acceptance transition by acceptance-task fit, never names. Unresolved ambiguity stops before mutation. Use workflow_assistance_action create_and_bind_governance_child once atomically. On ambiguous response read the exact case detail and match child/version/binding/acceptance digest/prerequisite; unproven commit remains UNKNOWN with no replacement or new-key call.',
     'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
     'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
   ].join('\n')
@@ -238,12 +240,26 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       if (afterNextEligibleAt !== undefined) args.afterNextEligibleAt = afterNextEligibleAt
       if (afterDispatchIntentId !== undefined) args.afterDispatchIntentId = afterDispatchIntentId
       const res = await gateway.execute(
-        { capabilityId: 'workflow_dispatch_intents', operation: 'list', args },
+        { capabilityId: 'workflow_dispatch_intents', operation: 'list_ready', args },
         { agentId: pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'dispatch_intents_failed', detail: res.error?.detail }
-      const items = Array.isArray(res.result?.items) ? res.result.items : []
-      return { ok: true, items }
+      const items = res.result?.items
+      if (!Array.isArray(items) || items.length > DUE_FEED_LIMIT
+        || items.some(item => item?.readinessStatus !== 'READY')) {
+        return { ok: false, code: 'invalid_ready_projection' }
+      }
+      const dueItems = items.map(({ readinessStatus, ...due }) => due)
+      const tuples = new Set()
+      for (const due of dueItems) {
+        const tuple = JSON.stringify([due.nextEligibleAt, due.dispatchIntentId])
+        if (!normalizeDueIntent(due).ok || tuples.has(tuple)
+          || (due.nextEligibleAt === afterNextEligibleAt && due.dispatchIntentId === afterDispatchIntentId)) {
+          return { ok: false, code: 'invalid_ready_projection' }
+        }
+        tuples.add(tuple)
+      }
+      return { ok: true, items: dueItems }
     },
     resolvePrincipalToAgent: async (principalId) => {
       const res = await principalAccess.handlers.agent_resolve_principal.resolve({ principalId }, { callerAgentId: pollerAgentId })
