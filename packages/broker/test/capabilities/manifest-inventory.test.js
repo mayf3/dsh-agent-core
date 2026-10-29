@@ -4,8 +4,8 @@ import assert from 'node:assert/strict'
 import { validateManifest } from '../../src/schema.js'
 import { targets } from '../../src/targets.js'
 import { manifests as forumManifests } from '../../src/capabilities/forum.js'
-import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
-import { manifests as workflowHumanPrincipalProjectionManifests } from '../../src/capabilities/workflow-human-principal-projection.js'
+import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
+import { manifests as workflowHumanPrincipalProjectionManifests } from '../../src/capabilities/workflow/human-principal-projection.js'
 import { manifests as okrManifests } from '../../src/capabilities/okr.js'
 
 // ─── Schema: bounded Forum/Workflow/OKR inventory is valid ──────────────────

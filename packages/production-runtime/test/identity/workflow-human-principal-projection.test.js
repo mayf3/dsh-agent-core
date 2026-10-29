@@ -9,7 +9,7 @@ import {
 import {
   TARGET_HUMAN_PRINCIPAL_ID,
   WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_CAPABILITY_ID,
-} from '../../../broker/src/capabilities/workflow-human-principal-projection.js'
+} from '../../../broker/src/capabilities/workflow/human-principal-projection.js'
 
 const ORIGIN = 'https://workflow.example.test'
 const ARGS = { principalId: TARGET_HUMAN_PRINCIPAL_ID, principalType: 'HUMAN', status: 'active' }

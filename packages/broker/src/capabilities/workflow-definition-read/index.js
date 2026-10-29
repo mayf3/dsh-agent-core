@@ -25,9 +25,9 @@
  */
 
 import { withTransportErrors } from '../../transport.js'
-import { authErrors, baseErrors } from '../workflow-definition-authoring.js'
+import { authErrors, baseErrors } from '../workflow/definition-authoring.js'
 import { COMPLETE_BODY_ID, COMPLETE_ERRORS } from './complete-contract.js'
-import { queryErrors } from '../workflow-execute.js'
+import { queryErrors } from '../workflow/execute.js'
 
 /** Same pagination error rows the other workflow read capabilities declare. */
 const paginationErrors = [

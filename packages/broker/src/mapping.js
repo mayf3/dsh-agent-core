@@ -105,6 +105,7 @@ export function validateArgumentsDetailed(argumentSchema, args) {
         // any token mint or business HTTP call — e.g. a resolve without an
         // outcome summary never leaves the broker.
         else if (spec.nonBlank === true && val.trim() === '') violations.push(`property "${label}" must be a non-blank string`)
+        else if (typeof spec.pattern === 'string' && !new RegExp(spec.pattern).test(val)) violations.push(`property "${label}" must match its declared pattern`)
       } else if (spec.type === 'boolean') {
         if (typeof val !== 'boolean') violations.push(`property "${label}" must be a boolean`)
       } else if (spec.type === 'object') {

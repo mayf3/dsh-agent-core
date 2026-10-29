@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { validateManifest } from '../../src/schema.js'
 import { createHttpTransport } from '../../src/transport.js'

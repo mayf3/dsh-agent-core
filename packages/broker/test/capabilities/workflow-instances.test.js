@@ -6,7 +6,7 @@ import { DEFAULT_MANIFESTS } from '../../src/index.js'
 import { assertValidManifest, invoke } from '../../src/mapping.js'
 import { createHttpHandlers } from '../../src/transport.js'
 
-import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
 import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
 

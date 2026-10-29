@@ -4,8 +4,8 @@ import { test } from 'node:test'
 import {
   workflowAssistanceActionManifest,
   workflowAssistanceReadManifest,
-} from '../src/capabilities/workflow-assistance.js'
-import { workflowExecutionEscalationManifest } from '../src/capabilities/workflow.js'
+} from '../src/capabilities/workflow/assistance.js'
+import { workflowExecutionEscalationManifest } from '../src/capabilities/workflow/index.js'
 import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { assertValidManifest } from '../src/mapping.js'
 import { validateManifest } from '../src/schema.js'
@@ -19,7 +19,7 @@ test('Domain Owner assistance read/action are split by least-privilege scope', (
   assert.deepEqual(read.requiredScopes, ['workflow.read'])
   assert.deepEqual(action.requiredScopes, ['workflow.execute'])
   assert.deepEqual(read.operations.map((op) => op.name), ['owner_inbox', 'detail'])
-  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'resolve_current_governance_review', 'escalate_to_human', 'bind_governance'])
+  assert.deepEqual(action.operations.map((op) => op.name), ['resolve', 'resolve_current_governance_review', 'escalate_to_human', 'bind_governance', 'create_and_bind_governance_child'])
   assert.equal(read.operations[0].http.path, '/internal/v1/assistance-cases/owner-inbox')
   assert.equal(read.operations[1].http.path, '/internal/v1/assistance-cases/{assistanceCaseId}')
 })
@@ -398,4 +398,38 @@ test('resolve rejects any pre-existing projection target as binding_error before
   }
   assert.equal(tokenServer.requests.length, 0)
   assert.equal(workflow.requests.length, 0)
+})
+
+
+test('atomic create-bind is closed, validates UUIDs and forwards one trusted-key request unchanged', async () => {
+  const token = await startTokenServer()
+  const receipt = { bindingId: 'service-binding', child: { workflowInstanceId: 'service-child' }, acceptanceContractDigest: 'service-digest' }
+  const service = await startMockServer((req, res) => json(res, 200, receipt))
+  try {
+    const transport = createHttpTransport({
+      credentialProvider: { getCredential: async () => ({ clientId: 'client', clientSecret: 'secret' }) },
+      targets: mockTargets({ 'svc-workflow': service.origin }), authServiceOrigin: token.origin,
+    })
+    const { definition } = wire(workflowAssistanceActionManifest, transport)
+    const id = '11111111-2222-4333-8444-555555555555'
+    const args = { operation: 'create_and_bind_governance_child', assistanceCaseId: id, definitionVersionId: id,
+      contextPayload: { workflowPrerequisite: { kind: 'TERMINAL_SUBMISSION', workflowInstanceId: id, definitionVersionId: id, transitionId: id } },
+      acceptanceTransitionId: id, expectedWorkflowStateVersion: 7 }
+    for (const bad of [{ domainId: id }, { bindingId: id }, { definitionVersionId: 'name' }, { acceptanceTransitionId: 'guess' }, { assistanceCaseId: 'bad' }]) {
+      assert.equal((await definition.execute({ ...args, ...bad })).ok, false)
+    }
+    assert.equal(service.requests.length, 0)
+    assert.equal(token.requests.length, 0)
+    assert.deepEqual((await definition.execute(args)).result, receipt)
+    assert.equal(service.requests.length, 1)
+    const request = service.requests[0]
+    assert.equal(request.pathname, `/internal/v1/assistance-cases/${id}/governance-child:create-and-bind`)
+    assert.ok(request.headers['idempotency-key'])
+    assert.deepEqual(request.body, { definitionVersionId: id, contextPayload: args.contextPayload,
+      acceptanceTransitionId: id, expectedWorkflowStateVersion: 7 })
+    const op = workflowAssistanceActionManifest.operations.find(op => op.name === args.operation)
+    assert.match(op.description, /unresolved ambiguity/)
+    assert.match(op.description, /UNKNOWN/)
+    assert.match(op.description, /no new-key call/)
+  } finally { await token.close(); await service.close() }
 })
