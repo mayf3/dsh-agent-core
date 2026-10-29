@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
 title: Owner-selected governance child creation and prerequisite-ready dispatch
-status: accepted
+status: superseded
 accepted_date: 2026-10-29
 accepted_by: Codex root (explicitly delegated by mayf3)
 accepted_reviewed_head: 32d677a631c0f7d25de3450271ef295f8d432840
@@ -34,7 +34,7 @@ governed_by:
   - AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2
 owners:
   - mayf3
 external_authorities: []
