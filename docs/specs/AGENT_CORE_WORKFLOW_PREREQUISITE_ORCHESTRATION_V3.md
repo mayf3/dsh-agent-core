@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3
 title: Transparent passthrough of immutable create admission observations
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -19,7 +19,7 @@ governed_by:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
 supersedes:
   - AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4
 accepted_date: 2026-10-29
 accepted_by: Codex root (explicitly delegated by mayf3)
 accepted_reviewed_head: b9d9d808e02d7b34ad44dd70597f505b9b947ef7
