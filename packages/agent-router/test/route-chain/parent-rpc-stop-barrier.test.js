@@ -76,3 +76,35 @@ test('live READY child keeps the ordinary broker and switch semantics', async ()
   assert.equal(switchCalls.length, 1)
   assert.deepEqual(switchCalls[0][0], { binding: 'live-turn' })
 })
+
+test('real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable', async t => {
+  const { makeFx } = await import('../helpers/fake-child.js')
+  const fx = makeFx()
+  t.after(() => fx.childExit())
+  await fx.readyNow()
+  const origin = { kind: 'workflow_execution', workflowInstanceId: '11111111-1111-4111-8111-111111111111',
+    nodeVisitId: '22222222-2222-4222-8222-222222222222', attemptId: 'wfeat-' + 'b'.repeat(24) }
+  const expected = { ...origin }
+  const pending = fx.proc.deliver('main', 'ordinary task', { messageOrigin: origin })
+  await fx.tick()
+  const prompt = fx.writes.filter(w => w.method === 'session/prompt').at(-1)
+  const turnId = prompt.params.turnExecutionId
+  assert.ok(turnId)
+  const execution = fx.proc.executions.get(turnId)
+  assert.deepEqual(execution.workflowProvenance, expected)
+  assert.equal(Object.isFrozen(execution.workflowProvenance), true)
+  assert.throws(() => { execution.workflowProvenance = {} }, TypeError)
+  origin.workflowInstanceId = 'forged-after-capture'
+  const seen = []
+  const rpc = createParentRpcHandler({ agentId: fx.proc.agentId, getProc: () => fx.proc, log,
+    getBrokerGateway: () => ({ execute: async (call, trusted) => { seen.push(trusted); return { ok: true } } }) })
+  assert.equal((await rpc(BROKER_RPC_METHOD, { capabilityId: 'workflow_execute', operation: 'create_instance', args: {},
+    sourceTurnExecutionId: 'forged', workflowProvenance: {} }, { turnExecutionId: turnId })).ok, true)
+  assert.deepEqual(seen[0].workflowProvenance, expected)
+  assert.equal(seen[0].sourceTurnExecutionId, turnId)
+  // Only now return the prompt receipt: classification did not depend on it.
+  fx.respondTo('session/prompt', { messageId: 'managed-message' })
+  await pending
+  fx.completeTurn('main', 'managed-message', 'done')
+  await fx.tick()
+})

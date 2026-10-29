@@ -24,7 +24,7 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
   const handle = 'turn:runtime:a1:g1:s1'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: {
+    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
       instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
       current_node_visit_id: VISIT,
       current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
@@ -113,6 +113,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve))
 function executionContext() {
   const services = {
     brokerGateway: { execute: async (request, caller) => {
+      if (request.capabilityId === 'workflow_owner_obligation') return { ok: false, error: { code: 'owner_obligation_not_managed' } }
       assert.equal(request.capabilityId, 'workflow_instance_detail')
       assert.equal(caller.agentId, AGENT)
       return { ok: true, result: { visibility: 'full', detail: {
@@ -347,7 +348,7 @@ test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over t
   let turnState = 'pending'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: {
+    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
       instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
       current_node_visit_id: VISIT,
       current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
@@ -411,6 +412,7 @@ test('normal READY poll drains pages, rereads after restart, rejects malformed p
     nodeVisitId: `22222222-2222-4333-8444-${String(n).padStart(12, '0')}`, workflowInstanceId: INSTANCE,
     ownerPrincipalId: OWNER, nextEligibleAt: '2026-10-29T01:00:00.123456Z', createdAt: 'now', updatedAt: 'now', readinessStatus: 'READY' })
   const gateway = { execute: async request => {
+    if (request.capabilityId === 'workflow_owner_obligation') return { ok: false, error: { code: 'owner_obligation_not_managed' } }
     if (request.capabilityId === 'workflow_dispatch_intents') {
       calls.push(request)
       assert.equal(request.operation, 'list_ready')
@@ -467,11 +469,13 @@ test('normal READY poll drains pages, rereads after restart, rejects malformed p
     assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'already_attempted')
     assert.equal(deliveries, 1)
     mode = 'blocked'
-    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'blocked')
-    const blocked = runtime.ledger.get(row(102).nodeVisitId)
-    assert.equal(blocked.phase, 'resolution_blocked')
-    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'already_attempted')
-    assert.equal(runtime.ledger.get(row(102).nodeVisitId).attemptId, blocked.attemptId)
+    // Without a resolvable authorized reader, managed-vs-unmanaged is UNKNOWN.
+    // New authority requires no admission before classification; it cannot fall back
+    // to the legacy NOT_MANAGED path or consume/reset a managed visit's budget.
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(runtime.ledger.get(row(102).nodeVisitId), undefined)
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(runtime.ledger.get(row(102).nodeVisitId), undefined)
     assert.equal(deliveries, 1)
     await runtime.stop()
   } finally { rmSync(root, { recursive: true, force: true }) }

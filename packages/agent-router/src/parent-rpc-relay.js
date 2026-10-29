@@ -79,11 +79,18 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
         'processGeneration', 'turnExecutionId', 'channelNamespace', 'channelConversationId',
         'feishuChatId', 'feishuConversationId', 'feishuMessageId',
         'ingressContext', 'activeIngressContext',
+        'sourceTurnExecutionId', 'workflowProvenance',
       ].filter((field) => params?.[field] !== undefined)
       if (selfReported.length > 0) {
         log.log(`[broker] agent ${agentId}: IGNORING child-supplied identity fields: ${selfReported.join(', ')}`)
       }
       const proc = getProc()
+      const sourceTurnExecutionId = provenSourceTurnExecutionId(proc, rpcMeta)
+      const workflowProvenance = proc.executions?.get(sourceTurnExecutionId)?.workflowProvenance
+      if (sourceTurnExecutionId === undefined && [...(proc.executions?.values() ?? [])]
+        .some(e => e.settled !== true && e.workflowProvenance !== undefined)) {
+        return { ok: false, error: { code: 'authoritative_reference_unavailable' } }
+      }
       const active = proc.activeIngressContext
       const activeExecution = active && proc.executions?.get(active.turnExecutionId)
       const boundIngressContext = active
@@ -120,7 +127,8 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
           ingressContext: boundIngressContext,
           // R3 exact source-turn correlation for the messaging capability —
           // proven against the execution map above, absent when stale.
-          sourceTurnExecutionId: provenSourceTurnExecutionId(proc, rpcMeta),
+          sourceTurnExecutionId,
+          ...(workflowProvenance === undefined ? {} : { workflowProvenance }),
           // Trusted-channel-only logical invocation anchor. It correlates a
           // lost response to this gateway-derived caller; it never supplies
           // identity and is never taken from model arguments.

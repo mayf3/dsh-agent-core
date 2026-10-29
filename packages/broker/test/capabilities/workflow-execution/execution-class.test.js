@@ -1,3 +1,5 @@
+import { defineTool } from '@deepseek-ai/dsh-tools'
+import { buildToolDefinition } from '../../../src/registry.js'
 // AGENT_CORE_WORKFLOW_EXECUTION_CLASS_BROKER_V1 — implementation closure tests.
 //
 // Physically separate from workflow-execute.test.js (structure gate 500-line
@@ -7,10 +9,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
-import { validateManifest } from '../../src/schema.js'
-import { createHttpTransport } from '../../src/transport.js'
-import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
+import { manifests as workflowManifests } from '../../../src/capabilities/workflow/index.js'
+import { validateManifest } from '../../../src/schema.js'
+import { createHttpTransport } from '../../../src/transport.js'
+import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../../test-support/capability-fixtures.js'
 
 const executeManifest = () => workflowManifests.find((manifest) => manifest.id === 'workflow_execute')
 
@@ -321,4 +323,18 @@ test('return-policy declarer: an UNdeclared transition service code still fails 
 
   await tokenServer.close()
   await workflow.close()
+})
+
+test('Broker exposes only the validated operation selector as a trusted native discriminator', () => {
+  const { definition } = buildToolDefinition({ manifest: executeManifest(), handlers: {} })
+  assert.deepEqual(definition.nativePolicyDiscriminators, ['operation'])
+
+  const ordinaryTool = defineTool({
+    name: 'ordinary_tool',
+    description: 'A direct tool with no operation selector contract.',
+    parameters: {},
+    output: { schema: { type: 'string' }, render: () => [{ type: 'text', text: 'ok' }] },
+    execute: async () => 'ok',
+  })
+  assert.equal(ordinaryTool.nativePolicyDiscriminators, undefined)
 })
