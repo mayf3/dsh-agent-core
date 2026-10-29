@@ -82,9 +82,11 @@ function validReview(admission, detail, principalId) {
 /** Parent-only wrapper; undefined is an explicitly proven unmanaged route, never an unknown read. */
 export async function routeOwnerObligation({ call, manifest, context, resolveWorkflowProvenance, executeRead, transport }) {
   if (!['workflow_execute', 'workflow_assistance_action', 'workflow_assistance_request'].includes(call.capabilityId)) return undefined
+  const contextTransition = call.capabilityId === 'workflow_execute' && call.operation === 'transition'
+    && Object.hasOwn(call.args ?? {}, 'contextPayload')
   let origin
   try { origin = await resolveWorkflowProvenance?.(context) } catch { return failure() }
-  if (!origin) return context.workflowProvenance ? failure() : undefined
+  if (!origin) return context.workflowProvenance ? failure() : (contextTransition ? failure('invalid_arguments') : undefined)
   if (!closed(origin, ['kind', 'workflowInstanceId', 'nodeVisitId', 'attemptId'])
     || origin.kind !== 'workflow_execution' || !UUID.test(origin.workflowInstanceId)
     || !UUID.test(origin.nodeVisitId) || !/^wfeat-[0-9a-f]{24}$/.test(origin.attemptId)) return failure()
@@ -92,11 +94,14 @@ export async function routeOwnerObligation({ call, manifest, context, resolveWor
   if (!validation.ok) return { ok: false, error: validation.error }
   const read = await executeRead({ capabilityId: 'workflow_owner_obligation', operation: 'read',
     args: { workflowInstanceId: origin.workflowInstanceId } })
-  if (!read?.ok) return read?.error?.code === 'owner_obligation_not_managed' ? undefined : (read ?? failure())
+  if (!read?.ok) return read?.error?.code === 'owner_obligation_not_managed'
+    ? (contextTransition ? failure('invalid_arguments') : undefined) : (read ?? failure())
   const m = read.result
   if (!validRelation(m, origin)) return failure()
   // Existing transition route remains Svc guarded, but cannot target another instance from this turn.
   if (call.capabilityId === 'workflow_execute' && call.operation === 'transition') {
+    if (contextTransition && (m.managedKind !== 'INTAKE' || m.state !== 'ACTIVE'
+      || !validNode(m.currentNode, origin) || call.args.workflowInstanceId !== origin.workflowInstanceId)) return failure('invalid_arguments')
     return call.args.workflowInstanceId === origin.workflowInstanceId ? undefined : failure('governed_operation_required')
   }
   const key = keys[`${call.capabilityId}.${call.operation}`]

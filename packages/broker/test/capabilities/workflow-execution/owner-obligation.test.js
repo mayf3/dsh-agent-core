@@ -344,3 +344,84 @@ test('existing write manifests preserve managed refusal codes through the child 
     assert.equal(resolveCode(manifest, 'governed_operation_required', 'invalid_arguments').code, 'governed_operation_required')
   }
 })
+
+const transitionCall = () => ({ capabilityId: 'workflow_execute', operation: 'transition', args: {
+  workflowInstanceId: managedId, transitionDefinitionId: id(21), expectedWorkflowStateVersion: 9,
+  submissionPayload: { report: 'old-context acceptance' } } })
+const contextPayload = () => ({ acceptanceCatalog: { unchanged: ['proof'] }, work: { prerequisite: {
+  kind: 'TERMINAL_SUBMISSION', workflowInstanceId: id(12), definitionVersionId: targetVersion, transitionId: id(22) } } })
+const transitionResult = { workflowInstanceId: managedId, workflowStateVersion: 10,
+  currentNodeVisitId: id(23), currentContextRevisionId: id(24), eventSequence: 4 }
+
+test('managed INTAKE transition forwards full Context unchanged through existing wire without discovery joins', async t => {
+  for (const transitionDefinitionId of [id(21), id(25)]) {
+    const managed = relation(); delete managed.currentNode.operation
+    const f = await fixture(t, { managed, effectReply: transitionResult }), call = transitionCall()
+    call.args.transitionDefinitionId = transitionDefinitionId
+    call.args.contextPayload = contextPayload()
+    const before = structuredClone(call)
+    assert.deepEqual(await f.call(call), { ok: true, result: transitionResult })
+    assert.deepEqual(call, before)
+    assert.deepEqual(f.requests.map(r => r.pathname), [
+      `/internal/v1/workflow-instances/${managedId}/owner-obligation`,
+      `/internal/v1/workflow-instances/${managedId}/transitions` ])
+    const post = f.requests.at(-1)
+    assert.deepEqual(post.body, { transitionDefinitionId, expectedWorkflowStateVersion: 9,
+      submissionPayload: call.args.submissionPayload, contextPayload: call.args.contextPayload })
+    assert.ok(typeof post.headers['idempotency-key'] === 'string' && post.headers['idempotency-key'].length > 0)
+  }
+})
+
+test('Context omission preserves ordinary and managed transition body, receipt and trusted idempotency', async t => {
+  for (const options of [{ trusted: null }, { readError: 'owner_obligation_not_managed' }, {}]) {
+    const f = await fixture(t, { ...options, effectReply: transitionResult }), call = transitionCall()
+    assert.deepEqual(await f.call(call), { ok: true, result: transitionResult })
+    const post = f.requests.at(-1)
+    assert.deepEqual(post.body, { transitionDefinitionId: id(21), expectedWorkflowStateVersion: 9,
+      submissionPayload: { report: 'old-context acceptance' } })
+    assert.equal(Object.hasOwn(post.body, 'contextPayload'), false)
+    assert.ok(typeof post.headers['idempotency-key'] === 'string' && post.headers['idempotency-key'].length > 0)
+  }
+})
+
+test('present Context rejects null/nonobjects and unknown arguments before HTTP', async t => {
+  for (const value of [null, [], 'context', 0, true, undefined]) {
+    const f = await fixture(t), call = transitionCall(); call.args.contextPayload = value
+    assert.equal((await f.call(call)).error.code, 'invalid_arguments')
+    assert.equal(f.requests.length, 0)
+  }
+  const f = await fixture(t), call = transitionCall()
+  call.args.contextPayload = contextPayload(); call.args.slotKey = 'model-selected'
+  assert.equal((await f.call(call)).error.code, 'invalid_arguments')
+  assert.equal(f.requests.length, 0)
+})
+
+test('present Context cannot use unmanaged, unproven, stale, stopped or non-INTAKE provenance', async t => {
+  const options = [{ trusted: null }, { readError: 'owner_obligation_not_managed' },
+    { trusted: null, context: { workflowProvenance: provenance } }]
+  for (const kind of ['REVIEW', 'DEPENDENCY']) {
+    const managed = relation(); managed.managedKind = kind; options.push({ managed })
+  }
+  for (const mutate of [m => { m.state = 'STOPPED' }, m => { m.currentNode.nodeVisitId = id(99) },
+    m => { delete m.currentNode }]) {
+    const managed = relation(); mutate(managed); options.push({ managed })
+  }
+  for (const config of options) {
+    const f = await fixture(t, config), call = transitionCall(); call.args.contextPayload = contextPayload()
+    assert.equal((await f.call(call)).ok, false)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, 0)
+  }
+  const f = await fixture(t), call = transitionCall()
+  call.args.contextPayload = contextPayload(); call.args.workflowInstanceId = id(99)
+  assert.equal((await f.call(call)).ok, false)
+  assert.equal(f.requests.filter(r => r.method === 'POST').length, 0)
+})
+
+test('managed Context preserves actual Svc gate/schema/CAS errors without local guessing or retries', async t => {
+  for (const code of ['invalid_input', 'context_validation_failed', 'owner_node_gate_binding_mismatch', 'workflow_state_version_conflict']) {
+    const f = await fixture(t, { writeError: code }), call = transitionCall(); call.args.contextPayload = contextPayload()
+    assert.equal((await f.call(call)).error.code, code)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, 1)
+    assert.deepEqual(f.requests.at(-1).body.contextPayload, call.args.contextPayload)
+  }
+})
