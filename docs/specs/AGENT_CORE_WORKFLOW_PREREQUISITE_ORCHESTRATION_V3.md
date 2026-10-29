@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3
 title: Transparent passthrough of immutable create admission observations
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,6 +20,12 @@ governed_by:
 supersedes:
   - AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2
 superseded_by: null
+accepted_date: 2026-10-29
+accepted_by: Codex root (explicitly delegated by mayf3)
+accepted_reviewed_head: b9d9d808e02d7b34ad44dd70597f505b9b947ef7
+acceptance_review_verdict: PASS
+independent_semantic_reviewer: /root/v11_lifecycle_review
+acceptance_record: external artifact admission-observation-contract-20261029/root-owner-acceptance.json
 paired_authority: SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3
 owners:
   - mayf3
@@ -28,7 +34,7 @@ external_authorities: []
 
 # AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3 — optional creation observation passthrough
 
-This PROPOSED whole-Spec successor preserves the complete accepted Core WPO V2
+This accepted whole-Spec successor preserves the complete accepted Core WPO V2
 body below. It adds only transparent passthrough of Svc V3's optional
 versioned `admissionObservation` on ordinary `workflow_execute(create_instance)`
 responses. It does not alter the request, Scheduler, `list_ready`, READY row,
@@ -37,8 +43,8 @@ response. The Svc V3 successor is a required paired authority.
 
 ## V3 paired-authority mapping
 
-The paired Svc authority is the PROPOSED
-`SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3`, governed by proposed Product
+The paired Svc authority is the accepted
+`SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3`, governed by accepted Product
 Boundary V11 and unchanged accepted Architecture V0_4_5 and Storage Contract
 V0.2. Core implementation is unauthorized unless both V3 Specs and Product
 V11 are accepted in their target bases and a separate implementation mandate
@@ -74,6 +80,24 @@ passthrough tests alone do not prove PostgreSQL atomicity, natural WAITING-to-
 READY progression, a first Scheduler attempt, or final business QA.
 
 ---
+
+## Lifecycle acceptance record
+
+```text
+ACCEPTANCE_STATUS = accepted
+ACCEPTED_BY = Codex root acting under explicit mayf3 delegation; not the Spec author
+ACCEPTANCE_RECEIPT = ART/admission-observation-contract-20261029/root-owner-acceptance.json
+ACCEPTANCE_RECEIPT_SHA256 = 575ac95a8f7a2a45acfea216a438c2fd72f5b81cd023c8dd81f38f510f95105d
+REVIEWED_SEMANTIC_HEAD = b9d9d808e02d7b34ad44dd70597f505b9b947ef7
+INDEPENDENT_REVIEW = ART/admission-observation-contract-20261029/INDEPENDENT_FINAL_REVIEW.md
+INDEPENDENT_REVIEW_SHA256 = 02e1da3af30f8ecad827d9e2a53ee7c4f12d08ff0d86b12dcf40607042bb1183
+SEMANTIC_DELTA_AFTER_REVIEW = NONE
+FINAL_ACCEPTED_HEAD = REPORTED_IN_PAIRED_PR_RECORD_AFTER_LIFECYCLE_COMMIT
+FINAL_HEAD_RECHECK = REQUIRED_BEFORE_MERGE
+EFFECTIVE_AFTER = BOTH_PAIRED_AUTHORITY_PRS_MERGE_TO_MAIN
+IMPLEMENTATION_AUTHORITY = contracts
+PRODUCTION_APPLY_AUTHORITY = none
+```
 
 # AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2 — preserved accepted predecessor body
 
