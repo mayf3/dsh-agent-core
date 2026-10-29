@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1
 title: Core broker and execution companion for Svc-owned Owner obligation Workflows
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -25,7 +25,7 @@ governed_by:
 paired_authority: SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2
 owners:
   - mayf3
 acceptance_authority_basis: >-

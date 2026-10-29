@@ -88,7 +88,7 @@ EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 
 ## Current Owner-obligation Workflow authority
 
-The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `b115c0641e4c2b6b965a6a3cd24252734754c14f` and Core `0629858c08029ebcaed39b012b4c4a2a2a8078fb`. The accepted Core whole successors are WAE V3, Assignee Transition Capability V2, WEC V3, GCR V2, and WPO V4; their direct predecessors are superseded with reciprocal links in the paired lifecycle transaction. Governing Contracts authorize later source implementation after their accepted revisions are present in the implementation base; production apply remains none.
+The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `39587c33c8bcf26ad5689127f5c92a6abc8b562e` and Core `ac83fe5cea3701eb9436f74d1b5f6ed0013256a9`. The accepted Core whole successors are WAE V3, Assignee Transition Capability V3, WEC V3, GCR V2, WPO V4, and Owner Workflows V2. Assignee Transition Capability V2 is superseded by V3, and Owner Workflows V1 by V2, with reciprocal lifecycle links. The paired Svc acceptance-context successor is `SVC_WORKFLOW_ACCEPTANCE_CONTEXT_BINDING_V2`. Governing Contracts authorize source implementation only after their accepted revisions are present in the implementation base; production apply remains none.
 
 ## Code structure rules
 
