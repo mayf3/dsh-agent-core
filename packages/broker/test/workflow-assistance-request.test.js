@@ -3,7 +3,7 @@ import { test } from 'node:test'
 
 import {
   workflowAssistanceRequestManifest,
-} from '../src/capabilities/workflow-assistance.js'
+} from '../src/capabilities/workflow/assistance.js'
 import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { assertValidManifest } from '../src/mapping.js'
 

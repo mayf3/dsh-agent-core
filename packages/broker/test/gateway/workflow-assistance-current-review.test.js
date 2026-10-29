@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import {
   workflowAssistanceActionManifest,
   workflowAssistanceReadManifest,
-} from '../../src/capabilities/workflow-assistance.js'
+} from '../../src/capabilities/workflow/assistance.js'
 import { createBrokerGateway } from '../../src/gateway.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { validateManifest } from '../../src/schema.js'

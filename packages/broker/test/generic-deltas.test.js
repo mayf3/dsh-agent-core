@@ -18,7 +18,7 @@ import {
 } from '../src/transport.js'
 import { validateManifest } from '../src/schema.js'
 import { validateArgumentsDetailed } from '../src/mapping.js'
-import { manifests as workflowManifests } from '../src/capabilities/workflow.js'
+import { manifests as workflowManifests } from '../src/capabilities/workflow/index.js'
 import { DEFAULT_MANIFESTS } from '../src/index.js'
 import { buildToolDefinition } from '../src/registry.js'
 import { createHttpTransport } from '../src/transport.js'

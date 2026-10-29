@@ -6,8 +6,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { buildExecutionInstruction } from '../src/instruction.js'
-import { workflowExecuteManifest } from '../../broker/src/capabilities/workflow-execute.js'
-import { workflowAssistanceRequestManifest } from '../../broker/src/capabilities/workflow-assistance.js'
+import { workflowExecuteManifest } from '../../broker/src/capabilities/workflow/execute.js'
+import { workflowAssistanceRequestManifest } from '../../broker/src/capabilities/workflow/assistance.js'
 
 const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
 const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'

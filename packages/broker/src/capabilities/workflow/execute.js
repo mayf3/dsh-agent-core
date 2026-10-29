@@ -8,8 +8,8 @@
 // reconciliation). Semantic bytes are unchanged except the accepted companion
 // delta (optional executionClass + declared invalid_input error row +
 // summary field-list documentation).
-import { withTransportErrors } from '../transport.js'
-import { authErrors, baseErrors } from './workflow-definition-authoring.js'
+import { withTransportErrors } from '../../transport.js'
+import { authErrors, baseErrors } from './definition-authoring.js'
 
 /** Shared read-side query codes (error.rs from_query WorkflowQueryError). */
 export const queryErrors = [

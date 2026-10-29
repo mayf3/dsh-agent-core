@@ -37,7 +37,7 @@ import { invoke, validateInvocation } from './mapping.js'
 import { sanitizeDispatchStatusError } from './agent-session-status-result.js'
 import { loadCredentialFor } from './credential-store.js'
 import { validateSchedulerTrustedContext } from './scheduler-validation.js'
-import { prepareWorkflowDraft } from './capabilities/workflow-linear-authoring.js'
+import { prepareWorkflowDraft } from './capabilities/workflow/linear-authoring.js'
 
 /**
  * Create the in-process broker gateway.
