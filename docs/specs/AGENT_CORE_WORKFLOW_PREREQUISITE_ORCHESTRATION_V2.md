@@ -43,15 +43,19 @@ The current paired dependency is the proposed Svc whole successor
 SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2, which depends on Product V10,
 Architecture V0_4_5, PostgreSQL Storage Contract V0.2 and the unchanged WEP V2.
 For this Core Contract, Svc CTR-SWPO-007 is the storage/event-lineage
-conformance source. Svc CTR-SWPO-008 changes only the Svc readiness detail
-variant for an unrecoverable reference triple; Core consumes the same literal
-READY row and does not expose or reinterpret that variant.
+conformance source, including the completed-receipt Event/fact matrix and
+command-identity serialization evidence. Svc CTR-SWPO-008 changes only the Svc
+readiness detail variant for an unrecoverable reference triple; Core consumes
+the same literal READY row and does not expose or reinterpret that variant.
 
 The Core acceptance matrix and native-run requirement below remain verbatim as
 the preserved V1 baseline. At paired acceptance, review evidence MUST also
 bind Svc WPO V2 CTR-SWPO-007/008 and the source event/readiness receipts to the
-exact companion Spec head. This is lifecycle/evidence coordination only;
-Core's three Contracts and the ready-row schema remain unchanged.
+exact companion Spec head, including successful 2xx exact-pair proof,
+deterministic non-2xx zero-fact replay, and concurrent ordinary-command
+cardinality proof that exercises the receipt-row lock. This is
+lifecycle/evidence coordination only; Core's three Contracts and the ready-row
+schema remain unchanged.
 
 ---
 
