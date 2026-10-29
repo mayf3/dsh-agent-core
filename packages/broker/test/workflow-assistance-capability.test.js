@@ -403,7 +403,19 @@ test('resolve rejects any pre-existing projection target as binding_error before
 
 test('atomic create-bind is closed, validates UUIDs and forwards one trusted-key request unchanged', async () => {
   const token = await startTokenServer()
-  const receipt = { bindingId: 'service-binding', child: { workflowInstanceId: 'service-child' }, acceptanceContractDigest: 'service-digest' }
+  const prerequisiteReadiness = {
+    status: 'WAITING',
+    reason: 'PREREQUISITE_PENDING',
+    sourceInstanceId: '66666666-6666-4666-8666-666666666666',
+    sourceDefinitionVersionId: '77777777-7777-4777-8777-777777777777',
+    transitionId: '88888888-8888-4888-8888-888888888888',
+  }
+  const receipt = {
+    bindingId: 'service-binding',
+    child: { workflowInstanceId: 'service-child' },
+    acceptanceContractDigest: 'service-digest',
+    prerequisiteReadiness,
+  }
   const service = await startMockServer((req, res) => json(res, 200, receipt))
   try {
     const transport = createHttpTransport({
@@ -420,7 +432,9 @@ test('atomic create-bind is closed, validates UUIDs and forwards one trusted-key
     }
     assert.equal(service.requests.length, 0)
     assert.equal(token.requests.length, 0)
-    assert.deepEqual((await definition.execute(args)).result, receipt)
+    const created = await definition.execute(args)
+    assert.deepEqual(created.result, receipt)
+    assert.deepEqual(created.result.prerequisiteReadiness, prerequisiteReadiness)
     assert.equal(service.requests.length, 1)
     const request = service.requests[0]
     assert.equal(request.pathname, `/internal/v1/assistance-cases/${id}/governance-child:create-and-bind`)

@@ -55,6 +55,53 @@ test('workflow_execute: create_instance binding freezes WITH the accepted execut
   }
 })
 
+test('workflow_execute create_instance: READY and WAITING admission observations pass through unchanged', async (t) => {
+  const tokenServer = await startTokenServer()
+  const common = {
+    version: 1, kind: 'TERMINAL_SUBMISSION',
+    dependentInstanceId: '11111111-1111-4111-8111-111111111111',
+    dependentDefinitionVersionId: '22222222-2222-4222-8222-222222222222',
+    initialContextRevisionId: '33333333-3333-4333-8333-333333333333', initialContextSha256: 'a'.repeat(64),
+    initialVisitId: '44444444-4444-4444-8444-444444444444', birthEventId: '55555555-5555-4555-8555-555555555555',
+    sourceInstanceId: '66666666-6666-4666-8666-666666666666',
+    sourceDefinitionVersionId: '77777777-7777-4777-8777-777777777777',
+    transitionId: '88888888-8888-4888-8888-888888888888',
+  }
+  const observations = {
+    WAITING: { ...common, status: 'WAITING' },
+    READY: { ...common, status: 'READY', eventId: '99999999-9999-4999-8999-999999999999',
+      submissionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', submissionSha256: 'b'.repeat(64) },
+  }
+  const workflow = await startMockServer((req, res, entry) => {
+    if (entry.method === 'POST' && entry.pathname === '/internal/v1/workflow-instances') {
+      const status = entry.body.contextPayload.case
+      return json(res, 201, { workflowInstanceId: common.dependentInstanceId, workflowStateVersion: 1,
+        currentContextRevisionId: common.initialContextRevisionId, currentNodeVisitId: common.initialVisitId,
+        eventSequence: 1, admissionObservation: observations[status] })
+    }
+    json(res, 404, { error: { code: 'domain_not_found', message: 'missing' } })
+  })
+  t.after(async () => { await tokenServer.close(); await workflow.close() })
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }), authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+  for (const status of ['WAITING', 'READY']) {
+    const result = await definition.execute({ operation: 'create_instance', domainId: 'domain-9',
+      definitionVersionId: common.dependentDefinitionVersionId, contextPayload: { case: status }, metadata: null })
+    assert.deepEqual(result.result.admissionObservation, observations[status])
+    assert.deepEqual(result.result, { workflowInstanceId: common.dependentInstanceId, workflowStateVersion: 1,
+      currentContextRevisionId: common.initialContextRevisionId, currentNodeVisitId: common.initialVisitId,
+      eventSequence: 1, admissionObservation: observations[status] })
+    if (status === 'WAITING') for (const proof of ['eventId', 'submissionId', 'submissionSha256']) {
+      assert.equal(Object.hasOwn(result.result.admissionObservation, proof), false)
+    }
+  }
+  assert.equal(workflow.requests.length, 2)
+  assert.equal(tokenServer.requests.length, 1)
+})
+
 test('WEC companion: legacy create (absent executionClass) maps to a body with NO executionClass key — legacy wire byte-identical', async () => {
   const tokenServer = await startTokenServer()
   const workflow = await startMockServer((req, res) => json(res, 201, { workflowInstanceId: 'wf-wec-1', workflowStateVersion: 1 }))
