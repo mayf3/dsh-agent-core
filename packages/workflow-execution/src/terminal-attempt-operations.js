@@ -1,12 +1,14 @@
 import { DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 
 export function createTerminalAttemptOperations({ ledger, escalateAttemptLimit }) {
-  function isAtAttemptLimit(attempt) {
-    return (attempt.generation ?? 1) >= (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)
+  async function isAtAttemptLimit(attempt) {
+    const policy = ledger.attemptPolicy ? await ledger.attemptPolicy(attempt)
+      : { limit: ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT }
+    return policy === undefined ? undefined : (attempt.generation ?? 1) >= policy.limit
   }
 
   async function maybeEscalateAtLimit(attempt) {
-    if (!isAtAttemptLimit(attempt) || attempt.escalation !== undefined) return
+    if (!await isAtAttemptLimit(attempt) || attempt.escalation !== undefined) return
     await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
   }
 
@@ -21,7 +23,9 @@ export function createTerminalAttemptOperations({ ledger, escalateAttemptLimit }
 
   async function reconcileTerminalCandidate(attempt, stale, staleReentry) {
     if (stale.kind !== 'stale_confirmed') return
-    if (isAtAttemptLimit(attempt)) {
+    const atLimit = await isAtAttemptLimit(attempt)
+    if (atLimit === undefined) return
+    if (atLimit) {
       await maybeEscalateAtLimit(attempt)
       return
     }

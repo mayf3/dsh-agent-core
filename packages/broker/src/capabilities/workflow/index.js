@@ -6,7 +6,9 @@ import { workflowDomainAdminManifest, workflowDomainMembersManifest, workflowDom
 export { workflowDomainAdminManifest, workflowDomainMembersManifest, workflowDomainBindingReconcileManifest }
 import { workflowDefinitionAuthoringManifest } from './definition-authoring.js'
 import { workflowExecuteManifest } from './execute.js'
+import { workflowOwnerObligationManifest } from './owner-obligation.js'
 export const manifests = [
+  workflowOwnerObligationManifest,
   workflowMyTasksManifest,
   workflowInstanceDetailManifest,
   workflowSubmissionHistoryManifest,

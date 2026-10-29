@@ -169,6 +169,17 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   const ledger = new ExecutionLedger({
     dir: layout.workflowExecutionDir,
     log,
+    resolveManagedAttempt: async ({ ownerPrincipalId, workflowInstanceId, nodeVisitId }) => {
+      const caller = config.pollerAgentId ?? process.env[WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV]
+      const resolved = await principalAccess.handlers.agent_resolve_principal.resolve({ principalId: ownerPrincipalId }, { callerAgentId: caller })
+      if (!resolved?.ok || !resolved.result?.agentId) return undefined
+      const read = await gateway.execute({ capabilityId: 'workflow_owner_obligation', operation: 'read', args: { workflowInstanceId } }, { agentId: resolved.result.agentId })
+      if (!read?.ok) return read?.error?.code === 'owner_obligation_not_managed' ? false : undefined
+      const m = read.result
+      return m?.version === 1 && m.workflowInstanceId === workflowInstanceId
+        && ['INTAKE', 'REVIEW', 'DEPENDENCY'].includes(m.managedKind) && m.state === 'ACTIVE'
+        && m.currentNode?.nodeVisitId === nodeVisitId ? true : undefined
+    },
     // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the attempt limit lives on
     // the fence itself (admission policy; replay of old files unchanged).
     maxAttemptsPerVisit: resolvePositiveInt({

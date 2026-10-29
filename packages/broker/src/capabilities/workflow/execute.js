@@ -1,3 +1,4 @@
+import { withManagedWriteErrors } from './owner-obligation.js'
 // workflow-execute.js — the single workflow instance-execution write entry.
 //
 // Physically split from capabilities/workflow.js (structure gate: the
@@ -31,7 +32,7 @@ export const queryErrors = [
  * credential seam — no principalId/agentId/actor/assignee/Idempotency-Key is
  * model-facing. No broker-side automatic retry (DEC-004).
  */
-export const workflowExecuteManifest = withTransportErrors({
+export const workflowExecuteManifest = withTransportErrors(withManagedWriteErrors({
   id: 'workflow_execute',
   toolName: 'workflow_execute',
   name: 'Workflow Execute',
@@ -200,4 +201,4 @@ export const workflowExecuteManifest = withTransportErrors({
       },
     },
   ],
-})
+}))
