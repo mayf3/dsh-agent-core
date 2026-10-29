@@ -124,13 +124,14 @@ export const workflowExecuteManifest = withTransportErrors(withManagedWriteError
     },
     {
       name: 'transition',
-      description: 'Submit one transition using exact values read from workflow_instance_detail.',
+      description: 'Submit one transition using exact values read from workflow_instance_detail. Only a trusted managed INTAKE may supply the full resulting contextPayload object when entering a declared prerequisite gate; Svc validates the actual target and producer binding atomically.',
       arguments: {
         properties: {
           workflowInstanceId: { type: 'string', description: 'Workflow instance id (UUID).' },
           transitionDefinitionId: { type: 'string', description: 'Exact outgoing transition definition id (UUID).' },
           expectedWorkflowStateVersion: { type: 'integer', minimum: 1, description: 'Current workflow state version used for CAS.' },
           submissionPayload: { type: 'json', description: 'Optional payload matching the selected transition submission schema.' },
+          contextPayload: { type: 'object', description: 'Optional full resulting Context for managed INTAKE gated entry; omit to retain the current Context. Null is invalid; Svc validates schema and actual producer lineage.' },
           // Named by the frozen operation description as an advisory preference
           // the model may send; declared so the closed argument schema accepts
           // it while it stays advisory-only (never forwarded; the server is
@@ -148,7 +149,7 @@ export const workflowExecuteManifest = withTransportErrors(withManagedWriteError
         method: 'POST',
         path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
         pathParams: ['workflowInstanceId'],
-        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+        body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload', 'contextPayload'],
         idempotencyKey: true,
       },
     },
