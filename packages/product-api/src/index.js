@@ -259,7 +259,8 @@ export function apply(ctx, config = {}) {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
       if (req.method === 'GET' && url.pathname === '/health') {
-        json(res, 200, { ok: true, service: 'agent-core-product-api' })
+        // PRODUCT #525 P1: additive admission readiness ({configured,state}|null) — liveness `ok` unchanged; identity-free.
+        json(res, 200, { ok: true, service: 'agent-core-product-api', admission: config.workflowAdmission?.admissionHealth?.() ?? null })
         return
       }
       const conversationResult = await conversation()(req,url)

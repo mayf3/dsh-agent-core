@@ -43,7 +43,7 @@ import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-rou
 import { mountBrokerGateway } from './broker-composition.js'
 import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
-import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
+import { mountProductApiAdmission } from './product-api-admission.js'
 import { Scheduler, JobStore } from '../../scheduler/src/index.js'
 import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
@@ -235,6 +235,8 @@ export async function composeProductionRuntime(options = {}) {
     throw Object.assign(new Error(`production-runtime: agent definition ${layout.agentsConfig} has no default agent (nothing to route to)`), { code: 'CONFIG_INVALID' })
   }
   log.log(`agent definition loaded: ${definition.listAgents().length} agent(s), default=${defaultAgent.id} (${defaultAgent.name})`)
+  const productApiCfg = opts.productApi ?? {}
+  const productApiAdmission = mountProductApiAdmission({ definition, productApiCfg, log })
 
   // AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_V1 (accepted) + IMPL_V1: deployment-
   // owned static route chain config (agent-model-overrides.json version 3).
@@ -383,11 +385,9 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
-  const productApiCfg = opts.productApi ?? {}
   mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
-    workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
-    enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
+    ...productApiAdmission,
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
     // Dedicated history-only Tailnet config remains pass-through/default-OFF.
