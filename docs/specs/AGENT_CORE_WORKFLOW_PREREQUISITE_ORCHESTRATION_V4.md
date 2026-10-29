@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4
-title: Proposed whole-authority successor to AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3
-status: proposed
+title: Accepted whole-authority successor to AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -21,20 +21,22 @@ supersedes:
 superseded_by: null
 owners:
   - mayf3
+acceptance_authority_basis: >-
+  Root acceptance under user-delegated authority; ROOT_OWNER_ACCEPTANCE.json SHA-256 43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e; reviewed semantic Svc b115c0641e4c2b6b965a6a3cd24252734754c14f and Core 0629858c08029ebcaed39b012b4c4a2a2a8078fb. Lifecycle transaction only; no production apply authority.
 ---
 
-# AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4 — proposed whole-authority successor
+# AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4 — accepted whole-authority successor
 
-This proposal preserves the complete `AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3` predecessor body below. The existing predecessor remains accepted and effective in the current main base: this proposed document makes no reciprocal lifecycle mutation and grants no implementation or production authority. The field and route details are proposed and trace to the paired authority below; independent review and acceptance remain outstanding. No claims of conformance or testing are made.
+Accepted whole-authority successor. Root acceptance under the user-delegated authority, recorded in `ROOT_OWNER_ACCEPTANCE.json` (SHA-256 `43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e`), binds the independently reviewed semantic heads Svc `b115c0641e4c2b6b965a6a3cd24252734754c14f` and Core `0629858c08029ebcaed39b012b4c4a2a2a8078fb`. This lifecycle-only transaction records acceptance and reciprocal predecessor links. Accepted governing Specs with `implementation_authority: contracts` authorize later source implementation within their Contracts once present in its base; Product, Architecture, and Storage authority retain `implementation_authority: none`. Production apply, migration execution, deployment, and A75 mutation remain unauthorized. It carries forward the predecessor contracts with the explicitly stated bounded additions below; the predecessor source remains unchanged.
 
-## Proposed bounded delta
+## Bounded contract delta
 
 Keep existing ordinary-create `admissionObservation` passthrough opaque and optional; keep existing GCR `prerequisiteReadiness` response mapping unchanged. Preserve the V3 supplier-first Owner flow for non-opted-in source Definitions. For the new exact opted-in policy route, Svc creates the prerequisite-free intake singleton under the existing GCR create-bind cardinality; this does not relax the existing root-create marker or backfill an initial supplier ID. The true upstream supplier is created later by its declared node operation.
 
 Add the closed Svc node gate for the declared managed intake node only. Svc evaluates the current READY/WAITING/UNKNOWN/CLOSED state inside its existing READY-only due query; Core consumes the existing `list_ready` contract unchanged, with no new ready-row coordinates or tool. A missing real producer/receipt, wrong producer/slot/domain/version/transition, or not-ready result yields zero WAE attempts and zero Router deliveries. Readiness is re-evaluated under the paired Svc snapshot and pre-LIMIT rule; Core does not infer state, use predicted IDs, create a Core wait ledger, or adapt ordinary create schemas. The relation/effect capability names, GET bindings, managed relation schema, effect lookup, and cap behavior are fixed by the paired Spec and both immutable author addenda.
 
 Paired authority reference: `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1 §§4–6,9,13–14; carries WPO Core V3 passthrough`.
-The complete predecessor body is carried forward unchanged below. Its previously accepted clauses remain in force until an exact complete successor is independently reviewed, accepted by the authorized Owner, and merged with reciprocal lifecycle links. The exact contract delta and acceptance evidence are specified by the paired Spec; no tests are claimed here.
+The predecessor contracts are carried forward below with only the bounded successor changes stated above; the predecessor source remains unchanged. This successor is accepted in the same paired lifecycle transaction that records the reciprocal predecessor backlink. Acceptance is not implementation or conformance evidence.
 
 Predecessor source: `docs/specs/AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3.md` at `45268be276276462bd71040f0cd51b28a7764fe0`; original file SHA-256 `d94304392c4efe3eb0e0e8a12d547c37fe8b6dc7a168b31862e5e4209b1519ab`.
 

@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
-status: accepted
+status: superseded
 accepted_date: 2026-08-29
 accepted_by: mayf3
 accepted_at: 2026-08-29T07:25:51Z
@@ -20,7 +20,7 @@ governed_by:
   - AGENT_CORE_WORKFLOW_DOMAIN_INSTANCES_BROKER_V1
 external_authorities: []
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2
 owners:
   - mayf3
 ---
