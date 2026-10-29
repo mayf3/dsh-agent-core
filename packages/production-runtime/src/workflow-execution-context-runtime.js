@@ -30,8 +30,10 @@ function normalizeProvenance(value) {
 function turnIdFromTrustedContext(trustedContext) {
   const nested = trustedContext?.ingressContext?.turnExecutionId
   const legacy = trustedContext?.turnExecutionId
-  if (nested !== undefined && legacy !== undefined && nested !== legacy) return undefined
-  return nested ?? legacy
+  const source = trustedContext?.sourceTurnExecutionId
+  const values = [nested, legacy, source].filter(v => v !== undefined)
+  if (new Set(values).size !== 1) return undefined
+  return values[0]
 }
 
 export function mountWorkflowExecutionContextRuntime({ ctx }) {
@@ -67,9 +69,15 @@ export function mountWorkflowExecutionContextRuntime({ ctx }) {
     const turnExecutionId = turnIdFromTrustedContext(trustedContext)
     if (typeof turnExecutionId !== 'string' || turnExecutionId === '') return undefined
     const noted = byTurn.get(turnExecutionId)
-    if (noted === undefined) return undefined
-
     const actualAgentId = trustedContext?.agentId
+    const parentOrigin = trustedContext?.workflowProvenance
+    if (parentOrigin !== undefined) {
+      const workflow = normalizeProvenance(parentOrigin)
+      if (!workflow || !AGENT_ID_RE.test(actualAgentId ?? '') || trustedContext.sourceTurnExecutionId !== turnExecutionId) return undefined
+      if (noted && (noted.agentId !== actualAgentId || Object.keys(workflow).some(k => workflow[k] !== noted.workflow[k]))) return undefined
+      return Object.freeze({ workflow, agentId: actualAgentId, turnExecutionId })
+    }
+    if (noted === undefined) return undefined
     if (noted.agentId !== undefined && noted.agentId !== actualAgentId) return undefined
 
     return noted

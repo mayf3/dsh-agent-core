@@ -38,6 +38,7 @@ import { sanitizeDispatchStatusError } from './agent-session-status-result.js'
 import { loadCredentialFor } from './credential-store.js'
 import { validateSchedulerTrustedContext } from './scheduler-validation.js'
 import { prepareWorkflowDraft } from './capabilities/workflow/linear-authoring.js'
+import { routeOwnerObligation } from './capabilities/workflow/owner-obligation-guard.js'
 
 /**
  * Create the in-process broker gateway.
@@ -83,6 +84,7 @@ export function createBrokerGateway({
   localHandlers,
   localHandlerResolver,
   auditDenial,
+  resolveWorkflowProvenance,
   log = () => {},
 }) {
   const targetMap = buildTargetMap(targets)
@@ -394,6 +396,10 @@ export function createBrokerGateway({
 
     // ── HTTP-bound capability: the existing generic authorized transport. ─
     const transport = transportFor(agentId)
+    const managed = await routeOwnerObligation({ call: { capabilityId: manifest.id, operation, args: localArgs }, manifest,
+      context: trustedContext, resolveWorkflowProvenance, transport,
+      executeRead: (readCall) => executeCore(readCall, trustedContext) })
+    if (managed !== undefined) return managed
     const handlers = createHttpHandlers(manifest, transport, {
       executeRead: (readCall) => executeCore(readCall, trustedContext),
     })
