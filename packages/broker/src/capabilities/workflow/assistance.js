@@ -1,3 +1,4 @@
+import { withManagedWriteErrors } from './owner-obligation.js'
 /**
  * DOMAIN_OWNER_ASSISTANCE_V1 — thin broker transport over svc-workflow's
  * existing Assistance V1 API. Business authorization stays server-side.
@@ -106,7 +107,7 @@ export const workflowAssistanceReadManifest = withTransportErrors({
   }],
 })
 
-export const workflowAssistanceActionManifest = withTransportErrors({
+export const workflowAssistanceActionManifest = withTransportErrors(withManagedWriteErrors({
   id: 'workflow_assistance_action',
   toolName: 'workflow_assistance_action',
   name: 'Workflow Assistance Action',
@@ -276,9 +277,9 @@ export const workflowAssistanceActionManifest = withTransportErrors({
       idempotencyKey: true,
     },
   }],
-})
+}))
 
-export const workflowAssistanceRequestManifest = withTransportErrors({
+export const workflowAssistanceRequestManifest = withTransportErrors(withManagedWriteErrors({
   id: 'workflow_assistance_request',
   toolName: 'workflow_assistance_request',
   name: 'Workflow Assistance Request',
@@ -345,7 +346,7 @@ export const workflowAssistanceRequestManifest = withTransportErrors({
       idempotencyKey: true,
     },
   }],
-})
+}))
 
 export const workflowAssistanceManifests = [
   workflowAssistanceReadManifest,

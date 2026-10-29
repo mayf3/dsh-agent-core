@@ -262,6 +262,11 @@ export const turnExecutionMethods = {
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
+    // Capture the ingress-validated origin before prompt write: the first RPC
+    // can precede deliver()'s receipt and the runtime's bounded cache entry.
+    if (opts?.messageOrigin?.kind === 'workflow_execution') Object.defineProperty(execution, 'workflowProvenance', {
+      value: Object.freeze({ ...opts.messageOrigin }), enumerable: true,
+    })
     // Native's original message identity is known before write, but is not an acceptance receipt.
     execution.nativeGoalMessageId = opts?.nativeGoalContinuation?.messageId ?? null
     if (execution.nativeGoalMessageId !== null) execution.receiptMessageId = execution.nativeGoalMessageId

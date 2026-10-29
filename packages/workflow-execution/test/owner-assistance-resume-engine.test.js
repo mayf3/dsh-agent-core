@@ -395,3 +395,21 @@ test('planned Owner-resume stays fenced for pending or unknown Router correlatio
     })
   }
 })
+
+test('managed per-Visit cap cannot use the legacy Owner-resume exemption', async () => {
+  const fixture = makeDeps({ turnState: () => 'settled',
+    detailBody: () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 12 }, current_node_visit_id: VISIT } } }),
+    resumeEvidence: () => ({ ok: true, evidence: ownerEvidence(12) }),
+  })
+  try {
+    fixture.ledger.maxAttemptsPerVisit = 99
+    fixture.ledger.resolveManagedAttempt = async () => true
+    await seedRunEndedAtGeneration(fixture.ledger, 3)
+    const prior = fixture.ledger.get(VISIT)
+    const result = await fixture.engine.pollOnce()
+    assert.equal(result.admissions[0].action, 'attempt_limit_reached')
+    assert.equal(fixture.calls.delivers.length, 0)
+    assert.equal(fixture.ledger.get(VISIT).attemptId, prior.attemptId)
+    assert.equal(fixture.ledger.get(VISIT).generation, 3)
+  } finally { fixture.cleanup() }
+})

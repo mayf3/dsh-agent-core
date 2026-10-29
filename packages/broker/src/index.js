@@ -186,6 +186,7 @@ export const Config = z.object({
    * capabilities fail closed as unsupported_operation.
    */
   resolveLocalHandlers: z.any(),
+  resolveWorkflowProvenance: z.any(),
 })
 
 /**
@@ -310,6 +311,7 @@ export function apply(ctx, config = {}) {
     // when absent or empty, local capabilities fail closed as unsupported —
     // the gateway stays fully functional.
     const gateway = createBrokerGateway({
+      resolveWorkflowProvenance: config.resolveWorkflowProvenance,
       manifests,
       targets,
       authServiceOrigin,

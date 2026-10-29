@@ -76,3 +76,71 @@ test('live READY child keeps the ordinary broker and switch semantics', async ()
   assert.equal(switchCalls.length, 1)
   assert.deepEqual(switchCalls[0][0], { binding: 'live-turn' })
 })
+
+test('real AgentProcess captures workflow origin before first prompt RPC and keeps it immutable', async t => {
+  const { makeFx } = await import('../helpers/fake-child.js')
+  const fx = makeFx()
+  t.after(() => fx.childExit())
+  await fx.readyNow()
+  const origin = { kind: 'workflow_execution', workflowInstanceId: '11111111-1111-4111-8111-111111111111',
+    nodeVisitId: '22222222-2222-4222-8222-222222222222', attemptId: 'wfeat-' + 'b'.repeat(24) }
+  const expected = { ...origin }
+  const pending = fx.proc.deliver('main', 'ordinary task', { messageOrigin: origin })
+  await fx.tick()
+  const prompt = fx.writes.filter(w => w.method === 'session/prompt').at(-1)
+  const turnId = prompt.params.turnExecutionId
+  assert.ok(turnId)
+  const execution = fx.proc.executions.get(turnId)
+  assert.deepEqual(execution.workflowProvenance, expected)
+  assert.equal(Object.isFrozen(execution.workflowProvenance), true)
+  assert.throws(() => { execution.workflowProvenance = {} }, TypeError)
+  origin.workflowInstanceId = 'forged-after-capture'
+  const seen = []
+  const rpc = createParentRpcHandler({ agentId: fx.proc.agentId, getProc: () => fx.proc, log,
+    getBrokerGateway: () => ({ execute: async (call, trusted) => { seen.push(trusted); return { ok: true } } }) })
+  assert.equal((await rpc(BROKER_RPC_METHOD, { capabilityId: 'workflow_execute', operation: 'create_instance', args: {},
+    sourceTurnExecutionId: 'forged', workflowProvenance: {} }, { turnExecutionId: turnId })).ok, true)
+  assert.deepEqual(seen[0].workflowProvenance, expected)
+  assert.equal(seen[0].sourceTurnExecutionId, turnId)
+  // Only now return the prompt receipt: classification did not depend on it.
+  fx.respondTo('session/prompt', { messageId: 'managed-message' })
+  await pending
+  fx.completeTurn('main', 'managed-message', 'done')
+  await fx.tick()
+})
+
+test('real completed managed turn cannot erase stale RPC correlation into ordinary fallback', async t => {
+  const { makeFx } = await import('../helpers/fake-child.js')
+  const fx = makeFx(); t.after(() => fx.childExit()); await fx.readyNow()
+  const calls = []
+  fx.proc.onRpcRequest = handler({ proc: fx.proc,
+    gateway: { execute: async call => { calls.push(call); return { ok: true, result: {} } } } })
+  const pending = fx.proc.deliver('main', 'managed task', { messageOrigin: {
+    kind: 'workflow_execution', workflowInstanceId: '11111111-1111-4111-8111-111111111111',
+    nodeVisitId: '22222222-2222-4222-8222-222222222222', attemptId: 'wfeat-' + 'b'.repeat(24) } })
+  await fx.tick()
+  const turnId = fx.writes.filter(w => w.method === 'session/prompt').at(-1).params.turnExecutionId
+  fx.respondTo('session/prompt', { messageId: 'managed-message' }); await pending
+  fx.completeTurn('main', 'managed-message', 'done'); await fx.tick()
+  assert.equal(fx.proc.executions.has(turnId), false)
+  const late = fx.proc.handleRpcRequest({ requestId: 'late-managed-create', method: BROKER_RPC_METHOD,
+    params: { capabilityId: 'workflow_execute', operation: 'create_instance', args: {} }, turnExecutionId: turnId })
+  for (let i = 0; i < 1000 && !fx.writes.some(w => w.method === 'rpc.response'); i++) await fx.tick()
+  const reply = fx.writes.find(w => w.method === 'rpc.response')
+  if (reply) fx.respondTo('rpc.response', {})
+  await late
+  assert.equal(calls.length, 0)
+  assert.deepEqual(reply?.params.result, { ok: false, error: { code: 'authoritative_reference_unavailable' } })
+})
+
+test('invalid supplied turn correlation refuses while proven live unmanaged turns retain ordinary routing', async () => {
+  const proc = liveProc(), calls = []
+  proc.executions.set('live-unmanaged', { settled: false })
+  const rpc = handler({ proc, gateway: { execute: async call => { calls.push(call); return { ok: true } } } })
+  for (const turnExecutionId of ['missing', '', null]) {
+    assert.equal((await rpc(BROKER_RPC_METHOD, {}, { turnExecutionId })).error.code, 'authoritative_reference_unavailable')
+  }
+  assert.equal(calls.length, 0)
+  assert.equal((await rpc(BROKER_RPC_METHOD, {}, { turnExecutionId: 'live-unmanaged' })).ok, true)
+  assert.equal(calls.length, 1)
+})
