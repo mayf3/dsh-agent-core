@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs'
 import { createBrokerGateway } from '../../src/gateway.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { createRelayHandlers } from '../../src/relay.js'
-import { manifests } from '../../src/capabilities/workflow.js'
+import { manifests } from '../../src/capabilities/workflow/index.js'
 import { mockTargets } from '../capability-fixtures.js'
 
 export async function runScenarios({ origin, auth, sql, principal, domainId, temp, version }) {

@@ -14,7 +14,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { validateInvocation, assertValidManifest } from '../../src/mapping.js'
 import { validateManifest } from '../../src/schema.js'
-import { workflowDefinitionAuthoringManifest as rawAuthoringManifest } from '../../src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest as rawAuthoringManifest } from '../../src/capabilities/workflow/definition-authoring.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { manifest as calculatorManifest } from '../../src/calculator.manifest.js'
 

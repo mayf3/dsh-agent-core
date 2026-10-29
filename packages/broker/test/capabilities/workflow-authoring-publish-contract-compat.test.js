@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { workflowDefinitionAuthoringManifest as manifest } from '../../src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest as manifest } from '../../src/capabilities/workflow/definition-authoring.js'
 import { buildToolDefinition } from '../../src/registry.js'
 import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'

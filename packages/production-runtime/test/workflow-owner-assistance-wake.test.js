@@ -115,7 +115,10 @@ test('owner assistance wake resolves exact principal and uses stable inter-agent
   assert.equal(deliveries[0].req.agentId, OWNER)
   assert.equal(deliveries[0].req.sessionMode, 'main')
   assert.match(deliveries[0].req.message, /OWNER_PENDING/)
-  assert.match(deliveries[0].req.message, /workflow_assistance_action/)
+  assert.match(deliveries[0].req.message, /workflow_assistance_action/ )
+  assert.match(deliveries[0].req.message, /create_and_bind_governance_child/ )
+  assert.match(deliveries[0].req.message, /Unresolved ambiguity stops before mutation/ )
+  assert.match(deliveries[0].req.message, /UNKNOWN with no replacement or new-key call/ )
   assert.deepEqual(deliveries[0].control.messageOrigin, {
     kind: 'inter_agent', sourceAgentId: POLLER,
     correlation: 'workflow-assistance:' + CASE_ID,

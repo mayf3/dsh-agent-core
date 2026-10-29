@@ -27,7 +27,7 @@ import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { realpathSync } from 'node:fs'
 
-import { workflowDefinitionAuthoringManifest } from '../packages/broker/src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest } from '../packages/broker/src/capabilities/workflow/definition-authoring.js'
 import { AUTHORING_FILE_ENTRY_TOOL_NAME } from '../packages/broker/src/authoring-file-entry.js'
 import { apply as applyBroker } from '../packages/broker/src/index.js'
 import { createParentRpcHandler } from '../packages/agent-router/src/parent-rpc-relay.js'

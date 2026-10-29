@@ -139,7 +139,7 @@ test('real gateway rejects untrusted turn and model-carried coordinates', async 
 })
 test('workflow_progress tool shape exposes no identity/provenance arguments', async () => {
   const broker = await import('../../broker/src/registry.js')
-  const capability = await import('../../broker/src/capabilities/workflow-progress.js')
+  const capability = await import('../../broker/src/capabilities/workflow/progress.js')
   const { definition } = broker.buildToolDefinition({ manifest: capability.workflowProgressManifest, handlers: {} })
 
   assert.deepEqual(definition.parameters.operation.enum, ['checkpoint', 'read_current'])

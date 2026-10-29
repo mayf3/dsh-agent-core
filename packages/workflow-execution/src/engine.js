@@ -337,6 +337,7 @@ export function createWorkflowExecutionEngine({
     let boundSkipped = 0
     let cursor
     let drainedEarly = false
+    const seenTuples = new Set()
     while (true) {
       if (stopped) {
         drainedEarly = true
@@ -353,6 +354,23 @@ export function createWorkflowExecutionEngine({
       pages += 1
       const items = Array.isArray(page.items) ? page.items : []
       const exhausted = items.length < DUE_PAGE_LIMIT
+      const last = items[items.length - 1]
+      if (!exhausted && (last === null || typeof last !== 'object'
+        || typeof last.nextEligibleAt !== 'string' || last.nextEligibleAt === ''
+        || typeof last.dispatchIntentId !== 'string' || last.dispatchIntentId === '')) {
+        log.error?.('workflow-execution: due-feed cursor protocol violation (full page without a well-formed last record) — sweep stopped')
+        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_protocol_violation', reconciled, admissions, skipped, pages }
+      }
+      // Validate the whole page before WEC: any earlier tuple makes this
+      // scan non-advancing. A later poll gets a new Set and starts at page one.
+      for (const raw of items) {
+        const tuple = JSON.stringify([raw?.nextEligibleAt, raw?.dispatchIntentId])
+        if (seenTuples.has(tuple)) {
+          log.error?.('workflow-execution: due-feed repeated tuple — sweep stopped before page admission')
+          return { ok: false, phase: 'due_feed_cursor', code: 'cursor_not_advancing', reconciled, admissions, skipped, pages }
+        }
+      }
+      for (const raw of items) seenTuples.add(JSON.stringify([raw?.nextEligibleAt, raw?.dispatchIntentId]))
       for (const raw of items) {
         const normalized = normalizeDueIntent(raw)
         if (!normalized.ok) {
@@ -376,24 +394,7 @@ export function createWorkflowExecutionEngine({
         }
       }
       if (exhausted) break
-      const last = items[items.length - 1]
-      if (last === null || typeof last !== 'object'
-        || typeof last.nextEligibleAt !== 'string' || last.nextEligibleAt === ''
-        || typeof last.dispatchIntentId !== 'string' || last.dispatchIntentId === '') {
-        log.error?.('workflow-execution: due-feed cursor protocol violation (full page without a well-formed last record) — sweep stopped')
-        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_protocol_violation', reconciled, admissions, skipped, pages }
-      }
-      const nextCursor = {
-        afterNextEligibleAt: last.nextEligibleAt,
-        afterDispatchIntentId: last.dispatchIntentId,
-      }
-      if (cursor !== undefined
-        && nextCursor.afterNextEligibleAt === cursor.afterNextEligibleAt
-        && nextCursor.afterDispatchIntentId === cursor.afterDispatchIntentId) {
-        log.error?.('workflow-execution: due-feed cursor did not advance (identical full page repeated) — sweep stopped loud; is the svc-workflow keyset continuation deployed?')
-        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_not_advancing', reconciled, admissions, skipped, pages }
-      }
-      cursor = nextCursor
+      cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
     }
     if (boundReached) {
       log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)

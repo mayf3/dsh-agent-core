@@ -17,7 +17,7 @@
  * Linear steps carry only canonical work-assignment Principal references.
  */
 
-import { withTransportErrors } from '../transport.js'
+import { withTransportErrors } from '../../transport.js'
 
 export const baseErrors = [
   { code: 'invalid_arguments', description: 'Arguments did not satisfy the operation schema.' },

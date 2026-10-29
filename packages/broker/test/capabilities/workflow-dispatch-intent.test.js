@@ -15,7 +15,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { manifests as workflowManifests } from '../../src/capabilities/workflow.js'
+import { manifests as workflowManifests } from '../../src/capabilities/workflow/index.js'
 import { validateManifest } from '../../src/schema.js'
 import { createHttpTransport } from '../../src/transport.js'
 import { json, mockTargets, startMockServer, startTokenServer, wire } from '../../test-support/capability-fixtures.js'
@@ -318,4 +318,25 @@ test('workflow_dispatch_intents + workflow_wake_dispatch_intent: manifest valida
   assert.equal(ids.filter((id) => id === 'workflow_global_instances').length, 1)
   assert.equal(ids.filter((id) => id === 'workflow_domain_instances').length, 1)
   assert.equal(ids.includes('workflow_transition'), false)
+})
+
+
+test('list_ready has a distinct closed route, exact cursor pair and unchanged raw route', async () => {
+  const token = await startTokenServer()
+  const row = { ...intent(1), readinessStatus: 'READY' }
+  const service = await startMockServer((req, res) => json(res, 200, { items: [row] }))
+  try {
+    const transport = createHttpTransport({ credentialProvider: { getCredential: async () => ({ clientId: 'c', clientSecret: 's' }) },
+      targets: mockTargets({ 'svc-workflow': service.origin }), authServiceOrigin: token.origin })
+    const { definition } = wire(findDue(), transport)
+    for (const bad of [{ afterNextEligibleAt: row.nextEligibleAt }, { afterDispatchIntentId: row.dispatchIntentId }, { ownerPrincipalId: row.ownerPrincipalId }]) {
+      assert.equal((await definition.execute({ operation: 'list_ready', ...bad })).ok, false)
+    }
+    assert.equal(service.requests.length, 0)
+    const result = await definition.execute({ operation: 'list_ready', limit: 100, afterNextEligibleAt: row.nextEligibleAt, afterDispatchIntentId: row.dispatchIntentId })
+    assert.deepEqual(result.result, { items: [row] })
+    assert.equal(service.requests[0].pathname, '/internal/v1/dispatch-intents/ready')
+    assert.deepEqual(service.requests[0].query, { limit: '100', afterNextEligibleAt: row.nextEligibleAt, afterDispatchIntentId: row.dispatchIntentId })
+    assert.equal(findDue().operations.find(op => op.name === 'list').http.path, '/internal/v1/dispatch-intents')
+  } finally { await token.close(); await service.close() }
 })
