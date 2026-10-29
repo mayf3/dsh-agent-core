@@ -87,8 +87,10 @@ export function createParentRpcHandler({ agentId, log, getProc, getBrokerGateway
       const proc = getProc()
       const sourceTurnExecutionId = provenSourceTurnExecutionId(proc, rpcMeta)
       const workflowProvenance = proc.executions?.get(sourceTurnExecutionId)?.workflowProvenance
-      if (sourceTurnExecutionId === undefined && [...(proc.executions?.values() ?? [])]
-        .some(e => e.settled !== true && e.workflowProvenance !== undefined)) {
+      // An explicit correlation that no longer proves a live execution must
+      // not become an ordinary call after finishExecution removes the entry.
+      if (sourceTurnExecutionId === undefined && (rpcMeta.turnExecutionId !== undefined
+        || [...(proc.executions?.values() ?? [])].some(e => e.settled !== true && e.workflowProvenance !== undefined))) {
         return { ok: false, error: { code: 'authoritative_reference_unavailable' } }
       }
       const active = proc.activeIngressContext
