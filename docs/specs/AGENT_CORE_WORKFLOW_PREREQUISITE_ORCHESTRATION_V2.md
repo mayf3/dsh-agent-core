@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2
 title: Owner-selected governance child creation and prerequisite-ready dispatch
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -20,6 +20,20 @@ governed_by:
 supersedes:
   - AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1
 superseded_by: null
+accepted_date: 2026-10-29
+accepted_by: Codex root (explicitly delegated by mayf3)
+accepted_reviewed_head: 8de415701b48137bfc3b35b7d01a0924415ba1c9
+acceptance_review_verdict: PASS
+independent_semantic_reviewer: /root/structure_v2_semantic_review
+acceptance_record: docs/reports/WORKFLOW_PREREQUISITE_COMPOSITE_ACCEPTANCE_20261029.md
+acceptance_authority_basis: >-
+  Root accepted the exact independently reviewed semantic head under mayf3's
+  explicit delegated authority recorded in the paired acceptance record. The
+  repair review SHA-256 is
+  6b987dce26ba823bf91953e4c9db669dec4a9e60c344022a04b9c656d49b37ce. This is
+  lifecycle acceptance only; source implementation and isolated validation
+  require the accepted authorities in their target bases and a separate
+  implementation mandate. Production apply authority is none.
 owners:
   - mayf3
 external_authorities: []
@@ -27,19 +41,19 @@ external_authorities: []
 
 # AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2
 
-This proposed whole-Spec successor preserves the complete accepted Core WPO V1
+This accepted whole-Spec successor preserves the complete accepted Core WPO V1
 body below. Its sole current-authority change is the paired Svc prerequisite
-reference and the lifecycle/evidence mapping: the active companion candidate
+reference and the lifecycle/evidence mapping: the accepted companion authority
 is SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2, which resolves the measured
 two-Event create-bind constraint and the missing-coordinate UNKNOWN variant.
 No Core Broker request/response, Owner selection, scheduler route, READY row,
-attempt, retry, WEC, WAE or wait behavior changes. V1 remains the current Core
-authority until this successor and its Svc companion are accepted in their
-respective bases.
+attempt, retry, WEC, WAE or wait behavior changes. V1 was the current Core
+authority until this successor and its Svc companion were accepted, as recorded
+below.
 
 ## V2 paired-authority and evidence mapping
 
-The current paired dependency is the proposed Svc whole successor
+The current paired dependency is the accepted Svc whole successor
 SVC_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2, which depends on Product V10,
 Architecture V0_4_5, PostgreSQL Storage Contract V0.2 and the unchanged WEP V2.
 For this Core Contract, Svc CTR-SWPO-007 is the storage/event-lineage
