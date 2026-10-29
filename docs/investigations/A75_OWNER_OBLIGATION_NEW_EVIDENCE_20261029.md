@@ -27,6 +27,7 @@ Neither dependent readiness observation was exercised: there is no consumer crea
 - Native audit report: `ART/g6-native-audit-a75-20261029/final-audit.md`, SHA-256 `afa991636499f80394745fb5877a810f5d87288ded0d8b14745d9321afb170f0`.
 - Read-only Svc case/outbox snapshot: `ART/a75-owner-wake-mechanism-diagnosis-20261029/root-readonly-owner-wake-snapshot.json`, SHA-256 `c167561b72c69b656b673d0218fa88e0881376654f1dce84494d72af71003210`.
 - Natural runtime lifecycle receipt: `ART/a75-prepare-preflight-20261029/a75-final-lifecycle.json`, SHA-256 `6ad150c3742a4f9f66891d3e6b700a5fb01ed7988b3bb8730dafff225fa50b75`.
+- Bounded semantic-review closure input: `ART/a75-owner-wake-mechanism-diagnosis-20261029/owner-obligation-v1-review-gap-closure.md`, SHA-256 `79e47fa08a3be5068c21f0b08f7a0b090097d804fc8894f0f92d25174105a6ce`; exact same-caller source-CAS producer, managed-review projection and 004/005 transaction constraints. It is proposal input only.
 
 ## Interpretation and limits
 
@@ -36,4 +37,4 @@ The evidence does not authorize replay, reclassification, repair, or mutation of
 
 ## Proposed investigation disposition
 
-Use this evidence as `NEW_EVIDENCE` for a docs-first paired authority proposal. Keep the design recommendation non-authoritative until exact proposed Contracts receive independent review and Owner acceptance. The proposal must not add a parallel flat catalog/template/materializer/completeness language or a Core phase-specific prompt/continuation engine. The exact persisted fields, effect keys, service/API mapping, producer/discovery rules, and storage/cardinality contract are now fixed by the pinned design plus three author addenda; independent paired review and Owner acceptance remain pending. A75's observed WAIT/READY and unattended business completion remain unexercised.
+Use this evidence as `NEW_EVIDENCE` for a docs-first paired authority proposal. Keep the design recommendation non-authoritative until exact proposed Contracts receive independent review and Owner acceptance. The proposal must not add a parallel flat catalog/template/materializer/completeness language or a Core phase-specific prompt/continuation engine. The exact persisted fields, effect keys, service/API mapping, producer/discovery rules, storage/cardinality contract, and bounded review-gap closure are fixed by the four author design inputs plus the separately pinned review-gap closure proposal; paired delta review and Owner acceptance remain pending. A75's observed WAIT/READY and unattended business completion remain unexercised.
