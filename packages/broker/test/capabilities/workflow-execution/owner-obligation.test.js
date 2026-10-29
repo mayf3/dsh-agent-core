@@ -31,7 +31,7 @@ const createCall = () => ({ capabilityId: 'workflow_execute', operation: 'create
 const business = { workflowInstanceId: id(12), workflowStateVersion: 1, admissionObservation: { status: 'WAITING' } }
 const resultDigest = createHash('sha256').update(canonicalJSON(business)).digest('hex')
 
-async function fixture(t, { managed = relation(), source = detail(), trusted = provenance, readError, writeError, effectReply, principalId = id(15), context = {} } = {}) {
+async function fixture(t, { managed = relation(), source = detail(), trusted = provenance, readError, writeError, effectReply, replayIntent, principalId = id(15), context = {} } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'owner-obligation-broker-'))
   const credentialsFile = join(root, 'credentials.json')
   await writeFile(credentialsFile, JSON.stringify({ version: 1,
@@ -41,6 +41,10 @@ async function fixture(t, { managed = relation(), source = detail(), trusted = p
     if (entry.pathname.endsWith('/owner-obligation')) return readError ? json(res, 404, { error: { code: readError, message: 'read denied' } }) : json(res, 200, managed)
     if (entry.pathname === `/internal/v1/assistance-cases/${caseId}`) return json(res, 200, source)
     if (writeError) return json(res, 409, { error: { code: writeError, message: 'actual service rejection' } })
+    // Match the Svc semantic receipt check, which precedes active/CAS admission.
+    if (replayIntent && canonicalJSON({ operation: entry.body.operation, arguments: entry.body.arguments }) !== canonicalJSON(replayIntent)) {
+      return json(res, 409, { error: { code: 'idempotency_conflict', message: 'different business intent' } })
+    }
     return json(res, 201, effectReply ?? (entry.pathname.includes('/operation-effects/')
       ? { effectId: id(13), state: 'SUCCEEDED', commandId: id(14), result: business, resultDigest, replayed: false }
       : business))
@@ -92,13 +96,44 @@ test('dependency leaf cannot fork and UNKNOWN cannot write or fall through', asy
   }
 })
 
-test('successful stable slot readback returns original result without new detail/admission/write', async t => {
-  const m = relation()
-  m.currentNode.operation.effect = { state: 'SUCCEEDED', effectId: id(13), commandId: id(14),
-    requestDigest: 'c'.repeat(64), result: business, resultDigest }
-  const f = await fixture(t, { managed: m })
+function succeeded(data, operation, args, result = business) {
+  const digest = v => createHash('sha256').update(canonicalJSON(v)).digest('hex')
+  data.replayIntent = { operation, arguments: structuredClone(args) }
+  const body = { expectedWorkflowStateVersion: 9, expectedSourceWorkflowStateVersion: 12, ...data.replayIntent }
+  const effect = { state: 'SUCCEEDED', effectId: id(13), commandId: id(14),
+    requestDigest: digest({ managedInstanceId: managedId, nodeVisitId: visitId,
+      slotKey: data.managed.currentNode.operation.slotKey, body }), result, resultDigest: digest(result) }
+  data.managed.currentNode.operation.effect = effect
+  const { requestDigest, ...reply } = effect
+  data.effectReply = { ...reply, replayed: true }
+  return data
+}
+
+test('successful create after RETURN verifies original semantic intent without creating a new effect', async t => {
+  const data = succeeded({ managed: relation(), source: detail() }, createDescriptor, createCall().args)
+  data.managed.currentNode.workflowStateVersion = 19
+  data.source.workflowStateVersion = 22
+  const f = await fixture(t, data)
   assert.deepEqual(await f.call(), { ok: true, result: business })
-  assert.equal(f.requests.length, 1)
+  assert.equal(f.requests.length, 3)
+  assert.equal(f.requests.at(-1).body.expectedWorkflowStateVersion, 19)
+  assert.equal(f.requests.at(-1).body.expectedSourceWorkflowStateVersion, 22)
+  assert.deepEqual(f.requests.at(-1).body.arguments, createCall().args)
+  assert.ok(f.requests.at(-1).pathname.endsWith('/operation-effects/supplier:execute'))
+})
+
+test('successful create cannot credit changed business body, target, or unknown arguments', async t => {
+  for (const change of ['body', 'target', 'extra']) {
+    const data = succeeded({ managed: relation(), source: detail() }, createDescriptor, createCall().args)
+    const f = await fixture(t, data), call = createCall()
+    if (change === 'body') call.args.contextPayload = { changed: true }
+    if (change === 'target') call.args.definitionVersionId = id(99)
+    if (change === 'extra') call.args.inventedField = 'invalid'
+    const result = await f.call(call)
+    assert.equal(result.ok, false)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, change === 'body' ? 1 : 0)
+    if (change === 'body') assert.equal(result.error.code, 'idempotency_conflict')
+  }
 })
 
 const resolveDescriptor = { key: 'workflow.assistance.resolve_current_review', version: 1,
@@ -169,15 +204,63 @@ test('managed escalation retains explicit stale CAS and the existing business pa
   assert.equal(stale.requests.filter(r => r.method === 'POST').length, 0)
 })
 
-test('own successful review readback precedes fresh ADMISSIBLE and source resolution checks', async t => {
+function resolvedReview() {
   const data = reviewFixture()
+  const args = resolveCall().args
+  args.resolution.supportingPayload.governanceChildReview = data.managed.currentNode.reviewAdmission.proof
+  data.source.resolution = structuredClone(args.resolution)
   delete data.managed.currentNode.reviewAdmission
   data.source.status = 'RESOLVED'
-  data.managed.currentNode.operation.effect = { state: 'SUCCEEDED', effectId: id(13), commandId: id(14),
-    requestDigest: 'c'.repeat(64), result: business, resultDigest }
+  data.source.workflowStateVersion = 13
+  data.source.currentNodeVisitId = id(20)
+  return succeeded(data, resolveDescriptor, args, { assistanceCaseId: caseId, status: 'RESOLVED', workflowStateVersion: 13 })
+}
+
+test('own resolve replay uses immutable original proof and explicit old CAS without new ADMISSIBLE', async t => {
+  const data = resolvedReview()
   const f = await fixture(t, data)
-  assert.deepEqual(await f.call(resolveCall()), { ok: true, result: business })
-  assert.equal(f.requests.length, 1)
+  assert.deepEqual(await f.call(resolveCall()), { ok: true, result: data.effectReply.result })
+  assert.equal(f.requests.length, 3)
+  const body = f.requests.at(-1).body
+  assert.equal(body.expectedSourceWorkflowStateVersion, 12)
+  assert.deepEqual(body.arguments, data.replayIntent.arguments)
+})
+
+test('own resolve replay rejects changed message, changed allowed descriptor and wrong case', async t => {
+  for (const change of ['message', 'descriptor', 'case']) {
+    const data = resolvedReview(), f = await fixture(t, data)
+    let call = resolveCall()
+    if (change === 'message') call.args.resolution.message = 'Different business request'
+    if (change === 'case') call.args.assistanceCaseId = id(99)
+    if (change === 'descriptor') call = { capabilityId: 'workflow_assistance_action', operation: 'escalate_to_human',
+      args: { assistanceCaseId: caseId, expectedWorkflowStateVersion: 12, escalation: { message: 'Escalate instead' } } }
+    const result = await f.call(call)
+    assert.equal(result.ok, false)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, change === 'case' ? 0 : 1)
+    if (change !== 'case') assert.equal(result.error.code, 'idempotency_conflict')
+  }
+})
+
+test('own resolve replay cannot synthesize missing proof or trust mismatched immutable lineage', async t => {
+  for (const corrupt of [d => { delete d.source.resolution },
+    d => { d.source.resolution.supportingPayload.governanceChildReview.submissionId = id(99) },
+    d => { d.source.governanceTerminalProof.transitionId = id(99) },
+    d => { d.source.governanceBinding.source.workflowInstanceId = id(99) }]) {
+    const data = resolvedReview(); corrupt(data)
+    const f = await fixture(t, data)
+    assert.equal((await f.call(resolveCall())).ok, false)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, 0)
+  }
+})
+
+test('a claimed replay must bind the same original command, result and effect', async t => {
+  for (const corrupt of [r => { r.replayed = false }, r => { r.effectId = id(99) },
+    r => { r.commandId = id(99) }, r => { r.result = {}; r.resultDigest = createHash('sha256').update('{}').digest('hex') }]) {
+    const data = resolvedReview(); corrupt(data.effectReply)
+    const f = await fixture(t, data)
+    assert.equal((await f.call(resolveCall())).ok, false)
+    assert.equal(f.requests.filter(r => r.method === 'POST').length, 1)
+  }
 })
 
 test('only authoritative not-managed permits fallback; opaque 404/storage and malformed relations do not', async t => {
