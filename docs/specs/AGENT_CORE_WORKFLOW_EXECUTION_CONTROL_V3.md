@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
-title: Proposed whole-authority successor to AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
-status: proposed
+title: Accepted whole-authority successor to AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -21,18 +21,20 @@ supersedes:
 superseded_by: null
 owners:
   - mayf3
+acceptance_authority_basis: >-
+  Root acceptance under user-delegated authority; ROOT_OWNER_ACCEPTANCE.json SHA-256 43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e; reviewed semantic Svc b115c0641e4c2b6b965a6a3cd24252734754c14f and Core 0629858c08029ebcaed39b012b4c4a2a2a8078fb. Lifecycle transaction only; no production apply authority.
 ---
 
-# AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3 — proposed whole-authority successor
+# AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3 — accepted whole-authority successor
 
-This proposal preserves the complete `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2` predecessor body below. The existing predecessor remains accepted and effective in the current main base: this proposed document makes no reciprocal lifecycle mutation and grants no implementation or production authority. The field and route details are proposed and trace to the paired authority below; independent review and acceptance remain outstanding. No claims of conformance or testing are made.
+Accepted whole-authority successor. Root acceptance under the user-delegated authority, recorded in `ROOT_OWNER_ACCEPTANCE.json` (SHA-256 `43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e`), binds the independently reviewed semantic heads Svc `b115c0641e4c2b6b965a6a3cd24252734754c14f` and Core `0629858c08029ebcaed39b012b4c4a2a2a8078fb`. This lifecycle-only transaction records acceptance and reciprocal predecessor links. Accepted governing Specs with `implementation_authority: contracts` authorize later source implementation within their Contracts once present in its base; Product, Architecture, and Storage authority retain `implementation_authority: none`. Production apply, migration execution, deployment, and A75 mutation remain unauthorized. It carries forward the predecessor contracts with the explicitly stated bounded additions below; the predecessor source remains unchanged.
 
-## Proposed bounded delta
+## Bounded contract delta
 
 Both intake and separate review execute through existing WEC policy and bounded mechanisms. Opted-in initial wake is routed to the real intake workflow and never also drives naked chat. A turn delivery or `completed` result does not complete the Svc obligation. Only a real Svc command receipt joined to published required operation permits progress; failure/cap/Owner change is represented by a durable Svc STOP, not local needs_review alone. Preserve explicit resolve-before-resume and existing HUMAN_REQUIRED guard; no automatic phase re-prompt. Paired Spec §§4–9.
 
 Paired authority reference: `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1 §§1,5,7–9,11–14; preserves WEC V2 whole body`.
-The complete predecessor body is carried forward unchanged below. Its previously accepted clauses remain in force until an exact complete successor is independently reviewed, accepted by the authorized Owner, and merged with reciprocal lifecycle links. The exact contract delta and acceptance evidence are specified by the paired Spec; no tests are claimed here.
+The predecessor contracts are carried forward below with only the bounded successor changes stated above; the predecessor source remains unchanged. This successor is accepted in the same paired lifecycle transaction that records the reciprocal predecessor backlink. Acceptance is not implementation or conformance evidence.
 
 Predecessor source: `docs/specs/AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2.md` at `45268be276276462bd71040f0cd51b28a7764fe0`; original file SHA-256 `54795015fa96399714d8a5b910e3292a267cb1dc39d6c8227efc5ef7e09b1648`.
 

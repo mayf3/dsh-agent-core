@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1
 title: Core broker and execution companion for Svc-owned Owner obligation Workflows
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -28,11 +28,13 @@ supersedes: []
 superseded_by: null
 owners:
   - mayf3
+acceptance_authority_basis: >-
+  Root acceptance under user-delegated authority; ROOT_OWNER_ACCEPTANCE.json SHA-256 43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e; reviewed semantic Svc b115c0641e4c2b6b965a6a3cd24252734754c14f and Core 0629858c08029ebcaed39b012b4c4a2a2a8078fb. Lifecycle transaction only; no production apply authority.
 ---
 
-# AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1 — proposed paired broker/execution contract
+# AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1 — accepted paired broker/execution contract
 
-`status: proposed` is deliberate. This is a docs proposal only, not implementation or production authority. Accepted predecessors remain effective in the candidate base until complete successors are independently reviewed, accepted by the authorized Owner, and merged with reciprocal lifecycle links. The A75 evidence is recorded in `docs/investigations/A75_OWNER_OBLIGATION_NEW_EVIDENCE_20261029.md`; it shows partial unattended nonprogress, not a cause inferred from model text.
+Accepted paired governing Spec. Root acceptance under the user-delegated authority, recorded in `ROOT_OWNER_ACCEPTANCE.json` (SHA-256 `43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e`), binds the independently reviewed semantic heads Svc `b115c0641e4c2b6b965a6a3cd24252734754c14f` and Core `0629858c08029ebcaed39b012b4c4a2a2a8078fb`. This lifecycle-only transaction records acceptance and reciprocal predecessor links. Accepted governing Specs with `implementation_authority: contracts` authorize later source implementation within their Contracts once present in its base; Product, Architecture, and Storage authority retain `implementation_authority: none`. Production apply, migration execution, deployment, and A75 mutation remain unauthorized. The A75 evidence remains observational only; unobserved WAIT/READY and unattended business completion remain UNKNOWN. No production conformance is claimed.
 
 ## Goal
 
@@ -40,16 +42,16 @@ Give an opted-in Owner request a real bounded Workflow path whose required work 
 
 ## Scope and non-goals
 
-Scope is the Core side of the exact Svc-owned intake/review singletons: trusted managed-turn routing, current-owner bounded reads, effect-result passthrough, existing WAE/WEC execution, and no-bypass behavior. Non-goals are source implementation, production activation, policy provisioning, new model-facing write tool, flat plan/catalog language, Core business-state machine, automatic Owner handoff, replay after UNKNOWN, or mutation/replay of A75.
+Scope is the Core side of the exact Svc-owned intake/review singletons: trusted managed-turn routing, current-owner bounded reads, effect-result passthrough, existing WAE/WEC execution, and no-bypass behavior. Non-goals are implementation outside these Contracts, production activation, policy provisioning, new model-facing write tool, flat plan/catalog language, Core business-state machine, automatic Owner handoff, replay after UNKNOWN, or mutation/replay of A75.
 
 ## Authority and dependencies
 
-This proposal is governed by the proposed Core WAE V3, WEC V3, GCR V2, WPO V4, Assignee Transition Capability V2 whole successors, and the accepted `AGENT_CORE_TRUSTED_NATIVE_TOOL_POLICY_V1` at base `45268be276276462bd71040f0cd51b28a7764fe0` (§§2–4); it is paired with proposed Svc `SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`. Every predecessor remains accepted/current and unmodified in base `45268be276276462bd71040f0cd51b28a7764fe0` until the exact paired set is accepted and lifecycle-merged. Current broker mapping input is frozen in the author addenda cited at the end.
+This authority is governed by the accepted Core WAE V3, WEC V3, GCR V2, WPO V4, Assignee Transition Capability V2 whole successors, and the accepted `AGENT_CORE_TRUSTED_NATIVE_TOOL_POLICY_V1` at base `45268be276276462bd71040f0cd51b28a7764fe0` (§§2–4); it is paired with accepted Svc `SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`. The paired lifecycle transaction supersedes the named predecessors with reciprocal links. Current broker mapping input is frozen in the author addenda cited at the end.
 
 ## Current State
 
-- Core proposal base: `45268be276276462bd71040f0cd51b28a7764fe0`.
-- Svc proposal base: `f5e7f328ccba5f6e0d752abf74e68558ef38ca0f`.
+- Reviewed Core semantic base: `45268be276276462bd71040f0cd51b28a7764fe0`.
+- Reviewed Svc semantic base: `f5e7f328ccba5f6e0d752abf74e68558ef38ca0f`.
 - A75 actual report: normal Owner turn ended after one supplier create; no consumer/GCR creation was observed and source case remained `OWNER_PENDING`. WAIT/READY exercise is UNKNOWN. Run exited naturally; no rerun is in scope.
 - No Core implementation or production conformance is claimed by this Spec.
 
@@ -60,7 +62,7 @@ This proposal is governed by the proposed Core WAE V3, WEC V3, GCR V2, WPO V4, A
 ## Claims and assumptions
 
 - `CLM-CORE-OWNER-001` — SUPPORTED only for the cited A75 run: normal completion of the observed Owner turn did not complete the business case. This does not establish why it ended.
-- `CLM-CORE-OWNER-002` — OPEN_ACTIVATION until future independent implementation/runtime evidence: native-source review supports an immutable exact model-tool allowlist, but A75 had read/write tools and did not satisfy the proposed activation boundary. Actual policy-generation ACK, synthetic deny probe, non-model-writable Broker/module/policy configuration, and redacted environment key-name readback must all be evidenced before producer activation. An ordinary Svc JWT alone does not prove that boundary; no OS same-UID/ACL split is required.
+- `CLM-CORE-OWNER-002` — OPEN_ACTIVATION until future independent implementation/runtime evidence: native-source review supports an immutable exact model-tool allowlist, but A75 had read/write tools and did not satisfy the required activation boundary. Actual policy-generation ACK, synthetic deny probe, non-model-writable Broker/module/policy configuration, and redacted environment key-name readback must all be evidenced before producer activation. An ordinary Svc JWT alone does not prove that boundary; no OS same-UID/ACL split is required.
 
 ## Evidence relations
 
@@ -174,13 +176,13 @@ The review Workflow explicitly calls existing `resolve_current_governance_review
 | Owner replacement and bounds | Materialization/replacement both commit orders including no managed ID, A→B→A/no-op/replay plus graph cycle and actual WAE/RETURN stop tests | Isolated paired Core/Svc fixture | Owner command, original intent STOP provenance, per-Visit WAE admission, Svc RETURN Event and graph validation evidence | No handoff/reset; prebirth stop preserves absent coordinates; finite bound uses existing actual producers | Old-owner write, invented ID/claim, lost responsibility, uncounted cycle, cap reset, recursion, false HUMAN_REQUIRED |
 | Review cleanup | Managed REVIEW with no wake row; resolve through its own operation then complete, lose first response and read back; contrast unrelated resolve/VOID | Isolated paired runtime | Exact reviewAdmission/detail join, Svc-verified proof, actual receipt/Event and review completion facts | Legacy delivery gate stays strict; managed review uses one guarded source effect and its own SUCCEEDED readback finishes the slot without a second projection/action | Fake delivery/proof, second resolve, own action strands review, or unrelated case change is credited |
 
-Publication receipt/error mapping, managed read union, WAE/RETURN bounds, real STOP producers, service Principal seam, and leaf/fork termination are pinned by immutable producer-discovery addendum SHA-256 `874e36341a4ef0e390aafebae090f482a986def3faea665ca0d99cf108c55823`. Exact storage entities, receipt/Event matrix, and implementation/activation stage correction are pinned by storage/stage addendum SHA-256 `8eab0f233793e1704c3612e1659f0c69c0e4323b45b0f1d395c8f9fec8a8ab06`. The exact current addition remains proposal-only and requires independent review. No tests or runtime conformance are claimed by this proposal.
+Publication receipt/error mapping, managed read union, WAE/RETURN bounds, real STOP producers, service Principal seam, and leaf/fork termination are pinned by immutable producer-discovery addendum SHA-256 `874e36341a4ef0e390aafebae090f482a986def3faea665ca0d99cf108c55823`. Exact storage entities, receipt/Event matrix, and implementation/activation stage correction are pinned by storage/stage addendum SHA-256 `8eab0f233793e1704c3612e1659f0c69c0e4323b45b0f1d395c8f9fec8a8ab06`. The exact current addition is accepted in the paired authority set at the reviewed semantic heads bound by the Owner acceptance record. No tests or runtime conformance are claimed by this accepted Spec.
 
 ## 11. Authority and lifecycle
 
-This Spec is paired with `SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`. Its whole-authority closure includes proposed successors to Core WAE V2, WEC V2, GCR V1, WPO V3, and Assignee Transition Capability V1. The latter explicitly amends CTR-010 to route managed calls through the guarded local wrapper while retaining the unified existing `workflow_execute` write entry. Every successor must preserve the complete accepted predecessor body, amendments, and rejected alternatives; no partial supersession is intended.
+This Spec is paired with `SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`. Its whole-authority closure includes accepted successors to Core WAE V2, WEC V2, GCR V1, WPO V3, and Assignee Transition Capability V1. The latter explicitly amends CTR-010 to route managed calls through the guarded local wrapper while retaining the unified existing `workflow_execute` write entry. Every successor must preserve the complete accepted predecessor body, amendments, and rejected alternatives; no partial supersession is intended.
 
-The exact internal wire and Svc-owned command/Event/storage details are fixed by the paired proposal, four frozen author design inputs, and the separately pinned review-gap closure proposal. Svc remains the authority for those service-owned facts; Core only transparently forwards its closed read DTOs and preserves existing write routes. The accepted trusted-native authority is pinned to the exact Core file and source hashes in the paired Investigation Record; these source pins establish the dispatch-policy mechanism only, not activation readiness. No implementation, production activation, credential provisioning, migration, or A75 replay is authorized here.
+The exact internal wire and Svc-owned command/Event/storage details are fixed by the paired accepted Spec, four frozen author design inputs, and the separately pinned review-gap closure input. Svc remains the authority for those service-owned facts; Core only transparently forwards its closed read DTOs and preserves existing write routes. The accepted trusted-native authority is pinned to the exact Core file and source hashes in the paired Investigation Record; these source pins establish the dispatch-policy mechanism only, not activation readiness. Source implementation is authorized only within these Contracts after the paired accepted set is present in the implementation base. Production activation, credential provisioning, migration apply, and A75 replay are not authorized here.
 
 ## Alternatives and disposition
 
@@ -195,7 +197,7 @@ This Core contract adds no Core database table or migration. The two read operat
 
 ## Open questions
 
-No normative V1 choice remains open in this Core proposal. Runtime credential isolation and service actor correctness are fail-closed implementation activation gates, not accepted claims. The exact five Svc relation schemas and command/Event closure are specified in paired Svc Spec §§3–4, 11–12, 15 and Storage Contract V0.3; they require independent whole-pair review before acceptance.
+No normative V1 choice remains open in this accepted Core Contract. Runtime credential isolation and service actor correctness are fail-closed implementation activation gates, not accepted claims. The exact five Svc relation schemas and command/Event closure are specified in paired Svc Spec §§3–4, 11–12, 15 and Storage Contract V0.3; they require independent whole-pair review before acceptance.
 
 ```text
 OPEN_OWNER_DECISIONS = NONE
@@ -212,8 +214,8 @@ Design inputs:
 - `/Users/yanfenma/workspace/artifacts/workflow-unattended-mechanisms-20261027/ART/a75-owner-wake-mechanism-diagnosis-20261029/owner-obligation-v1-storage-and-stage-corrections.md`, SHA-256 `8eab0f233793e1704c3612e1659f0c69c0e4323b45b0f1d395c8f9fec8a8ab06`.
 
 ```text
-IMPLEMENTATION_ALLOWED = NO
+IMPLEMENTATION_ALLOWED = YES_WITHIN_ACCEPTED_CONTRACTS_AFTER_PAIRED_SET_IS_IN_IMPLEMENTATION_BASE
 PRODUCTION_APPLY_ALLOWED = NO
 A75_REPLAY_OR_MUTATION = FORBIDDEN
-ACCEPTANCE = NONE (independent proposal review and Owner lifecycle action pending)
+ACCEPTANCE = ROOT_OWNER_ACCEPTANCE.json (Root under user-delegated authority; exact reviewed semantic heads recorded there)
 ```

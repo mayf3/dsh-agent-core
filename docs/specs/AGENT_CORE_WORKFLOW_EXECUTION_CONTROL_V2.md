@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2
 title: Workflow execution control with explicit Owner-resolved same-visit resume
-status: accepted
+status: superseded
 accepted_date: 2026-10-28
 accepted_at: 2026-10-27T17:37:27.570181+00:00
 accepted_by: Codex root (explicitly delegated by mayf3)
@@ -42,7 +42,7 @@ governed_by:
   - AGENT_PROCESS_LIFECYCLE_HARDENING_V3
 supersedes:
   - AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3
 owners:
   - mayf3
 external_authorities:

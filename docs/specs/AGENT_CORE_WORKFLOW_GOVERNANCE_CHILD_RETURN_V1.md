@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1
 title: Owner-bound governance child and return to the originating Workflow visit
-status: accepted
+status: superseded
 accepted_date: 2026-10-28
 accepted_at: 2026-10-28T06:04:48Z
 accepted_by: Codex root (explicitly delegated by mayf3)
@@ -38,7 +38,7 @@ external_authorities:
     revision: 1f191156a03d9397b2fb2fdb6c28d6a9621ace95
     relation: interoperates_with
 supersedes: []
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V2
 owners:
   - mayf3
 ---

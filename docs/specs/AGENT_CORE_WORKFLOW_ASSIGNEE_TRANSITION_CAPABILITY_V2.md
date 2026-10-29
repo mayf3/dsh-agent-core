@@ -1,7 +1,7 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2
-title: Proposed whole-authority successor to AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
-status: proposed
+title: Accepted whole-authority successor to AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V1
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -22,13 +22,15 @@ supersedes:
 superseded_by: null
 owners:
   - mayf3
+acceptance_authority_basis: >-
+  Root acceptance under user-delegated authority; ROOT_OWNER_ACCEPTANCE.json SHA-256 43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e; reviewed semantic Svc b115c0641e4c2b6b965a6a3cd24252734754c14f and Core 0629858c08029ebcaed39b012b4c4a2a2a8078fb. Lifecycle transaction only; no production apply authority.
 ---
 
-# AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2 — proposed whole-authority successor
+# AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2 — accepted whole-authority successor
 
-This proposal carries forward the complete accepted V1 authority, including all amendments and rejected alternatives, below. It does not mutate the accepted predecessor or authorize implementation/production use; the predecessor remains effective until this complete successor and the paired Owner-obligation Specs are independently reviewed, accepted, and merged with reciprocal lifecycle links.
+Accepted whole-authority successor. Root acceptance under the user-delegated authority, recorded in `ROOT_OWNER_ACCEPTANCE.json` (SHA-256 `43eef302fb86cf131106fd6d39c0e338abc0acf9f14fb0210a5e51918d91448e`), binds the independently reviewed semantic heads Svc `b115c0641e4c2b6b965a6a3cd24252734754c14f` and Core `0629858c08029ebcaed39b012b4c4a2a2a8078fb`. This lifecycle-only transaction records acceptance and reciprocal predecessor links. Accepted governing Specs with `implementation_authority: contracts` authorize later source implementation within their Contracts once present in its base; Product, Architecture, and Storage authority retain `implementation_authority: none`. Production apply, migration execution, deployment, and A75 mutation remain unauthorized. It carries forward the predecessor contracts with the explicitly stated bounded additions below; the predecessor source remains unchanged.
 
-## Proposed CTR-010 amendment — managed trusted routing
+## CTR-010 amendment — managed trusted routing
 
 CTR-010's unified `workflow_execute` model-visible write entry remains the only generic workflow write tool. In a trusted managed workflow turn, the existing `workflow_execute.create_instance` operation is intercepted by the local trusted wrapper, which resolves actual workflow execution provenance, reads the Svc-owned managed relation and published node contract, derives the declared slot/registry descriptor, obtains the required fresh CAS coordinates, and maps the unchanged business DTO to the Svc guarded effect endpoint. Unmanaged calls retain their current route. Managed generic create or transition attempts that bypass the declared required operation are guarded or refused by the Svc contract.
 
@@ -40,7 +42,7 @@ The only new model-facing capability in this amendment is read-only `workflow_ow
 
 This bounded carve-in amends CTR-010 only as needed to make the existing managed workflow model entries use the guarded Svc effect path. Every other CTR-010 contract, including unified entry, existing operations and DTOs, errors, identity behavior, no automatic retry, and no arbitrary operation execution, remains intact. The paired Owner-obligation Spec and whole successor define exact route and receipt joins; they do not weaken the original Svc checks.
 
-## Proposed ACC-CTR-010 amendment acceptance
+## Accepted ACC-CTR-010 amendment acceptance
 
 | Case | Required evidence | Expected result | Reject if |
 |---|---|---|---|
