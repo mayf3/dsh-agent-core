@@ -35,9 +35,11 @@ variant as a scheduler row.
 
 This docs-only successor changes the active companion authority pointer and
 acceptance-evidence map to Svc WPO V2. Its paired acceptance must also cite
-Svc CTR-SWPO-007/008, exact source/Event lineage evidence and the all-or-none
-UNKNOWN read-model tests. It does not expand Core wire, grant, wait state or
-implementation scope.
+Svc CTR-SWPO-007/008, exact source/Event lineage evidence, successful-2xx and
+deterministic-non-2xx receipt outcomes, command-row serialization/concurrent
+ordinary-command cardinality evidence, and the all-or-none UNKNOWN read-model
+tests. It does not expand Core wire, grant, wait state or implementation
+scope.
 
 1. Preserve the complete Core WPO V1 body and add the V2 pair mapping above.
 2. Update only the Core Specs index so V1 remains current and proposed V2 is
