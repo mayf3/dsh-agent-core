@@ -40,16 +40,24 @@ export function createTurnRecoveryEvidenceLookup(turnRecoveryStore, log) {
     log?.error?.(`fence-auto-reconcile: turn-recovery store unreadable, failing closed: ${error?.message ?? error}`)
     return null
   }
-  const byCorrelation = []
+  // Structured correlation index (review R1 G-3): cron turns carry
+  // callerCorrelation {occurrenceId, runId, requestId}; native-session turns
+  // encode the occurrence id inside the derived session id. Matching is
+  // exact-key — never substring — so near-identical ids cannot cross-match.
+  const index = new Map()
   for (const record of records.values()) {
+    const correlation = record.callerCorrelation
+    if (correlation && typeof correlation === 'object' && typeof correlation.occurrenceId === 'string') {
+      index.set(correlation.occurrenceId, record)
+      continue
+    }
     const sessionId = String(record.sessionId ?? '')
-    const caller = String(record.callerCorrelation ?? '')
-    if (sessionId.includes('occ:') || caller.includes('occ:')) byCorrelation.push({ sessionId, caller, record })
+    const embedded = sessionId.match(/occ:[0-9a-f]{16}/)
+    if (embedded) index.set(embedded[0], record)
   }
   return (schedulerOccurrence) => {
-    const needle = String(schedulerOccurrence?.occurrenceId ?? '').replace(/^occ:/, '')
-    if (needle === '') return null
-    const hit = byCorrelation.find((entry) => entry.sessionId.includes(needle) || entry.caller.includes(needle))
+    const occurrenceId = String(schedulerOccurrence?.occurrenceId ?? '')
+    const hit = index.get(occurrenceId)
     if (hit === undefined) return null
     return {
       initialSource: hit.record.initialSource ?? null,

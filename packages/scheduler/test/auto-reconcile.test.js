@@ -109,6 +109,7 @@ test('CTR-S1/S3 integration: settlement goes through the CLI-identical path with
   assert.equal(results.length, 1)
   assert.equal(results[0].outcome, 'settled')
   assert.equal(results[0].resolvedTo, 'succeeded')
+  assert.equal(results[0].receipt, 'ok', 'durable run-event receipt must be written (CTR-S1/S3)')
   assert.equal(fencesRemaining, 0)
   assert.equal(identity.actorId, AUTO_RECONCILE_DEFAULT_ACTOR_ID)
 
@@ -120,6 +121,20 @@ test('CTR-S1/S3 integration: settlement goes through the CLI-identical path with
   assert.equal(after.fences[recurringJob.id], undefined, 'fence must be released')
   const summary = after.jobs.find((job) => job.id === recurringJob.id).state
   assert.equal(summary.lastRunStatus, 'succeeded')
+})
+
+test('CTR-S3 hardening: human-style actorId is rejected for the policy path', async () => {
+  const occurrence = makeUnknownOccurrence(recurringJob)
+  const store = await fixture({ jobs: [recurringJob], occurrences: [occurrence] })
+  await assert.rejects(
+    () => autoReconcileOccurrences(store, {
+      settlements: [{ occurrenceId: occurrence.occurrenceId, runId: occurrence.runId, resolvedTo: 'failed', evidenceNote: 'x' }],
+      actorId: 'yanfenma:501',
+    }),
+    /machine identity/,
+  )
+  const after = await store.loadDoc()
+  assert.equal(after.occurrences.find((entry) => entry.occurrenceId === occurrence.occurrenceId).state, 'outcome_unknown')
 })
 
 test('CTR-S5 drift safety: plan/commit drift settles nothing out of policy and reports per-item errors', async () => {
