@@ -1,7 +1,13 @@
+837e4d04f73669f93a81bebdab58e3ad64d39bb90ad085c9eeba11b820655877  docs/evidence/hr-dispatch-count-source-896-20261031/checks/delivery-checks.json
+75c2792a195521c1873334d2765ed0cb52d8f8607d312b740966008169a3f411  docs/evidence/hr-dispatch-count-source-896-20261031/checks/delivery-receipt.json
+f73cbf0dfcccd10f4cf9d14723c13c90dec9eda595f142e62d74fe17cfca7c60  docs/evidence/hr-dispatch-count-source-896-20261031/checks/independent-review.json
 5a15fca34edf1849b32d5d2dcafb069f932cbd8b4907f59308c5311bd1ecdb8f  docs/evidence/hr-dispatch-count-source-896-20261031/checks/initial-precommit.json
 08e7a85c331bdf657f2f23d813e89320831316ec0ae2343ac95c932eceded0fd  docs/evidence/hr-dispatch-count-source-896-20261031/checks/initial-structure.command.json
 8c8eca7b20048a2b7d02b124b3b7f0035ee49f8182fbe04d96028a92e27f1a9e  docs/evidence/hr-dispatch-count-source-896-20261031/checks/initial-structure.json
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/evidence/hr-dispatch-count-source-896-20261031/checks/initial-structure.stderr.txt
+97893b84c7a1597ff09fb094c565439291ae569076f2b283ac3ee9add7111ab8  docs/evidence/hr-dispatch-count-source-896-20261031/checks/source-final-readback.json
+9e181f0792779ef1bb34bedde1334309f23963c14896da11621f6c408e73087e  docs/evidence/hr-dispatch-count-source-896-20261031/checks/structure-candidate.command.json
+aa45f2afe6f4ade86780773bfff6cd39ab1bf31bb4c552efd64c900fa3ca6066  docs/evidence/hr-dispatch-count-source-896-20261031/checks/structure-candidate.json
 cb9ba4e6c2374427f6a61f5c6bfc1b223a6113f80f7131843d703b9919fd3449  docs/evidence/hr-dispatch-count-source-896-20261031/issue-896-readback.json
 4fc4bd0a585ae9277f447c3f037306e5e6f01fd3a340b73665c674fe1c01590a  docs/evidence/hr-dispatch-count-source-896-20261031/path-checks.json
 e8269c193c784ec5a24b9a8783c53269541714d77bdb5cdc9790f783bb6762c1  docs/evidence/hr-dispatch-count-source-896-20261031/published-history/manifest.json

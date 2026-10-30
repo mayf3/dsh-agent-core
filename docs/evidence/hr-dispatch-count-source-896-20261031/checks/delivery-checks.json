@@ -1,0 +1,59 @@
+{
+  "evaluated_at_utc": "2026-10-30T21:19:46.683250+00:00",
+  "head": "0173c81ced20ef3d123cb19726983c61cdb75b13",
+  "base": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "0173c81ced20ef3d123cb19726983c61cdb75b13"
+      ],
+      "exit_code": 2,
+      "stdout": "docs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:85: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:86: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:89: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/test_receipt_envelope_alignment.final.py.txt:426: trailing whitespace.\n+    check(\"E8 raising send: count 0, no reference\", \ndocs/evidence/hr-dispatch-count-source-896-20261031/source/dispatch_escalation.py.txt:363: trailing whitespace.\n+                             (\"projectionUpdatedAt\", projection_updated_at)): \n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "0173c81ced20ef3d123cb19726983c61cdb75b13",
+        "--",
+        "scripts/availability-recovery/hr_dispatch_count_probe.py",
+        "docs/investigations/HR_DISPATCH_COUNT_SOURCE_896_20261031.md"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        ".",
+        "--require-accepted"
+      ],
+      "exit_code": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-remote",
+        "origin",
+        "refs/heads/main",
+        "refs/heads/ac-task/896-dispatch-count-source"
+      ],
+      "exit_code": 0,
+      "stdout": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01\trefs/heads/main\n",
+      "stderr": ""
+    }
+  ],
+  "archive_whitespace_disposition": "5 trailing-space findings preserved as exact input bytes; handwritten runner/report check passes; no rule bypass or normalization"
+}

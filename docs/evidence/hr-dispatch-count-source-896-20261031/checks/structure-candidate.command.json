@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+    "--head",
+    "0173c81ced20ef3d123cb19726983c61cdb75b13",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stderr": ""
+}

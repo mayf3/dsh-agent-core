@@ -1,0 +1,36 @@
+{
+  "recorded_at_utc": "2026-10-30T21:20:53.903186+00:00",
+  "reviewed_candidate": "0173c81ced20ef3d123cb19726983c61cdb75b13",
+  "base": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "source_delivery": "NO_BLOCKER_FOUND_FOR_BOUNDED_SOURCE_EVIDENCE_DELIVERY",
+  "product_change": false,
+  "production_writes": 0,
+  "business_recovery": 0,
+  "probe_modes": {
+    "semantics": {
+      "rc": 0,
+      "observations": 18,
+      "assertions_passed": 35
+    },
+    "correlation": {
+      "rc": 1,
+      "unmet_criteria": 3
+    },
+    "no-replay": {
+      "rc": 1,
+      "unmet_criteria": 2
+    }
+  },
+  "structure": {
+    "rc": 0,
+    "candidate_violations": 0,
+    "baseline_debt": 34
+  },
+  "whitespace": {
+    "full_delta_rc": 2,
+    "preserved_archive_findings": 5,
+    "handwritten_delta_rc": 0
+  },
+  "product_runtime_business_acceptance": "UNKNOWN / NOT CLAIMED",
+  "final_addendum_scope": "Receipt-only: append checks and independent review; update evidence manifest. No source/probe/report semantics changed."
+}
