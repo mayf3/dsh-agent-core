@@ -1,5 +1,5 @@
-import { validateWebsiteAdmission } from '../../demo-server/src/website-admission.js'
-import { fencedRejection } from './process/state-machine.js'
+import { validateWebsiteAdmission } from '../../../demo-server/src/website-admission.js'
+import { fencedRejection } from './state-machine.js'
 
 /** Separate trusted website entry; Delivery V0/ASM/channel shapes unchanged.
  * The actual prompt still goes through the original route chain and the

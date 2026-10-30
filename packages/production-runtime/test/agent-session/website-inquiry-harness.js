@@ -9,7 +9,7 @@ import { AgentProcess } from '../../../agent-router/src/process/agent-process.js
 import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/index.js'
 import { createParentRpcHandler } from '../../../agent-router/src/parent-rpc-relay.js'
 import { createRouteChainExecutor } from '../../../agent-router/src/route-chain.js'
-import { createWebsiteInquiryAdmission } from '../../../agent-router/src/website-inquiry-admission.js'
+import { createWebsiteInquiryAdmission } from '../../../agent-router/src/process/website-inquiry-admission.js'
 import { resolveCanonicalTarget } from '../../../session-history/src/locator.js'
 import { createWebsiteNative } from '../../src/agent-session/website-inquiry/native.js'
 import { InquiryStore } from '../../../product-api/src/website-inquiry/store.js'
@@ -65,7 +65,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   } }
   const parentRpc = createParentRpcHandler({ agentId: 'agt_pilot', log, getProc: () => proc, getBrokerGateway: () => undefined })
   const services = { loader: { await: async () => {} }, agentLoop: {}, sessionPersistence: { list: async () => [header] }, agents: { resume: async () => ({ agent }) } }
-  const seam = createSessionSeam({ ctx: { get: name => services[name] }, settings: { cwd: workspace },
+  const seam = createSessionSeam({ conversationSource: null, ctx: { get: name => services[name] }, settings: { cwd: workspace },
     websiteAdmission: async (carrier, message) => {
       custody.register(carrier, message)
       await parentRpc('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id }, { turnExecutionId: requestContext })
@@ -73,7 +73,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   proc.request = async (method, params) => {
     assert.equal(method, 'session/prompt')
     requestContext = params.turnExecutionId
-    return seam.prompt(params.sessionId, params.contentBlocks, params.cwd, params.messageOrigin, params.websiteAdmission)
+    return seam.prompt(params.sessionId, params.contentBlocks, params.cwd, params.messageOrigin, params.conversationSource, params.websiteAdmission)
   }
   const chain = createRouteChainExecutor({ log, ensureRunningForRoute: async () => ({ status: 'ready', proc }) })
   const definition = { getAgent: id => { sourceReadCounts.definition++; return { id, disabled: false } } }

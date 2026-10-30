@@ -233,7 +233,10 @@ test('constructor enforces trusted seams and the bounded deadline', () => {
 })
 
 test('compose wires the provider to the existing caller credential and workflow.admin token primitive', () => {
-  const source = readFileSync(new URL('../../src/compose.js', import.meta.url), 'utf8')
+  const composeSource = readFileSync(new URL('../../src/compose.js', import.meta.url), 'utf8')
+  assert.match(composeSource, /import \{ mountIdentityCapabilityRuntime \} from '\.\/identity\/capability-runtime\.js'/)
+  assert.match(composeSource, /mountIdentityCapabilityRuntime\(\{ ctx, definition, brokerCredentialsFile, brokerAuthServiceOrigin, workflowServiceOrigin \}\)/)
+  const source = readFileSync(new URL('../../src/identity/capability-runtime.js', import.meta.url), 'utf8')
   const start = source.indexOf("ctx.provide('workflowHumanPrincipalProjectionAccess'")
   assert.notEqual(start, -1)
   const block = source.slice(start, source.indexOf('  }))', start) + 5)

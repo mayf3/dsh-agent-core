@@ -268,10 +268,16 @@ export function apply(ctx, config = {}) {
         // initialize-time process cwd (legacy/scheduler callers).
         // params.messageOrigin = the R4 trusted inter-agent source sidecar
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
+        // Native goal messages retain their original source; product carriers
+        // require the separate user-message custody path below.
+        if (params?.nativeGoalContinuation !== undefined
+          && (params?.conversationSource !== undefined || params?.websiteAdmission !== undefined)) {
+          throw new TypeError('mixed native goal and product surface admission')
+        }
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
           () => params?.nativeGoalContinuation === undefined
-            ? prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource)
+            ? prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource, params?.websiteAdmission)
             : nativeGoal.commit({ sessionId: params.sessionId, contentBlocks: params.contentBlocks,
               cwd: params.cwd, turnExecutionId: params.turnExecutionId, reservation: params.nativeGoalContinuation }),
         )
