@@ -15,7 +15,8 @@ The second defect has an existing canonical fix in
 `c211b445593fa5639075dc690801a3a3005ca0dd`. Reuse those bytes and their regression
 tests; this task has not reimplemented or redeployed that passed fix.
 
-No governing accepted Spec for this product delta was found. The proposed
+No governing accepted Spec for this product delta was found. Under the user's
+explicit task AGENTS instruction, the proposed
 [PI_AI_REPLAY_COMPATIBILITY_025_V1](../specs/PI_AI_REPLAY_COMPATIBILITY_025_V1.md)
 must be independently reviewed, accepted and merged before product implementation.
 The investigation does not grant that authority.
@@ -117,8 +118,17 @@ Need new/amended Spec = YES
 IMPLEMENTATION_ALLOWED = NO
 ```
 
-`.agents/README.md:34-43` requires an accepted Spec, with any amendment merged
-before coding. `AGENT_DELIVERY_RESILIENCE_V1:19-22` expressly excludes #550;
+The original checkout's `.agents/README.md` had the old docs-first standing order.
+The isolated fresh main base instead uses accepted V3 governance and local rules
+that permit bounded NEW/AMEND + ROUTINE/DURABLE atomic Spec-and-code changes.
+The user's AGENTS bootstrap supplied in this task explicitly says no accepted
+Spec or a needed new/amended Spec means no implementation; that stricter task
+instruction controls this run. The initial report's attribution to lines 34-43
+of the new base's README was incorrect and is corrected here after independent
+review. Current authoring uses `.agents/skills/spec-governance/SKILL.md` AUTHOR
+and the accepted frontmatter/logical-section format.
+
+`AGENT_DELIVERY_RESILIENCE_V1` frontmatter expressly excludes #550;
 its provider-idle transport contracts do not authorize replay schema changes.
 `AGENT_CORE_HARDENING_PROGRAM_V1` has `implementation_authority: none`.
 Issue requirements and source-review PASS do not substitute for accepted Spec
@@ -174,7 +184,7 @@ fleet recovery. No manual migration script was prepared or run.
 ## SPEC_COMPLIANCE
 
 ```text
-Referenced Spec = accepted repository knowledge governance for evidence placement only
+Referenced Spec = accepted AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3 and vendored grammar/format for evidence and proposed-authority work only
 Implemented scope = source investigation and proposed Spec; product delta NONE
 Acceptance criteria evidence = fixed source captures and bounded diagnostic observations
 Out-of-spec behavior = NONE for this evidence checkpoint

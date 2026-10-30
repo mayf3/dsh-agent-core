@@ -1,47 +1,121 @@
 ---
 spec_id: PI_AI_REPLAY_COMPATIBILITY_025_V1
 status: proposed
+spec_kind: implementation
+authority_level: governing_spec
+implementation_authority: contracts
+scope:
+  - Agent Core acceptance of replay-compatible harness and Codex 0.2.5 integration candidates
+governed_by:
+  - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
+external_authorities: []
+supersedes: []
+superseded_by: null
+owners: [mayf3]
 date: 2026-10-31
-type: implementation-spec
-implementation_authority: none-until-accepted-and-merged
-references:
-  - mayf3/agent-control#1249
-  - mayf3/dsh-agent-core#548
-  - mayf3/dsh-agent-core#550
-  - mayf3/deepseek-harness#4
 ---
 
 # pi-ai replay compatibility for the 0.2.5 integration
 
-This is a proposed implementation authority, not an accepted Spec or a repair.
-The implementation agent must not accept or merge this document itself. Under
-`.agents/README.md`, acceptance and merge must precede product implementation in
-a separate change. This document does not amend the unrelated delivery-resilience
-Spec, whose exclusion of web-search poisoning remains intact.
+## 1. Goal
 
-## Intent and pinned source evidence
-
-Make existing affected session histories resume without rewriting or rotating
+Make affected Agent Core session histories resume without rewriting or rotating
 their durable files. Preserve provider replay metadata and exact unknown-event
-rejection. Limit release coordination to the requested Codex 0.2.5 integration.
+rejection. This is a proposed integration Spec, not an accepted authority or repair.
 
-The inspected source tuple is:
+## 2. Scope and non-goals
 
-| Repository | Commit | Meaning |
+Scope is Agent Core's acceptance of a harness/Codex 0.2.5 candidate for the two
+compatibility defects reported in agent-control#1249. The target source must be
+bound and reproduced before selecting a repair. No production deployment,
+runtime/plugin restart, real session inspection, session rewrite/rotation,
+credential/config mutation, UNKNOWN replay, format v3 or other release is allowed.
+Original tags and unrelated 0.2.6 work remain untouched.
+
+## 3. Authority and dependencies
+
+The parent Architecture keeps Agent Core thin and assigns the session engine,
+persistence and replay implementation to DSH. This Spec governs only Core's
+integration acceptance; it cannot authorize code or supersede policy in
+`mayf3/deepseek-harness` or `mayf3/dsh-openai-codex`. External source changes must
+satisfy their owning repository's governance and attributable Owner mandate.
+No external accepted authority has been established, hence the empty
+`external_authorities` list; source commits below are evidence, not authority.
+
+The current local V3 adoption permits bounded NEW/AMEND + ROUTINE/DURABLE atomic
+Spec-and-code work. The user's AGENTS instruction for this task is stricter:
+no implementation without an accepted Spec. Follow that instruction docs-first.
+The implementation agent must not accept or merge its own proposal. Acceptance
+by mayf3 or an explicitly delegated maintainer, and merge into the authority base,
+must precede a separate implementation change. This proposal does not amend
+AGENT_DELIVERY_RESILIENCE_V1 or its explicit exclusion of web-search poisoning.
+
+References: agent-control#1249; dsh-agent-core#548/#550; deepseek-harness PR #4.
+These issue/PR records supply requirements and evidence, not Product Authority.
+
+## 4. Current State
+
+`STATE-001`: at Core base `20e60dd72a42a0ef69e0acb8516b15c1893ffb01`, in isolated
+source/probe environments observed 2026-10-30T21:56:49Z through 22:02:59Z, the
+inspected source accepts wrapped v2. No incident-to-candidate failing conversion,
+production-loaded version or fleet recovery is established. Basis: OBS-001,
+OBS-002 and CLM-001; provenance is the linked investigation/evidence below.
+
+| Repository | Exact source revision | Meaning |
 |---|---|---|
-| dsh-agent-core | `20e60dd72a42a0ef69e0acb8516b15c1893ffb01` | Fresh remote main; delivery/evidence repository |
-| deepseek-harness | `c211b445593fa5639075dc690801a3a3005ca0dd` | Includes the existing exact Codex web-event fix |
-| dsh-codex | `e3e54e206f7c829503c7e6eed378643ba0416792` | Existing `v0.2.5`; lock pins pi-ai adapter `0.1.0-rc.7` |
+| dsh-agent-core | `20e60dd72a42a0ef69e0acb8516b15c1893ffb01` | Fresh remote main; integration/evidence repository |
+| deepseek-harness | `c211b445593fa5639075dc690801a3a3005ca0dd` | Existing exact Codex web-event fix included |
+| dsh-codex | `e3e54e206f7c829503c7e6eed378643ba0416792` | Existing v0.2.5; pi-ai adapter lock 0.1.0-rc.7 |
 
-The current git reader accepts wrapped v2. Codex 0.2.5 already converts flat v1
-to wrapped v2 in memory. The incident's claimed wrapped-v2 to flat-v2 transition
-is not established by these sources. Production-loaded bytes remain UNKNOWN.
-The public npm adapter tarball was independently verified against its lock
-integrity and accepts wrapped v2 in the bounded synthetic probe. That probe
-uses available development peers and does not bind a full 0.2.5 runtime closure.
-A production read is not required or authorized by this Spec.
+## 5. Observations
 
-## Contracts
+`OBS-001`: fixed source reads at the tuple above, captured at
+2026-10-30T21:56:49.905946Z, show the harness reader accesses `envelope.response`
+and the plugin migrates flat v1 to wrapped v2. It does not transform wrapped v2
+into invalid `response.kind`. Method/provenance: eight actual git-show captures
+in [source-capture.json](../evidence/pi-ai-replay-1249-20261031/checks/source-capture.json).
+
+`OBS-002`: the public npm rc.7 tarball's computed SHA512 matches registry and
+v0.2.5 lock integrity; six public-class synthetic cases return rc0. Valid wrapped
+v2 reaches the fake provider with native metadata. Raw flat v1/v2 degrade
+explicitly to `dsh-foreign`. Provenance: [publication-probe](../evidence/pi-ai-replay-1249-20261031/publication-probe/probe-results.json)
+and its command/integrity receipts. Root and independent reviewer repeated the
+bounded observations by 2026-10-30T22:02:59Z. Available peers include two rc.8
+packages; no complete plugin/lock closure or persistent restart was exercised.
+
+## 6. Claims and assumptions
+
+`CLM-001` — SUPPORTED by EVD-001: the observed tuple contradicts a universal
+claim that valid wrapped v2 necessarily fails in this reader. It does not refute
+the historical incident or identify its deployed reader.
+
+`CLM-002` — OPEN_ASSUMPTION: the incident's 1,940 files all contain valid supported
+records and have no other recovery blockers. This is not an acceptance premise;
+no fleet claim may depend on it. No real session read is authorized to resolve it.
+
+## 7. Evidence relations
+
+`EVD-001`: sources OBS-001/OBS-002 SUPPORT CLM-001 and STATE-001 at the source
+commits, public tarball and synthetic environment above. Sufficient only for
+these conversion observations; insufficient for the incident's loaded version,
+full dependency closure, restart persistence or actual fleet recovery. Provenance:
+[fixed investigation](../investigations/PI_AI_REPLAY_1249_SOURCE_BINDING_20261031.md)
+and the committed evidence manifest. No conformance to future accepted Contracts
+is implied by these observations.
+
+## 8. Decisions
+
+`DEC-001` — Proposal for mayf3's acceptance: normalize known historical records
+at the reproducing provider-owned read/restore conversion, retaining the current
+in-memory envelope and validation. Do not invent a new disk format or durable
+fleet migration. If no candidate failure reproduces, deliver the mismatch rather
+than a redundant repair. Alternatives ALT-001/ALT-002 explain this selection.
+
+`DEC-002` — Proposal for mayf3's acceptance: reuse harness PR #4's exact event
+registration and unknown-event rejection. Do not redo its passed source repair.
+Source acceptance, release installation and business acceptance remain distinct.
+
+## 9. Contracts
 
 **CTR-001 — Bind the target before editing.** Record exact candidate harness and
 plugin source commits, published dependency integrity, and reader behavior using
@@ -93,43 +167,76 @@ is accepted and merged. Do not modify an accepted governing Spec in its own
 implementation change. Keep original tags and existing 0.2.6 work untouched;
 identify any 0.2.5 integration candidate by its exact commit and artifact hash.
 
-## Alternatives and boundaries
 
-The proposed approach is narrow read-time normalization at the reproducing
-provider-owned conversion/reader, reusing the existing current envelope and
-validation. Durable one-time migration is unnecessary if read compatibility is
-proven and would add a fleet writer. Generic projection-layer coercion would
-affect other adapters and conceal invalid metadata. Neither alternative is
-selected. This selection is an author proposal pending acceptance.
+## 10. Acceptance
 
-No production deployment, runtime/plugin restart, real session inspection,
-session rewrite/rotation, migration script execution, credential/config change,
-UNKNOWN replay, format v3, or release outside the 0.2.5 integration is authorized.
-No new global session-tolerance policy is introduced. Source preparation and
-production acceptance remain separate.
+Every row runs in isolated, synthetic nonproduction test identities. Record exact
+source/Spec revisions, environment, command argv, rc, stdout and stderr. All six
+Contracts have explicit reverse mappings below; observed compatibility without a
+repair does not satisfy the original task's RED-to-GREEN completion definition.
 
-## Acceptance evidence
+| Acceptance / Contracts | Method / required evidence | Expected result / failure condition |
+|---|---|---|
+| ACC-001 / CTR-001 | Bind source/publication tuple and trace a synthetic existing-history request | Exact failing conversion RED, or explicit already-compatible mismatch with no repair claim; fabricated RED or unbound target fails |
+| ACC-002 / CTR-002 | Identical historical/current records before/after minimal repair in existing Vitest | Native response IDs, signatures, redaction and identity retained; source bytes unchanged; metadata loss/input mutation fails |
+| ACC-003 / CTR-003 | Wrong-kind/version/fields/provider/model/block negative matrix | Existing reader rejection and explicit fallback policy retained; invalid native trust or blanket catch fails |
+| ACC-004 / CTR-004, CTR-005 | Reuse five Codex event tests and add fresh-loader JSONL/fake-provider restart case at candidate head | Exact event loads, unknown non-ignorable rejects, ordering/sequence/idempotency preserved; lost/duplicated business message or skipped unknown fails |
+| ACC-005 / CTR-006 | Affected package suites and independent exact-head affected-Contract review | All actual failures named and no load-bearing source blocker; missing evidence or author-only review fails |
+| ACC-006 / CTR-006 | Commit/hash-bound 0.2.5 integration note and scoped self-healing statement | Conditional coverage limited to tested valid formats; unsupported fleet/install/runtime claim fails |
 
-| Criterion | Required evidence |
-|---|---|
-| ACC-001 | Source/publication tuple plus a synthetic end-to-end RED showing the exact failing conversion, or an explicit already-compatible/mismatch result with no repair claim |
-| ACC-002 | Identical old/new replay fixtures GREEN after the minimal fix; response IDs, all signature types, redaction and provider/model fidelity retained; input bytes unchanged |
-| ACC-003 | Invalid-state negative cases retain existing rejection/diagnostic policy; unknown non-ignorable events still reject |
-| ACC-004 | Existing five Codex web-event reload tests reused at the candidate head; fresh-loader restart/sequence/no-duplication fixture passes |
-| ACC-005 | All affected existing package-suite outputs, named baseline failures, and non-author exact-head review receipt |
-| ACC-006 | Commit/hash-bound 0.2.5 integration note and conditional self-healing statement, with production status UNKNOWN/unverified |
+## 11. Alternatives and disposition
 
-The fleet statement may say: after the exact tested reader and event registry are
-installed in the runtime that owns the sessions, valid historical records in the
-tested formats need no manual migration or rotation for these two defects. The
-reported 1,940 files are incident evidence, not a newly verified inventory. Other
+`ALT-001` — Durable one-time migration: not selected. Read compatibility, once
+proved, avoids introducing a fleet writer; no migration script is required by
+this proposal. `ALT-002` — Generic projection coercion/wildcard event ignoring:
+not selected because it affects other adapters and can hide invalid metadata.
+DEC-001/DEC-002 remain proposals until independently reviewed and accepted.
+
+## 12. Migration, compatibility, and rollback
+
+Use read-time normalization only, preserve input and durable records, and retain
+the current envelope. Existing valid historical records are a supported read
+surface (RETAIN), not a second executable session model. No path is retired and
+no convergence completion is claimed. Rollback here means discarding the isolated
+source candidate; any production release/rollback needs its own authorized path.
+
+After ACC-001 through ACC-005 pass, a conditional statement may say: once the
+exact tested reader/registry is installed in the session-owning runtime, valid
+records in the tested formats need no manual migration or rotation for these
+two defects. The incident count 1,940 is not a newly verified inventory. Other
 corruption, unrelated defects, installation and actual fleet recovery are not
-proved by synthetic source tests. Until ACC-001 through ACC-005 are satisfied,
-even this conditional self-healing claim must remain unproven.
+proved by synthetic tests. This conditional self-healing statement is currently
+UNPROVEN and no actual recovery is claimed.
 
-## Acceptance status
+## 13. Open questions
 
-`SPEC_STATUS=proposed`, `IMPLEMENTATION_ALLOWED=NO`, `MERGE_READY=NO`,
-`OPERATION_ALLOWED=NO`. Non-author proposal review is not Owner acceptance and
-does not authorize implementation. Resume after the governing Spec is accepted
-and merged at a fixed commit; preserve all existing passed source evidence.
+The incident's exact 023rb harness source/package revision and failing conversion
+remain UNKNOWN; resolving them is required by CTR-001 before any repair claim.
+Acceptance belongs to mayf3 or an explicitly delegated maintainer; this proposal
+has not been accepted. External source implementation authority remains unproven
+and must be established in the owning repository before that code changes.
+These gaps may not be bypassed by local tests or a review recommendation.
+
+```text
+SPEC_GOVERNANCE_MODE = AUTHOR
+AUTHORITY_ACTION = NEW
+SPEC_ID = PI_AI_REPLAY_COMPATIBILITY_025_V1
+STATUS = proposed
+IMPLEMENTATION_AUTHORITY = contracts (effective only after acceptance/merge)
+PRIMARY_PARENT_AUTHORITY = AGENT_CORE_PRODUCT_ARCHITECTURE_V1
+EXTERNAL_AUTHORITIES = NONE_ESTABLISHED
+PLAN_LEVEL = EXEC_PLAN for later cross-component implementation; BRIEF for this proposal
+ASSURANCE_LEVEL = DURABLE
+DOCS_FIRST_REQUIRED = YES (explicit task AGENTS instruction)
+OPEN_OWNER_DECISIONS = accept Core integration Contracts; establish external source authority
+NORMATIVE_TBD = NONE; unresolved source identity is an explicit execution gate
+PARTIAL_SUPERSESSION = NONE
+CONTRACT_COUNT = 6
+CONTRACTS_WITH_ACCEPTANCE = 6
+AUTHORING_READY_FOR_REVIEW = YES
+SPEC_ACCEPTANCE_READY = NO pending owner/source-authority questions
+IMPLEMENTATION_ALLOWED = NO
+MERGE_READY = NO
+OPERATION_ALLOWED = NO
+NEXT_ACTION = REVIEW
+```
