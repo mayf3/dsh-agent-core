@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: \#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness
+ok 1 - \#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness
+  ---
+  duration_ms: 4.228584
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 54.491458

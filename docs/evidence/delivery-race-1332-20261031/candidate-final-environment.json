@@ -1,0 +1,19 @@
+{
+  "head": "3259d8cc2c6a3cb0d8e8f16edaacc0c01f0ca3bb",
+  "source": "/private/tmp/dsh-1332-delivery-race-fix",
+  "started_at_utc": "2026-10-30T23:53:15.806547+00:00",
+  "dependency_state": "warm after first full candidate run; source unchanged by this agent",
+  "integration_env_present": {
+    "TEST_ROTATION_DATABASE_URL": false,
+    "TEST_AUTH_ORIGIN": false,
+    "NOTIFICATION_INGRESS_INTEGRATION": false
+  },
+  "proxy_env_present": {
+    "HTTP_PROXY": true,
+    "HTTPS_PROXY": true,
+    "ALL_PROXY": true,
+    "NO_PROXY": true,
+    "NODE_USE_ENV_PROXY": false
+  },
+  "command": "env -u TEST_ROTATION_DATABASE_URL -u TEST_AUTH_ORIGIN -u NOTIFICATION_INGRESS_INTEGRATION node --test --test-force-exit --test-timeout=60000 --test-reporter=tap 'packages/*/test/*.test.js' 'packages/*/test/*/*.test.js'"
+}

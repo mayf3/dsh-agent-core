@@ -1,0 +1,1 @@
+Reviewer-generated executable probe source is archived verbatim as independent-probes.source.txt (original /private/tmp/dsh-1332-independent/independent-probes.mjs). Its SHA256 and execution coordinate remain in the original reviewer manifest. This is historical review evidence; no production entrypoint or maintained test discovery path imports it.
