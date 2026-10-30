@@ -96,12 +96,12 @@ AGENTS 派发段称 accepted 仅送达、超期无变化应 FOLLOW_UP_REQUIRED�
 
 ## 5. 最小零网络离线复现与真实 rc
 
-入口：[scripts/diagnostics/hr_dispatch_count_probe.py](../../scripts/diagnostics/hr_dispatch_count_probe.py)。它验证两个源 hash 后加载封存副本，注入 fake sender/Owner/snapshot，只把 ledger 与 lock 写入随机临时目录；不运行原 CLI/selftest，不用默认 memory 路径。Python audit hook 禁 socket/process 调用并限制写 open 到临时目录。每轮实测禁止调用尝试为0、synthetic write opens=74；无真实发送或 Workflow 请求。
+入口：[scripts/availability-recovery/hr_dispatch_count_probe.py](../../scripts/availability-recovery/hr_dispatch_count_probe.py)。它验证两个源 hash 后加载封存副本，注入 fake sender/Owner/snapshot，只把 ledger 与 lock 写入随机临时目录；不运行原 CLI/selftest，不用默认 memory 路径。Python audit hook 禁 socket/process 调用并限制写 open 到临时目录。每轮实测禁止调用尝试为0、synthetic write opens=74；无真实发送或 Workflow 请求。
 
 ```bash
-python3 -B scripts/diagnostics/hr_dispatch_count_probe.py --mode semantics
-python3 -B scripts/diagnostics/hr_dispatch_count_probe.py --mode correlation
-python3 -B scripts/diagnostics/hr_dispatch_count_probe.py --mode no-replay
+python3 -B scripts/availability-recovery/hr_dispatch_count_probe.py --mode semantics
+python3 -B scripts/availability-recovery/hr_dispatch_count_probe.py --mode correlation
+python3 -B scripts/availability-recovery/hr_dispatch_count_probe.py --mode no-replay
 ```
 
 | 命令模式 | 实际 rc | 结果 |
@@ -147,3 +147,9 @@ python3 -B scripts/diagnostics/hr_dispatch_count_probe.py --mode no-replay
 业务侧仍是 [source9/#779](https://github.com/mayf3/agent-control/issues/779) 的 `ac-779` 原执行线，#893/#894 沿同线，controller 的 writer/UNKNOWN/capacity 准入为最终裁定；本轮新离线分支不是替代 writer。[#754 原拒绝](https://github.com/mayf3/agent-control/issues/754#issuecomment-6107617247)是 local-controller 安装续段的 BLOCKED_TOOL_BEFORE_COMMAND_CREATION，必须沿原支持审查路径，不换 issue/session/tool 重试。本轮不提交 operator disposition、不触发准入、不 wake/重派/submit、不清 fence、不部署、不读取私有会话/凭据。
 
 交付评论沿 [#953 R2](https://github.com/mayf3/agent-control/issues/953#issuecomment-6533425954) 的交付段/证据段/UNKNOWN段格式。该评论是已授权 SOURCE 结果交付，不是对 HR 或业务 Agent 的执行指令。完成 commit 和评论后即停止。
+
+## 7. 交付检查记录
+
+初版 commit `d3bd15282c290d52a7a2d1392270b5e19308d57d` 的结构 gate rc1：新增 diagnostics 目录使 scripts 立即子项66→67，属于候选新增违反。仅将探针原样移至现有 `scripts/availability-recovery/`（子项4→5），没有改业务代码或放宽结构规则。初次运行和失败检查均保留在 `runs/initial-diagnostics-path/` 与 `checks/initial-*`，不隐去失败。最终路径重新执行的完整输出在 `runs/` 顶层。
+
+全差量 whitespace 检查 rc2，5处均为不可改写的原字节历史 diff/源码/测试尾空格；手写 runner 和报告的检查 rc0。治理锁完整性 rc0。最终结构 gate、独立受影响面审查与最终 hash 清单另见同 evidence 目录的交付检查收据。整体测试不得称全绿；语义证明通过不消除关联/UNKNOWN两组 RED。

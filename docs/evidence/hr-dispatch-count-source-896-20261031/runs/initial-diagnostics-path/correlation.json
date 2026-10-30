@@ -1,0 +1,662 @@
+{
+  "failed": 3,
+  "investigation_criteria": [
+    {
+      "name": "same_target_envelope: counted send has durable validated receipt association",
+      "pass": false
+    },
+    {
+      "name": "bare_ok_without_coordinates: counted send has durable validated receipt association",
+      "pass": false
+    },
+    {
+      "name": "foreign_target_envelope: counted send has durable validated receipt association",
+      "pass": false
+    }
+  ],
+  "mode": "correlation",
+  "network_and_process_guard": {
+    "forbidden_attempts": 0,
+    "synthetic_write_opens": 74
+  },
+  "observation_assertions": [
+    {
+      "name": "planning selects but neither sends nor counts",
+      "pass": true
+    },
+    {
+      "name": "same_target_envelope: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "same_target_envelope: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "same_target_envelope: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "bare_ok_without_coordinates: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "bare_ok_without_coordinates: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "bare_ok_without_coordinates: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "foreign_target_envelope: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "foreign_target_envelope: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "foreign_target_envelope: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "null_return: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "null_return: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "null_return: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "false_return: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "false_return: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "false_return: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "send_started: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "send_started: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "send_started: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "explicit_failure: observed count and classification",
+      "pass": true
+    },
+    {
+      "name": "explicit_failure: claim precedes send; count write follows return",
+      "pass": true
+    },
+    {
+      "name": "explicit_failure: receipt reference absent in current ledger",
+      "pass": true
+    },
+    {
+      "name": "same-hour repeat neither calls nor counts again",
+      "pass": true
+    },
+    {
+      "name": "response_loss: possible acceptance does not count; reservation retained",
+      "pass": true
+    },
+    {
+      "name": "response_loss: same-hour fence prevents second call",
+      "pass": true
+    },
+    {
+      "name": "response_loss: after-hour current source calls again",
+      "pass": true
+    },
+    {
+      "name": "sender_crash: possible acceptance does not count; reservation retained",
+      "pass": true
+    },
+    {
+      "name": "sender_crash: same-hour fence prevents second call",
+      "pass": true
+    },
+    {
+      "name": "sender_crash: after-hour current source calls again",
+      "pass": true
+    },
+    {
+      "name": "crash after return retains zero-count reservation",
+      "pass": true
+    },
+    {
+      "name": "explicit expired followUpAt yields FOLLOW_UP_REQUIRED",
+      "pass": true
+    },
+    {
+      "name": "direct authoritative fixture resets noProgressCount, preserves dispatchCount",
+      "pass": true
+    },
+    {
+      "name": "old followUpAt still fences same visit despite followUpRequired false",
+      "pass": true
+    },
+    {
+      "name": "without old deadline transition permits later dispatch; dispatchCount accumulates",
+      "pass": true
+    },
+    {
+      "name": "post-send snapshot fixture is valid but observation clock rejects reset",
+      "pass": true
+    }
+  ],
+  "observations": [
+    {
+      "case": "planning_without_send",
+      "send_calls": 0,
+      "state": {
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": []
+    },
+    {
+      "case": "same_target_envelope",
+      "report_dispatch_count": 1,
+      "round_receipts": [
+        {
+          "ok": true,
+          "result": {
+            "messageId": "fixture-message",
+            "sessionId": "fixture-session",
+            "status": "accepted",
+            "targetAgentId": "agt_fixture-agent"
+          }
+        }
+      ],
+      "send_calls": 1,
+      "skip_reasons": [],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "bare_ok_without_coordinates",
+      "report_dispatch_count": 1,
+      "round_receipts": [
+        {
+          "ok": true
+        }
+      ],
+      "send_calls": 1,
+      "skip_reasons": [],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "foreign_target_envelope",
+      "report_dispatch_count": 1,
+      "round_receipts": [
+        {
+          "ok": true,
+          "result": {
+            "messageId": "fixture-message",
+            "sessionId": "fixture-session",
+            "status": "accepted",
+            "targetAgentId": "agt_other-fixture"
+          }
+        }
+      ],
+      "send_calls": 1,
+      "skip_reasons": [],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "null_return",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "SEND_OUTCOME_UNKNOWN"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned"
+      ]
+    },
+    {
+      "case": "false_return",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "SEND_OUTCOME_UNKNOWN"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned"
+      ]
+    },
+    {
+      "case": "send_started",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "SEND_OUTCOME_UNKNOWN"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned"
+      ]
+    },
+    {
+      "case": "explicit_failure",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "SEND_FAILED"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned"
+      ]
+    },
+    {
+      "case": "repeat_success_within_hour",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "COOLDOWN_NOT_ELAPSED"
+      ],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "response_loss",
+      "external_outcome": "UNKNOWN",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "SEND_FAILED"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss"
+      ]
+    },
+    {
+      "case": "response_loss_after_hour",
+      "external_outcome": "UNKNOWN",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 2,
+      "skip_reasons": [
+        "SEND_FAILED"
+      ],
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791716256828,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss",
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss"
+      ]
+    },
+    {
+      "case": "sender_crash",
+      "external_outcome": "UNKNOWN",
+      "send_calls": 1,
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss"
+      ]
+    },
+    {
+      "case": "sender_crash_after_hour",
+      "external_outcome": "UNKNOWN",
+      "send_calls": 2,
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791716256828,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss",
+        "claim_written",
+        "send_called",
+        "simulated_remote_accept_before_response_loss"
+      ]
+    },
+    {
+      "case": "crash_after_return_before_record",
+      "external_outcome": "UNKNOWN: fake sender returned; no durable receipt",
+      "send_calls": 1,
+      "state": {
+        "action": "DISPATCH_RESERVED",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 0,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "expired_followup",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "FOLLOW_UP_REQUIRED"
+      ],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "followUpAt": 1791716256827,
+        "followUpRequired": true,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "same_visit_transition_after_followup",
+      "report_dispatch_count": 0,
+      "round_receipts": [],
+      "send_calls": 1,
+      "skip_reasons": [
+        "FOLLOW_UP_REQUIRED"
+      ],
+      "state": {
+        "action": "OBSERVE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "followUpAt": 1791716256827,
+        "followUpRequired": false,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": 1791716256829,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 0,
+        "ownerNotified": false,
+        "progressEvent": "TRANSITION",
+        "progressObserved": true,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "transition_without_followup_after_hour",
+      "report_dispatch_count": 1,
+      "round_receipts": [
+        {
+          "ok": true,
+          "result": {
+            "messageId": "fixture-message",
+            "sessionId": "fixture-session",
+            "status": "accepted",
+            "targetAgentId": "agt_fixture-agent"
+          }
+        }
+      ],
+      "send_calls": 2,
+      "skip_reasons": [],
+      "state": {
+        "action": "NONE",
+        "dispatchClaimedAt": 1791716256828,
+        "dispatchCount": 2,
+        "followUpRequired": false,
+        "lastDispatchAt": 1791716256828,
+        "lastProgressAt": 1791712656828,
+        "nextEligibleAt": 1791719856828,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": null,
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called",
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    },
+    {
+      "case": "post_dispatch_snapshot_transition",
+      "report_dispatch_count": 1,
+      "round_receipts": [
+        {
+          "ok": true,
+          "result": {
+            "messageId": "fixture-message",
+            "sessionId": "fixture-session",
+            "status": "accepted",
+            "targetAgentId": "agt_fixture-agent"
+          }
+        }
+      ],
+      "send_calls": 1,
+      "skip_reasons": [],
+      "state": {
+        "action": "OBSERVE",
+        "dispatchClaimedAt": 1791712656827,
+        "dispatchCount": 1,
+        "lastDispatchAt": 1791712656827,
+        "lastProgressAt": null,
+        "nextEligibleAt": 1791716256827,
+        "noProgressCount": 1,
+        "ownerNotified": false,
+        "progressEvent": "TRANSITION",
+        "progressObserved": false,
+        "reportIssued": false,
+        "threadId": null
+      },
+      "trace": [
+        "claim_written",
+        "send_called",
+        "send_returned",
+        "record_dispatch_called"
+      ]
+    }
+  ],
+  "source_sha256": {
+    "dispatch_escalation": "abe30587670765e13999f0c4d9955a92464981c9d3b702d6cb6b01bc56296383",
+    "dispatcher_v5": "5bb4c879958a8bec1320c260c1a856e3df91a0fd2441ae02b37177b90377190b"
+  },
+  "synthetic_only": true
+}

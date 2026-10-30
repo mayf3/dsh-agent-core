@@ -1,0 +1,39 @@
+[
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "exit_code": 2,
+    "stdout": "docs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:85: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:86: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/minimal_v3_review_fix.diff:89: trailing whitespace.\n+ \ndocs/evidence/hr-dispatch-count-source-896-20261031/published-history/test_receipt_envelope_alignment.final.py.txt:426: trailing whitespace.\n+    check(\"E8 raising send: count 0, no reference\", \ndocs/evidence/hr-dispatch-count-source-896-20261031/source/dispatch_escalation.py.txt:363: trailing whitespace.\n+                             (\"projectionUpdatedAt\", projection_updated_at)): \n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      "scripts/diagnostics/hr_dispatch_count_probe.py",
+      "docs/investigations/HR_DISPATCH_COUNT_SOURCE_896_20261031.md"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "python3",
+      ".agents/tools/verify_governance.py",
+      "--target",
+      ".",
+      "--require-accepted"
+    ],
+    "exit_code": 0,
+    "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+    "stderr": ""
+  }
+]
