@@ -25,7 +25,7 @@ export const FX_DEADLINES = Object.freeze({
   shutdownGraceMs: 200,
 })
 
-export function makeFakeChild({ pid = 4242 } = {}) {
+export function makeFakeChild({ pid = 4242, autoPrepare = false } = {}) {
   const child = {
     pid,
     killSignals: [],
@@ -38,7 +38,8 @@ export function makeFakeChild({ pid = 4242 } = {}) {
       holdCallbacks: false,
       on(event, fn) { this.handlers[event] = fn },
       write(line, callback) {
-        child.writes.push(JSON.parse(line))
+        const request = JSON.parse(line)
+        child.writes.push(request)
         if (this.syncThrowNext !== undefined) {
           const error = this.syncThrowNext
           this.syncThrowNext = undefined
@@ -53,6 +54,8 @@ export function makeFakeChild({ pid = 4242 } = {}) {
           }
           if (!this.holdCallbacks) queueMicrotask(() => callback(null))
         }
+        if (autoPrepare && request.method === 'session/prepare') queueMicrotask(() => child.stdout.handler(
+          JSON.stringify({ id: request.id, result: { version: 1, ready: true, sessionId: request.params.sessionId } }) + '\n'))
         return true
       },
     },
@@ -64,9 +67,9 @@ export function makeFakeChild({ pid = 4242 } = {}) {
   return child
 }
 
-export function makeFx({ deadlines, generation, integration, reconciliationStore, ...ctorOpts } = {}) {
+export function makeFx({ deadlines, generation, integration, reconciliationStore, autoPrepare = false, ...ctorOpts } = {}) {
   const store = reconciliationStore ?? new TurnReconciliationStore()
-  const child = makeFakeChild()
+  const child = makeFakeChild({ autoPrepare })
   const slotOps = []
   const registryIntegration = {
     casReap(proc, cause) {
@@ -125,7 +128,7 @@ export function makeFx({ deadlines, generation, integration, reconciliationStore
     async readyNow({ providers } = {}) {
       const pendingReady = proc.ready()
       await tick()
-      fx.respondTo('initialize', { registeredProviders: providers ?? [proc.provider] })
+      fx.respondTo('initialize', { registeredProviders: providers ?? [proc.provider], deliveryReadiness: { version: 1 } })
       await pendingReady
       return proc
     },

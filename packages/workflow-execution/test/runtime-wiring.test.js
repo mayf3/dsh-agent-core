@@ -225,8 +225,12 @@ async function answerChild(f, admission) {
     for (const proc of f.spawned) for (const write of proc.fakeChild.writes) {
       if (answered.has(write.id)) continue
       answered.add(write.id)
-      assert.ok(['initialize', 'session/prompt'].includes(write.method))
-      const result = write.method === 'initialize' ? { registeredProviders: [proc.provider] } : { messageId: 'new-message' }
+      assert.ok(['initialize', 'session/prepare', 'session/prompt'].includes(write.method))
+      const result = write.method === 'initialize'
+        ? { registeredProviders: [proc.provider], deliveryReadiness: { version: 1 } }
+        : write.method === 'session/prepare'
+          ? { version: 1, ready: true, sessionId: write.params.sessionId }
+          : { messageId: 'new-message' }
       proc.fakeChild.stdout.handler(`${JSON.stringify({ id: write.id, result })}\n`)
     }
   }

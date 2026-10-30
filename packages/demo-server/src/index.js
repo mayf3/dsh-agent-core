@@ -33,6 +33,7 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { createNativeGoalAdmission } from './native-goal-admission.js'
+import { prepareSessionDelivery } from './delivery-readiness.js'
 
 import z from '@deepseek-ai/schemastery'
 
@@ -55,7 +56,7 @@ export const inject = ['agents']
 export const Config = z.object({ nativeGoalContinuation: z.boolean().default(false) })
 
 /** Wire protocol method → handler. */
-const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.response'])
+const METHODS = new Set(['initialize', 'session/prepare', 'session/prompt', 'shutdown', 'rpc.response'])
 
 /**
  * Serve the demo protocol over process stdio for the process lifetime.
@@ -261,7 +262,10 @@ export function apply(ctx, config = {}) {
           conversationSource: seam.conversationSource ? {version:1} : null,
           ...(nativeToolPolicyAck === undefined ? {} : { nativeToolPolicy: nativeToolPolicyAck }),
           websiteAdmission: { version: 1 },
+          deliveryReadiness: { version: 1 },
         }
+      } else if (method === 'session/prepare') {
+        result = await prepareSessionDelivery(seam, params)
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the

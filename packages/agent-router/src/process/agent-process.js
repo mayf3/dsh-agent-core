@@ -37,6 +37,7 @@ import { eventCorrelationMethods } from './event-correlation.js'
 import { turnExecutionMethods } from './turn-execution.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
+import { deliveryReadinessMethods } from './delivery-readiness.js'
 
 const sleep = (ms) => new Promise((resolve) => {
   const timer = setTimeout(resolve, ms)
@@ -328,6 +329,7 @@ for (const group of [
   turnExecutionMethods,
   spawnMethods,
   shutdownMethods,
+  deliveryReadinessMethods,
 ]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue

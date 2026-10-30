@@ -13,6 +13,7 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { markTransportRetryEvidence } from './delivery-resilience.js'
 
 import { sanitizeProviderError } from './provider-errors.js'
 import { envelopeCarrier, exactTurnOutcome, monotonicNowMs } from './state-machine.js'
@@ -227,6 +228,7 @@ export const eventCorrelationMethods = {
       execution.terminationEvidence = 'exact_terminal_then_idle'
       execution.phase = 'terminal'
       error.evidence = execution.evidenceSnapshot()
+      markTransportRetryEvidence(this, execution, error)
       execution.terminalReject?.(error)
     } else {
       this.store.settleDirect(execution.handle, {
