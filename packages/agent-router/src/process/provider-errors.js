@@ -52,6 +52,12 @@ export function sanitizeProviderError(providerError, { agentId, provider, model 
     agentId,
     provider,
     model,
+    // Preserve a narrow connection signal, never arbitrary provider payloads.
+    // This is classification only: the exact-turn reducer separately proves
+    // zero output/tools and termination before recovery may replay anything.
+    ...(new Set(['TRANSPORT', 'ECONNREFUSED', 'ECONNRESET', 'ENOTFOUND', 'EPIPE']).has(providerError?.code)
+      && !/timeout|timed out/iu.test(safeMessage)
+      ? { transportFailure: 'connection_failure' } : {}),
   })
 }
 

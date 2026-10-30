@@ -132,7 +132,7 @@ export function createRouteGate({
       if (hasExactDeathEvidence(proc)) {
         lifecycleSlots.delete(agentId)
         log.log(`process for ${agentId} is dead (exit ${proc?.exit?.code ?? 'unobserved'}, state ${proc?.state ?? 'n/a'}); will respawn`)
-      } else if (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity) {
+      } else if (!proc.deliveryTransportFailed && (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity)) {
         return { status: 'ready', proc }
       } else {
         if (busyProcess(proc)) {

@@ -38,7 +38,6 @@ export function createIngressDelivery({
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
   registerAuthenticatedIngress,
 }) {
-  /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
   /**
    * Deliver one ingress message through the channel model:
@@ -193,7 +192,7 @@ export function createIngressDelivery({
       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
       if (feishu !== undefined && isFeishuEntry) {
         try {
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.message ?? error}`)
+          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
         } catch { /* best effort */ }
         // CTR-I2-015 observer external-delivery lifecycle point (failure
         // receipt path — CANARY-C expects exactly one failure delivery).
@@ -473,7 +472,6 @@ export function createIngressDelivery({
     }
   }
 
-  /** Test/ops: in-memory Delivery V0 acceptance log snapshot. */
   function deliveriesSnapshot() {
     return deliveries.map(d => ({ ...d }))
   }

@@ -108,6 +108,9 @@ export const rpcChannelMethods = {
    * reserve (C-005). One wire response attempt, no re-invocation.
    */
   async handleRpcRequest({ requestId, method, params, turnExecutionId } = {}) {
+    // A child-to-parent operation may have external effects even without an
+    // assistant/message event. It permanently disqualifies automatic replay.
+    for (const execution of this.executions.values()) execution.deliveryRpcObserved = true
     if (typeof requestId !== 'string' || typeof method !== 'string') return
     const receivedAtMono = monotonicNowMs()
     // B03: an attributable execution contributes its original absolute

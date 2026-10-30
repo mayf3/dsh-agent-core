@@ -247,6 +247,10 @@ export function createProcessRegistry({
     }
     const initial = lifecycleSlots.get(agentId)
     if (initial?.state === 'READY') {
+      if (initial.processRef?.deliveryTransportFailed) return routeGate.ensureRunningForRoute(agentId).then(result => {
+        if (result.status === 'ready') return result.proc
+        throw Object.assign(new Error('transport generation is retiring'), { code: 'AGENT_PROCESS_REAPING' })
+      })
       if (!hasExactDeathEvidence(initial.processRef)) {
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
         return Promise.resolve(initial.processRef)

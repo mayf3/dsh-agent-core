@@ -17,6 +17,7 @@ import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } fr
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 import { promptWrite } from './prompt-write.js'
+import { DELIVERY_COMPLETION } from './delivery-resilience.js'
 
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
@@ -172,6 +173,8 @@ export const turnExecutionMethods = {
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
+    if (this.deliveryTransportFailed) return envelopeCarrier('not_admitted', null,
+      'AGENT_DELIVERY_TRANSPORT_UNHEALTHY', 'transport generation is quarantined')
     if (opts?.nativeGoalContinuation && (opts.admissionSignal?.aborted
         || (opts.admissionDeadlineMono !== undefined && monotonicNowMs() >= opts.admissionDeadlineMono))) {
       return envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission expired before write')
@@ -318,7 +321,7 @@ export const turnExecutionMethods = {
       if (mode === 'deliver') {
         // Receipt-only: the caller returns now; the execution keeps its
         // terminal/unknown fence tracking in the background (C-010).
-        resolve({
+        const acceptance = {
           accepted: true,
           sessionId,
           messageId: execution.receiptMessageId,
@@ -327,7 +330,9 @@ export const turnExecutionMethods = {
           evidence: execution.evidenceSnapshot(),
           ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
           ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
-        })
+        }
+        Object.defineProperty(acceptance, DELIVERY_COMPLETION, { value: execution.terminalPromise })
+        resolve(acceptance)
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise
         return

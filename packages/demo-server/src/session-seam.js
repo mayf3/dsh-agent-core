@@ -48,6 +48,9 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
  */
 export function createSessionSeam({ ctx, settings, websiteAdmission, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
   const sessionOrigins = new WeakMap()
+  // Preparing a handle is not an admitted prompt: keep its native resolution
+  // provenance until the first followup succeeds, then genuine reuse is hot.
+  const promptedHandles = new WeakSet()
   const handles = new Map() // sessionId -> AgentHandle
   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
 
@@ -224,7 +227,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
     if (conversation !== undefined && websiteCarrier !== undefined) throw new TypeError('mixed product surface admission')
     const carrier = websiteCarrier === undefined ? undefined : validateWebsiteAdmission(websiteCarrier)
     if (carrier && (sessionId !== 'main' || messageOrigin !== undefined || typeof websiteAdmission !== 'function')) throw new TypeError('website admission unavailable')
-    const wasHot=handles.has(sessionId),wasPending=pendingCreations.has(sessionId)
+    const wasHot=promptedHandles.has(handles.get(sessionId)),wasPending=pendingCreations.has(sessionId)
     const handle = await getOrCreateSession(sessionId, resolvedCwd, Boolean(carrier))
     const mainResolution=wasHot?{disposition:'hot_reuse',reason:'loaded_main_handle',provenance:'native_session_resolution',
       generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'}
@@ -238,6 +241,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
     }
     if (carrier) await websiteAdmission(carrier, message, handle.agent.session)
     handle.agent.followup(message)
+    promptedHandles.add(handle)
     return { messageId: message.id, ...(retention ?? {}) }
   }
 
