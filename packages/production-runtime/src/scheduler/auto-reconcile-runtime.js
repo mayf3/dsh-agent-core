@@ -105,7 +105,8 @@ export function mountSchedulerAutoReconcileRuntime({ layout, store, log, enabled
         store, { settlements: plan.targets, actorId: AUTO_RECONCILE_DEFAULT_ACTOR_ID },
       )
       const settled = results.filter((entry) => entry.outcome === 'settled').length
-      log?.log?.(`fence-auto-reconcile: settled=${settled} errors=${results.length - settled} fencesRemaining=${fencesRemaining}`)
+      const receiptFailures = results.filter((entry) => typeof entry.receipt === 'string' && entry.receipt !== 'ok').length
+      log?.log?.(`fence-auto-reconcile: settled=${settled} errors=${results.length - settled} receiptFailures=${receiptFailures} fencesRemaining=${fencesRemaining}`)
     } catch (error) {
       log?.error?.(`fence-auto-reconcile pass failed (fail-closed, retry next tick): ${error?.message ?? error}`)
     } finally {
