@@ -49,6 +49,7 @@ import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
+import { mountSchedulerAutoReconcileRuntime } from './scheduler/auto-reconcile-runtime.js'
 import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
@@ -425,6 +426,15 @@ export async function composeProductionRuntime(options = {}) {
     log,
   })
   const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
+
+  // AGENT_DELIVERY_RESILIENCE_V1 CTR-S1/S4 (accepted @8cf2c23a): evidence-
+  // gated scheduler fence auto-reconcile. DEFAULT OFF — runs only when
+  // AGENT_CORE_FENCE_AUTO_RECONCILE === 'on' (explicit owner/operator
+  // configuration action); settles unresolved outcome_unknown occurrences
+  // through the same store mutation path as the operator CLI with a machine
+  // receipt actor. The transport-watchdog / fence-janitor external stopgaps
+  // retire per CTR-X1/X2 once this is enabled and production-verified.
+  mountSchedulerAutoReconcileRuntime({ layout, store, log })
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.

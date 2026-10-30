@@ -55,3 +55,10 @@ export * from './watchdog/reconciliation.js'
 export * from './watchdog/health.js'
 export * from './watchdog/durable-state.js'
 export * from './watchdog/delivery.js'
+export {
+  AUTO_RECONCILE_DEFAULT_ACTOR_ID,
+  AUTO_RECONCILE_MAX_SETTLEMENTS,
+  evaluateAutoReconcileDecision,
+  planAutoReconcilePass,
+} from './auto-reconcile.js'
+export { autoReconcileOccurrences } from './control.js'
