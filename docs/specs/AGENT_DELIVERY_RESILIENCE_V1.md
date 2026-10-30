@@ -9,6 +9,17 @@ independent_spec_review_result: PASS (R1 REVISE 3 load-bearing gaps -> fixed 14e
 required_fixes: NONE
 review_verdict: READY_TO_ACCEPT_AND_MERGE
 acceptance_mode: owner-delegated in-session (mayf3 authorization 2026-10-30 "那你自己推进"; executor ZCode operator; receipts in this commit + agent-control#1332)
+amendments:
+  - AMENDMENT_1 (2026-10-30, status: accepted — focused re-review PASS same day, reviewer round-2 mechanical re-verification): CTR-S2 frozen
+    mapping gains the fifth negative line — lateOutcome=terminated_without_outcome
+    -> failed (evaluated AFTER exact_turn_end_failure, BEFORE the ambiguous fallback).
+    Rationale: the original text transcribed the owner-validated fence-janitor policy
+    incompletely; janitor decide() contains exactly this line, and the shape is reachable
+    in production via restart-quiescence startup recovery (startup-recovery.js writes
+    lateOutcome=terminated_without_outcome with terminationEvidence=restart_quiescence_proven).
+    Without the line those occurrences divert to humans (safe, but breaks the ACC-S2
+    equivalence claim with the 44-decision ledger). Divergence found by independent
+    implementation review of PR #588; amendment restores spec/code/ledger consistency.
 type: implementation-spec (behavior + invariants; implementation in bounded follow-up PRs under this spec)
 scope:
   - Router delivery resilience: child turn-transport readiness probing, respawn, bounded retry, dead-letter semantics, delivery-failure observability
@@ -307,6 +318,8 @@ CTR-S2 政策门（冻结）
   证据→决定映射（互斥、穷举、其余一律不动作）：
     outcomeEvidence=exact_turn_end_success            -> succeeded（不重跑）
     outcomeEvidence=exact_turn_end_failure            -> failed（下个 slot 重跑）
+    lateOutcome=terminated_without_outcome（AMENDMENT_1：先于含糊兜底评估；该形态由
+      restart-quiescence 启动恢复写入且无 outcomeEvidence，重跑安全）-> failed（下个 slot 重跑）
     terminationEvidence=child_real_exit，或权威 turn 登记册（turn-recovery registry，从属于
       D-007 的 durable occurrence authority 及其保留语义）中无该 occurrence 记录 -> failed（下个 slot 重跑）
     其他一切                                          -> 不动作，留人工
@@ -356,7 +369,7 @@ ACC-W2 CTR-W2,W3 生产证据：复放 18:43 形态（人为制造 >100s turn）
        + 入口通知；沉默丢弃零发生（连续 7 天生产观测）
 ACC-S1 CTR-S1,S3 单测：政策结算走 CLI 同路径、receipt actor=机器身份、历史日志追加
 ACC-S2 CTR-S2,S4 政策等价性：以 fence-janitor 2026-10-29 全量台账（44 决策）回放新政策，
-       决策逐条一致；`at` 任务与含糊证据恒不动作；默认 OFF
+       决策逐条一致（含 AMENDMENT_1 第五行）；`at` 任务与含糊证据恒不动作；默认 OFF
 ACC-S3 CTR-S5    单测：无冻结证据形态的 unknown 不可被政策置为终态
 ACC-X1 CTR-X1    发布清单：watchdog 卸载命令执行 + 其历史日志归档至 docs/evidence/
 ACC-X2 CTR-X2    发布清单：janitor 卸载命令执行 + 台账归档至 docs/evidence/
