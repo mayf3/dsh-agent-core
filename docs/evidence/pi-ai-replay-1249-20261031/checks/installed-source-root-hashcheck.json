@@ -1,0 +1,21 @@
+{
+  "observed_at_utc": "2026-10-30T22:07:37.324247+00:00",
+  "method": "read only three exact product source/manifest files and compute hashlib.sha256; no execution or directory scan",
+  "observations": [
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/package.json",
+      "sha256": "3419020058b58d6edd7981fd5d42975853c15ba4d068505329386ff6fb6d0a05",
+      "matches_agent_receipt": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/src/replay.ts",
+      "sha256": "dc5203bc43e707f5f469d35272a533631c4dbf4adc57332e7acbdd7d33345e8a",
+      "matches_agent_receipt": true
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/lib/index.js",
+      "sha256": "023eedbc4949224970bbc39aa520ee7a07bfb9dc69fd13df97027c09fba21d02",
+      "matches_agent_receipt": true
+    }
+  ]
+}

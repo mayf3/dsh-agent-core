@@ -5,7 +5,11 @@ e473873798a4a73ab08a733b6eb46df3367344e740da9bc10b92eff8199b8b78  docs/evidence/
 1c17217366cced90f672d40c5c22282f79bdf4aa9c5524bbff3296bdb075af0c  docs/evidence/pi-ai-replay-1249-20261031/550-core-issue.json
 f9696e6922939e2abe77837a6e85caf45eb3a2a4da0933ed831cff513502f4c8  docs/evidence/pi-ai-replay-1249-20261031/checks/delivery-checks.json
 bd6e706d0a3b1539d0f70f5b5b4dc4dfa0c02d17b7f45e7b1826b898c0f75485  docs/evidence/pi-ai-replay-1249-20261031/checks/fixed-head-checks-r1.json
+08ed3ec8a3a062bca3ab4648541c4163347ab60fc1822effd66323e240dd28e2  docs/evidence/pi-ai-replay-1249-20261031/checks/fixed-head-checks-r2.json
 dce5fb7d7e7d90cc8abd90dbefc7866ed519bda65637512bca6d1f5b195e778e  docs/evidence/pi-ai-replay-1249-20261031/checks/independent-review-r1.json
+c13a7ed30a9e704b55d9f84d6e5221c4fb703bf69daa71068a3b2c67319dc4f2  docs/evidence/pi-ai-replay-1249-20261031/checks/independent-review-r2.json
+bacd1cc1f5dfedc14a56951ff1bd9d6d46c1a141abd3ecd5ba3556822ef5d60b  docs/evidence/pi-ai-replay-1249-20261031/checks/installed-source-readonly.json
+fe6dc0a790934f1d45058bcecd928f140c5a92a93042e322f72030539e213fcf  docs/evidence/pi-ai-replay-1249-20261031/checks/installed-source-root-hashcheck.json
 d66153b625d44b55d7be83b5d49147cfef851c11fc2519f7a12959a6414a9024  docs/evidence/pi-ai-replay-1249-20261031/checks/proposal-format.json
 75c8e0357e3466e18a2f63661ff658486203233b9f31a86c44c9d3b87c8233f9  docs/evidence/pi-ai-replay-1249-20261031/checks/source-capture.json
 f4078349aa4751a15e6c611bca2c8bf796137ffb8e1ad9e49bad8c02ec26fb63  docs/evidence/pi-ai-replay-1249-20261031/publication-probe/attempts/1/probe-command.json
