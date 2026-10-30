@@ -77,8 +77,30 @@ plugin locations bind `e3e54e206f7c829503c7e6eed378643ba0416792`.
 
 Thus no exact wrapped-v2-to-invalid transformation has been demonstrated in this
 tuple. The incident's deployed 023rb reader, package/build identity and historical
-loaded bytes remain unbound. No production files or process state were read to
-resolve that uncertainty.
+loaded bytes remain unbound. The later bounded source-file read below does not
+resolve that historical identity; no process state or session data was read.
+
+## Bounded installed-source text check
+
+To avoid treating an available source reference as unknowable, a separate
+read-only check inspected exactly three files under
+`/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/`:
+`package.json`, `src/replay.ts`, and `lib/index.js`. No module was loaded or
+executed and no directory was scanned. The
+[coordinate-bound receipt](../evidence/pi-ai-replay-1249-20261031/checks/installed-source-readonly.json)
+records file metadata, hashes and source-only excerpts.
+
+The manifest says rc.8; `src/replay.ts` equals the pinned rc.7 source byte for
+byte (`dc5203bc43e707f5f469d35272a533631c4dbf4adc57332e7acbdd7d33345e8a`).
+The installed bundle's whole hash differs from the public rc.7 bundle, but its
+complete replay region is byte-identical (region SHA256
+`f0702d8f1a58b822c3a0f046833a548fde6e36a42db98e8415b6186baa0214a8`).
+Its reader at bundle line 93 accesses `envelope.response`; its conversion at
+lines 230-240 degrades invalid state. Current installed source therefore also
+does not expose the reported valid-wrapper failure. Installed file bytes are
+not historical 023rb provenance or proof of current loaded bytes; both remain
+UNKNOWN. No installed code was modified, no process was inspected, and no
+production session/config/credential/log content was read.
 
 ## Existing event repair and 0.2.5 integration
 
