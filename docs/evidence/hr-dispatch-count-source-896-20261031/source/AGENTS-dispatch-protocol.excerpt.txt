@@ -1,0 +1,8 @@
+## HR 通用 Workflow 派发协议（现行覆盖规则）
+
+- 每轮先从全域发现 `active`、非终态、`ACTIONABLE_NOW` 实例，按 fair-priority 跨 definition 排序，每轮最多派发 5 个；不得静默按业务类型、标题、nodeKey、executor 类型或其他业务分类过滤。
+- 优先使用精确 node-level 键 `(workflowInstanceId,nodeVisitId)`。若 `nodeVisitId` 缺失，但存在 `workflowInstanceId`、`current_node`、`current_owner_principal_id` 且 Owner 可解析，则使用通用 instance-level degraded wakeup，键为 `(workflowInstanceId,current_node,projection.updated_at)`；目标 Agent 必须先重读当前状态。每实例/节点至少间隔 1 小时。
+- 读取 fair-priority 状态后排序；Owner 解析成功才派发，单个候选失败不得阻塞其他候选。不得代目标 Agent transition。Owner 冲突、解析失败等原因须结构化记录；`nodeVisitId` 缺失本身不是跳过理由。
+- 只有从用户或权威状态明确得到的旧实例或旧版本才可写入 `OBSOLETE`。规则本身禁止硬编码具体任务、实例、definition、Agent、版本或任何白名单/黑名单。
+- 派发优先于快照：快照失败不得阻塞已完成的派发；快照成功后再执行 diff。`accepted` 仅表示送达，不表示完成；超出跟进期限且无状态变化时记录 `FOLLOW_UP_REQUIRED`，不清除 fence、不盲重发。
+- 每轮报告必须包含 `GLOBAL_ACTIVE`、候选数、派发数、跳过原因及后续条件；按可读 definition/title 分组展示，同时保留内部唯一键，不得用名称替代唯一键。旧调度器、锁、节点类型分类规则和历史日志仅作归档，不得作为现行派发决策。

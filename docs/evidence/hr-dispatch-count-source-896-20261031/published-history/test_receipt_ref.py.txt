@@ -1,0 +1,203 @@
+"""RED/GREEN probe: minimal receipt reference persisted on the FSM ledger.
+
+Contract under test (one production gap from #896):
+  After a send_agent return, the per-dispatch ledger entry must carry a
+  minimal, whitelisted receipt REFERENCE so the count stays auditable even
+  when the session-written round report is lost. The reference is a reported
+  transport result ONLY - never counterpart consumption, ACK, or business
+  submission. No receipt id => entry stays UNKNOWN (no fabrication).
+  dispatchCount / cooldown / fence / claim->send->record order must remain
+  byte-for-byte semantically identical to the pre-change module.
+"""
+import json
+import os
+import sys
+import tempfile
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
+from scripts import dispatch_escalation as fsm          # noqa: E402
+from scripts import dispatcher_v5 as v5                 # noqa: E402
+
+RESULTS = []
+T0 = 1791712656827
+HOUR = 60 * 60 * 1000
+
+
+def check(name, cond, detail=""):
+    RESULTS.append((name, bool(cond), detail))
+
+
+class FakeSender:
+    def __init__(self, receipt=None, behavior="ok"):
+        self.calls = []
+        self.receipt = receipt
+        self.behavior = behavior
+
+    def __call__(self, target, message, candidate):
+        self.calls.append(target)
+        if self.behavior == "raise":
+            raise RuntimeError("synthetic transport failure")
+        return self.receipt
+
+
+def candidate(instance, target="agt_fake-agent", node="candidates",
+              visit=None, projection="pX"):
+    c = {"workflowInstanceId": instance, "currentNodeKey": node,
+         "targetAgentId": target, "projection_updated_at": projection,
+         "definitionKey": "fake-def-v1"}
+    if visit:
+        c["nodeVisitId"] = visit
+    return c
+
+
+def plan_for(*candidates):
+    cands = list(candidates)
+    return {"skips": [], "union": {"candidates": cands},
+            "ranking": {"selected": cands, "deferred": []}}
+
+
+def fresh_ledger():
+    fd, path = tempfile.mkstemp(suffix=".jsonl")
+    os.close(fd)
+    os.unlink(path)
+    return path
+
+
+def last_record(path, instance, node="candidates", visit=None, projection="pX"):
+    st = fsm.get(path, instance, node, node_visit_id=visit,
+                 projection_updated_at=projection)
+    return st
+
+
+def red_case():
+    """RED: valid receipt returned, round report lost => no ledger reference."""
+    path = fresh_ledger()
+    sender = FakeSender(receipt={"messageId": "om_real_1", "status": "sent"})
+    out = v5.execute_round(
+        plan_for(candidate("b3000000-0000-4000-8000-00000000000c")),
+        sender, state_path=path, now_ms=T0)
+    st = last_record(path, "b3000000-0000-4000-8000-00000000000c")
+    # the receipt existed in the round item...
+    check("R0 precondition: round item carried receipt",
+          out["dispatches"][0].get("receipt", {}).get("messageId") == "om_real_1")
+    # ...but the ledger must ALSO carry the minimal reference (currently absent)
+    rr = st.get("receiptRef")
+    check("R1 ledger persists minimal receipt reference (messageId)",
+          isinstance(rr, dict) and rr.get("messageId") == "om_real_1",
+          f"receiptRef={rr}")
+    check("R2 reference marked as REPORTED transport result, not consumption",
+          isinstance(rr, dict) and rr.get("receiptSource") == "send_agent_return"
+          and "consumed" not in json.dumps(rr).lower()
+          and "ack" not in json.dumps(rr).lower(),
+          f"receiptRef={rr}")
+    check("R3 report loss does not destroy the reference (ledger-only read)",
+          isinstance(rr, dict) and rr.get("messageId") == "om_real_1",
+          f"receiptRef={rr}")
+
+
+def green_no_exception_no_id():
+    path = fresh_ledger()
+    # false / None / error-object / wrong-type returns: no exception, no id
+    for i, receipt in enumerate([False, None, {"error": "boom"},
+                                 {"status": "unknown"}, "plain-string-ok"]):
+        sender = FakeSender(receipt=receipt)
+        inst = f"c4000000-0000-4000-8000-0000000000{i:02d}"
+        out = v5.execute_round(plan_for(candidate(inst)), sender,
+                               state_path=path, now_ms=T0 + i)
+        st = last_record(path, inst)
+        check(f"G{i+1} no-exception {json.dumps(receipt)[:24]!r} => count+1 but NO fabricated receiptRef",
+              st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+              f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+
+
+def green_secret_never_persisted():
+    path = fresh_ledger()
+    sender = FakeSender(receipt={"messageId": "om_sec_1", "status": "sent",
+                                 "text": "SECRET-BODY", "raw": {"x": 1},
+                                 "credential": "tok"})
+    v5.execute_round(plan_for(candidate("d5000000-0000-4000-8000-00000000000e")),
+                     sender, state_path=path, now_ms=T0)
+    st = last_record(path, "d5000000-0000-4000-8000-00000000000e")
+    blob = json.dumps(st, ensure_ascii=False)
+    check("G6 whitelist: body/raw/credential never persisted",
+          all(tok not in blob for tok in ("SECRET-BODY", '"raw"', "credential")),
+          blob[:200])
+    check("G7 id + explicit status persisted, same target/key",
+          st.get("receiptRef", {}).get("messageId") == "om_sec_1"
+          and st.get("agentId") == "agt_fake-agent",
+          f"receiptRef={st.get('receiptRef')}")
+
+
+def green_cross_target_and_report_loss():
+    path = fresh_ledger()
+    s1 = FakeSender(receipt={"messageId": "om_a"})
+    s2 = FakeSender(receipt={"messageId": "om_b"})
+    v5.execute_round(plan_for(candidate("e6000000-0000-4000-8000-00000000000f")),
+                     s1, state_path=path, now_ms=T0)
+    v5.execute_round(plan_for(candidate("a7000000-0000-4000-8000-000000000010",
+                                        target="agt_other-agent")),
+                     s2, state_path=path, now_ms=T0 + 1)
+    st1 = last_record(path, "e6000000-0000-4000-8000-00000000000f")
+    st2 = last_record(path, "a7000000-0000-4000-8000-000000000010")
+    check("G8 receipts do not cross targets",
+          st1.get("receiptRef", {}).get("messageId") == "om_a"
+          and st2.get("receiptRef", {}).get("messageId") == "om_b",
+          f"r1={st1.get('receiptRef')} r2={st2.get('receiptRef')}")
+    # ledger-only read again (report never written): references still queryable
+    ok = all(last_record(path, i).get("receiptRef", {}).get("messageId")
+             for i in ("e6000000-0000-4000-8000-00000000000f",
+                       "a7000000-0000-4000-8000-000000000010"))
+    check("G9 ledger-only audit survives lost report", ok)
+
+
+def green_legacy_and_semantics():
+    path = fresh_ledger()
+    # legacy-style row via direct primitive (no receipt_ref param)
+    fsm.record_dispatch(path, "a8000000-0000-4000-8000-000000000011",
+                        "candidates", dispatch_ts=T0, agent_id="agt_legacy")
+    st = last_record(path, "a8000000-0000-4000-8000-000000000011", projection=None)
+    check("G10 legacy row without receiptRef reads fine (UNKNOWN implicit)",
+          st.get("dispatchCount") == 1 and "receiptRef" not in st,
+          f"keys={sorted(st)}")
+    # repeated rounds: no extra send, count semantics unchanged (D-equivalent)
+    sender = FakeSender(receipt={"messageId": "om_d"})
+    v5.execute_round(plan_for(candidate("a9000000-0000-4000-8000-000000000012")),
+                     sender, state_path=path, now_ms=T0)
+    v5.execute_round(plan_for(candidate("a9000000-0000-4000-8000-000000000012")),
+                     sender, state_path=path, now_ms=T0 + 10 * 60 * 1000)
+    st = last_record(path, "a9000000-0000-4000-8000-000000000012")
+    check("G11 second round within cooldown: count stays 1, single receiptRef, one send",
+          st.get("dispatchCount") == 1 and len(sender.calls) == 1
+          and st.get("receiptRef", {}).get("messageId") == "om_d",
+          f"count={st.get('dispatchCount')} sends={len(sender.calls)}")
+    # failed send: no record_dispatch => no receiptRef, count 0 (A-equivalent)
+    path2 = fresh_ledger()
+    bad = FakeSender(receipt={"messageId": "om_never"}, behavior="raise")
+    v5.execute_round(plan_for(candidate("aa000000-0000-4000-8000-000000000013")),
+                     bad, state_path=path2, now_ms=T0)
+    st = last_record(path2, "aa000000-0000-4000-8000-000000000013")
+    check("G12 failed send: count 0, no receiptRef despite receipt object existing",
+          st.get("dispatchCount") == 0 and not st.get("receiptRef"),
+          f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+
+
+def main():
+    for fn in (red_case, green_no_exception_no_id, green_secret_never_persisted,
+               green_cross_target_and_report_loss, green_legacy_and_semantics):
+        try:
+            fn()
+        except Exception as exc:
+            RESULTS.append((fn.__name__ + " HARNESS", False, repr(exc)))
+    failed = 0
+    print("=== receipt-reference RED/GREEN probe (offline, fake sender) ===")
+    for name, ok, detail in RESULTS:
+        print(f"{'PASS' if ok else 'FAIL'}  {name}  {detail}")
+        failed += 0 if ok else 1
+    print(f"=== {len(RESULTS) - failed}/{len(RESULTS)} passed, {failed} failed ===")
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,146 @@
+--- v1-candidate/scripts/dispatcher_v5.py
++++ revised-candidate/scripts/dispatcher_v5.py
+@@ -389,56 +389,86 @@
+     boundary is {ok:true, result:{status:'accepted', targetAgentId,
+     sessionId, messageId}}, and a receipt missing non-empty string
+     sessionId/messageId can only surface as ok:false / outcome_unknown -
+-    never as a fabricated success.  Only that exact shape yields a
+-    reference; everything else falls through to the legacy top-level probe
+-    (which returns None for this nested shape).  The explicit targetAgentId
+-    is kept only when it exactly equals the expected target of THIS
+-    dispatch; any mismatch reduces to None (UNKNOWN).  No attempt-binding
+-    field exists in the boundary envelope, so binding stays explicitly
+-    ``unknown`` and is never inferred.  requestId/correlation are not part
+-    of this boundary and are never guessed or persisted here.  The result
+-    is still only a REPORTED transport receipt: it never implies
+-    counterpart consumption, ACK, or a business submission.
+-    """
+-    if not isinstance(receipt, dict) or receipt.get("ok") is not True:
+-        return None
+-    result = receipt.get("result")
+-    if not isinstance(result, dict) or result.get("status") != "accepted":
++    never as a fabricated success.
++
++    Shape closure (R1): any dict carrying an ``ok`` or ``result`` key is a
++    new-shape attempt; if the exact-shape validation below fails, the
++    outcome is terminal UNKNOWN and the legacy top-level probe is NOT
++    consulted, so a rejected envelope/error/partial/wrong-target shape can
++    never be re-admitted through stray top-level messageId/message_id/id
++    fields.  Only a dict with NEITHER key is a genuine historical flat
++    receipt and stays on the unchanged legacy probe, whose bare-id /
++    arbitrary-status semantics remain legacy-only: never elevated to
++    envelope provenance or a global safety guarantee.
++
++    Opaque coordinates (R2): validation and storage are separated;
++    accepted coordinates are stored as their ORIGINAL bytes - never
++    stripped or otherwise normalized, so distinct identifiers can never
++    collapse into one.  Values with leading/trailing whitespace are
++    rejected by contract instead of being rewritten.  The explicit
++    targetAgentId is accepted only when it byte-equals the trusted
++    expected target of THIS dispatch; a missing/empty/untrusted expected
++    target keeps the new binding UNKNOWN rather than promoting it.
++
++    No attempt-binding field exists in the boundary envelope, so binding
++    stays explicitly ``unknown`` and is never inferred.  requestId/
++    correlation are not part of this boundary and are never guessed or
++    persisted here.  The result is still only a REPORTED transport
++    receipt: it never implies counterpart consumption, ACK, or a business
++    submission.
++    """
++    if not isinstance(receipt, dict):
+         return None
+-    ref = {}
+-    for key in ("messageId", "sessionId", "targetAgentId"):
+-        value = result.get(key)
+-        if not (isinstance(value, str) and value.strip() and len(value) <= 128):
++    if "ok" in receipt or "result" in receipt:
++        if receipt.get("ok") is not True:
+             return None
+-        ref[key] = value.strip()
+-    if expected_target is not None and ref["targetAgentId"] != expected_target:
+-        return None
+-    ref["reportedStatus"] = result["status"]
+-    ref["receiptSource"] = "send_agent_return_envelope"
+-    ref["attemptBinding"] = "unknown"
+-    return ref
++        result = receipt.get("result")
++        if not isinstance(result, dict) or result.get("status") != "accepted":
++            return None
++        if not isinstance(expected_target, str) or expected_target == "":
++            return None
++        ref = {}
++        for key in ("messageId", "sessionId", "targetAgentId"):
++            value = result.get(key)
++            if not (isinstance(value, str) and value != ""
++                    and len(value) <= 128 and value.strip() == value):
++                return None
++            ref[key] = value
++        if ref["targetAgentId"] != expected_target:
++            return None
++        ref["reportedStatus"] = result["status"]
++        ref["receiptSource"] = "send_agent_return_envelope"
++        ref["attemptBinding"] = "unknown"
++        return ref
++    return None
+ 
+ 
+ def _receipt_reference(receipt, expected_target=None):
+     """Whitelist a transport return value into a minimal receipt reference.
+ 
+     The real nested success envelope (see ``_real_envelope_reference``) is
+-    tried first; the historical top-level probe below is kept unchanged for
+-    legacy-shaped returns.  Only an explicit string message-id proven by the
+-    actual send_agent return value anchors the reference (bounded length); a
+-    returned explicit status string rides along as ``reportedStatus``.
+-    Anything else - falsy returns, error objects, unknown-only payloads,
+-    non-dicts - reduces to ``None`` so the ledger entry stays UNKNOWN instead
+-    of fabricating a delivery.  The reference is a REPORTED transport result:
+-    it never implies counterpart consumption, ACK, or a business submission,
+-    and never carries message bodies, payloads, credentials, or raw provider
+-    responses.
++    tried first; a recognized new-shape receipt that fails validation is
++    terminally UNKNOWN and never falls back to the historical top-level
++    probe below, which is kept ONLY for genuine flat legacy returns (dicts
++    without ``ok``/``result`` keys).  Only an explicit string message-id
++    proven by the actual send_agent return value anchors the reference
++    (bounded length); a returned explicit status string rides along as
++    ``reportedStatus``.  Anything else - falsy returns, error objects,
++    unknown-only payloads, non-dicts - reduces to ``None`` so the ledger
++    entry stays UNKNOWN instead of fabricating a delivery.  The reference
++    is a REPORTED transport result: it never implies counterpart
++    consumption, ACK, or a business submission, and never carries message
++    bodies, payloads, credentials, or raw provider responses.
+     """
+     envelope = _real_envelope_reference(receipt, expected_target)
+     if envelope is not None:
+         return envelope
+     if not isinstance(receipt, dict):
+         return None
++    if "ok" in receipt or "result" in receipt:
++        # R1 shape closure: a new-shape attempt already failed exact
++        # validation; stray top-level id fields must not re-admit it.
++        return None
+     ref = {}
+     for key in ("messageId", "message_id", "id"):
+         value = receipt.get(key)
+--- v1-candidate/scripts/dispatch_escalation.py
++++ revised-candidate/scripts/dispatch_escalation.py
+@@ -335,6 +335,18 @@
+                              ("projectionUpdatedAt", projection_updated_at)):
+             if value is not None:
+                 rec[field] = value
++        if isinstance(receipt_ref, dict) and receipt_ref:
++            envelope_sourced = (receipt_ref.get("receiptSource")
++                                == "send_agent_return_envelope")
++            # R3: an envelope-sourced reference must bind to THIS row's
++            # agent - an explicit target contradicting the row agent, or a
++            # missing/untrusted binding, is rejected outright instead of
++            # persisting a cross-target reference.  Legacy-sourced refs
++            # keep the historical behavior unchanged.
++            binds_row_agent = (isinstance(agent_id, str) and agent_id != ""
++                               and receipt_ref.get("targetAgentId") == agent_id)
++            if envelope_sourced and not binds_row_agent:
++                receipt_ref = None
+         if isinstance(receipt_ref, dict) and receipt_ref:
+             clean = {k: v for k, v in receipt_ref.items()
+                      if k in ("messageId", "sessionId", "targetAgentId",

@@ -1,0 +1,28 @@
+{
+  "observed_at_utc": "2026-10-30T21:14:01.182032+00:00",
+  "historical_artifact_paths": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-10/task-hr-readonly-inquiry/output/hr-dispatch-fsm-repro",
+      "result": "FileNotFoundError",
+      "errno": 2
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-17/task-hr-receipt-contract-alignment/output/hr-receipt-contract-alignment-20261017-v1",
+      "result": "FileNotFoundError",
+      "errno": 2
+    }
+  ],
+  "source_vcs_probe": {
+    "argv": [
+      "git",
+      "-C",
+      "/Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts",
+      "rev-parse",
+      "--show-toplevel"
+    ],
+    "exit_code": 0,
+    "stdout": "/Users/yanfenma/.openclaw\n",
+    "stderr": ""
+  },
+  "source9_ac779": "Reference only; no session or runtime records opened; no wildcard expansion outside the named missing artifact roots"
+}

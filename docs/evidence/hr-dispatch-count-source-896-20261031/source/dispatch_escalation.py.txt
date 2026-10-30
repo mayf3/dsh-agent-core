@@ -1,0 +1,574 @@
+#!/usr/bin/env python3
+"""Durable no-progress escalation state machine for Workflow dispatch.
+
+The exact key is (workflowInstanceId,nodeVisitId) for node-level dispatches,
+or (workflowInstanceId,currentNodeKey,projection.updated_at) for degraded
+instance-level wakeups. Dispatch delivery is not progress: only an
+authoritative progress timestamp resets the escalation counter. Records are
+append-only JSONL so every stage change is auditable.
+"""
+from __future__ import annotations
+
+import argparse
+import fcntl
+import json
+import os
+import time
+import uuid
+from contextlib import contextmanager
+
+STAGE_AGENT = "AGENT"
+# Keep the persisted stage names compact, while exposing the protocol action
+# names separately.  Stage transitions are durable and idempotent.
+STAGE_THREAD = "THREAD"
+STAGE_OWNER = "OWNER"
+STAGE_REPORT = "REPORT"
+STAGES = (STAGE_AGENT, STAGE_THREAD, STAGE_OWNER, STAGE_REPORT)
+ACTION_THREAD = "CREATE_OR_REUSE_THREAD"
+ACTION_OWNER = "NOTIFY_DOMAIN_OWNER"
+ACTION_REPORT = "ISSUE_ESCALATION_REPORT"
+AUTHORITATIVE_PROGRESS_EVENTS = frozenset({
+    "TRANSITION", "RETURN", "HUMAN_REQUIRED", "NODE_CHANGE", "TERMINAL",
+})
+
+
+def state_key(instance_id: str, node_key: str, node_visit_id=None,
+              projection_updated_at=None) -> str:
+    """Build an exact FSM key, with a safe degraded fallback.
+
+    A visit id is authoritative. When it is unavailable, the projection
+    timestamp disambiguates successive projections of the same instance/node;
+    the legacy two-argument form remains readable for existing ledgers.
+    """
+    instance_id = str(instance_id).strip() if instance_id is not None else ""
+    node_key = str(node_key).strip() if node_key is not None else ""
+    if not instance_id or not node_key:
+        raise ValueError("instance_id and node_key are required")
+    try:
+        uuid.UUID(instance_id)
+    except (ValueError, AttributeError):
+        raise ValueError("instance_id must be a UUID")
+    if node_visit_id:
+        # Principal/workflow services normally emit UUIDs, but the dispatcher
+        # must treat the value as an opaque authoritative visit identifier. Do
+        # not reject a valid projection merely because a test/double uses a
+        # non-UUID token.
+        visit = str(node_visit_id).strip()
+        if not visit:
+            raise ValueError("node_visit_id must not be blank")
+        return f"{instance_id}|visit:{visit}"
+    if projection_updated_at is None or not str(projection_updated_at).strip():
+        # Keep the two-argument API readable for legacy ledger records. The v5
+        # planner never creates this form: it structurally skips degraded
+        # projections without projection.updated_at.
+        projection_updated_at = "__legacy__"
+    # Keep the persisted FSM key byte-for-byte aligned with dispatcher_v5's
+    # degraded candidate key.  This prevents a successful wakeup from being
+    # tracked under a different key than the one used for cooldown/fairness.
+    projection = str(projection_updated_at).strip()
+    return f"{instance_id}|node:{node_key.strip()}|projection:{projection}"
+
+
+def _legacy_state_key(instance_id: str, node_key: str, node_visit_id=None,
+                      projection_updated_at=None) -> str:
+    """Return the pre-v5 degraded spelling for read-side compatibility."""
+    if node_visit_id:
+        return f"{instance_id}|visit:{str(node_visit_id).strip()}"
+    if projection_updated_at is None or not str(projection_updated_at).strip():
+        projection_updated_at = "__legacy__"
+    return f"{instance_id}|{node_key.strip()}|projection:{projection_updated_at}"
+
+
+def _lookup(latest, instance_id, node_key, node_visit_id=None,
+            projection_updated_at=None, aggregate_degraded=False):
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    exact = latest.get(key) or latest.get(
+        _legacy_state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    )
+    if exact is not None or node_visit_id or not aggregate_degraded:
+        return exact
+    # Degraded keys intentionally include projection.updated_at for audit and
+    # dedupe, but escalation must accumulate across refreshed projections of the
+    # same instance/node.  Reuse the newest degraded record as the FSM base;
+    # never merge a node-level visit into degraded state.
+    matches = []
+    for record in latest.values():
+        if not isinstance(record, dict):
+            continue
+        if record.get("instanceId") != instance_id or record.get("nodeKey") != node_key:
+            continue
+        if record.get("nodeVisitId") not in (None, ""):
+            continue
+        stamp = record.get("ts", record.get("lastDispatchAt", 0))
+        try:
+            stamp = int(stamp)
+        except (TypeError, ValueError):
+            stamp = 0
+        matches.append((stamp, record))
+    return max(matches, key=lambda pair: pair[0])[1] if matches else None
+
+
+@contextmanager
+def _lock(path):
+    os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
+    fh = open(path + ".lock", "a+", encoding="utf-8")
+    try:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        yield fh
+    finally:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        fh.close()
+
+
+def _read(path):
+    latest = {}
+    corrupt = 0
+    if not os.path.exists(path):
+        return latest, corrupt
+
+    def valid(rec):
+        if not isinstance(rec, dict) or not isinstance(rec.get("stateKey"), str):
+            return False
+        if rec.get("stage") not in STAGES:
+            return False
+        if not isinstance(rec.get("instanceId"), str) or not isinstance(rec.get("nodeKey"), str):
+            return False
+        if not isinstance(rec.get("dispatchCount"), int) or isinstance(rec.get("dispatchCount"), bool):
+            return False
+        if not isinstance(rec.get("noProgressCount"), int) or isinstance(rec.get("noProgressCount"), bool):
+            return False
+        if rec["dispatchCount"] < 0 or rec["noProgressCount"] < 0:
+            return False
+        for field in ("ownerNotified", "reportIssued"):
+            if not isinstance(rec.get(field), bool):
+                return False
+        # The state key must be the exact canonical identity for the record.
+        visit = rec.get("nodeVisitId")
+        projection = rec.get("projectionUpdatedAt")
+        expected = state_key(rec["instanceId"], rec["nodeKey"], visit, projection)
+        legacy = _legacy_state_key(rec["instanceId"], rec["nodeKey"], visit, projection)
+        # Read compatibility for pre-v5 degraded records; every subsequent
+        # write canonicalizes them to ``expected``.
+        # Historical ledgers used compact instance|node and instance|visit
+        # spellings before v5 carried nodeKey/projection metadata. Preserve
+        # those rows for read-side compatibility; all new writes remain
+        # canonical v5 keys.
+        historical_visit = f"{rec['instanceId']}|visit:{str(visit).strip()}" if visit else None
+        # Pre-v5 rows sometimes persisted the visit in stateKey but omitted
+        # nodeVisitId. Accept those immutable historical observations so one
+        # corrupt legacy row cannot poison the whole append-only ledger; new
+        # writes always include the canonical visit field.
+        omitted_visit_key = (visit is None and projection is None and
+                             rec["stateKey"].startswith(f"{rec['instanceId']}|visit:"))
+        historical_node = (visit is None and projection is None and
+                           rec["stateKey"] == f"{rec['instanceId']}|{rec['nodeKey']}")
+        historical = (historical_node or
+                      (historical_visit is not None and rec["stateKey"] == historical_visit) or
+                      omitted_visit_key)
+        return (rec["stateKey"] in {expected, legacy} or
+                (visit is None and projection is None and
+                 rec["stateKey"].startswith(f"{rec['instanceId']}|{rec['nodeKey']}|projection:")) or
+                historical)
+
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+                if not valid(rec):
+                    raise ValueError("invalid escalation record schema")
+                latest[rec["stateKey"]] = rec
+            except Exception:
+                corrupt += 1
+    return latest, corrupt
+
+
+def _append(path, rec):
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
+        fh.flush()
+        os.fsync(fh.fileno())
+
+
+def get(path, instance_id, node_key, node_visit_id=None,
+        projection_updated_at=None):
+    """Read the durable state for the exact node or degraded node key."""
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+    if corrupt:
+        return {"stateKey": key, "state": "STATE_UNTRUSTED", "corruptLines": corrupt}
+    return (_lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at) or {
+        "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+        "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+        "threadId": None, "ownerNotified": False, "reportIssued": False,
+    })
+
+
+def claim_dispatch(path, instance_id, node_key, claim_ts=None,
+                   node_visit_id=None, projection_updated_at=None,
+                   cooldown_ms=60 * 60 * 1000):
+    """Durably reserve one exact dispatch key before transport delivery.
+
+    The reservation is deliberately separate from ``record_dispatch``: a
+    crashed process must still leave a cooldown fence, while the latter records
+    the actual delivery and increments dispatchCount.  A reservation never
+    counts as progress or as a dispatch by itself.
+    """
+    now = int(claim_ts if claim_ts is not None else time.time() * 1000)
+    if not node_visit_id and (projection_updated_at is None or not str(projection_updated_at).strip()):
+        raise ValueError("projection_updated_at is required for degraded dispatch reservation")
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True)
+        timestamps = []
+        # A degraded candidate's projection timestamp is part of its exact
+        # audit key, but must not bypass the one-hour instance/node fence when
+        # a refreshed projection produces a new exact key.
+        for record in latest.values():
+            if not isinstance(record, dict):
+                continue
+            if record.get("instanceId") != instance_id or record.get("nodeKey") != node_key:
+                continue
+            # Cooldown is stable at (instance,node), while the persisted FSM
+            # identity remains the exact visit/degraded key.  A refreshed visit
+            # must not bypass the one-hour operational fence.
+            for field in ("dispatchClaimedAt", "lastDispatchAt"):
+                try:
+                    if record.get(field) is not None:
+                        timestamps.append(int(record[field]))
+                except (TypeError, ValueError, OverflowError):
+                    continue
+        if timestamps:
+            last_dispatch = max(timestamps)
+            if now - last_dispatch < max(0, int(cooldown_ms)):
+                return {"claimed": False, "stateKey": key,
+                        "reason": "COOLDOWN_NOT_ELAPSED",
+                        "nextEligibleAt": last_dispatch + max(0, int(cooldown_ms))}
+            # The one-hour fence is the minimum interval, not a permanent
+            # no-progress lock.  After it elapses, the next deliberate fair
+            # dispatch is allowed so record_dispatch() can advance the durable
+            # three-attempt escalation FSM.  accepted delivery still never
+            # counts as progress; only authoritative events reset the count.
+        base = dict(prev or {"stateKey": key, "instanceId": instance_id,
+                             "nodeKey": node_key, "stage": STAGE_AGENT,
+                             "dispatchCount": 0, "noProgressCount": 0,
+                             "threadId": None, "ownerNotified": False,
+                             "reportIssued": False})
+        base.update({"stateKey": key, "instanceId": instance_id,
+                     "nodeKey": node_key, "dispatchClaimedAt": now,
+                     "action": "DISPATCH_RESERVED", "ts": now})
+        if node_visit_id is not None:
+            base["nodeVisitId"] = node_visit_id
+        if projection_updated_at is not None:
+            base["projectionUpdatedAt"] = projection_updated_at
+        _append(path, base)
+    return {"claimed": True, "stateKey": key, "claimedAt": now}
+
+
+def record_dispatch(path, instance_id, node_key, dispatch_ts=None,
+                    progress_ts=None, agent_id=None, progress_event=None,
+                    node_visit_id=None, projection_updated_at=None,
+                    dispatch_intent_id=None, attempt_count=None,
+                    last_attempt_id=None, next_eligible_at=None, reason=None,
+                    follow_up_at=None, delivery_outcome=None):
+    """Record one dispatch and return the next durable escalation action.
+
+    ``progress_ts`` is trusted only when paired with an authoritative event.
+    Delivery/accepted receipts are deliberately not progress.  The JSONL row
+    is a write-ahead observation, so a crash cannot lose the FSM transition.
+    """
+    now = int(dispatch_ts if dispatch_ts is not None else time.time() * 1000)
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        exact_prev = latest.get(key) or latest.get(
+            _legacy_state_key(instance_id, node_key, node_visit_id, projection_updated_at))
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True) or {
+            "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+            "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+            "threadId": None, "ownerNotified": False, "reportIssued": False,
+        }
+        # Canonicalize records loaded through the legacy read-compatibility key.
+        # New v5 writes must always persist the exact node/degraded key used by
+        # dispatcher_v5; otherwise the ledger would split one candidate across
+        # two durable FSM identities.
+        prev = dict(prev)
+        prev["stateKey"] = key
+        last_dispatch = prev.get("lastDispatchAt")
+        # Legacy callers supplied only a timestamp; protocol callers provide
+        # the authoritative event explicitly.
+        event = str(progress_event or "").upper()
+        # Malformed timestamp evidence must never erase the durable dispatch
+        # record after delivery.  Treat it as non-progress and retain an audit
+        # note rather than letting int() abort the FSM write.
+        progress_value = None
+        last_dispatch_value = None
+        timestamp_error = None
+        try:
+            if progress_ts is not None:
+                progress_value = int(progress_ts)
+            if last_dispatch is not None:
+                last_dispatch_value = int(last_dispatch)
+        except (TypeError, ValueError, OverflowError) as exc:
+            timestamp_error = f"INVALID_PROGRESS_TIMESTAMP:{exc}"
+        progressed = (timestamp_error is None and progress_value is not None and
+                      progress_value <= now and
+                      event in AUTHORITATIVE_PROGRESS_EVENTS and
+                      (last_dispatch_value is None or progress_value > last_dispatch_value))
+        prior_no_progress = int(prev.get("noProgressCount", 0))
+        # Projection attempt_count is authoritative evidence. It may be ahead
+        # of a rebuilt/local ledger, but must never decrease durable history.
+        try:
+            reported_attempt = (int(attempt_count)
+                                if attempt_count is not None else None)
+        except (TypeError, ValueError, OverflowError):
+            reported_attempt = None
+        baseline = max(prior_no_progress, reported_attempt or 0)
+        count = 0 if progressed else baseline + 1
+        # Keep dispatchCount scoped to the exact audit key, while the
+        # noProgressCount/stage above intentionally aggregate refreshed
+        # degraded projections of the same instance/node.
+        total = int(exact_prev.get("dispatchCount", 0)) + 1 if exact_prev else 1
+        stage = STAGE_AGENT if progressed else prev.get("stage", STAGE_AGENT)
+        action = "NONE"
+        if progressed:
+            prev = dict(prev)
+            prev.update({"threadId": None, "ownerNotified": False, "reportIssued": False,
+                         "followUpRequired": False, "lastProgressAt": progress_value})
+        if count >= 3 and not prev.get("threadId"):
+            stage, action = STAGE_THREAD, ACTION_THREAD
+        elif prev.get("threadId") and count >= 4 and not prev.get("ownerNotified"):
+            stage, action = STAGE_OWNER, ACTION_OWNER
+        elif prev.get("threadId") and prev.get("ownerNotified") and count >= 5 and not prev.get("reportIssued"):
+            stage, action = STAGE_REPORT, ACTION_REPORT
+        rec = dict(prev)
+        rec.update({"nodeKey": node_key, "stage": stage, "dispatchCount": total, "noProgressCount": count,
+                    "lastDispatchAt": now,
+                    "progressObserved": bool(progressed), "progressEvent": event or None,
+                    "agentId": agent_id, "action": action, "ts": now})
+        if timestamp_error:
+            rec["progressEvidenceError"] = timestamp_error
+        for field, value in (("dispatchIntentId", dispatch_intent_id),
+                             ("attemptCount", attempt_count), ("lastAttemptId", last_attempt_id),
+                             ("nextEligibleAt", next_eligible_at), ("reason", reason),
+                             ("followUpAt", follow_up_at), ("deliveryOutcome", delivery_outcome),
+                             ("nodeVisitId", node_visit_id),
+                             ("projectionUpdatedAt", projection_updated_at)): 
+            if value is not None:
+                rec[field] = value
+        rec.setdefault("lastProgressAt", prev.get("lastProgressAt"))
+        if follow_up_at is not None and not progressed:
+            rec["followUpRequired"] = True
+        _append(path, rec)
+    return rec
+
+
+def record_observation(path, instance_id, node_key, observed_ts=None,
+                       progress_ts=None, progress_event=None, note=None,
+                       node_visit_id=None, projection_updated_at=None):
+    """Append an observation without counting a dispatch.
+
+    This is used before/after snapshot reads.  Only the five authoritative
+    events reset the no-progress counter; ``accepted`` and ordinary receipts
+    remain observations with no progress.
+    """
+    now = int(observed_ts if observed_ts is not None else time.time() * 1000)
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True) or {
+            "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+            "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+            "threadId": None, "ownerNotified": False, "reportIssued": False,
+        }
+        prev = dict(prev)
+        prev["stateKey"] = key
+        event = str(progress_event or "").upper()
+        progress_value = None
+        evidence_error = None
+        if progress_ts is not None:
+            try:
+                progress_value = int(progress_ts)
+            except (TypeError, ValueError, OverflowError) as exc:
+                evidence_error = f"INVALID_PROGRESS_TIMESTAMP:{exc}"
+        previous_progress = prev.get("lastProgressAt")
+        try:
+            previous_progress_value = (int(previous_progress)
+                                       if previous_progress is not None else None)
+        except (TypeError, ValueError, OverflowError) as exc:
+            previous_progress_value = None
+            evidence_error = evidence_error or f"INVALID_LAST_PROGRESS_TIMESTAMP:{exc}"
+        last_dispatch = prev.get("lastDispatchAt")
+        try:
+            last_dispatch_value = (int(last_dispatch)
+                                   if last_dispatch is not None else None)
+        except (TypeError, ValueError, OverflowError) as exc:
+            last_dispatch_value = None
+            evidence_error = evidence_error or f"INVALID_LAST_DISPATCH_TIMESTAMP:{exc}"
+        progressed = (evidence_error is None and progress_value is not None and
+                      progress_value <= now and
+                      event in AUTHORITATIVE_PROGRESS_EVENTS and
+                      (previous_progress_value is None or progress_value > previous_progress_value) and
+                      (last_dispatch_value is None or progress_value > last_dispatch_value))
+        rec = dict(prev)
+        if progressed:
+            rec.update({"noProgressCount": 0, "stage": STAGE_AGENT,
+                        "threadId": None, "ownerNotified": False,
+                        "reportIssued": False, "followUpRequired": False,
+                        "lastProgressAt": progress_value})
+        rec.update({"nodeKey": node_key, "action": "OBSERVE", "progressObserved": bool(progressed),
+                    "progressEvent": event or None, "observedAt": now})
+        if evidence_error:
+            rec["progressEvidenceError"] = evidence_error
+        if note:
+            rec["note"] = note
+        _append(path, rec)
+    return rec
+
+
+def attach_thread(path, instance_id, node_key, thread_id,
+                  node_visit_id=None, projection_updated_at=None):
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True) or {
+            "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+            "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+            "threadId": None, "ownerNotified": False, "reportIssued": False,
+        }
+        prev = dict(prev)
+        prev["stateKey"] = key
+        if prev.get("threadId"):
+            if prev.get("threadId") == thread_id:
+                return {**prev, "action": "THREAD_ALREADY_ATTACHED"}
+            raise RuntimeError("FSM_INVALID_THREAD_REPLACEMENT")
+        if prev.get("stage") not in (STAGE_AGENT, STAGE_THREAD):
+            raise RuntimeError("FSM_INVALID_THREAD_STAGE")
+        rec = dict(prev)
+        rec.update({"threadId": thread_id, "stage": STAGE_THREAD,
+                    "action": "THREAD_ATTACHED", "ts": int(time.time() * 1000)})
+        _append(path, rec)
+    return rec
+
+
+def mark_owner_notified(path, instance_id, node_key,
+                        node_visit_id=None, projection_updated_at=None):
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True) or {
+            "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+            "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+            "threadId": None, "ownerNotified": False, "reportIssued": False,
+        }
+        prev = dict(prev)
+        prev["stateKey"] = key
+        if prev.get("ownerNotified"):
+            return {**prev, "action": "OWNER_ALREADY_NOTIFIED"}
+        if not prev.get("threadId") or prev.get("stage") not in (STAGE_THREAD, STAGE_OWNER):
+            raise RuntimeError("FSM_INVALID_OWNER_STAGE")
+        rec = dict(prev)
+        rec.update({"ownerNotified": True, "stage": STAGE_OWNER,
+                    "action": "OWNER_NOTIFIED", "ts": int(time.time() * 1000)})
+        _append(path, rec)
+    return rec
+
+
+def mark_report_issued(path, instance_id, node_key,
+                       node_visit_id=None, projection_updated_at=None):
+    key = state_key(instance_id, node_key, node_visit_id, projection_updated_at)
+    with _lock(path):
+        latest, corrupt = _read(path)
+        if corrupt:
+            raise RuntimeError("STATE_UNTRUSTED")
+        prev = _lookup(latest, instance_id, node_key, node_visit_id, projection_updated_at, aggregate_degraded=True) or {
+            "stateKey": key, "instanceId": instance_id, "nodeKey": node_key,
+            "stage": STAGE_AGENT, "dispatchCount": 0, "noProgressCount": 0,
+            "threadId": None, "ownerNotified": False, "reportIssued": False,
+        }
+        prev = dict(prev)
+        prev["stateKey"] = key
+        if prev.get("reportIssued"):
+            return {**prev, "action": "REPORT_ALREADY_ISSUED"}
+        if not prev.get("threadId") or not prev.get("ownerNotified") or prev.get("stage") not in (STAGE_OWNER, STAGE_REPORT):
+            raise RuntimeError("FSM_INVALID_REPORT_STAGE")
+        rec = dict(prev)
+        rec.update({"reportIssued": True, "stage": STAGE_REPORT,
+                    "action": "REPORT_ISSUED", "ts": int(time.time() * 1000)})
+        _append(path, rec)
+    return rec
+
+
+def selftest():
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "escalation.jsonl")
+        iid, node = str(uuid.uuid4()), "review"
+        visit = str(uuid.uuid4())
+        a = record_dispatch(path, iid, node, dispatch_ts=1000, node_visit_id=visit)
+        b = record_dispatch(path, iid, node, dispatch_ts=2000, node_visit_id=visit)
+        c = record_dispatch(path, iid, node, dispatch_ts=3000, node_visit_id=visit)
+        assert (a["stage"], a["action"]) == (STAGE_AGENT, "NONE")
+        assert (b["stage"], b["action"]) == (STAGE_AGENT, "NONE")
+        assert (c["stage"], c["action"]) == (STAGE_THREAD, "CREATE_OR_REUSE_THREAD")
+        attach_thread(path, iid, node, "thread-1", node_visit_id=visit)
+        d4 = record_dispatch(path, iid, node, dispatch_ts=4000, node_visit_id=visit)
+        assert (d4["stage"], d4["action"]) == (STAGE_OWNER, "NOTIFY_DOMAIN_OWNER")
+        mark_owner_notified(path, iid, node, node_visit_id=visit)
+        d5 = record_dispatch(path, iid, node, dispatch_ts=5000, node_visit_id=visit)
+        assert (d5["stage"], d5["action"]) == (STAGE_REPORT, "ISSUE_ESCALATION_REPORT")
+        p = record_dispatch(path, iid, node, dispatch_ts=6000, progress_ts=5500,
+                        progress_event="TRANSITION", node_visit_id=visit)
+        assert p["noProgressCount"] == 0 and p["stage"] == STAGE_AGENT
+        assert get(path, iid, node, node_visit_id=visit)["dispatchCount"] == 6
+    print("[dispatch_escalation selftest] PASS (6 assertions)")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command", nargs="?", default="selftest",
+                        choices=["selftest", "get", "record-dispatch"])
+    parser.add_argument("--file")
+    parser.add_argument("--instance")
+    parser.add_argument("--node-key")
+    parser.add_argument("--dispatch-ts", type=int)
+    parser.add_argument("--progress-ts", type=int)
+    parser.add_argument("--agent")
+    parser.add_argument("--node-visit-id")
+    parser.add_argument("--projection-updated-at")
+    parser.add_argument("--progress-event")
+    parser.add_argument("--dispatch-intent-id")
+    parser.add_argument("--attempt-count")
+    parser.add_argument("--last-attempt-id")
+    parser.add_argument("--next-eligible-at")
+    parser.add_argument("--reason")
+    args = parser.parse_args()
+    if args.command == "selftest":
+        selftest()
+    elif args.command == "get":
+        print(json.dumps(get(args.file, args.instance, args.node_key,
+                             args.node_visit_id, args.projection_updated_at), ensure_ascii=False))
+    else:
+        print(json.dumps(record_dispatch(
+            args.file, args.instance, args.node_key,
+            args.dispatch_ts, args.progress_ts, args.agent,
+            args.progress_event, args.node_visit_id,
+            args.projection_updated_at,
+            dispatch_intent_id=args.dispatch_intent_id,
+            attempt_count=args.attempt_count,
+            last_attempt_id=args.last_attempt_id,
+            next_eligible_at=args.next_eligible_at,
+            reason=args.reason), ensure_ascii=False))

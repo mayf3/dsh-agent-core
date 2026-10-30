@@ -1,0 +1,1344 @@
+#!/usr/bin/env python3
+"""Pure HR Workflow Dispatcher v5 planning/reporting mechanics.
+
+The caller supplies only projections from workflow_global_instances and
+workflow_dispatch_intents.  This module never reads workflow_instance_detail,
+executes a transition, or invents a CAS/version.
+"""
+from __future__ import annotations
+
+from collections import Counter
+from datetime import datetime, timezone
+from typing import Any, Iterable
+import uuid
+
+MAX_DISPATCH_PER_ROUND = 5
+ACTIONABLE = "ACTIONABLE_NOW"
+
+
+def _get(x: dict, *names, default=None):
+    for name in names:
+        if x.get(name) is not None:
+            return x[name]
+    return default
+
+
+def _node(x: dict) -> dict:
+    value = x.get("current_node") or x.get("currentNode") or {}
+    if isinstance(value, dict):
+        # Projection adapters have used both node_key and key for the
+        # authoritative current-node locator.  Preserve either spelling;
+        # this is shape compatibility, not inferred workflow state.
+        if value.get("node_key") is None:
+            # Projection adapters have also used camelCase aliases for the
+            # same authoritative locator.  Preserve the source value rather
+            # than inferring any workflow state.
+            alias = value.get("key")
+            if alias is None:
+                alias = value.get("nodeKey")
+            if alias is None:
+                alias = value.get("currentNodeKey")
+            if alias is not None:
+                return {**value, "node_key": alias}
+        return value
+    # Some projection versions flatten current_node to its key.  Preserve that
+    # authoritative value without manufacturing any other workflow state.
+    if isinstance(value, str) and value.strip():
+        return {"node_key": value.strip()}
+    return {}
+
+
+def _updated(x: dict):
+    # The degraded key is intentionally tied to the projection timestamp.
+    # Prefer a non-blank nested projection value, then legacy top-level aliases.
+    # A blank nested value is missing, not authoritative, and must not mask a
+    # valid top-level timestamp supplied by the same projection adapter.
+    projection = x.get("projection")
+    if isinstance(projection, dict):
+        nested = _get(projection, "updated_at", "updatedAt")
+        if nested is not None and str(nested).strip():
+            return nested
+    value = _get(x, "projection_updated_at", "projectionUpdatedAt", "updated_at", "updatedAt")
+    return value if value is not None and str(value).strip() else None
+
+
+def _instance(x: dict):
+    return _get(x, "workflowInstanceId", "workflow_instance_id")
+
+
+def _visit(x: dict):
+    return _get(x, "nodeVisitId", "node_visit_id")
+
+
+def _owner_values(x: dict):
+    values = set()
+    for name in ("current_owner_principal_id", "current_assignee_principal_id",
+                 "currentOwnerPrincipalId", "currentAssigneePrincipalId",
+                 "ownerPrincipalId", "owner_principal_id"):
+        value = x.get(name)
+        # Principal IDs are opaque scalar identifiers.  Normalize surrounding
+        # whitespace, but fail closed for structured values instead of turning
+        # them into a misleading string that could be sent to a resolver.
+        if isinstance(value, str) and value.strip():
+            values.add(value.strip())
+    return values
+
+
+def _owner(x: dict):
+    # Global projections expose current_assignee_principal_id; dispatch intents
+    # expose ownerPrincipalId.  Both are authoritative owner fields.
+    values = _owner_values(x)
+    return next(iter(values), None)
+
+
+def _canonical_agent(x: dict):
+    # A global projection may already carry the authoritative canonical Agent
+    # locator.  Only scalar, non-blank values are safe transport targets;
+    # malformed values must go through exact principal resolution instead.
+    value = _get(x, "current_assignee_canonical_agent_id",
+                 "currentAssigneeCanonicalAgentId", "ownerCanonicalAgentId",
+                 "owner_canonical_agent_id")
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _definition(x: dict):
+    return _get(x, "definition_key", "definitionKey", default="<missing-definition>")
+
+
+def _node_key(x: dict):
+    # Dispatch-intent projections may intentionally omit current_node.  A
+    # nodeVisitId is still an authoritative node identity for intent-only
+    # candidates; use it as the FSM node label without inventing workflow state.
+    return _get(x, "currentNodeKey", "current_node_key", default=_node(x).get("node_key")) or _visit(x)
+
+
+def _is_active_nonterminal(x: dict) -> bool:
+    """Accept the canonical global projection shape without detail reads.
+
+    svc-workflow's global projection uses ``is_terminal`` plus lifecycle/status
+    aliases in older snapshots.  Never let an absent legacy field turn a
+    terminal row into an actionable candidate.
+    """
+    if x.get("is_terminal") is True or x.get("isTerminal") is True:
+        return False
+    # Fail closed when a projection omits every lifecycle/status marker: an
+    # unmarked row cannot prove that it is the required active, non-terminal
+    # global candidate.  Accept either canonical marker (older projections may
+    # omit one), but any marker that is present must agree with ACTIVE.
+    lifecycle_raw = _get(x, "lifecycle", "lifecycle_status")
+    status_raw = _get(x, "status")
+    if lifecycle_raw is None and status_raw is None:
+        # workflow_global_instances(lifecycle=active,status=active) is already
+        # an authoritative active projection.  Its canonical rows expose only
+        # is_terminal; do not silently discard them merely because legacy
+        # lifecycle/status aliases are absent.
+        return x.get("is_terminal") is False or x.get("isTerminal") is False
+    lifecycle = str(lifecycle_raw).lower() if lifecycle_raw is not None else "active"
+    status = str(status_raw).lower() if status_raw is not None else "active"
+    # The dispatcher is fed the active projection, not a broad "anything that
+    # is not terminal" view.  Treat an explicitly present non-ACTIVE status
+    # (for example PAUSED) as ineligible; otherwise a stale/non-actionable row
+    # could enter the UNION merely because it had not reached a terminal state.
+    return lifecycle == "active" and status == "active"
+
+
+def _is_actionable(x: dict, intent: bool = False) -> bool:
+    """Recognize the authoritative ACTIONABLE_NOW projection marker.
+
+    svc-workflow has emitted the marker under ``eligibility.classification``;
+    older projection adapters flatten that object.  These aliases are shape
+    compatibility only—they must still equal the exact canonical value and
+    are never inferred from lifecycle, status, node type, or an intent id.
+    """
+    eligibility = x.get("eligibility")
+    # Projection adapters have emitted both an object marker and a flattened
+    # scalar.  Accept only the authoritative ACTIONABLE_NOW value; do not
+    # infer actionability from lifecycle, status, node type, or intent id.
+    eligibility_classification = (
+        eligibility.get("classification") if isinstance(eligibility, dict)
+        else eligibility
+    )
+    classification = next((value for value in (
+        eligibility_classification,
+        x.get("eligibility_classification"),
+        x.get("actionability"),
+        x.get("actionability_classification"),
+        x.get("classification"),
+    ) if value is not None), None)
+    return intent or classification == ACTIONABLE
+
+
+def candidate_key(x: dict) -> str:
+    """Exact dedupe key: visit pair, or degraded triple including updated_at."""
+    iid, visit, node, updated = _instance(x), _visit(x), _node_key(x), _updated(x)
+    if iid is None or not str(iid).strip():
+        raise ValueError("missing workflowInstanceId")
+    if not isinstance(iid, str) or not iid.strip():
+        raise ValueError("workflowInstanceId must be a scalar string")
+    iid = iid.strip()
+    try:
+        uuid.UUID(iid)
+    except (ValueError, AttributeError):
+        raise ValueError("workflowInstanceId must be a UUID")
+    if visit is not None and not isinstance(visit, str):
+        raise ValueError("nodeVisitId must be a scalar string")
+    if node is not None and not isinstance(node, str):
+        raise ValueError("current_node.node_key must be a scalar string")
+    visit = visit.strip() if visit is not None else ""
+    node = node.strip() if node is not None else ""
+    if visit:
+        return f"{iid}|visit:{visit}"
+    if not node:
+        raise ValueError("missing current_node.node_key")
+    if updated is None or str(updated).strip() == "":
+        raise ValueError("missing projection.updated_at for degraded candidate")
+    return f"{iid}|node:{node}|projection:{str(updated).strip()}"
+
+
+def _normalize(x: dict, source: str, intent: bool = False) -> dict:
+    y = dict(x)
+    # Keep the authoritative scheduling fields at the top level so callers do
+    # not need a detail read (and so every disposition can be audited).
+    scheduling = x.get("scheduling") if isinstance(x.get("scheduling"), dict) else {}
+    instance_id = _instance(x)
+    node_visit_id = _visit(x)
+    current_node_key = _node_key(x)
+    # Preserve opaque identifiers, while normalizing scalar string aliases so
+    # the exact dedupe/fence key and the persisted candidate fields agree.
+    if isinstance(instance_id, str):
+        instance_id = instance_id.strip()
+    if isinstance(node_visit_id, str):
+        node_visit_id = node_visit_id.strip() or None
+    if isinstance(current_node_key, str):
+        current_node_key = current_node_key.strip() or None
+    y.update({
+        "workflowInstanceId": instance_id,
+        "nodeVisitId": node_visit_id,
+        "currentNodeKey": current_node_key,
+        "current_owner_principal_id": _owner(x),
+        "definitionKey": _definition(x),
+        "projection_updated_at": _updated(x),
+        "dispatchIntentId": _get(x, "dispatchIntentId", "dispatch_intent_id"),
+        "nextEligibleAt": _get(x, "nextEligibleAt", "next_eligible_at",
+                                default=scheduling.get("nextEligibleAt", scheduling.get("next_eligible_at"))),
+        "attemptCount": _get(
+            x, "attempt_count", "attemptCount",
+            "authoritative_attempt_count", "authoritativeAttemptCount",
+            "no_progress_attempt_count", "noProgressAttemptCount",
+            "authoritative_no_progress_attempt_count",
+            "authoritativeNoProgressAttemptCount",
+            default=_get(scheduling, "attempt_count", "attemptCount",
+                         "authoritative_attempt_count", "authoritativeAttemptCount",
+                         "no_progress_attempt_count", "noProgressAttemptCount",
+                         "authoritative_no_progress_attempt_count",
+                         "authoritativeNoProgressAttemptCount")),
+        "noProgressCount": _get(x, "no_progress_attempt_count", "noProgressAttemptCount",
+                                 "no_progress_count", "noProgressCount",
+                                 default=scheduling.get("no_progress_count", scheduling.get("noProgressCount"))),
+        "lastDispatchAt": _get(x, "lastDispatchAt", "last_dispatch_at",
+                                default=scheduling.get("lastDispatchAt", scheduling.get("last_dispatch_at"))),
+        "source": source,
+        "_intent": intent,
+    })
+    y["candidateKey"] = candidate_key(y)
+    return y
+
+
+def union_candidates(global_instances: Iterable[dict], dispatch_intents: Iterable[dict]) -> dict:
+    """Build the required UNION and preserve provenance; no silent drops."""
+    # Materialize both inputs once.  The public API accepts Iterables, and a
+    # caller may provide generators from paginated projection reads.  The
+    # complementary visit reconciliation below must not consume the intent
+    # stream before the actual UNION pass.
+    global_instances = list(global_instances or [])
+    dispatch_intents = list(dispatch_intents or [])
+    eligible = []
+    structured = []
+    raw_count = 0
+    # A global projection commonly omits nodeVisitId while the matching
+    # dispatch-intent carries it.  Reconcile that complementary evidence before
+    # keying: otherwise the same actionable node would become one degraded
+    # candidate plus one node-level candidate and could consume two slots.  This
+    # is still a projection-only UNION operation; it does not infer a visit when
+    # the intent side is absent or ambiguous.
+    # Do not graft an intent visit onto a degraded global row merely because
+    # both rows share an instance.  Dispatch intents do not carry enough
+    # authoritative node/owner evidence to prove that they refer to the same
+    # visit.  Keep both UNION rows unless node (and, when present, owner)
+    # evidence agrees exactly.
+    global_rows = []
+    for raw_global in (global_instances or []):
+        global_rows.append(raw_global)
+    for source, rows, intent in (("workflow_global_instances", global_rows, False),
+                                 ("workflow_dispatch_intents", dispatch_intents, True)):
+        for item in rows or []:
+            raw_count += 1
+            if not isinstance(item, dict):
+                # Even malformed source rows get a complete structured
+                # disposition.  They are not eligible work, but emitting the
+                # audit fields keeps the per-row contract machine-checkable.
+                structured.append({"source": source, "status": "STRUCTURED_SKIPPED",
+                                   "reason": "INVALID_PROJECTION",
+                                   "nextEligibleAt": None,
+                                   "attemptCount": "UNKNOWN"})
+                continue
+            # Dispatch-intent service results are authoritative when they omit
+            # lifecycle fields, but an adapter that supplies such fields must
+            # not smuggle stale/cancelled intents into the UNION.
+            if intent and (any(item.get(k) is not None for k in
+                               ("lifecycle", "lifecycle_status", "status", "is_terminal", "isTerminal"))):
+                if not _is_active_nonterminal(item):
+                    structured.append({**item, "source": source, "status": "STRUCTURED_SKIPPED",
+                                       "reason": "STALE_OR_INACTIVE_INTENT",
+                                       "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+                                       "attemptCount": _reported_attempt_count(item)})
+                    continue
+            if not intent and not _is_active_nonterminal(item):
+                structured.append({**item, "source": source, "status": "STRUCTURED_SKIPPED",
+                                   "reason": "INACTIVE_OR_TERMINAL",
+                                   "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+                                   "attemptCount": _reported_attempt_count(item)})
+                continue
+            if not intent and not _is_actionable(item):
+                structured.append({**item, "source": source, "status": "STRUCTURED_SKIPPED",
+                                   "reason": "NOT_ACTIONABLE_NOW",
+                                   "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+                                   "attemptCount": _reported_attempt_count(item)})
+                continue
+            try:
+                normalized = _normalize(item, source, intent)
+                if len(_owner_values(item)) > 1:
+                    normalized["ownerConflict"] = True
+                    normalized["ownerConflictPrincipals"] = sorted(_owner_values(item))
+            except ValueError as exc:
+                structured.append({"source": source, "status": "STRUCTURED_SKIPPED",
+                                   "workflowInstanceId": _instance(item), "reason": str(exc),
+                                   "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+                                   "attemptCount": _reported_attempt_count(item)})
+                continue
+            eligible.append(normalized)
+    by_key = {}
+    deduped = 0
+    for item in eligible:
+        key = item["candidateKey"]
+        if key in by_key:
+            deduped += 1
+            current = by_key[key]
+            current["sources"] = sorted(set(current.get("sources", []) + [item["source"]]))
+            # A shared key with disagreeing owners is not safe to send.  Keep
+            # it in the UNION so it is visible, but make the disposition
+            # explicit instead of silently trusting whichever source arrived
+            # first.
+            owner_values = _owner_values(current) | _owner_values(item)
+            if len(owner_values) > 1:
+                current["ownerConflict"] = True
+                current["ownerConflictPrincipals"] = sorted(owner_values)
+        else:
+            item["sources"] = [item["source"]]
+            by_key[key] = item
+        # When the same exact key is present in both projections, merge
+        # complementary authoritative fields instead of trusting source order.
+        # In particular, an intent may carry the owner while the global row
+        # carries the node/definition (or vice versa).
+        if key in by_key and by_key[key] is not item:
+            current = by_key[key]
+            for field in ("workflowInstanceId", "nodeVisitId", "currentNodeKey",
+                          "current_owner_principal_id", "definitionKey",
+                          "projection_updated_at", "dispatchIntentId",
+                          "nextEligibleAt", "attemptCount", "noProgressCount",
+                          "lastDispatchAt"):
+                incoming = item.get(field)
+                existing = current.get(field)
+                # Normalization uses explicit sentinels for fields that are
+                # absent in an intent-only projection (notably definition and
+                # node).  Do not let those synthetic values mask the richer
+                # global projection when the UNION is merged.
+                synthetic = (
+                    (field == "definitionKey" and existing == "<missing-definition>") or
+                    (field == "currentNodeKey" and
+                     existing == current.get("nodeVisitId") and
+                     incoming not in (None, "", current.get("nodeVisitId")))
+                )
+                if (existing in (None, "") or synthetic) and incoming not in (None, ""):
+                    current[field] = incoming
+    candidates = list(by_key.values())
+    safe_candidates = []
+    for item in candidates:
+        if item.get("ownerConflict"):
+            structured.append({**item, "status": "STRUCTURED_SKIPPED",
+                               "reason": "OWNER_CONFLICT",
+                               "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+                               "attemptCount": _reported_attempt_count(item)})
+        else:
+            safe_candidates.append(item)
+    return {"candidates": safe_candidates, "structured_skips": structured,
+            "raw_count": raw_count, "deduped_count": deduped,
+            "union_count": len(candidates), "source_counts": dict(Counter(i["source"] for i in eligible)),
+            "owner_conflict_count": sum(1 for i in candidates if i.get("ownerConflict"))}
+
+
+def _millis(value):
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(text).timestamp() * 1000
+    except (TypeError, ValueError):
+        return None
+
+
+def _nonnegative_int(value, default=0):
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError):
+        return default
+
+
+def _stable_last_dispatch(state: dict[str, dict], candidate: dict):
+    """Find the latest send for the operational cooldown fence.
+
+    A visit id is stronger than a projected node label: intent-only rows may
+    temporarily use the visit as their node locator, while a later global row
+    supplies the real current node.  Match the visit first so that spelling
+    changes cannot bypass the one-hour fence.  Degraded rows without a visit
+    use the stable (instance,current-node) fence across refreshed projections.
+    """
+    iid = candidate.get("workflowInstanceId")
+    visit = candidate.get("nodeVisitId")
+    node = candidate.get("currentNodeKey")
+    if not iid or (not visit and not node):
+        return None
+    values = []
+    for record in (state or {}).values():
+        if not isinstance(record, dict):
+            continue
+        if record.get("instanceId", record.get("workflowInstanceId")) != iid:
+            continue
+        if visit:
+            if record.get("nodeVisitId") != visit:
+                continue
+        elif record.get("nodeKey", record.get("currentNodeKey")) != node:
+            continue
+        for field in ("lastDispatchAt", "last_dispatch_at", "dispatchClaimedAt"):
+            value = _millis(record.get(field))
+            if value is not None:
+                values.append(value)
+    return max(values) if values else None
+
+
+def _degraded_last_dispatch(state: dict[str, dict], candidate: dict):
+    """Compatibility alias; the operational fence is stable for all visits."""
+    return _stable_last_dispatch(state, candidate)
+
+
+def _stable_state_record(state: dict[str, dict], candidate: dict) -> dict:
+    """Return the newest FSM record for the stable dispatch identity.
+
+    Degraded candidate keys intentionally include projection.updated_at.  FSM
+    policy (cooldown, follow-up and escalation stage) must survive that key
+    changing, otherwise a refreshed projection can silently bypass an existing
+    owner/report fence.  Exact-key state wins; otherwise aggregate by the same
+    instance + visit or instance + current node identity used by the fence.
+    """
+    if not isinstance(state, dict):
+        return {}
+    exact = state.get(candidate.get("candidateKey"))
+    if isinstance(exact, dict):
+        return exact
+    iid = candidate.get("workflowInstanceId")
+    visit = candidate.get("nodeVisitId")
+    node = candidate.get("currentNodeKey")
+    matches = []
+    for record in state.values():
+        if not isinstance(record, dict) or record.get("instanceId", record.get("workflowInstanceId")) != iid:
+            continue
+        if visit:
+            if record.get("nodeVisitId") != visit:
+                continue
+        elif not node or record.get("nodeKey", record.get("currentNodeKey")) != node:
+            continue
+        stamp = max((_millis(record.get(field)) or 0)
+                     for field in ("ts", "lastDispatchAt", "last_dispatch_at", "dispatchClaimedAt"))
+        matches.append((stamp, record))
+    return max(matches, key=lambda item: item[0])[1] if matches else {}
+
+
+def _follow_up_at(item: dict, state: dict):
+    value = _get(state, "followUpAt", "follow_up_at")
+    if value is None:
+        value = _get(item, "followUpAt", "follow_up_at")
+    return _millis(value)
+
+
+def _reported_attempt_count(item: dict):
+    """Return authoritative no-progress attempt evidence, never an invented count.
+
+    svc-workflow projections have used both ``attempt_count`` and the more
+    explicit ``no_progress_attempt_count`` spelling.  Prefer the generic
+    authoritative field when present, then accept the explicit spelling (and
+    their scheduling-object aliases) as shape compatibility.  Ledger values
+    are intentionally not used here: reports must expose projection evidence,
+    or ``UNKNOWN`` when the projection omitted it.
+    """
+    value = _get(item, "attempt_count", "attemptCount",
+                 "authoritative_attempt_count", "authoritativeAttemptCount")
+    if value is None:
+        value = _get(item, "no_progress_attempt_count", "noProgressAttemptCount",
+                     "authoritative_no_progress_attempt_count",
+                     "authoritativeNoProgressAttemptCount")
+    if value is None and isinstance(item.get("scheduling"), dict):
+        scheduling = item["scheduling"]
+        value = _get(scheduling, "attempt_count", "attemptCount",
+                     "authoritative_attempt_count", "authoritativeAttemptCount",
+                     "no_progress_attempt_count", "noProgressAttemptCount",
+                     "authoritative_no_progress_attempt_count",
+                     "authoritativeNoProgressAttemptCount")
+    return value if value is not None else "UNKNOWN"
+
+
+def rank_fair(candidates: list[dict], state: dict[str, dict] | None = None,
+              now_ms: float | None = None, limit: int = MAX_DISPATCH_PER_ROUND) -> dict:
+    """Aging/fair-priority ranking with per-definition and per-owner rotation."""
+    state = state or {}
+    now_ms = now_ms if now_ms is not None else datetime.now(timezone.utc).timestamp() * 1000
+    enriched = []
+    for c in candidates:
+        old = _stable_state_record(state, c)
+        last = old.get("lastDispatchAt", old.get("last_dispatch_at"))
+        if last is None:
+            last = c.get("lastDispatchAt", c.get("last_dispatch_at"))
+        last_ms = _millis(last)
+        # Degraded projections deliberately rotate their exact key with
+        # projection.updated_at.  Fairness must nevertheless remember the
+        # stable (instance,current-node) dispatch history; otherwise every
+        # refreshed projection would look "never dispatched" and repeatedly
+        # jump ahead of genuinely older work.
+        stable_last_ms = _stable_last_dispatch(state, c)
+        if stable_last_ms is not None:
+            last_ms = max(last_ms or stable_last_ms, stable_last_ms)
+        updated_ms = _millis(c.get("projection_updated_at"))
+        # Keep dispatch-age and candidate-age separate.  A candidate that was
+        # dispatched recently may still have been waiting for a long time
+        # before that send; collapsing both into one value can starve old work
+        # behind repeatedly refreshed projections.
+        dispatch_wait_ms = (max(0, now_ms - last_ms)
+                            if last_ms is not None else 0)
+        candidate_age_ms = (max(0, now_ms - updated_ms)
+                            if updated_ms is not None else 0)
+        waiting_ms = dispatch_wait_ms if last_ms is not None else candidate_age_ms
+        waiting_rounds = int(waiting_ms // 3600000)
+        base_priority = _nonnegative_int(_get(c, "base_priority", "basePriority",
+                                               default=old.get("basePriority", 0)))
+        dispatch_count = _nonnegative_int(_get(old, "dispatchCount", "dispatch_count",
+                                                default=_get(c, "dispatchCount", "dispatch_count", default=0)))
+        fair_score = base_priority + waiting_rounds - (2 * dispatch_count)
+        # Prefer the authoritative projection attempt count; local state is a
+        # fallback only when the projection omits it.
+        # ``_normalize`` keeps an explicit UNKNOWN marker for the report when
+        # the projection omits attempt_count.  That marker is not evidence and
+        # must not mask the durable ledger value used for fair-priority; use
+        # the ledger only as a fallback, never as a replacement for an
+        # authoritative projection count.
+        attempt_value = _get(c, "attempt_count", "attemptCount",
+                             "authoritative_attempt_count", "authoritativeAttemptCount")
+        if attempt_value in (None, "", "UNKNOWN"):
+            # Some projection versions name this explicitly as the
+            # no-progress attempt count.  It is still authoritative projection
+            # evidence and must outrank the durable local fallback.
+            attempt_value = _get(c, "no_progress_attempt_count",
+                                 "noProgressAttemptCount",
+                                 "authoritative_no_progress_attempt_count",
+                                 "authoritativeNoProgressAttemptCount")
+        if attempt_value in (None, "", "UNKNOWN"):
+            attempt_value = old.get("attemptCount", old.get("attempt_count", 0))
+        attempt = _nonnegative_int(attempt_value)
+        no_progress_value = _get(c, "no_progress_attempt_count", "noProgressAttemptCount",
+                                  "no_progress_count", "noProgressCount")
+        if no_progress_value in (None, "", "UNKNOWN"):
+            no_progress_value = old.get("noProgressCount", old.get("no_progress_count", 0))
+        no_progress = _nonnegative_int(no_progress_value)
+        never = last_ms is None
+        enriched.append({**c, "_never": never, "_waiting_ms": waiting_ms,
+                         "_dispatch_wait_ms": dispatch_wait_ms,
+                         "_candidate_age_ms": candidate_age_ms,
+                         "_waiting_rounds": waiting_rounds, "_base_priority": base_priority,
+                         "_dispatch_count": dispatch_count, "_fair_score": fair_score,
+                         "_attempt": attempt, "_no_progress": no_progress,
+                         "_last_ms": last_ms, "_updated_ms": updated_ms})
+    # Aging is first-class: never-dispatched or at least one hour overdue
+    # candidates outrank younger work regardless of base priority. Within the
+    # aging bucket, authoritative projection attempt_count leads, then distance
+    # from the last dispatch, candidate age, and fair score. The local FSM
+    # noProgressCount remains audit evidence and cannot override projection data.
+    enriched.sort(key=lambda c: (
+                                -int(c["_never"] or c["_waiting_ms"] >= 3600000),
+                                -c["_attempt"],
+                                -c["_dispatch_wait_ms"],
+                                -c["_candidate_age_ms"],
+                                -c["_fair_score"],
+                                 c["_updated_ms"] if c["_updated_ms"] is not None else float("inf"),
+                                c["candidateKey"]))
+    chosen, used_defs, used_owners = [], Counter(), Counter()
+    remaining = list(enriched)
+    while remaining and len(chosen) < min(MAX_DISPATCH_PER_ROUND, max(0, int(limit))):
+        # Prefer an unused definition and owner when available, preventing monopoly.
+        pick = next((c for c in remaining if not used_defs[c["definitionKey"]] and not used_owners[_owner(c)]), None)
+        if pick is None:
+            pick = next((c for c in remaining if not used_defs[c["definitionKey"]]), None)
+        # If all remaining work belongs to one definition, still rotate
+        # across Owners before allowing one Owner to consume the round.
+        if pick is None:
+            pick = next((c for c in remaining if not used_owners[_owner(c)]), None)
+        if pick is None:
+            pick = remaining[0]
+        remaining.remove(pick)
+        chosen.append(pick)
+        used_defs[pick["definitionKey"]] += 1
+        used_owners[_owner(pick)] += 1
+    deferred = [{**c, "status": "STRUCTURED_SKIPPED", "reason": "ROUND_CAPACITY",
+                 "nextEligibleAt": _get(c, "nextEligibleAt", "next_eligible_at"),
+                 "attemptCount": _reported_attempt_count(c)} for c in remaining]
+    unselected = [c for c in enriched if c not in chosen]
+    oldest = max((c["_waiting_ms"] for c in unselected), default=0)
+    oldest_candidate = max(unselected, key=lambda c: c["_waiting_ms"], default=None)
+    return {"selected": chosen, "deferred": deferred,
+            "definition_distribution": dict(Counter(c["definitionKey"] for c in chosen)),
+            "owner_distribution": dict(Counter(_owner(c) for c in chosen)),
+            "oldest_wait_ms": int(oldest),
+            "oldest_unselected_candidate": (oldest_candidate["candidateKey"] if oldest_candidate else None),
+            "starvation_risk": [c["candidateKey"] for c in unselected if c["_waiting_ms"] >= 3600000]}
+
+
+def _disposition_base(item: dict) -> dict:
+    """Fields required on every structured disposition in the round report."""
+    return {
+        "status": "STRUCTURED_SKIPPED",
+        "nextEligibleAt": _get(item, "nextEligibleAt", "next_eligible_at"),
+        "attemptCount": _reported_attempt_count(item),
+    }
+
+
+def plan_round(global_instances: Iterable[dict], dispatch_intents: Iterable[dict],
+               state: dict[str, dict] | None = None, now_ms: float | None = None,
+               resolve_owner=None) -> dict:
+    """Plan one round and classify every candidate as dispatch or structured skip.
+
+    ``resolve_owner`` is an injected exact-principal resolver.  This keeps
+    identity authority outside the planner and makes an unresolved owner an
+    explicit disposition rather than a silent omission.
+    """
+    # Materialize once so generators are safe for both the UNION and the
+    # mandatory GLOBAL_ACTIVE report metric.
+    global_rows = list(global_instances or [])
+    intent_rows = list(dispatch_intents or [])
+    union = union_candidates(global_rows, intent_rows)
+    global_active = sum(1 for row in global_rows
+                        if isinstance(row, dict) and _is_active_nonterminal(row))
+
+    # Resolve every owner before applying the five-item capacity cap.  An
+    # unresolved high-priority row is a structured skip, not a capacity slot:
+    # one broken candidate must never block a lower-ranked candidate.
+    dispatchable, skips = [], list(union["structured_skips"])
+    effective_now = now_ms if now_ms is not None else datetime.now(timezone.utc).timestamp() * 1000
+    for candidate in union["candidates"]:
+        owner = _owner(candidate)
+        base = _disposition_base(candidate)
+        # The protocol has a hard one-hour per exact key interval.  A future
+        # nextEligibleAt is also authoritative; neither condition is a reason
+        # to drop the candidate silently or consume this round's capacity.
+        old = _stable_state_record(state or {}, candidate)
+        last_ms = _millis(_get(old, "lastDispatchAt", "last_dispatch_at",
+                                default=_get(candidate, "lastDispatchAt", "last_dispatch_at")))
+        # Degraded keys include projection.updated_at, but cooldown remains
+        # scoped to the stable instance/current-node pair.
+        # The exact key is for audit/dedupe; cooldown is stable across
+        # refreshed visits for the same instance/current node.
+        scoped_last_ms = _stable_last_dispatch(state or {}, candidate)
+        if scoped_last_ms is not None:
+            last_ms = max(last_ms or scoped_last_ms, scoped_last_ms)
+        next_ms = _millis(_get(candidate, "nextEligibleAt", "next_eligible_at"))
+        follow_up_ms = _follow_up_at(candidate, old)
+        # An authoritative follow-up deadline is itself a durable fence.  Do
+        # not require the local boolean marker: ledgers can be rebuilt or a
+        # projection can carry the deadline before the marker is attached.
+        if follow_up_ms is not None and follow_up_ms <= effective_now:
+            skips.append({**candidate, **base, "reason": "FOLLOW_UP_REQUIRED",
+                          "nextEligibleAt": follow_up_ms,
+                          "next_condition": "AUTHORITATIVE_PROGRESS_OR_HUMAN_HANDLING"})
+            continue
+        if next_ms is not None and next_ms > effective_now:
+            skips.append({**candidate, **base, "reason": "NOT_YET_ELIGIBLE"})
+            continue
+        # Once the mandatory one-hour interval has elapsed, a no-progress
+        # candidate remains eligible for the next deliberate aging/fairness
+        # attempt.  Delivery is not progress; record_dispatch() increments the
+        # durable noProgressCount and drives the three-round escalation FSM.
+        # Never bypass the interval, but do not turn FOLLOW_UP_REQUIRED into a
+        # permanent dead end that makes the required 3-attempt escalation
+        # unreachable.
+        if last_ms is not None and effective_now - last_ms < 3600000:
+            skips.append({**candidate, **base, "reason": "COOLDOWN_NOT_ELAPSED",
+                          "nextEligibleAt": _get(candidate, "nextEligibleAt", "next_eligible_at")
+                          or last_ms + 3600000})
+            continue
+        if not owner:
+            skips.append({**candidate, **base, "reason": "OWNER_PRINCIPAL_MISSING"})
+            continue
+        # Resolve every owner through the injected exact-principal resolver.
+        # Projection-side Agent-looking fields are metadata only: trusting one
+        # would bypass identity authority and could route a stale/malformed
+        # principal to an unrelated Agent.
+        if resolve_owner is None:
+            skips.append({**candidate, **base, "reason": "OWNER_RESOLUTION_NOT_SUPPLIED"})
+            continue
+        try:
+            resolved = resolve_owner(owner)
+            agent_id = (resolved.strip() if isinstance(resolved, str) and resolved.strip()
+                        else None)
+        except Exception as exc:
+            skips.append({**candidate, **base, "reason": "OWNER_RESOLUTION_FAILED",
+                          "detail": str(exc)})
+            continue
+        if not isinstance(agent_id, str) or not agent_id.strip():
+            skips.append({**candidate, **base, "reason": "OWNER_RESOLUTION_FAILED"})
+            continue
+        dispatchable.append({**candidate, "targetAgentId": agent_id})
+
+    ranking = rank_fair(dispatchable, state, now_ms)
+    # The report's starvation view must cover the complete deduplicated UNION,
+    # not only rows that survived owner resolution.  An unresolved/cooldown row
+    # is still an eligible candidate that must remain visible as the oldest
+    # un-dispatched work; excluding it here would make starvation look smaller
+    # than it is.
+    selected_keys = {item.get("candidateKey") for item in ranking.get("selected", [])}
+    union_unselected = [item for item in union.get("candidates", [])
+                        if item.get("candidateKey") not in selected_keys]
+    if union_unselected:
+        def _wait_age(item):
+            old = (state or {}).get(item.get("candidateKey"), {})
+            last = _millis(old.get("lastDispatchAt", old.get("last_dispatch_at")))
+            if last is None:
+                last = _millis(item.get("lastDispatchAt", item.get("last_dispatch_at")))
+            updated_ms = _millis(item.get("projection_updated_at"))
+            return max(0, effective_now - (last if last is not None else updated_ms)) if (last is not None or updated_ms is not None) else 0
+        oldest_union = max(union_unselected, key=_wait_age)
+        ranking["oldest_unselected_candidate"] = oldest_union.get("candidateKey")
+        ranking["oldest_wait_ms"] = int(_wait_age(oldest_union))
+        ranking["starvation_risk"] = [item.get("candidateKey") for item in union_unselected
+                                       if _wait_age(item) >= 3600000]
+    dispatched = []
+    # Capacity skips are emitted only for candidates that survived identity
+    # resolution and therefore could actually have been dispatched.
+    skips.extend(ranking["deferred"])
+    cooldown_at = int(effective_now + 3600000)
+    for candidate in ranking["selected"]:
+        # This is a plan, not a delivery receipt.  Only execute_round may
+        # upgrade the row to DISPATCHED after a confirmed transport outcome.
+        dispatched.append({**candidate,
+                           # Internal plan marker only; final reports expose
+                           # DISPATCHED or STRUCTURED_SKIPPED.
+                           "planned": True,
+                           "dispatchLevel": "node-level" if _visit(candidate) else "instance-level-degraded",
+                           "reason": "ELIGIBLE_FAIR_PRIORITY",
+                           # A dispatch consumes the exact-key one-hour
+                           # interval. Never echo a stale/past projection
+                           # value as the next eligibility deadline.
+                           "nextEligibleAt": cooldown_at,
+                           "attemptCount": _reported_attempt_count(candidate)})
+    return {"union": union, "ranking": ranking, "dispatched": dispatched, "skips": skips,
+            "GLOBAL_ACTIVE": global_active}
+
+
+def build_dispatch_message(candidate: dict) -> str:
+    """Construct a locator-only wakeup; the owner rereads authoritative state."""
+    instance_id = candidate.get("workflowInstanceId")
+    visit = candidate.get("nodeVisitId")
+    if visit:
+        locator = f"nodeVisitId={visit}"
+    else:
+        locator = f"current_node={candidate.get('currentNodeKey')} (degraded instance-level wakeup)"
+    return (
+        "HR Workflow wakeup. Please reread the authoritative workflow state and "
+        f"process workflowInstanceId={instance_id}, {locator}. "
+        "HR will not execute transition or fabricate CAS; report authoritative "
+        "progress (transition/RETURN/HUMAN_REQUIRED/node change/terminal)."
+    )
+
+
+def execute_round(plan: dict, send_agent, read_snapshot=None,
+                  state_path="memory/dispatch-escalation.jsonl",
+                  now_ms: float | None = None, escalation_handler=None,
+                  pre_snapshot=None, diff_builder=None) -> dict:
+    """Send the ranked plan, persist escalation FSM state, then snapshot.
+
+    ``send_agent(target_agent_id, message, candidate)`` is injected so identity
+    and transport remain authoritative.  A send failure becomes a structured
+    skip and cannot consume another candidate's slot.  ``escalation_handler``
+    is optional and receives ``(fsm_record, candidate)`` when the durable FSM
+    requests CREATE_OR_REUSE_THREAD, NOTIFY_DOMAIN_OWNER, or
+    ISSUE_ESCALATION_REPORT; the handler may return a thread id or receipt.
+    This module never performs a transition or reads workflow_instance_detail.
+    Snapshot failures are bounded and non-blocking.
+    """
+    sent, skips = [], list(plan.get("skips", []))
+    fsm_records = []
+    # A fenced top-ranked candidate must not consume a round slot: walk the
+    # fair-ranked overflow after a claim refusal and promote the next eligible
+    # candidate.  This keeps one stale fence from starving unrelated work.
+    ranked_candidates = list(plan.get("ranking", {}).get("selected", []))
+    ranked_candidates.extend(plan.get("ranking", {}).get("deferred", []))
+    dispatched_slots = 0
+    # The escalation ledger is part of the v5 contract, not an optional
+    # optimisation.  Keep a durable default even when an adapter passes None.
+    if state_path is None:
+        state_path = "memory/dispatch-escalation.jsonl"
+    dispatch_ts = now_ms if now_ms is not None else datetime.now(timezone.utc).timestamp() * 1000
+    for candidate in ranked_candidates:
+        if dispatched_slots >= MAX_DISPATCH_PER_ROUND:
+            break
+        # Keep the transport contract explicit: node-level sends carry the
+        # authoritative visit locator; degraded sends carry only the current
+        # node/instance locator and require the owner to reread state.
+        candidate = {
+            **candidate,
+            "dispatchLevel": "node-level" if _visit(candidate)
+            else "instance-level-degraded",
+            "wakeType": "NODE_LEVEL" if _visit(candidate)
+            else "INSTANCE_LEVEL_DEGRADED",
+        }
+        base = _disposition_base(candidate)
+        # Reserve the exact key before transport.  This closes the crash and
+        # overlapping-round window between a send and the escalation ledger
+        # write; a reservation is not counted as progress or dispatch yet.
+        if state_path:
+            try:
+                from scripts.dispatch_escalation import claim_dispatch
+                claim = claim_dispatch(
+                    state_path, candidate["workflowInstanceId"],
+                    candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                    claim_ts=dispatch_ts,
+                    node_visit_id=candidate.get("nodeVisitId"),
+                    projection_updated_at=candidate.get("projection_updated_at"),
+                )
+            except Exception as exc:
+                skips.append({**candidate, **base, "reason": "DISPATCH_FENCE_UNTRUSTED",
+                              "detail": str(exc)})
+                continue
+            if not claim.get("claimed"):
+                skips.append({**candidate, **base,
+                              "reason": claim.get("reason", "DISPATCH_FENCE_CLOSED"),
+                              "nextEligibleAt": claim.get("nextEligibleAt") or base.get("nextEligibleAt")})
+                continue
+        try:
+            receipt = send_agent(candidate["targetAgentId"],
+                                 build_dispatch_message(candidate), candidate)
+            # Transport adapters may return a failure envelope instead of
+            # raising.  It is not delivery and must never be reported as
+            # DISPATCHED or advance the no-progress FSM.  The write-ahead
+            # fence remains closed for blind replay because the outcome is
+            # already ambiguous at this point.
+            failed = False
+            confirmed = False
+            failure_detail = None
+            if isinstance(receipt, dict):
+                status = str(receipt.get("status", "")).upper()
+                failed = (receipt.get("ok") is False or
+                          receipt.get("accepted") is False or
+                          status in {"FAILED", "ERROR", "REJECTED", "DENIED"})
+                confirmed = (not failed and
+                             (receipt.get("ok") is True or
+                              receipt.get("accepted") is True or
+                              status in {"ACCEPTED", "CONFIRMED", "DELIVERED",
+                                         "SEND_CONFIRMED"}))
+                if failed:
+                    failure_detail = receipt.get("error") or receipt.get("reason") or receipt
+            if failed:
+                skips.append({**candidate, **base, "reason": "SEND_FAILED",
+                              "nextEligibleAt": int(dispatch_ts + 3600000),
+                              "detail": failure_detail})
+                continue
+            if not confirmed:
+                # The write-ahead fence is already durable, so an unknown or
+                # SEND_STARTED outcome is never replayed blindly and must not
+                # increment the no-progress FSM or consume a dispatch slot.
+                skips.append({**candidate, **base, "reason": "SEND_OUTCOME_UNKNOWN",
+                              "nextEligibleAt": int(dispatch_ts + 3600000),
+                              "detail": receipt})
+                continue
+        except Exception as exc:
+            # The write-ahead fence is already durable at this point.  The
+            # transport outcome is therefore not safe to blindly replay: keep
+            # the candidate visible as a structured skip and expose the same
+            # one-hour eligibility boundary used by a successful dispatch.
+            skips.append({**candidate, **base, "reason": "SEND_FAILED",
+                          "nextEligibleAt": int(dispatch_ts + 3600000),
+                          "detail": str(exc)})
+            continue
+        item = {**candidate, "status": "DISPATCHED",
+                "dispatchLevel": "node-level" if _visit(candidate) else "instance-level-degraded",
+                "reason": "ELIGIBLE_FAIR_PRIORITY",
+                "receipt": receipt,
+                # The send establishes the next exact-key cooldown; do not
+                # echo a stale/past projection deadline.
+                "nextEligibleAt": int(dispatch_ts + 3600000),
+                "attemptCount": _reported_attempt_count(candidate)}
+        sent.append(item)
+        dispatched_slots += 1
+        if state_path:
+            try:
+                from scripts.dispatch_escalation import record_dispatch
+                follow_up_at = _get(candidate, "followUpAt", "follow_up_at")
+                fsm_record = record_dispatch(
+                    state_path, candidate["workflowInstanceId"],
+                    candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                    dispatch_ts=dispatch_ts, agent_id=candidate.get("targetAgentId"),
+                    node_visit_id=candidate.get("nodeVisitId"),
+                    projection_updated_at=candidate.get("projection_updated_at"),
+                    dispatch_intent_id=candidate.get("dispatchIntentId"),
+                    attempt_count=item["attemptCount"],
+                    next_eligible_at=item["nextEligibleAt"],
+                    reason=item["reason"],
+                    follow_up_at=follow_up_at,
+                    delivery_outcome=(receipt.get("status") if isinstance(receipt, dict)
+                                      else "UNKNOWN"),
+                )
+                fsm_record["followUpAt"] = follow_up_at
+                # A follow-up fence is meaningful only when an authoritative
+                # deadline exists; never manufacture one from a successful
+                # receipt alone.
+                if _millis(follow_up_at) is not None:
+                    fsm_record["followUpRequired"] = True
+                action = fsm_record.get("action")
+                if escalation_handler is not None and action in {
+                        "CREATE_OR_REUSE_THREAD", "NOTIFY_DOMAIN_OWNER",
+                        "ISSUE_ESCALATION_REPORT"}:
+                    try:
+                        result = escalation_handler(fsm_record, candidate)
+                        fsm_record = dict(fsm_record)
+                        fsm_record["escalationReceipt"] = result
+                        # Persist the escalation action's acknowledgement so
+                        # the next round advances the FSM instead of opening a
+                        # duplicate thread or repeating owner/report notices.
+                        from scripts.dispatch_escalation import (
+                            attach_thread, mark_owner_notified, mark_report_issued,
+                        )
+                        key_args = {
+                            "node_visit_id": candidate.get("nodeVisitId"),
+                            "projection_updated_at": candidate.get("projection_updated_at"),
+                        }
+                        if action == "CREATE_OR_REUSE_THREAD" and result:
+                            thread_id = (result.get("threadId") if isinstance(result, dict)
+                                         else result)
+                            if thread_id:
+                                attached = attach_thread(
+                                    state_path, candidate["workflowInstanceId"],
+                                    candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                                    thread_id, **key_args)
+                                # The initial record_dispatch response predates
+                                # the escalation side effect.  Reflect the
+                                # durable FSM mutation in this round's report;
+                                # otherwise the stale pre-attach row can mask
+                                # the correct durable state below.
+                                if isinstance(attached, dict):
+                                    fsm_record.update({
+                                        field: attached.get(field)
+                                        for field in ("threadId", "stage", "ownerNotified",
+                                                      "reportIssued")
+                                        if field in attached
+                                    })
+                                fsm_record["threadId"] = thread_id
+                        elif action == "NOTIFY_DOMAIN_OWNER" and result:
+                            notified = mark_owner_notified(
+                                state_path, candidate["workflowInstanceId"],
+                                candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                                **key_args)
+                            if isinstance(notified, dict):
+                                fsm_record.update({
+                                    field: notified.get(field)
+                                    for field in ("threadId", "stage", "ownerNotified",
+                                                  "reportIssued")
+                                    if field in notified
+                                })
+                        elif action == "ISSUE_ESCALATION_REPORT" and result:
+                            issued = mark_report_issued(
+                                state_path, candidate["workflowInstanceId"],
+                                candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                                **key_args)
+                            if isinstance(issued, dict):
+                                fsm_record.update({
+                                    field: issued.get(field)
+                                    for field in ("threadId", "stage", "ownerNotified",
+                                                  "reportIssued")
+                                    if field in issued
+                                })
+                    except Exception as exc:
+                        # Delivery already happened; expose escalation failure
+                        # without undoing it or retrying the wakeup blindly.
+                        item["escalationError"] = str(exc)
+                fsm_records.append(fsm_record)
+            except Exception as exc:
+                # Delivery already happened; expose FSM failure without undoing it.
+                item["fsmError"] = str(exc)
+    snapshot = {"status": "FAILED", "reason": "SNAPSHOT_NOT_ATTEMPTED",
+                 "non_blocking": True}
+    # Snapshot only after at least one confirmed dispatch; an empty round has
+    # no post-dispatch evidence and must not trigger an unnecessary read.
+    if sent and read_snapshot is not None:
+        snapshot = post_dispatch_snapshot(read_snapshot, 3)
+    diff = {"changed": False, "reason": "not_provided"}
+    if snapshot.get("status") == "SUCCESS" and pre_snapshot is not None:
+        try:
+            diff = (diff_builder(pre_snapshot, snapshot.get("data"))
+                    if diff_builder is not None
+                    else projection_diff(pre_snapshot, snapshot.get("data")))
+        except Exception as exc:
+            diff = {"changed": False, "reason": "DIFF_FAILED", "detail": str(exc)}
+    # Snapshot evidence may close the no-progress loop, but only when the
+    # adapter supplies an explicit authoritative event bound to this candidate.
+    if snapshot.get("status") == "SUCCESS" and state_path:
+        try:
+            from scripts.dispatch_escalation import record_observation
+            evidence_items = _snapshot_evidence_items(diff)
+            for candidate in sent:
+                # Evaluate each candidate against every returned evidence item;
+                # a five-dispatch round may produce multiple independent
+                # authoritative progress events in one snapshot response.
+                for evidence in evidence_items:
+                    event, progress_ts = _snapshot_authoritative_evidence(
+                        evidence, candidate, dispatch_ts=dispatch_ts)
+                    if not event or progress_ts is None:
+                        continue
+                    obs = record_observation(
+                        state_path, candidate["workflowInstanceId"],
+                        candidate.get("currentNodeKey") or candidate.get("nodeVisitId"),
+                        observed_ts=dispatch_ts, progress_ts=progress_ts,
+                        progress_event=event, node_visit_id=candidate.get("nodeVisitId"),
+                        projection_updated_at=candidate.get("projection_updated_at"),
+                        note="authoritative post-dispatch snapshot evidence")
+                    fsm_records.append(obs)
+        except Exception:
+            # FSM observation must never undo or block a completed dispatch.
+            pass
+    # Durable FSM state is reported even when this round sends nothing.
+    durable_fsm = []
+    if state_path:
+        try:
+            from scripts.dispatch_escalation import _read
+            latest, corrupt = _read(state_path)
+            round_keys = {item.get("candidateKey")
+                          for item in plan.get("union", {}).get("candidates", [])}
+            durable_fsm = [record for key, record in latest.items()
+                           if key in round_keys]
+            if corrupt:
+                durable_fsm.append({"state": "STATE_UNTRUSTED", "corruptLines": corrupt})
+        except Exception as exc:
+            durable_fsm.append({"state": "FSM_READ_FAILED", "detail": str(exc)})
+    report = build_report(plan["union"], plan["ranking"], sent, skips,
+                          fsm=fsm_records, durable_fsm=durable_fsm, snapshot=snapshot, diff=diff,
+                          global_active=plan.get("GLOBAL_ACTIVE"))
+    return report
+
+
+def _snapshot_evidence_items(diff):
+    """Normalize snapshot evidence to per-candidate records.
+
+    Adapters may return one evidence object, an ``evidence``/``progress`` list,
+    or a mapping keyed by candidateKey.  Unknown wrapper metadata is preserved
+    only when it is itself an evidence object; no progress is inferred from a
+    generic ``changed`` flag.
+    """
+    if not isinstance(diff, dict):
+        return []
+    for field in ("evidence", "progress", "authoritativeEvidence", "authoritative_evidence"):
+        value = diff.get(field)
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+        if isinstance(value, dict):
+            return [{**item, "candidateKey": item.get("candidateKey", key)}
+                    for key, item in value.items() if isinstance(item, dict)]
+    for field in ("byCandidate", "by_candidate", "evidenceByCandidate", "evidence_by_candidate"):
+        value = diff.get(field)
+        if isinstance(value, dict):
+            return [{**item, "candidateKey": item.get("candidateKey", key)}
+                    for key, item in value.items() if isinstance(item, dict)]
+    return [diff]
+
+
+def _snapshot_authoritative_evidence(diff, candidate, dispatch_ts=None):
+    """Return ``(event, timestamp)`` only for precisely bound evidence.
+
+    A changed projection is not itself progress.  The snapshot adapter must
+    supply an authoritative event, an exact candidate locator, and an event
+    timestamp strictly later than dispatch; otherwise the observation is kept
+    non-progress and the escalation FSM remains intact.  The explicit
+    ``dispatch_ts`` guard is performed here as well as in the durable FSM so
+    adapters cannot accidentally treat pre-send evidence as progress.
+    """
+    if not isinstance(diff, dict):
+        return None, None
+    event = str(diff.get("progressEvent", diff.get("event")) or "").upper()
+    if event not in {"TRANSITION", "RETURN", "HUMAN_REQUIRED", "NODE_CHANGE", "TERMINAL"}:
+        return None, None
+    locator = diff.get("candidateKey")
+    if locator != candidate.get("candidateKey"):
+        return None, None
+    timestamp = diff.get("progressAt", diff.get("progressTimestamp"))
+    if timestamp is None and isinstance(diff.get("evidence"), dict):
+        timestamp = diff["evidence"].get("progressAt", diff["evidence"].get("timestamp"))
+    parsed = _millis(timestamp)
+    if parsed is None:
+        return None, None
+    if dispatch_ts is not None:
+        sent_at = _millis(dispatch_ts)
+        if sent_at is not None and parsed <= sent_at:
+            return None, None
+    return event, int(parsed)
+
+
+def _snapshot_authoritative_event(diff, candidate):
+    """Compatibility wrapper returning only the validated event."""
+    event, _timestamp = _snapshot_authoritative_evidence(diff, candidate)
+    return event
+
+
+def projection_diff(before, after) -> dict:
+    """Return a small deterministic diff for projection snapshots.
+
+    The dispatcher treats snapshots as opaque projection payloads; this helper
+    deliberately compares JSON-shaped values without interpreting workflow
+    state or making a detail read.  Callers may provide ``diff_builder`` when
+    their snapshot service supplies a domain-specific diff.
+    """
+    if before == after:
+        return {"changed": False, "changedKeys": []}
+    if isinstance(before, dict) and isinstance(after, dict):
+        keys = sorted(set(before) | set(after))
+        changed = [key for key in keys if before.get(key) != after.get(key)]
+        return {"changed": bool(changed), "changedKeys": changed}
+    return {"changed": True, "changedKeys": ["$"], "beforeType": type(before).__name__,
+            "afterType": type(after).__name__}
+
+
+def post_dispatch_snapshot(read_snapshot, max_retries: int = 3) -> dict:
+    """Read a post-dispatch projection snapshot without blocking dispatch.
+
+    The callback is deliberately injected so this module cannot accidentally
+    call workflow_instance_detail.  Failures are reported after bounded
+    retries; callers must retain the already-issued dispatches.
+    """
+    attempts = max(1, min(3, _nonnegative_int(max_retries, 3)))
+    errors = []
+    for attempt in range(1, attempts + 1):
+        try:
+            value = read_snapshot()
+            # Snapshot adapters may report transport/service failure as a
+            # structured value instead of raising.  Treat explicit FAILED
+            # status as retryable; successful reads remain opaque payloads.
+            if isinstance(value, dict):
+                status = str(value.get("status", "")).upper()
+                # Accept the standard capability envelope as well as the
+                # adapter's status envelope.  In particular, {ok:false} is a
+                # transport failure and must be retried, not treated as an
+                # opaque successful snapshot payload.
+                if (value.get("ok") is False or
+                        status in {"FAILED", "FAILURE", "ERROR", "REJECTED", "DENIED"} or
+                        "error" in value or "errors" in value):
+                    errors.append(str(value.get("reason") or value.get("error") or
+                                     value.get("errors") or value))
+                    continue
+                if status == "SUCCESS" and "data" in value:
+                    return {"status": "SUCCESS", "attempts": attempt,
+                            "data": value.get("data")}
+                if value.get("ok") is True:
+                    return {"status": "SUCCESS", "attempts": attempt,
+                            "data": value.get("result", value.get("data"))}
+            return {"status": "SUCCESS", "attempts": attempt, "data": value}
+        except Exception as exc:  # snapshot failure is non-blocking by contract
+            errors.append(str(exc))
+    return {"status": "FAILED", "attempts": attempts, "errors": errors,
+            "non_blocking": True}
+
+
+def build_report(union: dict, ranking: dict, dispatched: list[dict], skips: list[dict],
+                 fsm: list[dict] | None = None, durable_fsm: list[dict] | None = None,
+                 snapshot: dict | None = None,
+                 diff: dict | None = None, global_active: int | None = None) -> dict:
+    # Callers may pass ``plan_round()['skips']`` (which already includes
+    # capacity skips).  Merge by exact candidate key so a structured skip is
+    # reported once, never silently duplicated or counted twice.
+    all_skips = []
+    seen_skip_keys = set()
+    seen_skip_fingerprints = set()
+    # Transport/bookkeeping outcomes must outrank the preliminary capacity
+    # marker.  Otherwise execute_round's SEND_FAILED can be hidden by the
+    # earlier ROUND_CAPACITY row for the same key.
+    skip_priority = {"ROUND_CAPACITY": 0, "REPORT_DISPOSITION_MISSING": 0}
+    skip_by_key = {}
+    unkeyed = []
+    for item in (list(union.get("structured_skips", [])) +
+                 list(ranking.get("deferred", [])) + list(skips or [])):
+        if not isinstance(item, dict):
+            continue
+        key = item.get("candidateKey")
+        if key:
+            prior = skip_by_key.get(key)
+            if prior is None or skip_priority.get(str(prior.get("reason")), 1) <= skip_priority.get(str(item.get("reason")), 1):
+                skip_by_key[key] = item
+        else:
+            # Invalid/inactive source rows have no canonical candidate key, but
+            # plan_round and execute_round can both pass them here. Deduplicate
+            # those structured records by stable audit fields.
+            fingerprint = (
+                item.get("source"), item.get("workflowInstanceId"),
+                item.get("nodeVisitId"), item.get("reason"),
+                item.get("status"), item.get("detail"),
+            )
+            if fingerprint not in seen_skip_fingerprints:
+                seen_skip_fingerprints.add(fingerprint)
+                unkeyed.append(item)
+    all_skips = unkeyed + list(skip_by_key.values())
+    # A deferred row can be promoted when an earlier claim is fenced or fails.
+    # Its preliminary ROUND_CAPACITY marker must not override the real dispatch
+    # disposition (and must not inflate structured_skip_count).
+    dispatched_keys = {item.get("candidateKey") for item in dispatched if item.get("candidateKey")}
+    all_skips = [item for item in all_skips
+                 if not item.get("candidateKey") or item.get("candidateKey") not in dispatched_keys]
+    candidates = list(union.get("candidates", []))
+    # Keep one explicit disposition for every deduplicated eligible candidate;
+    # this makes omissions mechanically visible to report consumers.  A caller
+    # cannot accidentally emit an ``UNSEEN`` eligible row: if transport or
+    # bookkeeping omitted it, surface a structured skip with the required
+    # audit fields instead of silently dropping it.
+    dispositions = {}
+    candidate_by_key = {item.get("candidateKey"): item for item in candidates
+                        if item.get("candidateKey")}
+    dispatched_object_ids = {id(item) for item in dispatched}
+    for item in dispatched + all_skips:
+        key = item.get("candidateKey")
+        if not key and isinstance(item, dict):
+            # Source rows that cannot form a canonical key are still explicit
+            # structured dispositions; never hide malformed input from the
+            # round report.
+            normalized = dict(item)
+            normalized.setdefault("status", "STRUCTURED_SKIPPED")
+            normalized.setdefault("reason", "INVALID_PROJECTION")
+            normalized.setdefault("nextEligibleAt", None)
+            normalized.setdefault("attemptCount", "UNKNOWN")
+            dispositions[f"unkeyed:{len(dispositions)}"] = normalized
+        if key:
+            # Enforce the audit contract at the report boundary as well as in
+            # the planner.  This protects callers that construct a concise
+            # DISPATCHED receipt and ensures every eligible disposition carries
+            # reason, nextEligibleAt, and authoritative attemptCount fields.
+            candidate = candidate_by_key.get(key, {})
+            normalized = dict(item)
+            # Every keyed candidate must have an explicit terminal
+            # disposition, even when a transport adapter returns a concise
+            # receipt containing only candidateKey.
+            default_status = ("DISPATCHED" if id(item) in dispatched_object_ids and not item.get("planned")
+                              else "STRUCTURED_SKIPPED")
+            normalized.setdefault("status", default_status)
+            normalized.setdefault("reason", "DISPATCHED" if default_status == "DISPATCHED"
+                                 else "STRUCTURED_SKIPPED")
+            normalized.setdefault("nextEligibleAt", _get(candidate, "nextEligibleAt",
+                                                          "next_eligible_at"))
+            normalized.setdefault("attemptCount", _reported_attempt_count(candidate)
+                                 if candidate else "UNKNOWN")
+            dispositions[key] = normalized
+    # UNION rows rejected before they enter ``union["candidates"]`` (for
+    # example an owner conflict) still have a canonical key. Keep them in the
+    # machine-readable disposition list as STRUCTURED_SKIPPED rather than
+    # exposing them only in the human grouping. This completes the per-row
+    # DISPATCHED/STRUCTURED_SKIPPED audit invariant.
+    for item in all_skips:
+        key = item.get("candidateKey")
+        if key and key not in dispositions:
+            normalized = dict(item)
+            normalized.setdefault("status", "STRUCTURED_SKIPPED")
+            normalized.setdefault("reason", "STRUCTURED_SKIPPED")
+            normalized.setdefault("nextEligibleAt", _get(item, "nextEligibleAt",
+                                                          "next_eligible_at"))
+            normalized.setdefault("attemptCount", _reported_attempt_count(item))
+            dispositions[key] = normalized
+    for candidate in candidates:
+        key = candidate.get("candidateKey")
+        if key and key not in dispositions:
+            missing = {**candidate, **_disposition_base(candidate),
+                       "reason": "REPORT_DISPOSITION_MISSING"}
+            all_skips.append(missing)
+            dispositions[key] = missing
+    groups = {}
+    # Include deduplicated candidates and structured skips that have an exact
+    # candidate key (notably OWNER_CONFLICT rows).  Readable grouping must not
+    # make a visible skip disappear merely because it was unsafe to dispatch.
+    group_items = list(candidates) + [item for item in all_skips
+                                      if item.get("candidateKey") and
+                                      item.get("candidateKey") not in candidate_by_key]
+    for item in group_items:
+        key = item.get("candidateKey")
+        disposition = dispositions.get(key, item)
+        definition_key = item.get("definitionKey", "<missing-definition>")
+        readable_title = item.get("title") or item.get("definitionName")
+        # Keep distinct titles visible even when they share one definition;
+        # the opaque candidateKey remains the per-row identity.
+        group_id = (definition_key, readable_title)
+        groups.setdefault(group_id, {"definitionKey": definition_key,
+                                      "definitionName": item.get("definitionName"),
+                                      "title": item.get("title"), "candidates": []})["candidates"].append({
+            "candidateKey": key, "workflowInstanceId": item.get("workflowInstanceId"),
+            "nodeVisitId": item.get("nodeVisitId"), "status": disposition.get("status", "STRUCTURED_SKIPPED")})
+    # Prefer the newest durable record for each FSM key, while retaining
+    # unkeyed read errors for visibility.  ``fsm`` contains this round's
+    # post-write records and therefore wins over the preassembled ledger view.
+    fsm_latest = {}
+    fsm_unkeyed = []
+    for item in list(durable_fsm or []) + list(fsm or []):
+        if not isinstance(item, dict):
+            continue
+        key = item.get("stateKey")
+        if key:
+            fsm_latest[key] = item
+        else:
+            fsm_unkeyed.append(item)
+    fsm_report = list(fsm_latest.values()) + fsm_unkeyed
+    return {"protocol": "HR_WORKFLOW_DISPATCHER_V5", "scope": "GLOBAL_ACTIVE",
+            "projection_sources": ["workflow_dispatch_intents", "workflow_global_instances"],
+            "detail_preflight": False,
+            "GLOBAL_ACTIVE": (global_active if global_active is not None else
+                              union.get("global_active")),
+            "source_input_count": union.get("raw_count", 0),
+            "eligible_projection_count": len(candidates),
+            "source_counts": union.get("source_counts", {}),
+            "union_candidate_count": union.get("union_count", 0),
+            "union_candidate_count_before_dedupe": len(candidates) + union.get("deduped_count", 0),
+             "deduplicated_candidate_count": union.get("union_count", 0),
+            "deduplicated_duplicates": union.get("deduped_count", 0),
+            "selection_limit": MAX_DISPATCH_PER_ROUND, "dispatch_count": len(dispatched),
+            "structured_skip_count": len(all_skips), "dispatches": dispatched,
+            "candidate_dispositions": list(dispositions.values()),
+             "structured_skips": all_skips, "definition_fair_distribution": ranking.get("definition_distribution", {}),
+             "owner_fair_distribution": ranking.get("owner_distribution", {}),
+             "fair_priority": [{"candidateKey": c.get("candidateKey"), "fairScore": c.get("_fair_score"),
+                               "basePriority": c.get("_base_priority"), "waitingRounds": c.get("_waiting_rounds"),
+                               "dispatchCount": c.get("_dispatch_count")}
+                              for c in ranking.get("selected", [])],
+             "readable_definition_groups": list(groups.values()),
+            "oldest_unselected_wait_ms": ranking.get("oldest_wait_ms", 0),
+             "oldest_unselected_candidate": ranking.get("oldest_unselected_candidate"),
+            "starvation_risk": ranking.get("starvation_risk", []), "fsm": fsm_report,
+             "fsm_state": [{"stateKey": item.get("stateKey"),
+                            "stage": item.get("stage"),
+                            "dispatchCount": item.get("dispatchCount", 0),
+                            "noProgressCount": item.get("noProgressCount", 0),
+                             "lastProgressAt": item.get("lastProgressAt"),
+                            "threadId": item.get("threadId"),
+                            "ownerNotified": bool(item.get("ownerNotified")),
+                            "reportIssued": bool(item.get("reportIssued"))}
+                           for item in fsm_report],
+            "snapshot": snapshot or {"status": "FAILED", "reason": "SNAPSHOT_NOT_ATTEMPTED", "non_blocking": True},
+            "snapshot_diff": diff or {"changed": False, "reason": "not_provided"},
+            "follow_up_conditions": sorted({item.get("next_condition") for item in all_skips if item.get("next_condition")}),
+             "next_conditions": sorted({item.get("next_condition") for item in all_skips if item.get("next_condition")}),
+             "accepted_is_not_progress": True, "transition_performed": False}

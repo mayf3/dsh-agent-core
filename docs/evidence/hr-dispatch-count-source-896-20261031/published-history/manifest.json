@@ -1,0 +1,41 @@
+{
+  "source_snapshot": "/tmp/issue-896-full.json",
+  "source_snapshot_sha256": "cb9ba4e6c2374427f6a61f5c6bfc1b223a6113f80f7131843d703b9919fd3449",
+  "complete_product_scripts_available": false,
+  "test_fsm_repro_source_available": false,
+  "artifacts": [
+    {
+      "file": "test_receipt_ref.py",
+      "source_url": "https://github.com/mayf3/agent-control/issues/896#issuecomment-6110929231",
+      "block_1based": 5,
+      "language": "python",
+      "bytes": 9251,
+      "sha256": "dc0de447fab2786a2a52ca8c3a1da6b51e795d541ebb6ab39857cdbd0044e77b",
+      "published_bytes_only": true,
+      "executed": false,
+      "archive": "test_receipt_ref.py.txt"
+    },
+    {
+      "file": "minimal_v3_review_fix.diff",
+      "source_url": "https://github.com/mayf3/agent-control/issues/896#issuecomment-6230343262",
+      "block_1based": 1,
+      "language": "diff",
+      "bytes": 7903,
+      "sha256": "8d0a9f54f6202bee11491e883996b8e18b7cc844149d79fe5e292578087c3f6c",
+      "published_bytes_only": true,
+      "executed": false,
+      "archive": "minimal_v3_review_fix.diff"
+    },
+    {
+      "file": "test_receipt_envelope_alignment.final.py",
+      "source_url": "https://github.com/mayf3/agent-control/issues/896#issuecomment-6230343262",
+      "block_1based": 2,
+      "language": "python",
+      "bytes": 23536,
+      "sha256": "d0e1e67ea5c57f159706416c534c1c445b547f108eccb588e0f10a9ab4e43277",
+      "published_bytes_only": true,
+      "executed": false,
+      "archive": "test_receipt_envelope_alignment.final.py.txt"
+    }
+  ]
+}

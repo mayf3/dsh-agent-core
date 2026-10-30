@@ -1,0 +1,475 @@
+"""SOURCE-alignment RED/GREEN probe: real nested envelope vs receiptRef ledger.
+
+Revision: hr-receipt-adapter-review-fix-20261017-v1 (applies the three
+static REVISE items on comment 896/6230260354 to the v1 candidate; the
+pre-revision candidate is preserved at v1-baseline-preserved/ and is the
+RED target of this same test byte-string).
+
+SOURCE contract under test (dsh-agent-core 33ebceb9c80df668c27ad61d162ed9afa0
+c08da8, packages/production-runtime/src/agent-session-messaging.js L238-272,
+blob bec9e00e2b915b4e5a08fea1cd37c606f077df91): the receipt-only success
+boundary returns {ok:true, result:{status:'accepted', targetAgentId,
+sessionId, messageId}}, and a receipt lacking non-empty string
+sessionId/messageId can only surface as ok:false/outcome_unknown - never a
+fabricated success.
+
+R1 (shape closure): any dict with an ``ok`` or ``result`` key is a
+new-shape attempt; failed validation is terminal UNKNOWN and must NOT fall
+back to the legacy top-level messageId/message_id/id probe.  Genuine flat
+legacy receipts (neither key) keep the unchanged legacy contract,
+disclosed as legacy-only semantics, never elevated.
+
+R2 (opaque coordinates): accepted coordinates keep their original bytes -
+never stripped/normalized; whitespace-padded values are rejected by
+contract; targetAgentId must byte-equal the trusted expected target, and
+without a trusted expected target the new binding stays UNKNOWN.
+
+R3 (row binding at persistence): an envelope-sourced receiptRef persisted
+via record_dispatch must bind to the row's agent - a foreign target or a
+missing binding is rejected; legacy-sourced refs keep historical
+semantics; historical rows are never backfilled.  E9-like two-row cases
+are NOT cross-attempt detections; attemptBinding stays 'unknown' and no
+trusted attempt/request field is fabricated.
+
+Run against the preserved pre-revision candidate this probe must FAIL
+(RED), and against the revised candidate it must PASS (GREEN).  Offline,
+fake sender, zero network; no real agent_session_send / run_v5_round is
+ever invoked and nothing outside this isolated directory is written.
+
+Trusted fields (messageId/sessionId/targetAgentId/reportedStatus) come only
+from THIS round's actual send return value.  Row context (instanceId/nodeKey/
+agentId) keeps coming from the candidate context and is never dressed up as
+receipt observation.  requestId/correlation are not exposed by that
+boundary and are never guessed, derived, or persisted.
+"""
+import json
+import os
+import sys
+import tempfile
+
+ROOT = (os.environ.get("RECEIPT_ALIGN_MODULE_ROOT")
+        or os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, ROOT)
+
+from scripts import dispatch_escalation as fsm          # noqa: E402
+from scripts import dispatcher_v5 as v5                 # noqa: E402
+
+RESULTS = []
+T0 = 1792015200000  # 2026-10-15T10:00:00Z, fixed synthetic clock
+HOUR = 60 * 60 * 1000
+
+ENVELOPE_FIELDS = ("messageId", "sessionId", "targetAgentId",
+                   "reportedStatus", "receiptSource", "attemptBinding")
+
+
+def check(name, cond, detail=""):
+    RESULTS.append((name, bool(cond), detail))
+
+
+def envelope(mid="om_env_1", session="sess_real_1", target="agt_fake-agent",
+             status="accepted", ok=True, extra=None):
+    if not ok:
+        return {"ok": False, "error": {"code": "outcome_unknown",
+                                       "detail": "synthetic non-success"}}
+    result = {"status": status, "targetAgentId": target,
+              "sessionId": session, "messageId": mid}
+    if extra:
+        result.update(extra)
+    return {"ok": True, "result": result}
+
+
+class FakeSender:
+    def __init__(self, receipt=None, behavior="ok"):
+        self.calls = []
+        self.receipt = receipt
+        self.behavior = behavior
+
+    def __call__(self, target, message, candidate):
+        self.calls.append(target)
+        if self.behavior == "raise":
+            raise RuntimeError("synthetic transport failure")
+        return self.receipt
+
+
+def candidate(instance, target="agt_fake-agent", node="candidates",
+              visit=None, projection="pX"):
+    c = {"workflowInstanceId": instance, "currentNodeKey": node,
+         "targetAgentId": target, "projection_updated_at": projection,
+         "definitionKey": "fake-def-v1"}
+    if visit:
+        c["nodeVisitId"] = visit
+    return c
+
+
+def plan_for(*candidates):
+    cands = list(candidates)
+    return {"skips": [], "union": {"candidates": cands},
+            "ranking": {"selected": cands, "deferred": []}}
+
+
+def fresh_ledger():
+    fd, path = tempfile.mkstemp(suffix=".jsonl")
+    os.close(fd)
+    os.unlink(path)
+    return path
+
+
+def last_record(path, instance, node="candidates", visit=None, projection="pX"):
+    return fsm.get(path, instance, node, node_visit_id=visit,
+                   projection_updated_at=projection)
+
+
+def red_core_envelope_accepted():
+    """Real nested envelope => ledger carries the reference from THIS return."""
+    path = fresh_ledger()
+    inst = "b3000000-0000-4000-8000-00000000000c"
+    sender = FakeSender(receipt=envelope())
+    out = v5.execute_round(plan_for(candidate(inst)),
+                           sender, state_path=path, now_ms=T0)
+    st = last_record(path, inst)
+    check("E0a round item carried the raw envelope unchanged",
+          out["dispatches"][0].get("receipt", {}).get("result", {}).get("messageId")
+          == "om_env_1")
+    rr = st.get("receiptRef") or {}
+    check("E0b ledger persists reference from the nested envelope",
+          rr.get("messageId") == "om_env_1" and rr.get("sessionId") == "sess_real_1",
+          f"receiptRef={st.get('receiptRef')}")
+    check("E0c context fields still come from the candidate, not the receipt",
+          st.get("instanceId") == inst and st.get("agentId") == "agt_fake-agent"
+          and st.get("nodeKey") == "candidates",
+          f"row={ {k: st.get(k) for k in ('instanceId', 'agentId', 'nodeKey')} }")
+    check("E0d reference marked REPORTED envelope transport result",
+          rr.get("receiptSource") == "send_agent_return_envelope"
+          and rr.get("reportedStatus") == "accepted"
+          and "consumed" not in json.dumps(rr).lower()
+          and "ack" not in json.dumps(rr).lower(),
+          f"receiptRef={st.get('receiptRef')}")
+    check("E0e report loss does not destroy the reference (ledger-only read)",
+          rr.get("messageId") == "om_env_1",
+          f"receiptRef={st.get('receiptRef')}")
+
+
+def envelope_field_discipline():
+    path = fresh_ledger()
+    inst = "c4000000-0000-4000-8000-000000000001"
+    sender = FakeSender(receipt=envelope(extra={"text": "SECRET-BODY",
+                                                "raw": {"x": 1},
+                                                "credential": "tok",
+                                                "requestId": "should-not-leak"}))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    st = last_record(path, inst)
+    rr = st.get("receiptRef") or {}
+    check("E1a whitelisted envelope fields only, exact key set",
+          sorted(rr.keys()) == sorted(ENVELOPE_FIELDS), f"keys={sorted(rr)}")
+    check("E1b attempt binding stays explicitly unknown (never inferred)",
+          rr.get("attemptBinding") == "unknown", f"receiptRef={rr}")
+    blob = json.dumps(st, ensure_ascii=False)
+    check("E1c secret/body/raw/unclaimed-requestId never persisted",
+          all(tok not in blob for tok in
+              ("SECRET-BODY", '"raw"', "credential", "should-not-leak")),
+          blob[:200])
+    check("E1d targetAgentId equals THIS dispatch's expected target",
+          rr.get("targetAgentId") == "agt_fake-agent", f"receiptRef={rr}")
+
+
+def target_binding_exact():
+    path = fresh_ledger()
+    inst = "c4000000-0000-4000-8000-000000000002"
+    sender = FakeSender(receipt=envelope(target="agt_OTHER-agent"))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    st = last_record(path, inst)
+    check("E2 explicit target mismatch => no reference on this row (UNKNOWN)",
+          st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+          f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+
+
+def partial_or_invalid_coordinates():
+    bad_results = [
+        ("missing sessionId", {"ok": True, "result": {
+            "status": "accepted", "targetAgentId": "agt_fake-agent",
+            "messageId": "om_p1"}}),
+        ("empty messageId", envelope(mid="  ")),
+        ("non-string messageId", envelope(mid=12345)),
+        ("missing messageId", {"ok": True, "result": {
+            "status": "accepted", "targetAgentId": "agt_fake-agent",
+            "sessionId": "sess_x"}}),
+        ("status not accepted", envelope(status="unknown")),
+        ("result not an object", {"ok": True, "result": "accepted"}),
+        ("ok missing", {"result": {"status": "accepted",
+                                   "targetAgentId": "agt_fake-agent",
+                                   "sessionId": "s", "messageId": "m"}}),
+    ]
+    for i, (label, receipt) in enumerate(bad_results):
+        path = fresh_ledger()
+        inst = f"c4000000-0000-4000-8000-0000000000{i + 10:02x}"
+        sender = FakeSender(receipt=receipt)
+        v5.execute_round(plan_for(candidate(inst)), sender,
+                         state_path=path, now_ms=T0 + i)
+        st = last_record(path, inst)
+        check(f"E3 {label}: no exception, count+1, NO fabricated reference",
+              st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+              f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+
+
+def non_success_envelopes_stay_unknown():
+    for i, receipt in enumerate([None, False, "plain-string-ok",
+                                 {"error": "boom"}, envelope(ok=False),
+                                 {"ok": True, "error": "weird"}]):
+        path = fresh_ledger()
+        inst = f"d5000000-0000-4000-8000-0000000000{i + 20:02x}"
+        sender = FakeSender(receipt=receipt)
+        v5.execute_round(plan_for(candidate(inst)), sender,
+                         state_path=path, now_ms=T0 + i)
+        st = last_record(path, inst)
+        check(f"E4 no-exception {json.dumps(receipt, default=str)[:28]!r} "
+              f"=> count kept, NO fabricated reference",
+              not st.get("receiptRef"),
+              f"receiptRef={st.get('receiptRef')}")
+
+
+def new_shape_failure_closes_legacy_fallback():
+    """R1: a recognized new-shape receipt failing validation is terminal
+    UNKNOWN - stray top-level messageId/message_id/id keys must not
+    re-admit it, and the ledger must show zero reference with the old
+    count/fence semantics intact."""
+    mixed_cases = [
+        ("impostor ok+top-level id",
+         {"ok": True, "messageId": "om_top", "status": "accepted"}),
+        ("wrongtarget result + top-level id",
+         {"ok": True, "result": {"status": "accepted",
+                                 "targetAgentId": "agt_OTHER-agent",
+                                 "sessionId": "s", "messageId": "m"},
+          "id": "request-id"}),
+        ("ok:false error + top-level messageId",
+         {"ok": False, "error": {"code": "outcome_unknown"},
+          "messageId": "om_e"}),
+        ("partial result (missing sessionId) + top-level message_id",
+         {"ok": True, "result": {"status": "accepted",
+                                 "targetAgentId": "agt_fake-agent",
+                                 "messageId": "om_p"},
+          "message_id": "om_p"}),
+    ]
+    for i, (label, receipt) in enumerate(mixed_cases):
+        path = fresh_ledger()
+        inst = f"e6000000-0000-4000-8000-0000000000{i + 70:02x}"
+        sender = FakeSender(receipt=receipt)
+        v5.execute_round(plan_for(candidate(inst)), sender,
+                         state_path=path, now_ms=T0 + i)
+        st = last_record(path, inst)
+        check(f"E5 {label}: closed to UNKNOWN, zero reference, count kept",
+              st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+              f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+
+
+def genuine_flat_legacy_contract_unchanged():
+    """R1 disclosure: a dict with NEITHER ok nor result keys is a genuine
+    historical flat receipt and keeps the unchanged legacy contract
+    (legacy-only semantics, never envelope provenance)."""
+    path = fresh_ledger()
+    inst = "e6000000-0000-4000-8000-00000000007f"
+    sender = FakeSender(receipt={"messageId": "om_leg", "status": "sent"})
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    st = last_record(path, inst)
+    rr = st.get("receiptRef") or {}
+    check("E5b genuine flat legacy: legacy probe kept, legacy provenance",
+          rr.get("messageId") == "om_leg"
+          and rr.get("reportedStatus") == "sent"
+          and rr.get("receiptSource") == "send_agent_return"
+          and rr.get("receiptSource") != "send_agent_return_envelope",
+          f"receiptRef={rr}")
+
+
+def opaque_coordinates_byte_exact():
+    """R2: coordinates are validated and stored as original bytes - never
+    stripped/normalized; whitespace-padded values are rejected by contract
+    (never rewritten into a different ID); target binding is byte-exact."""
+    # leading/trailing whitespace target must NOT match expected target
+    for i, label, target in [(0, "trailing-space", "agt_fake-agent "),
+                             (1, "leading-space", " agt_fake-agent")]:
+        path = fresh_ledger()
+        inst = f"f7000000-0000-4000-8000-00000000000{i + 1:x}"
+        sender = FakeSender(receipt=envelope(
+            mid=f"om_ws{i}", session=f"sess_ws{i}", target=target))
+        v5.execute_round(plan_for(candidate(inst)), sender,
+                         state_path=path, now_ms=T0 + i)
+        st = last_record(path, inst)
+        check(f"E10 {label} target: no byte-folding match, no reference",
+              st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+              f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+    # whitespace-padded coordinates are explicitly rejected, not rewritten
+    path = fresh_ledger()
+    inst = "f7000000-0000-4000-8000-000000000003"
+    sender = FakeSender(receipt=envelope(mid="  om_pad  ", session=" sess_pad "))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    st = last_record(path, inst)
+    check("E10 padded coordinates: rejected by contract, not normalized",
+          st.get("dispatchCount") == 1 and not st.get("receiptRef"),
+          f"count={st.get('dispatchCount')} receiptRef={st.get('receiptRef')}")
+    # accepted coordinates keep their ORIGINAL bytes (internal spaces kept)
+    path = fresh_ledger()
+    inst = "f7000000-0000-4000-8000-000000000004"
+    sender = FakeSender(receipt=envelope(mid="om mid", session="sess 1"))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    rr = last_record(path, inst).get("receiptRef") or {}
+    check("E11 accepted coordinates stored byte-exact (no rewrite)",
+          rr.get("messageId") == "om mid" and rr.get("sessionId") == "sess 1"
+          and rr.get("targetAgentId") == "agt_fake-agent",
+          f"receiptRef={rr}")
+    # missing/untrusted expected target: new binding stays UNKNOWN.  The
+    # dispatcher cannot send without a target (the send itself would fail),
+    # so this contract is probed at the adapter unit boundary, which is the
+    # exact surface that decides promotion.
+    no_target_cases = [
+        ("absent expected target", None),
+        ("empty expected target", ""),
+        ("non-string expected target", 123),
+    ]
+    for i, (label, expected) in enumerate(no_target_cases):
+        ref = v5._receipt_reference(envelope(), expected)
+        check(f"E12 {label}: new binding stays UNKNOWN at adapter boundary",
+              ref is None, f"ref={ref}")
+
+
+def old_rows_never_backfilled():
+    """R3: same-target/row positive is honest; explicit foreign-target and
+    missing-binding envelope refs are rejected at the persistence entry;
+    legacy-sourced refs keep historical semantics; historical rows are
+    never backfilled."""
+    path = fresh_ledger()
+    legacy_inst = "a8000000-0000-4000-8000-000000000040"
+    fsm.record_dispatch(path, legacy_inst, "candidates", dispatch_ts=T0,
+                        agent_id="agt_legacy")
+    inst = "a9000000-0000-4000-8000-000000000041"
+    sender = FakeSender(receipt=envelope(mid="om_env_2", session="sess_real_2"))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path,
+                     now_ms=T0 + 1)
+    own_ref = {"messageId": "om_env_2", "sessionId": "sess_real_2",
+               "targetAgentId": "agt_legacy", "reportedStatus": "accepted",
+               "receiptSource": "send_agent_return_envelope",
+               "attemptBinding": "unknown"}
+    fsm.record_dispatch(path, legacy_inst, "candidates", dispatch_ts=T0 + 2,
+                        agent_id="agt_legacy", receipt_ref=own_ref)
+    first = json.loads(open(path).read().splitlines()[0])
+    check("E6a historical row stays without receiptRef (no backfill)",
+          "receiptRef" not in first, f"first-row keys={sorted(first)}")
+    last = last_record(path, legacy_inst, projection=None)
+    rr = last.get("receiptRef") or {}
+    check("E6b same-target envelope ref persists on its own row (own ref)",
+          rr.get("messageId") == "om_env_2"
+          and rr.get("targetAgentId") == "agt_legacy",
+          f"receiptRef={rr}")
+    st = last_record(path, inst)
+    check("E6c envelope instance keeps its own reference (no cross-row leak)",
+          (st.get("receiptRef") or {}).get("sessionId") == "sess_real_2",
+          f"receiptRef={st.get('receiptRef')}")
+    # foreign target on a legacy row: envelope-sourced ref must NOT persist
+    path2 = fresh_ledger()
+    foreign_ref = dict(own_ref, messageId="om_foreign",
+                       targetAgentId="agt_fake-agent")
+    fsm.record_dispatch(path2, "b1000000-0000-4000-8000-000000000042",
+                        "candidates", dispatch_ts=T0, agent_id="agt_legacy",
+                        receipt_ref=foreign_ref)
+    st2 = last_record(path2, "b1000000-0000-4000-8000-000000000042",
+                      projection=None)
+    check("E6d foreign-target envelope ref rejected at persistence entry",
+          not st2.get("receiptRef"),
+          f"receiptRef={st2.get('receiptRef')}")
+    # missing binding: envelope-source ref without explicit target / row agent
+    path3 = fresh_ledger()
+    unbound_ref = {k: v for k, v in own_ref.items() if k != "targetAgentId"}
+    fsm.record_dispatch(path3, "b2000000-0000-4000-8000-000000000043",
+                        "candidates", dispatch_ts=T0, agent_id="agt_legacy",
+                        receipt_ref=unbound_ref)
+    fsm.record_dispatch(path3, "b3000000-0000-4000-8000-000000000044",
+                        "candidates", dispatch_ts=T0 + 1, agent_id=None,
+                        receipt_ref=own_ref)
+    st3a = last_record(path3, "b2000000-0000-4000-8000-000000000043",
+                       projection=None)
+    st3b = last_record(path3, "b3000000-0000-4000-8000-000000000044",
+                       projection=None)
+    check("E6e envelope ref without explicit target or without row agent: "
+          "rejected (binding missing)",
+          not st3a.get("receiptRef") and not st3b.get("receiptRef"),
+          f"a={st3a.get('receiptRef')} b={st3b.get('receiptRef')}")
+    # legacy-sourced ref without target contract: historical behavior kept
+    path4 = fresh_ledger()
+    legacy_ref = {"messageId": "om_old", "reportedStatus": "sent",
+                  "receiptSource": "send_agent_return"}
+    fsm.record_dispatch(path4, "b4000000-0000-4000-8000-000000000045",
+                        "candidates", dispatch_ts=T0, agent_id=None,
+                        receipt_ref=legacy_ref)
+    st4 = last_record(path4, "b4000000-0000-4000-8000-000000000045",
+                      projection=None)
+    check("E6f legacy-sourced ref without target contract: unchanged",
+          (st4.get("receiptRef") or {}).get("messageId") == "om_old",
+          f"receiptRef={st4.get('receiptRef')}")
+
+
+def count_cooldown_and_failure_semantics_unchanged():
+    path = fresh_ledger()
+    inst = "aa000000-0000-4000-8000-000000000050"
+    sender = FakeSender(receipt=envelope(mid="om_d", session="sess_d"))
+    v5.execute_round(plan_for(candidate(inst)), sender, state_path=path, now_ms=T0)
+    v5.execute_round(plan_for(candidate(inst)), sender,
+                     state_path=path, now_ms=T0 + 10 * 60 * 1000)
+    st = last_record(path, inst)
+    check("E7 second round within cooldown: count 1, one send, single reference",
+          st.get("dispatchCount") == 1 and len(sender.calls) == 1
+          and (st.get("receiptRef") or {}).get("messageId") == "om_d",
+          f"count={st.get('dispatchCount')} sends={len(sender.calls)} "
+          f"receiptRef={st.get('receiptRef')}")
+    path2 = fresh_ledger()
+    bad = FakeSender(receipt=envelope(mid="om_never"), behavior="raise")
+    v5.execute_round(plan_for(candidate("ab000000-0000-4000-8000-000000000051")),
+                     bad, state_path=path2, now_ms=T0)
+    st2 = last_record(path2, "ab000000-0000-4000-8000-000000000051")
+    check("E8 raising send: count 0, no reference", 
+          st2.get("dispatchCount") == 0 and not st2.get("receiptRef"),
+          f"count={st2.get('dispatchCount')} receiptRef={st2.get('receiptRef')}")
+
+
+def receipts_never_cross_sessions():
+    path = fresh_ledger()
+    i1, i2 = "ac000000-0000-4000-8000-000000000060", "ad000000-0000-4000-8000-000000000061"
+    v5.execute_round(plan_for(candidate(i1)),
+                     FakeSender(receipt=envelope(mid="om_a", session="sess_a")),
+                     state_path=path, now_ms=T0)
+    v5.execute_round(plan_for(candidate(i2, target="agt_other-agent")),
+                     FakeSender(receipt=envelope(mid="om_b", session="sess_b",
+                                                 target="agt_other-agent")),
+                     state_path=path, now_ms=T0 + 1)
+    r1 = last_record(path, i1).get("receiptRef") or {}
+    r2 = last_record(path, i2).get("receiptRef") or {}
+    check("E9 two normal inputs each land in their own row "
+          "(NOT a cross-attempt detection; attemptBinding stays 'unknown')",
+          r1.get("messageId") == "om_a" and r1.get("sessionId") == "sess_a"
+          and r2.get("messageId") == "om_b" and r2.get("sessionId") == "sess_b",
+          f"r1={r1} r2={r2}")
+
+
+def main():
+    for fn in (red_core_envelope_accepted, envelope_field_discipline,
+               target_binding_exact, partial_or_invalid_coordinates,
+               non_success_envelopes_stay_unknown,
+               new_shape_failure_closes_legacy_fallback,
+               genuine_flat_legacy_contract_unchanged,
+               opaque_coordinates_byte_exact,
+               old_rows_never_backfilled,
+               count_cooldown_and_failure_semantics_unchanged,
+               receipts_never_cross_sessions):
+        try:
+            fn()
+        except Exception as exc:
+            RESULTS.append((fn.__name__ + " HARNESS", False, repr(exc)))
+    failed = 0
+    print(f"=== receipt envelope SOURCE-alignment probe "
+          f"(module root: {ROOT}) ===")
+    for name, ok, detail in RESULTS:
+        print(f"{'PASS' if ok else 'FAIL'}  {name}  {detail}")
+        failed += 0 if ok else 1
+    print(f"=== {len(RESULTS) - failed}/{len(RESULTS)} passed, {failed} failed ===")
+    sys.exit(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    main()

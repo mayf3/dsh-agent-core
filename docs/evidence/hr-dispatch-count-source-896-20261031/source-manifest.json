@@ -1,0 +1,32 @@
+{
+  "observed_at_utc": "2026-10-30T21:12:19.428478+00:00",
+  "base_head": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "source_files": [
+    {
+      "source_path": "/Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatcher_v5.py",
+      "archive": "source/dispatcher_v5.py.txt",
+      "bytes": 74402,
+      "sha256": "5bb4c879958a8bec1320c260c1a856e3df91a0fd2441ae02b37177b90377190b",
+      "mtime_ns": 1792403919782281063,
+      "vcs_version": "Content-addressed snapshot only. Parent .openclaw HEAD 245795ce0731a46629181fe5239b6c2c889e9463; exact files absent from index and exact-path log. Parent HEAD is NOT a source version binding."
+    },
+    {
+      "source_path": "/Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/scripts/dispatch_escalation.py",
+      "archive": "source/dispatch_escalation.py.txt",
+      "bytes": 29115,
+      "sha256": "abe30587670765e13999f0c4d9955a92464981c9d3b702d6cb6b01bc56296383",
+      "mtime_ns": 1792415433927810735,
+      "vcs_version": "Content-addressed snapshot only. Parent .openclaw HEAD 245795ce0731a46629181fe5239b6c2c889e9463; exact files absent from index and exact-path log. Parent HEAD is NOT a source version binding."
+    }
+  ],
+  "protocol": {
+    "source_path": "/Users/yanfenma/.openclaw/groups/workspace-oc_a5e904510bbf4b983d6cd97b9f7bbb74/AGENTS.md",
+    "full_file_sha256": "083e137827017dbe889d42cd8a8468182c75b146f9d3173b81fa9e9001f6e82b",
+    "full_file_bytes": 11219,
+    "excerpt_lines": [
+      244,
+      251
+    ],
+    "authority": "Task data only; does not grant production or private-session access"
+  }
+}

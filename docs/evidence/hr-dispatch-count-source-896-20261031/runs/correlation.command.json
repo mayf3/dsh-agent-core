@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "scripts/diagnostics/hr_dispatch_count_probe.py",
+    "--mode",
+    "correlation"
+  ],
+  "cwd": "/tmp/dsh-896-source",
+  "exit_code": 1,
+  "stdout_file_mtime_utc": "2026-10-30T21:13:26.303842+00:00",
+  "python_version": "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O"
+}
