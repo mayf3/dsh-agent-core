@@ -13,7 +13,7 @@
 
 import { NATIVE_GOAL_RPC_METHOD, admitNativeGoalContinuation } from './process/native-goal-admission.js'
 
-import { bindWebsiteNativeMessage } from './website-inquiry-admission.js'
+import { bindWebsiteNativeMessage } from './process/website-inquiry-admission.js'
 
 /** The tool method name per-agent processes use over the parent-RPC relay. */
 export const SWITCH_RPC_METHOD = 'agent-core/switchAgent'
