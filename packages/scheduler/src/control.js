@@ -477,14 +477,16 @@ export async function autoReconcileOccurrences(store, { settlements, actorId = '
   if (!Array.isArray(settlements) || settlements.length === 0) {
     return { results: [], fencesRemaining: null }
   }
-  if (typeof actorId !== 'string' || actorId === '') {
-    throw new TypeError('autoReconcileOccurrences: actorId must be a non-empty machine identity string')
+  if (typeof actorId !== 'string' || !/^system:[a-z0-9-]+$/.test(actorId)) {
+    throw new TypeError('autoReconcileOccurrences: actorId must be a machine identity of the form system:<kebab-id> (CTR-S3; human-style identities are reserved for the operator reconcile path)')
   }
   const identity = { provenance: 'scheduler-policy', actorId }
   const resolvedAt = nowMs
-  const results = []
+  let results = []
   let fencesRemaining = null
-  await store.mutateDoc((latest) => {
+  let value
+  try {
+    ({ value } = await store.mutateDoc((latest) => {
     for (const target of settlements) {
       const { occurrenceId, runId, resolvedTo, evidenceNote } = target ?? {}
       try {
@@ -528,16 +530,30 @@ export async function autoReconcileOccurrences(store, { settlements, actorId = '
     }
     fencesRemaining = Object.keys(latest.fences).length
     return { value: { results } }
-  })
+    }))
+  } catch (error) {
+    // Same committed-receipt discipline as reconcileOccurrence above: the
+    // atomic commit may be durable even when its acknowledgement is lost.
+    // Replay the committed results instead of surfacing an error whose only
+    // safe retry is per-item already-settled (settle-once preserved).
+    if (error?.mutationOutcome !== 'committed' || !error.committedValue) throw error
+    value = error.committedValue
+  }
+  results = value.results
   for (const result of results) {
     if (result.outcome !== 'settled') continue
-    await store.appendRunEvent({
-      ts: resolvedAt, action: 'late_settlement', occurrenceId: result.occurrenceId,
-      runId: settlements.find((target) => target.occurrenceId === result.occurrenceId)?.runId,
-      resolvedTo: result.resolvedTo, basis: 'policy-auto-reconcile',
-      operatorIdentity: identity, jobId: result.jobId,
-      fenceRemaining: fencesRemaining,
-    })
+    try {
+      const evidenceStatus = await store.appendRunEvent({
+        ts: resolvedAt, action: 'late_settlement', occurrenceId: result.occurrenceId,
+        runId: settlements.find((target) => target.occurrenceId === result.occurrenceId)?.runId,
+        resolvedTo: result.resolvedTo, basis: 'policy-auto-reconcile',
+        operatorIdentity: identity, jobId: result.jobId,
+        fenceRemaining: fencesRemaining,
+      })
+      result.receipt = evidenceStatus?.ok === false ? 'failed' : 'ok'
+    } catch (error) {
+      result.receipt = `failed:${String(error?.message ?? error).slice(0, 120)}`
+    }
   }
   return { results, fencesRemaining, identity }
 }
