@@ -1,0 +1,11 @@
+{
+  "name": "@deepseek-ai/dsh-llm-pi-ai",
+  "version": "0.1.0-rc.7",
+  "tarball": "https://registry.npmjs.org/@deepseek-ai/dsh-llm-pi-ai/-/dsh-llm-pi-ai-0.1.0-rc.7.tgz",
+  "metadataIntegrity": "sha512-8sZuvgylK9ZKQmZtUU4z3DVBcM4Q4SH4OWo4qeOahLOsteT9NdIwZFer6f0QwqH6DjXIqz2Gq+XtntYXznGZPw==",
+  "lockIntegrity": "sha512-8sZuvgylK9ZKQmZtUU4z3DVBcM4Q4SH4OWo4qeOahLOsteT9NdIwZFer6f0QwqH6DjXIqz2Gq+XtntYXznGZPw==",
+  "computedIntegrity": "sha512-8sZuvgylK9ZKQmZtUU4z3DVBcM4Q4SH4OWo4qeOahLOsteT9NdIwZFer6f0QwqH6DjXIqz2Gq+XtntYXznGZPw==",
+  "metadataMatches": true,
+  "lockMatches": true,
+  "tarballSha256": "7ebef054dab1642eaba4eb3edbca4299a354d710583485ce68ce8db9674099ee"
+}

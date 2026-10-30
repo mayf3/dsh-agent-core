@@ -1,0 +1,373 @@
+{
+  "node": "v26.7.0",
+  "execution": "unmodified published bundle public PiAiAdapter.stream with synthetic provider",
+  "limitation": "Uses existing development package peers; their exact versions and paths are recorded. No production installation/runtime is loaded.",
+  "home": "/private/tmp/dsh-ac1249-probe/empty-home",
+  "dshHome": "/private/tmp/dsh-ac1249-probe/empty-dsh-home",
+  "environmentKeys": [
+    "DSH_HOME",
+    "HOME",
+    "PATH",
+    "TMPDIR",
+    "__CF_USER_TEXT_ENCODING"
+  ],
+  "fetchAttempts": 0,
+  "peers": [
+    {
+      "name": "@deepseek-ai/dsh-llm",
+      "version": "0.1.0-rc.8",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-llm@file+..+..+..+..+..+tmp+dsh-pkgs+deepseek-ai-dsh-llm-0.1.0-rc.8.tg_35a8f2d31feea974de154c8b48679a09/node_modules/@deepseek-ai/dsh-llm/package.json"
+    },
+    {
+      "name": "@deepseek-ai/dsh-timeout",
+      "version": "0.1.0-rc.7",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-timeout@0.1.0-rc.7_@deepseek-ai+cordis@4.0.1_@deepseek-ai+dsh-invarian_22adfdf3ba29bade6675fa7bb401c215/node_modules/@deepseek-ai/dsh-timeout/package.json"
+    },
+    {
+      "name": "@deepseek-ai/dsh-settings",
+      "version": "0.1.0-rc.7",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-settings@0.1.0-rc.7_@deepseek-ai+cordis@4.0.1_@deepseek-ai+dsh-brand@0_6b0eb868fb92d854799855c05c5fa43c/node_modules/@deepseek-ai/dsh-settings/package.json"
+    },
+    {
+      "name": "@deepseek-ai/dsh-launch-environment",
+      "version": "0.1.0-rc.8",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-launch-environment@0.1.0-rc.8_@deepseek-ai+cordis@4.0.1_@deepseek-ai+d_dfde907fbab82235ba0d7e25a6a20149/node_modules/@deepseek-ai/dsh-launch-environment/package.json"
+    },
+    {
+      "name": "@deepseek-ai/dsh-credentials",
+      "version": "0.1.0-rc.7",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+dsh-credentials@0.1.0-rc.7_@deepseek-ai+cordis@4.0.1_@deepseek-ai+dsh-bran_6df341f05d8885c9ff6d5b51570dc623/node_modules/@deepseek-ai/dsh-credentials/package.json"
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "version": "3.18.1",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@deepseek-ai+schemastery@3.18.1/node_modules/@deepseek-ai/schemastery/package.json"
+    },
+    {
+      "name": "@earendil-works/pi-ai",
+      "version": "0.82.1",
+      "path": "/Users/yanfenma/workspace/github/dsh-codex/node_modules/.pnpm/@earendil-works+pi-ai@0.82.1_ws@8.21.3_zod@4.4.3/node_modules/@earendil-works/pi-ai/package.json"
+    }
+  ],
+  "results": [
+    {
+      "name": "wrapper-v2-empty-blocks",
+      "expectedApi": "openai-codex-responses",
+      "actualApi": "openai-codex-responses",
+      "nativeReplayPreserved": true,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [],
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "responseId": "synthetic-response-id",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [],
+      "finish": {
+        "kind": "stop"
+      }
+    },
+    {
+      "name": "wrapper-v2-native-signatures",
+      "expectedApi": "openai-codex-responses",
+      "actualApi": "openai-codex-responses",
+      "nativeReplayPreserved": true,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "synthetic reasoning",
+            "thinkingSignature": "synthetic-encrypted-thinking",
+            "redacted": true
+          },
+          {
+            "type": "text",
+            "text": "synthetic text",
+            "textSignature": "synthetic-text-signature"
+          },
+          {
+            "type": "toolCall",
+            "id": "synthetic-call",
+            "name": "synthetic_tool",
+            "arguments": {
+              "x": 1
+            },
+            "thoughtSignature": "synthetic-tool-signature"
+          }
+        ],
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "responseId": "synthetic-response-id",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [],
+      "finish": {
+        "kind": "stop"
+      }
+    },
+    {
+      "name": "raw-flat-v1-degrades",
+      "expectedApi": "dsh-foreign",
+      "actualApi": "dsh-foreign",
+      "nativeReplayPreserved": false,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "synthetic reasoning"
+          },
+          {
+            "type": "text",
+            "text": "synthetic text"
+          },
+          {
+            "type": "toolCall",
+            "id": "synthetic-call",
+            "name": "synthetic_tool",
+            "arguments": {
+              "x": 1
+            }
+          }
+        ],
+        "api": "dsh-foreign",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [
+        {
+          "provider": "openai-codex",
+          "model": "synthetic-model",
+          "reason": "invalid pi-ai replay state: expected a response object"
+        }
+      ],
+      "finish": {
+        "kind": "stop"
+      }
+    },
+    {
+      "name": "raw-flat-v2-degrades",
+      "expectedApi": "dsh-foreign",
+      "actualApi": "dsh-foreign",
+      "nativeReplayPreserved": false,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "synthetic reasoning"
+          },
+          {
+            "type": "text",
+            "text": "synthetic text"
+          },
+          {
+            "type": "toolCall",
+            "id": "synthetic-call",
+            "name": "synthetic_tool",
+            "arguments": {
+              "x": 1
+            }
+          }
+        ],
+        "api": "dsh-foreign",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [
+        {
+          "provider": "openai-codex",
+          "model": "synthetic-model",
+          "reason": "invalid pi-ai replay state: expected a response object"
+        }
+      ],
+      "finish": {
+        "kind": "stop"
+      }
+    },
+    {
+      "name": "flat-v1-after-plugin-migration",
+      "expectedApi": "openai-codex-responses",
+      "actualApi": "openai-codex-responses",
+      "nativeReplayPreserved": true,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "synthetic reasoning",
+            "thinkingSignature": "synthetic-encrypted-thinking",
+            "redacted": true
+          },
+          {
+            "type": "text",
+            "text": "synthetic text",
+            "textSignature": "synthetic-text-signature"
+          },
+          {
+            "type": "toolCall",
+            "id": "synthetic-call",
+            "name": "synthetic_tool",
+            "arguments": {
+              "x": 1
+            },
+            "thoughtSignature": "synthetic-tool-signature"
+          }
+        ],
+        "api": "openai-codex-responses",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "responseId": "synthetic-response-id",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [],
+      "finish": {
+        "kind": "stop"
+      }
+    },
+    {
+      "name": "wrapper-v2-block-count-mismatch",
+      "expectedApi": "dsh-foreign",
+      "actualApi": "dsh-foreign",
+      "nativeReplayPreserved": false,
+      "originalInputUnchanged": true,
+      "capturedMessage": {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "synthetic reasoning"
+          },
+          {
+            "type": "text",
+            "text": "synthetic text"
+          },
+          {
+            "type": "toolCall",
+            "id": "synthetic-call",
+            "name": "synthetic_tool",
+            "arguments": {
+              "x": 1
+            }
+          }
+        ],
+        "api": "dsh-foreign",
+        "provider": "openai-codex",
+        "model": "synthetic-model",
+        "usage": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        "stopReason": "toolUse",
+        "timestamp": 0
+      },
+      "degrades": [
+        {
+          "provider": "openai-codex",
+          "model": "synthetic-model",
+          "reason": "invalid pi-ai replay state: block count does not match assistant content"
+        }
+      ],
+      "finish": {
+        "kind": "stop"
+      }
+    }
+  ],
+  "status": "PASS"
+}
