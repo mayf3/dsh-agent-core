@@ -18,7 +18,8 @@ references:
   - docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V1.md (accepted; D-007 occurrence outcome authority — unknown never terminal)
   - docs/specs/SCHEDULER_CONTROL_PLANE_RELIABILITY_V1.md (accepted; single mutation semantics + reconciliation + operator CLI)
   - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V2.md (D-007)
-  - .agents/skills/cron-helper/SKILL.md v4.1.0 (self_ops reconcile safety rules — amendment anchor, see DEC-004)
+  - cron-helper SKILL.md v4.1.0（运维技能，位于 operator 主目录 ~/.agents/skills/cron-helper/，
+    非 repo accepted 权威；self_ops reconcile 安全规则原文，见 DEC-004 锚点核查）
 implementation_authority: contracts
 parent_authorities:
   - SCHEDULER_TIMEOUT_OUTCOME_V1 (accepted @3776b19)
@@ -43,8 +44,8 @@ READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 IMPLEMENTATION_ALLOWED = NO (until accepted at exact head)
 OPEN_OWNER_DECISIONS = 1 (见 §6：HUMAN_REQUIRED 规则的修正锚点需 review 中钉死)
 PARTIAL_SUPERSESSION = NONE (对 SCHEDULER_TIMEOUT_OUTCOME_V1 / CONTROL_PLANE_RELIABILITY_V1 为纯政策层叠加，见 DEC-004 §7)
-CONTRACT_COUNT = 14
-CONTRACTS_WITH_ACCEPTANCE = 14
+CONTRACT_COUNT = 18
+CONTRACTS_WITH_ACCEPTANCE = 18 contracts, all covered by 13 ACC entries
 ```
 
 ---
@@ -117,7 +118,7 @@ OBS-008 subject=证据化结算有效性
   observed_at=2026-10-29 19:20 CST
   result=按证据规则经官方 agentcore-cron reconcile 结算 41+3=44 条（succeeded：exact_turn_end_success；
          failed：exact_turn_end_failure / child_real_exit / 无登记记录）→ 0 错误，fences 19→0
-  provenage=fence-janitor.log + operator-receipts.jsonl；agent-control#1332 comment 6521433613
+  provenance=fence-janitor.log + operator-receipts.jsonl；agent-control#1332 comment 6521433613
 
 OBS-009 subject=router 投递实现
   observed_at=2026-10-29；source=packages/agent-router/src/process/*（main @e9699aee）
@@ -144,6 +145,9 @@ CLM-004 调度 fence 的保守设计（outcome_unknown → fence → HUMAN_REQUI
   积压为长期静默失效；证据化结算可安全解锁且经官方通道可审计。 support=SUPPORTED
   （OBS-007/008）
 
+CLM-006 方法学：子进程 socket 存在性不能判别卡死状态（idle 健康与卡死子进程计数相同），
+  故任何健康/就绪判据 MUST 使用应用层信号。 support=SUPPORTED（OBS-004）
+
 CLM-005 外部 stopgap（transport-watchdog v3、fence-janitor）为错误层级的补救：依据日志文本
   推断进程状态并 kill（watchdog），或以外部脚本承载本应内建的清算政策（janitor）。
   其自身缺陷已在 2026-10-29 造成两次用户可见事故（v1 永久跳过、v2 kill-loop）。
@@ -168,9 +172,9 @@ EVD-001 source_observations=[OBS-001] target=CLM-001 relation=SUPPORTS
         strength=分布形态与 turn 频率强相关（hr 定时任务密度 ↔ 失败密度）；limits=非机制证明
 EVD-002 source_observations=[OBS-002,OBS-003] target=CLM-001 relation=SUPPORTS
         strength=确定性复现两代进程；limits=内部机制未定位
-EVD-003 source_observations=[OBS-004] target=CLM-001 relation=CONTRADICTS
-        strength=socket 计数不区分健康/卡死子进程，否定以 socket 探测为判据的实现路线
-        （对 CTR-R1 的探测设计构成硬约束：必须使用应用层探测，不得使用 socket 存在性）
+EVD-003 source_observations=[OBS-004] target=CLM-006 relation=SUPPORTS
+        strength=健康与卡死子进程 socket 计数相同（均为 0），直接支持方法学判断；
+        对 CTR-R1 构成硬约束：探测 MUST 用应用层信号，不得用 socket 存在性
 EVD-004 source_observations=[OBS-006] target=CLM-003 relation=SUPPORTS strength=完整登记链
 EVD-005 source_observations=[OBS-007,OBS-008] target=CLM-004 relation=SUPPORTS strength=全量清账 0 错误
 EVD-006 source_observations=[OBS-005] target=CLM-005 relation=SUPPORTS strength=同日两次事故
@@ -257,8 +261,8 @@ CTR-H1 idle 后可服务性
   child MUST 主动退出（使 router 重生），MUST NOT 以僵死状态驻留。
 
 CTR-H2 根因调查义务
-  wedge 内部机制（CLM-001 标注 OPEN 的部分：luna/codex 路由上 idle 后传输死亡的
-  确切层次）MUST 在 CTR-H1 标记 satisfied 前产出书面调查记录
+  wedge 内部机制（CLM-001 标注 OPEN 的部分：harness provider 层 / dsh-codex 插件 /
+  codex app-server 三层中 idle 后传输死亡的确切层次）MUST 在 CTR-H1 标记 satisfied 前产出书面调查记录
   （docs/investigations/，含复现最小化与定位结论）；无记录不得声明 H1 完成。
 
 CTR-H3 多轮回归面
@@ -297,7 +301,8 @@ CTR-S2 政策门（冻结）
   证据→决定映射（互斥、穷举、其余一律不动作）：
     outcomeEvidence=exact_turn_end_success            -> succeeded（不重跑）
     outcomeEvidence=exact_turn_end_failure            -> failed（下个 slot 重跑）
-    terminationEvidence=child_real_exit 或无登记记录   -> failed（下个 slot 重跑）
+    terminationEvidence=child_real_exit，或权威 turn 登记册（D-007 保留语义下的
+      turn-recovery registry）中无该 occurrence 记录 -> failed（下个 slot 重跑）
     其他一切                                          -> 不动作，留人工
 
 CTR-S3 审计身份
@@ -322,7 +327,7 @@ CTR-X1 transport-watchdog 退役
   此前过渡期内两者并行，watchdog 的每次动作 MUST 继续留痕于其历史日志。
 
 CTR-X2 fence-janitor 退役
-  CTR-S1..S4 实现且政策启用（含政策等价性验收）后，外部
+  CTR-S1..S5 实现且政策启用（含政策等价性与 ACC-S3 不变量验收）后，外部
   /usr/local/libexec/agent-core/scripts/fence-janitor.py 与其守护 MUST 被移除。
 ```
 
@@ -365,16 +370,22 @@ BACKLINKS = agent-control#1332（证据权威）⇄ 本 spec
 ID_REUSE = NONE（CTR-/OBS-/CLM-/EVD-/ACC- 均为本 spec 首发编号）
 PROGRAM_TO_CHILD_LEAP = NONE（实现授权仅 contracts，逐 PR 落地）
 
-OPEN-1（review 钉死）：DEC-004 amendment anchor 的精确原文坐标
-  （预期候选：cron-helper SKILL.md v4.1.0 self_ops「termination-only fence 处置」规则；
-   SCHEDULER_CONTROL_PLANE_RELIABILITY_V1 reconcile 语义节）。review PASS 时必须在
-   verdict 中记录锚点；若两处均非权威源，则本 spec 增补 amendment 目标文档坐标。
+OPEN-1（已于 review R1 钉死，2026-10-30）：DEC-004 amendment anchor 核查结论——
+  「termination-only fence 处置」原文位于 operator 主目录运维技能
+  （~/.agents/skills/cron-helper/SKILL.md v4.1.0，规则行 242/语义行 171-180），
+  非 repo accepted 权威；repo 规范层依据为 SCHEDULER_TIMEOUT_OUTCOME_V1 C-003 与
+  D-007 §8.3 的显式政策让渡条款 + CONTROL_PLANE_RELIABILITY_V1 单变更/reconcile 语义。
+  结论：DEC-004 无需对任何 repo 权威做 amendment，政策层经父权威自身让渡条款合法叠加；
+  与 PARTIAL_SUPERSESSION=NONE 相容。实现无需修改任何既有权威文本。
 ```
 
 ## 7. Syntax pass
 
-依 `.agents/protocol/SPEC_FORMAT_V0.md`：frontmatter 完整（spec_id/status/date/type/
-scope/out_of_scope/references/implementation_authority/parent_authorities）；编号原语
+frontmatter 字段集与仓内 accepted 先例（SCHEDULER_TIMEOUT_OUTCOME_V1 /
+SCHEDULER_CONTROL_PLANE_RELIABILITY_V1）一致（spec_id/status/date/type/scope/
+out_of_scope/references/implementation_authority/parent_authorities + review 记录位）；
+未采用 SPEC_FORMAT_V0 全字段集（spec_kind/authority_level/governed_by/owners/
+supersedes 等——该协议文本为本工作区 vendored 参考，非本 repo 树内文件）。编号原语
 OBS/CLM/EVD/STATE/DEC/CTR/ACC 均带稳定 ID；无编号重排/复用。syntax pass ≠ semantic
 acceptance。
 
