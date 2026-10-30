@@ -1,0 +1,201 @@
+{
+  "strategy": "local real node_modules; third-party entries symlinked; @agent-core remains local; no npm install",
+  "links": [
+    {
+      "name": "@types",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@types"
+    },
+    {
+      "name": "es-errors",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/es-errors"
+    },
+    {
+      "name": "agent-base",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/agent-base"
+    },
+    {
+      "name": "ms",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/ms"
+    },
+    {
+      "name": "math-intrinsics",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/math-intrinsics"
+    },
+    {
+      "name": "has-tostringtag",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/has-tostringtag"
+    },
+    {
+      "name": "side-channel-list",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/side-channel-list"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/call-bind-apply-helpers"
+    },
+    {
+      "name": "@larksuite",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@larksuite"
+    },
+    {
+      "name": "proxy-from-env",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/proxy-from-env"
+    },
+    {
+      "name": "function-bind",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/function-bind"
+    },
+    {
+      "name": "es-define-property",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/es-define-property"
+    },
+    {
+      "name": "lodash.identity",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/lodash.identity"
+    },
+    {
+      "name": "get-intrinsic",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/get-intrinsic"
+    },
+    {
+      "name": "qs",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/qs"
+    },
+    {
+      "name": "call-bound",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/call-bound"
+    },
+    {
+      "name": "lodash.pickby",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/lodash.pickby"
+    },
+    {
+      "name": "combined-stream",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/combined-stream"
+    },
+    {
+      "name": "dunder-proto",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/dunder-proto"
+    },
+    {
+      "name": "hasown",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/hasown"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/side-channel-weakmap"
+    },
+    {
+      "name": "mime-types",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/mime-types"
+    },
+    {
+      "name": "undici-types",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/undici-types"
+    },
+    {
+      "name": "has-symbols",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/has-symbols"
+    },
+    {
+      "name": "long",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/long"
+    },
+    {
+      "name": "lodash.merge",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/lodash.merge"
+    },
+    {
+      "name": "side-channel",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/side-channel"
+    },
+    {
+      "name": "protobufjs",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/protobufjs"
+    },
+    {
+      "name": "@standard-schema",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@standard-schema"
+    },
+    {
+      "name": "get-proto",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/get-proto"
+    },
+    {
+      "name": "form-data",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/form-data"
+    },
+    {
+      "name": "delayed-stream",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/delayed-stream"
+    },
+    {
+      "name": "asynckit",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/asynckit"
+    },
+    {
+      "name": "croner",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/croner"
+    },
+    {
+      "name": "@larksuiteoapi",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@larksuiteoapi"
+    },
+    {
+      "name": "@deepseek-ai",
+      "realpath": "/usr/local/libexec/agent-core/harness/node_modules/.pnpm/node_modules/@deepseek-ai"
+    },
+    {
+      "name": "@protobufjs",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/@protobufjs"
+    },
+    {
+      "name": "gopd",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/gopd"
+    },
+    {
+      "name": "https-proxy-agent",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/https-proxy-agent"
+    },
+    {
+      "name": "follow-redirects",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/follow-redirects"
+    },
+    {
+      "name": "proxy-agent-negotiate",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/proxy-agent-negotiate"
+    },
+    {
+      "name": "es-set-tostringtag",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/es-set-tostringtag"
+    },
+    {
+      "name": "axios",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/axios"
+    },
+    {
+      "name": "side-channel-map",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/side-channel-map"
+    },
+    {
+      "name": "object-inspect",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/object-inspect"
+    },
+    {
+      "name": "ws",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/ws"
+    },
+    {
+      "name": "debug",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/debug"
+    },
+    {
+      "name": "mime-db",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/mime-db"
+    },
+    {
+      "name": "es-object-atoms",
+      "realpath": "/usr/local/libexec/agent-core/app/node_modules/es-object-atoms"
+    }
+  ]
+}

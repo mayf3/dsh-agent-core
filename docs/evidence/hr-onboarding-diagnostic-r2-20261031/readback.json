@@ -1,0 +1,130 @@
+{
+  "observed_at_utc": "2026-10-30T20:56:20.651506+00:00",
+  "scope": "READ_ONLY_METADATA_NO_CREDENTIAL_OR_SESSION_READ",
+  "files": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/compose.js",
+      "sha256": "27ccc2bde3c123c55805e2fcee32686e5c7dee15fb8331112f83ae9f572d9ffe",
+      "bytes": 26617
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/v2-ingress-gate.js",
+      "sha256": "06d9c0c62cefedad46ccbb726e2f3e81313ccee5e358034ca3b413662679edd1",
+      "bytes": 5523
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-definition/src/access.js",
+      "sha256": "0cf284aa9c61f3dba1edf861c0929e13c857831e9a13a4d678f003ee5606f210",
+      "bytes": 6607
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-credential-provisioning/src/index.js",
+      "sha256": "84a5b2764f24de2828aebdd02ac788c1c506247796cd6adfff520ee2fa78767d",
+      "bytes": 9710
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/index.js",
+      "sha256": "eaa15fbd09e933cd4e1426cc3cdde42a9118b8ef97c686098363104381b291e7",
+      "bytes": 25973
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/index.js",
+      "sha256": "8916dec1ecf7f8ab42b050f8267036be5a15f76fc2cb35f7ae84ffcf59a2c563",
+      "bytes": 20965
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/capabilities/agent-definition.js",
+      "sha256": "6a0566d0c7ef4135094087f92115076a1e6ec47f4cf67825b6e2eb90175e41c8",
+      "bytes": 6215
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/gateway.js",
+      "sha256": "4c341db4d0369811b3df4a4eb7e711af33fdf84abe17a39349c5f75e7830490e",
+      "bytes": 19162
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/broker/src/transport.js",
+      "sha256": "c22f0a344a2e4595dc900cdc7851f6ee284b682ae4f6371f0cf29b4464be9663",
+      "bytes": 29704
+    }
+  ],
+  "status_commands": [
+    {
+      "argv": [
+        "sudo",
+        "-n",
+        "/bin/launchctl",
+        "list"
+      ],
+      "error": "PermissionError",
+      "errno": 1,
+      "proof_limit": "UNKNOWN_not_stopped"
+    },
+    {
+      "argv": [
+        "/bin/launchctl",
+        "list"
+      ],
+      "rc": 1,
+      "relevant_status_lines": [],
+      "stderr": "",
+      "proof_limit": "empty_or_denied_is_UNKNOWN_not_stopped"
+    },
+    {
+      "argv": [
+        "/bin/ps",
+        "-axo",
+        "pid,uid,comm"
+      ],
+      "error": "PermissionError",
+      "errno": 1,
+      "proof_limit": "UNKNOWN_not_stopped"
+    }
+  ],
+  "registry": {
+    "path": "/Users/authsvc/.agent-core/agents.json",
+    "resolved": "/usr/local/libexec/agent-core/config/agents.json",
+    "sha256": "e0800b0fde6fc46b2873decd0f83c9b807b48b56cc3c9ad9cf578a5685b5b6fe",
+    "row_count": 98,
+    "duplicate_id_count": 0,
+    "canonical_hr": [
+      {
+        "id": "agt_hr-agent",
+        "disabled": false
+      }
+    ],
+    "legacy_hr_exact_id_count": 0,
+    "failed_employee_selection": "UNKNOWN_NO_EXACT_ID_IN_RECEIPTS",
+    "identity_inference": "NONE_NO_NAME_OR_ALIAS_SELECTION"
+  },
+  "installed_pack": {
+    "path": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+    "sha256": "1e2093b9c2411e608896bd781e623850290a823ececc3a6a1fede440ae121541",
+    "declared_metadata_only": {
+      "provenance": "TRUSTED_CP_PACK_INPUT_PROVENANCE_V1",
+      "source_head_sha": "bdbaf8a00dffbede37794c6ed1585bccf8d6f84f",
+      "source_tree_sha": "b82d5fd0a4c755b73e01ffd89230ccbf6836f07d",
+      "source_clean": "yes",
+      "generation_label_sha": "bdbaf8a00dffbede37794c6ed1585bccf8d6f84f",
+      "source_label_matches_pack_input": "YES",
+      "packed_app_tree_sha256": "61680dda6965a43a08db5671cafe161914be741a30d784b210506062bbe4dd45",
+      "note": "Source-only reviewed profile idempotence successor. No production installation or business acceptance."
+    },
+    "loaded_binding": "UNKNOWN",
+    "entire_pack_digest_recomputed": false
+  },
+  "stat_only": [
+    {
+      "path": "/Users/authsvc/.agent-core/bindings/bindings.json",
+      "error": "PermissionError",
+      "errno": 13,
+      "contents_read": false
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control",
+      "uid": 505,
+      "mode": "0o701",
+      "contents_read": false
+    }
+  ]
+}

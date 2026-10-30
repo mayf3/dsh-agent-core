@@ -1,0 +1,29 @@
+{
+  "method": "Python gzip.compress(raw, mtime=0); raw output unchanged, lossless roundtrip checked; raw .log files gitignored, archives are delivered",
+  "files": [
+    {
+      "archive": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-npm-test-attempt1.log.gz",
+      "archive_sha256": "c7456a7a7c477290974546759fb56eb0387da5cff891b3d4fd155ff5de378ded",
+      "raw_log": "validation-npm-test-attempt1.log",
+      "raw_bytes": 107029,
+      "raw_sha256": "c841d1a4269483fd8a0c84021a5cff2c2c3f63792a098ec7dab9cabf071de55f",
+      "lossless_roundtrip": true
+    },
+    {
+      "archive": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-npm-test.log.gz",
+      "archive_sha256": "0d22a3bd6e4c661cb77422b5a6f9aa095c4b8b308afe2081e95a56d408e6a4b7",
+      "raw_log": "validation-npm-test.log",
+      "raw_bytes": 102531,
+      "raw_sha256": "6df74fd4c0d7666b2495a7e7b23fbfb2e393a1febe8fa1c034a0171db70b7733",
+      "lossless_roundtrip": true
+    },
+    {
+      "archive": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-syntax.log.gz",
+      "archive_sha256": "95bbd0c8a0fbff1b219c3144fabf5ef21e3a6fd6ce8aa1c9dcafce2d94cc9afe",
+      "raw_log": "validation-syntax.log",
+      "raw_bytes": 5869,
+      "raw_sha256": "26b1732962e16d722475fc81993042c4cd93536cc82940c1453b3efdc459a396",
+      "lossless_roundtrip": true
+    }
+  ]
+}

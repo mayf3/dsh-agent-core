@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-10-30T20:57:37.179149+00:00",
+  "command": "node --check <each rg --files packages scripts -g *.js -g *.mjs -g *.cjs>",
+  "file_count": 134,
+  "failures": [],
+  "package_json_build_script": null,
+  "scope": "all 134 JavaScript/ESM/CommonJS source, test and script files under packages/ and scripts/; parse only, none executed",
+  "ended_at": "2026-10-30T20:57:40.693772+00:00",
+  "returncode": 0
+}

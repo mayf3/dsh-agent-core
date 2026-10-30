@@ -1,0 +1,31 @@
+{
+  "started_at": "2026-10-30T20:57:26.086022+00:00",
+  "cwd": "/Users/yanfenma/workspace/project/dsh-agent-core/.worktrees/953-diagnostic-round2",
+  "head": "f5a530ef7f0baf9f6ca86e3a9e59fd660ba59437",
+  "command": [
+    "npm",
+    "test"
+  ],
+  "environment_keys": [
+    "DSH_HARNESS_ROOT",
+    "HR953_ISOLATED_OS_HOME",
+    "NODE_OPTIONS",
+    "PATH"
+  ],
+  "home_isolation": "os.homedir preload + syncBuiltinESMExports; HOME and CODEX_HOME not assigned; private home not read",
+  "node": "v26.7.0",
+  "npm": "11.19.0",
+  "integration_seam_enabled": false,
+  "subscription_artifact_enabled": false,
+  "returncode": 1,
+  "ended_at": "2026-10-30T20:57:36.724485+00:00",
+  "counts": {
+    "tests": 441,
+    "suites": 7,
+    "pass": 435,
+    "fail": 4,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  }
+}

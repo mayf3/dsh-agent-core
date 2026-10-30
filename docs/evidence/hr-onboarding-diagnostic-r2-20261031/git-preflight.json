@@ -1,0 +1,81 @@
+{
+  "observed_at_utc": "2026-10-30T21:01:20.024183+00:00",
+  "phase": "precommit/prepush",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-965",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "f5a530ef7f0baf9f6ca86e3a9e59fd660ba59437\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-965",
+        "status",
+        "--porcelain=v1"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "ls-remote",
+        "--heads",
+        "origin",
+        "refs/heads/ac-task/953-onboarding-entry-source"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "rc": 0,
+      "stdout": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--exit-code",
+        "f5a530ef",
+        "--",
+        "packages",
+        "scripts",
+        "profile-production",
+        "bundle-broker",
+        "package.json",
+        "package-lock.json"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "note": "Original worktree/ref unchanged; isolated clone has same named branch. Remote branch empty result means absent before first publication, not missing local upstream."
+}

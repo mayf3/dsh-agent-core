@@ -1,0 +1,141 @@
+{
+  "observed_at_utc": "2026-10-30T21:02:15.713127+00:00",
+  "scope": "pattern check of delivered artifacts plus independently reviewed collection boundaries; zero matches is not a universal secret detector",
+  "files": [
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/case-evidence.md",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/collect-readonly.py",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/delivery-notes.md",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/git-preflight.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/readback.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/source-excerpts.md",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-dependencies.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-home-preload.mjs",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-npm-test-attempt1.log",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-npm-test.log",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-syntax-metadata.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-syntax.log",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-test-attempt1-metadata.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation-test-metadata.json",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    },
+    {
+      "path": "docs/evidence/hr-onboarding-diagnostic-r2-20261031/validation.md",
+      "credential_value_pattern_matches": {
+        "jwt_value": 0,
+        "private_key_header": 0,
+        "bearer_value": 0,
+        "openai_key_value": 0
+      }
+    }
+  ]
+}
