@@ -42,7 +42,7 @@ NEEDS_OWNER_DECISION = NO (DEC-004 已由 Owner 2026-10-29 会话裁决；review
 SPEC_STATUS = proposed
 READY_FOR_INDEPENDENT_SPEC_REVIEW = YES
 IMPLEMENTATION_ALLOWED = NO (until accepted at exact head)
-OPEN_OWNER_DECISIONS = 1 (见 §6：HUMAN_REQUIRED 规则的修正锚点需 review 中钉死)
+OPEN_OWNER_DECISIONS = NONE（OPEN-1 已于 review R1 钉死，见 §6）
 PARTIAL_SUPERSESSION = NONE (对 SCHEDULER_TIMEOUT_OUTCOME_V1 / CONTROL_PLANE_RELIABILITY_V1 为纯政策层叠加，见 DEC-004 §7)
 CONTRACT_COUNT = 18
 CONTRACTS_WITH_ACCEPTANCE = 18 contracts, all covered by 13 ACC entries
@@ -146,7 +146,7 @@ CLM-004 调度 fence 的保守设计（outcome_unknown → fence → HUMAN_REQUI
   （OBS-007/008）
 
 CLM-006 方法学：子进程 socket 存在性不能判别卡死状态（idle 健康与卡死子进程计数相同），
-  故任何健康/就绪判据 MUST 使用应用层信号。 support=SUPPORTED（OBS-004）
+    故健康/就绪判据的应用层信号要求规范化为 CTR-R1（此处仅作方法学判断）。 support=SUPPORTED（OBS-004）
 
 CLM-005 外部 stopgap（transport-watchdog v3、fence-janitor）为错误层级的补救：依据日志文本
   推断进程状态并 kill（watchdog），或以外部脚本承载本应内建的清算政策（janitor）。
@@ -209,9 +209,8 @@ DEC-004 owner=mayf3（同上）
     不是把 unknown 定为终态）
   rejected=维持全量 HUMAN_REQUIRED——2026-08 起积压 19 fence/43 unknown 已证明
     无人节拍即静默失效（OBS-007）
-  amendment_anchor=现行「fence 处置 HUMAN_REQUIRED」规则的原文出处需在 review 钉死
-    （预期：cron-helper SKILL.md v4.1.0 self_ops 规则 + CONTROL_PLANE_RELIABILITY_V1
-    的 reconcile 语义；见 §6 OPEN-1）。钉死前 IMPLEMENTATION 不得触碰该原文。
+  amendment_anchor=已于 review R1 钉死（结论见 §6 OPEN-1）：无需对任何 repo 权威做
+    amendment，政策层经父权威自身让渡条款合法叠加。
 
 DEC-005 owner=mayf3（同上）
   selected=两个外部守护按 CTR-X1/X2 于对应 Contracts 生产验证后同版本退役，
@@ -301,8 +300,8 @@ CTR-S2 政策门（冻结）
   证据→决定映射（互斥、穷举、其余一律不动作）：
     outcomeEvidence=exact_turn_end_success            -> succeeded（不重跑）
     outcomeEvidence=exact_turn_end_failure            -> failed（下个 slot 重跑）
-    terminationEvidence=child_real_exit，或权威 turn 登记册（D-007 保留语义下的
-      turn-recovery registry）中无该 occurrence 记录 -> failed（下个 slot 重跑）
+    terminationEvidence=child_real_exit，或权威 turn 登记册（turn-recovery registry，从属于
+      D-007 的 durable occurrence authority 及其保留语义）中无该 occurrence 记录 -> failed（下个 slot 重跑）
     其他一切                                          -> 不动作，留人工
 
 CTR-S3 审计身份
