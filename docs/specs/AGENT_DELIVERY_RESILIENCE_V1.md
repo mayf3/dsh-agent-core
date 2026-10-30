@@ -1,7 +1,14 @@
 ---
 spec_id: AGENT_DELIVERY_RESILIENCE_V1
-status: proposed
+status: accepted
 date: 2026-10-29
+accepted_date: 2026-10-30
+accepted_reviewed_head: 8cf2c23a
+independent_spec_review: AGENT_DELIVERY_RESILIENCE_V1_SPEC_REVIEW_R1R2R3
+independent_spec_review_result: PASS (R1 REVISE 3 load-bearing gaps -> fixed 14e2b41b; R2 REVISE 1 gap -> fixed 8cf2c23a; R3 mechanical re-verification PASS, final-head binding 8cf2c23a; OPEN-1 anchor pinned at R1)
+required_fixes: NONE
+review_verdict: READY_TO_ACCEPT_AND_MERGE
+acceptance_mode: owner-delegated in-session (mayf3 authorization 2026-10-30 "那你自己推进"; executor ZCode operator; receipts in this commit + agent-control#1332)
 type: implementation-spec (behavior + invariants; implementation in bounded follow-up PRs under this spec)
 scope:
   - Router delivery resilience: child turn-transport readiness probing, respawn, bounded retry, dead-letter semantics, delivery-failure observability
@@ -398,4 +405,19 @@ PR-B harness：CTR-H1..H3（前置：CTR-H2 调查记录合入）
 PR-C caller bound：CTR-W1..W3
 PR-D scheduler：CTR-S1..S5（政策默认 OFF；启用配置单列）
 PR-E retirement：CTR-X1..X2（生产验证后执行并归档证据）
+```
+
+---
+
+## 10. Acceptance record
+
+```text
+ACCEPTANCE_DATE = 2026-10-30
+ACCEPTED_HEAD = 8cf2c23a（final-head binding；此后任何语义变动需新评审）
+REVIEW_TRAIL = R1 REVISE/3（G1 计数 14→18、G2 X2 前置补 S5、G3 §0 矛盾）
+             → R2 REVISE/1（G-3 声称已修未落文——r2 修复 8cf2c23a 落文并经复核）
+             → R3 PASS（机械复核，diff 4 hunks 零回归）
+ACCEPTANCE_MODE = owner-delegated in-session（授权语：「那你自己推进」，2026-10-30）
+IMPLEMENTATION = 按 §8 PR-A..PR-E 逐 PR 启用；IMPLEMENTATION_ALLOWED 由本 acceptance 解锁
+STOPGAP_STATUS = transport-watchdog v3 与 fence-janitor 继续在岗至 CTR-X1/X2 退役条件达成
 ```
