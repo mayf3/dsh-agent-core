@@ -10,7 +10,7 @@ required_fixes: NONE
 review_verdict: READY_TO_ACCEPT_AND_MERGE
 acceptance_mode: owner-delegated in-session (mayf3 authorization 2026-10-30 "那你自己推进"; executor ZCode operator; receipts in this commit + agent-control#1332)
 amendments:
-  - AMENDMENT_1 (2026-10-30, status: accepted pending focused re-review): CTR-S2 frozen
+  - AMENDMENT_1 (2026-10-30, status: accepted — focused re-review PASS same day, reviewer round-2 mechanical re-verification): CTR-S2 frozen
     mapping gains the fifth negative line — lateOutcome=terminated_without_outcome
     -> failed (evaluated AFTER exact_turn_end_failure, BEFORE the ambiguous fallback).
     Rationale: the original text transcribed the owner-validated fence-janitor policy
