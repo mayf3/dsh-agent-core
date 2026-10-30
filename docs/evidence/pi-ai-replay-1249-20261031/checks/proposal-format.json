@@ -1,0 +1,7 @@
+{
+  "observed_at_utc": "2026-10-30T22:04:49.378001+00:00",
+  "method": "PyYAML.safe_load frontmatter then jsonschema.validate against .agents/schemas/spec-frontmatter.schema.json",
+  "rc": 0,
+  "scope": "frontmatter syntax only; semantic acceptance remains NO",
+  "spec_sha256": "e46684b4665345a39d7d92df01fc08044455db0f07be0612fd5e6784a2a351cc"
+}

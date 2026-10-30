@@ -1,0 +1,245 @@
+{
+  "schema_version": 2,
+  "SPEC_GOVERNANCE_MODE": "REVIEW",
+  "REVIEW_KIND": "AFFECTED_CONTRACT",
+  "REPOSITORY": "mayf3/dsh-agent-core",
+  "REVIEWER_ID": "/root/independent_spec_review",
+  "AUTHOR_ID": "/root",
+  "AUTHOR_INDEPENDENCE": "PASS",
+  "INDEPENDENCE_BASIS": "Reviewer did not author or mutate candidate semantics; only this external /tmp review receipt is written.",
+  "ASSURANCE_LEVEL": "DURABLE",
+  "REVIEW_TARGET_HEAD": "6a8535db1a62647b16133f5c29d490490568e672",
+  "BASE_HEAD": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "CURRENT_BASE_HEAD": "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+  "CURRENT_BASE_BASIS": "Local origin/main readback; no network/live production read by reviewer.",
+  "OBSERVED_AT_UTC": "2026-10-30T22:02:59.316066+00:00",
+  "REVIEW_SCOPE": "FULL",
+  "FULL_REVIEW_BASIS": "INITIAL_REVIEW",
+  "SCOPE_REASON": "Initial independent review of the bounded evidence-only/proposed-Spec delta, not of product implementation or the fleet.",
+  "BASE_IMPACT": "NONE",
+  "IMPACT_EVIDENCE": [
+    "git diff --name-status and --stat at fixed Base/Head: 55 added files, 8582 insertions; all under docs/specs, docs/investigations or docs/evidence; no product-code modification.",
+    "All eight source-capture git show commands independently replayed at fixed nonproduction source commits; hashes match.",
+    "Manifest, npm tarball integrity, source call chain, archived probe programs and the current accepted governance/related authorities independently checked."
+  ],
+  "SPEC_REVIEW": "REVISE",
+  "SOURCE_VERDICT": "SUPPORTED_BOUNDED_EVIDENCE_WITH_PROPOSAL_REVISION_REQUIRED",
+  "AUTHORITY_REVIEW": "FAIL",
+  "PRIMITIVE_BOUNDARY_REVIEW": "PASS",
+  "CONTRACT_REVIEW": "PASS",
+  "CONTRACT_REVIEW_LIMIT": "Proposed behavior is narrow and conditionally requires reproduction; PASS does not accept a Product Contract or authorize external repository implementation.",
+  "ACCEPTANCE_COVERAGE_REVIEW": "FAIL",
+  "MANDATE_SCOPE_REVIEW": "PASS",
+  "EVIDENCE_REVIEWABILITY": "PASS",
+  "AUTHORITY_INVENTORY": {
+    "inspected": [
+      "AGENTS.md user-supplied bootstrap",
+      ".agents/README.md",
+      ".agents/local/README.md",
+      ".agents/protocol/SPEC_GOVERNANCE_V1.md",
+      ".agents/protocol/SPEC_FORMAT_V0.md",
+      "AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3",
+      "docs/AGENT_CORE_PRODUCT_ARCHITECTURE_V1.md",
+      "docs/decisions/ and docs/specs/ direct pi-ai/codex/schema/event issue matches",
+      "AGENT_DELIVERY_RESILIENCE_V1",
+      "AGENT_CORE_HARDENING_PROGRAM_V1",
+      "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1",
+      "AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3 and relevant superseded route predecessors"
+    ],
+    "result": "No active accepted implementation Contract found for this bounded replay-schema/event compatibility product delta. Delivery Resilience explicitly excludes #550. Hardening Program has implementation_authority=none. Route/auth Specs govern distinct responsibilities and do not supply replay-schema authority. Code, existing PR merge, Issue and this review are not replacement Product Authority.",
+    "local_atomic_rule": "Accepted V3/local README permits bounded NEW/AMEND+ROUTINE/DURABLE atomic Spec-and-code by default; the user-supplied AGENTS instruction for this task is stricter and prohibits implementation without accepted Spec. Candidate still correctly retains IMPLEMENTATION_ALLOWED=NO.",
+    "external_authority_limit": "This review did not establish accepted implementation authority in harness or dsh-codex; a Core-only proposal cannot self-grant external product authority."
+  },
+  "BLOCKERS": [
+    {
+      "id": "R1",
+      "class": "REPOSITORY_INVARIANT_VIOLATION",
+      "status": "OPEN",
+      "source": ".agents/protocol/SPEC_FORMAT_V0.md section 2; .agents/schemas/spec-frontmatter.schema.json required fields and implementation_authority enum",
+      "counterexample": "PI_AI_REPLAY_COMPATIBILITY_025_V1.md lines 1-12 omits spec_kind, authority_level, scope, governed_by, external_authorities, supersedes, superseded_by and owners; implementation_authority=none-until-accepted-and-merged is outside none|contracts. Independent JSON Schema evaluation returned nine errors and validate_metadata returned two.",
+      "impact": "The proposed governing Spec cannot be recommended for acceptance under the active syntax contract; missing ownership/parent authority also leaves cross-repository authorization ambiguous. This does not invalidate the archived observations.",
+      "minimal_closure": "Complete required frontmatter with real local ownership/parents and whole-authority metadata; use implementation_authority=contracts for intended post-acceptance authority while retaining status=proposed and current implementation prohibition, or none if acceptance must never authorize code. Explicitly constrain this Core document to Core integration and require owning-repository acceptance for external harness/plugin code. Do not invent an external accepted authority.",
+      "affected_readiness": [
+        "SPEC_ACCEPTANCE_READY",
+        "IMPLEMENTATION_ALLOWED"
+      ],
+      "readiness": {
+        "SPEC_ACCEPTANCE_READY": "NO",
+        "IMPLEMENTATION_ALLOWED": "NO"
+      }
+    },
+    {
+      "id": "R2",
+      "class": "REPOSITORY_INVARIANT_VIOLATION",
+      "status": "OPEN",
+      "source": ".agents/protocol/SPEC_FORMAT_V0.md sections 3, 5-9 and 11; .agents/README.md load-bearing Evidence identity requirement",
+      "counterexample": "The proposal has only Intent and pinned source evidence, Contracts, Alternatives and boundaries, Acceptance evidence and Acceptance status. Required authority/dependency, State, Observations, Claims, Evidence relations, Decisions and Open questions logical sections are absent rather than explicitly N/A. Load-bearing source facts have no OBS/CLM/EVD identities or Observation-to-target relation; ACC-001..006 never explicitly name CTR-001..006.",
+      "impact": "Normative decisions and descriptive evidence cannot be independently traced through the governing format, and the mandated bidirectional Contract-to-Acceptance check cannot be completed. No additional implementation behavior is requested by this finding.",
+      "minimal_closure": "Reformat the same bounded proposal into the required logical sections, assign stable evidence/decision identities with coordinates and limitations, explicitly map every Contract and Acceptance both ways, state remaining incident/source and acceptance-owner questions, and keep all unresolved product/runtime gates false.",
+      "affected_readiness": [
+        "SPEC_ACCEPTANCE_READY",
+        "IMPLEMENTATION_ALLOWED"
+      ],
+      "readiness": {
+        "SPEC_ACCEPTANCE_READY": "NO",
+        "IMPLEMENTATION_ALLOWED": "NO"
+      }
+    }
+  ],
+  "FROZEN_BLOCKER_UNION": [
+    "R1",
+    "R2"
+  ],
+  "SPEC_GAPS": [
+    {
+      "id": "SG1",
+      "kind": "SPEC_GAP",
+      "load_bearing": true,
+      "dependency": "LOAD_BEARING",
+      "affected_action": "Implement or claim the user-requested #1249 replay compatibility repair",
+      "missing_decision": "Owning-repository accepted read/restore compatibility obligation and its validation/fallback semantics for the actual reproducing source candidate.",
+      "authority_inventory_searched": "AUTHORITY_INVENTORY above",
+      "reachable_counterexample": "Current source reader accepts wrapped v2 but degrades raw flat v2; the incident prose expects flat v2 and reported a fatal wrapped-v2 failure. Choosing normalization direction or changing failure policy solely to fit that prose would create a new long-lived decision with no applicable accepted Contract.",
+      "impact": "Product implementation and repair acceptance remain disallowed, even though current-source diagnostic evidence is reviewable.",
+      "minimum_closure": "Fix proposal governance blockers, resolve reproduction/source binding with synthetic evidence, obtain attributable owning-authority acceptance at an exact commit and merge per the user docs-first constraint; then re-PREFLIGHT the actual bounded implementation.",
+      "avoidance": "Evidence-only investigation and existing canonical-event-fix reuse planning can continue without product implementation or production reads.",
+      "affected_readiness": [
+        "IMPLEMENTATION_ALLOWED",
+        "PRODUCT_REPAIR_READY"
+      ],
+      "readiness": {
+        "IMPLEMENTATION_ALLOWED": "NO",
+        "PRODUCT_REPAIR_READY": "NO"
+      }
+    }
+  ],
+  "FOLLOW_UPS": [
+    {
+      "id": "F1",
+      "source": "investigation lines 120-121 and proposal lines 17-19",
+      "finding": "The cited current .agents/README.md:34-43 does not state the quoted docs-first requirement; current AGENT_DELIVERY_RESILIENCE_V1 exclusion is at lines 32/75, not 19-22. The active local V3 atomic route exists.",
+      "minimal_closure": "Use the actual user AGENTS bootstrap as the stricter current task boundary and accurate current authority/section references; distinguish it from the default local atomic permission. The final no-implementation outcome is unchanged."
+    }
+  ],
+  "TOOLING_DEBT": [],
+  "HASH_CHECKS": {
+    "manifest_entries": 52,
+    "manifest_mismatches": 0,
+    "uncovered_evidence_files": 0,
+    "source_capture_commands_reexecuted": 8,
+    "source_capture_hash_mismatches": 0,
+    "tarball_sha256": "7ebef054dab1642eaba4eb3edbca4299a354d710583485ce68ce8db9674099ee",
+    "bundle_sha256": "917c559d3e804c638e69a2e46a6ee922e50636f962eaffae1fab9af56835debd",
+    "integrity": "Computed SHA512 equals archived npm dist.integrity and fixed v0.2.5 lock entry; bundle extracted in memory equals archived published-index.js.txt.",
+    "gitHead": "Absent in archived npm metadata; no full tarball-to-source build identity inferred."
+  },
+  "SOURCE_FINDINGS": [
+    "Fixed Codex e3e54e206f7c829503c7e6eed378643ba0416792 is version 0.2.5 and its pnpm lock resolves llm-pi-ai rc.7 with the recorded integrity.",
+    "Pinned plugin adapter.ts lines 32-44 migrates recognized flat v1 to wrapped v2, lines 47-59 detaches modified message/source and lines 148-153 execute migration before super.stream. No wrapped-v2-to-invalid-response.kind conversion was found in the inspected chain.",
+    "Harness replay.ts at c211b445593fa5639075dc690801a3a3005ca0dd equals rc.7 replay source and the 514ab7b local replay source. Reader validates wrapped v2; toPiAssistant catches only INVALID_REPLAY_STATE and degrades to provider-neutral history.",
+    "Harness c211b445593fa5639075dc690801a3a3005ca0dd registers the exact Codex web event and contains five focused tests for exact namespace/reload/ordering/unknown rejection/idempotency. These tests were inspected, not rerun in this review. Reimplementing their existing source fix is unwarranted."
+  ],
+  "INDEPENDENT_EXECUTION": {
+    "method": "Execute exact archived JS bodies via node --input-type=module stdin. Prepend a guard that intercepts fs.writeFileSync solely for each expected diagnostic JSON destination, captures output in memory and asserts one report write; no result files are changed. Child environment has only PATH, empty synthetic HOME/DSH_HOME and temporary TMPDIR.",
+    "cwd": "/private/tmp/dsh-ac1249-probe",
+    "runs": [
+      {
+        "script": "publication-probe/probe.mjs.txt",
+        "sha256": "cb1c7efb865da4da5dec8b7549490e69b2798d5b2d4b1e9a7d2de0e3f8ffdf64",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "--input-type=module"
+        ],
+        "rc": 0,
+        "stderr_bytes": 0,
+        "results": 6,
+        "fetchAttempts": 0,
+        "matches_committed_json": true,
+        "observations": "Wrapped v2 empty/signed and manually migrated flat v1 reach native synthetic provider; raw flat v1/v2 and mismatched block count degrade to dsh-foreign; all original inputs unchanged."
+      },
+      {
+        "script": "publication-probe/compare-replay.mjs.txt",
+        "sha256": "21e4d1452ee670f37e287d5cd5b46110c4c1541b5d9c69d1df9f108fb6dc5253",
+        "argv": [
+          "/opt/homebrew/bin/node",
+          "--input-type=module"
+        ],
+        "rc": 0,
+        "stderr": "Node ExperimentalWarning for stripTypeScriptTypes; no product error.",
+        "results": 6,
+        "matches_committed_json": true,
+        "observations": "Published replay region and type-stripped fixed git replay functions agree for six vectors; exact pinned plugin migration snippet creates detached messages and preserves original input; writer projections agree."
+      }
+    ],
+    "interpretation": "Compatibility diagnostics only. An initial require.resolve/ESM startup error is archived and is not product RED. Neither execution is a RED-to-GREEN repair, full plugin startup, fresh persistence-loader restart or complete pinned 0.2.5 dependency closure. Existing development peers include rc.8."
+  },
+  "OTHER_INDEPENDENT_CHECKS": [
+    {
+      "name": "whitespace",
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "6a8535db1a62647b16133f5c29d490490568e672"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "governance_integrity",
+      "argv": [
+        "python3",
+        "-B",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        ".",
+        "--require-accepted"
+      ],
+      "rc": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    },
+    {
+      "name": "structure",
+      "argv": [
+        "node",
+        "scripts/verify-code-structure.mjs",
+        "--base",
+        "20e60dd72a42a0ef69e0acb8516b15c1893ffb01",
+        "--head",
+        "6a8535db1a62647b16133f5c29d490490568e672",
+        "--json"
+      ],
+      "rc": 0,
+      "stdout": {
+        "candidate_result": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+        "summary": {
+          "exit_code": 0,
+          "in_scope_files": 852,
+          "candidate_violations": 0,
+          "baseline_debt": 34,
+          "resolved_debt": 0
+        }
+      },
+      "stderr": ""
+    }
+  ],
+  "LIMITATIONS": [
+    "The actual failing 023rb loaded artifact and first wrapped-v2-to-invalid conversion remain UNKNOWN; no incident root cause is disproved by current-source compatibility.",
+    "The archived 1,940-file count was not independently inventoried; no fleet resume, installation, runtime loading or self-healing outcome is verified.",
+    "No affected product-suite PASS, new release artifact or source repair is delivered by this candidate.",
+    "No production/service/process/session/credential/config read or write, UNKNOWN replay, restart, deploy, merge or message to other people was performed by this reviewer."
+  ],
+  "CONVERGENCE_EXIT": "NOT_APPLICABLE",
+  "SPEC_ACCEPTANCE_READY": "NO",
+  "EVIDENCE_DELIVERY_READY": "YES",
+  "PRODUCT_REPAIR_READY": "NO",
+  "IMPLEMENTATION_ALLOWED": "NO",
+  "MERGE_READY": "NO",
+  "OPERATION_ALLOWED": "NO",
+  "NEXT_ACTION": "RE_PREFLIGHT",
+  "NEXT_REAL_ACTION": "Author repairs the frozen proposal governance blockers and inaccurate references in one bounded docs pass; reviewer performs affected-delta recheck; owning authority acceptance remains separate.",
+  "FINAL_NOTE": "Independent review recommendation only. Bounded source evidence is supported; user-requested #1249 repair, RED/GREEN, restart acceptance and fleet outcome remain incomplete."
+}

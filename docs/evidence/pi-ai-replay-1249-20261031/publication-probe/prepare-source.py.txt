@@ -1,0 +1,18 @@
+from pathlib import Path
+import subprocess,json,hashlib
+
+root=Path('/private/tmp/dsh-ac1249-probe')
+items=[('harness-replay.rc7.ts','/Users/yanfenma/workspace/github/deepseek-harness','dsh-v0.1.0-rc.7','packages/llm/llm-pi-ai/src/replay.ts'),('codex-adapter.v0.2.5.ts','/Users/yanfenma/workspace/github/dsh-codex','v0.2.5','src/adapter.ts')]
+reports=[]
+for dest,cwd,ref,path in items:
+    argv=['git','show',f'{ref}:{path}']
+    result=subprocess.run(argv,cwd=cwd,capture_output=True,check=True)
+    (root/dest).write_bytes(result.stdout)
+    commit=subprocess.run(['git','rev-parse',f'{ref}^{{commit}}'],cwd=cwd,capture_output=True,text=True,check=True).stdout.strip()
+    reports.append({'argv':argv,'cwd':cwd,'ref':ref,'commit':commit,'sourcePath':path,'destination':dest,'rc':result.returncode,'sha256':hashlib.sha256(result.stdout).hexdigest()})
+    if dest.startswith('codex-adapter'):
+        snippet=b'\n'.join(result.stdout.splitlines()[24:60])+b'\n'
+        (root/'codex-migration.v0.2.5.ts').write_bytes(snippet)
+        reports[-1]['migrationSnippet']={'lines':'25-60','sha256':hashlib.sha256(snippet).hexdigest()}
+(root/'source-bindings.json').write_text(json.dumps(reports,indent=2)+'\n')
+print(json.dumps(reports,indent=2))

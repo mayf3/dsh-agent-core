@@ -1,0 +1,111 @@
+{
+  "observed_at_utc": "2026-10-30T21:56:49.905946+00:00",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm-pi-ai/src/replay.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "dc5203bc43e707f5f469d35272a533631c4dbf4adc57332e7acbdd7d33345e8a",
+      "stdout_bytes": 11251,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/dsh-codex",
+        "show",
+        "e3e54e206f7c829503c7e6eed378643ba0416792:src/adapter.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "b652118d8d6cf70874f4d7f9bee63eb2b361497382a3005b052861ad458d5c78",
+      "stdout_bytes": 7666,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/dsh-codex",
+        "show",
+        "e3e54e206f7c829503c7e6eed378643ba0416792:src/search-event.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "fdfd6f066ab6c44e62fe3da0637b45175f39ecfbad9252c5e1ae56187f276f7d",
+      "stdout_bytes": 1945,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/core/session/src/surface.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "85570bb2dfa0aaf1c9dbe9af525a4f53e8ffd9be78222bed588f7f88f1777bb8",
+      "stdout_bytes": 17908,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm/src/index.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "71c03b10d948a2dc2403db5c544ee9a2d6db7a45eb0b97d2b0bb2f733507526f",
+      "stdout_bytes": 41274,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/llm/llm-pi-ai/src/context.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "73057d53a313b2a879fc1906709b1525302fc14d66155035c645426ba445fa54",
+      "stdout_bytes": 9063,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/core/session/src/known-event-types.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "079ec6d40de5db38a8b4b6507f6636949b99ef12ac64dde47d8a43362c05e815",
+      "stdout_bytes": 2035,
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/yanfenma/workspace/github/deepseek-harness",
+        "show",
+        "c211b445593fa5639075dc690801a3a3005ca0dd:packages/session/session-persistence/src/coordinator.ts"
+      ],
+      "rc": 0,
+      "stdout_sha256": "80f044b43da1224e0e97208d27d0451f29f8acb579a43389af398eb36f98c096",
+      "stdout_bytes": 60433,
+      "stderr": ""
+    }
+  ],
+  "production_reads": false,
+  "private_session_reads": false
+}

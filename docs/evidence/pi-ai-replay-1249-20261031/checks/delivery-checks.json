@@ -1,0 +1,36 @@
+{
+  "observed_at_utc": "2026-10-30T21:59:14.024450+00:00",
+  "scope": "evidence/proposed Spec only, no product repair",
+  "checks": [
+    {
+      "argv": [
+        "python3",
+        "-B",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        ".",
+        "--require-accepted"
+      ],
+      "rc": 0,
+      "stdout": "vendored governance bytes match governance.lock.json and adoption is accepted\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "initial_whitespace_check": {
+    "rc": 2,
+    "reason": "generated line-number prefixes left spaces on empty excerpt lines",
+    "resolution": "removed presentation trailing spaces; exact full source snapshots unchanged"
+  },
+  "product_tests": "NOT_RUN; no product implementation or full-suite claim"
+}

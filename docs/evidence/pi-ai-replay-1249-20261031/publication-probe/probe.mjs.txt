@@ -1,0 +1,84 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+// Probe the unmodified, integrity-verified public bundle via its public class.
+// The provider is a synthetic in-memory event source; no OAuth/store/service is mounted.
+let fetchAttempts = 0;
+globalThis.fetch = async () => { fetchAttempts++; throw new Error('Probe forbids network'); };
+const root = '/private/tmp/dsh-ac1249-probe';
+const packageRoot = path.join(root, 'published/package');
+const { PiAiAdapter } = await import(pathToFileURL(path.join(packageRoot, 'lib/index.js')));
+const piPath = fs.realpathSync(path.join(packageRoot, 'node_modules/@earendil-works/pi-ai/dist/index.js'));
+const { createAssistantMessageEventStream } = await import(pathToFileURL(piPath));
+const peerNames = ['@deepseek-ai/dsh-llm', '@deepseek-ai/dsh-timeout', '@deepseek-ai/dsh-settings', '@deepseek-ai/dsh-launch-environment', '@deepseek-ai/dsh-credentials', '@deepseek-ai/schemastery', '@earendil-works/pi-ai'];
+const peers = peerNames.map(name => {
+  const filename = path.join(packageRoot, 'node_modules', name, 'package.json');
+  const meta = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  return { name, version: meta.version, path: fs.realpathSync(filename) };
+});
+const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } };
+const model = { id: 'synthetic-model', name: 'Synthetic', provider: 'openai-codex', api: 'openai-codex-responses', reasoning: false, input: ['text'], cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 4096, maxTokens: 1024 };
+const response = { kind: 'pi-ai', version: 2, api: model.api, provider: model.provider, model: model.id, responseId: 'synthetic-response-id', stopReason: 'toolUse' };
+const blocks = [{ type: 'reasoning', thinkingSignature: 'synthetic-encrypted-thinking', redacted: true }, { type: 'text', textSignature: 'synthetic-text-signature' }, { type: 'tool-call', thoughtSignature: 'synthetic-tool-signature' }];
+const content = [{ type: 'reasoning', text: 'synthetic reasoning' }, { type: 'text', text: 'synthetic text' }, { type: 'tool-call', id: 'synthetic-call', name: 'synthetic_tool', arguments: '{"x":1}' }];
+function deepFreeze(value) { if (value && typeof value === 'object') { Object.freeze(value); for (const child of Object.values(value)) deepFreeze(child); } return value; }
+
+async function runCase(name, replayState, sourceContent, expectedApi) {
+  let captured;
+  const degrades = [];
+  const provider = {
+    id: model.provider, name: 'Synthetic provider',
+    auth: { apiKey: { name: 'Synthetic only', resolve: async () => ({ auth: { apiKey: 'synthetic-only' } }) } },
+    getModels: () => [model],
+    streamSimple(_model, context) {
+      captured = structuredClone(context);
+      const events = createAssistantMessageEventStream();
+      const message = { role: 'assistant', api: model.api, provider: model.provider, model: model.id, content: [{ type: 'text', text: 'synthetic output' }], usage, stopReason: 'stop', timestamp: 0 };
+      events.push({ type: 'done', reason: 'stop', message });
+      return events;
+    },
+  };
+  provider.stream = provider.streamSimple;
+  const profiles = new Map([[model.provider, { provider: model.provider, displayName: 'Synthetic', streamIdleTimeoutMs: 1000, configuredMaxTokens: new Map(), piProvider: provider }]]);
+  const adapter = new PiAiAdapter({ profiles: () => profiles, resolveApiKey: async () => 'synthetic-only', onReplayDegrade: item => degrades.push(item) });
+  const input = deepFreeze({ provider: model.provider, model: model.id, messages: [{ role: 'assistant', content: sourceContent, source: { kind: 'model', provider: model.provider, model: model.id, replayState } }] });
+  const preimage = JSON.stringify(input);
+  const chunks = [];
+  for await (const chunk of adapter.stream(input)) chunks.push(chunk);
+  assert.equal(JSON.stringify(input), preimage, `${name} must not mutate input`);
+  assert.ok(captured, `${name} must reach synthetic provider`);
+  assert.equal(captured.messages[0].api, expectedApi);
+  if (expectedApi === model.api) {
+    assert.equal(degrades.length, 0);
+    assert.equal(captured.messages[0].responseId, response.responseId);
+    if (sourceContent.length > 0) {
+      assert.equal(captured.messages[0].content[0].thinkingSignature, blocks[0].thinkingSignature);
+      assert.equal(captured.messages[0].content[0].redacted, true);
+      assert.equal(captured.messages[0].content[1].textSignature, blocks[1].textSignature);
+      assert.equal(captured.messages[0].content[2].thoughtSignature, blocks[2].thoughtSignature);
+      assert.deepEqual(captured.messages[0].content[2].arguments, { x: 1 });
+    }
+  } else {
+    assert.equal(degrades.length, 1);
+    assert.equal(captured.messages[0].content[0]?.thinkingSignature, undefined);
+  }
+  return { name, expectedApi, actualApi: captured.messages[0].api, nativeReplayPreserved: expectedApi === model.api, originalInputUnchanged: true, capturedMessage: captured.messages[0], degrades, finish: chunks.at(-1)?.reason };
+}
+
+const flatV1 = { ...response, version: 1, blocks };
+const flatV2 = { ...response, blocks };
+// This is exactly the result produced by pinned dsh-codex@0.2.5's migration.
+const migratedFlatV1 = { response: { ...response, version: 2 }, blocks };
+const results = [];
+results.push(await runCase('wrapper-v2-empty-blocks', { response, blocks: [] }, [], model.api));
+results.push(await runCase('wrapper-v2-native-signatures', { response, blocks }, content, model.api));
+results.push(await runCase('raw-flat-v1-degrades', flatV1, content, 'dsh-foreign'));
+results.push(await runCase('raw-flat-v2-degrades', flatV2, content, 'dsh-foreign'));
+results.push(await runCase('flat-v1-after-plugin-migration', migratedFlatV1, content, model.api));
+results.push(await runCase('wrapper-v2-block-count-mismatch', { response, blocks: [] }, content, 'dsh-foreign'));
+assert.equal(fetchAttempts, 0);
+const report = { node: process.version, execution: 'unmodified published bundle public PiAiAdapter.stream with synthetic provider', limitation: 'Uses existing development package peers; their exact versions and paths are recorded. No production installation/runtime is loaded.', home: process.env.HOME, dshHome: process.env.DSH_HOME, environmentKeys: Object.keys(process.env).sort(), fetchAttempts, peers, results, status: 'PASS' };
+fs.writeFileSync(path.join(root, 'probe-results.json'), JSON.stringify(report, null, 2) + '\n');
+console.log(JSON.stringify(report, null, 2));

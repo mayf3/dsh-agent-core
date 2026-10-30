@@ -1,0 +1,27 @@
+from pathlib import Path
+import os,subprocess,json,hashlib
+
+root=Path('/private/tmp/dsh-ac1249-probe')
+if (root/'probe.rc').exists():
+    attempts=root/'attempts'
+    attempts.mkdir(exist_ok=True)
+    attempt=attempts/str(len(list(attempts.iterdir()))+1)
+    attempt.mkdir()
+    for name in ['probe.stdout','probe.stderr','probe.rc','probe-command.json']:
+        f=root/name
+        if f.exists(): (attempt/name).write_bytes(f.read_bytes())
+dev=Path('/Users/yanfenma/workspace/github/dsh-codex')
+peer_closure=(dev/'node_modules/@deepseek-ai/dsh-llm-pi-ai').resolve().parent.parent
+target=root/'published/package/node_modules'
+if not target.exists(): target.symlink_to(peer_closure,target_is_directory=True)
+env={'PATH':'/opt/homebrew/bin:/usr/bin:/bin','HOME':str(root/'empty-home'),'DSH_HOME':str(root/'empty-dsh-home'),'TMPDIR':str(root)}
+argv=['/opt/homebrew/bin/node',str(root/'probe.mjs')]
+result=subprocess.run(argv,cwd=root,env=env,capture_output=True,text=True,timeout=30)
+(root/'probe.stdout').write_text(result.stdout)
+(root/'probe.stderr').write_text(result.stderr)
+(root/'probe.rc').write_text(str(result.returncode)+'\n')
+(root/'probe-command.json').write_text(json.dumps({'argv':argv,'cwd':str(root),'environment':env,'peerClosure':str(peer_closure),'rc':result.returncode},indent=2)+'\n')
+print('probe rc:',result.returncode)
+print(result.stdout)
+print(result.stderr)
+raise SystemExit(result.returncode)
