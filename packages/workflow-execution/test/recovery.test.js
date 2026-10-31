@@ -17,6 +17,7 @@ import { join } from 'node:path'
 
 import { ExecutionLedger, attemptIdFor } from '../src/ledger.js'
 import { createWorkflowExecutionEngine } from '../src/engine.js'
+import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
 
 const VISIT = 'ca11ef0a-0000-4a7e-9a3f-5d1c2b0a9e11'
 const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
@@ -24,7 +25,7 @@ const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
 const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
 const AGENT = 'agt_writing-style-analyst-agent'
 const AUTHORITY = 'OWNER_RULING_TEST_AUTHORITATION'
-const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: {}, current_node_visit_id: VISIT } } })
+const STILL_CURRENT = () => ({ ok: true, body: { visibility: 'full', detail: { instance: { workflow_state_version: 1 }, current_node_visit_id: VISIT } } })
 
 /**
  * Engine fixture with fully mutable seams. `state.resolve.ok` models the
@@ -66,9 +67,12 @@ function makeFixture({
     },
     getTurnReconciliation: () => ({ state: 'never_existed' }),
     resolveCallerCorrelation: ({ requestId }) => state.correlation({ requestId }),
-    readInstanceDetail: async () => {
+    readInstanceDetail: async ({ workflowInstanceId }) => {
       calls.probes += 1
-      return state.detail()
+      const read = calls.probes === 1 ? STILL_CURRENT() : state.detail()
+      return read?.ok ? { ...read, body: completeCurrentActivationDetail(read.body, {
+        workflowInstanceId, ownerPrincipalId: OWNER,
+      }) } : read
     },
   })
   const eventsFile = () => join(dir, 'attempts.jsonl')

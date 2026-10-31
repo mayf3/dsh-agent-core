@@ -1,0 +1,476 @@
+#!/usr/bin/python3
+"""One fixed input placement, then exec the original B7 outer. No retry/cleanup."""
+import contextlib
+import hashlib
+import io
+import json
+import os
+from pathlib import Path, PurePosixPath
+import posixpath
+import stat
+import subprocess
+import sys
+import tarfile
+import uuid
+
+PACKAGE = Path('/private/var/db/agent-deploy-system/inputs/b7-install-r31/b7-wired-inputs')
+CANDIDATE = Path('/private/var/db/agent-deploy-system-execution/b7-native-execution-r31-c71fd2cc/b7-wired-stage')
+PINS_SHA = 'c4aa344d8c93db29c7905b7ef07cc030a264fa1a28ddc73dd8e35096a3251f6c'
+TEMPLATE_SHA = 'ac1933eb4c15776ac18aeb59545c4d30a3a70ec9c96724713e27fb4337a56a35'
+SOURCE_LIST_SHA = 'd077e80f8be6ffeeb1a35f5595a892746c63f78d9cde1a314035bc8eacdff2ae'
+WORKER_SHA = '520068ca8d685bcfc34e31d4b448acdb97cb649780e188379e20f46274819346'
+RECOVERY = Path('/var/db/agent-core/authsvc-codex-migration')
+STAGE_NAME = 'activation-code-input'
+SEED_NAME = 'b7-preparation-input.json'
+TX_NAME = 'migration-transaction.json'
+ARTIFACT_PARENT = Path('/usr/local/share')
+ARTIFACT_ROOT = ARTIFACT_PARENT / 'agent-core/artifacts'
+LOCK = Path('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
+NODE = '/usr/local/libexec/agent-core/node-runtime/bin/node'
+OUTER_REL = 'docs/evidence/shared-codex-auth-deployment-root-refreeze-v2-20261002/owner-router-closure-g2-g7-v23.sh'
+SPEC = Path('/private/var/db/agent-deploy-system-execution/b7-native-execution-r31-c71fd2cc/b7-wired-stage/accepted-spec-copy-b08db324aa179af962536a804d275866fa2bb7f2.md')
+PROVISION = Path('/private/var/db/agent-deploy-system-execution/b7-native-execution-r31-c71fd2cc/b7-wired-stage/accepted-provisioning-commit.txt')
+PROVISION_SHA = '49c5113d2bae4971bf5f49521f2f3cb18627c57f190b68ba6fac21436a0d25b9'
+PARTS = [('app', 'agent-core-app-b7-r31.tar.gz'), ('harness', 'agent-core-harness-b7-r1.tar.gz'), ('node-runtime', 'agent-core-node-runtime-local-frozen.tar.gz')]
+CODE_NAME='b7-entry-code'
+EXEC_WORKER=RECOVERY/STAGE_NAME/CODE_NAME/CANDIDATE.name/'seed-materials.mjs'
+EXEC_TOOL_ROOT=RECOVERY/STAGE_NAME/CODE_NAME/PACKAGE.name/'dsh-agent-core'
+PUBLIC_FILES = ['dsh-codex-0.2.3-release.tgz','codex-deps-scopes-rc8.tgz','dsh-codex-0.2.3-source-stamp.prepared.json']
+NOFOLLOW = os.O_NOFOLLOW
+DIRECTORY = os.O_DIRECTORY
+
+class Refused(RuntimeError): pass
+
+# Test-only injectable pin seam: defaults are the ORIGINAL production pins; no CLI or environment path sets these.
+CHECKPOINT_SHA = '4e3218d2fa69568353f93e2960bbc774e20418ad890e992359481fe87d17d5b2'
+CHECKPOINT_INPUTS_SHA = 'c6e916129bfc8c1f180409a68e46630fe88c733c25b9b60add2c1c58ff6e66a1'
+
+def require_invocation(args, uid, euid):
+    if args or uid != 0 or euid != 0: raise Refused('FIXED_ROOT_ENTRY_REQUIRES_NO_ARGUMENTS')
+
+def check_only_receipt_fields(checkpoint):
+    return {'checkpoint_sha256': hashlib.sha256(json.dumps(checkpoint,sort_keys=True,separators=(',',':')).encode()).hexdigest(), 'live_increment_files': len(checkpoint['liveIncrementFiles']), 'restored_preimages': len(checkpoint['sixTargetRecovery']['restoredPreimages']), 'writes_performed': 0, 'installed': False, 'ready': False}
+
+def stamp(s):
+    return (s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns,s.st_uid,s.st_gid,s.st_mode,s.st_nlink)
+
+def check_directory(fd, protected=False):
+    s=os.fstat(fd)
+    if not stat.S_ISDIR(s.st_mode): raise Refused('DIRECTORY_REQUIRED')
+    if protected and (s.st_uid!=0 or s.st_mode & 0o022): raise Refused('ROOT_DIRECTORY_CUSTODY')
+    return s
+
+def open_dir_at(parent, name, protected=False):
+    if not name or '/' in name or name in ('.','..'): raise Refused('DIRECTORY_COMPONENT')
+    before=os.stat(name,dir_fd=parent,follow_symlinks=False)
+    fd=os.open(name,os.O_RDONLY|DIRECTORY|NOFOLLOW,dir_fd=parent)
+    try:
+        opened=check_directory(fd,protected);after=os.stat(name,dir_fd=parent,follow_symlinks=False)
+        if (before.st_dev,before.st_ino)!=(opened.st_dev,opened.st_ino) or (after.st_dev,after.st_ino)!=(opened.st_dev,opened.st_ino):raise Refused('DIRECTORY_OPEN_DRIFT')
+        return fd
+    except BaseException:os.close(fd);raise
+
+def physical(path):
+    # The one existing macOS system alias accepted by the original tools.
+    text=str(path)
+    if text=='/var' or text.startswith('/var/'):
+        s=os.lstat('/var')
+        if not stat.S_ISLNK(s.st_mode) or s.st_uid!=0 or s.st_nlink!=1 or os.readlink('/var')!='private/var': raise Refused('SYSTEM_VAR_ALIAS')
+        return Path('/private/var'+text[4:])
+    return Path(text)
+
+def open_directory(path,protected=False):
+    p=physical(path)
+    if not p.is_absolute() or str(p)!=posixpath.normpath(str(p)):raise Refused('ABSOLUTE_CANONICAL_DIRECTORY')
+    fd=os.open('/',os.O_RDONLY|DIRECTORY|NOFOLLOW)
+    try:
+        check_directory(fd,protected)
+        for name in p.parts[1:]:
+            next_fd=open_dir_at(fd,name,protected);os.close(fd);fd=next_fd
+        return fd
+    except BaseException:os.close(fd);raise
+
+def require_absent(fd,name):
+    try:os.stat(name,dir_fd=fd,follow_symlinks=False)
+    except FileNotFoundError:return
+    raise Refused('EXISTING_OBJECT:'+name)
+
+class Receipts:
+    def __init__(self,out):self.out=out;self.possible=[];self.facts=[]
+    def emit(self,phase,**fields):
+        self.out.write(json.dumps(dict(kind='B7_INPUT_PLACEMENT_V1',phase=phase,**fields),sort_keys=True)+'\n');self.out.flush()
+    def intent(self,path,operation):
+        self.emit('INTENT',path=str(path),operation=operation)
+        # Includes the syscall boundary even if failure prevents a returned fact.
+        self.possible.append(str(path))
+    def fact(self,path,**fields):
+        self.facts.append(dict(path=str(path),**fields));self.emit('FACTS',**self.facts[-1])
+    def stop(self,reason):
+        self.emit('STOP_PARTIAL' if self.possible else 'STOP_BEFORE_WRITE',reason=reason,confirmed=self.facts,possibly_written=self.possible,retained=True,outer_entered=False)
+
+class PinnedFile:
+    def __init__(self,path,digest,size=None,max_size=None):self.path=Path(path);self.digest=digest;self.size=size;self.max_size=max_size
+    def __enter__(self):
+        self.parent=open_directory(self.path.parent)
+        try:
+            before=os.stat(self.path.name,dir_fd=self.parent,follow_symlinks=False)
+            if not stat.S_ISREG(before.st_mode) or before.st_nlink!=1:raise Refused('PINNED_REGULAR_SINGLELINK')
+            if self.size is not None and before.st_size!=self.size:raise Refused('PINNED_SIZE')
+            if self.max_size is not None and before.st_size>self.max_size:raise Refused('PINNED_BOUND')
+            fd=os.open(self.path.name,os.O_RDONLY|NOFOLLOW,dir_fd=self.parent)
+            self.file=os.fdopen(fd,'rb')
+            if stamp(before)!=stamp(os.fstat(fd)):raise Refused('PINNED_OPEN_DRIFT')
+            self.before=before
+            h=hashlib.sha256()
+            while True:
+                b=self.file.read(1048576)
+                if not b:break
+                h.update(b)
+            if h.hexdigest()!=self.digest:raise Refused('PINNED_HASH:'+self.path.name)
+            self.stable();self.file.seek(0);return self
+        except BaseException:
+            if hasattr(self,'file'):self.file.close()
+            os.close(self.parent);raise
+    def stable(self):
+        actual_parent=open_directory(self.path.parent)
+        try:
+            a=os.fstat(actual_parent);b=os.fstat(self.parent)
+            if (a.st_dev,a.st_ino)!=(b.st_dev,b.st_ino):raise Refused('PINNED_PARENT_CHANGED')
+        finally:os.close(actual_parent)
+        after=os.fstat(self.file.fileno());leaf=os.stat(self.path.name,dir_fd=self.parent,follow_symlinks=False)
+        if stamp(self.before)!=stamp(after) or stamp(self.before)!=stamp(leaf):raise Refused('PINNED_INPUT_CHANGED:'+self.path.name)
+    def __exit__(self,typ,value,trace):
+        try:
+            if typ is None:self.stable()
+        finally:self.file.close();os.close(self.parent)
+
+def pinned_bytes(path,digest,max_size=1048576):
+    with PinnedFile(path,digest,max_size=max_size) as p:return p.file.read()
+
+def archive_headers(file,part):
+    file.seek(0)
+    with tarfile.open(fileobj=file,mode='r:gz') as tf:rows=tf.getmembers()
+    seen={};links=set()
+    for h in rows:
+        name=h.name
+        if name.endswith('/') and h.isdir():name=name.rstrip('/')
+        if not name or name.startswith('/') or name!=posixpath.normpath(name) or any(x in ('','.', '..') for x in name.split('/')) or name.split('/')[0]!=part:raise Refused('ARCHIVE_MEMBER_PATH')
+        h.name=name
+        if name in seen:raise Refused('ARCHIVE_DUPLICATE')
+        if not (h.isdir() or h.isreg() or h.issym()) or h.islnk():raise Refused('ARCHIVE_TYPE')
+        if h.uid<0 or h.gid<0 or h.mode<0 or h.mode & ~0o7777 or h.size<0:raise Refused('ARCHIVE_METADATA')
+        if h.issym():
+            target=h.linkname
+            if not target or target.startswith('/') or '\x00' in target:raise Refused('ARCHIVE_LINK')
+            resolved=posixpath.normpath(posixpath.join(posixpath.dirname(name),target))
+            if part=='app':
+                if (name,target)!=('app/node_modules/@deepseek-ai','../../harness/node_modules/.pnpm/node_modules/@deepseek-ai'):raise Refused('APP_LINK_EXCEPTION')
+            elif part=='harness':
+                if resolved!='harness' and not resolved.startswith('harness/'):raise Refused('HARNESS_LINK_ESCAPE')
+            else:raise Refused('NODE_LINK_FORBIDDEN')
+            links.add(name)
+        seen[name]=h
+    for name in seen:
+        parts=name.split('/')
+        for i in range(1,len(parts)):
+            ancestor='/'.join(parts[:i])
+            if ancestor in links or (ancestor in seen and not seen[ancestor].isdir()):raise Refused('ARCHIVE_PARENT_TYPE')
+            if ancestor not in seen:raise Refused('ARCHIVE_MISSING_DIRECTORY_HEADER')
+    for name in links:
+        h=seen[name];current=name.split('/')[:-1];pending=h.linkname.split('/');expansions=0
+        while pending:
+            component=pending.pop(0)
+            if component in ('','.'):continue
+            if component=='..':
+                if not current:raise Refused('LINK_GRAPH_ESCAPE')
+                current.pop();continue
+            current.append(component);candidate='/'.join(current)
+            if candidate in links:
+                expansions+=1
+                if expansions>128:raise Refused('LINK_GRAPH_CYCLE')
+                target=seen[candidate].linkname;current.pop();pending=target.split('/')+pending
+        if part=='harness' and (not current or current[0]!='harness'):raise Refused('LINK_GRAPH_ESCAPE')
+    return rows
+
+def write_all(fd,b):
+    view=memoryview(b)
+    while view:
+        n=os.write(fd,view)
+        if n<=0:raise Refused('SHORT_WRITE')
+        view=view[n:]
+
+def write_exclusive(parent,name,source,digest,mode,uid,gid,receipt,emit=True,label=None):
+    require_absent(parent,name)
+    if emit:receipt.intent(label or name,'exclusive-regular-file')
+    fd=os.open(name,os.O_RDWR|os.O_CREAT|os.O_EXCL|NOFOLLOW,mode,dir_fd=parent)
+    try:
+        h=hashlib.sha256();count=0
+        while True:
+            b=source.read(1048576)
+            if not b:break
+            write_all(fd,b);h.update(b);count+=len(b)
+        if h.hexdigest()!=digest:raise Refused('COPIED_HASH')
+        if os.geteuid()==0:os.fchown(fd,uid,gid)
+        os.fchmod(fd,mode);os.fsync(fd)
+        s=os.fstat(fd);leaf=os.stat(name,dir_fd=parent,follow_symlinks=False)
+        if not stat.S_ISREG(s.st_mode) or (s.st_uid,s.st_gid,s.st_mode&0o7777,s.st_nlink,s.st_size)!=(uid,gid,mode,1,count) or stamp(s)!=stamp(leaf):raise Refused('CREATED_FILE_CUSTODY')
+        os.lseek(fd,0,os.SEEK_SET);actual=hashlib.sha256()
+        while True:
+            b=os.read(fd,1048576)
+            if not b:break
+            actual.update(b)
+        if actual.hexdigest()!=digest or stamp(s)!=stamp(os.fstat(fd)):raise Refused('CREATED_FILE_READBACK')
+        os.fsync(parent)
+        if emit:receipt.fact(label or name,bytes=count,sha256=digest,uid=s.st_uid,gid=s.st_gid,mode=oct(mode),nlink=s.st_nlink,fsynced=True)
+    finally:os.close(fd)
+
+def mkdir_exclusive(parent,name,receipt,label,uid=0,gid=0,mode=0o700):
+    require_absent(parent,name);receipt.intent(label,'exclusive-directory');os.mkdir(name,0o700,dir_fd=parent)
+    fd=open_dir_at(parent,name)
+    try:
+        if os.geteuid()==0:os.fchown(fd,uid,gid)
+        os.fchmod(fd,mode);os.fsync(fd);os.fsync(parent)
+        s=os.fstat(fd)
+        if (s.st_uid,s.st_gid,s.st_mode&0o7777)!=(uid,gid,mode):raise Refused('CREATED_DIRECTORY_CUSTODY')
+        receipt.fact(label,uid=s.st_uid,gid=s.st_gid,mode=oct(mode),fsynced=True)
+        return fd
+    except BaseException:os.close(fd);raise
+
+def member_parent(root,name):
+    fd=os.dup(root)
+    try:
+        for component in name.split('/')[:-1]:
+            next_fd=open_dir_at(fd,component);os.close(fd);fd=next_fd
+        return fd
+    except BaseException:os.close(fd);raise
+
+def assert_member_parent(root,name,opened):
+    actual=member_parent(root,name)
+    try:
+        a=os.fstat(actual);b=os.fstat(opened)
+        if (a.st_dev,a.st_ino)!=(b.st_dev,b.st_ino):raise Refused('MEMBER_PARENT_REPLACED')
+    finally:os.close(actual)
+
+def extract_archive(file,rows,root,receipt,preserve=True,custody_override=None):
+    # All effective headers validated before writing. Never tar.extract(all).
+    file.seek(0);part=rows[0].name.split('/')[0] if rows else 'empty'
+    receipt.intent(part,'archive-exclusive-extraction')
+    dirs=[];files=0;links=0
+    with tarfile.open(fileobj=file,mode='r:gz') as tf:
+        for h in rows:
+            wanted_uid,wanted_gid=custody_override or (h.uid,h.gid)
+            parent=member_parent(root,h.name)
+            try:
+                name=h.name.split('/')[-1];assert_member_parent(root,h.name,parent);require_absent(parent,name)
+                if h.isdir():
+                    os.mkdir(name,0o700,dir_fd=parent);os.fsync(parent);dirs.append(h)
+                elif h.issym():
+                    os.symlink(h.linkname,name,dir_fd=parent)
+                    if preserve:os.chown(name,wanted_uid,wanted_gid,dir_fd=parent,follow_symlinks=False)
+                    os.chmod(name,h.mode,dir_fd=parent,follow_symlinks=False)
+                    s=os.stat(name,dir_fd=parent,follow_symlinks=False)
+                    if not stat.S_ISLNK(s.st_mode) or s.st_nlink!=1 or (s.st_mode&0o7777)!=h.mode or os.readlink(name,dir_fd=parent)!=h.linkname or (preserve and (s.st_uid,s.st_gid)!=(wanted_uid,wanted_gid)):raise Refused('EXTRACTED_LINK_CUSTODY')
+                    os.fsync(parent);links+=1
+                else:
+                    source=tf.extractfile(h)
+                    fd=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|NOFOLLOW,0o600,dir_fd=parent)
+                    try:
+                        count=0
+                        while True:
+                            b=source.read(1048576)
+                            if not b:break
+                            write_all(fd,b);count+=len(b)
+                        if count!=h.size:raise Refused('ARCHIVE_FILE_SIZE')
+                        if preserve:os.fchown(fd,wanted_uid,wanted_gid)
+                        os.fchmod(fd,h.mode);os.fsync(fd)
+                        s=os.fstat(fd)
+                        if s.st_nlink!=1 or s.st_size!=h.size or (s.st_mode&0o7777)!=h.mode or (preserve and (s.st_uid,s.st_gid)!=(wanted_uid,wanted_gid)):raise Refused('EXTRACTED_FILE_CUSTODY')
+                        leaf=os.stat(name,dir_fd=parent,follow_symlinks=False)
+                        if stamp(s)!=stamp(leaf):raise Refused('EXTRACTED_FILE_DRIFT')
+                        os.fsync(parent);files+=1
+                    finally:fd_open=fd;os.close(fd_open);source.close()
+                assert_member_parent(root,h.name,parent)
+            finally:os.close(parent)
+    for h in sorted(dirs,key=lambda x:x.name.count('/'),reverse=True):
+        wanted_uid,wanted_gid=custody_override or (h.uid,h.gid)
+        parent=member_parent(root,h.name)
+        try:
+            fd=open_dir_at(parent,h.name.split('/')[-1])
+            try:
+                if preserve:os.fchown(fd,wanted_uid,wanted_gid)
+                os.fchmod(fd,h.mode);os.fsync(fd)
+                s=os.fstat(fd)
+                if (s.st_mode&0o7777)!=h.mode or (preserve and (s.st_uid,s.st_gid)!=(wanted_uid,wanted_gid)):raise Refused('EXTRACTED_DIRECTORY_CUSTODY')
+                os.fsync(parent)
+            finally:os.close(fd)
+        finally:os.close(parent)
+    os.fsync(root);receipt.fact(part,headers=len(rows),directories=len(dirs),regular_files=files,symlinks=links,archive_custody_preserved=preserve and custody_override is None,code_custody_override=custody_override,fsynced=True)
+
+def assert_no_transaction_or_lock(recovery):
+    actual=open_directory(RECOVERY,protected=True)
+    try:
+        a=os.fstat(actual);b=os.fstat(recovery)
+        if (a.st_dev,a.st_ino)!=(b.st_dev,b.st_ino):raise Refused('RECOVERY_DIRECTORY_REPLACED')
+    finally:os.close(actual)
+    require_absent(recovery,TX_NAME)
+    # lstat only; never reads a holder or touches the original lock.
+    p=open_directory(LOCK.parent,protected=True)
+    try:require_absent(p,LOCK.name)
+    finally:os.close(p)
+
+def original_environment():
+    if any(k in os.environ for k in ('BASH_ENV','ENV','SHELLOPTS','BASHOPTS')) or any(k.startswith('BASH_FUNC_') for k in os.environ):raise Refused('SHELL_STARTUP_ENV_REFUSED')
+    # Retain actual normal operator/sudo identity; do not manufacture SUDO_UID.
+    env={k:os.environ[k] for k in ('HOME','USER','LOGNAME','SUDO_UID','SUDO_GID','SUDO_USER') if k in os.environ}
+    env.update(PATH='/usr/bin:/bin:/usr/sbin:/sbin',LC_ALL='C',GIT_OPTIONAL_LOCKS='0')
+    return env
+
+def worker(phase,prior=None):
+    env=original_environment()
+    try:
+        p=subprocess.run([NODE,str(physical(EXEC_WORKER)),phase],input=prior,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=600,check=False,env=env,cwd='/')
+    except subprocess.TimeoutExpired:raise Refused('PRIVATE_WORKER_TIMEOUT_OUTPUT_UNKNOWN')
+    if p.returncode:raise Refused('PRIVATE_WORKER_REFUSED:'+p.stderr.decode('utf-8','replace').strip()[:300])
+    if len(p.stdout)>65536:raise Refused('PRIVATE_WORKER_OUTPUT_BOUND')
+    json.loads(p.stdout);return p.stdout
+
+def validate_source(pins):
+    app=pins['appSource'];env=dict(original_environment(),EXPECTED_SOURCE_SHA=app['commit'],EXPECTED_SOURCE_TREE=app['tree'],GENERATION_LABEL_SHA=app['commit'])
+    result=subprocess.run(['/bin/bash',str(physical(EXEC_TOOL_ROOT)/'scripts/trusted-cp-deploy-install.sh'),'--validate-source',app['root']],env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=20,check=False,cwd='/')
+    if result.returncode or b'PROVENANCE_VALIDATE=PASS\n' not in result.stdout:raise Refused('ORIGINAL_ROOT_SOURCE_VALIDATION_REFUSED')
+
+# BEGIN BOUND CHECKPOINT R3
+def checkpoint_module():
+    raw=pinned_bytes(CANDIDATE/'checkpoint.py',CHECKPOINT_SHA,65536)
+    import types
+    module=types.ModuleType('native_bound_checkpoint');module.__file__=str(CANDIDATE/'checkpoint.py')
+    exec(compile(raw,module.__file__,'exec'),module.__dict__)
+    return module
+
+def clean_checkpoint():
+    module=checkpoint_module()
+    raw=pinned_bytes(CANDIDATE/'checkpoint-inputs.json',CHECKPOINT_INPUTS_SHA,1048576)
+    config=json.loads(raw,object_pairs_hook=module.unique_binding_fields)
+    return module.Production(config,hashlib.sha256(raw).hexdigest(),None).clean_checkpoint()
+# END BOUND CHECKPOINT R3
+
+def main():
+    check_only = sys.argv[1:] == ['check-only']
+    require_invocation([] if check_only else sys.argv[1:],os.getuid(),os.geteuid())
+    # BEGIN FIXED DS R2 MAP CHANNEL
+    map_fd_raw=os.environ.pop('B7_DS_NATIVE_MAP_ACK_FD',None)
+    if map_fd_raw is None or not map_fd_raw.isdecimal() or not 96<=int(map_fd_raw)<=1048576:raise Refused('DS_NATIVE_MAP_CHANNEL_REQUIRED')
+    map_fd=int(map_fd_raw)
+    if not stat.S_ISFIFO(os.fstat(map_fd).st_mode) or os.fstat(map_fd).st_uid!=0:raise Refused('DS_NATIVE_MAP_CHANNEL_CUSTODY')
+    # END FIXED DS R2 MAP CHANNEL
+    os.umask(0o077)
+    if str(Path(__file__).resolve())!=str(CANDIDATE/'stage-seed-once.py'):raise Refused('FIXED_ENTRY_LOCATION')
+    if any(os.environ.get(k) is not None for k in ('NODE_OPTIONS','NODE_PATH','DYLD_INSERT_LIBRARIES','DYLD_LIBRARY_PATH','PYTHONPATH','PYTHONHOME','TRUSTED_CP_SELFTEST_PROVENANCE','B7_PROBE_BASE','B7_COHORT_RUNTIME')):raise Refused('OPERATOR_STARTUP_OR_FIXTURE_ENV_REFUSED')
+    original_environment()
+    receipt=Receipts(sys.stdout)
+    try:
+        receipt.emit('READ_ONLY_PREFLIGHT',state='NOT_INSTALLED_NOT_READY',identity='normal-original-root-operator',package=str(PACKAGE),pins_sha256=PINS_SHA)
+        pins=json.loads(pinned_bytes(PACKAGE/'INSTALL-PINS.json',PINS_SHA))
+        pinned_bytes(PACKAGE/'SOURCE-CONTENT.sha256',SOURCE_LIST_SHA)
+        template=json.loads(pinned_bytes(PACKAGE/'SEED-TEMPLATE.UNINSTALLABLE.json',TEMPLATE_SHA,65536))
+        for row in pins['toolPins'].values():pinned_bytes(row['path'],row['sha256'],row['bytes'])
+        pinned_bytes(SPEC,template['specSha256'],65536);pinned_bytes(PROVISION,PROVISION_SHA,65536)
+        provenance=json.loads(pinned_bytes(PACKAGE/'APP-PACK-PROVENANCE.json',pins['appSource']['packProvenanceSha256'],65536))
+        app=pins['appSource']
+        if provenance['repo_src_realpath']!=app['root'] or provenance['source_label']!=app['label'] or provenance['source_tree_sha']!=app['tree'] or provenance['baseline']!=app['lineage']['baseline'] or provenance['lineage']['hrFix']!='47693d4d (PR509)':raise Refused('PINNED_APP_RECEIPT_BINDING')
+        with contextlib.ExitStack() as stack:
+            recovery=open_directory(RECOVERY,protected=True);stack.callback(os.close,recovery)
+            rs=os.fstat(recovery)
+            if (rs.st_uid,rs.st_gid,rs.st_mode&0o7777)!=(0,0,0o700):raise Refused('RECOVERY_ROOT_CUSTODY')
+            assert_no_transaction_or_lock(recovery)
+            for n in (STAGE_NAME,SEED_NAME):require_absent(recovery,n)
+            share=open_directory(ARTIFACT_PARENT,protected=True);stack.callback(os.close,share)
+            try:
+                existing=open_dir_at(share,'agent-core',protected=True)
+            except FileNotFoundError:existing=None
+            if existing is not None:
+                stack.callback(os.close,existing);require_absent(existing,'artifacts')
+            worker_file=stack.enter_context(PinnedFile(CANDIDATE/'seed-materials.mjs',WORKER_SHA,max_size=65536))
+            operation=stack.enter_context(PinnedFile(pins['operationSourceArchive'],pins['operationSourceArchiveSha256'],pins['artifactPins'][Path(pins['operationSourceArchive']).name]['bytes']))
+            operation_rows=archive_headers(operation.file,'dsh-agent-core');operation.stable()
+            archives=[]
+            for part,name in PARTS:
+                row=pins['artifactPins'][name];f=stack.enter_context(PinnedFile(row['path'],row['sha256'],row['bytes']));rows=archive_headers(f.file,part);f.stable();archives.append((part,f,rows))
+            public=[]
+            for name in PUBLIC_FILES:
+                row=pins['artifactPins'][name];f=stack.enter_context(PinnedFile(row['path'],row['sha256'],row['bytes']));public.append((name,row,f))
+                side=(row['sha256']+'  '+name+'\n').encode();actual=pinned_bytes(row['sidecarPath'],hashlib.sha256(side).hexdigest(),1024)
+                if actual!=side:raise Refused('ARTIFACT_SIDECAR')
+            receipt.emit('READ_ONLY_INPUT_PIN_PREFLIGHT_PASSED',source_validation_pending=True,runtime_validation_pending=True)
+            assert_no_transaction_or_lock(recovery)
+            # BEGIN BOUND CHECKPOINT R3 ADMISSION
+            checkpoint=clean_checkpoint()
+            receipt.emit('BOUND_CLEAN_CHECKPOINT_PASSED',checkpoint_sha256=hashlib.sha256(json.dumps(checkpoint,sort_keys=True,separators=(',',':')).encode()).hexdigest(),live_increment_files=len(checkpoint['liveIncrementFiles']),restored_preimages=len(checkpoint['sixTargetRecovery']['restoredPreimages']),installed=False,ready=False)
+            assert_no_transaction_or_lock(recovery)
+            if check_only:
+                receipt.emit('CHECK_ONLY_COMPLETE',**check_only_receipt_fields(checkpoint))
+                return
+            # END BOUND CHECKPOINT R3 ADMISSION
+            stage=mkdir_exclusive(recovery,STAGE_NAME,receipt,RECOVERY/STAGE_NAME);stack.callback(os.close,stage)
+            code=mkdir_exclusive(stage,CODE_NAME,receipt,RECOVERY/STAGE_NAME/CODE_NAME);stack.callback(os.close,code)
+            tool_package=mkdir_exclusive(code,PACKAGE.name,receipt,RECOVERY/STAGE_NAME/CODE_NAME/PACKAGE.name);stack.callback(os.close,tool_package)
+            extract_archive(operation.file,operation_rows,tool_package,receipt,custody_override=(0,0));operation.stable()
+            entry=mkdir_exclusive(code,CANDIDATE.name,receipt,RECOVERY/STAGE_NAME/CODE_NAME/CANDIDATE.name);stack.callback(os.close,entry)
+            worker_file.file.seek(0);write_exclusive(entry,'seed-materials.mjs',worker_file.file,WORKER_SHA,0o644,0,0,receipt,label=EXEC_WORKER);worker_file.stable()
+            source_rows=pinned_bytes(PACKAGE/'SOURCE-CONTENT.sha256',SOURCE_LIST_SHA).decode('ascii').splitlines()
+            for line in source_rows:
+                digest,rel=line.split('  ',1)
+                if not rel or rel.startswith('/') or rel!=posixpath.normpath(rel) or '..' in rel.split('/'):raise Refused('SOURCE_LIST_PATH')
+                pinned_bytes(EXEC_TOOL_ROOT/rel,digest,16777216)
+            for rel,row in pins['toolPins'].items():pinned_bytes(EXEC_TOOL_ROOT/rel,row['sha256'],row['bytes'])
+            receipt.emit('ROOT_CODE_COPY_FACTS',operation_source_archive_sha256=pins['operationSourceArchiveSha256'],regular_source_files_verified=len(source_rows),worker_sha256=WORKER_SHA,tool_source_root=str(physical(EXEC_TOOL_ROOT)),composite_git_head=None,source_bytes_preserved=True)
+            validate_source(pins)
+            prior=worker('pre')
+            receipt.emit('ORIGINAL_SOURCE_AND_RUNTIME_VALIDATED',app_source_head=app['commit'],app_source_tree=app['tree'],source_validated_by_original_installer=True,runtime_binding_sha256=hashlib.sha256(prior).hexdigest())
+            for part,f,rows in archives:
+                assert_no_transaction_or_lock(recovery);extract_archive(f.file,rows,stage,receipt);f.stable()
+            if existing is None:
+                existing=mkdir_exclusive(share,'agent-core',receipt,ARTIFACT_PARENT/'agent-core',mode=0o755);stack.callback(os.close,existing)
+            assert_no_transaction_or_lock(recovery)
+            artifacts=mkdir_exclusive(existing,'artifacts',receipt,ARTIFACT_ROOT,mode=0o755);stack.callback(os.close,artifacts)
+            for name,row,f in public:
+                f.file.seek(0);write_exclusive(artifacts,name,f.file,row['sha256'],0o644,0,0,receipt,label=ARTIFACT_ROOT/name);f.stable()
+                side=(row['sha256']+'  '+name+'\n').encode()
+                write_exclusive(artifacts,name+'.sha256',io.BytesIO(side),hashlib.sha256(side).hexdigest(),0o644,0,0,receipt,label=ARTIFACT_ROOT/(name+'.sha256'))
+            # Check the genuine receipt actually placed in the new app tree.
+            pinned_bytes(RECOVERY/STAGE_NAME/'app/pack-provenance.json',app['packProvenanceSha256'],65536)
+            seed=worker('finish',prior)
+            seed_json=json.loads(seed);digests=seed_json['activation']['codeDigests']
+            receipt.emit('ACTUAL_CODE_INPUT_FACTS',code_digests=digests,cohort_pending_original_fd9_preparation=True,installed=False,ready=False)
+            assert_no_transaction_or_lock(recovery)
+            write_exclusive(recovery,SEED_NAME,io.BytesIO(seed),hashlib.sha256(seed).hexdigest(),0o600,0,0,receipt,label=RECOVERY/SEED_NAME)
+            for _,f,_ in archives:f.stable()
+            for _,_,f in public:f.stable()
+            # Source/header checks never substitute for FD9 preparation or Owner.
+            validate_source(pins)
+            for rel,row in pins['toolPins'].items():pinned_bytes(EXEC_TOOL_ROOT/rel,row['sha256'],row['bytes'])
+            assert_no_transaction_or_lock(recovery)
+            tx='tx-'+uuid.uuid4().hex
+            receipt.emit('ORIGINAL_OUTER_HANDOFF_INTENT',transaction=tx,outer_sha256=pins['toolPins'][OUTER_REL]['sha256'],seed_sha256=hashlib.sha256(seed).hexdigest(),installed=False,ready=False,stdin='original-owner-channel-retained',on_failure='retain-inputs-and-original-tx-lock-if-created')
+        # BEGIN FIXED DS R2 DURABLE TX HANDOFF
+        # Actual native TX was generated above by the original stage. A bounded
+        # DS receipt ACK gates exec of original outer, never Owner confirmation.
+        map_ack=os.read(map_fd,256)
+        if map_ack!=('DS_B7_TX_MAP_ACK '+tx+'\n').encode('ascii'):raise Refused('DS_NATIVE_TX_MAPPING_NOT_ACKNOWLEDGED')
+        os.close(map_fd)
+        # END FIXED DS R2 DURABLE TX HANDOFF
+        # No new transaction or lease is created here. Original outer owns both.
+        env=original_environment()
+        os.chdir('/')
+        os.execve('/bin/bash',['/bin/bash',str(physical(EXEC_TOOL_ROOT)/OUTER_REL),'b7-apply','--transaction',tx],env)
+    except BaseException as e:
+        try:receipt.stop(str(e)[:400])
+        except BaseException:pass
+        raise
+
+if __name__=='__main__':
+    try:main()
+    except BaseException as e:
+        try:sys.stderr.write('FIXED_STAGE_SEED_STOP: '+str(e)[:400]+'\n')
+        except BaseException:pass
+        sys.exit(1)

@@ -32,6 +32,17 @@ def scoped_source(name, path):
             + f"{name} = _make_{name}()\n\n")
 
 
+def module_pin(relative_path, retired_literal):
+    """PRODUCT_434: dfb654f8 retired the native-arm64 incident modules from the
+    generic runtime tree. A build where the module still exists keeps the exact
+    source digest (historical bytes unchanged); on a tree without it the pin
+    records the documented retirement marker instead of restoring the file."""
+    target = HERE.parents[1] / relative_path
+    if target.exists():
+        return hashlib.sha256(target.read_bytes()).hexdigest()
+    return hashlib.sha256(retired_literal).hexdigest()
+
+
 def build_bytes():
     raw = BASE.read_bytes()
     if hashlib.sha256(raw).hexdigest() != BASE_SHA256:
@@ -77,9 +88,9 @@ def _compose(raw):
         + f'HR_INVENTORY_VALIDATOR_PINS = {inventory_pins!r}\n'
         + f'HR_READBACK_HELPER_SOURCE = {readback!r}\n'
         + f'HR_READBACK_HELPER_SHA256 = {hashlib.sha256(readback.encode()).hexdigest()!r}\n\n'
-        + f'HR_GATED_ENTRY_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs").read_bytes()).hexdigest()!r}\n'
-        + f'HR_STARTUP_CONTEXT_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs").read_bytes()).hexdigest()!r}\n'
-        + f'HR_CHILD_PROOF_SHA256 = {hashlib.sha256((HERE.parents[1] / "packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py").read_bytes()).hexdigest()!r}\n'
+        + f'HR_GATED_ENTRY_SHA256 = {module_pin("packages/production-runtime/src/native-arm64/hr-s256-r2-gated-runtime.mjs", b"RETIRED_BY_PRODUCT_434_DFB654F8:hr-s256-r2-gated-runtime.mjs")!r}\n'
+        + f'HR_STARTUP_CONTEXT_SHA256 = {module_pin("packages/production-runtime/src/native-arm64/hr-s256-r2-startup-context.mjs", b"RETIRED_BY_PRODUCT_434_DFB654F8:hr-s256-r2-startup-context.mjs")!r}\n'
+        + f'HR_CHILD_PROOF_SHA256 = {module_pin("packages/production-runtime/src/native-arm64/hr-s256-r2-child-proof.py", b"RETIRED_BY_PRODUCT_434_DFB654F8:hr-s256-r2-child-proof.py")!r}\n'
         + scoped_source("HR_PROFILE", HERE / "profile.py")
         + scoped_source("HR_COLLECTOR", HERE / "collector.py")
         + scoped_source("HR_PROJECTION", HERE / "projection.py")

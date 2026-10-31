@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto'
 import {
   TARGET_HUMAN_PRINCIPAL_ID,
   WORKFLOW_HUMAN_PRINCIPAL_PROJECTION_CAPABILITY_ID,
-} from '../../../broker/src/capabilities/workflow-human-principal-projection.js'
+} from '../../../broker/src/capabilities/workflow/human-principal-projection.js'
 
 const REQUEST_TIMEOUT_MS = 5000
 const ADMIN_PATH = '/internal/v1/admin/principals'

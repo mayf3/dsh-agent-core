@@ -11,8 +11,10 @@ import { WATCHDOG_DELETE_PATHS, WATCHDOG_OVERLAY_PATHS, WATCHDOG_PAYLOAD_SNAPSHO
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 const composePath = 'packages/production-runtime/src/compose.js'
-const reviewedComposePreSha = '678374d753fec151614c4e1ab5cae6e340527a55a10640178b151b9074392ae7'
-const reviewedComposePostSha = '17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0'
+// R3 identity re-pin (2026-10-11): the deployed compose generation already carries the
+// integrated watchdog wiring, so PRE = POST = the fresh deployed sha (packet §6r3).
+const reviewedComposePreSha = '96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f'
+const reviewedComposePostSha = '96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f'
 const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim()
 const reviewedPayload = (path) => {
   const expected = WATCHDOG_PAYLOAD_SNAPSHOT.paths[path]
@@ -74,7 +76,7 @@ test('reviewed production path authority is exactly 23 writes plus one retired w
   assert.equal([...WATCHDOG_DELETE_PATHS].some((path) => WATCHDOG_OVERLAY_PATHS.has(path)), false)
 })
 
-test('compose live adapter pins replace the stale generation with the Agent Directory generation', () => {
+test('compose live adapter pins are frozen to the exact deployed integrated generation (R3 identity re-pin)', () => {
   assert.equal(WATCHDOG_LIVE_ADAPTER_SHA.get(composePath), reviewedComposePreSha)
   assert.equal(WATCHDOG_LIVE_ADAPTER_POST_SHA.get(composePath), reviewedComposePostSha)
 })

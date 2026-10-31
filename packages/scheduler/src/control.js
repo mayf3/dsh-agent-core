@@ -130,6 +130,76 @@ export async function findJobByLogicalKey(store, logicalKey) {
 }
 
 /**
+ * clone_disabled (AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4_AMENDMENT1_CLONE_DISABLED,
+ * DRAFT / PENDING_ACCEPTANCE; candidate revision 2, SUP-20261011-0310-HR-SUCCESSOR):
+ * same-Owner atomic clone of one stored definition into a permanently disabled
+ * target.
+ *
+ * One mutateDoc (single mutation authority: lock + re-read-latest) enforces
+ * the frozen judgment order — source visible -> owned (assertSource; clone has
+ * NO admin bypass) -> expected-revision CAS (stale readers never clone) ->
+ * logical-key dedup -> insert. The dedup anchor is the SOURCE INTENT, not the
+ * projection alone: each committed clone persists a minimal non-secret
+ * `cloneProvenance` {sourceJobId, sourceScheduleRevision, sourceUpdatedAtMs},
+ * and a retry converges to `already_applied` ONLY when the existing key
+ * binding carries THIS clone's provenance (same source job + same source
+ * revision CAS) AND the projection still matches. A key bound to a job
+ * without this provenance (created by create, or cloned from a different
+ * source or an earlier revision — even one whose bytes later drifted back) is
+ * a different intent and conflicts; it is never silently adopted. The target
+ * is born enabled:false with a fresh id/revision/state and inherits NO
+ * occurrence, fence, run or history — only the definition whitelist bytes
+ * (name/schedule/payload/delivery/retry/deleteAfterRun/description) are
+ * copied. The hidden payload message travels only inside the store: it is
+ * never accepted from nor returned to the model, and audit carries digests
+ * only.
+ */
+export async function cloneDisabledJobOp(store, { sourceJobId, expectedRevision, cloneInput }, { nowMs = Date.now(), assertSource } = {}) {
+  const clone = normalizeJob({ ...cloneInput, enabled: false }, { nowMs })
+  const provenance = {
+    sourceJobId,
+    sourceScheduleRevision: expectedRevision.scheduleRevision,
+    sourceUpdatedAtMs: expectedRevision.updatedAtMs,
+  }
+  const { value } = await store.mutateDoc((latest) => {
+    const source = findJob(latest.jobs, sourceJobId)
+    if (typeof assertSource === 'function') assertSource(source)
+    assertExpectedRevision(source, expectedRevision)
+    const existing = clone.logicalKey !== undefined
+      ? latest.jobs.find((candidate) => candidate.logicalKey === clone.logicalKey)
+      : undefined
+    if (existing !== undefined) {
+      const prior = existing.cloneProvenance
+      const sameIntent = prior !== null && typeof prior === 'object'
+        && prior.sourceJobId === provenance.sourceJobId
+        && prior.sourceScheduleRevision === provenance.sourceScheduleRevision
+        && prior.sourceUpdatedAtMs === provenance.sourceUpdatedAtMs
+      if (!sameIntent) {
+        throw logicalKeyConflictError(existing, ['cloneProvenance'])
+      }
+      const differingFields = differingProjectionFields(existing, clone)
+      if (differingFields.length === 0) {
+        // Zero semantic write: the committed clone stays byte-identical
+        // (already_applied — a retry with the SAME key + SAME source identity
+        // and revision converges here and never duplicates).
+        return { value: { job: cloneJob(existing), alreadyApplied: true } }
+      }
+      throw logicalKeyConflictError(existing, differingFields)
+    }
+    if (latest.jobs.some((candidate) => candidate.id === clone.id)) throw new Error(`job id already exists: ${clone.id}`)
+    const stored = cloneJob(clone)
+    stored.cloneProvenance = provenance
+    stored.state = deriveJobStateSummary(stored, latest.occurrences, nowMs)
+    latest.jobs.push(stored)
+    return { value: { job: stored, alreadyApplied: false } }
+  })
+  return {
+    outcome: value.alreadyApplied ? 'already_applied' : 'created',
+    job: toPublicJob(value.job),
+  }
+}
+
+/**
  * Update mutable fields. A change to schedule/payload/agentId/retry semantics
  * bumps `scheduleRevision` (D-007 §5.2): existing occurrences stay bound to
  * their creation revision; future occurrences mint in the new space.
@@ -386,4 +456,104 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     fenceRemaining: value.fenceRemaining,
     evidenceStatus,
   }
+}
+
+/**
+ * AGENT_DELIVERY_RESILIENCE_V1 CTR-S1/S3 — policy auto-reconcile (machine
+ * actor). Batch settlement of unresolved outcome_unknown occurrences through
+ * the SAME store mutation path as the operator `reconcileOccurrence` above
+ * (single mutation authority, C-029): one atomic mutateDoc, applyTransition
+ * lateSettlement, fence rebuild, per-item durable run-event.
+ *
+ * The ONLY caller-observable differences from the operator path are the
+ * settlement basis (`policy-auto-reconcile`) and the receipt actor: a machine
+ * identity supplied by the caller — the scheduler never derives policy actor
+ * identity from the OS user (CTR-S3). Callers MUST pass targets produced by
+ * `planAutoReconcilePass` (auto-reconcile.js); this function re-validates
+ * every precondition and skips (never throws the batch away) on per-item
+ * drift — the store may have moved between plan and commit.
+ */
+export async function autoReconcileOccurrences(store, { settlements, actorId = 'system:fence-auto-reconcile', nowMs = Date.now() }) {
+  if (!Array.isArray(settlements) || settlements.length === 0) {
+    return { results: [], fencesRemaining: null }
+  }
+  if (typeof actorId !== 'string' || !/^system:[a-z0-9-]+$/.test(actorId)) {
+    throw new TypeError('autoReconcileOccurrences: actorId must be a machine identity of the form system:<kebab-id> (CTR-S3; human-style identities are reserved for the operator reconcile path)')
+  }
+  const identity = { provenance: 'scheduler-policy', actorId }
+  const resolvedAt = nowMs
+  let results = []
+  let fencesRemaining = null
+  let value
+  try {
+    ({ value } = await store.mutateDoc((latest) => {
+    for (const target of settlements) {
+      const { occurrenceId, runId, resolvedTo, evidenceNote } = target ?? {}
+      try {
+        if (!['succeeded', 'failed'].includes(resolvedTo)) {
+          throw new Error('resolvedTo must be succeeded|failed for policy auto-reconcile')
+        }
+        if (typeof evidenceNote !== 'string' || !evidenceNote.trim()) {
+          throw new Error('evidenceNote is required')
+        }
+        const record = findOccurrenceById(latest.occurrences, occurrenceId)
+        if (!record) throw new Error(`unknown occurrence: ${occurrenceId}`)
+        if (record.runId !== runId) {
+          throw new Error(`runId mismatch: occurrence ${occurrenceId} belongs to ${record.runId}`)
+        }
+        if (!isUnresolvedUnknown(record)) {
+          results.push({ occurrenceId, outcome: 'already_settled' })
+          continue
+        }
+        applyTransition(record, {
+          to: resolvedTo,
+          at: resolvedAt,
+          reason: `policy auto-reconcile: ${evidenceNote.trim()}`,
+          endedAt: resolvedAt,
+          executionOutcome: resolvedTo,
+          lateSettlement: {
+            resolvedTo, resolvedAt, basis: 'policy-auto-reconcile',
+            evidenceRef: evidenceNote.trim(),
+          },
+          terminalEvidence: { kind: 'policy-auto-reconcile', detailRef: evidenceNote.trim() },
+        })
+        latest.fences = rebuildFences(latest.occurrences)
+        const job = latest.jobs.find((candidate) => candidate.id === record.jobId)
+        if (job) job.state = deriveJobStateSummary(job, latest.occurrences, resolvedAt)
+        results.push({ occurrenceId, outcome: 'settled', resolvedTo, jobId: record.jobId })
+      } catch (error) {
+        results.push({ occurrenceId: occurrenceId ?? null, outcome: 'error', error: String(error?.message ?? error) })
+      }
+    }
+    for (const job of latest.jobs) {
+      job.state = deriveJobStateSummary(job, latest.occurrences, resolvedAt)
+    }
+    fencesRemaining = Object.keys(latest.fences).length
+    return { value: { results } }
+    }))
+  } catch (error) {
+    // Same committed-receipt discipline as reconcileOccurrence above: the
+    // atomic commit may be durable even when its acknowledgement is lost.
+    // Replay the committed results instead of surfacing an error whose only
+    // safe retry is per-item already-settled (settle-once preserved).
+    if (error?.mutationOutcome !== 'committed' || !error.committedValue) throw error
+    value = error.committedValue
+  }
+  results = value.results
+  for (const result of results) {
+    if (result.outcome !== 'settled') continue
+    try {
+      const evidenceStatus = await store.appendRunEvent({
+        ts: resolvedAt, action: 'late_settlement', occurrenceId: result.occurrenceId,
+        runId: settlements.find((target) => target.occurrenceId === result.occurrenceId)?.runId,
+        resolvedTo: result.resolvedTo, basis: 'policy-auto-reconcile',
+        operatorIdentity: identity, jobId: result.jobId,
+        fenceRemaining: fencesRemaining,
+      })
+      result.receipt = evidenceStatus?.ok === false ? 'failed' : 'ok'
+    } catch (error) {
+      result.receipt = `failed:${String(error?.message ?? error).slice(0, 120)}`
+    }
+  }
+  return { results, fencesRemaining, identity }
 }

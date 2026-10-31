@@ -25,7 +25,8 @@ export function assembleResult(input) {
   const sourceFiles = {}
   const sourceStatuses = {}
   for (const [name, loaded] of loadedSources) {
-    sourceFiles[name] = { rows: loaded.rows, files: loaded.files ?? [] }
+    sourceFiles[name] = { rows: loaded.rows, files: loaded.files ?? [],
+      ...(loaded.revision !== undefined ? { revision: loaded.revision } : {}) }
     sourceStatuses[name] = { ...loaded.status, truncated: loaded.status?.truncated }
   }
   const token = sourceGenerationToken(sourceFiles)
@@ -56,7 +57,7 @@ export function assembleResult(input) {
       })),
       cursorSemantics: pagination.cursorSemantics,
     },
-    summary: { fiveDimensions },
+    summary: { fiveDimensions, ...(build.workflowResult ? { workflowResult: build.workflowResult } : {}) },
     timeline: pagination.entries.map((entry) => ({ ...entry, atUtc: utcIso(entry.atMs), brief: brief(entry) ?? entry.brief })),
     correlations: build.correlations,
     gaps: build.gaps,
@@ -229,6 +230,18 @@ export function renderReportText(result) {
     lines.push(`- ${DIM_LABELS[dim]}: ${glyph}${verdict.ruleIds?.length ? ` [${verdict.ruleIds.join(',')}]` : ''}`)
   }
   lines.push('')
+  if (result.summary.workflowResult) {
+    const projection = result.summary.workflowResult
+    lines.push('## 业务结果（与执行关闭分开）')
+    for (const entry of projection.execution) {
+      lines.push(`- ${entry.nodeVisitId}/${entry.attemptId}: executionState=${entry.executionState}; attemptClosure=${entry.attemptClosure}; visitLeft=${entry.visitLeft}`)
+    }
+    const business = projection.businessOutcome
+    lines.push(`- businessOutcome=${business.state}; version=${business.workflowStateVersion}; acceptance=${business.acceptance.state} (STRUCTURAL_BINDING_ONLY); consistency=${projection.consistency}`)
+    lines.push(`- evidence=${JSON.stringify(business.evidence)}; acceptanceEvidence=${JSON.stringify(business.acceptance.evidence)}`)
+    lines.push(`- observations=${JSON.stringify(projection.observations)}; gaps=${business.gaps.join(',')}`)
+    lines.push('')
+  }
   lines.push(`## 时间轴 (共 ${result.totalRecords} 条, 本页 ${result.timeline.length}; 原生序号保留)`)
   for (const entry of result.timeline.slice(0, 200)) {
     const seq = entry.nativeSeq !== undefined ? ` seq=${entry.nativeSeq}` : ''

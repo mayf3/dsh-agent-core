@@ -20,6 +20,7 @@ import {
 } from '../control.js'
 import { toPublicJob } from '../job-model.js'
 import { createCriticalJobGuard, ownershipGuard, DEFAULT_CRITICAL_INVENTORY_PATH } from './critical-job-guard.js'
+import { createCloneDisabledHandler } from './clone.js'
 import {
   SELF_SERVICE_ERROR_CODES,
   err,
@@ -345,6 +346,8 @@ export function createSelfServiceSchedulerAccess({ store, assertGrant, onAuditFa
       async disable(args, context) {
         return mutateToggle('disable', args, context, disableJobOp)
       },
+
+      clone_disabled: createCloneDisabledHandler({ store, appendAudit, contextOrError }),
 
       async remove(args, context) {
         const caller = contextOrError(context, 'scheduler.remove')

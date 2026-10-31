@@ -275,6 +275,72 @@ test('owner-assistance wake: closed body + workflow.execute gate + retryable run
   assert.equal(retryable.body.error.code, 'principal_disabled')
 })
 
+test('governance child review wake accepts the closed typed phase and paired optional submission proof', async (t) => {
+  const { base, access } = await mount(t)
+  const body = {
+    phase: 'GOVERNANCE_CHILD_REVIEW',
+    workflowInstanceId: INSTANCE,
+    nodeVisitId: VISIT,
+    assistanceCaseId: CASE_ID,
+    ownerPrincipalId: OWNER_PRINCIPAL,
+    ownerBindingId: '7d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77',
+    reviewWakeId: '8d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e88',
+    bindingId: '9d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e99',
+    governanceChildInstanceId: 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9eaa',
+    childNodeVisitId: 'bd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9ebb',
+    childDefinitionVersionId: 'cd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9ecc',
+    childTerminalEventId: 'dd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9edd',
+    acceptanceTransitionId: 'ed5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9eee',
+    acceptanceContractDigest: 'a'.repeat(64),
+    childSubmissionId: 'fd5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9eff',
+    childSubmissionDigest: 'b'.repeat(64),
+  }
+
+  const res = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body,
+  })
+  assert.equal(res.status, 200)
+  assert.deepEqual(access.calls.ownerWakes, [body])
+
+  const withoutSubmission = { ...body }
+  delete withoutSubmission.childSubmissionId
+  delete withoutSubmission.childSubmissionDigest
+  const noSubmission = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: withoutSubmission,
+  })
+  assert.equal(noSubmission.status, 200)
+  assert.deepEqual(access.calls.ownerWakes[1], withoutSubmission)
+
+  const missingContractDigest = { ...withoutSubmission }
+  delete missingContractDigest.acceptanceContractDigest
+  const missingDigest = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: missingContractDigest,
+  })
+  assert.equal(missingDigest.status, 400)
+
+  const invalidDigest = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: { ...body, childSubmissionDigest: 'not-a-sha256' },
+  })
+  assert.equal(invalidDigest.status, 400)
+  assert.equal(invalidDigest.body.error.code, 'invalid_arguments')
+
+  const unpairedSubmission = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: (() => { const { childSubmissionDigest, ...unpaired } = body; return unpaired })(),
+  })
+  assert.equal(unpairedSubmission.status, 400)
+
+  const invalidIdentity = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: { ...withoutSubmission, bindingId: 'not-a-uuid' },
+  })
+  assert.equal(invalidIdentity.status, 400)
+
+  const unknown = await call(base, '/workflow-execution/owner-assistance-wakes', {
+    token: OK_TOKEN, method: 'POST', body: { ...body, phase: 'INITIAL', reason: 'contradictory' },
+  })
+  assert.equal(unknown.status, 400)
+  assert.equal(access.calls.ownerWakes.length, 2)
+})
+
 test('CTR-WEC1-003: access service absent → 503 not_ready (fail-closed, honest)', async (t) => {
   const { base } = await mount(t, { access: null })
   const res = await call(base, `/workflow-execution/traces?workflowInstanceId=${INSTANCE}`, { token: OK_TOKEN })

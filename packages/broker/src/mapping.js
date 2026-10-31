@@ -25,6 +25,7 @@
  * forward, or even accept one from `args`.
  */
 
+import { COMPLETE_BODY_ID, completeArguments, completeFailure, validCompleteResult } from './capabilities/workflow-definition-read/complete-contract.js'
 import { validateManifest } from './schema.js'
 import { validateSchedulerArguments } from './scheduler-validation.js'
 
@@ -104,6 +105,7 @@ export function validateArgumentsDetailed(argumentSchema, args) {
         // any token mint or business HTTP call — e.g. a resolve without an
         // outcome summary never leaves the broker.
         else if (spec.nonBlank === true && val.trim() === '') violations.push(`property "${label}" must be a non-blank string`)
+        else if (typeof spec.pattern === 'string' && !new RegExp(spec.pattern).test(val)) violations.push(`property "${label}" must match its declared pattern`)
       } else if (spec.type === 'boolean') {
         if (typeof val !== 'boolean') violations.push(`property "${label}" must be a boolean`)
       } else if (spec.type === 'object') {
@@ -160,6 +162,10 @@ export function validateInvocation(manifest, call) {
     return { ok: false, error: resolveCode(manifest, 'unsupported_operation', FALLBACK_ERRORS.unsupported_operation) }
   }
 
+  if (manifest.id === COMPLETE_BODY_ID) {
+    const args = completeArguments(call?.args)
+    return args ? { ok: true, operation, op, args } : completeFailure({ code: 'invalid_arguments' }, manifest)
+  }
   let args = call?.args
   let scheduler
   if (manifest.id === 'scheduler' && args !== null && typeof args === 'object' && !Array.isArray(args)) {
@@ -204,7 +210,7 @@ export function validateInvocation(manifest, call) {
  * @param {() => unknown} deps.resolvePrincipal - the single identity source.
  * @returns {Promise<{ ok: true, result: unknown } | { ok: false, error: { code: string } }>}
  */
-export async function invoke(manifest, handlers, call, deps) {
+async function invokeCore(manifest, handlers, call, deps) {
   const validated = validateInvocation(manifest, call)
   if (!validated.ok) return validated
   const { operation, args } = validated
@@ -265,4 +271,17 @@ export function assertValidManifest(input) {
     throw new Error(`invalid capability manifest: ${res.errors.join('; ')}`)
   }
   return res.manifest
+}
+
+
+export async function invoke(manifest, handlers, call, deps) {
+  if (manifest.id !== COMPLETE_BODY_ID) return invokeCore(manifest, handlers, call, deps)
+  try {
+    const result = await invokeCore(manifest, handlers, call, deps)
+    if (result.ok === false) return completeFailure(result.error, manifest)
+    return validCompleteResult(result.result, call?.args) ? result
+      : completeFailure({ code: 'current_task_body_protocol_error' }, manifest)
+  } catch {
+    return completeFailure({ code: 'transport_failure' }, manifest)
+  }
 }

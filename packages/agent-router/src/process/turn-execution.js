@@ -16,6 +16,8 @@
 import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
+import { promptWrite } from './prompt-write.js'
+import { DELIVERY_COMPLETION } from './delivery-resilience.js'
 
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
@@ -150,7 +152,20 @@ export const turnExecutionMethods = {
           `agent ${this.agentId}: queued prompt caps exceeded (${this.turnQueueEntries.length} entries / ${this.queuedPromptBytes}B)`))
         return
       }
-      this.turnQueueEntries.push({ mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject })
+      const entry = { mode, sessionId, text, opts, callerBoundMs, promptBytes, resolve, reject }
+      if (opts?.nativeGoalContinuation && opts.admissionSignal) {
+        const abort = () => {
+          const index = this.turnQueueEntries.indexOf(entry)
+          if (index < 0) return
+          this.turnQueueEntries.splice(index, 1)
+          this.queuedPromptBytes -= entry.promptBytes
+          entry.detachAdmissionAbort?.()
+          reject(envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission cancelled before write'))
+        }
+        opts.admissionSignal.addEventListener('abort', abort, { once: true })
+        entry.detachAdmissionAbort = () => opts.admissionSignal.removeEventListener('abort', abort)
+      }
+      this.turnQueueEntries.push(entry)
       this.queuedPromptBytes += promptBytes
       this.drainTurnQueue()
     })
@@ -158,8 +173,16 @@ export const turnExecutionMethods = {
 
   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
+    if (this.deliveryTransportFailed) return envelopeCarrier('not_admitted', null,
+      'AGENT_DELIVERY_TRANSPORT_UNHEALTHY', 'transport generation is quarantined')
+    if (opts?.nativeGoalContinuation && (opts.admissionSignal?.aborted
+        || (opts.admissionDeadlineMono !== undefined && monotonicNowMs() >= opts.admissionDeadlineMono))) {
+      return envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission expired before write')
+    }
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) return lineageError
+    if (opts?.websiteControl && this.initializeEvidence?.websiteAdmission?.version !== 1) return envelopeCarrier('not_admitted',null,'WEBSITE_SOURCE_UNAVAILABLE','website source retention is unavailable')
+    if (opts?.conversationSource && this.initializeEvidence?.conversationSource?.version !== 1) return envelopeCarrier('not_admitted',null,'CONVERSATION_SOURCE_UNAVAILABLE','source retention is unavailable')
     if (typeof sessionId !== 'string' || sessionId === '') {
       return envelopeCarrier('not_admitted', null, 'AGENT_PROCESS_INVALID_INPUT', 'sessionId must be a non-empty string')
     }
@@ -188,6 +211,7 @@ export const turnExecutionMethods = {
       return
     }
     const entry = this.turnQueueEntries.shift()
+    entry.detachAdmissionAbort?.()
     this.queuedPromptBytes -= entry.promptBytes
     this.turnInFlight = true
     void this.runPromptExecution(entry).catch((cause) => {
@@ -201,6 +225,7 @@ export const turnExecutionMethods = {
 
   rejectQueuedTurns(code, detail, fenceHandle) {
     for (const entry of this.turnQueueEntries.splice(0)) {
+      entry.detachAdmissionAbort?.()
       this.queuedPromptBytes -= entry.promptBytes
       entry.reject(envelopeCarrier('not_admitted', null, code,
         `agent ${this.agentId}: queued turn rejected (${detail})`, { fencedBy: fenceHandle ?? null }))
@@ -242,6 +267,14 @@ export const turnExecutionMethods = {
       deadlines: this.deadlines,
       bindingContext: opts?.bindingContext,
     })
+    // Capture the ingress-validated origin before prompt write: the first RPC
+    // can precede deliver()'s receipt and the runtime's bounded cache entry.
+    if (opts?.messageOrigin?.kind === 'workflow_execution') Object.defineProperty(execution, 'workflowProvenance', {
+      value: Object.freeze({ ...opts.messageOrigin }), enumerable: true,
+    })
+    // Native's original message identity is known before write, but is not an acceptance receipt.
+    execution.nativeGoalMessageId = opts?.nativeGoalContinuation?.messageId ?? null
+    if (execution.nativeGoalMessageId !== null) execution.receiptMessageId = execution.nativeGoalMessageId
     execution.promptRequestId = `req-${this.processGeneration}-${this.seq + 1}`
     try {
       this.store.markAdmitted(handle, {
@@ -261,7 +294,7 @@ export const turnExecutionMethods = {
       return
     }
     this.executions.set(handle, execution)
-    if (mode === 'turn') {
+    if (mode === 'turn' || opts?.productSurface === true) {
       const ingress = opts?.ingressContext
       // CTR-CTX-001: identity comes only from this Router-owned process and
       // the handle minted for THIS execution. Copy only the allowlisted
@@ -288,14 +321,18 @@ export const turnExecutionMethods = {
       if (mode === 'deliver') {
         // Receipt-only: the caller returns now; the execution keeps its
         // terminal/unknown fence tracking in the background (C-010).
-        resolve({
+        const acceptance = {
           accepted: true,
           sessionId,
           messageId: execution.receiptMessageId,
           ms: Date.now() - startedWall,
           reconciliationHandle: handle,
           evidence: execution.evidenceSnapshot(),
-        })
+          ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
+          ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
+        }
+        Object.defineProperty(acceptance, DELIVERY_COMPLETION, { value: execution.terminalPromise })
+        resolve(acceptance)
         if (!execution.settled) this.installBackgroundTurnWatch(execution)
         await execution.queueReleasePromise
         return
@@ -313,7 +350,7 @@ export const turnExecutionMethods = {
     } catch (error) {
       this.handleExecutionCallerError(execution, error, reject)
     } finally {
-      if (mode === 'turn') {
+      if (mode === 'turn' || opts?.productSurface === true) {
         // Clear both turn-scoped contexts together before the single-flight
         // queue may install the next turn's values.
         this.activeBindingContext = undefined
@@ -322,40 +359,7 @@ export const turnExecutionMethods = {
     }
   },
 
-  async promptWrite(execution, sessionId, text, opts) {
-    const lineageError = promptFenceError(this.store, this.agentId)
-    if (lineageError) throw lineageError
-    const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
-    const requestId = execution.promptRequestId
-    execution.phase = 'prompt_sending'
-    this.store.markPromptWriteAttempted(execution.handle)
-    if (this.counters !== undefined) {
-      this.counters.explicitNewRequestExecutions ??= 0
-      this.counters.explicitNewRequestExecutions += 1
-    }
-    const receipt = await this.request('session/prompt', {
-      sessionId,
-      contentBlocks: [{ type: 'text', text }],
-      // Parent-minted protocol metadata, consumed by demo-server's private
-      // agentRpc carrier and never exposed as model tool arguments.
-      turnExecutionId: execution.handle,
-      ...(opts?.cwd === undefined ? {} : { cwd: opts.cwd }),
-      // R4 trusted source sidecar: generic sibling metadata, exact-allowlist
-      // validated upstream (deliver) and consumed by the session seam.
-      ...(opts?.messageOrigin === undefined ? {} : { messageOrigin: opts.messageOrigin }),
-    }, undefined, {
-      deadlineMono: receiptDeadlineMono,
-      execution,
-    })
-    execution.receiptMessageId = receipt?.messageId ?? null
-    execution.promptReceipt = receipt?.messageId !== undefined ? 'accepted' : 'unknown'
-    this.store.markPromptReceipt(execution.handle, { messageId: execution.receiptMessageId })
-    // C-011: exact receipt messageId is now bound — replay the bounded ring
-    // from the watermark so events that arrived before this JSON-RPC
-    // response are correctly attributed to this execution.
-    this.replayExecutionFromWatermark(execution)
-    return receipt
-  },
+  promptWrite,
 
   /** Wait for exact terminal + idle within min(turn deadline, caller bound). */
   awaitTerminal(execution, callerBoundMs) {

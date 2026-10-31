@@ -13,23 +13,34 @@ import { relativeImports, resolveRelative, inOverlayUniverse } from './admission
 export const WATCHDOG_PINNED_LIVE_DEPENDENCIES = new Map([
   ['packages/production-runtime/src/model-overrides.js', '4df9f741e1c550d377a29a81ba08f32d8986c19384e8239570738e565858898d'],
 ])
+// R3 live-adapter re-pin (2026-10-11, Product #428 packet refresh; agent-control#892):
+// the four entries whose deployed generation had legally evolved past both the frozen
+// PRE and POST bytes are re-frozen as IDENTITY pins (PRE = POST = fresh deployed sha):
+// the deployed files already carry the integrated watchdog wiring, adaptLiveIntegration
+// ForWatchdog can no longer re-derive them (compose's first anchor import no longer
+// exists; the other three would double-integrate), and buildOverlaySeedBytes seeds a
+// live==POST file verbatim — the same path entry.js / self-service-runtime.js /
+// scheduler index already ride. Adapter paths have always pinned deployed-artifact
+// bytes (the frozen PRE 678374d7 / POST 17e4aedd compose generations are absent from
+// main history too), so this re-pin changes pin values only, no pin mechanism. Any
+// further live drift still fails closed at the apply-time pin gate.
 export const WATCHDOG_LIVE_ADAPTER_SHA = new Map([
-  ['packages/product-api/src/index.js', 'f49cbbba4e79d73c52353891cc1c8701e27b3252a6e9758982a727cddd07ca05'],
-  ['packages/production-runtime/src/compose.js', '678374d753fec151614c4e1ab5cae6e340527a55a10640178b151b9074392ae7'],
+  ['packages/product-api/src/index.js', '864b2cec122af0e171abad25832b2669409aec3244695ff3eba989d3531db008'],
+  ['packages/production-runtime/src/compose.js', '96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f'],
   ['packages/production-runtime/src/entry.js', 'ca48020c68a5241b0748d675747d7465f02544ddf37337bb849f3648e2fc6b0a'],
-  ['packages/production-runtime/src/paths.js', 'e99add385746fe81bf1e9f7c35f6a5eeadf93604cbf0d8c83a4d3e13889a5e91'],
+  ['packages/production-runtime/src/paths.js', '3e862991b866927e8cb7492af51dcb476715022df6525631fb99987a6c5e0767'],
   ['packages/production-runtime/src/scheduler/self-service-runtime.js', 'c18887e4f9630210cd7e450c96c2f13679be90fa0287380394642d3c57ce3cae'],
   ['packages/scheduler/src/index.js', '34b470c7b1f35f0f361b42848a90f330d5dd9cd6b7aa5611c91e9bedc0f336a3'],
-  ['packages/scheduler/src/self-ops/index.js', '0cd886e7a7e7ee518a769fdfb3ea01dc9cf931d66bf291988e1f3eadee6d2015'],
+  ['packages/scheduler/src/self-ops/index.js', '0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293'],
 ])
 export const WATCHDOG_LIVE_ADAPTER_POST_SHA = new Map([
-  ['packages/product-api/src/index.js', 'a23e7b7ef3c70884050686c928bb4a4d0a576209bf9f6404dad17f1a67062bfe'],
-  ['packages/production-runtime/src/compose.js', '17e4aedd43053286c4bcead61b18da4bec6bbaccda2bdd99860963a711a3c3d0'],
+  ['packages/product-api/src/index.js', '864b2cec122af0e171abad25832b2669409aec3244695ff3eba989d3531db008'],
+  ['packages/production-runtime/src/compose.js', '96098f239d70942f921527f1e2727710705b53f7e57714be23a304635fe8d53f'],
   ['packages/production-runtime/src/entry.js', '5c52329df4449cc1205d7dbea7555671c856b69a304d22e157b8733ec4a57070'],
-  ['packages/production-runtime/src/paths.js', 'e5131350cd8d1c654e0ed5d6db5c1ee82f3d68561355807133d4e2f43768fa79'],
+  ['packages/production-runtime/src/paths.js', '3e862991b866927e8cb7492af51dcb476715022df6525631fb99987a6c5e0767'],
   ['packages/production-runtime/src/scheduler/self-service-runtime.js', 'acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0'],
   ['packages/scheduler/src/index.js', '9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d'],
-  ['packages/scheduler/src/self-ops/index.js', 'd253d34b538aae7911afe001e74240ace806bcff894c3910b34470f435494590'],
+  ['packages/scheduler/src/self-ops/index.js', '0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293'],
 ])
 
 function replaceExactlyOnce(source, before, after, label) {
