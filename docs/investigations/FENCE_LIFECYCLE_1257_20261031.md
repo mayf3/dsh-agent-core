@@ -162,3 +162,123 @@ ingress alerts without prompt/answer/secret leakage or duplicate counting.
 Existing Base tests: shutdown + restart convergence matrix + restart drain,
 20/20 pass (rc0). This is existing green coverage, not a new repair claim.
 Current investigation has not accessed production turn-recovery bytes.
+
+## Frozen source delivery
+
+Source Head: `38b705a6b2cdd62969bef18b31e69ab974bbc261`. Integration Base and
+fresh impact recheck: `0386b34a3d1054c71cbe51a2310fdff4d55c992b`. Worktree:
+`/Users/yanfenma/workspace/worktrees/ac-task-1257-fence-lifecycle`. The original
+dirty checkout was preserved. No governing Spec, Decision, governance lock or
+Scheduler occurrence/retry implementation changed.
+
+| Direction | Exact source locations at the frozen Head | Result |
+|---|---|---|
+| R1 owned shutdown | `production-runtime/src/compose.js:455`, `context.js:33`; `agent-router/src/process-registry-startup.js:3` | Attempt every existing cleanup, await owned real exit/settlement, propagate aggregate failure and share concurrent disposal. |
+| R1 restart barrier | `production-runtime/src/restart-boundary.js:111,146,191`, `scheduler/deployment-runtime-restart.js:11`, `entry.js:54` | Exact native owner/instance and ready capability before mutation; fresh successful stop/census and native exit within shared budget before bootstrap. No caller boolean supplies missing proof. |
+| R2 operator adapter | `agent-router/src/reconciliation/operator-candidate.js:93,133`; `scripts/availability-recovery/turn-recovery.mjs` | Explicit local Owner authorization and already durable exact proof; deployed loader/authority pre/post validation; new candidate and hash-bound receipt; source immutable. |
+| R3 alert feed | `agent-router/src/reconciliation/admission.js:4`, `delivery-failures.js:26`, router `index.js:294`, `route-chain.js:471` | Startup and four delivery surfaces share existing four-category feed. A single blocked observation alerts immediately; normal transport threshold remains3/300000ms. |
+
+Paths above are relative to `packages/` except the script. See the
+[operator runbook](../runbooks/turn-recovery-offline.md) and the
+[evidence bundle](../evidence/fence-lifecycle-1257-20261031/).
+
+## Executed verification and environment
+
+| Observation | Executed result |
+|---|---|
+| Existing shutdown/restart/drain Base selection | rc0,20/20 already green |
+| R1 final seven-file focused selection, Node25/proxy-free | rc0,77/77; frozen source/test manifest unchanged during run |
+| R2+R3 parent combination, Node25 | rc0,46/46 |
+| R3 broader affected selection | rc0,90/90 |
+| Nonauthor independent R2 safety probes | rc0,4/4; original correlated-store counterexample closed |
+| Nonauthor independent R1 floor/custody probes | rc0,7/7; expiry, signal-order and C/Chinese locale counterexamples closed |
+| Full Base, Node25.6.1/concurrency4/isolated PG | rc1,3156 tests:2961 pass/157 fail/38 skip |
+| Full exact source candidate, identical topology/environment | rc1,3232 tests:3037 pass/157 fail/38 skip |
+| Failure-name multiset comparison | identical157 failures;0 newly failing names; net76 added passes |
+| Structure candidate gate | rc0,0 candidate violations;32 unchanged baseline debts |
+| Governance distribution integrity | rc0,accepted lock matches |
+| Isolated PostgreSQL cleanup | stop rc0;postmaster PID file absent |
+
+The full suite remains **FAIL**, not repository-wide green. Every failing name
+and its diagnostic is retained in the bundle. Existing failures include missing
+paired/native/channel dependencies, `/tmp` incident-trust guards, credential
+owner assertions, and PG fixture incompatibility (including the required
+`preimage_fingerprint`). PG was actually started and the gated tests executed;
+no production DB/auth origin/credential environment was used.
+
+Full runner: `/usr/local/bin/node --test --test-concurrency=4 --test-force-exit
+--test-timeout=60000 --test-reporter=tap 'packages/*/test/*.test.js'
+'packages/*/test/*/*.test.js'`, with a clean allowlisted environment recorded
+in each summary. Test-only `dsh-tools` passthrough and each worktree's own
+development package bridge are declared environment limitations.
+
+The first candidate full run used the development worktree's path and found
+the local harness that `/tmp` Base could not resolve:3232 tests,3037 pass,
+160 fail,35 skip. Its three extra failures were precisely the previously
+skipped real-boot cases. It is preserved as **noncomparable**, not erased or
+called a product regression/pass. The authoritative repeat uses a detached
+test-only `/tmp/dsh-1257-candidate` at the identical source Head, with the same
+harness-unavailable discovery topology as `/tmp/dsh-1257-baseline`. No skip
+flags or test definitions changed between these two candidate runs. The
+nonauthor topology addendum binds the resolver/dependency/bridge checks.
+
+Two existing R1 behavior tests were deliberately updated: emergency acceptance
+still records its boundary but cannot bypass exact exit proof; unarmed legacy
+restart now refuses before mutation. Their old/new names and reasoning are
+explicitly mapped in `comparison-final.json`. There are no unmapped removed
+test definitions. This is an intended safety change, not a mechanical rename
+or permission to hide lost coverage.
+
+## Independent review and bounded repair
+
+Nonauthor `authority_audit` reviewed the exact frozen30-file source delta:
+**SOURCE_REVIEW=PASS,OPEN_BLOCKERS=NONE**. The independent report and JSON bind
+all source hashes and executed probes. The initial concrete union was repaired:
+unrelated Scheduler correlations during singleton resume, proof accepted after
+the shared deadline, localized native start parsing, producer support/owner
+floor, receipt custody, and ready capability before installed signal handlers.
+RED/GREEN evidence is archived. No extra product authority was authored.
+
+The workflow-drain admission race was reproduced on both Base and candidate;
+the reviewer reclassified it as existing behavior. This change preserves the
+accepted workflow drain order. The raced-turn fixture proves one retained
+initial UNKNOWN and zero newly unresolved UNKNOWN; it does not claim zero
+initial UNKNOWN records in every concurrent stop scenario.
+
+## Delivery boundaries
+
+- R2 is candidate-only. It cannot settle the historical restart-lost shape
+  from PID absence/old epoch/Owner assertion. That shape remains fenced until
+  the existing separately authorized trusted-quiescence route supplies proof.
+- Old producers without the ready capability refuse before stop. Adopting the
+  producer floor, production installation and actual UID502/UID505 resource
+  checks require a separate controlled operation; none was executed here.
+- The external unload deadline can be shorter than worker grace; missing or
+  late proof refuses replacement. The launchd ExitTimeOut policy is unchanged.
+- R3 is the existing structured log/counter surface. No governance-post/Feishu
+  destination, daemon, escalation policy or production alert delivery was added.
+- `dsh-agent-core#527` retains Scheduler receipt/fence/readback/probe/HUMAN_REQUIRED
+  ownership. `agent-control#1332` retains transport retry/readiness/deadletter
+  ownership; its shared alert mechanism is reused. #508/#509 UNKNOWN protection
+  and no-replay semantics remain intact.
+
+```text
+SPEC_COMPLIANCE
+Referenced Spec = V4 C015-C025/C026; DCP CTR-DCP-012; DELIVERY_RESILIENCE CTR-R5
+Implemented scope = bounded R1 shutdown/restart proof, R2 validated candidate adapter, R3 shared blocked alerts
+Acceptance criteria evidence = exact-source tests and same-environment full comparison above
+Out-of-spec behavior = NONE in reviewed source/candidate scope
+Rejected alternative accidentally reintroduced = NO
+Frozen boundaries respected = YES
+New architectural decision introduced = NO
+Governing Spec modified = NO
+SPEC_COMPLIANCE = PASS for affected source Contracts
+FULL_SUITE = FAIL_WITH_SHARED_BASELINE_DEBT (157 identical failures)
+LIVE_INSTALLATION / RUNTIME_ADMISSION / BUSINESS_ACCEPTANCE = NOT_EXECUTED
+PRODUCTION_WRITES / REAL_FENCE_SETTLEMENT / DS_RESTART / MERGE = NONE
+```
+
+Publication is the final remaining action at this evidence freeze: push the
+named branch, open an unmerged PR and post the exact #1257 delivery comment.
+The resulting PR/issue records carry publication truth; this document does
+not forecast a PR number or claim a future action already happened.
