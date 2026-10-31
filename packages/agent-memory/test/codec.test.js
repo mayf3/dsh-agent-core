@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * SOURCE codec contract tests (SIGTRAP fix v1).
  *
