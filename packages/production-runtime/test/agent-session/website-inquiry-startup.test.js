@@ -23,21 +23,74 @@ function fixture() {
   save()
   return { root, dir, configFile, keyFile, storeFile, human, config, save, close: () => rmSync(root, { recursive: true, force: true }) }
 }
-async function startup(f, extraArgs) {
-  const handlers = new Map(), logs = [], disposed = []
+const SELF_INSTANCE = Object.freeze({ pid: 12345, uid: 502, gid: 20,
+  started: 'Fri Oct 30 12:00:00 2026', program: '/synthetic/native/node' })
+
+async function startup(f, extraArgs, { readProcessInstance = pid => {
+  assert.equal(pid, SELF_INSTANCE.pid, 'read only this resident instance')
+  return { ...SELF_INSTANCE, unprojected: 'PRIVATE_READBACK_METADATA' }
+}, onCompose = () => {} } = {}) {
+  const handlers = new Map(), logs = [], disposed = [], evidence = [], readyHandlers = []
   let mounted, started = 0, stopped = 0
   const ctx = { provide() {}, on: (_, fn) => disposed.push(fn) }
   const proc = { pid: 12345, stdout: { write: value => logs.push(value) }, stderr: { write: value => logs.push(value) },
+    getuid: () => 502, getgid: () => 20,
     on: (event, fn) => handlers.set(event, fn), exit() {} }
   // Substitute the pre-existing service graph, while exercising the actual
   // resident argument parser, config loader and website runtime mount.
-  await runProductionRuntime(['--root', f.root, ...extraArgs], proc, { compose: async options => {
+  await runProductionRuntime(['--root', f.root, ...extraArgs], proc, { readProcessInstance, compose: async options => {
+    onCompose()
     mounted = await mountWebsiteInquiryRuntime({ ctx, config: options.websiteInquiry,
       router: { onTurnReconciled: () => () => {}, admitWebsiteInquiry() {} }, definition: {}, workspaceBootstrap: {} })
     return { start: async () => { started++ }, stop: async () => { stopped++; disposed.forEach(fn => fn()) },
-      writeEvidence() {}, definition: { getDefaultAgent: () => null }, notificationIngress: { address: () => ({ port: 0 }) } }
+      writeEvidence: entry => {
+        evidence.push(entry)
+        if (entry.kind === 'ready') readyHandlers.push({ SIGTERM: handlers.has('SIGTERM'), SIGINT: handlers.has('SIGINT') })
+      }, definition: { getDefaultAgent: () => null }, notificationIngress: { address: () => ({ port: 0 }) } }
   } })
-  return { get mounted() { return mounted }, logs, started, close: async () => { handlers.get('SIGTERM')(); await new Promise(resolve => setImmediate(resolve)); assert.equal(stopped, 1) } }
+  return { get mounted() { return mounted }, logs, evidence, readyHandlers, started, close: async () => { handlers.get('SIGTERM')(); await new Promise(resolve => setImmediate(resolve)); assert.equal(stopped, 1) } }
+}
+
+test('resident ready evidence binds stop-proof capability to exact native self readback', async () => {
+  const f = fixture()
+  let run
+  try {
+    run = await startup(f, [])
+    const ready = run.evidence.find(entry => entry.kind === 'ready')
+    assert.deepEqual(ready.stopProof, { version: 1, instance: SELF_INSTANCE })
+    assert.equal(JSON.stringify(ready).includes('PRIVATE_READBACK_METADATA'), false)
+  } finally { await run?.close(); f.close() }
+})
+
+test('resident installs both shutdown signal handlers before publishing ready stop-proof capability', async () => {
+  const f = fixture()
+  let run
+  try {
+    run = await startup(f, [])
+    assert.deepEqual(run.readyHandlers, [{ SIGTERM: true, SIGINT: true }])
+  } finally { await run?.close(); f.close() }
+})
+
+for (const [name, readProcessInstance] of [
+  ['missing', () => null], ['boolean', () => true],
+  ['read error', () => { throw Object.assign(new Error('native read denied'), { code: 'EACCES' }) }],
+  ['wrong pid', () => ({ ...SELF_INSTANCE, pid: SELF_INSTANCE.pid + 1 })],
+  ['wrong uid', () => ({ ...SELF_INSTANCE, uid: 505 })],
+  ['wrong gid', () => ({ ...SELF_INSTANCE, gid: 601 })],
+  ['missing identity field', () => ({ pid: SELF_INSTANCE.pid })],
+  ['invalid start identity', () => ({ ...SELF_INSTANCE, started: 'unknown' })],
+  ['relative program', () => ({ ...SELF_INSTANCE, program: 'node' })],
+]) {
+  test(`resident refuses readiness before composing when self stop-proof readback is ${name}`, async () => {
+    const f = fixture()
+    let run, compositions = 0
+    try {
+      await assert.rejects(async () => { run = await startup(f, [], {
+        readProcessInstance, onCompose: () => { compositions++ },
+      }) }, { code: 'RUNTIME_STOP_PROOF_UNAVAILABLE' })
+      assert.equal(compositions, 0)
+    } finally { await run?.close(); f.close() }
+  })
 }
 
 test('original resident entry flags reach the real website config and mount boundary', async () => {

@@ -6,6 +6,7 @@ import { quiesceLaunchdServices } from './deployment-launchd.js'
 import { capturePlainFileMetadata, listFileXattrs } from './deployment-file-metadata.js'
 import { atomicInstallDurableFile, durableCopyPreimage, syncDirectory, syncFile, verifyAndSyncPreimage, verifyReceiptedPreimage } from './deployment-durable-file.js'
 import { enforceRestartDrainGate } from './restart-drain.js'
+import { assertRuntimeStopProofCurrent, captureRuntimeStopProof, verifyRuntimeStopProof } from '../restart-boundary.js'
 
 export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   if (!/^[0-9a-f]{40}$/.test(sourceSha ?? '') || !Number.isInteger(ctx.authsvcUid) || !Number.isInteger(ctx.authsvcGid)
@@ -18,8 +19,8 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   // the A4 emergency boundary are receipted through the DEDICATED drain
   // receipt channel (`ctx.runtimeDrainReceipt`) — never the single-slot
   // install receipt file, whose INSTALLING/INSTALLED schema the rollback
-  // lane and the retry preimage check consume. Unarmed (no census paths) =
-  // legacy behavior.
+  // lane and the retry preimage check consume. Replacement also requires
+  // the exact native instance and fresh completed-stop proof below.
   let drain = null
   try {
     drain = enforceRestartDrainGate({
@@ -44,6 +45,7 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
       ? { status: 'RESTART_BOUNDARY', sourceSha, census: drain.census, at: new Date().toISOString() }
       : { status: 'DRAIN_OBSERVED', sourceSha, census: drain.census, drain: drain.drain, at: new Date().toISOString() })
   }
+  const stopProof = captureRuntimeStopProof(ctx, drain?.census)
   const plistPath = join(ctx.launchdDir, 'ai.agent-core.runtime.plist')
   const preimage = join(ctx.artifactsDir, 'rollback', 'ai.agent-core.runtime.plist.preimage')
   mkdirSync(dirname(preimage), { recursive: true })
@@ -109,7 +111,10 @@ export function restartSchedulerProductionRuntime({ ctx, phase, sourceSha }) {
   for (const [key, value] of Object.entries(envAdds)) {
     if (!installed.includes(`<key>${key}</key><string>${value}</string>`)) throw new Error(`runtime plist readback mismatch for ${key}`)
   }
+  assertRuntimeStopProofCurrent(ctx, stopProof)
+  const stopDeadline = performance.now() + (ctx.unloadTimeoutMs ?? 10_000)
   quiesceLaunchdServices(['system/ai.agent-core.runtime'], ctx)
+  verifyRuntimeStopProof(ctx, stopProof, stopDeadline)
   ctx.bootstrap(plistPath, 'system/ai.agent-core.runtime')
   if (JSON.stringify(capturePlainFileMetadata(plistPath)) !== JSON.stringify(preimageMetadata)) throw new Error('runtime plist metadata readback mismatch')
   ctx.runtimeReceipt?.({ status: 'INSTALLED', sourceSha, plistPath, preimage, preimageSha256, preimageMetadata, preimageXattrs, installedSha256 })

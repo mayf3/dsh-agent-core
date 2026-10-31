@@ -459,13 +459,14 @@ export async function composeProductionRuntime(options = {}) {
       // handles + in-flight occurrences), quiesce_end after the EXISTING
       // controlled shutdown settled what it could. Evidence only: the receipt
       // never writes the recovery store and never stamps exit evidence.
-      const writeBoundary = (phase) => {
+      const writeBoundary = (phase, stopResult) => {
         try {
           appendRestartBoundaryReceipt({
             boundaryLog: layout.restartBoundaryLog,
             entry: {
               kind: 'restart_boundary',
               phase,
+              ...(stopResult === undefined ? {} : { stopResult }),
               pid: process.pid,
               ...(signal === undefined ? {} : { signal: String(signal) }),
               census: collectRuntimeRestartCensus({
@@ -481,16 +482,18 @@ export async function composeProductionRuntime(options = {}) {
         }
       }
       writeBoundary('quiesce_begin')
+      let stopResult = 'stop_failed'
       try {
-        // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
-        // (in-flight poll finishes, no further page) BEFORE the scheduler and
-        // the owned contexts (Router processes) are torn down — a late poll can
-        // then never deliver into a disposed Router nor outlive the result.
-        await workflowExecution.stop()
-        await scheduler.stop()
-        await ctx.disposeAll()
+        // Preserve drain order, attempt every cleanup, and report failure
+        // only after the owned Router processes finish their exit path.
+        const errors = []
+        for (const stop of [() => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
+          try { await stop() } catch (error) { errors.push(error) }
+        }
+        if (errors.length > 0) throw new AggregateError(errors, 'production runtime stop failed')
+        stopResult = 'stopped'
       } finally {
-        writeBoundary('quiesce_end')
+        writeBoundary('quiesce_end', stopResult)
       }
     },
   }
