@@ -1,0 +1,118 @@
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-Kzm5BV/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-Kzm5BV/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (1ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793404331557,"sequence":1,"category":"transport_death","agentId":"agt_target-agent","routeRef":null,"transportAttempt":1,"processGeneration":2,"categoryCount":1,"windowCount":1}
+✖ settled active fence preserves stale successor liveness: correlation=false, clean baseline=false (279.278875ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-xnkLWG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-xnkLWG/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793404331725,"sequence":1,"category":"transport_death","agentId":"agt_target-agent","routeRef":null,"transportAttempt":1,"processGeneration":2,"categoryCount":1,"windowCount":1}
+✖ settled active fence preserves stale successor liveness: correlation=false, clean baseline=true (164.486583ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-E2nIaB/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-E2nIaB/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793404331989,"sequence":1,"category":"transport_death","agentId":"agt_target-agent","routeRef":null,"transportAttempt":1,"processGeneration":2,"categoryCount":1,"windowCount":1}
+✖ settled active fence preserves stale successor liveness: correlation=true, clean baseline=false (264.12075ms)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-ds0ssl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/wfe-recovery-interleave-ds0ssl/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] [router] agent agt_target-agent ready pid=9101 (0ms)
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793404332162,"sequence":1,"category":"transport_death","agentId":"agt_target-agent","routeRef":null,"transportAttempt":1,"processGeneration":2,"categoryCount":1,"windowCount":1}
+✖ settled active fence preserves stale successor liveness: correlation=true, clean baseline=true (172.595208ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 945.591542
+
+✖ failing tests:
+
+test at packages/workflow-execution/test/runtime-wiring.test.js:238:3
+✖ settled active fence preserves stale successor liveness: correlation=false, clean baseline=false (279.278875ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(['initialize', 'session/prompt'].includes(write.method))
+  
+      at answerChild (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:228:14)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:261:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/runtime-wiring.test.js:238:3
+✖ settled active fence preserves stale successor liveness: correlation=false, clean baseline=true (164.486583ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(['initialize', 'session/prompt'].includes(write.method))
+  
+      at answerChild (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:228:14)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:261:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/runtime-wiring.test.js:238:3
+✖ settled active fence preserves stale successor liveness: correlation=true, clean baseline=false (264.12075ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(['initialize', 'session/prompt'].includes(write.method))
+  
+      at answerChild (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:228:14)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:261:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at packages/workflow-execution/test/runtime-wiring.test.js:238:3
+✖ settled active fence preserves stale successor liveness: correlation=true, clean baseline=true (172.595208ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(['initialize', 'session/prompt'].includes(write.method))
+  
+      at answerChild (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:228:14)
+      at async TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/workflow-execution/test/runtime-wiring.test.js:261:19)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

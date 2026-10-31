@@ -4,6 +4,7 @@ import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import { createSessionSeam } from '../../../demo-server/src/session-seam.js'
+import { prepareSessionDelivery } from '../../../demo-server/src/delivery-readiness.js'
 import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from '../../../demo-server/src/website-custody.js'
 import { AgentProcess } from '../../../agent-router/src/process/agent-process.js'
 import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/index.js'
@@ -35,7 +36,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
   const proc = new AgentProcess({ agentId: 'agt_pilot', home, workspace, profile: '/synthetic-profile', log, reconciliationStore: reconciliation })
   proc.state = 'READY'
   // This synthetic child implements the real website mapping/custody seam below.
-  proc.initializeEvidence = { websiteAdmission: { version: 1 } }
+  proc.initializeEvidence = { websiteAdmission: { version: 1 }, deliveryReadiness: { version: 1 } }
   const custody = new WebsiteSourceCustody(home)
   let requestContext
   let sends = 0
@@ -71,6 +72,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
       await parentRpc('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id }, { turnExecutionId: requestContext })
     } })
   proc.request = async (method, params) => {
+    if (method === 'session/prepare') return prepareSessionDelivery(seam, params)
     assert.equal(method, 'session/prompt')
     requestContext = params.turnExecutionId
     return seam.prompt(params.sessionId, params.contentBlocks, params.cwd, params.messageOrigin, params.conversationSource, params.websiteAdmission)

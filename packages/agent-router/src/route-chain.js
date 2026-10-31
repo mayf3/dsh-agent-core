@@ -20,6 +20,7 @@
  * refs/enums/counts only — never raw errors/tokens/credentials/bodies.
  */
 
+import { createDeliveryResilience } from './process/delivery-resilience.js'
 import { websiteRouteLog } from './process/website-inquiry-admission.js'
 import { resolve } from 'node:path'
 import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
@@ -264,11 +265,12 @@ function routeLabel(route) {
  */
 export function createRouteChainExecutor({
   log, ensureRunningForRoute, resolveRouteChain, resolveTurnDeadlineMs,
-  canaryRuntimeRoot, journalMaxEntries = 256,
+  canaryRuntimeRoot, journalMaxEntries = 256, deadLetterDirectory, transportRetry, deliveryAlert,
 }) {
   if (typeof ensureRunningForRoute !== 'function') {
     throw new TypeError('agent-router: route chain executor requires ensureRunningForRoute')
   }
+  const resilience = createDeliveryResilience({ log, deadLetterDirectory, transportRetry, deliveryAlert })
   const journal = []
   const canarySeam = typeof canaryRuntimeRoot === 'string' && canaryRuntimeRoot !== ''
     ? createCanarySeam({ runtimeRoot: canaryRuntimeRoot, log })
@@ -382,21 +384,21 @@ export function createRouteChainExecutor({
           // generation, zero dispatch.
           throw canaryOutcomeUnknownFixtureError(canary)
         }
-        proc = await acquire(agentId, route, deadlineMono)
-        if (mode === 'turn') {
-          notifyDispatchOnce()
-          if (observer !== null) observer.providerDispatchCount += 1
-        }
-        if (canaryFixtureAttempt && canary.mode === 'provider_quota_rejected_before_generation') {
-          // Acquire/dispatch boundary crossed; the fixture now returns the
-          // fixed terminal 429 BEFORE any generation — no network call.
-          throw canaryQuotaFixtureError(canary)
-        }
-        if (observer !== null) observer.modelCallStartCount += 1
-        const remainingMs = Math.max(1, deadlineMono - monotonicNowMs())
-        const result = mode === 'turn'
-          ? await proc.turn(sessionId, message, opts, remainingMs)
-          : await proc.deliver(sessionId, message, opts)
+        const result = await resilience.run({ agentId, route, sessionId, message, opts, deadlineMono, acquire,
+          onAcquired: acquired => { proc = acquired },
+          invoke: async proc => {
+            if (mode === 'turn') {
+              notifyDispatchOnce()
+              if (observer !== null) observer.providerDispatchCount += 1
+            }
+            if (canaryFixtureAttempt && canary.mode === 'provider_quota_rejected_before_generation') {
+              throw canaryQuotaFixtureError(canary)
+            }
+            if (observer !== null) observer.modelCallStartCount += 1
+            const remainingMs = Math.max(1, deadlineMono - monotonicNowMs())
+            return mode === 'turn' ? proc.turn(sessionId, message, opts, remainingMs) : proc.deliver(sessionId, message, opts)
+          },
+        })
         recordAttempt({
           kind: 'route_attempt', tsWallMs: Date.now(), routeChainId: chainId, agentId,
           attemptIndex, route: label, primaryRoute,
@@ -466,6 +468,8 @@ export function createRouteChainExecutor({
   }
 
   return {
+    deliveryFailuresSnapshot: () => resilience.failures.snapshot(),
+    getDeliveryDeadLetter: id => resilience.failures.get(id),
     /** Sync-turn variant (onIngress + scheduler invokeAgent). */
     runTurnWithRouteChain(agentId, args) {
       return executeChain('turn', agentId, args)
