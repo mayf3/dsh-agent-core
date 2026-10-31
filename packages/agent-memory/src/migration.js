@@ -45,16 +45,37 @@ async function validateDestination(destination) {
     return { target, parent, identity }
   } catch { return refused('UNSAFE_PATH') }
 }
-async function syncDirectory(path) {
-  const handle = await open(path, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
-  try { await handle.sync() } finally { await handle.close() }
+async function verifyDirectories(pinned) {
+  for (const [path, { handle, identity }] of pinned) {
+    const observed = await realDirectory(path)
+    if (!observed || !sameIdentity(observed, identity) || !sameIdentity(await handle.stat(), identity)) throw new Error('COPY_DIRECTORY_CHANGED')
+  }
 }
-async function writeOwnedFile(path, bytes) {
+async function pinDirectory(pinned, path, expected = null) {
+  await verifyDirectories(pinned)
+  const handle = await open(path, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
+  try {
+    const identity = await handle.stat()
+    const observed = await realDirectory(path)
+    if (!observed || !identity.isDirectory() || !sameIdentity(identity, observed) || (expected && !sameIdentity(identity, expected))) throw new Error('COPY_DIRECTORY_CHANGED')
+    pinned.set(path, { handle, identity })
+  } catch (error) { await handle.close(); throw error }
+  await verifyDirectories(pinned)
+}
+async function createOwnedDirectory(pinned, path) {
+  await verifyDirectories(pinned)
+  await mkdir(path, { mode: 0o700 })
+  await pinDirectory(pinned, path)
+}
+async function writeOwnedFile(pinned, path, bytes) {
+  await verifyDirectories(pinned)
   const handle = await open(path, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600)
   try {
+    await verifyDirectories(pinned)
     await handle.writeFile(bytes)
     await handle.chmod(0o400)
     await handle.sync()
+    await verifyDirectories(pinned)
   } finally { await handle.close() }
 }
 function prepare(sourceBytes, operations, agentId) {
@@ -117,27 +138,29 @@ export async function createMigrationCopy({ sourceBytes, destination, operations
   const budgetFiles = protocolFiles(prepared, checked.identity)
   if (budgetFiles.totalBytes > STORE_LIMIT) return refused('STORE_PRESSURE')
   let created = false
+  const pinned = new Map()
   try {
     const currentParent = await realDirectory(checked.parent)
     if (!currentParent || !sameIdentity(currentParent, checked.identity)) return refused('UNSAFE_PATH')
+    await pinDirectory(pinned, checked.parent, checked.identity)
+    await verifyDirectories(pinned)
     await mkdir(checked.target, { mode: 0o700 })
     created = true
+    await pinDirectory(pinned, checked.target)
     const current = await realDirectory(checked.target)
     const afterParent = await realDirectory(checked.parent)
     if (!current || !afterParent || !sameIdentity(afterParent, checked.identity)) return refused('COPY_INCOMPLETE')
     const stored = protocolFiles(prepared, current)
     if (stored.totalBytes > STORE_LIMIT) return refused('COPY_INCOMPLETE')
-    await mkdir(resolve(checked.target, 'memory'), { mode: 0o700 })
+    await createOwnedDirectory(pinned, resolve(checked.target, 'memory'))
     const ledger = resolve(checked.target, 'memory', '.agent-memory-v2')
-    await mkdir(ledger, { mode: 0o700 })
-    await mkdir(resolve(ledger, 'transactions'), { mode: 0o700 })
-    await writeOwnedFile(resolve(checked.target, 'MEMORY.md'), prepared.bytes)
-    for (const [name, bytes] of stored.files) await writeOwnedFile(resolve(ledger, name), bytes)
-    await syncDirectory(resolve(ledger, 'transactions'))
-    await syncDirectory(ledger)
-    await syncDirectory(resolve(checked.target, 'memory'))
-    await syncDirectory(checked.target)
-    await syncDirectory(checked.parent)
+    await createOwnedDirectory(pinned, ledger)
+    await createOwnedDirectory(pinned, resolve(ledger, 'transactions'))
+    await writeOwnedFile(pinned, resolve(checked.target, 'MEMORY.md'), prepared.bytes)
+    for (const [name, bytes] of stored.files) await writeOwnedFile(pinned, resolve(ledger, name), bytes)
+    await verifyDirectories(pinned)
+    for (const { handle } of [...pinned.values()].reverse()) await handle.sync()
+    await verifyDirectories(pinned)
     return { status: 'CREATED_COPY', mode: 'MIGRATION_COPY', writerActive: false,
       source: { bytes: prepared.bytes.length, sha256: hash(prepared.bytes), format: prepared.document.format },
       planStatus: prepared.plan.status, beforeSha256: prepared.plan.beforeSha256,
@@ -146,5 +169,7 @@ export async function createMigrationCopy({ sourceBytes, destination, operations
   } catch (error) {
     if (!created && error.code === 'EEXIST') return refused('DESTINATION_EXISTS')
     return refused(created ? 'COPY_INCOMPLETE' : 'UNSAFE_PATH')
+  } finally {
+    for (const { handle } of pinned.values()) await handle.close().catch(() => {})
   }
 }

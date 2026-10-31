@@ -232,3 +232,32 @@ test('CLI refuses a protected destination during dry-run without creating it', a
   assert.equal(result.reason, 'PROTECTED_PATH')
   assert.deepEqual(await readdir(root), ['config.json'])
 })
+
+test('replacement of a newly created ancestor refuses before writing outside the copy', async (t) => {
+  const fs = (await import('node:fs')).default
+  const { syncBuiltinESMExports } = await import('node:module')
+  const root = await fixture(t)
+  const destination = join(root,'candidate')
+  const outside = join(root,'outside')
+  await mkdir(outside)
+  const original = fs.promises.mkdir
+  let injected = false
+  fs.promises.mkdir = async (path,...args) => {
+    const result = await original(path,...args)
+    if (path === join(destination,'memory') && !injected) {
+      injected = true
+      await fs.promises.rename(path,join(destination,'memory-original'))
+      await fs.promises.symlink(outside,path)
+    }
+    return result
+  }
+  syncBuiltinESMExports()
+  let result
+  try { result = await implementation()({sourceBytes:source,destination}) }
+  finally { fs.promises.mkdir = original; syncBuiltinESMExports() }
+  assert.equal(injected,true)
+  assert.equal(result.status,'REFUSED')
+  assert.equal(result.reason,'COPY_INCOMPLETE')
+  assert.deepEqual(await readdir(outside),[])
+  assert.ok((await readdir(destination)).includes('memory-original'))
+})
