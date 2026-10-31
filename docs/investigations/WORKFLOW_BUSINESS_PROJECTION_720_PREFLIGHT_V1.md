@@ -1,5 +1,68 @@
 # #720 business-outcome projection — source preflight
 
+## R2 continuation — 2026-10-31
+
+The R1 checkpoint below is historical. The [Owner's subsequent ruling](https://github.com/mayf3/agent-control/issues/720#issuecomment-6542854437)
+explicitly authorizes a proposed Spec, implementation, regression and non-author
+review in this same PR. It does not accept the Spec in advance. Acceptance remains
+the supervisor's semantic ruling on the independently reviewed commit; a Spec
+semantic finding stops dependent work and returns to #720 without author repair.
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = PREFLIGHT
+TARGET_REPOSITORY = mayf3/dsh-agent-core
+REVIEW_TARGET_HEAD = 324d3265ea791e43d1ac86e80b2e7ca059f7661d (R2 input)
+BASE_HEAD = 491faec46877d8078dd5be4a491f8fc047f83c82
+CURRENT_BASE_HEAD = 491faec46877d8078dd5be4a491f8fc047f83c82
+GOAL_OR_TARGET = independent read-only business result on the existing history reader
+CURRENT_GAP = no #720 classifier or acceptance contract/implementation
+AUTHORITY_ACTION = NEW
+PRIMARY_AUTHORITY = proposed AGENT_CORE_BUSINESS_RESULT_PROJECTION_V1
+RELATED_AUTHORITIES = Product Architecture V1; WAE V3 CTR-WAE-010; WEC V3 CTR-WEC1-001/002; Execution History Query V1
+ROUTE_STAGE = AUTHORITY_AUTHORING (atomic implementation permitted)
+AUTHORITY_ACCEPTED_IN_BASE = NO
+IMPLEMENTATION_AUTHORITY = contracts upon acceptance
+ATOMIC_SPEC_IMPLEMENTATION_PERMITTED = YES (active V3 local permission + exact Owner ruling)
+PLAN_LEVEL = BRIEF
+ASSURANCE_LEVEL = DURABLE
+EXECUTION_MANDATE = VALID (Owner R2 task and linked ruling)
+MUTATION_AUTHORIZATION = VALID (this PR only, plus requested issue delivery comment)
+ISOLATED_WRITE_SURFACE = YES (/tmp/dc-720, dedicated pr-720 checkout, exact parent above)
+CONTROLLED_RUNBOOK_REQUIRED = NO (no production operation)
+SPEC_GAP_DEPENDENCY = LOAD_BEARING (closed for implementation by the explicitly permitted atomic route; merge awaits acceptance)
+EVIDENCE_REVIEWABILITY = PASS (source and isolated reproducible tests)
+LIVE_AUTHORITY_GAP = NONE
+OWNER_DECISION_REQUIRED = YES (Spec acceptance after non-author review)
+EMERGENCY_STATE = NONE
+BASE_IMPACT = NONE (fresh origin/main equals R1 integration base)
+IMPLEMENTATION_ALLOWED = YES (bounded atomic route)
+MERGE_READY = NO
+OPERATION_ALLOWED = NO
+EVIDENCE_NEEDED = feature RED/GREEN; named baseline comparison; independent Spec+code review
+DONE_WHEN = reviewed source+Spec+regressions published in PR #595 and delivery comment in #720; PR open, no merge
+EXPANSION_TRIGGER = authority conflict; Spec semantic finding; source outside proposed read allowlist; new privilege/write/execution flow
+NEXT_REAL_ACTION = proposed Spec then pure projection and one existing reader/report
+NEXT_ACTION = CONTINUE
+```
+
+Implementation plan (bounded Brief; no separate control-plane record):
+
+1. Add `docs/specs/AGENT_CORE_BUSINESS_RESULT_PROJECTION_V1.md` as proposed.
+   Freeze fields, exact permitted joins, acceptance sufficiency and unknown cases.
+2. Write isolated feature regressions first; record their failing execution.
+   Add pure read projection under `packages/workflow-execution/src/` and connect
+   `packages/execution-history/src/correlate/workflow-root.js` and `report.js`.
+   Existing judgment and ledger-only execution projection remain authoritative.
+3. Run the same two-package baseline plus feature tests, structure and diff checks.
+   Record environment failures and exact baseline names separately from regressions.
+4. Commit a reviewable candidate; fresh non-author reviewer checks Spec and code.
+   On Spec semantic issue, stop and report to #720. On implementation-only defect,
+   repair within the proposed Contracts and obtain affected delta review.
+5. Push to the existing PR ref, update its final description and post the requested
+   #720 delivery evidence. Leave Spec proposed pending supervisor acceptance and
+   leave PR open/unmerged. No install, enablement or business acceptance claim.
+
 ## Status and mandate
 
 `DISPOSITION = deferred`; `IMPLEMENTATION_ALLOWED = NO` for the new product projection.

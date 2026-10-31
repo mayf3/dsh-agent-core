@@ -32,20 +32,24 @@ export async function fetchTimelineAll(request, agentId, workflowInstanceId, { m
   let after
   let truncated = false
   let lastError = null
+  let complete = false
   for (let page = 0; page < Math.ceil(maxEvents / pageSize) + 1; page += 1) {
     const result = await fetchTimelinePage(request, agentId, workflowInstanceId, { after, limit: pageSize })
     if (!result.ok) { lastError = result; break }
-    const batch = Array.isArray(result.body?.items) ? result.body.items : []
+    if (!Array.isArray(result.body?.items)) { truncated = true; break }
+    const batch = result.body.items
     items.push(...batch)
-    const next = result.body?.next_cursor
+    const next = result.body?.nextCursor ?? result.body?.next_cursor
     if (next === null || next === undefined || items.length >= maxEvents) {
+      complete = next === null || next === undefined
       if (items.length > maxEvents) items.length = maxEvents
       if (items.length >= maxEvents && next !== null && next !== undefined) truncated = true
       break
     }
+    if (!Number.isSafeInteger(next) || next < 1 || (after !== undefined && next <= after)) { truncated = true; break }
     after = next
   }
-  return { items, truncated, error: lastError }
+  return { items, truncated: truncated || (!complete && lastError === null), error: lastError }
 }
 
 /** Fetch submission history (existing broker-read endpoint shape). */

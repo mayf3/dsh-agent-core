@@ -75,7 +75,8 @@ function finalize(ctx, result, meta) {
   for (const name of ['scheduler_store', 'scheduler_history', 'attempts_ledger', 'asm_audit', 'runtime_evidence', ...extraSources]) {
     if (ctx._sources.has(name)) {
       const src = ctx._sources.get(name)
-      loadedSources.set(name, { status: src.status, files: src.files ?? [], rows: src.rowsRead ?? 0 })
+      loadedSources.set(name, { status: src.status, files: src.files ?? [], rows: src.rowsRead ?? 0,
+        ...(src.revision !== undefined ? { revision: src.revision } : {}) })
     }
   }
   for (const [key, journal] of ctx._journals) {
@@ -120,7 +121,8 @@ async function runWorkflow(ctx, args, meta) {
       return err('workflow_instance_not_found', 'not found or not visible to the caller')
     }
   }
-  return finalize(ctx, built, { ...meta, args, brief: briefWorkflow, extraSources: ['svc_detail', 'svc_timeline', 'svc_submissions'] })
+  return finalize(ctx, built, { ...meta, args, brief: briefWorkflow,
+    extraSources: ['svc_detail', 'svc_timeline', 'svc_submissions', 'svc_definition_identity', 'svc_definition_version'] })
 }
 
 async function runSession(ctx, args, meta) {
