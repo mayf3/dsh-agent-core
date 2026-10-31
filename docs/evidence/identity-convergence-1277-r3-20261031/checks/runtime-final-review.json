@@ -1,0 +1,524 @@
+{
+  "schema": "ac1277-r3-runtime-final-review-v1",
+  "createdAt": "2026-10-31T02:24:38.922511+00:00",
+  "reviewKind": "RECEIPT_ONLY_RUNTIME_EVIDENCE_FOLLOWUP",
+  "reviewer": "/root/source_review",
+  "repository": "mayf3/svc-workflow",
+  "worktree": "/tmp/ac1277-svc-workflow",
+  "reviewTargetHead": "06c035467ef7effc664f41ab703bbe736523d13e",
+  "reviewTargetTree": "9c0c7df1451bf712f0e3627b3c4093b0e1670225",
+  "cleanCandidateObserved": true,
+  "scope": "Read final command logs and independent exception classification; retain source review and frozen B1 closure. No product re-review, source/test/DB changes, extra agents or new design scope.",
+  "reusedSourceReview": {
+    "path": "/tmp/ac1277-r3-source-final-review.json",
+    "sha256": "0e5761b17b348acc1a83d1b21a5e999e21f69508d94d7857100302c231b9bffb",
+    "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+    "SPEC_COMPLIANCE": "PASS_SCOPED_T1_T2_SOURCE",
+    "sourceBlockers": 0,
+    "R3_B1": "CLOSED",
+    "preservedLimits": "Source PASS does not establish whole-project tests, merge readiness, runtime installation, T3 contract completion or business outcome."
+  },
+  "runtimeVerdict": {
+    "fullProject": "FAIL",
+    "rc": 101,
+    "counts": {
+      "passed": 1180,
+      "failed": 95,
+      "ignored": 1
+    },
+    "failedTargets": 8,
+    "affectedEightTargets": [
+      {
+        "target": "tests/17_workflow_runtime.rs",
+        "status": "ok",
+        "passed": 454,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/19_domain_owner_definition_governance.rs",
+        "status": "ok",
+        "passed": 25,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/23_global_coordinator.rs",
+        "status": "ok",
+        "passed": 10,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/25_workflow_assistance.rs",
+        "status": "ok",
+        "passed": 33,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/31_admission_wiring.rs",
+        "status": "ok",
+        "passed": 11,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/32_canonical_assignee_continuity.rs",
+        "status": "ok",
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/32_definition_publish_admission.rs",
+        "status": "ok",
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0
+      },
+      {
+        "target": "tests/34_identity_repair_operator.rs",
+        "status": "ok",
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0
+      }
+    ],
+    "affectedEightTargetsPassed": 540,
+    "affectedEightTargetsFailed": 0,
+    "library": {
+      "passed": 252,
+      "failed": 0,
+      "ignored": 1
+    },
+    "subsequentScopedRuns": {
+      "35_work_execution_class": {
+        "passed": 10,
+        "failed": 0,
+        "resolvedOriginalFailures": 2
+      },
+      "45_workflow_prerequisites": {
+        "passed": 28,
+        "failed": 0,
+        "resolvedOriginalFailures": 18
+      }
+    },
+    "resolvedOriginalFailedNames": [
+      "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+      "t5j_class_mixed_window_returns_only_business_in_order",
+      "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+      "atomic::create_bind_http_atomic_replay_and_rollback",
+      "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+      "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+      "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+      "concurrency::event_guard_waits_for_the_actual_receipt_row",
+      "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+      "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+      "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+      "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+      "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+      "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+      "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+      "publication::publication_checks_context_root_marker_and_immutable_digest",
+      "race::source_terminal_and_dependent_create_have_one_serial_order",
+      "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+      "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+      "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization"
+    ],
+    "resolvedOriginalFailedNameCount": 20,
+    "remainingUnverifiedOriginalFailedNameCount": 75,
+    "remainingUnverifiedOriginalFailedNames": [
+      "test_migration_0019_constraint_enforced",
+      "empty_disposable_databases_fail_loud_with_zero_workflow_writes",
+      "combined_entry_uses_new_context_and_submission_causal_chain",
+      "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+      "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+      "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+      "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+      "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+      "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+      "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+      "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+      "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+      "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+      "initial_input_is_exact_existing_full_detail_without_business_writes",
+      "later_corrections_and_requested_older_originals_are_server_selected",
+      "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+      "malformed_and_partial_queries_do_not_fall_back_to_input",
+      "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+      "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+      "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+      "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+      "negative_and_models::model3_task_entry_allows_null_submission",
+      "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+      "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+      "restricted_and_unrelated_actors_never_receive_full_content",
+      "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+      "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision",
+      "ctr6_revoked_optin_version_rejected_by_new_and_old_binary",
+      "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+      "case_projection::case_owner_detail_projects_the_original_responsibility",
+      "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+      "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+      "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+      "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+      "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+      "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+      "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+      "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+      "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+      "http::http_actual_managed_effect_dto_jwt_and_visibility",
+      "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+      "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+      "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+      "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+      "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+      "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+      "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+      "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+      "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+      "intents::intents_config_actor_mismatch_stops_before_any_birth",
+      "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+      "intents::intents_ordinary_create_cannot_birth_managed_role",
+      "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+      "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+      "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+      "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+      "migration::migration_exact_five_relations",
+      "publication::publication_approval_fault_rolls_back_version_and_receipt",
+      "publication::publication_malformed_policy_is_rejected",
+      "publication::publication_receipt_approval_version_share_commit_and_replay",
+      "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+      "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+      "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+      "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+      "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+      "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+      "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+      "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake",
+      "actual_auth_visibility_and_enabled_guards_precede_normalization",
+      "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+      "closed_shapes_semantics_and_schema_failures_preserve_graph",
+      "concurrent_canonical_replacements_use_actual_locked_preimage",
+      "concurrent_replace_and_publish_never_publish_unresolved_references",
+      "one_put_normalizes_both_positions_and_publishes_over_http",
+      "original_parsed_hash_failure_replay_and_historical_success_replay"
+    ],
+    "remainingTargetCounts": {
+      "01_migration_tests": 1,
+      "27_trusted_fleet_principal_cutover_v1": 1,
+      "41_current_task_input": 25,
+      "42_acceptance_binding_downgrade_gate": 1,
+      "46_owner_obligations": 40,
+      "47_owner_node_reference_authoring": 7
+    },
+    "aggregationRule": "Original 1180/95/1 and subsequent 10/0 plus 28/0 are separate coordinate-bound observations. Do not add repeated passing names or rewrite the original full-run failure into an invented global PASS."
+  },
+  "failureClassification": [
+    {
+      "classification": "UNCHANGED_FIXTURE_PRECONDITION_BASELINE_SQL_REPRODUCED",
+      "failureCount": 1,
+      "claim": "Arbitrary LIMIT 1 selects a referenced DefinitionVersion; modifying its model violates the pre-existing composite FK. Same failure mechanism was reproduced on the owned baseline DB.",
+      "limits": "This is a matched SQL-precondition comparison, not an executed pristine-baseline cargo test PASS. The original candidate test remains FAILED.",
+      "nextVerification": "No product repair inferred. Retain exception and original baseline SQL receipt; any future fixture repair must select/seed its own unreferenced row rather than weaken the FK.",
+      "target": "01_migration_tests",
+      "failedNames": [
+        "test_migration_0019_constraint_enforced"
+      ]
+    },
+    {
+      "classification": "UNCHANGED_MISSING_DEDICATED_RUNNER_ENV",
+      "failureCount": 1,
+      "claim": "The test fails at TEST_WORKFLOW_DATABASE_URL getenv before any DB connection; TEST_AUTH_DATABASE_URL is separately required immediately afterward.",
+      "limits": "The empty-disposable-database operator scenario was not executed by the full-project command. No baseline runtime PASS is claimed.",
+      "nextVerification": "Only if this suite is needed: provision two new task-owned disposable databases on owned 57278, set both dedicated TEST_* variables via the original runner, and retain zero-write assertions. Do not use any pre-existing Auth DB.",
+      "target": "27_trusted_fleet_principal_cutover_v1",
+      "failedNames": [
+        "empty_disposable_databases_fail_loud_with_zero_workflow_writes"
+      ]
+    },
+    {
+      "classification": "ORIGINAL_FAILURE_RETAINED_SUBSEQUENT_EXACT_SOURCE_OWNED_FIXTURE_PASS",
+      "failureCount": 2,
+      "claim": "Both originally failing control-row assertions pass, with all 10 unchanged WEC cases, at exact clean candidate source on the newly named owned 57278 DB. The original full-run failure remains recorded.",
+      "limits": "This rules out a deterministic reproduction under the fresh-owned-DB precondition. Original global-feed pagination/retained-row interference remains an inference: exact original displaced-row count was not measured. No pristine-baseline cargo result or whole-project PASS is inferred.",
+      "nextVerification": "No repeat required for these same unchanged source/fixture coordinates; retain both original failure and successful scoped receipt.",
+      "target": "35_work_execution_class",
+      "failedNames": [
+        "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+        "t5j_class_mixed_window_returns_only_business_in_order"
+      ]
+    },
+    {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 25,
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted.",
+      "target": "41_current_task_input",
+      "failedNames": [
+        "combined_entry_uses_new_context_and_submission_causal_chain",
+        "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+        "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+        "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+        "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+        "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+        "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+        "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+        "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+        "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+        "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+        "initial_input_is_exact_existing_full_detail_without_business_writes",
+        "later_corrections_and_requested_older_originals_are_server_selected",
+        "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+        "malformed_and_partial_queries_do_not_fall_back_to_input",
+        "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+        "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+        "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+        "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+        "negative_and_models::model3_task_entry_allows_null_submission",
+        "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+        "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+        "restricted_and_unrelated_actors_never_receive_full_content",
+        "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+        "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision"
+      ]
+    },
+    {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 1,
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve structural/effective-destination checks and old-binary guard. No 55432 access or broad guard relaxation.",
+      "target": "42_acceptance_binding_downgrade_gate",
+      "failedNames": [
+        "ctr6_revoked_optin_version_rejected_by_new_and_old_binary"
+      ]
+    },
+    {
+      "classification": "ORIGINAL_FAILURE_RETAINED_SUBSEQUENT_EXACT_SOURCE_OWNED_FIXTURE_PASS",
+      "failureCount": 18,
+      "claim": "All 28 prerequisite cases, including the 18 original guard failures, pass at exact clean candidate source after supplying the required owned DB namespace on 57278. The source guard and test oracles were not relaxed.",
+      "limits": "This subsequent scoped target PASS does not alter the original full-project rc101 or verify other guarded targets.",
+      "nextVerification": "No repeat required for these same unchanged source/fixture coordinates; retain both original failure and successful scoped receipt.",
+      "target": "45_workflow_prerequisites",
+      "failedNames": [
+        "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+        "atomic::create_bind_http_atomic_replay_and_rollback",
+        "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+        "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+        "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+        "concurrency::event_guard_waits_for_the_actual_receipt_row",
+        "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+        "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+        "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+        "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+        "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+        "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+        "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+        "publication::publication_checks_context_root_marker_and_immutable_digest",
+        "race::source_terminal_and_dependent_create_have_one_serial_order",
+        "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+        "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+        "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization"
+      ]
+    },
+    {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 40,
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted.",
+      "target": "46_owner_obligations",
+      "failedNames": [
+        "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+        "case_projection::case_owner_detail_projects_the_original_responsibility",
+        "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+        "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+        "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+        "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+        "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+        "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+        "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+        "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+        "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+        "http::http_actual_managed_effect_dto_jwt_and_visibility",
+        "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+        "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+        "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+        "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+        "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+        "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+        "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+        "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+        "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+        "intents::intents_config_actor_mismatch_stops_before_any_birth",
+        "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+        "intents::intents_ordinary_create_cannot_birth_managed_role",
+        "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+        "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+        "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+        "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+        "migration::migration_exact_five_relations",
+        "publication::publication_approval_fault_rolls_back_version_and_receipt",
+        "publication::publication_malformed_policy_is_rejected",
+        "publication::publication_receipt_approval_version_share_commit_and_replay",
+        "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+        "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+        "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+        "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+        "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+        "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+        "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+        "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake"
+      ]
+    },
+    {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 7,
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted.",
+      "target": "47_owner_node_reference_authoring",
+      "failedNames": [
+        "actual_auth_visibility_and_enabled_guards_precede_normalization",
+        "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+        "closed_shapes_semantics_and_schema_failures_preserve_graph",
+        "concurrent_canonical_replacements_use_actual_locked_preimage",
+        "concurrent_replace_and_publish_never_publish_unresolved_references",
+        "one_put_normalizes_both_positions_and_publishes_over_http",
+        "original_parsed_hash_failure_replay_and_historical_success_replay"
+      ]
+    }
+  ],
+  "exceptionAudit": {
+    "path": "/tmp/ac1277-r3-broad-exceptions-audit.json",
+    "sha256": "3226b3a43ff667a74ad7e7a763124f81c7eebe4712c3bb1d25672dc9319fe3dd",
+    "reviewer": "/root/contract_audit",
+    "candidateHead": "06c035467ef7effc664f41ab703bbe736523d13e",
+    "scope": "full-project test evidence classification only; no new product review or Product Authority",
+    "acceptedFor": "Classifying observed failure locations, read-only baseline source/guard comparison and subsequent scoped evidence; not waiving tests or manufacturing full project PASS.",
+    "importantLimits": [
+      "01 baseline comparison reproduces the exact SQL precondition/FK failure, not a pristine-baseline cargo test or a baseline all-project PASS. Original candidate test remains FAILED.",
+      "27 dedicated runner environment is missing; that disposable Workflow/Auth scenario remains unexecuted.",
+      "41/42/46/47 have 73 original failures at unchanged owned-testbed guards. Their product scenarios remain unverified.",
+      "WEC global feed interference is an inference; fresh-owned-DB exact-source 10/0 is the actual subsequent evidence.",
+      "Prerequisite exact-owned-namespace 28/0 is scoped proof at unchanged candidate, not proof for the other guarded suites.",
+      "No confirmed introduced product regression is established by this classified failure set, but absence of every possible introduced regression is not proven."
+    ]
+  },
+  "commands": [
+    {
+      "label": "full-project-runtime",
+      "argv": [
+        "cargo",
+        "test",
+        "--no-fail-fast",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/tmp/ac1277-svc-workflow",
+      "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+      "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-10-31T01:51:06.155046+00:00",
+      "elapsedSeconds": 980.614,
+      "rc": 101,
+      "log": "full-project-runtime.log",
+      "sha256": "3e0251a9b5a0a4af9ece9e2c7c2e0a268dfc7e31167fdecb52eaabf7b43ad33b",
+      "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+      "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+      "rawLogPath": "/tmp/ac1277-r3-evidence/full-project-runtime.log",
+      "rawLogHashVerified": true
+    },
+    {
+      "label": "wec-fresh-db-regression",
+      "argv": [
+        "cargo",
+        "test",
+        "--test",
+        "35_work_execution_class",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/tmp/ac1277-svc-workflow",
+      "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+      "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-10-31T02:18:00.831001+00:00",
+      "elapsedSeconds": 21.462,
+      "rc": 0,
+      "log": "wec-fresh-db-regression.log",
+      "sha256": "187b0215cff11d467a09268467048b9eece757f83ff384ad503a706e21970250",
+      "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r3_wec_test",
+      "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+      "rawLogPath": "/tmp/ac1277-r3-evidence/wec-fresh-db-regression.log",
+      "rawLogHashVerified": true
+    },
+    {
+      "label": "prerequisites-owned-name-regression",
+      "argv": [
+        "cargo",
+        "test",
+        "--test",
+        "45_workflow_prerequisites",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/tmp/ac1277-svc-workflow",
+      "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+      "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-10-31T02:18:22.364306+00:00",
+      "elapsedSeconds": 39.098,
+      "rc": 0,
+      "log": "prerequisites-owned-name-regression.log",
+      "sha256": "2fc504e10dfef6740124be1dd0480565556dfd6fc1bb19fbbbbf91f5aee0b74b",
+      "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/svc_prereq_20261029_impl",
+      "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster",
+      "rawLogPath": "/tmp/ac1277-r3-evidence/prerequisites-owned-name-regression.log",
+      "rawLogHashVerified": true
+    }
+  ],
+  "commandsSnapshot": {
+    "path": "/tmp/ac1277-r3-evidence/commands.jsonl",
+    "sha256": "ee01cd2d84349e211557e65e3db56c829370467133f1d77be2c524526b4d5979"
+  },
+  "frozenUnion": {
+    "sourceBlockers": 0,
+    "closedSourceBlockerIds": [
+      "R3-B1"
+    ],
+    "requiredRuntimeGate": "FAIL_WITH_CLASSIFIED_EXCEPTIONS_AND_75_UNVERIFIED_ORIGINAL_FAILURES",
+    "newProductDesignFindings": 0,
+    "newProductRepairRequested": false,
+    "fullProjectPass": false
+  },
+  "readiness": {
+    "T1_T2_SOURCE_REVIEW": "PASS_REUSED",
+    "T1_T2_AFFECTED_EIGHT_TARGETS": "PASS_540",
+    "FULL_PROJECT_TESTS": "FAIL_RC101",
+    "MERGE_READY": "NO",
+    "OVERALL_1277_COMPLETE": "NO",
+    "T3": "BLOCKED_BY_EXISTING_BOUNDED_CONTRACT_GAPS",
+    "T4_T5": "DEPENDENT_NOT_CLOSED",
+    "OPERATION_ALLOWED": "NO",
+    "INSTALLED_ENABLED_BUSINESS_VERIFIED": "NOT_CLAIMED",
+    "nextAction": "Preserve classified exceptions and remaining unverified cases in handoff. Any future testbed closure must use an authorized owned environment without weakening guards. No further work is authorized by this receipt itself."
+  },
+  "prohibitedShortcuts": [
+    "Do not access or reuse the unauthorized pre-existing 55432 PostgreSQL instance.",
+    "Do not relax guards, spoof a DSN destination, substitute a shared/production DB, drop failed names, or reinterpret a guard rejection as a passing product test.",
+    "Do not convert SQL baseline contrast to pristine-baseline cargo PASS.",
+    "Do not label the task merge-ready, globally passing, deployed, retired or overall complete."
+  ],
+  "reviewerActions": {
+    "repositoryWrites": 0,
+    "testRuns": 0,
+    "databaseAccesses": 0,
+    "productionChanges": 0,
+    "newAgents": 0,
+    "writtenArtifacts": [
+      "/tmp/ac1277-r3-runtime-final-review.json"
+    ]
+  },
+  "stop": "Receipt-only followup complete; frozen source review and original runtime failure retained."
+}
