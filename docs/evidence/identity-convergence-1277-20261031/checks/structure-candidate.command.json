@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "0b64aca3615aec203b95aa960eff39d635bd26c1",
+    "--head",
+    "1eec489742d1dc270c10c53abc53c1b809833945",
+    "--json"
+  ],
+  "cwd": "/tmp/ac1277-dsh-agent-core",
+  "initial_rc": 1,
+  "retry_rc": 1,
+  "retry_cause": "Published existing candidate branch so lazy fetch could negotiate candidate; no source change",
+  "stdout_bytes": 0,
+  "stderr_sha256": "b5abfbf1432154e1ee08490f1bb5252e51d25b9d680ea0f6b2547c1209d28a7a",
+  "error": "Historical blob 42715b22ee5cbf0b566a7660762d688c3641f676 missing; promisor fetch failed",
+  "result": "NO_STRUCTURE_VERDICT",
+  "classification": "TOOLING_DEBT",
+  "scope": "DSH documentation/evidence only; product source and accepted authority unchanged",
+  "false_pass_claimed": false
+}

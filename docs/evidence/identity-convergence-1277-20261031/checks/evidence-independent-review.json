@@ -1,0 +1,91 @@
+{
+  "recorded_by": "/root",
+  "reviewer": "/root/dsh_contract_audit",
+  "author": "/root",
+  "author_independence": "PASS",
+  "scope": "Report/evidence only; reuse svc independent review at cf2397",
+  "base_head": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "review_target_head": "1eec489742d1dc270c10c53abc53c1b809833945",
+  "review_target_tree": "9eb1359467266fcc059fde5cf042fea1ea2e37cd",
+  "result": "PASS_FOR_DOCUMENTATION_AND_RECORDED_RESULTS",
+  "manifest_entries_verified": 14,
+  "manifest_sha256_at_review": "083aa8873ae48d8bc35fda3ee05df87a89ae6fd32637a71df60a76c586e82a11",
+  "gzip_archives_verified": 6,
+  "source_diff_decompressed_bytes": 27889,
+  "source_diff_sha256": "7e1a50f4d7c1d05d1c25a235b1f7c051570a8e42b808f32919b1145d75ee2c89",
+  "new_evidence_blockers": [],
+  "inherited_open_blockers": [
+    "B1277-T0-DB"
+  ],
+  "source_ready": false,
+  "merge_ready": false,
+  "operation_allowed": false,
+  "production_acceptance": "NOT_TESTED",
+  "reviewer_production_writes": 0,
+  "independent_commands_rc0": [
+    [
+      "git",
+      "rev-parse",
+      "HEAD",
+      "HEAD^{tree}"
+    ],
+    [
+      "git",
+      "rev-parse",
+      "origin/main"
+    ],
+    [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    [
+      "git",
+      "diff",
+      "--stat",
+      "BASE",
+      "HEAD"
+    ],
+    [
+      "git",
+      "diff",
+      "--raw",
+      "BASE",
+      "HEAD"
+    ],
+    [
+      "git",
+      "diff",
+      "--check",
+      "BASE",
+      "HEAD"
+    ],
+    [
+      "git",
+      "diff",
+      "--exit-code",
+      "BASE",
+      "HEAD",
+      "--",
+      "packages",
+      "scripts",
+      "docs/specs",
+      "docs/product",
+      "docs/architecture",
+      ".agents"
+    ],
+    [
+      "python3",
+      "-B",
+      "-",
+      "fixed-object manifest/tracked/gzip/commands/diff/authority review"
+    ],
+    [
+      "python3",
+      "-B",
+      "-",
+      "six gzip decompression/hash review"
+    ]
+  ]
+}
