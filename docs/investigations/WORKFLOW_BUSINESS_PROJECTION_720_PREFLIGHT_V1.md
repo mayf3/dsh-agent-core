@@ -63,6 +63,14 @@ Implementation plan (bounded Brief; no separate control-plane record):
    #720 delivery evidence. Leave Spec proposed pending supervisor acceptance and
    leave PR open/unmerged. No install, enablement or business acceptance claim.
 
+R2 source checkpoint: proposed Spec and implementation are independently reviewed
+at `54a235c55f52b209e6f3b17fa1e23eea73c9da2f`; one implementation-only review union
+was repaired under unchanged Spec bytes. Regressions are 360/360 with all 330
+baseline outcomes retained. The [conformance/review report](../reports/WORKFLOW_BUSINESS_RESULT_PROJECTION_720_R2.md)
+and [named test receipt](../evidence/business-result-projection-720-r2/TEST_EVIDENCE.json)
+carry current evidence. Spec acceptance remains the supervisor's post-review
+semantic ruling; the R1 deferred status below is historical, not the R2 route.
+
 ## Status and mandate
 
 `DISPOSITION = deferred`; `IMPLEMENTATION_ALLOWED = NO` for the new product projection.
