@@ -108,6 +108,7 @@ test('workflow_execute: manifest freezes the unified four-operation write contra
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
   ])
+  // Optional contextPayload accepted contract = PR #585 (3981579c).
   // WORKFLOW_DOMAIN_OWNER_ARCHIVE_CAPABILITY_REPAIR_V1: executable_for_actor
   // is named by the frozen operation description as a model-permitted advisory
   // preference, so the closed argument schema declares it explicitly (never
@@ -117,6 +118,7 @@ test('workflow_execute: manifest freezes the unified four-operation write contra
     'transitionDefinitionId',
     'expectedWorkflowStateVersion',
     'submissionPayload',
+    'contextPayload',
     'executable_for_actor',
   ])
   assert.equal(transition.arguments.properties.executable_for_actor.type, 'boolean')
@@ -126,7 +128,7 @@ test('workflow_execute: manifest freezes the unified four-operation write contra
     method: 'POST',
     path: '/internal/v1/workflow-instances/{workflowInstanceId}/transitions',
     pathParams: ['workflowInstanceId'],
-    body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload'],
+    body: ['transitionDefinitionId', 'expectedWorkflowStateVersion', 'submissionPayload', 'contextPayload'],
     idempotencyKey: true,
   })
 
@@ -250,6 +252,52 @@ test('workflow_execute operation=transition: optional submissionPayload is omitt
 
   await tokenServer.close()
   await workflow.close()
+})
+
+test('workflow_execute operation=transition: optional contextPayload is forwarded only when present', async (t) => {
+  const tokenServer = await startTokenServer()
+  t.after(() => tokenServer.close())
+  const workflow = await startMockServer((req, res) => json(res, 200, { workflowInstanceId: 'wf-44' }))
+  t.after(() => workflow.close())
+  const transport = createHttpTransport({
+    credentialProvider: { getCredential: async () => ({ clientId: 'wf-client', clientSecret: 'wf-secret' }) },
+    targets: mockTargets({ 'svc-workflow': workflow.origin }),
+    authServiceOrigin: tokenServer.origin,
+  })
+  const { definition } = wire(executeManifest(), transport)
+
+  const withContext = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-44',
+    transitionDefinitionId: 'transition-9',
+    expectedWorkflowStateVersion: 4,
+    contextPayload: { intake: { report: 'report-1' } },
+  })
+  assert.equal(withContext.ok, true)
+  assert.equal(workflow.requests.length, 1)
+  assert.equal(workflow.requests[0].method, 'POST')
+  assert.equal(workflow.requests[0].pathname, '/internal/v1/workflow-instances/wf-44/transitions')
+  assert.deepEqual(workflow.requests[0].body, {
+    transitionDefinitionId: 'transition-9',
+    expectedWorkflowStateVersion: 4,
+    contextPayload: { intake: { report: 'report-1' } },
+  })
+
+  const withoutContext = await definition.execute({
+    operation: 'transition',
+    workflowInstanceId: 'wf-44',
+    transitionDefinitionId: 'transition-9',
+    expectedWorkflowStateVersion: 5,
+  })
+  assert.equal(withoutContext.ok, true)
+  assert.equal(workflow.requests.length, 2)
+  assert.equal(workflow.requests[1].method, 'POST')
+  assert.equal(workflow.requests[1].pathname, '/internal/v1/workflow-instances/wf-44/transitions')
+  assert.deepEqual(workflow.requests[1].body, {
+    transitionDefinitionId: 'transition-9',
+    expectedWorkflowStateVersion: 5,
+  })
+  assert.equal(Object.hasOwn(workflow.requests[1].body, 'contextPayload'), false)
 })
 
 test('workflow_execute operation=transition: declared transition failures preserve the formal error envelope', async () => {
