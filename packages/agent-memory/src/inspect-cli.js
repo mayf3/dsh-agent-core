@@ -3,9 +3,9 @@
 import { constants } from 'node:fs'
 import { open } from 'node:fs/promises'
 import { isAbsolute } from 'node:path'
-import { inspectMemory, resolveMemoryBinding } from '../../packages/agent-memory/src/inspect.js'
+import { inspectMemory, resolveMemoryBinding } from './inspect.js'
 
-const help = 'Usage: node scripts/lib/agent-memory-v2-inspect.mjs --config <absolute-reviewed-config.json> [--detail summary|coverage]\nConfig: {"agentId":"...","primaryWorkspace":"/absolute/workspace","session":{"header":{"cwd":"/absolute/workspace"}}}\nRead-only: never mounts the plugin or creates files.\n'
+const help = 'Usage: node packages/agent-memory/src/inspect-cli.js --config <absolute-reviewed-config.json> [--detail summary|coverage]\nConfig: {"agentId":"...","primaryWorkspace":"/absolute/workspace","session":{"header":{"cwd":"/absolute/workspace"}}}\nRead-only: never mounts the plugin or creates files.\n'
 async function main() {
   const args = process.argv.slice(2)
   if (args.length === 1 && args[0] === '--help') { process.stdout.write(help); return }
