@@ -1,0 +1,29 @@
+{
+  "source": "/private/tmp/dsh-1257-baseline",
+  "head": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+  "tracked_status": "",
+  "started_at_utc": "2026-10-31T07:45:51.231648+00:00",
+  "node_version": "v25.6.1",
+  "node_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+  "argv": [
+    "/usr/local/bin/node",
+    "--test",
+    "--test-concurrency=4",
+    "--test-force-exit",
+    "--test-timeout=60000",
+    "--test-reporter=tap",
+    "packages/*/test/*.test.js",
+    "packages/*/test/*/*.test.js"
+  ],
+  "environment": {
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin",
+    "HOME": "/private/tmp/dsh-1257-evidence/baseline/warm-node25/home",
+    "TMPDIR": "/private/tmp/dsh-1257-evidence/baseline/warm-node25/tmp/",
+    "LC_ALL": "C",
+    "LANG": "C",
+    "TEST_ROTATION_DATABASE_URL": "postgresql://dsh1257_app@127.0.0.1:49858/dsh1257_fixture",
+    "TEST_ROTATION_PSQL": "/opt/homebrew/bin/psql"
+  },
+  "outer_timeout_seconds": 240,
+  "dependency_mode": "warm root npm install; test-created local worktree bridges; @deepseek-ai/dsh-tools unit passthrough stub"
+}

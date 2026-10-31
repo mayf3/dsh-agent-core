@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * V2 memory workspace resolver tests for the agent-memory PLUGIN glue
  * (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §5.2/§5.3/§5.4, accepted).

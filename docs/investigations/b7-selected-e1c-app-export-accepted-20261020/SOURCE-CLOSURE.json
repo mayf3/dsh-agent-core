@@ -1,0 +1,114 @@
+{
+  "kind": "FIXED_SELECTED_E1C_APP_GIT_EXPORT_SOURCE_CLOSURE_V1",
+  "status": "PROPOSED_MATERIAL_ONLY",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+    "bytes": 19756,
+    "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+  },
+  "held_refs": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "bytes": 3901,
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9",
+      "use": "Held exact needed members/inventory/P6 boundary; reread only this held material this turn."
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+      "bytes": 21325,
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "spans": "26-45",
+      "use": "Already-held body; this turn only its known import span, no new source acquisition."
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-repo-core-bridge.js",
+      "bytes": 4770,
+      "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+      "spans": "5,7-8,28-79,82-103",
+      "use": "Already-held finite source body; candidate-name and original topology grammar only."
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "bytes": 2280,
+      "sha256": "f616fdca970608ba4dca5cf681d27aca4487d2da0c0502e7046d00d188c13407",
+      "use": "Held prior main readback repository+72a exact commit, not reread/rehash this turn."
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-cap-publication-v1/BUILD-TERMINAL-INDEX.v1.json",
+      "bytes": 9551,
+      "sha256": "0920635205629030d39f5cfb1528024b78a7d06ae8f15904cca09fe09d327d2d",
+      "use": "Held actual call3 PUBLISHED; no artifact/catalog/payload/terminal reread this turn."
+    }
+  ],
+  "actual_new_source_acquisition": 0,
+  "actual_git_network_artifact_or_production_calls": 0,
+  "proposed_source": {
+    "repository": "mayf3/dsh-agent-core",
+    "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+    "commit_provenance": "Held PR541/main readback; source suitability UNPROVEN; exact e1c+b85 first anchors failclosed",
+    "git_path_to_app_member": "packages/... -> app/packages/... proposed source mapping; no archive equivalence"
+  },
+  "fixed_named_bodies": [
+    "packages/agent-provisioning/src/index.js",
+    "packages/agent-provisioning/src/repo-core-bridge.js",
+    "packages/agent-provisioning/src/shared-codex.js",
+    "packages/agent-provisioning/src/plugin-artifact.js",
+    "packages/agent-provisioning/src/ensure-symlink.js"
+  ],
+  "finite_inventory": "same-commit nonrecursive root/packages child trees; max256 package children +64 bundle trees; manifest presence metadata only, not bodies",
+  "proposed_p6_role": "separate future candidate input copy of verified selected plugin blob, explicit new selection not old-member equivalence",
+  "proposed_semantic_source_ceiling": [
+    {
+      "path": "tools/fixed_selected_e1c_app_export.py",
+      "max_lines": 500,
+      "placement": "isolated owned nonproduction workblock only",
+      "current_exists_or_written": false
+    }
+  ],
+  "existing_source_functions": {
+    "selected_e1c": "imports/reexports26-45",
+    "b85": "ensureRepoCoreBridge28-64; repoBridgeWritable67-79; REPO7-8"
+  },
+  "future_read_limits": {
+    "max_get_requests": 330,
+    "max_package_children": 256,
+    "max_bundle_trees": 64,
+    "max_single_response_bytes": 1048576,
+    "max_tree_proof_bytes": 4194304,
+    "max_new_source_blob_bytes": 262144,
+    "gross_owned_preparation_reserve_bytes": 20971520,
+    "single_export_allowance_requested": 1
+  },
+  "authority": {
+    "repository_source_role": "mayf3 owner or explicitly delegated exact-repository maintainer",
+    "technical_role": "original1378 may judge actual delegated mandate, not automatic OS issuer",
+    "read_purpose_ref": "UNPROVEN; explicit decision required; no new credentials/Grant",
+    "actual_effect_permission_current": false
+  },
+  "count_state": {
+    "packaging_issued": 3,
+    "packaging_remaining": 0,
+    "collector_issued": 2,
+    "collector_remaining": 0,
+    "count_amendment_requested": false
+  },
+  "identity_state": {
+    "e42": "UNREGISTERED",
+    "attempt": 0,
+    "business": "0/2",
+    "new_production_identity_allocated": false,
+    "Lshared": null,
+    "finalJ": null,
+    "G": null,
+    "remaining": null
+  },
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+  "route": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "target_technical_actor": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "writer_sends": 0
+  },
+  "current_task_ceiling": "Only held material consumption and new docs writes; no new source/Git/catalog/payload/artifact/read/search/build/test/runtime"
+}

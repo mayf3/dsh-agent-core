@@ -1,0 +1,96 @@
+{
+  "kind": "E42_PUBLIC_SELECTOR_AND_INDEPENDENT_GROUPS_CONTRACT_MATERIAL_INDEPENDENT_RECEIPT_V1_1",
+  "at_utc": "2026-10-19T14:05:22.536910+00:00",
+  "reader": "/root/sol_e40_independent_reader",
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol/ultra",
+  "native_observed_model": "UNKNOWN",
+  "disposition": "PASS_CONTRACT_MATERIAL_ONLY",
+  "separate_items": {
+    "S": "Material sufficient for original qualified source/result-contract decision; NOT accepted by this receipt.",
+    "C": "Material sufficiently states one extra fixed invocation/private-destination exception for separate original qualified decision; NOT granted by this receipt or S alone."
+  },
+  "exact_inputs": {
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/PROPOSED-E42-PUBLIC-SELECTOR-AND-INDEPENDENT-GROUPS.v1.1.md",
+      "bytes": 18664,
+      "sha256": "6241dcd1212295b7179d7fbcafe6032aef2425fe5dd4c7394cb7612128090ab9"
+    },
+    "source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/SOURCE-CLOSURE-INDEX.v1.1.json",
+      "bytes": 3943,
+      "sha256": "6fa56a7fb683fad5d0fccc821861656f5a2cbb9ab0c3ddb2596841b1d0e038c2"
+    },
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/INDEX.v1.1.json",
+      "bytes": 1631,
+      "sha256": "b66980d4c233359917dfd629c2cf72d16742dd7d1e0f87d571be9d35f517d96e"
+    }
+  },
+  "scope": "Only new public H validation/projection, independent S/H/Q3 qualification/result semantics and separate one-additional-call proposal. No re-review of parent acceptance639e/method531/R41 or actual effects.",
+  "actual_read_and_attribution": {
+    "direct": "Read complete unit/closure/index, verified all6 reference size/SHA pins; read stated original capture7fe import/publicConfig151-164 and pure provider-environment3deb4-9/21-105, b86 selector/aggregate/Q3 finite spans, complete785f source-fact receipt, pertinent3e6e direction fields, and original terminal predecessor pointers.",
+    "new_direct_primary_scope": "Only the fixed frozen public validator source and listed parent semantic/read/result spans. No runtime config/registry/provider value, tree, credential, npm source/command, SourceRoot, DS or route was opened.",
+    "upstream_source_attribution": "Original guard/once/group dependency observations in785f are /root/capacity_a_sol facts and3e6e decision; reader did not reproduce their live observations.",
+    "original_predecessor_binding": "Pinned terminale7b50c4d contains exact INTENT329B/ce443667 and RESULT2352B/ae9a4279 pointers requested by C; no actual result content was newly collected or salvaged.",
+    "oracle_limit": "No Node/JS/Python validator fixture executed. Canonical-profile acceptance implication is a proposed implementation obligation with owned synthetic pinned-JS oracle after acceptance, not a measured implementation PASS."
+  },
+  "material_readback": [
+    {
+      "lines": "15-27",
+      "conclusion": "Concrete internal Python projection, same two bounded JSON content inputs/custody and fixed registry alias, is explicitly proposed; whole-file content read is acknowledged and not called metadata-only. Public qualification derives from exact original publicConfig and four-key imported grammar, not UID/hash or omitted output. Absent/empty compatibility retained; every route validates. No external selector file, opaque pass-through, credential file, env/config dump or new path."
+    },
+    {
+      "lines": "19-25",
+      "conclusion": "Four literal public keys/string types and NODE_USE_ENV_PROXY=1 match original3deb. Python canonical URL/IP/DNS/no-proxy profile is intentionally a sound fail-closed subset, with numeric-final-label/IDNA/zone/escaping exclusions and no contact/resolution. Outside-profile original validity is UNKNOWN rather than false original-invalid/secret evidence. True original schema violations get fixed refusal. Future acceptance-implies-original tests and non-leakage are explicit; full WHATWG equivalence is not asserted."
+    },
+    {
+      "lines": "31-35",
+      "conclusion": "Closed internal projection contains only safe IDs/model references and pinned validator identity; ordered fallback lists preserved. COMPLETE selected IDs remain exact sorted unique enabled intersection, not a different membership. Credential/provider values absent from output. Proof includes raw input digests, identity/stamps, projection and two agreeing selection bookends; failed initial H does not parse again. S/H regular file content remains unread."
+    },
+    {
+      "lines": "39-41",
+      "conclusion": "Local H schema/profile/selection/read failure does not suppress independently valid fixed S/Q3 public observations. Genuinely shared entry/control/AUTH/PIN/caller/window/phase/mutex/deadline/shared ancestry or final custody failures null every dependent qualified total and retain safe observations separately. No old late-drift COMPLETE remains, no budget/FD-limit increase or new callable group path."
+    },
+    {
+      "lines": "45-53",
+      "conclusion": "New closed V2 explicitly separates shared qualification, group input/observation/budget conditions. Unknown values null, retained observed values unadmitted, exact integer quantities and honest positively qualified empty-H zero. Q2 provenance2947/actualG unknown is preserved. Q3 public pins/manifest rows may COMPLETE but config/aux/allowance stays UNKNOWN/null until separate valid original basis. Top complete remains false for any required unknown and rc2 remains normal incomplete; publisher must validate V2 without reinterpreting V1 or emitting raw values/errors."
+    },
+    {
+      "lines": "57-61",
+      "conclusion": "Finite S source ceiling and necessary embedding/publisher/verifier/AUTH/capsule/PIN joins are explicit; original JS is only semantic/offline oracle input, never root-executed dependency. Original root verb/UID502/channel/current pair/strong phases/S-H measurement/Q3 readset/Q2/business identities stay bounded. New actual changed files, rollback preimages, sequential tmp and output allocations must be measured; prior1519616/oldJ is not a new fit. Over4MiB route stops for exact cost delta, without floor reduction/fullDRIVEN/DS_UPDATE/manual substitute."
+    },
+    {
+      "lines": "65-75",
+      "conclusion": "C requires separately accepted one extra native call only after accepted S implementation/independent source closure and genuine original runtime admission. Exact same entry/subject/caller and fixed new publisher destination, old immutable intent/result lineage, new durable EXCL intent and final source/AUTH/PIN/generation bindings are stated. Original quota remains0 now; new PID/hash/window/path or S acceptance never replenishes it. Any issued refusal/partial/timeout/transport/publication failure consumes the added call; no third/newID/relabelled destination, no independent S/H attempts. Existing field scope/admission remains distinct from old E41 fixed-case permission and no generic Owner gate is invented."
+    }
+  ],
+  "blocking_material_findings": [],
+  "future_proof_not_current_claims": [
+    "Canonical-profile soundness implementation and synthetic oracle/negative evidence, projection/custody/stability and closed V2 publisher behavior.",
+    "Actual source/executor/verifier/AUTH/capsule/PIN and incremental4MiB/futureJ closure; current window/preimage/runtime/caller admission.",
+    "Item C acceptance/additional allowance, actual new invocation, fresh S/H/Q3 public observations or real capacity/numeric/business PASS."
+  ],
+  "quota_and_transport_as_material": {
+    "original_issued": 1,
+    "original_remaining": 0,
+    "proposed_additional": 1,
+    "proposed_total_after_issuance": 2,
+    "proposed_remaining_after_issuance": 0,
+    "current_new_permission": false,
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_dispatch": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "qualified_recipient": "01a1378d-e052-7021-9992-f0760eb9f9e7"
+  },
+  "reader_effects": {
+    "candidate_source_or_config_mutations": 0,
+    "fixtures_or_tests_or_oracle_runs": 0,
+    "live_config_registry_provider_or_tree_reads": 0,
+    "credential_SourceRoot_Git_npm_DS_calls": 0,
+    "native_collections": 0,
+    "external_dispatch": 0,
+    "owned_effect": "This single material receipt only."
+  },
+  "next": "Original author may package this exact v1.1 for the existing separate S/C qualified decision. Receipt creates no new approval layer or permission, and does not make either item accepted or collection ready."
+}

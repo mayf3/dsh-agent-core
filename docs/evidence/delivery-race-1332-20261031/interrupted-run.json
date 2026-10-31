@@ -1,0 +1,13 @@
+{
+  "at_utc": "2026-10-30T23:43:31.977770+00:00",
+  "reason": "Default npm test emitted no further output for more than120s and had no final summary; terminate own exact log-holding test runner to rerun with explicit timeout.",
+  "exact_log_holders": [
+    56920,
+    56934
+  ],
+  "lsof": "COMMAND   PID     USER   FD   TYPE DEVICE SIZE/OFF      NODE NAME\nnode    56920 yanfenma    1w   REG   1,13   340005 330946434 /private/tmp/dsh-1332-baseline/full-suite.tap\nnode    56920 yanfenma    2w   REG   1,13   340005 330946434 /private/tmp/dsh-1332-baseline/full-suite.tap\nnode    56934 yanfenma    1w   REG   1,13   340005 330946434 /private/tmp/dsh-1332-baseline/full-suite.tap\nnode    56934 yanfenma    2w   REG   1,13   340005 330946434 /private/tmp/dsh-1332-baseline/full-suite.tap\n",
+  "signal_command_attempt": "os.kill exact node56934 SIGTERM rejected EPERM",
+  "actual_termination": "write_stdin Control-C",
+  "termination_rc": 130,
+  "full_suite_finished": false
+}

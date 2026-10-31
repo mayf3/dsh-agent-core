@@ -1,0 +1,79 @@
+{
+  "kind": "FIXED_SELECTED_E1C_APP_GIT_EXPORT_MATERIAL_READY_V1",
+  "time": "2026-10-19T19:24:09.876548+00:00",
+  "clarification_before_relay": "N1, unit section3(4): complete=false denotes initial/failure incompleteness only. Every tree requires truncated=false. EXPORT_COMPLETE is permitted only after every bounded walk, absence proof and body/object/publication check is complete. Success is not required to remain incomplete. Frozen unit bytes unchanged; no read/count/cost/authority expansion.",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/PROPOSED-FIXED-SELECTED-E1C-APP-GIT-EXPORT.v1.md",
+    "bytes": 19756,
+    "sha256": "d8d4cf59301a142c53e7e5cd9d412dc121a43c0dbe48129400f1747e04c0e314"
+  },
+  "closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/SOURCE-CLOSURE.v1.json",
+    "bytes": 5831,
+    "sha256": "cb4ce07bab9881ee3f57d38bcf9c5c73fcf1e2f13db429b36b7ba0ffc6ac8c97"
+  },
+  "index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/INDEX.v1.json",
+    "bytes": 3919,
+    "sha256": "44f6c70015fe3511e2eab99fde805171cabf476ae1e997a7567c3972a79fafda"
+  },
+  "material_review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/independent-sol-readback/FIXED-SELECTED-E1C-APP-EXPORT-MATERIAL-RECEIPT.v1.json",
+    "bytes": 11798,
+    "sha256": "d955aec1a839ac0d905089cb1065a71d944650a92d5f4a1ff4ce3d3284cb8d4b"
+  },
+  "review_disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blocking_findings": [],
+  "cleanup": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/OWN-CLEANUP-MATERIAL.v1.json",
+    "bytes": 482,
+    "sha256": "50840c0ebd534933b2ab80fb14ad319fc74f1c997c9d5c29fa107b358da388ba"
+  },
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+  "acceptance_points": {
+    "S": "Exact known-repo immutable72a source eligibility + one fixed <=500-line isolated exporter/source/ABI; e1c+b85 anchor mismatch is defined stop, not presently verified suitability.",
+    "E": "Exactly one finite new repository-object readset/export; positive original read-purpose authority and no-denied-access-retry compatibility must be decided. No packaging/collector count amendment requested.",
+    "P6": "Separate new candidate-local source choice from same verified plugin blob, not historical P6 equivalence or runtime adoption."
+  },
+  "effect_tuple": {
+    "repository": "mayf3/dsh-agent-core",
+    "commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+    "named_bodies": 5,
+    "inventory": "nonrecursive same-commit package/bundle trees + manifest presence metadata only",
+    "max_gets": 330,
+    "requested_exports": 1,
+    "proposed_owned_gross_ceiling": 20971520,
+    "current_export_issued": 0,
+    "current_source_written": false,
+    "current_read_permission": false
+  },
+  "known_unproven": {
+    "selected_commit_anchors_match": "UNPROVEN",
+    "three_bodies_and_inventory": "UNPROVEN",
+    "historical_P6": "UNPROVEN",
+    "future_read_purpose_authority": "UNPROVEN",
+    "Lshared": null,
+    "finalJ": null,
+    "G": null,
+    "remaining": null
+  },
+  "route": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "qualified_target": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "writer_technical_requests_sent": 0
+  },
+  "preserved": {
+    "business": "0/2",
+    "e42": "UNREGISTERED",
+    "attempt": 0,
+    "packaging_issued": 3,
+    "packaging_remaining": 0,
+    "collector_issued": 2,
+    "collector_remaining": 0,
+    "floor": 53687091200,
+    "solewriter_fence": "UNCHANGED"
+  },
+  "actual_work": "Only held material consumption, exact new proposal/closure/index/cleanup writes, mechanical doc-pin arithmetic and original same-reader document review. No new APP/Git/source/catalog/payload/artifact input, search, implementation, tests, build, df, collection or production call."
+}

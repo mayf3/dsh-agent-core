@@ -1,0 +1,52 @@
+[demo-server] session main created (0 events) cwd=/tmp/prepared-provenance
+[demo-server] session main resumed (59243 events) cwd=/tmp/prepared-provenance
+✖ prepared created session retains first-prompt provenance, then reports genuine hot reuse (2.770583ms)
+✖ prepared resumed session retains first-prompt provenance, then reports genuine hot reuse (0.223375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 100.564084
+
+✖ failing tests:
+
+test at packages/demo-server/test/delivery-readiness.test.js:81:3
+✖ prepared created session retains first-prompt provenance, then reports genuine hot reuse (2.770583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'hot_reuse'
+  - 'created'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/test/delivery-readiness.test.js:101:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'hot_reuse',
+    expected: 'created',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/demo-server/test/delivery-readiness.test.js:81:3
+✖ prepared resumed session retains first-prompt provenance, then reports genuine hot reuse (0.223375ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'hot_reuse'
+  - 'resumed'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/test/delivery-readiness.test.js:101:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'hot_reuse',
+    expected: 'resumed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

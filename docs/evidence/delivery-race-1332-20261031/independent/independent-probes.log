@@ -1,0 +1,15 @@
+{"kind":"async","accepted":true,"errorCode":null,"prompts":3,"generations":3,"quarantined":true,"counts":{"transport_death":3,"caller_bound_exceeded":0,"child_exit_without_outcome":0,"other":0},"waits":[1,2],"deadLetters":1,"replayForbidden":false,"recoveryBlocked":false}
+{"kind":"unsafe","accepted":false,"errorCode":"provider_runtime_rejection","prompts":1,"generations":1,"quarantined":true,"counts":{"transport_death":1,"caller_bound_exceeded":0,"child_exit_without_outcome":0,"other":0},"waits":[],"deadLetters":0,"replayForbidden":false,"recoveryBlocked":false}
+{"kind":"childexit","accepted":false,"errorCode":"AGENT_PROCESS_CHILD_EXITED","prompts":1,"generations":1,"quarantined":false,"counts":{"transport_death":0,"caller_bound_exceeded":0,"child_exit_without_outcome":1,"other":0},"waits":[],"deadLetters":0,"replayForbidden":false,"recoveryBlocked":false}
+{"kind":"reapfailure","accepted":false,"errorCode":"provider_runtime_rejection","prompts":3,"generations":3,"quarantined":true,"counts":{"transport_death":3,"caller_bound_exceeded":0,"child_exit_without_outcome":0,"other":0},"waits":[1,2],"deadLetters":1,"replayForbidden":false,"recoveryBlocked":true}
+{"kind":"source","accepted":false,"errorCode":"provider_runtime_rejection","prompts":1,"generations":1,"quarantined":true,"counts":{"transport_death":1,"caller_bound_exceeded":0,"child_exit_without_outcome":0,"other":0},"waits":[],"deadLetters":1,"replayForbidden":true,"recoveryBlocked":false}
+[demo-server] session main created (0 events) cwd=/tmp/review-main
+{"kind":"provenance","persisted":false,"creates":1,"resumes":0,"first":"created","second":"hot_reuse"}
+[demo-server] session main resumed (0 events) cwd=/tmp/review-main
+{"kind":"provenance","persisted":true,"creates":0,"resumes":1,"first":"resumed","second":"hot_reuse"}
+[router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/1332-independent-registry-UI84YK/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[router] route mismatch for agt_review (generation 1): controlled shutdown before new-generation spawn
+{"kind":"registry_quarantine","sameRoute":true,"generations":2,"oldShutdowns":1,"reused":false}
+INDEPENDENT_PROBES PASS 8/8; offline synthetic inputs only; production I/O 0

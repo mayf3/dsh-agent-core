@@ -5,7 +5,7 @@
  * This file owns ONLY the real-I/O seam injection; every semantic lives in
  * packages/workflow-execution (engine/ledger/judgment) and the reused seams:
  *
- *   due feed          broker gateway `workflow_dispatch_intents.list`
+ *   due feed          broker gateway `workflow_dispatch_intents.list_ready`
  *                     (the poller Principal holds the GLOBAL_SCHEDULER_READ
  *                     binding server-side; the gateway does token+HTTP —
  *                     no second HTTP client, no new scope handling). The
@@ -40,6 +40,8 @@
  */
 
 import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
+import { normalizeDueIntent } from '../../workflow-execution/src/judgment.js'
+import { wakeDomainOwnerAssistanceReview } from './workflow/owner-assistance-review-wake.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
@@ -87,16 +89,10 @@ export function resolveStaleNoProgressThresholdMs({ configValue, envValue } = {}
  *   WORKFLOW_EXECUTION_POLLER_AGENT_ID, the stale threshold to
  *   DSH_WORKFLOW_STALE_NO_PROGRESS_MS, then 1h.
  */
-export async function wakeDomainOwnerAssistance({
-  router,
-  principalAccess,
-  pollerAgentId,
-  workflowInstanceId,
-  nodeVisitId,
-  assistanceCaseId,
-  ownerPrincipalId,
-  reason,
-}) {
+export async function wakeDomainOwnerAssistance(payload) {
+  const { router, principalAccess, pollerAgentId, workflowInstanceId, nodeVisitId, assistanceCaseId, ownerPrincipalId, reason, phase } = payload
+  if (phase === 'GOVERNANCE_CHILD_REVIEW') return wakeDomainOwnerAssistanceReview(payload)
+  if (phase !== undefined) return { ok: false, code: 'invalid_owner_wake_phase' }
   if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
     return { ok: false, code: 'assistance_case_missing' }
   }
@@ -127,6 +123,7 @@ export async function wakeDomainOwnerAssistance({
     `Assistance case: ${assistanceCaseId}.`,
     'You are the enabled Domain Owner. Do not take over the original assignee execution by default.',
     'Use workflow_assistance_read owner_inbox/detail to inspect the case and existing evidence.',
+    'If governance work is needed, inspect exact published Definition Context/terminal schemas and case facts with workflow_definition_read; select one same-Domain version and acceptance transition by acceptance-task fit, never names. Unresolved ambiguity stops before mutation. Use workflow_assistance_action create_and_bind_governance_child once atomically. On ambiguous response read the exact case detail and match child/version/binding/acceptance digest/prerequisite; unproven commit remains UNKNOWN with no replacement or new-key call.',
     'If you can remove the blocker, use workflow_assistance_action resolve. If Domain Owner handling is insufficient, explicitly use escalate_to_human.',
     'Do not claim workflow completion unless the authoritative workflow transition/receipt says so.',
   ].join('\n')
@@ -158,6 +155,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   }
   const gateway = ctx.get('brokerGateway')
   const principalAccess = ctx.get('agentPrincipalResolutionAccess')
+  const assistanceResumeEvidenceAccess = ctx.get('workflowAssistanceResumeEvidenceAccess')
   // Runtime-owned Workflow execution context: the exact Router turn is bound
   // to the trusted workflow_execution provenance at delivery time. Fixed
   // Operations and Progress Checkpoints both resolve this mapping; model args
@@ -171,6 +169,17 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
   const ledger = new ExecutionLedger({
     dir: layout.workflowExecutionDir,
     log,
+    resolveManagedAttempt: async ({ ownerPrincipalId, workflowInstanceId, nodeVisitId }) => {
+      const caller = config.pollerAgentId ?? process.env[WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV]
+      const resolved = await principalAccess.handlers.agent_resolve_principal.resolve({ principalId: ownerPrincipalId }, { callerAgentId: caller })
+      if (!resolved?.ok || !resolved.result?.agentId) return undefined
+      const read = await gateway.execute({ capabilityId: 'workflow_owner_obligation', operation: 'read', args: { workflowInstanceId } }, { agentId: resolved.result.agentId })
+      if (!read?.ok) return read?.error?.code === 'owner_obligation_not_managed' ? false : undefined
+      const m = read.result
+      return m?.version === 1 && m.workflowInstanceId === workflowInstanceId
+        && ['INTAKE', 'REVIEW', 'DEPENDENCY'].includes(m.managedKind) && m.state === 'ACTIVE'
+        && m.currentNode?.nodeVisitId === nodeVisitId ? true : undefined
+    },
     // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the attempt limit lives on
     // the fence itself (admission policy; replay of old files unchanged).
     maxAttemptsPerVisit: resolvePositiveInt({
@@ -204,6 +213,18 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       assistanceCaseId: payload.assistanceCaseId,
       ownerPrincipalId: payload.ownerPrincipalId,
       reason: payload.reason,
+      phase: payload.phase,
+      ownerBindingId: payload.ownerBindingId,
+      reviewWakeId: payload.reviewWakeId,
+      bindingId: payload.bindingId,
+      governanceChildInstanceId: payload.governanceChildInstanceId,
+      childNodeVisitId: payload.childNodeVisitId,
+      childDefinitionVersionId: payload.childDefinitionVersionId,
+      childTerminalEventId: payload.childTerminalEventId,
+      acceptanceTransitionId: payload.acceptanceTransitionId,
+      acceptanceContractDigest: payload.acceptanceContractDigest,
+      childSubmissionId: payload.childSubmissionId,
+      childSubmissionDigest: payload.childSubmissionDigest,
     })
   }
 
@@ -230,12 +251,26 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       if (afterNextEligibleAt !== undefined) args.afterNextEligibleAt = afterNextEligibleAt
       if (afterDispatchIntentId !== undefined) args.afterDispatchIntentId = afterDispatchIntentId
       const res = await gateway.execute(
-        { capabilityId: 'workflow_dispatch_intents', operation: 'list', args },
+        { capabilityId: 'workflow_dispatch_intents', operation: 'list_ready', args },
         { agentId: pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'dispatch_intents_failed', detail: res.error?.detail }
-      const items = Array.isArray(res.result?.items) ? res.result.items : []
-      return { ok: true, items }
+      const items = res.result?.items
+      if (!Array.isArray(items) || items.length > DUE_FEED_LIMIT
+        || items.some(item => item?.readinessStatus !== 'READY')) {
+        return { ok: false, code: 'invalid_ready_projection' }
+      }
+      const dueItems = items.map(({ readinessStatus, ...due }) => due)
+      const tuples = new Set()
+      for (const due of dueItems) {
+        const tuple = JSON.stringify([due.nextEligibleAt, due.dispatchIntentId])
+        if (!normalizeDueIntent(due).ok || tuples.has(tuple)
+          || (due.nextEligibleAt === afterNextEligibleAt && due.dispatchIntentId === afterDispatchIntentId)) {
+          return { ok: false, code: 'invalid_ready_projection' }
+        }
+        tuples.add(tuple)
+      }
+      return { ok: true, items: dueItems }
     },
     resolvePrincipalToAgent: async (principalId) => {
       const res = await principalAccess.handlers.agent_resolve_principal.resolve({ principalId }, { callerAgentId: pollerAgentId })
@@ -289,10 +324,14 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
     readInstanceDetail: async ({ agentId, workflowInstanceId }) => {
       const res = await gateway.execute(
         { capabilityId: 'workflow_instance_detail', operation: 'read', args: { workflowInstanceId } },
-        { agentId },
+        { agentId: agentId ?? pollerAgentId },
       )
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'instance_detail_failed', detail: res.error?.detail }
       return { ok: true, body: res.result }
+    },
+    readOwnerAssistanceResumeEvidence: async (args) => {
+      if (!enabled || typeof assistanceResumeEvidenceAccess !== 'function') return { ok: false, code: 'poller_unconfigured' }
+      return assistanceResumeEvidenceAccess({ callerAgentId: pollerAgentId, ...args })
     },
     // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-005: the ONE escalation seam —
     // svc-workflow's system execution-escalation ingress, called as the

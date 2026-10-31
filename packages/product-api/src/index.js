@@ -49,6 +49,7 @@
  */
 
 import { createServer } from 'node:http'
+import { createConversationHandler } from './conversation/http.js'
 import z from '@deepseek-ai/schemastery'
 import { handleSchedulerRequest } from './scheduler-routes.js'
 import { handleSchedulerHealthRequest } from './scheduler-health-routes.js'
@@ -252,14 +253,18 @@ export function apply(ctx, config = {}) {
   // PRODUCT_API_VOICE_TRANSCRIPTION_V1: ONE additive route with its own
   // long-lived in-process ASR engine (loaded once; see voice-transcription.js).
   const voiceTranscription = createVoiceTranscriptionHandler()
+  const conversation = () => createConversationHandler({service:config.conversationService ?? ctx.get('nativeConversation')})
 
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
+      if (await ctx.get('websiteInquiryHandler')?.(req, res)) return
       if (req.method === 'GET' && url.pathname === '/health') {
         json(res, 200, { ok: true, service: 'agent-core-product-api' })
         return
       }
+      const conversationResult = await conversation()(req,url)
+      if (conversationResult) { res.setHeader('Cache-Control','no-store'); json(res,conversationResult.status,conversationResult.body); return }
       const admission = await config.workflowAdmission?.(req, url)
       if (admission) {
         res.setHeader('Cache-Control', 'no-store')

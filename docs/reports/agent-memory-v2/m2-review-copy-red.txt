@@ -1,0 +1,32 @@
+✖ replacement of a newly created ancestor refuses before writing outside the copy (27.644792ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72.047083
+
+✖ failing tests:
+
+test at packages/agent-memory/test/migration.test.js:236:1
+✖ replacement of a newly created ancestor refuses before writing outside the copy (27.644792ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   '.agent-memory-v2'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///Users/yanfenma/workspace/project/dsh-agent-core/.worktree/ac-task-1248-m2-protocol-migration/packages/agent-memory/test/migration.test.js:261:10)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ '.agent-memory-v2' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

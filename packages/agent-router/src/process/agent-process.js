@@ -25,6 +25,10 @@
 
 import { TurnReconciliationStore } from '../reconciliation/index.js'
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../../agent-provisioning/src/shared-codex.js'
+import {
+  assertTrustedNativeToolPolicyAck,
+  resolveTrustedNativeToolPolicy,
+} from '../../../agent-provisioning/src/trusted-native-tool-policy.js'
 import { assertPositiveSafeDeadline, monotonicNowMs, stateMachineMethods } from './state-machine.js'
 import { FAIL_LOUD_PROVIDER_ERRORS, sanitizeProviderError } from './provider-errors.js'
 import { evidenceBufferMethods } from './evidence-buffer.js'
@@ -33,6 +37,7 @@ import { eventCorrelationMethods } from './event-correlation.js'
 import { turnExecutionMethods } from './turn-execution.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
+import { deliveryReadinessMethods } from './delivery-readiness.js'
 
 const sleep = (ms) => new Promise((resolve) => {
   const timer = setTimeout(resolve, ms)
@@ -41,7 +46,7 @@ const sleep = (ms) => new Promise((resolve) => {
 
 export class AgentProcess {
   constructor({
-    agentId, home, workspace, profile, provider, model, providerEnv = {}, omitEnv = [],
+    agentId, home, workspace, profile, provider, model, providerEnv = {}, omitEnv = [], nativeToolPolicy,
     log = console, env = {},
     processGeneration = 1,
     deadlines,
@@ -53,6 +58,10 @@ export class AgentProcess {
       throw new TypeError('AgentProcess: profile is required (no default — the caller owns the composition choice)')
     }
     this.agentId = agentId
+    Object.defineProperty(this, 'nativeToolPolicy', {
+      value: resolveTrustedNativeToolPolicy(nativeToolPolicy, agentId),
+      enumerable: true,
+    })
     this.home = home
     this.workspace = workspace
     this.profile = profile
@@ -184,10 +193,13 @@ export class AgentProcess {
       try {
         const initialized = await this.request('initialize', {
           cwd: this.workspace,
+          nativeGoalContinuation: { version: 1 },
+          ...(this.nativeToolPolicy === undefined ? {} : { nativeToolPolicy: this.nativeToolPolicy }),
           provider: this.provider,
           model: this.model,
           maxTokens: Number.parseInt(process.env.DSH_AGENT_MAX_TOKENS ?? '8192', 10),
         }, undefined, { deadlineMono: initDeadlineMono })
+        assertTrustedNativeToolPolicyAck(this.nativeToolPolicy, initialized?.nativeToolPolicy)
         if (Array.isArray(initialized?.registeredProviders)
             && !initialized.registeredProviders.includes(this.provider)) {
           if (monotonicNowMs() >= initDeadlineMono) {
@@ -215,6 +227,10 @@ export class AgentProcess {
             : error
         }
         if (FAIL_LOUD_PROVIDER_ERRORS.has(error?.code)) {
+          void this.fatal('initialize_failed')
+          throw error
+        }
+        if (error?.code === 'AGENT_PROCESS_NATIVE_TOOL_POLICY_ACK_MISMATCH') {
           void this.fatal('initialize_failed')
           throw error
         }
@@ -313,6 +329,7 @@ for (const group of [
   turnExecutionMethods,
   spawnMethods,
   shutdownMethods,
+  deliveryReadinessMethods,
 ]) {
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
     if (key === 'constructor') continue

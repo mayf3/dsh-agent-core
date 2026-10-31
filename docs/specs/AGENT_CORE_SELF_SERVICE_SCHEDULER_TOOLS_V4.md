@@ -34,7 +34,17 @@ external_authorities:
 supersedes:
   - AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V3
 superseded_by: null
-amendments: []  # V4 whole-successor: V3's accepted amendments (AMENDMENT_1/2/3) are carried
+amendments:
+  - AMENDMENT1_CLONE_DISABLED (2026-10-11, status: accepted; spec AGENT_CORE_SELF_SERVICE_SCHEDULER_TOOLS_V4_AMENDMENT1_CLONE_DISABLED):
+    one additive eighth action `clone_disabled` — same-Owner atomic clone into a permanently
+    disabled target; closed schema (job_id + two-field CAS + new_logical_key + optional new_name);
+    persisted cloneProvenance {sourceJobId, sourceScheduleRevision, sourceUpdatedAtMs} anchors the
+    §5.1 logical-key dedup on source intent; §5.2 lost-response reconcile requires provenance-proven
+    THIS-intent + disabled (else STILL_UNKNOWN). Seven existing actions and self_ops untouched;
+    no new scope/admin/error-code. accepted_reviewed_head
+    1feec97181556fa7bdf0461607fa7a4e8dd00a50 (docs-only lineage from statically reviewed
+    0b84a822440a108227a76731de55343cc9bc4c7b); accepted_by mayf3, 2026-10-11.
+    # V4 whole-successor: V3's accepted amendments (AMENDMENT_1/2/3) are carried
                 # forward as incorporated body content (Appendix A + folded contracts); their
                 # lifecycle records remain in V3's history. Provenance: V4 derives from V3
                 # accepted_reviewed_head 23b2332f9c3b4a35511c63dec367f2e5d97c0bdc and absorbs

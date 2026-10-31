@@ -204,6 +204,14 @@ export function startHistoryListener({
 
   server.requestTimeout = 0
   server.headersTimeout = 30000
+  // The history surface is OPTIONAL: a bind failure (e.g. the pinned
+  // tailscale IP disappearing across a network change, 2026-10-23) emits an
+  // async 'error' event. Without a handler it escapes as an uncaught
+  // exception and kills the WHOLE runtime — taking the admission core
+  // (served by the same process) down with it. Log and stay up instead.
+  server.on('error', (error) => {
+    console.error(`[history-listener] bind/serve failed; history route unavailable: ${error?.code ?? ''} ${error?.message ?? error}`)
+  })
   server.listen(port, host)
 
   return {

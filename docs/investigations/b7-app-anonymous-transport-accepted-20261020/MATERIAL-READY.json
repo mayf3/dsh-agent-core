@@ -1,0 +1,78 @@
+{
+  "kind": "MEASURED_GH_REDIRECT_BLOCKER_AND_EXACT_TRANSPORT_AMENDMENT_READY",
+  "time": "2026-10-19T19:46:31.011481+00:00",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/PROPOSED-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT.v1.md",
+    "bytes": 7857,
+    "sha256": "9f162062fd8bef1e840609b42dabbbb6c715183a828c22482395f563bcbc513f"
+  },
+  "closure": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/SOURCE-CLOSURE.v1.json",
+    "bytes": 2473,
+    "sha256": "16aa3514573eb0edd2bc027f42b6d62b56256f3e3ba5f9a0f931eb3be840d0c9"
+  },
+  "index": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/INDEX.v1.json",
+    "bytes": 1523,
+    "sha256": "085693ccafd98bc145145f9045a3b98f7e7eef07ddb854d0783176081382078d"
+  },
+  "observation": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ACTUAL-CLI-REDIRECT-OBSERVATION.v1.json",
+    "bytes": 3229,
+    "sha256": "641b55272985fba99a6753c0eb6059ed88eb550972734a200c3d99a219287ac4"
+  },
+  "review": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/independent-sol-readback/FIXED-GIT-TRANSPORT-AMENDMENT-MATERIAL-RECEIPT.v1.json",
+    "bytes": 11922,
+    "sha256": "ed456f12624bb3af1e326c4140396829f521a94a9727bf82cb83a43a17b747b7"
+  },
+  "review_scope": "PASS_PROPOSAL_MATERIAL_ONLY/blocking[]; actualcurrenthelpernotimplemented/sourcePASSnotclaimed",
+  "docs_main": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+    "bytes": 2430,
+    "sha256": "33be1669e4bfd7b41d985c33df1e0cab00ba55d428ba933ae556de5273fb4def"
+  },
+  "preflight": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/DEVELOPMENT_PREFLIGHT.json",
+    "bytes": 3135,
+    "sha256": "9986e884a9810a561f85e3900b5545e0de5068bf30b40672852a2f1d0c91501e"
+  },
+  "cleanup": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/OWN-CLEANUP.v1.json",
+    "bytes": 780,
+    "sha256": "52d42dd4ad2f3147ab6fd317d3a85441d4b3c90ea3bebc6abc01b4a001b9cc30"
+  },
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ORIGINAL-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT-TECHNICAL-DECISION.v1.json",
+  "actual_results": {
+    "PR542": "MERGED",
+    "accepted_main": "4238992afaed40fb7d2b7f90ef1532f8d41e532b",
+    "fixed_docs_head": "f55f30977fc62154b73e14db9f3cef41d660825c",
+    "new_product_or_exporter_source_written": false,
+    "synthetic_gh_child_rc": 0,
+    "synthetic_server_GETs": 2,
+    "counter_driver_outer_rc": 1,
+    "actual_repository_export_issued": 0,
+    "E_remaining": 1
+  },
+  "source_blocker": "SingleCLIinvocationfollowed302andsentsecondGET. DirectexistingCLIcallcannotbeassumedconformingtoacceptednohiddenredirect/actualGETaccounting. Noheldtrustedcontrol; noassertionallCLIconfigurationimpossibleorrealGitHubwouldredirect.",
+  "requested_decision": "OneexplicitS/Etransportamendment: samehelper/readset/commit/output/oncecap viafixedunauthenticatedHTTPS(noautoredirect/retry/authfallback), withHTTPprincipal/routechangeanduseridentitychannelconstraintapplicabilityexplicitlydecidedbyoriginalqualified. Rebindunissued1,notadditionalquota. Noimplementationoractualreadunderproposedamendment.",
+  "route": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "qualified_target": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "writer_requests_sent": 0
+  },
+  "preserved": {
+    "business": "0/2",
+    "e42": "UNREGISTERED",
+    "attempt": 0,
+    "packaging": "3/rem0/noFourth",
+    "collector": "2/rem0/noThird",
+    "floor": 53687091200,
+    "Lshared": null,
+    "finalJ": null,
+    "G": null,
+    "remaining": null
+  }
+}

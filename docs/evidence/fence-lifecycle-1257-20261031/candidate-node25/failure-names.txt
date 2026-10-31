@@ -1,0 +1,160 @@
+REAL_POSTGRES_READ_ONLY_SMOKE (T1/T2/T4/T9): real PG census — hits reconcile, zero mutation
+cross-repo: canonical rotation transaction A–F against the real auth enforcement seam
+PA1: absent store entry + (c)=false fails before S1/S2 and before any store write
+prerequisite (c) token-provider failure occurs before S1/S2 and store write
+PA2: absent store entry + (c)=true runs exactly S1, S2, one store write, and one verification mint
+deployed seam wire shape: one-time secret carried as `secret` is accepted (CANONICAL_ONBOARDING_COMPLETION_V1 §5)
+persisted reread object is the verification mint source
+real inode replacement with changed clientId or secret blocks verification mint
+same-metadata parent swap before lock acceptance causes zero Auth calls
+PA3: existing store entry fails loud with zero Auth, claim, rotation, and store writes
+PA3 ordering: entry classification precedes the (c) gate — (c)=false does not change the result
+repeated clean bootstrap: the second request sees the store entry, calls no Auth, creates no duplicate identity
+three concurrent same-Agent ensures create one identity and at most one secret write
+blocked Phase B path: Auth client already exists without a store entry — fail loud, no rotation, no second client, no write
+ownerless-v1 401 on the fresh mint is prerequisite (d) evidence and never rotates or deletes the new identity
+temporarily_unavailable mint is inconclusive: no rotation, store keeps the new credential
+raw secret is absent from argv/env/output/errors/workspace and child inputs
+T12: dedicated fixture rotation — full chain PASS, receipt COMPLETED, store swapped 0600, siblings preserved
+red-line: secret bytes never enter receipts, and the preimage backup stays 0600
+NOW fail-closed: APPLY without the (e) privileged channel refuses before ANY mutation and receipts the refusal
+T10: same ROTATION_OPERATION_ID replay -> idempotent, zero second mutation
+T9: store-swap failure -> bounded recovery rolls the DB back and receipts ROLLED_BACK
+T9b: rollback that cannot complete receipts SPLIT_STATE_OPEN loud (never silent)
+T9 inherited gate: an unreceipted DB generation advance refuses the next seam contact
+T13b: bounded recovery under the shared reader-owner face restores a gate-readable reader-owned store
+SHARED_READER_OWNER: root rotation replaces the entry and finalizes reader-owned 0600
+SHARED_READER_OWNER: failed temp chown fails closed on the preimage with zero leftovers
+SHARED_READER_OWNER: idempotent repeated rotations keep the reader-owner contract
+SHARED_READER_OWNER validation: non-root writer, root reader, mixed owner options, malformed input all refuse pre-mutation
+T13c: restore-finalization failure after a proven DB rollback receipts SPLIT_STATE_OPEN — never ROLLED_BACK
+writer creates a trusted-owner 0600 V1 store before persisting secret bytes
+hostile formatting preserves every unrelated entry byte while adding target
+empty and non-empty credentials objects remain valid after byte-splice insertion
+wrong, root, negative, and non-integer trusted owner inputs are rejected
+TEMP_PATH_SWAP_REJECTED: swapped temp pathname is rejected before rename
+parent swap before temp open writes zero secret bytes and preserves replacement sentinels
+private lock serializes concurrent target-only updates
+harness resolution is worktree-aware and cliBin fails loud without a checkout
+FLEET_SHARED_CODEX_AUTH A2/A4: canonical store resolves per deployment root; the yanfenma-domain constant stays frozen
+FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refused — one OAuth lineage per security surface
+seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)
+seam: a structured gateway failure passes through declared codes verbatim at the correct depth
+T3: real plugin boot under an untraversable parent TMPDIR — plugin tree, initialize and provider registration all pass
+packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js
+R3: a settled or unknown turnExecutionId proves nothing (absent leaf)
+scripted native rounds obtain fresh parent proof after prior settlement through real child transport
+real child timeout removes native queued admission before old owner release
+real child cancel removes native queued admission before old owner release
+registers exactly the agent_core_switch_agent tool
+workflow_execute: manifest freezes the unified four-operation write contract (§25 amendment)
+agent-core-production profile real boot: plugin loads + initialize handshake
+DEFAULT_MODEL_ROUTING_CONFIG_V1: no-params initialize resolves the canonical Luna default; explicit params still win
+GATE: allowed verdict forwards to onEvent, no receipt
+GATE: rejection FAILS CLOSED — onEvent never called, fixed receipt sent once
+AC-GATE-MALFORMED-FAIL-CLOSED: only a non-null object with literal allowed=true passes
+GATE: diagnostic verdict getters are never invoked and cannot suppress rejection receipt
+GATE: accessor-based allowed verdict fails closed without invoking getter
+GATE: a throwing gate FAILS CLOSED too (gate_error)
+GATE: NO gate installed = fail-closed drop (spec §9 startup ordering — never legacy forward)
+GATE: wired after construction takes effect immediately (live config, like setCallback)
+GATE: self-echo never reaches the gate (residual guard before admission)
+GATE: handler awaits the FULL onEvent turn before resolving
+GATE: onEvent rejection propagates to the SDK public error pipeline
+GATE: current Router-style {error} outcome remains a handler failure
+IDENTITY: group message with UNRESOLVED bot identity fails closed (error + drop)
+IDENTITY: p2p message with unresolved identity still reaches the gate (p2p needs no identity for adjudication)
+IDENTITY: identity resolved but openId empty fails closed for group too
+packages/feishu-connector/test/bridge.test.js
+packages/feishu-connector/test/current-main-full-turn.test.js
+packages/feishu-connector/test/frozen-config.test.js
+packages/feishu-connector/test/full-ingress-differential.test.js
+packages/feishu-connector/test/golden-vectors.test.js
+packages/feishu-connector/test/log-redaction-adversarial.test.js
+packages/feishu-connector/test/log-redaction.test.js
+packages/feishu-connector/test/mention-config.test.js
+packages/feishu-connector/test/mount.test.js
+packages/feishu-connector/test/outbound.test.js
+packages/feishu-connector/test/processing-reaction.test.js
+packages/feishu-connector/test/real-binding-replay.test.js
+packages/feishu-connector/test/reply-card/reply-card.test.js
+packages/feishu-connector/test/reply-card/scheduler-card.test.js
+packages/feishu-connector/test/reply-card/ux-phase1-v3-display.test.js
+packages/feishu-connector/test/sdk-pipeline.test.js
+packages/feishu-connector/test/standalone-log-redaction.test.js
+packages/feishu-connector/test/ux-phase1-v2.test.js
+B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate
+B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart
+enabled channel + invalid identity credentials fail composition LOUD (fail closed)
+actual arm64 Node and internal links pass closure inspection
+installer probes before backup and never grants root Git trust
+desired-state install splits control gids (candidate/preimage) from the installed target gid
+desired-state install preserves exact predecessor and replay retains first receipt
+desired-state install accepts root-owned legacy 0644 preimage and narrows the installed mode to 0640
+desired-state replay narrows an already-installed candidate from legacy 0644 to 0640
+desired-state install rejects a legacy target with an unsupported extended attribute
+desired-state install rejects a legacy target with an extended ACL
+desired-state install rejects a legacy target with the wrong owner identity
+desired-state replay rejects same-byte predecessor metadata drift
+desired-state install still rejects a writable legacy target
+desired-state crash after INSTALLING receipt replays from the frozen candidate, not predecessor target
+desired-state replay finalizes an INSTALLING receipt after the candidate rename frontier
+desired-state install accepts only the root-owned macOS /var system alias
+incident migration narrows an existing runtime-owned 0755 directory to 0700
+incident migration directory preparation is idempotent at 0700
+incident migration converts only an explicitly allowed legacy runtime group
+incident ownership migration preserves provenance-only xattr
+incident state file normalization refuses unauthorized metadata and never recurses blindly
+deployment accepts a safe failed-cutover migration extension receipt
+deployment migration uses the explicit runtime reader gid instead of the account primary gid
+production-pinned payload executes migration with distinct source and destination groups
+legacy-gid incident state reproduces the production failure; admission repair converges first run and rerun
+rollback restores exact 0644 metadata even under a restrictive process umask
+rollback repairs same-byte predecessor metadata drift after a partial rollback
+routing deployment freezes explicit candidate and atomically preserves the exact preimage
+routing deployment keeps rollback control artifacts separate from the runtime reader group
+routing deployment repairs only the exact legacy routing control ownership drift
+routing deployment rejects missing canonical ops target before any write
+routing deployment rejects a target symlink before reading or replacing it
+watchdog deployment source retains the accepted Session Trace lineage in its overlay
+T15/T29 runtime reads one generation-bound complete census
+persisted control-plane binding to a non-canonical chat makes canonical health incomplete
+persisted delivery binding from an impossible future makes canonical health incomplete
+persisted attempted intent relabeled PENDING makes canonical health incomplete before any delivery path
+T33 authority-invalid occurrence returns incomplete census, never false green
+wired start refuses scheduler and workflow engine while the canonical authority is invalid
+CTR-ACT-005 bootstrap happy path: receipt governs, reuse forced, reauth never bound
+bootstrap fails closed when an ownerReauthCanonical binding is present
+bootstrap fails closed on a missing / corrupt ten-gate receipt
+bootstrap fails closed on a FAIL (or wrong phase / wrong root) receipt
+bootstrap fails closed on wrong fleet cardinality: 91 (91+unknown), 93 (extra)
+bootstrap fails closed when bootstrapStore is outside the receipt equality set
+bootstrap rejects an unknown candidateClass
+non-bootstrap regression: ownerReauthCanonical binding is still REQUIRED and reauth still fires on non-reuse selection
+real executable bindings complete isolated production-like migrate and safe rollback
+canonical credential constant is the yanfenma path in both carrying modules
+provisioning boundary accepts the realigned default and stamps the patch block with it
+normal reauth path accepts a 1-candidate (non-92) inventory: cardinality gate is bootstrap-only
+canaries execute in the realigned STOCK → CEO → CTO order
+validateConfig fails closed on a missing realigned canary binding
+ACC-ACT2-003 migrated real-snapshot-shape v3 document loads with providerEnv + canonical passthrough
+T-DP-6 restart/replay is idempotent and the projection never mutates durable state
+failed-cutover replay preserves committed incidents and imports only newly proven legacy roots
+failed-cutover replay carries forward a committed root absent from a later snapshot
+failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state
+failed-cutover replay replaces volatile detail for one stable fingerprint without growing state
+failed-cutover replay stays bounded across repeated volatile generations
+delivery commit compares exact predecessor and rejects evidence-erasing regression to PENDING
+T26 state/outbox commit is atomic and expected-hash guarded
+T26 injected crash before rename preserves preimage bytes and leaves no accepted new state
+T28 unsafe mode, symlink and concurrent lock fail loud without resetting state
+T28 only a well-formed lock whose exact PID is proven dead may be reaped
+T28 two processes reaping one stale lock cannot delete the replacement live lock or corrupt state
+T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state
+T27 source drift aborts before incident-state commit
+T27 migration derives delivery only from frozen evidence and rejects contradictions
+T30 local ops sink is private, no-follow, locked, and append durable
+T27 formal migration entrypoint consumes only frozen protected source files
+T02/T03/T04 one quarantined Job fences only itself, persists, and unrelated admission continues
+T30 protected manifest reader uses no-follow identity checks and returns secret-safe provenance
+T30 production default parent boundary (/) walks real ancestors to the filesystem root

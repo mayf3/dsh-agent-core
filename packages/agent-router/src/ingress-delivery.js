@@ -14,7 +14,7 @@
 import { createHash } from 'node:crypto'
 import { ingressBindingNamespace, feishuReplyOwed } from './channel-conversation.js'
 import { classifyFailureStage, isRecoveryFenceResult } from './process/ingress-failure.js'
-import { fencedRejection } from './process/state-machine.js'
+import { createRecoveryAdmission } from './reconciliation/admission.js'
 import { outerFailureProjection } from './reconciliation/query.js'
 import { authenticatedFeishuFields, ingressTurnOpts, authenticatedCorrelation } from './ingress-authenticated.js'
 /**
@@ -38,8 +38,8 @@ export function createIngressDelivery({
   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
   registerAuthenticatedIngress,
 }) {
-  /** Delivery V0 acceptance log (evidence surface; in-memory only). */
   const deliveries = []
+  const recoveryAdmission = createRecoveryAdmission(reconciliationStore, routeChain)
   /**
    * Deliver one ingress message through the channel model:
    *   ChannelConversation -> Binding -> Agent + Session -> reply.
@@ -72,7 +72,7 @@ export function createIngressDelivery({
     let turnStarted = false
     try {
       const trusted = authenticatedFeishu ? authenticatedFeishuFields(ingress) : null
-      reconciliationStore.assertBusinessAdmissionReady?.()
+      recoveryAdmission.assertReady()
       ;({ channelConversation, binding } = await resolveChannelConversation({
         channel: namespace,
         externalId: ingress.conversationId,
@@ -85,12 +85,7 @@ export function createIngressDelivery({
       // New-request admission consults the abandonment-aware blocker
       // projection; the historical agent-wide fence stays queryable via
       // activeFenceForAgent and still blocks every non-abandoned unknown.
-      const restoredFence = typeof reconciliationStore.admissionBlockerForAgent === 'function'
-        ? reconciliationStore.admissionBlockerForAgent(binding.activeAgentId)
-        : reconciliationStore.activeFenceForAgent?.(binding.activeAgentId)
-      if (restoredFence !== null && restoredFence !== undefined) {
-        throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
-      }
+      recoveryAdmission.assertUnfenced(binding.activeAgentId)
       log.log(`channelConversation ${channelConversation.id.slice(0, 24)}... -> binding -> agent ${binding.activeAgentId} + session ${binding.activeSessionId} (${evSummary})`)
       // AGENT_CORE_BINDING_WORKSPACE_V1: resolve the Binding's effective
       // workspace and hand it to the turn as the SESSION cwd (R1 create /
@@ -193,7 +188,7 @@ export function createIngressDelivery({
       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
       if (feishu !== undefined && isFeishuEntry) {
         try {
-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.message ?? error}`)
+          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
         } catch { /* best effort */ }
         // CTR-I2-015 observer external-delivery lifecycle point (failure
         // receipt path — CANARY-C expects exactly one failure delivery).
@@ -325,7 +320,7 @@ export function createIngressDelivery({
    * @returns {Promise<{accepted:true, sessionId:string}>}
    */
   async function deliver(req, controlOpts = undefined) {
-    reconciliationStore.assertBusinessAdmissionReady?.()
+    recoveryAdmission.assertReady()
     const requestId = req?.requestId
     const sessionMode = req?.sessionMode
     const message = req?.message
@@ -406,12 +401,7 @@ export function createIngressDelivery({
     // HR_RESET_AND_RESUME_V1: new-request admission consults the abandonment-
     // aware projection; the historical agent-wide fence stays queryable via
     // activeFenceForAgent and still blocks every non-abandoned unknown.
-    const restoredFence = typeof reconciliationStore.admissionBlockerForAgent === 'function'
-      ? reconciliationStore.admissionBlockerForAgent(agent.id)
-      : reconciliationStore.activeFenceForAgent?.(agent.id)
-    if (restoredFence !== null && restoredFence !== undefined) {
-      throw Object.assign(fencedRejection(restoredFence.handle), reconciliationStore.recoveryDiagnostic?.(restoredFence.handle) ?? {})
-    }
+    recoveryAdmission.assertUnfenced(agent.id)
     // CLAUSE-PROC-BOUNDED rule 8: reconciliation capacity is checked BEFORE
     // spawn/write — an exhausted store must never cost a spawn or a prompt
     // byte (§10.3 ROUTER_GLOBAL_RECONCILIATION_CAP: S/W = 0/0).
@@ -473,7 +463,6 @@ export function createIngressDelivery({
     }
   }
 
-  /** Test/ops: in-memory Delivery V0 acceptance log snapshot. */
   function deliveriesSnapshot() {
     return deliveries.map(d => ({ ...d }))
   }

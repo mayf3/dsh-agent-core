@@ -1,0 +1,30 @@
+\#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness
+R1 readiness: initialize ready cannot bypass session preparation acknowledgement
+R1 readiness: absent capability and mismatched acknowledgement fail closed
+R1 readiness: never-ready child respects caller deadline and late ack cannot admit
+R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement
+R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing
+R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit
+R1 readiness preserves private-session log suppression without forwarding custody payload
+CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch
+CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics
+CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"text","text":"partial"}]}}}
+CTR-R2 no replay after unsafe/unknown event {"type":"assistant/message","data":{"message":{"content":[{"type":"tool-call","name":"write"}]}}}
+CTR-R2 no replay after unsafe/unknown event {"type":"tool/start","data":{}}
+CTR-R2 no replay after unsafe/unknown event {"type":"unrecognized/provider-event","data":{}}
+CTR-R5 final unknown increments caller-bound class without replay or respawn
+CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion
+CTR-R3 failed exact generation reap still retains message and resend notice
+CTR-R2 arbitrary fetch-failed text never provides replay authority
+CTR-R5 all four categories and threshold are recomputable from structured log events
+CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries
+CTR-R2 parent RPC observation denies replay even without assistant/tool events
+accepted original-source custody forbids a second prompt and retains failed original
+CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt
+CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发
+R1 fresh spawn + 59243-event resume: no readiness ack or prompt before replay completes
+R1 readiness validates version/session and propagates workspace mismatch without admission
+readiness preserves private-session resolution and redacts its rejection details
+prepared created session retains first-prompt provenance, then reports genuine hot reuse
+prepared resumed session retains first-prompt provenance, then reports genuine hot reuse
+R1 stdio integration: fresh child acknowledges initialize before suspended resume is deliverable

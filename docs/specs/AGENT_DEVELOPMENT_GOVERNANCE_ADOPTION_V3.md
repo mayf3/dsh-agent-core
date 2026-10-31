@@ -1,6 +1,22 @@
 ---
 spec_id: AGENT_DEVELOPMENT_GOVERNANCE_ADOPTION_V3
-status: proposed
+status: accepted
+accepted_date: 2026-10-15
+accepted_by: mayf3
+accepted_at: 2026-10-15T12:03:07.950464Z
+accepted_reviewed_spec_commit: 44da63d21987bf7115435f0767e7851b9022836a
+acceptance_review_verdict: NO_SEMANTIC_BLOCKER_FOUND_IN_EXISTING_V3_PROPOSAL
+acceptance_review_receipt_sha256: 9c1450a75e024a85a5be0670cf2d31a7e17c1f166c7a7d7f18fd2a27cd00fdee
+acceptance_authority_basis: >-
+  Owner mayf3 explicitly approved in the current Codex task on 2026-10-15:
+  "批准。接受 MCP #5，将 DSH 文档治理激活与 #497 的 CI 改造分开，
+  完成最终校验后合入两仓 main。生产加载和新增权限仍另批，
+  EP49 和旧 UNKNOWN 不重发。" This is current docs-only acceptance of
+  the independently reviewed V3 proposal at 44da63d2 and its four-file
+  activation plan. It does not reuse or overwrite PR #497's historical
+  five-check approval. The independent reviewer /root/governance_adoption_review
+  authored no candidate changes. Exact final-head delta review and main
+  readback are retained in the activation PR; activation occurs only at merge.
 spec_kind: invariant
 authority_level: governing_spec
 implementation_authority: none
@@ -20,7 +36,13 @@ superseded_by: null
 owners: [mayf3]
 ---
 
-# Bounded governance adoption V3 — proposed pilot
+# Bounded governance adoption V3 — accepted pilot
+
+> Current lifecycle: accepted by mayf3 on 2026-10-15 for docs-only activation,
+> independently of the CI work in PR #497. Source pin, all six Contracts, local
+> rules and historical preparation observations are preserved. Main merge is
+> the activation boundary; this record grants no product or production operation.
+> Candidate/proposed wording in the dated preparation sections below is history.
 
 ## 1. Goal
 
@@ -169,7 +191,9 @@ Rollback follows CTR-AD3-006 and the preserved lineage; do not edit old receipts
 Source PR #21 integration is satisfied: the exact source `6301662e18adaed88e4412394ad9bdb959d92355`
 was merged into upstream main by `d38c94dc6df8e8d8e0bfe45528dadfe5c9bf2543`
 on 2026-09-29T03:26:17Z. Source: https://github.com/mayf3/agent-development-governance/pull/21.
-Local independent final-head review and adoption acceptance remain pending.
+Owner acceptance and independent proposal/activation-plan review are complete.
+The activation PR records the final-head delta review and main merge/readback;
+no pre-merge record by itself establishes active adoption.
 No unresolved question grants implementation or production authority. Future
 executor-level duplicate suppression and measured delivery improvements are not
 prerequisites of current HR recovery or this bounded governance repair.

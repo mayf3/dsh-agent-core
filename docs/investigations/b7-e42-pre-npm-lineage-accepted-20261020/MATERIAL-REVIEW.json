@@ -1,0 +1,131 @@
+{
+  "kind": "E42_PRE_NPM_INPUT_LINEAGE_ORIGINAL_READER_MATERIAL_RECEIPT_V1",
+  "at_utc": "2026-10-19T16:01:32.821124+00:00",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blocking_material_findings": [],
+  "attribution": {
+    "reader": "/root/sol_e40_independent_reader",
+    "author": "/root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol/ultra",
+    "native_observed_model": "UNKNOWN",
+    "chain": "Existing independent reader only. No Root/wiring personal-read attribution, new reviewer or approval chain. Original1378 decides exact technical material;14c remains exclusive relay."
+  },
+  "fixed_inputs": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/INDEX.v1.json",
+      "bytes": 6242,
+      "sha256": "977d2c5912c356679102521010f68bbf7bf36e4366fd6627d23e0a1dcc727d84"
+    },
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/PROPOSED-E42-PRE-NPM-INPUT-LINEAGE-AND-EXTRA-MEMBERSHIP-BASIS.v1.md",
+      "bytes": 20977,
+      "sha256": "3f3c45095c9c1b14100ea8ef62b5d4478c1f56355edbaf3e1d389f0262282968"
+    },
+    "closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/SOURCE-CLOSURE.v1.json",
+      "bytes": 9231,
+      "sha256": "ad2e75218d00a73b62e90283d06dcdc045ca4c47f344286b45a5843953c9901e"
+    },
+    "proposed_basis": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/PROPOSED-BASIS-VALUE.v1.json",
+      "bytes": 12107,
+      "sha256": "20e080e605273349d9a434e19768dedc6a90fc400a07cc54bdf4a026e46b9829"
+    },
+    "original_resolution": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/ORIGINAL-E42-SAVED-C-Q3-PRECISE-MATERIAL-TECHNICAL-RESOLUTION.v1.json",
+      "bytes": 28091,
+      "sha256": "5b148da42a8e5a1f6850e2a5cfe240728d9b8343602d7629950e5c662b309633"
+    }
+  },
+  "scope": "One documentary retained-original-lineage producer/consumer ABI and precise original-record handoff under resolution5b148da4. Material is suitable for qualified decision within its stated ceiling. This is not acceptance of absent facts, a complete usable basis, source implementation, actual producer invocation, runtime read permission or numerical admission.",
+  "personally_read_and_checked": [
+    "Verified all11 indexed files plus resolution to exact bytes/SHA. Read full new proposal/closure/current UNPROVEN basis and resolution field_resolutions/one_minimal_material_delta. No parent archive or523003-byte projected inventory rehash/reread.",
+    "Verified and read only needed finite source ranges of preserved dd96:22-44,73-75,113-119,413-489 and00811809:152-158,247-252,285-288. This is bounded saved source implication, not new source/runtime access.",
+    "Hashed both saved21325-byte index copies: same e1c3 body. Read index import/export lines1-43 and bridge lines1-65, plus complete small nested profile/plugin JSON. No execution/import traversal or whole-source transitive closure claim.",
+    "Verified saved INSTALL-PINS e673 and read appSource/artifactPins/actualRootCodeDigests. Verified and read small original90b pin metadata and9680 allowance. No native module bodies, current installation, failed live paths or production files read.",
+    "Checked five semantic fields, six fixed-prefix order/paths, status/null distinctions, producer/source/effect/phase/cost separation, actual UNKNOWN fields and explicit no-third/no-retry. No tests, archive extraction, fixture, npm/config/env, collector, context/TX or live call performed."
+  ],
+  "concrete_material_assessment": {
+    "producer": "Selected manual documentary assembler role original1437, not an asserted callable/getter. Inputs are exact already-retained installation/source/input/preimage originals; output is one closed five-field documentary object. ABI/publication recipe is concrete for joining supplied records but cannot attest missing installed facts.",
+    "missing_facts_are_not_accepted": "Native event/custody/retention, exact9df/import/installation lineage, prefix-root package/lock/shrinkwrap/workspace/baseline and materialization/occupancy proof stay explicit null/UNKNOWN. A handoff contract plus future record request does not close any of these facts or authorize a runtime substitute.",
+    "resolution_alignment": "Resolution permits bounded saved-member/source preparation and exact missing-original coordinates. Unit names three source identities, direct caller/bridge limit, five fields, original producer responsibilities, pre-numeric phase and conditional bound. It does not ask original1378 to invent OS authority, issue another collector or accept an unnamed API.",
+    "minimum_decidable_unit": "Qualified can decide this finite documentary ABI/source-input handoff. No additional runnable producer is requested/ready. If retained originals cannot supply it, the current contract yields that precise unresolved material dependency; it does not claim an unspecified future producer accepted. Any actual new producer/effect remains outside this unit, exactly as unit§3/6 says.",
+    "no_universal_gate": "Unit preserves accepted536 independently lawful conservative routes. This object does not add a universal business precondition, cancel existing authority or demand generic Owner approval."
+  },
+  "source_findings_verified": [
+    {
+      "claim": "dd96 expects provisioning index9df at fixed APP path",
+      "coordinates": "dd96:30-31,73-75,422-423",
+      "meaning": "Hash before import, then ensureRepoCoreBridge. Expected source is not supplied by an unrelated saved body. Original npm PATH and six-target argv/call order verified at32,39-40,113-119,475-489."
+    },
+    {
+      "claim": "R30/R33 selected saved members bothe1c3,21325B",
+      "evidence": [
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+          "bytes": 21325,
+          "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01"
+        },
+        {
+          "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/r30-app-agent-provisioning-index.js",
+          "bytes": 21325,
+          "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01"
+        }
+      ],
+      "meaning": "Reader independently establishes saved copy equality/digest. Parent archive membership/FD stability are attributed to author member-readback records, not reader extraction or fresh archive hash. No current installed mismatch inferred."
+    },
+    {
+      "claim": "Projected21784B/ba397 third identity",
+      "meaning": "Attributed frozen inventory-derived pin from author closure/resolution; reader intentionally did not reread large inventory or corresponding body. Not substituted for9df or asserted current installation."
+    },
+    {
+      "claim": "INSTALL-PINS sourceb939/tree8cc and one reviewed shared-codex.js delta, actualRootCodeDigests allnull",
+      "meaning": "Recipe/packaging lineage only; not9df transformation proof or current native attestation."
+    },
+    {
+      "claim": "Nested815B profile dependencies empty; plugin4190B dsh-codex0.2.3 no dependencies/optionalDependencies and19 peers",
+      "meaning": "Small saved JSON bodies read/hash checked. Nested profiles/agent-core-production package is not profiles/package.json or full npm graph. Plugin metadata supports only fixed component conditional native/legacy-peer model, not whole prefix membership."
+    },
+    {
+      "claim": "HOME_FILES does not capture root prefix graph",
+      "coordinates": "dd96:43-44,435-449,461-489",
+      "meaning": "Only settings and nested profile package/patch preimages; conditionally copies nested template, then npm prefix is profiles. MISSING cannot prove no root manifest/lock/workspace/baseline. Source/action preimages are not a complete graph getter."
+    },
+    {
+      "claim": "e1c direct bridge is conditional and not prefix graph proof",
+      "coordinates": "index:33-36; bridge:8,28-64",
+      "meaning": "Writable branch may create links; immutable branch validates existing APP bridge links. This conditional body cannot be applied to missing9df or promoted to installed/current behavior."
+    },
+    {
+      "claim": "Provision precedes later whole-tree shadow and no early cleanup credit",
+      "coordinates": "00811809:247-252,285-288",
+      "meaning": "Source rule only; no current tree measured. Charge evidenced copies/failure lifetimes and overlap, not arbitrary multiplier. Six compatible possible calls need no skip evidence unless taking skip credit."
+    }
+  ],
+  "five_field_state": {
+    "nativeBinding": "Historical90b/9680 expected values only; actual alias/content/custody/installation/retention null. No guessed UID502/current unsafe/permission absence.",
+    "prefixInputs": "All6 exact roots UNKNOWN; root manifests/locks/shrinkwrap/workspace/baseline and effective members null; no empty-success graph.",
+    "effectiveMaterializationBasis": "Three dimensions only: membership, copy topology/lifetime, normal aux membership. No invented actual option, full env freeze or literal cache-path equality condition.",
+    "branchOccupancyAndAux": "Conditional6*(2P+2T)=2579447808;134217728 normal cache/log/helper is within1073741824 typedaux, not double charged or arbitrary extras reserve. All extra members/bytes/phase peaks/overlap/max unresolved.",
+    "producerEntryAndPhase": "Documentary retained originals before numeric admission; no new executable/readset/source ceiling/runtime effects. P1/2/3 future equality cannot retrospectively create P0 bound. Publication described as private EXCL/fsync/readback recipe, not performed by this docs task."
+  },
+  "original_producer_handoff_not_new_gate": [
+    "Original APP packaging/provisioning lane: retained9df body plus exact imports/transform/install parent/member mapping, or identify genuine candidate amendment; do not silently rebind9df to e1c/ba397.",
+    "Original native installation/source record role: actual event receipt/issuer/generation/window/custody/retention to consuming child. Exact receipt filename not held; not invented and not a new actor.",
+    "Original input/preimage lineage: six prefix-root public graph/baseline and deterministic pre-npm transform. Existing HOME_FILES limitation explicit; no new capture/permission inferred.",
+    "Original npm/model owner and531/536 consumer: source implications or exhaustive nonsecret extras with quantities/concurrent/retained/shadow/aux overlap; no npm/config/env invocation or unspecified getter.",
+    "Original1437 arithmetic consumer: only supplied/qualified inputs can yield branch bound and affordable Q2 plan. Material acceptance alone provides no such numerical result."
+  ],
+  "evidence_attribution_limits": {
+    "parent_archives": "R30f651/R331fc0/tgz869b hashes are inherited frozen inventory/package pins. Reader did not open/hash archives or observe held-FD stability; readback artifacts record author observations.",
+    "old_native_and_growth": "C/old lineage2 remaining0 and S/H/J/conditions are saved context. No actual result recapture, current native proof or growth equality recheck.",
+    "closure": "Selected references only, not a claim every closure body/transitive import was independently read. Projected/source/inventory absence is not global absence."
+  },
+  "nonacceptances": [
+    "NOT_SENT route0; this reader did not route/send to1378.",
+    "No source implementation, API/getter, runtime permission, extra collection/quota exception, installed native PASS or exhaustive actual package graph.",
+    "No numeric remaining or actual G/plan/admission, business completion,4MiB/50GiB/fresh-free fit or J change. Documentary files remain outside sealed runtime closure.",
+    "No new production/source access, identity/ACL/TCC/FDA/path/owner change, no failed-path retry/third sample."
+  ],
+  "reader_write_boundary": "Only this owned receipt under existing independent-sol-readback; author candidate/docs/index untouched."
+}

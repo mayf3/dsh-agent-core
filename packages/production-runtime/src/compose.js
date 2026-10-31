@@ -41,31 +41,18 @@ import { apply as applyBootstrap } from '../../workspace-bootstrap/src/index.js'
 import { apply as applyDefinition } from '../../agent-definition/src/index.js'
 import { apply as applyRouter, RECOGNIZED_PROXY_ENV_KEYS } from '../../agent-router/src/index.js'
 import { mountBrokerGateway } from './broker-composition.js'
+import { prepareSchedulerRuntime } from './scheduler/composition-runtime.js'
+import { mountIdentityCapabilityRuntime } from './identity/capability-runtime.js'
+import { mountWorkflowCapabilityRuntime } from './workflow/capability-runtime.js'
+import { mountConversationRuntime } from '../../product-api/src/conversation/runtime.js'
 import { apply as applyProductApi } from '../../product-api/src/index.js'
 import { createWorkflowAdmissionHandler } from '../../product-api/src/workflow-admission.js'
-import { Scheduler, JobStore } from '../../scheduler/src/index.js'
-import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
-import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
-import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
+import { Scheduler } from '../../scheduler/src/index.js'
 import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
-import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
-import { loadCredentialFor } from '../../broker/src/credential-store.js'
-import { requestAccessToken } from '../../broker/src/transport.js'
+import { createSchedulerRuntimeStarter } from './scheduler/health-runtime.js'
 import { buildTargetMap, targets as defaultBrokerTargets } from '../../broker/src/targets.js'
-// Identity capability providers via the package's TRACKED PUBLIC ENTRY (DSH_AGENT_CORE_MODULARITY_PHASE_A_V1 closure amendment): a tracked relative path closes under plain source resolution in every checkout — no untracked node_modules bridge, no manual link step. package.json exports["."] exposes the same file.
-import { createAgentDirectoryAccess, createAgentPrincipalResolutionAccess, createAgentPrincipalReverseResolutionAccess } from '../../agent-identity-capabilities/index.js'
-import { createWorkflowHumanPrincipalProjectionAccess } from './identity/workflow-human-principal-projection.js'
-import { mountWorkflowExecutionRuntime } from './workflow-execution-runtime.js'
-import { mountWorkflowExecutionContextRuntime } from './workflow-execution-context-runtime.js'
-import { mountWorkflowProgressRuntime } from './workflow-progress-runtime.js'
-// Latest-main integration: BOTH wirings coexist —
-//   WORKFLOW_EXECUTION_CONTROL_V1 (projectExecutionTrace → workflowExecutionAccess)
-//   DEVELOPMENT_EXECUTION_SURFACE_V1 (mountDevelopmentExecutionRuntime)
-import { mountDevelopmentExecutionRuntime } from './development-execution-runtime.js'
-import { mountFixedOperationRuntime } from './fixed-operation-runtime.js'
-import { projectExecutionTrace } from '../../workflow-execution/src/projection.js'
-import { projectExecutionAttention } from '../../workflow-execution/src/attention.js'
 import { createAgentSessionRuntime } from './agent-session/runtime.js'
+import { mountWebsiteInquiryRuntime } from './agent-session/website-inquiry/runtime.js'
 import { mountExecutionHistoryRuntime } from './execution-history/runtime.js'
 import { resolveHarnessRoot } from '../../agent-provisioning/src/index.js'
 import { createPluginContext } from './context.js'
@@ -75,7 +62,6 @@ import { loadAgentModelOverrides, canonicalDefaultGlobalRoute, createModelArtifa
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import {
   mountNotificationIngressRuntime,
-  wireNotificationIngressDeliveryEvidence,
 } from './notification-ingress-runtime.js'
 import { wireV2IngressGate, V2_INGRESS_MODE } from './v2-ingress-gate.js'
 import {
@@ -93,11 +79,9 @@ export {
   resolveReplyRenderMode,
   warnInvalidUnconfiguredFeishuEnv,
 } from './feishu-env.js'
-
 /** The per-agent profile the Production Runtime spawns (profile-production/). */
 export const PRODUCTION_AGENT_PROFILE = 'agent-core-production'
 export const TARGET_PROXY_NODE_VERSION = 'v25.6.1'
-
 function invalidProxyRuntime(key, invalidClass) {
   return Object.assign(
     new Error(`production-runtime: invalid agent model overrides: ${key}: ${invalidClass}`),
@@ -113,7 +97,6 @@ export function assertTargetProxyRuntime({ env = process.env, version = process.
     throw invalidProxyRuntime('NODE_RUNTIME_VERSION', 'runtime_version_mismatch')
   }
 }
-
 // The fleet shared-Codex migration functions live in their own module
 // (structure-only move; compose keeps the stable re-export surface for the
 // existing tests and the executable).
@@ -332,12 +315,13 @@ export async function composeProductionRuntime(options = {}) {
 
   const router = applyRouter(ctx, {
     bindingsStoreFile: layout.bindingsStore, reconciliationStoreFile: layout.turnRecoveryStore,
+    ...(opts.productApi?.conversation?.enabled === true ? {conversationSourceDir:join(layout.controlDir,'native-conversation','source')} : {}),
     defaultAgentId: defaultAgent.id,
     defaultSessionId: 'main',
     agentProfile,
     ...(opts.processFactory === undefined ? {} : { processFactory: opts.processFactory }),
     ...(opts.provisionHome === undefined ? {} : { provisionHome: opts.provisionHome }),
-    resolveProcessConfig,
+    resolveProcessConfig, resolveNativeToolPolicy: opts.resolveNativeToolPolicy,
     resolveRouteChain,
     // CTR-I2-015 (IMPL V2): the production runtime root instantiates the
     // default-off one-shot canary seam at
@@ -383,17 +367,15 @@ export async function composeProductionRuntime(options = {}) {
     auditDenial: agentSessionRuntime.auditDenial,
   })
 
+  await mountWebsiteInquiryRuntime({ ctx, config: opts.websiteInquiry, router, definition, workspaceBootstrap })
   const productApiCfg = opts.productApi ?? {}
+  mountConversationRuntime(ctx,{layout,router,definition,config:productApiCfg.conversation})
   const productApi = applyProductApi(ctx, {
     workflowAdmission: createWorkflowAdmissionHandler({ definition, jwksUrl: process.env.AGENT_DIRECTORY_AUTH_JWKS_URL }),
     enabled: productApiCfg.enabled ?? process.env.PRODUCT_API_ENABLED !== '0',
     host: productApiCfg.host ?? process.env.PRODUCT_API_HOST ?? '127.0.0.1',
     port: productApiCfg.port ?? Number.parseInt(process.env.PRODUCT_API_PORT ?? '8787', 10),
-    // MOBILE_SESSION_HISTORY_V1 / PRODUCT_API_AUTHENTICATION_V1: the
-    // dedicated history-only Tailnet listener config must reach the product
-    // api through the composition contract. Pure pass-through — the module
-    // owns default-OFF (enabled:false) and every fail-closed mount decision;
-    // an absent key keeps the listener OFF exactly as before.
+    // Dedicated history-only Tailnet config remains pass-through/default-OFF.
     history: productApiCfg.history,
   })
 
@@ -403,31 +385,7 @@ export async function composeProductionRuntime(options = {}) {
     layout,
   })
 
-  // ── scheduler engine over the production store (existing seams only) ─────
-  const invoker = createObservedSchedulerInvoker({ router, definition, writeEvidence, runtimeGeneration: opts.runtimeGeneration ?? process.env.AGENT_CORE_DEPLOYED_SHA })
-
-  // Admission observability remains a wrap around Router-owned delivery.
-  wireNotificationIngressDeliveryEvidence(router, writeEvidence)
-
-  const deliver = feishu !== undefined
-    ? createFeishuDeliver(feishu)
-    : async ({ job }) => {
-        throw new Error(`production-runtime: feishu channel not configured — cannot deliver job ${job?.id ?? '?'} (set FEISHU_CREDS_PATH or create the job with --no-deliver)`)
-      }
-
-  const store = new JobStore(layout.jobsStore, { runLogPath: layout.runsLog })
-
-  // AGENT_CORE_SCHEDULER_RUN_HISTORY_V1: structured execution history over
-  // its own directory (events.jsonl + monthly projections) and its own lock.
-  // It records facts at the engine's lifecycle boundaries and NEVER gates
-  // admission (R-H1); jobs.json / runs.jsonl authorities are untouched.
-  const history = await mountSchedulerHistoryRuntime({
-    ctx,
-    layout,
-    schedulerAuth: opts.schedulerAuth,
-    log,
-  })
-  const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
+  const { invoker, deliver, store, history, schedulerHealth } = await prepareSchedulerRuntime({ ctx, opts, layout, router, definition, feishu, writeEvidence, log })
 
   // Shared trusted Broker configuration is also consumed by principal
   // resolution below; neither value is ever accepted from model arguments.
@@ -444,143 +402,8 @@ export async function composeProductionRuntime(options = {}) {
   // the agentSessionAudit file with sanitized onAuditFailure signals.
   agentSessionRuntime.mount(ctx); mountExecutionHistoryRuntime(ctx, { layout, broker: opts.broker, log })
 
-  // AGENT_CORE_EXACT_PRINCIPAL_AGENT_RESOLUTION_V1 (accepted): the trusted
-  // LOCAL provider for the read-only agent_resolve_principal. Auth is the
-  // identity authority (exact UUID read; audience `agent-principal-resolution`
-  // × `auth.agent.resolve`); the local Agent Definition registry then proves
-  // exact deliverability. The token is acquired by the runtime for the
-  // ACTUAL caller through the same trusted credential seam as the gateway
-  // grant check and never reaches the model; the Auth origin is the fixed
-  // deployment configuration, never a tool argument.
-  ctx.provide('agentPrincipalResolutionAccess', createAgentPrincipalResolutionAccess({
-    definition,
-    authServiceOrigin: brokerAuthServiceOrigin,
-    acquireCallerToken: async ({ agentId }) => {
-      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-      if (credential === undefined) {
-        throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
-      }
-      try {
-        return await requestAccessToken({
-          credential,
-          authServiceOrigin: brokerAuthServiceOrigin,
-          resource: 'agent-principal-resolution',
-          scope: 'auth.agent.resolve',
-        })
-      } catch (error) {
-        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
-          code: error?.errorCode ?? 'transport_failure',
-        })
-      }
-    },
-  }))
-
-  // AGENT_CORE_AGENT_PRINCIPAL_REVERSE_RESOLUTION_V1 (accepted): the trusted
-  // LOCAL provider for the read-only agent_resolve_principal_by_agent. Auth is
-  // the identity authority (exact agentId -> stored Agent Principal UUID via
-  // the identity-directory reverse route; audience `identity-directory` x
-  // `auth.directory.read` — the baseline internal directory entitlement, no
-  // new scope/audience); the local Agent Definition registry then proves exact
-  // deliverability. Same trusted seam as the forward sibling: the token is
-  // acquired for the ACTUAL caller and never reaches the model, and the Auth
-  // origin is the fixed deployment configuration, never a tool argument. No
-  // canonical-lifecycle semantics are claimed or returned.
-  ctx.provide('agentPrincipalReverseResolutionAccess', createAgentPrincipalReverseResolutionAccess({
-    definition,
-    authServiceOrigin: brokerAuthServiceOrigin,
-    acquireCallerToken: async ({ agentId }) => {
-      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-      if (credential === undefined) {
-        throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
-      }
-      try {
-        return await requestAccessToken({
-          credential,
-          authServiceOrigin: brokerAuthServiceOrigin,
-          resource: 'identity-directory',
-          scope: 'auth.directory.read',
-        })
-      } catch (error) {
-        throw Object.assign(error instanceof Error ? error : new Error(String(error)), {
-          code: error?.errorCode ?? 'transport_failure',
-        })
-      }
-    },
-  }))
-
-  // AGENT_CORE_AGENT_DIRECTORY_TOOL_V1 (accepted): the trusted LOCAL provider
-  // for the read-only agent_directory (resolve/list). It reads ONLY the Agent
-  // Definition snapshot — the single canonical source of Agent existence/
-  // identity/enabled truth — so no second registry, cache or mapping exists;
-  // visibility is the accepted agent.definition.read no-scope baseline (no
-  // new auth audience/scope/grant, no boundary expansion), and a disabled
-  // Agent resolves explicitly with enabled:false (CTR-IAD-003 semantics).
-  ctx.provide('agentDirectoryAccess', createAgentDirectoryAccess({ definition }))
-
-  ctx.provide('workflowHumanPrincipalProjectionAccess', createWorkflowHumanPrincipalProjectionAccess({
-    workflowOrigin: workflowServiceOrigin,
-    acquireCallerToken: async ({ agentId }) => {
-      const credential = loadCredentialFor(brokerCredentialsFile, agentId)
-      if (credential === undefined) throw Object.assign(new Error('no credential bound'), { code: 'credential_unavailable' })
-      try {
-        return await requestAccessToken({
-          credential,
-          authServiceOrigin: brokerAuthServiceOrigin,
-          resource: 'svc-workflow',
-          scope: 'workflow.admin',
-        })
-      } catch (error) {
-        throw Object.assign(error instanceof Error ? error : new Error(String(error)),
-          { code: error?.errorCode ?? 'transport_failure' })
-      }
-    },
-  }))
-  // AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1: shared local coding-executor
-  // capability. Additive and agent-agnostic; refuses honestly (config_missing)
-  // until the Operator provisions dev-execution/{repos.json,backend.json}.
-  mountDevelopmentExecutionRuntime({ ctx, layout, log })
-
-  // Runtime-owned turn -> workflow_execution provenance mapping shared by
-  // every Workflow-scoped LOCAL capability. It is execution context only,
-  // never workflow business state.
-  mountWorkflowExecutionContextRuntime({ ctx })
-
-  // FIXED_OPERATION_V1: fixture-only fixed-operation LOCAL surface.
-  mountFixedOperationRuntime({ ctx, log })
-
-  const workflowExecution = mountWorkflowExecutionRuntime({
-    ctx,
-    layout,
-    router,
-    log,
-    ...(opts.workflowExecution === undefined ? {} : { config: opts.workflowExecution }),
-  })
-
-  // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the product-api
-  // /workflow-execution/* routes resolve this service at request time (the
-  // same late-binding discipline as schedulerHistory/schedulerTokenVerifier).
-  // traces = cross-process-fresh read model; kick = one coalesced poll
-  // trigger (latency only; the poll loop stays the correctness path).
-  mountWorkflowProgressRuntime({ ctx, ledger: workflowExecution.ledger, log })
-
-  ctx.provide('workflowExecutionAccess', {
-    traces: async ({ workflowInstanceId, nodeVisitId } = {}) => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionTrace(attempts, { workflowInstanceId, nodeVisitId })
-    },
-    // Fleet-level attention summary: the same cross-process-fresh snapshot,
-    // selected down to the attention-worthy executionStates. Read-only.
-    attention: async () => {
-      const attempts = await workflowExecution.ledger.snapshotFresh()
-      return projectExecutionAttention(attempts)
-    },
-    kick: (payload) => {
-      if (!workflowExecution.enabled) return { ok: false, code: 'poller_unconfigured' }
-      void payload // the kick carries no semantics; the poll re-reads svc truth
-      return workflowExecution.engine.kick()
-    },
-    ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
-  })
+  mountIdentityCapabilityRuntime({ ctx, definition, brokerCredentialsFile, brokerAuthServiceOrigin, workflowServiceOrigin })
+  const workflowExecution = mountWorkflowCapabilityRuntime({ ctx, layout, router, log, opts })
 
   const scheduler = new Scheduler({
     store,
@@ -636,13 +459,14 @@ export async function composeProductionRuntime(options = {}) {
       // handles + in-flight occurrences), quiesce_end after the EXISTING
       // controlled shutdown settled what it could. Evidence only: the receipt
       // never writes the recovery store and never stamps exit evidence.
-      const writeBoundary = (phase) => {
+      const writeBoundary = (phase, stopResult) => {
         try {
           appendRestartBoundaryReceipt({
             boundaryLog: layout.restartBoundaryLog,
             entry: {
               kind: 'restart_boundary',
               phase,
+              ...(stopResult === undefined ? {} : { stopResult }),
               pid: process.pid,
               ...(signal === undefined ? {} : { signal: String(signal) }),
               census: collectRuntimeRestartCensus({
@@ -658,16 +482,18 @@ export async function composeProductionRuntime(options = {}) {
         }
       }
       writeBoundary('quiesce_begin')
+      let stopResult = 'stop_failed'
       try {
-        // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
-        // (in-flight poll finishes, no further page) BEFORE the scheduler and
-        // the owned contexts (Router processes) are torn down — a late poll can
-        // then never deliver into a disposed Router nor outlive the result.
-        await workflowExecution.stop()
-        await scheduler.stop()
-        await ctx.disposeAll()
+        // Preserve drain order, attempt every cleanup, and report failure
+        // only after the owned Router processes finish their exit path.
+        const errors = []
+        for (const stop of [() => workflowExecution.stop(), () => scheduler.stop(), () => ctx.disposeAll()]) {
+          try { await stop() } catch (error) { errors.push(error) }
+        }
+        if (errors.length > 0) throw new AggregateError(errors, 'production runtime stop failed')
+        stopResult = 'stopped'
       } finally {
-        writeBoundary('quiesce_end')
+        writeBoundary('quiesce_end', stopResult)
       }
     },
   }

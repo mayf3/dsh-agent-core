@@ -1,0 +1,138 @@
+{
+  "kind": "E42_FIXED_PRE_NPM_INPUT_LINEAGE_SOURCE_CLOSURE_V1",
+  "status": "PROPOSED_MATERIAL_ONLY",
+  "author": "/root/sol_execution_continuation",
+  "newProductSource": [],
+  "newRuntimeReadset": [],
+  "semanticCeiling": "Documentary proof and original-producer material handoff. No executable producer accepted/implemented; missing original primary bodies remain unbound.",
+  "references": {
+    "resolution": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/ORIGINAL-E42-SAVED-C-Q3-PRECISE-MATERIAL-TECHNICAL-RESOLUTION.v1.json",
+      "bytes": 28091,
+      "sha256": "5b148da42a8e5a1f6850e2a5cfe240728d9b8343602d7629950e5c662b309633",
+      "role": "Original1378 technical disposition; preparation only"
+    },
+    "projectedInventory": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-source-readiness-diagnostic/business-readiness-producer-order-amendment/successor-r40-binding/successor-r41-binding-v2/small-output/R41-FILES-PROJECTED.json",
+      "bytes": 523003,
+      "sha256": "b1d4d5f4b6151c40cd2af36a48f68a082e30abc9c6468f232b777494d17c3a00",
+      "role": "Frozen expected artifact/member pins, not new archive hash/current installation"
+    },
+    "installPins": {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/b7-install-r41/b7-wired-inputs/INSTALL-PINS.json",
+      "bytes": 19835,
+      "sha256": "e673ee816035ba2eb31c25b89f988ba2199f30d909b1d0170b1f49c5b8a4a090",
+      "role": "Saved R41 recipe/pins; actualRootCodeDigests null",
+      "span": "appSource,artifactPins,actualRootCodeDigests"
+    },
+    "provision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/six-target-provision.mjs",
+      "bytes": 34571,
+      "sha256": "dd96d67eca9d27afb1d4b656f870b2a13f45e80d7ab51c444ed549ed0c5f3bb9",
+      "role": "Original fixed caller/control flow",
+      "span": "22-33,39-44,73-75,113-119,413-489"
+    },
+    "preparation": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-preparation.mjs",
+      "bytes": 38142,
+      "sha256": "00811809c5b1fb4a2d64b909f6410051733c8c0fafb97aa576fda97d605bd3b3",
+      "role": "Original provisioning-before-shadow",
+      "span": "152-158,247-252,285-288"
+    },
+    "nativePins": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-SOURCE-PINS.json",
+      "bytes": 1490,
+      "sha256": "90b2236a5d0474d258a4bf7d9f9a579d5a8d00394606e415aa2b3de80975711f",
+      "role": "Historical five expected native source pins"
+    },
+    "nativeAllowance": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/NPM-OPERATIONAL-ALLOWANCE.json",
+      "bytes": 1872,
+      "sha256": "9680a975a70400e03233535c0cb2675193242a06de27ec6ad1af19e057860145",
+      "role": "Conditional original model"
+    },
+    "heldBasis": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/HELD-SAVED-C-BASIS.v2.json",
+      "bytes": 13118,
+      "sha256": "e571653afb5357e355d350b5136e7ba7ba591a17c14fc530765cbb3f1c40e724",
+      "role": "Preserved unresolved basis"
+    },
+    "q2Delivery": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/delivery-v1/SOURCE-DELIVERY-TERMINAL-INDEX.json",
+      "bytes": 2423,
+      "sha256": "4b8f628aa01ea7f6ad1cdba4ac4bc51e0a510f76206ebf5ef66b7fab5becd47d",
+      "role": "Source delivery/current and prospective J; no adoption"
+    },
+    "archiveReadback": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/SAVED-ARCHIVE-MEMBERS.json",
+      "bytes": 4544,
+      "sha256": "03edbeb5fe43e9be763e535429ee7859816812cb876fbda54fa88bbcbf4fb9e9",
+      "role": "Selected R33/tgz member extraction; parent not rehashed"
+    },
+    "r30Readback": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/R30-DIRECT-MEMBER-READBACK.json",
+      "bytes": 894,
+      "sha256": "1122c85d232c9c1a441b7ec7039a5e20e1959b7d997d0ce779cba2bc522278f9",
+      "role": "Direct R30 member; parent not rehashed"
+    },
+    "bridgeReadback": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/DIRECT-IMPORT-MEMBER-READBACK.json",
+      "bytes": 708,
+      "sha256": "23a53e2b625d2eb7697541789b072ca9152d47f95a3505a3539c5fea6e32dc61",
+      "role": "Direct R33 import, conditional applicability"
+    },
+    "app-agent-provisioning-index.js": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+      "bytes": 21325,
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "role": "Selected saved archive body, not installed source"
+    },
+    "r30-app-agent-provisioning-index.js": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/r30-app-agent-provisioning-index.js",
+      "bytes": 21325,
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "role": "Selected saved archive body, not installed source"
+    },
+    "app-profile-production-package.json": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-profile-production-package.json",
+      "bytes": 815,
+      "sha256": "19cffb0937eecfbe2db6cc516e66efd706a1ce494b818a6fd823e49447220f33",
+      "role": "Selected saved archive body, not installed source"
+    },
+    "fixed-plugin-package.json": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/fixed-plugin-package.json",
+      "bytes": 4190,
+      "sha256": "ac6352ee0be926b459e6a2d523bf456f3233f86f3d978371ba7d41b5c2b2d359",
+      "role": "Selected saved archive body, not installed source"
+    },
+    "app-repo-core-bridge.js": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-repo-core-bridge.js",
+      "bytes": 4770,
+      "sha256": "b85c7f574cec3e2564ba092426c4501ac09caf057b9c975669a1072ed3228f4b",
+      "role": "Selected saved archive body, not installed source"
+    }
+  },
+  "archiveParentQualification": "Parent SHA attributed to frozen projected inventory/immutable package evidence. Only selected member bytes plus descriptor identity/size/stamp stability measured; archives not rehashed and installed targets not inspected.",
+  "missingExactPrimary": [
+    {
+      "consumer": "six-target-provision.mjs:73-75,422-423",
+      "requiredPath": "/usr/local/libexec/agent-core/app/packages/agent-provisioning/src/index.js",
+      "requiredSha256": "9dfabed9cf9046193d5ca73ce4e6cdd0fb60dff3e6befd68770a1b96e2822ec6",
+      "savedArchiveParent": null,
+      "savedMemberBytes": null,
+      "reason": "R30/R33 index members are e1c3; projected app-source is ba397. Transformation/installation join to9df is unbound, not a current installation claim."
+    },
+    {
+      "consumer": "npmInstallExact:113-119",
+      "required": "Original installation receipt and retained source/content closure for five90b pins plus npm command/alias resolution",
+      "savedParentAndMember": null,
+      "reason": "Old pin metadata has no current custody/retention-to-child join; C returned null/PUBLIC_CUSTODY and NPM_ALIAS."
+    },
+    {
+      "consumer": "doExecute:435-489",
+      "required": "Existing original preimage/input lineage of six exact profiles roots, root package/lock/shrinkwrap/workspace graph/node_modules baseline and deterministic pre-npm transform",
+      "savedParentAndMember": null,
+      "reason": "HOME_FILES captures only settings and nested profile package/patch, not prefix-root graph. C MISSING is not qualified leaf absence."
+    }
+  ]
+}

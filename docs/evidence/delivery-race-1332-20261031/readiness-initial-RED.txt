@@ -1,0 +1,79 @@
+✖ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (2.156167ms)
+✖ R1 readiness: absent capability and mismatched acknowledgement fail closed (0.646542ms)
+✖ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (0.480583ms)
+✖ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (0.234708ms)
+✖ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (0.763709ms)
+node:internal/modules/esm/resolve:272
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/src/delivery-readiness.js' imported from /private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/test/delivery-readiness.test.js
+    at finalizeResolution (node:internal/modules/esm/resolve:272:11)
+    at moduleResolve (node:internal/modules/esm/resolve:879:10)
+    at defaultResolve (node:internal/modules/esm/resolve:1006:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:708:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:728:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:766:56)
+    at #resolve (node:internal/modules/esm/loader:690:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:610:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:277:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:389:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///private/tmp/dsh-1332-delivery-race-fix/packages/demo-server/src/delivery-readiness.js'
+}
+
+Node.js v26.7.0
+✖ packages/demo-server/test/delivery-readiness.test.js (44.961708ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 88.313542
+
+✖ failing tests:
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:13:1
+✖ R1 readiness: initialize ready cannot bypass session preparation acknowledgement (2.156167ms)
+  TypeError: fx.proc.prepareDelivery is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:16:28)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:29:1
+✖ R1 readiness: absent capability and mismatched acknowledgement fail closed (0.646542ms)
+  TypeError: legacy.proc.prepareDelivery is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:32:36)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:45:1
+✖ R1 readiness: never-ready child respects caller deadline and late ack cannot admit (0.480583ms)
+  TypeError: fx.proc.prepareDelivery is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:50:30)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:63:1
+✖ R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement (0.234708ms)
+  TypeError: cold.proc.prepareDelivery is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:65:34)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:77:1
+✖ R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing (0.763709ms)
+  TypeError: fx.proc.prepareDelivery is not a function
+      at TestContext.<anonymous> (file:///private/tmp/dsh-1332-delivery-race-fix/packages/agent-router/test/process-lifecycle/delivery-readiness.test.js:79:32)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7)
+
+test at packages/demo-server/test/delivery-readiness.test.js:1:1
+✖ packages/demo-server/test/delivery-readiness.test.js (44.961708ms)
+  'test failed'

@@ -57,18 +57,24 @@ test('tracked closure: no production-runtime composition source carries a bare i
 
 test('tracked closure: the composition import resolves as a tracked file and yields the public surface', async () => {
   const composeSource = readFileSync(join(PRODUCTION_RUNTIME_SRC, 'compose.js'), 'utf8')
-  const importLine = composeSource
+  const helperSpecifier = composeSource.match(/import \{ mountIdentityCapabilityRuntime \} from '([^']+)'/)?.[1]
+  assert.notEqual(helperSpecifier, undefined, 'compose.js must import its identity composition helper')
+  assert.equal(helperSpecifier.startsWith('.'), true, 'the helper import must be a tracked relative path')
+  assert.match(composeSource, /mountIdentityCapabilityRuntime\(\{ ctx, definition, brokerCredentialsFile, brokerAuthServiceOrigin, workflowServiceOrigin \}\)/)
+  const compositionPath = resolve(PRODUCTION_RUNTIME_SRC, helperSpecifier)
+  const compositionSource = readFileSync(compositionPath, 'utf8')
+  const importLine = compositionSource
     .split('\n')
     .find((line) => line.includes('agent-identity-capabilities/index.js'))
   assert.notEqual(importLine, undefined,
-    'compose.js must import the identity package public entry by its tracked path')
+    'the identity composition helper must import the identity package public entry by its tracked path')
 
-  // Resolve exactly what the composition resolves: relative to compose.js,
+  // Resolve exactly what the composition resolves: relative to its helper,
   // with NO node_modules involvement — the git-archive-closure semantics.
   const specifier = importLine.match(/from\s+'([^']+)'/)?.[1]
   assert.notEqual(specifier, undefined)
   assert.equal(specifier.startsWith('.'), true, 'the import must be a tracked relative path')
-  const resolvedPath = resolve(dirname(join(PRODUCTION_RUNTIME_SRC, 'compose.js')), specifier)
+  const resolvedPath = resolve(dirname(compositionPath), specifier)
   assert.equal(existsSync(resolvedPath), true)
 
   const entry = await import(pathToFileURL(resolvedPath).href)

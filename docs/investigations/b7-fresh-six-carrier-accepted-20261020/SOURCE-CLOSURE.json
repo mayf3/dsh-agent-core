@@ -1,0 +1,117 @@
+{
+  "kind": "FIXED_FRESH_SIX_TARGET_OFFLINE_CARRIER_SOURCE_CLOSURE_V1",
+  "status": "PROPOSED_NOT_ACCEPTED",
+  "sourceRole": "Original1437 sole B7 source/packet/provisioning writer; original1378 technical decision actor, not generic OS issuer",
+  "existingSources": {
+    "sixTarget": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/six-target-provision.mjs",
+      "bytes": 34571,
+      "sha256": "dd96d67eca9d27afb1d4b656f870b2a13f45e80d7ab51c444ed549ed0c5f3bb9",
+      "span": "73-75,79-118,121-145,369-405,413-498"
+    },
+    "preparation": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-e38-cohort-binding-repair/successor-r39-binding-preparation/small-output/package-overlay/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-preparation.mjs",
+      "bytes": 38142,
+      "sha256": "00811809c5b1fb4a2d64b909f6410051733c8c0fafb97aa576fda97d605bd3b3",
+      "span": "152-158,247-252,264-271,279-290"
+    },
+    "selectedAPPIndex": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/app-agent-provisioning-index.js",
+      "bytes": 21325,
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "span": "33-40,291-309"
+    },
+    "fixedPackageJSON": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/primary-excerpts/fixed-plugin-package.json",
+      "bytes": 4190,
+      "sha256": "ac6352ee0be926b459e6a2d523bf456f3233f86f3d978371ba7d41b5c2b2d359"
+    },
+    "priorDocumentaryDecision": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/ORIGINAL-E42-PRE-NPM-LINEAGE-MATERIAL-TECHNICAL-DECISION.v1.json",
+      "bytes": 25463,
+      "sha256": "fb058716118c0f661bd4e42d5471756140f171b8230923bd593ace82467aee97"
+    },
+    "boundedExhaustion": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-ORIGINAL-RECORD-FOUR-TOKEN-BOUNDED-LOOKUP-OBS-20261020.json",
+      "bytes": 4298,
+      "sha256": "35e21c145c0fd14c4a07a6e4cf3ae665147e87f3da80aeee822a13d9f87603a4"
+    },
+    "closedDocumentarySource": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/SOURCE-CLOSURE.v1.json",
+      "bytes": 9231,
+      "sha256": "ad2e75218d00a73b62e90283d06dcdc045ca4c47f344286b45a5843953c9901e"
+    },
+    "actualScopeFact": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/HELD-C-FIXED-SIX-SCOPE-FACT.v1.json",
+      "bytes": 1463,
+      "sha256": "72d1b20b1f646474c7eabe068d98ba6faede5a4b379b6351c87f422950aeee79"
+    },
+    "docsMain": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/fixed-pre-npm-input-lineage-and-extra-membership-basis/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+      "bytes": 4431,
+      "sha256": "be49d9bc73580fcffec37341ef0a0d28f56b6f439878e3faae113a3ee7530356"
+    }
+  },
+  "proposedSemanticCeiling": [
+    {
+      "file": "scripts/lib/deployment-reuse/six-target-provision.mjs",
+      "changes": [
+        "Fixed-six all-homes-ABSENT precondition before PreimageStore/Journal creation; no PARTIAL/foreign-home adoption",
+        "Replace npmInstallExact with fixed sealed payload materialization and single fixed bin link; no npm invocation or configuration/graph consumption",
+        "Explicit provisioning module expected pin9df->selected saved APP member e1c; no live read now or equivalence assertion",
+        "Preserve existing peer/farm/auth guard effects, write-ahead journal and fresh-only recovery ownership; no fallback to npm"
+      ]
+    },
+    {
+      "file": "scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "state": "PROPOSED_NEW_NOT_EXISTING",
+      "functions": [
+        "buildFixedPluginPayloadFromPinnedArtifact() [offline fixed inputs/output]",
+        "materializeFixedPluginAtFreshHome(home,originalJournal,originalCreated) [internal fixed target only]"
+      ],
+      "changes": [
+        "One offline generation from fixed869b artifact to closed regular/directory/internal-link payload and catalog",
+        "Root runtime copies only this root-sealed catalog/payload; no tar/npm/graph/config/native-path reader",
+        "Bounded held-source/target copy and existing recovery integration"
+      ]
+    },
+    {
+      "file": "scripts/lib/deployment-reuse/b7-preparation.mjs",
+      "changes": [
+        "Fresh-only selected alternative stops on any existing batch before reading/recovering old PROVISIONING at242-246; no old partial record mutation",
+        "Necessary package/copy source binding only; original doExecute-before-shadow order and original rollback remain",
+        "No change to caller root/domain/identity, outer, source checks, native TX/ACK/COMMIT, credential interface or unrelated targets"
+      ]
+    }
+  ],
+  "necessaryMechanicalCeiling": [
+    "SC/tool/worker/manifest/op/packet/policies/AUTH/PIN/capsule/verifier/copied-layout and one derived new fixed Q2 subject binding, only after semantic acceptance/source freeze; no current changes"
+  ],
+  "newReadBoundaryNow": [],
+  "futureOfflineReadBoundaryRequiringAcceptance": [
+    "One fixed plugin tgz869b original public artifact, complete archive headers/content for offline payload+catalog generation before any P0 runtime admission; not R30/R33 archives or live failed paths",
+    "Exact saved public APP import closure only if original source proof cannot be reused; specific absent member/body/pin must be listed before reading, not permission to reopen archives/SourceRoot/secret-bearing runtime files"
+  ],
+  "runtimeReadDifferenceProposed": [
+    "Six fixed home terminal absence/custody guard as original business write exclusion, never profiles manifests/locks/native npm failed inputs or quantities",
+    "New immutable root-sealed payload/catalog, fixed source-relative path and exact digest/size set; no caller selectors"
+  ],
+  "runtimeWriteDifferenceProposed": [
+    "Fresh home/plugin tree and one bin link copied from closed payload, original six target roots only",
+    "Fixed new packet payload/catalog and original private journal/preimage metadata; no foreign-home overwrite or native npm cache writes"
+  ],
+  "notAuthorizedNow": [
+    "Any implementation",
+    "New source/archive/live read beyond held source in this closure",
+    "Sampling or runtime call",
+    "F/adoption/install/register/attempt/TX/context",
+    "Changing identity/permissions/root/channel/sourceRoot",
+    "HR/Auth effects"
+  ],
+  "unboundBeforeUse": [
+    "Actual built catalog counts/rounded bytes and module/caller final source pins",
+    "New immutable candidate identifiers, true J and full remaining/affordable plan",
+    "Actual home absence/phase/caller/window/custody and original mandatory guards",
+    "Source-readiness P3 cause/recovery: not changed or solved by this mechanism"
+  ]
+}

@@ -20,8 +20,9 @@
  * field. Identity flows only through the injected `deps.resolvePrincipal`.
  */
 
+import { COMPLETE_BODY_ID, completeFailure } from './capabilities/workflow-definition-read/complete-contract.js'
 import { assertValidManifest, invoke } from './mapping.js'
-import { sanitizeErrorDetail } from './error-detail-sanitizer.js'
+import { sanitizeErrorDetail } from './transport/error-detail-sanitizer.js'
 
 const MODEL_ANNOTATIONS = ['description', 'title', 'default', 'examples']
 
@@ -202,10 +203,13 @@ export function buildToolDefinition({ manifest: rawManifest, handlers, deps = {}
         `Supported operations: ${manifest.operations.map((o) => o.name).join(', ')}.` +
         renderPerOperationRequired(manifest.operations),
       parameters,
+      nativePolicyDiscriminators: [selector],
       output: {
         schema: outputSchema,
         render: (args, value) =>
-          value && value.ok === true
+          wireId === COMPLETE_BODY_ID
+            ? [{ type: 'text', text: JSON.stringify(value?.ok === true ? value : completeFailure(value?.error, manifest)) }]
+            : value && value.ok === true
             ? [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) = ${JSON.stringify(value.result)} (ok: true)` }]
             : [{ type: 'text', text: `${wireId}: ${args[selector]}(${renderArgs(args)}) failed: ${renderError(value?.error, args[selector])}` }],
       },

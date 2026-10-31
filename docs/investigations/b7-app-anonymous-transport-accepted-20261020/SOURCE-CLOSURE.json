@@ -1,0 +1,36 @@
+{
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/PROPOSED-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT.v1.md",
+    "bytes": 7857,
+    "sha256": "9f162062fd8bef1e840609b42dabbbb6c715183a828c22482395f563bcbc513f"
+  },
+  "actual_new_primary": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ACTUAL-CLI-REDIRECT-OBSERVATION.v1.json",
+    "bytes": 3229,
+    "sha256": "641b55272985fba99a6753c0eb6059ed88eb550972734a200c3d99a219287ac4"
+  },
+  "accepted_decision": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/ORIGINAL-FIXED-SELECTED-E1C-APP-GIT-EXPORT-TECHNICAL-DECISION.v1.json",
+    "bytes": 27143,
+    "sha256": "64b13dc07372e8b00d5d596be5e51dbd14e22a9ea11e3c57907d63aee11ea26f"
+  },
+  "docs_main": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/DOCS-MAIN-TERMINAL-INDEX.v1.json",
+    "bytes": 2430,
+    "sha256": "33be1669e4bfd7b41d985c33df1e0cab00ba55d428ba933ae556de5273fb4def"
+  },
+  "preflight": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/implementation-v1/DEVELOPMENT_PREFLIGHT.json",
+    "bytes": 3135,
+    "sha256": "9986e884a9810a561f85e3900b5545e0de5068bf30b40672852a2f1d0c91501e"
+  },
+  "source_helper_written": false,
+  "actual_export_issued": 0,
+  "current_E_remaining": 1,
+  "proposed_delta": "Same <=500line helper only; authenticatedCLI transport -> fixed unauthenticateddirectHTTPS explicitnewHTTPpurpose/principal/route decision. No token/client/Grant/OSidentity/config changes.",
+  "fixed_repo": "mayf3/dsh-agent-core",
+  "fixed_commit": "72a097bd65f05adf26d7929dbb4d32384e124d37",
+  "exact_readset_output_bounds": "Original64b13 unchanged; no newread performed",
+  "role": "Original1378 decides actualmandate/preciseuserconstraint. NotautomaticOS/networkauthority.",
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-selected-e1c-app-source-export-contract/fixed-bounded-transport-amendment/ORIGINAL-FIXED-BOUNDED-PUBLIC-GIT-TRANSPORT-AMENDMENT-TECHNICAL-DECISION.v1.json"
+}

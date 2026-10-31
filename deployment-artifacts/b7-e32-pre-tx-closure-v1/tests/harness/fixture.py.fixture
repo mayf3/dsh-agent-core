@@ -1,0 +1,99 @@
+"""Original server installation/handle + paired client, owned temp; root IDs modeled.
+Real bytes/modes/FD traversal/flock/fsync/EXCL. No subprocess/network/production I/O.
+"""
+import ast,copy,fcntl,importlib.util,json,os,pathlib,re,socket,stat,subprocess,sys,types
+from unittest.mock import patch
+sys.dont_write_bytecode=True
+R=pathlib.Path(__file__).resolve().parents[1]
+spec=importlib.util.spec_from_file_location('e32_base',R/'baseline/test_base.py');b=importlib.util.module_from_spec(spec);spec.loader.exec_module(b)
+OP='b7-packet-r31-19e485b2f9fa79a5-e32';PACKET='b7-native-execution-r31-c71fd2cc';MAN='19e485b2f9fa79a5603a14536c5613be5f0c4c065d182ab420b6c7809a857109';SRC='2a881af0daf50547881245f0cfc556d2f52af1f632b0662abc7754cefb3626ff'
+REG='27151bf6484d28b916b790a41a66019aa5161f5418c0970c905a68c22d4e1edd';EX='ac2d3e6e04864217d022bbcae35c7ef376081bc72af1e85b70c15ad4420ed15f'
+STATUS=b.STATUS;DISPOSE=b.DISPOSE
+sha=b.sha;canon=b.canonical
+class Candidate(b.Candidate):
+ def __init__(self,mode):b.SERVER=R/mode/'deployment_system.py';b.CLIENT=R/mode/'ds_client.py';super().__init__()
+class Fixture(b.Fixture):
+ def _execute_actual_installation(self):
+  if not hasattr(self,'host_preinstallation'):
+   self.host_preinstallation=dict(self.ds.__dict__)
+   for k in ('OBSERVATION_ACTIONS','LEGACY_ACTION_FIELDS','OBSERVATION_CONFIG_PATHS'):self.host_preinstallation[k]=copy.deepcopy(self.host_preinstallation[k])
+  for original in self.candidate.wiring:
+   node=copy.deepcopy(original)
+   for call in ast.walk(node):
+    if isinstance(call,ast.Call) and isinstance(call.func,(ast.Name,ast.Attribute)):
+     name=call.func.id if isinstance(call.func,ast.Name) else call.func.attr
+     if name in {'install_hooks','install_execution_hooks'}:
+      for i,arg in enumerate(call.args):
+       if isinstance(arg,ast.Dict):call.args[i]=b.PathRelocation(self).visit(arg)
+   exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),'actual-server-install','exec'),self.ds.__dict__)
+   for mod in list(self.ds.__dict__.values()):
+    if isinstance(mod,types.ModuleType) and isinstance(getattr(mod,'E32',None),dict) and id(mod) not in self.configured_modules:
+     self.configured_modules.add(id(mod));ep=copy.deepcopy(self.ds._b7_execution_instance.policy);self.state['execution_policy_sha256']=sha(canon(ep));self.exec_raw=canon(self.state)
+     if not getattr(self,'restarting',False):self.put(self.exec_path,self.exec_raw)
+     else:assert self.exec_path.read_bytes()==self.exec_raw
+     self.fixture_pins.update(execution_record_sha256=sha(self.exec_raw),execution_policy_sha256=sha(canon(ep)))
+     mod.E32.update(self.fixture_pins);mod.ORIGINAL_EXECUTION_POLICY=ep
+ def __init__(self,c):
+  saved=tuple(getattr(b,k) for k in ('OP','PACKET','MANIFEST','SOURCE','OLD_REG_POLICY','OLD_EXEC_POLICY'))
+  for k,v in zip(('OP','PACKET','MANIFEST','SOURCE','OLD_REG_POLICY','OLD_EXEC_POLICY'),(OP,PACKET,MAN,SRC,REG,EX)):setattr(b,k,v)
+  try:super().__init__(c)
+  finally:
+   for k,v in zip(('OP','PACKET','MANIFEST','SOURCE','OLD_REG_POLICY','OLD_EXEC_POLICY'),saved):setattr(b,k,v)
+  self.mod=getattr(self.ds,'_b7_e32_closure',None);self.isolation_errors=[];self.metadata_overrides={}
+  self.snapshot_root=pathlib.Path(self.policy['snapshotRoot']);self.snapshot_root.mkdir(parents=True);self.snapshot_root.chmod(0o700)
+  self.snapshot_source=R/'snapshot'
+  for row in self.policy['files']:self.put(self.snapshot_root/row['relative'],(self.snapshot_source/row['relative']).read_bytes(),0o600)
+  self.native_absences=[self.tx_path.parent/n for n in ('activation-code-input','b7-preparation-input.json','b7-six-target-batch.json','b7-six-target-batch.json.new','migration-transaction.json','migration-fence.json')]+[self.holder_path,pathlib.Path(self.relocate('/usr/local/share/agent-core/artifacts'))]
+  for p in self.native_absences:p.parent.mkdir(parents=True,exist_ok=True)
+  self.tx_path.parent.chmod(0o700);self.reg_path.parent.chmod(0o755);pathlib.Path(self.ds.STATE_ROOT).chmod(0o770)
+  if self.mod:
+   self.mod.E32.update(snapshot_root=str(self.snapshot_root),migration_root=str(self.tx_path.parent),native_absences=[str(p) for p in self.native_absences])
+   self._project_os()
+ def _project_os(self):
+  m=self.mod;realos=os;fx=self
+  def fdpath(fd):return fcntl.fcntl(fd,50,b'\0'*1024).split(b'\0',1)[0].decode()
+  def project(s,path):
+   attrs={n:getattr(s,n) for n in dir(s) if n.startswith('st_')};attrs['st_uid']=0;attrs['st_gid']=80 if str(pathlib.Path(path).parent.resolve()/pathlib.Path(path).name).startswith(str(fx.reg_path.parent.resolve())) or str(pathlib.Path(path).parent.resolve()/pathlib.Path(path).name) in (str(pathlib.Path(fx.ds.STATE_ROOT).resolve()),str((pathlib.Path(fx.ds.STATE_ROOT)/'mutation.lock').resolve())) else 0
+   attrs.update(fx.metadata_overrides.get(str(pathlib.Path(path).parent.resolve()/pathlib.Path(path).name),{}));return types.SimpleNamespace(**attrs)
+  def fstat(fd):return project(realos.fstat(fd),fdpath(fd))
+  def statcall(path,**kw):
+   full=str(path) if not kw.get('dir_fd') else str(pathlib.Path(fdpath(kw['dir_fd']))/path)
+   if not (pathlib.Path(full).parent.resolve()/pathlib.Path(full).name).is_relative_to(fx.root.resolve()):fx.isolation_errors.append('stat outside owned root');raise AssertionError(full)
+   if str(pathlib.Path(full).parent.resolve()/pathlib.Path(full).name) in {str(pathlib.Path(p).resolve()) for p in fx.denied_paths}:raise PermissionError(13,'modeled denied fixed observation')
+   return project(realos.stat(path,**kw),full)
+  facade=types.SimpleNamespace(**{n:getattr(os,n) for n in dir(os)});facade.fstat=fstat;facade.stat=statcall;facade.fchown=lambda fd,uid,gid:(uid==0 and gid==80) or (_ for _ in ()).throw(AssertionError('wrong chown'))
+  m.os=facade;m._FS_ROOT=str(self.root)
+  native=m._rename_excl
+  def guarded(e,parent,src,dst):
+   s=realos.fstat(parent);want=fx.reg_path.parent.stat()
+   good=(s.st_dev,s.st_ino)==(want.st_dev,want.st_ino) and dst in (fx.auth_path.name,fx.terminal_path.name) and re.fullmatch(r'\.'+re.escape(dst)+r'\.[a-f0-9]{32}\.tmp',src)
+   if not good:fx.isolation_errors.append('native syscall boundary');raise AssertionError('unsafe native')
+   return native(e,parent,src,dst)
+  m._rename_excl=guarded
+  ns=dict(self.ds.__dict__,os=facade,stat=stat,TEST_MODE=False,errno=__import__('errno'))
+  nodes=[copy.deepcopy(n) for n in self.candidate.tree.body if isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in {'ObservationPath','_observation_identity','_observation_oserror'}]
+  class RootMap(ast.NodeTransformer):
+   def visit_Constant(self,node):
+    if node.value=='/':return ast.copy_location(ast.Constant(str(fx.root)),node)
+    if node.value=='/private/var/db/agent-deploy-system':return ast.copy_location(ast.Constant(fx.ds.STATE_ROOT),node)
+    return node
+  exec(compile(ast.fix_missing_locations(RootMap().visit(ast.Module(body=nodes,type_ignores=[]))),'actual-protected-traversal', 'exec'),ns);self.ds.ObservationPath=ns['ObservationPath']
+ def request(self,action=STATUS,peer=502,op=OP,**fields):
+  with patch.object(subprocess,'Popen',side_effect=AssertionError('forbidden process')) as spawn,patch.object(socket,'socket',side_effect=AssertionError('forbidden network')) as network:result,restart=self.ds.handle(canon(dict(action=action,operation_id=op,**fields)),peer=peer)
+  assert spawn.call_count==network.call_count==0,'forbidden effects cannot count as semantic refusal'
+  assert restart is None;assert not self.isolation_errors;return result
+ def client_request(self,action=STATUS,op=OP,**fields):
+  original=self.ds.handle
+  def checked(raw,peer=None):
+   with patch.object(subprocess,'Popen',side_effect=AssertionError('forbidden process')) as spawn,patch.object(socket,'socket',side_effect=AssertionError('forbidden network')) as network:result=original(raw,peer=peer)
+   assert spawn.call_count==network.call_count==0,'forbidden effect';assert not self.isolation_errors;return result
+  self.ds.handle=checked
+  try:return super().client_request(action,op=op,**fields)
+  finally:self.ds.handle=original
+
+ def restart(self):
+  old=self.mod;before=self.snapshot();self.restarting=True;self.ds.__dict__.clear();self.ds.__dict__.update(self.host_preinstallation)
+  for k in ('OBSERVATION_ACTIONS','LEGACY_ACTION_FIELDS','OBSERVATION_CONFIG_PATHS'):self.ds.__dict__[k]=copy.deepcopy(self.host_preinstallation[k])
+  self._execute_actual_installation();self.execution=self.ds._b7_execution_instance;self.registration=self.ds._b7_registration_instance;self.mod=self.ds._b7_e32_closure
+  self.mod.E32.update(old.E32);self._project_os();assert self.execution._e32_durability=={};assert self.snapshot()==before
+  if hasattr(self,'client'):sys.modules.pop(self.client.__name__,None);del self.client

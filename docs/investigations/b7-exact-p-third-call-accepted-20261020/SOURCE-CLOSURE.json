@@ -1,0 +1,142 @@
+{
+  "kind": "EXACT_NEW_NUMERICAL_THIRD_CALL_AND_RETAINED_BOUNDARY_MATERIAL_V1_1",
+  "at": "2026-10-19T18:47:34.549671+00:00",
+  "state": "FROZEN_PROPOSED_MATERIAL_REVIEW_PENDING_NOT_ACCEPTED",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/PROPOSED-EXACT-P-CAP-AND-THIRD-PACKAGING-BOUNDARY.v1.1.md",
+    "bytes": 9832,
+    "sha256": "23a4621b7de85c06e0603adf30993bc046a226fffb5b1ed7cb73e9a474eecf22"
+  },
+  "currentNoThirdCompatible": false,
+  "currentPackagingTotal": 2,
+  "currentPackagingRemaining": 0,
+  "collectorTotal": 2,
+  "collectorRemaining": 0,
+  "sourceOrInputEffectsInThisUnit": 0,
+  "bodyAlreadySourceReviewed": false,
+  "scope": "Only new actual P excess12288, two payload numerical guards and explicit third-call authority exception; original A/source/runtime/APP not re-reviewed. No source modified/input read/test/df.",
+  "arithmetic": {
+    "P": 192733184,
+    "oldCap": 192720896,
+    "delta": 12288,
+    "old12P": 2312650752,
+    "new12P": 2312798208,
+    "delta12P": 147456,
+    "proposedCatalogBytes": 4694846,
+    "proposedCatalogRounded": 4698112
+  },
+  "fixedSourceSpans": [
+    {
+      "line": 112,
+      "meaning": "catalog/runtime P comparison proposed12288increase"
+    },
+    {
+      "line": 220,
+      "meaning": "logical limit192720896 unchanged"
+    },
+    {
+      "line": 241,
+      "meaning": "builder P comparison proposed12288increase"
+    }
+  ],
+  "noThirdCurrentRule": "Explicitly incompatible until qualified confirms an effective exact exception; no mere source/numeric PASS or path/name grants a call.",
+  "dispatch": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "sender": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "recipientRole": "original qualified technical scope, jurisdiction over count exception must be explicit, not presumed"
+  },
+  "pins": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/PROPOSED-EXACT-P-CAP-AND-THIRD-PACKAGING-BOUNDARY.v1.1.md",
+      "bytes": 9832,
+      "sha256": "23a4621b7de85c06e0603adf30993bc046a226fffb5b1ed7cb73e9a474eecf22"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/BUILD-TERMINAL-INDEX.v1.json",
+      "bytes": 6415,
+      "sha256": "46007dff9d3319c8d2447522514fc079ac98386801ac121d20475574fe0a4fcc"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/RESULT-READBACK.json",
+      "bytes": 2341,
+      "sha256": "22afc7c91f5a47f399c2ced1bb76922f035cd2db9c5ef9e047cbac288198de9a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/PROCESS.json",
+      "bytes": 1291,
+      "sha256": "f9655c18fd6668c6b238960600faaf26ffbaa6c17f2fe8be2f79fa2e66a4eda0"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/stdout.raw",
+      "bytes": 713,
+      "sha256": "57d582baa27b71a21494f09bd5067bfead2cd228ad5722f15c8e86474effca76"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/INTENT.json",
+      "bytes": 10228,
+      "sha256": "7a9f53bfeab1354709f2c7c30b2c9195f1cc49569ed36627bfcaeb3c0c95c06f"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/actual-fixed-artifact-continuation/ISSUED.json",
+      "bytes": 457,
+      "sha256": "7ab1d3e7cd3e58d9a33e5f3afa649dba0fd3e1073361be18fe4b3af08ffc90d5"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/independent-sol-readback/CONTINUATION-A-AFFECTED-SOURCE-RECEIPT.v1.json",
+      "bytes": 18874,
+      "sha256": "1bd50ca8d0abacc71590c4acc00e18fac7105b4df44a5a95790796bd6d41882f"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/SOURCE-A-TERMINAL-INDEX.v1.json",
+      "bytes": 4383,
+      "sha256": "e28bdb6edeeddd13adbb488f105cbe1033dd671e795dc7ed68dd1935b609ad7a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 35114,
+      "sha256": "883fa2a815a84438276113ad8e31bec2ce627b9dc43ff8fd5b4fccbe5766622b"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/offline-continuation-v1/OWNED-B-BUDGET.v1.json",
+      "bytes": 2673,
+      "sha256": "c43cdf31c60ab94284959a2dd265d8db05b94a286f0ef846e6a6a5a4cd5a59ed"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/ORIGINAL-FIXED-869B-OFFLINE-CARRIER-CONTINUATION-TECHNICAL-DECISION.v2.1.json",
+      "bytes": 27978,
+      "sha256": "dc465111190fab7fe88cf5c987950d40830c660836423bca67a2a929acd7d53c"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "bytes": 3901,
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/docs-review-worktrees/e42-fixed-offline-continuation-accepted-20261020/docs/specs/AGENT_CORE_B7_FIXED_OFFLINE_CARRIER_CONTINUATION_V1.md",
+      "bytes": 14790,
+      "sha256": "3af49b3bcd981a8cd096c25b40062cdeac6c8692ff537a64ad1bc5a8dc7d71d5"
+    }
+  ],
+  "previousUnit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/PROPOSED-EXACT-P-CAP-AND-THIRD-PACKAGING-BOUNDARY.v1.md",
+    "bytes": 8117,
+    "sha256": "f41a1f4dfa576878cb607648512937e775813bf3a2f5a4b4474d00304770a25a"
+  },
+  "previousIndex": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/INDEX.v1.json",
+    "bytes": 6205,
+    "sha256": "95c703a2ec1a9afb5afc2ee57f6f573bef0d2be3015076cefedcc393d24d2cbd"
+  },
+  "threeSeparatePoints": [
+    "N numeric and two-guard source exception",
+    "E explicit third invocation and mandate jurisdiction",
+    "R quantity-only evidence/no artifact/independent APP gap"
+  ],
+  "acceptedSpec": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/docs-review-worktrees/e42-fixed-offline-continuation-accepted-20261020/docs/specs/AGENT_CORE_B7_FIXED_OFFLINE_CARRIER_CONTINUATION_V1.md",
+    "bytes": 14790,
+    "sha256": "3af49b3bcd981a8cd096c25b40062cdeac6c8692ff537a64ad1bc5a8dc7d71d5"
+  },
+  "decision_output": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-complete-p-cap-and-third-packaging-boundary/ORIGINAL-EXACT-P-CAP-AND-THIRD-PACKAGING-BOUNDARY-TECHNICAL-DECISION.v1.json"
+}

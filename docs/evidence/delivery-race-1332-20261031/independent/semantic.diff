@@ -1,0 +1,1480 @@
+diff --git a/packages/agent-router/src/index.js b/packages/agent-router/src/index.js
+index 4250cb9249e12de59762d0ceb8e67873ec21092f..bccbcb955aca349432bedaadbb4c6b2b6aa80ce0 100644
+--- a/packages/agent-router/src/index.js
++++ b/packages/agent-router/src/index.js
+@@ -68,7 +68,7 @@
+ 
+ import z from '@deepseek-ai/schemastery'
+ import { homedir, hostname } from 'node:os'
+-import { join } from 'node:path'
++import { dirname, join } from 'node:path'
+ import { AgentProcess } from './process/index.js'
+ import { resolveDeadlineConfig } from './deadline-config.js'
+ import { TurnReconciliationStore } from './reconciliation/index.js'
+@@ -283,6 +283,7 @@ export function apply(ctx, config) {
+   const routeChain = createRouteChainExecutor({
+     log,
+     ensureRunningForRoute: registry.ensureRunningForRoute,
++    deadLetterDirectory: join(dirname(recoveryFile ?? storeFile), 'delivery-dead-letters'),
+     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
+     resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
+     ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
+@@ -318,6 +319,8 @@ export function apply(ctx, config) {
+   ctx.effect(() => () => registry.dispose())
+ 
+   const service = {
++    deliveryFailuresSnapshot: () => routeChain.deliveryFailuresSnapshot(),
++    getDeliveryDeadLetter: id => routeChain.getDeliveryDeadLetter(id),
+     ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
+     pluginName: name,
+     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
+diff --git a/packages/agent-router/src/ingress-delivery.js b/packages/agent-router/src/ingress-delivery.js
+index fae7b3ada0436c24770a23924493e3ef35b2c8dc..09ebb8ace1bab0c87910e2373e4d0eec57480232 100644
+--- a/packages/agent-router/src/ingress-delivery.js
++++ b/packages/agent-router/src/ingress-delivery.js
+@@ -38,7 +38,6 @@ export function createIngressDelivery({
+   routeChain, resolveAgentRef, resolveAgentById, resolveChannelConversation, resolveEffectiveWorkspace,
+   registerAuthenticatedIngress,
+ }) {
+-  /** Delivery V0 acceptance log (evidence surface; in-memory only). */
+   const deliveries = []
+   /**
+    * Deliver one ingress message through the channel model:
+@@ -193,7 +192,7 @@ export function createIngressDelivery({
+       log.error(`delivery to ${binding?.activeAgentId ?? 'unresolved'} failed during ${failureStage}: ${error?.code ?? 'unclassified'}`)
+       if (feishu !== undefined && isFeishuEntry) {
+         try {
+-          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.message ?? error}`)
++          await feishu.reply(feishu.replyTargetFor(ingress).replyTo(ingress.messageId), `[agent-core] delivery failed: ${error?.deliveryFailure?.userMessage ?? error?.message ?? error}`)
+         } catch { /* best effort */ }
+         // CTR-I2-015 observer external-delivery lifecycle point (failure
+         // receipt path — CANARY-C expects exactly one failure delivery).
+@@ -473,7 +472,6 @@ export function createIngressDelivery({
+     }
+   }
+ 
+-  /** Test/ops: in-memory Delivery V0 acceptance log snapshot. */
+   function deliveriesSnapshot() {
+     return deliveries.map(d => ({ ...d }))
+   }
+diff --git a/packages/agent-router/src/process-registry-route-gate.js b/packages/agent-router/src/process-registry-route-gate.js
+index 98f9660aeb3565f72b5d28b701d852eef90c107f..ab08339590439239d9d916f201684353ed9d3c37 100644
+--- a/packages/agent-router/src/process-registry-route-gate.js
++++ b/packages/agent-router/src/process-registry-route-gate.js
+@@ -132,7 +132,7 @@ export function createRouteGate({
+       if (hasExactDeathEvidence(proc)) {
+         lifecycleSlots.delete(agentId)
+         log.log(`process for ${agentId} is dead (exit ${proc?.exit?.code ?? 'unobserved'}, state ${proc?.state ?? 'n/a'}); will respawn`)
+-      } else if (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity) {
++      } else if (!proc.deliveryTransportFailed && (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity)) {
+         return { status: 'ready', proc }
+       } else {
+         if (busyProcess(proc)) {
+diff --git a/packages/agent-router/src/process-registry.js b/packages/agent-router/src/process-registry.js
+index 2d6287d67e5f3de42492dae633e47611b9bfb782..ae4453fac408d0958ba5ce93b5fae082756de3c2 100644
+--- a/packages/agent-router/src/process-registry.js
++++ b/packages/agent-router/src/process-registry.js
+@@ -247,6 +247,10 @@ export function createProcessRegistry({
+     }
+     const initial = lifecycleSlots.get(agentId)
+     if (initial?.state === 'READY') {
++      if (initial.processRef?.deliveryTransportFailed) return routeGate.ensureRunningForRoute(agentId).then(result => {
++        if (result.status === 'ready') return result.proc
++        throw Object.assign(new Error('transport generation is retiring'), { code: 'AGENT_PROCESS_REAPING' })
++      })
+       if (!hasExactDeathEvidence(initial.processRef)) {
+         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
+         return Promise.resolve(initial.processRef)
+diff --git a/packages/agent-router/src/process/agent-process.js b/packages/agent-router/src/process/agent-process.js
+index f9a915052fd13eb1c4d7ab079a69e1c572a679c2..b9e4b31db82a6c0c12d5070504b8a9dfebdab987 100644
+--- a/packages/agent-router/src/process/agent-process.js
++++ b/packages/agent-router/src/process/agent-process.js
+@@ -37,6 +37,7 @@ import { eventCorrelationMethods } from './event-correlation.js'
+ import { turnExecutionMethods } from './turn-execution.js'
+ import { spawnMethods } from './spawn.js'
+ import { shutdownMethods } from './shutdown.js'
++import { deliveryReadinessMethods } from './delivery-readiness.js'
+ 
+ const sleep = (ms) => new Promise((resolve) => {
+   const timer = setTimeout(resolve, ms)
+@@ -328,6 +329,7 @@ for (const group of [
+   turnExecutionMethods,
+   spawnMethods,
+   shutdownMethods,
++  deliveryReadinessMethods,
+ ]) {
+   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(group))) {
+     if (key === 'constructor') continue
+diff --git a/packages/agent-router/src/process/delivery-readiness.js b/packages/agent-router/src/process/delivery-readiness.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..d146068a66d9cf30b298949ca2b0ef6391a4b88d
+--- /dev/null
++++ b/packages/agent-router/src/process/delivery-readiness.js
+@@ -0,0 +1,59 @@
++/** Application-level session preparation, separate from process initialize.
++ * The versioned acknowledgement proves session creation/resume completed.
++ * It does not claim that a later provider network request will succeed;
++ * connection-level failures remain the delivery recovery layer's concern.
++ */
++import { envelopeCarrier, monotonicNowMs } from './state-machine.js'
++
++function preparationError(code, message) {
++  return envelopeCarrier('not_admitted', null, code, message, { deliveryPreparation: true })
++}
++
++export const deliveryReadinessMethods = {
++  async prepareDelivery(sessionId, opts = {}, { deadlineMono } = {}) {
++    const gate = this.preAdmissionError('turn', sessionId, '', 0, opts)
++    if (gate !== null) throw gate
++    if (this.initializeEvidence?.deliveryReadiness?.version !== 1) {
++      throw preparationError('AGENT_DELIVERY_PREPARE_PROTOCOL',
++        'child does not support versioned delivery preparation')
++    }
++    if (deadlineMono !== undefined && !Number.isFinite(deadlineMono)) {
++      throw new TypeError('delivery preparation requires a finite monotonic deadline')
++    }
++    const deadline = Math.min(deadlineMono ?? Infinity,
++      monotonicNowMs() + this.deadlines.initializeTimeoutMs)
++    if (deadline <= monotonicNowMs()) {
++      throw preparationError('AGENT_DELIVERY_PREPARE_TIMEOUT',
++        'delivery preparation deadline expired before request')
++    }
++    let acknowledgement
++    try {
++      acknowledgement = await this.request('session/prepare', {
++        version: 1,
++        sessionId,
++        ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
++        ...(opts.websiteControl ? { privateSession: true } : {}),
++      }, undefined, { deadlineMono: deadline })
++    } catch (error) {
++      if (error?.code === 'AGENT_PROCESS_RPC_DEADLINE') {
++        throw preparationError('AGENT_DELIVERY_PREPARE_TIMEOUT',
++          'child did not finish delivery preparation before the deadline')
++      }
++      error.deliveryPreparation = true
++      throw error
++    }
++    if (monotonicNowMs() >= deadline) {
++      throw preparationError('AGENT_DELIVERY_PREPARE_TIMEOUT',
++        'delivery preparation acknowledgement arrived after the deadline')
++    }
++    if (acknowledgement?.version !== 1 || acknowledgement?.ready !== true
++        || acknowledgement?.sessionId !== sessionId) {
++      throw preparationError('AGENT_DELIVERY_PREPARE_PROTOCOL',
++        'child returned an invalid delivery preparation acknowledgement')
++    }
++    // State or fences can change while a large session is replaying.
++    const currentGate = this.preAdmissionError('turn', sessionId, '', 0, opts)
++    if (currentGate !== null) throw currentGate
++    return { version: 1, ready: true, sessionId }
++  },
++}
+diff --git a/packages/agent-router/src/process/delivery-resilience.js b/packages/agent-router/src/process/delivery-resilience.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9f19cdec976ad82cb4d0894c39891ee38fef481
+--- /dev/null
++++ b/packages/agent-router/src/process/delivery-resilience.js
+@@ -0,0 +1,148 @@
++/** CTR-R1..R5: same-route recovery. Unknown outcomes never enter this retry path. */
++import { monotonicNowMs } from './state-machine.js'
++import { authoritativeTurnEvidence, chainDeadlineError } from './route-chain-evidence.js'
++import { hasExactDeathEvidence } from '../process-registry-death-evidence.js'
++import { createDeliveryFailureStore } from '../reconciliation/delivery-failures.js'
++
++const retryProofs = new WeakMap()
++export const DELIVERY_COMPLETION = Symbol('deliveryCompletion')
++const harmlessEvents = new Set(['agent/inbox/spliced', 'turn/start', 'user/message', 'turn/end'])
++const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
++
++/** Called only by the exact terminal+idle reducer, before the execution is discarded.
++ * Unknown event types, an evicted event, any assistant content/tool or an earlier
++ * failed turn deny replay. No arbitrary provider-supplied proof crosses here. */
++export function markTransportRetryEvidence(proc, execution, error) {
++  if (error.transportFailure === 'connection_failure') proc.deliveryTransportFailed = true
++  if (error.transportFailure !== 'connection_failure' || execution.unknownMarked
++      || execution.streamGapSeen || execution.laterTurnStartSeen || execution.deliveryRpcObserved || execution.hasOutput()) return
++  for (let seq = execution.watermarkSeq + 1; seq <= proc.eventSeq; seq += 1) {
++    const entry = proc.eventLog.get(seq)
++    if (!entry) return
++    if (entry.params?.sessionId !== execution.sessionId) continue
++    if (!harmlessEvents.has(entry.params.event?.type)) return
++  }
++  retryProofs.set(error, { proc, handle: execution.handle })
++}
++
++function retryProven(proc, error) {
++  const proof = retryProofs.get(error)
++  const snapshot = authoritativeTurnEvidence(proc, error)
++  return proof !== undefined && proof.proc === proc && proof.handle === error.reconciliationHandle
++    && snapshot?.initialOutcome !== 'outcome_unknown'
++    && snapshot?.reconciledOutcome === 'failed'
++    && snapshot?.outcomeEvidence === 'exact_turn_end_failure'
++    && snapshot?.terminationEvidence === 'exact_terminal_then_idle'
++    && snapshot?.finalAssistantOutputAvailable === false
++}
++
++async function bounded(operation, deadlineMono, agentId) {
++  const remaining = deadlineMono - monotonicNowMs()
++  if (remaining <= 0) throw chainDeadlineError(agentId)
++  let timer
++  try {
++    return await Promise.race([operation(), new Promise((_, reject) => {
++      timer = setTimeout(() => reject(chainDeadlineError(agentId)), remaining)
++    })])
++  } finally { clearTimeout(timer) }
++}
++
++/** Quarantine synchronously before yielding; reuse/admission gates see this flag.
++ * Existing single-flight ownership must drain before shutdown. Real exit (not
++ * shutdown ACK) is required before the caller can acquire a replacement. */
++async function retire(proc, deadlineMono, agentId) {
++  proc.deliveryTransportFailed = true
++  proc.rejectQueuedTurns?.('AGENT_DELIVERY_TRANSPORT_UNHEALTHY', 'transport generation quarantined')
++  await bounded(async () => {
++    while (proc.turnInFlight === true || (proc.executions?.size ?? 0) > 0) await sleep(1)
++    if (typeof proc.shutdown !== 'function') throw new Error('controlled shutdown unavailable')
++    await proc.shutdown(Math.max(1, Math.min(proc.deadlines?.shutdownGraceMs ?? 30_000, deadlineMono - monotonicNowMs())))
++    if (!hasExactDeathEvidence(proc)) throw new Error('transport generation real exit unproven')
++  }, deadlineMono, agentId)
++}
++
++export function createDeliveryResilience({ log, deadLetterDirectory, transportRetry = {}, deliveryAlert = {} }) {
++  const failures = createDeliveryFailureStore({ log, directory: deadLetterDirectory, ...deliveryAlert })
++  // Fixed production policy: original + two retries, delays 250/500ms.
++  // Test seam may shorten delays; cannot widen the production retry count.
++  const maxRetries = 2
++  const baseDelayMs = transportRetry.baseDelayMs ?? 250
++  const wait = transportRetry.sleep ?? sleep
++  function exhausted(error, request, attempts, category, recoveryBlocked = false) {
++    let deadLetterId = null
++    try { deadLetterId = failures.deadLetter({ ...request, attempts, error }) } catch {
++      log.error?.(`delivery-dead-letter-failed ${JSON.stringify({ agentId: request.agentId, category, transportAttempts: attempts })}`)
++    }
++    error.deliveryFailure = { category, retriesExhausted: true, recoveryBlocked, deadLetterId,
++      userMessage: deadLetterId ? `自动重试已停止，消息已留存（${deadLetterId}），请重发。`
++        : '自动重试已停止，消息留存失败，请重发。' }
++    return error
++  }
++  async function perform({ agentId, route, sessionId, message, opts, deadlineMono, acquire, invoke, onAcquired }, accepted) {
++    let failedProc
++    for (let retryIndex = 0; ; retryIndex += 1) {
++      let proc
++      let preparing = false
++      try {
++        proc = await bounded(() => acquire(agentId, route, deadlineMono), deadlineMono, agentId)
++        onAcquired(proc)
++        if (proc === failedProc || proc.deliveryTransportFailed) throw Object.assign(
++          new Error('quarantined transport generation cannot be reused'), { code: 'AGENT_DELIVERY_TRANSPORT_UNHEALTHY' })
++        preparing = true
++        if (typeof proc.prepareDelivery === 'function') {
++          await proc.prepareDelivery(sessionId, opts, { deadlineMono })
++        }
++        preparing = false
++        if (monotonicNowMs() >= deadlineMono) throw chainDeadlineError(agentId)
++        const result = await invoke(proc)
++        if (result?.[DELIVERY_COMPLETION]) {
++          accepted(result)
++          await bounded(() => result[DELIVERY_COMPLETION], deadlineMono, agentId)
++        }
++        return result
++      } catch (error) {
++        const category = failures.failure(error, { agentId, routeRef: route.routeRef ?? null,
++          transportAttempt: retryIndex + 1, processGeneration: proc?.processGeneration ?? null })
++        const preparationFailure = preparing && error.deliveryPreparation === true
++          && (['AGENT_DELIVERY_PREPARE_PROTOCOL', 'AGENT_DELIVERY_PREPARE_TIMEOUT',
++            'AGENT_PROCESS_UNAVAILABLE', 'AGENT_PROCESS_EXITED', 'AGENT_PROCESS_INPUT_FROZEN'].includes(error.code)
++            || error.transportFailure === 'connection_failure')
++        const safe = preparationFailure || retryProven(proc, error)
++        if (!safe || !proc) throw error
++        if (!preparationFailure && (opts?.conversationSource || opts?.websiteControl || opts?.nativeGoalContinuation)) {
++          // These accepted carriers own an exact original message/reservation.
++          // Their stronger custody forbids another prompt for that same key.
++          exhausted(error, { agentId, sessionId, message, opts, route }, retryIndex + 1, category)
++          error.deliveryFailure.retriesExhausted = false
++          error.deliveryFailure.replayForbidden = true
++          throw error
++        }
++        failedProc = proc
++        try { await retire(proc, deadlineMono, agentId) } catch {
++          throw exhausted(error, { agentId, sessionId, message, opts, route }, retryIndex + 1, category, true)
++        }
++        const delay = baseDelayMs * 2 ** retryIndex
++        if (retryIndex >= maxRetries || monotonicNowMs() + delay >= deadlineMono) {
++          throw exhausted(error, { agentId, sessionId, message, opts, route }, retryIndex + 1, category)
++        }
++        try { await bounded(() => wait(delay), deadlineMono, agentId) } catch {
++          throw exhausted(error, { agentId, sessionId, message, opts, route }, retryIndex + 1, category)
++        }
++      }
++    }
++  }
++  function run(request) {
++    // Deliver V0 remains receipt-only. One worker observes the exact terminal
++    // promise after returning the receipt, without a second outward acceptance.
++    return new Promise((resolve, reject) => {
++      let accepted = false
++      void perform(request, receipt => { accepted = true; resolve(receipt) }).then(resolve, error => {
++        if (!accepted) return reject(error)
++        log.error?.(`delivery-background-failed ${JSON.stringify({ agentId: request.agentId,
++          deadLetterId: error.deliveryFailure?.deadLetterId ?? null,
++          category: error.deliveryFailure?.category ?? 'other' })}`)
++      })
++    })
++  }
++  return { run, failures }
++}
+diff --git a/packages/agent-router/src/process/event-correlation.js b/packages/agent-router/src/process/event-correlation.js
+index 68970de38245b0d595a1d581eaacf41d81f9563e..dc7b309a2c9293af4c956f407e33725223d2fe5a 100644
+--- a/packages/agent-router/src/process/event-correlation.js
++++ b/packages/agent-router/src/process/event-correlation.js
+@@ -13,6 +13,7 @@
+  */
+ 
+ import { randomUUID } from 'node:crypto'
++import { markTransportRetryEvidence } from './delivery-resilience.js'
+ 
+ import { sanitizeProviderError } from './provider-errors.js'
+ import { envelopeCarrier, exactTurnOutcome, monotonicNowMs } from './state-machine.js'
+@@ -227,6 +228,7 @@ export const eventCorrelationMethods = {
+       execution.terminationEvidence = 'exact_terminal_then_idle'
+       execution.phase = 'terminal'
+       error.evidence = execution.evidenceSnapshot()
++      markTransportRetryEvidence(this, execution, error)
+       execution.terminalReject?.(error)
+     } else {
+       this.store.settleDirect(execution.handle, {
+diff --git a/packages/agent-router/src/process/provider-errors.js b/packages/agent-router/src/process/provider-errors.js
+index 6b157a3ebaeaf9a0bd039acbccdc6a73ee7bb510..d98f780228395c301b7b5ee40daa25a8581c473c 100644
+--- a/packages/agent-router/src/process/provider-errors.js
++++ b/packages/agent-router/src/process/provider-errors.js
+@@ -52,6 +52,12 @@ export function sanitizeProviderError(providerError, { agentId, provider, model
+     agentId,
+     provider,
+     model,
++    // Preserve a narrow connection signal, never arbitrary provider payloads.
++    // This is classification only: the exact-turn reducer separately proves
++    // zero output/tools and termination before recovery may replay anything.
++    ...(new Set(['TRANSPORT', 'ECONNREFUSED', 'ECONNRESET', 'ENOTFOUND', 'EPIPE']).has(providerError?.code)
++      && !/timeout|timed out/iu.test(safeMessage)
++      ? { transportFailure: 'connection_failure' } : {}),
+   })
+ }
+ 
+diff --git a/packages/agent-router/src/process/rpc-channel.js b/packages/agent-router/src/process/rpc-channel.js
+index 57949e9d12b31b681095300e948001290ba980dc..0aefee7fff67701a94c6b89b5ce395271501621c 100644
+--- a/packages/agent-router/src/process/rpc-channel.js
++++ b/packages/agent-router/src/process/rpc-channel.js
+@@ -108,6 +108,9 @@ export const rpcChannelMethods = {
+    * reserve (C-005). One wire response attempt, no re-invocation.
+    */
+   async handleRpcRequest({ requestId, method, params, turnExecutionId } = {}) {
++    // A child-to-parent operation may have external effects even without an
++    // assistant/message event. It permanently disqualifies automatic replay.
++    for (const execution of this.executions.values()) execution.deliveryRpcObserved = true
+     if (typeof requestId !== 'string' || typeof method !== 'string') return
+     const receivedAtMono = monotonicNowMs()
+     // B03: an attributable execution contributes its original absolute
+diff --git a/packages/agent-router/src/process/turn-execution.js b/packages/agent-router/src/process/turn-execution.js
+index 8b10207352dcffc44ad38d80af32c4d37d4aee0d..8239094fa8b853ec034b87fb770056168899e3a0 100644
+--- a/packages/agent-router/src/process/turn-execution.js
++++ b/packages/agent-router/src/process/turn-execution.js
+@@ -17,6 +17,7 @@ import { envelopeCarrier, fencedRejection, monotonicNowMs, promptFenceError } fr
+ import { redactSensitiveText } from './provider-errors.js'
+ import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
+ import { promptWrite } from './prompt-write.js'
++import { DELIVERY_COMPLETION } from './delivery-resilience.js'
+ 
+ export class TurnExecution {
+   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
+@@ -172,6 +173,8 @@ export const turnExecutionMethods = {
+ 
+   /** Pre-reservation admission gate (envelope not_admitted with handle=null). */
+   preAdmissionError(mode, sessionId, text, promptBytes, opts) {
++    if (this.deliveryTransportFailed) return envelopeCarrier('not_admitted', null,
++      'AGENT_DELIVERY_TRANSPORT_UNHEALTHY', 'transport generation is quarantined')
+     if (opts?.nativeGoalContinuation && (opts.admissionSignal?.aborted
+         || (opts.admissionDeadlineMono !== undefined && monotonicNowMs() >= opts.admissionDeadlineMono))) {
+       return envelopeCarrier('not_admitted', null, 'NATIVE_GOAL_ADMISSION_CANCELLED', 'native admission expired before write')
+@@ -318,7 +321,7 @@ export const turnExecutionMethods = {
+       if (mode === 'deliver') {
+         // Receipt-only: the caller returns now; the execution keeps its
+         // terminal/unknown fence tracking in the background (C-010).
+-        resolve({
++        const acceptance = {
+           accepted: true,
+           sessionId,
+           messageId: execution.receiptMessageId,
+@@ -327,7 +330,9 @@ export const turnExecutionMethods = {
+           evidence: execution.evidenceSnapshot(),
+           ...(receipt?.sessionGeneration ? {sessionGeneration:receipt.sessionGeneration} : {}),
+           ...(receipt?.mainResolution ? {mainResolution:receipt.mainResolution} : {}),
+-        })
++        }
++        Object.defineProperty(acceptance, DELIVERY_COMPLETION, { value: execution.terminalPromise })
++        resolve(acceptance)
+         if (!execution.settled) this.installBackgroundTurnWatch(execution)
+         await execution.queueReleasePromise
+         return
+diff --git a/packages/agent-router/src/reconciliation/delivery-failures.js b/packages/agent-router/src/reconciliation/delivery-failures.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..0e616342aeb6a4b838ddfce98065cd21821996ca
+--- /dev/null
++++ b/packages/agent-router/src/reconciliation/delivery-failures.js
+@@ -0,0 +1,79 @@
++/** CTR-R3/R5: local durable dead letters and independently countable failure events. */
++import { randomUUID } from 'node:crypto'
++import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, writeFileSync } from 'node:fs'
++import { join } from 'node:path'
++
++const CATEGORIES = ['transport_death', 'caller_bound_exceeded', 'child_exit_without_outcome', 'other']
++
++export function deliveryFailureCategory(error) {
++  if (error?.deliveryPreparation || error?.transportFailure === 'connection_failure') return 'transport_death'
++  if (error?.source === 'caller_wait_exceeded' || error?.source === 'turn_deadline_exceeded'
++      || /DEADLINE|TIMEOUT/u.test(error?.code ?? '')) return 'caller_bound_exceeded'
++  if (['AGENT_PROCESS_EXITED', 'AGENT_PROCESS_CHILD_EXITED'].includes(error?.code) || error?.source === 'child_exit_without_parsed_outcome'
++      || error?.source === 'child_exit_without_outcome') return 'child_exit_without_outcome'
++  return 'other'
++}
++
++export function createDeliveryFailureStore({ log, directory, alertThreshold = 3, windowMs = 300_000, now = Date.now }) {
++  if (!Number.isSafeInteger(alertThreshold) || alertThreshold < 1 || !Number.isSafeInteger(windowMs) || windowMs < 1) {
++    throw new TypeError('delivery alert threshold and window must be positive safe integers')
++  }
++  const counts = Object.fromEntries(CATEGORIES.map(category => [category, 0]))
++  const recent = []
++  let sequence = 0
++  let windowStart = now()
++  let windowCount = 0
++  let alerts = 0
++  function failure(error, coordinates) {
++    const tsWallMs = now()
++    if (tsWallMs - windowStart >= windowMs) {
++      windowStart = tsWallMs
++      windowCount = 0
++    }
++    const category = deliveryFailureCategory(error)
++    counts[category] += 1
++    windowCount += 1
++    const event = { kind: 'delivery_failure', tsWallMs, sequence: ++sequence, category,
++      ...coordinates, categoryCount: counts[category], windowCount }
++    recent.push(event)
++    if (recent.length > 256) recent.shift()
++    log.error?.(`delivery-failure ${JSON.stringify(event)}`)
++    if (windowCount % alertThreshold === 0) {
++      alerts += 1
++      log.error?.(`delivery-failure-alert ${JSON.stringify({ kind: 'delivery_failure_alert', tsWallMs,
++        category, windowCount, threshold: alertThreshold, windowMs, agentId: coordinates.agentId })}`)
++    }
++    return category
++  }
++  function deadLetter({ agentId, sessionId, message, opts, route, attempts, error }) {
++    if (!directory) throw Object.assign(new Error('dead-letter directory unavailable'), { code: 'DEAD_LETTER_UNAVAILABLE' })
++    const id = randomUUID()
++    const record = { schemaVersion: 1, id, createdAtWallMs: now(), agentId, sessionId, message,
++      routeRef: route.routeRef ?? null, transportAttempts: attempts,
++      callerCorrelation: opts?.callerCorrelation ?? null,
++      ingress: opts?.ingressContext === undefined ? null : {
++        channelNamespace: opts.ingressContext.channelNamespace,
++        channelConversationId: opts.ingressContext.channelConversationId,
++        feishuMessageId: opts.ingressContext.feishuMessageId,
++      },
++      reconciliationHandle: error?.reconciliationHandle ?? null,
++      category: deliveryFailureCategory(error), disposition: 'retry_exhausted_no_replay' }
++    mkdirSync(directory, { recursive: true, mode: 0o700 })
++    const fd = openSync(join(directory, `${id}.json`), 'wx', 0o600)
++    try {
++      writeFileSync(fd, JSON.stringify(record) + '\n', 'utf8')
++      fsyncSync(fd)
++    } finally { closeSync(fd) }
++    const dirFd = openSync(directory, 'r')
++    try { fsyncSync(dirFd) } finally { closeSync(dirFd) }
++    return id
++  }
++  function get(id) {
++    if (!directory || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/u.test(id)) {
++      throw new TypeError('exact dead-letter id required')
++    }
++    return JSON.parse(readFileSync(join(directory, `${id}.json`), 'utf8'))
++  }
++  return { failure, deadLetter, get,
++    snapshot: () => ({ counts: { ...counts }, alerts, windowCount, windowMs, recent: recent.map(row => ({ ...row })) }) }
++}
+diff --git a/packages/agent-router/src/route-chain.js b/packages/agent-router/src/route-chain.js
+index a285162e356db1cf1a4fb6c3952e709875cff104..f48e64802ccdda15234ea16b6148c7d1c807d242 100644
+--- a/packages/agent-router/src/route-chain.js
++++ b/packages/agent-router/src/route-chain.js
+@@ -20,6 +20,7 @@
+  * refs/enums/counts only — never raw errors/tokens/credentials/bodies.
+  */
+ 
++import { createDeliveryResilience } from './process/delivery-resilience.js'
+ import { websiteRouteLog } from './process/website-inquiry-admission.js'
+ import { resolve } from 'node:path'
+ import { FAIL_LOUD_PROVIDER_ERRORS } from './process/provider-errors.js'
+@@ -264,11 +265,12 @@ function routeLabel(route) {
+  */
+ export function createRouteChainExecutor({
+   log, ensureRunningForRoute, resolveRouteChain, resolveTurnDeadlineMs,
+-  canaryRuntimeRoot, journalMaxEntries = 256,
++  canaryRuntimeRoot, journalMaxEntries = 256, deadLetterDirectory, transportRetry, deliveryAlert,
+ }) {
+   if (typeof ensureRunningForRoute !== 'function') {
+     throw new TypeError('agent-router: route chain executor requires ensureRunningForRoute')
+   }
++  const resilience = createDeliveryResilience({ log, deadLetterDirectory, transportRetry, deliveryAlert })
+   const journal = []
+   const canarySeam = typeof canaryRuntimeRoot === 'string' && canaryRuntimeRoot !== ''
+     ? createCanarySeam({ runtimeRoot: canaryRuntimeRoot, log })
+@@ -382,21 +384,21 @@ export function createRouteChainExecutor({
+           // generation, zero dispatch.
+           throw canaryOutcomeUnknownFixtureError(canary)
+         }
+-        proc = await acquire(agentId, route, deadlineMono)
+-        if (mode === 'turn') {
+-          notifyDispatchOnce()
+-          if (observer !== null) observer.providerDispatchCount += 1
+-        }
+-        if (canaryFixtureAttempt && canary.mode === 'provider_quota_rejected_before_generation') {
+-          // Acquire/dispatch boundary crossed; the fixture now returns the
+-          // fixed terminal 429 BEFORE any generation — no network call.
+-          throw canaryQuotaFixtureError(canary)
+-        }
+-        if (observer !== null) observer.modelCallStartCount += 1
+-        const remainingMs = Math.max(1, deadlineMono - monotonicNowMs())
+-        const result = mode === 'turn'
+-          ? await proc.turn(sessionId, message, opts, remainingMs)
+-          : await proc.deliver(sessionId, message, opts)
++        const result = await resilience.run({ agentId, route, sessionId, message, opts, deadlineMono, acquire,
++          onAcquired: acquired => { proc = acquired },
++          invoke: async proc => {
++            if (mode === 'turn') {
++              notifyDispatchOnce()
++              if (observer !== null) observer.providerDispatchCount += 1
++            }
++            if (canaryFixtureAttempt && canary.mode === 'provider_quota_rejected_before_generation') {
++              throw canaryQuotaFixtureError(canary)
++            }
++            if (observer !== null) observer.modelCallStartCount += 1
++            const remainingMs = Math.max(1, deadlineMono - monotonicNowMs())
++            return mode === 'turn' ? proc.turn(sessionId, message, opts, remainingMs) : proc.deliver(sessionId, message, opts)
++          },
++        })
+         recordAttempt({
+           kind: 'route_attempt', tsWallMs: Date.now(), routeChainId: chainId, agentId,
+           attemptIndex, route: label, primaryRoute,
+@@ -466,6 +468,8 @@ export function createRouteChainExecutor({
+   }
+ 
+   return {
++    deliveryFailuresSnapshot: () => resilience.failures.snapshot(),
++    getDeliveryDeadLetter: id => resilience.failures.get(id),
+     /** Sync-turn variant (onIngress + scheduler invokeAgent). */
+     runTurnWithRouteChain(agentId, args) {
+       return executeChain('turn', agentId, args)
+diff --git a/packages/agent-router/test/feishu-regression.test.js b/packages/agent-router/test/feishu-regression.test.js
+index fcf899290b6241adc74346773f2c4c625c095223..f37882f6c819cc9fb2a48c343490971ad74632f6 100644
+--- a/packages/agent-router/test/feishu-regression.test.js
++++ b/packages/agent-router/test/feishu-regression.test.js
+@@ -15,7 +15,7 @@
+  * Feishu entry; 'mobile' = the mobile Product API namespace.
+  *
+  * The full onIngress path is exercised with a stub feishu channel handle
+- * and a STUBBED AgentProcess (spawn/ready/turn/shutdown) so no real DSH
++ * and a STUBBED AgentProcess (spawn/ready/prepare/turn/shutdown) so no real DSH
+  * child is spawned; the reply branch and the Binding keys are the code
+  * under test.
+  */
+@@ -80,6 +80,7 @@ function stubAgentProcess() {
+     return this
+   }
+   AgentProcess.prototype.ready = async () => 0
++  AgentProcess.prototype.prepareDelivery = async sessionId => ({ version: 1, ready: true, sessionId })
+   AgentProcess.prototype.turn = async function turnStub(sessionId, text, opts) {
+     spawns.turns.push({ agentId: this.agentId, sessionId, text, opts })
+     return { reply: 'stub-reply', messageId: 'stub-msg' }
+diff --git a/packages/agent-router/test/helpers/fake-child.js b/packages/agent-router/test/helpers/fake-child.js
+index eb87d3ea713fe958ad989d64ce962e242ecb22c4..d09856793598c24304bf3fdf0756f3eb23b3b685 100644
+--- a/packages/agent-router/test/helpers/fake-child.js
++++ b/packages/agent-router/test/helpers/fake-child.js
+@@ -25,7 +25,7 @@ export const FX_DEADLINES = Object.freeze({
+   shutdownGraceMs: 200,
+ })
+ 
+-export function makeFakeChild({ pid = 4242 } = {}) {
++export function makeFakeChild({ pid = 4242, autoPrepare = false } = {}) {
+   const child = {
+     pid,
+     killSignals: [],
+@@ -38,7 +38,8 @@ export function makeFakeChild({ pid = 4242 } = {}) {
+       holdCallbacks: false,
+       on(event, fn) { this.handlers[event] = fn },
+       write(line, callback) {
+-        child.writes.push(JSON.parse(line))
++        const request = JSON.parse(line)
++        child.writes.push(request)
+         if (this.syncThrowNext !== undefined) {
+           const error = this.syncThrowNext
+           this.syncThrowNext = undefined
+@@ -53,6 +54,8 @@ export function makeFakeChild({ pid = 4242 } = {}) {
+           }
+           if (!this.holdCallbacks) queueMicrotask(() => callback(null))
+         }
++        if (autoPrepare && request.method === 'session/prepare') queueMicrotask(() => child.stdout.handler(
++          JSON.stringify({ id: request.id, result: { version: 1, ready: true, sessionId: request.params.sessionId } }) + '\n'))
+         return true
+       },
+     },
+@@ -64,9 +67,9 @@ export function makeFakeChild({ pid = 4242 } = {}) {
+   return child
+ }
+ 
+-export function makeFx({ deadlines, generation, integration, reconciliationStore, ...ctorOpts } = {}) {
++export function makeFx({ deadlines, generation, integration, reconciliationStore, autoPrepare = false, ...ctorOpts } = {}) {
+   const store = reconciliationStore ?? new TurnReconciliationStore()
+-  const child = makeFakeChild()
++  const child = makeFakeChild({ autoPrepare })
+   const slotOps = []
+   const registryIntegration = {
+     casReap(proc, cause) {
+@@ -125,7 +128,7 @@ export function makeFx({ deadlines, generation, integration, reconciliationStore
+     async readyNow({ providers } = {}) {
+       const pendingReady = proc.ready()
+       await tick()
+-      fx.respondTo('initialize', { registeredProviders: providers ?? [proc.provider] })
++      fx.respondTo('initialize', { registeredProviders: providers ?? [proc.provider], deliveryReadiness: { version: 1 } })
+       await pendingReady
+       return proc
+     },
+diff --git a/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js b/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js
+index 9f2cd95c1ff3eee54cbe7791e796ed1946ddf460..b95350a84b9da5bbefbc9ff00ad34101724e8737 100644
+--- a/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js
++++ b/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js
+@@ -228,7 +228,15 @@ function integratedRouter(t, { failBeforePrompt = false } = {}) {
+         proc.exitPromise = new Promise(() => {})
+         return proc
+       }
+-      proc.ready = async () => { proc.state = 'READY'; return 0 }
++      proc.ready = async () => {
++        proc.state = 'READY'
++        proc.initializeEvidence = { deliveryReadiness: { version: 1 } }
++        return 0
++      }
++      proc.request = async (method, params) => {
++        assert.equal(method, 'session/prepare')
++        return { version: 1, ready: true, sessionId: params.sessionId }
++      }
+       // Keep real turn(), bounded queue and C-010 mint. Only the downstream
+       // child prompt I/O and terminal observation are synthetic.
+       proc.promptWrite = async (execution) => {
+@@ -242,6 +250,7 @@ function integratedRouter(t, { failBeforePrompt = false } = {}) {
+           terminationEvidence: 'exact_terminal_then_idle',
+         })
+         execution.settled = true
++        execution.terminalResolve({ reply: 'synthetic-result', messageId: 'native-receipt' })
+         execution.releaseQueueOwnership()
+         return { messageId: 'native-receipt' }
+       }
+diff --git a/packages/agent-router/test/route-chain/delivery-race-repro.test.js b/packages/agent-router/test/route-chain/delivery-race-repro.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..c9c46ed53007342ebcfe0141998b7213907f9657
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/delivery-race-repro.test.js
+@@ -0,0 +1,58 @@
++/** Same executable test is run at the unmodified Base and candidate. No network. */
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { createRouteChainExecutor } from '../../src/route-chain.js'
++import { makeFx } from '../helpers/fake-child.js'
++
++test('#1332 fresh spawn + suspended 59243-event resume: no prompt before application readiness', async () => {
++  const fx = makeFx()
++  await fx.readyNow()
++  fx.proc.initializeEvidence.deliveryReadiness = { version: 1 }
++  let resumeComplete = false
++  let prepareRequest
++  let earlyPrompts = 0
++  const write = fx.child.stdin.write.bind(fx.child.stdin)
++  fx.child.stdin.write = (line, callback) => {
++    const request = JSON.parse(line)
++    // Own the preparation response so the test can hold the application
++    // resume boundary; ready pid alone must not release a prompt.
++    if (request.method === 'session/prepare') {
++      fx.child.writes.push(request)
++      prepareRequest = request
++      queueMicrotask(() => callback?.(null))
++      return true
++    }
++    const result = write(line, callback)
++    if (request.method === 'session/prompt') queueMicrotask(() => {
++      const id = 'synthetic-race-message'
++      fx.emit({ id: request.id, result: { messageId: id } })
++      if (resumeComplete) fx.completeTurn('main', id, 'one reply after resume')
++      else {
++        earlyPrompts += 1
++        fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
++        fx.emitEvent('main', { type: 'user/message', data: { id } })
++        fx.emitEvent('main', { type: 'turn/end', data: { turn: 1,
++          reason: { kind: 'error', error: { code: 'TRANSPORT', message: 'fetch failed' } } } })
++        fx.emitStatus('main', 'idle')
++      }
++    })
++    return result
++  }
++  const executor = createRouteChainExecutor({ log: { log() {}, error() {} },
++    ensureRunningForRoute: async () => ({ status: 'ready', proc: fx.proc }) })
++  const observed = executor.runTurnWithRouteChain('agt_fx', {
++    sessionId: 'main', message: 'synthetic fresh-spawn message', opts: {}, deadlineMs: 1000,
++  }).then(result => ({ result }), error => ({ error }))
++  await fx.tick()
++  const promptsBeforeResume = fx.child.writes.filter(row => row.method === 'session/prompt').length
++  resumeComplete = true
++  if (prepareRequest) fx.emit({ id: prepareRequest.id,
++    result: { version: 1, ready: true, sessionId: 'main' } })
++  const outcome = await observed
++  assert.equal(promptsBeforeResume, 0, 'process-ready released a prompt while application resume was suspended')
++  assert.equal(earlyPrompts, 0)
++  assert.equal(outcome.error, undefined)
++  assert.equal(outcome.result.reply, 'one reply after resume')
++  assert.equal(fx.counts().promptWriteAttempts, 1)
++  assert.equal(fx.counts().spawnAttempts, 1)
++})
+diff --git a/packages/agent-router/test/route-chain/delivery-readiness.test.js b/packages/agent-router/test/route-chain/delivery-readiness.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..eea45574f340ea81422555e05bc3b3e01d7041a1
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/delivery-readiness.test.js
+@@ -0,0 +1,111 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { makeFx } from '../helpers/fake-child.js'
++import { monotonicNowMs } from '../../src/process/state-machine.js'
++
++async function readyFixture() {
++  const fx = makeFx()
++  await fx.readyNow()
++  fx.proc.initializeEvidence.deliveryReadiness = { version: 1 }
++  return fx
++}
++
++test('R1 readiness: initialize ready cannot bypass session preparation acknowledgement', async () => {
++  const fx = await readyFixture()
++  let settled = false
++  const prepared = fx.proc.prepareDelivery('main', { cwd: '/tmp/fx-ws' }, {
++    deadlineMono: monotonicNowMs() + 500,
++  }).then(value => { settled = true; return value })
++  await fx.tick()
++  const request = fx.writes.find(write => write.method === 'session/prepare')
++  assert.deepEqual(request.params, { version: 1, sessionId: 'main', cwd: '/tmp/fx-ws' })
++  assert.equal(settled, false, 'no readiness until resume/creation acknowledgement arrives')
++  assert.equal(fx.counts().promptWriteAttempts, 0)
++  assert.equal(fx.store.records.size, 0, 'preparation does not mint a business execution')
++  fx.respondTo('session/prepare', { version: 1, ready: true, sessionId: 'main' })
++  assert.deepEqual(await prepared, { version: 1, ready: true, sessionId: 'main' })
++})
++
++test('R1 readiness: absent capability and mismatched acknowledgement fail closed', async () => {
++  const legacy = await readyFixture()
++  delete legacy.proc.initializeEvidence.deliveryReadiness
++  await assert.rejects(legacy.proc.prepareDelivery('main'), { code: 'AGENT_DELIVERY_PREPARE_PROTOCOL' })
++  assert.equal(legacy.writes.filter(write => write.method === 'session/prepare').length, 0)
++
++  for (const acknowledgement of [undefined, {}, { version: 2, ready: true, sessionId: 'main' },
++    { version: 1, ready: false, sessionId: 'main' }, { version: 1, ready: true, sessionId: 'other' }]) {
++    const fx = await readyFixture()
++    const prepared = fx.proc.prepareDelivery('main')
++    fx.respondTo('session/prepare', acknowledgement)
++    await assert.rejects(prepared, { code: 'AGENT_DELIVERY_PREPARE_PROTOCOL' })
++    assert.equal(fx.counts().promptWriteAttempts, 0)
++  }
++})
++
++test('R1 readiness: never-ready child respects caller deadline and late ack cannot admit', async () => {
++  const fx = await readyFixture()
++  const keepAlive = setTimeout(() => {}, 1000)
++  try {
++    const started = monotonicNowMs()
++    const prepared = fx.proc.prepareDelivery('main', {}, { deadlineMono: started + 35 })
++    const rejection = assert.rejects(prepared, { code: 'AGENT_DELIVERY_PREPARE_TIMEOUT' })
++    const request = fx.writes.find(write => write.method === 'session/prepare')
++    await rejection
++    assert.ok(monotonicNowMs() - started < 400, 'caller deadline bounds preparation')
++    assert.equal(fx.proc.pending.size, 0)
++    fx.emit({ id: request.id, result: { version: 1, ready: true, sessionId: 'main' } })
++    assert.equal(fx.counts().promptWriteAttempts, 0)
++  } finally {
++    clearTimeout(keepAlive)
++  }
++})
++
++test('R4 readiness: process state and newly installed UNKNOWN fence gate acknowledgement', async () => {
++  const cold = makeFx()
++  await assert.rejects(cold.proc.prepareDelivery('main'), { code: 'AGENT_PROCESS_NOT_READY' })
++  assert.equal(cold.writes.length, 0)
++
++  const fx = await readyFixture()
++  const prepared = fx.proc.prepareDelivery('main')
++  fx.proc.activeUnknownFences.set('unknown-handle', { handle: 'unknown-handle', sessionId: 'main' })
++  fx.proc.activeUnknownFence = { handle: 'unknown-handle', sessionId: 'main' }
++  fx.respondTo('session/prepare', { version: 1, ready: true, sessionId: 'main' })
++  await assert.rejects(prepared, { code: 'AGENT_PROCESS_TURN_FENCED' })
++  assert.equal(fx.counts().promptWriteAttempts, 0)
++})
++
++test('R1 readiness: each call obtains a fresh ack; expired caller budget writes nothing', async () => {
++  const fx = await readyFixture()
++  await assert.rejects(fx.proc.prepareDelivery('main', {}, {
++    deadlineMono: monotonicNowMs() - 1,
++  }), { code: 'AGENT_DELIVERY_PREPARE_TIMEOUT' })
++  assert.equal(fx.writes.filter(write => write.method === 'session/prepare').length, 0)
++  for (let call = 0; call < 3; call += 1) {
++    const prepared = fx.proc.prepareDelivery('main')
++    fx.respondTo('session/prepare', { version: 1, ready: true, sessionId: 'main' })
++    await prepared
++  }
++  assert.equal(fx.writes.filter(write => write.method === 'session/prepare').length, 3)
++  assert.equal(fx.counts().promptWriteAttempts, 0)
++})
++
++test('R1 readiness: an acknowledgement processed beyond the absolute budget cannot admit', async () => {
++  const fx = await readyFixture()
++  const deadlineMono = monotonicNowMs() + 5
++  const prepared = fx.proc.prepareDelivery('main', {}, { deadlineMono })
++  while (monotonicNowMs() <= deadlineMono) { /* hold the event loop past the caller budget */ }
++  fx.respondTo('session/prepare', { version: 1, ready: true, sessionId: 'main' })
++  await assert.rejects(prepared, { code: 'AGENT_DELIVERY_PREPARE_TIMEOUT' })
++  assert.equal(fx.counts().promptWriteAttempts, 0)
++})
++
++test('R1 readiness preserves private-session log suppression without forwarding custody payload', async () => {
++  const fx = await readyFixture()
++  fx.proc.initializeEvidence.websiteAdmission = { version: 1 }
++  const prepared = fx.proc.prepareDelivery('private-session', { websiteControl: { carrier: 'private-sentinel' } })
++  assert.deepEqual(fx.writes.at(-1).params, {
++    version: 1, sessionId: 'private-session', privateSession: true,
++  })
++  fx.respondTo('session/prepare', { version: 1, ready: true, sessionId: 'private-session' })
++  await prepared
++})
+diff --git a/packages/agent-router/test/route-chain/delivery-resilience.test.js b/packages/agent-router/test/route-chain/delivery-resilience.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..dc9bbadfc31c425f4c3a87dcbb3566ee629c7359
+--- /dev/null
++++ b/packages/agent-router/test/route-chain/delivery-resilience.test.js
+@@ -0,0 +1,276 @@
++import { test } from 'node:test'
++import assert from 'node:assert/strict'
++import { mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++import { createRouteChainExecutor } from '../../src/route-chain.js'
++import { makeFx } from '../helpers/fake-child.js'
++import { createDeliveryFailureStore } from '../../src/reconciliation/delivery-failures.js'
++import { createIngressDelivery } from '../../src/ingress-delivery.js'
++
++const quiet = { log() {}, error() {} }
++const pause = () => new Promise(resolve => setImmediate(resolve))
++
++function rig({ failCount = 2, unsafeEvent, deadLetterDirectory, unknown = false,
++  afterReceipt, shutdownFailure = false, failureCode = 'TRANSPORT', failPrepare = false } = {}) {
++  const generations = []
++  const waits = []
++  const logs = []
++  let current
++  let dispatches = 0
++  let promptCount = 0
++  const executor = createRouteChainExecutor({
++    log: { log: line => logs.push(line), error: line => logs.push(line) },
++    deadLetterDirectory,
++    transportRetry: { baseDelayMs: 1, maxRetries: 2, sleep: async ms => { waits.push(ms) } },
++    resolveTurnDeadlineMs: () => 1000,
++    ensureRunningForRoute: async () => {
++      if (!current || current.proc.state === 'EXITED') {
++        current = makeFx({ generation: generations.length + 1, log: quiet })
++        await current.readyNow()
++        current.proc.initializeEvidence.deliveryReadiness = { version: 1 }
++        current.proc.initializeEvidence.websiteAdmission = { version: 1 }
++        current.proc.initializeEvidence.conversationSource = { version: 1 }
++        const fx = current
++        if (shutdownFailure) fx.proc.shutdown = async () => { throw new Error('injected reap failure') }
++        const originalWrite = fx.child.stdin.write.bind(fx.child.stdin)
++        fx.child.stdin.write = (line, callback) => {
++          const req = JSON.parse(line)
++          const result = originalWrite(line, callback)
++          queueMicrotask(() => {
++            if (req.method === 'session/prepare') {
++              if (failPrepare) fx.emit({ id: req.id, error: { code: 'TRANSPORT', message: 'connection refused' } })
++              else fx.emit({ id: req.id, result: { version: 1, ready: true, sessionId: req.params.sessionId } })
++            } else if (req.method === 'shutdown') {
++              fx.emit({ id: req.id, result: {} })
++              fx.childExit()
++            } else if (req.method === 'session/prompt') {
++              promptCount += 1
++              const messageId = `message-${promptCount}`
++              fx.emit({ id: req.id, result: { messageId } })
++              if (afterReceipt) {
++                afterReceipt(fx, messageId, promptCount)
++                return
++              }
++              if (unknown) return
++              if (promptCount > failCount) {
++                fx.completeTurn('main', messageId, 'recovered')
++                return
++              }
++              fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
++              fx.emitEvent('main', { type: 'user/message', data: { id: messageId } })
++              if (unsafeEvent) fx.emitEvent('main', unsafeEvent)
++              fx.emitEvent('main', { type: 'turn/end', data: { turn: 1,
++                reason: { kind: 'error', error: { code: failureCode, message: 'fetch failed' } } } })
++              fx.emitStatus('main', 'idle')
++            }
++          })
++          return result
++        }
++        generations.push(fx)
++      }
++      return { status: 'ready', proc: current.proc }
++    },
++  })
++  return { executor, generations, waits, logs, promptCount: () => promptCount,
++    dispatches: () => dispatches,
++    admit: () => executor.admitWithRouteChain('agt_fx', { sessionId: 'main', message: 'synthetic async message', opts: {} }),
++    run: (extraOpts = {}) => executor.runTurnWithRouteChain('agt_fx', { sessionId: 'main', message: 'synthetic original message',
++      opts: { callerCorrelation: { requestId: 'synthetic-request' }, onDispatch: () => { dispatches += 1 }, ...extraOpts } }),
++  }
++}
++
++test('CTR-R2 fresh/idle transport failure respawns twice with exponential delay, one reply/dispatch', async () => {
++  const fx = rig()
++  const result = await fx.run()
++  assert.equal(result.reply, 'recovered')
++  assert.equal(fx.generations.length, 3)
++  assert.deepEqual(fx.waits, [1, 2])
++  assert.equal(fx.dispatches(), 1)
++  assert.equal(fx.promptCount(), 3)
++  for (const generation of fx.generations.slice(0, 2)) assert.equal(generation.proc.state, 'EXITED')
++  const final = fx.executor.journalSnapshot().find(row => row.kind === 'route_chain_final')
++  assert.equal(final.totalRouteAttempts, 1)
++  assert.equal(final.fallbackActivated, false)
++  assert.equal(fx.logs.filter(line => line.startsWith('delivery-failure ')).length, 2)
++})
++
++test('CTR-R3 exhaustion durably retains original message, coordinates and explicit resend semantics', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-dead-letter-'))
++  const fx = rig({ failCount: 99, deadLetterDirectory: directory })
++  await assert.rejects(fx.run(), error => {
++    assert.equal(error.deliveryFailure.retriesExhausted, true)
++    assert.match(error.deliveryFailure.userMessage, /请重发/u)
++    return true
++  })
++  const files = readdirSync(directory)
++  assert.equal(files.length, 1)
++  const record = JSON.parse(readFileSync(join(directory, files[0]), 'utf8'))
++  assert.equal(record.message, 'synthetic original message')
++  assert.equal(record.sessionId, 'main')
++  assert.equal(record.callerCorrelation.requestId, 'synthetic-request')
++  assert.equal(record.transportAttempts, 3)
++  assert.equal(statSync(join(directory, files[0])).mode & 0o777, 0o600)
++  assert.equal(fx.executor.getDeliveryDeadLetter(record.id).id, record.id)
++  assert.equal(fx.generations.at(-1).proc.state, 'EXITED')
++})
++
++for (const unsafeEvent of [
++  { type: 'assistant/message', data: { message: { content: [{ type: 'text', text: 'partial' }] } } },
++  { type: 'assistant/message', data: { message: { content: [{ type: 'tool-call', name: 'write' }] } } },
++  { type: 'tool/start', data: {} },
++  { type: 'unrecognized/provider-event', data: {} },
++]) test(`CTR-R2 no replay after unsafe/unknown event ${JSON.stringify(unsafeEvent)}`, async () => {
++  const fx = rig({ unsafeEvent })
++  await assert.rejects(fx.run())
++  assert.equal(fx.promptCount(), 1)
++  assert.equal(fx.generations.length, 1)
++  assert.deepEqual(fx.waits, [])
++  assert.equal(fx.generations[0].proc.deliveryTransportFailed, true)
++})
++
++test('CTR-R5 final unknown increments caller-bound class without replay or respawn', async () => {
++  const fx = rig({ unknown: true })
++  await assert.rejects(fx.run(), error => error.envelope === 'outcome_unknown')
++  assert.equal(fx.promptCount(), 1)
++  assert.equal(fx.generations.length, 1)
++  const snapshot = fx.executor.deliveryFailuresSnapshot()
++  assert.equal(snapshot.counts.caller_bound_exceeded, 1)
++  await pause()
++})
++
++function terminalFailure(fx, messageId) {
++  fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
++  fx.emitEvent('main', { type: 'user/message', data: { id: messageId } })
++  fx.emitEvent('main', { type: 'turn/end', data: { turn: 1,
++    reason: { kind: 'error', error: { code: 'TRANSPORT', message: 'fetch failed' } } } })
++  fx.emitStatus('main', 'idle')
++}
++
++async function until(predicate) {
++  const deadline = Date.now() + 1000
++  while (!predicate()) {
++    assert.ok(Date.now() < deadline, 'background worker did not converge')
++    await pause()
++  }
++}
++
++test('CTR-R2/R3 async admission returns one receipt then recovers delayed failures and persists exhaustion', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-async-dead-letter-'))
++  const pending = []
++  const fx = rig({ deadLetterDirectory: directory, afterReceipt: (proc, messageId) => pending.push([proc, messageId]) })
++  const receipt = await fx.admit()
++  assert.equal(receipt.accepted, true)
++  assert.equal(fx.executor.deliveryFailuresSnapshot().counts.transport_death, 0)
++  for (let i = 0; i < 3; i += 1) {
++    await until(() => pending.length > i)
++    terminalFailure(...pending[i])
++  }
++  await until(() => readdirSync(directory).length === 1)
++  assert.equal(fx.generations.length, 3)
++  assert.deepEqual(fx.waits, [1, 2])
++  assert.equal(fx.executor.deliveryFailuresSnapshot().counts.transport_death, 3)
++  assert.equal(fx.executor.journalSnapshot().filter(row => row.kind === 'route_chain_final').length, 1)
++  const record = JSON.parse(readFileSync(join(directory, readdirSync(directory)[0]), 'utf8'))
++  assert.equal(record.message, 'synthetic async message')
++})
++
++test('CTR-R3 failed exact generation reap still retains message and resend notice', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-reap-dead-letter-'))
++  const fx = rig({ deadLetterDirectory: directory, shutdownFailure: true })
++  await assert.rejects(fx.run(), error => {
++    assert.equal(error.deliveryFailure.recoveryBlocked, true)
++    assert.match(error.deliveryFailure.userMessage, /请重发/u)
++    return true
++  })
++  assert.equal(readdirSync(directory).length, 1)
++  assert.equal(fx.generations.length, 1)
++})
++
++test('CTR-R2 arbitrary fetch-failed text never provides replay authority', async () => {
++  const fx = rig({ failureCode: 'provider_error' })
++  await assert.rejects(fx.run())
++  assert.equal(fx.promptCount(), 1)
++})
++
++test('CTR-R5 all four categories and threshold are recomputable from structured log events', () => {
++  const logs = []
++  let now = 1000
++  const store = createDeliveryFailureStore({ log: { error: line => logs.push(line) },
++    alertThreshold: 2, windowMs: 100, now: () => now })
++  for (const error of [ { transportFailure: 'connection_failure' }, { source: 'caller_wait_exceeded' },
++    { code: 'AGENT_PROCESS_CHILD_EXITED' }, { code: 'unclassified' } ]) store.failure(error, { agentId: 'agt_fx' })
++  const counts = Object.fromEntries(Object.keys(store.snapshot().counts).map(category => [category, 0]))
++  for (const line of logs.filter(line => line.startsWith('delivery-failure '))) {
++    counts[JSON.parse(line.slice('delivery-failure '.length)).category] += 1
++  }
++  assert.deepEqual(counts, store.snapshot().counts)
++  assert.deepEqual(Object.values(counts), [1, 1, 1, 1])
++  assert.equal(store.snapshot().alerts, 2)
++  now += 101
++  store.failure({}, { agentId: 'agt_fx' })
++  assert.equal(store.snapshot().windowCount, 1)
++  assert.equal(store.snapshot().alerts, 2)
++})
++
++test('CTR-R5 real child exit after receipt counts child_exit_without_outcome and never retries', async () => {
++  const fx = rig({ afterReceipt: proc => proc.childExit(1) })
++  await assert.rejects(fx.run(), error => error.code === 'AGENT_PROCESS_CHILD_EXITED')
++  assert.equal(fx.executor.deliveryFailuresSnapshot().counts.child_exit_without_outcome, 1)
++  assert.equal(fx.generations.length, 1)
++})
++
++test('CTR-R2 parent RPC observation denies replay even without assistant/tool events', async () => {
++  const fx = rig({ afterReceipt: (proc, id) => {
++    proc.emit({ method: 'rpc.request', params: { requestId: 'synthetic-rpc', method: 'possible.write' } })
++    terminalFailure(proc, id)
++  } })
++  await assert.rejects(fx.run())
++  assert.equal(fx.promptCount(), 1)
++  assert.equal(fx.generations[0].proc.deliveryTransportFailed, true)
++})
++
++test('accepted original-source custody forbids a second prompt and retains failed original', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-source-dead-letter-'))
++  const fx = rig({ deadLetterDirectory: directory, afterReceipt: (proc, id) => terminalFailure(proc, id) })
++  await assert.rejects(fx.run({ conversationSource: { requestId: 'synthetic-source' } }), error => {
++    assert.equal(error.deliveryFailure.replayForbidden, true)
++    assert.equal(error.deliveryFailure.retriesExhausted, false)
++    return true
++  })
++  assert.equal(fx.promptCount(), 1)
++  assert.equal(fx.generations.length, 1)
++  assert.equal(readdirSync(directory).length, 1)
++})
++
++test('CTR-R1 never-serviceable preparation respawns twice and dead-letters without any prompt', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-prepare-dead-letter-'))
++  const fx = rig({ deadLetterDirectory: directory, failPrepare: true })
++  await assert.rejects(fx.run(), error => error.deliveryFailure.retriesExhausted === true)
++  assert.equal(fx.generations.length, 3)
++  assert.equal(fx.promptCount(), 0)
++  assert.deepEqual(fx.waits, [1, 2])
++  assert.equal(readdirSync(directory).length, 1)
++})
++
++test('CTR-R3 real ingress failure reply keeps its prefix and explicitly says 请重发', async () => {
++  const directory = mkdtempSync(join(tmpdir(), 'delivery-ingress-dead-letter-'))
++  const fx = rig({ deadLetterDirectory: directory, failCount: 99 })
++  let terminalError
++  try { await fx.run() } catch (error) { terminalError = error }
++  const replies = []
++  const ingress = createIngressDelivery({ log: quiet,
++    feishu: { replyTargetFor: () => ({ replyTo: id => id }), reply: async (_target, text) => replies.push(text) },
++    workspaceBootstrap: {}, store: {},
++    reconciliationStore: { assertMintCapacity() {}, assertBusinessAdmissionReady() {} },
++    routeChain: { runTurnWithRouteChain: async () => { throw terminalError } },
++    resolveChannelConversation: async () => ({ channelConversation: { id: 'synthetic-group' },
++      binding: { activeAgentId: 'agt_fx', activeSessionId: 'main' } }),
++    resolveEffectiveWorkspace: () => ({ workspaceId: null, workspacePath: '/tmp/synthetic-workspace' }),
++  })
++  const result = await ingress.onIngress({ channel: 'group', conversationId: 'synthetic-group',
++    messageId: 'synthetic-message', sender: { openId: 'synthetic-user' }, text: 'synthetic message' })
++  assert.equal(result.error, terminalError)
++  assert.equal(replies.length, 1)
++  assert.match(replies[0], /^\[agent-core\] delivery failed: .*请重发/u)
++})
+diff --git a/packages/agent-router/test/route-chain/quota-classifier.test.js b/packages/agent-router/test/route-chain/quota-classifier.test.js
+index ae5de21481c1003faba9df00514ac7c9c6698308..4fa6a8fcd261ed7922e506f32d9275a991e3f31a 100644
+--- a/packages/agent-router/test/route-chain/quota-classifier.test.js
++++ b/packages/agent-router/test/route-chain/quota-classifier.test.js
+@@ -258,7 +258,7 @@ test('the other three no-admission classes still hop (closed V1 whitelist intact
+ // ─── Executor level with the REAL AgentProcess carrier ────────────────────
+ 
+ test('A (real process): terminal pre-generation 429 hops glm53 -> luna -> success', async () => {
+-  const fx = makeFx()
++  const fx = makeFx({ autoPrepare: true })
+   await fx.readyNow()
+   const luna = lunaProc()
+   const seam = fakeSeam({ procs: [fx.proc, luna] })
+@@ -295,7 +295,7 @@ test('A (real process): terminal pre-generation 429 hops glm53 -> luna -> succes
+ })
+ 
+ test('B (real process): 429 after partial assistant output STOPs, zero luna acquires', async () => {
+-  const fx = makeFx()
++  const fx = makeFx({ autoPrepare: true })
+   await fx.readyNow()
+   const luna = lunaProc()
+   const seam = fakeSeam({ procs: [fx.proc, luna] })
+@@ -327,7 +327,7 @@ test('B (real process): 429 after partial assistant output STOPs, zero luna acqu
+ })
+ 
+ test('C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires', async () => {
+-  const fx = makeFx({ deadlines: { turnTimeoutMs: 60 } })
++  const fx = makeFx({ autoPrepare: true, deadlines: { turnTimeoutMs: 60 } })
+   await fx.readyNow()
+   const luna = lunaProc()
+   const seam = fakeSeam({ procs: [fx.proc, luna] })
+diff --git a/packages/demo-server/src/delivery-readiness.js b/packages/demo-server/src/delivery-readiness.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..17ad95292e616a203ef17e1d5b3b1919ba214cab
+--- /dev/null
++++ b/packages/demo-server/src/delivery-readiness.js
+@@ -0,0 +1,23 @@
++/** No-prompt application-layer acknowledgement of a prepared native session.
++ * getOrCreateSession awaits the shared creation/resume promise and verifies
++ * the persisted workspace before this signal can be emitted. No followup,
++ * model generation or provider network probe is initiated by this method.
++ */
++export async function prepareSessionDelivery(seam, params) {
++  if (params?.version !== 1 || typeof params?.sessionId !== 'string' || params.sessionId === '') {
++    throw Object.assign(new Error('invalid delivery preparation protocol'), {
++      code: 'AGENT_DELIVERY_PREPARE_PROTOCOL',
++    })
++  }
++  try {
++    await seam.getOrCreateSession(params.sessionId, params.cwd, params.privateSession === true)
++  } catch (error) {
++    if (params.privateSession === true) {
++      throw Object.assign(new Error('session preparation failed'), {
++        code: typeof error?.code === 'string' ? error.code : 'AGENT_DELIVERY_PREPARE_FAILED',
++      })
++    }
++    throw error
++  }
++  return { version: 1, ready: true, sessionId: params.sessionId }
++}
+diff --git a/packages/demo-server/src/index.js b/packages/demo-server/src/index.js
+index 77e1779451f2da16874de843ca6da5fdd2b41efe..13b688d2d5d473ed924a970ad376f6d6a89d71e2 100644
+--- a/packages/demo-server/src/index.js
++++ b/packages/demo-server/src/index.js
+@@ -33,6 +33,7 @@
+ 
+ import { AsyncLocalStorage } from 'node:async_hooks'
+ import { createNativeGoalAdmission } from './native-goal-admission.js'
++import { prepareSessionDelivery } from './delivery-readiness.js'
+ 
+ import z from '@deepseek-ai/schemastery'
+ 
+@@ -55,7 +56,7 @@ export const inject = ['agents']
+ export const Config = z.object({ nativeGoalContinuation: z.boolean().default(false) })
+ 
+ /** Wire protocol method → handler. */
+-const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.response'])
++const METHODS = new Set(['initialize', 'session/prepare', 'session/prompt', 'shutdown', 'rpc.response'])
+ 
+ /**
+  * Serve the demo protocol over process stdio for the process lifetime.
+@@ -261,7 +262,10 @@ export function apply(ctx, config = {}) {
+           conversationSource: seam.conversationSource ? {version:1} : null,
+           ...(nativeToolPolicyAck === undefined ? {} : { nativeToolPolicy: nativeToolPolicyAck }),
+           websiteAdmission: { version: 1 },
++          deliveryReadiness: { version: 1 },
+         }
++      } else if (method === 'session/prepare') {
++        result = await prepareSessionDelivery(seam, params)
+       } else if (method === 'session/prompt') {
+         // params.cwd = the Router-resolved effective workspace for THIS
+         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
+diff --git a/packages/demo-server/src/session-seam.js b/packages/demo-server/src/session-seam.js
+index 8ad29d7c319818d18b993ff4d166cd781c3b7e64..7ebef72c059a5606120485055e1fdfac64778412 100644
+--- a/packages/demo-server/src/session-seam.js
++++ b/packages/demo-server/src/session-seam.js
+@@ -48,6 +48,9 @@ export const SESSION_WORKSPACE_MISMATCH = 'SESSION_WORKSPACE_MISMATCH'
+  */
+ export function createSessionSeam({ ctx, settings, websiteAdmission, conversationSource = createConversationSource({directory:process.env.DSH_CONVERSATION_SOURCE_DIR,agentId:process.env.DSH_AGENT_ID}) }) {
+   const sessionOrigins = new WeakMap()
++  // Preparing a handle is not an admitted prompt: keep its native resolution
++  // provenance until the first followup succeeds, then genuine reuse is hot.
++  const promptedHandles = new WeakSet()
+   const handles = new Map() // sessionId -> AgentHandle
+   const pendingCreations = new Map() // sessionId -> Promise<AgentHandle>
+ 
+@@ -224,7 +227,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
+     if (conversation !== undefined && websiteCarrier !== undefined) throw new TypeError('mixed product surface admission')
+     const carrier = websiteCarrier === undefined ? undefined : validateWebsiteAdmission(websiteCarrier)
+     if (carrier && (sessionId !== 'main' || messageOrigin !== undefined || typeof websiteAdmission !== 'function')) throw new TypeError('website admission unavailable')
+-    const wasHot=handles.has(sessionId),wasPending=pendingCreations.has(sessionId)
++    const wasHot=promptedHandles.has(handles.get(sessionId)),wasPending=pendingCreations.has(sessionId)
+     const handle = await getOrCreateSession(sessionId, resolvedCwd, Boolean(carrier))
+     const mainResolution=wasHot?{disposition:'hot_reuse',reason:'loaded_main_handle',provenance:'native_session_resolution',
+       generation_change_reason:null,generation_change_reason_availability:'unknown_no_native_reset_cause'}
+@@ -238,6 +241,7 @@ export function createSessionSeam({ ctx, settings, websiteAdmission, conversatio
+     }
+     if (carrier) await websiteAdmission(carrier, message, handle.agent.session)
+     handle.agent.followup(message)
++    promptedHandles.add(handle)
+     return { messageId: message.id, ...(retention ?? {}) }
+   }
+ 
+diff --git a/packages/demo-server/test/delivery-readiness.test.js b/packages/demo-server/test/delivery-readiness.test.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..f95873916da1fb0142faea8ed948ad1cd7a141f7
+--- /dev/null
++++ b/packages/demo-server/test/delivery-readiness.test.js
+@@ -0,0 +1,162 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { spawn } from 'node:child_process'
++import { once } from 'node:events'
++import { createSessionSeam } from '../src/session-seam.js'
++import { prepareSessionDelivery } from '../src/delivery-readiness.js'
++import { AgentProcess } from '../../agent-router/src/process.js'
++import { monotonicNowMs } from '../../agent-router/src/process/state-machine.js'
++
++test('R1 fresh spawn + 59243-event resume: no readiness ack or prompt before replay completes', async () => {
++  let releaseResume
++  const resuming = new Promise(resolve => { releaseResume = resolve })
++  let resumeStarted
++  const started = new Promise(resolve => { resumeStarted = resolve })
++  const calls = { resume: 0, create: 0, followup: 0 }
++  const events = Array.from({ length: 59243 }, (_, seq) => ({ seq }))
++  const handle = { agent: {
++    session: { id: 'main', seq: events.length, header: { cwd: '/tmp/resume-workspace' } },
++    followup() { calls.followup += 1 },
++  } }
++  const services = {
++    agentLoop: {}, sessionPersistence: { list: async () => [{ id: 'main' }] },
++    agents: {
++      async resume() { calls.resume += 1; resumeStarted(); await resuming; return handle },
++      async create() { calls.create += 1; throw new Error('unexpected create') },
++    },
++  }
++  const seam = createSessionSeam({
++    ctx: { get: name => services[name] },
++    settings: { cwd: '/tmp/resume-workspace', provider: 'offline', model: 'fixture' },
++    conversationSource: null,
++  })
++  let acknowledged = 0
++  const first = prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++    .then(value => { acknowledged += 1; return value })
++  await started
++  const concurrent = prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++    .then(value => { acknowledged += 1; return value })
++  await new Promise(resolve => setImmediate(resolve))
++  assert.equal(acknowledged, 0)
++  assert.deepEqual(calls, { resume: 1, create: 0, followup: 0 })
++  assert.equal(seam.handles.size, 0)
++  releaseResume()
++  assert.deepEqual(await first, { version: 1, ready: true, sessionId: 'main' })
++  await concurrent
++  assert.equal(acknowledged, 2)
++  assert.equal(seam.handles.get('main').agent.session.seq, 59243)
++  assert.deepEqual(calls, { resume: 1, create: 0, followup: 0 })
++  await prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++  assert.equal(calls.resume, 1, 'hot handle is checked without another replay')
++})
++
++test('R1 readiness validates version/session and propagates workspace mismatch without admission', async () => {
++  let calls = 0
++  const seam = { async getOrCreateSession() { calls += 1; throw Object.assign(new Error('mismatch'), { code: 'SESSION_WORKSPACE_MISMATCH' }) } }
++  for (const params of [undefined, {}, { version: 2, sessionId: 'main' }, { version: 1, sessionId: '' }]) {
++    await assert.rejects(prepareSessionDelivery(seam, params), { code: 'AGENT_DELIVERY_PREPARE_PROTOCOL' })
++  }
++  assert.equal(calls, 0)
++  await assert.rejects(prepareSessionDelivery(seam, { version: 1, sessionId: 'main' }), { code: 'SESSION_WORKSPACE_MISMATCH' })
++  assert.equal(calls, 1)
++})
++
++test('readiness preserves private-session resolution and redacts its rejection details', async () => {
++  let argumentsSeen
++  const seam = { async getOrCreateSession(...args) {
++    argumentsSeen = args
++    throw Object.assign(new Error('private-session private-workspace'), { code: 'SESSION_WORKSPACE_MISMATCH' })
++  } }
++  await assert.rejects(prepareSessionDelivery(seam, {
++    version: 1, sessionId: 'private-session', cwd: 'private-workspace', privateSession: true,
++  }), error => {
++    assert.equal(error.code, 'SESSION_WORKSPACE_MISMATCH')
++    assert.equal(error.message, 'session preparation failed')
++    return true
++  })
++  assert.deepEqual(argumentsSeen, ['private-session', 'private-workspace', true])
++})
++
++for (const persisted of [false, true]) {
++  test(`prepared ${persisted ? 'resumed' : 'created'} session retains first-prompt provenance, then reports genuine hot reuse`, async () => {
++    let followups = 0
++    const workspace = '/tmp/prepared-provenance'
++    const handle = { agent: {
++      session: { id: 'main', seq: persisted ? 59243 : 0, header: { cwd: workspace } },
++      followup() { followups += 1 },
++    } }
++    const services = {
++      agentLoop: {}, sessionPersistence: { list: async () => persisted ? [{ id: 'main' }] : [] },
++      agents: { create: async () => handle, resume: async () => handle },
++    }
++    const seam = createSessionSeam({
++      ctx: { get: name => services[name] },
++      settings: { cwd: workspace, provider: 'offline', model: 'fixture' },
++      conversationSource: { reserve: ({ mainResolution }) => ({ mainResolution }) },
++    })
++    await prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++    await prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++    assert.equal(followups, 0, 'repeated readiness checks are not admitted prompts')
++    const first = await seam.prompt('main', [], workspace, undefined, { requestId: 'first' })
++    assert.equal(first.mainResolution.disposition, persisted ? 'resumed' : 'created')
++    assert.equal(first.mainResolution.reason, persisted ? 'persisted_main_resumed' : 'main_artifact_absent')
++    assert.equal(first.mainResolution.provenance, 'native_session_resolution')
++    assert.equal(first.mainResolution.generation_change_reason, null)
++    await prepareSessionDelivery(seam, { version: 1, sessionId: 'main' })
++    const second = await seam.prompt('main', [], workspace, undefined, { requestId: 'second' })
++    assert.equal(second.mainResolution.disposition, 'hot_reuse')
++    assert.equal(second.mainResolution.reason, 'loaded_main_handle')
++    assert.equal(followups, 2)
++  })
++}
++
++test('R1 stdio integration: fresh child acknowledges initialize before suspended resume is deliverable', { timeout: 5000 }, async t => {
++  const program = `
++    import { apply } from ${JSON.stringify(new URL('../src/index.js', import.meta.url).href)};
++    let releaseResume;
++    const suspended = new Promise(resolve => { releaseResume = resolve });
++    process.on('message', message => { if (message === 'resume-complete') releaseResume() });
++    const services = {
++      llm: { listProviders: () => [{ id: 'offline' }] }, agentLoop: {},
++      sessionPersistence: { list: async () => [{ id: 'main' }], flush: async () => {} },
++      agents: { async resume() {
++        process.send('resume-started');
++        await suspended;
++        return { agent: { session: { id: 'main', seq: 59243, header: { cwd: '/tmp/stdio-resume' } },
++          followup() { throw new Error('readiness must not prompt') } }, dispose: async () => {} };
++      } },
++    };
++    apply({ get: key => services[key], on: () => () => {}, provide() {},
++      root: { fiber: { dispose: async () => {} } } });
++  `
++  const child = spawn(process.execPath, ['--input-type=module', '-e', program], {
++    env: { PATH: process.env.PATH }, stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
++  })
++  t.after(async () => {
++    if (child.exitCode === null && child.signalCode === null) {
++      child.kill('SIGKILL')
++      await once(child, 'exit')
++    }
++  })
++  const proc = new AgentProcess({
++    agentId: 'agt_offline', profile: 'offline', home: '/tmp/stdio-resume-home',
++    workspace: '/tmp/stdio-resume', provider: 'offline', model: 'fixture',
++    log: { log() {}, error() {} }, deadlines: { initializeTimeoutMs: 2000 },
++  })
++  proc.attachChild(child)
++  await proc.ready()
++  assert.equal(proc.state, 'READY')
++  assert.deepEqual(proc.initializeEvidence.deliveryReadiness, { version: 1 })
++  const resumeStarted = once(child, 'message')
++  let deliverable = false
++  const prepared = proc.prepareDelivery('main', {}, { deadlineMono: monotonicNowMs() + 2000 })
++    .then(value => { deliverable = true; return value })
++  assert.equal((await resumeStarted)[0], 'resume-started')
++  assert.equal(deliverable, false, 'process READY does not bypass pending session resume')
++  assert.equal(proc.counters.promptWriteAttempts, 0)
++  child.send('resume-complete')
++  assert.deepEqual(await prepared, { version: 1, ready: true, sessionId: 'main' })
++  assert.equal(proc.counters.promptWriteAttempts, 0)
++  assert.equal(proc.store.records.size, 0)
++  await proc.shutdown(200)
++})
+diff --git a/packages/production-runtime/test/agent-session/website-inquiry-harness.js b/packages/production-runtime/test/agent-session/website-inquiry-harness.js
+index efb49351275b24a66134ee717045ff9e69c43bbf..bd42eff63c0370c8a840a079ac677217ee968de0 100644
+--- a/packages/production-runtime/test/agent-session/website-inquiry-harness.js
++++ b/packages/production-runtime/test/agent-session/website-inquiry-harness.js
+@@ -4,6 +4,7 @@ import { join, dirname } from 'node:path'
+ import { tmpdir } from 'node:os'
+ import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
+ import { createSessionSeam } from '../../../demo-server/src/session-seam.js'
++import { prepareSessionDelivery } from '../../../demo-server/src/delivery-readiness.js'
+ import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from '../../../demo-server/src/website-custody.js'
+ import { AgentProcess } from '../../../agent-router/src/process/agent-process.js'
+ import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/index.js'
+@@ -35,7 +36,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
+   const proc = new AgentProcess({ agentId: 'agt_pilot', home, workspace, profile: '/synthetic-profile', log, reconciliationStore: reconciliation })
+   proc.state = 'READY'
+   // This synthetic child implements the real website mapping/custody seam below.
+-  proc.initializeEvidence = { websiteAdmission: { version: 1 } }
++  proc.initializeEvidence = { websiteAdmission: { version: 1 }, deliveryReadiness: { version: 1 } }
+   const custody = new WebsiteSourceCustody(home)
+   let requestContext
+   let sends = 0
+@@ -71,6 +72,7 @@ export async function integratedFixture({ deferReplies = false } = {}) {
+       await parentRpc('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id }, { turnExecutionId: requestContext })
+     } })
+   proc.request = async (method, params) => {
++    if (method === 'session/prepare') return prepareSessionDelivery(seam, params)
+     assert.equal(method, 'session/prompt')
+     requestContext = params.turnExecutionId
+     return seam.prompt(params.sessionId, params.contentBlocks, params.cwd, params.messageOrigin, params.conversationSource, params.websiteAdmission)
+diff --git a/packages/workflow-execution/test/runtime-wiring.test.js b/packages/workflow-execution/test/runtime-wiring.test.js
+index 0d475049ef5b62f636bc16949a23aee5ce62b267..9d1605955650d00d0e5843cfcc4cea7b35654f82 100644
+--- a/packages/workflow-execution/test/runtime-wiring.test.js
++++ b/packages/workflow-execution/test/runtime-wiring.test.js
+@@ -225,8 +225,12 @@ async function answerChild(f, admission) {
+     for (const proc of f.spawned) for (const write of proc.fakeChild.writes) {
+       if (answered.has(write.id)) continue
+       answered.add(write.id)
+-      assert.ok(['initialize', 'session/prompt'].includes(write.method))
+-      const result = write.method === 'initialize' ? { registeredProviders: [proc.provider] } : { messageId: 'new-message' }
++      assert.ok(['initialize', 'session/prepare', 'session/prompt'].includes(write.method))
++      const result = write.method === 'initialize'
++        ? { registeredProviders: [proc.provider], deliveryReadiness: { version: 1 } }
++        : write.method === 'session/prepare'
++          ? { version: 1, ready: true, sessionId: write.params.sessionId }
++          : { messageId: 'new-message' }
+       proc.fakeChild.stdout.handler(`${JSON.stringify({ id: write.id, result })}\n`)
+     }
+   }
