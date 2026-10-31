@@ -49,6 +49,7 @@ import {
   consolidate,
   loadEntries,
   loadEntriesSync,
+  loadEntriesTailSync,
   readDailyNotes,
   removeEntry,
   renderContextText,
@@ -648,7 +649,7 @@ export const apply = (ctx, config = {}) => {
         order: 90,
         text: () => {
           try {
-            return renderContextText(loadEntriesSync(memoryFile), {
+            return renderContextText(loadEntriesTailSync(memoryFile), {
               maxEntries: cfg.maxInjectedEntries,
               maxChars: cfg.maxInjectedChars,
             })
