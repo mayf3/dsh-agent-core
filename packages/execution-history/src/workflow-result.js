@@ -1,10 +1,7 @@
 /** #720 read adapter: existing caller GETs only, no writes or execution calls. */
 import { projectBusinessResult } from '../../workflow-execution/src/business-result.js'
 import { projectNodeAttemptHistory } from './workflow-node-history.js'
-import { createHash } from 'node:crypto'
-import { stableStringify } from './boundary.js'
-
-const revision = (value) => createHash('sha256').update(stableStringify(value)).digest('hex')
+import { sourceReadRevision as revision } from './boundary.js'
 
 export async function buildWorkflowResult(ctx, workflowInstanceId, records, attempts, observations) {
   const detail = records.find((r) => r.source === 'svc_detail')?.data ?? null
@@ -20,7 +17,9 @@ export async function buildWorkflowResult(ctx, workflowInstanceId, records, atte
   }
   for (const source of ['svc_detail', 'svc_timeline', 'svc_submissions']) {
     const loaded = ctx._sources.get(source)
-    if (loaded) loaded.revision = revision({ status: loaded.status, data: records.filter((r) => r.source === source).map((r) => r.data) })
+    if (loaded && loaded.revision === undefined) {
+      loaded.revision = revision({ status: loaded.status, data: records.filter((r) => r.source === source).map((r) => r.data) })
+    }
   }
   const preliminary = projectBusinessResult(input)
   const instance = detail?.detail?.instance

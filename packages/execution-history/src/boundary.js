@@ -32,6 +32,11 @@ export function stableStringify(value) {
   return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`
 }
 
+/** Ephemeral content/status revision of a consulted read, never an entity ID. */
+export function sourceReadRevision(value) {
+  return createHash('sha256').update(stableStringify(value)).digest('hex')
+}
+
 /** Build the token from loader outputs: {sourceName: [{file,size,mtimeMs}, ...], rows}. */
 export function sourceGenerationToken(sourceFiles) {
   const token = {}

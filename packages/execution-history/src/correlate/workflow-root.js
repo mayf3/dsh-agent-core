@@ -46,13 +46,13 @@ export async function buildWorkflowRoot(ctx, args) {
     resultObservations.push({ source: 'svc_timeline', observedAtMs: Date.now() })
     if (timeline.error !== null && timeline.error !== undefined) {
       gaps.push(svcFailureGap(timeline.error, 'svc_timeline'))
-      ctx._sources.set('svc_timeline', { status: { status: 'ABSENT', reason: timeline.error.code }, files: [], rowsRead: 0 })
+      ctx._sources.set('svc_timeline', { status: { status: 'ABSENT', reason: timeline.error.code }, files: [], rowsRead: 0, revision: timeline.revision })
     } else {
       const timelineRecords = timelineToRecords(timeline.items)
       records.push(...timelineRecords)
       if (timeline.truncated) gaps.push(gap('TRUNCATED', 'svc_timeline', { reason: 'timeline page cap reached' }))
       observations.push(...classifySvcEvents(timelineRecords))
-      ctx._sources.set('svc_timeline', { status: { status: timeline.truncated ? 'DEGRADED' : 'OK', truncated: timeline.truncated }, files: [], rowsRead: timelineRecords.length })
+      ctx._sources.set('svc_timeline', { status: { status: timeline.truncated ? 'DEGRADED' : 'OK', truncated: timeline.truncated }, files: [], rowsRead: timelineRecords.length, revision: timeline.revision })
     }
     const submissions = await fetchSubmissions(ctx.svcRequest, ctx.viewer.agentId, workflowInstanceId, {})
     resultObservations.push({ source: 'svc_submissions', observedAtMs: Date.now() })

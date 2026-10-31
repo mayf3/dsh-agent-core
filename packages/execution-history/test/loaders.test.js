@@ -39,6 +39,21 @@ test('#720 timeline follows the deployed camelCase cursor and marks stalled pagi
   assert.equal(stalled.truncated, true, 'a repeated cursor never proves complete history')
 })
 
+test('#720 review: a cursor cannot skip unreturned native sequence ranges', async () => {
+  const result = await fetchTimelineAll(async (_agentId, req) => ({ ok: true, body: req.query.after === undefined
+    ? { items: [{ event_sequence: 1 }], nextCursor: 10 }
+    : { items: [{ event_sequence: 11 }], nextCursor: null } }), 'agt_a', WF_ID)
+  assert.equal(result.truncated, true)
+})
+
+test('#720 review: clipping an oversized final page always reports truncation', async () => {
+  const result = await fetchTimelineAll(async () => ({ ok: true, body: {
+    items: [1, 2, 3].map((event_sequence) => ({ event_sequence })), nextCursor: null,
+  } }), 'agt_a', WF_ID, { maxEvents: 2, pageSize: 100 })
+  assert.equal(result.items.length, 2)
+  assert.equal(result.truncated, true)
+})
+
 test('T1 attempts ledger: multi-generation attempts stay separate and project in order', async () => {
   const fixture = buildFixtureRoot()
   try {
