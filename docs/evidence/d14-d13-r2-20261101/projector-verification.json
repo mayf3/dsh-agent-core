@@ -1,0 +1,10 @@
+{
+  "fixture": "PASS",
+  "fixtureCases": 6,
+  "fixtureTrueDenials": 1,
+  "fixtureExcludedFalsePositives": 5,
+  "realProjection": "PASS",
+  "sourceSha256": "b551b76b8ca3edb59003c666ad9227a9ce416f3f72f217471e4e1a5e770680fe",
+  "realDirectDenials": 2,
+  "realExcludedSignatureSearchHits": 15
+}

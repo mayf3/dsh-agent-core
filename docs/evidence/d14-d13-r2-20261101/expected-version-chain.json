@@ -1,0 +1,90 @@
+{
+  "observedAt": "2026-10-31T23:25:00.659236+00:00",
+  "coordinate": "installed source files; not independent proof of process-loaded byte identity",
+  "files": [
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-provisioning/src/shared-codex.js",
+      "sha256": "959b17876e868786fb24d43840810984376e984b99fa69b051279a415a33db6a",
+      "snippets": [
+        {
+          "lineStart": 236,
+          "lineEnd": 245,
+          "text": "236: export const CHATGPT_SUBSCRIPTION_V1 = Object.freeze({\n237:   targetAgentId: 'agt_cto-agent',\n238:   plugin: 'dsh-codex',\n239:   pluginVersion: '0.2.3',\n240:   sourceCommit: '75d98d5b10bb926d53108e49019668c1bde2a9eb',\n241:   artifactSha256: '2d29f95f14ff918f90b90134353c842052e9cd2aff9cb9d1866d854fff2c50b0',\n242:   dshVersion: '0.1.0-rc.8',\n243:   dshCommit: '514ab7b0029141b88c807704764d0d3e1eea1da4',\n244:   credentialFile: CANONICAL_OPENAI_CODEX_CREDENTIAL_FILE,\n245: })"
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/production-runtime/src/model-overrides.js",
+      "sha256": "15fa37832c5696ca9561a1ff260734bc5a4a13814380fc5828a6b5fbd58081a3",
+      "snippets": [
+        {
+          "lineStart": 186,
+          "lineEnd": 205,
+          "text": "186: /** One resolved chain route entry: frozen process config + reuse identity. */\n187: function makeChainRoute(routeRef, route, artifactContext) {\n188:   const processConfig = Object.freeze({\n189:     provider: route.provider,\n190:     model: route.model,\n191:     omitEnv: Object.freeze(['OPENAI_API_KEY']),\n192:     ...(route.providerEnv === undefined ? {} : { providerEnv: route.providerEnv }),\n193:     // DEC-IMPL-011: only a subscription route carries the provisioning\n194:     // block; a builtin processConfig has NO subscription key, so the spawn\n195:     // side's conditional expansion keeps it off the plugin/pin path entirely.\n196:     ...(route.routeKind === 'subscription' ? {\n197:       subscription: subscriptionProcessConfigBlock(route.plugin, route.pluginVersion, route.credentialFile, effectiveRouteReasoningEffort(route), artifactContext),\n198:     } : {}),\n199:   })\n200:   return Object.freeze({\n201:     routeRef,\n202:     provider: route.provider,\n203:     model: route.model,\n204:     identity: canonicalRouteIdentity(processConfig),\n205:     processConfig,"
+        },
+        {
+          "lineStart": 218,
+          "lineEnd": 234,
+          "text": "218: function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort, artifactContext) {\n219:   const tupleIdentity = pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion ? GPT6_LUNA_ROUTE_V1 : CHATGPT_SUBSCRIPTION_V1\n220:   const binding = plugin === CHATGPT_SUBSCRIPTION_V1.plugin && pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion ? artifactContext?.binding : undefined\n221:   const paths = artifactContext ?? { packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL, sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP }\n222:   return Object.freeze({\n223:     plugin,\n224:     pluginVersion,\n225:     sourceCommit: tupleIdentity.sourceCommit,\n226:     artifactSha256: binding?.artifactSha256 ?? tupleIdentity.artifactSha256,\n227:     ...(binding === undefined ? {} : { artifactBinding: binding }),\n228:     dshVersion: tupleIdentity.dshVersion,\n229:     dshCommit: tupleIdentity.dshCommit,\n230:     ...(credentialFile === undefined ? {} : { credentialFile }),\n231:     ...(reasoningEffort === undefined ? {} : { reasoningEffort }),\n232:     ...(paths.packageArtifact === undefined ? {} : { packageArtifact: paths.packageArtifact }),\n233:     ...(paths.sourceStamp === undefined ? {} : { sourceStamp: paths.sourceStamp }),\n234:   })"
+        },
+        {
+          "lineStart": 246,
+          "lineEnd": 260,
+          "text": "246:   const artifactContext = verifyArtifactContext(options)\n247:   return Object.freeze({\n248:     provider: CANONICAL_DEFAULT_MODEL_ROUTE.provider,\n249:     model: CANONICAL_DEFAULT_MODEL_ROUTE.model,\n250:     subscription: subscriptionProcessConfigBlock(\n251:       CHATGPT_SUBSCRIPTION_V1.plugin,\n252:       CHATGPT_SUBSCRIPTION_V1.pluginVersion,\n253:       options.deploymentRoot === undefined ? CHATGPT_SUBSCRIPTION_V1.credentialFile : canonicalOpenAICodexCredentialFileFor(options.deploymentRoot),\n254:       undefined, artifactContext,\n255:     ),\n256:   })\n257: }\n258: \n259: /**\n260:  * Load the frozen V3 route chain schema. Missing file is the rollback/legacy"
+        },
+        {
+          "lineStart": 313,
+          "lineEnd": 347,
+          "text": "313:       const hasReasoningEffort = Object.hasOwn(route ?? {}, 'reasoningEffort')\n314:       // GPT6_LUNA_AND_REASONING_EFFORT_V1 (CTR-G6R-002): the loader accepts\n315:       // BOTH dsh-codex pins — the V3 production pin (legacy tuple) and the\n316:       // dormant GPT-6 tuple pin. A single global pin that makes an existing\n317:       // V3 config invalid is forbidden.\n318:       const isDshCodexSubscription = isSubscription && route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin\n319:       const isLegacyCodexTuple = isDshCodexSubscription && route.pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion\n320:       const isGpt6Tuple = isDshCodexSubscription && route.pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion\n321:       const routeKeys = [\n322:         'credentialReadiness', 'model', 'provider', 'routeKind',\n323:         ...(isSubscription ? ['plugin', 'pluginVersion'] : []),\n324:         ...(isSubscription && isOpenAICodex ? ['credentialFile'] : []),\n325:         ...(hasProviderEnv ? ['providerEnv'] : []),\n326:         ...(hasReasoningEffort ? ['reasoningEffort'] : []),\n327:       ]\n328:       if (routeRef === '' || !exactKeys(route, routeKeys)) {\n329:         throw invalid(isSubscription\n330:           ? `routeCatalog.${routeRef} must contain routeKind, provider, model, plugin, pluginVersion, credentialReadiness and optional providerEnv/reasoningEffort only`\n331:           : `routeCatalog.${routeRef} must contain routeKind, provider, model, credentialReadiness and optional providerEnv only (plugin/pluginVersion are FORBIDDEN on a builtin route)`)\n332:       }\n333:       const requiredFields = isSubscription\n334:         ? ['provider', 'model', 'plugin', 'pluginVersion', 'credentialReadiness']\n335:         : ['provider', 'model', 'credentialReadiness']\n336:       for (const field of requiredFields) {\n337:         assertNonEmptyString(route[field], `routeCatalog.${routeRef}.${field}`)\n338:       }\n339:       if (isSubscription && /^[~^*]|[xX]$|\\s\\|\\||\\s-\\s/u.test(route.pluginVersion)) {\n340:         throw invalid(`routeCatalog.${routeRef}.pluginVersion must be an exact pin (got ${route.pluginVersion})`)\n341:       }\n342:       if (isDshCodexSubscription && !isLegacyCodexTuple && !isGpt6Tuple) {\n343:         // CTR-011 + CTR-G6R-002: a dsh-codex pin mismatch is a config error,\n344:         // never a fallback trigger. Scoped to subscription routes carrying\n345:         // the plugin (a builtin route has no plugin key at all).\n346:         throw invalid(`routeCatalog.${routeRef}: pluginVersion pin mismatch (${CHATGPT_SUBSCRIPTION_V1.plugin} must be ${CHATGPT_SUBSCRIPTION_V1.pluginVersion} or ${GPT6_LUNA_ROUTE_V1.pluginVersion} exactly, got ${JSON.stringify(route.pluginVersion)})`)\n347:       }"
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-router/src/process-registry.js",
+      "sha256": "ea2717a27db187358c8241fdab7cc420c57a1d043e53b98b64f26ddab01599eb",
+      "snippets": [
+        {
+          "lineStart": 292,
+          "lineEnd": 309,
+          "text": "292:         teardownFailure: fatalCause => auditStaleSlot(`startup fatal convergence failed for ${agentId}: ${redactSensitiveText(String(fatalCause?.message ?? fatalCause)).slice(0, 1024)}`),\n293:       })\n294:     }\n295:   }\n296: \n297:   /** Spawn + initialize one generation for an installed STARTUP slot. */\n298:   async function startProcessForSlot(agentId, entry) {\n299:     // F-1 (C-008 no-child discipline): every synchronous pre-spawn\n300:     // preparation step is failure-converged — a throw settles the shared\n301:     // startup promise exactly once and cleans the exact STARTUP slot to\n302:     // EMPTY via identity CAS (no REAP, no shutdown write, no kill; the next\n303:     // ensureRunning retries; stale first-generation cleanups are audit-only).\n304:     let workspace\n305:     let home\n306:     let processConfig\n307:     try {\n308:       entry.startupFailureStage = 'resolveWorkspace'\n309:       // workspace-bootstrap is the single owner of the agentId -> workspace /"
+        },
+        {
+          "lineStart": 329,
+          "lineEnd": 333,
+          "text": "329:       entry.startupFailureStage = 'provisionHome'\n330:       provisionHome(home, workspace, {\n331:         profile: cfg.agentProfile,\n332:         ...(processConfig.subscription === undefined ? {} : { subscription: processConfig.subscription }),\n333:         // The runtime's own deployment root pins the shared credentialFile"
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-provisioning/src/index.js",
+      "sha256": "e1c3dc586f0cede58a9c1f8fce4d2ff025c49600816af9e7d2f75beb5284df01",
+      "snippets": [
+        {
+          "lineStart": 199,
+          "lineEnd": 213,
+          "text": "199:  * so ordinary automation has no npm-registry dependency.\n200:  */\n201: export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {\n202:   verifyPluginProvisioningInputs(requirement, { ...options, deploymentRoot: deploymentRootOfAgentHome(home) })\n203:   const { plugin, version, sourceCommit, artifactSha256, dshVersion } = requirement\n204:   const injectedArtifactIdentity = options.artifactIdentity\n205:   const artifactIdentity = { version: 1, sourceCommit, artifactSha256 }\n206:   const profilesRoot = join(home, 'profiles')\n207:   const installedRoot = join(profilesRoot, 'node_modules', plugin)\n208:   const installedPackage = join(profilesRoot, 'node_modules', plugin, 'package.json')\n209:   const existingVersion = installedPluginVersion(installedPackage)\n210:   if (existingVersion !== undefined && existingVersion !== version) {\n211:     throw provisioningError('plugin_version_mismatch', `expected ${plugin}@${version}, resolved ${existingVersion ?? '(missing)'}`)\n212:   }\n213:   // Same version is insufficient: reuse only exact installed artifact bytes."
+        },
+        {
+          "lineStart": 390,
+          "lineEnd": 410,
+          "text": "390: \n391:   // Install the external package BEFORE creating the local farm links: npm\n392:   // prunes extraneous entries under node_modules, so reversing this order\n393:   // would delete the production profile's @agent-core bundles on first use.\n394:   if (options.subscription !== undefined) {\n395:     const subscription = options.subscription\n396:     provisionExactProfilePlugin(home, profile, {\n397:       plugin: subscription.plugin,\n398:       version: subscription.pluginVersion,\n399:       sourceCommit: subscription.sourceCommit,\n400:       artifactSha256: subscription.artifactSha256,\n401:       ...(subscription.artifactBinding === undefined ? {} : { artifactBinding: subscription.artifactBinding }),\n402:       dshVersion: subscription.dshVersion,\n403:       dshCommit: subscription.dshCommit,\n404:     }, {\n405:       pluginInstaller: options.pluginInstaller,\n406:       packageArtifact: subscription.packageArtifact,\n407:       sourceStamp: subscription.sourceStamp,\n408:       artifactIdentity: options.artifactIdentity,\n409:       harnessIdentity: options.harnessIdentity,\n410:       harnessRoot: options.harnessRoot,"
+        }
+      ]
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/app/packages/agent-provisioning/src/plugin-artifact.js",
+      "sha256": "cf910ba3cd25c058f55dbf53b7d7dcbfd2ffb8e9d7568fb25ebd45e6f531b66f",
+      "snippets": [
+        {
+          "lineStart": 11,
+          "lineEnd": 16,
+          "text": "11: export const INSTALLED_ARTIFACT_STAMP = '.agent-core-artifact-identity.json'\n12: \n13: export function installedPluginVersion(packageFile) {\n14:   if (!existsSync(packageFile)) return undefined\n15:   try { return JSON.parse(readFileSync(packageFile, 'utf8')).version } catch { return null }\n16: }"
+        }
+      ]
+    }
+  ],
+  "liveConfigRead": {
+    "path": "/Users/authsvc/.agent-core/agent-model-overrides.json",
+    "result": "EACCES(errno=13); no sudo expansion used; exact live catalog field values UNKNOWN"
+  }
+}

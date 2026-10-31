@@ -1,0 +1,74 @@
+{
+  "observedAt": "2026-10-31T23:25:25.823417+00:00",
+  "command": [
+    "sudo",
+    "-n",
+    "grep",
+    "-n",
+    "-E",
+    "plugin_version_mismatch|expected dsh-codex@0.2.3, resolved 0.3.2|route_chain_final.*(agt_qa-reviewer|agt_family-steward-agent|agt_writing-style-analyst-agent|agt_shopping-list-agent)",
+    "/Users/authsvc/.agent-core/logs/runtime.err.log"
+  ],
+  "exitCode": 0,
+  "matchedBytesSha256": "fbb3afdac385de76abe519ceedf076e085d3b3f5295f61e2c2aa28ff3029c4fe",
+  "records": [
+    {
+      "line": 99985,
+      "kind": "route_chain_final",
+      "agentId": "agt_qa-reviewer",
+      "routeChainId": "chain-agt_qa-reviewer-f55891d9e349a434",
+      "tsWallMs": 1793450403536,
+      "timeUtc": "2026-10-31T12:40:03.536000+00:00",
+      "primaryRoute": "luna",
+      "finalOutcome": "spawn_failed_without_child"
+    },
+    {
+      "line": 99986,
+      "kind": "admission_error",
+      "agentId": "agt_qa-reviewer",
+      "code": "plugin_version_mismatch"
+    },
+    {
+      "line": 99987,
+      "kind": "version_error",
+      "message": "agent-provisioning: expected dsh-codex@0.2.3, resolved 0.3.2",
+      "agentId": "UNKNOWN in this exact log line"
+    },
+    {
+      "line": 99988,
+      "kind": "version_error",
+      "message": "agent-provisioning: expected dsh-codex@0.2.3, resolved 0.3.2",
+      "agentId": "UNKNOWN in this exact log line"
+    },
+    {
+      "line": 100505,
+      "kind": "route_chain_final",
+      "agentId": "agt_qa-reviewer",
+      "routeChainId": "chain-agt_qa-reviewer-f55891d9e349a434",
+      "tsWallMs": 1793488928539,
+      "timeUtc": "2026-10-31T23:22:08.539000+00:00",
+      "primaryRoute": "luna",
+      "finalOutcome": "spawn_failed_without_child"
+    },
+    {
+      "line": 100506,
+      "kind": "admission_error",
+      "agentId": "agt_qa-reviewer",
+      "code": "plugin_version_mismatch"
+    },
+    {
+      "line": 100507,
+      "kind": "version_error",
+      "message": "agent-provisioning: expected dsh-codex@0.2.3, resolved 0.3.2",
+      "agentId": "UNKNOWN in this exact log line"
+    },
+    {
+      "line": 100508,
+      "kind": "version_error",
+      "message": "agent-provisioning: expected dsh-codex@0.2.3, resolved 0.3.2",
+      "agentId": "UNKNOWN in this exact log line"
+    }
+  ],
+  "limit": "No message bodies retained. Route timestamps belong to exact named route-chain records, not timestamps embedded in version_error lines.",
+  "totalMatchedSanitizedRecordsBeforeFocus": 1013
+}

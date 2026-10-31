@@ -1,0 +1,60 @@
+{
+  "observedAt": "2026-10-31T23:24:37.921830+00:00",
+  "scope": "all existing readable homes/agt_*/profiles/node_modules/dsh-codex, NOT registered fleet or running children; publication retains four named rows and aggregate counts only; full local observation retained outside Git",
+  "rows": [
+    {
+      "agentId": "agt_family-steward-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:07:52.485010+00:00"
+    },
+    {
+      "agentId": "agt_qa-reviewer",
+      "home": "/Users/authsvc/.agent-core/homes/agt_qa-reviewer",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_qa-reviewer/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:17:59.935990+00:00"
+    },
+    {
+      "agentId": "agt_shopping-list-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_shopping-list-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_shopping-list-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T14:59:40.077865+00:00"
+    },
+    {
+      "agentId": "agt_writing-style-analyst-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_writing-style-analyst-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_writing-style-analyst-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:13:57.422457+00:00"
+    }
+  ],
+  "versions": {
+    "0.3.2": 117,
+    "0.2.3": 6
+  },
+  "sameCurrentLinkCount": 117,
+  "fullCensusSha256": "51edf005f97e0b0e512afe55703ee8598891ad5235f4cca49d5fd144c147e403"
+}

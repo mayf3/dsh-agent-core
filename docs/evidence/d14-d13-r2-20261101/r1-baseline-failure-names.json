@@ -1,0 +1,250 @@
+[
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/provisioning.test.js",
+    "name": "harness resolution is worktree-aware and cliBin fails loud without a checkout"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: a structured gateway failure passes through declared codes verbatim at the correct depth"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "E: valid canonical credential \u2014 child initializes on the openai-codex route"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "F: missing credential fails loud on the real chain \u2014 never a silent fallback"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "G: unsafe credential (group/world readable) fails loud on the real chain"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "name": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E negative: unknown name \u2192 not_found and ZERO deliveries anywhere"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E negative: whitespace-only query \u2192 invalid_arguments envelope, ZERO deliveries"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E disabled target: resolves enabled:false (existence truth) and the send is refused"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E list: the full composed stack lists both agents in directory shape"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js",
+    "name": "B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js",
+    "name": "B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case A: the existing main is reused \u2014 same process, two sends, two Runs"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case B: concurrent first sends to an absent main share ONE startup generation"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case F: an unauthorized sender is access_denied with zero target deliveries"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case F (F23): a grant-check transport outage is transport_failure, never access_denied"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "disabled target is target_disabled with zero target process or prompt"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case G: model-supplied identity fields are rejected before any delivery"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "R12: L0 rows never carry business detail; the target reply never reaches the audit file"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose-deployment-root.test.js",
+    "name": "composition pins the credentialFile to the runtime deployment root (own root accepted)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "composition provides the full existing service graph over the production layout"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "scheduler engine consumes a job from the production store through the router seam"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "B15 production evidence preserves scheduled outcome_unknown reconciliation data"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "graceful stop closes the HTTP surfaces and writes stopped-able state"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "runtime state carries no demo artifacts anywhere"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths \u2014 no credentials, no secret env"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+    "name": "MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D2 runtime env override wins over the default; composition config wins over env"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js",
+    "name": "composition freezes the own-domain artifact and refuses drift before the next process boundary"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js",
+    "name": "RED base: missing adapter implementation does not block the channel-OFF base path"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js",
+    "name": "enabled channel + missing adapter implementation fails composition LOUD (fail closed)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid mention switch fails composition LOUD (fail closed)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid reply render mode fails composition LOUD (fail closed)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid identity credentials fail composition LOUD (fail closed)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/ingress-restart-handoff.test.js",
+    "name": "A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/ingress-restart-handoff.test.js",
+    "name": "A6: runtime restart on the same root reuses the in-flight admission idempotently \u2014 outcome_unknown, zero Router re-admission"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "production composition applies the runtime proxy gate before any mount or layout read"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "composition resolves the v3 primary to target and the global route to another Agent"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "target-only rollback rewrites the config file; non-target PID and route unchanged"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "malformed config fails target respawn loud without disturbing a running non-target"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "actual arm64 Node and internal links pass closure inspection"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "installer probes before backup and never grants root Git trust"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "absent primary-workspaces.json \u2192 behavior identical to today (default derivation)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "invalid import entry (relative path) \u2192 startup fails loud with PRIMARY_WORKSPACE_INVALID"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "invalid import entry (missing directory) \u2192 startup fails loud"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "malformed primary-workspaces.json (bad JSON / non-object) \u2192 startup fails loud"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "I: the same static config file yields the identical primary across restarts"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/restart-boundary.test.js",
+    "name": "compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end)"
+  },
+  {
+    "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js",
+    "name": "cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay"
+  }
+]
