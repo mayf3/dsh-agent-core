@@ -158,7 +158,7 @@ test('judgeAttempt: no verified Run linkage => NEEDS_REVIEW delivery_unverified 
 // trigger, never a business fact derived from exit0 shapes or model text.
 
 import * as judgmentNs from '../src/judgment.js'
-import { authErrors } from '../../broker/src/capabilities/workflow-definition-authoring.js'
+import { authErrors } from '../../broker/src/capabilities/workflow/definition-authoring.js'
 
 const ATTEMPT_ID = `wfeat-${'d'.repeat(24)}`
 const OTHER_ATTEMPT_ID = `wfeat-${'e'.repeat(24)}`
