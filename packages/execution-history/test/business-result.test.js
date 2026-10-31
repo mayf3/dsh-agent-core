@@ -267,3 +267,37 @@ test('#720 Svc proof revisions change the boundary even with the same row count;
     assert.notEqual(changed.result.reportId, full.result.reportId, 'changed remote proof must not masquerade as the old boundary')
   } finally { destroyFixtureRoot(fixture) }
 })
+
+for (const malformed of ['missing cursor', 'invalid rows']) {
+  test(`#720 review existing reader: ${malformed} cannot prove movement and remains in the read boundary`, async () => {
+    const fixture = buildFixtureRoot()
+    try {
+      const input = facts()
+      const request = requestFor(input, [])
+      let mode = 'clean'
+      const svcRequest = async (agentId, req) => {
+        if (req.path.endsWith('/timeline') && mode !== 'clean') {
+          return { ok: true, body: malformed === 'missing cursor'
+            ? { items: input.timeline }
+            : { items: [...input.timeline, mode === 'broken' ? null : false, 'broken', 17], nextCursor: null } }
+        }
+        return request(agentId, req)
+      }
+      const opts = { root: 'workflow_instance', args: { workflowInstanceId: WF_ID },
+        viewer: { agentId: 'agt_a', audit: false }, paths: fixture.paths, svcRequest, nowMs: 500 }
+      const clean = await queryExecutionTrace(opts)
+      mode = 'broken'
+      const broken = await queryExecutionTrace(opts)
+      const projection = broken.result.summary.workflowResult.businessOutcome
+      assert.equal(projection.state, 'UNKNOWN')
+      assert.ok(projection.gaps.includes('TIMELINE_INCOMPLETE'))
+      assert.equal(broken.result.readBoundary.sources.find((s) => s.name === 'svc_timeline').status, 'DEGRADED')
+      assert.notEqual(broken.result.reportId, clean.result.reportId)
+      if (malformed === 'invalid rows') {
+        mode = 'different broken body'
+        assert.notEqual((await queryExecutionTrace(opts)).result.reportId, broken.result.reportId,
+          'raw invalid content stays bound even when the normalized records and gap are identical')
+      }
+    } finally { destroyFixtureRoot(fixture) }
+  })
+}
