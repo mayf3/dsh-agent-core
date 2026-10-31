@@ -1,0 +1,67 @@
+{
+  "sourceHead": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+  "rc": 0,
+  "passed": 502,
+  "failed": 0,
+  "targets": [
+    {
+      "target": "17_workflow_runtime",
+      "result": "ok",
+      "passed": 453,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 537.28
+    },
+    {
+      "target": "19_domain_owner_definition_governance",
+      "result": "ok",
+      "passed": 25,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 0.52
+    },
+    {
+      "target": "23_global_coordinator",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 37.89
+    },
+    {
+      "target": "31_admission_wiring",
+      "result": "ok",
+      "passed": 7,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 14.9
+    },
+    {
+      "target": "32_canonical_assignee_continuity",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 1.52
+    },
+    {
+      "target": "32_definition_publish_admission",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 7.2
+    },
+    {
+      "target": "34_identity_repair_operator",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "elapsedSeconds": 0.98
+    }
+  ],
+  "rawLogSha256": "a30f12c040b09204ccf464cac09533e148243e733cd0a656cf02db609fef80fe",
+  "existingFailureNames": [],
+  "meaning": "T0 existing repair integration verified; not T1 canonical-only new-write implementation"
+}

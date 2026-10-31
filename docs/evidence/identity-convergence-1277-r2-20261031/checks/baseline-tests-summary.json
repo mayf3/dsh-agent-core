@@ -1,0 +1,26 @@
+{
+  "baseHead": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "sourceUnchanged": true,
+  "sameTestsOnCandidate": "all three PASS within 502 suite",
+  "boundedBaselineOnly": true,
+  "results": [
+    {
+      "label": "baseline-creator",
+      "passed": 1,
+      "failed": 1,
+      "failedNames": [
+        "query_worklists::creator_sql_exact_creator_with_legacy_assignee_lists_and_combines"
+      ],
+      "logSha256": "2d2945bd284c9fcbdb25a8da80325f412f82a1382a0afa3e657855f2d3170ab5"
+    },
+    {
+      "label": "baseline-continuity",
+      "passed": 0,
+      "failed": 1,
+      "failedNames": [
+        "canonical_assignee_reads_and_advances_where_stale_uuid_stored"
+      ],
+      "logSha256": "5941180e7bba103c6d8917feb0b4fca5454c782e0fe6e7385f3dec7ed0080871"
+    }
+  ]
+}

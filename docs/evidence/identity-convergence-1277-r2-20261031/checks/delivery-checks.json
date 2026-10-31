@@ -1,0 +1,46 @@
+{
+  "task": 1277,
+  "round": "R2",
+  "sourceHead": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+  "steps": {
+    "T0": "DONE_SOURCE_LOCAL",
+    "T1": "BLOCKED_OQ_NW_001_AND_ACCEPTED_MAIN_AUTHORITY",
+    "T2": "BLOCKED_ORDERED_DEPENDENCY",
+    "T3": "BLOCKED_ORDERED_DEPENDENCY_AND_PROJECTION_AUTHORITY",
+    "T4": "BLOCKED_ORDERED_DEPENDENCY",
+    "T5": "BLOCKED_RETIREMENT_DEPENDENCIES"
+  },
+  "rustTests": {
+    "passed": 502,
+    "failed": 0,
+    "rc": 0,
+    "elapsedSeconds": 623.368
+  },
+  "dshExecutionTests": {
+    "passed": 69,
+    "failed": 0,
+    "rc": 0
+  },
+  "dshBrokerTests": {
+    "passed": 3,
+    "fileLoadFailures": 3,
+    "cause": "missing croner; root dependency lock absent; no product JS delta"
+  },
+  "baseline": {
+    "bounded": true,
+    "passed": 1,
+    "expectedRepairedFailures": 2
+  },
+  "t1ProposalHead": "27747607937ecaa032982bd1a81301601633791d",
+  "t1ProposalAccepted": false,
+  "sourceReady": false,
+  "mergeReady": false,
+  "productionChange": 0,
+  "productionDbAccess": false,
+  "productionDbWrites": 0,
+  "sessionReset": false,
+  "realBusinessTransition": false,
+  "deployment": false,
+  "localClusterStopped": true,
+  "finalReportReview": "PENDING_EXACT_HEAD"
+}

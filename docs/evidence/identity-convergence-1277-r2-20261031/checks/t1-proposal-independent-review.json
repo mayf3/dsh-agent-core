@@ -1,0 +1,181 @@
+{
+  "recordType": "INDEPENDENT_T1_PROPOSAL_REVIEW",
+  "reviewer": "/root/t1_authority_audit",
+  "sourceAuthor": "/root",
+  "authorIndependence": "PASS",
+  "evaluatedAtUtc": "2026-10-31T00:25:26.299225+00:00",
+  "repository": "mayf3/svc-workflow",
+  "worktree": "/tmp/ac1277-svc-spec",
+  "reviewKind": "SPEC_PROPOSAL_AFFECTED_CONTRACT",
+  "reviewTargetHead": "27747607937ecaa032982bd1a81301601633791d",
+  "reviewTargetTree": "13b7b987924cbecf34158cb2af8e79e84e845857",
+  "baseHead": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "currentBaseHead": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "baseHeadVerification": "git ls-remote origin refs/heads/main returned exact base SHA during this review",
+  "candidateFile": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V3.md",
+  "candidateFileSha256": "2bf37d825ee4260c93ad6350b546079bea032a5bacaf0fa868fe234973058eb0",
+  "route": {
+    "authorityAction": "SUPERSEDE",
+    "planLevel": "EXEC_PLAN",
+    "assuranceLevel": "CONTROLLED",
+    "routeStage": "AUTHORITY_AUTHORING",
+    "authorityAcceptedInBase": "NO"
+  },
+  "reviewResult": "PASS_AS_PROPOSAL_NON_READY",
+  "isAcceptance": false,
+  "acceptanceReadiness": "NON_READY",
+  "implementationAllowed": false,
+  "mergeReady": false,
+  "productionOperationAllowed": false,
+  "checks": {
+    "AUTHORITY": {
+      "result": "PASS_AS_PROPOSAL",
+      "evidence": [
+        "V3 lines 3,37-42 explicitly proposed/not accepted; V2 stays active until authorized lifecycle transaction and merge.",
+        "V3 lines 12-14 identify accepted active Product V13 and Architecture 0.4.7; old local README parents were not treated as current.",
+        "V3 lines 221-239 carry V2 body byte-for-byte; no accepted authority file changed; all three external pins are exact.",
+        "Whole-authority successor is the local governance vehicle for changed accepted new-write meaning; no standalone policy bypass was created.",
+        "Current schema/format strict governed_by ID rule rejects actual historical stable Architecture IDs; full syntax is FAIL and unresolved, not waived by this proposal review."
+      ]
+    },
+    "PRIMITIVE": {
+      "result": "PASS_AS_PROPOSAL",
+      "evidence": [
+        "V3 lines 79-109 bind source observation to exact base/candidate, distinguish static source evidence from runtime/production proof.",
+        "T62 is called implementation evidence rather than Product Authority.",
+        "CLM-NW-002 remains OPEN_ASSUMPTION and cannot justify implementation."
+      ]
+    },
+    "CONTRACT": {
+      "result": "PASS_AS_PROPOSAL",
+      "evidence": [
+        "CTR-NW-001 rejects explicit legacy inputs via authoritative exact validation; no local alias/name or global fallback.",
+        "CTR-NW-002 confines P-to-Q internal historical target mapping to its original accepted scope, validates Q, preserves P provenance and immutable history.",
+        "CTR-NW-003 carries validated canonical target to assignment persistence and preserves transaction/lock/CAS/deadline/assistance/business checks.",
+        "CTR-NW-004 separates canonical responsibility from actual authenticated actor, exact creator and independent Domain/admin/auditor grants; original request hash and UNKNOWN reconciliation remain unchanged.",
+        "CTR-NW-005 and lines 51-61 prevent ordinary policy expansion from enlarging frozen repair APPLY membership; no T3 DTO/window semantics added."
+      ]
+    },
+    "ACCEPTANCE": {
+      "result": "PASS_AS_PROPOSAL_COVERAGE_ONLY",
+      "readiness": "NON_READY",
+      "evidence": [
+        "ACC-NW-001..005 cover all five proposed contracts with explicit inputs/internal history, all named write paths, disabled/unavailable/missing target negatives, actor/hash/replay, CAS and historical digest controls.",
+        "V3 lines 174-177 require owned PostgreSQL/mock directory evidence and explicitly separate test definitions from executed results.",
+        "OQ-NW-001 remains unselected; acceptance/implementation/merge readiness are NO in lines 208-219. This review does not select a disabled-mode contract or certify executed conformance."
+      ]
+    },
+    "MANDATE": {
+      "result": "PASS_AS_PROPOSAL",
+      "evidence": [
+        "Exactly one docs-only new V3 file; V2 and product source/tests unchanged.",
+        "production_apply_authority is none, no production operation or Auth/grant/credential/session effect is authorized.",
+        "Proposal follows issue #1277 T1 selected new-write policy and limits future implementation to the authorized source branch after authority acceptance."
+      ]
+    },
+    "EVIDENCE": {
+      "result": "PASS_STATIC_PROPOSAL_REVIEW",
+      "evidence": [
+        "Candidate/base committed Git bytes inspected directly; clean worktree observed.",
+        "V2 exact carried body SHA-256 recomputed and matches declared hash.",
+        "External authority pins compared exactly.",
+        "git diff --check base..candidate exited 0.",
+        "No database or product tests were run by reviewer; no runtime/production conformance claimed.",
+        "Independent full frontmatter schema evaluation FAILS for both base V2 Architecture V0_4_1 and candidate V3 Architecture V0_4_7; recorded as comparative tooling debt, never full syntax PASS."
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "OQ-NW-001",
+      "kind": "SPEC_GAP",
+      "dependency": "LOAD_BEARING",
+      "status": "OPEN_ALREADY_DISCLOSED",
+      "source": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V3.md:208-219 and .agents/README.md:150-154",
+      "counterexample": "Keeping disabled admission as unrestricted no-op would permit new unverified legacy assignment; selecting fail-closed without acceptance would invent new failure/activation semantics.",
+      "impact": "T1 proposed authority cannot be accepted, merged as accepted, or used for implementation yet.",
+      "minimalClosure": "Authorized owning actor selects fail-closed versus an exactly named finite dormant consumer/version window; encode the selected contract and discriminating enabled/disabled tests, then independent exact-head review and docs-only lifecycle acceptance/merge."
+    },
+    {
+      "id": "TD-NW-001",
+      "kind": "TOOLING_DEBT",
+      "status": "PRE_EXISTING_BASE_AND_CANDIDATE_SCHEMA_MISMATCH",
+      "source": ".agents/schemas/spec-frontmatter.schema.json:7-10,69-74; .agents/protocol/SPEC_FORMAT_V0.md:90,145",
+      "counterexample": "The exact committed base V2 governed_by contains SVC_WORKFLOW_ARCHITECTURE_V0_4_1 and candidate V3 contains the actual accepted SVC_WORKFLOW_ARCHITECTURE_V0_4_7; both are rejected by strict _V[0-9]+ reference validation.",
+      "impact": "Full syntax validation is FAIL. No acceptance or implementation readiness is granted. Draft publication need not rename accepted authorities or alter unrelated governance solely to create a passing result.",
+      "minimalClosure": "Record comparative failure without waiver or fabricated syntax pass; before any future acceptance, owning governance authority must reconcile validation with the actual stable Architecture parent IDs through its lawful route."
+    }
+  ],
+  "counts": {
+    "proposalPublicationBlockers": 0,
+    "loadBearingOpenSpecGaps": 1,
+    "newFindings": 0,
+    "followUps": 0,
+    "toolingDebt": 1
+  },
+  "byteVerification": {
+    "changedFiles": [
+      "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V3.md"
+    ],
+    "v2Unchanged": true,
+    "v2BodyExactSuffix": true,
+    "v2BodyBytes": 36458,
+    "v2BodySha256": "55e8b518e91dfef94f7c74e4642a57ec4ad7471903f70bef9e64ed4e4d3bd84e",
+    "externalPinsExact": true,
+    "diffCheckRc": 0
+  },
+  "limitations": [
+    "This is independent review of a non-ready proposal, not Owner acceptance or final accepted-head recheck.",
+    "T3 projection semantics, production retirement and runtime business acceptance remain outside the proposal/review.",
+    "External authority pins were checked for faithful preservation, not fresh external-service deployment status.",
+    "Schema validation is FAIL on actual stable Architecture governed_by IDs in both base and candidate. Semantic proposal review does not waive or certify the syntax gate."
+  ],
+  "effects": {
+    "repositoryWrites": 0,
+    "databaseAccess": 0,
+    "productionWrites": 0,
+    "externalMessages": 0,
+    "receiptOnlyWrite": true
+  },
+  "nextAction": "Resolve OQ-NW-001 and reconcile recorded governed_by schema limitation before acceptance; preserve all non-ready boundaries.",
+  "syntaxValidation": {
+    "result": "FAIL",
+    "fullSyntaxPass": false,
+    "schema": ".agents/schemas/spec-frontmatter.schema.json",
+    "schemaSha256": "2788da9f04c4c3494d1b48bd68afae681f8db951fac8e34bd1e016b91091599b",
+    "method": "yaml.safe_load frontmatter plus jsonschema.Draft202012Validator.iter_errors on exact committed base and candidate bytes",
+    "comparison": [
+      {
+        "label": "base",
+        "ref": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+        "path": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V2.md",
+        "result": "FAIL",
+        "errors": [
+          {
+            "path": [
+              "governed_by",
+              1
+            ],
+            "message": "'SVC_WORKFLOW_ARCHITECTURE_V0_4_1' does not match '^[A-Z][A-Z0-9_]*_V[0-9]+$'"
+          }
+        ]
+      },
+      {
+        "label": "candidate",
+        "ref": "27747607937ecaa032982bd1a81301601633791d",
+        "path": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V3.md",
+        "result": "FAIL",
+        "errors": [
+          {
+            "path": [
+              "governed_by",
+              1
+            ],
+            "message": "'SVC_WORKFLOW_ARCHITECTURE_V0_4_7' does not match '^[A-Z][A-Z0-9_]*_V[0-9]+$'"
+          }
+        ]
+      }
+    ],
+    "interpretation": "Both exact base V2 and candidate V3 are rejected on their true stable Architecture parent IDs. No parent was renamed, normalized or omitted to force a pass. This review permits draft publication only and does not waive schema/local-format acceptance requirements."
+  }
+}
