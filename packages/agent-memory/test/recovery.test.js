@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * recoverSource() tests (SIGTRAP fix v1) — the migration tool's mechanical
  * recovery contract: maximal unwrap of esc^k layers, unique logical

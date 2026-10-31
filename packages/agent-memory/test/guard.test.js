@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * MEMORY guard tests (SIGTRAP fix v1): bounded validation BEFORE any
  * String.replace / IO. FAIL_LOUD_BUT_NON_FATAL — a MemoryGuardError must

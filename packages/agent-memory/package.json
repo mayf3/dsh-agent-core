@@ -9,7 +9,9 @@
     ".": "./src/index.js",
     "./memory": "./src/memory.js",
     "./paths": "./src/paths.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./inspect": "./src/inspect.js",
+    "./history": "./src/history.js"
   },
   "license": "UNLICENSED",
   "peerDependencies": {

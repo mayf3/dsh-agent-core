@@ -1,43 +1,13 @@
-/**
- * @agent-core/agent-memory — Cordis plugin: per-agent long-term memory glue.
- *
- * FILE-FIRST per-agent memory (see src/memory.js): MEMORY.md in the agent's
- * workspace is the canonical store; memory/YYYY-MM-DD.md is the episodic
- * fallback layer. This plugin is the THIN glue that connects the file store
- * to one DSH agent process:
- *
- *   1. `ctx.agentMemory` service — load(agentId) / renderForContext(agentId) /
- *      update(...) / remove(...) / search(...) / consolidate(agentId,
- *      sessionEvidence) — the Agent Core memory glue surface (also usable by
- *      a future control plane / human tooling).
- *   2. Model tools — memory_save / memory_search / memory_list /
- *      memory_update / memory_delete / memory_consolidate (adapted from
- *      @modusensus/dsh-mneme's tool set, file-backed instead of SQLite).
- *   3. Automatic injection — fresh sessions receive the curated memory via
- *      `systemPrompt.context` (re-read from disk at every assembly, so
- *      human edits are visible immediately).
- *   4. Automatic consolidation — on `turn/end` the session's new evidence is
- *      distilled by the LLM into curated entries (debounced); when the LLM
- *      path fails or yields nothing, the raw evidence still lands in the
- *      daily note (reliable fallback — nothing is lost).
- *
- * Isolation is physical: MEMORY.md lives inside ONE workspace and every
- * operation resolves that workspace per-call (V2,
- * AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC §5.2): session-aware call
- * sites (tools / save / search / consolidation / daily notes) use the current
- * Session's frozen header.cwd; the session-less synchronous system-prompt
- * injection uses Agent.primaryWorkspace (= resolveWorkspace(agentId)). In the
- * V2 normal path both resolve to the same workspace, so all sessions of the
- * agent share one MEMORY.md (MEMORY_OWNERSHIP = WORKSPACE_LOCAL, unchanged).
- *
- * stdout is reserved for the JSON-RPC protocol of the demo-server; all
- * diagnostics go through ctx.logger (stderr), never console.log.
- */
+/** Per-agent memory plugin: trusted session cwd for tools, primary for sync injection. */
 
 import z from '@deepseek-ai/schemastery'
-import { defineTool } from '@deepseek-ai/dsh-tools'
+import { memoryTools, toApiList } from './tools.js'
 import { basename, isAbsolute, resolve } from 'node:path'
 import { mkdir } from 'node:fs/promises'
+import { realpathSync, statSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { inspectMemory, resolveMemoryBinding } from './inspect.js'
+import { createHistorySearch } from './history.js'
 
 import {
   agentIdFromCwd,
@@ -48,7 +18,6 @@ import {
 import {
   consolidate,
   loadEntries,
-  loadEntriesSync,
   loadEntriesTailSync,
   readDailyNotes,
   removeEntry,
@@ -59,67 +28,22 @@ import {
   writeEntries,
 } from './memory.js'
 
-/** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-memory'
 
-/** Optional services are read via ctx.get; nothing is a hard dependency. */
 export const inject = []
 
-/** Plugin config. */
 export const Config = z.object({
-  /** Optional agentId; defaults to the basename of the process cwd (the workspace dir name). */
-  agentId: z.string(),
-  /** Optional workspace-root override, passed through to workspace-bootstrap. */
-  workspaceRoot: z.string(),
-  /** Inject curated memory into fresh sessions (default true). */
-  autoInject: z.boolean().default(true),
-  /** Max entries injected per session (default 6). */
-  maxInjectedEntries: z.natural().min(1).max(20).default(6),
-  /** Max chars of injected memory block (default 2400). */
-  maxInjectedChars: z.natural().min(200).max(20000).default(2400),
-  /** Auto-consolidate session evidence at turn/end (default true). */
-  autoConsolidate: z.boolean().default(true),
-  /** Debounce before the consolidation LLM call (default 3000ms). */
-  consolidateDelayMs: z.natural().min(0).max(60000).default(3000),
-  /** Append raw evidence to the daily note on every consolidation (default true). */
-  dailyNotes: z.boolean().default(true),
-  /** Optional explicit LLM route for consolidation (default: session route, then agent default). */
-  provider: z.string(),
-  /** Optional explicit model for consolidation (default: session route, then agent default). */
-  model: z.string(),
+    agentId: z.string(),
+    workspaceRoot: z.string(),
+    autoInject: z.boolean().default(true),
+    maxInjectedEntries: z.natural().min(1).max(20).default(6),
+    maxInjectedChars: z.natural().min(200).max(20000).default(2400),
+    autoConsolidate: z.boolean().default(true),
+    consolidateDelayMs: z.natural().min(0).max(60000).default(3000),
+    dailyNotes: z.boolean().default(true),
+    provider: z.string(),
+    model: z.string(),
 })
-
-const TEXT_OUTPUT = (text) => [{ type: 'text', text }]
-
-/** Wire shape of a memory entry as returned by tools. */
-const MEMORY_ITEM_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    id: { type: 'string', required: true },
-    type: { type: 'string', required: true },
-    title: { type: 'string', required: true },
-    content: { type: 'string', required: true },
-    tags: { type: 'array', items: { type: 'string' } },
-    importance: { type: 'integer', required: true },
-    source: { type: 'string' },
-    updatedAt: { type: 'string', required: true },
-  },
-}
-
-/** toApiList: strip nothing, expose the full entry. */
-function toApiList(entries) {
-  return entries.map((m) => ({
-    id: m.id,
-    type: m.type,
-    title: m.title,
-    content: m.content,
-    tags: m.tags,
-    importance: m.importance,
-    source: m.source,
-    updatedAt: m.updatedAt,
-  }))
-}
 
 const DISTILL_PROMPT = `You are the memory distillation assistant of a long-lived agent.
 From the session evidence below, extract 2-3 facts worth remembering ACROSS sessions:
@@ -131,17 +55,6 @@ Rules:
 - Copy dates, numbers and proper nouns EXACTLY as stated in the evidence; never invent, alter or guess values.
 - Do not invent facts that are not in the evidence. Do not output anything else.`
 
-/**
- * Mount the memory plugin.
- *
- * Arrow (not function declaration) on purpose: cordis 4 treats any apply with
- * a prototype as a class constructor (`new apply(...)`) and discards its
- * return value, so a `function apply` disposer would never run on unload.
- * An arrow has no prototype, is called normally, and its returned disposer
- * is collected and run by the fiber on unload (same pattern as dsh-mneme).
- * @param ctx - plugin context.
- * @param config - validated plugin config.
- */
 export const apply = (ctx, config = {}) => {
   const cfg = Config(config)
   // agentId precedence: explicit config > $DSH_AGENT_ID (the control plane /
@@ -176,32 +89,13 @@ export const apply = (ctx, config = {}) => {
   }
   const memoryFile = resolveMemoryFile(workspace)
 
-  /**
-   * V2 memory workspace resolver (AGENT_WORKSPACE_SESSION_V2_CORE_ALIGNMENT_SPEC
-   * §5.2/§5.3, accepted; KERNEL_CHANGE = NONE): MEMORY_OWNERSHIP =
-   * WORKSPACE_LOCAL is unchanged and unique — only HOW each call site obtains
-   * the workspace authority differs:
-   *
-   *   session-aware call sites (tools / save / search / consolidation /
-   *     daily notes)  -> the current Session's frozen header.cwd
-   *   session-less call sites (the synchronous system-prompt [memory]
-   *     injection, §5.4) -> Agent.primaryWorkspace = resolveWorkspace(agentId)
-   *
-   * In the V2 normal path session.header.cwd == resolveWorkspace(agentId), so
-   * both resolve to the same MEMORY.md (MEMORY_WORKSPACE_EQUALITY). A session
-   * whose header carries no usable cwd falls back to the primary workspace
-   * (fail toward the agent's own workspace, never an error).
-   * @param {object} [session] - session handle (`session.header.cwd`).
-   * @returns {string} the absolute workspace root for this operation.
-   */
-  function resolveMemoryWorkspace(session) {
+    function resolveMemoryWorkspace(session) {
     const cwd = session?.header?.cwd
     if (typeof cwd === 'string' && cwd.trim() !== '') return cwd
     return workspace
   }
 
-  /** The MEMORY.md path for one operation context (see resolveMemoryWorkspace). */
-  function memoryFileFor(session) {
+    function memoryFileFor(session) {
     return resolveMemoryFile(resolveMemoryWorkspace(session))
   }
 
@@ -228,19 +122,11 @@ export const apply = (ctx, config = {}) => {
     running: new Set(),          // in-flight consolidations
   }
 
-  /**
-   * Read the current entries (fresh from disk — human edits always win).
-   * Session-aware (§5.2): `{ session }` resolves the workspace from
-   * session.header.cwd; without a session this reads the agent primary
-   * workspace's MEMORY.md.
-   */
-  async function load(opts = {}) {
+    async function load(opts = {}) {
     return loadEntries(memoryFileFor(opts.session))
   }
 
-  /** Render the injection text for this agent (fresh read; primary workspace
-   *  — the session-less resolver fallback, §5.2/§5.4). */
-  async function renderForContext() {
+    async function renderForContext() {
     const entries = await load()
     return renderContextText(entries, {
       maxEntries: cfg.maxInjectedEntries,
@@ -248,8 +134,7 @@ export const apply = (ctx, config = {}) => {
     })
   }
 
-  /** update(...) glue: save/merge an entry, persist atomically (session-aware). */
-  async function update(entry, opts = {}) {
+    async function update(entry, opts = {}) {
     const file = memoryFileFor(opts.session)
     const entries = await loadEntries(file)
     const outcome = saveWithDedupe(entries, entry)
@@ -258,8 +143,7 @@ export const apply = (ctx, config = {}) => {
     return { action: outcome.action, memory: outcome.entry }
   }
 
-  /** remove(id) glue: delete an entry, persist atomically (session-aware). */
-  async function remove(id, opts = {}) {
+    async function remove(id, opts = {}) {
     const file = memoryFileFor(opts.session)
     const entries = await loadEntries(file)
     const outcome = removeEntry(entries, id)
@@ -267,18 +151,15 @@ export const apply = (ctx, config = {}) => {
     return outcome.removed
   }
 
-  /** search(query) glue (session-aware). */
-  async function search(query, opts = {}) {
+    async function search(query, opts = {}) {
     return searchEntries(await loadEntries(memoryFileFor(opts.session)), query)
   }
 
-  /** list() glue (session-aware). */
-  async function list(opts = {}) {
+    async function list(opts = {}) {
     return loadEntries(memoryFileFor(opts.session))
   }
 
-  /** Resolve the LLM route for distillation. */
-  function resolveRoute(session) {
+    function resolveRoute(session) {
     try {
       const header = session?.requestHeader?.()?.config
       if (header?.provider && header?.model) return { provider: header.provider, model: header.model }
@@ -291,8 +172,7 @@ export const apply = (ctx, config = {}) => {
     return undefined
   }
 
-  /** LLM-backed distill function fed to the pure consolidate core. */
-  function makeDistill(session) {
+    function makeDistill(session) {
     const route = resolveRoute(session)
     if (!route) return undefined
     return async (evidenceText) => {
@@ -321,15 +201,7 @@ export const apply = (ctx, config = {}) => {
     }
   }
 
-  /**
-   * consolidate(agentId, sessionEvidence) glue. `sessionEvidence` is text
-   * (raw transcript of the session turn); falls back to the daily note when
-   * distillation is unavailable or fails. Distilled entries are stamped with
-   * consolidation provenance (unless the distill output already carries one).
-   * Session-aware (§5.2): the workspace (MEMORY.md + daily note) resolves
-   * from the triggering session's header.cwd.
-   */
-  async function consolidateNow(sessionEvidence, { session } = {}) {
+    async function consolidateNow(sessionEvidence, { session } = {}) {
     const provenance = session ? `consolidation:session:${session.id}` : 'consolidation'
     const ws = resolveMemoryWorkspace(session)
     const result = await consolidate({
@@ -354,198 +226,34 @@ export const apply = (ctx, config = {}) => {
     return { saved: toApiList(result.saved), fallback: result.fallback }
   }
 
+  // Read-only services resolve from trusted process/session context only.
+  let lastAssembly = null
+  let lastQueryCoverage = null
+  const digest = value => createHash('sha256').update(value).digest('hex')
+  function assemblyWorkspaceKey() {
+    const path = realpathSync(workspace)
+    const info = statSync(path)
+    return `v1:${digest(JSON.stringify({agentId,workspace:{path,dev:String(info.dev),ino:String(info.ino)}}))}`
+  }
+  async function inspect(opts = {}) {
+    const binding = await resolveMemoryBinding({agentId,primaryWorkspace:workspace,session:opts.session})
+    return inspectMemory({binding,detail:opts.detail ?? 'summary',observedRuntime:{
+      injection:{configured:cfg.autoInject,maxEntries:cfg.maxInjectedEntries,maxChars:cfg.maxInjectedChars,lastObservedAssembly:lastAssembly},
+      history:{lastQueryCoverage:lastQueryCoverage?.workspaceKey === binding.workspaceKey ? lastQueryCoverage.coverage : null},
+    }})
+  }
+  async function historySearch(args, opts = {}) {
+    const binding = await resolveMemoryBinding({agentId,primaryWorkspace:workspace,session:opts.session})
+    return createHistorySearch({binding,onCoverage:coverage=>{lastQueryCoverage={workspaceKey:binding.workspaceKey,coverage}}})(args)
+  }
+
   // ------------------------------------------------------------------ tools
 
-  const tools = [
-    defineTool({
-      name: 'memory_save',
-      description:
-        'Persist one memory entry for future sessions (user preferences, durable personal facts, project state, decisions). ' +
-        'Call this when the user states a durable preference or fact, or a project decision is made. ' +
-        'Merges into an existing entry of the same type when the title matches.',
-      parameters: {
-        type: { type: 'string', required: true, enum: ['preference', 'project', 'decision', 'history'], description: 'preference=user preference/durable fact; project=project knowledge/state; decision=key decision; history=conversation event worth recalling' },
-        title: { type: 'string', required: true, description: 'Short unique title' },
-        content: { type: 'string', required: true, description: 'Memory body' },
-        tags: { type: 'array', items: { type: 'string' }, description: 'Optional tags' },
-        importance: { type: 'integer', description: '1-5; >= 3 auto-injects into future sessions' },
-        source: { type: 'string', description: 'Optional provenance' },
-      },
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            action: { type: 'string', required: true, enum: ['created', 'merged'] },
-            id: { type: 'string', required: true },
-          },
-        },
-        render: (_args, value) => TEXT_OUTPUT(`memory ${value.action}: ${value.id}`),
-      },
-      async execute(args, exec) {
-        const { action, memory } = await update({
-          type: args.type,
-          title: args.title,
-          content: args.content,
-          tags: args.tags ?? [],
-          importance: args.importance ?? 3,
-          source: args.source ?? 'tool',
-        }, { session: exec?.agent?.session })
-        return { action, id: memory.id }
-      },
-    }),
-
-    defineTool({
-      name: 'memory_search',
-      description:
-        'Search this agent\'s cross-session long-term memory (MEMORY.md). Use when you need past context: user preferences, durable facts, project decisions. Substring-matches title/content/tags.',
-      parameters: {
-        query: { type: 'string', required: true, description: 'Search text; substring match over title/content/tags' },
-        limit: { type: 'integer', description: 'Max results (default 10)' },
-      },
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            items: { type: 'array', required: true, items: MEMORY_ITEM_SCHEMA },
-          },
-        },
-        render: (_args, value) => TEXT_OUTPUT(`Found ${value.items.length} memory entr${value.items.length === 1 ? 'y' : 'ies'}.`),
-      },
-      async execute(args, exec) {
-        const limit = args.limit ?? 10
-        return { items: toApiList((await search(args.query, { session: exec?.agent?.session })).slice(0, limit)) }
-      },
-    }),
-
-    defineTool({
-      name: 'memory_list',
-      description: 'List this agent\'s memory entries, high-importance first, then newest.',
-      parameters: {
-        type: { type: 'string', enum: ['preference', 'project', 'decision', 'history'], description: 'Filter by type; omit for all' },
-        limit: { type: 'integer', description: 'Max results (default 50)' },
-      },
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            items: { type: 'array', required: true, items: MEMORY_ITEM_SCHEMA },
-            total: { type: 'integer', required: true },
-          },
-        },
-        render: (_args, value) => TEXT_OUTPUT(`${value.items.length} memory entries (of ${value.total}).`),
-      },
-      async execute(args, exec) {
-        const all = await list({ session: exec?.agent?.session })
-        const filtered = args.type ? all.filter((m) => m.type === args.type) : all
-        const sorted = [...filtered].sort((a, b) => b.importance - a.importance || (a.updatedAt < b.updatedAt ? 1 : -1))
-        return { items: toApiList(sorted.slice(0, args.limit ?? 50)), total: filtered.length }
-      },
-    }),
-
-    defineTool({
-      name: 'memory_update',
-      description: 'Modify an existing memory entry (title, content, type, tags, importance).',
-      parameters: {
-        id: { type: 'string', required: true, description: 'Memory id' },
-        title: { type: 'string' },
-        content: { type: 'string' },
-        type: { type: 'string', enum: ['preference', 'project', 'decision', 'history'] },
-        tags: { type: 'array', items: { type: 'string' } },
-        importance: { type: 'integer', description: '1-5' },
-      },
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            memory: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                id: { type: 'string', required: true },
-                title: { type: 'string', required: true },
-                content: { type: 'string', required: true },
-              },
-            },
-          },
-        },
-        render: (_args, value) => TEXT_OUTPUT(`Updated memory ${value.memory.id}: ${value.memory.title}`),
-      },
-      async execute(args, exec) {
-        const session = exec?.agent?.session
-        const file = memoryFileFor(session)
-        const entries = await loadEntries(file)
-        const outcome = updateEntry(entries, args.id, {
-          title: args.title,
-          content: args.content,
-          type: args.type,
-          tags: args.tags,
-          importance: args.importance,
-        })
-        if (outcome.entry === undefined) throw new Error('memory not found')
-        await writeEntries(file, outcome.entries)
-        return { memory: { id: outcome.entry.id, title: outcome.entry.title, content: outcome.entry.content } }
-      },
-    }),
-
-    defineTool({
-      name: 'memory_delete',
-      description: 'Permanently delete a memory entry.',
-      parameters: {
-        id: { type: 'string', required: true },
-      },
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: { deleted: { type: 'boolean', required: true } },
-        },
-        render: (_args, value) => TEXT_OUTPUT(value.deleted ? 'Memory deleted.' : 'Memory not found.'),
-      },
-      async execute(args, exec) {
-        const deleted = await remove(args.id, { session: exec?.agent?.session })
-        return { deleted }
-      },
-    }),
-
-    defineTool({
-      name: 'memory_consolidate',
-      description:
-        'Consolidate the current session\'s new evidence into long-term memory now: distill durable facts from the recent conversation into curated MEMORY.md entries (and always keep raw evidence in the daily note). Call this explicitly when the session produced facts worth keeping across sessions and you want them persisted immediately.',
-      parameters: {},
-      output: {
-        schema: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            saved: { type: 'integer', required: true },
-            fallback: { type: 'boolean', required: true },
-          },
-        },
-        render: (_args, value) => TEXT_OUTPUT(`Consolidated: ${value.saved} entries saved (daily-note fallback: ${value.fallback}).`),
-      },
-      async execute(_args, exec) {
-        const session = exec?.agent?.session
-        const evidence = session
-          ? collectEvidence(session, { sinceSeq: state.lastSeqBySession.get(String(session.id)) ?? 0 }).text
-          : ''
-        const result = await consolidateNow(evidence, { session })
-        return { saved: result.saved.length, fallback: result.fallback }
-      },
-    }),
-  ]
+  const tools = memoryTools({inspect, historySearch, update, search, list, remove, memoryFileFor, consolidateNow, collectEvidence, state})
 
   // ------------------------------------------------------- event wiring
 
-  /**
-   * Collect the session's NEW evidence since the last consolidation: direct
-   * user messages + assistant text replies (surface text only, bounded to the
-   * last 40 events). Plugin-injected context is never evidence.
-   */
-  function collectEvidence(session, { sinceSeq = 0 } = {}) {
+    function collectEvidence(session, { sinceSeq = 0 } = {}) {
     const lines = []
     let lastSeq = sinceSeq
     let count = 0
@@ -570,8 +278,7 @@ export const apply = (ctx, config = {}) => {
     return { text: lines.join('\n'), lastSeq }
   }
 
-  /** Debounced turn/end consolidation. */
-  function scheduleConsolidation(session) {
+    function scheduleConsolidation(session) {
     if (!cfg.autoConsolidate) return
     const sessionId = String(session.id)
     const sinceSeq = state.lastSeqBySession.get(sessionId) ?? 0
@@ -616,9 +323,7 @@ export const apply = (ctx, config = {}) => {
     agentId,
     workspace,
     memoryFile,
-    /** V2 resolver surface: how this mount resolves one operation's memory
-     *  workspace (§5.2: session-aware -> session.header.cwd; else primary). */
-    resolveMemoryWorkspace,
+        resolveMemoryWorkspace,
     load,
     renderForContext,
     update,
@@ -626,9 +331,9 @@ export const apply = (ctx, config = {}) => {
     search,
     list,
     consolidate: consolidateNow,
-    /** Session-aware daily notes: `{ session }` resolves the workspace from
-     *  session.header.cwd (§5.2); without a session, the primary workspace. */
-    readDailyNotes: (opts = {}) => readDailyNotes(resolveMemoryWorkspace(opts.session), opts),
+    inspect,
+    historySearch,
+        readDailyNotes: (opts = {}) => readDailyNotes(resolveMemoryWorkspace(opts.session), opts),
   }
 
   ctx.provide('agentMemory', service)
@@ -648,13 +353,29 @@ export const apply = (ctx, config = {}) => {
         name: 'memory',
         order: 90,
         text: () => {
+          let workspaceKey = null
+          let coreSha256 = null
+          let selectedIds = []
           try {
-            return renderContextText(loadEntriesTailSync(memoryFile), {
+            workspaceKey = assemblyWorkspaceKey()
+            let entries
+            let missing = false
+            try {
+              entries = loadEntriesTailSync(memoryFile,{onSnapshot:snapshot=>{coreSha256=snapshot.sha256}})
+            } catch (error) {
+              if (error?.code !== 'ENOENT') throw error
+              entries=[];missing=true
+            }
+            const text = renderContextText(entries, {
               maxEntries: cfg.maxInjectedEntries,
               maxChars: cfg.maxInjectedChars,
+              onSelection:ids=>{selectedIds=ids},
             })
+            lastAssembly={workspaceKey,coreSha256,selectedIdsDigest:digest(JSON.stringify(selectedIds)),selectedCount:selectedIds.length,charCount:text.length,result:text ? 'INJECTED' : 'EMPTY',reason:missing ? 'MISSING' : null,time:new Date().toISOString()}
+            return text
           } catch (error) {
-            log.warn(`injection render failed: ${String(error)}`)
+            lastAssembly={workspaceKey,coreSha256,selectedIdsDigest:digest('[]'),selectedCount:0,charCount:0,result:'REFUSED',reason:error?.code === 'MEMORY_GUARD_LIMIT' ? 'GUARD_LIMIT' : 'READ_REFUSED',time:new Date().toISOString()}
+            log.warn('injection render failed: READ_REFUSED')
             return ''
           }
         },
