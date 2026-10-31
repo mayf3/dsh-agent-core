@@ -11,7 +11,8 @@
     "./paths": "./src/paths.js",
     "./package.json": "./package.json",
     "./inspect": "./src/inspect.js",
-    "./history": "./src/history.js"
+    "./history": "./src/history.js",
+    "./migration": "./src/migration.js"
   },
   "license": "UNLICENSED",
   "peerDependencies": {
