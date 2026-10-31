@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { realpath, stat } from 'node:fs/promises'
 import { isAbsolute, resolve } from 'node:path'
-import { ENTRY_TYPES, INJECT_TYPES, MEMORY_GUARD_LIMITS, MEMORY_HEADER, parseEntries } from './memory.js'
+import { ENTRY_TYPES, INJECT_TYPES, MEMORY_GUARD_LIMITS, MEMORY_HEADER, ASSEMBLY_GUARD_LIMITS, parseAssemblyEntries, parseEntries } from './memory.js'
 
 const MAX_BYTES = 32 * 1024 * 1024
 const OUTPUT_BYTES = 64 * 1024
@@ -236,7 +236,7 @@ export async function inspectMemory({ binding, observedRuntime = {}, detail = 's
   const configuredEntries = count(observedRuntime.injection?.maxEntries) ?? 6
   const configuredChars = count(observedRuntime.injection?.maxChars) ?? 2400
   const injection = { configured: typeof observedRuntime.injection?.configured === 'boolean' ? observedRuntime.injection.configured : null,
-    configuredMaxEntries: configuredEntries, configuredMaxChars: configuredChars, predictedSelectionCount: null,
+    configuredMaxEntries: configuredEntries, configuredMaxChars: configuredChars, configuredAssemblyParseBytes: ASSEMBLY_GUARD_LIMITS.maxAssemblyParseBytes, predictedSelectionCount: null,
     excludedSelectionCount: null, lastObservedAssembly: cleanReceipt(observedRuntime.injection?.lastObservedAssembly, binding?.workspaceKey) }
   const history = { enabled: null, manifestDigest: null, sourceKinds: ['core', 'daily', 'archive'], sourceCount: null, lastQueryCoverage: cleanQueryCoverage(observedRuntime.history?.lastQueryCoverage) }
   const writer = { mode: fixedString(observedRuntime.writer?.mode, 64), ownerKnown: typeof observedRuntime.writer?.ownerKnown === 'boolean' ? observedRuntime.writer.ownerKnown : null,
@@ -249,7 +249,10 @@ export async function inspectMemory({ binding, observedRuntime = {}, detail = 's
     core.bytes = count(source.size)
     if (source.bytes && source.status === 'COMPLETE') {
       const document = parseMemoryDocument(source.bytes)
-      core.exists = true; core.sha256 = source.sha256; core.format = document.format; core.entries = document.entries.length
+      core.exists = true
+      core.sha256 = source.sha256
+      core.format = document.format
+      core.entries = document.entries.length
       core.unparsedBytes = document.coverage.unparsedBytes
       core.parsedByteCoverage = { complete: detail === 'coverage', bytes: document.coverage.parsedBytes, totalBytes: document.coverage.bytes,
         spans: detail === 'coverage' ? document.spans.map(({ byteStart, byteEnd }) => ({ byteStart, byteEnd })) : null,
@@ -257,11 +260,20 @@ export async function inspectMemory({ binding, observedRuntime = {}, detail = 's
       core.guardStatus = document.issues.length ? 'INVALID' : 'PASS'
       core.readOnlyReason = document.issues.length ? 'READ_ONLY_FORMAT' : null
       core.budgetStatus = source.size > 64 * 1024 || document.entries.length > 128 ? 'OVER_CORE_BUDGET' : 'WITHIN_CORE_BUDGET'
-      const selected = injectionSelection(document.entries, configuredEntries, configuredChars)
-      injection.predictedSelectionCount = selected.selected; injection.excludedSelectionCount = selected.excluded
+      try {
+        const selected = injectionSelection(parseAssemblyEntries(source.bytes), configuredEntries, configuredChars)
+        injection.predictedSelectionCount = selected.selected; injection.excludedSelectionCount = selected.excluded
+      } catch (error) {
+        status = 'PARTIAL'
+        reasons.push(error?.code === 'MEMORY_GUARD_LIMIT' ? 'ASSEMBLY_GUARD_LIMIT' : 'ASSEMBLY_PARSE_REFUSED')
+      }
       if (document.issues.length) { status = 'PARTIAL'; reasons.push(...new Set(document.issues.map((issue) => issue.code))) }
     } else if (source.reason === 'MISSING' || source.status === 'MISSING') {
-      core.exists = false; core.bytes = 0; core.format = 'MISSING'; core.entries = 0; core.unparsedBytes = 0
+      core.exists = false
+      core.bytes = 0
+      core.format = 'MISSING'
+      core.entries = 0
+      core.unparsedBytes = 0
       core.guardStatus = 'MISSING'; core.budgetStatus = 'MISSING'
       injection.predictedSelectionCount = 0; injection.excludedSelectionCount = 0
     } else {
