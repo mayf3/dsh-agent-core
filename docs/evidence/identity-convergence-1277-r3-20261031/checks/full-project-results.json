@@ -1,0 +1,498 @@
+{
+  "command": "full-project-runtime",
+  "sourceHead": "06c035467ef7effc664f41ab703bbe736523d13e",
+  "rc": 101,
+  "targets": [
+    {
+      "target": "src/lib.rs",
+      "result": "ok",
+      "passed": 252,
+      "failed": 0,
+      "ignored": 1
+    },
+    {
+      "target": "src/bin/human_executor_normalization_v0.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "src/bin/identity_repair_v1.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "src/bin/provision-todo-definition.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "src/bin/stop_new_v1.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "src/main.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "src/bin/trusted_fleet_principal_cutover_v1.rs",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "00_upgrade_verification",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "01_migration_tests",
+      "result": "FAILED",
+      "passed": 17,
+      "failed": 1,
+      "ignored": 0
+    },
+    {
+      "target": "02_domain_owner_tests",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "03_context_revision_constraints",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "04_node_visit_constraints",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "05_submission_constraints",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "06_event_constraints",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "07_command_constraints",
+      "result": "ok",
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "08_instance_constraints",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "09_deferred_fk_tests",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "10_definition_version_tests",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "11_size_limit_tests",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "12_graph_immutability_tests",
+      "result": "ok",
+      "passed": 16,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "13_definition_service_tests",
+      "result": "ok",
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "14_definition_lifecycle_tests",
+      "result": "ok",
+      "passed": 6,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "15_definition_graph_parent_move_tests",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "16_definition_service_audit_fix",
+      "result": "ok",
+      "passed": 36,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "17_workflow_runtime",
+      "result": "ok",
+      "passed": 454,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "18_self_projection_and_domain_members",
+      "result": "ok",
+      "passed": 25,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "19_domain_owner_definition_governance",
+      "result": "ok",
+      "passed": 25,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "20_canary_seed_tests",
+      "result": "ok",
+      "passed": 5,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "21_instance_cancel_archive",
+      "result": "ok",
+      "passed": 27,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "22_repair_context",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "23_global_coordinator",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "24_coordinator_domain_management",
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "25_workflow_assistance",
+      "result": "ok",
+      "passed": 33,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "26_workflow_assistance_http",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "27_trusted_fleet_principal_cutover_v1",
+      "result": "FAILED",
+      "passed": 2,
+      "failed": 1,
+      "ignored": 0
+    },
+    {
+      "target": "28_visit_activation_v1",
+      "result": "ok",
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "29_dispatch_intent_keyset",
+      "result": "ok",
+      "passed": 6,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "29_model3_authoring_conformance",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "30_definition_graph_diagnostics",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "31_admission_wiring",
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "32_canonical_assignee_continuity",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "32_definition_publish_admission",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "33_source_only_stop_new_v1",
+      "result": "ok",
+      "passed": 3,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "34_identity_repair_operator",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "35_coordinator_control_plane",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "35_human_executor_normalization_v0",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "35_work_execution_class",
+      "result": "FAILED",
+      "passed": 8,
+      "failed": 2,
+      "ignored": 0
+    },
+    {
+      "target": "36_execution_control_v1",
+      "result": "ok",
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "37_authoring_loop_e2e",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "38_declared_context_inputs_v5_distribution",
+      "result": "ok",
+      "passed": 7,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "39_definition_version_detail_read",
+      "result": "ok",
+      "passed": 6,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "40_definition_input_contract_member_read_tests",
+      "result": "ok",
+      "passed": 17,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "41_acceptance_context_binding_v1",
+      "result": "ok",
+      "passed": 40,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "41_current_task_input",
+      "result": "FAILED",
+      "passed": 0,
+      "failed": 25,
+      "ignored": 0
+    },
+    {
+      "target": "42_acceptance_binding_downgrade_gate",
+      "result": "FAILED",
+      "passed": 2,
+      "failed": 1,
+      "ignored": 0
+    },
+    {
+      "target": "44_governance_child",
+      "result": "ok",
+      "passed": 21,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "45_workflow_prerequisites",
+      "result": "FAILED",
+      "passed": 10,
+      "failed": 18,
+      "ignored": 0
+    },
+    {
+      "target": "46_owner_obligations",
+      "result": "FAILED",
+      "passed": 3,
+      "failed": 40,
+      "ignored": 0
+    },
+    {
+      "target": "47_owner_node_reference_authoring",
+      "result": "FAILED",
+      "passed": 0,
+      "failed": 7,
+      "ignored": 0
+    },
+    {
+      "target": "provisioning_validation",
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "provisioning_validation",
+      "result": "ok",
+      "passed": 0,
+      "failed": 0,
+      "ignored": 0
+    }
+  ],
+  "totals": {
+    "passed": 1180,
+    "failed": 95,
+    "ignored": 1
+  },
+  "affectedTargets": [
+    {
+      "target": "17_workflow_runtime",
+      "result": "ok",
+      "passed": 454,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "19_domain_owner_definition_governance",
+      "result": "ok",
+      "passed": 25,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "23_global_coordinator",
+      "result": "ok",
+      "passed": 10,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "25_workflow_assistance",
+      "result": "ok",
+      "passed": 33,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "31_admission_wiring",
+      "result": "ok",
+      "passed": 11,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "32_canonical_assignee_continuity",
+      "result": "ok",
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "32_definition_publish_admission",
+      "result": "ok",
+      "passed": 4,
+      "failed": 0,
+      "ignored": 0
+    },
+    {
+      "target": "34_identity_repair_operator",
+      "result": "ok",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    }
+  ],
+  "originalFullRunRewritten": false
+}

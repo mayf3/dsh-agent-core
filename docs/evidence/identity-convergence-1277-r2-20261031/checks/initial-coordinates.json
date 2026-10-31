@@ -1,0 +1,23 @@
+[
+  {
+    "cwd": "/tmp/ac1277-svc-workflow",
+    "head": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+    "tree": "65fcd731491cb1d23fa9cea20f550c1f0b14d524",
+    "status": "",
+    "base": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890"
+  },
+  {
+    "cwd": "/tmp/ac1277-svc-spec",
+    "head": "27747607937ecaa032982bd1a81301601633791d",
+    "tree": "13b7b987924cbecf34158cb2af8e79e84e845857",
+    "status": "",
+    "base": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890"
+  },
+  {
+    "cwd": "/tmp/ac1277-dsh-agent-core",
+    "head": "4c8fe59133395a1cb21d29f0dc1b0553d18a4828",
+    "tree": "38da88bf34c8c30efb4a45383a2bda0f82083c0b",
+    "status": "",
+    "base": "0b64aca3615aec203b95aa960eff39d635bd26c1"
+  }
+]

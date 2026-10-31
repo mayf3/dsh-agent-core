@@ -1,0 +1,28 @@
+{
+  "recorded_by": "/root/dsh_resume_audit",
+  "author_independence": true,
+  "label": "dsh-mock-broker",
+  "argv": [
+    "node",
+    "--test",
+    "packages/broker/test/capabilities/workflow-instances.test.js",
+    "packages/broker/test/capabilities/workflow-my-tasks.test.js",
+    "packages/broker/test/capabilities/workflow-transition.test.js",
+    "packages/broker/test/agent-principal-resolution.test.js"
+  ],
+  "cwd": "/tmp/ac1277-dsh-agent-core",
+  "head": "4c8fe59133395a1cb21d29f0dc1b0553d18a4828",
+  "startedAt": "2026-10-31T00:23:12.079332+00:00",
+  "elapsedSeconds": 0.150565,
+  "rc": 1,
+  "log": "/tmp/ac1277-r2-evidence/dsh-mock-broker.log",
+  "sha256": "f2928e101f1e5955e3ece4265b9834b26f67951950a34f209bca2894cc362ab6",
+  "envKeys": [
+    "HOME",
+    "PATH",
+    "TMPDIR"
+  ],
+  "preGitStatus": "",
+  "fixtures": "Execution sources inject all svc/Auth/Router seams; Broker fixtures bind 127.0.0.1 ephemeral mock servers and replace svc-workflow and auth origins; no production target invoked",
+  "production_access": false
+}

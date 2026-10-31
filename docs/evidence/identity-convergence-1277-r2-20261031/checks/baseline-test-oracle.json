@@ -1,0 +1,12 @@
+{
+  "recordedAt": "2026-10-31T00:27:54.605192+00:00",
+  "baselineHead": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "sourceUnchanged": true,
+  "testOracle": "exact unchanged tests reused from cf2397b and original 10310a4/c125f39; only test files copied; not committed",
+  "copiedFiles": {
+    "tests/17_workflow_runtime/query/worklists.rs": "b34ea669061239d8e9085b9daaf804820936c5a629db0e84db9df77a0e266b53",
+    "tests/32_canonical_assignee_continuity.rs": "221e1a2c4164bede94236a297df098f9d2d2633ab401b415938ea5f768ec16ca"
+  },
+  "database": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_baseline",
+  "status": " M tests/17_workflow_runtime/query/worklists.rs\n?? tests/32_canonical_assignee_continuity.rs\n"
+}

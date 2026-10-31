@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-31T00:27:18.170112+00:00",
+  "operation": "initialize/start task-owned PostgreSQL cluster and read back identity",
+  "mandate": "user #1277 R2; local PostgreSQL only; no production changes",
+  "cluster": {
+    "dataDirectory": "/tmp/ac1277-r2-pg",
+    "socketDirectory": "/tmp/ac1277-r2-socket",
+    "user": "ac1277_r2_test",
+    "database": "ac1277_r2_test",
+    "host": "127.0.0.1",
+    "port": 57278
+  },
+  "argv": [
+    [
+      "initdb",
+      "-D",
+      "/tmp/ac1277-r2-pg",
+      "-U",
+      "ac1277_r2_test",
+      "--auth=trust",
+      "--no-locale",
+      "--encoding=UTF8"
+    ],
+    [
+      "pg_ctl",
+      "-D",
+      "/tmp/ac1277-r2-pg",
+      "-l",
+      "/tmp/ac1277-r2-evidence/postgres.log",
+      "-o",
+      "-h 127.0.0.1 -p 57278 -k /tmp/ac1277-r2-socket",
+      "start"
+    ],
+    [
+      "createdb",
+      "-h",
+      "127.0.0.1",
+      "-p",
+      "57278",
+      "-U",
+      "ac1277_r2_test",
+      "ac1277_r2_test"
+    ]
+  ],
+  "rc": 0,
+  "duration": "NOT_INSTRUMENTED; direct tool exit codes retained",
+  "identityReadback": "ac1277_r2_test|ac1277_r2_test|127.0.0.1|57278|/tmp/ac1277-r2-pg",
+  "initdbLogSha256": "da4651254940e88bdf7ff85a0d20f7dd5ccf7d53e2c553cdf0b51f7bebcd5634",
+  "productionAccess": false
+}

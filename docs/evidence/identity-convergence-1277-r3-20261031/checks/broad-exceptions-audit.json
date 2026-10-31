@@ -1,0 +1,1373 @@
+{
+  "reviewKind": "independent_read_only_test_evidence_exception_audit",
+  "reviewer": "/root/contract_audit",
+  "repository": "/tmp/ac1277-svc-workflow",
+  "baselineHead": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+  "candidateHead": "06c035467ef7effc664f41ab703bbe736523d13e",
+  "scope": "full-project test evidence classification only; no new product review or Product Authority",
+  "auditActions": {
+    "sourceReadOnly": true,
+    "testsExecutedByAuditor": false,
+    "databaseConnectionsByAuditor": 0,
+    "networkRequestsByAuditor": 0,
+    "port55432Accessed": false,
+    "preexistingPostgresTouched": false,
+    "onlyWrittenArtifact": "/tmp/ac1277-r3-broad-exceptions-audit.json"
+  },
+  "inputEvidence": {
+    "command": {
+      "label": "full-project-runtime",
+      "argv": [
+        "cargo",
+        "test",
+        "--no-fail-fast",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/tmp/ac1277-svc-workflow",
+      "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+      "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-10-31T01:51:06.155046+00:00",
+      "elapsedSeconds": 980.614,
+      "rc": 101,
+      "log": "full-project-runtime.log",
+      "sha256": "3e0251a9b5a0a4af9ece9e2c7c2e0a268dfc7e31167fdecb52eaabf7b43ad33b",
+      "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+      "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster"
+    },
+    "fullLogHashVerified": true,
+    "failureIndexSha256": "0a1371250abcaa01fc42186cdb1f30ef9630bf7299f7334cdb9b705c737b8ee5",
+    "commandsJsonlSha256": "a5f1ebb82e67f82b7598884cd4d0a6b458cd419bd6a7fefcfb07eb2a6ba8746c"
+  },
+  "summary": {
+    "observedFailedTargets": 8,
+    "observedFailedNames": 95,
+    "stdoutFailedTestLines": 95,
+    "stdoutResultTotals": {
+      "passed": 1180,
+      "failed": 95,
+      "ignored": 1
+    },
+    "confirmedIntroducedProductRegressions": [],
+    "confirmedIntroducedProductRegressionsCount": 0,
+    "absenceOfAllIntroducedRegressionsProven": false,
+    "unresolvedFailedNames": [
+      "test_migration_0019_constraint_enforced",
+      "empty_disposable_databases_fail_loud_with_zero_workflow_writes",
+      "combined_entry_uses_new_context_and_submission_causal_chain",
+      "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+      "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+      "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+      "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+      "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+      "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+      "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+      "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+      "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+      "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+      "initial_input_is_exact_existing_full_detail_without_business_writes",
+      "later_corrections_and_requested_older_originals_are_server_selected",
+      "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+      "malformed_and_partial_queries_do_not_fall_back_to_input",
+      "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+      "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+      "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+      "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+      "negative_and_models::model3_task_entry_allows_null_submission",
+      "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+      "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+      "restricted_and_unrelated_actors_never_receive_full_content",
+      "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+      "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision",
+      "ctr6_revoked_optin_version_rejected_by_new_and_old_binary",
+      "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+      "case_projection::case_owner_detail_projects_the_original_responsibility",
+      "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+      "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+      "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+      "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+      "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+      "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+      "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+      "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+      "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+      "http::http_actual_managed_effect_dto_jwt_and_visibility",
+      "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+      "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+      "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+      "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+      "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+      "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+      "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+      "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+      "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+      "intents::intents_config_actor_mismatch_stops_before_any_birth",
+      "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+      "intents::intents_ordinary_create_cannot_birth_managed_role",
+      "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+      "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+      "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+      "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+      "migration::migration_exact_five_relations",
+      "publication::publication_approval_fault_rolls_back_version_and_receipt",
+      "publication::publication_malformed_policy_is_rejected",
+      "publication::publication_receipt_approval_version_share_commit_and_replay",
+      "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+      "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+      "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+      "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+      "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+      "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+      "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+      "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake",
+      "actual_auth_visibility_and_enabled_guards_precede_normalization",
+      "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+      "closed_shapes_semantics_and_schema_failures_preserve_graph",
+      "concurrent_canonical_replacements_use_actual_locked_preimage",
+      "concurrent_replace_and_publish_never_publish_unresolved_references",
+      "one_put_normalizes_both_positions_and_publishes_over_http",
+      "original_parsed_hash_failure_replay_and_historical_success_replay"
+    ],
+    "fullProjectPass": false,
+    "requiredGateState": "ORIGINAL_FULL_PROJECT_FAILED_75_ORIGINAL_NAMES_REMAIN_UNVERIFIED_WITH_CLASSIFIED_CAUSES",
+    "originalFullProjectRunRetained": true,
+    "subsequentResolvedOriginalFailedNamesCount": 20,
+    "subsequentResolvedOriginalFailedNames": [
+      "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+      "t5j_class_mixed_window_returns_only_business_in_order",
+      "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+      "atomic::create_bind_http_atomic_replay_and_rollback",
+      "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+      "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+      "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+      "concurrency::event_guard_waits_for_the_actual_receipt_row",
+      "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+      "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+      "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+      "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+      "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+      "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+      "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+      "publication::publication_checks_context_root_marker_and_immutable_digest",
+      "race::source_terminal_and_dependent_create_have_one_serial_order",
+      "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+      "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+      "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization"
+    ],
+    "remainingUnverifiedOriginalFailedNamesCount": 75,
+    "remainingUnverifiedOriginalFailedNames": [
+      "test_migration_0019_constraint_enforced",
+      "empty_disposable_databases_fail_loud_with_zero_workflow_writes",
+      "combined_entry_uses_new_context_and_submission_causal_chain",
+      "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+      "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+      "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+      "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+      "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+      "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+      "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+      "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+      "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+      "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+      "initial_input_is_exact_existing_full_detail_without_business_writes",
+      "later_corrections_and_requested_older_originals_are_server_selected",
+      "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+      "malformed_and_partial_queries_do_not_fall_back_to_input",
+      "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+      "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+      "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+      "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+      "negative_and_models::model3_task_entry_allows_null_submission",
+      "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+      "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+      "restricted_and_unrelated_actors_never_receive_full_content",
+      "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+      "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision",
+      "ctr6_revoked_optin_version_rejected_by_new_and_old_binary",
+      "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+      "case_projection::case_owner_detail_projects_the_original_responsibility",
+      "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+      "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+      "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+      "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+      "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+      "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+      "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+      "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+      "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+      "http::http_actual_managed_effect_dto_jwt_and_visibility",
+      "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+      "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+      "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+      "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+      "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+      "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+      "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+      "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+      "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+      "intents::intents_config_actor_mismatch_stops_before_any_birth",
+      "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+      "intents::intents_ordinary_create_cannot_birth_managed_role",
+      "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+      "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+      "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+      "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+      "migration::migration_exact_five_relations",
+      "publication::publication_approval_fault_rolls_back_version_and_receipt",
+      "publication::publication_malformed_policy_is_rejected",
+      "publication::publication_receipt_approval_version_share_commit_and_replay",
+      "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+      "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+      "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+      "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+      "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+      "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+      "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+      "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake",
+      "actual_auth_visibility_and_enabled_guards_precede_normalization",
+      "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+      "closed_shapes_semantics_and_schema_failures_preserve_graph",
+      "concurrent_canonical_replacements_use_actual_locked_preimage",
+      "concurrent_replace_and_publish_never_publish_unresolved_references",
+      "one_put_normalizes_both_positions_and_publishes_over_http",
+      "original_parsed_hash_failure_replay_and_historical_success_replay"
+    ],
+    "remainingTargetCounts": {
+      "01_migration_tests": 1,
+      "27_trusted_fleet_principal_cutover_v1": 1,
+      "41_current_task_input": 25,
+      "42_acceptance_binding_downgrade_gate": 1,
+      "46_owner_obligations": 40,
+      "47_owner_node_reference_authoring": 7
+    },
+    "unresolvedProductAssertionsAfterScopedReruns": [],
+    "subsequentScopedResults": {
+      "35_work_execution_class": {
+        "passed": 10,
+        "failed": 0
+      },
+      "45_workflow_prerequisites": {
+        "passed": 28,
+        "failed": 0
+      }
+    },
+    "doNotAggregateAsFullProjectPass": "Original 1180/95/1 and scoped reruns are separate observations; duplicate passing names are not summed into an invented clean full run."
+  },
+  "targets": {
+    "01_migration_tests": {
+      "classification": "UNCHANGED_FIXTURE_PRECONDITION_BASELINE_SQL_REPRODUCED",
+      "failureCount": 1,
+      "failedNames": [
+        "test_migration_0019_constraint_enforced"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "test_migration_0019_constraint_enforced",
+          "lines": [
+            "thread 'test_migration_0019_constraint_enforced' (26353020) panicked at tests/01_migration_tests.rs:215:6:",
+            "semantic_model_version = 2 must be accepted: Database(PgDatabaseError { severity: Error, code: \"23503\", message: \"update or delete on table \\\"workflow_definition_versions\\\" violates foreign key constraint \\\"fk_instance_definition_version_model\\\" on table \\\"workflow_instances\\\"\", detail: Some(\"Key (definition_version_id, semantic_model_version)=(91780af8-bd27-4c81-aa19-35e45a523ebb, 1) is still referenced from table \\\"workflow_instances\\\".\"), hint: None, position: None, where: None, schema: Some(\"public\"), table: Some(\"workflow_instances\"), column: None, data_type: None, constraint: Some(\"fk_instance_definition_version_model\"), file: Some(\"ri_triggers.c\"), line: Some(2633), routine: Some(\"ri_ReportViolation\") })",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+            "failures:",
+            "    test_migration_0019_constraint_enforced",
+            "test result: FAILED. 17 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s",
+            "error: test failed, to rerun pass `--test 01_migration_tests`"
+          ]
+        }
+      ],
+      "claim": "Arbitrary LIMIT 1 selects a referenced DefinitionVersion; modifying its model violates the pre-existing composite FK. Same failure mechanism was reproduced on the owned baseline DB.",
+      "evidence": [
+        {
+          "path": "tests/01_migration_tests.rs",
+          "baselineObject": "ecda193859525ce4022f4fef155dd39114c25c87",
+          "candidateObject": "ecda193859525ce4022f4fef155dd39114c25c87",
+          "identical": true
+        },
+        {
+          "path": "migrations",
+          "baselineObject": "6b9c09aa44c99a02da8e015836319893b4b5fe4d",
+          "candidateObject": "6b9c09aa44c99a02da8e015836319893b4b5fe4d",
+          "identical": true
+        },
+        {
+          "source": "tests/01_migration_tests.rs:173-215",
+          "observation": "LIMIT 1 without an unreferenced-row predicate, followed by model UPDATE"
+        },
+        {
+          "receipt": "/tmp/ac1277-r3-evidence/baseline-migration01-sql.json",
+          "receiptSha256": "a1abdbb63018242900c9a9b0be950236b3ba1d2ed0563ec2a372791b8faf5ea0",
+          "logSha256Verified": "4435907f4d04308612a7912e7881301bef665a34cb9f01806c6307307149d746",
+          "sameConstraint": "fk_instance_definition_version_model",
+          "baselineRowUnchanged": true
+        }
+      ],
+      "limits": "This is a matched SQL-precondition comparison, not an executed pristine-baseline cargo test PASS. The original candidate test remains FAILED.",
+      "nextVerification": "No product repair inferred. Retain exception and original baseline SQL receipt; any future fixture repair must select/seed its own unreferenced row rather than weaken the FK."
+    },
+    "27_trusted_fleet_principal_cutover_v1": {
+      "classification": "UNCHANGED_MISSING_DEDICATED_RUNNER_ENV",
+      "failureCount": 1,
+      "failedNames": [
+        "empty_disposable_databases_fail_loud_with_zero_workflow_writes"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "empty_disposable_databases_fail_loud_with_zero_workflow_writes",
+          "lines": [
+            "thread 'empty_disposable_databases_fail_loud_with_zero_workflow_writes' (26378962) panicked at tests/27_trusted_fleet_principal_cutover_v1.rs:115:68:",
+            "runner workflow DB: NotPresent",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+            "failures:",
+            "    empty_disposable_databases_fail_loud_with_zero_workflow_writes",
+            "test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.82s",
+            "error: test failed, to rerun pass `--test 27_trusted_fleet_principal_cutover_v1`"
+          ]
+        }
+      ],
+      "claim": "The test fails at TEST_WORKFLOW_DATABASE_URL getenv before any DB connection; TEST_AUTH_DATABASE_URL is separately required immediately afterward.",
+      "evidence": [
+        {
+          "path": "tests/27_trusted_fleet_principal_cutover_v1.rs",
+          "baselineObject": "56e42eba46a52deaed34f6d7561bdc24e1a4b9f3",
+          "candidateObject": "56e42eba46a52deaed34f6d7561bdc24e1a4b9f3",
+          "identical": true
+        },
+        {
+          "source": "tests/27_trusted_fleet_principal_cutover_v1.rs:115-117",
+          "observation": "runner workflow DB: NotPresent"
+        }
+      ],
+      "limits": "The empty-disposable-database operator scenario was not executed by the full-project command. No baseline runtime PASS is claimed.",
+      "nextVerification": "Only if this suite is needed: provision two new task-owned disposable databases on owned 57278, set both dedicated TEST_* variables via the original runner, and retain zero-write assertions. Do not use any pre-existing Auth DB."
+    },
+    "35_work_execution_class": {
+      "classification": "ORIGINAL_FAILURE_RETAINED_SUBSEQUENT_EXACT_SOURCE_OWNED_FIXTURE_PASS",
+      "failureCount": 2,
+      "failedNames": [
+        "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+        "t5j_class_mixed_window_returns_only_business_in_order"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+          "lines": [
+            "thread 't5g_owner_marking_persists_and_t5a_excluded_from_due_feed' (26384862) panicked at tests/35_work_execution_class.rs:423:5:",
+            "T5c: unmarked control must be present (row shape/order unchanged)",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+          ]
+        },
+        {
+          "name": "t5j_class_mixed_window_returns_only_business_in_order",
+          "lines": [
+            "thread 't5j_class_mixed_window_returns_only_business_in_order' (26385199) panicked at tests/35_work_execution_class.rs:617:18:",
+            "business row in feed",
+            "failures:",
+            "    t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+            "    t5j_class_mixed_window_returns_only_business_in_order",
+            "test result: FAILED. 8 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 26.60s",
+            "error: test failed, to rerun pass `--test 35_work_execution_class`"
+          ]
+        }
+      ],
+      "claim": "Both originally failing control-row assertions pass, with all 10 unchanged WEC cases, at exact clean candidate source on the newly named owned 57278 DB. The original full-run failure remains recorded.",
+      "evidence": [
+        {
+          "path": "src/store/postgres/workflow_instance_repository/query_dispatch_intents.rs",
+          "baselineObject": "311b48987c60f4409534a87a07f8837bc4e45a19",
+          "candidateObject": "311b48987c60f4409534a87a07f8837bc4e45a19",
+          "identical": true
+        },
+        {
+          "path": "src/http/handlers/dispatch_intents.rs",
+          "baselineObject": "1f64422cd71736aa9f8c15f221540af155801860",
+          "candidateObject": "1f64422cd71736aa9f8c15f221540af155801860",
+          "identical": true
+        },
+        {
+          "source": "tests/35_work_execution_class.rs:259-265,407-425,595-617",
+          "observation": "past windows start about 80 minutes before now; both tests inspect only unfiltered first global /dispatch-intents?limit=100 page without cursor continuation"
+        },
+        {
+          "source": "src/store/postgres/workflow_instance_repository/query_dispatch_intents.rs:69,123-142,223-229",
+          "observation": "global due set, ordered by effective eligibility then activation UUID, bounded to 100; no per-test/domain filter"
+        },
+        {
+          "testDiff": "diff --git a/tests/35_work_execution_class.rs b/tests/35_work_execution_class.rs\nindex 8bc5ba9..eb65b21 100644\n--- a/tests/35_work_execution_class.rs\n+++ b/tests/35_work_execution_class.rs\n@@ -50,7 +50,7 @@ use svc_workflow::http::{self, AppState, HttpConfig};\n \n fn build_app(pool: sqlx::PgPool, jwks_url: &str) -> axum::Router {\n     let config = HttpConfig {\n-        admission: svc_workflow::auth::admission::AdmissionConfig::disabled(),\n+        admission: crate::common::admitting_config(),\n         bind_addr: \"127.0.0.1:0\".parse().unwrap(),\n         request_body_max_bytes: 2_097_152,\n         request_timeout_seconds: 30,\n@@ -772,7 +772,7 @@ async fn t5k_other_domain_owner_cannot_mark() {\n async fn idempotency_same_ik_different_class_is_conflict_not_replay() {\n     let pool = common::create_pool().await;\n     let (_owner, domain_id, creator, ver_id) = seed_fixture(&pool).await;\n-    let admission = svc_workflow::store::postgres::admission_gate::AdmissionGate::disabled();\n+    let admission = crate::common::admitting_gate();\n     let fixed_ik = format!(\"wec-conflict-{}\", Uuid::new_v4());\n \n     let first = svc_workflow::application::workflow_instance::create::create_workflow_instance(\n",
+          "observation": "only configured admitting HTTP/gate fixture replacements; failure assertions unchanged"
+        }
+      ],
+      "limits": "This rules out a deterministic reproduction under the fresh-owned-DB precondition. Original global-feed pagination/retained-row interference remains an inference: exact original displaced-row count was not measured. No pristine-baseline cargo result or whole-project PASS is inferred.",
+      "nextVerification": "No repeat required for these same unchanged source/fixture coordinates; retain both original failure and successful scoped receipt.",
+      "originalClassification": "UNRESOLVED_MISSING_CONTROL_ROWS_FIRST_GLOBAL_PAGE",
+      "originalClaim": "Two real assertions failed after successful creates and activation lookup. Global retained-row interference is plausible, but no actual regression or interference cause is proven yet.",
+      "followupEvidence": {
+        "command": {
+          "label": "wec-fresh-db-regression",
+          "argv": [
+            "cargo",
+            "test",
+            "--test",
+            "35_work_execution_class",
+            "--",
+            "--test-threads=1"
+          ],
+          "cwd": "/tmp/ac1277-svc-workflow",
+          "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+          "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "startedAt": "2026-10-31T02:18:00.831001+00:00",
+          "elapsedSeconds": 21.462,
+          "rc": 0,
+          "log": "wec-fresh-db-regression.log",
+          "sha256": "187b0215cff11d467a09268467048b9eece757f83ff384ad503a706e21970250",
+          "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r3_wec_test",
+          "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster"
+        },
+        "rawLogSha256Verified": true,
+        "results": {
+          "passed": 10,
+          "failed": 0,
+          "ignored": 0
+        },
+        "allOriginallyFailedNamesPresentAndPassing": true,
+        "originalFailedNamesResolvedByThisRun": [
+          "t5g_owner_marking_persists_and_t5a_excluded_from_due_feed",
+          "t5j_class_mixed_window_returns_only_business_in_order"
+        ]
+      }
+    },
+    "41_current_task_input": {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 25,
+      "failedNames": [
+        "combined_entry_uses_new_context_and_submission_causal_chain",
+        "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+        "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+        "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+        "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+        "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+        "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+        "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+        "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+        "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+        "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+        "initial_input_is_exact_existing_full_detail_without_business_writes",
+        "later_corrections_and_requested_older_originals_are_server_selected",
+        "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+        "malformed_and_partial_queries_do_not_fall_back_to_input",
+        "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+        "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+        "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+        "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+        "negative_and_models::model3_task_entry_allows_null_submission",
+        "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+        "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+        "restricted_and_unrelated_actors_never_receive_full_content",
+        "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+        "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "combined_entry_uses_new_context_and_submission_causal_chain",
+          "lines": [
+            "thread 'combined_entry_uses_new_context_and_submission_causal_chain' (26388918) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+          "lines": [
+            "thread 'entry_and_integrity::actual_administrative_override_has_no_invented_transition' (26388919) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+          "lines": [
+            "thread 'entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success' (26388920) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references",
+          "lines": [
+            "thread 'entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references' (26388921) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints",
+          "lines": [
+            "thread 'entry_and_integrity::cross_instance_event_refs_are_rejected_by_live_composite_constraints' (26388922) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order",
+          "lines": [
+            "thread 'entry_and_integrity::exact_entry_survives_newer_equal_timestamp_submissions_with_stable_uuid_order' (26388923) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing",
+          "lines": [
+            "thread 'entry_and_integrity::imported_normal_visit_is_initial_without_visit_number_guessing' (26388924) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally",
+          "lines": [
+            "thread 'entry_and_integrity::malformed_transition_entry_data_and_duplicate_introducers_fail_internally' (26388925) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure",
+          "lines": [
+            "thread 'entry_and_integrity::unknown_entry_with_nullable_data_is_incomplete_not_initial_or_storage_failure' (26388926) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "entry_is_causal_and_same_visit_context_revision_is_not_corruption",
+          "lines": [
+            "thread 'entry_is_causal_and_same_visit_context_revision_is_not_corruption' (26388927) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "exact_actor_detail_detects_target_eligibility_drift_without_state_change",
+          "lines": [
+            "thread 'exact_actor_detail_detects_target_eligibility_drift_without_state_change' (26388928) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "initial_input_is_exact_existing_full_detail_without_business_writes",
+          "lines": [
+            "thread 'initial_input_is_exact_existing_full_detail_without_business_writes' (26388929) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "later_corrections_and_requested_older_originals_are_server_selected",
+          "lines": [
+            "thread 'later_corrections_and_requested_older_originals_are_server_selected' (26388930) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk",
+          "lines": [
+            "thread 'long_unicode_bodies_reconstruct_and_stale_hash_never_emits_chunk' (26388931) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "malformed_and_partial_queries_do_not_fall_back_to_input",
+          "lines": [
+            "thread 'malformed_and_partial_queries_do_not_fall_back_to_input' (26388932) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact",
+          "lines": [
+            "thread 'negative_and_models::foreign_refs_offsets_and_permission_rechecks_remain_exact' (26388933) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed",
+          "lines": [
+            "thread 'negative_and_models::global_grants_do_not_escalate_and_denial_audit_failure_is_closed' (26388934) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest",
+          "lines": [
+            "thread 'negative_and_models::large_submission_and_empty_json_reconstruct_stored_digest' (26388935) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail",
+          "lines": [
+            "thread 'negative_and_models::long_instructions_and_outgoing_schema_remain_exact_full_detail' (26388936) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::model3_task_entry_allows_null_submission",
+          "lines": [
+            "thread 'negative_and_models::model3_task_entry_allows_null_submission' (26388937) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor",
+          "lines": [
+            "thread 'negative_and_models::omitted_selected_body_keeps_exact_zero_offset_descriptor' (26388938) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject",
+          "lines": [
+            "thread 'negative_and_models::parsed_uuid_duplicates_and_numeric_overflow_reject' (26388939) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "restricted_and_unrelated_actors_never_receive_full_content",
+          "lines": [
+            "thread 'restricted_and_unrelated_actors_never_receive_full_content' (26388940) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write",
+          "lines": [
+            "thread 'snapshot_and_failure::interrupted_database_read_is_unavailable_and_recovers_without_business_write' (26388941) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required"
+          ]
+        },
+        {
+          "name": "snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision",
+          "lines": [
+            "thread 'snapshot_and_failure::one_http_snapshot_does_not_mix_a_concurrent_context_revision' (26388942) panicked at tests/current_task_input/support.rs:101:9:",
+            "isolated CTI test database required",
+            "failures:",
+            "    combined_entry_uses_new_context_and_submission_causal_chain",
+            "    entry_and_integrity::actual_administrative_override_has_no_invented_transition",
+            "    entry_and_integrity::appended_digest_corruption_is_internal_not_partial_success",
+            "    entry_and_integrity::bounded_administrative_fixtures_preserve_nontransition_references"
+          ]
+        }
+      ],
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "evidence": [
+        {
+          "source": "tests/current_task_input/support.rs:98-105",
+          "guard": "url.contains(\"127.0.0.1:55432/svc_workflow_test_current_input_20261027_\")",
+          "guardBytesEqualToBaseline": true,
+          "guardSegmentSha256": "e758f2b2d3554d83eab7020d29ad9149a7bb5ba860b6cbd5e86a15e744e3a7de"
+        }
+      ],
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted."
+    },
+    "42_acceptance_binding_downgrade_gate": {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 1,
+      "failedNames": [
+        "ctr6_revoked_optin_version_rejected_by_new_and_old_binary"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "ctr6_revoked_optin_version_rejected_by_new_and_old_binary",
+          "lines": [
+            "thread 'ctr6_revoked_optin_version_rejected_by_new_and_old_binary' (26389033) panicked at tests/42_acceptance_binding_downgrade_gate.rs:128:5:",
+            "assertion `left == right` failed: TEST_DATABASE_URL port must be explicitly 55432 (no PG* env fallback)",
+            "  left: Some(57278)",
+            " right: Some(55432)",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace",
+            "failures:",
+            "    ctr6_revoked_optin_version_rejected_by_new_and_old_binary"
+          ]
+        }
+      ],
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "evidence": [
+        {
+          "source": "tests/42_acceptance_binding_downgrade_gate.rs:79-154",
+          "guard": "ISOLATED_DB_PORT=55432 and ISOLATED_DB_NAME=svc_workflow_acb_impl_27oct",
+          "guardBytesEqualToBaseline": true,
+          "guardSegmentSha256": "eb5c7b30c282d0569bfb2f97d3cd65d462b0c714f6edf9feccc75956fe0d15e4"
+        }
+      ],
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve structural/effective-destination checks and old-binary guard. No 55432 access or broad guard relaxation."
+    },
+    "45_workflow_prerequisites": {
+      "classification": "ORIGINAL_FAILURE_RETAINED_SUBSEQUENT_EXACT_SOURCE_OWNED_FIXTURE_PASS",
+      "failureCount": 18,
+      "failedNames": [
+        "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+        "atomic::create_bind_http_atomic_replay_and_rollback",
+        "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+        "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+        "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+        "concurrency::event_guard_waits_for_the_actual_receipt_row",
+        "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+        "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+        "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+        "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+        "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+        "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+        "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+        "publication::publication_checks_context_root_marker_and_immutable_digest",
+        "race::source_terminal_and_dependent_create_have_one_serial_order",
+        "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+        "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+        "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+          "lines": [
+            "thread 'admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts' (26390055) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+          ]
+        },
+        {
+          "name": "atomic::create_bind_http_atomic_replay_and_rollback",
+          "lines": [
+            "thread 'atomic::create_bind_http_atomic_replay_and_rollback' (26390060) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+          "lines": [
+            "thread 'atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts' (26390061) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+          "lines": [
+            "thread 'concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations' (26390062) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+          "lines": [
+            "thread 'concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt' (26390063) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "concurrency::event_guard_waits_for_the_actual_receipt_row",
+          "lines": [
+            "thread 'concurrency::event_guard_waits_for_the_actual_receipt_row' (26390064) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+          "lines": [
+            "thread 'concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots' (26390065) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+          "lines": [
+            "thread 'disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected' (26390066) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+          "lines": [
+            "thread 'integrity::completed_composite_null_status_is_not_a_success_or_rejection' (26390067) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+          "lines": [
+            "thread 'integrity::completed_pair_negative_shapes_rollback_without_touching_history' (26390068) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+          "lines": [
+            "thread 'integrity::receipt_completion_and_event_mutation_independently_enforce_matrix' (26390069) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+          "lines": [
+            "thread 'lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded' (26390070) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+          "lines": [
+            "thread 'poll::ready_poll_filters_blocked_prefix_before_page_and_restarts' (26390797) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "publication::publication_checks_context_root_marker_and_immutable_digest",
+          "lines": [
+            "thread 'publication::publication_checks_context_root_marker_and_immutable_digest' (26390798) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "race::source_terminal_and_dependent_create_have_one_serial_order",
+          "lines": [
+            "thread 'race::source_terminal_and_dependent_create_have_one_serial_order' (26390799) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+          "lines": [
+            "thread 'readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt' (26390800) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+          "lines": [
+            "thread 'readiness::readiness_http_waiting_then_exact_submission_and_archive' (26390801) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required"
+          ]
+        },
+        {
+          "name": "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization",
+          "lines": [
+            "thread 'unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization' (26390802) panicked at tests/prerequisites/support.rs:6:5:",
+            "explicit fresh task database required",
+            "failures:",
+            "    admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+            "    atomic::create_bind_http_atomic_replay_and_rollback",
+            "    atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+            "    concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations"
+          ]
+        }
+      ],
+      "claim": "All 28 prerequisite cases, including the 18 original guard failures, pass at exact clean candidate source after supplying the required owned DB namespace on 57278. The source guard and test oracles were not relaxed.",
+      "evidence": [
+        {
+          "source": "tests/prerequisites/support.rs:1-9",
+          "guard": "test_database_url().ends_with(\"/svc_prereq_20261029_impl\")",
+          "guardBytesEqualToBaseline": true,
+          "guardSegmentSha256": "64e1cd11b94521e817c688c43e8c4a09184c1c0df25ae40714da8299d756f686"
+        }
+      ],
+      "limits": "This subsequent scoped target PASS does not alter the original full-project rc101 or verify other guarded targets.",
+      "nextVerification": "No repeat required for these same unchanged source/fixture coordinates; retain both original failure and successful scoped receipt.",
+      "originalClassification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "originalClaim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "followupEvidence": {
+        "command": {
+          "label": "prerequisites-owned-name-regression",
+          "argv": [
+            "cargo",
+            "test",
+            "--test",
+            "45_workflow_prerequisites",
+            "--",
+            "--test-threads=1"
+          ],
+          "cwd": "/tmp/ac1277-svc-workflow",
+          "head": "06c035467ef7effc664f41ab703bbe736523d13e",
+          "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "startedAt": "2026-10-31T02:18:22.364306+00:00",
+          "elapsedSeconds": 39.098,
+          "rc": 0,
+          "log": "prerequisites-owned-name-regression.log",
+          "sha256": "2fc504e10dfef6740124be1dd0480565556dfd6fc1bb19fbbbbf91f5aee0b74b",
+          "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/svc_prereq_20261029_impl",
+          "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster"
+        },
+        "rawLogSha256Verified": true,
+        "results": {
+          "passed": 28,
+          "failed": 0,
+          "ignored": 0
+        },
+        "allOriginallyFailedNamesPresentAndPassing": true,
+        "originalFailedNamesResolvedByThisRun": [
+          "admission::ordinary_admission_rejects_invalid_and_unauthorized_without_facts",
+          "atomic::create_bind_http_atomic_replay_and_rollback",
+          "atomic::deterministic_rejection_preserves_receipt_and_zero_business_facts",
+          "concurrency::composite_partial_and_extra_pair_races_fail_in_all_isolations",
+          "concurrency::duplicate_atomic_commands_have_one_child_pair_and_one_receipt",
+          "concurrency::event_guard_waits_for_the_actual_receipt_row",
+          "concurrency::ordinary_global_cardinality_survives_stale_snapshots_and_forged_slots",
+          "disabled_scheduler::disabled_scheduler_with_valid_jwt_and_enabled_binding_is_rejected",
+          "integrity::completed_composite_null_status_is_not_a_success_or_rejection",
+          "integrity::completed_pair_negative_shapes_rollback_without_touching_history",
+          "integrity::receipt_completion_and_event_mutation_independently_enforce_matrix",
+          "lineage::closed_and_corrupt_lineage_never_dispatch_and_current_task_is_bounded",
+          "poll::ready_poll_filters_blocked_prefix_before_page_and_restarts",
+          "publication::publication_checks_context_root_marker_and_immutable_digest",
+          "race::source_terminal_and_dependent_create_have_one_serial_order",
+          "readback::lost_reply_case_readback_recovers_exact_child_prerequisite_and_receipt",
+          "readiness::readiness_http_waiting_then_exact_submission_and_archive",
+          "unidentified::unidentifiable_context_is_closed_unknown_after_real_authorization"
+        ]
+      }
+    },
+    "46_owner_obligations": {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 40,
+      "failedNames": [
+        "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+        "case_projection::case_owner_detail_projects_the_original_responsibility",
+        "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+        "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+        "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+        "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+        "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+        "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+        "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+        "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+        "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+        "http::http_actual_managed_effect_dto_jwt_and_visibility",
+        "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+        "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+        "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+        "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+        "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+        "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+        "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+        "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+        "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+        "intents::intents_config_actor_mismatch_stops_before_any_birth",
+        "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+        "intents::intents_ordinary_create_cannot_birth_managed_role",
+        "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+        "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+        "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+        "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+        "migration::migration_exact_five_relations",
+        "publication::publication_approval_fault_rolls_back_version_and_receipt",
+        "publication::publication_malformed_policy_is_rejected",
+        "publication::publication_receipt_approval_version_share_commit_and_replay",
+        "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+        "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+        "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+        "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+        "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+        "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+        "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+        "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+          "lines": [
+            "thread 'case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field' (26390958) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+          ]
+        },
+        {
+          "name": "case_projection::case_owner_detail_projects_the_original_responsibility",
+          "lines": [
+            "thread 'case_projection::case_owner_detail_projects_the_original_responsibility' (26390959) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+          "lines": [
+            "thread 'case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage' (26390960) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope",
+          "lines": [
+            "thread 'context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope' (26390961) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "context::context_fault_after_append_rolls_back_receipt_context_visit_and_event",
+          "lines": [
+            "thread 'context::context_fault_after_append_rolls_back_receipt_context_visit_and_event' (26390962) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage",
+          "lines": [
+            "thread 'context::context_real_two_gate_binding_wait_ready_return_and_acb_revision_lineage' (26390963) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "effects::effects_concurrent_create_response_loss_replay_and_changed_body",
+          "lines": [
+            "thread 'effects::effects_concurrent_create_response_loss_replay_and_changed_body' (26390965) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts",
+          "lines": [
+            "thread 'effects::effects_known_failure_receipt_and_absorbing_stop_are_zero_business_facts' (26390966) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event",
+          "lines": [
+            "thread 'effects::effects_return_visits_reuse_same_effect_and_third_return_stops_with_actual_event' (26390967) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin",
+          "lines": [
+            "thread 'effects::effects_storage_fault_after_real_create_rolls_back_claim_receipt_child_and_origin' (26390968) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "effects::readiness_required_operation_cannot_be_skipped_by_advance",
+          "lines": [
+            "thread 'effects::readiness_required_operation_cannot_be_skipped_by_advance' (26390969) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "http::http_actual_managed_effect_dto_jwt_and_visibility",
+          "lines": [
+            "thread 'http::http_actual_managed_effect_dto_jwt_and_visibility' (26390970) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops",
+          "lines": [
+            "thread 'http::http_loaded_policy_actor_mismatch_refuses_admission_then_actual_producer_stops' (26390971) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation",
+          "lines": [
+            "thread 'http::http_publication_owner_approval_replay_and_no_pm_ordinary_write_delegation' (26390972) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event",
+          "lines": [
+            "thread 'independent_counterexamples::independent_reject_assistance_success_receipt_without_actual_case_event' (26390973) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator",
+          "lines": [
+            "thread 'independent_counterexamples::independent_reject_fixed_policy_actor_aliasing_real_workflow_creator' (26390974) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings",
+          "lines": [
+            "thread 'independent_counterexamples::independent_reject_same_principal_qa_under_different_assignee_spellings' (26390975) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin",
+          "lines": [
+            "thread 'independent_counterexamples::independent_reject_succeeded_create_effect_without_real_origin' (26390976) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review",
+          "lines": [
+            "thread 'independent_counterexamples::independent_reject_unrelated_third_actor_masking_selected_qa_self_review' (26390977) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded",
+          "lines": [
+            "thread 'intents::intents_actual_request_receipt_and_wrong_policy_references_are_database_guarded' (26390978) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart",
+          "lines": [
+            "thread 'intents::intents_auto_intake_is_one_exact_pair_under_concurrency_and_restart' (26390979) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_config_actor_mismatch_stops_before_any_birth",
+          "lines": [
+            "thread 'intents::intents_config_actor_mismatch_stops_before_any_birth' (26390980) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts",
+          "lines": [
+            "thread 'intents::intents_invalid_initial_context_is_known_failure_no_auto_business_facts' (26390981) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_ordinary_create_cannot_birth_managed_role",
+          "lines": [
+            "thread 'intents::intents_ordinary_create_cannot_birth_managed_role' (26390982) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_request_has_atomic_unique_intake_without_naked_chat",
+          "lines": [
+            "thread 'intents::intents_request_has_atomic_unique_intake_without_naked_chat' (26390983) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles",
+          "lines": [
+            "thread 'intents::intents_storage_fault_after_pair_rolls_back_all_birth_binding_and_receipt_then_reconciles' (26390984) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types",
+          "lines": [
+            "thread 'migration::migration_auto_success_receipt_without_actual_facts_is_rejected_on_both_types' (26390985) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "migration::migration_dependency_origin_requires_the_exact_actual_birth_event",
+          "lines": [
+            "thread 'migration::migration_dependency_origin_requires_the_exact_actual_birth_event' (26390986) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "migration::migration_exact_five_relations",
+          "lines": [
+            "thread 'migration::migration_exact_five_relations' (26390987) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "publication::publication_approval_fault_rolls_back_version_and_receipt",
+          "lines": [
+            "thread 'publication::publication_approval_fault_rolls_back_version_and_receipt' (26391034) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "publication::publication_malformed_policy_is_rejected",
+          "lines": [
+            "thread 'publication::publication_malformed_policy_is_rejected' (26391035) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "publication::publication_receipt_approval_version_share_commit_and_replay",
+          "lines": [
+            "thread 'publication::publication_receipt_approval_version_share_commit_and_replay' (26391036) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes",
+          "lines": [
+            "thread 'review::review_not_accepted_has_no_resolve_admission_and_escalates_then_finishes' (26391037) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup",
+          "lines": [
+            "thread 'review::review_real_terminal_singleton_without_wake_resolve_and_own_cleanup' (26391038) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit",
+          "lines": [
+            "thread 'stops::stops_dependency_leaf_has_no_recursive_effect_and_nested_cap_uses_actual_leaf_visit' (26391039) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass",
+          "lines": [
+            "thread 'stops::stops_disabled_policy_actor_and_plain_owner_action_cannot_bypass' (26391040) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay",
+          "lines": [
+            "thread 'stops::stops_owner_replacement_before_birth_is_absorbing_across_aba_and_replay' (26391041) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback",
+          "lines": [
+            "thread 'stops::stops_owner_replacement_races_actual_effect_without_duplicate_and_keeps_current_owner_readback' (26391042) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf",
+          "lines": [
+            "thread 'stops::stops_parent_cancel_retires_and_separate_receipted_cleanup_preserves_leaf' (26391043) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake",
+          "lines": [
+            "thread 'stops::stops_real_attempt_cap_records_actual_attempt_and_no_naked_wake' (26391044) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG",
+            "failures:",
+            "    case_projection::case_durable_unknown_is_not_storage_failure_and_ordinary_case_omits_field",
+            "    case_projection::case_owner_detail_projects_the_original_responsibility",
+            "    case_projection::case_prebirth_stop_current_owner_privacy_and_persisted_unknown_vs_outage",
+            "    context::context_absent_ordinary_hash_wire_compatibility_and_present_outside_scope"
+          ]
+        }
+      ],
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "evidence": [
+        {
+          "source": "tests/owner_obligations/support.rs:1-14",
+          "guard": "base.contains(\"@127.0.0.1:55432\") plus /svc_obl_20261029_impl",
+          "guardBytesEqualToBaseline": true,
+          "guardSegmentSha256": "a424d2ab05be681a44361d581346cbee41b4063609bea559d3124faa3dd6c881"
+        }
+      ],
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted."
+    },
+    "47_owner_node_reference_authoring": {
+      "classification": "UNCHANGED_PRE_IMPLEMENTATION_TESTBED_GUARD",
+      "failureCount": 7,
+      "failedNames": [
+        "actual_auth_visibility_and_enabled_guards_precede_normalization",
+        "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+        "closed_shapes_semantics_and_schema_failures_preserve_graph",
+        "concurrent_canonical_replacements_use_actual_locked_preimage",
+        "concurrent_replace_and_publish_never_publish_unresolved_references",
+        "one_put_normalizes_both_positions_and_publishes_over_http",
+        "original_parsed_hash_failure_replay_and_historical_success_replay"
+      ],
+      "reportedFailureObservations": [
+        {
+          "name": "actual_auth_visibility_and_enabled_guards_precede_normalization",
+          "lines": [
+            "thread 'actual_auth_visibility_and_enabled_guards_precede_normalization' (26391113) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG",
+            "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+          ]
+        },
+        {
+          "name": "canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+          "lines": [
+            "thread 'canonical_read_edit_copy_foreign_stale_and_rename_are_closed' (26391114) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "closed_shapes_semantics_and_schema_failures_preserve_graph",
+          "lines": [
+            "thread 'closed_shapes_semantics_and_schema_failures_preserve_graph' (26391115) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "concurrent_canonical_replacements_use_actual_locked_preimage",
+          "lines": [
+            "thread 'concurrent_canonical_replacements_use_actual_locked_preimage' (26391116) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "concurrent_replace_and_publish_never_publish_unresolved_references",
+          "lines": [
+            "thread 'concurrent_replace_and_publish_never_publish_unresolved_references' (26391117) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "one_put_normalizes_both_positions_and_publishes_over_http",
+          "lines": [
+            "thread 'one_put_normalizes_both_positions_and_publishes_over_http' (26391118) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG"
+          ]
+        },
+        {
+          "name": "original_parsed_hash_failure_replay_and_historical_success_replay",
+          "lines": [
+            "thread 'original_parsed_hash_failure_replay_and_historical_success_replay' (26391119) panicked at tests/owner_obligations/support.rs:7:5:",
+            "only explicit loopback isolated PG",
+            "failures:",
+            "    actual_auth_visibility_and_enabled_guards_precede_normalization",
+            "    canonical_read_edit_copy_foreign_stale_and_rename_are_closed",
+            "    closed_shapes_semantics_and_schema_failures_preserve_graph",
+            "    concurrent_canonical_replacements_use_actual_locked_preimage"
+          ]
+        }
+      ],
+      "claim": "Reported failed names stop at an unchanged explicit task-database guard before implementation/database setup for that case.",
+      "evidence": [
+        {
+          "source": "tests/owner_obligations/support.rs:1-14",
+          "guard": "imports owner_obligations/support.rs and hits same 55432 guard",
+          "guardBytesEqualToBaseline": true,
+          "guardSegmentSha256": "a424d2ab05be681a44361d581346cbee41b4063609bea559d3124faa3dd6c881"
+        },
+        {
+          "path": "tests/47_owner_node_reference_authoring.rs",
+          "baselineObject": "9870531c8cefc5f7387c967eda867f82c319f94e",
+          "candidateObject": "9870531c8cefc5f7387c967eda867f82c319f94e",
+          "identical": true
+        }
+      ],
+      "limits": "This classifies the observed failure location only. It does not verify the guarded product cases or turn their failure into PASS.",
+      "nextVerification": "Preserve the guard; source cases remain unexecuted here. No 55432 access is permitted."
+    }
+  },
+  "minimalNextVerification": [
+    "No repeat of the successful unchanged WEC/prerequisite scoped checks is needed.",
+    "Retain 01 matched baseline SQL exception with its explicit limit: no pristine-baseline cargo PASS.",
+    "27 requires explicit task-owned Workflow/Auth disposable test DSNs under its original runner before that one case is verified.",
+    "41/42/46/47 remain unverified because unchanged exact task DSN/55432 guards rejected the current own 57278 environment. Do not connect to the unauthorized pre-existing 55432 instance, relax guards, or call these cases passing. Any future execution requires an independently owned authorized testbed satisfying the existing isolation contract."
+  ],
+  "forbiddenShortcuts": [
+    "No connection to occupied/pre-existing port 55432",
+    "No guard relaxation or DSN spoofing",
+    "No shared/production DB substitution",
+    "No dropping or relabeling failed names",
+    "No baseline full-suite PASS inferred from SQL precondition reproduction"
+  ],
+  "receiptUpdate": {
+    "priorArtifactSha256": "9dad526bb813d3a18017f9ed2af9a9467f482b56ee8f9fd264358b17b5d2644c",
+    "purpose": "R3 final exception receipt update only",
+    "newSourceEdits": false,
+    "newTestRunsByAuditor": false,
+    "databaseOrNetworkAccessByAuditor": false,
+    "port55432Accessed": false,
+    "subsequentCommandLabels": [
+      "wec-fresh-db-regression",
+      "prerequisites-owned-name-regression"
+    ]
+  }
+}

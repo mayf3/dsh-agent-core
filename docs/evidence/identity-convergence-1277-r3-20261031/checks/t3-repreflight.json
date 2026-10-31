@@ -1,0 +1,42 @@
+{
+  "task": "agent-control#1277 R3 / T3",
+  "routeStage": "AUTHORITY_AUTHORING",
+  "implementationAllowed": false,
+  "productionOperationAllowed": false,
+  "executionMandate": "Existing user SOURCE mandate remains valid; no general Owner reauthorization is requested",
+  "svcHead": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+  "dshHead": "ca18b7176cea0f66f14b825a6fd4b47bfcef577d",
+  "gapDependency": "LOAD_BEARING",
+  "observations": [
+    {
+      "source": "svc-workflow/src/application/workflow_instance/query_types.rs:158-165 and existing P9 projection",
+      "fact": "assignee_canonical_agent_id is immutable successor-lineage enrichment; canonical-native and unresolved may both be null. Stored visit assignee remains historical P. Accepted CIR V2 does not define a new current DTO, native proof source, typed unresolved behavior or consumer endpoint."
+    },
+    {
+      "source": "dsh-agent-core/packages/broker/src/capabilities/workflow/reads.js:97-101",
+      "fact": "Broker already says null metadata alone does not mean non-assignee, executable_for_actor advisory only, Svc owns authorization. These passed existing semantics are reused."
+    },
+    {
+      "source": "dsh-agent-core/docs/specs/AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3.md:1248-1251; accepted RETURN declarer precedent; workflow/execute.js and mapping.js:244-257",
+      "fact": "admission_target_disabled and admission_legacy_input are undeclared and therefore compliantly degrade to http_4xx with422/status/detail/requestId. Implementation is forbidden to self-widen that table. Definition publication has a separate undeclared table."
+    }
+  ],
+  "minimumContractClosure": [
+    "Freeze the server-owned current projection that distinguishes canonical-native, supported exact successor and unresolved; define its authoritative proof source and typed unknown/unavailable response without repurposing historical fields or adding role/identity authority",
+    "Freeze exact DTO/serialization meaning and the affected consumer version/release endpoint; preserve immutable historical UUID/lineage and existing visibility/transaction authority",
+    "Authorize only the two new declared Svc refusal codes on the affected existing Broker operations, preserving undeclared fallback, HTTP/status/detail/requestId, original request binding and one-attempt/no-retry behavior",
+    "Review that one bounded cross-repository contract delta through the existing chain, accept in its implementation bases, then continue T3 synthetic-context/tool-transport regressions; no additional general Owner mandate or identity service"
+  ],
+  "scopeDisposition": {
+    "T1": "Svc typed refusal and canonical new facts implemented; existing Broker fallback retained as T3 limitation",
+    "T2": "Shared current role predicates implemented and focused tests pass",
+    "T3": "BLOCKED on the listed bounded contract meanings; no DTO/JS product code guessed",
+    "T4": "BLOCKED by ordered predecessor; no live sensitive inventory or enlarged repair scope",
+    "T5": "BLOCKED by predecessor and retirement conditions; no legacy Auth/bridge/guard disabled"
+  },
+  "productionDbAccess": false,
+  "productionChanges": 0,
+  "sessionReset": false,
+  "realBusinessTransition": false,
+  "deployment": false
+}

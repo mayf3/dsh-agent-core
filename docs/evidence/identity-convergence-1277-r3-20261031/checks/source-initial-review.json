@@ -1,0 +1,265 @@
+{
+  "schema": "ac1277-r3-independent-source-review-v1",
+  "created_at": "2026-10-31T01:38:27.485158+00:00",
+  "repository": "mayf3/svc-workflow",
+  "worktree": "/tmp/ac1277-svc-workflow",
+  "SPEC_GOVERNANCE_MODE": "REVIEW",
+  "REVIEW_KIND": "FINAL_HEAD",
+  "SPEC_REVIEW": "NOT_APPLICABLE",
+  "REVIEW_TARGET_HEAD": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+  "REVIEW_TARGET_TREE": "61863e566d0488048a3c96d9a8986c032bd46286",
+  "BASE_HEAD": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+  "CURRENT_BASE_HEAD": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+  "current_base_verification": "git ls-remote origin refs/heads/main returned exact integration base during review",
+  "diff_sha256": "231032f46854d7c7e4a0316dccf371b97b343ed2d586b19aacda98076c990b6a",
+  "REVIEWER_ID": "/root/source_review",
+  "AUTHOR_ID": "/root",
+  "AUTHOR_INDEPENDENCE": "PASS",
+  "ASSURANCE_LEVEL": "CONTROLLED",
+  "authority_action": "REUSE",
+  "plan_level": "EXEC_PLAN",
+  "route_stage": "IMPLEMENTATION",
+  "AUTHORITY_ACCEPTED_IN_BASE": "YES",
+  "authorities": [
+    {
+      "path": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V2.md",
+      "sha256": "4ccc1e87c08a8cbe080c8e1f7dc704e5c1ae0ca6b49565ad3e150ee50ded716f",
+      "identical_to_integration_base": true
+    },
+    {
+      "path": "docs/product/SVC_WORKFLOW_PRODUCT_BOUNDARY_V13.md",
+      "sha256": "646271316ac20804d0b1375b7a7bd1e35eff8c545bc2fd71e60eaa477a99726b",
+      "identical_to_integration_base": true
+    },
+    {
+      "path": "docs/architecture/SVC_WORKFLOW_ARCHITECTURE_V0_4_7.md",
+      "sha256": "59ea63c105c04ac314c63bf2ede774455c33040ada80f728afe9b60a50bb9024",
+      "identical_to_integration_base": true
+    },
+    {
+      "path": ".agents/README.md",
+      "sha256": "1f9f00a3692ac8a191384feb768f8accb4276039b688828c7db22c50efd02d22",
+      "identical_to_integration_base": true
+    },
+    {
+      "path": ".agents/local/README.md",
+      "sha256": "5aefbef27307ef9a378990141d3c0cc797e84e9300bbbdd977cc1de6a5c7d70a",
+      "identical_to_integration_base": true
+    },
+    {
+      "path": ".agents/skills/spec-governance/modes/REVIEW.md",
+      "sha256": "d88dde81a444a07e31164fc5ff722ada1edc37d4ff9fe3714d56eb6deac6b9c6",
+      "identical_to_integration_base": true
+    }
+  ],
+  "mandate": {
+    "review_package": "/tmp/ac1277-r3-evidence/review-package.md",
+    "review_package_sha256": "8e6db571260ccc20eb4c75293b22efd5557655848278f8e9d7ce1381b3435ada",
+    "plan": "/tmp/ac1277-r3-plan.md",
+    "plan_sha256": "3e69c02f548dc8645062b0340499734c03c5bbbf27a8af0a6a9749d10c3bd3ca",
+    "allowed": "Independent whole-branch source/affected-Contract review and this new external receipt only",
+    "forbidden": "Repository edits, DB access, tests, production actions, grants/credentials, new agents",
+    "actual_repo_mutations": 0,
+    "actual_db_accesses": 0,
+    "actual_test_executions": 0,
+    "production_changes": 0,
+    "spawned_agents": 0
+  },
+  "checks": {
+    "AUTHORITY": {
+      "result": "PASS",
+      "detail": "Accepted CIR V2 plus separately accepted disabled-target subsection are in exact integration base and unchanged by candidate. Product V13/Architecture 0.4.7 and local governance bytes are also unchanged. Source repair stays REUSE; T3 semantics cannot be authored in implementation."
+    },
+    "PRIMITIVE": {
+      "result": "PASS",
+      "detail": "Source, executed dirty-tree test observations, clean exact-HEAD compilation, T0 reused evidence, future full runtime and production/business acceptance remain separate. No evidence of fabricated execution."
+    },
+    "CONTRACT": {
+      "result": "FAIL",
+      "detail": "R3-B1: immutable P9 canonical Agent assertion is lost before new RETURN admission. Other inspected T1/T2 behavior preserves current-assignee versus creator/Owner/admin roles and raw command identity."
+    },
+    "ACCEPTANCE": {
+      "result": "FAIL",
+      "detail": "Positive RETURN fixture currently accepts contradictory P9/directory identity. Add the discriminating mismatch denial oracle. Full project runtime at final corrected HEAD is still required; current exact-HEAD evidence is compilation only."
+    },
+    "MANDATE": {
+      "result": "PASS",
+      "detail": "Reviewed source only. No production, migration membership, login/grant, session, DB or deployment expansion. Existing source/test isolation and single writer respected."
+    },
+    "EVIDENCE": {
+      "result": "PASS",
+      "detail": "18 command-log entries were readable and all raw-log SHA-256 values matched commands.jsonl. T2 final test dirty diff equals git diff f61f7e5..3567fdc; exact clean 3567fdc cargo test --no-run rc0. Earlier dirty-tree results are accepted only at recorded coordinates, not relabeled full-final-HEAD runtime PASS."
+    }
+  },
+  "AUTHORITY_REVIEW": "PASS",
+  "PRIMITIVE_BOUNDARY_REVIEW": "PASS",
+  "CONTRACT_REVIEW": "FAIL",
+  "ACCEPTANCE_COVERAGE_REVIEW": "FAIL",
+  "MANDATE_SCOPE_REVIEW": "PASS",
+  "EVIDENCE_REVIEWABILITY": "PASS",
+  "BASE_IMPACT": "NONE",
+  "SPEC_COMPLIANCE": "FAIL",
+  "BLOCKERS": 1,
+  "blockers": [
+    {
+      "id": "R3-B1",
+      "severity": "P1",
+      "class": "CONTRACT_VIOLATION",
+      "title": "Historical RETURN ignores disagreement between immutable P9 Agent identity and fresh Auth identity",
+      "source": [
+        {
+          "path": "docs/specs/SVC_WORKFLOW_CANONICAL_IDENTITY_RECONCILIATION_V2.md",
+          "lines": "89-99",
+          "contracts": [
+            "CTR-CIR-002",
+            "CTR-CIR-003"
+          ],
+          "obligation": "Each successor chain uses exact Auth UUID/type/status/agent_id and documented historical binding; every non-null identity assertion must agree; identity mismatch rejects the whole new business write."
+        }
+      ],
+      "locations": [
+        {
+          "path": "src/store/postgres/admission_gate.rs",
+          "lines": "238-275"
+        },
+        {
+          "path": "src/store/postgres/admission_gate.rs",
+          "lines": "295-310"
+        },
+        {
+          "path": "src/store/postgres/workflow_instance_repository/transition_transaction.rs",
+          "lines": "736-754"
+        }
+      ],
+      "counterexample": "An exact prior P responsibility exists in the same Instance/node. Its immutable P9 row maps P to Q with canonical_agent_id=agt_original. Q is a local enabled AGENT with no second edge. Fresh Auth returns exact Q, active, agentId=agt_different and Agent directory returns that exact different ID with exists/enabled true. resolve_current_principal drops all P9 metadata, observe accepts the new pair, and RETURN appends a Q Visit despite the contradictory identity chain. Both Agent IDs can satisfy the canonical grammar; no display-name inference or hypothetical network forgery is needed. The implementation has no comparison that can reject this state.",
+      "support": "The existing new positive historical_return_persists_validated_q_preserving_p_and_original_request fixture records canonical-{q} at tests/31_admission_wiring.rs:1018, while the directory stub returns agent-{q} at :120, and expects success at :1120-1132. Its 9/0 executed suite is hash-verified; reviewer did not execute a new counterexample.",
+      "impact": "The new historical bridge can create a responsibility using a fresh Agent binding inconsistent with the immutable evidence used to select Q, rather than failing closed on ambiguous/corrupt/drifted evidence. UUID-only validity is not proof that all identity assertions agree. This affects T1 source readiness and is independent of T3 DTO semantics.",
+      "minimal_closure": "Carry the exact one-edge P9 canonical_agent_id alongside the selected original/canonical UUIDs, compare it to the fresh Auth/Agent observation before producing ValidatedTarget, and reject mismatch with an existing suitable typed admission rejection and zero receipt/business facts. Align positive fixtures to the stored exact pair and add a valid-grammar A-versus-B negative RETURN fixture with before/after Visit/Event/Context/receipt checks. Keep old P disabled acceptance, Q disabled/missing/unavailable denial, raw request/hash/actor and replay behavior. No new identity service, grant, migration membership, API or Spec amendment is needed for this comparison."
+    }
+  ],
+  "SPEC_GAPS": 2,
+  "spec_gaps": [
+    {
+      "id": "R3-SG1",
+      "class": "SPEC_GAP",
+      "scope": "T3 current projection",
+      "load_bearing_for": [
+        "T3",
+        "T4",
+        "T5",
+        "overall #1277 completion"
+      ],
+      "detail": "Native canonical, successor metadata and unresolved nullable enrichment lack accepted exact proof source, closed current DTO/UNKNOWN semantics and consumer compatibility window. Existing fields are not silently redefined.",
+      "next_action": "RE_PREFLIGHT",
+      "readiness": "NO"
+    },
+    {
+      "id": "R3-SG2",
+      "class": "SPEC_GAP",
+      "scope": "T3 paired Broker declared error surface",
+      "load_bearing_for": [
+        "T3 consumer closure",
+        "overall #1277 completion"
+      ],
+      "detail": "The existing accepted Broker V3 declaration table omits admission_legacy_input/admission_target_disabled; current generic http_4xx degradation with HTTP422/detail/requestId preservation is not a Svc T1/T2 source violation. Widening that closed declaration requires its owning accepted contract route, not this implementation review. This review consumes the package/root report and does not independently audit the DSH consumer branch.",
+      "next_action": "RE_PREFLIGHT",
+      "readiness": "NO"
+    }
+  ],
+  "FOLLOW_UPS": 1,
+  "follow_ups": [
+    {
+      "id": "R3-F1",
+      "detail": "After one concentrated R3-B1 closure, bind fresh affected tests and the scheduled full project runtime to the exact corrected HEAD; then independent affected re-review. Compilation and filtered suites are not full project runtime acceptance."
+    }
+  ],
+  "TOOLING_DEBT": 0,
+  "reviewed_surface": {
+    "product_diff_paths": [
+      "src/application/definition/lifecycle/publish.rs",
+      "src/application/workflow_instance/admin_recovery.rs",
+      "src/application/workflow_instance/create.rs",
+      "src/application/workflow_instance/execute_transition.rs",
+      "src/application/workflow_instance/import.rs",
+      "src/application/workflow_instance/revise.rs",
+      "src/application/workflow_instance/revise_and_transition.rs",
+      "src/auth/admission.rs",
+      "src/store/postgres/admin_recovery_repository/override_transaction.rs",
+      "src/store/postgres/admission_gate.rs",
+      "src/store/postgres/definition_repository/lifecycle_transactions.rs",
+      "src/store/postgres/legacy_import_repository/transaction.rs",
+      "src/store/postgres/workflow_instance_repository/assistance_transaction/write.rs",
+      "src/store/postgres/workflow_instance_repository/combined_transaction.rs",
+      "src/store/postgres/workflow_instance_repository/create_transaction/facts.rs",
+      "src/store/postgres/workflow_instance_repository/query_detail.rs",
+      "src/store/postgres/workflow_instance_repository/query_visibility.rs",
+      "src/store/postgres/workflow_instance_repository/query_worklists.rs",
+      "src/store/postgres/workflow_instance_repository/repair_transaction.rs",
+      "src/store/postgres/workflow_instance_repository/revise_transaction.rs",
+      "src/store/postgres/workflow_instance_repository/transition_transaction.rs",
+      "src/store/postgres/workflow_instance_repository/transition_validation.rs"
+    ],
+    "ordinary_new_write_policy": "Explicit create/publish/default-enum/revise/combined/admin/import/repair inputs now reject mapped legacy identity; outputs discarded by explicit-only paths cannot normalize an alias because those paths reject any changed UUID. Create and RETURN consume validated responsibility. HUMAN paths retain local predicates. Terminal transition target remains unassigned.",
+    "context_configuration": "Create/revise/combined/import/repair enumerate existing declared INSTANCE_INPUT_PRINCIPAL keys; publication enumerates fixed principals and declared identity defaults/enums/examples. Unrelated business strings are not recursively replaced. Managed transition Context is limited to workflowPrerequisite by its unchanged accepted producer validation.",
+    "transaction_and_request": "Publish re-reads graph and checks digest/CAS in committing transaction before admission; other supported command paths use held transactions. Admission failures roll back receipts/business facts. Request payload/hash, authenticated actor, creator attribution and receipt keys are not replaced by canonical target.",
+    "roles": "Assigned SQL filters one-edge effective assignee before pagination, and final check/request assistance use shared helper. Old still-enabled P gets no current-assignee authority from stored OR. Exact creator checks remain in revise/combined; Domain Owner, admin, auditor, assistance open/close, CAS and replay predicates remain distinct. T0 helper changes are reused and inspected, not reimplemented.",
+    "tests": "Broad fixture changes replace disabled Agent admission with local directory stubs; new disabled/legacy rejection tests remain. No general test ignore or production bypass was added. The new positive RETURN identity inconsistency is specifically R3-B1, not acceptable proof.",
+    "history": "Original Visit/Event/creator/request facts retained; no schema/history rewrite in candidate. Bounded RETURN identity bridge remains, so final retirement is not claimed."
+  },
+  "evidence": {
+    "commands_path": "/tmp/ac1277-r3-evidence/commands.jsonl",
+    "commands_sha256": "1d361750f11924be81ffc6596d5600b346552bea7e7479d0449c0cfa720ea6e8",
+    "verified_raw_log_hash_count": 18,
+    "raw_log_hash_match": true,
+    "exact_candidate_compile": {
+      "label": "full-project-compile",
+      "argv": [
+        "cargo",
+        "test",
+        "--no-run"
+      ],
+      "cwd": "/tmp/ac1277-svc-workflow",
+      "head": "3567fdc83cbe60cc19c9c4b1d73c9dc20b31f008",
+      "dirtyDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "startedAt": "2026-10-31T01:33:26.403770+00:00",
+      "elapsedSeconds": 33.095,
+      "rc": 0,
+      "log": "full-project-compile.log",
+      "sha256": "bcbb1b01e8ac50b65473c29e76bcc9d58321494ef4eabcc6591ff9bdf9c85c8f",
+      "databaseIdentity": "postgres://ac1277_r2_test@127.0.0.1:57278/ac1277_r2_test",
+      "environment": "allowlisted env; DATABASE_URL=TEST_DATABASE_URL; local test cluster"
+    },
+    "t2_diff_binding_sha256": "29c677bb32f7ff9f5593faca06dd00862cf25082fda525597023eea426f618fe",
+    "executed_scope_summary": [
+      "T1 31 suite 9 passed; publish 4 passed; continuity 1 passed; repair 2 passed at logged precommit coordinates.",
+      "lib 252 passed, 1 ignored; Owner 25 passed; coordinator 10 passed; assistance 32 passed; original runtime 452 passed/1 fixture failure followed by filtered OBO 7 passed. These are not an all-project PASS.",
+      "T2 query_worklists 8 passed/446 filtered; assistance 33 passed; repair 2 passed; final T2 diff hash matches candidate source delta.",
+      "Clean exact candidate cargo test --no-run rc0; full project runtime NOT_EXECUTED at review cut."
+    ],
+    "T0_reuse": "Original cf2397b integration/review/502-test result reused as supplied; no unchanged test mechanism rerun by this reviewer."
+  },
+  "declined_to_judge": [
+    "Production installation, enabled admission configuration, real credentials/grants, runtime-loaded binary or business readiness.",
+    "Any live Auth/Agent directory, production database identity/data, real identity repair plan or sensitive fleet inventory.",
+    "T3 native/successor/unresolved DTO design, UNKNOWN response semantics, consumer window or Broker declared-error changes as accepted product authority.",
+    "T4/T5 retirement, disabled legacy authentication, legacy dependency zero-count, real-user dispatch/self-transition or warm-context model acceptance.",
+    "Full project runtime PASS: only exact clean candidate compilation is currently recorded; filtered/earlier runs remain scoped.",
+    "Reopening/retesting unchanged T0 mechanisms beyond current diff/affected dependency review.",
+    "General P9 operator correctness, membership expansion, historical source migration apply or unrelated pre-existing authority/source debt.",
+    "Automatic alias inheritance of creator, Domain Owner, admin or auditor rights.",
+    "Claims that API/advisory status is a durable execution ticket or that a timeout permits new request replay.",
+    "New governance acceptance: review recommends only; it does not accept or amend Product Authority."
+  ],
+  "readiness": {
+    "T1_SOURCE_READY": "NO_R3_B1",
+    "T2_SOURCE_SEMANTICS": "PASS_WITH_FINAL_RUNTIME_PENDING",
+    "T1_T2_MERGE_READY": "NO",
+    "overall_1277": "INCOMPLETE_T3_BLOCKED_T4_T5_DEPENDENT",
+    "convergence_exit": "NOT_APPLICABLE_NO_FINAL_RETIREMENT_CLAIM",
+    "IMPLEMENTATION_ALLOWED": "YES_FOR_BOUNDED_R3_B1_REUSE_REPAIR",
+    "MERGE_READY": "NO",
+    "OPERATION_ALLOWED": "NO",
+    "NEXT_ACTION": "CONTINUE_BOUNDED_REPAIR; T3_RE_PREFLIGHT"
+  },
+  "stop_boundary": "One frozen blocker union issued; no optional implementation or open-ended audit. Source correction and fresh tests belong to the existing writer."
+}

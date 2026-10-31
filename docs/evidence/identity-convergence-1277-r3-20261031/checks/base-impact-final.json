@@ -1,0 +1,18 @@
+{
+  "recordedAt": "2026-10-31T02:26:54.356994+00:00",
+  "svcMain": "3b81d8f99a286caeb04ea2c349966b0f6662275d",
+  "dshMain": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+  "dshOriginalBase": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "dshRelevantPaths": [
+    "docs/specs/AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3.md",
+    "packages/broker/src",
+    "packages/workflow-execution/src",
+    "packages/workflow-execution/test/instruction.test.js",
+    "packages/workflow-execution/test/judgment.test.js",
+    "packages/workflow-execution/test/engine.test.js",
+    "packages/workflow-execution/test/owner-assistance-resume-engine.test.js",
+    "packages/workflow-execution/test/recovery.test.js"
+  ],
+  "dshRelevantMainDelta": [],
+  "claim": "No relevant product/test authority invalidation from observed main movement; tests remain bound to actually executed snapshots, not unexecuted main"
+}
