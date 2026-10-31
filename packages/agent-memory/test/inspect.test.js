@@ -285,3 +285,14 @@ test('injection prediction is unknown when the exact assembly parser rejects a g
   assert.equal(report.injection.excludedSelectionCount, null)
   assert.ok(report.reasons.includes('ASSEMBLY_GUARD_LIMIT'))
 })
+
+test('inspector honors refused trusted binding instead of reading the fallback primary',async t=>{
+ const root=await mkdtemp(join(tmpdir(),'memory-refused-binding-'))
+ t.after(()=>rm(root,{recursive:true,force:true}))
+ await writeFile(join(root,'MEMORY.md'),'must remain unobserved')
+ const binding=await resolveMemoryBinding({agentId:'synthetic',primaryWorkspace:root,session:{header:{cwd:'relative'}}})
+ const report=await inspectMemory({binding})
+ assert.equal(report.status,'REFUSED')
+ assert.equal(report.core.sha256,null)
+ assert.equal(report.core.exists,null)
+})
