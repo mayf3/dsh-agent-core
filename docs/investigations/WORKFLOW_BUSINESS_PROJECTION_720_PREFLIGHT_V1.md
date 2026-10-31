@@ -76,7 +76,7 @@ At the pinned Svc source:
   Lines `4–8` explicitly exclude interpreting evidence meaning or deciding business truth.
 - [governance_child.rs](https://github.com/mayf3/svc-workflow/blob/ddf81196225f28bb5ffe0b8e73c8bc747aae736b/src/domain/workflow_instance/governance_child.rs#L30)
   `:30–80` declares `ACCEPTED | NOT_ACCEPTED` for its bounded linked-child contract.
-  Its [terminal proof](https://github.com/mayf3/svc-workflow/blob/ddf81196225f28bb5ffe0b8e73c8bc747aae736b/src/domain/workflow_instance/governance_child/terminal.rs#L70)
+  Its [terminal proof](https://github.com/mayf3/svc-workflow/blob/ddf81196225f28bb5ffe0b8e73c8bc747aae736b/src/store/postgres/workflow_instance_repository/assistance_transaction/governance_child/terminal.rs#L70)
   `:70–99` joins actual event, definition version, transition and submission/digest.
   Core's existing assistance-detail reader can expose the authorized Svc proof.
 
