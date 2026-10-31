@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
 import { realpath, stat } from 'node:fs/promises'
 import { isAbsolute, resolve } from 'node:path'
-import { ENTRY_TYPES, INJECT_TYPES, MEMORY_GUARD_LIMITS, MEMORY_HEADER, ASSEMBLY_GUARD_LIMITS, parseAssemblyEntries, parseEntries } from './memory.js'
+import { INJECT_TYPES, ASSEMBLY_GUARD_LIMITS, parseAssemblyEntries } from './memory.js'
 
 const MAX_BYTES = 32 * 1024 * 1024
 const OUTPUT_BYTES = 64 * 1024
@@ -46,132 +46,8 @@ export async function resolveMemoryBinding({ agentId, primaryWorkspace, session 
     resolverOrigin: sessionPath ? 'SESSION_HEADER_CWD' : 'PRIMARY_WORKSPACE', equality, status }
 }
 
-/**
- * Read-only document model. Entry and preserved ranges form an exact partition
- * of the original bytes; unknown text is never reconstructed or discarded.
- */
-export function parseMemoryDocument(buffer, { deadline = Infinity } = {}) {
-  const assertBudget = () => {
-    if (performance.now() >= deadline) {
-      const error = new Error('TIME_BUDGET')
-      error.code = 'TIME_BUDGET'
-      throw error
-    }
-  }
-  const checkInterval = (index) => { if ((index & 1023) === 0) assertBudget() }
-  assertBudget()
-  const bytes = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer ?? '')
-  const result = { format: 'FREEFORM', entries: [], spans: [], preservedSpans: [],
-    coverage: { bytes: bytes.length, parsedBytes: 0, unparsedBytes: bytes.length },
-    issues: [], sha256: digest(bytes) }
-  assertBudget()
-  if (bytes.length > MAX_BYTES) {
-    result.format = 'INVALID'; result.issues.push({ code: 'SOURCE_TOO_LARGE' })
-    if (bytes.length) result.preservedSpans.push({ byteStart: 0, byteEnd: bytes.length, kind: 'unparsed' })
-    return result
-  }
-  let text
-  try { text = new TextDecoder('utf-8', { fatal: true }).decode(bytes) }
-  catch {
-    result.format = 'INVALID'; result.issues.push({ code: 'INVALID_UTF8' })
-    if (bytes.length) result.preservedSpans.push({ byteStart: 0, byteEnd: bytes.length, kind: 'unparsed' })
-    return result
-  }
-  assertBudget()
-  const lines = []
-  let byteOffset = 0
-  for (const match of text.matchAll(/[^\n]*\n|[^\n]+$/g)) {
-    checkInterval(lines.length)
-    const raw = match[0]
-    const length = Buffer.byteLength(raw)
-    lines.push({ text: raw.replace(/\r?\n$/, ''), charStart: match.index,
-      byteStart: byteOffset, byteEnd: byteOffset + length })
-    byteOffset += length
-  }
-  const candidates = []
-  for (let i = 0; i < lines.length; i++) {
-    checkInterval(i)
-    if (!lines[i].text.startsWith('## ')) continue
-    let metaLine = i + 1
-    while (metaLine < lines.length && lines[metaLine].text === '') { checkInterval(metaLine); metaLine++ }
-    if (/^- \*\*ID\*\*: `[^`]+`$/.test(lines[metaLine]?.text ?? '') &&
-        /^- \*\*Type\*\*:/.test(lines[metaLine + 1]?.text ?? '')) candidates.push({ line: i, metaLine })
-  }
-  for (let i = 0; i < candidates.length; i++) {
-    checkInterval(i)
-    const candidate = candidates[i]
-    const start = candidate.line
-    const boundary = candidates[i + 1]?.line ?? lines.length
-    let end = boundary
-    // The final structural separator belongs to the entry; later human notes
-    // remain preserved. Earlier separators can be part of verbatim content.
-    let separator = -1
-    for (let j = candidate.metaLine + 2; j < boundary; j++) {
-      checkInterval(j)
-      if (/^---[ \t]*$/.test(lines[j].text)) separator = j
-    }
-    if (separator !== -1) end = separator + 1
-    const byteStart = lines[start].byteStart
-    const byteEnd = end < lines.length ? lines[end].byteStart : bytes.length
-    const title = lines[start].text.slice(3)
-    const type = lines[candidate.metaLine + 1].text.slice('- **Type**:'.length).trim()
-    let code = null
-    // Canonical title escapes are the inverse of the existing codec. Broken
-    // escape runs stay visible as unparsed text instead of acquiring identity.
-    if (!ENTRY_TYPES.has(type)) code = 'INVALID_ENTRY_TYPE'
-    else if (malformedEscape(title)) code = 'INVALID_ENTRY_ESCAPE'
-    else if (title.length > MEMORY_GUARD_LIMITS.maxFieldChars) code = 'ENTRY_GUARD_LIMIT'
-    const id = lines[candidate.metaLine].text.slice('- **ID**: `'.length, -1)
-    if (!code && id.length > MEMORY_GUARD_LIMITS.maxFieldChars) code = 'ENTRY_GUARD_LIMIT'
-    for (let j = candidate.metaLine + 1; !code && j < end; j++) {
-      checkInterval(j)
-      if (lines[j].text === '') break
-      const field = lines[j].text.match(/^- \*\*(Updated|Source)\*\*: ?(.*)$/)
-      if (field && field[2].length > MEMORY_GUARD_LIMITS.maxFieldChars) code = 'ENTRY_GUARD_LIMIT'
-      if (field?.[1] === 'Source' && malformedEscape(field[2])) code = 'INVALID_ENTRY_ESCAPE'
-    }
-    let parsed
-    if (!code) {
-      try {
-        parsed = parseEntries(bytes.subarray(byteStart, byteEnd).toString('utf8'))
-        if (parsed.length !== 1 || !parsed[0].title || !ENTRY_TYPES.has(parsed[0].type)) code = 'INVALID_ENTRY_STRUCTURE'
-        else if (parsed[0].content.length > MEMORY_GUARD_LIMITS.maxContentChars) code = 'ENTRY_GUARD_LIMIT'
-      } catch { code = 'ENTRY_GUARD_LIMIT' }
-      assertBudget()
-    }
-    if (code) { result.issues.push({ code, byteStart, byteEnd }); continue }
-    const entry = parsed[0]
-    result.entries.push(entry)
-    result.spans.push({ byteStart, byteEnd, entryId: entry.id, entry })
-  }
-  let offset = 0
-  for (const [index, span] of result.spans.entries()) {
-    checkInterval(index)
-    if (span.byteStart > offset) result.preservedSpans.push({ byteStart: offset, byteEnd: span.byteStart, kind: 'preserved' })
-    offset = span.byteEnd
-    result.coverage.parsedBytes += span.byteEnd - span.byteStart
-  }
-  if (offset < bytes.length) result.preservedSpans.push({ byteStart: offset, byteEnd: bytes.length, kind: 'preserved' })
-  result.coverage.unparsedBytes = bytes.length - result.coverage.parsedBytes
-  const nonStructural = result.preservedSpans.some(({ byteStart, byteEnd }, index) => {
-    checkInterval(index)
-    const piece = bytes.subarray(byteStart, byteEnd).toString('utf8')
-    return piece.replace(MEMORY_HEADER.trimEnd(), '').trim() !== ''
-  })
-  result.format = result.issues.length ? 'INVALID'
-    : result.entries.length ? (nonStructural ? 'MIXED' : 'STRUCTURED') : 'FREEFORM'
-  assertBudget()
-  return result
-}
-
-function malformedEscape(field) {
-  const allowed = new Set('\\`*_[\]{}()#+.!|>~-')
-  for (let i = 0; i < field.length; i++) {
-    if (field[i] !== '\\') continue
-    if (!allowed.has(field[++i])) return true
-  }
-  return false
-}
+import { parseMemoryDocument } from './document.js'
+export { parseMemoryDocument, planDocumentEdits, planDocumentRollback } from './document.js'
 
 function evidence(evidenceKind, asOf, ref = null) { return { evidenceKind, asOf, ref } }
 function annotate(group, kinds, observedAt, refs = {}) {
