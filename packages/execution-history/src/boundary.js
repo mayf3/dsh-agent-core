@@ -41,6 +41,7 @@ export function sourceGenerationToken(sourceFiles) {
     if (entry === undefined) continue
     token[name] = {
       rows: entry.rows ?? 0,
+      ...(entry.revision !== undefined ? { revision: entry.revision } : {}),
       files: (entry.files ?? []).map((f) => ({ file: f.file, size: f.size, mtimeMs: f.mtimeMs ?? 0 })).sort((a, b) => a.file.localeCompare(b.file)),
     }
   }
