@@ -42,5 +42,14 @@
   "realBusinessTransition": false,
   "deployment": false,
   "localClusterStopped": true,
-  "finalReportReview": "PENDING_EXACT_HEAD"
+  "finalReportReview": {
+    "result": "PASS_BOUNDED_R2_EVIDENCE",
+    "reviewTargetHead": "566ef99a6a81ad6438881924048cf4d5e7fa4e79",
+    "reviewer": "/root/r2_evidence_audit",
+    "finalReceiptDeltaReview": "pending exact commit readback"
+  },
+  "closedBlockers": [
+    "B1277-T0-DB"
+  ],
+  "currentDshBase": "0386b34a3d1054c71cbe51a2310fdff4d55c992b"
 }

@@ -1,0 +1,402 @@
+{
+  "recordType": "INDEPENDENT_R2_EXECUTED_EVIDENCE_AND_REPORT_REVIEW",
+  "reviewer": "/root/r2_evidence_audit",
+  "author": "/root",
+  "authorIndependence": true,
+  "evaluatedAtUtc": "2026-10-31T00:36:17.457179+00:00",
+  "repository": "mayf3/dsh-agent-core",
+  "reviewKind": "AFFECTED_CONTRACT_EVIDENCE_DELTA",
+  "reviewScope": "DELTA",
+  "scopeReason": "R1 fixed Svc source remains byte-identical; R2 adds executed local DB evidence, bounded baseline contrast and a non-ready T1 docs proposal, not product code.",
+  "reviewTargetHead": "566ef99a6a81ad6438881924048cf4d5e7fa4e79",
+  "reviewTargetTree": "b43517f49982328d53b7465e2d2c8fe14d2f567c",
+  "baseHead": "0b64aca3615aec203b95aa960eff39d635bd26c1",
+  "r2ParentHead": "4c8fe59133395a1cb21d29f0dc1b0553d18a4828",
+  "currentBaseHead": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+  "remoteHeadReadback": {
+    "method": "git ls-remote origin refs/heads/main during independent review",
+    "dsh": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+    "svc": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890"
+  },
+  "sourceCoordinates": {
+    "svcHead": "cf2397b048d84b1c6eadd1170b3cda1c102de11b",
+    "svcTree": "65fcd731491cb1d23fa9cea20f550c1f0b14d524",
+    "svcBase": "35c3b685db4ac91bc7a216d840fcf19a0fa1a890",
+    "svcBinaryDiffSha256": "7e1a50f4d7c1d05d1c25a235b1f7c051570a8e42b808f32919b1145d75ee2c89",
+    "svcDiffMeaning": "git diff --binary BASE HEAD, not executable bytes",
+    "svcTrackedSourceClean": true,
+    "sourceSemanticReview": "REUSED_R1_EXACT_HEAD_AND_IDENTICAL_DIFF",
+    "t1ProposalHead": "27747607937ecaa032982bd1a81301601633791d",
+    "t1ProposalStatus": "PROPOSED_NOT_ACCEPTED"
+  },
+  "reviewResult": "PASS_BOUNDED_R2_EVIDENCE",
+  "isAcceptance": false,
+  "checks": {
+    "AUTHORITY_REVIEW": {
+      "result": "PASS_BOUNDED_R2",
+      "evidence": [
+        "R1 accepted CIR V2/P9 and DSH capability V3 source authority reused at identical Svc source coordinates.",
+        "Proposal V3 at 2774760 remains proposed; no implementation or acceptance inferred from review.",
+        "T1 open disabled-admission policy and accepted/main prerequisite explicitly keep dependent implementation NO."
+      ]
+    },
+    "PRIMITIVE_BOUNDARY_REVIEW": {
+      "result": "PASS",
+      "evidence": [
+        "Report separates static source review, executed tests, proposed policy, deployment and business acceptance.",
+        "Setup duration and stop subcommand rc are explicitly uninstrumented/null instead of fabricated.",
+        "DSH module load failures are not reported as executed business-case regressions; T62 old behavior PASS is not represented as T1 completion."
+      ]
+    },
+    "CONTRACT_REVIEW": {
+      "result": "PASS_FOR_UNCHANGED_T0_SOURCE_AND_EVIDENCE",
+      "evidence": [
+        "Svc binary diff/hash and clean HEAD/tree exactly match prior independent source review; no source semantic re-review needed.",
+        "R2 diff changes only report/evidence files; no JavaScript/Rust product code, authority lifecycle, migrations, grants or sessions changed.",
+        "Baseline has exact selected-main src/migrations/authority and identical copied test oracle only; the creator negative control remains denied."
+      ]
+    },
+    "ACCEPTANCE_COVERAGE_REVIEW": {
+      "result": "PASS_T0_LOCAL_VERIFICATION_ONLY",
+      "evidence": [
+        "Seven Svc targets executed rc0 with 453+25+10+7+1+4+2=502 passed, zero failed/ignored/filtered.",
+        "Baseline creator and continuity fixtures reproduce the two named repaired defects (combined advisory false; detail 404); both pass on candidate and noncreator denial passes on both.",
+        "This is a bounded baseline contrast, not full baseline or T1-T5 completion.",
+        "69 DSH execution mock tests pass; broker has three manifest passes and three file load failures caused by missing croner, with restore NOT_RUN because no root lock.",
+        "No warm-context model behavior, legacy-auth disable rehearsal or production retirement claim is made."
+      ]
+    },
+    "MANDATE_SCOPE_REVIEW": {
+      "result": "PASS",
+      "evidence": [
+        "Runner allowlists environment, explicitly binds DATABASE_URL=TEST_DATABASE_URL to owned loopback port57278, and excludes inherited production DSNs/proxies.",
+        "db-identity and postmaster.opts bind task DB/user/local address/port/PGDATA; test34 derives operator DSN from TEST_DATABASE_URL and removes AUTH_DATABASE_URL.",
+        "Local cluster stopped: log says server stopped, status rc3 no server, postmaster.pid absent; task data retained.",
+        "No production DB access/write, deployment, session reset, real business transition or grant/credential/legacy-auth change appears in the reviewed task effects."
+      ]
+    },
+    "EVIDENCE_REVIEWABILITY": {
+      "result": "PASS_FOR_RECORDED_RESULTS",
+      "evidence": [
+        "All 28 manifest entries match exact tracked D1 bytes and working-tree bytes.",
+        "All ten gzip archives decompress; all six command/mock/precheck log hashes match receipts using decompressed bytes, and initdb hash matches setup receipt.",
+        "Candidate argv/head/empty dirtydiff/rc/monotonic duration and baseline dirty test oracle are reviewable.",
+        "Original R1 report differs only by a historical checkpoint link; original evidence is unchanged.",
+        "Reviewer did not rerun tests or access databases."
+      ]
+    }
+  },
+  "testEvidence": {
+    "candidate": {
+      "rc": 0,
+      "passed": 502,
+      "failed": 0,
+      "elapsedSeconds": 623.368,
+      "logSha256": "a30f12c040b09204ccf464cac09533e148243e733cd0a656cf02db609fef80fe"
+    },
+    "baseline": {
+      "boundedOnly": true,
+      "passed": 1,
+      "expectedRepairedFailures": 2,
+      "failedNames": [
+        "query_worklists::creator_sql_exact_creator_with_legacy_assignee_lists_and_combines",
+        "canonical_assignee_reads_and_advances_where_stale_uuid_stored"
+      ],
+      "sameCasesOnCandidate": "3_PASS"
+    },
+    "dshExecution": {
+      "passed": 69,
+      "failed": 0,
+      "rc": 0
+    },
+    "dshBroker": {
+      "passed": 3,
+      "fileLoadFailures": 3,
+      "rc": 1,
+      "cause": "ERR_MODULE_NOT_FOUND croner; no root lock; no product JS delta"
+    }
+  },
+  "integrity": {
+    "manifestSha256": "9b14fbe22ca2a33fb0707723120ec0ea2b6ed6514ae9fde574ce4b1408b4684f",
+    "manifestEntriesVerified": 28,
+    "gzipArchivesRead": 10,
+    "receiptLogHashesVerified": 6,
+    "entries": [
+      {
+        "path": "checks/baseline-continuity.log.gz",
+        "sha256": "f36161242b356e59e7621701a9ebbe10473cbe95249d17e5bd8a9aba2773e82b",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/baseline-creator.log.gz",
+        "sha256": "6cd2a4f67acef4b0f2f6c03c4ebfc33d408a7a1f717f53a25440d8ee80d7f691",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/baseline-db-identity-after-tests.txt",
+        "sha256": "7eb32ef577a1bda79843677ac401a663def105bfd21e5d382fb48ba76ea9696d",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/baseline-test-oracle.json",
+        "sha256": "6053aac1c82a8b64d6bb39fc207bf1aba4c6f9c17eb608bf8781e39b3e473cc1",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/baseline-tests-summary.json",
+        "sha256": "5055fe010403a5b81ce20229fa0d8c8dc0d00580dd3b64f295f03a285873f37e",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/candidate-seven.log.gz",
+        "sha256": "cd19531a0844c86c28731129fd465c39500638a485ed16256ec2e405cd92ab4c",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/candidate-tests-summary.json",
+        "sha256": "d8350174324e005e23747c83dbf589f95b1f851d0ddd7d82f101662029cc73ff",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/commands.jsonl",
+        "sha256": "fe33e1fbe4a6e3e407f4ae5ce34303b462a57b0ea7bcb0dec36e28d873d88c41",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/db-identity.txt",
+        "sha256": "b06ee930ac15d79a2b030458579cf4fd5239736ba60b1bbb47ad4311f265ad73",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/db-setup-receipt.json",
+        "sha256": "5ac38c856105748edfd1f5830e326daafc52af45e54d32be778259af0fff9c39",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/db-stop-receipt.json",
+        "sha256": "44bed7ef5a637a20f9994f39f4d960f18a878bf60a0b24c542cbe72dd34ec8ee",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/delivery-checks.json",
+        "sha256": "f71df61b0e214d0fd030f5c9d1c9a9017ff6362bd4343766ca4057fceccf0401",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-dependency-precheck.json",
+        "sha256": "03cfc2c8963b79d05c61aab04aba8d7da9c4bc11314c07c57b0e46fdde9cbfd6",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-dependency-precheck.log.gz",
+        "sha256": "fe7fb400fab552a9639ee1b8de6ca57802cd8f01ca08a1dd67d33802a75bb6e3",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-mock-broker.json",
+        "sha256": "a56add009b5a2f962adbc8916609dba0d69fc1d5d03909849e16cba6c5249a8b",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-mock-broker.log.gz",
+        "sha256": "5d24bddd0170897089ab3d57bfcbb8f869c6233f91bd813db83fe1496cdbdc12",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-mock-execution.json",
+        "sha256": "5c567da698df4db44feb36eb408c6a56f26992c07e01bcf41a8d8142140d0c48",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/dsh-mock-execution.log.gz",
+        "sha256": "fa2ad173dfad6846bc06f27eac87f6d39fd16d581cf7c62d9630616215f3f6ea",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/environment-and-boundaries.json",
+        "sha256": "73a7fd4a23496c3d5d1c8424c80c825dea795a84bbe2b2220a066433f36d6711",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/initdb.log.gz",
+        "sha256": "be5cc036780616b6204f330b9ec0ce3802dcefd5b70bc7608eb4e9424ed83e5b",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/initial-coordinates.json",
+        "sha256": "384b0e26c5f357639c51b41ea31f01eb966fce9566e109c87b44eb1c1b4b7fa9",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/postgres-status-after-stop.log.gz",
+        "sha256": "c9030bca18b838ddbd8da46ea0cfd22ce74ea011eb70d10561e95ea3c0c7b3bf",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/postgres-stop.log.gz",
+        "sha256": "da5bb8e75cbab141a9164b24c1330658be919fc88a9a3838063a58df033740bd",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/postgres.log.gz",
+        "sha256": "2abe08a049fbfd3792de996519fc0a1087d35af0e48c4dd4fecac9073d1c6a5e",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/record.py",
+        "sha256": "151ec47f328e3f47377b7364b821f26c94bd8dfa9f9974874007806f453db70f",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/t1-carry-verification.json",
+        "sha256": "ead8e4b6173ae02ed5af569d714d4d6283f4fe84861e1ab725a1f391b905f483",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/t1-proposal-independent-review.json",
+        "sha256": "4bf4cd627bca76fc90124a93c41c88c12c3b11b2b7aed9200b42689163d9500a",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      },
+      {
+        "path": "checks/t1-spec-validation.json",
+        "sha256": "f976ab9a8409d5d02d9492a9a75ae173820f9a9f1585248ccb8257dea10e5def",
+        "matchesTrackedBytes": true,
+        "worktreeEqualsTracked": true
+      }
+    ],
+    "logs": [
+      {
+        "label": "candidate-seven",
+        "rc": 0,
+        "sha256": "a30f12c040b09204ccf464cac09533e148243e733cd0a656cf02db609fef80fe",
+        "decompressedHashMatchesReceipt": true
+      },
+      {
+        "label": "baseline-creator",
+        "rc": 101,
+        "sha256": "2d2945bd284c9fcbdb25a8da80325f412f82a1382a0afa3e657855f2d3170ab5",
+        "decompressedHashMatchesReceipt": true
+      },
+      {
+        "label": "baseline-continuity",
+        "rc": 101,
+        "sha256": "5941180e7bba103c6d8917feb0b4fca5454c782e0fe6e7385f3dec7ed0080871",
+        "decompressedHashMatchesReceipt": true
+      },
+      {
+        "label": "dsh-mock-execution",
+        "rc": 0,
+        "sha256": "641a35eb9946607ce82d72355692d9d542ed36bb7929e1351900b85687ec75d4",
+        "decompressedHashMatchesReceipt": true
+      },
+      {
+        "label": "dsh-mock-broker",
+        "rc": 1,
+        "sha256": "f2928e101f1e5955e3ece4265b9834b26f67951950a34f209bca2894cc362ab6",
+        "decompressedHashMatchesReceipt": true
+      },
+      {
+        "label": "dsh-dependency-precheck",
+        "rc": 1,
+        "sha256": "bd89db46313bd3faf6d4f0f467098daf5a9616c377ff31cb840b22ee70b54ec9",
+        "decompressedHashMatchesReceipt": true
+      }
+    ],
+    "reportSha256": "de0514f69f30409eb99b2c7ae2acce3f108834adda014a75a69d1290bcebff0b"
+  },
+  "baseImpact": {
+    "classification": "BOUNDED",
+    "candidateHeadDrift": "NONE",
+    "currentBaseMoved": true,
+    "movement": "DSH main 0b64aca3 -> 0386b34a (PR590/#1332)",
+    "checked": "git diff names and empty scoped diff for docs/specs, workflow-execution/src, broker/src and R2 report/evidence paths",
+    "affectedPaths": "agent-router delivery/recovery, demo server, their tests/evidence; workflow-execution/test/runtime-wiring.test.js fixture",
+    "authorityOrIdentitySourceDelta": false,
+    "r2PathConflict": false,
+    "testClaimLimit": "DSH 69 tests bind old source snapshot4c8fe591; no latest-main PASS inferred; unchanged source evidence is not rerun solely for unrelated Base movement.",
+    "reportDisclosure": "Root will persist exact bounded movement record in receipt-only D2 and request final delta recheck."
+  },
+  "priorBlockerDisposition": {
+    "id": "B1277-T0-DB",
+    "status": "CLOSED_FOR_T0_LOCAL_SOURCE_VERIFICATION",
+    "evidence": "Owned PG fresh identity + exact candidate502/0 + named baseline contrast + this independent receipt audit."
+  },
+  "newBlockers": [],
+  "newEvidenceBlockerCount": 0,
+  "remainingFindings": [
+    {
+      "id": "OQ-NW-001",
+      "kind": "SPEC_GAP",
+      "dependency": "LOAD_BEARING",
+      "alreadyDisclosed": true,
+      "affectedReadiness": {
+        "T1_IMPLEMENTATION_ALLOWED": "NO",
+        "OVERALL_SOURCE_READY": "NO"
+      },
+      "minimumClosure": "Owning actor decides disabled mode and bounded authority is independently reviewed, accepted and present in implementation base."
+    },
+    {
+      "id": "TD-NW-001",
+      "kind": "TOOLING_DEBT",
+      "alreadyDisclosed": true,
+      "meaning": "Both predecessor and proposed actual Architecture parent IDs fail stock strict metadata regex; no syntax PASS, waiver or authority rename; reconcile lawfully before acceptance."
+    },
+    {
+      "id": "TD-R2-BROKER-DEPS",
+      "kind": "TOOLING_DEBT",
+      "alreadyDisclosed": true,
+      "meaning": "No root dependency lock and missing croner prevent broker files loading; no R2 product JS delta, tests remain unverified rather than product PASS."
+    }
+  ],
+  "readiness": {
+    "t0LocalVerification": "PASS",
+    "t1ImplementationAllowed": false,
+    "overallSourceReady": false,
+    "mergeReady": false,
+    "operationAllowed": false,
+    "merged": false,
+    "installed": false,
+    "enabled": false,
+    "businessVerified": "NOT_TESTED"
+  },
+  "finalHeadRecheck": "PENDING_RECEIPT_ONLY_D2_DELTA",
+  "limitations": [
+    "Evidence review reuses prior exact-head source review; reviewer did not rerun tests or access any DB.",
+    "No full all-repository baseline or latest-main DSH behavior claim; no T1-T5 or production conformance.",
+    "Current D1 report explicitly says final review receipt pending; D2 may persist this receipt and disclose Base movement without changing product semantics."
+  ],
+  "effects": {
+    "repositoryWrites": 0,
+    "databaseAccess": 0,
+    "productionWrites": 0,
+    "externalMessages": 0,
+    "receiptOnlyWrite": true
+  }
+}
