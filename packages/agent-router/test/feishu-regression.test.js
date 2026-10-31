@@ -15,7 +15,7 @@
  * Feishu entry; 'mobile' = the mobile Product API namespace.
  *
  * The full onIngress path is exercised with a stub feishu channel handle
- * and a STUBBED AgentProcess (spawn/ready/turn/shutdown) so no real DSH
+ * and a STUBBED AgentProcess (spawn/ready/prepare/turn/shutdown) so no real DSH
  * child is spawned; the reply branch and the Binding keys are the code
  * under test.
  */
@@ -80,6 +80,7 @@ function stubAgentProcess() {
     return this
   }
   AgentProcess.prototype.ready = async () => 0
+  AgentProcess.prototype.prepareDelivery = async sessionId => ({ version: 1, ready: true, sessionId })
   AgentProcess.prototype.turn = async function turnStub(sessionId, text, opts) {
     spawns.turns.push({ agentId: this.agentId, sessionId, text, opts })
     return { reply: 'stub-reply', messageId: 'stub-msg' }

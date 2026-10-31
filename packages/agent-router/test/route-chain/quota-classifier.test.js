@@ -258,7 +258,7 @@ test('the other three no-admission classes still hop (closed V1 whitelist intact
 // ─── Executor level with the REAL AgentProcess carrier ────────────────────
 
 test('A (real process): terminal pre-generation 429 hops glm53 -> luna -> success', async () => {
-  const fx = makeFx()
+  const fx = makeFx({ autoPrepare: true })
   await fx.readyNow()
   const luna = lunaProc()
   const seam = fakeSeam({ procs: [fx.proc, luna] })
@@ -295,7 +295,7 @@ test('A (real process): terminal pre-generation 429 hops glm53 -> luna -> succes
 })
 
 test('B (real process): 429 after partial assistant output STOPs, zero luna acquires', async () => {
-  const fx = makeFx()
+  const fx = makeFx({ autoPrepare: true })
   await fx.readyNow()
   const luna = lunaProc()
   const seam = fakeSeam({ procs: [fx.proc, luna] })
@@ -327,7 +327,7 @@ test('B (real process): 429 after partial assistant output STOPs, zero luna acqu
 })
 
 test('C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires', async () => {
-  const fx = makeFx({ deadlines: { turnTimeoutMs: 60 } })
+  const fx = makeFx({ autoPrepare: true, deadlines: { turnTimeoutMs: 60 } })
   await fx.readyNow()
   const luna = lunaProc()
   const seam = fakeSeam({ procs: [fx.proc, luna] })

@@ -68,7 +68,7 @@
 
 import z from '@deepseek-ai/schemastery'
 import { homedir, hostname } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
@@ -283,6 +283,7 @@ export function apply(ctx, config) {
   const routeChain = createRouteChainExecutor({
     log,
     ensureRunningForRoute: registry.ensureRunningForRoute,
+    deadLetterDirectory: join(dirname(recoveryFile ?? storeFile), 'delivery-dead-letters'),
     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
     resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
     ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
@@ -318,6 +319,8 @@ export function apply(ctx, config) {
   ctx.effect(() => () => registry.dispose())
 
   const service = {
+    deliveryFailuresSnapshot: () => routeChain.deliveryFailuresSnapshot(),
+    getDeliveryDeadLetter: id => routeChain.getDeliveryDeadLetter(id),
     ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
     pluginName: name,
     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
