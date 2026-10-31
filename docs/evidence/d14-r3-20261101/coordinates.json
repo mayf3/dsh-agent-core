@@ -1,0 +1,71 @@
+{
+  "observedAt": "2026-10-31T23:56:47.965841+00:00",
+  "worktree": "/tmp/proddsh-d14-fix",
+  "branch": "ac-D14D13-spawn-proof",
+  "sourceHead": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "integrationBase": "3a1282b35e7b852f51cd14284ea91fd77a13543e",
+  "gitCommonDir": "/private/tmp/proddsh-d14-fix/.git-r2-isolated",
+  "inheritedProductDelta": [
+    "M\tbundle-broker/cordis.patch.yml",
+    "M\tpackages/broker/src/registry.js",
+    "M\tpackages/broker/src/transport.js",
+    "M\tpackages/product-api/src/history-listener.js",
+    "A\tpackages/product-api/test/history-listener-bind-resilience.test.js",
+    "M\tpackages/production-runtime/src/entry.js",
+    "A\tpackages/production-runtime/test/entry-conversation-env.test.js"
+  ],
+  "inheritedCommits": [
+    "1921f8795e2212506a7a833bc79b84c17ba50ea1 fix(broker): surface structured service error details in failure lines (#84 D2)",
+    "e9a61deea1a01790d11a665e3e2fb5186ab6c5fc test(product-api): regression coverage for history listener bind resilience",
+    "f9e02f879a03ad5757dba1826e9934043d899ddf fix(product-api): history listener bind failure must not kill the runtime",
+    "4114c55e7a393904756b47b1967d786fd4a72e1c Revert \"TEMP DIAGNOSTIC (AC1159): bounded stderr line on the two send-stop branches\"",
+    "c50484b5bb4a9ae7c5aa8d7c080af35ff2fbd96f fix(broker): drop duplicated forumModeratorAgentIds block in bundle-broker cordis patch",
+    "c0ec3c275dda5fa0ef3302a7d95c2b622aa73ca2 TEMP DIAGNOSTIC (AC1159): bounded stderr line on the two send-stop branches",
+    "09c7e8b42758b74e74999b4efc18c1ea5a1fb03a fix(production-runtime): seam carries the T48 history env passthrough (AC1159 user-runtime surface parity)",
+    "bd8f74c4d8311e9093ec73ffa959b81ca2c25109 feat(production-runtime): supervision-unit env seam mounts the native conversation facade"
+  ],
+  "directFiles": [
+    {
+      "path": "packages/agent-provisioning/src/shared-codex.js",
+      "productionBlob": "748a615c80bc3cbe2d1d4300cae3446cf5bdc8dd",
+      "mainBlob": "748a615c80bc3cbe2d1d4300cae3446cf5bdc8dd",
+      "equal": true
+    },
+    {
+      "path": "packages/agent-provisioning/src/index.js",
+      "productionBlob": "b6fad4a5b070fd482117607a7069cd1dd5ddbd92",
+      "mainBlob": "b6fad4a5b070fd482117607a7069cd1dd5ddbd92",
+      "equal": true
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "productionBlob": "084109744b00eb55e9c4211d1d466b93cc5ef06a",
+      "mainBlob": "084109744b00eb55e9c4211d1d466b93cc5ef06a",
+      "equal": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3.md",
+      "productionBlob": "db877b53a3aa8f30acd7f5d27e4fc05f376be41d",
+      "mainBlob": "db877b53a3aa8f30acd7f5d27e4fc05f376be41d",
+      "equal": true
+    },
+    {
+      "path": "docs/specs/DEFAULT_MODEL_ROUTING_CONFIG_V1.md",
+      "productionBlob": "991222ae336a2391722c7048699cf43cf28626fb",
+      "mainBlob": "991222ae336a2391722c7048699cf43cf28626fb",
+      "equal": true
+    },
+    {
+      "path": "docs/specs/AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1.md",
+      "productionBlob": "23a6a1093ead1d62ddcee4e79edee45b7fbd2535",
+      "mainBlob": "23a6a1093ead1d62ddcee4e79edee45b7fbd2535",
+      "equal": true
+    }
+  ],
+  "remoteProductionBranchLookup": {
+    "command": "git ls-remote --heads origin ac-D14D13-spawn-proof ac1159-deploy",
+    "output": "",
+    "meaning": "No remote production branch found; draft PR targets main, deployment target remains ac1159 production line; inherited seven-file delta is not authored by R3."
+  },
+  "productDeltaSinceTaskStart": ""
+}

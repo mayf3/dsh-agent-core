@@ -1,0 +1,29 @@
+{
+  "sourceHead": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "baselineFailureListPath": "/tmp/proddsh-d14d13-evidence-20261101/baseline-failure-names.json",
+  "baselineFailureListSha256": "e259ec5017a7f13ab9a1148c97bc87f7393242fdc974fa7f64554bba29ece2a9",
+  "baselineFailureCount": 62,
+  "r3FailureCount": 62,
+  "newFailureNames": [],
+  "removedFailureNames": [],
+  "r1NamedStatusDiff": [],
+  "r2NamedStatusDiff": [],
+  "summary": {
+    "success": false,
+    "counts": {
+      "tests": 938,
+      "failed": 62,
+      "passed": 867,
+      "cancelled": 0,
+      "skipped": 9,
+      "todo": 0,
+      "topLevel": 938,
+      "suites": 0
+    },
+    "duration_ms": 25788.30625
+  },
+  "r3Exit": 1,
+  "externalDependencyLinksBefore": 0,
+  "externalDependencyLinksAfter": 0,
+  "limit": "Same legacy source coordinate and worktree-local copied dependency graph; proves named-set parity only, not GREEN or runtime acceptance"
+}

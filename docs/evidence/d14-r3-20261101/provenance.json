@@ -1,0 +1,10 @@
+{
+  "rawRoot": "/tmp/proddsh-d14-r3-evidence-20261101",
+  "testRawPath": "/tmp/proddsh-d14-r3-evidence-20261101/testing/comparison.ndjson",
+  "testRawSha256": "058a36b5f9a4106530085d9ec53ce3bc376f4fad571cc37d8ca6db7f147d28a1",
+  "baselineRawPath": "/tmp/proddsh-d14d13-evidence-20261101/baseline.ndjson",
+  "baselineRawSha256": "4757d2fb65f8d9105d10125e0fa217d879e62bca8a25ee2188ead162288e0140",
+  "r2Report": "https://github.com/mayf3/dsh-agent-core/pull/599",
+  "testSourceCoordinate": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "limits": "No source repair implemented, no runtime or production admission tested; existing named set only."
+}

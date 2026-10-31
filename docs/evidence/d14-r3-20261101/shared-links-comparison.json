@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-31T23:59:40.058955+00:00",
+  "root": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "linkSnapshotCount": 30,
+  "beforeSha256": "4346ef42597f0209f06a7c7280751dcebdb333b0d3adfdb91c8fac7eb468adaf",
+  "afterSha256": "4346ef42597f0209f06a7c7280751dcebdb333b0d3adfdb91c8fac7eb468adaf",
+  "linksEqual": true,
+  "lsBytesEqual": true,
+  "limits": "Symlink path/target/inode/mtimeNs and top-level ls bytes only; not a full regular-file or continuous write audit."
+}

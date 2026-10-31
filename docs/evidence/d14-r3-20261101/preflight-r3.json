@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "mode": "PREFLIGHT",
+  "target": "mayf3/dsh-agent-core",
+  "sourceHead": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "integrationBase": "3a1282b35e7b852f51cd14284ea91fd77a13543e",
+  "goalOrTarget": "Direction A is decided: legitimate gen-032/0.3.2 accepted through runtime admission with all protections; expected and fleet rollout share authority.",
+  "currentGap": "Accepted Core contracts still require legacy 0.2.3; no accepted successor admitting 0.3.2 exists at either inspected coordinate.",
+  "authorityAction": "SUPERSEDE",
+  "routeStage": "AUTHORITY_AUTHORING",
+  "authorityAcceptedInBase": false,
+  "implementationAuthority": "contracts (existing 0.2.3 only)",
+  "atomicSpecImplementationPermitted": false,
+  "planLevel": "BRIEF",
+  "assuranceLevel": "CONTROLLED",
+  "mandate": "Owner direct R3 user task, 2026-11-01: implement Direction A on isolated production branch, test, commit/push/PR and agent-control#1345 comment; no deployment/restart/shared-checkout writes; stop dependent work on Spec conflict.",
+  "scopeExecuted": "Read-only authority/source audit, copied-dependency named-set comparison, isolated evidence/report, commit/push/draft PR and issue readback. No acceptance-path product or behavior-test delta.",
+  "implementationAllowed": false,
+  "mergeReady": false,
+  "operationAllowed": false,
+  "sourceRepairDone": false,
+  "doneWhenMet": false,
+  "specGapDependency": "LOAD_BEARING",
+  "ownerDecisionRequired": false,
+  "directionAStatus": "DECIDED; do not reopen rollback alternative",
+  "affectedReadiness": [
+    "implementation",
+    "merge",
+    "operation"
+  ],
+  "spec_gap_detail": {
+    "id": "D14-R3-AUTH-001",
+    "affectedAction": "Replace legacy exact pin with fleet-current generation-derived expected and admit 0.3.2 homes.",
+    "missingLongLivedDecision": "Accepted whole-authority successor transaction for new exact plugin/Harness/dependency tuple and trusted fleet-current admission derivation, with protection/data-recovery compatibility and legacy/GPT6 dispositions.",
+    "authorityInventorySearched": [
+      "Architecture and Current Decision index",
+      "SCA V3 CTR-SCA-004/013",
+      "Default Model Routing V1 section 2",
+      "GPT6 Luna V1 CTR-G6R-001/002",
+      "Authsvc reconciliation V2 A1/A4 (bounded operation, not D14 authorization)",
+      "R2 report/constraints and external protection restoration R1/R2/R3"
+    ],
+    "counterexample": "Legacy route pluginVersion=0.2.3 plus home gen-032/0.3.2 must reject under CTR-SCA-004/013; requested repaired path must admit. Even all protection checks PASS cannot satisfy both identity obligations.",
+    "impact": "117 current-linked disk homes are potential consumers per R2; no new runtime/fleet acceptance is inferred. Changing mismatch to acceptance alters the security/lifecycle identity contract.",
+    "minimalClosure": "Accept docs-first successor transaction on authority main, resolve direct Default/GPT6 obligations and any reused authsvc installer/marker constraints, then bring accepted authority into production implementation base and resume as REUSE. Bind exact gen/source/archive/Harness/dependency identities; preserve R1/R2/R3 and current-data/intent/Owner-recovery compatibility.",
+    "canRemoveDependency": false,
+    "alreadyAuthorizedBoundedPath": "Existing exact-0.2.3 refusal remains authorized but does not achieve Direction A. No rollback or check bypass used."
+  },
+  "primaryAuthorities": [
+    "AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3",
+    "DEFAULT_MODEL_ROUTING_CONFIG_V1",
+    "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1"
+  ],
+  "evidenceNeeded": [
+    "Accepted new pin/generation derivation authority in production implementation base",
+    "Exact 0.3.2 complete tuple and current-linked provenance binding",
+    "R1/R2/R3 and synthetic credential/intent/Owner-recovery compatibility observations",
+    "Requested RED-to-GREEN admission fixtures after authorized implementation",
+    "Independent affected-contract review of exact repaired head"
+  ],
+  "fixtureStatus": {
+    "oldExpectedNewHome": "NOT_EXECUTED_AS_REPAIR: dependent semantic implementation stopped",
+    "matchingHomeExpected": "Existing named-set unchanged; no new R3 repaired-fixture claim",
+    "missingGeneration": "NOT_EXECUTED: no new generation acceptance implementation"
+  },
+  "doneWhen": "Authorized acceptance-path and process guard implemented, regression fixtures plus named-set comparison verified, exact production-branch head reviewed/committed/pushed, PR and #1345 updated. This evidence-only stop packet does not satisfy the goal.",
+  "expansionTrigger": "Concrete Spec conflict (triggered), new semantic test failure, or required shared/production write stops dependent work.",
+  "nextAction": "RE_PREFLIGHT",
+  "nextRealAction": "Authority owner accepts required pin/identity successor transaction; then resume production-line implementation. Unrelated evidence delivery continues."
+}
