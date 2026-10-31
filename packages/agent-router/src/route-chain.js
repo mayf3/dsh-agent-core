@@ -468,6 +468,7 @@ export function createRouteChainExecutor({
   }
 
   return {
+    recordBlockedDelivery: (error, coordinates) => resilience.failures.blocked(error, coordinates),
     deliveryFailuresSnapshot: () => resilience.failures.snapshot(),
     getDeliveryDeadLetter: id => resilience.failures.get(id),
     /** Sync-turn variant (onIngress + scheduler invokeAgent). */
