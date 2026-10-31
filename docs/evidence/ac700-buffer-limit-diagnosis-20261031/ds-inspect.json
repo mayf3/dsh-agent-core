@@ -1,0 +1,30 @@
+{
+ "action": "DS_INSPECT_V1",
+ "current_runtime_verified": false,
+ "data": {
+  "capabilities": [
+   "DS_B7_EXECUTION_STATUS_V2",
+   "DS_B7_LIFECYCLE_STATUS_V1",
+   "DS_B7_OWNER_OUTPUT_V2",
+   "DS_B7_PACKET_CHECK_V1",
+   "DS_CONFIG_SUMMARY_V1",
+   "DS_INSPECT_V1",
+   "DS_OPERATION_STATUS_V1",
+   "DS_RUNTIME_INPUTS_READONLY_V1",
+   "DS_UNIT_STATUS_V1"
+  ],
+  "declared_build_id": "ds-observation-v1-sourcecandidate",
+  "disk_artifact_sha256": "9044abfd5d1616e28c2c4226fc5dae27b8450a8636e7865e09c7b549919219f9",
+  "loaded_identity": {
+   "status": "UNKNOWN"
+  },
+  "protocol_version": 1
+ },
+ "error": null,
+ "observation": "MATCH",
+ "observed_at": "2026-10-31T03:57:56Z",
+ "ok": true,
+ "replay_allowed": false,
+ "schema": "ds-observation-v1",
+ "subject": {}
+}

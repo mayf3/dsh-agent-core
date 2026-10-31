@@ -1,0 +1,406 @@
+{
+  "agent-session-messaging-audit.jsonl": {
+    "bytes": 5260369,
+    "exact_original_id_metadata_matches": [],
+    "last_rows": [
+      {
+        "kind": "agent_session_send",
+        "phase": "intent",
+        "requestId": "5ef7f3b2-12d1-4de0-b992-c9cae2b1c46a",
+        "sourceAgentId": "agt_course-community-agent-2",
+        "targetAgentId": "agt_family-steward-agent",
+        "time": "2026-10-25T14:00:08.059000+00:00"
+      },
+      {
+        "kind": "agent_session_send",
+        "messageId": "dbfc87cc-914b-4b68-aa90-8c1fb7915dbb",
+        "phase": "outcome",
+        "requestId": "5ef7f3b2-12d1-4de0-b992-c9cae2b1c46a",
+        "sessionId": "main",
+        "sourceAgentId": "agt_course-community-agent-2",
+        "targetAgentId": "agt_family-steward-agent",
+        "time": "2026-10-25T14:00:15.848000+00:00"
+      },
+      {
+        "kind": "agent_session_send",
+        "phase": "intent",
+        "requestId": "8863287f-ae66-4488-9924-a515fad83464",
+        "sourceAgentId": "agt_course-community-agent-2",
+        "targetAgentId": "agt_family-steward-agent",
+        "time": "2026-10-25T22:01:48.597000+00:00"
+      },
+      {
+        "kind": "agent_session_send",
+        "messageId": "adc8a7f8-da45-4495-b4a6-5a121a5ae58f",
+        "phase": "outcome",
+        "requestId": "8863287f-ae66-4488-9924-a515fad83464",
+        "sessionId": "main",
+        "sourceAgentId": "agt_course-community-agent-2",
+        "targetAgentId": "agt_family-steward-agent",
+        "time": "2026-10-25T22:01:48.955000+00:00"
+      }
+    ],
+    "mtime": "2026-10-31T03:57:23.827102+00:00",
+    "parse_errors": 0,
+    "path": "/Users/authsvc/.agent-core/control/agent-session-messaging-audit.jsonl",
+    "realpath": "/Users/authsvc/.agent-core/control/agent-session-messaging-audit.jsonl",
+    "sha256": "f07767d57952d46d8337465a7394967b5e4a0bd1d0ae744d8ab3990d2473a292",
+    "target_family_rows": 289
+  },
+  "app_disk_provenance": {
+    "bytes": 2179,
+    "mtime": "2026-10-23T07:01:05.856491+00:00",
+    "packed_app_tree_sha256": "61680dda6965a43a08db5671cafe161914be741a30d784b210506062bbe4dd45",
+    "path": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+    "realpath": "/usr/local/libexec/agent-core/app/pack-provenance.json",
+    "sha256": "1e2093b9c2411e608896bd781e623850290a823ececc3a6a1fede440ae121541",
+    "source_clean": "yes",
+    "source_head_sha": "bdbaf8a00dffbede37794c6ed1585bccf8d6f84f",
+    "source_tree_sha": "b82d5fd0a4c755b73e01ffd89230ccbf6836f07d"
+  },
+  "disk_packages": [
+    {
+      "bytes": 11181,
+      "mtime": "2026-10-23T07:10:33.534584+00:00",
+      "name": "@deepseek-ai/dsh-root",
+      "path": "/usr/local/libexec/agent-core/harness/package.json",
+      "realpath": "/usr/local/libexec/agent-core/harness/package.json",
+      "sha256": "3ccd0eb74c9fc529b363e1404519207839c6d6bb942efce9103c1d08355ba852",
+      "version": "0.1.0-rc.8"
+    },
+    {
+      "bytes": 1878,
+      "mtime": "2026-10-23T07:11:33.492717+00:00",
+      "name": "@deepseek-ai/dsh-llm-pi-ai",
+      "path": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/package.json",
+      "realpath": "/usr/local/libexec/agent-core/harness/packages/llm/llm-pi-ai/package.json",
+      "sha256": "3419020058b58d6edd7981fd5d42975853c15ba4d068505329386ff6fb6d0a05",
+      "version": "0.1.0-rc.8"
+    },
+    {
+      "bytes": 4190,
+      "mtime": "1970-01-01T00:00:00+00:00",
+      "name": "dsh-codex",
+      "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex/package.json",
+      "realpath": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-b7-tx-757bcc57a36b46a08417987914c57b35-f87047de260e0f03/node_modules/dsh-codex/package.json",
+      "sha256": "ac6352ee0be926b459e6a2d523bf456f3233f86f3d978371ba7d41b5c2b2d359",
+      "version": "0.2.3"
+    }
+  ],
+  "family_lock": {
+    "meaning": "lock presence alone does not prove a live worker",
+    "path": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent/demo-owner.lock",
+    "pid": 17364,
+    "process_metadata": "",
+    "ps_rc": 1
+  },
+  "finished_at": "2026-10-31T04:00:00.148598+00:00",
+  "main_session": {
+    "bytes": 1032840,
+    "event_counts": {
+      "agent/inbox/spliced": 20,
+      "approval/policy": 1,
+      "assistant/chunk": 307,
+      "assistant/message": 39,
+      "permission/preset": 1,
+      "request/context": 1,
+      "request/header": 3,
+      "sandbox/mode": 1,
+      "session": 1,
+      "session/end-seed": 2,
+      "step/end": 39,
+      "step/start": 39,
+      "text-chunks": 59,
+      "tool-call-chunks": 75,
+      "tool/call": 47,
+      "tool/result": 47,
+      "turn/end": 9,
+      "turn/start": 9,
+      "user/message": 14
+    },
+    "exact_error_text_line_hits": 0,
+    "exact_original_id_metadata_hits": 0,
+    "history_scope": "current retained main file only; no claim about deleted or rotated content",
+    "last_input_metadata": [
+      {
+        "id": "e75b207a-5fcb-48d3-989a-efddf44a6320",
+        "role": "user",
+        "time": "2026-10-22T00:47:12.274000+00:00"
+      },
+      {
+        "id": "dbfc87cc-914b-4b68-aa90-8c1fb7915dbb",
+        "role": "user",
+        "time": "2026-10-25T14:00:15.831000+00:00"
+      },
+      {
+        "id": "d25de5de-f835-41e4-a4ea-71d97d8d3cab",
+        "role": "user",
+        "time": "2026-10-25T14:00:15.832000+00:00"
+      },
+      {
+        "id": "adc8a7f8-da45-4495-b4a6-5a121a5ae58f",
+        "role": "user",
+        "time": "2026-10-25T22:01:48.854000+00:00"
+      }
+    ],
+    "mtime": "2026-10-25T22:01:58.132395+00:00",
+    "parse_errors": 0,
+    "path": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_6331d216dd4911f0966d3683f8451ad4--/main/session.jsonl",
+    "realpath": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent/sessions/--Users-yanfenma-.openclaw-groups-workspace-oc_6331d216dd4911f0966d3683f8451ad4--/main/session.jsonl",
+    "sha256": "4af39a50b0c6eabd7dca80061446da8a4b3d93019953078733a0b1f94a0d5b9b",
+    "turn_ends": [
+      {
+        "kind": "completed",
+        "seq": 1256,
+        "time": "2026-10-21T17:09:27.794000+00:00",
+        "turn": 1
+      },
+      {
+        "kind": "completed",
+        "seq": 1625,
+        "time": "2026-10-21T18:12:25.445000+00:00",
+        "turn": 2
+      },
+      {
+        "kind": "completed",
+        "seq": 3224,
+        "time": "2026-10-21T18:43:26.912000+00:00",
+        "turn": 3
+      },
+      {
+        "kind": "completed",
+        "seq": 3586,
+        "time": "2026-10-21T19:14:02.102000+00:00",
+        "turn": 4
+      },
+      {
+        "kind": "completed",
+        "seq": 3949,
+        "time": "2026-10-21T19:44:55.148000+00:00",
+        "turn": 5
+      },
+      {
+        "kind": "completed",
+        "seq": 5225,
+        "time": "2026-10-21T20:16:06.162000+00:00",
+        "turn": 6
+      },
+      {
+        "kind": "completed",
+        "seq": 5571,
+        "time": "2026-10-22T00:47:20.502000+00:00",
+        "turn": 7
+      },
+      {
+        "kind": "completed",
+        "seq": 5777,
+        "time": "2026-10-25T14:00:32.157000+00:00",
+        "turn": 8
+      },
+      {
+        "kind": "completed",
+        "seq": 5909,
+        "time": "2026-10-25T22:01:58.128000+00:00",
+        "turn": 9
+      }
+    ],
+    "turn_starts": [
+      {
+        "time": "2026-10-21T17:08:22.251000+00:00",
+        "turn": 1
+      },
+      {
+        "time": "2026-10-21T18:12:17.820000+00:00",
+        "turn": 2
+      },
+      {
+        "time": "2026-10-21T18:42:56.382000+00:00",
+        "turn": 3
+      },
+      {
+        "time": "2026-10-21T19:13:55.612000+00:00",
+        "turn": 4
+      },
+      {
+        "time": "2026-10-21T19:44:48.655000+00:00",
+        "turn": 5
+      },
+      {
+        "time": "2026-10-21T20:15:41.433000+00:00",
+        "turn": 6
+      },
+      {
+        "time": "2026-10-22T00:47:12.161000+00:00",
+        "turn": 7
+      },
+      {
+        "time": "2026-10-25T14:00:15.704000+00:00",
+        "turn": 8
+      },
+      {
+        "time": "2026-10-25T22:01:48.825000+00:00",
+        "turn": 9
+      }
+    ]
+  },
+  "method": {
+    "probe_messages_sent": 0,
+    "production_writes": 0,
+    "scope": "exact family-steward receipt/session status only",
+    "withheld": [
+      "all message content",
+      "assistant output",
+      "tool arguments/results",
+      "tokens",
+      "credentials",
+      "settings contents"
+    ]
+  },
+  "observed_at": "2026-10-31T03:59:59.945345+00:00",
+  "reconciliation_store": {
+    "bytes": 7806452,
+    "current_runtime_epoch": "87c04aeb-8a2d-4649-a82b-0585ab0957c1",
+    "exact_original_id_metadata_matches": [],
+    "family_record_count": 256,
+    "family_records_in_current_epoch": 0,
+    "last_rows": [
+      {
+        "admitted": true,
+        "agentId": "agt_family-steward-agent",
+        "createdAt": "2026-10-25T14:00:15.426000+00:00",
+        "errorClass": null,
+        "fenceState": "armed",
+        "handle": "turn:232ecb22-c491-4d06-972a-a1fe6436beeb:a6:g24:s303",
+        "initialOutcome": null,
+        "lateOutcome": null,
+        "messageId": "dbfc87cc-914b-4b68-aa90-8c1fb7915dbb",
+        "outcome": "completed",
+        "processGeneration": 24,
+        "promptRequestId": "req-24-2",
+        "promptWriteAttempted": true,
+        "recoveryState": "settled",
+        "runtimeEpoch": "232ecb22-c491-4d06-972a-a1fe6436beeb",
+        "sessionId": "main",
+        "state": "settled",
+        "turnSeq": 303
+      },
+      {
+        "admitted": true,
+        "agentId": "agt_family-steward-agent",
+        "createdAt": "2026-10-25T22:01:48.650000+00:00",
+        "errorClass": null,
+        "fenceState": "armed",
+        "handle": "turn:232ecb22-c491-4d06-972a-a1fe6436beeb:a6:g24:s304",
+        "initialOutcome": null,
+        "lateOutcome": null,
+        "messageId": "adc8a7f8-da45-4495-b4a6-5a121a5ae58f",
+        "outcome": "completed",
+        "processGeneration": 24,
+        "promptRequestId": "req-24-8",
+        "promptWriteAttempted": true,
+        "recoveryState": "settled",
+        "runtimeEpoch": "232ecb22-c491-4d06-972a-a1fe6436beeb",
+        "sessionId": "main",
+        "state": "settled",
+        "turnSeq": 304
+      }
+    ],
+    "mtime": "2026-10-31T03:59:59.328410+00:00",
+    "outcome_counts": {
+      "completed": 246,
+      "failed": 10
+    },
+    "path": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+    "realpath": "/Users/authsvc/.agent-core/control/turn-recovery-v3.json",
+    "sha256": "f9345a878cc83abca44d8ea8fd7e691804222cea697960a81eedc6e417e8df0e",
+    "state_counts": {
+      "settled": 256
+    }
+  },
+  "runtime-evidence.jsonl": {
+    "bytes": 7417343,
+    "exact_original_id_metadata_matches": [],
+    "last_rows": [
+      {
+        "agentId": "agt_family-steward-agent",
+        "kind": "deliver",
+        "pid": 32299,
+        "requestId": "639937ae-3319-44f4-8d18-e26e8403011b",
+        "sessionId": "main",
+        "status": null,
+        "time": "2026-10-21T20:15:41.543000+00:00"
+      },
+      {
+        "agentId": "agt_family-steward-agent",
+        "kind": "deliver",
+        "pid": 32299,
+        "requestId": "dfa91c83-d397-4472-8bb4-b347cfa7f13f",
+        "sessionId": "main",
+        "status": null,
+        "time": "2026-10-22T00:47:12.282000+00:00"
+      },
+      {
+        "agentId": "agt_family-steward-agent",
+        "kind": "deliver",
+        "pid": 89130,
+        "requestId": "5ef7f3b2-12d1-4de0-b992-c9cae2b1c46a",
+        "sessionId": "main",
+        "status": null,
+        "time": "2026-10-25T14:00:15.848000+00:00"
+      },
+      {
+        "agentId": "agt_family-steward-agent",
+        "kind": "deliver",
+        "pid": 89130,
+        "requestId": "8863287f-ae66-4488-9924-a515fad83464",
+        "sessionId": "main",
+        "status": null,
+        "time": "2026-10-25T22:01:48.955000+00:00"
+      }
+    ],
+    "mtime": "2026-10-31T03:55:54.279346+00:00",
+    "parse_errors": 0,
+    "path": "/Users/authsvc/.agent-core/control/runtime-evidence.jsonl",
+    "realpath": "/Users/authsvc/.agent-core/control/runtime-evidence.jsonl",
+    "sha256": "021a13ac1f916d1e0d0d7944cc6c3ca278993b440ec517bf3a94b45ee2cf3447",
+    "target_family_rows": 156
+  },
+  "runtime_logs": [
+    {
+      "bytes": 5530262,
+      "correlation": "No timestamp or family/request binding inferred from uncorrelated log lines",
+      "exact_error_lines": [],
+      "mtime": "2026-10-31T03:55:55.656223+00:00",
+      "path": "/Users/authsvc/.agent-core/logs/runtime.log",
+      "realpath": "/Users/authsvc/.agent-core/logs/runtime.log",
+      "sha256": "652875944c9423bd2f1785a22824f6adec58d88cd88b41d252f85963cdaefe3b"
+    },
+    {
+      "bytes": 12528347,
+      "correlation": "No timestamp or family/request binding inferred from uncorrelated log lines",
+      "exact_error_lines": [
+        {
+          "family_id_on_same_line": false,
+          "line": 17207,
+          "original_id_on_same_line": false,
+          "sha256": "62a35f83cf8422d51b25975e01bf01cf003878a5111720325205a8c33411c887"
+        },
+        {
+          "family_id_on_same_line": false,
+          "line": 17208,
+          "original_id_on_same_line": false,
+          "sha256": "cbe80a3668d66e3fae02de83b927f871e128c9a06d038db93a4a02cc89a92844"
+        }
+      ],
+      "mtime": "2026-10-31T03:59:58.882386+00:00",
+      "path": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+      "realpath": "/Users/authsvc/.agent-core/logs/runtime.err.log",
+      "sha256": "3fe616f41ae58db04bf277db0dfa2c87a0952c6d64668b39888a9e0bcbc01f0b"
+    }
+  ],
+  "schema": "ac700-readonly-metadata-v1",
+  "shared_plugin_link": {
+    "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current",
+    "target": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-b7-tx-757bcc57a36b46a08417987914c57b35-f87047de260e0f03/node_modules"
+  }
+}

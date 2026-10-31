@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-10-31T03:57:56.155592+00:00",
+  "actual_call_timestamps": "NOT_CAPTURED",
+  "resolve_target": "agt_family-steward-agent",
+  "resolve_attempts": 2,
+  "resolve_result": {
+    "error_code": "UNAVAILABLE",
+    "origin": "OpenAI MCP SSE tunnel",
+    "http_status": 429
+  },
+  "task_result_701_attempts": 1,
+  "task_result_701_status": 429,
+  "target_handle_obtained": false,
+  "send_agent_message_calls": 0,
+  "probe_messages_sent": 0,
+  "meaning": "Transport failure occurred before target resolution. It is not a family Agent upstream-buffer reproduction. No fallback identity, route, or send was attempted."
+}

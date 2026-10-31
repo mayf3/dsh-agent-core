@@ -1,0 +1,247 @@
+{
+  "observed_at": "2026-10-31T03:57:56.155592+00:00",
+  "issues": [
+    {
+      "repository": "mayf3/agent-control",
+      "number": 700,
+      "title": "家庭管家 delivery failed：上游重试请求缓冲区超限，需原请求副作用核对及最小修复",
+      "state": "OPEN",
+      "url": "https://github.com/mayf3/agent-control/issues/700",
+      "updated_at": "2026-10-25T06:24:54Z",
+      "body_sha256": "0654a96ba89ff3d027a409afde80e360cc671f642f88f27dad82e3a85dbd5a6e",
+      "comments": [
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6071970031",
+          "created_at": "2026-10-09T00:48:40Z",
+          "body_sha256": "6f02fd646b09da38fa36887fd77224b2478a613b157ba6ba2c0d12ebe23effd1"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6071988521",
+          "created_at": "2026-10-09T00:50:27Z",
+          "body_sha256": "450987264ebef09ccf2602dc80b466139b1647a7827763aefaa92ec65bc80d43"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6072131982",
+          "created_at": "2026-10-09T01:04:07Z",
+          "body_sha256": "ba35d3447baa6be579f7a55c9405d6372503ae4f1541756bd34a79107db5512b"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6072336274",
+          "created_at": "2026-10-09T01:23:30Z",
+          "body_sha256": "3a62ec5669572ba961e97b9a288f582ab32ace2df0cfae1e3be4015d567c8a8a"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6072383241",
+          "created_at": "2026-10-09T01:28:08Z",
+          "body_sha256": "6cce4b0d82db04a33b4b74bf6106b8e4a0bdbd603e772cd6c8645a41ed312c7c"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6392224508",
+          "created_at": "2026-10-25T02:00:49Z",
+          "body_sha256": "7ca8695d46b825bacf051e4959a2515e9855f0dd290a7504ad713c03b141c9b8"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/700#issuecomment-6394360252",
+          "created_at": "2026-10-25T06:24:54Z",
+          "body_sha256": "e9051ba6d53dc9abf42dc98ffe5dff7959ad7cdf019e073ac49700fa4572ac84"
+        }
+      ]
+    },
+    {
+      "repository": "mayf3/agent-control",
+      "number": 701,
+      "title": "[zcode] Diagnose and minimally repair family Agent upstream request-buffer failure (#700)",
+      "state": "OPEN",
+      "url": "https://github.com/mayf3/agent-control/issues/701",
+      "updated_at": "2026-10-09T00:54:21Z",
+      "body_sha256": "b76767a6ab85ca46db0df3df506a4b2609070ad3c64ef10b37daa1ee68d305a6",
+      "comments": [
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/701#issuecomment-6071940704",
+          "created_at": "2026-10-09T00:45:56Z",
+          "body_sha256": "03ed93ff86805ac7e0fefbf92127509e7f361ff6217c7800c6e02c9e2ab007f8"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-control/issues/701#issuecomment-6071941765",
+          "created_at": "2026-10-09T00:46:01Z",
+          "body_sha256": "ce9d8540357d6e932eb84e356a1a84db760963333239472d03b13c6c5c763fc6"
+        }
+      ]
+    },
+    {
+      "repository": "mayf3/agent-workflow-operations",
+      "number": 10,
+      "title": "10 家庭采购：家庭管家 domain + 购物清单 Agent（下单须过交易批准）",
+      "state": "OPEN",
+      "url": "https://github.com/mayf3/agent-workflow-operations/issues/10",
+      "updated_at": "2026-10-16T16:10:14Z",
+      "body_sha256": "9aa49dd9fb4f10b67ca360421c1f6d2898b22d815f6043714880d2d47716265f",
+      "comments": [
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6053836506",
+          "created_at": "2026-10-08T06:27:20Z",
+          "body_sha256": "b5fb8b78d24f3af516230d49c5f6596ef9e970975e3b186b7505bc184f6d4973"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6054122022",
+          "created_at": "2026-10-08T06:44:06Z",
+          "body_sha256": "873bf1b028b7c7ebeeaf1029caa034e9d884209680e563b9a3ea565e2c2a0a36"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6054911138",
+          "created_at": "2026-10-08T07:28:28Z",
+          "body_sha256": "dcb148c0eb45b032aea1d2f338b8fbca2f4c74099b40ff7eea2363c5778b51cd"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6056172201",
+          "created_at": "2026-10-08T08:45:13Z",
+          "body_sha256": "244ae12a74c6f6daec873bf2035b3cf214ef03923c39fe7804eb0affae3bac38"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6056454641",
+          "created_at": "2026-10-08T09:01:59Z",
+          "body_sha256": "8d4b625ad466b7624aab58aab6e7f85a90babf32198f0bf610372e1172a5f623"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6057787089",
+          "created_at": "2026-10-08T10:22:56Z",
+          "body_sha256": "10b340bc3f1080fdfbd6c0e6ccd9d796f980572ecca36fedbbfcb6081e3f2de4"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6071616193",
+          "created_at": "2026-10-09T00:16:12Z",
+          "body_sha256": "10a0c0e982364fd85203af2798c45256ed199455c851e4775ea553b7545ece91"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6071969480",
+          "created_at": "2026-10-09T00:48:37Z",
+          "body_sha256": "07f8eb9a52a87d4580ab11bd3a5bd254bac09ffda7d3763ed6e668005db02a14"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6071987968",
+          "created_at": "2026-10-09T00:50:24Z",
+          "body_sha256": "f7d7ee0979e24588663f15d9588622e4e1f482cd2042070ccaea0669fe5bffc1"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6072110383",
+          "created_at": "2026-10-09T01:02:02Z",
+          "body_sha256": "e3cc6d4466a9e381636046048df28f7c90e4063c3ff13cdc87a8dae1066a8ad1"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6072131222",
+          "created_at": "2026-10-09T01:04:03Z",
+          "body_sha256": "6a66c3459919225e4233521e9deebe5b95149b505b8f37ead24b26f93a216aa5"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6075182907",
+          "created_at": "2026-10-09T05:52:41Z",
+          "body_sha256": "de61cb4b8ef70ebef72b8b136b3a797220220100d2adc54b3c6ce1779b6e8aba"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6083292379",
+          "created_at": "2026-10-09T14:49:06Z",
+          "body_sha256": "dd2d69c4eadf835e63b28a47fa1a21be8cc05ef3bbe2617e273437f4402b97c4"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6096450902",
+          "created_at": "2026-10-10T10:12:47Z",
+          "body_sha256": "63b993ef4cce3d36c11c28f9f084e40b3593efa72117c68dd99300925b5b7356"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6098238158",
+          "created_at": "2026-10-10T13:57:32Z",
+          "body_sha256": "eec08f5914d574fa4a140c527efd607802ea23ec5179bd20ce3cb53705a991b2"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6105204466",
+          "created_at": "2026-10-11T03:55:06Z",
+          "body_sha256": "ceaf64dd3536b197acf0527659055f0b56036761c0da44e40ceb29a64fa7deaa"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6111533291",
+          "created_at": "2026-10-11T17:09:17Z",
+          "body_sha256": "e30a9dfc7a468686d22e47c8b021c977e7480fbad248de0860047ec4ce8b402b"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6111939266",
+          "created_at": "2026-10-11T17:54:02Z",
+          "body_sha256": "f65d99172d03f730fc3b54a8d7b13025dc3049e59b386213844defc614decb7e"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6136888535",
+          "created_at": "2026-10-13T02:29:26Z",
+          "body_sha256": "a17ac170d5c036e853b40bc135e893509156fc7f4e03be27a78748842b180df1"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6137176613",
+          "created_at": "2026-10-13T02:55:22Z",
+          "body_sha256": "d424b6df074f1bc11d377b7e3fdbdede902ff760e446a67a7a767818ab887c7f"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6138047488",
+          "created_at": "2026-10-13T04:10:37Z",
+          "body_sha256": "31028076db94662718aa96713921773c2d83d44666abc51715f49d9a7c8eb300"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6138133359",
+          "created_at": "2026-10-13T04:18:36Z",
+          "body_sha256": "9392a65a47495b975e0343d06f8f9f0fd34ea1a8778bb280785606ed82545a64"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6138330849",
+          "created_at": "2026-10-13T04:36:45Z",
+          "body_sha256": "c11a222fbeb304ee752de975865feedf84db27a2dc65924a15f6032da9b5f10d"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6140727912",
+          "created_at": "2026-10-13T07:39:11Z",
+          "body_sha256": "eb4c7c9f712e3eb45f4a75ea099fb579668dffa3fd1f85c69224b31fa5a435a6"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6141646768",
+          "created_at": "2026-10-13T08:36:48Z",
+          "body_sha256": "758a3f3ffa9ff1b2a78983dd6c21d1f7241c3ff7594421b8fd6adf160ae7f47d"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6144697601",
+          "created_at": "2026-10-13T11:38:56Z",
+          "body_sha256": "be5c50127984f9a6d9b8b3fa5df3146c370315a1137218dbdc8c5144a45a5d8c"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6144831722",
+          "created_at": "2026-10-13T11:46:53Z",
+          "body_sha256": "f3d93df14f9983be08b3caa3086fc33f3e18befbc964f723a26319f890f0bb30"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6145012042",
+          "created_at": "2026-10-13T11:57:49Z",
+          "body_sha256": "69265cc77684b49204fb4d1e36c2809724491e0ad4142b963689408a88a92c9e"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6145281345",
+          "created_at": "2026-10-13T12:13:37Z",
+          "body_sha256": "1f3bee058d8bd210d05aa93e259826098f33e0194eaeb8aead118c244f681483"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6145316169",
+          "created_at": "2026-10-13T12:15:40Z",
+          "body_sha256": "78fc5ad58fb0ed469af47fbf553c7bd757e28cb5c34d6c83bfd2f5272915b8b1"
+        },
+        {
+          "url": "https://github.com/mayf3/agent-workflow-operations/issues/10#issuecomment-6219616571",
+          "created_at": "2026-10-16T16:10:14Z",
+          "body_sha256": "6a986bf760f5c0a40ba3dea4b6bb444d7e2caa8ddc8fe56d93bacff0418569ff"
+        }
+      ]
+    }
+  ],
+  "prior_source_pr": {
+    "headRefOid": "6af7aafc638c62fa70866ca0bebba5f96dc56e94",
+    "isDraft": true,
+    "mergedAt": null,
+    "number": 3,
+    "state": "OPEN",
+    "updatedAt": "2026-10-25T02:00:02Z",
+    "url": "https://github.com/mayf3/deepseek-harness/pull/3"
+  }
+}

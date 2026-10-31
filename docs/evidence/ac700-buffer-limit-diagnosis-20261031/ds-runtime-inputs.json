@@ -1,0 +1,40 @@
+{
+ "action": "DS_RUNTIME_INPUTS_READONLY_V1",
+ "current_runtime_verified": false,
+ "data": {
+  "canonical_credential": {
+   "code": "CUSTODY_INVALID",
+   "stage": "read",
+   "status": "UNKNOWN"
+  },
+  "consistency": "FIXED_OBJECTS_LSTAT_ONLY",
+  "loaded_job": {
+   "loaded_argv_sha256": "aa09e8f986f310ba787b60432bc0da91d22d755913600ce838ce40c70066a166",
+   "loaded_matches_plist": true,
+   "loaded_program": "/usr/local/libexec/agent-core/node-runtime/bin/node",
+   "status": "OK"
+  },
+  "plist": {
+   "dsh_codex_paths": {
+    "DSH_CODEX_PACKAGE_TARBALL": {
+     "present": false
+    },
+    "DSH_CODEX_SOURCE_STAMP": {
+     "present": false
+    }
+   },
+   "environment_keys_withheld": 31,
+   "plist_argv_sha256": "aa09e8f986f310ba787b60432bc0da91d22d755913600ce838ce40c70066a166",
+   "sha256": "1ca7bd04aac75e51c38a607fe54666051bebc6a0142cf4e1d12c1d020665ae0c",
+   "status": "OK"
+  },
+  "schema_version": 1
+ },
+ "error": null,
+ "observation": "MATCH",
+ "observed_at": "2026-10-31T03:57:56Z",
+ "ok": true,
+ "replay_allowed": false,
+ "schema": "ds-observation-v1",
+ "subject": {}
+}

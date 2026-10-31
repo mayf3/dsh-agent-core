@@ -1,0 +1,16 @@
+{
+  "observed_at": "2026-10-31T03:53:06Z",
+  "action": "DS_UNIT_STATUS_V1",
+  "subject": {
+    "unit": "agent-core-runtime"
+  },
+  "ok": false,
+  "current_runtime_verified": false,
+  "error": {
+    "category": "AUTHORIZATION",
+    "code": "PROFILE_NOT_AUTHORIZED",
+    "effect": "READ_ONLY",
+    "stage": "authorize"
+  },
+  "followup": "No retry of this denied subject and no identity substitution."
+}
