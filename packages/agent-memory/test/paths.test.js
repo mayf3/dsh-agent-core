@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * Unit tests for @agent-core/agent-memory — path mapping.
  *
