@@ -290,6 +290,10 @@ export function apply(ctx, config) {
       ? { canaryRuntimeRoot: cfg.canaryRuntimeRoot }
       : {}),
   })
+  try { reconciliationStore.assertBusinessAdmissionReady() } catch (error) {
+    routeChain.recordBlockedDelivery(error, { agentId: null,
+      reason: reconciliationStore.businessAdmissionStatus().reason })
+  }
   const ingressDelivery = createIngressDelivery({
     log,
     feishu,

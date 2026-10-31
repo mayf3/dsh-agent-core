@@ -101,8 +101,9 @@ export function createDeliveryResilience({ log, deadLetterDirectory, transportRe
         }
         return result
       } catch (error) {
-        const category = failures.failure(error, { agentId, routeRef: route.routeRef ?? null,
-          transportAttempt: retryIndex + 1, processGeneration: proc?.processGeneration ?? null })
+        const category = failures.failure(error, { agentId: opts?.websiteControl ? null : agentId,
+          routeRef: opts?.websiteControl ? null : route.routeRef ?? null,
+          transportAttempt: retryIndex + 1, processGeneration: opts?.websiteControl ? null : proc?.processGeneration ?? null })
         const preparationFailure = preparing && error.deliveryPreparation === true
           && (['AGENT_DELIVERY_PREPARE_PROTOCOL', 'AGENT_DELIVERY_PREPARE_TIMEOUT',
             'AGENT_PROCESS_UNAVAILABLE', 'AGENT_PROCESS_EXITED', 'AGENT_PROCESS_INPUT_FROZEN'].includes(error.code)

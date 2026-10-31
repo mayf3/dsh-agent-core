@@ -1,19 +1,21 @@
 import { validateWebsiteAdmission } from '../../../demo-server/src/website-admission.js'
 import { fencedRejection } from './state-machine.js'
+import { createRecoveryAdmission } from '../reconciliation/admission.js'
 
 /** Separate trusted website entry; Delivery V0/ASM/channel shapes unchanged.
  * The actual prompt still goes through the original route chain and the
  * AgentProcess unified FIFO/fence. Runtime-owned callbacks never reach a tool.
  */
 export function createWebsiteInquiryAdmission({ routeChain, reconciliationStore, workspaceBootstrap, definition, store }) {
+  const recoveryAdmission = createRecoveryAdmission(reconciliationStore, routeChain)
   return async function admitWebsiteInquiry({ agentId, message, carrier, recheck, map }) {
     const verified = validateWebsiteAdmission(carrier)
     if (typeof recheck !== 'function' || typeof map !== 'function' || typeof message !== 'string') throw new TypeError('website admission unavailable')
-    reconciliationStore.assertBusinessAdmissionReady?.()
+    recoveryAdmission.assertReady()
     const agent = definition.getAgent(agentId)
     if (!agent || agent.id !== agentId || agent.disabled === true) throw new Error('website target unavailable')
     const fence = reconciliationStore.admissionBlockerForAgent?.(agentId) ?? reconciliationStore.activeFenceForAgent?.(agentId)
-    if (fence) throw fencedRejection(fence.handle)
+    if (fence) throw recoveryAdmission.observed(fencedRejection(fence.handle))
     reconciliationStore.assertMintCapacity(agentId)
     const admission = () => routeChain.admitWithRouteChain(agentId, { sessionId: 'main', message,
       opts: { cwd: workspaceBootstrap.resolveWorkspace(agentId),
