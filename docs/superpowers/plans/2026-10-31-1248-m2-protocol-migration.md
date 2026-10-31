@@ -35,23 +35,23 @@
 
 **Files:** `src/document.js`, existing `src/inspect.js`, `test/document.test.js`, all under `packages/agent-memory/`.
 **Interfaces:** `parseMemoryDocument(bytes)` preserves M1 format/entries/spans/preservedSpans/coverage/issues/sha256 and adds owned `bytes`, editable ranges and write-safety reason. `planDocumentEdits(document, operations)` accepts UPDATE with entryId, expectedEntrySha256 and patch, or DELETE; returns status NOOP/READY/READ_ONLY_FORMAT/CONFLICT, beforeSha256, afterBytes/afterSha256, changes/preservedSpanProof. Refused plans keep operations as candidate data.
-- [ ] Write/run failing byte-conservation, ambiguous-format, CRLF, forged-anchor and drift regressions.
-- [ ] Implement bounded parsing and field/body splices; bind spans to original bytes and digest. Do not render the full document.
-- [ ] Run document and complete agent-memory suite; expected zero failures. Commit.
+- [x] Write/run failing byte-conservation, ambiguous-format, CRLF, forged-anchor and drift regressions.
+- [x] Implement bounded parsing and field/body splices; bind spans to original bytes and digest. Do not render the full document.
+- [x] Run document and complete agent-memory suite; expected zero failures. Commit.
 
 ### Task 3: New owned-copy ledger and migration CLI
 
 **Files:** `packages/agent-memory/src/migration.js`, `migration-cli.js`, `test/migration.test.js`, package exports if needed.
 **Interfaces:** `createMigrationCopy({sourceBytes, destination, operations=[], agentId='migration-copy'})` takes already authorized bytes and requires an absent destination under an existing real parent. Returns inert candidate receipt. It writes unchanged MEMORY.md, protocol manifest/checkpoint and retained proposal/candidate under memory/.agent-memory-v2. No API accepts an existing workspace write target. CLI uses explicit reviewed config and defaults to pure dry-run; create-copy is explicit and refuses inherited production workspace as an input or destination. Use Task 2 parser/planner exports.
-- [ ] Write/run failing ledger/classification, refused-proposal retention, output-conflict and symlink regressions.
-- [ ] Implement copy creation, durable bounded metadata and hash-bound revision candidate; no runtime registration, owner activation, checkpoint advancement or existing-core update.
-- [ ] Prove original-byte preservation, stale candidate conflict and rollback retaining later delta. Run complete package suite; expected zero failures. Commit.
+- [x] Write/run failing ledger/classification, refused-proposal retention, output-conflict and symlink regressions.
+- [x] Implement copy creation, durable bounded metadata and hash-bound revision candidate; no runtime registration, owner activation, checkpoint advancement or existing-core update.
+- [x] Prove original-byte preservation, stale candidate conflict and rollback retaining later delta. Run complete package suite; expected zero failures. Commit.
 
 ### Task 4: Evidence, independent review and delivery
 
 **Files:** `docs/reports/agent-memory-v2/M2_DELIVERY.md` and compact executed evidence.
-- [ ] Run complete package tests under sentinel environment, source hashes and exact candidate structure gate; disclose baseline debt separately.
-- [ ] Non-author independent review of exact semantic candidate; fix concrete blockers with regression evidence, independent affected delta check.
+- [x] Run complete package tests under sentinel environment, source hashes and exact candidate structure gate; disclose baseline debt separately.
+- [x] Non-author independent review of exact semantic candidate; fix concrete blockers with regression evidence, independent affected delta check.
 - [ ] Recheck current main impact, governing Spec unchanged, commit/push branch, open PR to main, post #1248 completion/test/M3 comment; verify URLs/state, then stop without merge.
 
 ## Checkpoints and rollback

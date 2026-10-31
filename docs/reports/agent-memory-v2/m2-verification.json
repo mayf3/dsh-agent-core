@@ -1,0 +1,119 @@
+{
+  "schema": "M2_SOURCE_VERIFICATION",
+  "semanticHead": "0c59a9f9bea7b39a8e8ee58f973b23e717cda06a",
+  "baseHead": "383c14dbe7e39f2c23f80c0c9edd9adb3adab46e",
+  "environment": {
+    "node": "v26.7.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "macOS": "26.6.2"
+  },
+  "packageTests": {
+    "command": "env DSH_PRIMARY_WORKSPACE=/__DO_NOT_TOUCH_1248__ DSH_AGENT_ID=sentinel DSH_WORKSPACE_DIR=/__DO_NOT_TOUCH_1248__ node --test packages/agent-memory/test/*.test.js",
+    "rc": 0,
+    "tests": 141,
+    "pass": 141,
+    "fail": 0,
+    "log": "m2-package-tests.txt"
+  },
+  "structure": {
+    "command": "node scripts/verify-code-structure.mjs --base 383c14dbe7e39f2c23f80c0c9edd9adb3adab46e --head 0c59a9f9bea7b39a8e8ee58f973b23e717cda06a --json",
+    "rc": 0,
+    "candidateViolations": 0,
+    "baselineDebt": 32,
+    "result": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+    "log": "m2-structure.json"
+  },
+  "originals": {
+    "source": "synthetic bytes only",
+    "productionSourceRead": false,
+    "privateSessionOrCredentialsRead": false,
+    "productionWrites": 0,
+    "writerSwitched": false,
+    "runtimeInstalledOrLoaded": "UNKNOWN"
+  },
+  "redGreen": [
+    {
+      "stage": "document API first tests",
+      "tests": 8,
+      "redFail": 8,
+      "greenPackagePass": 120,
+      "log": "/tmp/1248-m2-document-red.txt"
+    },
+    {
+      "stage": "unknown inner heading",
+      "tests": 10,
+      "redFail": 1,
+      "log": "/tmp/1248-m2-document-extra-red.txt"
+    },
+    {
+      "stage": "equivalent-content / metadata spacing",
+      "tests": 13,
+      "redFail": 2,
+      "greenPackagePass": 123,
+      "log": "/tmp/1248-m2-document-extra2-red.txt"
+    },
+    {
+      "stage": "independent parser review counterexamples",
+      "tests": 17,
+      "redFail": 4,
+      "greenPass": 17,
+      "log": "m2-review-parser-red.txt"
+    },
+    {
+      "stage": "independent ancestor substitution counterexample",
+      "tests": 1,
+      "redFail": 1,
+      "greenPass": 1,
+      "log": "m2-review-copy-red.txt"
+    }
+  ],
+  "characterization": "Already-green multi-entry/body-echo checks are characterization coverage, not claimed RED-to-GREEN. Initial full-suite startup failures were missing worktree dependency links, fixed with code-only links; no production install.",
+  "hashes": [
+    {
+      "path": "packages/agent-memory/src/codec.js",
+      "bytes": 12634,
+      "sha256": "274209c682982a886ea0470a8fee4b5479c7de0ac44dac0043cae7b5a16786cc"
+    },
+    {
+      "path": "packages/agent-memory/src/memory.js",
+      "bytes": 14868,
+      "sha256": "b3505985494de0d47efac3faccf6aa20840f35dc1f582bd220c19f9044ec5d50"
+    },
+    {
+      "path": "packages/agent-memory/src/index.js",
+      "bytes": 16357,
+      "sha256": "5153fd3197d35325959d495baab4e53fec6ffbc42b56c53c7c139d541754479a"
+    },
+    {
+      "path": "packages/agent-memory/src/inspect.js",
+      "bytes": 13764,
+      "sha256": "f6cc23110148db9ba729595b6c5439f2af31862869bd126ca14fdcc0112e508c"
+    },
+    {
+      "path": "packages/agent-memory/src/document.js",
+      "bytes": 13097,
+      "sha256": "e62e9be9ac2b5c2611b696d40c6647c4cc7c39cde83f57e57e9cbb744e7dde1d"
+    },
+    {
+      "path": "packages/agent-memory/src/migration.js",
+      "bytes": 9443,
+      "sha256": "dbe56177af9e30af3d29f4a73db0ce4bd5dbb80e31e107c7cef77dab393a19b2"
+    },
+    {
+      "path": "packages/agent-memory/src/migration-cli.js",
+      "bytes": 6714,
+      "sha256": "1ac2bf5535b5277313c34ad50cf4b4f055f72d8b70ec641c76db024a6f4c50c6"
+    },
+    {
+      "path": "packages/agent-memory/test/document.test.js",
+      "bytes": 10910,
+      "sha256": "5b0f38ca38fdfcd7563f645cce2fc3cf3c9975ead2afd53b6c8d0ea9d4da8fe2"
+    },
+    {
+      "path": "packages/agent-memory/test/migration.test.js",
+      "bytes": 13904,
+      "sha256": "4bb8850e374490ce488f7dddb23017d9e8b6531cd1961afdb93473453f6f8ce2"
+    }
+  ]
+}
