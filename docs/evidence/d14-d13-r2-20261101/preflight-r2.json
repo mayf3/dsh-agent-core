@@ -1,0 +1,34 @@
+{
+  "schema_version": 2,
+  "mode": "PREFLIGHT",
+  "target": "mayf3/dsh-agent-core",
+  "sourceHead": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "integrationBase": "3a1282b35e7b852f51cd14284ea91fd77a13543e",
+  "authorityAction": "REUSE",
+  "routeStage": "IMPLEMENTATION",
+  "planLevel": "BRIEF",
+  "assuranceLevel": "CONTROLLED",
+  "scope": "read-only production observations; isolated evidence/documentation; original-source named test comparison; commit/push/open-only PR",
+  "mandate": "Owner direct user r2 task 2026-11-01; no deployment/restart, no writes/permissions/moves in authsvc homes/logs; production-dsh-agent-core zero writes including Git metadata",
+  "d14ImplementationAllowed": false,
+  "d14Reason": "Direction reserved to regulator; existing exact accepted legacy tuple must not be relaxed; source delta unnecessary for fact-only packet",
+  "d13ImplementationAllowed": false,
+  "d13Reason": "User match-before-repair predicate not proven by authorized logs; signature=UNKNOWN; dependent product change STOPPED",
+  "operationAllowed": false,
+  "primaryAuthorities": [
+    "AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3 CTR-SCA-004/013",
+    "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1 CTR-G6R-001/002",
+    "AGENT_CORE_AGENT_SESSION_MESSAGING_V2 r5 CTR-ASM2-002/004",
+    "AGENT_PROCESS_LIFECYCLE_HARDENING_V4 C-001/005"
+  ],
+  "evidenceNeeded": [
+    "D14 expected field chain and four home generation provenance",
+    "D14 r3 task-name vs actual package-version relation and bounded recommendation",
+    "D13 denial timing and honest mechanism limits",
+    "r1 vs isolated-r2 named test result diff; no forced empty comparison",
+    "shared checkout links before/after identical"
+  ],
+  "doneWhen": "Evidence-only candidate committed/pushed/open PR; D14 direction and D13 unproven-cause remain explicitly pending",
+  "expansionTrigger": "New semantic failure, authority conflict, unauthorized write, or need for expanded protected reads stops dependent work",
+  "gitIsolation": "Original .git pointer copied as evidence then replaced with worktree-local independent .git-r2-isolated clone before fetch/commit/push"
+}
