@@ -1,3 +1,5 @@
+> Historical R1 checkpoint. Continue with [R2 local DB validation and T1 proposal](AC1277_IDENTITY_CONVERGENCE_R2_20261031.md); R1 logs and claims below remain unchanged.
+
 # #1277 — T0 integration candidate and BLOCKED delivery
 
 GOAL: execute [agent-control#1277](https://github.com/mayf3/agent-control/issues/1277) in its T0–T5 order, source only. STATE: **BLOCKED at T0 database verification**. This record is evidence and a resumable checkpoint, not Product Authority or production authorization.
