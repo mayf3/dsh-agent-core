@@ -65,8 +65,8 @@ All eight affected integration targets pass in that exact full run: `17_workflow
 | `41_current_task_input` | 25 | Existing strict guard requires old port55432 and dated isolated DB prefix; 57278 rejected before scenario. Guard unchanged. Not scenario failures proven on baseline; current execution coverage remains unavailable. |
 | `42_acceptance_binding_downgrade_gate` | 1 | `ctr6_revoked_optin_version_rejected_by_new_and_old_binary`: fixed55432/name/host guard rejects owned57278. No change to guard/old-binary fixture; scenario not established. |
 | `45_workflow_prerequisites` | 18 | Original fixed-name guard rejects generic test DB. Same exact source on new owned `svc_prereq_20261029_impl`: **28/0, rc0, 39.098s**. |
-| `46_owner_obligation_workflows` | 40 | Existing fixed55432 and dated-name guard rejects owned57278 before scenarios. Guard unchanged; no baseline scenario PASS claimed. |
-| `47_owner_obligation_reference_authoring` | 7 | Same owner-obligation support guard. Guard unchanged; no baseline scenario PASS claimed. |
+| `46_owner_obligations` | 40 | Existing fixed55432 and dated-name guard rejects owned57278 before scenarios. Guard unchanged; no baseline scenario PASS claimed. |
+| `47_owner_node_reference_authoring` | 7 | Same owner-obligation support guard. Guard unchanged; no baseline scenario PASS claimed. |
 
 Thus 20 originally failing names pass under corrected owned fixtures; **75 original names remain unpassed** with their exact observations, baseline comparison and limits in `full-project-failures.json` / `broad-exceptions-audit.json`. No introduced product regression was confirmed in that audit; absence of every possible regression is not proven. Required full-project gate is **FAIL_WITH_CLASSIFIED_EXCEPTIONS**, merge readiness NO. Port55432 belongs to a pre-existing PostgreSQL with unknown task authority; it was never connected to, stopped or reused. Guards were not relaxed to manufacture coverage.
 
