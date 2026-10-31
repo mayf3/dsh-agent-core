@@ -41,17 +41,20 @@ export function parseMemoryDocument(buffer, { deadline = Infinity } = {}) {
   const lines = []
   let offset = 0
   let fence = null
+  let comment = false
   for (const match of text.matchAll(/[^\n]*\n|[^\n]+$/g)) {
     if ((lines.length & 1023) === 0) check()
     const raw = match[0]
     const value = raw.replace(/\r?\n$/,'')
     const eol = raw.slice(value.length)
+    const commented = comment || value.includes('<!--')
+    for (const token of value.matchAll(/<!--|-->/g)) comment = token[0] === '<!--'
     const mark = value.match(/^ {0,3}(`{3,}|~{3,})(.*)$/)
     const fenced = fence !== null
     if (mark && !fence) fence = {char:mark[1][0],length:mark[1].length}
     else if (mark && fence && mark[1][0] === fence.char && mark[1].length >= fence.length && !mark[2].trim()) fence = null
     const length = Buffer.byteLength(raw)
-    lines.push({text:value,byteStart:offset,byteEnd:offset+length,eol,fenced:fenced || Boolean(mark)})
+    lines.push({text:value,byteStart:offset,byteEnd:offset+length,eol,fenced:fenced || Boolean(mark) || commented})
     offset += length
   }
   const candidates = []
@@ -77,15 +80,21 @@ export function parseMemoryDocument(buffer, { deadline = Infinity } = {}) {
     const byteEnd = lines[end-1]?.byteEnd ?? bytes.length
     const fail = code => doc.issues.push({code,byteStart,byteEnd})
     const metadata = FIELDS.map((field,i) => lines[meta+i]?.text.match(new RegExp(`^- \\*\\*${field}\\*\\*: (.*)$`)))
-    if (metadata.some(value=>!value) || lines[meta+6]?.text !== '') { fail('INVALID_ENTRY_STRUCTURE'); continue }
+    if (metadata.some(value=>!value) || lines[meta+6]?.text !== '' || !/^[1-5]$/.test(metadata[2]?.[1] ?? '')) { fail('INVALID_ENTRY_STRUCTURE'); continue }
     const rawFields = [lines[start].text.slice(3),...metadata.map(value=>value[1])]
     if (rawFields.some(value=>value.length > MEMORY_GUARD_LIMITS.maxFieldChars)) { fail('ENTRY_GUARD_LIMIT'); continue }
     if ([rawFields[0],metadata[3][1],metadata[5][1]].some(malformedEscape)) { fail('INVALID_ENTRY_ESCAPE'); continue }
     let entry
     try {
-      const parsed = parseEntries(bytes.subarray(byteStart,byteEnd).toString('utf8').replaceAll('\r\n','\n'))
+      const headEnd = lines[meta+6].byteStart
+      const head = bytes.subarray(byteStart,headEnd).toString('utf8').replaceAll('\r\n','\n')
+      const parsed = parseEntries(head + '\n\n---\n')
       if (parsed.length !== 1 || !parsed[0].title || !ENTRY_TYPES.has(parsed[0].type)) { fail('INVALID_ENTRY_STRUCTURE'); continue }
       entry = parsed[0]
+      const contentStart = lines[meta+7]?.byteStart ?? byteEnd
+      const contentEnd = separator === -1 ? byteEnd : lines[separator].byteStart
+      entry.content = bytes.subarray(contentStart,contentEnd).toString('utf8').replaceAll('\r\n','\n').trim()
+      if (renderEntry(entry).split('\n')[5] !== '- **Tags**: ' + metadata[3][1]) { fail('INVALID_ENTRY_TAGS'); continue }
       renderEntry(entry) // apply existing codec field/content/render guards
     } catch { fail('ENTRY_GUARD_LIMIT'); continue }
     const range = (lineIndex,prefix) => ({byteStart:lines[lineIndex].byteStart+Buffer.byteLength(prefix),byteEnd:lines[lineIndex].byteEnd-Buffer.byteLength(lines[lineIndex].eol)})

@@ -151,3 +151,43 @@ test('multiple selected entries splice independently and leave the unselected en
   assert.equal(plan.status,'READY')
   assert.deepEqual(plan.afterBytes,Buffer.from(entry.replace('旧正文','新正文') + '\n维护\n' + middle + '\n' + last.replace('user:turn','new')))
 })
+
+test('empty structural metadata never borrows a source or timestamp from body prose', () => {
+  const source = Buffer.from(entry.replace('2026-10-31','').replace('user:turn','').replace('旧正文','旧正文\n- **Source**: forged\n- **Updated**: forged-date'))
+  const doc = model.parseMemoryDocument(source)
+  assert.ok(doc.readOnlyReason === 'READ_ONLY_FORMAT' || (doc.entries[0].source === '' && doc.entries[0].updatedAt === ''))
+  const plan = model.planDocumentEdits(doc,[operation(doc)])
+  if (plan.status === 'READY') {
+    const after = model.parseMemoryDocument(plan.afterBytes)
+    assert.equal(after.entries[0].source,'')
+    assert.equal(after.entries[0].updatedAt,'')
+  }
+})
+
+test('invalid importance remains a retained read-only proposal rather than acquiring a default', () => {
+  for (const invalid of ['banana','3x','0','6','2.5']) {
+    const source = Buffer.from(entry.replace('**Importance**: 5','**Importance**: ' + invalid))
+    const doc = model.parseMemoryDocument(source)
+    const plan = model.planDocumentEdits(doc,[{type:'UPDATE',entryId:'one',expectedEntrySha256:sha(source),patch:{content:'new'}}])
+    assert.equal(plan.status,'READ_ONLY_FORMAT',invalid)
+    assert.equal(plan.afterBytes,null)
+  }
+})
+
+test('entries in multiline HTML comments remain raw unknown bytes without writable identity', () => {
+  const source = Buffer.from('维护说明\n<!--\n' + entry + '-->\n尾注')
+  const doc = model.parseMemoryDocument(source)
+  assert.equal(doc.entries.length,0)
+  assert.equal(doc.format,'FREEFORM')
+  assert.deepEqual(doc.bytes,source)
+})
+
+test('unknown or damaged tag delimiters do not acquire writable empty-tag semantics', () => {
+  for (const tags of ['garbage','`unterminated','`one``two`']) {
+    const source = Buffer.from(entry.replace('**Tags**: `tag`','**Tags**: ' + tags))
+    const doc = model.parseMemoryDocument(source)
+    const plan = model.planDocumentEdits(doc,[{type:'UPDATE',entryId:'one',expectedEntrySha256:sha(source),patch:{source:'new'}}])
+    assert.equal(plan.status,'READ_ONLY_FORMAT',tags)
+    assert.equal(plan.afterBytes,null)
+  }
+})
