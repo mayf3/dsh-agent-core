@@ -10,6 +10,8 @@
  * reported per-fact, the local-source trace continues.
  */
 
+import { sourceReadRevision } from '../boundary.js'
+
 /**
  * Fetch instance detail as the caller (svc visibility classes decide).
  * @returns {Promise<{ok: true, detail: object} | {ok: false, code: string, detail?: string}>}
@@ -32,20 +34,39 @@ export async function fetchTimelineAll(request, agentId, workflowInstanceId, { m
   let after
   let truncated = false
   let lastError = null
+  let complete = false
+  const pageRevisions = []
   for (let page = 0; page < Math.ceil(maxEvents / pageSize) + 1; page += 1) {
     const result = await fetchTimelinePage(request, agentId, workflowInstanceId, { after, limit: pageSize })
+    pageRevisions.push(sourceReadRevision(result))
     if (!result.ok) { lastError = result; break }
-    const batch = Array.isArray(result.body?.items) ? result.body.items : []
+    if (!Array.isArray(result.body?.items)) { truncated = true; break }
+    const batch = result.body.items
     items.push(...batch)
-    const next = result.body?.next_cursor
-    if (next === null || next === undefined || items.length >= maxEvents) {
-      if (items.length > maxEvents) items.length = maxEvents
-      if (items.length >= maxEvents && next !== null && next !== undefined) truncated = true
+    const camel = Object.hasOwn(result.body, 'nextCursor')
+    const snake = Object.hasOwn(result.body, 'next_cursor')
+    if ((!camel && !snake) || (camel && snake && result.body.nextCursor !== result.body.next_cursor)) {
+      truncated = true
       break
     }
+    const next = camel ? result.body.nextCursor : result.body.next_cursor
+    let lastSequence = after ?? 0
+    for (const row of batch) {
+      const sequence = row?.event_sequence ?? row?.eventSequence
+      if (row === null || typeof row !== 'object' || Array.isArray(row)
+        || !Number.isSafeInteger(sequence) || sequence <= lastSequence) { truncated = true; break }
+      lastSequence = sequence
+    }
+    if (items.length > maxEvents) { items.length = maxEvents; truncated = true }
+    if (truncated) break
+    if (next === null) { complete = true; break }
+    if (!Number.isSafeInteger(next) || next < 1 || batch.length === 0
+      || next !== lastSequence || (after !== undefined && next <= after)) { truncated = true; break }
+    if (items.length >= maxEvents) { truncated = true; break }
     after = next
   }
-  return { items, truncated, error: lastError }
+  return { items, truncated: truncated || (!complete && lastError === null), error: lastError,
+    revision: sourceReadRevision(pageRevisions) }
 }
 
 /** Fetch submission history (existing broker-read endpoint shape). */
