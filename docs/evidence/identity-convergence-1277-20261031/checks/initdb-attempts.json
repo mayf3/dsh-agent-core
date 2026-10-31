@@ -1,0 +1,41 @@
+{
+  "observer": "/root",
+  "attempts": [
+    {
+      "argv": [
+        "initdb",
+        "-D",
+        "/tmp/ac1277-evidence/pgdata",
+        "-U",
+        "ac1277_test",
+        "-A",
+        "trust",
+        "--no-locale"
+      ],
+      "rc": 1,
+      "stdout": "initdb.log",
+      "stderr_capture": "tool output; not raw file",
+      "observed_error": "FATAL: could not create shared memory segment: Operation not permitted; Failed system call was shmget(key=331206346, size=56, 03600).; child process exited with exit code 1"
+    },
+    {
+      "argv": [
+        "initdb",
+        "-D",
+        "/tmp/ac1277-evidence/pgdata",
+        "-U",
+        "ac1277_test",
+        "-A",
+        "trust",
+        "--no-locale",
+        "-c",
+        "shared_memory_type=mmap",
+        "-c",
+        "dynamic_shared_memory_type=mmap"
+      ],
+      "rc": 1,
+      "combined_log": "initdb-mmap.log"
+    }
+  ],
+  "cluster_started": false,
+  "db_identity_readback": "NOT_EXECUTED_CLUSTER_NOT_STARTED"
+}
