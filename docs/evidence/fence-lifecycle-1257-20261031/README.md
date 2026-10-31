@@ -32,6 +32,6 @@ isolated PG setup/metadata paths. It is not a production CLI. Root dependencies
 were installed without lifecycle scripts/lockfile changes; the test passthrough
 and local package bridge are disclosed in environment summaries.
 
-Raw `.tap.gz` files are lossless gzip; extract with `gzip -dc <file>`. Validate
+Raw `.tap.gz`, `.log.gz` and `.sql.gz` files are lossless gzip; extract with `gzip -dc <file>`. Validate
 all archived bytes from this directory with `shasum -a 256 -c MANIFEST.sha256`.
 The source tests themselves provide the fixture construction and CLI commands.

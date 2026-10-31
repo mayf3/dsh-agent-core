@@ -45,52 +45,64 @@
     "sha256": "c7236de5c7cd642418fd130f6dc2b946da9e254fb7828ebe5e335ca984e746dd"
   },
   {
-    "path": "r1/green-r1-freeze-accepted-budget.log",
-    "sha256": "0329eb1cd2470867d4254b33cdf542b99eaf58ab91b55af5beacaee62116a2c0"
+    "path": "r1/green-r1-freeze-accepted-budget.log.gz",
+    "sha256": "9fcfaf1b8195f37366858cb565b36cbc0fb54a6f2178986d9546b026fb87c06e",
+    "uncompressedSha256": "0329eb1cd2470867d4254b33cdf542b99eaf58ab91b55af5beacaee62116a2c0"
   },
   {
-    "path": "r1/red-runtime-pinned.log",
-    "sha256": "385f3a80945dfa790ec076849e1b9afdc32334515672fa62e6e460e060d5cd4a"
+    "path": "r1/red-runtime-pinned.log.gz",
+    "sha256": "09d92287fe2f7459ac55d84c1e32db121c6d117576eea4aee72ce942df06e3fc",
+    "uncompressedSha256": "385f3a80945dfa790ec076849e1b9afdc32334515672fa62e6e460e060d5cd4a"
   },
   {
-    "path": "r1/red-restart-proof.log",
-    "sha256": "436c7fed332c58f29ce920886b7121f589b0120c99c4cb5354a8f6a9de2ba94d"
+    "path": "r1/red-restart-proof.log.gz",
+    "sha256": "4c3b0699657778dacf67b2227a748a0ef261cd0dc767fc5db85f7ec8c762cc7f",
+    "uncompressedSha256": "436c7fed332c58f29ce920886b7121f589b0120c99c4cb5354a8f6a9de2ba94d"
   },
   {
-    "path": "r1/red-proof-floor.log",
-    "sha256": "ae6ee7ff16374690bac625c7f39730cf955249f80bf71d9cd24be431322c1b81"
+    "path": "r1/red-proof-floor.log.gz",
+    "sha256": "0f8c040053c3ba67fd694020aa46749528cb81c94d913f1c89dec18c7342d6c2",
+    "uncompressedSha256": "ae6ee7ff16374690bac625c7f39730cf955249f80bf71d9cd24be431322c1b81"
   },
   {
-    "path": "r1/red-proof-budget.log",
-    "sha256": "50256124423d5361bbb5ca9f627b5ace39f43d1edf6dc07f6a8c84b57abd79d0"
+    "path": "r1/red-proof-budget.log.gz",
+    "sha256": "9263844550888503fd75cc9dfcd4c67add7aaf5ccf46abc0834b66554ec9ed74",
+    "uncompressedSha256": "50256124423d5361bbb5ca9f627b5ace39f43d1edf6dc07f6a8c84b57abd79d0"
   },
   {
-    "path": "r1/red-native-locale.log",
-    "sha256": "8a3b89725b61278ce983230728338a620fa6ce7a698c44ace6e020a5d40e5003"
+    "path": "r1/red-native-locale.log.gz",
+    "sha256": "200dfc3cc9bf8e008c23b72aaf27759672c95dca46e85b8b28f3369812ac8ff6",
+    "uncompressedSha256": "8a3b89725b61278ce983230728338a620fa6ce7a698c44ace6e020a5d40e5003"
   },
   {
-    "path": "r1/producer-order-RED.log",
-    "sha256": "a95f2a90c415676368f4832ecf15f5b0aff5d96fa5f4988ca12e5a21d1a3e75d"
+    "path": "r1/producer-order-RED.log.gz",
+    "sha256": "256ab3a70a3b3c91924de208c178b27f90bbda585ffccb25690b634f007fea38",
+    "uncompressedSha256": "a95f2a90c415676368f4832ecf15f5b0aff5d96fa5f4988ca12e5a21d1a3e75d"
   },
   {
-    "path": "r1/producer-order-GREEN.log",
-    "sha256": "0f26bded07a39cdddb8874d60e1ce0fb241f740894df6b7701343ba4e25c5a3c"
+    "path": "r1/producer-order-GREEN.log.gz",
+    "sha256": "12fb4c44660de971b300bda630f88b497f7b79f1decef8ff8cc6828787d045d0",
+    "uncompressedSha256": "0f26bded07a39cdddb8874d60e1ce0fb241f740894df6b7701343ba4e25c5a3c"
   },
   {
-    "path": "r2/final-relocated.log",
-    "sha256": "9d547d90969506e3f83777a03eea6357ba480bcb8f92ee729cb02df5d9444b73"
+    "path": "r2/final-relocated.log.gz",
+    "sha256": "d872cb4fc32cbe2f38de5a0be97c798eaa231121a53e732edd090bcc17fa83e9",
+    "uncompressedSha256": "9d547d90969506e3f83777a03eea6357ba480bcb8f92ee729cb02df5d9444b73"
   },
   {
-    "path": "r2/review-correlation-RED.log",
-    "sha256": "ecb478c07fd61443852dcb1a16030f76e45e06561aab019b8e475b626fb54b0f"
+    "path": "r2/review-correlation-RED.log.gz",
+    "sha256": "e3b7402ebb8bf9d364637919abe7b0cd905ea52f163c7a05665e9f2d7881685d",
+    "uncompressedSha256": "ecb478c07fd61443852dcb1a16030f76e45e06561aab019b8e475b626fb54b0f"
   },
   {
-    "path": "r2/review-correlation-GREEN.log",
-    "sha256": "e2244e0d280df1cd37ef6e7dda170d2e22f6f82cb961d49c5d15568aa61cb6c4"
+    "path": "r2/review-correlation-GREEN.log.gz",
+    "sha256": "8393212ec3f61646b0c9ce297da29a9d3b5886d776d4887482aeb52508ba83b7",
+    "uncompressedSha256": "e2244e0d280df1cd37ef6e7dda170d2e22f6f82cb961d49c5d15568aa61cb6c4"
   },
   {
-    "path": "r2-r3-integrated.log",
-    "sha256": "3f231e88c3fe78239eeb656f88899bf3d15c099b06fb2fab59c728547771ad95"
+    "path": "r2-r3-integrated.log.gz",
+    "sha256": "94ef8f1afe0ff868d12b9dea32b35ae13fe798a196ba46929331055606bfa4cc",
+    "uncompressedSha256": "3f231e88c3fe78239eeb656f88899bf3d15c099b06fb2fab59c728547771ad95"
   },
   {
     "path": "r3/blocked-alerts-RED.tap.gz",
