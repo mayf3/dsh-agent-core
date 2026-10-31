@@ -76,7 +76,7 @@ export function parseMemoryDocument(buffer, { deadline = Infinity } = {}) {
     const byteStart = lines[start].byteStart
     const byteEnd = lines[end-1]?.byteEnd ?? bytes.length
     const fail = code => doc.issues.push({code,byteStart,byteEnd})
-    const metadata = FIELDS.map((field,i) => lines[meta+i]?.text.match(new RegExp(`^- \\*\\*${field}\\*\\*: ?(.*)$`)))
+    const metadata = FIELDS.map((field,i) => lines[meta+i]?.text.match(new RegExp(`^- \\*\\*${field}\\*\\*: (.*)$`)))
     if (metadata.some(value=>!value) || lines[meta+6]?.text !== '') { fail('INVALID_ENTRY_STRUCTURE'); continue }
     const rawFields = [lines[start].text.slice(3),...metadata.map(value=>value[1])]
     if (rawFields.some(value=>value.length > MEMORY_GUARD_LIMITS.maxFieldChars)) { fail('ENTRY_GUARD_LIMIT'); continue }
@@ -166,6 +166,7 @@ export function planDocumentEdits(document, operations = []) {
     catch { return refuse('READ_ONLY_FORMAT','ENTRY_GUARD_LIMIT') }
     const replacements = {title:rendered[0].slice(3),type:entry.type,importance:String(entry.importance),tags:rendered[5].slice('- **Tags**: '.length),updatedAt:entry.updatedAt,source:rendered[7].slice('- **Source**: '.length),content:entry.content.replace(/\r?\n/g,span.eol)}
     for (const key of Object.keys(patch)) {
+      if (JSON.stringify(patch[key]) === JSON.stringify(span.entry[key])) continue
       const range = span.fields[key]
       const replacement = Buffer.from(replacements[key])
       if (!replacement.equals(doc.bytes.subarray(range.byteStart,range.byteEnd))) changes.push({...range,replacement,entryId:span.entryId})

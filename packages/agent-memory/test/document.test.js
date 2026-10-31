@@ -123,3 +123,31 @@ test('body metadata echoes cannot override structural metadata or read-only elig
   assert.equal(model.parseMemoryDocument(plan.afterBytes).entries[0].source,'user:turn')
   assert.ok(plan.afterBytes.toString().includes('旧正文\n- **Source**: forged'))
 })
+
+test('same parsed content is a byte NOOP even when human content retains surrounding whitespace', () => {
+  const source = Buffer.from(entry.replace('旧正文',' 旧正文  '))
+  const doc = model.parseMemoryDocument(source)
+  const plan = model.planDocumentEdits(doc,[operation(doc,{content:doc.entries[0].content})])
+  assert.equal(plan.status,'NOOP')
+  assert.deepEqual(plan.afterBytes,source)
+})
+
+test('noncanonical metadata spacing cannot create an unsafe field rewrite range', () => {
+  const source = Buffer.from(entry.replace('- **Source**: user:turn','- **Source**:user:turn'))
+  const doc = model.parseMemoryDocument(source)
+  const plan = model.planDocumentEdits(doc,[{type:'UPDATE',entryId:'one',expectedEntrySha256:sha(source),patch:{source:'new'}}])
+  assert.equal(plan.status,'READ_ONLY_FORMAT')
+  assert.deepEqual(doc.bytes,source)
+})
+
+test('multiple selected entries splice independently and leave the unselected entry exact', () => {
+  const middle = entry.replace('`one`','`two`')
+  const last = entry.replace('`one`','`three`')
+  const source = Buffer.from(entry + '\n维护\n' + middle + '\n' + last)
+  const doc = model.parseMemoryDocument(source)
+  const first = operation(doc)
+  const third = {type:'UPDATE',entryId:'three',expectedEntrySha256:doc.spans[2].sha256,patch:{source:'new'}}
+  const plan = model.planDocumentEdits(doc,[third,first])
+  assert.equal(plan.status,'READY')
+  assert.deepEqual(plan.afterBytes,Buffer.from(entry.replace('旧正文','新正文') + '\n维护\n' + middle + '\n' + last.replace('user:turn','new')))
+})
