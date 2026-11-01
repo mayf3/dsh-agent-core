@@ -1,14 +1,16 @@
 import {readConversationSource,acknowledgeConversationSource} from './source.js'
+import { createRecoveryAdmission } from '../reconciliation/admission.js'
 function reject(code){return Object.assign(new Error(code),{code,status:'not_admitted',proven:'zero_byte'})}
 export function createProductSurfaceConversation({sourceDirectory,bindingResolution,definition,reconciliationStore,routeChain,workspaceBootstrap}){
+  const admission = createRecoveryAdmission(reconciliationStore, routeChain)
   return {
     async sendProductSurface({requestId,bindingId,agentId,message}){
       if(!sourceDirectory)throw reject('CONVERSATION_SOURCE_NOT_CONFIGURED')
       const binding=bindingResolution.getBinding(bindingId),agent=definition.getAgent(agentId)
       if(!binding||binding.activeAgentId!==agentId||binding.activeSessionId!=='main'||agent?.id!==agentId||agent.disabled)throw reject('CONVERSATION_BINDING_INVALID')
-      reconciliationStore.assertBusinessAdmissionReady?.()
+      admission.assertReady()
       const fence=reconciliationStore.admissionBlockerForAgent?.(agentId)??reconciliationStore.activeFenceForAgent?.(agentId)
-      if(fence)throw reject('AGENT_PROCESS_TURN_FENCED')
+      if(fence)throw admission.observed(reject('AGENT_PROCESS_TURN_FENCED'), agentId)
       reconciliationStore.assertMintCapacity(agentId)
       const {workspaceId,workspacePath}=bindingResolution.resolveEffectiveWorkspace(binding)
       if(workspaceId!==null)await workspaceBootstrap.ensureWorkspace(workspaceId)

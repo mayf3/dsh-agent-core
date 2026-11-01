@@ -16,7 +16,7 @@ import { randomUUID } from 'node:crypto'
 
 import { cliBin } from '../../../agent-provisioning/src/index.js'
 import { agentEnv, childSpawnConfig } from './env.js'
-import { envelopeCarrier } from './state-machine.js'
+import { envelopeCarrier, exactTurnOutcome } from './state-machine.js'
 import { redactSensitiveText } from './provider-errors.js'
 
 export const spawnMethods = {
@@ -161,11 +161,11 @@ export const spawnMethods = {
       }
       // 5. C-017 precedence: parsed exact outcome (received before the exit
       //    callback) wins over child_real_exit.
-      if (execution.terminalEvent !== null) {
-        const failed = execution.terminalReason?.kind === 'error'
+      const outcome = execution.terminalEvent === null ? null : exactTurnOutcome(execution.terminalReason)
+      if (outcome !== null) {
         this.store.settleLate(execution.handle, {
-          lateOutcome: failed ? 'late_failed' : 'late_completed',
-          outcomeEvidence: failed ? 'exact_turn_end_failure' : 'exact_turn_end_success',
+          lateOutcome: outcome === 'failed' ? 'late_failed' : 'late_completed',
+          outcomeEvidence: outcome === 'failed' ? 'exact_turn_end_failure' : 'exact_turn_end_success',
           terminationEvidence: 'child_real_exit',
           finalAssistantOutput: execution.hasOutput() ? execution.outputSnapshot() : undefined,
           exitObserved: true,

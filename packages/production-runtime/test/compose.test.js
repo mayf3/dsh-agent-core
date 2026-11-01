@@ -69,6 +69,41 @@ test('composition provides the full existing service graph over the production l
   assert.equal(doc.agents[0].id, AGT_ID)
 })
 
+test('composition forwards the trusted exact-agent native policy resolver into process startup', async (t) => {
+  const { layout } = await seedRuntime(t)
+  const spawned = []
+  const resolvedAgentIds = []
+  const runtime = await composeProductionRuntime({
+    globalRoute: GLOBAL_ROUTE,
+    layout,
+    productApi: { enabled: false, port: 0 },
+    notificationIngress: { enabled: false, port: 0 },
+    processFactory: (opts) => {
+      const proc = new FakeProc(opts)
+      proc.nativeToolPolicy = opts.nativeToolPolicy
+      spawned.push(proc)
+      return proc
+    },
+    resolveNativeToolPolicy: (agentId) => {
+      resolvedAgentIds.push(agentId)
+      return {
+        version: 1,
+        agentId,
+        mode: 'native-allowlist',
+        allowedCalls: [{ toolName: 'read' }],
+      }
+    },
+    log: silentLog,
+  })
+  t.after(() => runtime.stop())
+
+  const process = await runtime.ctx.get('agentRouter').ensureRunning(AGT_ID)
+  assert.equal(process.nativeToolPolicy.agentId, AGT_ID)
+  assert.equal(process.nativeToolPolicy.allowedCalls[0].toolName, 'read')
+  assert.deepEqual(resolvedAgentIds, [AGT_ID, AGT_ID])
+  assert.equal(spawned.length, 1)
+})
+
 test('notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox', async (t) => {
   const { layout } = await seedRuntime(t)
   writeNotificationAuthConfig(layout)

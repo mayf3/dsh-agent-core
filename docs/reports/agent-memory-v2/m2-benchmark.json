@@ -1,0 +1,693 @@
+{
+  "schema": "AGENT_MEMORY_HISTORY_SYNTHETIC_BENCHMARK_V1",
+  "observedAt": "2026-10-31T13:40:51.031Z",
+  "environment": {
+    "cpu": "Apple M5 Pro",
+    "logicalCpus": 15,
+    "ramBytes": 51539607552,
+    "platform": "darwin",
+    "arch": "arm64",
+    "osRelease": "25.6.0",
+    "node": "v26.7.0"
+  },
+  "methodology": {
+    "syntheticOnly": true,
+    "fixedQueryDate": "2026-10-31T12:00:00.000Z",
+    "queriesPerScenario": {
+      "freshFactory": 10,
+      "warmed": 10,
+      "warmup": 1
+    },
+    "cacheState": "Files were just written. First-read labels describe first API queries only; OS caches were not purged, so no true disk-cold claim.",
+    "factoryState": "Every fresh sample constructs a new search factory; warmed samples reuse one factory. Source snapshots are reverified by the API.",
+    "defaultBudget": {
+      "bytes": 8388608,
+      "files": 32,
+      "ms": 1000
+    },
+    "limit": 50,
+    "percentileMethod": "nearest rank",
+    "maxRssUnit": "KiB as reported by process.resourceUsage()"
+  },
+  "corpus": {
+    "sources": [
+      {
+        "relativePath": "MEMORY.md",
+        "bytes": 356,
+        "sha256": "51076b053f913960df1b8c97c81aa5d14aea610fcc730a0b1976195ae66cc609",
+        "entries": 1
+      },
+      {
+        "relativePath": "MEMORY.md.bloated-20261022",
+        "bytes": 2112509,
+        "sha256": "682f1bcdceac80a3a31492f431193a07d62ad71f6c34551953c1373d4264cec2",
+        "entries": 5337
+      },
+      {
+        "relativePath": "memory/2026-10-31.md",
+        "bytes": 329725,
+        "sha256": "7c46bcd096b73fd7fd7be044fb13ac3e943b6d74803285c02912469fbc327986",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-30.md",
+        "bytes": 329725,
+        "sha256": "842bfe8d9b3e8f72b83d28404687ac4ee2deaf9bca0224b91a4ea15049e84bc8",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-29.md",
+        "bytes": 329725,
+        "sha256": "dfebec4efbf5bce766200ae79a2c2511b31e87de6109a3f8ee08470db43981ed",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-28.md",
+        "bytes": 329725,
+        "sha256": "ac89df1a44808eca03d6ce7772e4a56bda9a88f55dc5dc704f884fb7d7bc58b8",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-27.md",
+        "bytes": 329725,
+        "sha256": "a0dd7d68574ca210693f455af61a65890f0e6f541f85d16249bc96d82c9bfdd1",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-26.md",
+        "bytes": 329725,
+        "sha256": "03f9b149872c41abb61fa9be23d19028a65b0fb5de0b13d0293c85360d141dcf",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/2026-10-25.md",
+        "bytes": 329725,
+        "sha256": "74521def0f3d351496bf27009e3ddf3ee8890df4177b60d8bd7e470601d09b74",
+        "paragraphs": 200
+      },
+      {
+        "relativePath": "memory/history-manifest.json",
+        "bytes": 196,
+        "sha256": "ce4067c1b502c92e8e5b1633ef0e97e935acb2d855cd7901cc701104ed6140a3"
+      }
+    ],
+    "searchedBytes": 4420940,
+    "totalBytesIncludingManifest": 4421136,
+    "unchangedAfterQueries": true
+  },
+  "scenarios": [
+    {
+      "name": "archive-only-phrase",
+      "query": "synthetic archive unique observation 1248",
+      "expectedHits": 1,
+      "freshFactory": {
+        "samples": 10,
+        "p50Ms": 72.846,
+        "p95Ms": 103.771,
+        "minMs": 67.943,
+        "maxMs": 103.771,
+        "bytesRead": [
+          4420940
+        ],
+        "partialRate": 0,
+        "completeRate": 1,
+        "allCompleteUnder1s": true,
+        "observations": [
+          {
+            "label": "first-read-for-scenario; no OS cache purge",
+            "elapsedMs": 103.771,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-2",
+            "elapsedMs": 78.103,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-3",
+            "elapsedMs": 73.976,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-4",
+            "elapsedMs": 85.66,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-5",
+            "elapsedMs": 72.126,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-6",
+            "elapsedMs": 72.846,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-7",
+            "elapsedMs": 73.325,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-8",
+            "elapsedMs": 71.261,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-9",
+            "elapsedMs": 69.46,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-10",
+            "elapsedMs": 67.943,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          }
+        ]
+      },
+      "warmed": {
+        "samples": 10,
+        "p50Ms": 68.92,
+        "p95Ms": 69.954,
+        "minMs": 67.197,
+        "maxMs": 69.954,
+        "bytesRead": [
+          4420940
+        ],
+        "partialRate": 0,
+        "completeRate": 1,
+        "allCompleteUnder1s": true,
+        "observations": [
+          {
+            "label": "warmed-1",
+            "elapsedMs": 69.371,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-2",
+            "elapsedMs": 68.222,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-3",
+            "elapsedMs": 67.728,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-4",
+            "elapsedMs": 69.954,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-5",
+            "elapsedMs": 69.251,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-6",
+            "elapsedMs": 68.275,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-7",
+            "elapsedMs": 69.267,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-8",
+            "elapsedMs": 68.92,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-9",
+            "elapsedMs": 69.04,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-10",
+            "elapsedMs": 67.197,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 1,
+            "reasons": [],
+            "unsearchedReasons": []
+          }
+        ]
+      },
+      "warmup": {
+        "label": "unmeasured-factory-warmup",
+        "elapsedMs": 69.506,
+        "status": "COMPLETE",
+        "exhausted": true,
+        "bytesRead": 4420940,
+        "filesPlanned": 9,
+        "filesVerified": 9,
+        "hits": 1,
+        "reasons": [],
+        "unsearchedReasons": []
+      }
+    },
+    {
+      "name": "daily-phrase",
+      "query": "synthetic daily unique observation 1248",
+      "expectedHits": 7,
+      "freshFactory": {
+        "samples": 10,
+        "p50Ms": 68.838,
+        "p95Ms": 70.925,
+        "minMs": 68.04,
+        "maxMs": 70.925,
+        "bytesRead": [
+          4420940
+        ],
+        "partialRate": 0,
+        "completeRate": 1,
+        "allCompleteUnder1s": true,
+        "observations": [
+          {
+            "label": "first-read-for-scenario; no OS cache purge",
+            "elapsedMs": 68.548,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-2",
+            "elapsedMs": 68.585,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-3",
+            "elapsedMs": 68.04,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-4",
+            "elapsedMs": 69.314,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-5",
+            "elapsedMs": 69.774,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-6",
+            "elapsedMs": 68.838,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-7",
+            "elapsedMs": 70.883,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-8",
+            "elapsedMs": 70.925,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-9",
+            "elapsedMs": 69.033,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "fresh-factory-10",
+            "elapsedMs": 68.488,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          }
+        ]
+      },
+      "warmed": {
+        "samples": 10,
+        "p50Ms": 68.329,
+        "p95Ms": 71.132,
+        "minMs": 67.838,
+        "maxMs": 71.132,
+        "bytesRead": [
+          4420940
+        ],
+        "partialRate": 0,
+        "completeRate": 1,
+        "allCompleteUnder1s": true,
+        "observations": [
+          {
+            "label": "warmed-1",
+            "elapsedMs": 68.706,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-2",
+            "elapsedMs": 67.838,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-3",
+            "elapsedMs": 71.132,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-4",
+            "elapsedMs": 68.736,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-5",
+            "elapsedMs": 68.395,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-6",
+            "elapsedMs": 68.006,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-7",
+            "elapsedMs": 67.942,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-8",
+            "elapsedMs": 68.329,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-9",
+            "elapsedMs": 68.187,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          },
+          {
+            "label": "warmed-10",
+            "elapsedMs": 68.618,
+            "status": "COMPLETE",
+            "exhausted": true,
+            "bytesRead": 4420940,
+            "filesPlanned": 9,
+            "filesVerified": 9,
+            "hits": 7,
+            "reasons": [],
+            "unsearchedReasons": []
+          }
+        ]
+      },
+      "warmup": {
+        "label": "unmeasured-factory-warmup",
+        "elapsedMs": 68.53,
+        "status": "COMPLETE",
+        "exhausted": true,
+        "bytesRead": 4420940,
+        "filesPlanned": 9,
+        "filesVerified": 9,
+        "hits": 7,
+        "reasons": [],
+        "unsearchedReasons": []
+      }
+    }
+  ],
+  "processResourceUsage": {
+    "userCPUTime": 3763345,
+    "systemCPUTime": 170914,
+    "maxRSS": 299600,
+    "sharedMemorySize": 0,
+    "unsharedDataSize": 0,
+    "unsharedStackSize": 0,
+    "minorPageFault": 35531,
+    "majorPageFault": 88,
+    "swappedOut": 0,
+    "fsRead": 0,
+    "fsWrite": 0,
+    "ipcSent": 0,
+    "ipcReceived": 0,
+    "signalsCount": 0,
+    "voluntaryContextSwitches": 29,
+    "involuntaryContextSwitches": 28481
+  },
+  "allDefaultQueriesCompleteUnder1s": true
+}

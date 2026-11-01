@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 
-import { workflowDefinitionAuthoringManifest } from '../src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest } from '../src/capabilities/workflow/definition-authoring.js'
 import { AUTHORING_FILE_ENTRY_TOOL_NAME } from '../src/authoring-file-entry.js'
 import { apply as applyBroker } from '../src/index.js'
 import { createParentRpcHandler } from '../../agent-router/src/parent-rpc-relay.js'

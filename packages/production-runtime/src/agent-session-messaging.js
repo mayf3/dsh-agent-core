@@ -35,6 +35,7 @@ import { randomUUID } from 'node:crypto'
 import {
   AGENT_SESSION_SEND_CAPABILITY_ID,
   AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID,
+  AGENT_SESSION_DISPATCH_STATUS_CAPABILITY_ID,
 } from '../../broker/src/capabilities/agent-session-messaging.js'
 import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID } from '../../broker/src/capabilities/agent-session-reconcile.js'
 import { createFinalReplyWaiter, mapFinalAssistantOutputToOutcome } from './agent-session-reply-wait.js'
@@ -136,6 +137,7 @@ export function createAgentSessionMessagingAccess({
   now = () => Date.now(),
   timer,
   inspectTurn,
+  dispatchStatus,
 }) {
   if (router === undefined || typeof router.deliver !== 'function'
     || typeof router.readFinalAssistantOutput !== 'function'
@@ -351,6 +353,17 @@ export function createAgentSessionMessagingAccess({
     }
   }
 
+  async function status(rawArgs, context) {
+    if (typeof dispatchStatus !== 'function') {
+      return { ok: false, error: { code: 'internal_error', detail: 'trusted dispatch status surface is unavailable' } }
+    }
+    try {
+      return await dispatchStatus({ args: rawArgs, callerAgentId: context?.callerAgentId })
+    } catch {
+      return { ok: false, error: { code: 'internal_error', detail: 'trusted dispatch status failed closed' } }
+    }
+  }
+
   function reconcile(rawArgs, context) {
     const sourceAgentId = context?.callerAgentId
     if (typeof sourceAgentId !== 'string' || !TRUSTED_SOURCE_AGENT_ID_RE.test(sourceAgentId)) {
@@ -387,6 +400,7 @@ export function createAgentSessionMessagingAccess({
     [AGENT_SESSION_SEND_CAPABILITY_ID]: { send },
     [AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID]: { lookup: reconcile },
     [AGENT_SESSION_TURN_INSPECT_CAPABILITY_ID]: { inspect },
+    [AGENT_SESSION_DISPATCH_STATUS_CAPABILITY_ID]: { status },
   } }
 }
 

@@ -15,6 +15,7 @@
  * Usage (via scripts/production-runtime.mjs):
  *   node scripts/production-runtime.mjs [--root <dir>] [--tick-ms N]
  *       [--concurrency N] [--catchup 0|1]
+ *       [--website-inquiry-enabled true|false] [--website-inquiry-config <private file>]
  *
  * Env (all optional; see compose.js for the full list):
  *   PRODUCTION_RUNTIME_ROOT   persistent root (default ~/.agent-core)
@@ -41,21 +42,46 @@
 import { assertProductionArchitecture } from './native-arm64/admission.js'
 import { resolveProductionLayout } from './paths.js'
 import { composeProductionRuntime } from './compose.js'
+import { websiteInquiryStartupConfig } from './agent-session/website-inquiry/startup-config.js'
+import { createLaunchdAdapter } from './scheduler/deployment-launchd.js'
+import { isAbsolute } from 'node:path'
 
 function argValue(args, name, fallback) {
   const idx = args.indexOf(name)
   return idx >= 0 && args[idx + 1] ? args[idx + 1] : fallback
 }
 
+function readSelfStopProof(processLike, readProcessInstance) {
+  try {
+    const { pid, uid, gid, started, program } = readProcessInstance(processLike.pid) ?? {}
+    const selfUid = processLike.geteuid?.() ?? processLike.getuid?.()
+    const selfGid = processLike.getegid?.() ?? processLike.getgid?.()
+    if (!Number.isSafeInteger(pid) || pid < 1 || pid !== processLike.pid
+        || !Number.isSafeInteger(uid) || uid < 0 || uid !== selfUid
+        || !Number.isSafeInteger(gid) || gid < 0 || gid !== selfGid
+        || typeof started !== 'string' || !Number.isFinite(Date.parse(started))
+        || typeof program !== 'string' || !isAbsolute(program)) throw new Error('invalid native self identity')
+    return { version: 1, instance: { pid, uid, gid, started, program } }
+  } catch {
+    throw Object.assign(new Error('runtime readiness requires exact native self identity for shutdown proof'), {
+      code: 'RUNTIME_STOP_PROOF_UNAVAILABLE',
+    })
+  }
+}
+
 /**
  * Run the Production Runtime resident until SIGTERM/SIGINT.
  * @param {string[]} [argv] - CLI args (default process.argv.slice(2)).
  * @param {object} [processLike] - process stand-in (tests); default process.
+ * @param {object} [dependencies] - external composition seam for isolated entry tests.
  */
 import { applyShutdownResult } from './shutdown-result.js'
 
-export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process) {
+export async function runProductionRuntime(argv = process.argv.slice(2), processLike = process, {
+  compose = composeProductionRuntime, readProcessInstance = createLaunchdAdapter().readProcessInstance,
+} = {}) {
   const nativeIdentity = assertProductionArchitecture({ required: argv.includes('--native-arm64') })
+  const stopProof = readSelfStopProof(processLike, readProcessInstance)
   const root = argValue(argv, '--root', undefined)
   const layout = resolveProductionLayout(root)
   const tickMs = Number(argValue(argv, '--tick-ms', '500'))
@@ -70,18 +96,9 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
 
   log.log(`root=${layout.root} tickMs=${tickMs} concurrency=${concurrency} catchup=${catchup}`)
 
-  const runtime = await composeProductionRuntime({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true })
+  const websiteInquiry = websiteInquiryStartupConfig(argv)
+  const runtime = await compose({ layout, tickMs, concurrency, catchup, log, schedulerReadinessRequired: true, websiteInquiry })
   await runtime.start()
-  runtime.writeEvidence({
-    kind: 'ready',
-    ...(nativeIdentity ? { nativeRuntime: nativeIdentity } : {}),
-    pid: processLike.pid,
-    root: layout.root,
-    tickMs,
-    defaultAgentId: runtime.definition.getDefaultAgent()?.id,
-    agentProfile: runtime.agentProfile,
-  })
-  log.log(`production runtime ready (pid ${processLike.pid}); scheduler loop online; ingress http://127.0.0.1:${runtime.notificationIngress.address().port}/health`)
 
   // Keep the event loop alive (the scheduler timer is unref'd by design).
   const keepalive = setInterval(() => { /* process must stay online */ }, 60_000)
@@ -107,6 +124,18 @@ export async function runProductionRuntime(argv = process.argv.slice(2), process
   }
   processLike.on('SIGTERM', () => void shutdown('SIGTERM'))
   processLike.on('SIGINT', () => void shutdown('SIGINT'))
+
+  runtime.writeEvidence({
+    kind: 'ready',
+    ...(nativeIdentity ? { nativeRuntime: nativeIdentity } : {}),
+    pid: processLike.pid,
+    stopProof,
+    root: layout.root,
+    tickMs,
+    defaultAgentId: runtime.definition.getDefaultAgent()?.id,
+    agentProfile: runtime.agentProfile,
+  })
+  log.log(`production runtime ready (pid ${processLike.pid}); scheduler loop online; ingress http://127.0.0.1:${runtime.notificationIngress.address().port}/health`)
 
   return runtime
 }

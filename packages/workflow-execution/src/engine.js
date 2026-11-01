@@ -8,9 +8,9 @@
 
 import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
-import { STALE_NO_PROGRESS_JUDGMENT, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
-
+import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+import { createTerminalAttemptOperations } from './terminal-attempt-operations.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -38,6 +38,7 @@ export function createWorkflowExecutionEngine({
   getTurnReconciliation,
   resolveCallerCorrelation,
   readInstanceDetail,
+  readOwnerAssistanceResumeEvidence,
   escalateAttemptLimit: escalateAttemptLimitDep,
   buildInstruction = buildExecutionInstruction,
   log = {},
@@ -98,6 +99,9 @@ export function createWorkflowExecutionEngine({
       log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
     }
   }
+
+  const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
+    createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
 
   /**
    * CTR-WAE-012/013: resolution may block recoverably, but delivery_started
@@ -160,8 +164,11 @@ export function createWorkflowExecutionEngine({
           reason: `engine_error:${error?.code ?? error?.name ?? 'Error'}:${String(error?.message ?? error).slice(0, 160)}`,
         }
       }
-    }, hasQuiescentTurn)
+    }, hasQuiescentTurn, ownerResumeOps.prepareAttemptPlan, (attempt) => ownerResumeOps.canOwnerResume(attempt, ownerResumeOps.queryTurnReconciliation))
     if (!attemptResult.created) {
+      if (attemptResult.cause === 'pre_plan_unavailable' || attemptResult.cause === 'owner_resume_proof_unavailable') {
+        return { action: 'pre_plan_unavailable', nodeVisitId: rawIntent.nodeVisitId, ...(attemptResult.attempt?.attemptId === undefined ? {} : { attemptId: attemptResult.attempt.attemptId }) }
+      }
       if (attemptResult.cause === 'deferred_quiescence') {
         log.warn?.(`workflow-execution: re-entry deferred for ${attemptResult.attempt.nodeVisitId} — execution quiescence unproven (fence stands; C-013); rechecked next sweep`)
         return { action: 'deferred_quiescence', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
@@ -186,34 +193,20 @@ export function createWorkflowExecutionEngine({
     return { action: 'admitted', nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId, agentId: attempt.delivered.agentId, sessionId: attempt.delivered.sessionId }
   }
 
-  /** Full reconciliation evidence for a delivered attempt (handle first, then
-   *  the exact requestId correlation as the restart-recovery fallback). */
-  function queryTurnReconciliation(attempt) {
-    const delivered = attempt.delivered
-    if (delivered === undefined) return undefined
-    let result
-    if (typeof delivered.reconciliationHandle === 'string') {
-      try { result = getTurnReconciliation(delivered.reconciliationHandle) } catch { result = undefined }
-    }
-    if ((result === undefined || ['evicted', 'restart_lost', 'never_existed'].includes(result?.state))
-      && typeof resolveCallerCorrelation === 'function') {
-      try {
-        const correlated = resolveCallerCorrelation({ requestId: delivered.requestId })
-        if (correlated?.state !== undefined && correlated.state !== 'never_existed') result = correlated
-      } catch { /* keep the primary answer */ }
-    }
-    return result
+  function queryTurnState(attempt) {
+    return ownerResumeOps.queryTurnReconciliation(attempt)?.state
   }
 
-  function queryTurnState(attempt) {
-    return queryTurnReconciliation(attempt)?.state
-  }
+  const ownerResumeOps = createOwnerAssistanceResumeOperations({
+    fetchDuePage, resolvePrincipalToAgent, readInstanceDetail, readOwnerAssistanceResumeEvidence,
+    resolveCallerCorrelation, getTurnReconciliation, deliverRun, buildInstruction, provenanceFor, duePageLimit: DUE_PAGE_LIMIT,
+  })
 
   // Called under the ledger admission lock, before any generation mint.
   // Settlement may precede registry/fence cleanup. Retain legacy state-only
   // proof and Router's nullable defaults; explicit unknown evidence defers.
   function hasQuiescentTurn(attempt) {
-    const result = queryTurnReconciliation(attempt)
+    const result = ownerResumeOps.queryTurnReconciliation(attempt)
     if (result === null || typeof result !== 'object' || Array.isArray(result)
       || !['settled', 'evicted', 'restart_lost', 'never_existed'].includes(result.state)) return false
     const snapshot = result.snapshot
@@ -243,19 +236,19 @@ export function createWorkflowExecutionEngine({
     return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
   }
 
-  /** Business-only CAS settlement; Router termination/fences remain untouched (C-013/015/016/017). */
-  async function settleStale(attempt) {
-    const recorded = await ledger.recordStaleSuperseded({
-      nodeVisitId: attempt.nodeVisitId,
-      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
-      observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch,
-    })
-    return recorded.committed
-  }
-
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
+    for (const attempt of await ledger.listActiveFresh()) {
+      if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
+      try {
+        await ledger.continuePlannedOwnerResume(attempt.nodeVisitId,
+          (fresh) => ownerResumeOps.verifyPlannedOwnerResume(fresh),
+          (fresh, { recordDeliveryStarted }) => ownerResumeOps.continuePlannedOwnerResume(fresh, recordDeliveryStarted))
+      } catch (error) {
+        log.error?.(`workflow-execution: planned Owner-resume recovery failed for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+      }
+    }
     // Cross-process failover must not reconcile a cached projection. Refresh
     // under the ledger's existing OwnerLock before enumerating this pass.
     for (const attempt of await ledger.listActiveFresh()) {
@@ -269,7 +262,7 @@ export function createWorkflowExecutionEngine({
         const verdict = judgeAttempt(attempt, { turnState })
         if (verdict.state === 'ACTIVE') {
           // A live-looking stale run requires positive business evidence; never settle on age alone.
-          if (attempt.phase === 'run_delivered'
+          if (attempt.retryReason !== 'owner_assistance_resolved' && attempt.phase === 'run_delivered'
             && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
             const stale = await judgeStale(attempt)
             if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
@@ -311,11 +304,7 @@ export function createWorkflowExecutionEngine({
       if (attempt.state !== 'NEEDS_REVIEW') continue
       try {
         const stale = await judgeStale(attempt)
-        if (stale.kind !== 'stale_confirmed') continue
-        if (await settleStale(attempt)) {
-          summary.staleReentry.push(attempt.nodeVisitId)
-          await maybeEscalateAtLimit(attempt)
-        }
+        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
@@ -324,22 +313,12 @@ export function createWorkflowExecutionEngine({
     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
       try {
         const stale = await judgeStale(attempt)
-        if (stale.kind !== 'stale_confirmed') continue
-        if (await settleStale(attempt)) {
-          summary.staleReentry.push(attempt.nodeVisitId)
-          await maybeEscalateAtLimit(attempt)
-        }
+        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
       } catch (error) {
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     return summary
-  }
-
-  /** CTR-WEC1-005: escalate once when a stale-settled visit has exhausted its attempt cap. */
-  async function maybeEscalateAtLimit(settledAttempt) {
-    if ((settledAttempt.generation ?? 1) < (ledger.maxAttemptsPerVisit ?? DEFAULT_MAX_ATTEMPTS_PER_VISIT)) return
-    await escalateAttemptLimit({ attempt: settledAttempt, reason: 'ATTEMPTS_EXHAUSTED' })
   }
 
   /** Reconcile, then sweep due intents; malformed entries fail loudly. stop() drains this work. */
@@ -358,6 +337,7 @@ export function createWorkflowExecutionEngine({
     let boundSkipped = 0
     let cursor
     let drainedEarly = false
+    const seenTuples = new Set()
     while (true) {
       if (stopped) {
         drainedEarly = true
@@ -374,6 +354,23 @@ export function createWorkflowExecutionEngine({
       pages += 1
       const items = Array.isArray(page.items) ? page.items : []
       const exhausted = items.length < DUE_PAGE_LIMIT
+      const last = items[items.length - 1]
+      if (!exhausted && (last === null || typeof last !== 'object'
+        || typeof last.nextEligibleAt !== 'string' || last.nextEligibleAt === ''
+        || typeof last.dispatchIntentId !== 'string' || last.dispatchIntentId === '')) {
+        log.error?.('workflow-execution: due-feed cursor protocol violation (full page without a well-formed last record) — sweep stopped')
+        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_protocol_violation', reconciled, admissions, skipped, pages }
+      }
+      // Validate the whole page before WEC: any earlier tuple makes this
+      // scan non-advancing. A later poll gets a new Set and starts at page one.
+      for (const raw of items) {
+        const tuple = JSON.stringify([raw?.nextEligibleAt, raw?.dispatchIntentId])
+        if (seenTuples.has(tuple)) {
+          log.error?.('workflow-execution: due-feed repeated tuple — sweep stopped before page admission')
+          return { ok: false, phase: 'due_feed_cursor', code: 'cursor_not_advancing', reconciled, admissions, skipped, pages }
+        }
+      }
+      for (const raw of items) seenTuples.add(JSON.stringify([raw?.nextEligibleAt, raw?.dispatchIntentId]))
       for (const raw of items) {
         const normalized = normalizeDueIntent(raw)
         if (!normalized.ok) {
@@ -397,24 +394,7 @@ export function createWorkflowExecutionEngine({
         }
       }
       if (exhausted) break
-      const last = items[items.length - 1]
-      if (last === null || typeof last !== 'object'
-        || typeof last.nextEligibleAt !== 'string' || last.nextEligibleAt === ''
-        || typeof last.dispatchIntentId !== 'string' || last.dispatchIntentId === '') {
-        log.error?.('workflow-execution: due-feed cursor protocol violation (full page without a well-formed last record) — sweep stopped')
-        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_protocol_violation', reconciled, admissions, skipped, pages }
-      }
-      const nextCursor = {
-        afterNextEligibleAt: last.nextEligibleAt,
-        afterDispatchIntentId: last.dispatchIntentId,
-      }
-      if (cursor !== undefined
-        && nextCursor.afterNextEligibleAt === cursor.afterNextEligibleAt
-        && nextCursor.afterDispatchIntentId === cursor.afterDispatchIntentId) {
-        log.error?.('workflow-execution: due-feed cursor did not advance (identical full page repeated) — sweep stopped loud; is the svc-workflow keyset continuation deployed?')
-        return { ok: false, phase: 'due_feed_cursor', code: 'cursor_not_advancing', reconciled, admissions, skipped, pages }
-      }
-      cursor = nextCursor
+      cursor = { afterNextEligibleAt: last.nextEligibleAt, afterDispatchIntentId: last.dispatchIntentId }
     }
     if (boundReached) {
       log.warn?.(`workflow-execution: admission bound (${maxAdmissions}) reached; ${boundSkipped} due intents left unadmitted — they stay due and are re-discovered next sweep`)

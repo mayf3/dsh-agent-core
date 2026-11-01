@@ -41,7 +41,8 @@ function fixture(t) {
         visibility: 'full',
         detail: {
           current_node_visit_id: VISIT,
-          instance: { is_terminal: false, workflow_state_version: 7 },
+          current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+          instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
         },
       },
     }),

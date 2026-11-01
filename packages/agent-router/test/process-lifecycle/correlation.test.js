@@ -242,3 +242,84 @@ test('ENVELOPE_OUTCOME_UNKNOWN: the envelope always exposes a queryable handle (
   assert.equal(record.snapshot.initialOutcome, 'outcome_unknown')
   assert.equal(fx.fence(), observed.reconciliationHandle, 'F[false,true]')
 })
+
+// V4 C-010/C-015/C-017: native cancellation/limits are not exact outcomes.
+const nonOutcomeReasons = [
+  ...['disposed', 'user', 'parent', 'legacy'].map(kind => ({ kind: 'aborted', reason: { kind } })),
+  { kind: 'aborted', reason: { kind: 'hook', reason: 'hook stopped turn' } },
+  { kind: 'blocked' }, { kind: 'max-tokens' }, { kind: 'interrupted' },
+  { kind: 'future-reason' }, {}, undefined, null, 'completed', ['completed'], { kind: null },
+]
+
+for (const [index, reason] of nonOutcomeReasons.entries()) {
+  test(`NON_OUTCOME_DIRECT ${index}: exact terminal+idle rejects unknown, settles termination only`, { timeout: 2000 }, async (t) => {
+    const fx = makeFx()
+    t.after(() => fx.childExit())
+    await fx.readyNow()
+    const order = []
+    for (const method of ['markOutcomeUnknown', 'settleLate', 'settleDirect']) {
+      const original = fx.store[method].bind(fx.store)
+      fx.store[method] = (...args) => { order.push(method); return original(...args) }
+    }
+    const turn = fx.proc.turn('main', 'non-outcome', {})
+    await fx.tick()
+    fx.respondTo('session/prompt', { messageId: 'm-non-outcome' })
+    await fx.tick()
+    const handle = fx.store.records.keys().next().value
+    fx.emitEvent('main', { type: 'turn/start', data: { turn: 7 } })
+    fx.emitEvent('main', { type: 'user/message', data: { id: 'm-non-outcome' } })
+    fx.emitEvent('main', { type: 'turn/end', data: { turn: 7, reason } })
+    assert.equal(fx.store.getTurnReconciliation(handle).state, 'pending', 'terminal without idle is insufficient')
+    fx.emitStatus('main', 'idle')
+    const error = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+    assert.equal(error.reconciliationHandle, handle)
+    assert.equal(error.evidence.phase, 'terminal')
+    assert.equal(error.evidence.terminationEvidence, 'exact_terminal_then_idle')
+    const record = fx.store.getTurnReconciliation(handle)
+    assert.equal(record.state, 'settled')
+    assert.equal(record.snapshot.initialOutcome, 'outcome_unknown')
+    assert.equal(record.snapshot.lateOutcome, 'terminated_without_outcome')
+    assert.equal(record.snapshot.outcomeEvidence, null)
+    assert.deepEqual(order, ['markOutcomeUnknown', 'settleLate'])
+    assert.equal(fx.fence(), false)
+    assert.equal(prompts(fx).length, 1)
+    assert.equal(fx.counts().replayAdmissions, 0)
+  })
+}
+
+test('NON_OUTCOME_DELIVER: acceptance remains receipt-only; aborted turn has no successful outcome', async (t) => {
+  const fx = makeFx()
+  t.after(() => fx.childExit())
+  await fx.readyNow()
+  const delivery = fx.proc.deliver('main', 'receipt-only', {})
+  await fx.tick()
+  fx.respondTo('session/prompt', { messageId: 'm-delivery' })
+  const accepted = await delivery
+  assert.equal(accepted.accepted, true)
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 1 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-delivery' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 1, reason: { kind: 'aborted', reason: { kind: 'disposed' } } } })
+  fx.emitStatus('main', 'idle')
+  await fx.tick() // Node's runner also detects any unhandled terminal rejection.
+  const snapshot = fx.store.getTurnReconciliation(accepted.reconciliationHandle).snapshot
+  assert.equal(snapshot.lateOutcome, 'terminated_without_outcome')
+  assert.equal(snapshot.outcomeEvidence, null)
+  assert.equal(fx.fence(), false)
+  assert.equal(prompts(fx).length, 1)
+})
+
+test('NON_OUTCOME_REPLAY: pre-receipt abort+idle settles the original waiter without waiting for its deadline', { timeout: 2000 }, async (t) => {
+  const fx = makeFx()
+  t.after(() => fx.childExit())
+  await fx.readyNow()
+  const turn = fx.proc.turn('main', 'pre-receipt-abort', {})
+  await fx.tick()
+  fx.emitEvent('main', { type: 'turn/start', data: { turn: 3 } })
+  fx.emitEvent('main', { type: 'user/message', data: { id: 'm-early-abort' } })
+  fx.emitEvent('main', { type: 'turn/end', data: { turn: 3, reason: { kind: 'aborted', reason: { kind: 'disposed' } } } })
+  fx.emitStatus('main', 'idle')
+  fx.respondTo('session/prompt', { messageId: 'm-early-abort' })
+  const error = await rejectsWith(turn, error => assert.equal(error.status, 'outcome_unknown'))
+  assert.equal(error.evidence.phase, 'terminal')
+  assert.equal(fx.store.getTurnReconciliation(error.reconciliationHandle).snapshot.lateOutcome, 'terminated_without_outcome')
+})

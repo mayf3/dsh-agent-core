@@ -67,9 +67,9 @@ agent ──mint──▶ auth-service ──token──▶ svc-workflow admissi
 ```
 
 - `unproven`：进程启动后尚无一次成功验证（冷启动正常，不告警）。
-- `ready`：最近链路健康。
-- `auth_unavailable`：JWKS 拉取失败/不可用——admission 正在 fail-closed，**应在任何业务命令
-  受阻前被外部 ≤5 分钟巡检发现**（巡检本体 = P2，deferred；本字段就是它要消费的原语）。
+- `ready`：至少一次 JWT 验证成功，可能使用已接受的有界 JWKS 缓存；不证明当前 JWKS 可达、caller scope、目标 enabled 或业务全链路健康。
+- `auth_unavailable`：请求期间观察到 JWKS 拉取失败/不可用，相关请求 fail-closed。后续成功验证恢复 `ready`；普通无效 token 不改变状态。
+  此字段没有主动探测能力；≤5 分钟巡检与提前告警属于尚未交付的 P2，不能由本健康位推断。
 - 状态迁移时 runtime log 输出一行 warn（进入 `auth_unavailable` 一次、恢复 `ready` 一次），
   不随请求刷屏；行内无 token/principal 素材。
 

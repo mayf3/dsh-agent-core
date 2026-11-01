@@ -1,3 +1,4 @@
+import './helpers/isolated-workspace.js'
 /**
  * Unit tests for @agent-core/agent-memory — the file-first memory store.
  *

@@ -27,7 +27,7 @@ import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { realpathSync } from 'node:fs'
 
-import { workflowDefinitionAuthoringManifest } from '../packages/broker/src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest } from '../packages/broker/src/capabilities/workflow/definition-authoring.js'
 import { AUTHORING_FILE_ENTRY_TOOL_NAME } from '../packages/broker/src/authoring-file-entry.js'
 import { apply as applyBroker } from '../packages/broker/src/index.js'
 import { createParentRpcHandler } from '../packages/agent-router/src/parent-rpc-relay.js'
@@ -257,7 +257,7 @@ await writeFile(join(outDir, 'sh562-pipe-negative-results.json'), JSON.stringify
 // The read capability flows the SAME real pipeline (child tool → parent
 // handler → gateway → transport). Allow / deny / honest-not-found against
 // the mock svc; identity stays the ACTUAL caller (agt_family-steward-agent).
-import { workflowDefinitionReadManifest } from '../packages/broker/src/capabilities/workflow-definition-read.js'
+import { workflowDefinitionReadManifest } from '../packages/broker/src/capabilities/workflow-definition-read/index.js'
 const readTool = registered.find((tool) => tool?.name === 'workflow_definition_read')
 assert.ok(readTool, 'workflow_definition_read must be registered in child mode')
 const readCalls = []

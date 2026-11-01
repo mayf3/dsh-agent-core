@@ -327,3 +327,143 @@ test('runtime wiring: node_history handler is mounted for both scopes, validates
     assert.deepEqual(auditOutcome.result.attempts.map((a) => a.generation), [1, 2])
   } finally { destroyFixtureRoot(fixture) }
 })
+
+// ── #724 report-side submission-gap presentation ────────────────────────────
+// SYNTHETIC_ONLY: no readable natural execution history existed at execution
+// time. Only a TRULY same-attempt correlated structured tool result may feed
+// the diagnosis; sibling-attempt, uncorrelated, and non-JSON evidence stays an
+// explicit gap. The renderer is value-free by construction (the diagnosis
+// contract carries only categories, field paths, error codes, request refs).
+
+import * as reportNs from '../src/report.js'
+import * as judgmentMod from '../../workflow-execution/src/judgment.js'
+import { projectJournal } from '../src/loaders/session-journal.js'
+
+const GAP_ATTEMPT_ID = `wfeat-${'7'.repeat(24)}`
+const GAP_ATTEMPT = { attemptId: GAP_ATTEMPT_ID, nodeVisitId: V_MULTI, workflowInstanceId: WF_A, phase: 'run_delivered' }
+
+function gapSessionView({ resultText, instanceId = WF_A, seq = 2, isError = true } = {}) {
+  return {
+    toolCalls: [
+      { seq: 1, name: 'workflow_execute', coordinates: { tool: 'workflow_execute', workflowInstanceId: instanceId, transitionDefinitionId: 'td-1', expectedWorkflowStateVersion: 3 } },
+      { seq, kind: 'result', isError, coordinates: { workflowInstanceId: instanceId }, resultText },
+    ],
+  }
+}
+
+test('#724-R1 a truly same-attempt correlated structured result feeds the diagnosis (STALE_VERSION end-to-end)', () => {
+  assert.equal(typeof reportNs.collectSubmissionGapEvidence, 'function', 'collectSubmissionGapEvidence missing (#724)')
+  const view = gapSessionView({ resultText: JSON.stringify({ ok: false, error: { code: 'workflow_state_version_conflict', requestId: 'req-r1' } }) })
+  const ev = reportNs.collectSubmissionGapEvidence({ attempt: GAP_ATTEMPT, sessionView: view, correlationRefs: [GAP_ATTEMPT_ID] })
+  assert.equal(ev.ok, true)
+  assert.equal(ev.input.evidenceStatus, 'readable')
+  assert.equal(ev.input.lastToolResult.error.code, 'workflow_state_version_conflict')
+  assert.ok(typeof reportNs.renderSubmissionGapDiagnosis === 'function', 'renderSubmissionGapDiagnosis missing (#724)')
+  const d = judgmentMod.diagnoseSubmissionGap?.({ ...{ attempt: GAP_ATTEMPT }, ...ev.input, evidenceStatus: ev.input.evidenceStatus, settle: { kind: 'still_current', reason: 'node_visit_still_current' } })
+    ?? (assert.fail('diagnoseSubmissionGap missing (#724)'), null)
+  assert.equal(d.category, 'STALE_VERSION')
+  const text = reportNs.renderSubmissionGapDiagnosis(d)
+  assert.match(text, /STALE_VERSION/)
+  assert.match(text, /req-r1/)
+})
+
+test('#724-R2 sibling-instance results and uncorrelated views never become this attempt\'s cause', () => {
+  assert.equal(typeof reportNs.collectSubmissionGapEvidence, 'function', 'collectSubmissionGapEvidence missing (#724)')
+  const sibling = reportNs.collectSubmissionGapEvidence({
+    attempt: GAP_ATTEMPT,
+    sessionView: gapSessionView({ instanceId: WF_B, resultText: JSON.stringify({ ok: false, error: { code: 'submission_validation_failed' } }) }),
+    correlationRefs: [GAP_ATTEMPT_ID],
+  })
+  assert.equal(sibling.ok, false)
+  assert.ok(sibling.missingEvidence.length > 0)
+  const uncorrelated = reportNs.collectSubmissionGapEvidence({
+    attempt: GAP_ATTEMPT,
+    sessionView: gapSessionView({ resultText: JSON.stringify({ ok: false, error: { code: 'submission_validation_failed' } }) }),
+    correlationRefs: [`wfeat-${'8'.repeat(24)}`],
+  })
+  assert.equal(uncorrelated.ok, false)
+  assert.ok(uncorrelated.missingEvidence.some((m) => /not correlated/i.test(m)), 'missing R3-style correlation is named')
+})
+
+test('#724-R3 non-JSON / coordinate-less tool results degrade to unreadable evidence gaps, never to a cause', () => {
+  assert.equal(typeof reportNs.collectSubmissionGapEvidence, 'function', 'collectSubmissionGapEvidence missing (#724)')
+  const nonJson = reportNs.collectSubmissionGapEvidence({ attempt: GAP_ATTEMPT, sessionView: gapSessionView({ resultText: '模型说完成了' }), correlationRefs: [GAP_ATTEMPT_ID] })
+  assert.equal(nonJson.ok, true)
+  assert.equal(nonJson.input.evidenceStatus, 'unreadable')
+  const d = judgmentMod.diagnoseSubmissionGap?.({ attempt: GAP_ATTEMPT, settle: { kind: 'still_current', reason: 'node_visit_still_current' }, lastToolResult: nonJson.input.lastToolResult, evidenceStatus: nonJson.input.evidenceStatus })
+    ?? (assert.fail('diagnoseSubmissionGap missing (#724)'), null)
+  assert.equal(d.category, 'OUTCOME_UNKNOWN')
+  const noCoords = reportNs.collectSubmissionGapEvidence({
+    attempt: GAP_ATTEMPT,
+    sessionView: { toolCalls: [{ seq: 2, kind: 'result', isError: true, resultText: JSON.stringify({ ok: false, error: { code: 'transport_failure' } }) }] },
+    correlationRefs: [GAP_ATTEMPT_ID],
+  })
+  assert.equal(noCoords.ok, false, 'a result without workflow coordinates cannot be tied to the attempt')
+  assert.ok(noCoords.missingEvidence.length > 0)
+})
+
+test('#724-R4 renderer: no diagnosis => no section; output is deterministic and value-free', () => {
+  assert.equal(typeof reportNs.renderSubmissionGapDiagnosis, 'function', 'renderSubmissionGapDiagnosis missing (#724)')
+  assert.equal(reportNs.renderSubmissionGapDiagnosis(null), null)
+  assert.equal(reportNs.renderSubmissionGapDiagnosis(undefined), null)
+  const marker = 'SECRET-PAYLOAD-VALUE-MARKER-724'
+  const d = judgmentMod.diagnoseSubmissionGap?.({
+    attempt: GAP_ATTEMPT,
+    settle: { kind: 'still_current', reason: 'node_visit_still_current' },
+    lastToolResult: { attemptId: GAP_ATTEMPT_ID, nodeVisitId: V_MULTI, workflowInstanceId: WF_A, ok: false, error: { code: 'submission_validation_failed', fieldPaths: ['submissionPayload.amount'], requestId: 'req-r4', details: { received: marker } } },
+    evidenceStatus: 'readable',
+  }) ?? (assert.fail('diagnoseSubmissionGap missing (#724)'), null)
+  const text1 = reportNs.renderSubmissionGapDiagnosis(d)
+  const text2 = reportNs.renderSubmissionGapDiagnosis(d)
+  assert.equal(text1, text2, 'deterministic rendering')
+  assert.ok(!text1.includes(marker), 'payload values never reach the report')
+  assert.match(text1, /submission_validation_failed/)
+  assert.match(text1, /submissionPayload\.amount/, 'field PATHS are presentable')
+})
+
+test('#724-R5 a naturally shaped workflow_execute failure {ok:false,error:{...}} pairs through its callId with the preceding same-call tool/call and recovers this attempt\'s coordinates (P1 4236719932)', () => {
+  const T = 1758100000000
+  const events = [
+    { type: 'tool/call', seq: 10, timeMs: T, data: { turn: 1, callId: 'call-err-1', name: 'workflow_execute', arguments: JSON.stringify({ operation: 'transition', workflowInstanceId: WF_A, transitionDefinitionId: 'td-9', expectedWorkflowStateVersion: 3 }) } },
+    { type: 'tool/result', seq: 11, timeMs: T + 10, data: { turn: 1, message: { content: [{ type: 'tool-result', toolCallId: 'call-err-1', isError: true, content: JSON.stringify({ ok: false, error: { code: 'workflow_state_version_conflict', requestId: 'req-r5', details: { expected: 3, received: 4 } } }) }] } } },
+  ]
+  const view = projectJournal(events, { briefMaxChars: 0 })
+  const failedResult = view.toolCalls.find((c) => c.kind === 'result')
+  assert.deepEqual(failedResult.coordinates, {}, 'the natural failure envelope carries no workflowInstanceId — pairing must recover it')
+  const ev = reportNs.collectSubmissionGapEvidence({ attempt: GAP_ATTEMPT, sessionView: view, correlationRefs: [GAP_ATTEMPT_ID] })
+  assert.equal(ev.ok, true, 'the failed result is tied to the attempt via its originating call')
+  assert.equal(ev.input.evidenceStatus, 'readable')
+  assert.equal(ev.input.lastToolResult.error.code, 'workflow_state_version_conflict')
+  assert.equal(ev.input.lastToolResult.workflowInstanceId, WF_A, 'instance coordinates come from the CALL, never from result text')
+  const d = judgmentMod.diagnoseSubmissionGap({ attempt: GAP_ATTEMPT, settle: { kind: 'still_current', reason: 'node_visit_still_current' }, lastToolResult: ev.input.lastToolResult, evidenceStatus: ev.input.evidenceStatus })
+  assert.equal(d.category, 'STALE_VERSION')
+  assert.ok(d.evidenceRefs.some((r) => r.includes('req-r5')), 'request ref presented')
+  assert.ok(!JSON.stringify(d).includes('"expected"'), 'error detail VALUES never enter the diagnosis')
+})
+
+test('#724-R6 pairing fails closed: no/foreign/non-workflow_execute/misordered originating call never lends coordinates', () => {
+  const call = (over = {}) => ({ seq: 1, name: 'workflow_execute', callId: 'call-x', coordinates: { tool: 'workflow_execute', workflowInstanceId: WF_A }, ...over })
+  const result = (over = {}) => ({ seq: 2, kind: 'result', isError: true, callId: 'call-x', coordinates: {}, resultText: JSON.stringify({ ok: false, error: { code: 'submission_validation_failed' } }), ...over })
+  const attempt = GAP_ATTEMPT
+
+  // No call with the result's callId exists.
+  const orphan = reportNs.collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: [result({ callId: 'call-unknown' })] }, correlationRefs: [attempt.attemptId] })
+  assert.equal(orphan.ok, false, 'a result whose callId matches no call stays uncorrelated')
+
+  // The callId belongs to a different tool (workflow_instance_detail) — that
+  // call never submitted, so it cannot lend submission coordinates.
+  const otherTool = reportNs.collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: [call({ name: 'workflow_instance_detail', coordinates: { tool: 'workflow_instance_detail', workflowInstanceId: WF_A } }), result()] }, correlationRefs: [attempt.attemptId] })
+  assert.equal(otherTool.ok, false, 'a non-workflow_execute call is never a submission coordinate source')
+
+  // The originating workflow_execute call targeted ANOTHER instance.
+  const foreign = reportNs.collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: [call({ coordinates: { tool: 'workflow_execute', workflowInstanceId: WF_B } }), result()] }, correlationRefs: [attempt.attemptId] })
+  assert.equal(foreign.ok, false, 'a sibling-instance call does not become this attempt\'s cause')
+
+  // The call is misordered AFTER its result (never "the preceding call").
+  const misordered = reportNs.collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: [result({ seq: 2 }), call({ seq: 3 })] }, correlationRefs: [attempt.attemptId] })
+  assert.equal(misordered.ok, false, 'only a PRECEDING call may lend coordinates')
+
+  // A direct result coordinate that CONTRADICTS its own call fails closed too.
+  const contradiction = reportNs.collectSubmissionGapEvidence({ attempt, sessionView: { toolCalls: [call(), result({ coordinates: { workflowInstanceId: WF_B } })] }, correlationRefs: [attempt.attemptId] })
+  assert.equal(contradiction.ok, false, 'result coordinates of another instance stay excluded even when a call could pair')
+})

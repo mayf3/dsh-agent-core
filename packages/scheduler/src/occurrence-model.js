@@ -22,9 +22,15 @@ export const OCCURRENCE_STATES = new Set(['admitted', 'running', 'succeeded', 'f
 export const TERMINAL_STATES = new Set(['succeeded', 'failed'])
 export const EXECUTION_OUTCOMES = new Set(['succeeded', 'failed'])
 export const DELIVERY_STATUSES = new Set(['delivered', 'not-delivered', 'not-requested', 'unknown'])
-export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile'])
+// 'policy-auto-reconcile' — AGENT_DELIVERY_RESILIENCE_V1 CTR-S1 (accepted
+// @8cf2c23a): the evidence-gated fence auto-reconcile policy settles
+// unresolved unknowns through the same late-settlement authority with a
+// machine receipt actor (control.js autoReconcileOccurrences). The policy is
+// frozen to exact evidence forms (CTR-S2) and may never settle an
+// unknown-without-evidence (CTR-S5).
+export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile', 'policy-auto-reconcile'])
 export const TERMINAL_EVIDENCE_KINDS = new Set([
-  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'termination-only',
+  'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'policy-auto-reconcile', 'termination-only',
 ])
 export const TERMINATION_EVIDENCE_KINDS = new Set([
   'exact_terminal_then_idle', 'exact_queued_removal', 'child_real_exit', 'cancellation_ack',

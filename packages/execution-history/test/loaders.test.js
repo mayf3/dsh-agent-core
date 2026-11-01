@@ -14,6 +14,7 @@ import { loadSchedulerStore, findJob, jobRoutingAgent, occurrencesOf } from '../
 import { loadRuntimeEvidence } from '../src/loaders/runtime-evidence.js'
 import { loadSessionJournal, projectJournal, resolveSessionFile } from '../src/loaders/session-journal.js'
 import { readJsonlFile } from '../src/loaders/lines.js'
+import { fetchTimelineAll } from '../src/loaders/svc-facts.js'
 import { buildFixtureRoot, destroyFixtureRoot, ATTEMPT_ID, VISIT_ID, WF_ID, MESSAGE_ID, OCC_ID, JOB_ID, attemptIdFor } from './fixtures.js'
 
 // The gen-N derivation used by the test mirrors the R2 ground truth (the
@@ -21,6 +22,37 @@ import { buildFixtureRoot, destroyFixtureRoot, ATTEMPT_ID, VISIT_ID, WF_ID, MESS
 function attemptIdFormula(nodeVisitId, generation = 1) {
   return attemptIdFor(nodeVisitId, generation)
 }
+
+test('#720 timeline follows the deployed camelCase cursor and marks stalled pagination incomplete', async () => {
+  const calls = []
+  const request = async (_agentId, req) => {
+    calls.push(req.query.after)
+    return { ok: true, body: req.query.after === undefined
+      ? { items: [{ event_sequence: 1 }], nextCursor: 1 }
+      : { items: [{ event_sequence: 2 }], nextCursor: null } }
+  }
+  const result = await fetchTimelineAll(request, 'agt_a', WF_ID)
+  assert.deepEqual(calls, [undefined, '1'])
+  assert.equal(result.items.length, 2)
+  assert.equal(result.truncated, false)
+  const stalled = await fetchTimelineAll(async () => ({ ok: true, body: { items: [], nextCursor: 1 } }), 'agt_a', WF_ID)
+  assert.equal(stalled.truncated, true, 'a repeated cursor never proves complete history')
+})
+
+test('#720 review: a cursor cannot skip unreturned native sequence ranges', async () => {
+  const result = await fetchTimelineAll(async (_agentId, req) => ({ ok: true, body: req.query.after === undefined
+    ? { items: [{ event_sequence: 1 }], nextCursor: 10 }
+    : { items: [{ event_sequence: 11 }], nextCursor: null } }), 'agt_a', WF_ID)
+  assert.equal(result.truncated, true)
+})
+
+test('#720 review: clipping an oversized final page always reports truncation', async () => {
+  const result = await fetchTimelineAll(async () => ({ ok: true, body: {
+    items: [1, 2, 3].map((event_sequence) => ({ event_sequence })), nextCursor: null,
+  } }), 'agt_a', WF_ID, { maxEvents: 2, pageSize: 100 })
+  assert.equal(result.items.length, 2)
+  assert.equal(result.truncated, true)
+})
 
 test('T1 attempts ledger: multi-generation attempts stay separate and project in order', async () => {
   const fixture = buildFixtureRoot()

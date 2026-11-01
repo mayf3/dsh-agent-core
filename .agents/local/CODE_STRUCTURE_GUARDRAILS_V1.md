@@ -222,3 +222,14 @@ accepted actor, and expire after one year unless renewed by a rule change.
   `SPEC_ACCEPTANCE_ACTORS`; registry housekeeping (expiry renewal, adding a
   generatedAllowlist entry, listing a newly split file) is an owner-reviewed PR
   that does not change frozen values.
+
+## Whole-version successor lifecycle
+
+```text
+LIFECYCLE = SUPERSEDED upon this transaction merging into main
+SUPERSEDED_BY = CODE_STRUCTURE_GUARDRAILS_V2
+SUCCESSOR_PATH = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
+```
+
+The original V1 body remains historical evidence. The accepted V2 successor and
+this backlink activate together on main; no V1 registry row is rewritten.

@@ -457,3 +457,103 @@ export async function reconcileOccurrence(store, { occurrenceId, runId, resolved
     evidenceStatus,
   }
 }
+
+/**
+ * AGENT_DELIVERY_RESILIENCE_V1 CTR-S1/S3 — policy auto-reconcile (machine
+ * actor). Batch settlement of unresolved outcome_unknown occurrences through
+ * the SAME store mutation path as the operator `reconcileOccurrence` above
+ * (single mutation authority, C-029): one atomic mutateDoc, applyTransition
+ * lateSettlement, fence rebuild, per-item durable run-event.
+ *
+ * The ONLY caller-observable differences from the operator path are the
+ * settlement basis (`policy-auto-reconcile`) and the receipt actor: a machine
+ * identity supplied by the caller — the scheduler never derives policy actor
+ * identity from the OS user (CTR-S3). Callers MUST pass targets produced by
+ * `planAutoReconcilePass` (auto-reconcile.js); this function re-validates
+ * every precondition and skips (never throws the batch away) on per-item
+ * drift — the store may have moved between plan and commit.
+ */
+export async function autoReconcileOccurrences(store, { settlements, actorId = 'system:fence-auto-reconcile', nowMs = Date.now() }) {
+  if (!Array.isArray(settlements) || settlements.length === 0) {
+    return { results: [], fencesRemaining: null }
+  }
+  if (typeof actorId !== 'string' || !/^system:[a-z0-9-]+$/.test(actorId)) {
+    throw new TypeError('autoReconcileOccurrences: actorId must be a machine identity of the form system:<kebab-id> (CTR-S3; human-style identities are reserved for the operator reconcile path)')
+  }
+  const identity = { provenance: 'scheduler-policy', actorId }
+  const resolvedAt = nowMs
+  let results = []
+  let fencesRemaining = null
+  let value
+  try {
+    ({ value } = await store.mutateDoc((latest) => {
+    for (const target of settlements) {
+      const { occurrenceId, runId, resolvedTo, evidenceNote } = target ?? {}
+      try {
+        if (!['succeeded', 'failed'].includes(resolvedTo)) {
+          throw new Error('resolvedTo must be succeeded|failed for policy auto-reconcile')
+        }
+        if (typeof evidenceNote !== 'string' || !evidenceNote.trim()) {
+          throw new Error('evidenceNote is required')
+        }
+        const record = findOccurrenceById(latest.occurrences, occurrenceId)
+        if (!record) throw new Error(`unknown occurrence: ${occurrenceId}`)
+        if (record.runId !== runId) {
+          throw new Error(`runId mismatch: occurrence ${occurrenceId} belongs to ${record.runId}`)
+        }
+        if (!isUnresolvedUnknown(record)) {
+          results.push({ occurrenceId, outcome: 'already_settled' })
+          continue
+        }
+        applyTransition(record, {
+          to: resolvedTo,
+          at: resolvedAt,
+          reason: `policy auto-reconcile: ${evidenceNote.trim()}`,
+          endedAt: resolvedAt,
+          executionOutcome: resolvedTo,
+          lateSettlement: {
+            resolvedTo, resolvedAt, basis: 'policy-auto-reconcile',
+            evidenceRef: evidenceNote.trim(),
+          },
+          terminalEvidence: { kind: 'policy-auto-reconcile', detailRef: evidenceNote.trim() },
+        })
+        latest.fences = rebuildFences(latest.occurrences)
+        const job = latest.jobs.find((candidate) => candidate.id === record.jobId)
+        if (job) job.state = deriveJobStateSummary(job, latest.occurrences, resolvedAt)
+        results.push({ occurrenceId, outcome: 'settled', resolvedTo, jobId: record.jobId })
+      } catch (error) {
+        results.push({ occurrenceId: occurrenceId ?? null, outcome: 'error', error: String(error?.message ?? error) })
+      }
+    }
+    for (const job of latest.jobs) {
+      job.state = deriveJobStateSummary(job, latest.occurrences, resolvedAt)
+    }
+    fencesRemaining = Object.keys(latest.fences).length
+    return { value: { results } }
+    }))
+  } catch (error) {
+    // Same committed-receipt discipline as reconcileOccurrence above: the
+    // atomic commit may be durable even when its acknowledgement is lost.
+    // Replay the committed results instead of surfacing an error whose only
+    // safe retry is per-item already-settled (settle-once preserved).
+    if (error?.mutationOutcome !== 'committed' || !error.committedValue) throw error
+    value = error.committedValue
+  }
+  results = value.results
+  for (const result of results) {
+    if (result.outcome !== 'settled') continue
+    try {
+      const evidenceStatus = await store.appendRunEvent({
+        ts: resolvedAt, action: 'late_settlement', occurrenceId: result.occurrenceId,
+        runId: settlements.find((target) => target.occurrenceId === result.occurrenceId)?.runId,
+        resolvedTo: result.resolvedTo, basis: 'policy-auto-reconcile',
+        operatorIdentity: identity, jobId: result.jobId,
+        fenceRemaining: fencesRemaining,
+      })
+      result.receipt = evidenceStatus?.ok === false ? 'failed' : 'ok'
+    } catch (error) {
+      result.receipt = `failed:${String(error?.message ?? error).slice(0, 120)}`
+    }
+  }
+  return { results, fencesRemaining, identity }
+}

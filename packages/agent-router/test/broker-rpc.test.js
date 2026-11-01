@@ -183,10 +183,11 @@ test('broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress cont
   proc.activeIngressContext = turnB
   proc.executions.set('turn:B', { settled: false })
   const call = { capabilityId: 'scheduler', operation: 'list', args: {} }
-  await proc.onRpcRequest(BROKER_RPC_METHOD, call, { turnExecutionId: 'turn:A' })
+  const stale = await proc.onRpcRequest(BROKER_RPC_METHOD, call, { turnExecutionId: 'turn:A' })
+  assert.deepEqual(stale, { ok: false, error: { code: 'authoritative_reference_unavailable' } })
+  assert.equal(seen.length, 0, 'failed explicit correlation cannot become a generic gateway call')
   await proc.onRpcRequest(BROKER_RPC_METHOD, call, { turnExecutionId: 'turn:B' })
-  assert.equal(seen[0], undefined, 'turn-A origin token cannot borrow B')
-  assert.equal(seen[1], turnB, 'the exact B origin token receives B context')
+  assert.deepEqual(seen, [turnB], 'the exact live B origin token receives B context')
 })
 
 test('broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win)', async (t) => {

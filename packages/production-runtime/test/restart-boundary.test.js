@@ -75,6 +75,14 @@ test('A4: the runtime census names the epoch, the lifecycle slots and every unre
   assert.deepEqual(census.inflightOccurrences.map((o) => o.occurrenceId), ['occ:b1'])
 })
 
+test('restart boundary distinguishes the live runtime generation from an older persisted epoch', t => {
+  const { turnFile, jobsFile, router } = fixtureCensusInputs(t)
+  router.reconciliationRuntimeStatus = () => ({ generationId: 'epoch-live-new', health: 'healthy' })
+  const census = collectRuntimeRestartCensus({ turnRecoveryStore: turnFile, jobsStore: jobsFile, router })
+  assert.equal(census.epoch, 'epoch-live-new')
+  assert.equal(census.durableEpoch, 'epoch-now')
+})
+
 test('GUARD: taking the census and writing the boundary receipt never touches the recovery store', (t) => {
   const { turnFile, jobsFile, router } = fixtureCensusInputs(t)
   const before = readFileSync(turnFile)
@@ -121,4 +129,5 @@ test('compose stop persists the boundary receipt across the controlled shutdown 
   // Post-drain the in-flight census is empty: the controlled stop drained
   // through the existing dispose path (no fake processes were busy).
   assert.deepEqual(lines[1].census.inflightTurns, [])
+  assert.equal(lines[1].stopResult, 'stopped', 'the restart gate can distinguish completed cleanup from a finally-only receipt')
 })

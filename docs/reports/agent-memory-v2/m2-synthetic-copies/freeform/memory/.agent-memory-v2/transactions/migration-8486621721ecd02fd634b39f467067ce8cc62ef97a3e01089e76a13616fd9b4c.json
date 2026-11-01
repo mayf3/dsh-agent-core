@@ -1,0 +1,29 @@
+{
+  "schema": "AGENT_MEMORY_V2_MIGRATION_TRANSACTION",
+  "txid": "migration-8486621721ecd02fd634b39f467067ce8cc62ef97a3e01089e76a13616fd9b4c",
+  "phase": "CANDIDATE_ONLY",
+  "planStatus": "READ_ONLY_FORMAT",
+  "beforeSha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+  "afterSha256": null,
+  "candidateFile": null,
+  "operations": [
+    {
+      "type": "UPDATE",
+      "entryId": "missing",
+      "expectedEntrySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "patch": {
+        "content": "retained synthetic proposal"
+      }
+    }
+  ],
+  "reasons": [
+    "READ_ONLY_FORMAT"
+  ],
+  "changes": [],
+  "preservedSpanProof": [],
+  "sourceEvents": {
+    "state": "UNKNOWN",
+    "eventIds": []
+  },
+  "published": false
+}

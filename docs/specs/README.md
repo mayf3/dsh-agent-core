@@ -103,6 +103,12 @@ runtime change, credential change, or real HR dispatch.
 
 Other existing Specs remain at their stable filenames and keep their current lifecycle until explicitly reviewed.
 
+## Structure verifier implementation authority
+
+| Spec | Current lifecycle | Implementation authority | Authority role |
+|---|---|---|---|
+| [CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1](CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md) | accepted under Owner delegation; effective on main merge | contracts after accepted in implementation base; production apply none | verifier CLI coordinates, byte-preserving V1 registry validation, computed visible baseline-debt output, affected-surface candidate gating, fail-closed configuration, and regression acceptance for local `CODE_STRUCTURE_GUARDRAILS_V2` |
+
 ## Agent primary Workspace authority
 
 | Spec | Current lifecycle | Implementation authority | Authority role |
@@ -366,6 +372,18 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 | Spec | Current lifecycle | Implementation authority | Authority role |
 |---|---|---|---|
 | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V1` | accepted in this candidate; effective after merge | contracts; production apply none | execution trace read model, bounded continuation and escalation, push kick, Forum projection |
+| `AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` | accepted in candidate; reviewed semantic head `599107b`; effective after both companion Specs merge | contracts; production apply none | one immutable same-Domain governance child per open Assistance case, distinct child-terminal Owner review wake, explicit evidence-bound resolve, and existing exact same-visit resume |
+| `AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V1` | superseded by V2; historical acceptance retained | no longer current; historical authority metadata retained | preserved V1 contracts and acceptance provenance | none |
+| `AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V2` | superseded by V3; historically accepted by Codex root under mayf3 delegation at reviewed semantic head `8de41570`; paired Svc head `1ac73756`; repair review SHA `6b987dce…d49b37ce` | historical contracts; no longer current | changes only paired Svc contract/lifecycle/evidence mapping; Core behavior, WEC/WAE and READY-row remain unchanged |
+| [`AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3`](AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3.md) | accepted by Codex root under explicit mayf3 delegation at reviewed semantic head `b9d9d808e02d7b34ad44dd70597f505b9b947ef7`; paired Svc semantic head `ea8ec3f4fdb8d9e7b4b24c1136074dfb26f3e5e7`; independent review SHA `02e1da3a…bb1183`; lifecycle-only final-head recheck required before merge | contracts after both paired authority branches merge; production apply none | transparent passthrough of optional Svc `admissionObservation` in existing workflow create response; no request, Scheduler, `list_ready`, WEC/WAE, GCR, or READY-row change |
+| [`AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1`](AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1.md) | superseded by accepted V2; historical acceptance retained | historical contracts; no longer current | preserved V1 contracts and acceptance provenance | `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2` |
+| [`AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2`](AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md) | accepted under ROOT_OWNER_ACCEPTANCE.json after independent semantic review | contracts after paired lifecycle commit pair is in implementation base; production apply none | Core broker/execution companion for Svc-owned intake and review singletons, late real Context binding, and bounded case-read STOP projection | `AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V1` |
+| [`AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3`](AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3.md) | accepted as paired whole successor | contracts; production apply none | reuses existing WAE ledger/quiescence for intake/review; no second queue or attempt reset | `AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V2` |
+| [`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2`](AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2.md) | superseded by accepted V3; historical acceptance retained | historical contracts; no longer current | preserved V2 contracts and acceptance provenance | `AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3` |
+| [`AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3`](AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V3.md) | accepted under ROOT_OWNER_ACCEPTANCE.json after independent semantic review | contracts after paired lifecycle commit pair is in implementation base; production apply none | managed trusted routing through existing model-visible write operations, including late real Context binding; no parallel write tool | `AGENT_CORE_WORKFLOW_ASSIGNEE_TRANSITION_CAPABILITY_V2` |
+| [`AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3`](AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3.md) | accepted as paired whole successor | contracts; production apply none | existing WEC policy and bounded mechanisms for separate intake/review execution | `AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V2` |
+| [`AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V2`](AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V2.md) | accepted as paired whole successor | contracts; production apply none | opted-in intake/review singletons; ACC-GCR-003 acceptance row is the single explicitly declared inherited semantic difference | `AGENT_CORE_WORKFLOW_GOVERNANCE_CHILD_RETURN_V1` |
+| [`AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4`](AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V4.md) | accepted as paired whole successor | contracts; production apply none | preserves optional `admissionObservation` passthrough and READY-only projection; no Core wait ledger or new `list_ready` coordinates | `AGENT_CORE_WORKFLOW_PREREQUISITE_ORCHESTRATION_V3` |
 | `AGENT_CORE_DEVELOPMENT_EXECUTION_SURFACE_V1` | accepted 2026-09-24 at reviewed head `e3393e7c`; pending latest-main integration | contracts (production apply none) | shared backend-abstracted development_execute: system-owned execution ledger, repo/worktree authority, codex exec adapter (workspace-write, CODEX_HOME operator credential), failure matrix A-G |
 
 ## Fixed HR causal qualification completion seam
