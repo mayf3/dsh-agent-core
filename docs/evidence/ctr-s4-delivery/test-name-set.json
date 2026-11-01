@@ -1,0 +1,29 @@
+{
+  "base_head": "32f12a0717d5ca7ef07dbc63677213dd92c2a634",
+  "base_tests": 421,
+  "candidate_tests": 427,
+  "existing_names_missing": [],
+  "existing_name_set_diff": [],
+  "added_tests": [
+    "CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped",
+    "CTR-S2 frozen mapping: evidence -> decision table",
+    "CTR-S2 gate: ambiguous evidence leaves the occurrence for a human",
+    "CTR-S2 gate: one-shot `at` jobs are never auto-disposed",
+    "CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes",
+    "CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements"
+  ],
+  "normalization": "TAP escapes \\# in test names; unescape only that reporter encoding",
+  "baseline_command": "node --test --test-concurrency=1 packages/scheduler/test/*.test.js packages/scheduler/test/*/*.test.js",
+  "candidate_command": "node --test --test-reporter=tap packages/scheduler/test/*.test.js packages/scheduler/test/*/*.test.js",
+  "baseline_result": {
+    "pass": 421,
+    "fail": 0,
+    "rc": 0
+  },
+  "candidate_result": {
+    "pass": 427,
+    "fail": 0,
+    "rc": 0
+  },
+  "scope": "pure no-record repair only; runtime and mutation adapter paused"
+}

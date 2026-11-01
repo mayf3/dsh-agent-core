@@ -1,0 +1,56 @@
+✖ CTR-S2 frozen mapping: evidence -> decision table (0.663541ms)
+✔ CTR-S2 gate: one-shot `at` jobs are never auto-disposed (0.072167ms)
+✔ CTR-S2 gate: ambiguous evidence leaves the occurrence for a human (0.041ms)
+✔ CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements (0.407334ms)
+✔ CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped (0.135167ms)
+✖ CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes (0.150959ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 44.195792
+
+✖ failing tests:
+
+test at packages/scheduler/test/watchdog/auto-reconcile.test.js:42:1
+✖ CTR-S2 frozen mapping: evidence -> decision table (0.663541ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'failed' !== null
+  
+      at TestContext.<anonymous> (file:///private/tmp/ctr-s4-prep/packages/scheduler/test/watchdog/auto-reconcile.test.js:48:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'failed',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/watchdog/auto-reconcile.test.js:94:1
+✖ CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes (0.150959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'failed' !== null
+  
+      at TestContext.<anonymous> (file:///private/tmp/ctr-s4-prep/packages/scheduler/test/watchdog/auto-reconcile.test.js:99:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'failed',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

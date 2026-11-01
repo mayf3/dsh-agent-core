@@ -162,3 +162,91 @@ The intended source flag in the untransplanted implementation is
 This is not an instruction to enable it now. The final configuration-off rollback
 must be verified to stop further passes, including timer/lifecycle handling;
 that proof and the executable deployment/rollback steps remain outstanding.
+
+## Continuation: source and no-record rulings executed (2026-11-01 UTC)
+
+This section supersedes only the two pending questions above, not the historical
+observations. The current user mandate explicitly selects implementation source
+`825664850abce61e821eb505063241341d419907` and requires no registry record to stay
+UNKNOWN under D-009 §8.5. Source history has one change to auto-reconcile.js,
+at that implementation commit; `2d28545b` is the earlier Spec-only acceptance.
+Read-only source provenance and SHA-256 values are retained in
+[`source-provenance.json`](../evidence/ctr-s4-delivery/source-provenance.json).
+
+```text
+CONTINUATION_BASE_HEAD = 32f12a0717d5ca7ef07dbc63677213dd92c2a634
+AUTHORITY_ACTION = REUSE (missing-record zero-write; accepted target Contracts)
+PRIMARY_AUTHORITY = D-009 §8.5; SCHEDULER_TIMEOUT_OUTCOME_V3; CTR-RECON-001
+RELATED_AUTHORITY = prior D-009 scoped termination-policy task exception
+ROUTE_STAGE = IMPLEMENTATION (pure no-record repair only)
+PLAN_LEVEL = EXEC_PLAN (resume continuation above)
+ASSURANCE_LEVEL = DURABLE
+MUTATION_AUTHORIZATION = current explicit user task; isolated sole writer
+ISOLATED_WRITE_SURFACE = /tmp/ctr-s4-prep, ac-ctr-s4-runtime-prep
+IMPLEMENTATION_ALLOWED = YES (independent no-record repair)
+MERGE_READY = NO (remaining semantic failures below)
+OPERATION_ALLOWED = NO
+DONE_WHEN = reviewed no-record repair plus full safe wiring/package evidence
+EXPANSION_TRIGGER = any additional semantic failure; stop dependent work
+```
+
+The borrowed policy is placed at `src/watchdog/auto-reconcile.js` to keep
+Scheduler's already-full `src/` directory within its existing child count.
+Null and undefined now return `decision: null`, never a settlement target.
+This pure module is not exported or mounted: the production call path remains
+paused. The target's accepted V3/CTR-RECON Contracts govern the port; the absent
+resilience Spec was not imported with its contradictory no-record→failed rule
+and superseded D-007 references. No accepted stable ID was silently rewritten.
+
+Executed offline evidence in [`ctr-s4-delivery`](../evidence/ctr-s4-delivery/):
+
+- Intentional regression run against borrowed uncorrected policy: 4 pass / 2
+  fail, both expected no-record→failed mismatches (`no-record-red.tap`).
+- Corrected pure policy: 6 pass / 0 fail (`no-record-green.tap`), including
+  null/undefined UNKNOWN, fence retention and byte-identical input.
+- Clean continuation baseline, serial: 421 pass / 0 fail
+  (`scheduler-baseline.tap`, rc=0). The earlier r2 concurrent 419/2 observation
+  remains historical; this run does not establish its cause.
+- Current full default-concurrency Scheduler suite: 427 pass / 0 fail
+  (`scheduler-after.tap`, rc=0). All 421 pre-existing names retained, name-set
+  diff=∅; six added tests are enumerated in `test-name-set.json`. TAP's escaped
+  `\#` is normalized to the original test name, not a semantic rename.
+- Independent reviewer `/root/authority_review` reran the pure six-test suite
+  and found zero blockers for that bounded repair. Final-head binding follows
+  in the PR receipt; this is not full implementation or operation acceptance.
+
+### New concrete semantic stop: original wiring cannot be copied unchanged
+
+Two independent read-only reviewers inspected exact source `82566485`.
+The following are source observations/counterexamples, not executed production
+results. Per the user's explicit “语义性失败即停”, the dependent wiring/batch
+port is paused; a scoped continuation question is pending in the current session.
+
+1. **CONTRACT_VIOLATION — exact evidence identity.** Source runtime
+   `createTurnRecoveryEvidenceLookup` chooses the first session/caller substring
+   hit, stringifies structured caller correlation and discards identity/epoch.
+   A different run, foreign agent, stale epoch or duplicate occurrence-like
+   string can provide the chosen outcome. D-009's retained exact identity,
+   current-epoch and coherence gates and CTR-RECON-001 require zero writes.
+   Minimum closure: use the existing Router's read-only exact correlation seam;
+   reject missing, foreign, stale, pending and conflicting evidence.
+2. **CONTRACT_VIOLATION — termination policy provenance.** Source batch writes
+   `executionOutcome=failed` and generic terminal evidence for termination-only
+   without durable business UNKNOWN/policy provenance. It also revalidates only
+   runId/unresolved state: a changed one-shot definition can pass. The D-009
+   amendment requires business uncertainty, exact evidence, recurring-only and
+   future-natural-only behavior. Minimum closure: revalidate under the existing
+   mutation lock; persist exact evidence reference, machine actor, explicit
+   policy failure/business UNKNOWN and no retry/catch-up disposition.
+3. **CONCRETE_REGRESSION — lifecycle and receipt closure.** Source compose
+   discards the timer handle, so runtime.stop never stops that loop; clearing
+   the interval alone does not reject subsequent manual/in-flight ticks.
+   Source batch also lacks the existing committed-ack-loss recovery and ignores
+   appendRunEvent's failure result. Minimum closure: retain/stop/drain the mount
+   before Router disposal and preserve truthful transactional receipt status.
+
+Affected readiness: runtime wiring, deployable package, PR ready. These remain
+NO; default OFF is retained. No deployable artifact, enable/rollback acceptance,
+or production result is claimed. The prior watchdog whitelist work is reused.
+No deployment, restart, production write, flag enabling, shared-checkout edit,
+stopgap retirement, merge or auto-merge was performed.

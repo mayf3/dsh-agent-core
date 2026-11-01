@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: CTR-S2 frozen mapping: evidence -> decision table
+ok 1 - CTR-S2 frozen mapping: evidence -> decision table
+  ---
+  duration_ms: 0.349916
+  type: 'test'
+  ...
+# Subtest: CTR-S2 gate: one-shot `at` jobs are never auto-disposed
+ok 2 - CTR-S2 gate: one-shot `at` jobs are never auto-disposed
+  ---
+  duration_ms: 0.051
+  type: 'test'
+  ...
+# Subtest: CTR-S2 gate: ambiguous evidence leaves the occurrence for a human
+ok 3 - CTR-S2 gate: ambiguous evidence leaves the occurrence for a human
+  ---
+  duration_ms: 0.040958
+  type: 'test'
+  ...
+# Subtest: CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements
+ok 4 - CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements
+  ---
+  duration_ms: 0.709333
+  type: 'test'
+  ...
+# Subtest: CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped
+ok 5 - CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped
+  ---
+  duration_ms: 0.211208
+  type: 'test'
+  ...
+# Subtest: CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes
+ok 6 - CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes
+  ---
+  duration_ms: 0.372625
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 41.849

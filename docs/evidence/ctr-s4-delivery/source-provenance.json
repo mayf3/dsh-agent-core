@@ -1,0 +1,27 @@
+{
+  "source_commit": "825664850abce61e821eb505063241341d419907",
+  "spec_only_commit": "2d28545b3a17818e4a0b9481827fd56a18cd4c3c",
+  "source_read_method": "git show only; no source-checkout mutations",
+  "files": [
+    {
+      "path": "packages/scheduler/src/auto-reconcile.js",
+      "sha256": "63707dc0fd0b97d8a22c0ea1f93435270a0f1b56a11a0aaa3522e7972739251f",
+      "blob": "de1bc478aaa41f4278ab776e2515577871f1f67d"
+    },
+    {
+      "path": "packages/scheduler/test/auto-reconcile.test.js",
+      "sha256": "55663433f92cc8d301958492eded0e48dfe6c15103430c2121127a750670f7f1",
+      "blob": "2496bc2ca38b4432a2eab86e207c6b5cb5f38fbd"
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js",
+      "sha256": "bc654112e094eca8aadaea8534b82b769dd4ae11de208edb1edfa2da0812e3b6",
+      "blob": "f9711586d7106265ada1cc71bccf16ada0137283"
+    },
+    {
+      "path": "packages/scheduler/src/control.js",
+      "sha256": "8a0adeb1ed46092ce0bf25f9d3faf707bce47aaeeb359854743597d0fc96b2df",
+      "blob": "d0aba4339d2890ead8c804fc0e46a027c80f0189"
+    }
+  ]
+}

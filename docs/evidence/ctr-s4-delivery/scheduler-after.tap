@@ -1,0 +1,2578 @@
+TAP version 13
+# Subtest: ACC-020 accepted authority disposition remains intact
+ok 1 - ACC-020 accepted authority disposition remains intact
+  ---
+  duration_ms: 4.081
+  type: 'test'
+  ...
+# Subtest: ACC-032 CLI is control-only and exposes occurrence/fence reconciliation projection
+ok 2 - ACC-032 CLI is control-only and exposes occurrence/fence reconciliation projection
+  ---
+  duration_ms: 0.836417
+  type: 'test'
+  ...
+# Subtest: ACC-036 all seven frozen implementation preconditions remain present
+ok 3 - ACC-036 all seven frozen implementation preconditions remain present
+  ---
+  duration_ms: 1.289584
+  type: 'test'
+  ...
+# Subtest: ACC-037 import tooling remains dry-run by default and performs no deploy
+ok 4 - ACC-037 import tooling remains dry-run by default and performs no deploy
+  ---
+  duration_ms: 0.559
+  type: 'test'
+  ...
+# Subtest: 37/37 contract and acceptance manifests are complete and sequential
+ok 5 - 37/37 contract and acceptance manifests are complete and sequential
+  ---
+  duration_ms: 2.483875
+  type: 'test'
+  ...
+# Subtest: 23/23 fault matrix manifest is complete and mapped to acceptance
+ok 6 - 23/23 fault matrix manifest is complete and mapped to acceptance
+  ---
+  duration_ms: 0.192
+  type: 'test'
+  ...
+# Subtest: CLI add anchors every schedules for runtime eligibility
+ok 7 - CLI add anchors every schedules for runtime eligibility
+  ---
+  duration_ms: 162.374125
+  type: 'test'
+  ...
+# Subtest: ACC-032 list/runs are control-only occurrence and fence projections
+ok 8 - ACC-032 list/runs are control-only occurrence and fence projections
+  ---
+  duration_ms: 261.255667
+  type: 'test'
+  ...
+# Subtest: ACC-029/032 CLI reconcile uses exact run identity and durable operator evidence
+ok 9 - ACC-029/032 CLI reconcile uses exact run identity and durable operator evidence
+  ---
+  duration_ms: 398.1615
+  type: 'test'
+  ...
+# Subtest: CLI update merges omitted payload fields from locked-current definition
+ok 10 - CLI update merges omitted payload fields from locked-current definition
+  ---
+  duration_ms: 982.009958
+  type: 'test'
+  ...
+# Subtest: CLI_MUTATION_SEMANTICS_MATCH_BROKER: CLI add replays converge to already-applied singleton; conflict fails closed
+ok 11 - CLI_MUTATION_SEMANTICS_MATCH_BROKER: CLI add replays converge to already-applied singleton; conflict fails closed
+  ---
+  duration_ms: 452.230292
+  type: 'test'
+  ...
+# Subtest: CLI store guard: wrong-$HOME resolution fails loud when AGENTCORE_EXPECTED_STORE is frozen (TEST-10/CLI_STORE_TARGET)
+ok 12 - CLI store guard: wrong-$HOME resolution fails loud when AGENTCORE_EXPECTED_STORE is frozen (TEST-10/CLI_STORE_TARGET)
+  ---
+  duration_ms: 45.830875
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-1 admin-authorized source -> enabled target: exactly one Run executes as the target Agent
+ok 13 - CROSS-AGENT-1 admin-authorized source -> enabled target: exactly one Run executes as the target Agent
+  ---
+  duration_ms: 860.802958
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-2 cron job targets another Agent: every occurrence runs as the target with fresh sessions
+ok 14 - CROSS-AGENT-2 cron job targets another Agent: every occurrence runs as the target with fresh sessions
+  ---
+  duration_ms: 1417.835375
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-3 every job targets another Agent: fixed-rate occurrences run as the target Agent
+ok 15 - CROSS-AGENT-3 every job targets another Agent: fixed-rate occurrences run as the target Agent
+  ---
+  duration_ms: 1385.94925
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-4 at + deleteAfterRun: the cross-agent definition is removed after success and the occurrence evidence is retained
+ok 16 - CROSS-AGENT-4 at + deleteAfterRun: the cross-agent definition is removed after success and the occurrence evidence is retained
+  ---
+  duration_ms: 1028.429042
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-5 unknown target fails closed at admission: no Router entry, no occurrence record, job stays enabled
+ok 17 - CROSS-AGENT-5 unknown target fails closed at admission: no Router entry, no occurrence record, job stays enabled
+  ---
+  duration_ms: 834.196542
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-6 disabled target fails closed at admission (AGENT_DISABLED, pre-start)
+ok 18 - CROSS-AGENT-6 disabled target fails closed at admission (AGENT_DISABLED, pre-start)
+  ---
+  duration_ms: 846.348667
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-7 source with self-service scheduler access but no scheduler.manage:any cannot target another Agent
+ok 19 - CROSS-AGENT-7 source with self-service scheduler access but no scheduler.manage:any cannot target another Agent
+  ---
+  duration_ms: 493.854667
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-8 explicit targeting requires the admin scope even when the target equals the caller (least privilege)
+ok 20 - CROSS-AGENT-8 explicit targeting requires the admin scope even when the target equals the caller (least privilege)
+  ---
+  duration_ms: 467.366333
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-9 the target Run request carries ONLY the target identity — no source Principal/Grant/credential propagation
+ok 21 - CROSS-AGENT-9 the target Run request carries ONLY the target identity — no source Principal/Grant/credential propagation
+  ---
+  duration_ms: 977.225958
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-10 concurrent due ticks admit exactly ONE cross-agent occurrence (duplicate admission produces no second Run)
+ok 22 - CROSS-AGENT-10 concurrent due ticks admit exactly ONE cross-agent occurrence (duplicate admission produces no second Run)
+  ---
+  duration_ms: 861.746125
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-11 timeout without termination proof: outcome_unknown fences the cross-agent job and is never replayed
+ok 23 - CROSS-AGENT-11 timeout without termination proof: outcome_unknown fences the cross-agent job and is never replayed
+  ---
+  duration_ms: 1079.964416
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-12 proven pre-start target runtime failure is recorded as failed without fencing the job
+ok 24 - CROSS-AGENT-12 proven pre-start target runtime failure is recorded as failed without fencing the job
+  ---
+  duration_ms: 927.599208
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-13 missing target credential fails closed at the Router boundary: failed Run, no source fallback, no automatic replay
+ok 25 - CROSS-AGENT-13 missing target credential fails closed at the Router boundary: failed Run, no source fallback, no automatic replay
+  ---
+  duration_ms: 932.454291
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-14 run history links job -> occurrence -> target Agent -> Run and respects ownership boundaries
+ok 26 - CROSS-AGENT-14 run history links job -> occurrence -> target Agent -> Run and respects ownership boundaries
+  ---
+  duration_ms: 1127.614375
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-15 cross-agent mutations leave durable provenance: source operator, target Agent, jobId
+ok 27 - CROSS-AGENT-15 cross-agent mutations leave durable provenance: source operator, target Agent, jobId
+  ---
+  duration_ms: 723.649916
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-16 re-targeting via update is admin-gated and bumps the schedule revision (never mutates recorded occurrences)
+ok 28 - CROSS-AGENT-16 re-targeting via update is admin-gated and bumps the schedule revision (never mutates recorded occurrences)
+  ---
+  duration_ms: 540.801417
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-17 foreign update/enable/disable/remove each prove exactly (scheduler, scheduler.admin) once; denial mutates and audits nothing
+ok 29 - CROSS-AGENT-17 foreign update/enable/disable/remove each prove exactly (scheduler, scheduler.admin) once; denial mutates and audits nothing
+  ---
+  duration_ms: 953.235417
+  type: 'test'
+  ...
+# Subtest: CROSS-AGENT-18 list(all_agents=true) is fail-closed with zero Auth and zero store reads for every scope combination
+ok 30 - CROSS-AGENT-18 list(all_agents=true) is fail-closed with zero Auth and zero store reads for every scope combination
+  ---
+  duration_ms: 380.711
+  type: 'test'
+  ...
+# Subtest: ACC-006 two preloaded writers re-read under lock and preserve monotonic seq + projection union
+ok 31 - ACC-006 two preloaded writers re-read under lock and preserve monotonic seq + projection union
+  ---
+  duration_ms: 493.634458
+  type: 'test'
+  ...
+# Subtest: ACC-006 load read-heal-install runs after an already-started writer under the same lock
+ok 32 - ACC-006 load read-heal-install runs after an already-started writer under the same lock
+  ---
+  duration_ms: 490.314833
+  type: 'test'
+  ...
+# Subtest: ACC-006 replay heal detects a complete-seq projection with a missing record
+ok 33 - ACC-006 replay heal detects a complete-seq projection with a missing record
+  ---
+  duration_ms: 493.160958
+  type: 'test'
+  ...
+# Subtest: R7 query reads monthly projections directly and prunes unrelated months
+ok 34 - R7 query reads monthly projections directly and prunes unrelated months
+  ---
+  duration_ms: 349.250542
+  type: 'test'
+  ...
+# Subtest: ACC-001 one-shot deleteAfterRun: definition deleted, occurrence+run+snapshot retained in history
+ok 35 - ACC-001 one-shot deleteAfterRun: definition deleted, occurrence+run+snapshot retained in history
+  ---
+  duration_ms: 1478.767792
+  type: 'test'
+  ...
+# Subtest: ACC-002 recurring job: 3 independent occurrences/runs, upsert-merge on replay
+ok 36 - ACC-002 recurring job: 3 independent occurrences/runs, upsert-merge on replay
+  ---
+  duration_ms: 3456.2695
+  type: 'test'
+  ...
+# Subtest: ACC-003a failure and auto-retry: correlation shared, parent_run_id linked, retry_count derived
+ok 37 - ACC-003a failure and auto-retry: correlation shared, parent_run_id linked, retry_count derived
+  ---
+  duration_ms: 2649.634292
+  type: 'test'
+  ...
+# Subtest: ACC-003b timeout without termination proof → outcome_unknown + TIMEOUT classification
+ok 38 - ACC-003b timeout without termination proof → outcome_unknown + TIMEOUT classification
+  ---
+  duration_ms: 986.513833
+  type: 'test'
+  ...
+# [scheduler] WARN job delivery delivery failed: channel down
+# Subtest: ACC-003c delivery failure never rewrites execution success (DELIVERY_FAILED classification)
+ok 39 - ACC-003c delivery failure never rewrites execution success (DELIVERY_FAILED classification)
+  ---
+  duration_ms: 1303.5455
+  type: 'test'
+  ...
+# Subtest: ACC-006 crash between event append and projection commit heals on load
+ok 40 - ACC-006 crash between event append and projection commit heals on load
+  ---
+  duration_ms: 560.271416
+  type: 'test'
+  ...
+# Subtest: ACC-006 corrupt event lines are skipped fail-visible, evidence stream survives
+ok 41 - ACC-006 corrupt event lines are skipped fail-visible, evidence stream survives
+  ---
+  duration_ms: 280.110416
+  type: 'test'
+  ...
+# Subtest: ACC-007 job deletion (operator path) leaves the history directory byte-identical
+ok 42 - ACC-007 job deletion (operator path) leaves the history directory byte-identical
+  ---
+  duration_ms: 1564.794667
+  type: 'test'
+  ...
+# Subtest: ACC-008 store face: result / result_error_code persisted without interpretation
+ok 43 - ACC-008 store face: result / result_error_code persisted without interpretation
+  ---
+  duration_ms: 834.435417
+  type: 'test'
+  ...
+# Subtest: status_view / error_code derivation follows the frozen R3/R10 tables
+ok 44 - status_view / error_code derivation follows the frozen R3/R10 tables
+  ---
+  duration_ms: 0.337833
+  type: 'test'
+  ...
+# Subtest: queryRuns filters compose and cursor pagination walks in scheduled_at desc order
+ok 45 - queryRuns filters compose and cursor pagination walks in scheduled_at desc order
+  ---
+  duration_ms: 1656.918625
+  type: 'test'
+  ...
+# Subtest: applyRunFilters limit is capped at 200 store-side (the API layer rejects >200 as invalid_query)
+ok 46 - applyRunFilters limit is capped at 200 store-side (the API layer rejects >200 as invalid_query)
+  ---
+  duration_ms: 0.117292
+  type: 'test'
+  ...
+# Subtest: history store coexistence: jobs.json document shape and runs.jsonl untouched by history writes
+ok 47 - history store coexistence: jobs.json document shape and runs.jsonl untouched by history writes
+  ---
+  duration_ms: 1086.728542
+  type: 'test'
+  ...
+# Subtest: ACC-014 MIGRATION_NO_CATCH_UP strips execution state and disables definitions
+ok 48 - ACC-014 MIGRATION_NO_CATCH_UP strips execution state and disables definitions
+  ---
+  duration_ms: 11.30275
+  type: 'test'
+  ...
+# Subtest: ACC-015 exactly three missing-agent definitions are blocked without guessing
+ok 49 - ACC-015 exactly three missing-agent definitions are blocked without guessing
+  ---
+  duration_ms: 0.14725
+  type: 'test'
+  ...
+# Subtest: ACC-015 fixture evidence contains exactly three missing-agent definitions
+ok 50 - ACC-015 fixture evidence contains exactly three missing-agent definitions
+  ---
+  duration_ms: 12.209834
+  type: 'test'
+  ...
+# Subtest: ACC-016 stale one-shot is DO_NOT_IMPORT and never converted to now
+ok 51 - ACC-016 stale one-shot is DO_NOT_IMPORT and never converted to now
+  ---
+  duration_ms: 0.130583
+  type: 'test'
+  ...
+# Subtest: ACC-017 disabled jobs stay disabled and enabled source is restore-gated disabled
+ok 52 - ACC-017 disabled jobs stay disabled and enabled source is restore-gated disabled
+  ---
+  duration_ms: 0.195417
+  type: 'test'
+  ...
+# Subtest: ACC-018 three daemon/long-running definitions remain out of Scheduler
+ok 53 - ACC-018 three daemon/long-running definitions remain out of Scheduler
+  ---
+  duration_ms: 0.083916
+  type: 'test'
+  ...
+# Subtest: ACC-019/037 restore count is zero: write rejects enabled imported definitions
+ok 54 - ACC-019/037 restore count is zero: write rejects enabled imported definitions
+  ---
+  duration_ms: 3.4845
+  type: 'test'
+  ...
+# Subtest: ACC-019/037 durable restore marker blocks enable and update bypasses
+ok 55 - ACC-019/037 durable restore marker blocks enable and update bypasses
+  ---
+  duration_ms: 279.808
+  type: 'test'
+  ...
+# Subtest: ACC-031 legacy sessionTarget/sessionKey are stripped
+ok 56 - ACC-031 legacy sessionTarget/sessionKey are stripped
+  ---
+  duration_ms: 0.427417
+  type: 'test'
+  ...
+# Subtest: ACC-034 existing empty target refuses no-force inside lock
+ok 57 - ACC-034 existing empty target refuses no-force inside lock
+  ---
+  duration_ms: 187.8555
+  type: 'test'
+  ...
+# Subtest: ACC-034 force import preserves occurrence/fence/history authority verbatim
+ok 58 - ACC-034 force import preserves occurrence/fence/history authority verbatim
+  ---
+  duration_ms: 286.759792
+  type: 'test'
+  ...
+# Subtest: ACC-034 PAYLOAD_HASH_CONFLICT force import fails unsafe merge
+ok 59 - ACC-034 PAYLOAD_HASH_CONFLICT force import fails unsafe merge
+  ---
+  duration_ms: 229.474417
+  type: 'test'
+  ...
+# Subtest: ACC-034 force import rejects schedule/retry rebinding at the same revision
+ok 60 - ACC-034 force import rejects schedule/retry rebinding at the same revision
+  ---
+  duration_ms: 258.923458
+  type: 'test'
+  ...
+# Subtest: ACC-034 in-lock TOCTOU guard sees a competing writer
+ok 61 - ACC-034 in-lock TOCTOU guard sees a competing writer
+  ---
+  duration_ms: 199.599625
+  type: 'test'
+  ...
+# Subtest: create contract: new logical key -> created; same key + same definition -> already_applied with identical jobId (TEST-4 singleton)
+ok 62 - create contract: new logical key -> created; same key + same definition -> already_applied with identical jobId (TEST-4 singleton)
+  ---
+  duration_ms: 250.8935
+  type: 'test'
+  ...
+# Subtest: create contract: same key + differing payload -> LOGICAL_KEY_CONFLICT (fail closed, zero write, TEST-C)
+ok 63 - create contract: same key + differing payload -> LOGICAL_KEY_CONFLICT (fail closed, zero write, TEST-C)
+  ---
+  duration_ms: 177.674125
+  type: 'test'
+  ...
+# Subtest: create contract: display fields are OUTSIDE the projection (same key + renamed -> already_applied, no write)
+ok 64 - create contract: display fields are OUTSIDE the projection (same key + renamed -> already_applied, no write)
+  ---
+  duration_ms: 290.493083
+  type: 'test'
+  ...
+# Subtest: logicalKey is persisted and canonical read-back is EXACT (no name/fuzzy inference, §5.1.5)
+ok 65 - logicalKey is persisted and canonical read-back is EXACT (no name/fuzzy inference, §5.1.5)
+  ---
+  duration_ms: 175.628875
+  type: 'test'
+  ...
+# Subtest: keyless create keeps legacy behavior (engine-internal path unchanged)
+ok 66 - keyless create keeps legacy behavior (engine-internal path unchanged)
+  ---
+  duration_ms: 175.071667
+  type: 'test'
+  ...
+# Subtest: normalizeJob validates logicalKey (non-empty string, trimmed)
+ok 67 - normalizeJob validates logicalKey (non-empty string, trimmed)
+  ---
+  duration_ms: 0.36525
+  type: 'test'
+  ...
+# Subtest: expectedRevision compare-before-write: stale update rejected, newer state preserved (TEST-D)
+ok 68 - expectedRevision compare-before-write: stale update rejected, newer state preserved (TEST-D)
+  ---
+  duration_ms: 356.69
+  type: 'test'
+  ...
+# Subtest: expectedRevision guards enable/disable/remove too (zero write on stale)
+ok 69 - expectedRevision guards enable/disable/remove too (zero write on stale)
+  ---
+  duration_ms: 479.75475
+  type: 'test'
+  ...
+# Subtest: matching expectedRevision mutates (compare-before-write is not a veto)
+ok 70 - matching expectedRevision mutates (compare-before-write is not a veto)
+  ---
+  duration_ms: 267.872166
+  type: 'test'
+  ...
+# Subtest: createJobOp legacy signature keeps returning the public job
+ok 71 - createJobOp legacy signature keeps returning the public job
+  ---
+  duration_ms: 159.668333
+  type: 'test'
+  ...
+# Subtest: response-loss replay on a real store: atomic commit then duplicate attempt converges (TEST-A store half)
+ok 72 - response-loss replay on a real store: atomic commit then duplicate attempt converges (TEST-A store half)
+  ---
+  duration_ms: 348.919959
+  type: 'test'
+  ...
+# Subtest: ACC-023 identity derivation is deterministic per logical coordinates
+ok 73 - ACC-023 identity derivation is deterministic per logical coordinates
+  ---
+  duration_ms: 1.07725
+  type: 'test'
+  ...
+# Subtest: ACC-023 runId/idempotencyKey derive from occurrenceId; session is fresh + non-main
+ok 74 - ACC-023 runId/idempotencyKey derive from occurrenceId; session is fresh + non-main
+  ---
+  duration_ms: 0.256333
+  type: 'test'
+  ...
+# Subtest: ACC-023 natural/catchup jointly occupy the nominal slot space; retry occupies its predecessor
+ok 75 - ACC-023 natural/catchup jointly occupy the nominal slot space; retry occupies its predecessor
+  ---
+  duration_ms: 0.450791
+  type: 'test'
+  ...
+# Subtest: ACC-023 structured collision error is fail-loud and structured
+ok 76 - ACC-023 structured collision error is fail-loud and structured
+  ---
+  duration_ms: 0.280583
+  type: 'test'
+  ...
+# Subtest: ACC-006 state machine: legal transitions and hard rejections
+ok 77 - ACC-006 state machine: legal transitions and hard rejections
+  ---
+  duration_ms: 0.07325
+  type: 'test'
+  ...
+# Subtest: ACC-006 applyTransition appends history and rejects illegal transitions
+ok 78 - ACC-006 applyTransition appends history and rejects illegal transitions
+  ---
+  duration_ms: 0.312291
+  type: 'test'
+  ...
+# Subtest: ACC-006 late settlement leaves the unknown history auditable
+ok 79 - ACC-006 late settlement leaves the unknown history auditable
+  ---
+  duration_ms: 0.092458
+  type: 'test'
+  ...
+# Subtest: ACC-022 buildOccurrenceRecord carries every authority field (C-022)
+ok 80 - ACC-022 buildOccurrenceRecord carries every authority field (C-022)
+  ---
+  duration_ms: 0.261417
+  type: 'test'
+  ...
+# Subtest: ACC-022 corrupt occurrence records fail loud on validation (authority corruption)
+ok 81 - ACC-022 corrupt occurrence records fail loud on validation (authority corruption)
+  ---
+  duration_ms: 0.22275
+  type: 'test'
+  ...
+# Subtest: ACC-006/011 unknown-to-terminal history without trusted lateSettlement fails loud
+ok 82 - ACC-006/011 unknown-to-terminal history without trusted lateSettlement fails loud
+  ---
+  duration_ms: 0.177291
+  type: 'test'
+  ...
+# Subtest: ACC-004/022 failed authority requires a valid terminalEvidence kind
+ok 83 - ACC-004/022 failed authority requires a valid terminalEvidence kind
+  ---
+  duration_ms: 0.177458
+  type: 'test'
+  ...
+# Subtest: ACC-022 default timeout falls back to the safety timeout (C-025)
+ok 84 - ACC-022 default timeout falls back to the safety timeout (C-025)
+  ---
+  duration_ms: 0.086
+  type: 'test'
+  ...
+# Subtest: ACC-024 payloadHash: canonical JSON, key order irrelevant, delivery excluded
+ok 85 - ACC-024 payloadHash: canonical JSON, key order irrelevant, delivery excluded
+  ---
+  duration_ms: 0.083792
+  type: 'test'
+  ...
+# Subtest: ACC-024 canonicalJSON sorts keys recursively
+ok 86 - ACC-024 canonicalJSON sorts keys recursively
+  ---
+  duration_ms: 0.039167
+  type: 'test'
+  ...
+# Subtest: ACC-028 rebuildFences derives fences from unresolved unknowns only
+ok 87 - ACC-028 rebuildFences derives fences from unresolved unknowns only
+  ---
+  duration_ms: 0.128166
+  type: 'test'
+  ...
+# Subtest: ACC-028 isUnresolvedUnknown + terminal helpers
+ok 88 - ACC-028 isUnresolvedUnknown + terminal helpers
+  ---
+  duration_ms: 0.05325
+  type: 'test'
+  ...
+# Subtest: findOccurrenceByCoords locates records by logical coordinates
+ok 89 - findOccurrenceByCoords locates records by logical coordinates
+  ---
+  duration_ms: 0.103042
+  type: 'test'
+  ...
+# Subtest: RUNBOOK §3.1 backfill tool: offline --selftest passes on a stub store (Owner discipline)
+ok 90 - RUNBOOK §3.1 backfill tool: offline --selftest passes on a stub store (Owner discipline)
+  ---
+  duration_ms: 818.877958
+  type: 'test'
+  ...
+# Subtest: RUNBOOK §1 preflight tool: parser selftest passes (CI-safe, host-independent)
+ok 91 - RUNBOOK §1 preflight tool: parser selftest passes (CI-safe, host-independent)
+  ---
+  duration_ms: 103.416042
+  type: 'test'
+  ...
+# Subtest: ACC-007 PROCESS_EXIT_WITHOUT_TURN_ATTRIBUTION: SIGKILL recovers running to unknown without Router replay
+ok 92 - ACC-007 PROCESS_EXIT_WITHOUT_TURN_ATTRIBUTION: SIGKILL recovers running to unknown without Router replay
+  ---
+  duration_ms: 1435.377375
+  type: 'test'
+  ...
+# Subtest: ACC-027 CONCURRENT_CLI_DISABLE_DURING_ADMITTED_OCCURRENCE uses a separate CLI process
+ok 93 - ACC-027 CONCURRENT_CLI_DISABLE_DURING_ADMITTED_OCCURRENCE uses a separate CLI process
+  ---
+  duration_ms: 1229.940334
+  type: 'test'
+  ...
+# Subtest: RED prod-shape: failed occurrence at rev1 + schedule edit to rev2 + retry.auto must NOT kill the tick
+ok 94 - RED prod-shape: failed occurrence at rev1 + schedule edit to rev2 + retry.auto must NOT kill the tick
+  ---
+  duration_ms: 2154.700584
+  type: 'test'
+  ...
+# Subtest: stale-retry receipt is deduped per engine session (no per-tick spam)
+ok 95 - stale-retry receipt is deduped per engine session (no per-tick spam)
+  ---
+  duration_ms: 1087.105375
+  type: 'test'
+  ...
+# Subtest: unit: retryCandidate marks cross-revision predecessor stale (not mintable) and leaves same-revision untouched
+ok 96 - unit: retryCandidate marks cross-revision predecessor stale (not mintable) and leaves same-revision untouched
+  ---
+  duration_ms: 0.198208
+  type: 'test'
+  ...
+# Subtest: unit: computeNextRunAtMsV2 ignores a stale cross-revision retry (natural schedule owns the projection)
+ok 97 - unit: computeNextRunAtMsV2 ignores a stale cross-revision retry (natural schedule owns the projection)
+  ---
+  duration_ms: 0.123542
+  type: 'test'
+  ...
+# Subtest: reserve defense-in-depth: a proposed cross-revision retry candidate is refused with retry_stale_schedule_revision
+ok 98 - reserve defense-in-depth: a proposed cross-revision retry candidate is refused with retry_stale_schedule_revision
+  ---
+  duration_ms: 1274.060416
+  type: 'test'
+  ...
+# Subtest: cron: next run with explicit timezone
+ok 99 - cron: next run with explicit timezone
+  ---
+  duration_ms: 12.666291
+  type: 'test'
+  ...
+# Subtest: cron: occurrence exactly at now is not re-returned (same-second guard)
+ok 100 - cron: occurrence exactly at now is not re-returned (same-second guard)
+  ---
+  duration_ms: 0.6
+  type: 'test'
+  ...
+# Subtest: cron: previous run (missed-run catch-up basis)
+ok 101 - cron: previous run (missed-run catch-up basis)
+  ---
+  duration_ms: 0.461708
+  type: 'test'
+  ...
+# Subtest: cron: top-of-hour expression gets the 300s default stagger
+ok 102 - cron: top-of-hour expression gets the 300s default stagger
+  ---
+  duration_ms: 0.067125
+  type: 'test'
+  ...
+# Subtest: cron: staggered next run is a stable per-job offset inside the window
+ok 103 - cron: staggered next run is a stable per-job offset inside the window
+  ---
+  duration_ms: 1.243708
+  type: 'test'
+  ...
+# Subtest: at: absolute ISO instant
+ok 104 - at: absolute ISO instant
+  ---
+  duration_ms: 0.2405
+  type: 'test'
+  ...
+# Subtest: at: parse absolute + relative durations
+ok 105 - at: parse absolute + relative durations
+  ---
+  duration_ms: 0.179792
+  type: 'test'
+  ...
+# Subtest: every: anchored fixed-rate next run
+ok 106 - every: anchored fixed-rate next run
+  ---
+  duration_ms: 0.119458
+  type: 'test'
+  ...
+# Subtest: every: future anchor returns the anchor itself
+ok 107 - every: future anchor returns the anchor itself
+  ---
+  duration_ms: 0.076709
+  type: 'test'
+  ...
+# Subtest: HIST history hooks fire at the engine lifecycle boundaries (reserve/start/terminal/delivery)
+ok 108 - HIST history hooks fire at the engine lifecycle boundaries (reserve/start/terminal/delivery)
+  ---
+  duration_ms: 1517.83425
+  type: 'test'
+  ...
+# Subtest: HIST pre-start rejection records AGENT_DISABLED error_code (R10)
+ok 109 - HIST pre-start rejection records AGENT_DISABLED error_code (R10)
+  ---
+  duration_ms: 1335.156833
+  type: 'test'
+  ...
+# Subtest: HIST restart sweep records outcome_unknown + fence event; late settlement records resolution
+ok 110 - HIST restart sweep records outcome_unknown + fence event; late settlement records resolution
+  ---
+  duration_ms: 1985.018875
+  type: 'test'
+  ...
+# Subtest: ACC-001 ACC-010 ACC-012 TIMEOUT_BEFORE_TURN_START: timeout without termination proof is outcome_unknown
+ok 111 - ACC-001 ACC-010 ACC-012 TIMEOUT_BEFORE_TURN_START: timeout without termination proof is outcome_unknown
+  ---
+  duration_ms: 812.816291
+  type: 'test'
+  ...
+# Subtest: ACC-001 ACC-010 ACC-012 TIMEOUT_DURING_ACTIVE_TURN: timeout without termination proof is outcome_unknown
+ok 112 - ACC-001 ACC-010 ACC-012 TIMEOUT_DURING_ACTIVE_TURN: timeout without termination proof is outcome_unknown
+  ---
+  duration_ms: 1063.844375
+  type: 'test'
+  ...
+# Subtest: ACC-002/003 OUTCOME_UNKNOWN_NO_RETRY + UNKNOWN_FENCES_LATER_SAME_JOB_OCCURRENCE
+ok 113 - ACC-002/003 OUTCOME_UNKNOWN_NO_RETRY + UNKNOWN_FENCES_LATER_SAME_JOB_OCCURRENCE
+  ---
+  duration_ms: 970.65175
+  type: 'test'
+  ...
+# Subtest: ACC-003/029 OPERATOR_RECONCILE_RESOLVES_FENCE + FENCE_RELEASE_NO_BACKLOG_REPLAY
+ok 114 - ACC-003/029 OPERATOR_RECONCILE_RESOLVES_FENCE + FENCE_RELEASE_NO_BACKLOG_REPLAY
+  ---
+  duration_ms: 1740.022333
+  type: 'test'
+  ...
+# [scheduler] WARN job 7cc1670f delivery failed: channel unavailable
+# Subtest: ACC-004 delivery failure never rewrites proven execution success
+ok 115 - ACC-004 delivery failure never rewrites proven execution success
+  ---
+  duration_ms: 1024.115458
+  type: 'test'
+  ...
+# Subtest: ACC-004 pre-start rejection is failed; post-start unproven carrier is unknown
+ok 116 - ACC-004 pre-start rejection is failed; post-start unproven carrier is unknown
+  ---
+  duration_ms: 2069.129333
+  type: 'test'
+  ...
+# Subtest: ACC-011 immediate unknown reconciliation evidence is observable and keyed
+ok 117 - ACC-011 immediate unknown reconciliation evidence is observable and keyed
+  ---
+  duration_ms: 886.766667
+  type: 'test'
+  ...
+# Subtest: ACC-005/008/026 CONCURRENT_DUE_TICKS_SAME_OCCURRENCE admits once
+ok 118 - ACC-005/008/026 CONCURRENT_DUE_TICKS_SAME_OCCURRENCE admits once
+  ---
+  duration_ms: 884.041042
+  type: 'test'
+  ...
+# Subtest: ACC-007 RESTART_AFTER_ADMITTED_BEFORE_ROUTER
+ok 119 - ACC-007 RESTART_AFTER_ADMITTED_BEFORE_ROUTER
+  ---
+  duration_ms: 999.351666
+  type: 'test'
+  ...
+# Subtest: ACC-007 RESTART_AFTER_ROUTER_BEFORE_RECEIPT / PROCESS_EXIT_WITHOUT_TURN_ATTRIBUTION
+ok 120 - ACC-007 RESTART_AFTER_ROUTER_BEFORE_RECEIPT / PROCESS_EXIT_WITHOUT_TURN_ATTRIBUTION
+  ---
+  duration_ms: 1072.095834
+  type: 'test'
+  ...
+# Subtest: ACC-007 live engine lease prevents recovery from sweeping a peer turn
+ok 121 - ACC-007 live engine lease prevents recovery from sweeping a peer turn
+  ---
+  duration_ms: 792.797791
+  type: 'test'
+  ...
+# Subtest: ACC-008/024 IDEMPOTENT_KEY_SAME_PAYLOAD_NO_SECOND_ENQUEUE and PAYLOAD_HASH_CONFLICT
+ok 122 - ACC-008/024 IDEMPOTENT_KEY_SAME_PAYLOAD_NO_SECOND_ENQUEUE and PAYLOAD_HASH_CONFLICT
+  ---
+  duration_ms: 875.711084
+  type: 'test'
+  ...
+# Subtest: ACC-026 stale pre-scan candidate cannot cross disable-to-enable activation boundary
+ok 123 - ACC-026 stale pre-scan candidate cannot cross disable-to-enable activation boundary
+  ---
+  duration_ms: 854.895
+  type: 'test'
+  ...
+# Subtest: ACC-009 ORDINARY_FAILED_RETRY_NEW_OCCURRENCE
+ok 124 - ACC-009 ORDINARY_FAILED_RETRY_NEW_OCCURRENCE
+  ---
+  duration_ms: 1029.137875
+  type: 'test'
+  ...
+# Subtest: ACC-011 LATE_SUCCESS_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+ok 125 - ACC-011 LATE_SUCCESS_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+  ---
+  duration_ms: 872.788208
+  type: 'test'
+  ...
+# Subtest: ACC-011 LATE_FAILURE_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+ok 126 - ACC-011 LATE_FAILURE_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+  ---
+  duration_ms: 707.531583
+  type: 'test'
+  ...
+# Subtest: ACC-011 LATE_EXTERNAL_SIDE_EFFECT_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+ok 127 - ACC-011 LATE_EXTERNAL_SIDE_EFFECT_AFTER_TIMEOUT: trusted exact-turn settlement resolves without re-admission
+  ---
+  duration_ms: 652.575792
+  type: 'test'
+  ...
+# Subtest: ACC-012 pre-admission queue time is excluded from persisted deadline
+ok 128 - ACC-012 pre-admission queue time is excluded from persisted deadline
+  ---
+  duration_ms: 862.90875
+  type: 'test'
+  ...
+# Subtest: ACC-012/025 mutation-lock wait is excluded from admittedAt/deadline
+ok 129 - ACC-012/025 mutation-lock wait is excluded from admittedAt/deadline
+  ---
+  duration_ms: 444.912125
+  type: 'test'
+  ...
+# Subtest: ACC-013/031 FRESH_SESSION_PER_OCCURRENCE uses distinct non-main sessions
+ok 130 - ACC-013/031 FRESH_SESSION_PER_OCCURRENCE uses distinct non-main sessions
+  ---
+  duration_ms: 673.761958
+  type: 'test'
+  ...
+# Subtest: ACC-025 execution deadline is durable from admittedAt
+ok 131 - ACC-025 execution deadline is durable from admittedAt
+  ---
+  duration_ms: 295.900958
+  type: 'test'
+  ...
+# Subtest: ACC-026/027 CONCURRENT_CLI_DISABLE_DURING_ADMITTED_OCCURRENCE preserves disable and outcome
+ok 132 - ACC-026/027 CONCURRENT_CLI_DISABLE_DURING_ADMITTED_OCCURRENCE preserves disable and outcome
+  ---
+  duration_ms: 340.393458
+  type: 'test'
+  ...
+# Subtest: ACC-027 deleted Job is not resurrected by occurrence writeback
+ok 133 - ACC-027 deleted Job is not resurrected by occurrence writeback
+  ---
+  duration_ms: 345.904542
+  type: 'test'
+  ...
+# Subtest: ACC-030 stale legacy summaries do not affect admission
+ok 134 - ACC-030 stale legacy summaries do not affect admission
+  ---
+  duration_ms: 302.613125
+  type: 'test'
+  ...
+# Subtest: ACC-032 runnable eligibility is checked before reserve and Router (C-SH-002: typed refusal, isolated)
+ok 135 - ACC-032 runnable eligibility is checked before reserve and Router (C-SH-002: typed refusal, isolated)
+  ---
+  duration_ms: 174.933292
+  type: 'test'
+  ...
+# Subtest: provenance: minimal non-secret source-intent field, same-Owner list visibility only
+ok 136 - provenance: minimal non-secret source-intent field, same-Owner list visibility only
+  ---
+  duration_ms: 384.395083
+  type: 'test'
+  ...
+# Subtest: gap A: identical projection from a DIFFERENT source never adopts the existing key binding
+ok 137 - gap A: identical projection from a DIFFERENT source never adopts the existing key binding
+  ---
+  duration_ms: 622.349542
+  type: 'test'
+  ...
+# Subtest: gap B: same source, different revision history under the same key conflicts
+ok 138 - gap B: same source, different revision history under the same key conflicts
+  ---
+  duration_ms: 833.61325
+  type: 'test'
+  ...
+# Subtest: same source identity + same revision CAS + matching projection still converges (already_applied)
+ok 139 - same source identity + same revision CAS + matching projection still converges (already_applied)
+  ---
+  duration_ms: 464.844709
+  type: 'test'
+  ...
+# Subtest: locked re-verify: a source change between the pre-read and the lock fails stale and never clones stale bytes
+ok 140 - locked re-verify: a source change between the pre-read and the lock fails stale and never clones stale bytes
+  ---
+  duration_ms: 448.989292
+  type: 'test'
+  ...
+# Subtest: the gap: create is always born enabled — clone_disabled is the only disabled-creation surface
+ok 141 - the gap: create is always born enabled — clone_disabled is the only disabled-creation surface
+  ---
+  duration_ms: 360.340291
+  type: 'test'
+  ...
+# Subtest: happy path: byte-preserving disabled clone, exact committed shape, zero message exposure
+ok 142 - happy path: byte-preserving disabled clone, exact committed shape, zero message exposure
+  ---
+  duration_ms: 361.597833
+  type: 'test'
+  ...
+# Subtest: new_name is optional: explicit name wins, default inherits the source display name
+ok 143 - new_name is optional: explicit name wins, default inherits the source display name
+  ---
+  duration_ms: 582.943
+  type: 'test'
+  ...
+# Subtest: foreign source is opaque even with a held admin proof; missing source is job_not_found
+ok 144 - foreign source is opaque even with a held admin proof; missing source is job_not_found
+  ---
+  duration_ms: 203.857917
+  type: 'test'
+  ...
+# Subtest: argument shape: new_logical_key and the exact two-field CAS are required
+ok 145 - argument shape: new_logical_key and the exact two-field CAS are required
+  ---
+  duration_ms: 419.552541
+  type: 'test'
+  ...
+# Subtest: elapsed one-shot is precisely rejected; future one-shot copies verbatim and stays disabled
+ok 146 - elapsed one-shot is precisely rejected; future one-shot copies verbatim and stays disabled
+  ---
+  duration_ms: 652.219834
+  type: 'test'
+  ...
+# Subtest: same-key retry converges to the original target with one job and an alreadyApplied audit mark
+ok 147 - same-key retry converges to the original target with one job and an alreadyApplied audit mark
+  ---
+  duration_ms: 526.460791
+  type: 'test'
+  ...
+# Subtest: source moved: stale CAS outranks dedup; fresh CAS against a changed source conflicts
+ok 148 - source moved: stale CAS outranks dedup; fresh CAS against a changed source conflicts
+  ---
+  duration_ms: 689.642958
+  type: 'test'
+  ...
+# Subtest: same key pre-bound to a different definition conflicts without touching that job
+ok 149 - same key pre-bound to a different definition conflicts without touching that job
+  ---
+  duration_ms: 466.436959
+  type: 'test'
+  ...
+# Subtest: concurrent same-key clones serialize to exactly one committed job
+ok 150 - concurrent same-key clones serialize to exactly one committed job
+  ---
+  duration_ms: 543.273875
+  type: 'test'
+  ...
+# Subtest: source UNKNOWN occurrence and fence survive the clone untouched; the target inherits none of it
+ok 151 - source UNKNOWN occurrence and fence survive the clone untouched; the target inherits none of it
+  ---
+  duration_ms: 524.571458
+  type: 'test'
+  ...
+# Subtest: cron definition clones verbatim (expr/tz preserved, target disabled with no next run)
+ok 152 - cron definition clones verbatim (expr/tz preserved, target disabled with no next run)
+  ---
+  duration_ms: 506.790708
+  type: 'test'
+  ...
+# Subtest: real engine tick: the disabled clone mints zero occurrences while the enabled source admits
+ok 153 - real engine tick: the disabled clone mints zero occurrences while the enabled source admits
+  ---
+  duration_ms: 1400.297416
+  type: 'test'
+  ...
+# Subtest: R1: no injected path + env absent -> the FIXED production default path is used (and it fail-closes like any source)
+ok 154 - R1: no injected path + env absent -> the FIXED production default path is used (and it fail-closes like any source)
+  ---
+  duration_ms: 296.636792
+  type: 'test'
+  ...
+# Subtest: R1b: default-path read failure -> FAIL_CLOSED, never inert (hermetic via throwing reader)
+ok 155 - R1b: default-path read failure -> FAIL_CLOSED, never inert (hermetic via throwing reader)
+  ---
+  duration_ms: 254.179833
+  type: 'test'
+  ...
+# Subtest: R2: fixed-style configured path MISSING -> disable FAIL_CLOSED (critical_inventory_unavailable), zero mutation
+ok 156 - R2: fixed-style configured path MISSING -> disable FAIL_CLOSED (critical_inventory_unavailable), zero mutation
+  ---
+  duration_ms: 492.757416
+  type: 'test'
+  ...
+# Subtest: R3: configured path MISSING -> remove FAIL_CLOSED, zero mutation
+ok 157 - R3: configured path MISSING -> remove FAIL_CLOSED, zero mutation
+  ---
+  duration_ms: 462.580417
+  type: 'test'
+  ...
+# Subtest: R4: explicit injected manifest -> exact logicalKey behavior (critical denies, non-critical allows)
+ok 158 - R4: explicit injected manifest -> exact logicalKey behavior (critical denies, non-critical allows)
+  ---
+  duration_ms: 793.580875
+  type: 'test'
+  ...
+# Subtest: T1b (identity, EXACT_LOGICAL_KEY_ONLY): case/whitespace variants of an inventory key are NOT critical
+ok 159 - T1b (identity, EXACT_LOGICAL_KEY_ONLY): case/whitespace variants of an inventory key are NOT critical
+  ---
+  duration_ms: 0.289708
+  type: 'test'
+  ...
+# Subtest: T2+T2a: self-owned CRITICAL disable AND remove -> FAIL_CLOSED, ZERO store mutation, durable sanitized denial evidence
+ok 160 - T2+T2a: self-owned CRITICAL disable AND remove -> FAIL_CLOSED, ZERO store mutation, durable sanitized denial evidence
+  ---
+  duration_ms: 614.69875
+  type: 'test'
+  ...
+# Subtest: T3+T3a: replay of denied disable/remove -> denied again, still zero mutation (idempotent refusal)
+ok 161 - T3+T3a: replay of denied disable/remove -> denied again, still zero mutation (idempotent refusal)
+  ---
+  duration_ms: 1035.336541
+  type: 'test'
+  ...
+# Subtest: T4: alternate identifiers cannot evade — resolution is exact-id only, and any resolved route hits the same persisted logicalKey
+ok 162 - T4: alternate identifiers cannot evade — resolution is exact-id only, and any resolved route hits the same persisted logicalKey
+  ---
+  duration_ms: 487.133125
+  type: 'test'
+  ...
+# Subtest: T5: foreign Agent targeting a critical job stays denied by existing ownership rules (unchanged)
+ok 163 - T5: foreign Agent targeting a critical job stays denied by existing ownership rules (unchanged)
+  ---
+  duration_ms: 388.553833
+  type: 'test'
+  ...
+# Subtest: T6/R8: operator CLI path (control-layer disableJobOp) keeps full critical-disable authority
+ok 164 - T6/R8: operator CLI path (control-layer disableJobOp) keeps full critical-disable authority
+  ---
+  duration_ms: 580.015042
+  type: 'test'
+  ...
+# Subtest: T7/R9: scheduler.manage:any (exact admin proof) disables a critical job via self-service — allowed, semantics unchanged
+ok 165 - T7/R9: scheduler.manage:any (exact admin proof) disables a critical job via self-service — allowed, semantics unchanged
+  ---
+  duration_ms: 627.545667
+  type: 'test'
+  ...
+# Subtest: T8: inventory malformed / unsupported version -> FAIL_CLOSED (critical_inventory_unavailable), even for non-critical jobs
+ok 166 - T8: inventory malformed / unsupported version -> FAIL_CLOSED (critical_inventory_unavailable), even for non-critical jobs
+  ---
+  duration_ms: 1761.919
+  type: 'test'
+  ...
+# Subtest: R5 (TOCTOU disable): unlocked snapshot non-critical -> locked current becomes critical -> DENIED, zero mutation (expected_revision omitted)
+ok 167 - R5 (TOCTOU disable): unlocked snapshot non-critical -> locked current becomes critical -> DENIED, zero mutation (expected_revision omitted)
+  ---
+  duration_ms: 419.046583
+  type: 'test'
+  ...
+# Subtest: R6 (TOCTOU remove): same race on remove -> DENIED, zero mutation
+ok 168 - R6 (TOCTOU remove): same race on remove -> DENIED, zero mutation
+  ---
+  duration_ms: 456.939459
+  type: 'test'
+  ...
+# Subtest: R7: concurrent denied requests -> both denied, zero mutation
+ok 169 - R7: concurrent denied requests -> both denied, zero mutation
+  ---
+  duration_ms: 564.02575
+  type: 'test'
+  ...
+# Subtest: T9: denial evidence is durable + sanitized (runs.jsonl carries whitelisted attribution only, zero payload bytes)
+ok 170 - T9: denial evidence is durable + sanitized (runs.jsonl carries whitelisted attribution only, zero payload bytes)
+  ---
+  duration_ms: 457.968459
+  type: 'test'
+  ...
+# Subtest: T10/R10: enable/list/runs/update zero regression — enable of a critical job by its owner stays ALLOWED (guard is disable/remove only)
+ok 171 - T10/R10: enable/list/runs/update zero regression — enable of a critical job by its owner stays ALLOWED (guard is disable/remove only)
+  ---
+  duration_ms: 709.666875
+  type: 'test'
+  ...
+# Subtest: parseCriticalInventory unit: rejects non-object/missing jobs/bad entries; accepts empty inventory
+ok 172 - parseCriticalInventory unit: rejects non-object/missing jobs/bad entries; accepts empty inventory
+  ---
+  duration_ms: 0.459542
+  type: 'test'
+  ...
+# Subtest: ZERO_STORE_MUTATION raw-bytes proof: denial leaves the store FILE byte-identical (mutateDoc abort leaves disk untouched)
+ok 173 - ZERO_STORE_MUTATION raw-bytes proof: denial leaves the store FILE byte-identical (mutateDoc abort leaves disk untouched)
+  ---
+  duration_ms: 527.432417
+  type: 'test'
+  ...
+# Subtest: ownership is rechecked inside the locked control mutation (TOCTOU fails closed)
+ok 174 - ownership is rechecked inside the locked control mutation (TOCTOU fails closed)
+  ---
+  duration_ms: 437.280875
+  type: 'test'
+  ...
+# Subtest: locked update preserves concurrently changed omitted fields and audits the exact preimage
+ok 175 - locked update preserves concurrently changed omitted fields and audits the exact preimage
+  ---
+  duration_ms: 522.679875
+  type: 'test'
+  ...
+# Subtest: live post-rename fault returns known committed projection and attempts one audit append
+ok 176 - live post-rename fault returns known committed projection and attempts one audit append
+  ---
+  duration_ms: 111.9345
+  type: 'test'
+  ...
+# Subtest: pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry
+ok 177 - pre-commit failure is known clean; uncertain commit failure is outcome-unknown with zero retry
+  ---
+  duration_ms: 691.633375
+  type: 'test'
+  ...
+# Subtest: audit append failure returns known committed result, logs sanitized coordinates, and does not retry
+ok 178 - audit append failure returns known committed result, logs sanitized coordinates, and does not retry
+  ---
+  duration_ms: 137.11625
+  type: 'test'
+  ...
+# Subtest: mutation audit is one sanitized append per committed mutation
+ok 179 - mutation audit is one sanitized append per committed mutation
+  ---
+  duration_ms: 784.216792
+  type: 'test'
+  ...
+# Subtest: A7/G-1: reconcileOccurrence converges to the committed receipt when the commit ack is lost
+ok 180 - A7/G-1: reconcileOccurrence converges to the committed receipt when the commit ack is lost
+  ---
+  duration_ms: 1225.818917
+  type: 'test'
+  ...
+# Subtest: A7/G-1: a genuine replay of a settled reconcile fails closed with no second write
+ok 181 - A7/G-1: a genuine replay of a settled reconcile fails closed with no second write
+  ---
+  duration_ms: 1319.729541
+  type: 'test'
+  ...
+# Subtest: A7/crash-restart: a dead engine running record is swept to outcome_unknown, fenced, and never replayed
+ok 182 - A7/crash-restart: a dead engine running record is swept to outcome_unknown, fenced, and never replayed
+  ---
+  duration_ms: 1344.436083
+  type: 'test'
+  ...
+# Subtest: A7/crash-restart: a settled occurrence survives restart immutable with no backlog replay
+ok 183 - A7/crash-restart: a settled occurrence survives restart immutable with no backlog replay
+  ---
+  duration_ms: 2350.174166
+  type: 'test'
+  ...
+# Subtest: F1 exhausted one-shot chain on a superseded revision still earns the durable stale disposition
+ok 184 - F1 exhausted one-shot chain on a superseded revision still earns the durable stale disposition
+  ---
+  duration_ms: 1206.87325
+  type: 'test'
+  ...
+# Subtest: F2a a job-local retry admission failure is isolated and durably receipted on the retry coordinate
+ok 185 - F2a a job-local retry admission failure is isolated and durably receipted on the retry coordinate
+  ---
+  duration_ms: 1776.224208
+  type: 'test'
+  ...
+# Subtest: F2b a global-fatal failure with a pending retry leaves the retry explainable too
+ok 186 - F2b a global-fatal failure with a pending retry leaves the retry explainable too
+  ---
+  duration_ms: 1365.441542
+  type: 'test'
+  ...
+# Subtest: F2c a refused retry candidate receipts ADMISSION_REJECTED on the retry coordinate
+ok 187 - F2c a refused retry candidate receipts ADMISSION_REJECTED on the retry coordinate
+  ---
+  duration_ms: 1467.685541
+  type: 'test'
+  ...
+# Subtest: F4 a failed global_tick_blocked append is retried on the next tick; success writes exactly once
+ok 188 - F4 a failed global_tick_blocked append is retried on the next tick; success writes exactly once
+  ---
+  duration_ms: 594.119791
+  type: 'test'
+  ...
+# Subtest: T1 stale cross-revision auto-retry expires with durable disposition and never stops the tick
+ok 189 - T1 stale cross-revision auto-retry expires with durable disposition and never stops the tick
+  ---
+  duration_ms: 2096.537583
+  type: 'test'
+  ...
+# Subtest: T2a an unrunnable agent is receipted and isolated; other due jobs still mint
+ok 190 - T2a an unrunnable agent is receipted and isolated; other due jobs still mint
+  ---
+  duration_ms: 1711.215292
+  type: 'test'
+  ...
+# Subtest: T2b a job-local reserve throw is isolated: affected job receipted, remaining jobs mint, tick completes
+ok 191 - T2b a job-local reserve throw is isolated: affected job receipted, remaining jobs mint, tick completes
+  ---
+  duration_ms: 1630.951792
+  type: 'test'
+  ...
+# Subtest: T2c a global-fatal reserve failure stays fail-closed with a durable global_tick_blocked receipt
+ok 192 - T2c a global-fatal reserve failure stays fail-closed with a durable global_tick_blocked receipt
+  ---
+  duration_ms: 701.503042
+  type: 'test'
+  ...
+# Subtest: classifyAdmissionFailure binds the cross-revision poison to its own candidate and nothing else
+ok 193 - classifyAdmissionFailure binds the cross-revision poison to its own candidate and nothing else
+  ---
+  duration_ms: 0.243291
+  type: 'test'
+  ...
+# Subtest: T3 job_disposition diagnoses the live stale cross-revision retry from canonical state
+ok 194 - T3 job_disposition diagnoses the live stale cross-revision retry from canonical state
+  ---
+  duration_ms: 892.253292
+  type: 'test'
+  ...
+# Subtest: T3b job_disposition keeps the stale classification explainable after recovery
+ok 195 - T3b job_disposition keeps the stale classification explainable after recovery
+  ---
+  duration_ms: 1372.95125
+  type: 'test'
+  ...
+# Subtest: T4 diagnose -> reconcile_turn -> receipt readback through the formal tool surface
+ok 196 - T4 diagnose -> reconcile_turn -> receipt readback through the formal tool surface
+  ---
+  duration_ms: 336.131792
+  type: 'test'
+  ...
+# Subtest: T5 insufficient evidence fails closed: denial, HUMAN_REQUIRED diagnosis, zero mutation
+ok 197 - T5 insufficient evidence fails closed: denial, HUMAN_REQUIRED diagnosis, zero mutation
+  ---
+  duration_ms: 153.9095
+  type: 'test'
+  ...
+# Subtest: T6 recovery replay: same coordinates return the same receipt with zero second write
+ok 198 - T6 recovery replay: same coordinates return the same receipt with zero second write
+  ---
+  duration_ms: 308.060291
+  type: 'test'
+  ...
+# Subtest: F3 more than 500 later unrelated events cannot bury stale or global evidence
+ok 199 - F3 more than 500 later unrelated events cannot bury stale or global evidence
+  ---
+  duration_ms: 8200.276333
+  type: 'test'
+  ...
+# Subtest: F1 CAPABILITY_LIMIT: router restart evidence/correlation loss fails closed, never blind retry
+ok 200 - F1 CAPABILITY_LIMIT: router restart evidence/correlation loss fails closed, never blind retry
+  ---
+  duration_ms: 1054.33125
+  type: 'test'
+  ...
+# Subtest: F2 CAPABILITY_LIMIT: fence is per-Job — the same Agent's other Job runs and the interactive status answers
+ok 201 - F2 CAPABILITY_LIMIT: fence is per-Job — the same Agent's other Job runs and the interactive status answers
+  ---
+  duration_ms: 1614.881959
+  type: 'test'
+  ...
+# Subtest: F3 CAPABILITY_LIMIT: scheduler abort without actual termination is never settlement evidence
+ok 202 - F3 CAPABILITY_LIMIT: scheduler abort without actual termination is never settlement evidence
+  ---
+  duration_ms: 1118.659084
+  type: 'test'
+  ...
+# Subtest: F4 OPEN_RISK: 5k-terminal ledger — reconcile stays correct, cache holds one clone, ledger has no retention policy
+ok 203 - F4 OPEN_RISK: 5k-terminal ledger — reconcile stays correct, cache holds one clone, ledger has no retention policy
+  ---
+  duration_ms: 3132.225875
+  type: 'test'
+  ...
+# status over 5001 occurrences: 53.5ms
+# reconcile commit over 5001 occurrences: 402.6ms
+# doc bytes=4410168 heap growth after 25 force loads=55.6MB
+# Subtest: self-ops termination-only reconcile COMMITS on a real engine unknown (endedAt-bearing)
+ok 204 - self-ops termination-only reconcile COMMITS on a real engine unknown (endedAt-bearing)
+  ---
+  duration_ms: 1245.324958
+  type: 'test'
+  ...
+# Subtest: operator termination-only reconcile COMMITS on a real engine unknown (endedAt-bearing)
+ok 205 - operator termination-only reconcile COMMITS on a real engine unknown (endedAt-bearing)
+  ---
+  duration_ms: 1178.638125
+  type: 'test'
+  ...
+# Subtest: next future natural slot runs normally after a real-shape termination settlement
+ok 206 - next future natural slot runs normally after a real-shape termination settlement
+  ---
+  duration_ms: 1879.381459
+  type: 'test'
+  ...
+# Subtest: unproven occurrences stay rejected: pending Router disposition never reconciles
+ok 207 - unproven occurrences stay rejected: pending Router disposition never reconciles
+  ---
+  duration_ms: 1012.251292
+  type: 'test'
+  ...
+# Subtest: status exposes the canonical health projector through the caller-owned read seam
+ok 208 - status exposes the canonical health projector through the caller-owned read seam
+  ---
+  duration_ms: 172.606209
+  type: 'test'
+  ...
+# Subtest: status is bounded, self-only and secret-free
+ok 209 - status is bounded, self-only and secret-free
+  ---
+  duration_ms: 280.841959
+  type: 'test'
+  ...
+# Subtest: termination-only reconcile preserves unknown, releases only the settled fence, and is idempotent
+ok 210 - termination-only reconcile preserves unknown, releases only the settled fence, and is idempotent
+  ---
+  duration_ms: 565.8035
+  type: 'test'
+  ...
+# Subtest: deleted, retargeted and spoofed coordinates are opaque and byte-for-byte zero-write
+ok 211 - deleted, retargeted and spoofed coordinates are opaque and byte-for-byte zero-write
+  ---
+  duration_ms: 592.562542
+  type: 'test'
+  ...
+# Subtest: later trusted business settlement does not change the immutable termination receipt
+ok 212 - later trusted business settlement does not change the immutable termination receipt
+  ---
+  duration_ms: 527.531125
+  type: 'test'
+  ...
+# Subtest: negative Router disposition and foreign caller are byte-for-byte zero-write
+ok 213 - negative Router disposition and foreign caller are byte-for-byte zero-write
+  ---
+  duration_ms: 132.639625
+  type: 'test'
+  ...
+# Subtest: every non-positive Router disposition is closed and byte-for-byte zero-write
+ok 214 - every non-positive Router disposition is closed and byte-for-byte zero-write
+  ---
+  duration_ms: 160.835208
+  type: 'test'
+  ...
+# Subtest: one-shot definition is disabled in the settlement commit
+ok 215 - one-shot definition is disabled in the settlement commit
+  ---
+  duration_ms: 333.73925
+  type: 'test'
+  ...
+# Subtest: pre-commit reconcile crash is zero-write, including one-shot enable state
+ok 216 - pre-commit reconcile crash is zero-write, including one-shot enable state
+  ---
+  duration_ms: 254.54275
+  type: 'test'
+  ...
+# Subtest: audit append failure is observable without rewriting a committed receipt
+ok 217 - audit append failure is observable without rewriting a committed receipt
+  ---
+  duration_ms: 333.05125
+  type: 'test'
+  ...
+# Subtest: operator termination-only settlement is idempotent and self path cannot adopt it
+ok 218 - operator termination-only settlement is idempotent and self path cannot adopt it
+  ---
+  duration_ms: 557.688334
+  type: 'test'
+  ...
+# Subtest: RQ-009 self-ops consumes exact restart quiescence proof and preserves unknown business state
+ok 219 - RQ-009 self-ops consumes exact restart quiescence proof and preserves unknown business state
+  ---
+  duration_ms: 398.631292
+  type: 'test'
+  ...
+# Subtest: operator business outcome can settle after termination without changing its receipt snapshot
+ok 220 - operator business outcome can settle after termination without changing its receipt snapshot
+  ---
+  duration_ms: 479.847917
+  type: 'test'
+  ...
+# Subtest: late business evidence does not move the recurring operational termination boundary
+ok 221 - late business evidence does not move the recurring operational termination boundary
+  ---
+  duration_ms: 485.919542
+  type: 'test'
+  ...
+# Subtest: concurrent self reconciles converge to one settlement and one immutable receipt
+ok 222 - concurrent self reconciles converge to one settlement and one immutable receipt
+  ---
+  duration_ms: 404.910416
+  type: 'test'
+  ...
+# Subtest: concurrent self/operator termination converges to one authoritative settlement
+ok 223 - concurrent self/operator termination converges to one authoritative settlement
+  ---
+  duration_ms: 317.243916
+  type: 'test'
+  ...
+# Subtest: concurrent self and trusted late outcome serialize without conflicting authority
+ok 224 - concurrent self and trusted late outcome serialize without conflicting authority
+  ---
+  duration_ms: 315.503458
+  type: 'test'
+  ...
+# Subtest: post-commit response loss returns the exact receipt through later outcome and replay
+ok 225 - post-commit response loss returns the exact receipt through later outcome and replay
+  ---
+  duration_ms: 460.729
+  type: 'test'
+  ...
+# Subtest: V2 migration marks records legacy without inventing owner or request identity
+ok 226 - V2 migration marks records legacy without inventing owner or request identity
+  ---
+  duration_ms: 464.418875
+  type: 'test'
+  ...
+# Subtest: create returns the exact 11-field committed projection and resolves only trusted feishuChatId
+ok 227 - create returns the exact 11-field committed projection and resolves only trusted feishuChatId
+  ---
+  duration_ms: 248.2935
+  type: 'test'
+  ...
+# Subtest: all eight actions use capability id scheduler and ordinary self actions make zero grant requests
+ok 228 - all eight actions use capability id scheduler and ordinary self actions make zero grant requests
+  ---
+  duration_ms: 1110.00625
+  type: 'test'
+  ...
+# Subtest: trusted caller/process/turn context is mandatory and forged caller mismatch fails before store access
+ok 229 - trusted caller/process/turn context is mandatory and forged caller mismatch fails before store access
+  ---
+  duration_ms: 58.016042
+  type: 'test'
+  ...
+# Subtest: current_conversation fails closed for missing/non-Feishu/invalid active chat context
+ok 230 - current_conversation fails closed for missing/non-Feishu/invalid active chat context
+  ---
+  duration_ms: 56.374708
+  type: 'test'
+  ...
+# Subtest: explicit target/destination are admin-only even when values equal self/current destination
+ok 231 - explicit target/destination are admin-only even when values equal self/current destination
+  ---
+  duration_ms: 226.041208
+  type: 'test'
+  ...
+# Subtest: V2 proof matrix: foreign control is admin-gated, foreign history is audit-gated, self stays zero-Auth
+ok 232 - V2 proof matrix: foreign control is admin-gated, foreign history is audit-gated, self stays zero-Auth
+  ---
+  duration_ms: 479.816
+  type: 'test'
+  ...
+# Subtest: foreign update/enable/disable/remove each request exactly (scheduler, scheduler.admin) once; self update stays zero-Auth
+ok 233 - foreign update/enable/disable/remove each request exactly (scheduler, scheduler.admin) once; self update stays zero-Auth
+  ---
+  duration_ms: 1255.765708
+  type: 'test'
+  ...
+# Subtest: runs(all_agents=true) needs exactly (scheduler, scheduler.audit); admin alone reveals no history; audit alone mutates nothing
+ok 234 - runs(all_agents=true) needs exactly (scheduler, scheduler.audit); admin alone reveals no history; audit alone mutates nothing
+  ---
+  duration_ms: 894.068917
+  type: 'test'
+  ...
+# Subtest: list(all_agents=true) is denied before any store read with zero Auth requests regardless of held scopes
+ok 235 - list(all_agents=true) is denied before any store read with zero Auth requests regardless of held scopes
+  ---
+  duration_ms: 386.093
+  type: 'test'
+  ...
+# Subtest: auth denial/error/uncertainty fails closed with exactly one proof attempt and no fallback spelling
+ok 236 - auth denial/error/uncertainty fails closed with exactly one proof attempt and no fallback spelling
+  ---
+  duration_ms: 408.703708
+  type: 'test'
+  ...
+# Subtest: update uses updateJobOp semantics, preserves omitted fields, and returns committed normalized evidence
+ok 237 - update uses updateJobOp semantics, preserves omitted fields, and returns committed normalized evidence
+  ---
+  duration_ms: 362.297417
+  type: 'test'
+  ...
+# Subtest: fenced enabled update commits with nextRunAt null and does not clear or replay the fence
+ok 238 - fenced enabled update commits with nextRunAt null and does not clear or replay the fence
+  ---
+  duration_ms: 504.703209
+  type: 'test'
+  ...
+# Subtest: remove retains occurrence authority but ordinary self runs becomes not-found post-delete
+ok 239 - remove retains occurrence authority but ordinary self runs becomes not-found post-delete
+  ---
+  duration_ms: 463.345875
+  type: 'test'
+  ...
+# Subtest: past one-shot create/update fail before control mutation
+ok 240 - past one-shot create/update fail before control mutation
+  ---
+  duration_ms: 257.128167
+  type: 'test'
+  ...
+# Subtest: CTR-SCT-003: frozen disposition table over persisted occurrence fields
+ok 241 - CTR-SCT-003: frozen disposition table over persisted occurrence fields
+  ---
+  duration_ms: 0.662042
+  type: 'test'
+  ...
+# Subtest: CTR-SCT-004: projection exposes sessionId + disposition; not_created hides the session id entirely
+ok 242 - CTR-SCT-004: projection exposes sessionId + disposition; not_created hides the session id entirely
+  ---
+  duration_ms: 0.147083
+  type: 'test'
+  ...
+# Subtest: CTR-SCT-004: the additive tail keeps every pre-existing projection field
+ok 243 - CTR-SCT-004: the additive tail keeps every pre-existing projection field
+  ---
+  duration_ms: 0.09425
+  type: 'test'
+  ...
+# Subtest: SIGKILL_LOCK_WINDOW_REPRODUCED: identity-less artifact has no mechanical recovery and is never seized
+ok 244 - SIGKILL_LOCK_WINDOW_REPRODUCED: identity-less artifact has no mechanical recovery and is never seized
+  ---
+  duration_ms: 828.896875
+  type: 'test'
+  ...
+# Subtest: SIGKILL_LOCK_WINDOW_CLOSED: concurrent acquirers killed at random instants never leave an identity-less artifact
+ok 245 - SIGKILL_LOCK_WINDOW_CLOSED: concurrent acquirers killed at random instants never leave an identity-less artifact
+  ---
+  duration_ms: 2597.171458
+  type: 'test'
+  ...
+# Subtest: SIGKILL_EXACT_LOCK_WINDOW_SEPARATE_PROCESS: engine A killed at the lock window; engine B recovers as sole owner, no duplicate admission, no replay
+ok 246 - SIGKILL_EXACT_LOCK_WINDOW_SEPARATE_PROCESS: engine A killed at the lock window; engine B recovers as sole owner, no duplicate admission, no replay
+  ---
+  duration_ms: 3308.468458
+  type: 'test'
+  ...
+# Subtest: SINGLE_LIVE_ENGINE: a second engine fails loud and never admits; after the owner dies the next engine recovers
+ok 247 - SINGLE_LIVE_ENGINE: a second engine fails loud and never admits; after the owner dies the next engine recovers
+  ---
+  duration_ms: 1406.727458
+  type: 'test'
+  ...
+# Subtest: R1 MULTI-SLOT DOWNTIME: only the latest slot is caught up — older elapsed slots leave zero durable accounting
+ok 248 - R1 MULTI-SLOT DOWNTIME: only the latest slot is caught up — older elapsed slots leave zero durable accounting
+  ---
+  duration_ms: 1750.514875
+  type: 'test'
+  ...
+# Subtest: R2 LEASE LOSS: ticks return 0 silently — elapsed slots leave zero accounting and no engine-level evidence
+ok 249 - R2 LEASE LOSS: ticks return 0 silently — elapsed slots leave zero accounting and no engine-level evidence
+  ---
+  duration_ms: 636.93875
+  type: 'test'
+  ...
+# Subtest: R3 SIBLING POISON: an unrunnable agent is receipted and isolated — siblings mint, tick completes (supersedes the old fail-loud propagation per SCHEDULER_SELF_HEALING_FROM_FEISHU_V1 C-SH-002)
+ok 250 - R3 SIBLING POISON: an unrunnable agent is receipted and isolated — siblings mint, tick completes (supersedes the old fail-loud propagation per SCHEDULER_SELF_HEALING_FROM_FEISHU_V1 C-SH-002)
+  ---
+  duration_ms: 1225.69175
+  type: 'test'
+  ...
+# Subtest: R4 POLICY SWALLOW: every-terminal-hold silently drops the held slot while nextRun advances past it
+ok 251 - R4 POLICY SWALLOW: every-terminal-hold silently drops the held slot while nextRun advances past it
+  ---
+  duration_ms: 875.420167
+  type: 'test'
+  ...
+# Subtest: R5 RESERVE SILENT NULL: exact refusal reasons are threaded and durably receipted
+ok 252 - R5 RESERVE SILENT NULL: exact refusal reasons are threaded and durably receipted
+  ---
+  duration_ms: 1350.532667
+  type: 'test'
+  ...
+# Subtest: R6 NEXT_RUN projection is wall-clock derived — advances with zero slot accounting (contract defect axis)
+ok 253 - R6 NEXT_RUN projection is wall-clock derived — advances with zero slot accounting (contract defect axis)
+  ---
+  duration_ms: 942.509917
+  type: 'test'
+  ...
+# Subtest: A BASELINE (already correct): due slot normal execution leaves the occurrence as its accounting
+ok 254 - A BASELINE (already correct): due slot normal execution leaves the occurrence as its accounting
+  ---
+  duration_ms: 893.345416
+  type: 'test'
+  ...
+# Subtest: E DISPOSITION QUERY: after nextRun advanced past the held slot, the owning Agent reads the exact skip disposition
+ok 255 - E DISPOSITION QUERY: after nextRun advanced past the held slot, the owning Agent reads the exact skip disposition
+  ---
+  duration_ms: 1459.653625
+  type: 'test'
+  ...
+# Subtest: F OWNING-AGENT SURFACE: occurrence-accounted, missed-accounted, foreign-denied and NOT_PROVEN bounds
+ok 256 - F OWNING-AGENT SURFACE: occurrence-accounted, missed-accounted, foreign-denied and NOT_PROVEN bounds
+  ---
+  duration_ms: 1536.734875
+  type: 'test'
+  ...
+# Subtest: ACC-021 document layout {version:3, jobs, occurrences, fences}; single mutation authority
+ok 257 - ACC-021 document layout {version:3, jobs, occurrences, fences}; single mutation authority
+  ---
+  duration_ms: 139.013083
+  type: 'test'
+  ...
+# Subtest: ACC-021 corrupt document fails loud (never an empty store)
+ok 258 - ACC-021 corrupt document fails loud (never an empty store)
+  ---
+  duration_ms: 24.607375
+  type: 'test'
+  ...
+# Subtest: ACC-021 unsupported version fails loud
+ok 259 - ACC-021 unsupported version fails loud
+  ---
+  duration_ms: 46.002292
+  type: 'test'
+  ...
+# Subtest: ACC-021 malformed upgradeable v2 (missing collections) fails loud
+ok 260 - ACC-021 malformed upgradeable v2 (missing collections) fails loud
+  ---
+  duration_ms: 39.003917
+  type: 'test'
+  ...
+# Subtest: ACC-021 CORRUPT_OCCURRENCE_STORE_FAIL_LOUD (authority corruption, not warn-drop)
+ok 261 - ACC-021 CORRUPT_OCCURRENCE_STORE_FAIL_LOUD (authority corruption, not warn-drop)
+  ---
+  duration_ms: 84.748459
+  type: 'test'
+  ...
+# Subtest: ACC-021 runs.jsonl rotation keeps authoritative state in the document (not the log)
+ok 262 - ACC-021 runs.jsonl rotation keeps authoritative state in the document (not the log)
+  ---
+  duration_ms: 3012.885375
+  type: 'test'
+  ...
+# Subtest: ACC-035 evidence failure is observable but never an authority change; commit failure fails the transition
+ok 263 - ACC-035 evidence failure is observable but never an authority change; commit failure fails the transition
+  ---
+  duration_ms: 235.721
+  type: 'test'
+  ...
+# Subtest: ACC-026 concurrent mutations serialize: one record per slot, no torn admission view
+ok 264 - ACC-026 concurrent mutations serialize: one record per slot, no torn admission view
+  ---
+  duration_ms: 1055.008875
+  type: 'test'
+  ...
+# Subtest: ACC-026 same-process FIFO ordering: enqueued ops observe each other
+ok 265 - ACC-026 same-process FIFO ordering: enqueued ops observe each other
+  ---
+  duration_ms: 228.149834
+  type: 'test'
+  ...
+# Subtest: ACC-026 live long-running writer lock is never stolen as stale
+ok 266 - ACC-026 live long-running writer lock is never stolen as stale
+  ---
+  duration_ms: 260.74375
+  type: 'test'
+  ...
+# Subtest: ACC-026 dead lock owner is recovered without stealing a live token
+ok 267 - ACC-026 dead lock owner is recovered without stealing a live token
+  ---
+  duration_ms: 240.623167
+  type: 'test'
+  ...
+# Subtest: ACC-021 crashed dead-lock reaper fails loud instead of spinning forever
+ok 268 - ACC-021 crashed dead-lock reaper fails loud instead of spinning forever
+  ---
+  duration_ms: 272.269584
+  type: 'test'
+  ...
+# Subtest: ACC-026 concurrent dead-lock reapers cannot delete the replacement owner token
+ok 269 - ACC-026 concurrent dead-lock reapers cannot delete the replacement owner token
+  ---
+  duration_ms: 411.556541
+  type: 'test'
+  ...
+# Subtest: legacy mutate(jobsOnly) preserves occurrences/fences verbatim
+ok 270 - legacy mutate(jobsOnly) preserves occurrences/fences verbatim
+  ---
+  duration_ms: 312.057875
+  type: 'test'
+  ...
+# Subtest: ACC-033 STORE_UPGRADE_V1_TO_V3: in-lock upgrade, generation backup, strip report, no fabricated occurrences
+ok 271 - ACC-033 STORE_UPGRADE_V1_TO_V3: in-lock upgrade, generation backup, strip report, no fabricated occurrences
+  ---
+  duration_ms: 505.37675
+  type: 'test'
+  ...
+# Subtest: ACC-033 bare-array v1 documents upgrade too
+ok 272 - ACC-033 bare-array v1 documents upgrade too
+  ---
+  duration_ms: 237.145458
+  type: 'test'
+  ...
+# Subtest: C-038 a V2-labeled document carrying V3 evidence fails loud instead of relabeling
+ok 273 - C-038 a V2-labeled document carrying V3 evidence fails loud instead of relabeling
+  ---
+  duration_ms: 106.047833
+  type: 'test'
+  ...
+# Subtest: V2 -> V3 pre-commit crash preserves V2 authority and retry upgrades without fabricated identity
+ok 274 - V2 -> V3 pre-commit crash preserves V2 authority and retry upgrades without fabricated identity
+  ---
+  duration_ms: 390.173416
+  type: 'test'
+  ...
+# Subtest: V2 -> V3 post-commit response loss is recovered from committed V3 authority on restart
+ok 275 - V2 -> V3 post-commit response loss is recovered from committed V3 authority on restart
+  ---
+  duration_ms: 273.715959
+  type: 'test'
+  ...
+# Subtest: C-038 actual pinned V2 reader and writer fail loud on V3 without changing bytes
+ok 276 - C-038 actual pinned V2 reader and writer fail loud on V3 without changing bytes
+  ---
+  duration_ms: 319.094083
+  type: 'test'
+  ...
+# Subtest: ACC-033 read surfaces cannot bypass the locked one-time v1 upgrade
+ok 277 - ACC-033 read surfaces cannot bypass the locked one-time v1 upgrade
+  ---
+  duration_ms: 251.152958
+  type: 'test'
+  ...
+# Subtest: ACC-033 V3 commit permanently blocks rollback after same-transaction mutation
+ok 278 - ACC-033 V3 commit permanently blocks rollback after same-transaction mutation
+  ---
+  duration_ms: 259.568042
+  type: 'test'
+  ...
+# Subtest: ACC-033 no downgrade after V3 authority is committed
+ok 279 - ACC-033 no downgrade after V3 authority is committed
+  ---
+  duration_ms: 243.40525
+  type: 'test'
+  ...
+# Subtest: ACC-033 no-downgrade guard is independent of direct V3 Job mutation
+ok 280 - ACC-033 no-downgrade guard is independent of direct V3 Job mutation
+  ---
+  duration_ms: 228.06875
+  type: 'test'
+  ...
+# Subtest: ACC-033 no-downgrade guard wins even when a legacy backup is tampered
+ok 281 - ACC-033 no-downgrade guard wins even when a legacy backup is tampered
+  ---
+  duration_ms: 218.430375
+  type: 'test'
+  ...
+# Subtest: ACC-028 PROJECTION_REBUILD_FROM_OCCURRENCE_LEDGER: fences + state summaries rebuild identically, no admission
+ok 282 - ACC-028 PROJECTION_REBUILD_FROM_OCCURRENCE_LEDGER: fences + state summaries rebuild identically, no admission
+  ---
+  duration_ms: 199.663125
+  type: 'test'
+  ...
+# Subtest: ACC-030 admission inputs never read legacy state: normalizeState drops runningAtMs entirely
+ok 283 - ACC-030 admission inputs never read legacy state: normalizeState drops runningAtMs entirely
+  ---
+  duration_ms: 0.384416
+  type: 'test'
+  ...
+# Subtest: ACC-030 STUCK_RUN_MS 2h clear-and-rerun path does not exist in V2
+ok 284 - ACC-030 STUCK_RUN_MS 2h clear-and-rerun path does not exist in V2
+  ---
+  duration_ms: 0.13925
+  type: 'test'
+  ...
+# Subtest: CONTAINMENT: a fence-rejected shift (not_admitted after dispatch) settles failed — never a second outcome_unknown
+ok 285 - CONTAINMENT: a fence-rejected shift (not_admitted after dispatch) settles failed — never a second outcome_unknown
+  ---
+  duration_ms: 976.622125
+  type: 'test'
+  ...
+# Subtest: TERMINAL_PROOF A: an authoritative terminal RPC failure envelope (no terminationEvidence kind) settles failed
+ok 286 - TERMINAL_PROOF A: an authoritative terminal RPC failure envelope (no terminationEvidence kind) settles failed
+  ---
+  duration_ms: 887.737292
+  type: 'test'
+  ...
+# Subtest: TERMINATION_ONLY B: child_real_exit (no business outcome) => outcome_unknown + terminationSettlement + fence released
+ok 287 - TERMINATION_ONLY B: child_real_exit (no business outcome) => outcome_unknown + terminationSettlement + fence released
+  ---
+  duration_ms: 1103.357167
+  type: 'test'
+  ...
+# Subtest: TERMINATION_ONLY: no automatic retry after a termination-only settlement (even with explicit retry.auto)
+ok 288 - TERMINATION_ONLY: no automatic retry after a termination-only settlement (even with explicit retry.auto)
+  ---
+  duration_ms: 1163.726459
+  type: 'test'
+  ...
+# Subtest: RACE: a committed late business settlement wins — no termination settlement, no fabricated evidence
+ok 289 - RACE: a committed late business settlement wins — no termination settlement, no fabricated evidence
+  ---
+  duration_ms: 1175.6625
+  type: 'test'
+  ...
+# Subtest: EVIDENCE: a real settlement appends exactly one termination_settlement evidence; a replay adds none
+ok 290 - EVIDENCE: a real settlement appends exactly one termination_settlement evidence; a replay adds none
+  ---
+  duration_ms: 1203.959167
+  type: 'test'
+  ...
+# Subtest: TERMINATION_ONLY late: a late trusted termination readback settles a timed-out unknown and releases the fence
+ok 291 - TERMINATION_ONLY late: a late trusted termination readback settles a timed-out unknown and releases the fence
+  ---
+  duration_ms: 903.904417
+  type: 'test'
+  ...
+# Subtest: REGRESSION C: timeout without termination proof stays outcome_unknown and fences
+ok 292 - REGRESSION C: timeout without termination proof stays outcome_unknown and fences
+  ---
+  duration_ms: 757.95525
+  type: 'test'
+  ...
+# Subtest: CONTAINMENT E: one agent unknown does not reproduce into another Job on the same agent
+ok 293 - CONTAINMENT E: one agent unknown does not reproduce into another Job on the same agent
+  ---
+  duration_ms: 961.78225
+  type: 'test'
+  ...
+# Subtest: TERMINAL_PROOF: a late deterministic failure envelope resolves a timed-out unknown and releases the fence
+ok 294 - TERMINAL_PROOF: a late deterministic failure envelope resolves a timed-out unknown and releases the fence
+  ---
+  duration_ms: 664.200375
+  type: 'test'
+  ...
+# Subtest: T10 unchanged root incident remains Owner-silent forever, including after restart
+ok 295 - T10 unchanged root incident remains Owner-silent forever, including after restart
+  ---
+  duration_ms: 1.18425
+  type: 'test'
+  ...
+# Subtest: T25 root fingerprint binds exact full job and occurrence identity
+ok 296 - T25 root fingerprint binds exact full job and occurrence identity
+  ---
+  duration_ms: 0.09325
+  type: 'test'
+  ...
+# Subtest: T32 disappearance closes with one recovery; occurrence-bound root never reopens
+ok 297 - T32 disappearance closes with one recovery; occurrence-bound root never reopens
+  ---
+  duration_ms: 0.167417
+  type: 'test'
+  ...
+# Subtest: T25 a different occurrence on the same Job is a new root incident
+ok 298 - T25 a different occurrence on the same Job is a new root incident
+  ---
+  duration_ms: 0.109875
+  type: 'test'
+  ...
+# Subtest: CTR-S2 frozen mapping: evidence -> decision table
+ok 299 - CTR-S2 frozen mapping: evidence -> decision table
+  ---
+  duration_ms: 0.351583
+  type: 'test'
+  ...
+# Subtest: CTR-S2 gate: one-shot `at` jobs are never auto-disposed
+ok 300 - CTR-S2 gate: one-shot `at` jobs are never auto-disposed
+  ---
+  duration_ms: 0.057625
+  type: 'test'
+  ...
+# Subtest: CTR-S2 gate: ambiguous evidence leaves the occurrence for a human
+ok 301 - CTR-S2 gate: ambiguous evidence leaves the occurrence for a human
+  ---
+  duration_ms: 0.318084
+  type: 'test'
+  ...
+# Subtest: CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements
+ok 302 - CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements
+  ---
+  duration_ms: 0.474375
+  type: 'test'
+  ...
+# Subtest: CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped
+ok 303 - CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped
+  ---
+  duration_ms: 0.232958
+  type: 'test'
+  ...
+# Subtest: CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes
+ok 304 - CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes
+  ---
+  duration_ms: 0.593125
+  type: 'test'
+  ...
+# Subtest: T01 paired missed/block facts for six occurrences compile to exactly six root incidents
+ok 305 - T01 paired missed/block facts for six occurrences compile to exactly six root incidents
+  ---
+  duration_ms: 6.246625
+  type: 'test'
+  ...
+# Subtest: T25 root identity is closed and stable; no suffix/name/chat/time identity
+ok 306 - T25 root identity is closed and stable; no suffix/name/chat/time identity
+  ---
+  duration_ms: 0.197917
+  type: 'test'
+  ...
+# Subtest: T10/T21 unchanged incident across ticks/restart emits one deterministic opening only
+ok 307 - T10/T21 unchanged incident across ticks/restart emits one deterministic opening only
+  ---
+  duration_ms: 0.519667
+  type: 'test'
+  ...
+# Subtest: T21/T26 delivery readback updates the same outbox key without minting another intent
+ok 308 - T21/T26 delivery readback updates the same outbox key without minting another intent
+  ---
+  duration_ms: 0.696542
+  type: 'test'
+  ...
+# Subtest: T11/T32 acknowledgment and recovery closures are deterministic and mutually exclusive
+ok 309 - T11/T32 acknowledgment and recovery closures are deterministic and mutually exclusive
+  ---
+  duration_ms: 0.940417
+  type: 'test'
+  ...
+# Subtest: T25 occurrence incidents never reopen; recurrent control-plane roots increment episode
+ok 310 - T25 occurrence incidents never reopen; recurrent control-plane roots increment episode
+  ---
+  duration_ms: 0.528208
+  type: 'test'
+  ...
+# Subtest: T10 producer observation domains never close or reopen a peer incident
+ok 311 - T10 producer observation domains never close or reopen a peer incident
+  ---
+  duration_ms: 0.202958
+  type: 'test'
+  ...
+# Subtest: T21 producer and first authorized delivery binding are immutable across replay
+ok 312 - T21 producer and first authorized delivery binding are immutable across replay
+  ---
+  duration_ms: 0.219
+  type: 'test'
+  ...
+# Subtest: T27 legacy paired symptoms collapse without re-alert when any member has delivery proof
+ok 313 - T27 legacy paired symptoms collapse without re-alert when any member has delivery proof
+  ---
+  duration_ms: 0.248208
+  type: 'test'
+  ...
+# Subtest: T27 acknowledged and retired legacy roots migrate closed without fabricating alerts
+ok 314 - T27 acknowledged and retired legacy roots migrate closed without fabricating alerts
+  ---
+  duration_ms: 0.165959
+  type: 'test'
+  ...
+# Subtest: T27 migrated incidents retain the canonical producer for pending and recovery delivery
+ok 315 - T27 migrated incidents retain the canonical producer for pending and recovery delivery
+  ---
+  duration_ms: 0.136958
+  type: 'test'
+  ...
+# Subtest: T27/T28 ambiguous delivery evidence and malformed state fail loud without empty reset
+ok 316 - T27/T28 ambiguous delivery evidence and malformed state fail loud without empty reset
+  ---
+  duration_ms: 0.121708
+  type: 'test'
+  ...
+# Subtest: T-DP-1 runtime unhealthy subsumes mechanically-attributable occurrence failures, not unrelated ones
+ok 317 - T-DP-1 runtime unhealthy subsumes mechanically-attributable occurrence failures, not unrelated ones
+  ---
+  duration_ms: 8.067541
+  type: 'test'
+  ...
+# Subtest: T-DP-2 job CONSECUTIVE_FAILURE suppresses same-window child RUN_FAILED spam; first failure and post-recovery failures page
+ok 318 - T-DP-2 job CONSECUTIVE_FAILURE suppresses same-window child RUN_FAILED spam; first failure and post-recovery failures page
+  ---
+  duration_ms: 0.594417
+  type: 'test'
+  ...
+# Subtest: T-DP-3 same-occurrence RUN_STUCK + RUN_STUCK_OUTCOME_UNKNOWN coalesce to one OPEN and one RECOVERED
+ok 319 - T-DP-3 same-occurrence RUN_STUCK + RUN_STUCK_OUTCOME_UNKNOWN coalesce to one OPEN and one RECOVERED
+  ---
+  duration_ms: 0.4465
+  type: 'test'
+  ...
+# Subtest: T-DP-4 simultaneous pair transitions still yield exactly one OPEN and one RECOVERED, deterministically
+ok 320 - T-DP-4 simultaneous pair transitions still yield exactly one OPEN and one RECOVERED, deterministically
+  ---
+  duration_ms: 0.558
+  type: 'test'
+  ...
+# Subtest: T-DP-5 a NEW that already recovered before delivery is suppressed; only the truthful RECOVERED pages
+ok 321 - T-DP-5 a NEW that already recovered before delivery is suppressed; only the truthful RECOVERED pages
+  ---
+  duration_ms: 0.103958
+  type: 'test'
+  ...
+# Subtest: T-DP-6 restart/replay is idempotent and the projection never mutates durable state
+ok 322 - T-DP-6 restart/replay is idempotent and the projection never mutates durable state
+  ---
+  duration_ms: 113.198417
+  type: 'test'
+  ...
+# Subtest: T-DP-7 internal evidence stays complete: every fact, incident and transition survives projection-only suppression
+ok 323 - T-DP-7 internal evidence stays complete: every fact, incident and transition survives projection-only suppression
+  ---
+  duration_ms: 0.401167
+  type: 'test'
+  ...
+# Subtest: T-DP-8 user-facing text is human-readable and action-oriented; legacy intents keep the frozen wire format
+ok 324 - T-DP-8 user-facing text is human-readable and action-oriented; legacy intents keep the frozen wire format
+  ---
+  duration_ms: 0.210333
+  type: 'test'
+  ...
+# Subtest: T-DP-9 runtime outage subsumes the same-occurrence stuck pair: only the runtime incident pages
+ok 325 - T-DP-9 runtime outage subsumes the same-occurrence stuck pair: only the runtime incident pages
+  ---
+  duration_ms: 0.250084
+  type: 'test'
+  ...
+# Subtest: historical cross-episode delivery updates only its bound outbox intent
+ok 326 - historical cross-episode delivery updates only its bound outbox intent
+  ---
+  duration_ms: 2.966625
+  type: 'test'
+  ...
+# Subtest: historical transition delivery cannot overwrite the current revision in the same episode
+ok 327 - historical transition delivery cannot overwrite the current revision in the same episode
+  ---
+  duration_ms: 0.390208
+  type: 'test'
+  ...
+# Subtest: current logical transition delivery still synchronizes its incident record
+ok 328 - current logical transition delivery still synchronizes its incident record
+  ---
+  duration_ms: 0.396125
+  type: 'test'
+  ...
+# Subtest: T21/T26 ambiguous transport replay keeps the exact key, payload, and downstream idempotency coordinate
+ok 329 - T21/T26 ambiguous transport replay keeps the exact key, payload, and downstream idempotency coordinate
+  ---
+  duration_ms: 0.38675
+  type: 'test'
+  ...
+# Subtest: T26 attempt start is durable before I/O and delayed restart remains eligible for readback
+ok 330 - T26 attempt start is durable before I/O and delayed restart remains eligible for readback
+  ---
+  duration_ms: 0.230416
+  type: 'test'
+  ...
+# Subtest: T21 delivered intents are never retried; failed route keeps the same logical opening pending repair
+ok 331 - T21 delivered intents are never retried; failed route keeps the same logical opening pending repair
+  ---
+  duration_ms: 0.215792
+  type: 'test'
+  ...
+# Subtest: T26 provider readback recognizes only the exact durable notification marker
+ok 332 - T26 provider readback recognizes only the exact durable notification marker
+  ---
+  duration_ms: 0.070042
+  type: 'test'
+  ...
+# Subtest: T26 crash recovery sends only after complete provider readback proves absence
+ok 333 - T26 crash recovery sends only after complete provider readback proves absence
+  ---
+  duration_ms: 0.059167
+  type: 'test'
+  ...
+# Subtest: T26 transport adapter separates definitive rejection from ambiguous post-send loss
+ok 334 - T26 transport adapter separates definitive rejection from ambiguous post-send loss
+  ---
+  duration_ms: 0.123375
+  type: 'test'
+  ...
+# Subtest: T26 recovered runner delivery reads back before any resend and preserves ambiguous outcomes
+ok 335 - T26 recovered runner delivery reads back before any resend and preserves ambiguous outcomes
+  ---
+  duration_ms: 0.163292
+  type: 'test'
+  ...
+# Subtest: T21 W2 cannot claim a W1 outbox intent
+ok 336 - T21 W2 cannot claim a W1 outbox intent
+  ---
+  duration_ms: 0.061792
+  type: 'test'
+  ...
+# Subtest: T21 malformed attempted notification fails closed instead of disappearing from retry inspection
+ok 337 - T21 malformed attempted notification fails closed instead of disappearing from retry inspection
+  ---
+  duration_ms: 0.199
+  type: 'test'
+  ...
+# Subtest: T32 formal acknowledgment closes exactly once and consumes later recovery
+ok 338 - T32 formal acknowledgment closes exactly once and consumes later recovery
+  ---
+  duration_ms: 1.75125
+  type: 'test'
+  ...
+# Subtest: T10 failure without disposition opens once and has no elapsed-time reminders
+ok 339 - T10 failure without disposition opens once and has no elapsed-time reminders
+  ---
+  duration_ms: 0.459667
+  type: 'test'
+  ...
+# Subtest: T32 disposition present on first sight opens and acknowledges, then stays silent
+ok 340 - T32 disposition present on first sight opens and acknowledges, then stays silent
+  ---
+  duration_ms: 0.112417
+  type: 'test'
+  ...
+# Subtest: detector keeps durable failure fact and adds only passive disposition evidence
+ok 341 - detector keeps durable failure fact and adds only passive disposition evidence
+  ---
+  duration_ms: 0.5735
+  type: 'test'
+  ...
+# Subtest: new occurrence remains distinct after an acknowledged sibling
+ok 342 - new occurrence remains distinct after an acknowledged sibling
+  ---
+  duration_ms: 5.359
+  type: 'test'
+  ...
+# Subtest: failed-cutover replay preserves committed incidents and imports only newly proven legacy roots
+ok 343 - failed-cutover replay preserves committed incidents and imports only newly proven legacy roots
+  ---
+  duration_ms: 840.929792
+  type: 'test'
+  ...
+# Subtest: failed-cutover replay carries forward a committed root absent from a later snapshot
+ok 344 - failed-cutover replay carries forward a committed root absent from a later snapshot
+  ---
+  duration_ms: 785.479291
+  type: 'test'
+  ...
+# Subtest: failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state
+ok 345 - failed-cutover replay monotonically enriches a committed root without changing lifecycle or alert state
+  ---
+  duration_ms: 810.090375
+  type: 'test'
+  ...
+# Subtest: failed-cutover replay replaces volatile detail for one stable fingerprint without growing state
+ok 346 - failed-cutover replay replaces volatile detail for one stable fingerprint without growing state
+  ---
+  duration_ms: 660.388083
+  type: 'test'
+  ...
+# Subtest: failed-cutover replay stays bounded across repeated volatile generations
+ok 347 - failed-cutover replay stays bounded across repeated volatile generations
+  ---
+  duration_ms: 3893.368166
+  type: 'test'
+  ...
+# Subtest: incident durability rejects invalid lifecycle, missing delivery, orphan and duplicate transition identities
+ok 348 - incident durability rejects invalid lifecycle, missing delivery, orphan and duplicate transition identities
+  ---
+  duration_ms: 2.262292
+  type: 'test'
+  ...
+# Subtest: incident durability binds persisted delivery to canonical routing authority
+ok 349 - incident durability binds persisted delivery to canonical routing authority
+  ---
+  duration_ms: 1.360084
+  type: 'test'
+  ...
+# Subtest: delivery commit compares exact predecessor and rejects evidence-erasing regression to PENDING
+ok 350 - delivery commit compares exact predecessor and rejects evidence-erasing regression to PENDING
+  ---
+  duration_ms: 476.641292
+  type: 'test'
+  ...
+# Subtest: protected control tree rejects symlink and writable ancestors before any receipt write
+ok 351 - protected control tree rejects symlink and writable ancestors before any receipt write
+  ---
+  duration_ms: 48.480917
+  type: 'test'
+  ...
+# Subtest: T26 state/outbox commit is atomic and expected-hash guarded
+ok 352 - T26 state/outbox commit is atomic and expected-hash guarded
+  ---
+  duration_ms: 216.063
+  type: 'test'
+  ...
+# Subtest: T26 injected crash before rename preserves preimage bytes and leaves no accepted new state
+ok 353 - T26 injected crash before rename preserves preimage bytes and leaves no accepted new state
+  ---
+  duration_ms: 196.681875
+  type: 'test'
+  ...
+# Subtest: T28 unsafe mode, symlink and concurrent lock fail loud without resetting state
+ok 354 - T28 unsafe mode, symlink and concurrent lock fail loud without resetting state
+  ---
+  duration_ms: 212.898083
+  type: 'test'
+  ...
+# Subtest: T28 only a well-formed lock whose exact PID is proven dead may be reaped
+ok 355 - T28 only a well-formed lock whose exact PID is proven dead may be reaped
+  ---
+  duration_ms: 471.246
+  type: 'test'
+  ...
+# Subtest: T28 two processes reaping one stale lock cannot delete the replacement live lock or corrupt state
+ok 356 - T28 two processes reaping one stale lock cannot delete the replacement live lock or corrupt state
+  ---
+  duration_ms: 426.521417
+  type: 'test'
+  ...
+# Subtest: T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state
+ok 357 - T27 file migration freezes all sources, retains hash-addressed backups, and reads back exact state
+  ---
+  duration_ms: 450.737541
+  type: 'test'
+  ...
+# Subtest: T27 source drift aborts before incident-state commit
+ok 358 - T27 source drift aborts before incident-state commit
+  ---
+  duration_ms: 108.73025
+  type: 'test'
+  ...
+# Subtest: T27 migration derives delivery only from frozen evidence and rejects contradictions
+ok 359 - T27 migration derives delivery only from frozen evidence and rejects contradictions
+  ---
+  duration_ms: 74.656209
+  type: 'test'
+  ...
+# Subtest: T30 local ops sink is private, no-follow, locked, and append durable
+ok 360 - T30 local ops sink is private, no-follow, locked, and append durable
+  ---
+  duration_ms: 406.03875
+  type: 'test'
+  ...
+# Subtest: T27 formal migration entrypoint consumes only frozen protected source files
+ok 361 - T27 formal migration entrypoint consumes only frozen protected source files
+  ---
+  duration_ms: 575.324959
+  type: 'test'
+  ...
+# Subtest: T15/T16 complete census is exclusive and exposes the canonical row contract
+ok 362 - T15/T16 complete census is exclusive and exposes the canonical row contract
+  ---
+  duration_ms: 1.76525
+  type: 'test'
+  ...
+# Subtest: T18 missing credential blocks only its Job; invalid routing degrades only its Job
+ok 363 - T18 missing credential blocks only its Job; invalid routing degrades only its Job
+  ---
+  duration_ms: 0.22025
+  type: 'test'
+  ...
+# Subtest: T18 recent terminal failure is canonically degraded and exposes the W1 finding
+ok 364 - T18 recent terminal failure is canonically degraded and exposes the W1 finding
+  ---
+  duration_ms: 0.990959
+  type: 'test'
+  ...
+# Subtest: T18 failure fact never disappears from age or a later successful occurrence
+ok 365 - T18 failure fact never disappears from age or a later successful occurrence
+  ---
+  duration_ms: 0.280958
+  type: 'test'
+  ...
+# Subtest: T18 executionDeadlineAtMs is the canonical stuck boundary
+ok 366 - T18 executionDeadlineAtMs is the canonical stuck boundary
+  ---
+  duration_ms: 0.1525
+  type: 'test'
+  ...
+# Subtest: T10 canonical unknown projection compiles paired symptoms into one durable incident
+ok 367 - T10 canonical unknown projection compiles paired symptoms into one durable incident
+  ---
+  duration_ms: 0.447625
+  type: 'test'
+  ...
+# Subtest: T18 runtime failure degrades every Job but emits one global canonical finding
+ok 368 - T18 runtime failure degrades every Job but emits one global canonical finding
+  ---
+  duration_ms: 0.124584
+  type: 'test'
+  ...
+# Subtest: T19/T22 one quarantined Job leaves watchdog/readback and unrelated Jobs healthy
+ok 369 - T19/T22 one quarantined Job leaves watchdog/readback and unrelated Jobs healthy
+  ---
+  duration_ms: 0.135667
+  type: 'test'
+  ...
+# Subtest: T29 generation drift retries whole capture then succeeds without mixing generations
+ok 370 - T29 generation drift retries whole capture then succeeds without mixing generations
+  ---
+  duration_ms: 0.200583
+  type: 'test'
+  ...
+# Subtest: T29 third drift or untrusted token fails closed and never manufactures unknown=0
+ok 371 - T29 third drift or untrusted token fails closed and never manufactures unknown=0
+  ---
+  duration_ms: 0.327541
+  type: 'test'
+  ...
+# Subtest: T18 fence projection mismatch fails complete health closed
+ok 372 - T18 fence projection mismatch fails complete health closed
+  ---
+  duration_ms: 0.184542
+  type: 'test'
+  ...
+# Subtest: T18 malformed or inexact fence values and invalid cron fail health closed/degraded
+ok 373 - T18 malformed or inexact fence values and invalid cron fail health closed/degraded
+  ---
+  duration_ms: 0.228875
+  type: 'test'
+  ...
+# Subtest: T33 unsupported version, malformed Job and duplicate identities never project complete
+ok 374 - T33 unsupported version, malformed Job and duplicate identities never project complete
+  ---
+  duration_ms: 0.108333
+  type: 'test'
+  ...
+# Subtest: T16 exact acknowledged alert lifecycle is preserved in health
+ok 375 - T16 exact acknowledged alert lifecycle is preserved in health
+  ---
+  duration_ms: 0.068375
+  type: 'test'
+  ...
+# Subtest: T33 unreadable Job document returns null counts and empty rows
+ok 376 - T33 unreadable Job document returns null counts and empty rows
+  ---
+  duration_ms: 0.058292
+  type: 'test'
+  ...
+# Subtest: T33 readable Jobs plus missing secondary source keeps complete rows classified UNKNOWN
+ok 377 - T33 readable Jobs plus missing secondary source keeps complete rows classified UNKNOWN
+  ---
+  duration_ms: 0.054125
+  type: 'test'
+  ...
+# Subtest: T17 scheduler.read sees only own health while scheduler.audit sees all; auth result is required
+ok 378 - T17 scheduler.read sees only own health while scheduler.audit sees all; auth result is required
+  ---
+  duration_ms: 0.513166
+  type: 'test'
+  ...
+# Subtest: T02/T03/T04 one quarantined Job fences only itself, persists, and unrelated admission continues
+ok 379 - T02/T03/T04 one quarantined Job fences only itself, persists, and unrelated admission continues
+  ---
+  duration_ms: 2630.699667
+  type: 'test'
+  ...
+# Subtest: C11-R1 core: exact trusted late_completed readback self-heals the fenced occurrence without a prompt
+ok 380 - C11-R1 core: exact trusted late_completed readback self-heals the fenced occurrence without a prompt
+  ---
+  duration_ms: 2421.246625
+  type: 'test'
+  ...
+# Subtest: C11-R1 late_failed variant: the exact trusted failure settles the occurrence as failed
+ok 381 - C11-R1 late_failed variant: the exact trusted failure settles the occurrence as failed
+  ---
+  duration_ms: 1731.031291
+  type: 'test'
+  ...
+# [scheduler] WARN reconciliation readback failed for occ:e6148e30d35352da: router conflict — zero-write
+# Subtest: C11-R1 mismatch/conflict/pending/incomplete evidence is zero-write and stays fenced + HUMAN_REQUIRED
+ok 382 - C11-R1 mismatch/conflict/pending/incomplete evidence is zero-write and stays fenced + HUMAN_REQUIRED
+  ---
+  duration_ms: 4761.141125
+  type: 'test'
+  ...
+# Subtest: C11-R1 two unknowns on one Job: settling one contribution keeps the aggregate fence until the last settles
+ok 383 - C11-R1 two unknowns on one Job: settling one contribution keeps the aggregate fence until the last settles
+  ---
+  duration_ms: 979.082375
+  type: 'test'
+  ...
+# Subtest: C11-R1 restart/re-adoption: settlement is settle-once, no second writer, no duplicate occurrence
+ok 384 - C11-R1 restart/re-adoption: settlement is settle-once, no second writer, no duplicate occurrence
+  ---
+  duration_ms: 1054.531
+  type: 'test'
+  ...
+# Subtest: C11-R1 termination-only readback uses the accepted C-039 settlement path and the self_ops replay is identical
+ok 385 - C11-R1 termination-only readback uses the accepted C-039 settlement path and the self_ops replay is identical
+  ---
+  duration_ms: 385.476875
+  type: 'test'
+  ...
+# Subtest: C11-R1 one-shot semantics preserved: a settled late outcome disables the one-shot job, never replays it
+ok 386 - C11-R1 one-shot semantics preserved: a settled late outcome disables the one-shot job, never replays it
+  ---
+  duration_ms: 321.68325
+  type: 'test'
+  ...
+# Subtest: C11-R1 the readback consult is rate-limited per occurrence and STILL_IN_FLIGHT is zero-write
+ok 387 - C11-R1 the readback consult is rate-limited per occurrence and STILL_IN_FLIGHT is zero-write
+  ---
+  duration_ms: 316.358417
+  type: 'test'
+  ...
+# Subtest: T31 valid route creates one opening intent; invalid route remains durable, failed, and health-visible
+ok 388 - T31 valid route creates one opening intent; invalid route remains durable, failed, and health-visible
+  ---
+  duration_ms: 2.154958
+  type: 'test'
+  ...
+# Subtest: T34 executable path census has no retired watchdog, alert-state, or ambient-chat route
+ok 389 - T34 executable path census has no retired watchdog, alert-state, or ambient-chat route
+  ---
+  duration_ms: 144.435792
+  type: 'test'
+  ...
+# Subtest: T05 age/timeout alone never proves failure or fence release
+ok 390 - T05 age/timeout alone never proves failure or fence release
+  ---
+  duration_ms: 0.460042
+  type: 'test'
+  ...
+# Subtest: T06/T07 trusted exact business outcome wins success/failure and releases only its contribution
+ok 391 - T06/T07 trusted exact business outcome wins success/failure and releases only its contribution
+  ---
+  duration_ms: 0.111792
+  type: 'test'
+  ...
+# Subtest: T08 fresh exact live evidence retains the fence
+ok 392 - T08 fresh exact live evidence retains the fence
+  ---
+  duration_ms: 0.349292
+  type: 'test'
+  ...
+# Subtest: T09/T24 ambiguous stale conflicting or cross-occurrence evidence is quarantine and zero-write
+ok 393 - T09/T24 ambiguous stale conflicting or cross-occurrence evidence is quarantine and zero-write
+  ---
+  duration_ms: 0.132458
+  type: 'test'
+  ...
+# Subtest: T20/T24 exact termination-only dispatches to existing settlement seam and never classifier mutation
+ok 394 - T20/T24 exact termination-only dispatches to existing settlement seam and never classifier mutation
+  ---
+  duration_ms: 0.66775
+  type: 'test'
+  ...
+# Subtest: T24 every ordered evidence path dispatches at most one seam
+ok 395 - T24 every ordered evidence path dispatches at most one seam
+  ---
+  duration_ms: 0.128583
+  type: 'test'
+  ...
+# Subtest: T23 aggregate fence remains until every unresolved contribution for exact Job settles
+ok 396 - T23 aggregate fence remains until every unresolved contribution for exact Job settles
+  ---
+  duration_ms: 0.073625
+  type: 'test'
+  ...
+# Subtest: row 9: Router legal termination settlement auto-leads the Scheduler exact-occurrence settlement with an auditable no-replay receipt
+ok 397 - row 9: Router legal termination settlement auto-leads the Scheduler exact-occurrence settlement with an auditable no-replay receipt
+  ---
+  duration_ms: 1888.977584
+  type: 'test'
+  ...
+# Subtest: row 9: the exact business late settlement carries the same auditable no-replay receipt
+ok 398 - row 9: the exact business late settlement carries the same auditable no-replay receipt
+  ---
+  duration_ms: 1815.272541
+  type: 'test'
+  ...
+# Subtest: row 3: exact trusted late_failed routes through the \#417 V3 trusted-late-evidence path
+ok 399 - row 3: exact trusted late_failed routes through the \#417 V3 trusted-late-evidence path
+  ---
+  duration_ms: 1549.067166
+  type: 'test'
+  ...
+# Subtest: row 7: two unresolved handles — only the eligible one converges; the other stays fenced and HUMAN_REQUIRED
+ok 400 - row 7: two unresolved handles — only the eligible one converges; the other stays fenced and HUMAN_REQUIRED
+  ---
+  duration_ms: 1422.110584
+  type: 'test'
+  ...
+# Subtest: row 10: Router availability and Scheduler recurring-job availability are reported separately
+ok 401 - row 10: Router availability and Scheduler recurring-job availability are reported separately
+  ---
+  duration_ms: 753.696875
+  type: 'test'
+  ...
+# Subtest: row 9 edge: a settled ONE-SHOT late outcome receipts one_shot_disabled, never a recurring disposition
+ok 402 - row 9 edge: a settled ONE-SHOT late outcome receipts one_shot_disabled, never a recurring disposition
+  ---
+  duration_ms: 1114.371459
+  type: 'test'
+  ...
+# Subtest: T12 the three route classes resolve only through their accepted precedence
+ok 403 - T12 the three route classes resolve only through their accepted precedence
+  ---
+  duration_ms: 0.902084
+  type: 'test'
+  ...
+# Subtest: persisted control-plane binding must match canonical ops target and routing generation
+ok 404 - persisted control-plane binding must match canonical ops target and routing generation
+  ---
+  duration_ms: 0.594416
+  type: 'test'
+  ...
+# Subtest: T30 protected manifest reader uses no-follow identity checks and returns secret-safe provenance
+ok 405 - T30 protected manifest reader uses no-follow identity checks and returns secret-safe provenance
+  ---
+  duration_ms: 83.999666
+  type: 'test'
+  ...
+# Subtest: T30 production default parent boundary (/) walks real ancestors to the filesystem root
+ok 406 - T30 production default parent boundary (/) walks real ancestors to the filesystem root
+  ---
+  duration_ms: 79.425833
+  type: 'test'
+  ...
+# Subtest: T13 missing Job/owner target falls to canonical ops with durable marker, never job.delivery/session
+ok 407 - T13 missing Job/owner target falls to canonical ops with durable marker, never job.delivery/session
+  ---
+  duration_ms: 0.377375
+  type: 'test'
+  ...
+# Subtest: T14 missing canonical ops route fails loud into local sink without forbidden fallback
+ok 408 - T14 missing canonical ops route fails loud into local sink without forbidden fallback
+  ---
+  duration_ms: 0.129083
+  type: 'test'
+  ...
+# Subtest: T30 manifest schema is closed and rejects unsupported/empty/unknown routing data
+ok 409 - T30 manifest schema is closed and rejects unsupported/empty/unknown routing data
+  ---
+  duration_ms: 0.1985
+  type: 'test'
+  ...
+# Subtest: T30 protected route/incident paths fail closed for symlink, mode, owner, parent write, ACL
+ok 410 - T30 protected route/incident paths fail closed for symlink, mode, owner, parent write, ACL
+  ---
+  duration_ms: 0.117708
+  type: 'test'
+  ...
+# Subtest: T16/T30 routing readback is secret-safe and contains provenance only
+ok 411 - T16/T30 routing readback is secret-safe and contains provenance only
+  ---
+  duration_ms: 0.08975
+  type: 'test'
+  ...
+# Subtest: audit Blocker-2 regression: W1 and W2 templates share ONE state dir (mutual heartbeat must see its peer)
+ok 412 - audit Blocker-2 regression: W1 and W2 templates share ONE state dir (mutual heartbeat must see its peer)
+  ---
+  duration_ms: 0.704833
+  type: 'test'
+  ...
+# Subtest: audit: W1/W2 are DISTINCT failure domains (uid + label) and neither is scheduled by the scheduler
+ok 413 - audit: W1/W2 are DISTINCT failure domains (uid + label) and neither is scheduled by the scheduler
+  ---
+  duration_ms: 0.323291
+  type: 'test'
+  ...
+# Subtest: desired-state manifest schema validation (§5.4.2)
+ok 414 - desired-state manifest schema validation (§5.4.2)
+  ---
+  duration_ms: 0.757833
+  type: 'test'
+  ...
+# Subtest: TEST-5: critical job missing -> JOB_MISSING
+ok 415 - TEST-5: critical job missing -> JOB_MISSING
+  ---
+  duration_ms: 0.385792
+  type: 'test'
+  ...
+# Subtest: TEST-6: disabled / schedule / timezone / agent drift each detected; healthy job silent
+ok 416 - TEST-6: disabled / schedule / timezone / agent drift each detected; healthy job silent
+  ---
+  duration_ms: 0.236334
+  type: 'test'
+  ...
+# Subtest: TEST-7: expected occurrence absent past grace -> EXPECTED_RUN_MISSED; fresh nextRun silent
+ok 417 - TEST-7: expected occurrence absent past grace -> EXPECTED_RUN_MISSED; fresh nextRun silent
+  ---
+  duration_ms: 1.238459
+  type: 'test'
+  ...
+# Subtest: TEST-8 store half: failed run / stuck run / consecutive failures detected
+ok 418 - TEST-8 store half: failed run / stuck run / consecutive failures detected
+  ---
+  duration_ms: 0.51575
+  type: 'test'
+  ...
+# Subtest: TEST-8b: terminal failed stays RUN_FAILED-detectable regardless of lateSettlement basis (suppression withdrawn 2026-09-10 — Owner ruling NOT_AUTHORIZED_YET)
+ok 419 - TEST-8b: terminal failed stays RUN_FAILED-detectable regardless of lateSettlement basis (suppression withdrawn 2026-09-10 — Owner ruling NOT_AUTHORIZED_YET)
+  ---
+  duration_ms: 0.130875
+  type: 'test'
+  ...
+# Subtest: TEST-9: settled outcome_unknown admission block -> ADMISSION_BLOCKED_UNKNOWN per occurrence (2026-09-09 W1 structural blindness)
+ok 420 - TEST-9: settled outcome_unknown admission block -> ADMISSION_BLOCKED_UNKNOWN per occurrence (2026-09-09 W1 structural blindness)
+  ---
+  duration_ms: 10.276416
+  type: 'test'
+  ...
+# Subtest: TEST-10: undefined nextRunAtMs re-derives EXPECTED_RUN_MISSED from schedule+ledger instead of going blind
+ok 421 - TEST-10: undefined nextRunAtMs re-derives EXPECTED_RUN_MISSED from schedule+ledger instead of going blind
+  ---
+  duration_ms: 0.296958
+  type: 'test'
+  ...
+# Subtest: SCHEDULER_RUNTIME_UNHEALTHY from health probe (TEST-H store half); evidence staleness is not a finding
+ok 422 - SCHEDULER_RUNTIME_UNHEALTHY from health probe (TEST-H store half); evidence staleness is not a finding
+  ---
+  duration_ms: 0.075208
+  type: 'test'
+  ...
+# Subtest: TEST-G: W2 heartbeat staleness is the W1-death signal; fresh heartbeat silent
+ok 423 - TEST-G: W2 heartbeat staleness is the W1-death signal; fresh heartbeat silent
+  ---
+  duration_ms: 0.08275
+  type: 'test'
+  ...
+# Subtest: alert text carries coordinates and never message bodies
+ok 424 - alert text carries coordinates and never message bodies
+  ---
+  duration_ms: 0.090625
+  type: 'test'
+  ...
+# Subtest: audit Blocker-3: reconciliation evidence entries become Owner-visible findings; stale entries silent
+ok 425 - audit Blocker-3: reconciliation evidence entries become Owner-visible findings; stale entries silent
+  ---
+  duration_ms: 0.093125
+  type: 'test'
+  ...
+# Subtest: audit: desired-state runPolicy grace is plumbed into EXPECTED_RUN_MISSED
+ok 426 - audit: desired-state runPolicy grace is plumbed into EXPECTED_RUN_MISSED
+  ---
+  duration_ms: 0.085166
+  type: 'test'
+  ...
+# Subtest: audit FOLLOW_UP closure: credential provider degraded is Owner-visible (§5.6 self-probe)
+ok 427 - audit FOLLOW_UP closure: credential provider degraded is Owner-visible (§5.6 self-probe)
+  ---
+  duration_ms: 0.065333
+  type: 'test'
+  ...
+1..427
+# tests 427
+# suites 0
+# pass 427
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 21652.235541
