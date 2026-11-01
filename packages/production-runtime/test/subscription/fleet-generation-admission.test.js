@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
-import { createModelArtifactContext } from '../src/model-overrides.js'
+import { createModelArtifactContext } from '../../src/model-overrides.js'
 
 test('D14 unknown selected fleet generation refuses before route composition', t => {
   const root = mkdtempSync(join(tmpdir(), 'd14-admission-'))
@@ -24,12 +24,52 @@ test('D14 missing current in a configured fleet cannot fall back to an old expec
 // These tests use exact released bytes and synthetic qualification records.
 // They prove the admission mechanism, never the empirical compatibility gate.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { createFleetGenerationFixture, FIXTURE_HARNESS, RELEASE_FIXTURE_AVAILABLE } from '../../agent-provisioning/test/fleet-generation-fixture.js'
-import { canonicalDefaultGlobalRoute, loadAgentModelOverrides } from '../src/model-overrides.js'
-import { provisionExactProfilePlugin } from '../../agent-provisioning/src/index.js'
-import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
+import { createFleetGenerationFixture, FIXTURE_HARNESS, RELEASE_FIXTURE_AVAILABLE } from '../../../agent-provisioning/test/fleet-generation-fixture.js'
+import { canonicalDefaultGlobalRoute, loadAgentModelOverrides } from '../../src/model-overrides.js'
+import { provisionExactProfilePlugin } from '../../../agent-provisioning/src/index.js'
+import { canonicalRouteIdentity } from '../../../agent-router/src/route-chain.js'
+import { executeFleetSharedCodexMigration, executeFleetSharedCodexRollback } from '../../src/shared-codex-migration-executable.js'
 
 const exactReleaseAvailable = RELEASE_FIXTURE_AVAILABLE
+test('D14 NONCODEX-001 preserves independent subscriptions and refuses non-current generation identity', { skip: !exactReleaseAvailable }, t => {
+  const fx = createFleetGenerationFixture()
+  t.after(fx.cleanup)
+  const context = createModelArtifactContext(fx.deploymentRoot, {})
+  const file = join(fx.deploymentRoot, 'independent-subscription.json')
+  const config = plugin => ({ version: 3,
+    routeCatalog: { independent: { routeKind: 'subscription', provider: 'zai', model: 'glm-5.3', plugin, pluginVersion: '0.2.3', credentialReadiness: 'subscription-oauth' } },
+    overrides: { fixture: { model: { primary: 'independent', fallbacks: [] } } },
+  })
+  const resolve = artifactContext => loadAgentModelOverrides(file, ['fixture'], { deploymentRoot: fx.deploymentRoot, artifactContext })
+    .resolveChain('fixture', { provider: 'fixture-builtin', model: 'fixture-model' })
+  // Similar names are deliberately independent artifacts, not a Codex family.
+  for (const plugin of ['other-plugin', 'dsh-codex-extra', 'codex-subscription']) {
+    writeFileSync(file, JSON.stringify(config(plugin)))
+    assert.deepEqual(resolve(context), resolve(undefined))
+  }
+  // Even an unrelated route cannot accept a forged or no-longer-current carrier.
+  assert.throws(() => resolve({ ...context, fleetGeneration: { ...context.fleetGeneration, generationId: 'non-current' } }), { code: 'FLEET_GENERATION_INVALID' })
+  rmSync(join(fx.control, 'current'))
+  symlinkSync('non-current/node_modules', join(fx.control, 'current'))
+  assert.throws(() => resolve(context), { code: 'FLEET_GENERATION_INVALID' })
+})
+
+test('D14 spawn-only acceptance never admits 0.3.2 into incident recovery or rollback', t => {
+  const root = mkdtempSync(join(tmpdir(), 'd14-recovery-exclusion-'))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const deploymentRoot = join(root, 'deployment')
+  const canonicalCredentialPath = join(deploymentRoot, 'shared-credentials/openai-codex/.openai-codex-auth.json')
+  const config = { root, canonicalCredentialPath, sharedConfigPath: join(deploymentRoot, 'agent-model-overrides.json'),
+    artifact: { version: '0.3.2', sourceCommit: '7cfa139e111956a7193622afc734126b52d7bf07', artifactSha256: '8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2' },
+  }
+  // The real executable validates its separate exact recovery pin before any
+  // command, fence or credential access. Spawn qualification cannot replace it.
+  for (const operation of [executeFleetSharedCodexMigration, executeFleetSharedCodexRollback]) {
+    assert.throws(() => operation(config), { code: 'SHARED_CODEX_ARTIFACT_MISMATCH' })
+    assert.equal(existsSync(deploymentRoot), false)
+  }
+})
+
 test('D14 explicit generation migration admits the exact home and still runs all input guards', { skip: !exactReleaseAvailable }, t => {
   const fx = createFleetGenerationFixture()
   t.after(fx.cleanup)
