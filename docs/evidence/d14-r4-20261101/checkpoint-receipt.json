@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "observedAt": "2026-11-01T01:22:11.524648+00:00",
+  "sourceHead": "f08ef1a3b68d592712f5480388ff7d409e772064",
+  "acceptedAuthorityImport": "eb78b169e1659fdec06019148c71f78fea8f5640",
+  "productionSourceParent": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "remoteReadback": "f08ef1a3b68d592712f5480388ff7d409e772064",
+  "independentFinalHeadRecheck": {
+    "reviewer": "/root/d14_authority_audit",
+    "reviewedIntegrationHashes": "12/12_MATCH",
+    "committedEvidenceManifest": "45/45_MATCH_NO_EXTRA_OR_MISSING",
+    "result": "PASS_FOR_STOPPED_DRAFT_PUBLICATION_ONLY",
+    "ownGenerationModuleApproval": "EXCLUDED",
+    "semanticDeltaAfterReview": "NONE"
+  },
+  "status": "STOPPED_SEMANTIC_REGRESSION",
+  "frozenBlockerUnion": [
+    "D14-R4-NONCODEX-001"
+  ],
+  "implementationDelivery": "NO",
+  "sourceMergeReady": "NO",
+  "productionAdmission": "NO",
+  "operationAllowed": "NO",
+  "sourceDiffCheck": {
+    "exitCode": 0,
+    "output": ""
+  },
+  "fullDiffCheck": "Raw TAP evidence has original trailing whitespace; retained byte-exact, not reported PASS.",
+  "vendoredIntegrity": "PASS standard verifier; --require-accepted failed older status mirror on non-authority branch and is not claimed PASS.",
+  "structure": {
+    "exitCode": 1,
+    "result": "STRUCTURE_VIOLATION",
+    "rules": "V1 available in production base; no V2 conformance claim",
+    "head": "f08ef1a3b68d592712f5480388ff7d409e772064",
+    "totalViolations": 11,
+    "newDirectoryGrowth": [
+      "packages/agent-router/test24->25",
+      "packages/production-runtime/src28->29",
+      "packages/production-runtime/test35->36",
+      "scripts66->67"
+    ],
+    "rawPath": "/tmp/proddsh-d14-r4-evidence-20261101/stopped-structure.json",
+    "rawSha256": "e906dbec7c1b238f484d9134d89257523b0ff9d3daef6599958b26e749839fb3",
+    "disposition": "No source/path repairs after semantic stop; must resolve affected growth before future source-merge approval."
+  },
+  "limits": "This receipt documents the stopped source checkpoint. No further admission tests, implementation fix, deploy/restart or runtime business proof."
+}
