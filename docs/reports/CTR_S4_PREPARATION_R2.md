@@ -258,3 +258,47 @@ NO; default OFF is retained. No deployable artifact, enable/rollback acceptance,
 or production result is claimed. The prior watchdog whitelist work is reused.
 No deployment, restart, production write, flag enabling, shared-checkout edit,
 stopgap retirement, merge or auto-merge was performed.
+
+## r3 continuation mandate and bounded execution plan
+
+The current Owner task explicitly classifies the three wiring findings above as
+defects of this slice and authorizes their repair and offline delivery. This
+replaces their r2 pause, without changing Product Contracts or production scope.
+
+```text
+CONTINUATION_BASE_HEAD = 06fc0737ca83386daef343efeb421f4243407805
+AUTHORITY_ACTION = REUSE (accepted exact identity/atomicity/receipt Contracts)
+RELATED_AUTHORITY = existing task-specific D-009 termination-policy amendment
+ROUTE_STAGE = IMPLEMENTATION
+AUTHORITY_ACCEPTED_IN_BASE = YES (existing Contracts); NO (pending amendment)
+PLAN_LEVEL = EXEC_PLAN (continue this existing record)
+ASSURANCE_LEVEL = DURABLE (offline source preparation)
+MUTATION_AUTHORIZATION = current explicit Owner r3 task
+ISOLATED_WRITE_SURFACE = /tmp/ctr-s4-prep, ac-ctr-s4-runtime-prep
+IMPLEMENTATION_ALLOWED = YES (three bounded wiring repairs)
+OPERATION_ALLOWED = NO
+DONE_WHEN = three repairs/regressions; full offline evidence; PR603 ready; #417 readback
+EXPANSION_TRIGGER = additional semantic failure outside the three repair subjects
+```
+
+Execution sequence (each repair gets failing regression, repair, green result):
+
+1. Connect Router's existing read-only exact correlation query. Validate current
+   epoch, agent and structured occurrence/run/request identity; reject incomplete,
+   foreign, stale, pending and conflicting evidence. Retain no-record UNKNOWN.
+2. Add the batch adapter under Scheduler watchdog (same `mutateDoc` authority).
+   Replan/revalidate identity, definition and evidence inside its lock. Preserve
+   termination-only business UNKNOWN in the durable policy receipt, omit a
+   fabricated execution outcome, and exclude that policy settlement from retry.
+3. Retain the runtime loop in compose, stop/drain it before Router disposal, and
+   expose committed-ack-loss and audit append failure truthfully.
+4. Run pure policy, full Scheduler and runtime wiring tests; compare the original
+   421-name baseline and r2's 427 names with multiplicity. Attribute structure
+   rc=1 to exactly the existing 11 debts and require zero new violations.
+5. Independently review the bounded source delta and final receipt-only delta;
+   commit/push this branch, update PR603 and #417 with the final SHA, mark ready,
+   and read back both remote records. No merge, deploy, restart or enable.
+
+Model disposition: RETAIN the Router correlation authority, Scheduler mutation
+authority and existing receipts; replace only the borrowed unsafe lookup/batch
+and loop wiring. No second registry, executor or permanent fallback is added.

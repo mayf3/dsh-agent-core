@@ -22,7 +22,7 @@ export const OCCURRENCE_STATES = new Set(['admitted', 'running', 'succeeded', 'f
 export const TERMINAL_STATES = new Set(['succeeded', 'failed'])
 export const EXECUTION_OUTCOMES = new Set(['succeeded', 'failed'])
 export const DELIVERY_STATUSES = new Set(['delivered', 'not-delivered', 'not-requested', 'unknown'])
-export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile'])
+export const LATE_SETTLEMENT_BASES = new Set(['trusted-late-evidence', 'operator-reconcile', 'policy-auto-reconcile'])
 export const TERMINAL_EVIDENCE_KINDS = new Set([
   'pre-start-rejection', 'turn-terminal', 'late-settlement', 'operator-reconcile', 'termination-only',
 ])
@@ -217,7 +217,23 @@ export function validateOccurrenceRecord(record) {
     corrupt('invalid terminalEvidence authority')
   }
   if (record.state === 'failed' && record.terminalEvidence === undefined) corrupt('failed requires terminalEvidence authority')
-  if (TERMINAL_STATES.has(record.state) && record.executionOutcome !== record.state) corrupt('terminal state must equal executionOutcome')
+  const policyUnknown = record.lateSettlement?.basis === 'policy-auto-reconcile'
+    && record.lateSettlement?.businessStateAtCommit === 'outcome_unknown'
+  if (policyUnknown) {
+    const policy = record.lateSettlement
+    if (record.state !== 'failed' || record.executionOutcome !== undefined
+      || record.terminalEvidence?.kind !== 'termination-only'
+      || policy.policyReason !== 'child_exit_without_outcome'
+      || policy.policyAuthority !== 'D-009:CTR-S2-termination-only'
+      || policy.actorKind !== 'machine' || policy.actorId !== 'system:fence-auto-reconcile'
+      || policy.actorProvenance !== 'scheduler-policy'
+      || policy.scheduleDisposition !== 'recurring_future_natural_only'
+      || policy.requestId !== record.requestId || policy.ownerAgentId !== record.ownerAgentId
+      || !(TERMINATION_EVIDENCE_KINDS.has(policy.evidenceKind) || policy.evidenceKind === 'exact_started_then_idle')
+      || typeof policy.runtimeEpoch !== 'string' || !policy.runtimeEpoch
+      || typeof policy.reconciliationHandle !== 'string' || !policy.reconciliationHandle.startsWith(`turn:${policy.runtimeEpoch}:`)
+      || !/^op:[0-9a-f]{16}$/.test(policy.operationId)) corrupt('invalid policy UNKNOWN authority')
+  } else if (TERMINAL_STATES.has(record.state) && record.executionOutcome !== record.state) corrupt('terminal state must equal executionOutcome')
   if (record.state === 'outcome_unknown' && record.executionOutcome !== undefined) corrupt('outcome_unknown cannot claim a terminal executionOutcome')
 
   if (!Array.isArray(record.history) || record.history.length === 0) corrupt('history must be a non-empty array')

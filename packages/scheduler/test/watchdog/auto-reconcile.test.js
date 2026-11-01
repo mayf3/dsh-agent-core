@@ -61,7 +61,11 @@ test('CTR-S1 pass: recurring unknown with success evidence is planned; `at` and 
   const recOcc = makeUnknownOccurrence(recurringJob)
   const atOcc = makeUnknownOccurrence(atJob)
   const evidenceLookup = (record) => {
-    if (record.occurrenceId === recOcc.occurrenceId) return { outcomeEvidence: 'exact_turn_end_success', lateOutcome: 'late_completed' }
+    if (record.occurrenceId === recOcc.occurrenceId) return {
+      occurrenceId: record.occurrenceId, runId: record.runId, requestId: record.requestId,
+      agentId: record.ownerAgentId, runtimeEpoch: 'current', reconciliationHandle: 'turn:current:a1:g1:s1',
+      outcomeEvidence: 'exact_turn_end_success', lateOutcome: 'late_completed', terminationEvidence: 'exact_terminal_then_idle',
+    }
     if (record.occurrenceId === atOcc.occurrenceId) return { outcomeEvidence: 'exact_turn_end_success' }
     return null
   }
