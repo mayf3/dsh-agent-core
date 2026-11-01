@@ -43,10 +43,10 @@ The bounded goal belongs to existing [Product #414](https://github.com/mayf3/dsh
 
 Public authority references:
 
-- [Predecessor reconciliation amendment](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT.md): the complete authority replaced by this successor; retained artifact, canonical-store, transaction, provisioning, and recovery obligations are restated below.
+- [Direct predecessor Reconciliation V2](AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V2.md): the whole authority replaced by this V3; artifact, canonical-store, transaction, provisioning and recovery obligations are fully restated below. Its historical ancestor is the [reconciliation amendment](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1_AUTHSVC_RECONCILIATION_AMENDMENT.md), already retired by V2.
 - [Activation V1](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V1.md), especially CTR-ACT-003/004/009/010, and [Activation V2](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_ACTIVATION_V2.md): retain the original deployment's activation and custody boundaries.
-- [Fleet shared Codex auth V3](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4.md): canonical credentials, refresh ownership, no-copy semantics, and the retained domain authority.
-- [Default model routing config V1](DEFAULT_MODEL_ROUTING_CONFIG_V2.md): a missing per-Agent override legally inherits the effective global/default route under existing precedence. This successor does not select new provider/model routes; D14 changes only the explicit plugin generation identity.
+- [Fleet shared Codex auth V4](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4.md): canonical credentials, refresh ownership, no-copy semantics, and the retained domain authority.
+- [Default model routing config V2](DEFAULT_MODEL_ROUTING_CONFIG_V2.md): a missing per-Agent override legally inherits the effective global/default route under existing precedence. This successor does not select new provider/model routes; D14 changes only the explicit plugin generation identity.
 
 These parameter names hide deployment details; they do not let an executor choose another target or relax a fixed scope:
 
