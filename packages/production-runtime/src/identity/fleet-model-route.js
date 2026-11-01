@@ -1,13 +1,17 @@
-import { CHATGPT_SUBSCRIPTION_V1, GPT6_LUNA_ROUTE_V1 } from '../../agent-provisioning/src/shared-codex.js'
-import { invalid } from './identity/provider-environment.js'
+import { CHATGPT_SUBSCRIPTION_V1, GPT6_LUNA_ROUTE_V1 } from '../../../agent-provisioning/src/shared-codex.js'
+import { invalid } from './provider-environment.js'
 
 export function fleetSubscription(plugin, pluginVersion, credentialFile, artifactContext) {
-  const fleetGeneration = pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion ? undefined : artifactContext?.fleetGeneration
+  // Spawn-only: the caller verifies this descriptor against fleet current.
+  // Bind only its exact artifact identity; names/types that resemble Codex do
+  // not make independent subscriptions consumers of the selected generation.
+  const selected = artifactContext?.fleetGeneration
+  const fleetGeneration = plugin === selected?.plugin && pluginVersion !== GPT6_LUNA_ROUTE_V1.pluginVersion ? selected : undefined
   if (plugin === CHATGPT_SUBSCRIPTION_V1.plugin && pluginVersion !== GPT6_LUNA_ROUTE_V1.pluginVersion && artifactContext?.fleetRequired && !fleetGeneration) {
     throw Object.assign(new Error('ordinary Codex admission requires an accepted fleet generation'), { code: 'FLEET_GENERATION_INVALID' })
   }
   if (fleetGeneration) {
-    if (plugin !== fleetGeneration.plugin || pluginVersion !== fleetGeneration.pluginVersion) throw invalid('subscription pin differs from selected fleet generation; explicit catalog migration required')
+    if (pluginVersion !== fleetGeneration.pluginVersion) throw invalid('subscription pin differs from selected fleet generation; explicit catalog migration required')
     return Object.freeze({
       plugin, pluginVersion, sourceCommit: fleetGeneration.sourceCommit,
       artifactSha256: fleetGeneration.artifactSha256, dshVersion: fleetGeneration.dshVersion,

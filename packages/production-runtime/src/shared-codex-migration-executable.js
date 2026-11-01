@@ -8,8 +8,9 @@ import { selectAuthoritativeCodexGeneration } from './shared-codex-migration.js'
 import { CHATGPT_SUBSCRIPTION_V1 } from './model-overrides.js'
 import { canonicalOpenAICodexCredentialFileFor } from '../../agent-provisioning/src/shared-codex.js'
 
-// GPT6_LUNA_AND_REASONING_EFFORT_V1: derived from the single-source pin so the
-// migration tooling always governs exactly the accepted candidate artifact.
+// CTR-SCA-013 / CTR-SCA4-013: this bounded incident recovery/rollback entry
+// retains its separate exact 0.2.3 pin. D14 accepts fleet current for spawn
+// only; a qualified 0.3.2 generation confers no recovery entry authority.
 const PIN = Object.freeze({
   version: CHATGPT_SUBSCRIPTION_V1.pluginVersion,
   sourceCommit: CHATGPT_SUBSCRIPTION_V1.sourceCommit,

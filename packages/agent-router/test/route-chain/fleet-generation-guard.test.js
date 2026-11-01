@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { AgentProcess } from '../src/process/agent-process.js'
+import { AgentProcess } from '../../src/process/agent-process.js'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -18,8 +18,8 @@ test('D14 unqualified generation is rejected before child construction or dispat
   }), { code: 'FLEET_GENERATION_INVALID' })
 })
 
-import { readFleetGeneration } from '../../agent-provisioning/src/fleet-generation.js'
-import { createFleetGenerationFixture, FIXTURE_HARNESS, RELEASE_FIXTURE_AVAILABLE } from '../../agent-provisioning/test/fleet-generation-fixture.js'
+import { readFleetGeneration } from '../../../agent-provisioning/src/fleet-generation.js'
+import { createFleetGenerationFixture, FIXTURE_HARNESS, RELEASE_FIXTURE_AVAILABLE } from '../../../agent-provisioning/test/fleet-generation-fixture.js'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -38,7 +38,7 @@ test('D14 child imports stay on immutable payload and switched current rejects q
     profile: 'agent-core-production', fleetGeneration: snapshot })
   const unknown = join(fx.control, 'unknown/node_modules')
   mkdirSync(unknown, { recursive: true })
-  const hook = fileURLToPath(new URL('../../agent-provisioning/src/fleet-import-hook.js', import.meta.url))
+  const hook = fileURLToPath(new URL('../../../agent-provisioning/src/fleet-import-hook.js', import.meta.url))
   const result = spawnSync(process.execPath, ['--import', hook, '--input-type=module', '-e', `
     import {unlinkSync,symlinkSync} from 'node:fs';
     const before = import.meta.resolve('dsh-codex');

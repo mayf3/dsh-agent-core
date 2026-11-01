@@ -29,7 +29,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs'
-import { fleetSubscription, bindFleetGlobalRoute, assertFleetCatalog } from './fleet-model-route.js'
+import { fleetSubscription, bindFleetGlobalRoute, assertFleetCatalog } from './identity/fleet-model-route.js'
 import { createHash } from 'node:crypto'
 
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
