@@ -1,8 +1,13 @@
 ---
 spec_id: AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V2
 status: proposed
-acceptance_status: ACCEPTED-under-Owner-D14-directive-20261101
-acceptance_status_scope: Owner-selected direction A; exact reviewed bytes and atomic lifecycle activation remain pending
+acceptance_status: PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+acceptance_status_scope: Owner direction dated 2026-11-01 authorizes direction A and docs authoring; exact-head acceptance remains pending
+ACCEPTANCE: PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+owner_direction_date: 2026-11-01
+owner_exact_head_acceptance: pending
+acceptance_final_head: PENDING_FINAL_HEAD_OF_PR_601
+acceptance_head_binding: Owner must bind the reviewed commit and final accepted PR head in PR 601; this placeholder is not acceptance
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts

@@ -1,8 +1,13 @@
 ---
 spec_id: AGENT_CORE_D14_FLEET_GENERATION_SUCCESSION_V1
 status: proposed
-acceptance_status: ACCEPTED-under-Owner-D14-directive-20261101
-acceptance_status_scope: semantic direction A accepted by supplied Owner directive; exact-byte acceptance and lifecycle activation pending
+acceptance_status: PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+acceptance_status_scope: Owner direction dated 2026-11-01 authorizes direction A and docs authoring; exact-head acceptance remains pending
+ACCEPTANCE: PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+owner_direction_date: 2026-11-01
+owner_exact_head_acceptance: pending
+acceptance_final_head: PENDING_FINAL_HEAD_OF_PR_601
+acceptance_head_binding: Owner must bind the reviewed commit and final accepted PR head in PR 601; this placeholder is not acceptance
 spec_kind: program
 authority_level: governing_spec
 implementation_authority: none
@@ -37,11 +42,14 @@ as a substitute for its exact derivative.
 This coordinating Program grants no implementation authority; the four implementation Specs
 incorporate CTR-D14-001–008 as their common requirements after the atomic acceptance transaction.
 
-`acceptance_status = ACCEPTED-under-Owner-D14-directive-20261101` is the requested Owner-direction
-designation. It does not invent acceptance of bytes not yet reviewed. Formal lifecycle is
-`status: proposed`, and `AUTHORITY_ACCEPTED_IN_BASE=NO`. Until exact-head Owner acceptance,
-reciprocal lifecycle updates and merge to main, the old authorities remain active. This is a
-reviewable draft of that transaction, not a declaration that the transaction has occurred.
+The Owner's direction A instruction is dated 2026-11-01. The current acceptance
+header is `ACCEPTANCE = PENDING_OWNER_EXACT_HEAD_ACCEPTANCE`; direction and authoring
+authorization are not exact-byte acceptance. Formal successor lifecycle remains
+`status: proposed`, and `AUTHORITY_ACCEPTED_IN_BASE=NO`. The four predecessors now
+carry appended `status = SUPERSEDED_PENDING_ACCEPTANCE` lifecycle sections and
+pending reciprocal successor-file links in this same PR. Their original text and
+accepted frontmatter remain intact. Until exact-head Owner acceptance, formal
+reciprocal lifecycle finalization and merge to main, the old authorities remain active.
 
 ## 2. Scope and non-goals
 
@@ -52,10 +60,18 @@ direction A already ruled by supervision, and this explicit docs-only task. Pers
 This request authorizes authoring, independent review, commit/push, a main-targeted PR and the
 specified issue backfill. It does not grant production effects in this task.
 
-Allowed tree delta: new files in `docs/specs/` and `docs/evidence/` only. No product source/tests,
-production branch, home/current, credential, process, permission, business message or deployment
-change. D13 is outside scope. Direction A is not reopened. The 117 current-linked homes are not
-rolled back by this task. The rollback Contract below specifies a future controlled failure path.
+The initial additions-only authoring scope is historical. The Owner's explicit
+2026-11-01 completion task now authorizes appended lifecycle sections in the four
+predecessors, acceptance-header updates in the five proposed Specs, and this
+coordinating Program's matching scope/status explanation. Four successor bodies
+remain byte-identical to `c5e8b5a713f05cec53010bc69059c46b9e24fe6c`.
+All previously delivered evidence, review records, checksum manifests and the
+unexecuted activation-patch skeleton remain byte-identical at that historical head;
+their old additions-only checks describe that snapshot, not this completion delta.
+No product source/tests, production branch, home/current, credential, process,
+permission, business message or deployment changes are authorized. D13 is outside
+scope. Direction A is not reopened. The 117 current-linked homes are not rolled back
+by this task. The rollback Contract below specifies a future controlled failure path.
 
 ## 3. Authority, coordinates and acceptance transaction
 
@@ -93,21 +109,40 @@ authority rather than leaving readers to merge old clauses with an overlay.
 This Program's empty `supersedes` is intentional: its four peer successors carry whole old IDs
 in their own metadata. No fragment ID is superseded independently.
 
-### D14-DOCS-LIFECYCLE-001 — concrete activation conflict
+### D14-DOCS-LIFECYCLE-001 — staged lifecycle; exact-head acceptance pending
 
 `.agents/local/README.md` prohibits new partial supersession, and
-`.agents/protocol/SPEC_FORMAT_V0.md` §2.7 requires: “backlinks change atomically in the same docs-only
-change.” Old authorities must become `status: superseded` with `superseded_by` equal to the
-respective successor. Owner acceptance must bind reviewed content and final accepted head.
-The task's additions-only restriction forbids those old-file mutations. No new manifest can stand
-in for them. Therefore this draft has **AUTHORITY_ACTIVATION_READY=NO**, not a self-certified PASS.
+`.agents/protocol/SPEC_FORMAT_V0.md` §2.7 requires reciprocal lifecycle links to
+change atomically in the same docs-only transaction. The former additions-only
+scope restriction was removed by the Owner's 2026-11-01 completion task. All four
+old files now carry the pending lifecycle marker and successor-file backlink;
+their matching successors already name each whole old authority in `supersedes`.
+No predecessor's original bytes or accepted meaning are rewritten.
 
-The concrete later mechanical lifecycle skeleton is prepared as
-[atomic-activation.patch](../evidence/d14-successor-spec-20261101/atomic-activation.patch), unexecuted.
-It changes only old lifecycle metadata and the existing index, plus proposed→accepted on the five
-new Specs. Applying it requires scope covering those existing docs and exact-head Owner acceptance;
-review-record digest/head/time provenance must then be recorded with the actual values. No patch
-here fabricates that acceptance. A later authority branch move requires affected-impact recheck.
+```text
+LIFECYCLE_MARKERS_AND_PENDING_BACKLINKS = STAGED_IN_THIS_PR
+ACCEPTANCE = PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+OWNER_DIRECTION_DATE = 2026-11-01
+FINAL_PR_HEAD = PENDING_FINAL_HEAD_OF_PR_601
+FORMAL_LIFECYCLE_FINALIZATION = PENDING_OWNER_ACCEPTANCE
+AUTHORITY_ACTIVATION_READY = NO
+```
+
+The pending marker is a lifecycle-section state, not a fourth schema value for
+formal frontmatter `status`. The old frontmatter stays `accepted` (and any original
+`superseded_by: null` stays intact); successor frontmatter stays `proposed`.
+Owner acceptance must bind reviewed content and the final accepted PR head. Only
+that later atomic acceptance transaction may finalize old `status: superseded` /
+`superseded_by`, all five proposed Specs' `status: accepted`, and the existing
+governing index/lifecycle mirrors, followed by merge into `main`. This task does
+not claim that finalization or merge.
+
+[atomic-activation.patch](../evidence/d14-successor-spec-20261101/atomic-activation.patch)
+is preserved as the historical, unexecuted skeleton at `c5e8b5a7`; it is not the
+current acceptance record or a blindly runnable finalization patch. Its actual
+application would require rechecking the current files and pending acceptance
+headers. No identifier, placeholder or direction date fabricates acceptance.
+A later authority-branch move requires affected-impact recheck.
 
 ## 4. Current State
 
@@ -388,13 +423,16 @@ eligible. The current PR must not merge as an active successor without closing l
 OPEN_OWNER_DIRECTION_DECISIONS = NONE (A already selected)
 NORMATIVE_TBD = NONE (missing execution facts are defined refusal gates)
 D14_R3_AUTH_001 = closure designed; not closed in main
-D14_DOCS_LIFECYCLE_001 = OPEN / REQUIRED_GATE_FAILURE for authority activation
+D14_DOCS_LIFECYCLE_001 = PENDING_EXACT_HEAD_ACCEPTANCE_AND_FORMAL_ATOMIC_FINALIZATION
+PENDING_LIFECYCLE_LINKS = STAGED_IN_THIS_PR
+ACCEPTANCE = PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+FINAL_PR_HEAD = PENDING_FINAL_HEAD_OF_PR_601
 AUTHORITY_ACTIVATION_READY = NO
 IMPLEMENTATION_ALLOWED = NO
 PRODUCTION_ADMISSION_ACCEPTANCE = NO
 OPERATION_ALLOWED = NO
 DOCS_DRAFT_PUBLICATION_ALLOWED = YES
-NEXT_REAL_ACTION = publish reviewed docs draft; obtain old-doc scope/exact-head acceptance for atomic activation
-DONE_WHEN = five Spec candidates + exact source evidence + non-author review + commit/push/PR + issue link
+NEXT_REAL_ACTION = push reviewed lifecycle completion; Owner exact-head acceptance then atomic formal lifecycle/index finalization
+DONE_WHEN = four pending predecessor lifecycle/backlinks + five pending acceptance headers + unchanged successor bodies/evidence + independent delta review + commit/push + PR 601 body update
 EXPANSION_TRIGGER = newly reachable conflicting accepted version owner or actual provenance contradiction
 ```
