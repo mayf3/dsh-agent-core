@@ -1,0 +1,74 @@
+{
+  "source_implementation_commit": "825664850abce61e821eb505063241341d419907",
+  "reused_reviewed_source_head": "e8b086e82af317e6a2771d3569fad3756496a15a",
+  "scope": "affected app files and local direct dependencies; full app required, not standalone overlay",
+  "default_flag": "OFF (absent)",
+  "enable_env": "AGENT_CORE_FENCE_AUTO_RECONCILE=on",
+  "files": [
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "sha256": "82866de52960455ea57df51ff3f4b9910c8f6b062d632f88266fa19978570b2e",
+      "size_bytes": 36193
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js",
+      "sha256": "90f968d2d65d29b6016e31b043a8d5ab417b99d1940ca658389d9cd7b7904b8d",
+      "size_bytes": 6384
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/auto-reconcile.js",
+      "sha256": "e916b92c82adac0b19e3c64de54b1b2ab9e9bc57946ec563aa92f039643b98b5",
+      "size_bytes": 7787
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/auto-reconcile-mutation.js",
+      "sha256": "12115987d6fb47a4e3cd75ab27ba1a622d5cef1eb42529f8d24e30f487461801",
+      "size_bytes": 6648
+    },
+    {
+      "path": "packages/scheduler/src/eligibility.js",
+      "sha256": "d755ec9fb0b133d2423bb732f9a3d1a7391da09f33664e52ca81f038958e4f9f",
+      "size_bytes": 12472
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "sha256": "df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd",
+      "size_bytes": 21376
+    },
+    {
+      "path": "packages/scheduler/src/schedule.js",
+      "sha256": "be487dfe542bb0006ed5a3443c9cacf3fbf67a665451afbd356ca80fb23e1933",
+      "size_bytes": 10517
+    },
+    {
+      "path": "packages/scheduler/package.json",
+      "sha256": "3ea454db4db55a3a035a63526a140b1353f1faf9f533ca9fdcc96748ab8aa45a",
+      "size_bytes": 816
+    },
+    {
+      "path": "packages/production-runtime/package.json",
+      "sha256": "e83317fe9f9c276627fc80c6d9bd4df970048b13bfeb3f35516783fd9890a59b",
+      "size_bytes": 541
+    },
+    {
+      "path": "scripts/scheduler-watchdog.mjs",
+      "sha256": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522",
+      "size_bytes": 28153
+    },
+    {
+      "path": "scripts/trusted-cp-deploy-install.sh",
+      "sha256": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e",
+      "size_bytes": 76467
+    },
+    {
+      "path": "scripts/lib/trusted-app-package-copy.mjs",
+      "sha256": "f8118e93306656a0aa45f5f1ca92d710217ecfc3947b8d5cdff6ddd2d4346869",
+      "size_bytes": 3693
+    },
+    {
+      "path": "scripts/lib/watchdog-payload-snapshot.mjs",
+      "sha256": "9017e5183e234e14ff697793f304e1897323873d01fc56b259998104f685dc66",
+      "size_bytes": 60395
+    }
+  ]
+}

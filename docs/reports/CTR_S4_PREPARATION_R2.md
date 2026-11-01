@@ -1,5 +1,10 @@
 # D-009 amendment / CTR-S4 preparation — r2 checkpoint
 
+Current continuation: the Owner's final task accepts the D-009 scoped amendment;
+see [final source packet](../../deployment-artifacts/ctr-s4-runtime-prep-v1/README.md)
+and the final continuation below. Earlier pending/stopped entries in this report
+remain historical observations at their stated coordinates.
+
 This is a preparation receipt and continuation plan, not Product Authority or a
 deployment authorization. Owner's ruling is dated **2026-11-02 as supplied in the
 task**; the observations below were collected on **2026-11-01 UTC**. These are
@@ -416,3 +421,107 @@ requested under the explicit r3 semantic-failure stop and three-defect scope.
 While awaiting that ruling: keep PR603 draft, preserve all completed source and
 review evidence, do not deploy/restart/enable/merge, and do not edit a shared
 checkout. This checkpoint does not claim completed r3 delivery or package ready.
+
+## Final preparation continuation — Owner acceptance and combined delivery
+
+The final task explicitly resolves the earlier D-009 stop, selects the r3-verified
+`825664850abce61e821eb505063241341d419907` source series, and orders the amendment
+status to **ACCEPTED**, quoting Owner's supplied 2026-11-02 ruling:
+**“termination-only 证据判 failed，修订 D-009”**. The actual verification below ran
+on 2026-11-01 UTC. The two dates retain their distinct provenance.
+
+```text
+schema_version = 2
+GOAL_OR_TARGET = complete bounded CTR-S4 source/offline preparation and handoff
+CURRENT_GAP = acceptance metadata, executable-source packet and enable/disable handoff
+CONTINUATION_BASE_HEAD = e8b086e82af317e6a2771d3569fad3756496a15a
+TASK_BASE_HEAD = 1921f8795e2212506a7a833bc79b84c17ba50ea1
+WORKTREE = /tmp/ctr-s4-prep (physical /private/tmp/ctr-s4-prep)
+BRANCH = ac-ctr-s4-runtime-prep
+PR_BASE = main
+CURRENT_BASE_HEAD_OBSERVED = 26178b4f459cdc2737724f6614b5e2bc9bdc77b0
+DEPLOYMENT_TARGET_LINE = ac1159-deploy
+AUTHORITY_ACTION = REUSE (existing implemented Contracts; Owner acceptance metadata)
+PRIMARY_AUTHORITY = D-009 scoped amendment; Timeout V3; CTR-RECON-001
+ROUTE_STAGE = IMPLEMENTATION (offline source finalization)
+AUTHORITY_ACCEPTED_IN_BASE = YES (existing Contracts); NO (amendment not merged to main)
+TASK_SPECIFIC_ROUTE_EXCEPTION = existing Owner-directed append-only/co-integration ruling
+PLAN_LEVEL = EXEC_PLAN (resume the existing bounded plan)
+ASSURANCE_LEVEL = DURABLE
+MUTATION_AUTHORIZATION = current explicit Owner task, including PR and #417 writes
+OPERATION_ALLOWED = NO
+EVIDENCE_NEEDED = fresh scheduler/wiring/name preservation; same 11 debts; packet; independent review
+DONE_WHEN = accepted amendment metadata + complete reviewed source packet + PR/#417 final-head readback
+EXPANSION_TRIGGER = new semantic failure; stop dependent work
+```
+
+The two source lines are already combined: `8dfd2854` carries the reviewed
+Scheduler/runtime repairs, `4c24a9d5` the authorized single decoder pin refresh,
+and `e8b086e8` the authorized snapshot structure registration. This continuation
+does not replay the transplant or modify their package/script/registry bytes.
+It finalizes the amendment status and Decision-index pointer, preserving all
+bounded policy text and original D-009 history. Integration acceptance and
+production execution remain separate boundaries.
+
+### Fresh executed offline observations
+
+Independent `/root/offline_validation` ran the existing full Scheduler and
+focused suites at exact `e8b086e8`; the final documentation delta leaves all tested
+bytes unchanged. Root checked the retained raw log hashes, name comparison and
+structure tuples before using them here.
+
+| Check | Actual result |
+|---|---|
+| Full Scheduler, default concurrency | 434 PASS / 0 FAIL, rc=0 |
+| Auto-reconcile policy + batch + runtime wiring | 32 PASS / 0 FAIL, rc=0 (13 Scheduler + 19 runtime) |
+| Original 421 and r2 427 names, with multiplicity | all retained; missing=0 |
+| Current names against r3 434 | diff=empty; duplicates=0 |
+| Structure task base -> candidate | rc=1; exactly 11 pre-existing directory debts; new=0 |
+| Independent task base -> same task base structure run | same 11 violation tuples, including counts/ceilings |
+| Existing package-copy helper on isolated Scheduler/runtime staging | rc=0; 44/50 source files byte-identical; tests excluded |
+| Shared installer whitelist in both prescan/copy loops | watchdog included; staged watchdog bytes match |
+| Installer shell syntax / watchdog syntax | rc=0 / rc=0 |
+
+Raw full-suite SHA-256:
+`fd9b63c79382ae29655cf95a0551cdea1593ac7b09a5af11f131911ca104dcb9`.
+Raw focused-suite SHA-256:
+`674454b8472583baa60d57446e7a821828cf7fbc577772b74df2f64eb5a77067`.
+Commands, actual timestamps, tested code hashes, complete name comparisons,
+structure attribution and compressed raw logs are retained in
+[`final-validation.json`](../evidence/ctr-s4-delivery/final-validation.json).
+Packaging/syntax observations are in
+[`final-packaging.json`](../evidence/ctr-s4-delivery/final-packaging.json).
+
+Independent `/root/package_audit` found no new source blocker in the full-app
+copy path, default OFF or lifecycle. It separately executed five existing
+default-off/timer/configuration-off/stop/drain tests: 5 PASS / 0 FAIL, rc=0.
+The accepted amendment metadata and final packet receive the independent exact-
+Head review recorded in the PR conversation; review does not substitute for the
+Owner acceptance already directed by this task.
+
+### Artifact, activation and stop boundary
+
+The [source delivery packet](../../deployment-artifacts/ctr-s4-runtime-prep-v1/README.md)
+defines the exact app-file inventory, bundle/archive/manifest outputs, clean Git
+source gate and regulator steps. Its env key is
+`AGENT_CORE_FENCE_AUTO_RECONCILE=on`; absence is default OFF. Regulator activation
+must set the **actual supervised Runtime env** and apply its existing authorized
+reload. Disabling removes that key through the same configuration path/reload;
+stop drains admitted transactions before Router disposal. A shell `unset` cannot
+alter another running PID, and disablement does not undo committed settlements.
+The packet explicitly preserves the UNKNOWN-aware decoder and no-replay boundary.
+
+The final bundle/manifest, exact final Head/tree, independent final-Head result,
+remote push/readback and #417 update are persisted together in PR #603. The
+packet is a source release input, not a newly installed Node/DSH dependency
+closure. It uses the ordinary full-app installer; the legacy 23-path overlay
+does not mount CTR-S4 and is not presented as a replacement deployment path.
+
+Retained limitations: PR #603's existing conflict with remote main, 26 broader-
+runtime baseline failures, two legacy-overlay baseline digest drifts, and 11
+unchanged structure debts. No new implementation change invalidates the previous
+pinned-migration 1/1 or closure 7/7 observations; those remain historical results,
+not falsely labelled fresh execution. Ready for source review is not merge-ready,
+installed, enabled, or business-verified. #417 remains open for regulator rollout
+and real acceptance. No deployment, restart, production write, flag enabling,
+shared-checkout edit, PR merge/auto-merge or stopgap retirement was performed.
