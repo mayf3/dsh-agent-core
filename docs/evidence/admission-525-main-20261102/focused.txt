@@ -1,0 +1,231 @@
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET /v1/agents lists defined agents in the contract shape (70.201ms)
+[product-api] ERROR GET /v1/binding failed: no binding for surface: never-seen
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET /v1/binding: 200 with the surface binding; 404 BINDING_NOT_FOUND when none (67.783583ms)
+[product-api] ERROR POST /v1/switch-agent failed: product-api: sessionId is not part of the Gate 1 switch-agent contract
+[product-api] ERROR GET /v1/binding failed: no binding for surface: surface-2
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ POST /v1/switch-agent: surface scope, targetAgentId-ONLY (sessionId rejected) (106.804084ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ POST /v1/message: routes through the Router, returns the reply + binding facts (18.275416ms)
+[product-api] ERROR POST /v1/message failed: mobile turn unknown
+✔ B15 product API preserves typed outcome_unknown reconciliation data (21.773333ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] ERROR POST /v1/message failed: product-api: surfaceId must be a non-empty string
+[product-api] ERROR POST /v1/message failed: product-api: surfaceId must be a non-empty string
+✔ validation and error envelope (400/404/500 shapes) (65.870083ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+[product-api] ERROR POST /v1/switch-agent failed: agent not found: agt_x
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ AGENT_NOT_FOUND from the Router maps to 404 (16.460167ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ GET /health carries additive admission readiness; absent handler stays null (PRODUCT #525 P1) (29.212208ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 gate: no token / unconfigured seam / bad token / no scope / local label all fail closed (602.118416ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 gate: unconfigured verification seam = 401 even for any bearer string (632.625083ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-001c/d/e + ACC-004 audit view: run detail with job_snapshot / output / trace.wake_links (679.479125ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 read scope: only own runs; other agent_id query / other run / other occurrence = 403 (690.742834ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-005 read scope without agent binding = 403 (owns no runs) (673.9415ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ R7 query contract: filters, pagination cursor, limit bounds, invalid_query, scheduled notice (683.164208ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ ACC-009 read-only red line: no mutating routes; unauthenticated POST = 401 gate first (632.153ms)
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ history store not wired = 500 internal (fail loud, not silent empty) (12.862208ms)
+✔ buildRunRecord stays a pure rebuildable projection (same facts → same record) (0.504042ms)
+✔ Auth V1 direct-machine agent and service profiles verify exactly (42.800375ms)
+✔ Auth V1 verifier requires issuer and audience configuration (0.768625ms)
+▶ Auth V1 direct-machine claim/profile violations fail closed
+  ✔ audience array (11.871ms)
+  ✔ wrong token version (11.607583ms)
+  ✔ wrong token_use (1.814875ms)
+  ✔ wrong type (7.319417ms)
+  ✔ non-UUID subject (3.158125ms)
+  ✔ missing client (5.016ms)
+  ✔ short jti (2.666458ms)
+  ✔ nbf after iat (3.470125ms)
+  ✔ non-positive lifetime (3.780208ms)
+  ✔ TTL over 600 seconds (3.810417ms)
+  ✔ leading scope space (1.97475ms)
+  ✔ duplicate scope (2.26925ms)
+  ✔ unsorted scopes (6.4875ms)
+  ✔ bad scope grammar (11.359708ms)
+  ✔ direct token act claim (1.373709ms)
+  ✔ direct token azp claim (1.708708ms)
+  ✔ agent profile missing agent_id (7.258291ms)
+  ✔ service profile carrying agent_id (3.429042ms)
+  ✔ future iat/nbf is not yet valid (2.80875ms)
+✔ Auth V1 direct-machine claim/profile violations fail closed (107.957666ms)
+✔ Auth V1 verifier rejects non-RS256 and unknown kid tokens (2.731375ms)
+✔ Auth V1 trusted JWKS cache is usable only inside max-stale (2.254375ms)
+✔ unknown-kid refresh failure keeps the AUTH_JWKS_UNAVAILABLE kind — infra evidence, not a bad token (2.26775ms)
+✔ agent caller observes exactly {agentId, exists, enabled}, snapshot fresh per command (30.430083ms)
+✔ service caller is equally directory-eligible; required scope is presence-checked (10.129125ms)
+✔ unknown exact ID is a 200 observation {exists:false, enabled:false} (1.78475ms)
+✔ wrong audience/issuer/profile/expired and missing scope deny before any Definition read (14.972709ms)
+✔ human principal type is denied before any Definition read (7.708792ms)
+✔ the superseded 5-second issued-at pin is retired; verifier time policy governs (2.783792ms)
+✔ query/body/list/legacy/name/prefix input is invalid after authentication (8.313833ms)
+✔ duplicate, corrupt and storage errors discriminate (7.339625ms)
+✔ whole deadline includes JWKS; late verification never reads snapshot (103.577666ms)
+✔ missing jwksUrl fails construction loud — a permanently-401 verifier can never mount (4.386042ms)
+✔ unreachable JWKS keeps the frozen 401 wire and flips admissionHealth with one bounded warn (3.761167ms)
+✔ ordinary invalid tokens never flip infra state; recovery warns exactly once (4.629958ms)
+✔ admissionHealth payload is key-pinned and identity-free (0.412209ms)
+✔ unknown-kid refresh failure during a JWKS outage surfaces as auth_unavailable, not a silent bad token (3.6315ms)
+[router] binding store loaded: 0 binding(s) from /tmp/dir-e2e-1Ik8yd/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[demo-server] session main created (0 events) cwd=/tmp/dir-e2e-1Ik8yd/workspaces/agt_dir-e2e-target-agent
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568788144,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568788145,"routeChainId":"chain-agt_dir-e2e-target-agent-df58fa0d488989fb","agentId":"agt_dir-e2e-target-agent","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_dir-e2e-target-agent session main requestId 5e00eba8-06c6-4865-a227-... (4b3b1310-a6d3-47fb-80cf-d20300e66d14) in 263ms
+✔ ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main (733.522542ms)
+[router] binding store loaded: 0 binding(s) from /tmp/dir-e2e-BnXlpg/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: unknown name → not_found and ZERO deliveries anywhere (222.370917ms)
+[router] binding store loaded: 0 binding(s) from /tmp/dir-e2e-wdNiz1/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries (282.172834ms)
+[router] binding store loaded: 0 binding(s) from /tmp/dir-e2e-48pTnD/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E disabled target: resolves enabled:false (existence truth) and the send is refused (355.114125ms)
+[router] binding store loaded: 0 binding(s) from /tmp/dir-e2e-PrIIQV/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ E2E list: the full composed stack lists both agents in directory shape (260.084833ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-JBIgP8/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:62576 (deliverReady=true storeReady=true)
+[notification-ingress] ERROR POST /v1/deliver failed: notification-ingress: sessionMode must be one of main | fresh
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568788386,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568788386,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session main requestId req-1... (msg-1) in 170ms
+✔ notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox (992.11825ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-pHiHXU/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568789464,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568789464,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ scheduler engine consumes a job from the production store through the router seam (1210.295417ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-sinY53/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] ERROR delivery-failure {"kind":"delivery_failure","tsWallMs":1793568790737,"sequence":1,"category":"other","agentId":"agt_production-runtime-test","routeRef":null,"transportAttempt":1,"processGeneration":null,"categoryCount":1,"windowCount":1}
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568790737,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"unproven","attemptOutcome":"stop:outcome_unknown"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568790737,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"NONE","finalOutcome":"stop:outcome_unknown","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ B15 production evidence preserves scheduled outcome_unknown reconciliation data (1238.235ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-8Me7K3/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:62705 (deliverReady=true storeReady=true)
+✔ graceful stop closes the HTTP surfaces and writes stopped-able state (479.031417ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-bFIaVt/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568791886,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568791886,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+[router] deliver accepted: agent agt_production-runtime-test session fresh-1eb7dfd82f271a47ef697aa829491c92 requestId req-clean... (msg-1) in 186ms
+✔ runtime state carries no demo artifacts anywhere (510.728333ms)
+✔ C-WIRE paths: the production layout owns the notification-ingress persistent surface (34.598666ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-cD2e20/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:62724 (deliverReady=true storeReady=true)
+✔ C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env (446.449583ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-sNrg2m/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+[router] route-chain {"kind":"route_attempt","tsWallMs":1793568793159,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","attemptIndex":0,"route":"global:oc-go/deepseek-v4-flash","primaryRoute":"global:oc-go/deepseek-v4-flash","failureClass":"NONE","admissionProven":"admitted","attemptOutcome":"success"}
+[router] route-chain {"kind":"route_chain_final","tsWallMs":1793568793159,"routeChainId":"chain-agt_production-runtime-test-df58fa0d488989fb","agentId":"agt_production-runtime-test","primaryRoute":"global:oc-go/deepseek-v4-flash","finalRoute":"global:oc-go/deepseek-v4-flash","finalOutcome":"SUCCESS","totalRouteAttempts":1,"fallbackActivated":false,"fallbackRoute":null}
+✔ C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services (1114.5955ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-uc7Lwu/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null (184.64425ms)
+✔ C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks (2.885458ms)
+✔ MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed) (237.014666ms)
+✔ PRODUCT #525 P1: product API enabled without AGENT_DIRECTORY_AUTH_JWKS_URL refuses composition (fail loud, never perma-401) (61.836416ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-WNfVL9/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[notification-ingress] disabled; no HTTP server mounted
+[product-api] listening on http://127.0.0.1:0 (channel=mobile)
+✔ PRODUCT #525 P1: product API enabled with the JWKS seam composes; /health carries additive admission readiness (346.054292ms)
+✔ PRODUCT #525 P1: the JWKS-seam gate precedes all downstream composition wiring (log-order pin) (46.328459ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-jJkvgk/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] listening on http://127.0.0.1:62573 (deliverReady=true storeReady=true)
+✔ composition provides the full existing service graph over the production layout (313.459041ms)
+[router] binding store loaded: 0 binding(s) from /tmp/prt-compose-Gt1FY8/bindings/bindings.json
+[router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+[router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+[broker] gateway mode: 50 http capabilities ready, 19 local capabilities ready
+[product-api] disabled; no HTTP server mounted
+[notification-ingress] disabled; no HTTP server mounted
+✔ composition forwards the trusted exact-agent native policy resolver into process startup (438.41175ms)
+✔ verifier parity: no auth config -> null verifier (fail-closed) (29.563084ms)
+✔ verifier parity: JWKS URL only -> null verifier, no mount throw (26.499208ms)
+✔ verifier parity: JWKS URL + issuer -> null verifier, no mount throw (20.695791ms)
+✔ verifier parity: URL + issuer + audience -> verifier constructed (22.802125ms)
+✔ verifier parity: env-sourced partial config -> null verifier (18.428291ms)
+✔ verifier parity: env-sourced complete config -> verifier constructed (45.275459ms)
+✔ verifier parity: schedulerAuth opts fall through to env per field (34.395833ms)
+ℹ tests 84
+ℹ suites 0
+ℹ pass 84
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 7099.01575

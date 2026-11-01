@@ -1,0 +1,42 @@
+{
+  "tested_code_head": "d0aedb647056d9457bc185320bc0de873eae2961",
+  "base_head": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "node_version": "v25.6.1",
+  "node_arch": "arm64",
+  "node_binary_sha256": "e5d8a01ccadd10e9988dfb03d371066ef06f7373e51f939d758fbb7aab7b3b21",
+  "official_archive_sha256": "a80cb252d170a4730f78f5950cf19a46106f156e5886e5c1cc8c5602aea60243",
+  "dependencies": {
+    "@deepseek-ai/dsh-tools": {
+      "version": "0.1.0-rc.8",
+      "package_json_sha256": "ccd1bfd65689c9ea6076b7119427110c1041ea1e6e454df27c23e42d25e17801"
+    },
+    "@deepseek-ai/dsh-session": {
+      "version": "0.1.0-rc.8",
+      "package_json_sha256": "08cded232b9232017c8446bddfd4ce11590a1a1126f08b3b904c7340f69d2878"
+    },
+    "@deepseek-ai/schemastery": {
+      "version": "3.18.5",
+      "package_json_sha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+    },
+    "@larksuite/channel": {
+      "version": "0.7.1",
+      "package_json_sha256": "d9688114248ab03b587a7e92b18c32fd8f71a5837bf51e8fc52de338d6ec2fd7"
+    },
+    "@larksuiteoapi/node-sdk": {
+      "version": "1.76.0",
+      "package_json_sha256": "2a5da04a9f35c9d2a6f3550f5ad5bb221dc1cdbea83ccef2c1247336bade5373"
+    },
+    "sherpa-onnx-node": {
+      "version": "1.13.7",
+      "package_json_sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d"
+    },
+    "sherpa-onnx-darwin-arm64": {
+      "version": "1.13.7",
+      "package_json_sha256": "e142e84fa207accb30e472c760b617c3165caafd499c92ec9065809a1ce4bff6"
+    }
+  },
+  "dependency_stubs": false,
+  "postgres": "NOT_REQUIRED; no DB env, fixture or production connection",
+  "runner_sha256": "dfd13e86c25027ed5534a2ea49d8913d2ce56b21a475c05ab85725d4dbbc5ca0",
+  "raw_evidence_local_root": "/tmp/dsh-525-evidence"
+}

@@ -1,0 +1,19 @@
+[
+  "POST /v1/voice/transcription: valid short WAV -> 200 {\"text\"} (engine: string text; tone may be empty)",
+  "valid near-limit WAV (14.5 s, inside both ceilings) -> 200",
+  "TEXT_NONEMPTY: real utterance (macOS say, zh_CN) transcribes to non-empty text",
+  "zero persistence + log allowlist: no new files, stderr carries ONLY the allowlisted fields",
+  "B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate",
+  "B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart",
+  "Case B: concurrent first sends to an absent main share ONE startup generation",
+  "runtime state carries no demo artifacts anywhere",
+  "enabled channel + invalid identity credentials fail composition LOUD (fail closed)",
+  "actual arm64 Node and internal links pass closure inspection",
+  "installer probes before backup and never grants root Git trust",
+  "production-pinned payload executes migration with distinct source and destination groups",
+  "routing deployment freezes explicit candidate and atomically preserves the exact preimage",
+  "routing deployment keeps rollback control artifacts separate from the runtime reader group",
+  "routing deployment rejects missing canonical ops target before any write",
+  "routing deployment rejects a target symlink before reading or replacing it",
+  "watchdog deployment source retains the accepted Session Trace lineage in its overlay"
+]
