@@ -6,6 +6,14 @@
   "generated_allowlist": [],
   "files": [
     {
+      "path": "scripts/lib/watchdog-payload-snapshot.mjs",
+      "approved_max_lines": 733,
+      "reason": "Owner-approved CTR-S4 integration-base registration: file already has 733 physical lines at task integration base 1921f8795e2212506a7a833bc79b84c17ba50ea1; original d506f811 baseline predates this file. Register this existing integration-base debt for the single decoder pin refresh only; ceiling 733, no growth or major-change exemption.",
+      "approved_by": "mayf3",
+      "expires_at": "2026-12-01",
+      "split_followup": "split the frozen payload data from handwritten manifest code before the next major edit; no growth beyond the 733-line integration baseline"
+    },
+    {
       "path": "packages/agent-credential-provisioning/src/store-writer.js",
       "approved_max_lines": 516,
       "reason": "legacy source file over HANDWRITTEN_FILE_MAX_LINES at baseline commit d506f81105e8aa05177a01b817ebe11dcc076ba5 (516 physical lines); grandfathered under CODE_STRUCTURE_GUARDRAILS_V1 \u00a76; ceiling = baseline lines; must not grow; major change requires split",
