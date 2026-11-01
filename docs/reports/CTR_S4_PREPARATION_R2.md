@@ -302,3 +302,117 @@ Execution sequence (each repair gets failing regression, repair, green result):
 Model disposition: RETAIN the Router correlation authority, Scheduler mutation
 authority and existing receipts; replace only the borrowed unsafe lookup/batch
 and loop wiring. No second registry, executor or permanent fallback is added.
+
+
+## r3 source repair results and new pinned-payload stop
+
+Source candidate: `8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4`, based on
+`06fc0737ca83386daef343efeb421f4243407805`. All three original wiring findings
+are repaired in this source candidate:
+
+1. The runtime calls Router `resolveCallerCorrelation` with the exact structured
+   occurrence/run/request triple. It verifies V3 owner, current runtime epoch
+   before/after query, coherent handle/process generation and outcome/termination
+   evidence. Missing, foreign, stale, conflicting and unreadable evidence is
+   fail-closed. Direct business results and child-exit late results retain their
+   actual Router provenance.
+2. The batch replans against locked latest state and compares the complete bounded
+   target, definition and evidence snapshot. Negative/drift cases throw `NoWrite`
+   before persistence. Termination-only policy `state=failed` has **no fabricated
+   executionOutcome**; durable `lateSettlement.businessStateAtCommit=outcome_unknown`
+   carries machine actor, policy authority/reason, exact evidence reference and
+   future-natural-only disposition. That policy settlement cannot generate retry.
+   Its businessStateAtCommit is a commit snapshot; this task does not introduce
+   a separate policy-terminal reclassification mechanism.
+3. Compose retains the loop and awaits stop/drain before Router disposal. Stop
+   rejects future/manual and queued work and drains already-admitted commits and
+   audit writes. Committed acknowledgement loss returns the persisted receipt.
+   Audit false/throw remains observable; replay checks retained receipt evidence
+   read-only and returns UNKNOWN if it is absent, rotated or unreadable.
+
+### Executed evidence
+
+Raw executed logs are gzip-preserved byte-for-byte, with raw/compressed SHA-256,
+commands and comparison records in [`ctr-s4-prep-r3`](../evidence/ctr-s4-prep-r3/).
+Node v26.7.0, macOS arm64, isolated temporary stores only.
+
+| Check | Actual result |
+|---|---|
+| Pure policy + batch regressions | 13 PASS / 0 FAIL |
+| Runtime wiring file, real JobStore and Router registry | 19 PASS / 0 FAIL |
+| Combined focused wiring | 32 PASS / 0 FAIL, rc=0 |
+| Final full Scheduler, default concurrency at source candidate | 434 PASS / 0 FAIL, rc=0 |
+| Existing 421 baseline and all 427 r2 names | retained with multiplicity, diff=empty; 7 additions, no duplicates |
+| Structure, task base 1921f879 -> source candidate | rc=1; exactly the same 11 pre-existing violation tuples, new=0 |
+| Compose legacy size | 673 -> 673 lines, no growth |
+| Independent Scheduler affected review `/root/baseline_audit` | PASS; 43/43 independently executed focused/dependent tests, zero original-scope blockers |
+| Independent runtime affected review `/root/runtime_review` | PASS; 19/19 tests plus 16 actual-registry shape checks, zero original-scope blockers |
+| Diff whitespace and changed-module syntax | PASS |
+
+The first concurrent Scheduler run during work was **427 PASS / 6 FAIL** (433
+tests); all six failed at existing seed fixtures before a stuck occurrence was
+available. The complete intermediate serial run passed **433/433**; the final
+concurrent run passed **434/434**. A fresh isolated r2 baseline passed **427/427**.
+These observations do not prove the cause of the initial six failures. Names:
+
+- C11-R1 core: exact trusted late_completed readback self-heals the fenced occurrence without a prompt
+- C11-R1 late_failed variant: the exact trusted failure settles the occurrence as failed
+- C11-R1 mismatch/conflict/pending/incomplete evidence is zero-write and stays fenced + HUMAN_REQUIRED
+- C11-R1 the readback consult is rate-limited per occurrence and STILL_IN_FLIGHT is zero-write
+- row 9: Router legal termination settlement auto-leads the Scheduler exact-occurrence settlement with an auditable no-replay receipt
+- row 9: the exact business late settlement carries the same auditable no-replay receipt
+
+
+### New concrete blocker: frozen payload no longer carries the changed decoder
+
+```text
+FINDING = REQUIRED_GATE_FAILURE / CONCRETE_REGRESSION
+SOURCE_HEAD = 8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4
+AFFECTED_READINESS = pinned migration closure; package/PR ready
+PR_READY = NO
+PRODUCTION_ALLOWED = NO
+```
+
+A broader runtime run on exact source candidate produced **283 PASS / 27 FAIL /
+4 SKIP** (314 tests, rc=1). Its exact r2 baseline in a separate full Git clone
+produced **268 PASS / 26 FAIL / 4 SKIP** (298 tests, rc=1). The 26 baseline
+failures (missing DSH dependencies, native-fixture and installer assertions) are
+individually retained in `runtime-failure-comparison.json`; they were not hidden,
+fixed or counted as PASS. Candidate adds exactly one failure:
+
+`production-pinned payload executes migration with distinct source and destination groups`.
+
+The test materializes the frozen watchdog payload with its SHA assertion. The
+current `occurrence-model.js` is correctly changed for the UNKNOWN provenance
+repair, but `WATCHDOG_PAYLOAD_SNAPSHOT.paths` still requires its exact old bytes:
+
+```text
+expected = 6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292
+actual   = df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd
+```
+
+The fixture catches this digest rejection while walking imports and omits that
+module; the staged migration then fails importing it. The real deployment
+controller `scripts/scheduler-cp-admission.mjs` also explicitly rejects the digest
+drift; this is not only a fixture limitation. Independent `/root/runtime_review`
+reproduced the single failing test (rc=1), and both reviewers confirmed the actual
+controller dependency. An old-byte embedding is not a valid CTR-S4 fix: the old
+decoder rejects the new policy failed/UNKNOWN record with
+`terminal state must equal executionOutcome`.
+
+The full legacy overlay already had two unrelated baseline drifted entries
+(product-api index and runtime entry); they remain unchanged. The candidate adds
+only this one decoder drift. No claim is made that the entire legacy controller
+was runnable before this task, or that the old 23-path watchdog overlay mounts
+CTR-S4 (it does not). The ordinary full-app installer is a distinct path.
+
+Minimum proposed closure is a separately scoped/reviewed update of only this
+snapshot digest to the reviewed decoder bytes, followed by the pinned migration
+and affected closure checks, retaining attribution of the two baseline drifts.
+The concrete one-line proposal is saved in
+`payload-pin-proposal.patch`; it has **not** been applied. User clarification was
+requested under the explicit r3 semantic-failure stop and three-defect scope.
+
+While awaiting that ruling: keep PR603 draft, preserve all completed source and
+review evidence, do not deploy/restart/enable/merge, and do not edit a shared
+checkout. This checkpoint does not claim completed r3 delivery or package ready.

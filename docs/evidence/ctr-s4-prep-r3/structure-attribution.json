@@ -1,0 +1,9 @@
+{
+  "actual_rc": 1,
+  "violations": 11,
+  "new_violations": 0,
+  "same_violation_tuples_as_r2": true,
+  "compose_base_lines": 673,
+  "compose_head_lines": 673,
+  "source_head": "8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4"
+}

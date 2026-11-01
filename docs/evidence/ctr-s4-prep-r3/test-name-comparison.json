@@ -1,0 +1,25 @@
+{
+  "source_head": "8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4",
+  "original_names": 421,
+  "r2_names": 427,
+  "final_names": 434,
+  "original_missing": [],
+  "r2_missing": [],
+  "existing_name_multiset_diff": [],
+  "r3_additions": [
+    "CTR-S4 batch termination policy failed retains UNKNOWN provenance and only future natural scheduling",
+    "CTR-S4 batch locks out identity definition and evidence drift with byte-identical negative writes",
+    "CTR-S4 batch rechecks inside lock and preserves another unknown aggregate fence",
+    "CTR-S4 batch committed acknowledgement loss returns canonical receipt and repeat is zero-write",
+    "CTR-S4 batch audit append failure remains observable without undoing authority",
+    "CTR-S4 batch exact business outcomes retain their proven execution result",
+    "CTR-S4 batch accepts coherent direct business and child-exit late evidence without losing provenance"
+  ],
+  "duplicates": [],
+  "normalization": "TAP reporter \\# only",
+  "final_result": {
+    "pass": 434,
+    "fail": 0,
+    "rc": 0
+  }
+}

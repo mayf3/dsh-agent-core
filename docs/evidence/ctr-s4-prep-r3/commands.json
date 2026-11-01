@@ -1,0 +1,9 @@
+{
+  "scheduler_final": "node --test --test-reporter=tap packages/scheduler/test/*.test.js packages/scheduler/test/*/*.test.js",
+  "scheduler_intermediate_serial": "node --test --test-concurrency=1 --test-reporter=tap packages/scheduler/test/*.test.js packages/scheduler/test/*/*.test.js",
+  "wiring": "node --test --test-reporter=tap packages/scheduler/test/watchdog/auto-reconcile.test.js packages/scheduler/test/watchdog/auto-reconcile-mutation.test.js packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+  "runtime_final": "node --test --test-reporter=tap packages/production-runtime/test/*.test.js packages/production-runtime/test/*/*.test.js",
+  "structure": "node scripts/verify-code-structure.mjs --base 1921f8795e2212506a7a833bc79b84c17ba50ea1 --head 8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4 --json",
+  "baseline_materialization": "git clone --no-hardlinks --no-checkout /tmp/ctr-s4-prep <isolated-temp>; git checkout --detach 06fc0737; symlink only scheduler node_modules; same test commands",
+  "baseline_archive_attempt": "Historical archive-based runtime attempt had 3 additional history-dependent fixture failures and was invalid for comparison; replaced by full-clone observation above."
+}

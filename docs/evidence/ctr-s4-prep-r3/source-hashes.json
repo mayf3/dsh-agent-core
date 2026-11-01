@@ -1,0 +1,17 @@
+{
+  "head": "8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4",
+  "base": "06fc0737ca83386daef343efeb421f4243407805",
+  "node": "v26.7.0",
+  "platform": "macOS arm64",
+  "files": {
+    "packages/production-runtime/src/compose.js": "82866de52960455ea57df51ff3f4b9910c8f6b062d632f88266fa19978570b2e",
+    "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js": "90f968d2d65d29b6016e31b043a8d5ab417b99d1940ca658389d9cd7b7904b8d",
+    "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js": "155448a3f24a21ee0b2dcc8d755da132fbbd1df1fb6a9fec56852675733144c2",
+    "packages/scheduler/src/eligibility.js": "d755ec9fb0b133d2423bb732f9a3d1a7391da09f33664e52ca81f038958e4f9f",
+    "packages/scheduler/src/occurrence-model.js": "df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd",
+    "packages/scheduler/src/watchdog/auto-reconcile-mutation.js": "12115987d6fb47a4e3cd75ab27ba1a622d5cef1eb42529f8d24e30f487461801",
+    "packages/scheduler/src/watchdog/auto-reconcile.js": "e916b92c82adac0b19e3c64de54b1b2ab9e9bc57946ec563aa92f039643b98b5",
+    "packages/scheduler/test/watchdog/auto-reconcile-mutation.test.js": "084d5a7116ed28d0de8432c0b55454ba27b4741a555b16c58fd30e7565ec0702",
+    "packages/scheduler/test/watchdog/auto-reconcile.test.js": "34cc66ce60e316ab6da043ea06c650e33b163e673ae74e74880f6514afbcc65e"
+  }
+}

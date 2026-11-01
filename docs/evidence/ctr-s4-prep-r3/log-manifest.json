@@ -1,0 +1,150 @@
+{
+  "batch-red.tap.gz": {
+    "sha256": "2108ba14fda20d48037ee3b8610cc31c312d5abc17d72243a8f33f9eaeef4370",
+    "raw_sha256": "a95b85f909c809d993df4c6a9eebac981d18210c1fb9a3ee581e3dac2593b692",
+    "raw_bytes": 5600,
+    "summary": {
+      "tests": 6,
+      "pass": 0,
+      "fail": 6,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "audit-replay-red.tap.gz": {
+    "sha256": "2056f0e1efae932f4f3b0705a22dff7bb027242b07f4fcd6fc40bac2574945c6",
+    "raw_sha256": "46be0475479aa2ae88ca2a477fbe7e428ee05b0960834eff9dd3fdb328bed7f4",
+    "raw_bytes": 979,
+    "summary": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "direct-business-red.tap.gz": {
+    "sha256": "e38e19b936c0de33f9adc5a95702b03fdca02a0a411a485609934dc6d72c61ff",
+    "raw_sha256": "dff31073c4f176bf86119f85f6d3ea2e699d4278f378248b0cc4d1f2d7c95e9d",
+    "raw_bytes": 998,
+    "summary": {
+      "tests": 1,
+      "pass": 0,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "runtime-identity-red.tap.gz": {
+    "sha256": "c4e3717f19199e4c85c25b1ea8a257244faf18382bb41d726b03c0f2bea28f0e",
+    "raw_sha256": "66895e4e8b68259de7febf053bbde240923374f3a84fee0ccb409eb78f8c76c0",
+    "raw_bytes": 3242,
+    "summary": {}
+  },
+  "runtime-stop-red.tap.gz": {
+    "sha256": "b8061d57b899ea6bf9eaa8c65b503ff896225eb820e10fe3273053bd901c1789",
+    "raw_sha256": "b64b87446d8e70e8c93dc08c6f2e74f536a27c5a0c2909f478c75c55d6bbf3c4",
+    "raw_bytes": 4147,
+    "summary": {}
+  },
+  "runtime-shapes-red.tap.gz": {
+    "sha256": "3dab2bc334288581061728608afaa49616018c6c5a9cdfc193229f81265eebd0",
+    "raw_sha256": "73e33ad21e097214796406cf37431f918223690e7090a2fb657e8555f7c48516",
+    "raw_bytes": 5408,
+    "summary": {}
+  },
+  "wiring-green.tap.gz": {
+    "sha256": "553425a40bae08d13ae096670ff58131f10259fc2c4ab522bf46ba59ec122f83",
+    "raw_sha256": "4fc924db04129d4273f4377ed37126b48a6f3eb5fe94c2967263eee13f0a1411",
+    "raw_bytes": 7373,
+    "summary": {
+      "tests": 32,
+      "pass": 32,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "scheduler-concurrent-initial.tap.gz": {
+    "sha256": "00e99a84d1046c956347cceaee1cacdfb7665865e46367cfca9d61e71512c204",
+    "raw_sha256": "203f331cb5051c0710aff416898960684dcace5a3180791ab1fb038c9f5f0786",
+    "raw_bytes": 110331,
+    "summary": {
+      "tests": 433,
+      "pass": 427,
+      "fail": 6,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "scheduler-serial-intermediate.tap.gz": {
+    "sha256": "5703747869f2569571960348f6d95e11c594533c19b9c31dcc42af60916484ba",
+    "raw_sha256": "f9d56c7d9e1305bef3733d027026ba968b6bd4a7ae8f5f97f396e903625fafa0",
+    "raw_bytes": 106264,
+    "summary": {
+      "tests": 433,
+      "pass": 433,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "scheduler-final.tap.gz": {
+    "sha256": "bef86668cd96577bc244c65c46d59a81e2d0cff7d0cbd64d4fff35e40c156c85",
+    "raw_sha256": "6f18cafadacea48caf49fb07bb4fa11b3ef503d3f5fbe6e5efbf751657f76989",
+    "raw_bytes": 106592,
+    "summary": {
+      "tests": 434,
+      "pass": 434,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "scheduler-baseline-fresh.tap.gz": {
+    "sha256": "ed2685b126eed8f5489d4ec54fea1d76dde9e976fae35115a126e98020783538",
+    "raw_sha256": "7b35e60ff8941af0123b2e1a2497deef301bcad3062d8388e10a95be9ac849f9",
+    "raw_bytes": 104856,
+    "summary": {
+      "tests": 427,
+      "pass": 427,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "runtime-final.tap.gz": {
+    "sha256": "137c70913d6ee3211a5263ee954a70ea030b2ce812d90056f98c8b329ef675a2",
+    "raw_sha256": "42edb28566525868b135cbf109f126ba1a36d1d16c101fb616219d4690d5b225",
+    "raw_bytes": 200242,
+    "summary": {
+      "tests": 314,
+      "pass": 283,
+      "fail": 27,
+      "cancelled": 0,
+      "skipped": 4,
+      "todo": 0
+    }
+  },
+  "runtime-baseline.tap.gz": {
+    "sha256": "490820da1f27c82ad6d75117c05f6659b18f393304b673a14b1b72467d320a41",
+    "raw_sha256": "b307c97eecd14df2eec3951f4ebb1dce1214ce8f58517bcc775fa9bb3f62955b",
+    "raw_bytes": 196465,
+    "summary": {
+      "tests": 298,
+      "pass": 268,
+      "fail": 26,
+      "cancelled": 0,
+      "skipped": 4,
+      "todo": 0
+    }
+  }
+}

@@ -1,0 +1,11 @@
+--- a/scripts/lib/watchdog-payload-snapshot.mjs
++++ b/scripts/lib/watchdog-payload-snapshot.mjs
+@@ -72,7 +72,7 @@
+     'packages/production-runtime/src/scheduler/health-runtime.js': '49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a',
+     'packages/production-runtime/src/scheduler/self-service-runtime.js': 'acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0',
+     'packages/scheduler/src/index.js': '9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d',
+-    'packages/scheduler/src/occurrence-model.js': '6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292',
++    'packages/scheduler/src/occurrence-model.js': 'df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd',
+     'packages/scheduler/src/self-ops/index.js': '0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293',
+     'packages/scheduler/src/watchdog/delivery-projection.js': '100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b',
+     'packages/scheduler/src/watchdog/delivery.js': '6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c',

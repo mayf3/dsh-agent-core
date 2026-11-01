@@ -1,0 +1,226 @@
+{
+  "baselineHead": "06fc0737ca83386daef343efeb421f4243407805",
+  "candidateHead": "8dfd2854aaa0c1286394b5a5bc8c2511b536b5e4",
+  "baselineDrifts": 2,
+  "candidateDrifts": 3,
+  "newDrifts": [
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "expected": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "baseline": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "candidate": "df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd",
+      "baselineDrift": false,
+      "candidateDrift": true,
+      "embedded": false
+    }
+  ],
+  "rows": [
+    {
+      "path": "packages/product-api/src/index.js",
+      "expected": "345551ef4ba9f094516cb8b3e5af2431fca4f16545dd4011dba89a9618800ffb",
+      "baseline": "2a5eb5f31e0b2739f05bf49509d5a5195bd3ee0186a194f6ae741b0f9172fee0",
+      "candidate": "2a5eb5f31e0b2739f05bf49509d5a5195bd3ee0186a194f6ae741b0f9172fee0",
+      "baselineDrift": true,
+      "candidateDrift": true,
+      "embedded": false
+    },
+    {
+      "path": "packages/product-api/src/scheduler-health-routes.js",
+      "expected": "8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d",
+      "baseline": "8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d",
+      "candidate": "8c04161f807f17aafb4a0cb265ea07b5f95a908b1ad735602f00f33c8a9ece5d",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/compose.js",
+      "expected": "a555adc8db9ac356c12cd504bb354074af973619e89d4fb619f363192cde1ae3",
+      "baseline": "a555adc8db9ac356c12cd504bb354074af973619e89d4fb619f363192cde1ae3",
+      "candidate": "a555adc8db9ac356c12cd504bb354074af973619e89d4fb619f363192cde1ae3",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": true
+    },
+    {
+      "path": "packages/production-runtime/src/entry.js",
+      "expected": "5a33a90fea9418982ac4d1e74c6bbfa19981208283c0c5800ddaad643b500016",
+      "baseline": "59b87c66b22d49f823b3f2fbaf78cd81543388bb20ad68a6051b2a9a6370fb9c",
+      "candidate": "59b87c66b22d49f823b3f2fbaf78cd81543388bb20ad68a6051b2a9a6370fb9c",
+      "baselineDrift": true,
+      "candidateDrift": true,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/paths.js",
+      "expected": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "baseline": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "candidate": "44dbf7df2dd8e660b0bfb67d22e7bad2833c9147a0463577e859cf916ad54f36",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler-invoker.js",
+      "expected": "d02643a28bcb8dce705bfd6448ddd84a5bb4a88fe4d1bfc76114b798956e8f7d",
+      "baseline": "d02643a28bcb8dce705bfd6448ddd84a5bb4a88fe4d1bfc76114b798956e8f7d",
+      "candidate": "d02643a28bcb8dce705bfd6448ddd84a5bb4a88fe4d1bfc76114b798956e8f7d",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/deployment-canary-control.js",
+      "expected": "d226b9b8c53e97438ab5aab5e13c07d1b2396a654e1961e0104664c7bcf59ef4",
+      "baseline": "d226b9b8c53e97438ab5aab5e13c07d1b2396a654e1961e0104664c7bcf59ef4",
+      "candidate": "d226b9b8c53e97438ab5aab5e13c07d1b2396a654e1961e0104664c7bcf59ef4",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/health-runtime.js",
+      "expected": "49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a",
+      "baseline": "49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a",
+      "candidate": "49c2fb7b77e6d5bfe8d38e3c66c613b527f83a3bed110eb95c6d8000201c694a",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/production-runtime/src/scheduler/self-service-runtime.js",
+      "expected": "acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0",
+      "baseline": "acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0",
+      "candidate": "acfde749a7c2c9201cc6270c4829c1267ce94d995b5610f39a64da64d2101df0",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/index.js",
+      "expected": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d",
+      "baseline": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d",
+      "candidate": "9ded6900d6f60b1f50c04a5327a5d1b4dd92b31ca7816f34707198a3432c705d",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/occurrence-model.js",
+      "expected": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "baseline": "6db88f5cee57d8a217fabde4749ffd7bf677399f348208131b2e2f2309ee9292",
+      "candidate": "df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd",
+      "baselineDrift": false,
+      "candidateDrift": true,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/self-ops/index.js",
+      "expected": "0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293",
+      "baseline": "0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293",
+      "candidate": "0fcb6811f53278f23bca7bfed1cd841a1034874054533453935e4c75da4c4293",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/delivery-projection.js",
+      "expected": "100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b",
+      "baseline": "100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b",
+      "candidate": "100459c3e117b6ac4d9074f85b16a56a71b0bb351076f2bec6f42aed6c84a32b",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/delivery.js",
+      "expected": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c",
+      "baseline": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c",
+      "candidate": "6b875ae5ad13af7d4a066caafdc7375c2000dc789bd63354f616b0c56b21925c",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/durable-state.js",
+      "expected": "a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835",
+      "baseline": "a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835",
+      "candidate": "a0bae637f5c73750964334d90f02fc0dab742558e826473ef10813e2eb5d2835",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/health.js",
+      "expected": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3",
+      "baseline": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3",
+      "candidate": "ab5aab07f6cdae61b173ab0c925d829c99416091985a8eb455ae90c798b625a3",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/incident-compiler.js",
+      "expected": "b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed",
+      "baseline": "b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed",
+      "candidate": "b4d0f02609468cffcc131fd28213ed6f599ae4caeb925e51fabb06e8cab807ed",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/incident-lifecycle.js",
+      "expected": "249e44a8e7d211a71b5b0dac9bc35e4c9c0588e2cebd82a50aa964fd3fd6bb68",
+      "baseline": "249e44a8e7d211a71b5b0dac9bc35e4c9c0588e2cebd82a50aa964fd3fd6bb68",
+      "candidate": "249e44a8e7d211a71b5b0dac9bc35e4c9c0588e2cebd82a50aa964fd3fd6bb68",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/index.js",
+      "expected": "b84914b558438a94e588db073601df0f548219fd5ccdf2cfb7eec4da6af56dfe",
+      "baseline": "b84914b558438a94e588db073601df0f548219fd5ccdf2cfb7eec4da6af56dfe",
+      "candidate": "b84914b558438a94e588db073601df0f548219fd5ccdf2cfb7eec4da6af56dfe",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/private-state-io.js",
+      "expected": "456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b",
+      "baseline": "456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b",
+      "candidate": "456227694c20e51158625e7dfdf40ce867a0b37b60cff8025af85ea78dba1f6b",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/reconciliation.js",
+      "expected": "3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa",
+      "baseline": "3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa",
+      "candidate": "3d1d31b6997e6c461ae8124bdf183e256e28630dcc930d5e5e01e666b8564aaa",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "packages/scheduler/src/watchdog/routing.js",
+      "expected": "91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547",
+      "baseline": "91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547",
+      "candidate": "91ec8516dedb2ac4f001434cbe5baa32fd8c0f3508e3256fa6d5c91d02334547",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    },
+    {
+      "path": "scripts/scheduler-watchdog.mjs",
+      "expected": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522",
+      "baseline": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522",
+      "candidate": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522",
+      "baselineDrift": false,
+      "candidateDrift": false,
+      "embedded": false
+    }
+  ]
+}
