@@ -1,0 +1,9 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/agent-provisioning/test/fleet-generation.test.js"
+  ],
+  "exitCode": 1,
+  "stage": "RED missing generation reader"
+}

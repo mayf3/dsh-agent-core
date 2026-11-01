@@ -230,6 +230,7 @@ export function createProcessRegistry({
     const initial = lifecycleSlots.get(agentId)
     if (initial?.state === 'READY') {
       if (initial.processRef?.exit === undefined) {
+        initial.processRef.assertFleetGeneration?.()
         log.log(`reuse process for ${agentId} (pid ${initial.processRef?.pid})`)
         return Promise.resolve(initial.processRef)
       }
@@ -329,6 +330,7 @@ export function createProcessRegistry({
         model: processConfig.model,
         providerEnv: processConfig.providerEnv,
         omitEnv: processConfig.omitEnv,
+        ...(processConfig.subscription?.fleetGeneration === undefined ? {} : { fleetGeneration: processConfig.subscription.fleetGeneration }),
         log,
         // The per-agent process must know its own identity: the memory plugin
         // and the switch tool resolve agentId from $DSH_AGENT_ID when set.

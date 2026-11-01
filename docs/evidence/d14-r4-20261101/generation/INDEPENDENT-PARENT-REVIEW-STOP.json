@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "review_kind": "AFFECTED_CONTRACT",
+  "review_scope": "DELTA",
+  "reviewer": "d14_authority_audit",
+  "author_independence": "PASS for parent-authored integrations only; own generation module excluded",
+  "base_head": "eb78b169e1659fdec06019148c71f78fea8f5640",
+  "source_hashes": {
+    "packages/production-runtime/src/fleet-model-route.js": "80c5bbfd97d22cb330d30e98850dd708a65e4bc5d35a0716cd10f4f8459c4dad",
+    "packages/production-runtime/src/model-overrides.js": "0eef872aeb5018b5eac99f7ffab678705d68d095ebe5650dcdfcebd6355e6091",
+    "packages/production-runtime/src/compose.js": "e3f6602177033cdd04ce54f2df6afd7cc9a2dc873203b21c0c5aaaf291d4b072",
+    "packages/agent-provisioning/src/deployment-artifact.js": "85218b1c5a30029b1d93ca48f845ae93732c825d2fa53660095692454f1aeddd",
+    "packages/agent-provisioning/src/index.js": "5fccb5f5b41986767fa25c009b9c8e7d5b3efef51f77529162c08e11626409b0",
+    "packages/agent-provisioning/src/fleet-import-hook.js": "3d273893cf2575ccbb05db72f893f9bddc07bae4b1209479055630f79626d627",
+    "packages/agent-router/src/process/agent-process.js": "96c24e8cbf183f2ec31ca7512d5aad344fa4d79a6e725c7e0e0cbdd7d6717513",
+    "packages/agent-router/src/process/spawn.js": "912ab25796a518c239229eaf4a3251c708d83a16c2f128349a057186dd2fe5d3",
+    "packages/agent-router/src/process/turn-execution.js": "6b86a59f41a0f2ec0fbbee5b267f51341241701586e40f6c2954afd1180e2efa",
+    "packages/agent-router/src/process-registry.js": "376edb1f647b9a3812a4a0c2255a1e4561f8abc0bff421f184c31141b4e0f075",
+    "packages/agent-router/src/process-registry-route-gate.js": "b141c79f0b24df5d631891a11f846578f98129b55561f5c90a3eb9798b59408e",
+    "packages/agent-router/src/route-chain.js": "125734fc684d8dce1b5c4016b72892adedd10578e75982beed58bd076a97091d"
+  },
+  "evaluated_at": "2026-11-01T01:18:34.340937+00:00",
+  "status": "STOPPED_SEMANTIC_REGRESSION",
+  "frozen_blocker_union": [
+    "D14-R4-NONCODEX-001"
+  ],
+  "blockers": [
+    {
+      "id": "D14-R4-NONCODEX-001",
+      "class": "CONCRETE_REGRESSION",
+      "source": [
+        "AGENT_CORE_D14_FLEET_GENERATION_SUCCESSION_V1 CTR-D14-005 preserve provider/model/order/effort and existing fixes",
+        "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V2 ACC-G6R2-006 non-Codex regression coverage"
+      ],
+      "location": "packages/production-runtime/src/fleet-model-route.js fleetSubscription",
+      "counterexample": "Existing valid version3 subscription route provider=zai model=glm-5.3 plugin=other-plugin pluginVersion=0.2.3 credentialReadiness=zai-api-key-home resolves without fleet context, but the same route under accepted gen032 fleet context throws AGENT_MODEL_OVERRIDE_INVALID: subscription pin differs from selected fleet generation. The helper selects the Codex generation for every non-dshr1 subscription before testing plugin identity.",
+      "impact": "Configured fleet rejects an unaffected supported non-Codex route; violates preserved route scope. This is actual changed-surface behavior, not planned TDD RED or setup failure.",
+      "minimal_closure": "A later explicitly resumed repair should restrict fleetSubscription engagement to ordinary dsh-codex while preserving supported non-Codex subscription path; add this exact regression fixture and independently delta-review. No repair performed because Owner semantic-failure stop is active.",
+      "evidence": "INDEPENDENT-NONCODEX-REGRESSION.jsonl",
+      "affected_readiness": {
+        "implementation_delivery": "NO",
+        "source_merge": "NO",
+        "production_admission": "NO"
+      }
+    }
+  ],
+  "observations": [
+    "Generation owned module13/13 focused mechanism tests passed; synthetic qualification is not production compatibility proof.",
+    "Parent actual import hook independently retained immutable gen032 root/subpath URLs after current changed (INDEPENDENT-HOOK-RETAINED-PATH.jsonl).",
+    "No semantic edits or further validation after the one minimal non-Codex reproducer."
+  ],
+  "next_action": "STOP; preserve stopped draft checkpoint and report exact blocker; no fix under this turn"
+}

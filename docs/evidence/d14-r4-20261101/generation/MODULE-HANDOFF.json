@@ -1,0 +1,28 @@
+{
+  "head": "eb78b169e1659fdec06019148c71f78fea8f5640",
+  "time": "2026-11-01T01:14:19.444517+00:00",
+  "scope": "read-only generation mechanism; synthetic qualification only; no production admissibility",
+  "files": {
+    "packages/agent-provisioning/src/fleet-generation.js": "0b6793e6adc22e8cc0d8427e6da46f1731fc174e00996d1b2047c88925454359",
+    "packages/agent-provisioning/src/fleet-generation-payload.js": "f73053ae6285bb7fee6e2b220ad80d66c679b29b5fd1d8d7db05176566a39a38",
+    "packages/agent-provisioning/test/fleet-generation-fixture.js": "4288c1d0f031c4ffddb59f72ef2acda004894a050b31d75068a83d7f85f0fabb",
+    "packages/agent-provisioning/test/fleet-generation.test.js": "2bb7dd2ee9edf71e7ab1975930094e7d9173ed4a079b761f8718941fe8746933"
+  },
+  "RED": {
+    "exitCode": 1,
+    "pass": 0,
+    "fail": 11
+  },
+  "GREEN": {
+    "exitCode": 0,
+    "pass": 13,
+    "fail": 0,
+    "skip": 0
+  },
+  "unavailableFixture": {
+    "exitCode": 0,
+    "pass": 2,
+    "fail": 0,
+    "skip": 11
+  }
+}

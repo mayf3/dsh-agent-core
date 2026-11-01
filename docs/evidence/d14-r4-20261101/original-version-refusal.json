@@ -1,0 +1,10 @@
+{
+  "sourceHead": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "expected": "0.2.3",
+  "resolved": "0.3.2",
+  "result": {
+    "code": "plugin_version_mismatch",
+    "message": "agent-provisioning: expected dsh-codex@0.2.3, resolved 0.3.2"
+  },
+  "limit": "original version gate with synthetic pre-gate Harness/artifact inputs, exact released home bytes; no compatibility claim"
+}

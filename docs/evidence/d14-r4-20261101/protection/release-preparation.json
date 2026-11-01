@@ -1,0 +1,24 @@
+{
+  "releaseArchiveSha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+  "packageSourceLibFilesComparedToAcceptedSource": 57,
+  "mismatches": [],
+  "closureSourceCommit": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "closureManifestSha256": "223fd2031c34267b4d167e3c725128472207a1c555f77c84ce7cf8d8f6822d15",
+  "closureSummaryKeys": [
+    "manifestVersion",
+    "sourceCommit",
+    "rootPolicy",
+    "roots",
+    "packages",
+    "optionalMissing",
+    "layout",
+    "packagePlacements",
+    "verifiedEdges",
+    "files",
+    "treeDigest",
+    "treeDigestAlgorithm",
+    "fileCount",
+    "totalBytes"
+  ],
+  "packageRoot": "/tmp/proddsh-d14-r4-evidence-20261101/protection/release/package"
+}

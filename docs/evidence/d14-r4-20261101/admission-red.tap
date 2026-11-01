@@ -1,0 +1,46 @@
+✖ D14 unknown selected fleet generation refuses before route composition (9.114208ms)
+✖ D14 missing current in a configured fleet cannot fall back to an old expected pin (0.755375ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65.889834
+
+✖ failing tests:
+
+test at packages/production-runtime/test/fleet-generation-admission.test.js:8:1
+✖ D14 unknown selected fleet generation refuses before route composition (9.114208ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/test/fleet-generation-admission.test.js:14:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { code: 'FLEET_GENERATION_INVALID' },
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/production-runtime/test/fleet-generation-admission.test.js:17:1
+✖ D14 missing current in a configured fleet cannot fall back to an old expected pin (0.755375ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/test/fleet-generation-admission.test.js:21:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { code: 'FLEET_GENERATION_INVALID' },
+    operator: 'throws',
+    diff: 'simple'
+  }

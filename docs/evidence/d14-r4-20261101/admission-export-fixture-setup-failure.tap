@@ -1,0 +1,39 @@
+✔ D14 unqualified generation is rejected before child construction or dispatch (19.446458ms)
+✖ D14 child imports stay on immutable payload and switched current rejects queued dispatch (15641.645958ms)
+✔ D14 unknown selected fleet generation refuses before route composition (10.043959ms)
+✔ D14 missing current in a configured fleet cannot fall back to an old expected pin (3.993583ms)
+✔ D14 explicit generation migration admits the exact home and still runs all input guards (15588.28ms)
+✔ D14 ordinary production context rejects missing fleet; explicit builtin remains usable (2.961959ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15721.052792
+
+✖ failing tests:
+
+test at packages/agent-router/test/fleet-generation-guard.test.js:27:1
+✖ D14 child imports stay on immutable payload and switched current rejects queued dispatch (15641.645958ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-router/test/fleet-generation-guard.test.js:56:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:969:18)
+      at Test.postRun (node:internal/test_runner/test:1537:19)
+      at Test.run (node:internal/test_runner/test:1462:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

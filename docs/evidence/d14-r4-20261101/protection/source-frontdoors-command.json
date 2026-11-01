@@ -1,0 +1,25 @@
+{
+  "startedAt": "2026-11-01T01:11:57.967080+00:00",
+  "cwd": "/tmp/proddsh-d14-r4-evidence-20261101/protection/source",
+  "command": [
+    "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/oauth-provider.spec.ts",
+    "tests/auth-routes.spec.ts",
+    "tests/bin.spec.ts",
+    "tests/proxy.spec.ts",
+    "tests/usage.spec.ts",
+    "--maxWorkers=1",
+    "--bail=1",
+    "--reporter=verbose"
+  ],
+  "isolatedEnvironment": {
+    "HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-home",
+    "DSH_HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-dsh-home",
+    "TMPDIR": "/tmp/proddsh-d14-r4-evidence-20261101/protection/tmp",
+    "NODE_OPTIONS": "--import=/tmp/proddsh-d14-r4-evidence-20261101/protection/deny-external-network.mjs"
+  },
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "testSubject": "source OAuth/cancellation/proxy/usage plus Web and CLI mocked-auth orchestration; not actual released Web/CLI recovery"
+}

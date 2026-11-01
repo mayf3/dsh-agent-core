@@ -1,0 +1,13 @@
+PASS R1 real released Loader/Config/apply/service carries explicit canonical filename
+PASS R1 released store rejects relative/component symlink/hardlink/private-parent negatives
+PASS R3 released pending same-generation fails before read/use/refresh
+PASS R3 released invalid replacement preserves intent; valid replacement clears with zero dispatch
+PASS current six synthetic credential schemas preserve identity and unrelated providers in released store
+PASS R2 released store 10 independent-process burst at most one refresh
+PASS R2 released store 20 independent-process burst at most one refresh
+PASS R2 released store 50 independent-process burst at most one refresh
+PASS R2 released store slow owner with 10 independent-process waiters refreshes once
+PASS R2/R3 released store crash-pre crash boundary
+PASS R2/R3 released store crash-post-rotation crash boundary
+PASS R2/R3 released store crash-post-write crash boundary
+PASS R3 actual released root loginOpenAICodex recovers malformed pending document with supplied transport

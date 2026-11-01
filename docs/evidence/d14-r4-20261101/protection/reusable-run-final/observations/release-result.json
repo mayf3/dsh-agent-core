@@ -1,0 +1,76 @@
+{
+  "outcome": "PASS",
+  "observedAt": "2026-11-01T01:15:44.306Z",
+  "packageRoot": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/release/package",
+  "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+  "libIndexSha256": "2d3504afb5e0540d8da4f1de0660f3148eaf8aceef159b45391f33bd9b097c8c",
+  "observations": [
+    {
+      "name": "R3 real released Loader-created service.login Owner recovery",
+      "result": "PASS",
+      "syntheticProviderCalls": 4,
+      "explicitLoginCompletingRefreshGrants": 1,
+      "automaticRecoveryRefreshes": 0
+    },
+    {
+      "name": "R1 real released Loader/Config/apply/service carries explicit canonical filename",
+      "result": "PASS"
+    },
+    {
+      "name": "R1 released store rejects relative/component symlink/hardlink/private-parent negatives",
+      "result": "PASS"
+    },
+    {
+      "name": "R3 released pending same-generation fails before read/use/refresh",
+      "result": "PASS"
+    },
+    {
+      "name": "R3 released invalid replacement preserves intent; valid replacement clears with zero dispatch",
+      "result": "PASS"
+    },
+    {
+      "name": "current six synthetic credential schemas preserve identity and unrelated providers in released store",
+      "result": "PASS"
+    },
+    {
+      "name": "R2 released store 10 independent-process burst at most one refresh",
+      "result": "PASS"
+    },
+    {
+      "name": "R2 released store 20 independent-process burst at most one refresh",
+      "result": "PASS"
+    },
+    {
+      "name": "R2 released store 50 independent-process burst at most one refresh",
+      "result": "PASS"
+    },
+    {
+      "name": "R2 released store slow owner with 10 independent-process waiters refreshes once",
+      "result": "PASS"
+    },
+    {
+      "name": "R2/R3 released store crash-pre crash boundary",
+      "result": "PASS"
+    },
+    {
+      "name": "R2/R3 released store crash-post-rotation crash boundary",
+      "result": "PASS"
+    },
+    {
+      "name": "R2/R3 released store crash-post-write crash boundary",
+      "result": "PASS"
+    },
+    {
+      "name": "R3 actual released root loginOpenAICodex recovers malformed pending document with supplied transport",
+      "result": "PASS"
+    }
+  ],
+  "proofScope": "released candidate in its shipped dependency closure with synthetic data/transports only",
+  "limits": [
+    "No real credential contents accessed",
+    "No production initialization/deployment/restart",
+    "No actual installed Harness identity or current Core admission proof",
+    "Web and CLI front doors remain separate source/mocked coverage",
+    "Post-write crash fixture synthesizes commit via candidate atomic-write dependency; source durability instrumentation is separate"
+  ]
+}

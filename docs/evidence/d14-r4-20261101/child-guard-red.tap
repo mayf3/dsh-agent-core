@@ -1,0 +1,27 @@
+✖ D14 unqualified generation is rejected before child construction or dispatch (0.745333ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 46.941334
+
+✖ failing tests:
+
+test at packages/agent-router/test/fleet-generation-guard.test.js:5:1
+✖ D14 unqualified generation is rejected before child construction or dispatch (0.745333ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-router/test/fleet-generation-guard.test.js:6:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: { code: 'FLEET_GENERATION_INVALID' },
+    operator: 'throws',
+    diff: 'simple'
+  }

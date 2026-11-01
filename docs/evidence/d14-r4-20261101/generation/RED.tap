@@ -1,0 +1,347 @@
+✖ absence of fleet control alone preserves distinct bounded legacy consumers (0.6785ms)
+✖ released bytes and separately reviewed synthetic fixture yield one frozen serializable snapshot (0.14025ms)
+✖ self-PASS descriptor cannot replace missing reviewed release evidence (0.569417ms)
+✖ unaccepted plugin identities and guessed Harness closure refuse even with a rebound receipt (0.947375ms)
+✖ missing, non-independent and descriptor-mismatched reviews refuse (0.730709ms)
+✖ drifted or unprotected evidence logs refuse (0.172875ms)
+✖ selected plugin payload drift and undeclared executable files refuse without repair (0.351375ms)
+✖ archive and embedded dependency closure drift refuse (0.445ms)
+✖ dispatch rejects a changed selector, wrong home and wrong actual Harness against frozen snapshot (0.125084ms)
+✖ dispatch detects newly reviewed descriptor changes and forged serialized snapshot fields (0.072917ms)
+✖ generation verification leaves shared payload and reviewed files unchanged (0.183916ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 0
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3556.77
+
+✖ failing tests:
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:20:1
+✖ absence of fleet control alone preserves distinct bounded legacy consumers (0.6785ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:21:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:30:1
+✖ released bytes and separately reviewed synthetic fixture yield one frozen serializable snapshot (0.14025ms)
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:31:20)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:43:1
+✖ self-PASS descriptor cannot replace missing reviewed release evidence (0.569417ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:46:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:46:9)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:49:1
+✖ unaccepted plugin identities and guessed Harness closure refuse even with a rebound receipt (0.947375ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:52:5)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:52:5)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:57:1
+✖ missing, non-independent and descriptor-mismatched reviews refuse (0.730709ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:61:5)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:61:5)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:66:1
+✖ drifted or unprotected evidence logs refuse (0.172875ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:70:3)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:70:3)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:76:1
+✖ selected plugin payload drift and undeclared executable files refuse without repair (0.351375ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:80:3)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:80:3)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:88:1
+✖ archive and embedded dependency closure drift refuse (0.445ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:93:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: generation selection reader must exist
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+        at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at refuses (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:18:30)
+        at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:93:9)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1397:25)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:969:7),
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:100:1
+✖ dispatch rejects a changed selector, wrong home and wrong actual Harness against frozen snapshot (0.125084ms)
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:101:20)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:113:1
+✖ dispatch detects newly reviewed descriptor changes and forged serialized snapshot fields (0.072917ms)
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:114:20)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/agent-provisioning/test/fleet-generation.test.js:121:1
+✖ generation verification leaves shared payload and reviewed files unchanged (0.183916ms)
+  AssertionError [ERR_ASSERTION]: generation selection reader must exist
+  + actual - expected
+  
+  + 'undefined'
+  - 'function'
+  
+      at read (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:15:10)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/fleet-generation.test.js:124:37)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: 'function',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

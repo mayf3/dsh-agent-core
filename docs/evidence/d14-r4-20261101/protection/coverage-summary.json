@@ -1,0 +1,134 @@
+{
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceGitStatusAfter": "",
+  "taskSourceLibTestDiffAfter": [],
+  "sourceNamedPassingCounts": {
+    "tests/auth-routes.spec.ts": 29,
+    "tests/bin.spec.ts": 12,
+    "tests/credential-document.spec.ts": 15,
+    "tests/loader-composition.spec.ts": 1,
+    "tests/oauth-provider.spec.ts": 8,
+    "tests/protection-composition.spec.ts": 12,
+    "tests/proxy.spec.ts": 4,
+    "tests/service-config.spec.ts": 2,
+    "tests/shared-durability.spec.ts": 3,
+    "tests/shared-store.spec.ts": 9,
+    "tests/store.spec.ts": 7,
+    "tests/usage.spec.ts": 17
+  },
+  "sourceFiles": 12,
+  "releaseObservationCount": 14,
+  "knownShippedPackageVersions": {
+    "@deepseek-ai/cordis-plugin-loader": "1.0.5",
+    "@deepseek-ai/cordis": "4.0.4",
+    "@deepseek-ai/dsh-atomic-write": "0.2.0-rc.1",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.1",
+    "@deepseek-ai/dsh-session": "0.2.0-rc.1",
+    "@earendil-works/pi-ai": "0.85.1"
+  },
+  "actualHarnessVersion": "UNKNOWN",
+  "actualHarnessCommit": "UNKNOWN",
+  "productionAcceptance": false,
+  "coverage": [
+    {
+      "surface": "R1 Loader/Config/apply/service/store",
+      "source": "PASS existing loader-composition/service-config tests",
+      "release": "PASS actual built Loader uses shipped candidate llm/web deps",
+      "gap": "Current production Harness/Core not initialized"
+    },
+    {
+      "surface": "R1 filesystem identity",
+      "source": "PASS relative/component symlink/hardlink/private-parent/0600 ownership negatives",
+      "release": "PASS actual built store negatives",
+      "gap": "Real credential metadata/contents never inspected"
+    },
+    {
+      "surface": "R2 lock/intent/concurrency",
+      "source": "PASS 10/20/50 independent processes; slow owner; fsync instrumentation",
+      "release": "PASS 10/20/50 independent built-lib worker processes; slow10; durable intent state before callback",
+      "gap": "Release fsync event instrumentation not separately injected"
+    },
+    {
+      "surface": "R2/R3 crashes",
+      "source": "PASS predispatch/postrotation/prewrite/postwrite/preclear; commit sync failure",
+      "release": "PASS same worker boundaries; postwrite uses candidate atomic-write dependency to synthesize committed inode",
+      "gap": "Not a production crash or old worker termination proof"
+    },
+    {
+      "surface": "Current document compatibility",
+      "source": "PASS six synthetic shapes with idToken/email/other provider/concurrent-edit preservation",
+      "release": "PASS six synthetic shapes preserve identity/unrelated providers",
+      "gap": "No assertion about actual protected credential document"
+    },
+    {
+      "surface": "Pending/invalid and valid replacement",
+      "source": "PASS same-generation failclosed; invalid evidence retained; valid inode recovery",
+      "release": "PASS same-generation read/use/refresh rejects; malformed/mode/hardlink replacement retains intent; valid replacement clears without provider call",
+      "gap": "Real canonical document/pending state not read"
+    },
+    {
+      "surface": "Explicit Owner login root entry",
+      "source": "PASS actual loginOpenAICodex -> Models.login with supplied fake devicecode fetch",
+      "release": "PASS actual built root loginOpenAICodex with supplied fake transport",
+      "gap": "Each explicit login completes with one synthetic refresh grant (not automatic recovery retry)"
+    },
+    {
+      "surface": "Explicit Owner login service entry",
+      "source": "Constructor/config source PASS; actual login covered in release",
+      "release": "PASS actual Loader-created service.login with supplied fake service.proxy.fetch",
+      "gap": "No actual Owner OAuth/account or production restore"
+    },
+    {
+      "surface": "Web login/status/cancellation/settings",
+      "source": "PASS 29 existing auth-routes cases; downstream auth.ts login/status/logout mocked",
+      "release": "NOT_EXECUTED actual Web login",
+      "gap": "Do not call mocked orchestration full recovery"
+    },
+    {
+      "surface": "CLI login/status",
+      "source": "PASS 14 existing bin cases; downstream auth.ts mocked; login flag rejection covered",
+      "release": "NOT_EXECUTED actual CLI login",
+      "gap": "No positive real CLI Owner login flow executed"
+    },
+    {
+      "surface": "Proxy/cancellation/usage401/403/error identity",
+      "source": "PASS existing source OAuth/provider/proxy/usage suites; local proxy guard correction recorded",
+      "release": "Pending/error root/store/usage identity PASS; proxy transport not separately exercised by native runner",
+      "gap": "Source vs compiled-library scope stays distinct"
+    },
+    {
+      "surface": "Full Harness and Core combination",
+      "source": "UNKNOWN full installed Harness version/commit; plugin source checks are not Core admission",
+      "release": "UNKNOWN current installed Harness/Core tuple",
+      "gap": "Hard production gate remains; shipped SDK package versions do not identify loaded Harness"
+    }
+  ],
+  "setupAttempts": [
+    {
+      "name": "cp-RL PNPM flattened vitest context",
+      "result": "tooling import failure before tests",
+      "resolution": "1193 task-local links reconstructed; zero external links"
+    },
+    {
+      "name": "native release positive fixture spelled /tmp",
+      "result": "correct R1 rejection of macOS /tmp symlink; no actual case ran",
+      "resolution": "fixture root realpath normalized"
+    },
+    {
+      "name": "source local proxy synthetic hostname",
+      "result": "guard blocked custom-lookup logical host;57 passes before guard failure",
+      "resolution": "guard validates supplied lookup results exclusively loopback; affected proxy+remainingCLI18 pass"
+    }
+  ],
+  "limits": "Only synthetic data, fake provider transports and loopback fixture servers. No credential reads, production init, deployment, restart, admission or business claim.",
+  "sourceNamedDistinctPassingNames": 119,
+  "sourcePassingCases": 121,
+  "sourceNamedCountLimitation": "Vitest parameterized CLI cases reuse 2 display names;121 executed cases correspond to119 unique display names. Case totals use49 core +54 OAuth/Web/usage +4 proxy +14 CLI, not de-duplicated display labels.",
+  "reusableWrapperValidation": {
+    "receipt": "/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/result.json",
+    "exitCode": 0,
+    "closureFilesHashed": 14224,
+    "finalWrapperTestedEndToEnd": true,
+    "runnerAndGuardCopiedIntoOutput": true
+  }
+}

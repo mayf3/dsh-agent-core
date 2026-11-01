@@ -1,0 +1,21 @@
+✔ absence of fleet control alone preserves distinct bounded legacy consumers (1.262959ms)
+✔ unknown current generation always refuses without needing released fixture bytes (1.162ms)
+✔ released bytes and separately reviewed synthetic fixture yield one frozen serializable snapshot (4718.2835ms)
+✔ self-PASS descriptor cannot replace missing reviewed release evidence (1.027ms)
+✔ unaccepted plugin identities and guessed Harness closure refuse even with a rebound receipt (3.764666ms)
+✔ missing, non-independent and descriptor-mismatched reviews refuse (14.504541ms)
+✔ drifted or unprotected evidence logs refuse (0.642917ms)
+✔ selected plugin payload drift and undeclared executable files refuse without repair (999.934416ms)
+✔ archive and embedded dependency closure drift refuse (493.463375ms)
+✔ dispatch rejects a changed selector, wrong home and wrong actual Harness against frozen snapshot (1512.680625ms)
+✔ dispatch detects newly reviewed descriptor changes and forged serialized snapshot fields (1471.4575ms)
+✔ removing the entire fleet selection never falls back for an existing snapshot (414.946458ms)
+✔ generation verification leaves shared payload and reviewed files unchanged (927.585875ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14114.463542

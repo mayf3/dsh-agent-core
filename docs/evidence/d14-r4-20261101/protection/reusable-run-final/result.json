@@ -1,0 +1,36 @@
+{
+  "startedAt": "2026-11-01T01:15:35.653406+00:00",
+  "archive": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/release.tgz",
+  "archiveSha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+  "source": "/private/tmp/025-r3-staging/source",
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceGitStatus": "",
+  "sourceLibComparedFiles": 57,
+  "sourceLibMismatches": [],
+  "dependencyArchiveSha256": "c994dff1b4ec771cb955ccb109a1100a9be4c71835308eac9c5b70d25c2e1abc",
+  "closureManifestSha256": "223fd2031c34267b4d167e3c725128472207a1c555f77c84ce7cf8d8f6822d15",
+  "closureTreeDigest": "119f74e67b61a1ecace6219ebcf7f2df8874ce71d27cc2170d8e91667d1990b0",
+  "closureFileCount": 14224,
+  "runnerSha256": "ecd41e1eb1ad0137264ae75166828dc35389bb1b97b788a806cfed03b5f36dbe",
+  "guardSha256": "ce89bbe8a1ce049ae0cba5b8ad9d8acc451815a02695a9bbe5448f4bac2bc617",
+  "command": [
+    "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/run-release-protection.mjs",
+    "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/release/package",
+    "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/observations"
+  ],
+  "isolatedEnvironment": {
+    "HOME": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/empty-home",
+    "DSH_HOME": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/empty-dsh-home",
+    "TMPDIR": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/tmp",
+    "NODE_OPTIONS": "--import=/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/deny-external-network.mjs",
+    "DSH_CODEX_MODELS_CACHE": "/private/tmp/proddsh-d14-r4-evidence-20261101/protection/reusable-run-final/empty-model-cache.json"
+  },
+  "actualHarnessVersion": "UNKNOWN",
+  "actualHarnessCommit": "UNKNOWN",
+  "productionAdmissionEstablished": false,
+  "limits": "Only the released plugin and its shipped dependency closure; no current installed Harness/Core or real credential compatibility assertion.",
+  "exitCode": 0,
+  "logSha256": "165e4deffe5f31db0f399f3e94e07f79a9d49524611bae17c53a74adc7c9395d",
+  "finishedAt": "2026-11-01T01:15:44.310531+00:00"
+}

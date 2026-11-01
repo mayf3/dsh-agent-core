@@ -1,0 +1,9 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "packages/agent-provisioning/test/fleet-generation.test.js"
+  ],
+  "exitCode": 0,
+  "scope": "synthetic mechanism only; exact released payload bytes"
+}

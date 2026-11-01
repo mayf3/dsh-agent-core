@@ -1,0 +1,14 @@
+✔ D14 unqualified generation is rejected before child construction or dispatch (16.344042ms)
+✔ D14 child imports stay on immutable payload and switched current rejects queued dispatch (17560.744167ms)
+✔ D14 unknown selected fleet generation refuses before route composition (2.340333ms)
+✔ D14 missing current in a configured fleet cannot fall back to an old expected pin (0.870292ms)
+✔ D14 explicit generation migration admits the exact home and still runs all input guards (17923.297709ms)
+✔ D14 ordinary production context rejects missing fleet; explicit builtin remains usable (1.311292ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 17980.909042

@@ -1,0 +1,54 @@
+✖ D14 unqualified generation is rejected before child construction or dispatch (1.081916ms)
+✔ D14 unknown selected fleet generation refuses before route composition (2.344875ms)
+✔ D14 missing current in a configured fleet cannot fall back to an old expected pin (0.771875ms)
+✔ D14 explicit generation migration admits the exact home and still runs all input guards (11646.75325ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11700.883083
+
+✖ failing tests:
+
+test at packages/agent-router/test/fleet-generation-guard.test.js:5:1
+✖ D14 unqualified generation is rejected before child construction or dispatch (1.081916ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    Comparison {
+  +   code: 'dsh_version_mismatch'
+  -   code: 'FLEET_GENERATION_INVALID'
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-router/test/fleet-generation-guard.test.js:6:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1397:25)
+      at Test.start (node:internal/test_runner/test:1257:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: agent-provisioning: cannot verify DSH version under /private/github/deepseek-harness
+        at provisioningError (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/src/index.js:83:24)
+        at readHarnessIdentity (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/src/index.js:137:11)
+        at AgentProcess.assertFleetGeneration (file:///private/tmp/proddsh-d14-fix/packages/agent-router/src/process/agent-process.js:253:41)
+        ... 6 lines matching cause stack trace ...
+        at Test.run (node:internal/test_runner/test:1397:25) {
+      [cause]: Error: ENOENT: no such file or directory, open '/private/github/deepseek-harness/package.json'
+          at readFileSync (node:fs:539:20)
+          at readHarnessIdentity (file:///private/tmp/proddsh-d14-fix/packages/agent-provisioning/src/index.js:135:26)
+          at AgentProcess.assertFleetGeneration (file:///private/tmp/proddsh-d14-fix/packages/agent-router/src/process/agent-process.js:253:41)
+          at new AgentProcess (file:///private/tmp/proddsh-d14-fix/packages/agent-router/src/process/agent-process.js:73:10)
+          at assert.throws.code (file:///private/tmp/proddsh-d14-fix/packages/agent-router/test/fleet-generation-guard.test.js:6:23)
+          at getActual (node:assert:580:5)
+          at strict.throws (node:assert:728:24)
+          at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/agent-router/test/fleet-generation-guard.test.js:6:10)
+          at Test.runInAsyncScope (node:async_hooks:226:14)
+          at Test.run (node:internal/test_runner/test:1397:25)
+    },
+    expected: { code: 'FLEET_GENERATION_INVALID' },
+    operator: 'throws',
+    diff: 'simple'
+  }

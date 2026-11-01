@@ -1,0 +1,28 @@
+{
+  "startedAt": "2026-11-01T01:09:06.174513+00:00",
+  "cwd": "/tmp/proddsh-d14-r4-evidence-20261101/protection/source",
+  "command": [
+    "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/loader-composition.spec.ts",
+    "tests/service-config.spec.ts",
+    "tests/store.spec.ts",
+    "tests/shared-store.spec.ts",
+    "tests/shared-durability.spec.ts",
+    "tests/protection-composition.spec.ts",
+    "tests/credential-document.spec.ts",
+    "--maxWorkers=1",
+    "--bail=1",
+    "--reporter=verbose"
+  ],
+  "isolatedEnvironment": {
+    "HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-home",
+    "DSH_HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-dsh-home",
+    "TMPDIR": "/tmp/proddsh-d14-r4-evidence-20261101/protection/tmp",
+    "NODE_OPTIONS": "--import=/tmp/proddsh-d14-r4-evidence-20261101/protection/deny-external-network.mjs"
+  },
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "testSubject": "exact accepted SOURCE copy; no released-lib proof implied",
+  "networkPolicy": "only loopback fixture sockets; no external provider traffic"
+}

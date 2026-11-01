@@ -1,0 +1,27 @@
+
+ RUN  v4.1.10 /private/tmp/proddsh-d14-r4-evidence-20261101/protection/source
+
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > accepts only HTTP(S) proxy URLs without reflecting credentials 1ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > leaves the process dispatcher untouched when disabled 0ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > restores the previous process dispatcher after global mode 1ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > routes a scoped Codex request through the configured proxy 15ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > trusts, lists, and untrusts exact origins through the server CLI 5ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > documents doctor and uses the package executable name 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > uses a consistent error prefix 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > previews the default tree and explicitly applies a selected Session path 1ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > emits one secret-free JSON document for doctor 1ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > returns exit 1 and a JSON compatibility status for an incompatible doctor report 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > emits secret-free JSON status for true authentication 1ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > emits secret-free JSON status for false authentication 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for login 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for logout 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for doctor 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for status 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for login 0ms
+ ✓ tests/bin.spec.ts > dsh-codex CLI > rejects unsupported flags for status 0ms
+
+ Test Files  2 passed (2)
+      Tests  18 passed (18)
+   Start at  09:12:46
+   Duration  252ms (transform 43ms, setup 0ms, import 102ms, tests 26ms, environment 0ms)
+

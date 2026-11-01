@@ -33,6 +33,8 @@ import { eventCorrelationMethods } from './event-correlation.js'
 import { turnExecutionMethods } from './turn-execution.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
+import { verifyFleetGenerationDispatch } from '../../../agent-provisioning/src/fleet-generation.js'
+import { readHarnessIdentity } from '../../../agent-provisioning/src/index.js'
 
 const sleep = (ms) => new Promise((resolve) => {
   const timer = setTimeout(resolve, ms)
@@ -42,7 +44,7 @@ const sleep = (ms) => new Promise((resolve) => {
 export class AgentProcess {
   constructor({
     agentId, home, workspace, profile, provider, model, providerEnv = {}, omitEnv = [],
-    log = console, env = {},
+    log = console, env = {}, fleetGeneration,
     processGeneration = 1,
     deadlines,
     reconciliationStore,
@@ -67,6 +69,8 @@ export class AgentProcess {
     this.omitEnv = [...omitEnv]
     this.log = log
     this.env = env // extra env for the child (e.g. DSH_AGENT_ID)
+    this.fleetGeneration = fleetGeneration
+    this.assertFleetGeneration()
 
     // --- V2 lifecycle -----------------------------------------------------
     this.processGeneration = processGeneration
@@ -242,6 +246,12 @@ export class AgentProcess {
    */
   turn(sessionId, text, opts = {}, callerWaitTimeoutMs) {
     return this.enqueuePromptExecution('turn', sessionId, text, opts, callerWaitTimeoutMs)
+  }
+
+  assertFleetGeneration() {
+    if (this.fleetGeneration) verifyFleetGenerationDispatch(this.fleetGeneration, {
+      home: this.home, harnessIdentity: readHarnessIdentity(),
+    })
   }
 
   /**

@@ -1,0 +1,26 @@
+{
+  "startedAt": "2026-11-01T01:12:46.099452+00:00",
+  "cwd": "/tmp/proddsh-d14-r4-evidence-20261101/protection/source",
+  "command": [
+    "/opt/homebrew/Cellar/node/26.7.0/bin/node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "tests/proxy.spec.ts",
+    "tests/bin.spec.ts",
+    "--maxWorkers=1",
+    "--bail=1",
+    "--reporter=verbose"
+  ],
+  "isolatedEnvironment": {
+    "HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-home",
+    "DSH_HOME": "/tmp/proddsh-d14-r4-evidence-20261101/protection/empty-dsh-home",
+    "TMPDIR": "/tmp/proddsh-d14-r4-evidence-20261101/protection/tmp",
+    "NODE_OPTIONS": "--import=/tmp/proddsh-d14-r4-evidence-20261101/protection/deny-external-network.mjs"
+  },
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "testSubject": "source proxy uses loopback lookup; CLI auth is mocked",
+  "guardCorrection": "Validate actual custom-lookup result is loopback; logical hostname may be synthetic proxy destination",
+  "exitCode": 0,
+  "finishedAt": "2026-11-01T01:12:46.616078+00:00",
+  "logSha256": "7134718d916becff111d7e027c7bf554188d1ee0b3a14b88db6da78955bf9f73"
+}

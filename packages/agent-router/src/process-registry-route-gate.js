@@ -130,6 +130,7 @@ export function createRouteGate({
         lifecycleSlots.delete(agentId)
         log.log(`process for ${agentId} exited (${proc.exit?.code ?? 'signal'}); will respawn`)
       } else if (wanted.routeIdentity === undefined || slot.routeIdentity === wanted.routeIdentity) {
+        proc.assertFleetGeneration?.()
         return { status: 'ready', proc }
       } else {
         if (busyProcess(proc)) {

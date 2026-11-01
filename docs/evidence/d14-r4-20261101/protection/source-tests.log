@@ -1,0 +1,58 @@
+
+ RUN  v4.1.10 /private/tmp/proddsh-d14-r4-evidence-20261101/protection/source
+
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > 10-process burst performs one remote refresh 363ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > 20-process burst performs one remote refresh 387ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > 50-process burst performs one remote refresh 810ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > slow lock waiters reread the committed inode and stale readers do not refresh twice 2667ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > crash before dispatch fails closed without a remote call 90ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > crash post-rotation/pre-write requires reauth and never retries the old token 105ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > crash post-write/pre-intent-clear accepts the new inode without refreshing 93ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > one canonical Owner reauth clears unknown outcome for every store instance 110ms
+ ✓ tests/shared-store.spec.ts > shared canonical credential serialization > rejects relative, symlinked, hardlinked, and over-broad shared paths 12ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > rejects component symlinks and nonprivate parents before callbacks or filesystem mutation 14ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > publishes exact private intent before callback and preserves identity fields and unrelated providers 33ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > retains evidence and redacts actual callback and candidate-validation failures after intent 45ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > returns the same redacted reauth identity through actual status, usage and root exports without network 18ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > retains pending evidence when a replacement document or mode is invalid 42ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > exposes bounded wait exhaustion and never clears unknown evidence through delete 16ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > never echoes arbitrary credential field names in diagnostics 13ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > rejects an unsafe symlink intent before an explicit Owner callback 15ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > rejects an unsafe hardlink intent before an explicit Owner callback 12ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > rejects an unsafe broad-mode intent before an explicit Owner callback 12ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > propagates non-reauth stored-status errors instead of reporting a signed-in account 22ms
+ ✓ tests/protection-composition.spec.ts > main protection composition > rejects non-RFC3339 intent timestamps and never removes an orphan lock merely because its pid is gone 25ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > persists, lists, detaches, and removes one OAuth credential owner-only 42ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > serializes cross-instance refresh writes so each sees the prior value 83ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > rejects malformed and over-broad documents without echoing their contents 3ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > writes the versioned document and refuses provider ids it does not own 11ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > updates a Pi document atomically without lock files or losing concurrent provider changes 22ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > propagates callback failures and rejects a detected competing credential update 15ms
+ ✓ tests/store.spec.ts > OpenAICodexCredentialStore > rejects unknown existing files before invoking refresh or writing 4ms
+ ✓ tests/shared-durability.spec.ts > syncs intent and its parent before dispatch and commit before durable intent removal 35ms
+ ✓ tests/shared-durability.spec.ts > retries a lock metadata snapshot unlinked during rapid writer turnover 11ms
+ ✓ tests/shared-durability.spec.ts > retains intent on commit durability failure and recovers a validated replacement without another dispatch 31ms
+ ✓ tests/loader-composition.spec.ts > OpenAI Codex real composition > loads through the Loader, exposes the catalog, and unregisters on disposal 139ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 0 1ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 1 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 2 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 3 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 4 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > round-trips existing shape and preserves unrelated fields: 5 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown, ambiguous, malformed and API-key-only documents without secrets 1ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > derives an absent account ID from the access-token claims 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 0 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 1 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 2 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 3 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 4 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > rejects unknown fields in the selected credential: 5 0ms
+ ✓ tests/credential-document.spec.ts > credential JSON formats > does not combine a new account with an old ID token 0ms
+ ✓ tests/service-config.spec.ts > credentialFile configuration seam > passes the explicit credential filename into the shared service store 1ms
+ ✓ tests/service-config.spec.ts > credentialFile configuration seam > retains the DSH_HOME-derived filename when credentialFile is absent 0ms
+
+ Test Files  7 passed (7)
+      Tests  49 passed (49)
+   Start at  09:09:07
+   Duration  6.45s (transform 122ms, setup 0ms, import 696ms, tests 5.31s, environment 0ms)
+

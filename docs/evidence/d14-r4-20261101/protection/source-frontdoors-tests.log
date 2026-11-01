@@ -1,0 +1,98 @@
+
+ RUN  v4.1.10 /private/tmp/proddsh-d14-r4-evidence-20261101/protection/source
+
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > uses the refresh grant and retains the returned identity token and email 2ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > lets pi-ai schedule refresh and atomically persists all fields in CPA format 29ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > completes pi-ai login with one full refresh before returning credentials 0ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > routes the entire device-code exchange through the supplied Codex fetch 1006ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > lets a local browser callback finish while token exchange uses Codex fetch 17ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > rejects missing ID tokens and hides failed response bodies 1ms
+ ✓ tests/oauth-provider.spec.ts > complete Codex OAuth refresh > does not send an already cancelled request 0ms
+ ✓ tests/oauth-provider.spec.ts > explicit login recovery seam > replaces an unknown generation through real Models.login and preserves supplied transport 1057ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > projects rolling percentages and exact provider-supported balances 1ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > projects the official backend model fallback instructions without exposing banner copy 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > recognizes Luna Reserve without inventing a fallback list 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > ignores unsupported backend fallback shapes while retaining quota data 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > rejects percentages that would make a quota bar misleading 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > projects a valid WHAM reset_at without deriving a client-side timestamp 1ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > treats an explicit null reset_at as unavailable without dropping quota data 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > fails closed when reset_at is present but invalid (1735689600) 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > fails closed when reset_at is present but invalid (0) 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > fails closed when reset_at is present but invalid (-1) 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > fails closed when reset_at is present but invalid (1.5) 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > fails closed when reset_at is present but invalid (9007199254740991) 0ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > reads the fixed usage endpoint with refreshed plugin credentials 15ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > uses an injected request transport for the usage endpoint 10ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > throws a secret-free reauthorization error for usage HTTP 401 14ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > throws a secret-free reauthorization error for usage HTTP 403 11ms
+ ✓ tests/usage.spec.ts > OpenAI Codex usage > keeps a signed-in account usable when quota metadata is unavailable 13ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > serves and validates the three-state proxy settings 2ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > serves and updates the model discovery subset through the plugin settings route 1ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > serves and validates the automatic model fallback toggle 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > serves and validates the image generation model 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > serves, updates, resets, and validates the context-window override 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > returns a stable remote-origin error until the exact effective origin is trusted 2ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > applies the remote-origin boundary to status 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > applies the remote-origin boundary to login 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > applies the remote-origin boundary to logout 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects a DNS-rebinding Host even when the peer and browser Origin agree 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects non-loopback peer 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects cross-site browser request 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects different Origin port 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects different Origin scheme 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > accepts numeric loopback with exact Origin 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > accepts localhost with exact Origin 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > accepts local client without browser Origin 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > reuses one login operation and one HTTPS challenge across concurrent callers 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > rejects an unsafe authorization URL and cancels the provider login 1ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > logout cancels an in-flight login, rejects its waiter, and deletes the credential 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > dispose cancels the login and settles every pending challenge waiter 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > settles signIn when the provider finishes without an auth_url event 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > times out waiting for auth_url and cancels the provider operation 6ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > times out the complete browser callback flow after providing the auth URL 52ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > restores a valid stored credential after a failed browser flow 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > cancels a pending login without deleting the credential 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > accepts a device-code challenge and reads a credential written after an earlier error 7ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > reports reauth-required without logging out or starting OAuth 0ms
+ ✓ tests/auth-routes.spec.ts > OpenAI Codex Web OAuth boundary > keeps signed-in quotaError fallback for temporary usage failures 0ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > accepts only HTTP(S) proxy URLs without reflecting credentials 1ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > leaves the process dispatcher untouched when disabled 0ms
+ ✓ tests/proxy.spec.ts > OpenAICodexProxyTransport > restores the previous process dispatcher after global mode 1ms
+ × tests/proxy.spec.ts > OpenAICodexProxyTransport > routes a scoped Codex request through the configured proxy 9ms
+   → fetch failed
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/proxy.spec.ts > OpenAICodexProxyTransport > routes a scoped Codex request through the configured proxy
+TypeError: fetch failed
+ ❯ Object.processResponse node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/web/fetch/index.js:271:16
+ ❯ node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/web/fetch/index.js:1119:19
+ ❯ node_modules/.pnpm/undici@8.10.0/node_modules/undici/index.js:159:7
+ ❯ OpenAICodexProxyTransport.fetch src/proxy.ts:164:13
+    162|       dispatcher: this.dispatcher(preferences.proxyUrl),
+    163|     } as Parameters<typeof undiciFetch>[1];
+    164|     return (await undiciFetch(
+       |             ^
+    165|       input as Parameters<typeof undiciFetch>[0],
+    166|       options
+ ❯ tests/proxy.spec.ts:80:24
+
+Caused by: Error: FIXTURE_EXTERNAL_NETWORK_DENIED
+ ❯ denied ../deny-external-network.mjs:7:9
+ ❯ Socket.net.Socket.connect ../deny-external-network.mjs:13:80
+ ❯ connect node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/core/connect.js:128:20
+ ❯ Client.connect node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:294:37
+ ❯ connect node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:530:23
+ ❯ _resume node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:720:7
+ ❯ resume node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:649:3
+ ❯ Client.<computed> node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:351:31
+ ❯ Client.[dispatch] node_modules/.pnpm/undici@8.10.0/node_modules/undici/lib/dispatcher/client.js:415:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (5)
+      Tests  1 failed | 57 passed (58)
+   Start at  09:11:58
+   Duration  2.99s (transform 81ms, setup 0ms, import 447ms, tests 2.27s, environment 0ms)
+

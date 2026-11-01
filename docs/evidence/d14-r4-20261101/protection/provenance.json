@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-11-01T01:07:56.626253+00:00",
+  "sourceRoot": "/tmp/025-r3-staging/source",
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceTree": "5f144d38a10eb40ce5cf33c597a72a81bd21e537",
+  "sourceGitStatus": "",
+  "isolatedCopy": "/tmp/proddsh-d14-r4-evidence-20261101/protection/source",
+  "copyCommand": "cp -RL (each source entry except .git)",
+  "comparedSourceLibTestFiles": 90,
+  "copyMismatches": [],
+  "remainingSymlinks": "task-local PNPM topology restored after flattened package resolution failure",
+  "artifactHashes": {
+    "release.tgz": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+    "codex-deps-scopes.tgz": "c994dff1b4ec771cb955ccb109a1100a9be4c71835308eac9c5b70d25c2e1abc",
+    "source-stamp.json": "76416450dc0ffd87f8c409b3e496a513d6da43c176beacea64f248ebd1888965",
+    "BUILD-RECEIPT.json": "15d71c79ec84c0cffdd11676d266cc1e5d060bac43b23a4ea81a15dcd6c606b3"
+  },
+  "limits": "Source tests are source evidence; release lib import and current Core combination are separate proof subjects.",
+  "restoredLocalLinkCount": 1193,
+  "externalSymlinks": [],
+  "setupCorrection": "Recreated original links pointing to resolved targets within copied tree only; no shared dependency path."
+}

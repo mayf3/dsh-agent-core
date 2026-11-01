@@ -4,6 +4,7 @@ import { lstatSync, readFileSync, readlinkSync, realpathSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { dirname, isAbsolute, resolve } from 'node:path'
 import { CHATGPT_SUBSCRIPTION_V1 } from './shared-codex.js'
+import { readFleetGeneration, verifyFleetGeneration } from './fleet-generation.js'
 
 const fail = reason => { throw Object.assign(new Error(`deployment artifact: ${reason}`), { code: 'DEPLOYMENT_ARTIFACT_INVALID' }) }
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -63,12 +64,19 @@ export function verifyDeploymentArtifactBinding(binding, deploymentRoot, paths, 
   return binding
 }
 
-export function createModelArtifactContext(deploymentRoot, paths = { packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL, sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP }) {
+export function createModelArtifactContext(deploymentRoot, paths = { packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL, sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP }, { fleetRequired = false } = {}) {
+  const fleetGeneration = readFleetGeneration(deploymentRoot)
+  if (fleetGeneration) return Object.freeze({ deploymentRoot, fleetGeneration })
+  // Fixed legacy B7 tooling is a distinct consumer of the old binding API.
+  // Ordinary production composition always sets fleetRequired, and can never
+  // turn missing fleet state into the old independently pinned subscription.
+  if (fleetRequired) return Object.freeze({ deploymentRoot, fleetRequired: true })
   return Object.freeze({ deploymentRoot, ...paths, binding: readDeploymentArtifactBinding(deploymentRoot, paths, CHATGPT_SUBSCRIPTION_V1.sourceCommit) })
 }
 export function verifyModelArtifactContext(options) {
   const context = options.artifactContext
   if (context && context.deploymentRoot !== options.deploymentRoot) fail('context belongs to another deployment root')
+  if (context?.fleetGeneration) verifyFleetGeneration(context.fleetGeneration)
   if (context?.binding) verifyDeploymentArtifactBinding(context.binding, options.deploymentRoot, context, CHATGPT_SUBSCRIPTION_V1.sourceCommit)
   return context
 }
