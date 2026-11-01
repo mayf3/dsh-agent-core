@@ -1,0 +1,38 @@
+{
+  "source": "/tmp/dsh-525-main-26178b4f",
+  "head": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "started_at": "2026-11-01T21:35:16.196818+00:00",
+  "argv": [
+    "/tmp/dsh-525-evidence/node-v25.6.1-darwin-arm64/bin/node",
+    "--test",
+    "--test-concurrency=1",
+    "--test-timeout=60000",
+    "--test-reporter=tap",
+    "packages/product-api/test/*.test.js",
+    "packages/product-api/test/*/*.test.js",
+    "packages/production-runtime/test/*.test.js",
+    "packages/production-runtime/test/*/*.test.js"
+  ],
+  "env": {
+    "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin",
+    "HOME": "/Users/yanfenma",
+    "TMPDIR": "/Users/yanfenma/Documents/Codex/2026-11-02/dsh-525-validation/base-arm64/",
+    "LC_ALL": "C",
+    "LANG": "C"
+  },
+  "node": "v25.6.1",
+  "postgres": "NOT_REQUIRED: neither package uses PG fixtures",
+  "dependency_mode": "npm install --ignore-scripts --package-lock=false; identical independent dependency copies for base/candidate; real published @deepseek-ai/dsh-tools@0.1.0-rc.8; no stubs",
+  "rc": 1,
+  "finished_at": "2026-11-01T21:36:33.370655+00:00",
+  "tap_sha256": "8f273fecc5a73568d4f76e9223306186e23e7ec79c7cbebe85ccf2451d66eac3",
+  "counts": {
+    "tests": 618,
+    "suites": 0,
+    "pass": 603,
+    "fail": 10,
+    "cancelled": 0,
+    "skipped": 5,
+    "todo": 0
+  }
+}
