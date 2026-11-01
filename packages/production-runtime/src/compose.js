@@ -247,7 +247,7 @@ export async function composeProductionRuntime(options = {}) {
   // never reads the file or learns provider/model rules.
   // DEFAULT_MODEL_ROUTING_CONFIG_V1 §3: composition config > env pair > the
   // canonical built-in default (GPT Luna as a complete subscription route).
-  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root) }
+  const modelLoadOptions = { deploymentRoot: layout.root, artifactContext: createModelArtifactContext(layout.root, undefined, { fleetRequired: true }) }
   const globalRouteSource = opts.globalRoute !== undefined
     ? 'composition_config'
     : (process.env.DSH_AGENT_PROVIDER !== undefined || process.env.DSH_AGENT_MODEL !== undefined

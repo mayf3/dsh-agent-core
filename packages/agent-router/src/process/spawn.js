@@ -13,6 +13,7 @@
 
 import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 
 import { cliBin } from '../../../agent-provisioning/src/index.js'
 import { agentEnv, childSpawnConfig } from './env.js'
@@ -25,13 +26,16 @@ export const spawnMethods = {
     this.counters.spawnAttempts += 1
     let spawnConfig
     try {
+      this.assertFleetGeneration()
       spawnConfig = childSpawnConfig(this.log)
     } catch (cause) {
       this.handleSpawnFailureWithoutChild(cause)
       throw cause
     }
     const program = spawnConfig.argv[0]
-    const args = [...spawnConfig.argv.slice(1), cliBin(), '--profile', this.profile]
+    const args = [...spawnConfig.argv.slice(1),
+      ...(this.fleetGeneration ? ['--import', fileURLToPath(new URL('../../../agent-provisioning/src/fleet-import-hook.js', import.meta.url))] : []),
+      cliBin(), '--profile', this.profile]
     // Direct setuid is only legal from root or the same uid; anything else
     // (e.g. a 505 parent without the root-bootstrapped helper) must fail
     // LOUD rather than silently run the child at the parent's identity.
@@ -46,7 +50,9 @@ export const spawnMethods = {
     try {
       child = spawn(program, args, {
         cwd: this.workspace,
-        env: agentEnv(this.home, this.env, this.omitEnv, this.providerEnv, this.provider),
+        env: agentEnv(this.home, { ...this.env,
+          ...(this.fleetGeneration ? { DSH_CODEX_FLEET_SNAPSHOT: JSON.stringify(this.fleetGeneration) } : {}),
+        }, this.omitEnv, this.providerEnv, this.provider),
         stdio: ['pipe', 'pipe', 'pipe'],
         ...(spawnConfig.spawnUid === undefined ? {} : { uid: spawnConfig.spawnUid, gid: spawnConfig.spawnGid }),
       })

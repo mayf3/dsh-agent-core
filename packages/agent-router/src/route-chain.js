@@ -149,6 +149,7 @@ export function canonicalRouteIdentity(processConfig = {}) {
     processConfig.model ?? null,
     subscription?.plugin ?? null,
     subscription?.pluginVersion ?? null,
+    ...(subscription?.fleetGeneration === undefined ? [] : [subscription.fleetGeneration.descriptorSha256]),
     ...(subscription?.reasoningEffort === undefined ? [] : [subscription.reasoningEffort]),
     subscription?.credentialFile === undefined ? 'ABSENT' : resolve(subscription.credentialFile),
     providerEnv === undefined

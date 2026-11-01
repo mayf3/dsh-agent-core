@@ -33,6 +33,7 @@ import {
 } from './shared-codex.js'
 import { installedArtifactMatches, installedPluginVersion, stampInstalledArtifact, verifyPluginInputs, resolvePluginPeerLinks } from './plugin-artifact.js'
 import { ensureSymlink } from './ensure-symlink.js'
+import { verifyFleetGeneration } from './fleet-generation.js'
 import { REPO, ensureRepoCoreBridge, provisionProfileWorkspaceLinks } from './repo-core-bridge.js'
 export { REPO, ensureRepoCoreBridge }
 
@@ -200,6 +201,26 @@ export function verifyPluginProvisioningInputs(requirement, options = {}) {
  * so ordinary automation has no npm-registry dependency.
  */
 export function provisionExactProfilePlugin(home, profile, requirement, options = {}) {
+  if (requirement.fleetGeneration) {
+    const snapshot = requirement.fleetGeneration
+    verifyFleetGeneration(snapshot, { harnessIdentity: options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot) })
+    if (requirement.plugin !== snapshot.plugin || requirement.version !== snapshot.pluginVersion) {
+      throw provisioningError('plugin_version_mismatch', 'requested pin differs from selected fleet generation')
+    }
+    const installedRoot = join(home, 'profiles/node_modules', snapshot.plugin)
+    // A rebuild may link its owned farm to the immutable payload. Existing
+    // homes are validated, never overwritten or repaired along a shared link.
+    if (!existsSync(installedRoot)) ensureSymlink(snapshot.pluginRoot, installedRoot)
+    verifyFleetGeneration(snapshot, { home })
+    const profilePackageFile = join(home, 'profiles', profile, 'package.json')
+    const pkg = JSON.parse(readFileSync(profilePackageFile, 'utf8'))
+    if (!Array.isArray(pkg?.dsh?.profile?.bundles)) throw provisioningError('plugin_provisioning_invalid', 'profile bundles missing')
+    if (!pkg.dsh.profile.bundles.includes(snapshot.plugin)) {
+      pkg.dsh.profile.bundles.push(snapshot.plugin)
+      atomicWriteJson(profilePackageFile, pkg)
+    }
+    return { plugin: snapshot.plugin, version: snapshot.pluginVersion, installedPackage: join(installedRoot, 'package.json'), profilePackageFile }
+  }
   verifyPluginProvisioningInputs(requirement, { ...options, deploymentRoot: deploymentRootOfAgentHome(home) })
   const { plugin, version, sourceCommit, artifactSha256, dshVersion } = requirement
   const injectedArtifactIdentity = options.artifactIdentity
@@ -367,6 +388,9 @@ export function provisionAgentHome(home, workspace, options = {}) {
   }
   // Validate the domain binding before any home/profile/seed side effect.
   const bound = options.subscription
+  if (bound?.fleetGeneration) verifyFleetGeneration(bound.fleetGeneration, {
+    harnessIdentity: options.harnessIdentity ?? readHarnessIdentity(options.harnessRoot),
+  })
   if (bound?.artifactBinding) verifyPluginProvisioningInputs({ ...bound, version: bound.pluginVersion }, {
     ...options, packageArtifact: bound.packageArtifact, sourceStamp: bound.sourceStamp,
     deploymentRoot: deploymentRootOfAgentHome(home),
@@ -404,6 +428,7 @@ export function provisionAgentHome(home, workspace, options = {}) {
       version: subscription.pluginVersion,
       sourceCommit: subscription.sourceCommit,
       artifactSha256: subscription.artifactSha256,
+      ...(subscription.fleetGeneration === undefined ? {} : { fleetGeneration: subscription.fleetGeneration }),
       ...(subscription.artifactBinding === undefined ? {} : { artifactBinding: subscription.artifactBinding }),
       dshVersion: subscription.dshVersion,
       dshCommit: subscription.dshCommit,

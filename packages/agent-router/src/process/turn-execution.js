@@ -328,6 +328,7 @@ export const turnExecutionMethods = {
   async promptWrite(execution, sessionId, text, opts) {
     const lineageError = promptFenceError(this.store, this.agentId)
     if (lineageError) throw lineageError
+    this.assertFleetGeneration?.()
     const receiptDeadlineMono = Math.min(execution.promptReceiptDeadlineMono, execution.turnDeadlineMono)
     const requestId = execution.promptRequestId
     execution.phase = 'prompt_sending'

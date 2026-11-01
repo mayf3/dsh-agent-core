@@ -29,6 +29,7 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs'
+import { fleetSubscription, bindFleetGlobalRoute, assertFleetCatalog } from './fleet-model-route.js'
 import { createHash } from 'node:crypto'
 
 import { canonicalRouteIdentity } from '../../agent-router/src/route-chain.js'
@@ -49,14 +50,9 @@ import { createModelArtifactContext, verifyModelArtifactContext as verifyArtifac
 
 
 
-/**
- * GPT6_LUNA_AND_REASONING_EFFORT_V1 (CTR-G6R-001/002): the V3 production pin
- * is preserved byte-for-byte — the dormant GPT-6 tuple lives in
- * GPT6_LUNA_ROUTE_V1 (agent-provisioning/shared-codex.js) and is selected
- * ONLY by a deployment-owned model override. The loader accepts BOTH
- * dsh-codex pins; a single global pin replacement is forbidden, and no
- * reasoning default is injected into the legacy tuple (DEC-G6R-004).
- */
+// Ordinary production follows the selected fleet snapshot. The old binding
+// APIs remain for separately scoped B7 tooling; the exact dormant GPT6 tuple
+// stays independent and never inherits the fleet generation's artifact.
 
 export { PROVIDER_ENV_ALLOWLIST } from './identity/provider-environment.js'
 import { PROVIDER_ENV_ALLOWLIST, validateProviderEnv, invalid } from './identity/provider-environment.js'
@@ -216,6 +212,8 @@ function makeChainRoute(routeRef, route, artifactContext) {
  * identity; a single global stamp is forbidden. */
 export { createModelArtifactContext }
 function subscriptionProcessConfigBlock(plugin, pluginVersion, credentialFile, reasoningEffort, artifactContext) {
+  const fleet = fleetSubscription(plugin, pluginVersion, credentialFile, artifactContext)
+  if (fleet) return fleet
   const tupleIdentity = pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion ? GPT6_LUNA_ROUTE_V1 : CHATGPT_SUBSCRIPTION_V1
   const binding = plugin === CHATGPT_SUBSCRIPTION_V1.plugin && pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion ? artifactContext?.binding : undefined
   const paths = artifactContext ?? { packageArtifact: process.env.DSH_CODEX_PACKAGE_TARBALL, sourceStamp: process.env.DSH_CODEX_SOURCE_STAMP }
@@ -249,7 +247,7 @@ export function canonicalDefaultGlobalRoute(options = {}) {
     model: CANONICAL_DEFAULT_MODEL_ROUTE.model,
     subscription: subscriptionProcessConfigBlock(
       CHATGPT_SUBSCRIPTION_V1.plugin,
-      CHATGPT_SUBSCRIPTION_V1.pluginVersion,
+      artifactContext?.fleetGeneration?.pluginVersion ?? CHATGPT_SUBSCRIPTION_V1.pluginVersion,
       options.deploymentRoot === undefined ? CHATGPT_SUBSCRIPTION_V1.credentialFile : canonicalOpenAICodexCredentialFileFor(options.deploymentRoot),
       undefined, artifactContext,
     ),
@@ -316,8 +314,10 @@ export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) 
       // dormant GPT-6 tuple pin. A single global pin that makes an existing
       // V3 config invalid is forbidden.
       const isDshCodexSubscription = isSubscription && route?.plugin === CHATGPT_SUBSCRIPTION_V1.plugin
-      const isLegacyCodexTuple = isDshCodexSubscription && route.pluginVersion === CHATGPT_SUBSCRIPTION_V1.pluginVersion
+      const fleetVersion = artifactContext?.fleetGeneration?.pluginVersion ?? CHATGPT_SUBSCRIPTION_V1.pluginVersion
+      const isLegacyCodexTuple = isDshCodexSubscription && route.pluginVersion === fleetVersion
       const isGpt6Tuple = isDshCodexSubscription && route.pluginVersion === GPT6_LUNA_ROUTE_V1.pluginVersion
+      assertFleetCatalog(isDshCodexSubscription, isGpt6Tuple, artifactContext)
       const routeKeys = [
         'credentialReadiness', 'model', 'provider', 'routeKind',
         ...(isSubscription ? ['plugin', 'pluginVersion'] : []),
@@ -454,6 +454,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) 
     resolve(agentId, globalRoute) {
       const override = overrides[agentId]
       if (override === undefined) {
+        globalRoute = bindFleetGlobalRoute(globalRoute, artifactContext, ownCanonicalCredentialFile, subscriptionProcessConfigBlock)
         return Object.freeze({
           provider: globalRoute.provider,
           model: globalRoute.model,
@@ -474,6 +475,7 @@ export function loadAgentModelOverrides(file, registeredAgentIds, options = {}) 
     resolveChain(agentId, globalRoute) {
       const override = overrides[agentId]
       if (override === undefined) {
+        globalRoute = bindFleetGlobalRoute(globalRoute, artifactContext, ownCanonicalCredentialFile, subscriptionProcessConfigBlock)
         const route = passthroughRoute(globalRoute)
         return Object.freeze({
           agentId,
