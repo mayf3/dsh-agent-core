@@ -50,7 +50,7 @@ agent ──mint──▶ auth-service ──token──▶ svc-workflow admissi
 
 | code | HTTP | 含义 | 操作员动作 |
 |---|---|---|---|
-| `UNAUTHORIZED` | 401 | 验证失败（含 JWKS 不可达/未配置） | **10-17 事故形态**。看 `/health` 的 `admission.state`：`auth_unavailable` = JWKS 拉不到（auth-service 挂/URL 错）；缺 env 的进程现在根本起不来（enabled 组合拒绝组合），若进程在跑则 env 存在但目录不可达 |
+| `UNAUTHORIZED` | 401 | 验证失败（含 JWKS 不可达/未配置） | **10-17 事故形态**。启用的进程已启动只能证明配置存在；仅 `admission.state=auth_unavailable` 表示观察到 JWKS 基础设施失败。普通无效 token 也返回 401，不能据此判断目录不可达；缺 env 的 enabled 组合拒绝启动 |
 | `ACCESS_DENIED` | 403 | caller 缺 `agent.directory.read` scope（token 有效） | 单 caller 授权问题：补目录读 grant，非故障 |
 | `INVALID_AGENT_ID` | 400 | 路径 ID 非法 | caller bug，非故障 |
 | `AGENT_DEFINITION_TIMEOUT` | 504 | 目录读超 1s 截止 | 重试一次；连续出现→agent-core 进程过载排查 |

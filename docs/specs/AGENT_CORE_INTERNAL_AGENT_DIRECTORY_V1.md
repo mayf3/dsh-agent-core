@@ -160,7 +160,8 @@ connections, listeners, scheduler or workflow engines are acquired. A disabled
 Product API MUST NOT construct this handler or require its JWKS configuration.
 Construction performs no network probe and proves configuration presence only.
 Invalid tokens and unavailable JWKS at request time retain CTR-IAD-002's fail-closed
-401 response; no authorization or enabled gate is bypassed.
+401 response, subject to CTR-IAD-003's existing operation deadline; no authorization
+or enabled gate is bypassed.
 
 ### CTR-IAD-008 — Identity-free verifier observations
 
