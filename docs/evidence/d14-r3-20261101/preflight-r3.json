@@ -14,7 +14,7 @@
   "planLevel": "BRIEF",
   "assuranceLevel": "CONTROLLED",
   "mandate": "Owner direct R3 user task, 2026-11-01: implement Direction A on isolated production branch, test, commit/push/PR and agent-control#1345 comment; no deployment/restart/shared-checkout writes; stop dependent work on Spec conflict.",
-  "scopeExecuted": "Read-only authority/source audit, copied-dependency named-set comparison, isolated evidence/report, commit/push/draft PR and issue readback. No acceptance-path product or behavior-test delta.",
+  "scopeExecuted": "Read-only authority/source audit, copied-dependency named-set comparison, isolated evidence/report. No acceptance-path product or behavior-test delta; commit/push/draft PR and issue readback are authorized delivery steps tracked by the actual PR/issue receipts.",
   "implementationAllowed": false,
   "mergeReady": false,
   "operationAllowed": false,
