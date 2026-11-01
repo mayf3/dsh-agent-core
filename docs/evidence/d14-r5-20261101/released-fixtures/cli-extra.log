@@ -1,0 +1,16 @@
+Open this URL to sign in:
+https://auth.openai.com/codex/device
+Enter code: FIXTURE
+dsh-codex: login failed: Credential store modify failed for openai-codex: openai-codex: /private/tmp/d14-r5-fixture-closure-20261101/cli-dsh-home-final/.openai-codex-auth.json is not valid JSON
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at file:///private/tmp/d14-r5-fixture-closure-20261101/run-cli-extra.mjs:41:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}

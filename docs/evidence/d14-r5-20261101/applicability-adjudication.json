@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "evaluator": "/root/prerequisite_audit",
+  "observedAt": "2026-11-01T01:41:09.807727+00:00",
+  "method": "Read-only source, shipped compiled chunks, accepted Spec and completed first raw observations. No test rerun or code repair by this evaluator.",
+  "cliFailedFixture": {
+    "observation": "PRESERVED_FAIL:cli.run(login --device-code) returned1; synthetic OAuth transport made4calls including1explicit completing refresh grant; error invalid JSON",
+    "classification": "INAPPLICABLE_ASSERTION_FIXTURE_SCOPE_MISMATCH",
+    "productSemanticBlocker": "NOT_ESTABLISHED",
+    "basis": [
+      "run-cli-extra constructs OpenAICodexCredentialStore() with no filename, and CLI login invokes loginOpenAICodex with no store; both select nonshared DSH_HOME default",
+      "Source store.ts214 and compiled search-event chunk680 set shared=(filename!==undefined)",
+      "Malformed-document repair guard source375/compiled858 explicitly requires OwnerReauth AND shared AND CredentialDecodeError AND pending intent. Durable clearIntent source406 also shared-only",
+      "Accepted external protection Spec R1 distinguishes explicitly configured shared mode from DSH_HOME default. R3 requires actual front-door coverage accurately attributed; no located Contract grants malformed shared-pending repair to nonshared default CLI",
+      "Core CTR-D14-003/004 requires actual canonical/shared recovery compatibility proof, which this nonshared CLI test cannot establish"
+    ],
+    "disposition": "Retract any product-defect/semantic-stop conclusion that rested solely on this assertion; retain failing observation and classify shared CLI wiring/compatibility as UNKNOWN/NOT_EXECUTED. No implementation-completion or production PASS inferred."
+  },
+  "namedFirstDifference": {
+    "observation": "First123-file run changed1 named status pass->fail:V3 parsed terminal and child exit remain uncommitted together when durable settlement fails;unhandledRejection AGENT_PROCESS_RPC_DEADLINE,not_admitted,zero_byte,session/prompt,duration157.264958ms",
+    "classification": "TIMING_DIFFERENCE_UNRESOLVED",
+    "regressionCause": "UNKNOWN",
+    "basis": [
+      "r5 diff empty for agent-router source, affected test and both fixture helpers",
+      "fake-child uses AgentProcess without fleetGeneration; fleet assert is inactive and changed production-runtime helper is outside this dependency path",
+      "Test has turnTimeoutMs70 and callerWait25; request deadline min(receipt250,turn70). raw error is request pre-write monotonic expiry.25ms applies to later caller terminal wait, not this request-before-write deadline",
+      "Wall-clock contention is a plausible working guess, not established root cause; this adjudication uses first completed observation only"
+    ],
+    "disposition": "First named diff remains nonempty. Any later verification must retain first raw evidence and be reported separately; do not recast first result as diff=[] or confirmed flaky."
+  },
+  "r5SemanticReviewScope": "Earlier PASS applies only to NONCODEX repair, spawn-only exclusions and three relocations at recorded hashes. No implementation completion, merge or production approval.",
+  "productionAcceptance": "NO",
+  "sourceMergeReady": "NO",
+  "files": [
+    {
+      "path": "/tmp/d14-r5-fixture-closure-20261101/run-cli-extra.mjs",
+      "sha256": "194c0bc65c14f086a2b3dba48cb1463f19e0532e4fc66688c121802b410822e6"
+    },
+    {
+      "path": "/tmp/d14-r5-fixture-closure-20261101/cli-extra-result.json",
+      "sha256": "6bc1db7c6f3fe1a16a68dfc1e5e0224760b0a8f1d4a49e75f69dcbb28fa78e91"
+    },
+    {
+      "path": "/tmp/d14-r5-fixture-closure-20261101/package/lib/bin.js",
+      "sha256": "5b0d05cec437bbab012f6bf586ec56b789d7cff19475602cd1b8ba90a8e0be32"
+    },
+    {
+      "path": "/tmp/d14-r5-fixture-closure-20261101/package/lib/src-nP_Jjtmz.js",
+      "sha256": "367705232987da99f3e5cd5325d392774488e361c33f9e8fbcc408456074a6ca"
+    },
+    {
+      "path": "/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js",
+      "sha256": "040134f0abefa85aa08111c97a27246a2416f9c2188d446700e9ecb337fdff04"
+    },
+    {
+      "path": "/tmp/025-r3-staging/source/src/bin.ts",
+      "sha256": "e582932469f815223224e049daad4ea8b51d430efbf20292c1e7f786b55d29da"
+    },
+    {
+      "path": "/tmp/025-r3-staging/source/src/auth.ts",
+      "sha256": "969999660cc6547459c6967c1cae66d5a5de1be2a7b12d88ff4916d70206b9e0"
+    },
+    {
+      "path": "/tmp/025-r3-staging/source/src/store.ts",
+      "sha256": "8b97dd265b7e5ceed902657c3619ea49c9866baff4c80501cbcf0534d41f9141"
+    },
+    {
+      "path": "/tmp/025-r3-staging/source/docs/specs/DSH_CODEX_SHARED_AUTH_PROTECTION_RESTORE_V1.md",
+      "sha256": "26e9d3c645f24eec02d6035f744a5083a2cdb94f2a1db1f917d7b5796afe1df5"
+    },
+    {
+      "path": "/tmp/proddsh-d14-r5-evidence-20261101/named-first-comparison.json",
+      "sha256": "6c251e481105f2deaf751f6a8a63394bbf5474bfe5fed2a166a6a56c731bf468"
+    },
+    {
+      "path": "/tmp/proddsh-d14-r5-evidence-20261101/named-first.ndjson",
+      "sha256": "ce147ac732d4bfeb66d6ac462eb854a2a9ffb0afa9506d01661b43d948a481c2"
+    }
+  ]
+}

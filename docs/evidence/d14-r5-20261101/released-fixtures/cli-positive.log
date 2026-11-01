@@ -1,0 +1,6 @@
+Open this URL to sign in:
+https://auth.openai.com/codex/device
+Enter code: FIXTURE
+OpenAI Codex: signed in; credentials saved to /private/tmp/d14-r5-cli-positive-20261101/dsh-home/.openai-codex-auth.json
+{"schemaVersion":1,"package":"dsh-codex","version":"0.3.2","status":"signed-in"}
+PASS compiled CLI normal nonshared login/status with synthetic fetch; no actual browser spawned

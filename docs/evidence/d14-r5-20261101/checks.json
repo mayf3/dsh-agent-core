@@ -1,0 +1,71 @@
+{
+  "schema_version": 2,
+  "observedAt": "2026-11-01T01:43:49.050168+00:00",
+  "sourceCommit": "b5d3a78f20cf73497fe12fe440fea541b66123e5",
+  "boundedRepair": "VERIFIED_SOURCE_AND_SYNTHETIC_FIXTURES",
+  "noncodex001": "CLOSED_FOR_REVIEWED_COORDINATES",
+  "spawnOnlyRecoveryExclusion": "PASS_REAL_MIGRATION_AND_ROLLBACK_ENTRYPOINTS",
+  "focused": {
+    "tests": 21,
+    "pass": 21,
+    "fail": 0,
+    "skip": 0
+  },
+  "afterRelocation": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "skip": 0
+  },
+  "independent": {
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "skip": 0
+  },
+  "namedLatest": {
+    "tests": 938,
+    "pass": 867,
+    "fail": 62,
+    "skip": 9,
+    "exitCode": 1,
+    "delta": []
+  },
+  "namedFirst": "one extra zero-byte RPC deadline failure, raw retained; root cause UNKNOWN; not erased or claimed semantic regression",
+  "releasedAdditionalObservations": 4,
+  "sharedLinks": {
+    "count": 30,
+    "equal": true,
+    "sha256": "4346ef42597f0209f06a7c7280751dcebdb333b0d3adfdb91c8fac7eb468adaf"
+  },
+  "dependencyLinks": {
+    "count": 83,
+    "external": 0
+  },
+  "acceptedSpecs": {
+    "count": 9,
+    "byteIdenticalTo": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0"
+  },
+  "structure": {
+    "exitCode": 1,
+    "violations": 11,
+    "closedGrowthLocations": 3,
+    "remainingGrowthLocations": 1
+  },
+  "governanceIntegrity": "PASS_STANDARD_VERIFIER",
+  "boundedR5SourceFixDelivered": "YES_AT_SOURCE_COMMIT_PENDING_PUBLICATION",
+  "implementationDeliveryAsAdmissible": "NO",
+  "sourceMergeReady": "NO",
+  "productionAcceptance": "NO",
+  "operationAllowed": "NO",
+  "productionOperations": "NONE",
+  "remainingPrerequisites": [
+    "Actual installed Harness path/version/commit/clean source and executable dependency closure bound to selected artifact and final Core",
+    "Actual Core wiring against synthetic current documents/pending intent/Owner recovery with accurately attributed supported entrypoints; canonical shared CLI binding UNKNOWN",
+    "Full qualified generation+descriptor/config/home rollback fixture and failure injection; do not imply recovery0.3.2 admission",
+    "11 structure directory violations listed in structure-summary.json; one remaining D14 scripts growth and10 unchanged base debts",
+    "Regulator fresh roster/routes/credential references/current/home/config/software preimages, worker/tool/refresh effects, unique writer/mutex and watchdog120s",
+    "Explicit stale catalog migration preserving provider/model/order/effort/domain; independently accepted release descriptor plus hash-bound qualification receipt",
+    "Controlled publication/restart/spawn canary and event-time business readback after all prerequisites"
+  ]
+}

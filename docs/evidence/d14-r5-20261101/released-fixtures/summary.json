@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "observedAt": "2026-11-01T01:41:47.421272+00:00",
+  "evaluator": "/root/fixture_closure",
+  "scope": "supplemental released-library synthetic fixtures, not production qualification",
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceClean": true,
+  "archiveSha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+  "dependencyArchiveSha256": "c994dff1b4ec771cb955ccb109a1100a9be4c71835308eac9c5b70d25c2e1abc",
+  "verifiedClosureFileCount": 14224,
+  "verifiedClosureTreeDigest": "119f74e67b61a1ecace6219ebcf7f2df8874ce71d27cc2170d8e91667d1990b0",
+  "sourceLibComparedFiles": 57,
+  "results": {
+    "releasedWebLoginStatus": "PASS; actual plugin-registered routes through actual Loader, capture-only fixture webServer plus HTTP loopback; real auth/provider/store on explicit synthetic credentialFile and valid same-generation pending intent; one explicit completing synthetic refresh grant",
+    "releasedWebCancellation": "PASS; actual cancel HTTP handler after device challenge and before poll; unchanged credential hash, zero additional OAuth calls after challenge",
+    "releasedScopedProxyAndAbort": "PASS; actual shipped transport/undici through loopback HTTP proxy; successful body then in-flight AbortSignal rejection; two proxy requests",
+    "releasedCliValidNonsharedDefault": "PASS rc0; actual compiled CLI run(argv) login+status; valid synthetic default document, four provider calls including one explicit completing refresh grant; status signed-in/dsh-codex0.3.2 with no extra OAuth calls",
+    "priorCliMalformedDefault": "OBSERVED_RC1_WITH_INAPPLICABLE_ASSERTION; shared-only malformed+pending expectation incorrectly applied to nonshared CLI default; no established product regression; raw failure preserved"
+  },
+  "passingAdditionalObservations": 4,
+  "setupFailures": "Two pre-check setup attempts preserved separately; realpath guard normalization then missing mandatory synthetic accountId",
+  "proofLimits": [
+    "Synthetic provider transports and no-op browser opener; actual auth, store, argument parser and plugin registrations unmocked",
+    "Web capture-only webServer adapter does not identify installed full Harness",
+    "CLI proof uses normal nonshared default, not a canonical shared CLI recovery entrypoint",
+    "CLI shared canonical binding/eligibility remains UNKNOWN; no conversion to shared mode by implication",
+    "Actual installed Harness version/commit/closure and final production Core combination remain UNKNOWN",
+    "No production init/deploy/restart/spawn, actual credential access or business outcome claim"
+  ],
+  "unaffectedPriorEvidence": "r4 121 source executed cases and 14 released observations reused, not rerun by this supplemental task",
+  "networkGuard": "original deny-external-network.mjs copied byte-identically; no denial logs produced during passing or failed fixture execution; synthetic auth calls are supplied fake fetch only",
+  "productionAdmissionEstablished": false
+}

@@ -1,0 +1,30 @@
+total 0
+drwxr-xr-x@ 29 yanfenma  staff   928 Nov  1 07:21 .
+drwxr-xr-x@ 57 yanfenma  staff  1824 Oct 16 13:53 ..
+lrwxr-xr-x@  1 yanfenma  staff    44 Nov  1 07:21 agent-credential-provisioning -> ../../packages/agent-credential-provisioning
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 agent-definition -> ../../packages/agent-definition
+lrwxr-xr-x@  1 yanfenma  staff    42 Nov  1 07:21 agent-identity-capabilities -> ../../packages/agent-identity-capabilities
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-memory -> ../../packages/agent-memory
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 agent-provisioning -> ../../packages/agent-provisioning
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-router -> ../../packages/agent-router
+lrwxr-xr-x@  1 yanfenma  staff    27 Nov  1 07:21 agent-switch -> ../../packages/agent-switch
+lrwxr-xr-x@  1 yanfenma  staff    21 Nov  1 07:21 broker -> ../../packages/broker
+lrwxr-xr-x@  1 yanfenma  staff    25 Nov  1 07:21 bundle-agent-switch -> ../../bundle-agent-switch
+lrwxr-xr-x@  1 yanfenma  staff    19 Nov  1 07:21 bundle-broker -> ../../bundle-broker
+lrwxr-xr-x@  1 yanfenma  staff    17 Nov  1 07:21 bundle-demo -> ../../bundle-demo
+lrwxr-xr-x@  1 yanfenma  staff    24 Nov  1 07:21 bundle-integration -> ../../bundle-integration
+lrwxr-xr-x@  1 yanfenma  staff    19 Nov  1 07:21 bundle-memory -> ../../bundle-memory
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 demo-server -> ../../packages/demo-server
+lrwxr-xr-x@  1 yanfenma  staff    36 Nov  1 07:21 development-execution -> ../../packages/development-execution
+lrwxr-xr-x@  1 yanfenma  staff    32 Nov  1 07:21 execution-history -> ../../packages/execution-history
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 feishu-connector -> ../../packages/feishu-connector
+lrwxr-xr-x@  1 yanfenma  staff    30 Nov  1 07:21 fixed-operation -> ../../packages/fixed-operation
+lrwxr-xr-x@  1 yanfenma  staff    35 Nov  1 07:21 notification-ingress -> ../../packages/notification-ingress
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 owner-guard -> ../../packages/owner-guard
+lrwxr-xr-x@  1 yanfenma  staff    26 Nov  1 07:21 product-api -> ../../packages/product-api
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 production-runtime -> ../../packages/production-runtime
+lrwxr-xr-x@  1 yanfenma  staff    24 Nov  1 07:21 scheduler -> ../../packages/scheduler
+lrwxr-xr-x@  1 yanfenma  staff    31 Nov  1 07:21 scheduler-router -> ../../packages/scheduler-router
+lrwxr-xr-x@  1 yanfenma  staff    30 Oct 16 18:53 session-history -> ../../packages/session-history
+lrwxr-xr-x@  1 yanfenma  staff    33 Nov  1 07:21 workflow-execution -> ../../packages/workflow-execution
+lrwxr-xr-x@  1 yanfenma  staff    34 Oct 16 18:53 workspace-bootstrap -> ../../packages/workspace-bootstrap

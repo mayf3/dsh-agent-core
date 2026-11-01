@@ -1,0 +1,12 @@
+{
+  "preparedAt": "2026-11-01T01:37:45.621935+00:00",
+  "archiveSha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+  "dependencyArchiveSha256": "c994dff1b4ec771cb955ccb109a1100a9be4c71835308eac9c5b70d25c2e1abc",
+  "sourceHead": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceClean": true,
+  "sourceLibFiles": 57,
+  "closureFileCount": 14224,
+  "closureTreeDigest": "119f74e67b61a1ecace6219ebcf7f2df8874ce71d27cc2170d8e91667d1990b0",
+  "actualHarnessIdentity": "UNKNOWN",
+  "productionAdmissionEstablished": false
+}

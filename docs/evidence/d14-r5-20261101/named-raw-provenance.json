@@ -1,0 +1,12 @@
+{
+  "first": {
+    "path": "/tmp/proddsh-d14-r5-evidence-20261101/named-first.ndjson",
+    "sha256": "ce147ac732d4bfeb66d6ac462eb854a2a9ffb0afa9506d01661b43d948a481c2",
+    "bytes": 588028
+  },
+  "final": {
+    "path": "/tmp/proddsh-d14-r5-evidence-20261101/named.ndjson",
+    "sha256": "3f2656b80b8d60d377ea62b272041d112470e014a7940dec0b8e1f50129c0f31",
+    "bytes": 587688
+  }
+}

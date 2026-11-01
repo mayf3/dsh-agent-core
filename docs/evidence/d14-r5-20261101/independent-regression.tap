@@ -1,0 +1,13 @@
+✔ D14 unknown selected fleet generation refuses before route composition (8.555208ms)
+✔ D14 missing current in a configured fleet cannot fall back to an old expected pin (6.568292ms)
+✔ D14 NONCODEX-001 preserves independent subscriptions and refuses non-current generation identity (28141.196375ms)
+✔ D14 spawn-only acceptance never admits 0.3.2 into incident recovery or rollback (2.655917ms)
+✔ D14 ordinary production context rejects missing fleet; explicit builtin remains usable (1.121166ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 28274.346792

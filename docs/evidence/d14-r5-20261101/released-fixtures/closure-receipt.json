@@ -1,0 +1,38 @@
+{
+  "schema_version": 2,
+  "evaluatedAt": "2026-11-01T01:40:22.815896+00:00",
+  "evaluator": "/root/fixture_closure",
+  "specGovernanceMode": "COMPLIANCE",
+  "scope": "supplemental released Web/proxy/CLI fixtures only; no product writes",
+  "authorityRevision": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0",
+  "implementationPluginSource": "7cfa139e111956a7193622afc734126b52d7bf07",
+  "sourceHashes": {
+    "src/store.ts": "8b97dd265b7e5ceed902657c3619ea49c9866baff4c80501cbcf0534d41f9141",
+    "src/auth.ts": "969999660cc6547459c6967c1cae66d5a5de1be2a7b12d88ff4916d70206b9e0",
+    "src/bin.ts": "e582932469f815223224e049daad4ea8b51d430efbf20292c1e7f786b55d29da",
+    "src/auth-routes.ts": "c7aa74206b5fe7acac215f0b4230e2778ed61b408e44eef8622dacbbfbc24861",
+    "src/proxy.ts": "4e8261b158584027655472e0dd2be47a6ecb111219a0f400d808fbf63aab9caa",
+    "docs/specs/DSH_CODEX_SHARED_AUTH_PROTECTION_RESTORE_V1.md": "26e9d3c645f24eec02d6035f744a5083a2cdb94f2a1db1f917d7b5796afe1df5"
+  },
+  "releasedHashes": {
+    "lib/bin.js": "5b0d05cec437bbab012f6bf586ec56b789d7cff19475602cd1b8ba90a8e0be32",
+    "lib/index.js": "2d3504afb5e0540d8da4f1de0660f3148eaf8aceef159b45391f33bd9b097c8c",
+    "lib/search-event-DUX-NgG9.js": "040134f0abefa85aa08111c97a27246a2416f9c2188d446700e9ecb337fdff04",
+    "lib/src-nP_Jjtmz.js": "367705232987da99f3e5cd5325d392774488e361c33f9e8fbcc408456074a6ca"
+  },
+  "webProxyExitCode": 0,
+  "webProxyPassingObservations": 3,
+  "cliExitCode": 1,
+  "cliStatusPositiveNotExecuted": true,
+  "classification": {
+    "cliObservation": "Executed real compiled CLI Owner-login on malformed default nonshared document; returned1 after four synthetic provider calls",
+    "assertionApplicability": "INAPPLICABLE_SHARED_EXPECTATION_ON_NONSHARED_STORE",
+    "confirmedProductRegression": false,
+    "reason": "CLI src/bin.ts265-271 calls login without store; auth.ts26 defaults constructor no filename; store.ts214 shared=false; malformed pending Owner repair at store.ts375 is explicitly shared-only. The fixture expected shared-only recovery on a nonshared default path. CTR-D14-003302 retains normal nonshared default outside shared mode; 309-310 requires accurate entrypoint attribution, not implicit conversion of CLI into canonical shared store.",
+    "contractResult": "UNKNOWN_FOR_CANONICAL_CLI_COMPATIBILITY; not VIOLATES based on this fixture",
+    "remaining": "No canonical shared CLI entrypoint/config binding verified; ordinary valid nonshared CLI positive NOT_EXECUTED after stop; actual Harness/Core remain UNKNOWN"
+  },
+  "stop": "No further test, fix, rerun or product mutation after parent stop. Only read-only root-cause attribution and own evidence packaging.",
+  "networkDenialsLogPresent": false,
+  "productionAdmissionEstablished": false
+}

@@ -1,0 +1,29 @@
+✖ D14 NONCODEX-001 preserves independent subscriptions and refuses non-current generation identity (9115.843459ms)
+✔ D14 spawn-only acceptance never admits 0.3.2 into incident recovery or rollback (4.340417ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9171.645958
+
+✖ failing tests:
+
+test at packages/production-runtime/test/fleet-generation-admission.test.js:34:1
+✖ D14 NONCODEX-001 preserves independent subscriptions and refuses non-current generation identity (9115.843459ms)
+  Error: production-runtime: invalid agent model overrides: subscription pin differs from selected fleet generation; explicit catalog migration required
+      at invalid (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/identity/provider-environment.js:12:24)
+      at fleetSubscription (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/fleet-model-route.js:10:101)
+      at subscriptionProcessConfigBlock (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/model-overrides.js:215:17)
+      at makeChainRoute (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/model-overrides.js:193:21)
+      at file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/model-overrides.js:488:55
+      at Array.map (<anonymous>)
+      at Object.resolveChain (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/src/model-overrides.js:488:42)
+      at resolve (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/test/fleet-generation-admission.test.js:44:6)
+      at TestContext.<anonymous> (file:///private/tmp/proddsh-d14-fix/packages/production-runtime/test/fleet-generation-admission.test.js:48:22)
+      at Test.runInAsyncScope (node:async_hooks:226:14) {
+    code: 'AGENT_MODEL_OVERRIDE_INVALID',
+    [cause]: undefined
+  }

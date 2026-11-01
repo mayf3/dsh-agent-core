@@ -1,0 +1,2003 @@
+{
+  "exitCode": 1,
+  "added": [
+    [
+      "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+      "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+      "fail"
+    ]
+  ],
+  "removed": [
+    [
+      "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+      "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+      "pass"
+    ]
+  ],
+  "delta": {
+    "added": [
+      [
+        "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+        "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+        "fail"
+      ]
+    ],
+    "removed": [
+      [
+        "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+        "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+        "pass"
+      ]
+    ]
+  },
+  "summaries": [
+    {
+      "success": false,
+      "counts": {
+        "tests": 29,
+        "failed": 1,
+        "passed": 28,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 29,
+        "suites": 0
+      },
+      "duration_ms": 948.239667,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/provisioning.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/provisioning.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 651.346625,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/repo-bridge.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/repo-bridge.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 8.934708,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 27,
+        "failed": 0,
+        "passed": 27,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 27,
+        "suites": 0
+      },
+      "duration_ms": 98.027417,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/binding-store.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/binding-store.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 12,
+        "failed": 2,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 12,
+        "suites": 0
+      },
+      "duration_ms": 93.085375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/broker-rpc.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/broker-rpc.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 53.282167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/child-env.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/child-env.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 30.173875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/deadline-config.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/deadline-config.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 11.627875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/default-model-route.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/default-model-route.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 12,
+        "failed": 0,
+        "passed": 12,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 12,
+        "suites": 0
+      },
+      "duration_ms": 61.078875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/delivery.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/delivery.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 51.428375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-regression.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-regression.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 15.634958,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-ux-seam.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-ux-seam.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 40.664916,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-v2-normal.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/feishu-v2-normal.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 15,
+        "failed": 0,
+        "passed": 15,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 15,
+        "suites": 0
+      },
+      "duration_ms": 1894.510042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/generation-restart-safety.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/generation-restart-safety.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 3,
+        "failed": 3,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 5.333625,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/luna-credential-chain.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/luna-credential-chain.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 333.078625,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/primary-workspace.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/primary-workspace.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 314.678167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-delivery.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-delivery.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 3.075958,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-descriptors.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-descriptors.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 17,
+        "failed": 0,
+        "passed": 17,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 17,
+        "suites": 0
+      },
+      "duration_ms": 1815.025375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/admin-abandonment.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 6,
+        "failed": 1,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 397.99225,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 19,
+        "failed": 0,
+        "passed": 19,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 19,
+        "suites": 0
+      },
+      "duration_ms": 11094.136667,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 18,
+        "failed": 0,
+        "passed": 18,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 18,
+        "suites": 0
+      },
+      "duration_ms": 725.737875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 510.220708,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/correlation.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/correlation.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 188.985875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/evidence-caps.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 5.142042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 10,
+        "failed": 0,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 10,
+        "suites": 0
+      },
+      "duration_ms": 886.083125,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/late-settlement.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 7.057958,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/message-origin.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/message-origin.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 12.772375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/pipe-failure.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 777.195209,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 2.717375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-quiescence-salvaged.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-quiescence-salvaged.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 36,
+        "failed": 0,
+        "passed": 36,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 36,
+        "suites": 0
+      },
+      "duration_ms": 5841.374333,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/restart-quiescence.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 2428.46525,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/rpc.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/rpc.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 1216.008833,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/shutdown.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/shutdown.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 887.4935,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/startup.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/startup.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 543.984167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/timeout.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/timeout.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 356.926917,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 528.429875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 968.776,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 5.351709,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 263.596583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-registry.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-registry.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 239.155542,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-startup-wedge.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-startup-wedge.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 24,
+        "failed": 0,
+        "passed": 24,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 24,
+        "suites": 0
+      },
+      "duration_ms": 3541.777917,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/reconciliation-store.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/reconciliation-store.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 15,
+        "failed": 0,
+        "passed": 15,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 15,
+        "suites": 0
+      },
+      "duration_ms": 398.941125,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/canary-seam.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/canary-seam.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 174.872334,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/conversation-runtime-seam.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/conversation-runtime-seam.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 402.266834,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/conversation-source.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/conversation-source.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 44.350291,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/ingress-fallback.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/ingress-fallback.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 4.868416,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 160.506041,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/process-registry-route-gate.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 10,
+        "failed": 0,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 10,
+        "suites": 0
+      },
+      "duration_ms": 123.586417,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/provider-route.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/provider-route.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 19,
+        "failed": 0,
+        "passed": 19,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 19,
+        "suites": 0
+      },
+      "duration_ms": 103.10225,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/quota-classifier.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/quota-classifier.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 17,
+        "failed": 0,
+        "passed": 17,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 17,
+        "suites": 0
+      },
+      "duration_ms": 285.114583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/route-chain.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/route-chain.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 51.12475,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/startup-carrier.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/route-chain/startup-carrier.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 15,
+        "failed": 0,
+        "passed": 15,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 15,
+        "suites": 0
+      },
+      "duration_ms": 559.196042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/router.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/router.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 95.904375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/runtime-hygiene/no-hidden-hr-runtime-knowledge.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/runtime-hygiene/no-hidden-hr-runtime-knowledge.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 86.965083,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/single-flight.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/single-flight.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 14,
+        "failed": 0,
+        "passed": 14,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 14,
+        "suites": 0
+      },
+      "duration_ms": 484.841583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/workspace-binding.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/agent-router/test/workspace-binding.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 2,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 3.31775,
+      "file": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/real-boot-smoke.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/real-boot-smoke.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 7.138375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam-message-origin.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam-message-origin.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 5.251583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam-workflow-origin.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam-workflow-origin.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 10,
+        "failed": 0,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 10,
+        "suites": 0
+      },
+      "duration_ms": 7.638458,
+      "file": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/demo-server/test/session-seam.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 5,
+        "failed": 5,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 56.765667,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-directory-session-send-e2e.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 21,
+        "failed": 0,
+        "passed": 21,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 21,
+        "suites": 0
+      },
+      "duration_ms": 67.677625,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session-messaging.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session-messaging.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 7.512459,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session-reply-wait.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session-reply-wait.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 2311.289417,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/audit-archive.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/audit-archive.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 2,
+        "failed": 2,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 33.093291,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 9,
+        "failed": 9,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 132.069708,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/messaging-integration.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 14,
+        "failed": 0,
+        "passed": 14,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 14,
+        "suites": 0
+      },
+      "duration_ms": 490.885208,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/turn-inspection.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agent-session/turn-inspection.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 6.224167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/agents-home-skill-root-passthrough.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 2,
+        "failed": 1,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 28.870458,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose-deployment-root.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose-deployment-root.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 12,
+        "failed": 10,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 12,
+        "suites": 0
+      },
+      "duration_ms": 98.842542,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/compose.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 6,
+        "failed": 4,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 52.84725,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/default-model-route.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 10.717959,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/entry-conversation-env.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/entry-conversation-env.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 2,
+        "failed": 2,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 204.477167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-missing-impl-startup.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 6,
+        "failed": 6,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 143.83825,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-optional-adapter-startup.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 4.023,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-readiness.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-readiness.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 10,
+        "failed": 0,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 10,
+        "suites": 0
+      },
+      "duration_ms": 12.467042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-ux-switches.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/feishu-ux-switches.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 6.980292,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/fixed-operation-runtime.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/fixed-operation-runtime.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 12,
+        "failed": 0,
+        "passed": 12,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 12,
+        "suites": 0
+      },
+      "duration_ms": 12.368833,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/identity/workflow-human-principal-projection.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 2,
+        "failed": 2,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 49.351125,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/ingress-restart-handoff.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/ingress-restart-handoff.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 5.909959,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/layout.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/layout.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 5,
+        "failed": 4,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 50.252958,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides-runtime.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 25,
+        "failed": 0,
+        "passed": 25,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 25,
+        "suites": 0
+      },
+      "duration_ms": 226.912209,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/model-overrides.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 90.636708,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/admission.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/admission.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 6,
+        "failed": 1,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 2,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 3020.368375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/inventory.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/inventory.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 375.533291,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/trusted-package-closure.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/trusted-package-closure.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 5,
+        "failed": 1,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 540.143541,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 6,
+        "failed": 6,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 153.14925,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/primary-workspaces.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 23.482125,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/processing-reaction-config.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/processing-reaction-config.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 13.164042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/reply-render-mode.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/reply-render-mode.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 3,
+        "failed": 1,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 209.7075,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/restart-boundary.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/restart-boundary.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 1,
+        "failed": 1,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 32.600666,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 60.501333,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-canary-control.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-canary-control.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 14,
+        "failed": 0,
+        "passed": 14,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 14,
+        "suites": 0
+      },
+      "duration_ms": 819.477042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-desired-state.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 8,
+        "failed": 0,
+        "passed": 8,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 8,
+        "suites": 0
+      },
+      "duration_ms": 400.139084,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-durable-file.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 30.345667,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-file-metadata.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-file-metadata.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 8,
+        "failed": 0,
+        "passed": 8,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 8,
+        "suites": 0
+      },
+      "duration_ms": 305.820958,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-incident-directory.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 6,
+        "failed": 0,
+        "passed": 6,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 6,
+        "suites": 0
+      },
+      "duration_ms": 6438.551375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-incident-migration.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 5,
+        "failed": 0,
+        "passed": 5,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 5,
+        "suites": 0
+      },
+      "duration_ms": 1176.02375,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-launchd.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 148.752167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 124.139167,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 13,
+        "failed": 0,
+        "passed": 13,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 13,
+        "suites": 0
+      },
+      "duration_ms": 35.088791,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 2,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 2,
+        "suites": 0
+      },
+      "duration_ms": 147.671583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-rollback-file.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-rollback-file.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 8.0545,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-rollback.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-rollback.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 1830.933583,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-routing.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-routing.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 637.6295,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 654.216208,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 12,
+        "failed": 0,
+        "passed": 12,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 12,
+        "suites": 0
+      },
+      "duration_ms": 955.005,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/health-runtime.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/health-runtime.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 7,
+        "failed": 0,
+        "passed": 7,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 7,
+        "suites": 0
+      },
+      "duration_ms": 117.791875,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 10,
+        "failed": 0,
+        "passed": 10,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 10,
+        "suites": 0
+      },
+      "duration_ms": 2295.926,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/restart-drain.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/restart-drain.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 291.695625,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 13.580791,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/self-service-runtime.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/scheduler/self-service-runtime.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 7.605334,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/shutdown-result.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/shutdown-result.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 0,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 19.304,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/chatgpt-subscription-real.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/chatgpt-subscription-real.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 8,
+        "failed": 0,
+        "passed": 8,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 8,
+        "suites": 0
+      },
+      "duration_ms": 2319.45075,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 1422.609,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 11,
+        "failed": 0,
+        "passed": 11,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 11,
+        "suites": 0
+      },
+      "duration_ms": 988.058666,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-migration.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 9,
+        "failed": 0,
+        "passed": 9,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 9,
+        "suites": 0
+      },
+      "duration_ms": 1389.368417,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 2,
+        "cancelled": 0,
+        "skipped": 1,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 5191.905792,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/target-proxy-observer.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/target-proxy-observer.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 13,
+        "failed": 0,
+        "passed": 13,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 13,
+        "suites": 0
+      },
+      "duration_ms": 94.541125,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/v2-ingress-gate.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/v2-ingress-gate.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 1,
+        "failed": 0,
+        "passed": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 1,
+        "suites": 0
+      },
+      "duration_ms": 10011.690042,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-execution-shutdown.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-execution-shutdown.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 7.80225,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-owner-assistance-wake.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 3,
+        "failed": 0,
+        "passed": 3,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 3,
+        "suites": 0
+      },
+      "duration_ms": 367.82475,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-progress-gateway.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-progress-gateway.test.js"
+    },
+    {
+      "success": true,
+      "counts": {
+        "tests": 4,
+        "failed": 0,
+        "passed": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 4,
+        "suites": 0
+      },
+      "duration_ms": 520.296417,
+      "file": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-progress-runtime.test.js",
+      "entryFile": "/private/tmp/proddsh-d14-fix/packages/production-runtime/test/workflow-progress-runtime.test.js"
+    },
+    {
+      "success": false,
+      "counts": {
+        "tests": 938,
+        "failed": 63,
+        "passed": 866,
+        "cancelled": 0,
+        "skipped": 9,
+        "todo": 0,
+        "topLevel": 938,
+        "suites": 0
+      },
+      "duration_ms": 30077.446792
+    }
+  ],
+  "baselineRawSha256": "983eec9b42aa89ec87bb53fadf37d5e2bad1397eed0ea7cda10fce975a1c65c3",
+  "currentRawSha256": "ce147ac732d4bfeb66d6ac462eb854a2a9ffb0afa9506d01661b43d948a481c2"
+}

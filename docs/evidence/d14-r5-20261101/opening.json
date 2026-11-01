@@ -1,0 +1,9 @@
+{
+  "observedAt": "2026-11-01T01:36:45.186445+00:00",
+  "worktree": "/private/tmp/proddsh-d14-fix",
+  "head": "c35d30f4ee021449c239199da192dadc2327eb4c",
+  "branch": "ac-D14D13-spawn-proof",
+  "sharedRoot": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "linkCount": 30,
+  "scope": "listed metadata only; read-only shared checkout"
+}

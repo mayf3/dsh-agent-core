@@ -1,0 +1,6 @@
+Error: openai-codex: /private/tmp/d14-r5-fixture-closure-20261101/cli-dsh-home/.openai-codex-auth.json credential accountId must be a non-empty string
+    at parseDocument (file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:644:84)
+    at file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:872:23
+    at async withFileLock (file:///private/tmp/d14-r5-fixture-closure-20261101/package/node_modules/@deepseek-ai/dsh-atomic-write/lib/index.js:211:10)
+    at async OpenAICodexCredentialStore.modify (file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:851:11)
+    at async file:///private/tmp/d14-r5-fixture-closure-20261101/run-cli-extra.mjs:36:3

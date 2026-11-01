@@ -1,0 +1,95 @@
+{
+  "schema_version": 2,
+  "observedAt": "2026-11-01T01:42:09.760432+00:00",
+  "evaluator": "/root/prerequisite_audit",
+  "method": "Mechanical committed-source binding and read-only completed evidence inspection; no new tests",
+  "sourceHead": "b5d3a78f20cf73497fe12fe440fea541b66123e5",
+  "parent": "c35d30f4ee021449c239199da192dadc2327eb4c",
+  "originalReviewPath": "/tmp/d14-r5-independent-review.json",
+  "originalReviewSha256": "fa1140d2e65b606851667496aa9633eadff290fff5a6d1dec4245e9a84320bfb",
+  "files": [
+    {
+      "path": "packages/production-runtime/src/identity/fleet-model-route.js",
+      "sha256": "e4a838928cf553d9d6da799fdda1073cc9e58f59b5d8768fc721ccf826352838",
+      "committedSha256": "e4a838928cf553d9d6da799fdda1073cc9e58f59b5d8768fc721ccf826352838",
+      "matchesReviewed": true
+    },
+    {
+      "path": "packages/production-runtime/src/model-overrides.js",
+      "sha256": "c472d6bc4c67232ea31ceda205a42a1a485dbdf010ec078fda9773298722e71d",
+      "committedSha256": "c472d6bc4c67232ea31ceda205a42a1a485dbdf010ec078fda9773298722e71d",
+      "matchesReviewed": true
+    },
+    {
+      "path": "packages/production-runtime/src/shared-codex-migration-executable.js",
+      "sha256": "be09d25e0c60ec141aac2741f67e472d1829b5a4c7cd4d02c2712229e6b70f9f",
+      "committedSha256": "be09d25e0c60ec141aac2741f67e472d1829b5a4c7cd4d02c2712229e6b70f9f",
+      "matchesReviewed": true
+    },
+    {
+      "path": "packages/production-runtime/test/subscription/fleet-generation-admission.test.js",
+      "sha256": "4927a50d559529ed2dc76b7674fee24e051fb4e194a7e17151e3001af51eb953",
+      "committedSha256": "4927a50d559529ed2dc76b7674fee24e051fb4e194a7e17151e3001af51eb953",
+      "matchesReviewed": true
+    },
+    {
+      "path": "packages/agent-router/test/route-chain/fleet-generation-guard.test.js",
+      "sha256": "c92d1445fd06ef2211309bee92d86a81d478999b4db2949e2c1356d097267b68",
+      "committedSha256": "c92d1445fd06ef2211309bee92d86a81d478999b4db2949e2c1356d097267b68",
+      "matchesReviewed": true
+    }
+  ],
+  "sourceBindingResult": "PASS_5_OF_5_REVIEWED_HASHES_MATCH_COMMIT",
+  "semanticDeltaResult": "PASS_AFFECTED_NONCODEX_AND_SPAWN_ONLY_SOURCE_DELTA",
+  "cliApplicability": {
+    "adjudicationPath": "/tmp/d14-r5-applicability-adjudication.json",
+    "sha256": "eb351575fbd6af947855f5d29d4ecdcfeb69aea3794bce0e4a54ac3e02c41d8f",
+    "classification": "INAPPLICABLE_ASSERTION_FIXTURE_SCOPE_MISMATCH",
+    "confirmedSemanticBlocker": false,
+    "remaining": "canonical/shared CLI wiring and actual installed Harness/Core compatibility UNKNOWN; this record does not independently review later positive nonshared CLI fixture"
+  },
+  "namedLatest": {
+    "path": "/tmp/proddsh-d14-r5-evidence-20261101/named-comparison.json",
+    "sha256": "ffbeac3cef18a59e1dfb99d1b48735fae2dc3532b6380e2d2db805629e7b4678",
+    "exitCode": 1,
+    "counts": {
+      "tests": 938,
+      "failed": 62,
+      "passed": 867,
+      "cancelled": 0,
+      "skipped": 9,
+      "todo": 0,
+      "topLevel": 938,
+      "suites": 0
+    },
+    "delta": [],
+    "interpretation": "Same named statuses as baseline:867pass62fail9skip; not full-suite PASS"
+  },
+  "namedFirst": {
+    "path": "/tmp/proddsh-d14-r5-evidence-20261101/named-first-comparison.json",
+    "sha256": "6c251e481105f2deaf751f6a8a63394bbf5474bfe5fed2a166a6a56c731bf468",
+    "delta": {
+      "added": [
+        [
+          "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+          "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+          "fail"
+        ]
+      ],
+      "removed": [
+        [
+          "/private/tmp/proddsh-d14-fix/packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+          "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+          "pass"
+        ]
+      ]
+    },
+    "rootCause": "UNKNOWN",
+    "interpretation": "First timing difference retained; latest identical full named rerun does not prove first cause"
+  },
+  "sourceMergeReady": "NO_REQUIRED_STRUCTURE_AND_COMPATIBILITY_GATES_REMAIN",
+  "productionAcceptance": "NO",
+  "operationAllowed": "NO",
+  "publication": "SOURCE_REVIEWED_PREPARATION_WITH_EXPLICIT_PENDING_GATES_ONLY; no implementation completion/merge/production approval",
+  "requiresFinalEvidenceDocsHeadRecheck": true
+}

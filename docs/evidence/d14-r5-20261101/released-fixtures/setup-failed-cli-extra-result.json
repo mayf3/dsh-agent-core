@@ -1,0 +1,23 @@
+{
+  "result": "FAIL",
+  "observedAt": "2026-11-01T01:39:02.855Z",
+  "observations": [
+    {
+      "result": "FAIL",
+      "error": {
+        "name": "Error",
+        "message": "openai-codex: /private/tmp/d14-r5-fixture-closure-20261101/cli-dsh-home/.openai-codex-auth.json credential accountId must be a non-empty string",
+        "stack": "Error: openai-codex: /private/tmp/d14-r5-fixture-closure-20261101/cli-dsh-home/.openai-codex-auth.json credential accountId must be a non-empty string\n    at parseDocument (file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:644:84)\n    at file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:872:23\n    at async withFileLock (file:///private/tmp/d14-r5-fixture-closure-20261101/package/node_modules/@deepseek-ai/dsh-atomic-write/lib/index.js:211:10)\n    at async OpenAICodexCredentialStore.modify (file:///private/tmp/d14-r5-fixture-closure-20261101/package/lib/search-event-DUX-NgG9.js:851:11)\n    at async file:///private/tmp/d14-r5-fixture-closure-20261101/run-cli-extra.mjs:36:3"
+      }
+    }
+  ],
+  "calls": [],
+  "browserAttempts": [],
+  "proofScope": "compiled CLI run(argv) export, argument parser/stdin facade/auth/provider/store unmocked; synthetic fetch; browser launcher replaced with no-op emitter",
+  "limits": [
+    "Not dsh plugin exec wrapper or actual installed Harness",
+    "No real OAuth or production credential access",
+    "Default CLI nonshared path is synthetic and does not establish canonical shared-mode CLI entrypoint wiring"
+  ],
+  "productionAdmissionEstablished": false
+}

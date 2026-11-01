@@ -1,0 +1,23 @@
+{
+  "sourceCommit": "b5d3a78f20cf73497fe12fe440fea541b66123e5",
+  "files": {
+    "packages/production-runtime/src/identity/fleet-model-route.js": "e4a838928cf553d9d6da799fdda1073cc9e58f59b5d8768fc721ccf826352838",
+    "packages/production-runtime/src/model-overrides.js": "c472d6bc4c67232ea31ceda205a42a1a485dbdf010ec078fda9773298722e71d",
+    "packages/production-runtime/src/shared-codex-migration-executable.js": "be09d25e0c60ec141aac2741f67e472d1829b5a4c7cd4d02c2712229e6b70f9f",
+    "packages/production-runtime/test/subscription/fleet-generation-admission.test.js": "4927a50d559529ed2dc76b7674fee24e051fb4e194a7e17151e3001af51eb953",
+    "packages/agent-router/test/route-chain/fleet-generation-guard.test.js": "c92d1445fd06ef2211309bee92d86a81d478999b4db2949e2c1356d097267b68"
+  },
+  "acceptedSpecs": {
+    "docs/specs/AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V2.md": "b628d81e8db8df047b8c419dbdeadd50853a3158023c7534869945a224e405a5",
+    "docs/specs/AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V3.md": "d33e97bd02f73675ee29ac2690fecf1585bc4bfb200fc7be2f673a7ee39ec82c",
+    "docs/specs/AGENT_CORE_D14_FLEET_GENERATION_SUCCESSION_V1.md": "6f91c3388503770e5e360da139fbd62ea58daa2011778f8cc07697e020ee310c",
+    "docs/specs/AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3.md": "412cb7f4a74ff685ad0bd0a7c802192965295ae18c1164713eac81e08c7d2b34",
+    "docs/specs/AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4.md": "d8bd1baaeeeaa0750b46146530ac300590598cc68fb123d5b2f1de682a3969cb",
+    "docs/specs/AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V1.md": "164c9c59b8e3fd18a4a086b6ba21884dc2716d495ef13dc2c2b3a2715ea4b0df",
+    "docs/specs/AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V2.md": "912e203e909b2921ac56e4ee8ade2a2feabb6af4059ab82a31391a6ac50b6924",
+    "docs/specs/DEFAULT_MODEL_ROUTING_CONFIG_V1.md": "0ebe164afe1a7e600f1aeb50662ad84b543953ba518063fcba55c4514218f248",
+    "docs/specs/DEFAULT_MODEL_ROUTING_CONFIG_V2.md": "07ff5e4f9c22ab9d19827a0042d1b7ff83abb7d418941ad87a814c0c49d831c6"
+  },
+  "acceptedSpecsCount": 9,
+  "authorityMerge": "26178b4f459cdc2737724f6614b5e2bc9bdc77b0"
+}

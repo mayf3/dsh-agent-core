@@ -1,0 +1,11 @@
+# D14 R5 supplemental released fixture evidence
+
+Exact candidate: dsh-codex 0.3.2, source `7cfa139e111956a7193622afc734126b52d7bf07`. `preparation.json` binds archive, dependency closure and 57 source/lib comparisons. `closure-receipt.json` additionally records exact source and compiled entrypoint hashes.
+
+The additional passing observations are actual compiled Web login/status, Web cancel, scoped HTTP proxy plus AbortSignal, and normal valid nonshared CLI login/status. See `summary.json` for attribution and remaining gates. Actual auth/provider/store code was used with synthetic provider responses; no real account, production credential or runtime was accessed. The original external-network guard was retained unchanged. Browser opening was replaced by a no-op event emitter in CLI fixtures.
+
+`extra-command.json` and `cli-positive-command.json` are actual executed commands and isolated environments; their original absolute paths identify task-owned extraction/output locations. Runners are included. Reproduction requires a newly owned physical directory with the exact archive extracted as `package/` for `run-extra.mjs`, or an explicit exact extracted package directory as argument 3 for `run-cli-positive.mjs`. Keep HOME, DSH_HOME, TMPDIR and guard imports inside that directory. These are observation runners, not release-admission scripts.
+
+The earlier `cli-extra.log` contains a failed overbroad expectation: it demanded shared malformed/pending repair from the default nonshared CLI. Source inspection shows CLI supplies no store, the constructor is nonshared without filename, and malformed repair is explicitly shared-only. The raw observation is retained; it does not establish a product semantic blocker. A separate fresh valid nonshared CLI run was authorized after scope review and passed once. No failed result is hidden or relabeled PASS. `setup-failed-*` is the still earlier invalid seed fixture, before CLI execution.
+
+Four supplementary fixture observations do not clear production acceptance. Actual installed Harness identity/closure, final Core wiring, canonical shared CLI availability/authorization and regulator readiness remain separate. The D14 source slice authorizes spawn only and does not admit 0.3.2 into recovery.

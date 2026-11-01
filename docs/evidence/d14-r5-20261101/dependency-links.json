@@ -1,0 +1,504 @@
+{
+  "count": 83,
+  "external": 0,
+  "links": [
+    {
+      "path": "node_modules/@larksuite/channel",
+      "target": "../.missing/07e01f03bbdeaa5e",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/.missing/07e01f03bbdeaa5e",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/fixed-operation",
+      "target": "/private/tmp/proddsh-d14-fix/packages/fixed-operation",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/fixed-operation",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/product-api",
+      "target": "/private/tmp/proddsh-d14-fix/packages/product-api",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/product-api",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/production-runtime",
+      "target": "/private/tmp/proddsh-d14-fix/packages/production-runtime",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/production-runtime",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/execution-history",
+      "target": "/private/tmp/proddsh-d14-fix/packages/execution-history",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/execution-history",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-identity-capabilities",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-identity-capabilities",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-identity-capabilities",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/broker",
+      "target": "/private/tmp/proddsh-d14-fix/packages/broker",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/broker",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/workflow-execution",
+      "target": "/private/tmp/proddsh-d14-fix/packages/workflow-execution",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/workflow-execution",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-switch",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-switch",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-switch",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/bundle-integration",
+      "target": "/private/tmp/proddsh-d14-fix/bundle-integration",
+      "resolved": "/private/tmp/proddsh-d14-fix/bundle-integration",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-credential-provisioning",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-credential-provisioning",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-credential-provisioning",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/scheduler-router",
+      "target": "/private/tmp/proddsh-d14-fix/packages/scheduler-router",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/scheduler-router",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/session-history",
+      "target": "/private/tmp/proddsh-d14-fix/packages/session-history",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/session-history",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/owner-guard",
+      "target": "/private/tmp/proddsh-d14-fix/packages/owner-guard",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/owner-guard",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-provisioning",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-provisioning",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/scheduler",
+      "target": "/private/tmp/proddsh-d14-fix/packages/scheduler",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/scheduler",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-router",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-router",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-router",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/workspace-bootstrap",
+      "target": "/private/tmp/proddsh-d14-fix/packages/workspace-bootstrap",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/workspace-bootstrap",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/bundle-agent-switch",
+      "target": "/private/tmp/proddsh-d14-fix/bundle-agent-switch",
+      "resolved": "/private/tmp/proddsh-d14-fix/bundle-agent-switch",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/feishu-connector",
+      "target": "/private/tmp/proddsh-d14-fix/packages/feishu-connector",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/feishu-connector",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/demo-server",
+      "target": "/private/tmp/proddsh-d14-fix/packages/demo-server",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/demo-server",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/development-execution",
+      "target": "/private/tmp/proddsh-d14-fix/packages/development-execution",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/development-execution",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-memory",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-memory",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-memory",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/bundle-memory",
+      "target": "/private/tmp/proddsh-d14-fix/bundle-memory",
+      "resolved": "/private/tmp/proddsh-d14-fix/bundle-memory",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/bundle-broker",
+      "target": "/private/tmp/proddsh-d14-fix/bundle-broker",
+      "resolved": "/private/tmp/proddsh-d14-fix/bundle-broker",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/notification-ingress",
+      "target": "/private/tmp/proddsh-d14-fix/packages/notification-ingress",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/notification-ingress",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/agent-definition",
+      "target": "/private/tmp/proddsh-d14-fix/packages/agent-definition",
+      "resolved": "/private/tmp/proddsh-d14-fix/packages/agent-definition",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@agent-core/bundle-demo",
+      "target": "/private/tmp/proddsh-d14-fix/bundle-demo",
+      "resolved": "/private/tmp/proddsh-d14-fix/bundle-demo",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-session",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-session",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-system-prompt",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/schemastery",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-llm",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-scope",
+      "target": "dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-code-runtime/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-code-runtime/node_modules/@deepseek-ai/cordis",
+      "target": "../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cosmokit",
+      "target": "cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-loader",
+      "target": "cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cosmokit",
+      "target": "cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../..",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../..",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-typert-registry",
+      "target": "dsh-session/node_modules/@deepseek-ai/dsh-typert-registry",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-registry",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-typert-protocol",
+      "target": "dsh-session/node_modules/@deepseek-ai/dsh-typert-protocol",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-protocol",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/cordis",
+      "target": "../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery/node_modules/@standard-schema/spec",
+      "target": "../../../../../../../../../cordis/node_modules/@standard-schema/spec",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@standard-schema/spec",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery/node_modules/@deepseek-ai/cosmokit",
+      "target": "../../../../../../../../../cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis/node_modules/@deepseek-ai/cordis-plugin-include/node_modules/@deepseek-ai/cordis-plugin-loader/node_modules/@deepseek-ai/cosmokit",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-brand",
+      "target": "../../../dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-llm",
+      "target": "../../../dsh-llm",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-scope",
+      "target": "../../../dsh-scope",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-registry/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-registry/node_modules/@deepseek-ai/dsh-typert-protocol",
+      "target": "../../../dsh-typert-protocol",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-protocol",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-registry/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-protocol/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session/node_modules/@deepseek-ai/dsh-typert-protocol/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt/node_modules/@deepseek-ai/schemastery",
+      "target": "../../../dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt/node_modules/@deepseek-ai/dsh-llm",
+      "target": "../../../dsh-llm",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt/node_modules/@deepseek-ai/dsh-scope",
+      "target": "../../../dsh-scope",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/schemastery",
+      "target": "../../../dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-brand",
+      "target": "dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../../../../../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-timeout/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-timeout/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope/node_modules/@deepseek-ai/cordis",
+      "target": "../../../../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-invariants",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-session",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-session",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-session",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-system-prompt",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-system-prompt",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/cordis",
+      "target": "../../../cordis",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/cordis",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/schemastery",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-invariants/node_modules/@deepseek-ai/schemastery",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-brand",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm/node_modules/@deepseek-ai/dsh-attachment/node_modules/@deepseek-ai/dsh-brand",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-agent",
+      "target": "../../../dsh-agent",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-llm",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-llm",
+      "internal": true
+    },
+    {
+      "path": "node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-user-approval/node_modules/@deepseek-ai/dsh-scope",
+      "target": "../../../dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "resolved": "/private/tmp/proddsh-d14-fix/node_modules/@deepseek-ai/dsh-tools/node_modules/@deepseek-ai/dsh-agent/node_modules/@deepseek-ai/dsh-scope",
+      "internal": true
+    }
+  ]
+}

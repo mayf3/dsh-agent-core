@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-11-01T01:41:39.772684+00:00",
+  "root": "/Users/yanfenma/workspace/project/production-dsh-agent-core",
+  "linkCount": 30,
+  "linksEqual": true,
+  "beforeSha256": "4346ef42597f0209f06a7c7280751dcebdb333b0d3adfdb91c8fac7eb468adaf",
+  "afterSha256": "4346ef42597f0209f06a7c7280751dcebdb333b0d3adfdb91c8fac7eb468adaf",
+  "listingBytesEqual": {
+    "node_modules": true,
+    "node_modules/@agent-core": true
+  },
+  "limits": "Only listed link and directory metadata; no claim of continuous or full filesystem audit"
+}

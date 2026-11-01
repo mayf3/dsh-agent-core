@@ -1,0 +1,34 @@
+{
+  "observedAt": "2026-11-01T01:44:20.120982+00:00",
+  "sourceCommit": "b5d3a78f20cf73497fe12fe440fea541b66123e5",
+  "checks": [
+    {
+      "command": [
+        "python3",
+        ".agents/tools/verify_governance.py",
+        "--target",
+        "."
+      ],
+      "exitCode": 0,
+      "stdout": "vendored governance bytes match governance.lock.json\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "c35d30f4",
+        "HEAD",
+        "--",
+        "packages",
+        "scripts"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "fixtureAuditManifestFiles": 23,
+  "fixtureAuditManifestMismatches": []
+}

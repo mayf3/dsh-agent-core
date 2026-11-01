@@ -1,0 +1,55 @@
+{
+  "result": "PASS",
+  "observedAt": "2026-11-01T01:38:36.895Z",
+  "observations": [
+    {
+      "name": "released Web cancel route preserves credential and performs zero refresh after device challenge",
+      "result": "PASS",
+      "providerCallsAfterChallenge": 0
+    },
+    {
+      "name": "released Web registered login/status routes run real auth/store Owner recovery",
+      "result": "PASS",
+      "detail": {
+        "routeCount": 12,
+        "explicitCompletingRefreshGrants": 1,
+        "frontDoor": "compiled registerOpenAICodexAuthRoutes via actual Loader; capture-only webServer adapter, HTTP loopback requests",
+        "transport": "synthetic provider fetch; actual auth.ts and store unmocked"
+      }
+    },
+    {
+      "name": "released proxy scoped HTTP request and AbortSignal use loopback proxy",
+      "result": "PASS",
+      "detail": {
+        "proxyRequests": 2,
+        "wire": "actual shipped undici scoped HTTP proxy; loopback listener; synthetic upstream URL is not DNS-resolved"
+      }
+    }
+  ],
+  "providerCalls": [
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/usercode"
+    },
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/token"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "authorization_code"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "refresh_token"
+    },
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/usercode"
+    }
+  ],
+  "limits": [
+    "No actual installed Harness identity or current production Core compatibility",
+    "Web HTTP served by capture-only fixture service from actual plugin registrations",
+    "All provider responses synthetic; no real Owner OAuth/account",
+    "No production recovery admission claim"
+  ],
+  "productionAdmissionEstablished": false
+}

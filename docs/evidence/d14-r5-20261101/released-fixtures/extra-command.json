@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-11-01T01:38:34.589690+00:00",
+  "command": [
+    "node",
+    "/private/tmp/d14-r5-fixture-closure-20261101/run-extra.mjs",
+    "/private/tmp/d14-r5-fixture-closure-20261101"
+  ],
+  "isolatedEnvironment": {
+    "HOME": "/private/tmp/d14-r5-fixture-closure-20261101/home",
+    "DSH_HOME": "/private/tmp/d14-r5-fixture-closure-20261101/dsh-home",
+    "TMPDIR": "/private/tmp/d14-r5-fixture-closure-20261101/tmp",
+    "NODE_OPTIONS": "--import=/private/tmp/d14-r5-fixture-closure-20261101/deny-external-network.mjs",
+    "DSH_CODEX_MODELS_CACHE": "/private/tmp/d14-r5-fixture-closure-20261101/empty-model-cache.json"
+  },
+  "runnerSha256": "0f0209a3b897aa30043b588eba8e27afbff52e33bb61daa3627be8974e05d18e"
+}

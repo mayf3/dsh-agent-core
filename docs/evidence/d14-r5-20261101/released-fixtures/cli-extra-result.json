@@ -1,0 +1,45 @@
+{
+  "result": "FAIL",
+  "observedAt": "2026-11-01T01:39:12.307Z",
+  "observations": [
+    {
+      "result": "FAIL",
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected values to be strictly equal:\n\n1 !== 0\n",
+        "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n1 !== 0\n\n    at file:///private/tmp/d14-r5-fixture-closure-20261101/run-cli-extra.mjs:41:10"
+      }
+    }
+  ],
+  "calls": [
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/usercode"
+    },
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/token"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "authorization_code"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "refresh_token"
+    }
+  ],
+  "browserAttempts": [
+    {
+      "command": "open",
+      "args": [
+        "https://auth.openai.com/codex/device"
+      ]
+    }
+  ],
+  "proofScope": "compiled CLI run(argv) export, argument parser/stdin facade/auth/provider/store unmocked; synthetic fetch; browser launcher replaced with no-op emitter",
+  "limits": [
+    "Not dsh plugin exec wrapper or actual installed Harness",
+    "No real OAuth or production credential access",
+    "Default CLI nonshared path is synthetic and does not establish canonical shared-mode CLI entrypoint wiring"
+  ],
+  "productionAdmissionEstablished": false
+}

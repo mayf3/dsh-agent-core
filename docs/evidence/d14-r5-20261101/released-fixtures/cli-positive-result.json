@@ -1,0 +1,45 @@
+{
+  "result": "PASS",
+  "observedAt": "2026-11-01T01:40:59.982Z",
+  "observations": [
+    {
+      "name": "released CLI run login --device-code and status --json use real auth/store on valid nonshared default document",
+      "result": "PASS",
+      "explicitCompletingRefreshGrants": 1,
+      "syntheticProviderCalls": 4,
+      "browserOpenersSuppressed": 1,
+      "defaultStoreInsideSyntheticDshHome": true
+    }
+  ],
+  "calls": [
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/usercode"
+    },
+    {
+      "url": "https://auth.openai.com/api/accounts/deviceauth/token"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "authorization_code"
+    },
+    {
+      "url": "https://auth.openai.com/oauth/token",
+      "grant": "refresh_token"
+    }
+  ],
+  "browserAttempts": [
+    {
+      "command": "open",
+      "args": [
+        "https://auth.openai.com/codex/device"
+      ]
+    }
+  ],
+  "proofScope": "compiled CLI run(argv) export, argument parser/stdin facade/auth/provider/store unmocked; synthetic fetch; browser launcher replaced with no-op emitter",
+  "limits": [
+    "Not dsh plugin exec wrapper or actual installed Harness",
+    "No real OAuth or production credential access",
+    "Valid default nonshared CLI path only; no malformed/pending shared recovery or canonical credentialFile selection claim"
+  ],
+  "productionAdmissionEstablished": false
+}

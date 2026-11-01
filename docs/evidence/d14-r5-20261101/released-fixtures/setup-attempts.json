@@ -1,0 +1,14 @@
+[
+  {
+    "attempt": 1,
+    "kind": "SETUP_FAILURE_BEFORE_EXECUTION",
+    "reason": "MacOS /tmp lexical alias caused relative_to extraction guard to fail; physical realpath used for fixture root",
+    "semanticFailure": false
+  },
+  {
+    "attempt": 2,
+    "kind": "SETUP_FAILURE_BEFORE_CLI_EXECUTION",
+    "reason": "Synthetic seed omitted mandatory accountId; real store rejected fixture during setup, before CLI invocation",
+    "semanticFailure": false
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "exitCode": 1,
+  "summary": {
+    "success": false,
+    "counts": {
+      "tests": 938,
+      "failed": 62,
+      "passed": 867,
+      "cancelled": 0,
+      "skipped": 9,
+      "todo": 0,
+      "topLevel": 938,
+      "suites": 0
+    },
+    "duration_ms": 26140.09225
+  },
+  "delta": [],
+  "baselineRawSha256": "983eec9b42aa89ec87bb53fadf37d5e2bad1397eed0ea7cda10fce975a1c65c3",
+  "currentRawSha256": "3f2656b80b8d60d377ea62b272041d112470e014a7940dec0b8e1f50129c0f31",
+  "firstObservation": "named-first-comparison.json retained; no assertion of identified timing root cause"
+}

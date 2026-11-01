@@ -1,0 +1,4692 @@
+[
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "profile table carries the production entry beside the legacy demo ones",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "profile is required — no silent demo default in the production package",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "provisionAgentHome installs profile copies + farm links idempotently",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "harness resolution is worktree-aware and cliBin fails loud without a checkout",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "target-home plugin provisioning is exact, idempotent and leaves the shared profile byte-unchanged",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "same-version legacy dsh-codex 0.2.3 is not reused without pinned artifact provenance",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "plugin missing, plugin mismatch, DSH mismatch and credential boundaries fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "modified 0.2.3 artifact requires an exact digest and source stamp",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "readHarnessIdentity prefers git: a working git repo ignores the .source-stamp entirely",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "readHarnessIdentity: no .git + valid stamp (dirtyCount = 0) resolves the stamp commit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "readHarnessIdentity: no .git + stamp dirtyCount != 0 fails loud (identity not exact)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "readHarnessIdentity: malformed stamps fail loud (extra/missing keys, bad types, non-JSON)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "readHarnessIdentity: no .git and no .source-stamp fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "stamp identity feeds the dshVersion/dshCommit pin check unchanged (mismatch is fail-loud, never a hop class)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "ensureSymlink accepts realpath-equivalent links without rewriting (fleet EACCES class 2026-09-12)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: provisioning stays PATH_ONLY — no parent-side credential probe anywhere",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "FLEET_SHARED_CODEX_AUTH A2/A4: canonical store resolves per deployment root; the yanfenma-domain constant stays frozen",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "FLEET_SHARED_CODEX_AUTH A4: cross-surface credential references are refused — one OAuth lineage per security surface",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "FLEET_SHARED_CODEX_AUTH A4: persistOpenAICodexCredentialFile refuses drift shapes and foreign deployment pins",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "DEFAULT_MODEL_ROUTING_CONFIG_V1 prerequisite: stale foreign credential reference is idempotently rewritten to the own-domain canonical before the child starts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "FLEET_SHARED_CODEX_AUTH A4: provisioning a production-layout home refuses a foreign surface canonical even without an explicit deploymentRoot",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "DEFAULT_MODEL_ROUTING_CONFIG_V1: fresh-home MINIMAL_SETTINGS defaults to the canonical Luna route and keeps OpenCode Go registrable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P1: persistOpenAICodexCredentialFile writes the route reasoning effort into the plugin config block",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P2: absent reasoningEffort keeps the block byte-identical to the legacy shape",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P3: an out-of-vocabulary reasoningEffort fails loud (reasoning_effort_invalid)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P4: the committed catalog fixture IS the frozen 0.87.1 artifact bytes (self-verifying pin)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P5: provisioning the GPT-6 tuple without pi-ai 0.87.1 fails loud (pi_ai_identity_mismatch)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P6: a wrong pi-ai version or wrong catalog bytes is refused — no clamp, no registry guess",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/provisioning.test.js",
+    "name": "GPT6-P7: the exact 0.87.1 artifact identity provisions the GPT-6 tuple and the link is kept",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "writable dev repository still creates every workspace/bundle bridge",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "writable dev repository still repairs a genuinely wrong existing bridge",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "immutable repo skips missing unrelated identity package with no topology-write attempt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "immutable repo rejects a wrong existing bridge without repairing it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "immutable repo accepts a realpath-equivalent existing bridge without rewriting it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "immutable repo rejects a dangling link and a plain-file impostor without writes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "OS-denied writable access selects read-only provisioning without topology writes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "immutable repo does not create a missing bridge directory",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/repo-bridge.test.js",
+    "name": "actual agent-core-production profile provisions its writable home beside an immutable repo",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js",
+    "name": "the canonical constant is derived from the executing deployment root, never a foreign literal",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js",
+    "name": "deploymentRootOfAgentHome + same-domain guard keep attributing homes to their own root",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js",
+    "name": "persist keeps the same-domain pin: authsvc deploymentRoot accepts only the authsvc canonical",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-provisioning/test/shared-codex-deployment-root-refreeze.test.js",
+    "name": "unpinned persist keeps the reviewed A4 shape-lock contract; the pins enforce same-domain",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "1. set/get/list round-trip",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "2. survives restart: a new instance over the same store file",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "3. document shape is atomic and versioned",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "4. missing file is a legal empty table",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "5. corrupt / unsupported store fails loud (never silently reset)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "6. absolute-path contract: relative and ~-prefixed storeFile rejected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "7. row validation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "8. FIX3: persist failure rolls back RAM, keeps disk, rejects the caller",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "9. FIX3: a failed NEW binding rolls back too (no phantom row)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "10. freshSessionFor mints on first sight, returns the same row on retry",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "11. freshSessionFor: different requestIds mint different sessions",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "12. freshSessionFor: mapping is per-agent (same requestId, two agents)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "13. freshSessionFor hands the mint the used-id set (router collision loop input)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "14. freshSessionFor: concurrent first deliveries converge on ONE row",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "15. freshSessions survive restart; older documents (no table) still load",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "16. freshSessionFor validation and corrupt-table fail-loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "17. fresh request mapping is durable and restarts keep resolving the same session",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "17b. legacy lineage-marked fresh rows load byte-stable across restart and persist",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "17c. legacy fresh row with a malformed marker fails the store load loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "legacy durable cut receipt loads, round-trips byte-stable, and stays queryable across normal writes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "legacy durable cut receipt drift fails the store load loud (fail-closed compat)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "legacy durable cut receipt referencing a missing conversation fails the load loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "post-rename durability failure poisons the store for later writes (sticky unknown)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "15. workspace round-trip: string stored verbatim, null preserved",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "16. legacy rows WITHOUT workspace load as null (no forced migration, AC8)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "17. restart keeps workspace; a workspace-typed-garbage row fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/binding-store.test.js",
+    "name": "18. set rejects a non-string non-null workspace (empty string included)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: executed as the ACTUAL proc.agentId via the gateway",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: passes the exact immutable active-turn context beside actual agentId",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: stale generation, settled execution, and cleared turn never forward ingress context",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: forged child-supplied identity/context is IGNORED (actual Router values win)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: gateway absent -> fails closed, switch RPC unaffected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC: unknown method still rejected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: a committed scheduler create reaches the model as the exact 11-field success (no double transport envelope)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "seam: agent_session_send accepted/replied/timeout survive the corrected depth; a gateway throw stays outcome_unknown with zero retry",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/broker-rpc.test.js",
+    "name": "broker RPC forwards the printable child invocation anchor without treating it as identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/child-env.test.js",
+    "name": "T1: inherited private parent TMPDIR is overridden to the fixed child TMPDIR without touching the parent env",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/child-env.test.js",
+    "name": "T2: no caller channel can override or drop the fixed child TMPDIR",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/child-env.test.js",
+    "name": "T3: real plugin boot under an untraversable parent TMPDIR — plugin tree, initialize and provider registration all pass",
+    "status": "skip"
+  },
+  {
+    "file": "packages/agent-router/test/child-env.test.js",
+    "name": "T4: mkdtemp under the child TMPDIR (spill-local primitive) yields a random 0700 child-owned directory",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/child-env.test.js",
+    "name": "T5: sentinel credentials never cross the env/log boundary and no full child env dump is asserted anywhere",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "four independent deadline fields with the frozen code defaults",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "global deployment env names override the code defaults",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "legacy DSH_AGENT_TURN_TIMEOUT=900000 maps to turnTimeoutMs only (production mitigation preserved)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "legacy DSH_AGENT_DELIVER_TIMEOUT maps to promptReceiptTimeoutMs only",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "per-Agent static override > global env > code default",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "invalid env values fail loud before any spawn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "per-Agent override file: valid shape loads; unknown agent entries apply only to that agent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "per-Agent override file: malformed content fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/deadline-config.test.js",
+    "name": "absent override file is not an error; DSH_AGENT_PROCESS_OVERRIDES_FILE locates it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/default-model-route.test.js",
+    "name": "zero-config construction resolves the canonical Luna built-in default",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/default-model-route.test.js",
+    "name": "explicit constructor route wins over env; env wins over the default",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D1 main first deliver: accepted, sessionId fixed main, one process, one prompt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D2 main again: same fixed session, process reused, no second mapping",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D3 fresh: different requestIds -> different new sessions",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D4 fresh: same requestId retry -> same session, never a second one",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D4b fresh: concurrent first deliveries of the same requestId converge on ONE session",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D5 caller cannot specify or resume an arbitrary non-main session",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D6 restart: fresh mapping survives a fresh router over the same store; main stays main",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D6b agent process restart: dead process respawns, session target unchanged",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D7 accepted resolves immediately: no turn completion required at the router level",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D8 validation: sessionMode / agentId / requestId / message contracts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D9 fresh mappings are namespaced per agent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/delivery.test.js",
+    "name": "D10 disabled enforcement (AGENT_DEFINITION_DISABLED_ENFORCEMENT_FIX): a disabled agent is rejected BEFORE ensureRunning — never spawned, main and fresh alike",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "FEISHU_MAPPING: p2p/group/thread/(none) -> feishu namespace; mobile -> mobile",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "FEISHU_REPLY_OWED: every Feishu subtype owes a reply; mobile never does",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "FEISHU_P2P_REPLY: p2p ingress replies to Feishu and binds under feishu:<conversationId>",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "FEISHU_GROUP_REPLY: group ingress replies to Feishu and binds under feishu:<conversationId>",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "FEISHU_EXISTING_BINDING_KEY_PRESERVED: pre-existing feishu:<id> binding is HIT, not orphaned",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "MOBILE_BINDING_NAMESPACE_UNCHANGED: mobile ingress -> mobile:<surfaceId>, no Feishu reply",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "DISABLED_ENFORCEMENT: an existing binding to a disabled Agent rejects the ingress and NEVER spawns",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-regression.test.js",
+    "name": "DISABLED_ENFORCEMENT: an unknown agent behind an existing binding also never spawns",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-ux-seam.test.js",
+    "name": "UX-SEAM-1: the success call passes EXACTLY the approved UX intent — and nothing else",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-ux-seam.test.js",
+    "name": "UX-SEAM-2: the success ux object carries NO identity values of any kind",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-ux-seam.test.js",
+    "name": "UX-SEAM-3: the deterministic FAILURE receipt call is byte-preserved — two arguments, no UX opts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-ux-seam.test.js",
+    "name": "UX-SEAM-4: Router source keeps the frozen UX call shapes (main-stable structural check)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-v2-normal.test.js",
+    "name": "V2 normal: first contact binds workspace=null + session main, turns in the Agent primary workspace",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-v2-normal.test.js",
+    "name": "V2 normal: the conversation-derived workspace is NEVER chosen",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-v2-normal.test.js",
+    "name": "V2 normal: second message RESUMES the same main (create/resume regression)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-v2-normal.test.js",
+    "name": "V2 normal: p2p ingress has the same shape (no p2p special case)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/feishu-v2-normal.test.js",
+    "name": "V2 normal: fresh non-main sessions in the SAME conversation share the primary cwd",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "RQ-005 Router startup consumes configured evidence before publishing its registry and reports invalid custody",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "RQ-005 fixture drives real Router apply: consume before service publication, then admit fleet",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "RQ-007 production composition stays inert without a bootstrapped launcher even if evidence custody passes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T1 fresh store: first runtime mints generation 1",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T2 same-runtime respawn: generations 1 -> 2 -> 3",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T3 REGRESSION runtime restart above durable history: fresh allocator mints strictly above the collision boundary (RED on the in-memory-only allocator)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T4 multiple restarts: consecutive restarts never reissue a durable generation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T5 per-agent isolation: agent A durable history never lifts or pollutes agent B",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T6 empty durable history behaves exactly like a fresh store",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T7 malformed durable store: fail loud, never mints from a fallback generation 1, store untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T8 existing overlapping store: stays fail-closed, allocator never runs, store never self-heals",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T9 concurrent ensureRunning stays single-flight: exactly one allocation (generation 1)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T10 crash before the first turn: reissue after restart is safe (nothing durable collided)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T11 generation exhaustion: MAX_SAFE_INTEGER durable floor fails before STARTUP mutation or spawn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/generation-restart-safety.test.js",
+    "name": "T12 restart integration: durable store -> spawn -> restart -> spawn -> validator PASS with disjoint ranges",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "E: valid canonical credential — child initializes on the openai-codex route",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "F: missing credential fails loud on the real chain — never a silent fallback",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/luna-credential-chain.test.js",
+    "name": "G: unsafe credential (group/world readable) fails loud on the real chain",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "D: imported agent — spawn hands the process the imported workspace + env mechanically",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "D: deliver V0 resolves the imported workspace as the per-session cwd (AC3)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "D: default agent (no entry) — env still set mechanically to the derived default path",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "D/AC7: the router ensure() writes NOTHING into the imported directory",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "AC9: pre-import session frozen in the old default workspace → structured rejection, no remap",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/primary-workspace.test.js",
+    "name": "I: restart over the same static config re-resolves the identical imported workspace",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-delivery.test.js",
+    "name": "DLV1 deliver resolves on the receipt alone — no event, no idle, no turn/end",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-delivery.test.js",
+    "name": "DLV2 deliver shares the production queue and cannot bypass an in-flight turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-delivery.test.js",
+    "name": "DLV3 a dead child (no receipt) rejects via the receipt deadline as outcome_unknown and cleans up",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-delivery.test.js",
+    "name": "DLV4 a late receipt after the deadline cannot resolve the timed-out call — but correlation continues",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-descriptors.test.js",
+    "name": "AgentProcess prototype method descriptors preserved (B-1: enumerable false, composition complete)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-descriptors.test.js",
+    "name": "TurnReconciliationStore prototype method descriptors preserved (B-1: enumerable false, composition complete)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "declaration unblocks admission for one agent; historical fence query and other agents unchanged",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "declaration is idempotent per declarationId and does not restamp",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "a NEW unknown after a declaration fences the agent again; a further declaration abandons only it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "abandonment persists across restarts; late old results stay isolated; no-replay keeps correlation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "declaration validation: arguments and admission readiness fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "durable validator rejects a malformed abandonment marker and accepts the closed shape",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "review r4130766501 regression: retrying a COMPLETED declaration never adopts a later unknown turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "scope binding survives restart: retry after reopen still cannot adopt a later unknown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "partial-write recovery: retry completes exactly the registered original scope",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "a declarationId bound to another agent fails loud and never restamps",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "marker-only reconstruction: a store with no registry file still binds retries to the marker scope",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "empty-scope declaration registers its (empty) operation: later turns are never adopted",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "durable validator rejects a malformed scope registry fail-closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "rollback/reupgrade regression: the scope registry survives an old-binary rewrite of the recovery file",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "entry-gate projection: stuck fences without durable exit evidence are reported; observed exits are not",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "owner risk acceptance stamps an explicit audit decision and fabricates no exit evidence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/admin-abandonment.test.js",
+    "name": "declaration scope matches the admission blocker: settled records with an active fence are abandonable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 parsed terminal and child exit remain uncommitted together when durable settlement fails",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 over-cap durable record keeps startup business admission fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 unavailable durable path keeps startup business admission fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 restored durable fence blocks the real outer entry with closed structured diagnostics",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 invalid durable store blocks the real outer entry before route execution",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence-seams.test.js",
+    "name": "V3 old-generation cleanup cannot clear a newer generation fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "RQ-009 verified startup proof survives the real durable validator without inventing child exit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 durable unknown reservation and fence survive a store reopen",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 C-024 preserves the exact pre-write hard deadline when unknown is marked later",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart mints a fresh runtime epoch while old durable handles remain queryable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart converts a crash-interrupted prompt write into a durable blocked fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart settles a reservation with no prompt-write attempt as proven not admitted",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 durable write failure rolls back the transition and closes business admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart settles durable child exit but keeps REAP fence without registry cleanup proof",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart completes a normal late-evidence fence cleanup without a new prompt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 restart clears a REAP fence only after durable registry cleanup proof",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 invalid durable store keeps startup business admission fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 durable schema drift keeps startup business admission fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 invalid durable top-level and issuance authority fail startup closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 repeated restart and mutation keeps durable runtime epochs bounded",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 resolved record eviction atomically retires caller correlation capacity and bytes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 caller correlation keys are type-safe and byte-bounded before authority mutation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 durable record correlation must match the durable exact secondary index",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 impossible unresolved-cleared durable state keeps startup admission fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3-persistence.test.js",
+    "name": "V3 durable recovery stores answer evidence without storing answer bytes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 trusted exact-started-then-idle settles unknown without killing resident child",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: missing exact receipt correlation stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: idle observed before the matched start stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: later turn start stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: second turn start before exact receipt stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: event stream gap stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 exact-started-then-idle negative control: one-active-turn invariant violation stays fenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 hard deadline performs one exact REAP and waits for real child exit before reopening",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 registry cleanup CAS mismatch keeps DRAINING and preserves the settled fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 caller unknown before the hard deadline does not start REAP early",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 child exit before hard deadline settles without a second shutdown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 failed exact ownership keeps the fence and never signals the child",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 registry REAP CAS failure rolls durable shutdown eligibility back to blocked",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 grace expiry sends one forced termination and still waits for real exit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 late evidence after claim but before shutdown commit cancels REAP with zero shutdown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 duplicate and concurrent recovery triggers join one logical operation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 coordinator restart rejoins the durable claim with one shutdown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/auto-recovery-v3.test.js",
+    "name": "V3 simulated-child real outer entry recovers without a new prompt, then accepts exactly one new request",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "PROMPT_EVENT_BEFORE_RPC_RESPONSE: pre-response events are replayed on receipt binding",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "UNRELATED_IDLE_OR_QUEUE_REMOVAL: unrelated evidence never releases the fence; exact failure settles late_failed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "PRIOR_TURN_LATE_EVENT_AFTER_NEXT_CALL: duplicate A events during B are excluded; B completes on its own events",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "B08 replay observes an intervening later turn/start before considering future idle",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "B08: stale idle before exact terminal cannot close the current turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "ENVELOPE_COMPLETED: stable handle, store query=settled",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "ENVELOPE_FAILED: structured provider failure with a stable handle",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "FAILED_EVIDENCE: a failed durable settlement cannot publish terminal proof to the caller",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "B05 raw session/prompt RPC cannot bypass admission/queue/watermark/fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "ENVELOPE_NOT_ADMITTED: validation fails before reservation, handle=null",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/correlation.test.js",
+    "name": "ENVELOPE_OUTCOME_UNKNOWN: the envelope always exposes a queryable handle (store=pending)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+    "name": "EVENT_RING_WRAP_DURING_ACTIVE_TURN: sequence matcher survives ring eviction",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+    "name": "STDERR_AND_CREATIONS_OVERFLOW: caps + exact counters",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+    "name": "B12 process audit count/bytes are hard-capped with drop accounting",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+    "name": "UTF8_OUTPUT_INCREMENTAL_TAIL: multibyte output over cap keeps a valid UTF-8 tail",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/evidence-caps.test.js",
+    "name": "queued turn caps: 65th queued turn is rejected pre-queue; oversized prompts never cached",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "name": "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "status": "fail"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+    "name": "CTR-EPAR-005: a deleted exact id whose string matches another agent display name sends ZERO",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+    "name": "CTR-EPAR-005: a disabled id is target_disabled even when its name is referenced",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+    "name": "CTR-EPAR-005: the exact enabled id still resolves and admits once",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+    "name": "non-A2A paths keep the existing resolution semantics (name fallback unchanged)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/ingress-exact-id.test.js",
+    "name": "A2A same-id rename remains exact: the id always selects that id",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "TURN_TIMEOUT_THEN_LATE_SUCCESS: settlement=late_completed, output available via handle",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "TURN_TIMEOUT_THEN_LATE_FAILURE: settlement=late_failed, no_output",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "TURN_TIMEOUT_THEN_CHILD_EXIT_NO_TERMINAL: pending-first order; terminated_without_outcome; fence released",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "B09 parser receipt/terminal evidence beats exit before the receipt Promise continuation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "PARSED_OUTCOME_PRECEDES_CHILD_EXIT: exact turn/end received pre-exit wins over child_real_exit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "DUPLICATE_CONFLICTING_LATE_EVIDENCE: state/output unchanged; duplicate + conflict audits",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "HANDOFF_VISIBLE_BEFORE_RELEASE: reconciliation visible before slot release — never not_found",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "LATE_OUTPUT_AFTER_GENERATION_EXIT: late_completed output survives graceful real exit, identical on repeat reads",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "scheduler seam snapshot separates outcome evidence / cancel requested / termination proven",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/late-settlement.test.js",
+    "name": "late output remains readable through the reconciliation handle after the generation exited",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R4: deliver forwards a valid messageOrigin (frozen) into the admission opts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R4: legacy deliver callers keep zero messageOrigin in the admission opts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R4: malformed control options and origins reject fail-loud before admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R4: promptWrite carries messageOrigin as session/prompt sibling metadata",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R4: promptWrite omits messageOrigin for legacy callers",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R3: a deliver-originated source Run proves its turnExecutionId via the execution map",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R3: the ordinary turn-mode path keeps its trusted ingressContext binding AND the source leaf",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/message-origin.test.js",
+    "name": "R3: child-supplied identity fields stay ignored while the runtime proof is derived",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "B04: known non-writable stdin rejects before any write attempt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "STDIN_SYNC_THROW_ZERO_BYTE: proven zero-byte -> not_admitted; broken stream still tears down",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "V3 durable write-intent failure sends zero prompt bytes and is never classified as a stdin zero-byte rejection",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "STDIN_ASYNC_WRITE_ERROR: admission unknown -> outcome_unknown visible pre-exit, then terminated_without_outcome",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "STDIN_CLOSE_AFTER_PARTIAL_WRITE: pipe close with unknown admission -> unknown, no replay, teardown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/pipe-failure.test.js",
+    "name": "FATAL_PROTOCOL_FRAME_OVERFLOW: oversized stdout frame -> immediate teardown, buffers capped",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+    "name": "row 2: crash after prompt write classifies the previous epoch without replay",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+    "name": "row 4: durable real-exit observation routes termination-only (child_real_exit), never business",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+    "name": "row 5: HR restart-lost abandonment stays exceptional and honest",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+    "name": "row 6: repeated restart reclassifies idempotently (settle-once, no audit growth, no fence flap)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-convergence-matrix.test.js",
+    "name": "row 8: an unrelated Agent is unaffected by another agent's unresolved fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence-salvaged.test.js",
+    "name": "r4 salvaged corpus adapter requires HR_R4_SALVAGE_ROOT",
+    "status": "skip"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B1 floor time missing rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B1 validator time string rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B1 inhibition time missing rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B2 inhibition after authorization rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B2 quiescence before inhibition rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B2 subject history after cut rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ reviewed B2 stop before deployment proof rejects without settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "ACC-RQ-007 planned stop within the prospective cut verifies without historical floor inference",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "ACC-RQ-001 one startup bundle settles only its exact old turn, preserving unknown outcome and null exit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-015 new evidence kind cannot enter through ordinary settlement constructors",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: subject agent differs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: old tree still present",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: bundle preimage digest differs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: floor proof is missing",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: launch authorization digest differs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: controlled stop missing for planned restart",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: window descriptor is absent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ zero-write: host differs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 two bundles for one handle reject both before either can settle",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 stable differing duplicate is batch zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 stable malformed duplicate is batch zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 replacement collision before subject is batch zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 replacement collision after subject is batch zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-007 same-subject bytes replaced during verification are zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-003 same-window lost during batch rejects both cached proofs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-003 same-window loss followed by positive during batch rejects both cached proofs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-003 same-window lost after batch before settlement rejects both cached proofs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "ACC-RQ-003 stable shared window settles both distinct subjects once",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-003 transient window-lock stat failure remains sticky after recovery",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-018 shared window lost between settlements leaves second record untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-008 replay of a valid already-settled bundle is settle-once audit only",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-002 settled different business result fails V8 P5 with zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "NEG-RQ-002 settled different termination evidence fails V8 P5 with zero-write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "ACC-RQ-007 persistence failure rolls the exact record back and leaves its fence active",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "RQ generic bundle.json (retired fixed-name gate removed) verifies and settles exactly once",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/restart-quiescence.test.js",
+    "name": "RQ foreign operation id bundle is rejected fail-closed with zero store writes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "CHILD_EXIT_WITH_MULTIPLE_PENDING_RPC: all reject with EXITED before the store hook",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "PARENT_RPC_RESPONSE_WRITE_RESERVE: handler deadline aborts; ONE timeout response inside the reserve",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "B03: expired inherited turn budget invokes no handler and writes no response",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "PARENT_RPC_WRITE_EXCEEDS_TOTAL_DEADLINE: one attempt, no post-deadline write, responseWrite=unknown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "B04 known broken stdin takes precedence over pending/deadline guards and drains existing RPCs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/rpc.test.js",
+    "name": "pending RPC cap: the 1025th concurrent RPC is rejected before write (no pending eviction)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "name": "GRACEFUL_SHUTDOWN_SUCCESS: one graceful write, kill=0, exact settlement order",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "name": "B14 graceful ACK waits the remaining grace and shutdown awaits real exitPromise",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "name": "SHUTDOWN_GRACE_EXPIRES_THEN_KILL: grace expiry escalates to exactly one SIGKILL + real exit await",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "name": "SHUTDOWN_OWNERSHIP_MISMATCH: token mismatch -> no graceful write, no kill, REAP retained, loud audit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/shutdown.test.js",
+    "name": "CONCURRENT_SHUTDOWN: exact shared Promise identity; one write/kill/exit wait; EMPTY after real exit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/startup.test.js",
+    "name": "INITIALIZE_REQUEST_NEVER_REPLIES: one total deadline, shared result rejects once, REAP then EMPTY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/startup.test.js",
+    "name": "INITIALIZE_PROVIDER_NEVER_READY: retries never reset the one initialize deadline",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/startup.test.js",
+    "name": "state machine: only the legal SPAWNING->INITIALIZING->READY->DRAINING->EXITED graph; illegal moves fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/timeout.test.js",
+    "name": "PROMPT_RECEIPT_NEVER_REPLIES (turn path): receipt unknown stays fenced until hard-deadline REAP",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/timeout.test.js",
+    "name": "DELIVER_TIMEOUT_USES_PROMPT_RECEIPT_FIELD: the config field is the binding receipt deadline",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/timeout.test.js",
+    "name": "DELIVER_CANNOT_BYPASS_UNKNOWN_FENCE: a second deliver while unknown is not_admitted with write delta 0",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/timeout.test.js",
+    "name": "B06: settling one of multiple unresolved unknowns does not release the others",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/timeout.test.js",
+    "name": "UNKNOWN_REJECTS_QUEUED_TURNS: B/C write delta 0; A late_completed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js",
+    "name": "crash-orphaned UNKNOWN stays fenced across restarts; no gate replays or settles it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js",
+    "name": "admin abandonment unblocks admission only; the UNKNOWN record is never settled or erased",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-no-replay.test.js",
+    "name": "restart-quiescence evidence without an authenticated context settles nothing (fail-closed)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "UNKNOWN_FENCE_SELF_LOCK_REPAIRED: idle before the same-batch turn/end settles late and releases the fence without any new admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "RECEIPT_CORRELATION_MISSING: terminal present but receipt never correlated — pending, no fake release",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "LATER_TURN_STARTED: a later turn/start after the terminal never settles the old turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "MULTI_UNKNOWN_ISOLATED: releasing one fence never releases another (C-016)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "CHILD_EXIT_SETTLES_TERMINATED_WITHOUT_OUTCOME: fence released, no new admission needed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "RELEASE_SENDS_NOTHING_NEW: deliver-mode late settlement produces no second business prompt and no duplicate delivery",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/unknown-fence-repair.test.js",
+    "name": "classifyUnknownFence covers the six bounded, secret-free categories",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 only the private authenticated callback registers exact opts identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 Router mounts a distinct private Feishu callback; public route cannot grant provenance",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 raw OpenID absence, fallback, mismatch and prototype spoof reject before route",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 post-binding correlation cap failure is still pre-turn admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 AgentProcess mint uses exact opts lookup, not caller ingressContext",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 durable correlation is write-once and legacy missing field reads null",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 malformed optional correlation rejects before sequence or durable mutation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 native prompt receipt remains separate from ingress message identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 mounted private callback reaches real C-010 mint; public route and chain remain unbound",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 real C-010 mint persists trusted identity before synthetic prompt byte failure",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/v5-ingress-correlation.test.js",
+    "name": "V5 deliver remains unbound; duplicate private message IDs remain distinct records",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js",
+    "name": "workflow_execution origin: valid provenance is frozen and forwarded into the admission opts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js",
+    "name": "workflow_execution origin: the exact-id admission gate applies (wrong-target family)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js",
+    "name": "workflow_execution origin: malformed provenance rejects fail-loud before admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-lifecycle/workflow-execution-origin.test.js",
+    "name": "workflow_execution origin: unknown kinds stay rejected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "B01: STARTUP CAS precedes async bootstrap and all callers share the exact resultPromise",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "B01 frozen bootstrap rejection settles shared STARTUP and returns slot to EMPTY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "B01 post-processRef setup failure with no child converges STARTUP to EMPTY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "CONCURRENT_ENSURE_RUNNING: 30 calls -> one spawn, one pid, shared READY reference",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "B14 disposer fences and cancels a no-child STARTUP before spawn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "B14 runtime disposer awaits child exit and retains REAP until then",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "SPAWN_ERROR_BEFORE_CHILD_HANDLE: sync spawn throw -> bounded reject + slot EMPTY, no fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "REGISTRY_STARTUP_FATAL_ATOMIC_REAP: REAP before real exit; racers error; no EMPTY window",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "REGISTRY_READY_FATAL_ATOMIC_REAP: no generation g+1 before g really exited",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "STARTUP_RESULT_REJECTS_WHILE_REAP_WAITS: bounded original reject + immediate reaping reject",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-registry.test.js",
+    "name": "OLD_GENERATION_LATE_EXIT_AFTER_RESPAWN: stale exit callback on the old process leaves g+1 untouched (audit only)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 resolveWorkspace: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 resolveDshHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 resolveProcessConfig: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 provisionHome: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 processFactory: bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 spawn (sync throw after processRef exists): bounded reject + identity-CAS EMPTY + retry reaches READY + stale isolation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 audit-probe regression: pre-spawn provisioning throw -> bounded reject -> EMPTY -> second ensureRunning does not hang",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F1 discipline is idempotent: repeated re-invocation cannot double-settle or empty a newer generation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F2 UNKNOWN_AGENT_OVERRIDE = FAIL_LOUD before any process spawn, structured and secret-free",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F2 KNOWN_AGENT_OVERRIDE = PASS: a registered agent override applies end-to-end",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/process-startup-wedge.test.js",
+    "name": "F2 EMPTY_OVERRIDES = PASS: no override file behaves exactly as before",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "handle embeds epoch/discriminator/generation/monotonic seq; seq is continuous per agent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "QUERY_PENDING_REPEATABLE: two reads are byte-identical and non-consuming",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "QUERY_NO_OUTPUT_REPEATABLE: settled failed record reads no_output twice, byte-identical",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "QUERY_EVICTED_REPEATABLE: a legally issued + resolved + evicted handle reads evicted twice",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "QUERY_RESTART_LOST_REPEATABLE: a foreign runtimeEpoch handle uniformly reads restart_lost",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "QUERY_NEVER_EXISTED_REPEATABLE: seq beyond the high-water / unknown agent / malformed format",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "CALLER_CORRELATION_RESTORE: exact triple restores the same handle without any admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B10 mint correlation conflict leaves authority/sequence/capacity unchanged",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B11 pending output never reports terminal available/no_output",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B10 failed oversized mint at full capacity evicts nothing",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 per-record hard cap fails before committing oversized identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 complete-record accounting rejects oversized mutable metadata without exceeding caps",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 aggregate byte pressure preserves mandatory unknown headroom and truncates optional output",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 cap-sized quote output is measured by retained UTF-8 bytes, not JSON escaping",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B10 handle classification rejects aliases and unsafe integers",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "caller correlation: same triple + same handle idempotent; different handle fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "settle-once: first winning settlement wins; duplicate + conflicting evidence only append audit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 reconciliation audit obeys exact count and byte hard caps",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "settleDirect rejects records that already entered the late machine and vice versa",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "onTurnReconciled emits exactly once per winning settlement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "UNRESOLVED_RECONCILIATION_CAP_PRESSURE: unresolved records are not evictable; the next mint fails pre-reservation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "ROUTER_GLOBAL_RECONCILIATION_CAP: global record cap rejects a mint on another agent, no eviction of unresolved",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "B12 issuance metadata fails loud before forgetting sparse legal generations",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/reconciliation-store.test.js",
+    "name": "resolved eviction frees capacity: settled records are evictable, unresolved are not",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "default off: no canaryRuntimeRoot => zero filesystem effect, normal turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "absent descriptor is the ordinary fast path (no injection, no marker)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "quota mode: acquire/dispatch boundary crossed, fixed terminal 429, hop luna, exact counts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "quota mode on a length-1 chain: fixture 429 stays terminal (no next route)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "outcome_unknown mode: STOP before acquire — zero acquires, no generation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "binding mismatches: wrong agent / route / channel / sender / partial marker / no ingress",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "other-Agent isolation: a matching descriptor never affects another agent turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "expired descriptor: no injection, not consumed, ordinary turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "malformed descriptors fail loud with zero attempts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "metadata drift (wrong mode bits) fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "one-shot race: exactly one of two concurrent matching turns gets the injection",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "crash after rename: used marker alone never re-consumes; ordinary turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "nonce collision: new descriptor whose used marker already exists fails loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "admission (deliver) entries never match the canary binding",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/canary-seam.test.js",
+    "name": "after clear (descriptor + used marker absent) the seam is inert",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-runtime-seam.test.js",
+    "name": "real Router ProductSurface seam preserves dedicated binding/main and hands source metadata to original chain",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-runtime-seam.test.js",
+    "name": "real AgentProcess receipt-only product surface holds trusted context until original terminal",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-source.test.js",
+    "name": "source owner retains exact native reply before publication, survives reset and restart",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-source.test.js",
+    "name": "source reserve fails before followup when durable retention is unavailable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-source.test.js",
+    "name": "B002: visible text and its native ID survive an empty completion anchor in the same exact turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/conversation-source.test.js",
+    "name": "B002: a wholly-empty native completion records no visible reply rather than retaining an empty business answer",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/ingress-fallback.test.js",
+    "name": "scenario 7 runs in a clean child-process environment",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js",
+    "name": "draining child of an ordinary agent loses broker and switch at the stop barrier",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js",
+    "name": "a child whose exit the parent observed is denied even while its socket lingers",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js",
+    "name": "live READY child keeps the ordinary broker and switch semantics",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "DEC-IMPL-004: identity-matching READY process is reused with zero new generations",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "DEC-IMPL-004: mismatched IDLE process is shut down through the existing controlled path, then a new generation spawns under the wanted route",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "credential path switch never reuses the per-home OAuth child",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "DEC-IMPL-004: mismatched BUSY process is never killed and never reused",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "shared STARTUP: a second caller with a different route converges after the in-flight startup settles",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "a settled-but-unconverged STARTUP slot fails loud and bounded (no spin)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "legacy ensureRunning still spawns via resolveProcessConfig and records the slot route identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "undefined identity disables the gate (byte-equivalent legacy acquisition)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/process-registry-route-gate.test.js",
+    "name": "registry-level startup failures reject the gate call with the structured carrier",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "resolved provider/model are immutable initialize inputs for the process that owns create and resume",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "target process environment explicitly omits OPENAI_API_KEY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "every child strips all proxy variants; only target providerEnv is injected exactly",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "providerEnv is immutable per AgentProcess lifetime",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "provider/account errors are classified without secret echo and never rewrite the route",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "failure taxonomy and redaction cover frozen provider-side classes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "real turn/end quota error rejects the turn with provider/account attribution and no empty success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "all frozen runtime classes traverse the real session.event turn/end shape",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "turn correlation ignores history/another session but fences two same-session pre-receipt starts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/provider-route.test.js",
+    "name": "async and sync provider errors share full token redaction and never retain raw payloads",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "quota signal + full authoritative evidence => exact new class, hop candidate",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "structured HTTP 429 status also qualifies as the quota signal",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "B/D matrix: every unsafe flag beats the quota signal => STOP",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "B (authoritative): captured assistant output stops even without carrier flags",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "C: 429-shaped outcome_unknown carrier => STOP outcome_unknown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "429 + transport timeout evidence => STOP timeout_without_proven_termination",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "ambiguous quota (no authoritative bundle, no controlled proofs) => STOP, never initialize/no-admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "each missing authoritative predicate separately breaks the quota class",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "text-only quota (quota words in message, non-quota structured code) => STOP post-admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "session-boundary quota sync rejection (no receipt, no proof) => STOP fail-closed, never class 3",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "explicit initialize-origin quota + never READY + no prompt attempt => existing class 2",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "the other three no-admission classes still hop (closed V1 whitelist intact)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "A (real process): terminal pre-generation 429 hops glm53 -> luna -> success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "B (real process): 429 after partial assistant output STOPs, zero luna acquires",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "C (real process): quota turn never terminates => outcome_unknown STOP, zero luna acquires",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "D (controlled carrier): 429 + tool started => STOP, zero luna acquires",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "journal redaction: quota attempts never journal raw provider bodies or prompts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "no next route: exact quota class on a length-1 chain stays terminal (no cycle/restart)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/quota-classifier.test.js",
+    "name": "budget exhaustion: exact quota class with no remaining deadline STOPs (no refresh)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "private caller opts cross to the final turn without entering the route acquire identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "classification: the four whitelisted proven-no-admission classes hop",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "classification: everything in the CTR-005 stop set stays put",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-002: primary success means zero fallback activity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-003/004: each whitelisted failure hops exactly once, in order, to the next route",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-003: multi-hop chains traverse route[0] -> route[1] -> route[2] with no skips",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-005: stop-set failures never hop; the original error propagates fail-loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-003: exhausting the chain fails loud with the last failure class",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "DEC-IMPL-005: explicit model strict mode = exactly one attempt, zero hops",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "DEC-IMPL-007: a whitelisted failure with no remaining budget does NOT hop",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "DEC-IMPL-007: busy_mismatch convergence waits consume the single budget, then stop",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-IMPL-003: deliver variant hops on admission failures and resolves on inbox accept",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-IMPL-005: onDispatch fires exactly once, right before the first dispatched attempt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "CTR-IMPL-006: journal records carry only structural fields — never raw errors",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "no-override agents pass through the seam with a length-1 chain (legacy default snapshot)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "invalid config at snapshot time fails loud with zero attempts and a truthful final block",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/route-chain.test.js",
+    "name": "canonicalRouteIdentity: credentialFile is part of reuse identity and is canonically resolved",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/route-chain/startup-carrier.test.js",
+    "name": "scenario 5 runs in a clean child-process environment",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "first contact binds the conversation to the Agent Definition default",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switchAgent: A -> B by opaque id, persisted, returns the new Binding",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switchAgent accepts the display name (Router owns agent lookup policy)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switchAgent rejects an unknown Agent and leaves the Binding untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switchAgent honors an explicit targetSessionId (V1: else main)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switchAgent creates the Binding when the conversation has none yet",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "switching one conversation leaves other Bindings untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "restart: a fresh router over the same stores restores the switched Binding",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "channelConversationIdOf accepts string and {channelConversationId}",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "channelConversationId is the single-owner id format (surface mapping)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "bookmark: leaving records lastSession; entering restores it (explicit > bookmark > main)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "bookmark: a surface that never visited an Agent falls back to main",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "bookmark: self-switch without explicit session is a no-op",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "bookmark: per-surface isolation and restart persistence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/router.test.js",
+    "name": "getBinding returns undefined for an unknown conversation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/runtime-hygiene/no-hidden-hr-runtime-knowledge.test.js",
+    "name": "generic runtime src carries no one-off HR incident knowledge",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/runtime-hygiene/no-hidden-hr-runtime-knowledge.test.js",
+    "name": "launchd runtime entry carries no one-off HR incident knowledge",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "CTX exact active ingress context is immutable and bound to actual process/turn identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "FIX2.1 same session: turn B waits for turn A; bindingContext stays A's",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "CTX queued conversations install only their own context after stale clear",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "FIX2.2 switch-tool relay during turn A sees exactly A's bindingContext",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "FIX2.3 different native sessions of one AgentProcess are serialized too",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "FIX2.4 a failed turn does not wedge the single-flight queue",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/single-flight.test.js",
+    "name": "FIX2.5 unresolved outcome_unknown fences the queue; re-admission after late settlement is explicit",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC1 stability: bindings survive a control-plane restart with the same workspaceIds",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC2/AC7: one group workspace, main + cron sessions -> different sessionIds, SAME cwd, shared files",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC3: App switch to Investment Agent -> its DEFAULT workspace, no product logic in the Router",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC4: persisted session cwd A vs resolved workspace B -> SESSION_WORKSPACE_MISMATCH, no mutation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC5: process restart -> sessions resume their persisted cwds; wrong resolution rejects",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC6: two workspaces -> isolated AGENTS.md / files",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC8: a legacy store row WITHOUT workspace loads as null and turns in the agent default workspace",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC8 (fresh legacy path): an ingress WITHOUT any workspace field turns in the agent default workspace",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC9/AC10: same Agent, two bindings with different workspaces -> ONE process, per-binding cwd only",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC11: switchAgent rejects invalid workspaceIds structurally and leaves the Binding untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "AC11 (resolve surface): first contact with an invalid workspaceId is rejected before any binding row",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "switchAgent: omitted workspace PRESERVES the binding workspace across agent switches",
+    "status": "pass"
+  },
+  {
+    "file": "packages/agent-router/test/workspace-binding.test.js",
+    "name": "deliver: Delivery V0 sessions run in the agent default workspace (no Binding exists)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/real-boot-smoke.test.js",
+    "name": "agent-core-production profile real boot: plugin loads + initialize handshake",
+    "status": "skip"
+  },
+  {
+    "file": "packages/demo-server/test/real-boot-smoke.test.js",
+    "name": "DEFAULT_MODEL_ROUTING_CONFIG_V1: no-params initialize resolves the canonical Luna default; explicit params still win",
+    "status": "skip"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-message-origin.test.js",
+    "name": "R4: an absent sidecar keeps the historical user source",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-message-origin.test.js",
+    "name": "R4: a valid inter_agent sidecar becomes the durable message source verbatim",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-message-origin.test.js",
+    "name": "R4: resume path (persisted main) carries the sidecar identically",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-message-origin.test.js",
+    "name": "R4: malformed sidecars reject the prompt before any message is queued",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-message-origin.test.js",
+    "name": "R4: validateMessageOrigin is exported for direct contract checks",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-workflow-origin.test.js",
+    "name": "workflow_execution origin: valid provenance becomes the durable message source verbatim",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-workflow-origin.test.js",
+    "name": "workflow_execution origin: validateMessageOrigin contract checks",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam-workflow-origin.test.js",
+    "name": "workflow_execution origin: malformed provenance queues zero messages",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R1: cold session is CREATED with meta:{cwd = resolved workspace} — the only creation contract",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R1: a prompt with no cwd falls back to the initialize-time process cwd",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R2: a persisted session is RESUMED with no meta; equal cwd -> the message is queued",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R3: persisted cwd != resolved workspace -> STRUCTURED_REJECT, cwd unchanged, no second session",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R3: hot path — a LIVE session resumed/created earlier rejects a different resolved workspace",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "R3: a persisted session WITHOUT a header.cwd also rejects (never silently adopts one)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "same workspace, multiple sessions: independent handles, same frozen cwd (AC2/AC7 seam level)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "restart semantics (AC5 seam level): resume restores the persisted cwd and never re-passes meta",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "resolved Luna route is identical for session create and restart resume",
+    "status": "pass"
+  },
+  {
+    "file": "packages/demo-server/test/session-seam.test.js",
+    "name": "B003: native source receipts distinguish first artifact creation, persisted resume and hot reuse without inventing reset cause",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "ACC-ADT-005: name-only caller discovers the canonical id and the send lands in the target main",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E negative: unknown name → not_found and ZERO deliveries anywhere",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E negative: whitespace-only query → invalid_arguments envelope, ZERO deliveries",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E disabled target: resolves enabled:false (existence truth) and the send is refused",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-directory-session-send-e2e.test.js",
+    "name": "E2E list: the full composed stack lists both agents in directory shape",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R2: the exact three fields accept boundary values",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R2: byte-length, NUL, grammar, and range violations reject with invalid_arguments detail",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R3: a missing or stale source-turn proof fails BEFORE Router delivery",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R3: self-send is rejected before delivery and before any audit intent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R3/R4: a trusted legal opaque source id with underscores is preserved exactly",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R3/R4: one deliver carries the frozen inter_agent messageOrigin built from trusted context",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R12: authoritative argument validation denial writes one L0 row and zero deliveries",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R12: intent row precedes delivery; outcome row follows the receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R12: an intent append failure returns internal_error with ZERO Router deliveries",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R12: first coordinate append failure after receipt is honest outcome_unknown and never redelivers",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R12: later wait-outcome audit degradation preserves the already-retained trace success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R8: the exact Run completing in time returns exactly one replied with the full text",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R8: reply-wait timeout returns {status:timeout} and never cancels or replays",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R8: the reply deadline starts AT the receipt (pre-receipt queue time excluded)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "R8: failed / no_output / truncated / outcome_unknown never become success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "deliver failures map to exact §5 classes and never retry",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "a malformed post-acceptance receipt is outcome_unknown, never not-delivered",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "wait mode without a reconciliation handle returns honest outcome_unknown",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "inspection handler forwards only args and the gateway-frozen caller to the read-only seam",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "reconcile lookup is caller-bound, reads live + .1, and returns retained V2 coordinate evidence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-messaging.test.js",
+    "name": "the provider requires the full Router reconciliation seam",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R8 available rows: completed/late_completed reply; truncated never becomes success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R8 failed rows: retained text is never returned as success",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R8 F19 rows: terminated_without_outcome maps to outcome_unknown in both shapes",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R8 no_output / not_admitted / absence rows",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: an already-settled Run settles from the first read without subscribing",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: settle between read and subscribe returns the same exact reply",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: a matching event settles through a fresh authoritative read",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: events for other handles are ignored",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: deadline fires timeout only after one final authoritative read",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: terminal settle racing the timer wins over timeout (once-guard)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session-reply-wait.test.js",
+    "name": "R9: a late terminal read at deadline time is honored (never mislabeled timeout)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "rotation archives the outgoing generation before the .1 rename (no loss window)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "checkpoint resets at rename: the new generation is never sliced by a stale offset",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "archive failure keeps rotation running, reports once, send path unaffected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "stale checkpoint from a previous generation is detected as 0 — no silent interval misalignment",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "archive failure payload carries bytesAttempted (§6.4 ASM_ARCHIVE_APPEND_FAILED{bytesAttempted})",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "checkpoint reset failure after a successful rename reports ASM_ARCHIVE_CHECKPOINT_RESET_FAILED and never corrupts the next generation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/audit-archive.test.js",
+    "name": "reconcile window unchanged: findInvocation reads exactly live + .1, never the archive",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js",
+    "name": "B9 lifecycle: canonical materialization admits, principal deactivation invalidates, scopes never escalate",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/fleet-send-entitlement-e2e.test.js",
+    "name": "B9 flow: sender identity, receiver identity, durable receipt and reply association across a full restart",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case C + G: receipt-only accepted; the provenance sidecar is runtime-owned and exact",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "ACC-ASM2-004/007: granted inspect crosses gateway, provider, audit and one exact artifact",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case A: the existing main is reused — same process, two sends, two Runs",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case B: concurrent first sends to an absent main share ONE startup generation",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case F: an unauthorized sender is access_denied with zero target deliveries",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case F (F23): a grant-check transport outage is transport_failure, never access_denied",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "disabled target is target_disabled with zero target process or prompt",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "Case G: model-supplied identity fields are rejected before any delivery",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/messaging-integration.test.js",
+    "name": "R12: L0 rows never carry business detail; the target reply never reaches the audit file",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "exact argument closure and DSH path encoding reject path interpretation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "audit eligibility scans .1 then live to EOF, groups one request, and makes negatives identical",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "audit append preflights the serialized row and keeps live bytes at or below N",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "audit generations enforce the exact byte cap and ambiguous dispatch ownership fails closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "exact turn projection has frozen schema/order and excludes adjacent/reasoning/replay/usage/chunks",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "accepted-not-started, running, failed, ambiguous and foreign durable provenance are honest",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "messages, tool arguments/results and final response redact filesystem paths and environment",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "full inspection reads both audit generations and exactly one selected artifact",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "ACC-ASM2-007 committed fixture resolves only the middle Workflow-read turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "missing/foreign audit coordinate performs no Session read and uses byte-identical error",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "ACC-ASM2-004 negative coordinates have identical bounded work and coarse latency",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "Session resource bounds fail closed without partial results",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "exact Session record, record-count and artifact-byte boundaries remain readable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agent-session/turn-inspection.test.js",
+    "name": "response truncation is deterministic, whole-record and under the byte cap",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-1: plist forwards DSH_AGENTS_HOME when set at install time",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-1: unset at install time -> key absent, value only ever comes from the install-time env",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-2: agentEnv carries parent DSH_AGENTS_HOME into the child env",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-5: unset parent env -> child env carries no DSH_AGENTS_HOME (fallback root semantics preserved)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-2b: configured agentsHome (production compose shape) ignores env DSH_AGENTS_HOME",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/agents-home-skill-root-passthrough.test.js",
+    "name": "ACC-5b: bootstrap WITHOUT configured agentsHome still honours the env var (documented override knob)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/compose-deployment-root.test.js",
+    "name": "composition pins the credentialFile to the runtime deployment root (own root accepted)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose-deployment-root.test.js",
+    "name": "composition refuses a foreign surface lineage in the deployment-owned catalog (fail closed)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "composition provides the full existing service graph over the production layout",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "notification ingress delivers over the authenticated frozen contract into the (fake) agent inbox",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "scheduler engine consumes a job from the production store through the router seam",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "B15 production evidence preserves scheduled outcome_unknown reconciliation data",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "graceful stop closes the HTTP surfaces and writes stopped-able state",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "runtime state carries no demo artifacts anywhere",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "C-WIRE paths: the production layout owns the notification-ingress persistent surface",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "C-BND-003 AC-BND-03: compose hands the ingress ONLY config/store paths — no credentials, no secret env",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "C-HIST compose wires the HistoryStore over layout.historyDir into the scheduler and provides the /scheduler/* services",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "C-HIST schedulerAuth opts provide a JWKS verifier; unconfigured stays null",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "C-HIST R4 ingestion: valid / UNPARSEABLE / OVERSIZE / INVALID_SCHEMA / absent blocks",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/compose.test.js",
+    "name": "MOBILE_SESSION_HISTORY_V1: productApi.history crosses the composition contract (default OFF unchanged; explicit enable reaches the module and fails closed)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "canonicalDefaultGlobalRoute is the complete Luna subscription route",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "passthrough carries the built-in subscription; a plain globalRoute keeps the legacy shape",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D1 zero config: every un-overridden Agent resolves to the Luna default with its subscription mount",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D2 runtime env override wins over the default; composition config wins over env",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "A-D3 explicit OpenCode Go agent override wins; un-overridden Agents keep the Luna default",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/default-model-route.test.js",
+    "name": "composition freezes the own-domain artifact and refuses drift before the next process boundary",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "absent env composes exactly the pre-pilot runtime (no productApi key)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "empty env value is treated as unset (no productApi key)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "history-disabled conversation env forwards conversation with inert history defaults",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "history env forwards the pre-pilot overlay shape verbatim",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "history enabled alone composes productApi without the conversation mount",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/entry-conversation-env.test.js",
+    "name": "non-string env values are not wires (defense against supervision typos)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-missing-impl-startup.test.js",
+    "name": "RED base: missing adapter implementation does not block the channel-OFF base path",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-missing-impl-startup.test.js",
+    "name": "enabled channel + missing adapter implementation fails composition LOUD (fail closed)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid mention switch composes the base runtime (warn, not fatal)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid reply render mode composes the base runtime (warn, not fatal)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "RED base: channel OFF + invalid processing-reaction switch composes the base runtime (warn, not fatal)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid mention switch fails composition LOUD (fail closed)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid reply render mode fails composition LOUD (fail closed)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-optional-adapter-startup.test.js",
+    "name": "enabled channel + invalid identity credentials fail composition LOUD (fail closed)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-readiness.test.js",
+    "name": "Feishu gate wiring precedes awaited readiness and live declaration",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "ENV: unset and empty mean not-configured (undefined)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "ENV: exact true/false parse to real booleans",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "ENV: every other value fails LOUD with FEISHU_UX_SWITCH_INVALID",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "SWITCHES: nothing configured -> empty object (connector defaults apply)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "SWITCHES: false/false (the frozen production target) parses to both false",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "SWITCHES: the two switches are independent (mixed values)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "SWITCHES: an invalid value on EITHER var fails loud (first var reported)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "COMPOSE: switches are strictly parsed INSIDE the enabled branch and spread into the feishu mount",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "LAUNCHD: both FEISHU switch vars pass through into the rendered plist when set",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/feishu-ux-switches.test.js",
+    "name": "LAUNCHD: unset switch vars emit NO plist keys (defaults stay connector-owned)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/fixed-operation-runtime.test.js",
+    "name": "production composition resolves fixedOperationAccess after broker mount",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/fixed-operation-runtime.test.js",
+    "name": "production composition denies an ordinary unnoted turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/fixed-operation-runtime.test.js",
+    "name": "production composition rejects model-carried workflow coordinates",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/fixed-operation-runtime.test.js",
+    "name": "conflicting flat and nested turn ids fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "authoritative validation accepts only the exact three-key target",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "pre-existing exact active Human returns existing after one GET and zero POST",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "pre-existing non-Human Principal fails closed after one GET and zero POST",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "absent and disabled-Human states each perform GET -> one fixed POST -> GET",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "lost POST response is never retried; exact readback alone may prove READY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "every uncertain or failed POST gets one readback and never a blind retry",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "a racing conflicting Principal is reported after POST with no further write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "malformed or mismatched readback never reports READY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "declared svc-workflow consistency failures are preserved without a POST",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "caller/token failures are sanitized and perform zero service I/O",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "constructor enforces trusted seams and the bounded deadline",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/identity/workflow-human-principal-projection.test.js",
+    "name": "compose wires the provider to the existing caller credential and workflow.admin token primitive",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/ingress-restart-handoff.test.js",
+    "name": "A6: a delivery parked in flight at the controlled stop leaves a durable reserved admission, quiesce receipts, and a closed ingress surface",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/ingress-restart-handoff.test.js",
+    "name": "A6: runtime restart on the same root reuses the in-flight admission idempotently — outcome_unknown, zero Router re-admission",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/layout.test.js",
+    "name": "default production root is ~/.agent-core (agentcore-cron store root, NOT .demo)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/layout.test.js",
+    "name": "layout derives every durable path under one root",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/layout.test.js",
+    "name": "explicit root wins over the env; the env wins over the default",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/layout.test.js",
+    "name": ".demo roots are rejected fail-loud (production state is never demo state)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "runtime gate rejects every recognized proxy key and any non-exact Node version without values",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "production composition applies the runtime proxy gate before any mount or layout read",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "composition resolves the v3 primary to target and the global route to another Agent",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "target-only rollback rewrites the config file; non-target PID and route unchanged",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides-runtime.test.js",
+    "name": "malformed config fails target respawn loud without disturbing a running non-target",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "the code constant carries ONLY pins and scope — no route tuple values (F-10)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-0: the GPT-6 tuple constant carries the exact DEC-G6R-002/003 identity — dormant, separate from V3",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "missing file = global passthrough; valid v3 chain resolves primary-first with identities",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "version discipline: older files fail loud (no auto conversion)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "malformed family: bad JSON, wrong shape, extra keys, deep duplicate keys fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "reference integrity and dedup: unknown ref, repeated ref, canonical alias duplicates fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "hard bound: chain length ≤ MAX_CONFIGURED_ROUTES = 4 (never 2)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "fleet activation accepts any registered Agent and rejects unregistered Agent ids",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "CTR-011 pin: a dsh-codex route with any other pluginVersion fails loud (not a fallback class)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "shared mode rejects missing, per-home, relative, and non-canonical credentialFile values",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "ACC-016 routeKind family: missing/invalid routeKind and plugin keys on a builtin fail loud",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "ACC-016/ACC-018: the frozen initial chain tuple loads; builtin processConfig has NO subscription block",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "ACC-019 reuse-gate identity: builtin and subscription processes never share an identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "providerEnv accepts only the frozen four-key set and safe host-list grammar",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "providerEnv URL, key and value failures are fail-loud without secret echo",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-1: an explicit reasoningEffort on the GPT-6 tuple loads and rides the process config",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-2: effective reasoningEffort joins the canonical route identity — absent GPT-6 IS medium, high is distinct",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-2b: absent and explicit medium in ONE catalog is a malformed alias (same canonical identity)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-3: the legacy tuple keeps the exact pre-change schema, identity bytes and absent reasoning",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-4: an invalid reasoningEffort value fails loud with the closed vocabulary in the message",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-5: reasoningEffort is FORBIDDEN outside the GPT-6 tuple — builtin, non-dsh-codex, legacy tuple",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-6: two routeRefs differing only in reasoningEffort do NOT collapse into one identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-7: the built-in default global route stays the legacy V3 tuple — merge is dormant (CTR-G6R-001)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-8: the dshr1 pin is bound to exactly one tuple — wrong pluginVersion/model pairings fail loud (ACC-G6R-005)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/model-overrides.test.js",
+    "name": "GPT6-9: both dsh-codex pins coexist in one catalog and keep distinct identities",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/admission.test.js",
+    "name": "normal native generation requires exact Node, architecture and explicit expectation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/admission.test.js",
+    "name": "unscoped development retains prior platform support; an explicit expectation cannot be ignored",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/admission.test.js",
+    "name": "real production launcher rejects missing expectation before imports or persistent state",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/admission.test.js",
+    "name": "real x64 Node cannot start the ARM generation",
+    "status": "skip"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/admission.test.js",
+    "name": "existing child spawn selects exact parent Node and per-agent overrides cannot drop architecture",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "actual arm64 Node and internal links pass closure inspection",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "substituted x64 native bytes reject the candidate",
+    "status": "skip"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "mixed native tree rejects even when the selected Node is arm64",
+    "status": "skip"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "missing native binding and escaped closure cannot pass",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "unknown native contents reject rather than infer architecture from name",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/inventory.test.js",
+    "name": "foreign node-pty path cannot hide unknown or unproven native contents",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-package-closure.test.js",
+    "name": "trusted pack copies package-root public entries required by production composition",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-package-closure.test.js",
+    "name": "canonical trusted installer uses the package-copy primitive for every package",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "source stamp preserves <40-hex HEAD><dirtyCount> without Git trust mutation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "source probe errors are visible and fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "the original ownership mismatch reproduces Git exit 128 with visible stderr",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "installer probes before backup and never grants root Git trust",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/native-arm64/trusted-source-git-stamp.test.js",
+    "name": "root path delegates Git to the source owner with a clean environment",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "wiring: the import map reaches workspace-bootstrap AND the spawned process (cwd base + env)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "absent primary-workspaces.json → behavior identical to today (default derivation)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "invalid import entry (relative path) → startup fails loud with PRIMARY_WORKSPACE_INVALID",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "invalid import entry (missing directory) → startup fails loud",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "malformed primary-workspaces.json (bad JSON / non-object) → startup fails loud",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/primary-workspaces.test.js",
+    "name": "I: the same static config file yields the identical primary across restarts",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "ENV: unset and empty mean FALSE (connector default OFF)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "ENV: exact true/false parse to real booleans (production target = true)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "ENV: every other value fails LOUD with FEISHU_PROCESSING_REACTION_INVALID",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "ENV: the reaction switch is independent of the UX mention switches",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "COMPOSE: the reaction switch is strictly parsed in the ENABLED branch and forwarded into the feishu mount",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "LAUNCHD: FEISHU_PROCESSING_REACTION_ENABLED passes through into the rendered plist when set",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/processing-reaction-config.test.js",
+    "name": "LAUNCHD: unset var emits NO plist key (connector default OFF applies)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "ENV: unset and empty mean MARKDOWN (byte-identical default)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "ENV: exact markdown/card parse to the real modes (production target = card, NOT applied this round)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "ENV: every other value fails LOUD with FEISHU_REPLY_RENDER_MODE_INVALID",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "ENV: the render mode is independent of the UX mention switches",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "COMPOSE: the render mode is strictly parsed in the ENABLED branch and forwarded into the feishu mount",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "LAUNCHD: FEISHU_REPLY_RENDER_MODE passes through into the rendered plist when set",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/reply-render-mode.test.js",
+    "name": "LAUNCHD: unset var emits NO plist key (connector default markdown applies)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/restart-boundary.test.js",
+    "name": "A4: the runtime census names the epoch, the lifecycle slots and every unresolved handle class",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/restart-boundary.test.js",
+    "name": "GUARD: taking the census and writing the boundary receipt never touches the recovery store",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/restart-boundary.test.js",
+    "name": "compose stop persists the boundary receipt across the controlled shutdown (quiesce begin/end)",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/compose-cross-agent-history.test.js",
+    "name": "cross-agent scheduler authorization flows one target-owned fresh Run into HistoryStore without source authority propagation or replay",
+    "status": "fail"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-canary-control.test.js",
+    "name": "postdeploy control creates one retained, no-delivery, no-retry canary and replays idempotently",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-canary-control.test.js",
+    "name": "postdeploy control rejects arbitrary identity and non-near-future schedules before store access",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install splits control gids (candidate/preimage) from the installed target gid",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install preserves exact predecessor and replay retains first receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install accepts root-owned legacy 0644 preimage and narrows the installed mode to 0640",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state replay narrows an already-installed candidate from legacy 0644 to 0640",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install rejects a legacy target with an unsupported extended attribute",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install rejects a legacy target with an extended ACL",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install rejects a legacy target with the wrong owner identity",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install rejects a symlink target before receipt or replacement",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state replay rejects same-byte predecessor metadata drift",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install still rejects a writable legacy target",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state crash after INSTALLING receipt replays from the frozen candidate, not predecessor target",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state replay finalizes an INSTALLING receipt after the candidate rename frontier",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install rejects unsafe ancestor before target or preimage write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-desired-state.test.js",
+    "name": "desired-state install accepts only the root-owned macOS /var system alias",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "preimage is file-and-directory durable before candidate installation frontier",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "preimage before-preimage-copy leaves no authoritative final and retry can rebuild",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "preimage during-preimage-copy leaves no authoritative final and retry can rebuild",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "preimage after-preimage-file-fsync leaves no authoritative final and retry can rebuild",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "crash after preimage rename is resumed by validating and syncing the complete final",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "abandoned uncommitted preimage temp is removed and rebuilt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "receipted preimage binds exact path, bytes and metadata before replay",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-durable-file.test.js",
+    "name": "watchdog replay validates both W1/W2 rollback generations from the frozen receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-file-metadata.test.js",
+    "name": "protected audit read validates every ancestor and rejects a symlinked parent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-file-metadata.test.js",
+    "name": "strict audit ancestor policy rejects even platform xattrs",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident migration narrows an existing runtime-owned 0755 directory to 0700",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident migration directory preparation is idempotent at 0700",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident migration converts only an explicitly allowed legacy runtime group",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident migration refuses symlink, wrong owner authority, and writable legacy mode",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident migration refuses a mode-0700 directory with a permissive macOS ACL",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident ownership migration preserves provenance-only xattr",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident state file normalization migrates exactly the authorized legacy-gid set and converges on rerun",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-directory.test.js",
+    "name": "incident state file normalization refuses unauthorized metadata and never recurses blindly",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "deployment accepts a safe failed-cutover migration extension receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "deployment migration uses the explicit runtime reader gid instead of the account primary gid",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "production-pinned payload executes migration with distinct source and destination groups",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "migration rejects an ACL-bearing frozen source without writing destination state",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "migration rejects an ACL-bearing destination directory without writing state",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-incident-migration.test.js",
+    "name": "legacy-gid incident state reproduces the production failure; admission repair converges first run and rerun",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+    "name": "launchd quiesce records prior state and proves every service absent",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+    "name": "launchd quiesce fails on bootout refusal or still-loaded readback",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+    "name": "launchd quiesce tolerates a bounded asynchronous bootout visibility window",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+    "name": "launchd quiesce terminates a launchctl command that exceeds the absolute deadline",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-launchd.test.js",
+    "name": "terminated launchctl cannot masquerade as an unloaded not-found readback",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "reviewed production path authority is exactly 23 writes plus one retired watchdog delete",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "compose live adapter pins are frozen to the exact deployed integrated generation (R3 identity re-pin)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "reviewed payload contains bounded failed-cutover extension and the dependency-isolated migration entrypoint",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "overlay closure pins only an exact reviewed live dependency and updates the rest",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "production compose preserves Agent Directory while adding Watchdog wiring",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "overlay refuses when the separately governed live dependency drifts from its reviewed pin",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-overlay-closure.test.js",
+    "name": "overlay preserves existing dependencies outside the reviewed watchdog path manifest",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js",
+    "name": "postdeploy finalize readback gate survives the authsvc/runtime-reader gid split",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize-ownership.test.js",
+    "name": "routing receipt readback fails closed on a wrong control gid",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "formal postdeploy evidence accepts exact health, one canary delta, quarantine isolation and dedupe",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "cardinality never mints current-six recovery authority",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "formal postdeploy evidence rejects fabricated generation and incomplete health",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "formal postdeploy rejects an attempted notification relabeled PENDING",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "formal postdeploy evidence rejects unexpected store mutation or duplicate incident roots",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "formal postdeploy evidence rejects route drift, synthetic incident state, unsafe canary and unrelated Job regression",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "one quarantined Job does not prevent an unrelated healthy Job from completing during canary",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "passive dedupe proof tolerates advancing overdueMs without changing root or notification attempt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "interrupted or non-exact receipt publication cannot return acceptance",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "postdeploy read expectations follow the deployed ownership contracts: incident tree at the runtime-reader gid, control artifacts at root:root",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "postdeploy read expectations fail closed on state-directory drift or a collapsed gid split",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "postdeploy read expectations reject coherent directory and file drift from the independently resolved runtime-reader gid",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-postdeploy-finalize.test.js",
+    "name": "finalize orchestrator binds incident reads to the derived ownership and the routing receipt to root:root",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-rollback-file.test.js",
+    "name": "rollback restores exact 0644 metadata even under a restrictive process umask",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-rollback-file.test.js",
+    "name": "rollback repairs same-byte predecessor metadata drift after a partial rollback",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-rollback.test.js",
+    "name": "phase-aware rollback accepts interruption after every phase without future receipts",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-rollback.test.js",
+    "name": "rollback progress and receipt schema fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-rollback.test.js",
+    "name": "rollback refuses unrelated postimage bytes even when semantic fields still resemble the candidate",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment freezes explicit candidate and atomically preserves the exact preimage",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment keeps rollback control artifacts separate from the runtime reader group",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment repairs only the exact legacy routing control ownership drift",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment rejects missing canonical ops target before any write",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment rejects a target symlink before reading or replacing it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment rejects a symlink parent before creating an absent target",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-routing.test.js",
+    "name": "routing deployment rejects an unsafe grandparent before creating an absent target",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js",
+    "name": "runtime restart replaces stale provenance coordinates and reads back the exact deployed SHA",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js",
+    "name": "runtime restart rejects a same-byte preimage with different predecessor metadata",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-runtime-restart.test.js",
+    "name": "runtime replay rejects rollback preimage drift against the frozen receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/deployment-session-trace-lineage.test.js",
+    "name": "watchdog deployment source retains the accepted Session Trace lineage in its overlay",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "T15/T29 runtime reads one generation-bound complete census",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "T33 a missing secondary source returns complete=false and UNKNOWN row, never false green",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "semantic-corrupt open incident without outbox makes canonical health incomplete",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "persisted control-plane binding to a non-canonical chat makes canonical health incomplete",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "persisted delivery binding from an impossible future makes canonical health incomplete",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "persisted attempted intent relabeled PENDING makes canonical health incomplete before any delivery path",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "T29 arbitrary runtime provenance cannot produce complete=true",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "T33 authority-invalid occurrence returns incomplete census, never false green",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "production layout exposes dedicated route, incident and local sink paths",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "startup fails only on incomplete global provenance, not one Job-local block",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "wired start refuses scheduler and workflow engine while the canonical authority is invalid",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/health-runtime.test.js",
+    "name": "wired start without the readiness requirement proceeds to both engines (test/overlay seam preserved)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: no auth config -> null verifier (fail-closed)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: JWKS URL only -> null verifier, no mount throw",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: JWKS URL + issuer -> null verifier, no mount throw",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: URL + issuer + audience -> verifier constructed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: env-sourced partial config -> null verifier",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: env-sourced complete config -> verifier constructed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/history-runtime-verifier-parity.test.js",
+    "name": "verifier parity: schedulerAuth opts fall through to env per field",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A1/A3: ordinary restart with an in-flight admitted turn REFUSES before any runtime mutation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A1: an admitted/running scheduler occurrence is identifiable execution and refuses too",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A2: a quiescent runtime restarts; the gate receipts one DRAIN_OBSERVED census",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A2: the bounded drain window observes the existing settlement path drain the turn",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A3: a turn still undrained at window expiry refuses — the window is bounded",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "A4: emergency restart (acceptUndrainedRestart) proceeds ONLY with a restart-boundary receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "fail-closed: a census-unavailable (corrupt) turn-recovery store refuses the restart",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "legacy callers without census paths are unarmed: restart behaves exactly as before",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "previous-epoch unresolved turns do NOT block a planned restart (the startup matrix owns them)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/restart-drain.test.js",
+    "name": "row 6 (repeated restart): after a drained restart the next armed restart proceeds again",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+    "name": "reserved generation-bound canary is a mechanical no-op and never reaches Router",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+    "name": "reserved identity with a non-matching generation fails closed through ordinary validation",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js",
+    "name": "reserved canary passes the real Scheduler admission and completes with zero downstream calls",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/self-service-runtime.test.js",
+    "name": "mount exposes scheduler and self_ops providers over the same store",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/self-service-runtime.test.js",
+    "name": "missing Router reconciliation seams fail closed by withholding self_ops provider",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/scheduler/self-service-runtime.test.js",
+    "name": "real Broker gateway preserves the real production self_ops status envelope",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/shutdown-result.test.js",
+    "name": "T67-r2: stop failure => stop_failed evidence + exit 1 (never clean)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/shutdown-result.test.js",
+    "name": "T67-r2: clean stop => stopped evidence + exit 0 (unchanged)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/shutdown-result.test.js",
+    "name": "T67-r2 entry integration: applyShutdownResult drives evidence/log/exit truthfully",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/chatgpt-subscription-real.test.js",
+    "name": "real production seam: local exact package, create/resume restart, and rollback",
+    "status": "skip"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "CTR-ACT-005 bootstrap happy path: receipt governs, reuse forced, reauth never bound",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap fails closed when an ownerReauthCanonical binding is present",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap fails closed on a missing / corrupt ten-gate receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap fails closed on a FAIL (or wrong phase / wrong root) receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap fails closed on wrong fleet cardinality: 91 (91+unknown), 93 (extra)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap fails closed when bootstrapStore is outside the receipt equality set",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "bootstrap rejects an unknown candidateClass",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-bootstrap.test.js",
+    "name": "non-bootstrap regression: ownerReauthCanonical binding is still REQUIRED and reauth still fires on non-reuse selection",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "gate mirror: no /Users/yanfenma literal in any of the three seam source files",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam A: the canonical constant is the EXECUTING surface canonical and agrees with the per-root math",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam B: loader with options.deploymentRoot accepts the authsvc own canonical and resolve() carries it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam B: loader refuses a foreign surface lineage under a pinned deploymentRoot (fail closed)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam B: explicit user-domain deploymentRoot preserves the frozen loader contract exactly",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam B: loader default (no option) accepts exactly the executing-surface canonical",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam C: the migration executable runs the authsvc domain end to end — own paths, own fence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam C: a config mixing two surfaces fails closed (SHARED_CODEX_PATH_INVALID)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam C: a non-canonical-shaped credential path fails closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "seam C: the user-domain transaction keeps the frozen CTR-ACT2-002 behavior byte-identically",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-deployment-root-refreeze.test.js",
+    "name": "all three seams agree on the domain owner for a given deployment root",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "A ONE_PROVEN_GENERATION: complete commit provenance permits reuse",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "B MULTIPLE_CANDIDATES_ONE_PROVEN: only the mechanically proven generation wins",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "C STALE_STORE_WITH_NEWER_MTIME: mtime is ignored and cannot outrank provenance",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "D TWO_CONFLICTING_PROVEN_GENERATIONS: fail closed to one canonical reauth",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "E TIE_OR_INSUFFICIENT_PROVENANCE: fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "F ACCESS_TOKEN_VALID_BUT_REFRESH_GENERATION_UNKNOWN: access validity is ignored",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "secret-bearing provenance fields are rejected without using or returning their values",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "G PENDING_REFRESH_INTENT_EXISTS: fail closed without selecting a store",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "H NO_LEGACY_PROVEN_GENERATION: runner performs exactly one canonical Owner reauth and ordered canaries",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "legacy inspection is rejected until both quiesce fences are established",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-migration.test.js",
+    "name": "real executable bindings complete isolated production-like migrate and safe rollback",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "canonical credential constant is the yanfenma path in both carrying modules",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "provisioning boundary accepts the realigned default and stamps the patch block with it",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "normal reauth path accepts a 1-candidate (non-92) inventory: cardinality gate is bootstrap-only",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "canaries execute in the realigned STOCK → CEO → CTO order",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "validateConfig fails closed on a missing realigned canary binding",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "authsvc-frame canonical and fleet-config paths are rejected in this domain",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "ACC-ACT2-003 migrated real-snapshot-shape v3 document loads with providerEnv + canonical passthrough",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "loader rejects the migrated document when identical routes are not distinguished",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/subscription/shared-codex-yanfenma-realignment.test.js",
+    "name": "loader rejects an authsvc credentialFile on a codex subscription route in this domain",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/target-proxy-observer.test.js",
+    "name": "HTTP fetch proxy observer captures its own CONNECT evidence",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/target-proxy-observer.test.js",
+    "name": "WebSocket proxy observer captures WebSocket CONNECT independently of SSE fallback",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/target-proxy-observer.test.js",
+    "name": "real dsh-codex usage service has separate proxy CONNECT evidence",
+    "status": "skip"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "V2_INGRESS_MODE is frozen to PREBOUND_ONLY",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "UNKNOWN conversation -> FAIL CLOSED: no forward, no default Binding row, fixed receipt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "ordinary no-mention group/topic -> silent drop before gate/Router and zero Binding delta",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "UNKNOWN conversation (direct gate call): unbound verdict, store untouched",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "PRE-BOUND primary conversation -> forwarded: canonical main + Agent primary workspace, no override",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "PRE-BOUND primary conversation: second message RESUMES the same main (regression)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "AC11 rollback without state migration: PRE-BOUND NON-PRIMARY compatibility row stays byte-preserved and blocked",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "NON-PRIMARY row (direct gate call): non_primary_workspace verdict",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "An explicit workspace that RESOLVES to the primary path is allowed (effective == primary)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "wireV2IngressGate: wires onto a feishu handle; returns false without one",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "makeV2PreboundIngressGate: fail-loud on missing generic Router read seams",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "IMPORTED primary: Binding.workspace == agentId no longer resolves to the primary → blocked (non_primary_workspace)",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/v2-ingress-gate.test.js",
+    "name": "IMPORTED primary: workspace-null binding stays allowed and the turn runs in the imported directory",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-execution-shutdown.test.js",
+    "name": "runtime stop(): the engine drain stays pending while a poll is in flight, and the runtime is quiescent once it resolves",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "name": "owner assistance wake resolves exact principal and uses stable inter-agent delivery",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "name": "existing pending/settled caller correlation suppresses duplicate prompt",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "name": "delivery error is accepted only when caller correlation proves admission",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-owner-assistance-wake.test.js",
+    "name": "owner principal resolution failure prevents delivery and stays retryable",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "name": "real gateway resolves late-mounted workflowProgressAccess and records checkpoint",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "name": "real gateway rejects untrusted turn and model-carried coordinates",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-gateway.test.js",
+    "name": "workflow_progress tool shape exposes no identity/provenance arguments",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-runtime.test.js",
+    "name": "trusted Workflow turn records and reads the current checkpoint",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-runtime.test.js",
+    "name": "ordinary, wrong-agent and conflicting-turn contexts fail closed",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-runtime.test.js",
+    "name": "model-carried workflow coordinates and transcript-sized payloads are rejected",
+    "status": "pass"
+  },
+  {
+    "file": "packages/production-runtime/test/workflow-progress-runtime.test.js",
+    "name": "terminal attempts cannot accept another checkpoint",
+    "status": "pass"
+  }
+]

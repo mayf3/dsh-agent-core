@@ -1,0 +1,22 @@
+{
+  "startedAt": "2026-11-01T01:40:58.489029+00:00",
+  "command": [
+    "node",
+    "/private/tmp/d14-r5-cli-positive-20261101/run-cli-positive.mjs",
+    "/private/tmp/d14-r5-cli-positive-20261101",
+    "/private/tmp/d14-r5-fixture-closure-20261101/package"
+  ],
+  "cwd": "/private/tmp/d14-r5-cli-positive-20261101",
+  "isolatedEnvironment": {
+    "HOME": "/private/tmp/d14-r5-cli-positive-20261101/home",
+    "DSH_HOME": "/private/tmp/d14-r5-cli-positive-20261101/dsh-home",
+    "TMPDIR": "/private/tmp/d14-r5-cli-positive-20261101/tmp",
+    "NODE_OPTIONS": "--import=/private/tmp/d14-r5-cli-positive-20261101/deny-external-network.mjs",
+    "DSH_CODEX_MODELS_CACHE": "/private/tmp/d14-r5-cli-positive-20261101/empty-model-cache.json"
+  },
+  "runnerSha256": "be1503f822536dbde6a9278a2718dd565ef7eee980bae1ed6bd6914ddbc2de49",
+  "guardSha256": "ce89bbe8a1ce049ae0cba5b8ad9d8acc451815a02695a9bbe5448f4bac2bc617",
+  "exitCode": 0,
+  "finishedAt": "2026-11-01T01:41:00.031315+00:00",
+  "logSha256": "fffdbb005bbb189b165c887e64b823b372da283ceed2b0b5037db32a8b25f6a3"
+}
