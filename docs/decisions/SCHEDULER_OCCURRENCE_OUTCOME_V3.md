@@ -1317,3 +1317,48 @@ READY_FOR_ACCEPTANCE = YES
 IMPLEMENTATION_AUTHORITY = NONE
 NEXT_ACTION = AUTHOR_SCHEDULER_TIMEOUT_OUTCOME_V3
 ```
+
+---
+
+## AMENDMENT — CTR-S2 termination-only policy settlement（Owner 裁定 2026-11-02）
+
+- 状态：待与 CTR-S2 实现一起接受并进入实现基座；本分支和 open PR 不使其生效。
+- 授权来源：mayf3 Owner 在本次「D-009 修订 + CTR-S4 移植恢复」会话中裁定：
+  **“termination-only 证据判 failed，修订 D-009”**（Owner 提供日期：2026-11-02）。
+- 修改方式：Owner 本次明确指定保留原文、增补 AMENDMENT，并要求修订与 CTR-S2
+  实现同入基座。这是本任务的明示路由特例，不声称属于 accepted meaning 不变的
+  strictly additive AMEND，也不据此修改仓库通用 whole-authority/docs-first 规则。
+- 生效条件：本修订与对应 CTR-S2 实现一起经接受进入同一实现基座；缺任一项均不生效。
+  implementation readiness、安装和生产启用分别取证；本修订不授权部署、重启或启用。
+
+### 有界语义变化
+
+仅对 CTR-S2 的 Scheduler 内建 auto-settlement 政策，可信且与目标 occurrence/run
+精确对应的 `child_real_exit` / `terminated_without_outcome` termination-only 证据，
+**可以自动将 recurring occurrence 从 `outcome_unknown` 结算为 `failed`**。
+此处 `failed` 是 Scheduler 政策结算结果；不能把它伪装为已证明的业务失败。
+
+本特例生效后，在上述政策路径内，它优先于本文 §0、§6（failed/outcome_unknown
+定义）、§6.1、§8.4–8.5、§9/§9.2、§17.1 以及 §21 总结中要求 termination-only
+保持 occurrence=`outcome_unknown` 的原条款。
+下游 `SCHEDULER_TIMEOUT_OUTCOME_V3` C-004/C-009/C-039/C-040 和
+`SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1` CTR-RECON-001
+的同义限制，亦仅在这一政策路径和这一证据形态上服从本特例。原文作为历史依据保留，
+其他调用路径继续适用原条款。除这一政策 failed 映射外，exact current-epoch、
+request/caller correlation、原子提交与互斥证据等既有门槛不变。
+
+### 保留的边界
+
+1. Router/Lifecycle 的证据含义不变：termination-only 只证明旧 execution 不能继续，
+   业务结果与已发生的外部副作用仍为 UNKNOWN。不得改写 Router outcome、删除原
+   timeout/unknown 历史，或将政策结算冒充 exact business failure。
+2. 结算必须保留可信证据引用、机器 actor 与政策 provenance，走 Scheduler 既有单一
+   mutation authority，重建 aggregate fence；同一 occurrence 仍至多 admission 一次。
+3. 该结算不重放旧请求，不自动生成 retry/catch-up occurrence；recurring job 只可恢复
+   后续 future natural slot。一次性 `at` job 继续 HUMAN_REQUIRED。
+4. `pending`、`restart_lost`、`evicted`、`never_existed`、无记录、不可读、身份不匹配
+   或冲突证据，不属于本次 termination-only 裁定；本修订不授权将它们推断为失败。
+5. CTR-S4 enable flag 默认 OFF；生产发布与显式启用仍由监管在获授权的低峰窗执行。
+
+追踪：`mayf3/dsh-agent-core#417`。若移植源包含超出本特例的证据映射，必须先停止
+依赖该映射的实现并报告具体冲突，不能借本修订扩大 Owner 裁定范围。
