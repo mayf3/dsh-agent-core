@@ -22,7 +22,7 @@
     },
     {
       "id": "AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V3",
-      "sha256": "68431075f23ef3ff6989b07f65fc1fb728b68334b60bd6752fb8e8bfd418409d",
+      "sha256": "ac2d91ee119436dd42c7487931fa65daff065543230eb2eddd6b36fff6c7c598",
       "schema": "PASS",
       "formalLifecycle": "proposed"
     },
