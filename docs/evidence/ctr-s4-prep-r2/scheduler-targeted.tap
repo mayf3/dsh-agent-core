@@ -1,0 +1,23 @@
+✔ C11-R1 core: exact trusted late_completed readback self-heals the fenced occurrence without a prompt (485.322666ms)
+✔ C11-R1 late_failed variant: the exact trusted failure settles the occurrence as failed (394.267916ms)
+[scheduler] WARN reconciliation readback failed for occ:75bad08088ea7bba: router conflict — zero-write
+✔ C11-R1 mismatch/conflict/pending/incomplete evidence is zero-write and stays fenced + HUMAN_REQUIRED (1399.987875ms)
+✔ C11-R1 two unknowns on one Job: settling one contribution keeps the aggregate fence until the last settles (495.489416ms)
+✔ C11-R1 restart/re-adoption: settlement is settle-once, no second writer, no duplicate occurrence (806.097ms)
+✔ C11-R1 termination-only readback uses the accepted C-039 settlement path and the self_ops replay is identical (482.826084ms)
+✔ C11-R1 one-shot semantics preserved: a settled late outcome disables the one-shot job, never replays it (501.244417ms)
+✔ C11-R1 the readback consult is rate-limited per occurrence and STILL_IN_FLIGHT is zero-write (456.755542ms)
+✔ row 9: Router legal termination settlement auto-leads the Scheduler exact-occurrence settlement with an auditable no-replay receipt (519.691042ms)
+✔ row 9: the exact business late settlement carries the same auditable no-replay receipt (402.874584ms)
+✔ row 3: exact trusted late_failed routes through the #417 V3 trusted-late-evidence path (482.821666ms)
+✔ row 7: two unresolved handles — only the eligible one converges; the other stays fenced and HUMAN_REQUIRED (647.760833ms)
+✔ row 10: Router availability and Scheduler recurring-job availability are reported separately (403.277542ms)
+✔ row 9 edge: a settled ONE-SHOT late outcome receipts one_shot_disabled, never a recurring disposition (758.452333ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8613.994542
