@@ -65,4 +65,3 @@ test('composition forwards the trusted exact-agent native policy resolver into p
   assert.deepEqual(resolvedAgentIds, [AGT_ID, AGT_ID])
   assert.equal(spawned.length, 1)
 })
-
