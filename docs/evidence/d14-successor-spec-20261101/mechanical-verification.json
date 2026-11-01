@@ -1,0 +1,47 @@
+{
+  "result": "PASS_DOCS_ONLY",
+  "base": "3a1282b35e7b852f51cd14284ea91fd77a13543e",
+  "specs": [
+    {
+      "id": "AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4",
+      "sha256": "01db7a1bb160b66c1e247e1b4f4b086697f018e3c86ee5c25338093e1b7dba09",
+      "schema": "PASS",
+      "formalLifecycle": "proposed"
+    },
+    {
+      "id": "DEFAULT_MODEL_ROUTING_CONFIG_V2",
+      "sha256": "e46415c505f9c6831c0ce6c05837b92002c5ed0c678dcd1f11676277d39c230e",
+      "schema": "PASS",
+      "formalLifecycle": "proposed"
+    },
+    {
+      "id": "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V2",
+      "sha256": "6ea6b8a96cafd8d25389c419671a307237961ad7b98c3572fd93eff3096f1e2b",
+      "schema": "PASS",
+      "formalLifecycle": "proposed"
+    },
+    {
+      "id": "AGENT_CORE_AUTHSVC_SHARED_CODEX_ACTIVATION_RECONCILIATION_V3",
+      "sha256": "68431075f23ef3ff6989b07f65fc1fb728b68334b60bd6752fb8e8bfd418409d",
+      "schema": "PASS",
+      "formalLifecycle": "proposed"
+    },
+    {
+      "id": "AGENT_CORE_D14_FLEET_GENERATION_SUCCESSION_V1",
+      "sha256": "77bea5547e64bd49b5c945690f5fb9eccc64a4463d9b58b6f663b6491125f9a7",
+      "schema": "PASS",
+      "formalLifecycle": "proposed"
+    }
+  ],
+  "originalQuotedBlocks": 12,
+  "byteExactEvidenceCopies": 4,
+  "predecessorFilesUnchanged": 4,
+  "contractDefinitionCounts": {
+    "AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4": 17,
+    "AGENT_CORE_GPT6_LUNA_REASONING_ROUTE_V2": 6
+  },
+  "cohortContracts": 6,
+  "activationPatch": "APPLIES_CHECK_ONLY_NOT_EXECUTED",
+  "authorityActivation": "NO_D14_DOCS_LIFECYCLE_001",
+  "implementationAndProductionEvidence": "NOT_EXECUTED"
+}
