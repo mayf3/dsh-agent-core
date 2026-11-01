@@ -145,3 +145,111 @@ test('whole deadline includes JWKS; late verification never reads snapshot', asy
   await delay(80)
   assert.equal(f.reads(), 0)
 })
+
+// ── PRODUCT #525 P1/P4: deployment-seam fail-loud + not-ready observability ──
+// The 10-17 restart without AGENT_DIRECTORY_AUTH_JWKS_URL silently mounted a
+// permanently-401 verifier; these tests pin the repaired contract.
+
+test('missing jwksUrl fails construction loud — a permanently-401 verifier can never mount', () => {
+  assert.throws(() => createWorkflowAdmissionHandler({
+    definition: { listAgents: () => [] },
+  }), /jwksUrl/)
+})
+
+test('unreachable JWKS keeps the frozen 401 wire and flips admissionHealth with one bounded warn', async () => {
+  const warnings = []
+  const handler = createWorkflowAdmissionHandler({
+    jwksUrl: 'http://127.0.0.1:1/jwks', nowMs: () => now,
+    fetchImpl: async () => { throw new Error('connect ECONNREFUSED') },
+    definition: { listAgents: () => [{ id: 'agt_test-agent', disabled: false }] },
+    log: { warn: line => warnings.push(line) },
+  })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'unproven' })
+  const result = await handler(req(), url('/agt_test-agent'))
+  assert.deepEqual(result, { status: 401, body: { error: 'UNAUTHORIZED' } })
+  assert.deepEqual(Object.keys(result.body), ['error'])  // redaction: {error} only, no echo
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'auth_unavailable' })
+  assert.equal(warnings.length, 1)
+  assert.match(warnings[0], /auth_unavailable/)
+  assert.equal(JSON.stringify(warnings).includes(agentBase.agent_id), false)  // no identity in ops signal
+  await handler(req(), url('/agt_test-agent'))
+  assert.equal(warnings.length, 1)  // bounded: repeated outage requests never re-warn
+})
+
+test('ordinary invalid tokens never flip infra state; recovery warns exactly once', async () => {
+  const warnings = []
+  let healthy = true
+  let clock = now
+  const handler = createWorkflowAdmissionHandler({
+    jwksUrl: 'http://127.0.0.1/jwks', nowMs: () => clock,
+    fetchImpl: async () => healthy
+      ? { ok: true, json: async () => ({ keys: [jwk] }) }
+      : { ok: false, status: 503 },
+    definition: { listAgents: () => [{ id: 'agt_test-agent', disabled: false }] },
+    log: { warn: line => warnings.push(line) },
+  })
+  // phase-scoped token (machine profile caps lifetime ≤600s): anchored to the
+  // advanced clock so the only possible 401 causes are the JWKS seam
+  const t2 = Math.floor(now / 1000) + 601
+  const phaseToken = agentToken({ iat: t2, nbf: t2, exp: t2 + 500 })
+  assert.deepEqual(await handler(req('garbage'), url('/agt_test-agent')),
+    { status: 401, body: { error: 'UNAUTHORIZED' } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'unproven' })  // bad token ≠ infra down
+  assert.equal(warnings.length, 0)
+  assert.deepEqual(await handler(req(), url('/agt_test-agent')),
+    { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: true } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'ready' })
+  assert.equal(warnings.length, 0)  // unproven -> ready stays silent
+  // past cache TTL + max-stale, the refresh is mandatory: outage -> AUTH_JWKS_UNAVAILABLE
+  healthy = false
+  clock = now + 601_000
+  assert.deepEqual(await handler(req(phaseToken), url('/agt_test-agent')),
+    { status: 401, body: { error: 'UNAUTHORIZED' } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'auth_unavailable' })
+  assert.equal(warnings.length, 1)
+  healthy = true
+  assert.deepEqual(await handler(req(phaseToken), url('/agt_test-agent')),
+    { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: true } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'ready' })
+  assert.equal(warnings.length, 2)
+  assert.match(warnings[1], /ready/)
+})
+
+test('admissionHealth payload is key-pinned and identity-free', async () => {
+  const handler = createWorkflowAdmissionHandler({
+    jwksUrl: 'http://127.0.0.1/jwks', nowMs: () => now,
+    fetchImpl: async () => ({ ok: true, json: async () => ({ keys: [jwk] }) }),
+    definition: { listAgents: () => [] },
+  })
+  assert.deepEqual(Object.keys(handler.admissionHealth()).sort(), ['configured', 'state'])
+})
+
+test('unknown-kid refresh failure during a JWKS outage surfaces as auth_unavailable, not a silent bad token', async () => {
+  // Key rotation while the JWKS endpoint is down, inside the fresh-cache TTL:
+  // the request fails closed with the frozen 401, but the outage must surface
+  // in admissionHealth (state auth_unavailable + one bounded warn) instead of
+  // masquerading as an ordinary invalid token.
+  const warnings = []
+  let healthy = true
+  const handler = createWorkflowAdmissionHandler({
+    jwksUrl: 'http://127.0.0.1/jwks', nowMs: () => now,
+    fetchImpl: async () => {
+      if (!healthy) throw new Error('connect ECONNREFUSED')
+      return { ok: true, json: async () => ({ keys: [jwk] }) }
+    },
+    definition: { listAgents: () => [{ id: 'agt_test-agent', disabled: false }] },
+    log: { warn: line => warnings.push(line) },
+  })
+  assert.deepEqual(await handler(req(), url('/agt_test-agent')),
+    { status: 200, body: { agentId: 'agt_test-agent', exists: true, enabled: true } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'ready' })
+  healthy = false
+  const rotatedInput = [JSON.stringify({ alg: 'RS256', kid: 'rotated-kid' }), JSON.stringify(agentBase)]
+    .map(v => Buffer.from(v).toString('base64url')).join('.')
+  const rotatedToken = rotatedInput + '.' + sign('RSA-SHA256', Buffer.from(rotatedInput), keys.privateKey).toString('base64url')
+  assert.deepEqual(await handler(req(rotatedToken), url('/agt_test-agent')),
+    { status: 401, body: { error: 'UNAUTHORIZED' } })
+  assert.deepEqual(handler.admissionHealth(), { configured: true, state: 'auth_unavailable' })
+  assert.equal(warnings.length, 1)
+  assert.match(warnings[0], /auth_unavailable/)
+})
