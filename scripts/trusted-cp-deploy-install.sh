@@ -624,7 +624,7 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 PACKAGE_COPY_HELPER="$REPO_SRC/scripts/lib/trusted-app-package-copy.mjs"
 [ -f "$PACKAGE_COPY_HELPER" ] || { echo "ERROR: package-copy helper missing: $PACKAGE_COPY_HELPER" >&2; exit 2; }
-APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
+APP_SCRIPTS_WHITELIST="agent-core-resident.mjs demo-home.mjs agentcore-cron.mjs scheduler-watchdog.mjs dsh-agent-spawn-helper.c trusted-cp-deploy-install.sh agent-core-backup-ops.sh trusted-cp-hardening-v1-verify.mjs production-runtime.mjs production-runtime-launchd.mjs production-runtime-v1-verify.mjs production-agent-provision.mjs"
 PRESCAN_STAGING="$(mktemp -d /tmp/trusted-cp-prescan-XXXXXX)"
 mkdir -p "$PRESCAN_STAGING/app/scripts" "$PRESCAN_STAGING/app/packages"
 cp "$REPO_SRC/package.json" "$PRESCAN_STAGING/app/package.json"
