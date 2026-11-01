@@ -1322,13 +1322,14 @@ NEXT_ACTION = AUTHOR_SCHEDULER_TIMEOUT_OUTCOME_V3
 
 ## AMENDMENT — CTR-S2 termination-only policy settlement（Owner 裁定 2026-11-02）
 
-- 状态：待与 CTR-S2 实现一起接受并进入实现基座；本分支和 open PR 不使其生效。
+- 状态：**ACCEPTED**（mayf3 Owner 裁定日期：2026-11-02；本轮明确要求将增补段定稿为 ACCEPTED）。
 - 授权来源：mayf3 Owner 在本次「D-009 修订 + CTR-S4 移植恢复」会话中裁定：
   **“termination-only 证据判 failed，修订 D-009”**（Owner 提供日期：2026-11-02）。
 - 修改方式：Owner 本次明确指定保留原文、增补 AMENDMENT，并要求修订与 CTR-S2
   实现同入基座。这是本任务的明示路由特例，不声称属于 accepted meaning 不变的
   strictly additive AMEND，也不据此修改仓库通用 whole-authority/docs-first 规则。
-- 生效条件：本修订与对应 CTR-S2 实现一起经接受进入同一实现基座；缺任一项均不生效。
+- 集成生效条件：已接受的本修订与对应 CTR-S2 实现进入同一实现基座；open PR
+  本身不代表已合入 main 或部署目标线 `ac1159-deploy`。
   implementation readiness、安装和生产启用分别取证；本修订不授权部署、重启或启用。
 
 ### 有界语义变化

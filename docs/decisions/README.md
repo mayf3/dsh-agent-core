@@ -20,6 +20,9 @@
 - 状态: accepted（2026-09-13；Current Scheduler Authority；无 implementation / production authority；全文见
   `docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md`）
 - 日期: 2026-09-13
+- 有界修订: CTR-S2 termination-only policy settlement **ACCEPTED**（Owner 2026-11-02：
+  “termination-only 证据判 failed，修订 D-009”）；精确适用范围和集成边界见 D-009 末尾
+  AMENDMENT。其他路径仍适用下列原始 V3 决策。
 - 背景: D-007 将 `outcome_unknown` 与 same-job fence 绑定，但当前 Router 已能精确证明
   `terminated_without_outcome`：旧 execution 不再继续，业务 outcome 与副作用仍未知。若继续保持
   fence，Agent 无法安全恢复自己的未来 natural schedule；若映射为 failed/succeeded，则伪造业务结果。

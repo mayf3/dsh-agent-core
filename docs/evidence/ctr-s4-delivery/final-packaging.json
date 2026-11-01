@@ -1,0 +1,31 @@
+{
+  "method": "existing trusted-app-package-copy helper + literal shared installer whitelist, temporary paths only",
+  "stage_dir": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/ctr-s4-app-copy-mf_j63xo",
+  "packages": [
+    {
+      "package": "scheduler",
+      "rc": 0,
+      "stdout": "{\"package\":\"@agent-core/scheduler\",\"copiedRootEntries\":[]}",
+      "src_file_count": 44
+    },
+    {
+      "package": "production-runtime",
+      "rc": 0,
+      "stdout": "{\"package\":\"@agent-core/production-runtime\",\"copiedRootEntries\":[]}",
+      "src_file_count": 50
+    }
+  ],
+  "tests_excluded": true,
+  "source_manifest_hashes_match": true,
+  "watchdog_in_both_copy_loops": true,
+  "watchdog_sha256": "6ab88171142a386664aa9b9a230fff83a9e01f09c1467e32c661a1aea6a9e522",
+  "syntax": {
+    "bash -n scripts/trusted-cp-deploy-install.sh": {
+      "rc": 0
+    },
+    "node --check scripts/scheduler-watchdog.mjs": {
+      "rc": 0
+    }
+  },
+  "no_install_or_activation": true
+}

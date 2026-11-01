@@ -1,0 +1,375 @@
+{
+  "tested_head": "e8b086e82af317e6a2771d3569fad3756496a15a",
+  "verification_kind": "fresh offline mechanisms; source bytes unchanged by docs-only finalization",
+  "executed_results": {
+    "scheduler-full": {
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "packages/scheduler/test/audit-fixes.test.js",
+        "packages/scheduler/test/control-cli.test.js",
+        "packages/scheduler/test/cross-agent.test.js",
+        "packages/scheduler/test/history-durability.test.js",
+        "packages/scheduler/test/history.test.js",
+        "packages/scheduler/test/import.test.js",
+        "packages/scheduler/test/logical-key.test.js",
+        "packages/scheduler/test/occurrence-model.test.js",
+        "packages/scheduler/test/packet-tools.test.js",
+        "packages/scheduler/test/process-faults.test.js",
+        "packages/scheduler/test/retry-stale-revision.test.js",
+        "packages/scheduler/test/schedule.test.js",
+        "packages/scheduler/test/scheduler-history.test.js",
+        "packages/scheduler/test/scheduler.test.js",
+        "packages/scheduler/test/sigkill-lock.test.js",
+        "packages/scheduler/test/slot-accounting.test.js",
+        "packages/scheduler/test/store-v2.test.js",
+        "packages/scheduler/test/terminal-proof-containment.test.js",
+        "packages/scheduler/test/self-service/clone-disabled-source-intent.test.js",
+        "packages/scheduler/test/self-service/clone-disabled.test.js",
+        "packages/scheduler/test/self-service/critical-job-guard.test.js",
+        "packages/scheduler/test/self-service/reconcile-transactional.test.js",
+        "packages/scheduler/test/self-service/self-healing-findings.test.js",
+        "packages/scheduler/test/self-service/self-healing.test.js",
+        "packages/scheduler/test/self-service/self-ops-cross-layer-faults.test.js",
+        "packages/scheduler/test/self-service/self-ops-termination-write.test.js",
+        "packages/scheduler/test/self-service/self-ops-v3.test.js",
+        "packages/scheduler/test/self-service/self-service.test.js",
+        "packages/scheduler/test/self-service/session-disposition.test.js",
+        "packages/scheduler/test/watchdog/alert-dedupe.test.js",
+        "packages/scheduler/test/watchdog/auto-reconcile-mutation.test.js",
+        "packages/scheduler/test/watchdog/auto-reconcile.test.js",
+        "packages/scheduler/test/watchdog/compiler-lifecycle.test.js",
+        "packages/scheduler/test/watchdog/delivery-projection.test.js",
+        "packages/scheduler/test/watchdog/delivery.test.js",
+        "packages/scheduler/test/watchdog/disposition-alert-lifecycle.test.js",
+        "packages/scheduler/test/watchdog/durable-state-cutover-replay.test.js",
+        "packages/scheduler/test/watchdog/durable-state.test.js",
+        "packages/scheduler/test/watchdog/health.test.js",
+        "packages/scheduler/test/watchdog/isolation-integration.test.js",
+        "packages/scheduler/test/watchdog/late-outcome-selfheal.test.js",
+        "packages/scheduler/test/watchdog/notification-integration.test.js",
+        "packages/scheduler/test/watchdog/path-census.test.js",
+        "packages/scheduler/test/watchdog/reconciliation.test.js",
+        "packages/scheduler/test/watchdog/restart-convergence-matrix.test.js",
+        "packages/scheduler/test/watchdog/routing.test.js",
+        "packages/scheduler/test/watchdog/templates.test.js",
+        "packages/scheduler/test/watchdog/watchdog.test.js"
+      ],
+      "rc": 0,
+      "started_at": "2026-11-01T14:10:06.164581+00:00",
+      "finished_at": "2026-11-01T14:10:29.204111+00:00",
+      "sha256": "fd9b63c79382ae29655cf95a0551cdea1593ac7b09a5af11f131911ca104dcb9"
+    },
+    "focused": {
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "packages/scheduler/test/watchdog/auto-reconcile.test.js",
+        "packages/scheduler/test/watchdog/auto-reconcile-mutation.test.js",
+        "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js"
+      ],
+      "rc": 0,
+      "started_at": "2026-11-01T14:10:29.204576+00:00",
+      "finished_at": "2026-11-01T14:10:30.998495+00:00",
+      "sha256": "674454b8472583baa60d57446e7a821828cf7fbc577772b74df2f64eb5a77067"
+    },
+    "structure": {
+      "argv": [
+        "node",
+        "scripts/verify-code-structure.mjs",
+        "--base",
+        "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+        "--head",
+        "e8b086e82af317e6a2771d3569fad3756496a15a",
+        "--json"
+      ],
+      "rc": 1,
+      "started_at": "2026-11-01T14:10:30.998896+00:00",
+      "finished_at": "2026-11-01T14:10:52.450563+00:00",
+      "sha256": "858bad14073ac0fa51228907f96e365f3ec14e652bd7dc5a99a7ed2c765c68f7"
+    },
+    "structure-task-base": {
+      "argv": [
+        "node",
+        "scripts/verify-code-structure.mjs",
+        "--base",
+        "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+        "--head",
+        "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+        "--json"
+      ],
+      "rc": 1,
+      "sha256": "97ef0e16e585745b313c0db970ce25f09db970b77647232bc4deaac1f4c36e85"
+    }
+  },
+  "test_name_comparison": {
+    "original": {
+      "path": "docs/evidence/ctr-s4-delivery/scheduler-baseline.tap",
+      "sha256": "52b2f8ff0d183e15f954a9e6780a637db8aa6a66c5672c9313534b69b6fb5c8b",
+      "count": 421
+    },
+    "r2_count": 427,
+    "r3_count": 434,
+    "current_count": 434,
+    "original_missing": [],
+    "r2_missing": [],
+    "r3_missing": [],
+    "current_vs_r3_added": [],
+    "current_added_to_original": [
+      {
+        "name": "CTR-S1 pass: recurring unknown with success evidence is planned; `at` and ambiguous are skipped",
+        "count": 1
+      },
+      {
+        "name": "CTR-S2 frozen mapping: evidence -> decision table",
+        "count": 1
+      },
+      {
+        "name": "CTR-S2 gate: ambiguous evidence leaves the occurrence for a human",
+        "count": 1
+      },
+      {
+        "name": "CTR-S2 gate: one-shot `at` jobs are never auto-disposed",
+        "count": 1
+      },
+      {
+        "name": "CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch accepts coherent direct business and child-exit late evidence without losing provenance",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch audit append failure remains observable without undoing authority",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch committed acknowledgement loss returns canonical receipt and repeat is zero-write",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch exact business outcomes retain their proven execution result",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch locks out identity definition and evidence drift with byte-identical negative writes",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch rechecks inside lock and preserves another unknown aggregate fence",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 batch termination policy failed retains UNKNOWN provenance and only future natural scheduling",
+        "count": 1
+      },
+      {
+        "name": "CTR-S4 default OFF: without an evidenceLookup the pass plans zero settlements",
+        "count": 1
+      }
+    ],
+    "current_duplicates": {},
+    "normalization": "TAP \\# only; original spec reporter strips only leading checkmark and trailing duration",
+    "full_totals": {
+      "tests": 434,
+      "suites": 0,
+      "pass": 434,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "focused_totals": {
+      "tests": 32,
+      "suites": 0,
+      "pass": 32,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "structure_comparison": {
+    "actual_rc": 1,
+    "base_rc": 1,
+    "base_summary": {
+      "result": "STRUCTURE_VIOLATION",
+      "exitCode": 1,
+      "rulesVersion": "CODE_STRUCTURE_GUARDRAILS_V1",
+      "base": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+      "head": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+      "checks": [
+        "FILE_LINE_LIMIT",
+        "DIRECTORY_CHILD_LIMIT",
+        "DIRECTORY_DEPTH_LIMIT",
+        "EXCEPTION_REGISTRY",
+        "NO_NEW_LEGACY_VIOLATION"
+      ],
+      "inScopeFiles": 781,
+      "violations": 11,
+      "warnings": 106,
+      "registryFiles": 20,
+      "registryDirectories": 4
+    },
+    "current_summary": {
+      "result": "STRUCTURE_VIOLATION",
+      "exitCode": 1,
+      "rulesVersion": "CODE_STRUCTURE_GUARDRAILS_V1",
+      "base": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+      "head": "e8b086e82af317e6a2771d3569fad3756496a15a",
+      "checks": [
+        "FILE_LINE_LIMIT",
+        "DIRECTORY_CHILD_LIMIT",
+        "DIRECTORY_DEPTH_LIMIT",
+        "EXCEPTION_REGISTRY",
+        "NO_NEW_LEGACY_VIOLATION"
+      ],
+      "inScopeFiles": 786,
+      "violations": 11,
+      "warnings": 106,
+      "registryFiles": 21,
+      "registryDirectories": 4
+    },
+    "exactly_same_as_task_base": true,
+    "exactly_same_as_delivery": true,
+    "exactly_same_as_r3": true,
+    "new_violations": [],
+    "resolved_violations": [],
+    "violations": [
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages",
+        "baselineValue": 22,
+        "headValue": 22,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "DIRECTORY_OVER_CEILING",
+        "path": "packages/agent-router/test",
+        "baselineValue": 24,
+        "headValue": 24,
+        "exception": 22
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/agent-router/test/process-lifecycle",
+        "baselineValue": 23,
+        "headValue": 23,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/broker/src/capabilities",
+        "baselineValue": 26,
+        "headValue": 26,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/broker/test",
+        "baselineValue": 28,
+        "headValue": 28,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/production-runtime/src",
+        "baselineValue": 28,
+        "headValue": 28,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "DIRECTORY_OVER_CEILING",
+        "path": "packages/production-runtime/test",
+        "baselineValue": 35,
+        "headValue": 35,
+        "exception": 21
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "packages/production-runtime/test/scheduler",
+        "baselineValue": 21,
+        "headValue": 21,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "DIRECTORY_OVER_CEILING",
+        "path": "scripts",
+        "baselineValue": 66,
+        "headValue": 66,
+        "exception": 40
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "scripts/lib",
+        "baselineValue": 26,
+        "headValue": 26,
+        "exception": null
+      },
+      {
+        "check": "DIRECTORY_CHILD_LIMIT",
+        "rule": "UNREGISTERED_LEGACY_DIRECTORY",
+        "path": "scripts/lib/hr-s256-one-shot",
+        "baselineValue": 21,
+        "headValue": 21,
+        "exception": null
+      }
+    ]
+  },
+  "tested_code_coordinates": {
+    "finished_at": "2026-11-01T14:11:43.346922+00:00",
+    "initial_head": "e8b086e82af317e6a2771d3569fad3756496a15a",
+    "final_head": "e8b086e82af317e6a2771d3569fad3756496a15a",
+    "status": "M docs/decisions/README.md\n M docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md\n M docs/reports/CTR_S4_PREPARATION_R2.md",
+    "source_bytes_changed_during_validation": [],
+    "tested_code_hashes": {
+      ".agents/structure-registry.json": "73f42dab1cc0fc2e8003bb16ee9106e606eec2b70c68871ef54cabc8b0028444",
+      "packages/production-runtime/src/compose.js": "82866de52960455ea57df51ff3f4b9910c8f6b062d632f88266fa19978570b2e",
+      "packages/production-runtime/src/scheduler/auto-reconcile-runtime.js": "90f968d2d65d29b6016e31b043a8d5ab417b99d1940ca658389d9cd7b7904b8d",
+      "packages/production-runtime/test/scheduler/scheduler-invoker-canary.test.js": "155448a3f24a21ee0b2dcc8d755da132fbbd1df1fb6a9fec56852675733144c2",
+      "packages/scheduler/src/eligibility.js": "d755ec9fb0b133d2423bb732f9a3d1a7391da09f33664e52ca81f038958e4f9f",
+      "packages/scheduler/src/occurrence-model.js": "df0b32208fa948fef90bbbe74b9a4d05003b68d3576383a496162df19f3be5fd",
+      "packages/scheduler/src/watchdog/auto-reconcile-mutation.js": "12115987d6fb47a4e3cd75ab27ba1a622d5cef1eb42529f8d24e30f487461801",
+      "packages/scheduler/src/watchdog/auto-reconcile.js": "e916b92c82adac0b19e3c64de54b1b2ab9e9bc57946ec563aa92f039643b98b5",
+      "packages/scheduler/test/watchdog/auto-reconcile-mutation.test.js": "084d5a7116ed28d0de8432c0b55454ba27b4741a555b16c58fd30e7565ec0702",
+      "packages/scheduler/test/watchdog/auto-reconcile.test.js": "34cc66ce60e316ab6da043ea06c650e33b163e673ae74e74880f6514afbcc65e",
+      "scripts/lib/watchdog-payload-snapshot.mjs": "9017e5183e234e14ff697793f304e1897323873d01fc56b259998104f685dc66",
+      "scripts/trusted-cp-deploy-install.sh": "dba2f136af78b6d89bf58d1b9ab0c15259efa3bf4f4d4f904e9494fd11d7741e"
+    }
+  },
+  "raw_logs": {
+    "scheduler-full": {
+      "file": "final-scheduler-full.log.gz",
+      "raw_sha256": "fd9b63c79382ae29655cf95a0551cdea1593ac7b09a5af11f131911ca104dcb9",
+      "gzip_sha256": "c69c7ccb4b5bbbdf17d871dc656ff299a266f5c0ae31e98f4a15612f4f77c8ad"
+    },
+    "focused": {
+      "file": "final-focused.log.gz",
+      "raw_sha256": "674454b8472583baa60d57446e7a821828cf7fbc577772b74df2f64eb5a77067",
+      "gzip_sha256": "fb63e2992a31274bba5685e645b1a754c4cdbaa33ba7d0079d7a0f13f2caf111"
+    },
+    "structure": {
+      "file": "final-structure.log.gz",
+      "raw_sha256": "858bad14073ac0fa51228907f96e365f3ec14e652bd7dc5a99a7ed2c765c68f7",
+      "gzip_sha256": "1b496dbb6e016283b3bb81dd3b5619231b631b82b90f6588d414782f420c6cb7"
+    },
+    "structure-task-base": {
+      "file": "final-structure-task-base.log.gz",
+      "raw_sha256": "97ef0e16e585745b313c0db970ce25f09db970b77647232bc4deaac1f4c36e85",
+      "gzip_sha256": "7286cebd1a85ba4f7cbe45f15d14bdb5dca582a3d766c8ded62328ac230c6a5b"
+    }
+  }
+}
