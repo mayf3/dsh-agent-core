@@ -18,9 +18,9 @@
 test at packages/scheduler/test/watchdog/auto-reconcile.test.js:42:1
 ✖ CTR-S2 frozen mapping: evidence -> decision table (0.663541ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   'failed' !== null
-  
+
       at TestContext.<anonymous> (file:///private/tmp/ctr-s4-prep/packages/scheduler/test/watchdog/auto-reconcile.test.js:48:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1397:25)
@@ -37,9 +37,9 @@ test at packages/scheduler/test/watchdog/auto-reconcile.test.js:42:1
 test at packages/scheduler/test/watchdog/auto-reconcile.test.js:94:1
 ✖ CTR-S2 no registry record: null and undefined keep UNKNOWN, fence and input bytes (0.150959ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   'failed' !== null
-  
+
       at TestContext.<anonymous> (file:///private/tmp/ctr-s4-prep/packages/scheduler/test/watchdog/auto-reconcile.test.js:99:12)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1397:25)

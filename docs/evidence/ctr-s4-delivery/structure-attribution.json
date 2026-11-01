@@ -1,0 +1,28 @@
+{
+  "head": "792127d5764ac61a3f67dea61ac88494d39a82b2",
+  "base": "1921f8795e2212506a7a833bc79b84c17ba50ea1",
+  "actual_rc": 1,
+  "violations": 11,
+  "new_violations": [],
+  "known_debt_unchanged": true,
+  "prior_receipt": "docs/evidence/ctr-s4-prep-r2/structure.json",
+  "comparison_fields": [
+    "check",
+    "path",
+    "baselineValue",
+    "headValue"
+  ],
+  "violating_paths": [
+    "packages",
+    "packages/agent-router/test",
+    "packages/agent-router/test/process-lifecycle",
+    "packages/broker/src/capabilities",
+    "packages/broker/test",
+    "packages/production-runtime/src",
+    "packages/production-runtime/test",
+    "packages/production-runtime/test/scheduler",
+    "scripts",
+    "scripts/lib",
+    "scripts/lib/hr-s256-one-shot"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "file": "docs/evidence/ctr-s4-delivery/no-record-red.tap",
+  "raw_sha256": "29354b452c0d10177a16b3c828280c77a0ad4a4da159034127f89c2eeb7320db",
+  "normalized_sha256": "792fbd32afabc9ba33adbc6455b349ac15a332a62a538ad7d780d80b201eda2e",
+  "method": "remove trailing ASCII spaces/tabs only; assertions, results and line count unchanged",
+  "lines_changed": [
+    21,
+    23,
+    40,
+    42
+  ]
+}

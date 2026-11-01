@@ -211,9 +211,17 @@ Executed offline evidence in [`ctr-s4-delivery`](../evidence/ctr-s4-delivery/):
   (`scheduler-after.tap`, rc=0). All 421 pre-existing names retained, name-set
   diff=∅; six added tests are enumerated in `test-name-set.json`. TAP's escaped
   `\#` is normalized to the original test name, not a semantic rename.
-- Independent reviewer `/root/authority_review` reran the pure six-test suite
-  and found zero blockers for that bounded repair. Final-head binding follows
-  in the PR receipt; this is not full implementation or operation acceptance.
+- Structure at source head `792127d5764ac61a3f67dea61ac88494d39a82b2`: rc=1,
+  exactly 11 pre-existing directory violations, same paths and base/head values
+  as the r2 receipt; new violations=0 (`structure-attribution.json`). This is
+  known debt, not a falsely green gate.
+- Independent reviewer `/root/authority_review` bound the pure repair/report
+  review to exact head `792127d5764ac61a3f67dea61ac88494d39a82b2`: PASS,
+  zero new blockers. It independently reran six tests, compared all test names
+  and verified four source hashes. This is not full implementation acceptance.
+  The receipt-only follow-up normalizes four trailing-whitespace diagnostic
+  lines; `log-normalization.json` retains raw and normalized log hashes.
+  Final receipt-only head binding is recorded in the PR conversation.
 
 ### New concrete semantic stop: original wiring cannot be copied unchanged
 
