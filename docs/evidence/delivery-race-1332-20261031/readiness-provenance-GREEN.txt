@@ -1,0 +1,64 @@
+[demo-server] session main resumed (59243 events) cwd=/tmp/resume-workspace
+[demo-server] session main created (0 events) cwd=/tmp/prepared-provenance
+[demo-server] session main resumed (59243 events) cwd=/tmp/prepared-provenance
+✔ R1 fresh spawn + 59243-event resume: no readiness ack or prompt before replay completes (3.746208ms)
+✔ R1 readiness validates version/session and propagates workspace mismatch without admission (0.554375ms)
+✔ readiness preserves private-session resolution and redacts its rejection details (0.14325ms)
+✔ prepared created session retains first-prompt provenance, then reports genuine hot reuse (0.876042ms)
+✔ prepared resumed session retains first-prompt provenance, then reports genuine hot reuse (0.179708ms)
+✔ R1 stdio integration: fresh child acknowledges initialize before suspended resume is deliverable (50.768625ms)
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+✔ R4: an absent sidecar keeps the historical user source (1.833917ms)
+✔ R4: a valid inter_agent sidecar becomes the durable message source verbatim (0.231625ms)
+✔ R4: resume path (persisted main) carries the sidecar identically (0.230917ms)
+✔ R4: malformed sidecars reject the prompt before any message is queued (0.676916ms)
+✔ R4: validateMessageOrigin is exported for direct contract checks (0.117125ms)
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+✔ workflow_execution origin: valid provenance becomes the durable message source verbatim (1.755917ms)
+✔ workflow_execution origin: validateMessageOrigin contract checks (0.301792ms)
+✔ workflow_execution origin: malformed provenance queues zero messages (0.175625ms)
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-b
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session cron-daily created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session memory-maintenance created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main-A created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main-B created (0 events) cwd=/tmp/ws/root-b
+[demo-server] session main-A resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main-B resumed (3 events) cwd=/tmp/ws/root-b
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+[demo-server] session main created (0 events) cwd=/tmp/ws/root-a
+[demo-server] session main resumed (3 events) cwd=/tmp/ws/root-a
+✔ R1: cold session is CREATED with meta:{cwd = resolved workspace} — the only creation contract (1.159167ms)
+✔ R1: a prompt with no cwd falls back to the initialize-time process cwd (0.317333ms)
+✔ R2: a persisted session is RESUMED with no meta; equal cwd -> the message is queued (0.698208ms)
+✔ R3: persisted cwd != resolved workspace -> STRUCTURED_REJECT, cwd unchanged, no second session (0.374083ms)
+✔ R3: hot path — a LIVE session resumed/created earlier rejects a different resolved workspace (0.231208ms)
+✔ R3: a persisted session WITHOUT a header.cwd also rejects (never silently adopts one) (0.1055ms)
+✔ same workspace, multiple sessions: independent handles, same frozen cwd (AC2/AC7 seam level) (0.218833ms)
+✔ restart semantics (AC5 seam level): resume restores the persisted cwd and never re-passes meta (0.311625ms)
+✔ resolved Luna route is identical for session create and restart resume (0.199875ms)
+✔ B003: native source receipts distinguish first artifact creation, persisted resume and hot reuse without inventing reset cause (0.473583ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 361.110125

@@ -1,0 +1,76 @@
+{
+  "kind": "FIXED_OFFLINE_CONTINUATION_SOURCE_CLOSURE_V2",
+  "unique_parent_source": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+    "bytes": 28557,
+    "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+  },
+  "source_only_parent_receipt": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/FRESH-CARRIER-AFFECTED-SOURCE-RECEIPT.v2.json",
+    "bytes": 14395,
+    "sha256": "b541d431a0d0c0514b3e4f5028d7db6cc230e70bbe63a317597c21ed1cce65eb"
+  },
+  "historical7ad": "Superseded as continuation runtime parent; not retained as a vulnerability requirement. Original v1 unit/closure stay unchanged historical NOT_SENT.",
+  "files": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/ORIGINAL-FIXED-FRESH-SIX-TARGET-OFFLINE-CARRIER-TECHNICAL-DECISION.v2.json",
+      "bytes": 27081,
+      "sha256": "02f7a36660fc340277f3075079af87ea9deea4a7a4ff026e73cbda10c5aff158"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/PROPOSED-FIXED-FRESH-SIX-TARGET-OFFLINE-CARRIER.v2.md",
+      "bytes": 24967,
+      "sha256": "c9c606481cf6f98721dbdb1ed8b917ab918eace6b3f7276d50457db1a94ade2b"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/SOURCE-REVIEW-INDEX.v1.json",
+      "bytes": 17955,
+      "sha256": "e64eccca81528efe4125502783bd26ab3d850a593cee0682e5c8c267d853eaef"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/source-versions/helper-f881-before-umask-fix.mjs",
+      "bytes": 26069,
+      "sha256": "f8811ccafeec1bc521b1cc86ae17a33b7b8cb2f556f73277b1d84b2f8229edd1"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 28557,
+      "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/SOURCE-DELTA-INDEX.v2.json",
+      "bytes": 6934,
+      "sha256": "adcfd3fa35a040656e2d56019737eea4a2ab3718416c892c10931c14fdfa0306"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/FRESH-CARRIER-AFFECTED-SOURCE-RECEIPT.v2.json",
+      "bytes": 14395,
+      "sha256": "b541d431a0d0c0514b3e4f5028d7db6cc230e70bbe63a317597c21ed1cce65eb"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/BUILD-TERMINAL-INDEX.v1.json",
+      "bytes": 3979,
+      "sha256": "1cb9683808d098aa99eca3951c27c69d287d2ff450ae3954404798afc589900a"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/PROCESS.json",
+      "bytes": 583,
+      "sha256": "8938ce95599b2baa1a6c09bf58336e6947a99e068a28a4faca9889e9545c2fa3"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v1/actual-fixed-artifact-build/OWNED-PARTIAL-ALLOCATION.json",
+      "bytes": 298,
+      "sha256": "78bde4f0a4bd0bd9a5bdf0f021d45d4d44f2132ca276ae86a63a90d2d6365bfe"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "bytes": 3901,
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9"
+    }
+  ],
+  "proposed_semantic_ceiling": [
+    "scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs builder/nonproduction failure receipt only"
+  ],
+  "runtime_changes_proposed": 0,
+  "new_actual_fixed_input_reads": 0
+}

@@ -1,3 +1,5 @@
+import { COMPLETE_BODY_ID } from './capabilities/workflow-definition-read/complete-contract.js'
+import { relayCompleteBody } from './capabilities/workflow-definition-read/complete-relay.js'
 /**
  * @agent-core/broker/src/relay.js — child-side broker RELAY (trusted
  * credential broker model).
@@ -37,6 +39,7 @@ import { appendFileSync } from 'node:fs'
 
 import { AGENT_SESSION_SEND_RECONCILE_CAPABILITY_ID } from './capabilities/agent-session-reconcile.js'
 import { exactKeys, nonEmpty, validSchedulerMutationResult } from './scheduler-mutation-result.js'
+import { relayDispatchStatus } from './agent-session-status-result.js'
 
 /**
  * The parent-RPC method the router dispatches to the trusted broker gateway.
@@ -343,6 +346,8 @@ export function createRelayHandlers(manifest, requestFn) {
   for (const op of manifest.operations) {
     if (!op.http && !isLocalManifest) continue
     handlers[op.name] = async (_operation, args) => {
+      if (manifest.id === COMPLETE_BODY_ID) return relayCompleteBody(manifest, requestFn, op.name, args)
+      if (manifest.id === 'agent_session_dispatch_status') return relayDispatchStatus(requestFn, manifest, op.name, args)
       const uncertainMutation = manifest.id === 'scheduler' && SCHEDULER_MUTATIONS.has(op.name)
       const uncertainSessionSend = manifest.id === 'agent_session_send' && op.name === 'send'
       const ambiguousError = {

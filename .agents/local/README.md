@@ -86,14 +86,22 @@ SEMANTIC_REVIEW_RECORD = persistent PR conversation or docs/reports/
 EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 ```
 
+## Current Owner-obligation Workflow authority
+
+The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `39587c33c8bcf26ad5689127f5c92a6abc8b562e` and Core `ac83fe5cea3701eb9436f74d1b5f6ed0013256a9`. The accepted Core whole successors are WAE V3, Assignee Transition Capability V3, WEC V3, GCR V2, WPO V4, and Owner Workflows V2. Assignee Transition Capability V2 is superseded by V3, and Owner Workflows V1 by V2, with reciprocal lifecycle links. The paired Svc acceptance-context successor is `SVC_WORKFLOW_ACCEPTANCE_CONTEXT_BINDING_V2`. Governing Contracts authorize source implementation only after their accepted revisions are present in the implementation base; production apply remains none.
+
 ## Code structure rules
 
-Binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md`](CODE_STRUCTURE_GUARDRAILS_V1.md)
-(frozen file/directory/depth limits, legacy policy, exception registry, anti-evasion
-rules). Entry point for the rule:
+Current binding repository-local rule: [`.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md`](CODE_STRUCTURE_GUARDRAILS_V2.md)
+(frozen limits, fixed-baseline registry validation, candidate-delta gate and visible
+historical debt). V2 and its V1 supersession activate atomically on main.
+The implementation contract is
+[`CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1`](../../docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md).
+Implementation starts only after both accepted authorities are in its base.
+The existing V1 runner remains unqualified for V2 until the implementation lands.
 
 ```text
-RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V1.md
+RULE = .agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md
 EXCEPTION_REGISTRY = .agents/structure-registry.json
 VERIFIER = node scripts/verify-code-structure.mjs --base <ref> --head <ref> [--json]
 NPM = npm run verify:structure

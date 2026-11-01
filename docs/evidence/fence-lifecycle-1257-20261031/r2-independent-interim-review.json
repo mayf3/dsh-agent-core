@@ -1,0 +1,44 @@
+{
+  "review": "R2_INTERIM_UNCOMMITTED_INDEPENDENT_REVIEW",
+  "reviewed_at_utc": "2026-10-31T07:52:48.633981+00:00",
+  "base_head": "0386b34a3d1054c71cbe51a2310fdff4d55c992b",
+  "worktree": "/Users/yanfenma/workspace/worktrees/ac-task-1257-fence-lifecycle",
+  "result": "PASS_WITHIN_CANDIDATE_ONLY_SCOPE",
+  "is_final_head_review": false,
+  "blockers": [
+    {
+      "id": "B1",
+      "status": "CLOSED",
+      "description": "singleton records omitted other correlation targets during authority recount",
+      "independent_repro_before": "r2-independent-correlations.jsonl",
+      "independent_repro_after": "r2-independent-correlations-after-fix.jsonl"
+    }
+  ],
+  "checks": [
+    "exact existing durable evidence only; owner file is authorization not proof",
+    "pending exact outcome evidence refuses exit-only downgrade",
+    "late success and independently tested late failure preserve outcome/digest",
+    "unrelated records and top-level values/issuance/correlation retained",
+    "full deployed loader and authority recount pre/post",
+    "source bytes unchanged; output exclusive new file; no persistence path on temporary Store",
+    "known trusted imported store closure definitions have no top-level side effects; validate does not restore source"
+  ],
+  "test_results": {
+    "existing_cli_suite": "16/16 PASS",
+    "independent_extra": "4/4 PASS",
+    "original_two_correlations_repro": "rc0 source unchanged after fix"
+  },
+  "residual_boundary": "loaderSha256 pins durable-file.js only; sibling Store and transitive imports must already belong to the same trusted deployment as documented. This is not an untrusted-code sandbox or closure-digest proof. No live install or fence recovery reviewed/performed.",
+  "reviewed_files": {
+    "packages/agent-router/src/reconciliation/operator-candidate.js": "ed1c3e8096f195e4a1cab2666b4bb404a90452d9abb7ba8fef252301ea8518cc",
+    "packages/agent-router/src/reconciliation/operator-files.js": "9495e593f5034ab388c16c724cb84034e408eb256e8913f6c39df66aa2c6d0e8",
+    "scripts/turn-recovery.mjs": "ae402ddae23d52909d17712f6400372029c37298ca02a97b2023cdbb5a253b35",
+    "packages/agent-router/test/process-lifecycle/reconcile-cli.test.js": "c0a2c21e08dfa700134b4ebe308938635db8c81a0dafa27510cb0d72e9602963",
+    "docs/runbooks/turn-recovery-offline.md": "c9bd789d32c5750efe076c205de646cf6dc0a7a717157ca059c8749c7acfb763"
+  },
+  "artifacts": {
+    "r2-independent-cli-suite.tap": "126fd82ae986718a93f09fb9ae0b322549e8ea62009ad036f718ba2047ce039c",
+    "r2-independent-extra.tap": "bacade007cc6f94475c1e182a1780970b6d3fc8172bf08b305f427e4870029b2",
+    "r2-independent-correlations-after-fix.jsonl": "4585cc4501f5aaa5c71501ab173b9523f4762f73fac2bafe4a68927a63c80caf"
+  }
+}

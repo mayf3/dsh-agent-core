@@ -1,0 +1,88 @@
+{
+  "kind": "E42_Q2_FIXED_G_CALLER_CONTRACT_MATERIAL_INDEPENDENT_RECEIPT_V2",
+  "at_utc": "2026-10-19T12:54:27.875786+00:00",
+  "reader": "/root/sol_e40_independent_reader",
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol/ultra",
+  "native_observed_model": "UNKNOWN",
+  "disposition": "PASS_CONTRACT_MATERIAL_ONLY",
+  "inputs": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/INDEX.v2.json",
+      "bytes": 963,
+      "sha256": "18160b794392130678d5b354cf135110e83188e0fe43f9471324a04df60d214d"
+    },
+    "exact_proposal": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/PROPOSED-E42-FIXED-G-BUDGET-CALLER-CONTRACT.v2.md",
+      "bytes": 14462,
+      "sha256": "70abd83505b0af98fb6346753d0014834c346e93d20b7bcdfb5d757d2d8e521d"
+    },
+    "source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q2-fixed-g-budget-contract/SOURCE-CLOSURE-INDEX.v2.json",
+      "bytes": 4193,
+      "sha256": "34e15a6dd66548486011ed66644e2ffeb05975dc7fa7cba98d0b1d1ad920e6d6"
+    }
+  },
+  "scope": "One bounded original-chain Q2 documentation/closure review after007458 direction. No reacceptance of531 method, A/helper source, old R41 implementation or tests; no code or invocation review.",
+  "actual_read_and_attribution": {
+    "direct": "Read the exact14462B proposed contract, source closure and index; verified their full size/SHA. Verified all four canonical-ref file pins. Read complete007458 direction and42de source-facts receipt; used held50c0 counts and original6ade candidate only as preserved canonical references.",
+    "direction_sha256": "007458fb6bd4ffb9bc51d96966f2d464f96575a61797febc8c2a88582b66e0bb",
+    "source_facts_sha256": "42de119aa8ae7e4bc1838d3091434cd7f765f57e30d7c862a2bfa924f617f0cf",
+    "source_facts_actual_reader": "/root/capacity_a_sol",
+    "independent_source_reread": false,
+    "limit": "The source statements at39e47fd6/d323f702/ba571c77/78546c71 and50c0 retain original reader attribution. This material review does not turn those transcriptions into my own source execution or fresh native facts."
+  },
+  "material_findings": [],
+  "readback": [
+    {
+      "subject": "Parent/source and comparison seam",
+      "lines": "11,62,70-72",
+      "finding": "Precisely pins the only semantic parent caller39e47fd6. Comparison is inside prepare_answers after original complete canonical context/representatives validation155-173 and before first177 group effect, not after await599 returns. G is the entire canonical set; no truncation, duplicate count, subset witness or changed normal600-612 predicates. Specific GCapExceeded catches only this new outcome."
+    },
+    {
+      "subject": "Trusted fixed-operation plan",
+      "lines": "64-70,78-80",
+      "finding": "Proposes one same-DRIVEN root-sealed drivenConfig, original AUTH/PIN/capsule and seal_authority_closure hash chain; rejects WB/user/argv/unsigned fallback or502 protectedSTATE read. Fixed kind and closed fields bind operation/manifest/worker/SC/parent and actual final caller/accepted contract/original2947 plus genuine quantity/J/branch/admission evidence. Exact finite G_budget1..256, D_max1/R_external0, duplicate/extra keys and bool/float G rejected. Self-hash cycle avoided because source fixes filename/subject rather than literal plan hash. Future evidence remains a consumption requirement, not a prerequisite to source-contract acceptance."
+    },
+    {
+      "subject": "Prospective immutable provenance",
+      "lines": "15-23,68,80,84-86",
+      "finding": "G_budget is affordable prospective budget, not actualG or an invented smaller partition. Original2947 bytes/helper Q2Plan remain unchanged; all new caller/data/AUTH/capsule bytes and final genuineJ must be rebound. Immutable packet/source inputs are not silently changed. No value is selected; no entry merely to discoverG if no legal nonempty group fits. Other original recovery authority is retained, while any later external recovery must be counted before calling."
+    },
+    {
+      "subject": "Normal/over-cap/failure/UNKNOWN",
+      "lines": "27-41,72-76,84-88",
+      "finding": "Normal <=cap keeps every group and original completion path. Excess creates no group folder/fetch/material/witness/bind/COMMIT and chooses only the existing same-session owner input before COMMIT and while original prompt/holder/window is legal. Failed/UNKNOWN preserves every completed/partial invocation and original TX/holder; no replay, new attempt/path/identity, timer extension, rollback verb or false terminal."
+    },
+    {
+      "subject": "One ABORT and outcome separation",
+      "lines": "35-41,74-76",
+      "finding": "Reuses original438-478/execution302-327 sequence/payload-hash/ACK transport for ABORT newline. ACK proves only input acceptance, not native terminal. Original outer same-FD9 recover-six-target/native abort/verify-terminal/release remains distinct and may fail/retain pending runtime/fence. Ambiguous dispatch/ACK is not resent; specific finally handling suppresses another owner-input/EOF mutation after possible ABORT. Missing/expired prompt does not acquire a substitute route."
+    },
+    {
+      "subject": "Branch accounting and bounded observation",
+      "lines": "45-58,78,84-88",
+      "finding": "Retains direction007458 counts: precomparison2+D<=3; normal5+D+2G<=6+2G_budget; excess2+D<=3 with zero extra externalprepare from same-session ABORT. Failed prefix is finite without claiming restoration. Budget is max over full normal/rollback/retained branches and unchanged50GiB; original3N+2S/native/npm/shadow/overlap/full-consumer metadata/COW/growth remain independent. Up to three <=1024B typed private new rows plus plan/temp/markers and closure costs are explicitly nonzero and must be measured; no clone/deletion/second-op credit."
+    },
+    {
+      "subject": "Disposition and scope",
+      "lines": "3,68,80,88-90",
+      "finding": "Document consistently PROPOSED/NOT_ACCEPTED and requests only finite caller/data amendment in original qualified chain. Direction007458 was not implementation acceptance. A/helper proceeds independently. It gives no actual TX/context/G, source change, test, native call, numeric remaining, admission or production grant; current saved unregistered subject is not freshly observed."
+    }
+  ],
+  "no_new_blocking_material_issue_identified": true,
+  "future_acceptance_boundary": "Only original qualified actor can accept this exact new semantic contract. This receipt is decision material, not that acceptance, implementation readiness, capacity admission, current window/prompt qualification or permission to invoke. Existing obligations are preserved without a new reviewer/Owner gate.",
+  "transport_observed_in_material": {
+    "status": "NOT_SENT",
+    "route_count": 0,
+    "exclusive_dispatch_owner": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38"
+  },
+  "effects_by_reader": {
+    "source_reads_or_edits": 0,
+    "tests_or_fixtures": 0,
+    "production_or_context_TX_probe_calls": 0,
+    "route_or_send_to_external_actor": 0,
+    "owned_artifact": "This single review receipt only"
+  },
+  "next": "Original author can package the exact proposed unit for the already-designated qualified route, preserving NOT_SENT until the exclusive coordinator acts. No A/helper work or unchanged review is made dependent on this material receipt."
+}

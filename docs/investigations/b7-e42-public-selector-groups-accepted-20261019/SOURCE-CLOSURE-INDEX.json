@@ -1,0 +1,62 @@
+{
+  "kind": "E42_PUBLIC_SELECTOR_GROUPS_SOURCE_CLOSURE_V1",
+  "status": "PROPOSED_NOT_ACCEPTED",
+  "unit": {
+    "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-public-selector-independent-groups/PROPOSED-E42-PUBLIC-SELECTOR-AND-INDEPENDENT-GROUPS.v1.1.md",
+    "bytes": 18664,
+    "sha256": "6241dcd1212295b7179d7fbcafe6032aef2425fe5dd4c7394cb7612128090ab9"
+  },
+  "references": [
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-PUBLIC-PROVIDER-ENV-GUARD-ORIGINAL-TECHNICAL-DIRECTION-20261019.json",
+      "bytes": 21859,
+      "sha256": "3e6e0b238b86c3a7b355a330d195daa8453a1d8db2f606f5afef949f67fdb01f",
+      "scope": "Full original direction; no implementation grant"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-PUBLIC-PROVIDER-ENV-GUARD-SOURCE-FACTS-SOL-20261019.json",
+      "bytes": 5497,
+      "sha256": "785f6da681fbd7b0f093773571b47a05b1475f2001402463a6f02a03753c38c7",
+      "scope": "Original capacity_a_sol finite source facts; attribution retained"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/delivery-v6/v50_e42_capacity_facts_source.py",
+      "bytes": 24138,
+      "sha256": "b86ba8b820de4b9a1f769710f9303a54bda2bf3c962614021d2b8faf7fcd7af7",
+      "scope": "20-38,157-188,191-239,242-290,334-388"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/b7-install-r38/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/capture-boundaries.mjs",
+      "bytes": 15437,
+      "sha256": "7fe28dcd295aef0211244f89b5fe52f26fb944b3057814efad2ce8904107f228",
+      "scope": "7,151-164; explicit validator import followed only to listed dependency"
+    },
+    {
+      "path": "/Users/yanfenma/workspace/.zcode-worktrees/workspace+project+dsh-agent-core/ac-810/evidence/b7-first-batch-v5-build/v3-pair-maintenance-workblock/v50-release/b7-install-r38/b7-wired-inputs/dsh-agent-core/packages/production-runtime/src/identity/provider-environment.js",
+      "bytes": 4061,
+      "sha256": "3deb221a63dd5998cc29f579de2a4842b72f065f571fb6622d3acc315d0337b1",
+      "scope": "4-9,21-105; pure grammar, no live values"
+    },
+    {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/actual-maintenance-v4/FULL-TERMINAL-INDEX.json",
+      "bytes": 7750,
+      "sha256": "e7b50c4d120df7d7eb6d20025766259178a4d6aa2287c7c8a196eca4a8fc9bb3",
+      "scope": "Saved once result/intent and exact terminal pins only"
+    }
+  ],
+  "existing_inputs": "Same two fixed registry/config bounded content reads, metadata-only S/H trees, fixed Q3 public set. No new live read performed.",
+  "new_producer": "PROPOSED internal pure public_h_projection in existing Python source, source-defined canonical four-key public subset; no external file or executable.",
+  "changed_surfaces": [
+    "select_ids/selection and pure public validator/projection",
+    "run/group dispatch and status invalidation",
+    "closed V2 result/publisher/consumer validation",
+    "executor embedding and necessary verifier/AUTH/PIN/capsule joins",
+    "only Item C fixed publisher identity/output literal if separately accepted"
+  ],
+  "unchanged": "Fixed business identities/Q2Plan/S-H metadata/Q3 public readset/root-UID502 channel/current pair/strong-validator phase/50GiB",
+  "native_calls_executed_in_this_unit": 0,
+  "original_native_remaining": 0,
+  "separate_additional_native_request": 1,
+  "new_source_implementation": 0,
+  "pre_review_delta": "Explicit conservative URL DNS constraints avoid WHATWG numeric/IDNA reinterpretation; outside-profile original validity remains unclaimed. Original v1 preserved."
+}

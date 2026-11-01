@@ -1,0 +1,381 @@
+{
+  "input": {
+    "binding": {
+      "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+      "definition_version_id": "bf5bcb24-afbe-4d51-aafe-dd7a1afb2006",
+      "node_visit_id": "8faeb529-f018-4360-9f34-91a3a2448c1b",
+      "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88",
+      "workflow_state_version": 21
+    },
+    "content_complete": true,
+    "detail_body": {
+      "content_status": "COMPLETE",
+      "encoding": "utf-8",
+      "id": "8faeb529-f018-4360-9f34-91a3a2448c1b",
+      "kind": "CURRENT_DETAIL",
+      "next_offset": null,
+      "offset": 0,
+      "serialization": "JCS",
+      "sha256": "f8f0027520f8f3ac7c0506e1ba431d3790e9030f15323fa486330724d896f635",
+      "text": "{\"current_context\":{\"context_revision_id\":\"b521980c-8b73-4af2-a9df-491ca8a65740\",\"created_at\":\"2026-10-27T01:32:54.676303Z\",\"created_by_principal_id\":\"10fceca4-c358-4be7-b0ca-77660ab6f6fd\",\"payload\":{},\"payload_digest\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\",\"previous_revision_id\":null,\"revision_number\":1,\"workflow_instance_id\":\"f85cac8e-9f5e-4f76-9dc1-0ee20816fd88\"},\"current_context_revision_id\":\"b521980c-8b73-4af2-a9df-491ca8a65740\",\"current_node_visit_id\":\"8faeb529-f018-4360-9f34-91a3a2448c1b\",\"current_visit\":{\"assignee_canonical_agent_id\":null,\"assignee_principal_id\":\"10fceca4-c358-4be7-b0ca-77660ab6f6fd\",\"created_at\":\"2026-10-27T01:32:58.609452Z\",\"eligibility\":{\"classification\":\"ACTIONABLE_NOW\"},\"entered_by_transition_id\":\"a1e4ddfb-8ed8-417b-953d-49a741365845\",\"instructions\":\"Draft instructions\",\"node\":{\"display_name\":\"Draft\",\"node_id\":\"27682caf-5641-4767-a9fa-e01b8db5f548\",\"node_key\":\"draft\",\"node_type\":\"DRAFT\"},\"node_visit_id\":\"8faeb529-f018-4360-9f34-91a3a2448c1b\",\"visit_number\":11,\"workflow_instance_id\":\"f85cac8e-9f5e-4f76-9dc1-0ee20816fd88\"},\"instance\":{\"created_at\":\"2026-10-27T01:32:54.676303Z\",\"created_by_principal_id\":\"10fceca4-c358-4be7-b0ca-77660ab6f6fd\",\"current_node\":{\"display_name\":\"Draft\",\"node_id\":\"27682caf-5641-4767-a9fa-e01b8db5f548\",\"node_key\":\"draft\",\"node_type\":\"DRAFT\"},\"definition_version_id\":\"bf5bcb24-afbe-4d51-aafe-dd7a1afb2006\",\"definition_version_status\":\"PUBLISHED\",\"domain_enabled\":true,\"domain_id\":\"3bd79f70-70f3-41b1-b1c9-a2a202126eb6\",\"external_reference\":null,\"external_url\":null,\"is_terminal\":false,\"metadata\":{},\"workflow_instance_id\":\"f85cac8e-9f5e-4f76-9dc1-0ee20816fd88\",\"workflow_state_version\":21},\"outgoing_transitions\":[{\"blocked_reason\":\"ADVANCE_NOT_PRIMARY\",\"display_name\":\"Extra Advance\",\"executable_for_actor\":false,\"submission_schema\":{\"type\":\"object\"},\"target_node\":{\"display_name\":\"Done\",\"node_id\":\"6e3d4b5d-281a-40ca-90c0-ef4e8c96d6f0\",\"node_key\":\"done\",\"node_type\":\"TERMINAL\"},\"transition_effect\":\"ADVANCE\",\"transition_id\":\"3206353f-4d07-4a65-982e-b07cd7b229ea\",\"transition_key\":\"advance-extra\"},{\"blocked_reason\":\"ACTOR_NOT_CURRENT_ASSIGNEE\",\"display_name\":\"Advance\",\"executable_for_actor\":false,\"submission_schema\":{\"type\":\"object\"},\"target_node\":{\"display_name\":\"Review\",\"node_id\":\"20b439e9-db20-443c-9039-343770d72650\",\"node_key\":\"review\",\"node_type\":\"NORMAL\"},\"transition_effect\":\"ADVANCE\",\"transition_id\":\"991c345d-8c9f-41b8-aedb-97129a1daf60\",\"transition_key\":\"advance-review\"}]}",
+      "total_bytes": 2489
+    },
+    "entry": {
+      "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+      "event_id": "5043915f-faad-44cc-af6f-ebb0a4461354",
+      "event_sequence": 21,
+      "event_type": "WORKFLOW_TRANSITION_COMMITTED",
+      "source_node_visit_id": "bcae8b60-aa49-4d6a-87e0-dfb053023be8",
+      "status": "TRANSITION",
+      "submission_id": "339e3e3e-2ff2-4c26-b249-d8c43dba3fb5",
+      "submission_status": "RECORDED",
+      "target_node_visit_id": "8faeb529-f018-4360-9f34-91a3a2448c1b",
+      "transition_id": "a1e4ddfb-8ed8-417b-953d-49a741365845"
+    },
+    "history_window_complete": false,
+    "input_status": "COMPLETE_FOR_SELECTION",
+    "recent_submission_ids": [
+      "339e3e3e-2ff2-4c26-b249-d8c43dba3fb5",
+      "d52acedf-d977-41ee-bc4d-48e92b796793",
+      "98d80d3a-3eb0-4aa4-bf3a-d6e71c9dace4",
+      "f35a41c5-8c10-488a-b1e6-d0b53df90c5a",
+      "53f091e9-fcc7-4fca-81a0-f145c29fbf3a",
+      "193ad86a-55ff-40ba-87cc-eda1af2a83b9",
+      "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+      "1fc11a47-a5e6-4652-87ef-b690f78b91bd"
+    ],
+    "recent_submissions_truncated": true,
+    "requested_submissions": [],
+    "return_feedback": [
+      {
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "event_id": "5043915f-faad-44cc-af6f-ebb0a4461354",
+        "event_sequence": 21,
+        "related_submission_ids": [
+          "9623f2a3-dec7-4d77-a8d1-ae59c023cb6e",
+          "30ccb3fd-68c9-485b-beff-bb76141930cd",
+          "6b885d25-b168-4a05-a130-7d212a1f5ebd",
+          "c566a4b1-9957-4afe-9fda-9bb4932c6425",
+          "7e9a97c7-c1cb-4c20-8854-070389795244",
+          "c1880157-4d48-455c-b0fb-e9b8f5b41b3a",
+          "e44fc62d-fe83-44c6-a2d3-8cb6e451707e",
+          "f8ca69db-544e-44c4-b8ab-c5803ef8627c",
+          "317406ce-adf5-4f9b-89ba-d82e2b75e800",
+          "d9dfd13c-7078-435b-bac7-6c36902d2088",
+          "60509644-398d-4e1c-9364-e8c59aec96bc",
+          "3cd0e1d5-bf8e-4843-bdc8-a14868a291e9",
+          "1fc11a47-a5e6-4652-87ef-b690f78b91bd",
+          "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+          "193ad86a-55ff-40ba-87cc-eda1af2a83b9",
+          "53f091e9-fcc7-4fca-81a0-f145c29fbf3a"
+        ],
+        "related_submission_ids_truncated": true,
+        "source_node_visit_id": "bcae8b60-aa49-4d6a-87e0-dfb053023be8",
+        "submission_id": "339e3e3e-2ff2-4c26-b249-d8c43dba3fb5",
+        "target_node_visit_id": "8faeb529-f018-4360-9f34-91a3a2448c1b"
+      },
+      {
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "event_id": "af8b3cfa-6bab-4b93-8e01-7be4a82c47d3",
+        "event_sequence": 19,
+        "related_submission_ids": [
+          "9623f2a3-dec7-4d77-a8d1-ae59c023cb6e",
+          "30ccb3fd-68c9-485b-beff-bb76141930cd",
+          "6b885d25-b168-4a05-a130-7d212a1f5ebd",
+          "c566a4b1-9957-4afe-9fda-9bb4932c6425",
+          "7e9a97c7-c1cb-4c20-8854-070389795244",
+          "c1880157-4d48-455c-b0fb-e9b8f5b41b3a",
+          "e44fc62d-fe83-44c6-a2d3-8cb6e451707e",
+          "f8ca69db-544e-44c4-b8ab-c5803ef8627c",
+          "317406ce-adf5-4f9b-89ba-d82e2b75e800",
+          "d9dfd13c-7078-435b-bac7-6c36902d2088",
+          "60509644-398d-4e1c-9364-e8c59aec96bc",
+          "3cd0e1d5-bf8e-4843-bdc8-a14868a291e9",
+          "1fc11a47-a5e6-4652-87ef-b690f78b91bd",
+          "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+          "193ad86a-55ff-40ba-87cc-eda1af2a83b9",
+          "53f091e9-fcc7-4fca-81a0-f145c29fbf3a"
+        ],
+        "related_submission_ids_truncated": true,
+        "source_node_visit_id": "5adf55d8-9e53-4af6-bf99-5e9fabad4bc7",
+        "submission_id": "98d80d3a-3eb0-4aa4-bf3a-d6e71c9dace4",
+        "target_node_visit_id": "b72f4f8b-3194-4756-a495-2b24499303e6"
+      },
+      {
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "event_id": "35dc905e-cc96-4949-878b-a9b424dcd07e",
+        "event_sequence": 17,
+        "related_submission_ids": [
+          "9623f2a3-dec7-4d77-a8d1-ae59c023cb6e",
+          "30ccb3fd-68c9-485b-beff-bb76141930cd",
+          "6b885d25-b168-4a05-a130-7d212a1f5ebd",
+          "c566a4b1-9957-4afe-9fda-9bb4932c6425",
+          "7e9a97c7-c1cb-4c20-8854-070389795244",
+          "c1880157-4d48-455c-b0fb-e9b8f5b41b3a",
+          "e44fc62d-fe83-44c6-a2d3-8cb6e451707e",
+          "f8ca69db-544e-44c4-b8ab-c5803ef8627c",
+          "317406ce-adf5-4f9b-89ba-d82e2b75e800",
+          "d9dfd13c-7078-435b-bac7-6c36902d2088",
+          "60509644-398d-4e1c-9364-e8c59aec96bc",
+          "3cd0e1d5-bf8e-4843-bdc8-a14868a291e9",
+          "1fc11a47-a5e6-4652-87ef-b690f78b91bd",
+          "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+          "193ad86a-55ff-40ba-87cc-eda1af2a83b9"
+        ],
+        "related_submission_ids_truncated": false,
+        "source_node_visit_id": "2e06779f-cf80-429c-8011-7127a229ea3b",
+        "submission_id": "53f091e9-fcc7-4fca-81a0-f145c29fbf3a",
+        "target_node_visit_id": "999638b2-c734-40ae-b6a9-e4b01f097dbe"
+      },
+      {
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "event_id": "e0cd8a77-cdd5-48e0-a33b-dc0e0b0d2990",
+        "event_sequence": 15,
+        "related_submission_ids": [
+          "9623f2a3-dec7-4d77-a8d1-ae59c023cb6e",
+          "30ccb3fd-68c9-485b-beff-bb76141930cd",
+          "6b885d25-b168-4a05-a130-7d212a1f5ebd",
+          "c566a4b1-9957-4afe-9fda-9bb4932c6425",
+          "7e9a97c7-c1cb-4c20-8854-070389795244",
+          "c1880157-4d48-455c-b0fb-e9b8f5b41b3a",
+          "e44fc62d-fe83-44c6-a2d3-8cb6e451707e",
+          "f8ca69db-544e-44c4-b8ab-c5803ef8627c",
+          "317406ce-adf5-4f9b-89ba-d82e2b75e800",
+          "d9dfd13c-7078-435b-bac7-6c36902d2088",
+          "60509644-398d-4e1c-9364-e8c59aec96bc",
+          "3cd0e1d5-bf8e-4843-bdc8-a14868a291e9",
+          "1fc11a47-a5e6-4652-87ef-b690f78b91bd"
+        ],
+        "related_submission_ids_truncated": false,
+        "source_node_visit_id": "d0220daa-574b-4714-bf5b-8e34c4c157d0",
+        "submission_id": "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+        "target_node_visit_id": "9c96f591-0e76-4527-b6b4-466f65c5be72"
+      }
+    ],
+    "return_feedback_truncated": true,
+    "submissions": [
+      {
+        "author_principal_id": "f5fad40f-309e-4e5d-8985-d56f150af100",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "339e3e3e-2ff2-4c26-b249-d8c43dba3fb5",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "77c1b8314976be73e29f8406cd8b4ef734ce46f9c904b0a19c2453fa70ff14a4",
+          "text": "{\"reason\":\"a reason is not semantic truth\",\"reasonCode\":\"REVIEW\",\"relatedSubmissionIds\":[\"9623f2a3-dec7-4d77-a8d1-ae59c023cb6e\",\"30ccb3fd-68c9-485b-beff-bb76141930cd\",\"6b885d25-b168-4a05-a130-7d212a1f5ebd\",\"c566a4b1-9957-4afe-9fda-9bb4932c6425\",\"7e9a97c7-c1cb-4c20-8854-070389795244\",\"c1880157-4d48-455c-b0fb-e9b8f5b41b3a\",\"e44fc62d-fe83-44c6-a2d3-8cb6e451707e\",\"f8ca69db-544e-44c4-b8ab-c5803ef8627c\",\"317406ce-adf5-4f9b-89ba-d82e2b75e800\",\"d9dfd13c-7078-435b-bac7-6c36902d2088\",\"60509644-398d-4e1c-9364-e8c59aec96bc\",\"3cd0e1d5-bf8e-4843-bdc8-a14868a291e9\",\"1fc11a47-a5e6-4652-87ef-b690f78b91bd\",\"65c0db01-15bf-4696-9c1c-3a9767c89f4e\",\"193ad86a-55ff-40ba-87cc-eda1af2a83b9\",\"53f091e9-fcc7-4fca-81a0-f145c29fbf3a\",\"f35a41c5-8c10-488a-b1e6-d0b53df90c5a\",\"98d80d3a-3eb0-4aa4-bf3a-d6e71c9dace4\",\"d52acedf-d977-41ee-bc4d-48e92b796793\"],\"rootCauseNodeVisitId\":\"bcae8b60-aa49-4d6a-87e0-dfb053023be8\"}",
+          "total_bytes": 893
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.609452Z",
+        "payload_digest": "77c1b8314976be73e29f8406cd8b4ef734ce46f9c904b0a19c2453fa70ff14a4",
+        "source_node_visit_id": "bcae8b60-aa49-4d6a-87e0-dfb053023be8",
+        "submission_id": "339e3e3e-2ff2-4c26-b249-d8c43dba3fb5",
+        "transition_effect": "RETURN",
+        "transition_id": "a1e4ddfb-8ed8-417b-953d-49a741365845",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "10fceca4-c358-4be7-b0ca-77660ab6f6fd",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "d52acedf-d977-41ee-bc4d-48e92b796793",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "2efdb62b08e84eec5673f06850d0be2441fd80ce739c0bad7b0ee43502276a8d",
+          "text": "{\"correction\":9}",
+          "total_bytes": 16
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.601265Z",
+        "payload_digest": "2efdb62b08e84eec5673f06850d0be2441fd80ce739c0bad7b0ee43502276a8d",
+        "source_node_visit_id": "b72f4f8b-3194-4756-a495-2b24499303e6",
+        "submission_id": "d52acedf-d977-41ee-bc4d-48e92b796793",
+        "transition_effect": "ADVANCE",
+        "transition_id": "991c345d-8c9f-41b8-aedb-97129a1daf60",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "f5fad40f-309e-4e5d-8985-d56f150af100",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "98d80d3a-3eb0-4aa4-bf3a-d6e71c9dace4",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "2dd0bf6e6c66522982f4a19c8722bbabf409de2006cafe58a7eb60f6c24c6e14",
+          "text": "{\"reason\":\"a reason is not semantic truth\",\"reasonCode\":\"REVIEW\",\"relatedSubmissionIds\":[\"9623f2a3-dec7-4d77-a8d1-ae59c023cb6e\",\"30ccb3fd-68c9-485b-beff-bb76141930cd\",\"6b885d25-b168-4a05-a130-7d212a1f5ebd\",\"c566a4b1-9957-4afe-9fda-9bb4932c6425\",\"7e9a97c7-c1cb-4c20-8854-070389795244\",\"c1880157-4d48-455c-b0fb-e9b8f5b41b3a\",\"e44fc62d-fe83-44c6-a2d3-8cb6e451707e\",\"f8ca69db-544e-44c4-b8ab-c5803ef8627c\",\"317406ce-adf5-4f9b-89ba-d82e2b75e800\",\"d9dfd13c-7078-435b-bac7-6c36902d2088\",\"60509644-398d-4e1c-9364-e8c59aec96bc\",\"3cd0e1d5-bf8e-4843-bdc8-a14868a291e9\",\"1fc11a47-a5e6-4652-87ef-b690f78b91bd\",\"65c0db01-15bf-4696-9c1c-3a9767c89f4e\",\"193ad86a-55ff-40ba-87cc-eda1af2a83b9\",\"53f091e9-fcc7-4fca-81a0-f145c29fbf3a\",\"f35a41c5-8c10-488a-b1e6-d0b53df90c5a\"],\"rootCauseNodeVisitId\":\"5adf55d8-9e53-4af6-bf99-5e9fabad4bc7\"}",
+          "total_bytes": 815
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.586060Z",
+        "payload_digest": "2dd0bf6e6c66522982f4a19c8722bbabf409de2006cafe58a7eb60f6c24c6e14",
+        "source_node_visit_id": "5adf55d8-9e53-4af6-bf99-5e9fabad4bc7",
+        "submission_id": "98d80d3a-3eb0-4aa4-bf3a-d6e71c9dace4",
+        "transition_effect": "RETURN",
+        "transition_id": "a1e4ddfb-8ed8-417b-953d-49a741365845",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "10fceca4-c358-4be7-b0ca-77660ab6f6fd",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "f35a41c5-8c10-488a-b1e6-d0b53df90c5a",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "bc5279e0264ca53494fcba8927269173f8cd6e31549224c2e3d280c8bebd98e0",
+          "text": "{\"correction\":8}",
+          "total_bytes": 16
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.578818Z",
+        "payload_digest": "bc5279e0264ca53494fcba8927269173f8cd6e31549224c2e3d280c8bebd98e0",
+        "source_node_visit_id": "999638b2-c734-40ae-b6a9-e4b01f097dbe",
+        "submission_id": "f35a41c5-8c10-488a-b1e6-d0b53df90c5a",
+        "transition_effect": "ADVANCE",
+        "transition_id": "991c345d-8c9f-41b8-aedb-97129a1daf60",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "f5fad40f-309e-4e5d-8985-d56f150af100",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "53f091e9-fcc7-4fca-81a0-f145c29fbf3a",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "fb10aa138cdf1283b370aca0dbf64bbbdb1e58a31a1828ea182d07bfd0f08229",
+          "text": "{\"reason\":\"a reason is not semantic truth\",\"reasonCode\":\"REVIEW\",\"relatedSubmissionIds\":[\"9623f2a3-dec7-4d77-a8d1-ae59c023cb6e\",\"30ccb3fd-68c9-485b-beff-bb76141930cd\",\"6b885d25-b168-4a05-a130-7d212a1f5ebd\",\"c566a4b1-9957-4afe-9fda-9bb4932c6425\",\"7e9a97c7-c1cb-4c20-8854-070389795244\",\"c1880157-4d48-455c-b0fb-e9b8f5b41b3a\",\"e44fc62d-fe83-44c6-a2d3-8cb6e451707e\",\"f8ca69db-544e-44c4-b8ab-c5803ef8627c\",\"317406ce-adf5-4f9b-89ba-d82e2b75e800\",\"d9dfd13c-7078-435b-bac7-6c36902d2088\",\"60509644-398d-4e1c-9364-e8c59aec96bc\",\"3cd0e1d5-bf8e-4843-bdc8-a14868a291e9\",\"1fc11a47-a5e6-4652-87ef-b690f78b91bd\",\"65c0db01-15bf-4696-9c1c-3a9767c89f4e\",\"193ad86a-55ff-40ba-87cc-eda1af2a83b9\"],\"rootCauseNodeVisitId\":\"2e06779f-cf80-429c-8011-7127a229ea3b\"}",
+          "total_bytes": 737
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.567648Z",
+        "payload_digest": "fb10aa138cdf1283b370aca0dbf64bbbdb1e58a31a1828ea182d07bfd0f08229",
+        "source_node_visit_id": "2e06779f-cf80-429c-8011-7127a229ea3b",
+        "submission_id": "53f091e9-fcc7-4fca-81a0-f145c29fbf3a",
+        "transition_effect": "RETURN",
+        "transition_id": "a1e4ddfb-8ed8-417b-953d-49a741365845",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "10fceca4-c358-4be7-b0ca-77660ab6f6fd",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "193ad86a-55ff-40ba-87cc-eda1af2a83b9",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "88ea236801d5d1f861736b369ec7f2f29670b6be0281db8a85cd48eac0f2262a",
+          "text": "{\"correction\":7}",
+          "total_bytes": 16
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.560528Z",
+        "payload_digest": "88ea236801d5d1f861736b369ec7f2f29670b6be0281db8a85cd48eac0f2262a",
+        "source_node_visit_id": "9c96f591-0e76-4527-b6b4-466f65c5be72",
+        "submission_id": "193ad86a-55ff-40ba-87cc-eda1af2a83b9",
+        "transition_effect": "ADVANCE",
+        "transition_id": "991c345d-8c9f-41b8-aedb-97129a1daf60",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "f5fad40f-309e-4e5d-8985-d56f150af100",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "0657cf5c22cdd2cd13ac51f4b3ac681f9fe3a62d812b85cd8ed796637c2097de",
+          "text": "{\"reason\":\"a reason is not semantic truth\",\"reasonCode\":\"REVIEW\",\"relatedSubmissionIds\":[\"9623f2a3-dec7-4d77-a8d1-ae59c023cb6e\",\"30ccb3fd-68c9-485b-beff-bb76141930cd\",\"6b885d25-b168-4a05-a130-7d212a1f5ebd\",\"c566a4b1-9957-4afe-9fda-9bb4932c6425\",\"7e9a97c7-c1cb-4c20-8854-070389795244\",\"c1880157-4d48-455c-b0fb-e9b8f5b41b3a\",\"e44fc62d-fe83-44c6-a2d3-8cb6e451707e\",\"f8ca69db-544e-44c4-b8ab-c5803ef8627c\",\"317406ce-adf5-4f9b-89ba-d82e2b75e800\",\"d9dfd13c-7078-435b-bac7-6c36902d2088\",\"60509644-398d-4e1c-9364-e8c59aec96bc\",\"3cd0e1d5-bf8e-4843-bdc8-a14868a291e9\",\"1fc11a47-a5e6-4652-87ef-b690f78b91bd\"],\"rootCauseNodeVisitId\":\"d0220daa-574b-4714-bf5b-8e34c4c157d0\"}",
+          "total_bytes": 659
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.549859Z",
+        "payload_digest": "0657cf5c22cdd2cd13ac51f4b3ac681f9fe3a62d812b85cd8ed796637c2097de",
+        "source_node_visit_id": "d0220daa-574b-4714-bf5b-8e34c4c157d0",
+        "submission_id": "65c0db01-15bf-4696-9c1c-3a9767c89f4e",
+        "transition_effect": "RETURN",
+        "transition_id": "a1e4ddfb-8ed8-417b-953d-49a741365845",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      },
+      {
+        "author_principal_id": "10fceca4-c358-4be7-b0ca-77660ab6f6fd",
+        "body": {
+          "content_status": "COMPLETE",
+          "encoding": "utf-8",
+          "id": "1fc11a47-a5e6-4652-87ef-b690f78b91bd",
+          "kind": "SUBMISSION_PAYLOAD",
+          "next_offset": null,
+          "offset": 0,
+          "serialization": "JCS",
+          "sha256": "b1d1524d56ff392d2afb40acb50dfa7b5c2f45d5c4f64bf0d62360897e7d0598",
+          "text": "{\"correction\":6}",
+          "total_bytes": 16
+        },
+        "context_revision_id": "b521980c-8b73-4af2-a9df-491ca8a65740",
+        "created_at": "2026-10-27T01:32:58.542668Z",
+        "payload_digest": "b1d1524d56ff392d2afb40acb50dfa7b5c2f45d5c4f64bf0d62360897e7d0598",
+        "source_node_visit_id": "b305df33-c04b-484e-8645-247f7af9ed37",
+        "submission_id": "1fc11a47-a5e6-4652-87ef-b690f78b91bd",
+        "transition_effect": "ADVANCE",
+        "transition_id": "991c345d-8c9f-41b8-aedb-97129a1daf60",
+        "workflow_instance_id": "f85cac8e-9f5e-4f76-9dc1-0ee20816fd88"
+      }
+    ],
+    "view": "input"
+  },
+  "body": {
+    "binding": {
+      "context_revision_id": "0dcf0098-09f2-4262-9cd3-e39cdfb7a993",
+      "definition_version_id": "3b2bde4a-fc13-4c47-a126-a101da641830",
+      "node_visit_id": "fc4ccf38-352e-4abd-be21-5dd5db9228e7",
+      "workflow_instance_id": "820b5a70-d110-4b05-bb0d-8723b174118c",
+      "workflow_state_version": 1
+    },
+    "body": {
+      "content_status": "TRUNCATED",
+      "encoding": "utf-8",
+      "id": "fc4ccf38-352e-4abd-be21-5dd5db9228e7",
+      "kind": "CURRENT_DETAIL",
+      "next_offset": 143329,
+      "offset": 135139,
+      "serialization": "JCS",
+      "sha256": "cec18f79b94aa36c59110c40892087f9a0d44ad897b1ee566714feceb69cf555",
+      "text": "😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n😀\\\"\\\\\\n",
+      "total_bytes": 152463
+    },
+    "view": "body"
+  },
+  "provenance": {
+    "kind": "isolated svc-workflow HTTP test captures",
+    "base": "52fcb13e63ac7c6696f2c3353ab5a09302cf2014",
+    "source_state": "in-progress current-input implementation; not production or final candidate evidence",
+    "captures": {
+      "input": {
+        "name": "2949276e-54ef-4bc3-8d0a-6f29939f856d.json",
+        "sha256": "ba54836c5b2b10f98b933b008fab96fe32cc3a239aabb5377e882a67383c72bb"
+      },
+      "body": {
+        "name": "0eb780b7-7f89-4aea-b8c9-e01d8d6a02d4.json",
+        "sha256": "c6a70a2a598bf55e895a32659af7fb029a1ae8d523efe02045a8a108e3f60924"
+      }
+    }
+  }
+}

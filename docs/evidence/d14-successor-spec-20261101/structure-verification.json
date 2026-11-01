@@ -1,0 +1,12 @@
+{
+  "command": "node scripts/verify-code-structure.mjs --base 3a1282b35e7b852f51cd14284ea91fd77a13543e --head 2e2e0f804cacee3eccae2e7f4c26179be028be3f --json",
+  "exitCode": 0,
+  "base": "3a1282b35e7b852f51cd14284ea91fd77a13543e",
+  "head": "2e2e0f804cacee3eccae2e7f4c26179be028be3f",
+  "candidateResult": "CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT",
+  "candidateViolations": 0,
+  "baselineDebt": 32,
+  "rawPath": "/tmp/d14-successor-structure.json",
+  "rawSha256": "a3ec1322815872507ce367c4255953bd79eebec47541d55b274c14b8032c02d9",
+  "limits": "structure only; no product behavior, runtime admission or business acceptance"
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "AGENT_MEMORY_V2_MANIFEST",
+  "mode": "MIGRATION_COPY",
+  "factSource": "MEMORY.md",
+  "resolverOrigin": "EXPLICIT_AUTHORIZED_BYTES",
+  "directoryIdentity": {
+    "dev": "16777229",
+    "ino": "335648319"
+  },
+  "agentId": "synthetic-m2",
+  "writer": {
+    "active": false,
+    "ownerEpoch": null
+  },
+  "features": {
+    "runtimeInstalled": false,
+    "automaticWrites": false,
+    "historyRegistered": false
+  },
+  "core": {
+    "bytes": 45,
+    "sha256": "aac45bd05a89ee8388c1b9ffbd9ed4264a67edbcbb122f5463451ef57ec9d061",
+    "format": "FREEFORM",
+    "readOnlyReason": "READ_ONLY_FORMAT"
+  },
+  "transactionMetadataLimitBytes": 67108864
+}

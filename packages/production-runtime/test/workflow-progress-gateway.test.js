@@ -139,7 +139,7 @@ test('real gateway rejects untrusted turn and model-carried coordinates', async 
 })
 test('workflow_progress tool shape exposes no identity/provenance arguments', async () => {
   const broker = await import('../../broker/src/registry.js')
-  const capability = await import('../../broker/src/capabilities/workflow-progress.js')
+  const capability = await import('../../broker/src/capabilities/workflow/progress.js')
   const { definition } = broker.buildToolDefinition({ manifest: capability.workflowProgressManifest, handlers: {} })
 
   assert.deepEqual(definition.parameters.operation.enum, ['checkpoint', 'read_current'])
@@ -149,4 +149,30 @@ test('workflow_progress tool shape exposes no identity/provenance arguments', as
   ]) {
     assert.equal(Object.hasOwn(definition.parameters, forbidden), false, forbidden)
   }
+})
+
+test('parent-owned workflow origin resolves before delivery receipt and after context cache eviction', async () => {
+  const { createParentRpcHandler, BROKER_RPC_METHOD } = await import('../../agent-router/src/parent-rpc-relay.js')
+  const ctx = createPluginContext()
+  const access = mountWorkflowExecutionContextRuntime({ ctx })
+  const origin = provenance()
+  const proc = { executions: new Map([['early-turn', { settled: false, workflowProvenance: origin }]]) }
+  const observed = []
+  const handler = createParentRpcHandler({ agentId: 'agt_progress', getProc: () => proc,
+    log: { log() {} }, getBrokerGateway: () => ({ execute: async (call, trusted) => {
+      observed.push(trusted)
+      return { ok: true, result: access.resolveWorkflowProvenance(trusted) }
+    } }) })
+  const forged = { capabilityId: 'workflow_execute', operation: 'create_instance', args: {},
+    workflowProvenance: { ...origin, workflowInstanceId: OWNER }, sourceTurnExecutionId: 'forged' }
+  assert.deepEqual((await handler(BROKER_RPC_METHOD, forged, { turnExecutionId: 'early-turn' })).result, origin)
+  assert.equal(observed[0].sourceTurnExecutionId, 'early-turn')
+  assert.deepEqual(observed[0].workflowProvenance, origin)
+  for (let i = 0; i < 257; i++) access.noteWorkflowTurn({ turnExecutionId: `later-${i}`, provenance: origin, agentId: 'agt_progress' })
+  assert.deepEqual((await handler(BROKER_RPC_METHOD, forged, { turnExecutionId: 'early-turn' })).result, origin)
+  const denied = await handler(BROKER_RPC_METHOD, forged, { turnExecutionId: 'forged' })
+  assert.equal(denied.ok, false)
+  assert.equal(observed.length, 2)
+  access.noteWorkflowTurn({ turnExecutionId: 'early-turn', provenance: { ...origin, workflowInstanceId: OWNER }, agentId: 'agt_progress' })
+  assert.equal((await handler(BROKER_RPC_METHOD, forged, { turnExecutionId: 'early-turn' })).result, undefined)
 })

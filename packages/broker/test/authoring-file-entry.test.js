@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 
-import { workflowDefinitionAuthoringManifest } from '../src/capabilities/workflow-definition-authoring.js'
+import { workflowDefinitionAuthoringManifest } from '../src/capabilities/workflow/definition-authoring.js'
 import {
   AUTHORING_FILE_ENTRY_TOOL_NAME,
   createAuthoringFileEntryTool,

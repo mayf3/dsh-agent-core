@@ -1,0 +1,197 @@
+{
+  "kind": "E42_UNCHANGED_NPM_BASIS_ORIGINAL_QUALIFIED_TECHNICAL_DECISION_V1",
+  "at_utc": "2026-10-19T14:03:53.936979+00:00",
+  "GOAL": "Decide the exact v2.1 unchanged-command conditional proof schema and consumption rules; preserve independent work and existing resource policy.",
+  "STATE": "ACCEPTED_DOCS_ONLY_PROOF_AND_CONSUMPTION_CONTRACT",
+  "actor": {
+    "thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "role": "Original user-delegated B7/#386/#508 qualified technical decision actor; not human Owner, a new source author or second production writer",
+    "delegation": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "user_text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "user_text": "授权范围内的问题你直接决策"
+      }
+    ],
+    "requested_model": "gpt-6-astra",
+    "native_observed_model": "NOT_EXPOSED; no independent model-switch or backend claim",
+    "original_source_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38"
+  },
+  "decision": {
+    "verdict": "ACCEPT",
+    "accepted": true,
+    "conditional": false,
+    "unaccepted_deltas": [],
+    "blocking_findings": [],
+    "accepted_scope": "Only the exact 11550-byte v2.1 unchanged-npm conditional basis/proof schema and classification/consumption rules, bound to the fixed E42 subject. The acceptance is supplied by this attributable decision, not inferred from material PASS or transport.",
+    "accepted_proof_schema_contract": true,
+    "docs_contract_ready": true,
+    "source_implementation": "NOT_REQUESTED",
+    "implementation_spec_ready": false,
+    "implementation_spec_ready_meaning": "No runtime/source implementation scope is requested or accepted. This false value is not a pending condition on the accepted docs-only proof contract.",
+    "accepted_runtime_implementation_spec": false,
+    "source_delta": [],
+    "runtime_producers": [],
+    "additional_owner_confirmation_required": false,
+    "additional_reviewer_required": false,
+    "future_actual_quantities_required_for_this_acceptance": false,
+    "reason": "The finite schema preserves the original conditional operational model, names its evidence dependencies and accounts for unknowns without changing commands, rights, producers or resource policy. The same-chain N1 clarification prevents an unnecessary skip-proof gate on a fully proved and fully charged six-call route."
+  },
+  "exact_inputs": {
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/PROPOSED-E42-FIXED-NPM-MATERIALIZATION-BASIS-CONTRACT.v2.1.md",
+      "bytes": 11550,
+      "sha256": "6af696a123c79f814444c63139da8dcbfe6cdeafdfe458a4418da5c1399b4d88"
+    },
+    "source_closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/SOURCE-CLOSURE-INDEX.v2.1.json",
+      "bytes": 2253,
+      "sha256": "a138714915521ee650108acacfa9be543abc10c14e9e374d61addd4e631e5f66"
+    },
+    "same_chain_material_review": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/independent-sol-readback/E42-Q3-UNCHANGED-NPM-BASIS-MATERIAL-RECEIPT.v2.1.json",
+      "bytes": 7702,
+      "sha256": "487492fb39ff7ad99e1c667bf72012ccf90d21d070ba31121503728529967c13"
+    },
+    "ready_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/READY-INDEX.v2.1.json",
+      "bytes": 2091,
+      "sha256": "6c5256377a069b6702d3f2f1d2ed331196352fa53fc034be76317c7d52a687ca"
+    },
+    "historical_material_index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-q3-fixed-npm-materialization-basis/INDEX.v2.1.json",
+      "bytes": 1324,
+      "sha256": "3adfde6b96f5daa059bc99cac90e52e889575f130d3cfd0af50be4c34955ffae"
+    }
+  },
+  "read_and_attribution": {
+    "direct": "Read all five exact files in full and verified every listed byte count and SHA256 this turn; rechecked only these pins before creating this decision.",
+    "review_reused": "Original /root/sol_e40_independent_reader PASS_CONTRACT_MATERIAL_ONLY; zero blocking findings; N1_FULL_SIX_CALL_CONSERVATIVE_PATH closed in v2.1. No new reviewer or old semantic review.",
+    "review_model": {
+      "requested": "gpt-6.1-sol/ultra",
+      "native_observed": "UNKNOWN as recorded by reviewer"
+    },
+    "primary_source_facts": "Original /root/critical_path_sol matrix77d89 retains attribution for dd96/npm spans. This actor did not reread or execute npm/caller/native sources, inspect runtime conditions or repeat tests.",
+    "prior_decisions": "1bba850e Q3 disposition, 42a39 scope, 639e helper and 3e6e providerEnv direction are reused; they are not reaccepted or reopened here.",
+    "canonical_refs_reuse": "The source closure supplies exact prior reference pins; same-chain review reports its verification. This turn did not repeat those historical file/source reads."
+  },
+  "section_dispositions": [
+    {
+      "section": "1",
+      "verdict": "ACCEPT",
+      "scope": "Fixed E42 identity; unchanged caller, npm11.9.0/artifact/argv model and conditional 6*(2P+2T)=2579447808B. No disk quota, new current quantity or altered 50GiB floor."
+    },
+    {
+      "section": "2",
+      "verdict": "ACCEPT",
+      "scope": "Offline immutable evidence join only. A finite primary implication is needed for relevant membership/multiplicity/lifetime effects; no full-env freeze, literal path matching or arbitrary-host-failure test is added."
+    },
+    {
+      "section": "3",
+      "verdict": "ACCEPT",
+      "scope": "Closed <=16384B canonical proof object, fixed six-prefix identity/phase evidence, exact integer quantities, three classifications and true/false/null condition match. Unknown is not zero or proof of irrelevance."
+    },
+    {
+      "section": "3 N1 clarification",
+      "verdict": "ACCEPT",
+      "scope": "When all six possible calls are proved compatible and charged in full, no separate skip proof is required. Only a claimed skip credit or exemption from a prefix proof requires the original phase-stable isDir/control-flow evidence. Pre-staging observations do not automatically bind post-staging inputs."
+    },
+    {
+      "section": "3 extra terms",
+      "verdict": "ACCEPT",
+      "scope": "EXACT_EXTRA_SET_WITH_BYTES requires exhaustive finite membership, bytes, branch/concurrency and resolved overlap with the original model. A different pathname alone does not remove P/T or add a copy. UNPROVEN is retained and cannot be consumed as numeric admission."
+    },
+    {
+      "section": "4",
+      "verdict": "ACCEPT",
+      "scope": "Original1437 owns the caller/phase join; existing fixed producer facts have their original limited meaning. No safe getter is invented, no new read is granted, and the exhausted selector-failed sample cannot be salvaged as npm condition evidence."
+    },
+    {
+      "section": "5",
+      "verdict": "ACCEPT",
+      "scope": "The 134217728B cache-index/log/helper share remains within the original 1073741824B typed aux membership. Defined-failure retained occupancy and overlap remain charged. No arbitrary growth is absorbed, no old identity is rebound, and future actual evidence/tool costs remain accounted for."
+    },
+    {
+      "section": "6",
+      "verdict": "ACCEPT",
+      "scope": "Docs-only conditional proof/consumption acceptance within existing original technical delegation; no source implementation, getter/profile, resource-policy amendment or new runtime effect."
+    }
+  ],
+  "governing_application": {
+    "original_scope": "Previously accepted 42a39 application of #386 L136/145-147 covers the fixed nonsecret capacity purpose; 531 is the already accepted method. This schema refines its conditional evidence consumption without enlarging access or operational effects.",
+    "original_Q3_basis": "1bba850e requires materialization-relevant source implications without a whole-environment or hard-quota requirement. v2.1 retains that boundary and the original conservative six-call option.",
+    "source_vs_evidence": "The absence of an installed safe getter leaves specific actual basis fields unresolved. It is not a reason to withhold this non-executable schema acceptance, and it creates no authorization to acquire those fields.",
+    "actual_extra_effect_established": false,
+    "new_authority_required_by_this_exact_unit": [],
+    "not_universal_gate": "An independently justified conservative path remains available under its own original contract; this schema is not an additional gate on every lawful business path."
+  },
+  "preserved_current_basis": {
+    "classification": "UNPROVEN",
+    "originalAllowanceConditionMatch": null,
+    "extraTerms": "UNRESOLVED_NOT_ZERO",
+    "unresolved_fields": [
+      "actual future native resolution",
+      "public prefix package/copy semantics through staging",
+      "materialization-relevant effective basis",
+      "normal auxiliary membership"
+    ],
+    "new_actual_materialization_changing_field_established": false,
+    "allowance_inheritance_proven": false,
+    "numeric_remaining": null,
+    "capacity_admission": false,
+    "affordable_G": null,
+    "new_J": null,
+    "sample": "Original settled rc2 PUBLIC_PROVIDER_ENV_UNPROVEN; Q3 UNKNOWN; original allowance exhausted. No new sample or successful basis is asserted.",
+    "native_TX_created": false,
+    "new_attempt_authorized": false,
+    "business_credit": 0,
+    "user_reported_business": "0/2, not refreshed by this docs-only turn"
+  },
+  "permissions_and_exclusions": {
+    "read_or_getter_authorized": false,
+    "source_implementation_authorized": false,
+    "sampling_authorized": false,
+    "npm_or_config_invocation_authorized": false,
+    "production_or_install_load_authorized": false,
+    "new_profile_env_or_permission_authorized": false,
+    "new_registration_or_attempt_authorized": false,
+    "old_operation_replay_authorized": false,
+    "unchanged": [
+      "provision/profile/argv/env/config/artifact/worker/packet/policy/manifest/op/source bytes",
+      "50GiB floor",
+      "same-attempt strong validation",
+      "sole writer/TX/fence rules",
+      "original saved evidence and once quotas"
+    ],
+    "other_work": "Q2 implementation, selector contract preparation and unrelated MCP work remain independent; none is a prerequisite to this acceptance."
+  },
+  "ACTION_TAKEN": [
+    "Read and hash-verified only the five new fixed docs/review/index files.",
+    "Made the attributable ACCEPT decision for the exact proof schema/consumption contract.",
+    "Created this decision and its pinned index with exclusive creation and exact readback. No code, tests, production access or messages to other threads."
+  ],
+  "NEXT": {
+    "responsible_actor": "Original1437 / original source lane; coordinator14c routes this decision without creating another writer.",
+    "step1": "Immediately perform the original docs-only accepted-Spec recording/main integration. Preserve or byte-bind the exact v2.1 body and this decision, report final reviewed HEAD and its accepted document identity under existing repository governance. The frozen proposal/old indexes/reviews stay unchanged. No second semantic acceptance or ordinary Owner confirmation is required for the identical body.",
+    "step2": "After that docs-only record, populate the typed basis from legally held immutable evidence and source implications only. Retain explicit null/UNKNOWN and UNPROVEN where facts are unavailable; distinguish public facts from future-phase qualifications. Do not invoke npm or read new runtime inputs to fill a blank.",
+    "step3_if_concrete_new_gap": "If a particular needed proof cannot be produced within an existing exact producer, original1437 names only that field, materialization effect, fixed member/root, receiving source, custody, phase and finite read/producer delta for the original technical route. No guessed broad environment list, new getter by assumption, automatic Owner request or unformed policy acceptance.",
+    "consumption": "Only a subsequently justified basis may be consumed under the original method. This acceptance supplies neither a current allowance match nor numeric admission, and does not restore sampling quota.",
+    "no_hidden_dependency": "The required docs-only lifecycle is the requested record of this acceptance, not a deferred condition on the acceptance itself or a new audit of 531/helper/R41."
+  },
+  "transport": {
+    "received_as": "User-supplied EXCLUSIVE_ACTUAL_ROUTE Q3_UNCHANGED_NPM_BASIS_V2_1 from coordinator14c in this turn",
+    "frozen_NOT_SENT_retained": true,
+    "frozen_materials_modified": false,
+    "output_delivery": "Decision files and final reply to the current coordinator only; no native downstream ACK or main merge claimed.",
+    "old_coordinator_contacted": false
+  },
+  "cleanup": {
+    "deleted_files": 0,
+    "deleted_bytes": 0,
+    "retained": "All original proposals/versions/receipts/source/runtime/thread/daemon evidence retained. Only this unique decision and index created; no redundant copy requiring deletion."
+  }
+}

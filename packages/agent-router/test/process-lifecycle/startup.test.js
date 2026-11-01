@@ -10,6 +10,7 @@
 
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { resolveTrustedNativeToolPolicy } from '../../../agent-provisioning/src/trusted-native-tool-policy.js'
 
 import { makeFx, rejectsWith, slotSeq } from './helpers.js'
 
@@ -61,6 +62,64 @@ test('INITIALIZE_PROVIDER_NEVER_READY: retries never reset the one initialize de
   assert.ok(fx.writes.filter(w => w.method === 'initialize').length >= 2, 'retries happened')
   fx.childExit(1, null)
   await fx.proc.exitPromise
+})
+
+test('trusted native policy is sent at initialize and readiness requires its exact acknowledgement', async () => {
+  const nativeToolPolicy = resolveTrustedNativeToolPolicy({
+    version: 1,
+    agentId: 'agt_fx',
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }, 'agt_fx')
+  const fx = makeFx({ nativeToolPolicy })
+  assert.equal(Object.getOwnPropertyDescriptor(fx.proc, 'nativeToolPolicy').writable, false)
+  const ready = fx.proc.ready()
+  await fx.tick()
+
+  const initialize = fx.writes.find((write) => write.method === 'initialize')
+  assert.deepEqual(initialize.params.nativeToolPolicy, nativeToolPolicy)
+  fx.emit({ id: initialize.id, result: {
+    registeredProviders: [fx.proc.provider],
+    nativeToolPolicy: {
+      version: 1,
+      agentId: 'agt_fx',
+      policyDigest: nativeToolPolicy.policyDigest,
+    },
+  } })
+  await ready
+  assert.equal(fx.proc.state, 'READY')
+})
+
+test('trusted native policy acknowledgement mismatch fails initialize before readiness', async () => {
+  const nativeToolPolicy = resolveTrustedNativeToolPolicy({
+    version: 1,
+    agentId: 'agt_fx',
+    mode: 'native-allowlist',
+    allowedCalls: [{ toolName: 'read' }],
+  }, 'agt_fx')
+  const fx = makeFx({ nativeToolPolicy })
+  const ready = fx.proc.ready()
+  await fx.tick()
+  const initialize = fx.writes.find((write) => write.method === 'initialize')
+
+  fx.emit({ id: initialize.id, result: {
+    registeredProviders: [fx.proc.provider],
+    nativeToolPolicy: { version: 1, agentId: 'agt_fx', policyDigest: '0'.repeat(64) },
+  } })
+  await assert.rejects(ready, { code: 'AGENT_PROCESS_NATIVE_TOOL_POLICY_ACK_MISMATCH' })
+  assert.equal(fx.writes.filter((write) => write.method === 'initialize').length, 1)
+  assert.equal(fx.proc.state, 'DRAINING')
+  fx.childExit(1, null)
+  await fx.proc.exitPromise
+})
+
+test('legacy initialize omits trusted native policy and accepts the existing acknowledgement', async () => {
+  const fx = makeFx()
+  await fx.readyNow()
+
+  const initialize = fx.writes.find((write) => write.method === 'initialize')
+  assert.equal(Object.hasOwn(initialize.params, 'nativeToolPolicy'), false)
+  assert.equal(fx.proc.state, 'READY')
 })
 
 // ---------------------------------------------------------------------------

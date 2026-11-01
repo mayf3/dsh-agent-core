@@ -24,7 +24,11 @@ test('Router outcome_unknown preserves its reconciliation handle as active Run l
   const handle = 'turn:runtime:a1:g1:s1'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { current_node_visit_id: VISIT } } }),
+    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
   }
   const principalAccess = {
     handlers: {
@@ -109,10 +113,13 @@ const tick = () => new Promise(resolve => setImmediate(resolve))
 function executionContext() {
   const services = {
     brokerGateway: { execute: async (request, caller) => {
+      if (request.capabilityId === 'workflow_owner_obligation') return { ok: false, error: { code: 'owner_obligation_not_managed' } }
       assert.equal(request.capabilityId, 'workflow_instance_detail')
       assert.equal(caller.agentId, AGENT)
       return { ok: true, result: { visibility: 'full', detail: {
-        current_node_visit_id: VISIT, instance: { is_terminal: false, workflow_state_version: 7 },
+        current_node_visit_id: VISIT,
+        current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+        instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
       } } }
     } },
     agentPrincipalResolutionAccess: { handlers: { agent_resolve_principal: {
@@ -218,8 +225,12 @@ async function answerChild(f, admission) {
     for (const proc of f.spawned) for (const write of proc.fakeChild.writes) {
       if (answered.has(write.id)) continue
       answered.add(write.id)
-      assert.ok(['initialize', 'session/prompt'].includes(write.method))
-      const result = write.method === 'initialize' ? { registeredProviders: [proc.provider] } : { messageId: 'new-message' }
+      assert.ok(['initialize', 'session/prepare', 'session/prompt'].includes(write.method))
+      const result = write.method === 'initialize'
+        ? { registeredProviders: [proc.provider], deliveryReadiness: { version: 1 } }
+        : write.method === 'session/prepare'
+          ? { version: 1, ready: true, sessionId: write.params.sessionId }
+          : { messageId: 'new-message' }
       proc.fakeChild.stdout.handler(`${JSON.stringify({ id: write.id, result })}\n`)
     }
   }
@@ -341,7 +352,11 @@ test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over t
   let turnState = 'pending'
   let deliveries = 0
   const gateway = {
-    execute: async () => ({ ok: true, result: { visibility: 'full', detail: { instance: { workflow_state_version: 7 }, current_node_visit_id: VISIT } } }),
+    execute: async request => request.capabilityId === 'workflow_owner_obligation' ? { ok: false, error: { code: 'owner_obligation_not_managed' } } : ({ ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 7 },
+      current_node_visit_id: VISIT,
+      current_visit: { node_visit_id: VISIT, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }),
   }
   const principalAccess = {
     handlers: { agent_resolve_principal: { resolve: async () => ({ ok: true, result: { principalId: OWNER, agentId: AGENT } }) } },
@@ -391,4 +406,81 @@ test('WORKFLOW_STALE_REENTRY_V1 r2 wiring — quiescence-gated redispatch over t
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
+})
+
+
+test('normal READY poll drains pages, rereads after restart, rejects malformed projections and never falls back', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'wfe-ready-'))
+  const calls = []; let deliveries = 0; let mode = 'waiting'
+  const row = n => ({ dispatchIntentId: `11111111-2222-4333-8444-${String(n).padStart(12, '0')}`,
+    nodeVisitId: `22222222-2222-4333-8444-${String(n).padStart(12, '0')}`, workflowInstanceId: INSTANCE,
+    ownerPrincipalId: OWNER, nextEligibleAt: '2026-10-29T01:00:00.123456Z', createdAt: 'now', updatedAt: 'now', readinessStatus: 'READY' })
+  const gateway = { execute: async request => {
+    if (request.capabilityId === 'workflow_owner_obligation') return { ok: false, error: { code: 'owner_obligation_not_managed' } }
+    if (request.capabilityId === 'workflow_dispatch_intents') {
+      calls.push(request)
+      assert.equal(request.operation, 'list_ready')
+      if (mode === 'error') return { ok: false, error: { code: 'projection_unavailable' } }
+      if (mode === 'malformed') return { ok: true, result: {} }
+      if (mode === 'waiting') return { ok: true, result: { items: [] } }
+      if (mode === 'blocked') return { ok: true, result: { items: [row(102)] } }
+      if (mode === 'blocked') return { ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: row(102).nodeVisitId, current_visit: { node_visit_id: row(102).nodeVisitId, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }
+    if (mode === 'single') return { ok: true, result: { items: [row(1)] } }
+      if (mode === 'duplicate') return { ok: true, result: { items: [row(1), row(1)] } }
+      if (mode !== 'ready') return { ok: true, result: { items: [{ ...row(1), readinessStatus: mode }] } }
+      return { ok: true, result: { items: request.args.afterDispatchIntentId ? [row(101)] : Array.from({ length: 100 }, (_, i) => row(i + 1)) } }
+    }
+    if (mode === 'blocked') return { ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: row(102).nodeVisitId, current_visit: { node_visit_id: row(102).nodeVisitId, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }
+    if (mode === 'single') return { ok: true, result: { visibility: 'full', detail: {
+      instance: { workflow_instance_id: INSTANCE, is_terminal: false, workflow_state_version: 1 },
+      current_node_visit_id: row(1).nodeVisitId, current_visit: { node_visit_id: row(1).nodeVisitId, workflow_instance_id: INSTANCE, assignee_principal_id: OWNER },
+    } } }
+    // Authoritative fresh admission refuses stale tuple. No attempt may be minted.
+    return { ok: false, error: { code: 'current_visit_changed' } }
+  } }
+  const mount = () => mountWorkflowExecutionRuntime({ ctx: { get: name => ({ brokerGateway: gateway,
+    agentPrincipalResolutionAccess: { handlers: { agent_resolve_principal: { resolve: async () => mode === 'blocked' ? { ok: false, error: { code: 'target_disabled' } } : ({ ok: true, result: { agentId: AGENT } }) } } } })[name] },
+    layout: { workflowExecutionDir: join(root, 'ledger') }, log: silentLog,
+    router: { deliver: async () => { deliveries++; return { sessionId: 'main' } }, getTurnReconciliation: () => ({ state: 'never_existed' }) },
+    config: { pollerAgentId: 'agt_poller', maxAdmissionsPerPoll: 200 } })
+  try {
+    let runtime = mount()
+    for (let i = 0; i < 2; i++) assert.equal((await runtime.engine.pollOnce()).ok, true)
+    for (mode of ['WAITING', 'CLOSED', 'UNKNOWN', undefined, 'malformed', 'duplicate', 'error']) {
+      assert.equal((await runtime.engine.pollOnce()).ok, false)
+      assert.equal(runtime.ledger.get(row(1).nodeVisitId), undefined)
+    }
+    mode = 'ready'; calls.length = 0
+    const poll = await runtime.engine.pollOnce()
+    assert.equal(poll.pages, 2)
+    assert.equal(poll.admissions.length, 101)
+    assert.ok(poll.admissions.every(item => item.action === 'pre_plan_unavailable'))
+    assert.equal(calls[1].args.afterNextEligibleAt, row(100).nextEligibleAt)
+    assert.equal(calls[1].args.afterDispatchIntentId, row(100).dispatchIntentId)
+    assert.equal(runtime.ledger.get(row(1).nodeVisitId), undefined)
+    await runtime.stop(); runtime = mount(); calls.length = 0
+    await runtime.engine.pollOnce()
+    assert.equal(calls[0].args.afterDispatchIntentId, undefined)
+    assert.equal(deliveries, 0)
+    mode = 'single'
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'admitted')
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'already_attempted')
+    assert.equal(deliveries, 1)
+    mode = 'blocked'
+    // Without a resolvable authorized reader, managed-vs-unmanaged is UNKNOWN.
+    // New authority requires no admission before classification; it cannot fall back
+    // to the legacy NOT_MANAGED path or consume/reset a managed visit's budget.
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(runtime.ledger.get(row(102).nodeVisitId), undefined)
+    assert.equal((await runtime.engine.pollOnce()).admissions[0].action, 'pre_plan_unavailable')
+    assert.equal(runtime.ledger.get(row(102).nodeVisitId), undefined)
+    assert.equal(deliveries, 1)
+    await runtime.stop()
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })

@@ -1,0 +1,85 @@
+{
+  "kind": "FIXED_869B_ONE_OFFLINE_CONTINUATION_ORIGINAL_READER_MATERIAL_RECEIPT_V2_1",
+  "at_utc": "2026-10-19T17:47:46.298439+00:00",
+  "disposition": "PASS_PROPOSAL_MATERIAL_ONLY",
+  "blocking_material_findings": [],
+  "attribution": {
+    "reader": "/root/sol_e40_independent_reader",
+    "author": "/root/sol_execution_continuation",
+    "requested_model": "gpt-6.1-sol/ultra",
+    "native_observed_model": "UNKNOWN",
+    "chain": "Same original material reader. Qualified1378 decides both source scope and explicit additional fixed input effect;14c exclusive relay. No second source/code review performed for this material."
+  },
+  "final_inputs": {
+    "index": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/INDEX.v2.1.json",
+      "bytes": 2187,
+      "sha256": "924f394544dddd17c8bccd3352a57e987ed71f372cb88e4b103cb9761a0b1959"
+    },
+    "unit": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PROPOSED-FIXED-869B-OFFLINE-CARRIER-CONTINUATION.v2.1.md",
+      "bytes": 10752,
+      "sha256": "b75b0a0067c07b2dbb8dd08c46374bf4b0d3635ce4523d98034902c37f890f8e"
+    },
+    "closure": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/SOURCE-CLOSURE.v2.json",
+      "bytes": 4675,
+      "sha256": "6992fe0af1176ebd1b7b676c38ee152e04289557d08346252084531f22f3c379"
+    },
+    "APP_handoff": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/APP-DIRECT-CLOSURE-HANDOFF.v1.json",
+      "bytes": 3901,
+      "sha256": "c9f9d56298cf040e82b36be4eda303c235ea713cf2378e0ba034933986b6e2c9"
+    },
+    "parent_delta": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/fixed-offline-build-continuation/PARENT-BINDING-ONLY.v1-to-v2.1.diff",
+      "bytes": 4075,
+      "sha256": "4f438bad3e188d9cc76fd1e8bc9c8c7ac948b1df75b6a233a1ddb6ed09629731"
+    }
+  },
+  "parent": {
+    "source": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/implementation-v2/packet/b7-wired-inputs/dsh-agent-core/scripts/lib/deployment-reuse/b7-fixed-plugin-materializer.mjs",
+      "bytes": 28557,
+      "sha256": "00bb8302eba5783378fe3c4cd1e0b7f61def9f5f24d213c6edaa93cb9fc6b056"
+    },
+    "source_receipt": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-fresh-six-target-offline-carrier/independent-sol-readback/FRESH-CARRIER-AFFECTED-SOURCE-RECEIPT.v2.json",
+      "bytes": 14395,
+      "sha256": "b541d431a0d0c0514b3e4f5028d7db6cc230e70bbe63a317597c21ed1cce65eb"
+    },
+    "relationship": "Unique00bb F1-closed parent with real14395B/b541 source-only receipt. Historical7ad no longer required runtime base; subsequent builder delta must preserve this repaired runtime."
+  },
+  "personally_checked": [
+    "Read original10454B/d3aa unit,3705B/a6dc closure and3901B/c9f9 APP handoff, and compared fixed failure facts with already-read original INTENT/PROCESS/stderr/terminal/partial-allocation documents. No original archive/partial access.",
+    "Verified final index2187B/924f,unit10752B/b75b,closure4675B/6992,APP handoff and4075B/4f43 delta pins. Closure referenced small documents and current unique source/receipt pins match. Cleanup attachment was outside this material semantic scope, not independently re-audited.",
+    "Verified v1->v2 only parent paragraph11 changed; found its missed paragraph15 still7ad. Finalv2.1 changes only that line to complete00bb. Paragraph11,15,37/closure now resolve one repaired source. Algorithms,one-extra count,cap,old failure facts/APP handoff unchanged. Frozen v1/v2 remain.",
+    "Checked proposed two-phase memory enumeration then same-cap decision; safe grammar/numerical/data limits, no output on over-cap, typed nonproduction diagnostics, exact same input/new private output effect, one-call consumption/no reissue, explicit cost/partial overlap and APP handoff boundaries. No new source, test/fixture, build, input read or effect performed for this material."
+  ],
+  "findings_closed": [
+    {
+      "id": "M1_UNIQUE_REPAIRED_PARENT",
+      "original": "v1 continuation fixed7ad runtime outside builder, conflicting with actual new home-identity F1 repair.",
+      "correction": "v2 changed paragraph11 and closure to00bb/b541; missed paragraph15 still7ad was independently identified. v2.1 changes exactly line15 to full00bb and retains all prior files. Source delta now has unambiguous repaired baseline.",
+      "boundary": "No further runtime/home/P6/prep changes accepted by material review; new algorithm still only builder/diagnostics and necessary nonproduction pins."
+    }
+  ],
+  "material_conclusions": {
+    "actual_failure": "Original sole fixed869b build1 settled native outerrc1/PAYLOAD_BINDING atf881, no catalog/fullP. Inner failed stage/header/subpredicate NOT_CAPTURED. Saved21736F/1837D/120505552 logical/192720896 conservative partial stays partial, not cause/full quantity. Output root/source flow implication of passed regular/fullhash check distinguished from a new independent raw hash observation.",
+    "new_effect_is_explicit": "Proposes exactly1 additional unprivileged offline invocation of same build function/--build and same literal public869b input22231229B, held-parent/nofollow exact size/hash. One fixed new owned output candidate under offline-continuation-v1; old partial/output neither reused nor overwritten/deleted. This extra input read is not currently permitted by old source receipt or initial consumed build allowance.",
+    "once": "Durable EXCL0600 intent binds predecessor/final source/input/output before issue. Issuance consumes allowance even preread refusal/overbound/timeout/crash/unknown/publisher failure. No third packaging invocation/newpath/ID/window automatic retry. CollectorC total2/rem0 independent and unchanged. Material acceptance/pass alone issues nothing.",
+    "algorithm": "Phase1 reads artifact once and safely enumerates all headers/content with no payload writes, retaining bounded data only. Limits compressed22233088B,regular logical192720896B,catalog16777216B,rows47051,depth64,path4096 are finite refusal bounds. Phase2 compares complete same conservative P including root/min4096/emptyfiles against unchanged192720896. Over-cap reports calculated quantities only, no payload/catalog; resource/unsafe/refusal/UNKNOWN never treated as full quantity proof. No cap raise or metric change hidden.",
+    "diagnostics": "Fixed stage/reason enum and existing top error family only, no raw member/content/env/exception leakage. Diagnostics write failure cannot turn refusal into success or replenish allowance. Runtime result/error ABI unchanged; proposed source/synthetic verification remains future work.",
+    "cost": "Prior192720896 partial independently retained/charged; new successful output bound is payload<=samecap + measured rounded catalog<=16MiB + actual source/evidence/temp/parent overlaps. Bounded in-process retention is not a measured exact RSS or physical quota. No old4MiB,J/free-space/remaining fit inherited. Actual final branch12P+fourL/shared/APP/J/remaining/plan/admission remains dependent.",
+    "APP_handoff": "Three selectede1c direct public member bodies/pins explicitly missing: shared-codex,plugin-artifact,ensure-symlink; candidate-local peer import separately bound. Existingb85 bridge/inventory Lshared not zero/proven. Handoff requests original exact material through existing chain, not archive/live/SourceRoot access, new keeper or assumed absent authority. Scope stops dependent APP integration/freeze/P0 while independent source work remains separately accepted.",
+    "qualified_decision": "Two distinct requested dispositions: builder/diagnostic source ceiling and exactly one additional fixed public read/build effect under once/custody/phase/cost. No self-authorization of retry/OS access, no automatic Owner escalation, no runtime/F/operation or larger numerical bound accepted here."
+  },
+  "not_covered": [
+    "No new two-phase builder source implementation/verification, actual additional input invocation, catalog/payload/P/C/M or overbound calculation. New algorithm remains PROPOSED/NOT_SENT pending exact qualified decision/docs/PREFLIGHT/source review.",
+    "No actual869b/partial contents opened, archive extraction, fixture/test, sourceRoot/Git/native5/home/prefix/config/npm/env/production/DS/F or permission/identity/path change.",
+    "No APP primary acquisition/closure, Lshared/otherL/J/remaining actual basis, final immutable tuple/plan/current mandatory/capacity or business readiness. Existing sourceb541 is source-only, not artifact success.",
+    "No old scope/A/main/method/old test re-review. No original evidence deletion or reinterpretation; new material files are outside runtime sealed closure."
+  ],
+  "route": "NOT_SENT/route0;14c alone relays exactv2.1. Reader did not route/send1378 or issue effects.",
+  "reader_write": "Only this own receipt; author source/material/index and original failure/partial unchanged."
+}

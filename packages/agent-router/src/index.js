@@ -68,7 +68,7 @@
 
 import z from '@deepseek-ai/schemastery'
 import { homedir, hostname } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { AgentProcess } from './process/index.js'
 import { resolveDeadlineConfig } from './deadline-config.js'
 import { TurnReconciliationStore } from './reconciliation/index.js'
@@ -78,6 +78,7 @@ import { createRouteChainExecutor } from './route-chain.js'
 import { createBindingResolution } from './binding-resolution.js'
 import { createProductSurfaceConversation } from './conversation/surface.js'
 import { createIngressDelivery } from './ingress-delivery.js'
+import { createWebsiteInquiryAdmission } from './process/website-inquiry-admission.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
@@ -263,6 +264,7 @@ export function apply(ctx, config) {
     reconciliationStore,
     processFactory,
     resolveProcessConfig,
+    resolveNativeToolPolicy: cfg.resolveNativeToolPolicy,
     provisionHome,
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
@@ -281,12 +283,17 @@ export function apply(ctx, config) {
   const routeChain = createRouteChainExecutor({
     log,
     ensureRunningForRoute: registry.ensureRunningForRoute,
+    deadLetterDirectory: join(dirname(recoveryFile ?? storeFile), 'delivery-dead-letters'),
     resolveRouteChain: typeof cfg.resolveRouteChain === 'function' ? cfg.resolveRouteChain : undefined,
     resolveTurnDeadlineMs: (agentId) => deadlineConfig.perAgent(agentId).turnTimeoutMs,
     ...(typeof cfg.canaryRuntimeRoot === 'string' && cfg.canaryRuntimeRoot !== ''
       ? { canaryRuntimeRoot: cfg.canaryRuntimeRoot }
       : {}),
   })
+  try { reconciliationStore.assertBusinessAdmissionReady() } catch (error) {
+    routeChain.recordBlockedDelivery(error, { agentId: null,
+      reason: reconciliationStore.businessAdmissionStatus().reason })
+  }
   const ingressDelivery = createIngressDelivery({
     log,
     feishu,
@@ -316,6 +323,8 @@ export function apply(ctx, config) {
   ctx.effect(() => () => registry.dispose())
 
   const service = {
+    deliveryFailuresSnapshot: () => routeChain.deliveryFailuresSnapshot(),
+    getDeliveryDeadLetter: id => routeChain.getDeliveryDeadLetter(id),
     ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
     pluginName: name,
     /** D-002 endpoint #12: idempotent ChannelConversation resolve (async). */
@@ -344,6 +353,7 @@ export function apply(ctx, config) {
      * for the model turn (see deliver's doc for the full contract).
      */
     deliver: ingressDelivery.deliver,
+    admitWebsiteInquiry: createWebsiteInquiryAdmission({ routeChain, reconciliationStore, workspaceBootstrap, definition: agentDefinition, store }),
     /** Test/ops surface: durable Delivery V0 fresh-mapping table snapshot. */
     freshSessionsSnapshot: () => store.freshSessionsSnapshot(),
     /** Test/ops surface: in-memory Delivery V0 acceptance log. */

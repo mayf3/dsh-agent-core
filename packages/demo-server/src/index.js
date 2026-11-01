@@ -32,11 +32,15 @@
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks'
+import { createNativeGoalAdmission } from './native-goal-admission.js'
+import { prepareSessionDelivery } from './delivery-readiness.js'
 
 import z from '@deepseek-ai/schemastery'
 
 import { CANONICAL_DEFAULT_MODEL_ROUTE } from '../../agent-provisioning/src/shared-codex.js'
 import { createSessionSeam, SESSION_WORKSPACE_MISMATCH } from './session-seam.js'
+import { nativePromptError } from './website-admission.js'
+import { WebsiteSourceCustody, forwardWebsiteSessionEvent } from './website-custody.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'demo-server'
@@ -48,17 +52,17 @@ export { SESSION_WORKSPACE_MISMATCH }
 /** The agent factory is the only hard dependency; everything else is optional. */
 export const inject = ['agents']
 
-/** Server config: none today (transport hooks would mirror the SDK server). */
-export const Config = z.object({})
+/** Required paired-runtime native continuation admission; optional for legacy consumers. */
+export const Config = z.object({ nativeGoalContinuation: z.boolean().default(false) })
 
 /** Wire protocol method → handler. */
-const METHODS = new Set(['initialize', 'session/prompt', 'shutdown', 'rpc.response'])
+const METHODS = new Set(['initialize', 'session/prepare', 'session/prompt', 'shutdown', 'rpc.response'])
 
 /**
  * Serve the demo protocol over process stdio for the process lifetime.
  * @param ctx - plugin context carrying the agent factory and optional services.
  */
-export function apply(ctx) {
+export function apply(ctx, config = {}) {
   const pendingRpc = new Map() // requestId -> { resolve, reject }
   // Parent mints one opaque execution handle per prompt. AsyncLocalStorage
   // preserves its origin across delayed async work, so an RPC born in turn A
@@ -77,13 +81,22 @@ export function apply(ctx) {
    * server neither knows nor validates the method names.
    */
   const agentRpc = {
-    request(method, params) {
+    request(method, params, options = {}) {
       if (typeof method !== 'string' || method === '') {
         return Promise.reject(new TypeError('agentRpc.request: method must be a non-empty string'))
       }
       return new Promise((resolveRequest, rejectRequest) => {
         const requestId = `rpc-${++rpcSeq}`
-        pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest })
+        const signal = options.signal
+        const abort = () => {
+          pendingRpc.delete(requestId)
+          if (method === 'agent-core/nativeGoalContinuation') notify('rpc.cancel', { requestId })
+          rejectRequest(Object.assign(new Error('parent RPC admission cancelled'), { code: 'NATIVE_GOAL_ADMISSION_CANCELLED' }))
+        }
+        if (signal?.aborted) { abort(); return }
+        const cleanup = () => signal?.removeEventListener('abort', abort)
+        signal?.addEventListener('abort', abort, { once: true })
+        pendingRpc.set(requestId, { resolve: resolveRequest, reject: rejectRequest, cleanup })
         notify('rpc.request', {
           requestId,
           method,
@@ -98,6 +111,8 @@ export function apply(ctx) {
   let provider = CANONICAL_DEFAULT_MODEL_ROUTE.provider
   let model = CANONICAL_DEFAULT_MODEL_ROUTE.model
   let maxTokens
+  let initializePolicyEstablished = false
+  let nativeToolPolicyAck
 
   // The per-session resolution seam (AGENT_CORE_BINDING_WORKSPACE_V1
   // SESSION_WRITE_CONTRACT R1/R2/R3): create freezes the resolved effective
@@ -105,7 +120,16 @@ export function apply(ctx) {
   // verifies it against the resolved workspace; a mismatch is a structured
   // SESSION_WORKSPACE_MISMATCH rejection. Getters observe the
   // initialize-time values at call time.
+  let websiteCustody
   const seam = createSessionSeam({
+    websiteAdmission: async (carrier, message, session) => {
+      if (!process.env.DSH_HOME) throw new Error('website source custody unavailable')
+      websiteCustody ??= new WebsiteSourceCustody(process.env.DSH_HOME)
+      websiteCustody.register(carrier, message)
+      await ctx.get('sessionPersistence')?.flush?.(session)
+      const response = await agentRpc.request('agent-core/websiteInquiryMap', { websiteAdmission: carrier, messageId: message.id })
+      if (response?.ok !== true || response.result?.mapped !== true) throw new Error('website native mapping unavailable')
+    },
     ctx,
     settings: {
       get cwd() { return cwd },
@@ -115,12 +139,18 @@ export function apply(ctx) {
     },
   })
   const { handles, pendingCreations, prompt } = seam
+  const nativeGoal = createNativeGoalAdmission({
+    request: (...args) => agentRpc.request(...args),
+    getAgent: sessionId => handles.get(sessionId)?.agent,
+    audit: evidence => process.stderr.write(`[demo-server] ${JSON.stringify(evidence)}\n`),
+  })
+  if (config.nativeGoalContinuation) ctx.provide('goalRoundEnqueue', nativeGoal)
 
   // Mirror the SDK server's event fan-out: every durable fact streams as
   // session.event, every whole-agent lifecycle transition as session.status.
   const offEvent = ctx.on('session/event', (session, event) => {
     try { seam.conversationSource?.onEvent(session,event) } catch { process.stderr.write('[demo-server] conversation source retention failed\n') }
-    notify('session.event', { sessionId: String(session.id), event })
+    forwardWebsiteSessionEvent(websiteCustody, String(session.id), event, value => notify('session.event', value))
   })
   const offStatus = ctx.on('agent/status', ({ agent, status }) => {
     notify('session.status', { sessionId: String(agent.session.id), status })
@@ -128,6 +158,7 @@ export function apply(ctx) {
 
   /** Dispose every owned agent and flush sessions, then exit 0. */
   async function shutdown() {
+    nativeGoal.dispose()
     const live = [...handles.values()]
     handles.clear()
     pendingCreations.clear()
@@ -183,33 +214,83 @@ export function apply(ctx) {
     try {
       let result
       if (method === 'initialize') {
+        const requestedPolicy = params !== null && typeof params === 'object'
+          && Object.hasOwn(params, 'nativeToolPolicy')
+        if (initializePolicyEstablished) {
+          const establishedPolicy = nativeToolPolicyAck !== undefined
+          const samePolicy = requestedPolicy && establishedPolicy
+            && params.nativeToolPolicy?.version === nativeToolPolicyAck.version
+            && params.nativeToolPolicy?.agentId === nativeToolPolicyAck.agentId
+            && params.nativeToolPolicy?.policyDigest === nativeToolPolicyAck.policyDigest
+          if (requestedPolicy !== establishedPolicy || (requestedPolicy && !samePolicy)) {
+            throw new Error('nativeToolPolicy cannot change after process initialization')
+          }
+        } else if (requestedPolicy) {
+          const tools = ctx.get('tools')
+          if (typeof tools?.configureTrustedNativeToolPolicy !== 'function') {
+            throw new Error('nativeToolPolicy requires the DSH ToolRuntime service')
+          }
+          const ack = tools.configureTrustedNativeToolPolicy(params.nativeToolPolicy)
+          if (ack?.version !== params.nativeToolPolicy?.version
+            || ack?.agentId !== params.nativeToolPolicy?.agentId
+            || ack?.policyDigest !== params.nativeToolPolicy?.policyDigest) {
+            throw new Error('DSH ToolRuntime returned a mismatched nativeToolPolicy acknowledgement')
+          }
+          nativeToolPolicyAck = {
+            version: ack.version,
+            agentId: ack.agentId,
+            policyDigest: ack.policyDigest,
+          }
+          initializePolicyEstablished = true
+        } else {
+          initializePolicyEstablished = true
+        }
         cwd = params?.cwd ?? process.cwd()
         provider = params?.provider ?? provider
         model = params?.model ?? model
         maxTokens = params?.maxTokens
+        if (config.nativeGoalContinuation) await ctx.get('loader')?.await()
+        const nativeGoalContinuation = config.nativeGoalContinuation
+          ? nativeGoal.activate({ parentVersion: params?.nativeGoalContinuation?.version, driver: ctx.get('goalRoundDriver') }) : null
         const registeredProviders = ctx.get('llm')?.listProviders().map((entry) => entry.id) ?? []
         result = {
           serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
           route: { provider, model },
           registeredProviders,
+          nativeGoalContinuation,
           pluginServices: { openAICodex: ctx.get('openAICodex') !== undefined },
           conversationSource: seam.conversationSource ? {version:1} : null,
+          ...(nativeToolPolicyAck === undefined ? {} : { nativeToolPolicy: nativeToolPolicyAck }),
+          websiteAdmission: { version: 1 },
+          deliveryReadiness: { version: 1 },
         }
+      } else if (method === 'session/prepare') {
+        result = await prepareSessionDelivery(seam, params)
       } else if (method === 'session/prompt') {
         // params.cwd = the Router-resolved effective workspace for THIS
         // session (AGENT_CORE_BINDING_WORKSPACE_V1); absent => the
         // initialize-time process cwd (legacy/scheduler callers).
         // params.messageOrigin = the R4 trusted inter-agent source sidecar
         // (AGENT_CORE_AGENT_SESSION_MESSAGING_V1); absent => source user.
+        // Native goal messages retain their original source; product carriers
+        // require the separate user-message custody path below.
+        if (params?.nativeGoalContinuation !== undefined
+          && (params?.conversationSource !== undefined || params?.websiteAdmission !== undefined)) {
+          throw new TypeError('mixed native goal and product surface admission')
+        }
         result = await rpcTurnContext.run(
           params?.turnExecutionId,
-          () => prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource),
+          () => params?.nativeGoalContinuation === undefined
+            ? prompt(params?.sessionId, params?.contentBlocks ?? [], params?.cwd, params?.messageOrigin, params?.conversationSource, params?.websiteAdmission)
+            : nativeGoal.commit({ sessionId: params.sessionId, contentBlocks: params.contentBlocks,
+              cwd: params.cwd, turnExecutionId: params.turnExecutionId, reservation: params.nativeGoalContinuation }),
         )
       } else if (method === 'rpc.response') {
         // Parent's answer to a rpc.request: resolve the pending plugin call.
         const waiter = pendingRpc.get(params?.requestId)
         if (waiter !== undefined) {
           pendingRpc.delete(params.requestId)
+          waiter.cleanup()
           if (params?.ok === true) waiter.resolve({ ok: true, result: params.result })
           else waiter.reject(new Error(params?.error ?? 'parent RPC failed'))
         }
@@ -219,13 +300,11 @@ export function apply(ctx) {
       }
       respond(id, result, undefined)
     } catch (error) {
-      process.stderr.write(`[demo-server] ${method} failed: ${error instanceof Error ? error.message : String(error)}\n`)
+      const safeError = nativePromptError(method, params, error)
+      process.stderr.write(`[demo-server] ${method} failed: ${safeError.message}\n`)
       // STRUCTURED rejections (e.g. SESSION_WORKSPACE_MISMATCH) keep their
       // string code on the wire so the Router can surface them verbatim.
-      respond(id, undefined, {
-        code: typeof error?.code === 'string' ? error.code : -32603,
-        message: error instanceof Error ? error.message : String(error),
-      })
+      respond(id, undefined, safeError)
     }
   }
 

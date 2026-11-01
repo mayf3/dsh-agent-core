@@ -258,6 +258,7 @@ export function apply(ctx, config = {}) {
   const server = createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
     try {
+      if (await ctx.get('websiteInquiryHandler')?.(req, res)) return
       if (req.method === 'GET' && url.pathname === '/health') {
         // PRODUCT #525 P1: additive admission readiness ({configured,state}|null) — liveness `ok` unchanged; identity-free.
         json(res, 200, { ok: true, service: 'agent-core-product-api', admission: config.workflowAdmission?.admissionHealth?.() ?? null })

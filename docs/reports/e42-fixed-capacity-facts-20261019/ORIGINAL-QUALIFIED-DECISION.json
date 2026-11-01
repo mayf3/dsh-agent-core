@@ -1,0 +1,313 @@
+{
+  "schema": "E42_FIXED_COPYSET_CAPACITY_FACTS_ORIGINAL_QUALIFIED_DECISION_V1",
+  "actor": {
+    "actor_thread": "01a1378d-e052-7021-9992-f0760eb9f9e7",
+    "role": "Original user-delegated B7/#508 qualified technical decision actor; docs-only decision, not human Owner signature or production executor",
+    "original_delegation": [
+      {
+        "message_id": "msg_01a14739-9970-7491-994e-888bf1340b31",
+        "text": "我是希望你来尽量审批和做决策的，尽量不要我参与"
+      },
+      {
+        "message_id": "msg_01a1477a-c4c5-7cf2-8a67-fd9f2222c62e",
+        "text": "授权范围内的问题你直接决策"
+      }
+    ],
+    "current_request": "New coordinator's exclusive ready-item relay of E42_FIXED_COPYSET_CAPACITY_FACTS_ONLY v1; precise bounded source/implementation-contract decision within the existing delegation",
+    "requested_decision_model": "gpt-6-astra",
+    "native_effective_model_observed": "NOT_EXPOSED",
+    "requested_original_execution_model": "gpt-6.1-sol",
+    "requested_original_execution_effort": "ultra",
+    "exclusive_coordinator": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "original_sole_writer": "01a1437b-f9f3-7a33-a253-8f7fce9459f3",
+    "not_authority_sources": [
+      "Auth/Mac delegation",
+      "backend capability alone",
+      "material-review PASS alone"
+    ]
+  },
+  "GOAL": "Close this exact ready contract decision so the original source lane can implement a bounded quantity producer without waiting for its future observations.",
+  "STATE": "ACCEPTED_EXACT_IMPLEMENTATION_CONTRACT_AND_SOURCE_SCOPE; not implemented, adopted, sampled or numerically admitted by this decision.",
+  "acceptance": {
+    "decision": "ACCEPT",
+    "accepted": true,
+    "conditional": false,
+    "implementation_spec_ready": true,
+    "source_implementation_scope_accepted": true,
+    "accepted_units": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/PROPOSED-E42-FIXED-COPYSET-CAPACITY-FACTS-CONTRACT.v1.md",
+        "bytes": 17039,
+        "sha256": "efe4c25079a36801837f337a39d4c7456f85df017ad001d1a83132d5e31510f3"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/SELECTED-STOP-ONLY-CALLPLAN.v1.json",
+        "bytes": 3727,
+        "sha256": "294746d9ed266a1b77480b060064f39129266839b54c46841b626e4fe5ee7c15"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/SOURCE-CLOSURE-INDEX.v1.json",
+        "bytes": 4453,
+        "sha256": "9c20e408ad2600e06600ccec21662784ab6a9a064ddbcd01a2f36972301d1f61"
+      }
+    ],
+    "substantive_unaccepted_deltas": [],
+    "unresolved_design_fields_blocking_acceptance": [],
+    "explanation": "The three exact units together specify the fixed entry, readset, source closure, failure/persistence semantics, selected schedule and bounded adoption cost. Future scene facts are producer outputs or original runtime admission data, not missing design or prerequisites to accepting this contract.",
+    "lifecycle_not_hidden_conditions": "Original writer must record the exact accepted docs/base and issue DEVELOPMENT_PREFLIGHT before coding, then obtain original-chain affected implementation review and satisfy the existing maintenance lifecycle before adoption/invocation. These are explicit delivery stages, not a second acceptance of this unchanged contract."
+  },
+  "EVIDENCE": {
+    "exact_artifacts_read_and_length_sha_verified": [
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/PROPOSED-E42-FIXED-COPYSET-CAPACITY-FACTS-CONTRACT.v1.md",
+        "bytes": 17039,
+        "sha256": "efe4c25079a36801837f337a39d4c7456f85df017ad001d1a83132d5e31510f3"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/SELECTED-STOP-ONLY-CALLPLAN.v1.json",
+        "bytes": 3727,
+        "sha256": "294746d9ed266a1b77480b060064f39129266839b54c46841b626e4fe5ee7c15"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/SOURCE-CLOSURE-INDEX.v1.json",
+        "bytes": 4453,
+        "sha256": "9c20e408ad2600e06600ccec21662784ab6a9a064ddbcd01a2f36972301d1f61"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/FINAL-PROPOSED-CAPACITY-FACTS-INDEX.v1.json",
+        "bytes": 4767,
+        "sha256": "45d8de7ca3af6a5c0e4c89b4cddec6737327738d9d72d32fe36942af4c4ef2f4"
+      },
+      {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/independent-sol-readback/E42-CAPACITY-FACTS-PRODUCER-CONTRACT-MATERIAL-RECEIPT.v1.json",
+        "bytes": 12069,
+        "sha256": "24073688ed632a5760a87f6387b361640dab700c22ab3913d3485232da946914"
+      }
+    ],
+    "review_reused": {
+      "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/e42-fixed-copyset-capacity-facts-contract/independent-sol-readback/E42-CAPACITY-FACTS-PRODUCER-CONTRACT-MATERIAL-RECEIPT.v1.json",
+      "bytes": 12069,
+      "sha256": "24073688ed632a5760a87f6387b361640dab700c22ab3913d3485232da946914",
+      "verdict": "PASS_PROPOSED_PRODUCER_CONTRACT_MATERIAL_ONLY_WITH_NONBLOCKING_CITATION_ERRATUM",
+      "blocking_findings": [],
+      "meaning": "Original nonauthor material review reused; this attributable decision supplies technical acceptance. No second reviewer, source review or old test rerun was started."
+    },
+    "authority_reused": {
+      "direction": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q1-Q3-PRODUCER-AUTHORITY-ROUTING-DECISION-20261019.json",
+        "bytes": 17075,
+        "sha256": "42a39af5ad6cdc74e7d57bc4f8f7f91e2184aa8607126476a6bfd7afbb5c0872"
+      },
+      "source_routing": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/E42-Q1-Q3-ORIGINAL-PRODUCER-ROUTING-SOL-20261019.json",
+        "bytes": 20504,
+        "sha256": "51860487a558a244e69999d23f3ab1cf6e2a672df4ae68d31f5e70fa6d5a93f5"
+      },
+      "saved_issue386": {
+        "path": "/Users/yanfenma/Documents/Codex/2026-10-16/b7-v50-continuation-audit/codex-r33-storage-reservation-readonly/issue386.json",
+        "sha256": "010f69bc2ece2b70945e9209bfc6c37879f82d939fd0285bf671f0fc7c0b6375",
+        "body_lines": [
+          136,
+          145,
+          146,
+          147
+        ],
+        "applicability": "Standing trusted deployment/maintenance surface for necessary fixed nonsecret capacity facts; genuine remaining accounting and unchanged 50GiB floor. Original 42a39 scope finding is reused, not a new per-field grant search."
+      },
+      "method531": {
+        "accepted_merged_main_reported": "88fe4a16a4a38c066d507d82c7020d52301c7aaa",
+        "status": "Previously accepted method and reported merge reused; not re-reviewed or freshly queried here",
+        "numeric_admission": false
+      }
+    },
+    "source_attribution": "Producer/callsite facts in the closure, original routing and count evidence retain their original authorship. This decision read the new frozen documents, not protected source, installed code or production objects.",
+    "saved_state": {
+      "e42": "unregistered / attempt0 / TXnull",
+      "business": "0/2",
+      "R41": "control pre/copied225 and post227 PASS; preparation completed",
+      "saved_free_bytes": 91119964160,
+      "all_current_state_fields": "Reused saved reports; no fresh production observation in this turn"
+    }
+  },
+  "citation_erratum": {
+    "id": "N1_CONTEXT_CALLSITE_COORDINATE",
+    "location": "SELECTED-STOP-ONLY-CALLPLAN.v1.json: gate-receipt context source coordinate",
+    "correct": "executor 673–681 is context; executor 421–429 is bind-act only",
+    "semantics_changed": false,
+    "counts_changed": false,
+    "frozen_artifacts_modified": false,
+    "handling": "Carry this exact erratum in the accepted docs wrapper/decision reference. Do not rewrite or rehash the frozen 294746d9 callplan, reopen counts, or await a new review for this coordinate correction."
+  },
+  "accepted_finite_scope": {
+    "subject": {
+      "operation_id": "b7-packet-r41-5a07e742664460c2-e42",
+      "manifest_sha256": "5a07e742664460c28aa169d134e72e2ded0fe86c8fa2ae323f5b712a7a3d1000",
+      "worker_sha256": "490bd9570d7915e29213b78bffb625e6970ce3158eb67afc7b4128db5284bc79",
+      "source_content_sha256": "5cd372cf79c29ee1d95f949119e1fa2b164d14bf9b0c721e5b2e65832cf93721",
+      "meaning": "Fixed documentary selector/provenance only; no production-ID allocation, REGISTER, attempt, context or TX."
+    },
+    "entry": {
+      "protected_executor": "/usr/local/libexec/b7-release-executor",
+      "verb": "e42-capacity-facts",
+      "arguments": 0,
+      "ordering": "Dispatch before and without prepare_driven; no J/full DRIVEN or package copy to collect quantities",
+      "execution": "Byte-exact embedded <=64KiB fixed metadata template, literal configuration, original /usr/bin/python3 -I",
+      "preservation": "Original actual caller502/internal-root responsibility, channel, existing-inode transient mutex and protected maintenance custody; no new identity, service, flock file, sudo rule or unsealed manual root script"
+    },
+    "readset_and_evidence": [
+      "Q1: only exact S3 and current enabled-registry/migration-override intersection H; fixed public selectors and exact original registry alias validation, safe ID grammar, no general traversal or arbitrary roots.",
+      "Q1 tree accounting is two no-follow descriptor-relative metadata passes and matching selection/root bookends, with per-path regular rounding, all directories, non-deduplicated hardlinks, links and unsupported/missing/error members explicit. No tree content proof, atomic snapshot or future-growth guarantee is claimed.",
+      "Q3 is the exact public npm/native and fixed six-prefix dependency metadata projection in section2. Its explicit public-content whitelist does not permit general S/H content reads, secrets, raw manifests/URLs/tokens, npmrc or environment enumeration.",
+      "Effective configuration or auxiliary membership not proved by an existing safe producer reference remains UNKNOWN; root identity/install flags alone do not establish the inherited npm allowance. No additional access or Owner question is inferred from UNKNOWN.",
+      "Schema/size/pin/integer validation, group completeness, null unknowns, 90s process budget and bounded partial retention are implementation obligations. Future quantity/growth/COW/competition data are not manufactured."
+    ],
+    "publication_and_consumption": {
+      "private_publisher": "e42_capacity_facts_publish.py",
+      "output_suffix": "actual-business-admission/capacity-facts-only/actual-observation-v1/",
+      "intent": "Fixed private EXCL intent is consumption point; exactly one native invocation in this unit",
+      "root_stdout_limit_bytes": 1048576,
+      "private_mode": "0600",
+      "durability": "Bounded actual stdout/stderr/native rc separately retained; fixed result/PROCESS/index, file and parent fsync, exact readback",
+      "refusal_or_unknown": "Do not reinvoke after completed refusal, timeout, transport UNKNOWN, truncated response or publication/fsync failure. Only lawful reads of the same intent/result/status; no fresh ID/path/generation to resend.",
+      "write_effect": "The new private evidence publication and finite protected-entry staging are expressly within this accepted implementation contract; they are nonzero effects, not an observation-only or zero-write claim."
+    },
+    "source_ceiling": {
+      "semantic_files": [
+        "v50_e42_capacity_facts_source.py",
+        "b7-release-executor.sh: one fixed case and embedded body",
+        "e42_capacity_facts_publish.py"
+      ],
+      "mechanical_joins": "Only necessary original AUTH/PIN/capsule/verifier-manifest joins. Actual new verifier logic must be included in the same affected source review.",
+      "original_executor_parent_sha256": "968d42e94b2d6345aaac2220714c96c105483902f823ad2af48a23f892db212b",
+      "inverse": "Removing the new case/embedded block restores the exact executor parent; original cases, pair, worker, packet, policy, normalP0, history and strong source predicates remain unchanged.",
+      "reuse": "An exact existing equivalent trusted reader, if supplied before implementation, may be reused within this same finite contract. Do not invent a new duplicate platform."
+    }
+  },
+  "selected_callplan": {
+    "selected": true,
+    "schedule": "stop-only",
+    "D_max": 1,
+    "R": 0,
+    "E_plan_max": 1,
+    "expression": "n <= 6 + 2*G",
+    "G_actual": null,
+    "G_planning_upper_bound": 256,
+    "n_planning_upper_bound": 518,
+    "mandatory_base": "release1 + context1 + materialsG + bind1 + commit1 + witnessedG + confirm1; optional delegation <=1",
+    "failure": "Retain completed and partial copies; stop further external mutations under this schedule. Original internal outer rollback remains mandatory where required and is costed in 3N+2S, not another executor prepare.",
+    "later_recovery": "Other original recovery authority is not revoked. Any legitimate additional external call must be enumerated and costed before that call; it is not silently included in E_plan1.",
+    "excludes_second_business_operation": true,
+    "not_actual_count_or_capacity_admission": true
+  },
+  "standalone_budget_and_later_numeric_boundary": {
+    "operational_reserve_bytes": 4194304,
+    "declared_member_caps_bytes": {
+      "result_and_same_parent_temporary": 2097152,
+      "stderr": 65536,
+      "combined_intent_process_return_index": 65536,
+      "incremental_helper_config_entry_install_preimage_temporaries": 1572864,
+      "owned_directories": 65536
+    },
+    "declared_caps_sum_bytes": 3866624,
+    "declared_margin_bytes": 327680,
+    "accepted_as": "Finite proposed operational membership cap, with the contract's explicit fit requirement; not a measured installed size or an APFS hard bound.",
+    "before_adoption": "Measure final assembled sizes/4096-rounded allocations and the original install/preimage/rollback/temporary topology offline. Fit the exact capped memberships; if the actual trusted route copies a larger closure, report its concrete cost and do not invoke under this 4MiB claim.",
+    "future_driven_J": "Recompute J from the final exact joined closure when helper bytes grow, and use it in the later same-e42 budget. Saved old J is not automatically valid.",
+    "physical_competition": "Not proved by the small-file arithmetic; retain the original runtime resource/floor conditions. No clone/dedupe, purgeable, future cleanup or COW-free credit.",
+    "floor_bytes": 53687091200,
+    "numeric_remaining_proven": false,
+    "business_capacity_admission": false,
+    "saved_free_does_not_supply_missing_quantities": true
+  },
+  "lifecycle": {
+    "existing_mechanical_requirements": [
+      "Original three fixed-target protected maintenance lifecycle, original AUTH/PIN/capsule bindings and PIN-last order.",
+      "Original actual caller/channel, installed entry/control generation, finite maintenance window, current preimage/custody and existing same-inode mutex admission.",
+      "Mandatory checks for the actual changed sealed inputs; reused unchanged R41 225/227, source tests and method evidence are not repeated just to accept this unit.",
+      "Normal business source validation remains twice in its original admitted phase, and ordinary resource/rollback/readback conditions remain unchanged."
+    ],
+    "new_accepted_delta_requirements": [
+      "Implement and review the fixed before-prepare zero-arg metadata producer and private once-only publisher; no DS_UPDATE or full DRIVEN path may be substituted for this fact-collection verb.",
+      "Verify the exact new closure/inverse, safe selectors, metadata metrics/stability/nofollow, bounded FD/time/partial behavior and no forbidden effects.",
+      "Verify fixed publisher EXCL-once, bounded timeout-prefix retention, schema/pin handling and durable exact readback.",
+      "Measure the actual new copied-layout/preimage topology against the standalone cap before adoption; include actual new verifier logic in the affected review if present."
+    ],
+    "runtime_values_are_not_acceptance_inputs": [
+      "Fresh caller and installed generation",
+      "Actual phase/window and current maintenance preimage",
+      "Future S/H/native/config quantities and their completeness"
+    ],
+    "no_hidden_reacceptance": "The exact contract is accepted now. Do not wait for future sample output, another semantic approval, a per-field Owner grant, or a renewed old source/gate audit to begin authorized isolated implementation.",
+    "actual_sampling": "After accepted docs/base, PREFLIGHT, original affected review and genuine original maintenance adoption/admission, the original sole writer may proceed through the existing applicable scope to the one fixed invocation. This record itself does not run or independently grant an immediate production invocation; no separate generic Owner approval is added.",
+    "no_forced_DS_UPDATE": "Do not force app/control rebinding or DS_UPDATE for a root-only metadata verb. The real original protected-entry delivery contract decides its necessary maintenance joins and actual cost; a larger unavoidable route cannot be mislabeled 4MiB."
+  },
+  "ACTION_TAKEN": {
+    "files_read": "Five exact new frozen documents, including full original nonauthor receipt",
+    "decision_written": "This new attributable docs-only record",
+    "implementation_changes": 0,
+    "tests_or_fixtures_run": 0,
+    "new_reviewers": 0,
+    "production_reads_or_calls": 0,
+    "production_mutations": 0,
+    "permission_changes": 0,
+    "source_or_secret_or_DB_reads": 0,
+    "sampling": 0,
+    "new_operations_or_attempts": 0,
+    "frozen_originals_modified": 0
+  },
+  "NEXT": [
+    {
+      "owner": "Original1437 source lane",
+      "action": "Immediately record the three exact accepted units and N1 coordinate erratum in a docs-only accepted Spec/base, with this attributable decision; preserve frozen originals and prior decisions."
+    },
+    {
+      "owner": "Original1437 source lane, requested Sol6.1 ultra",
+      "action": "Output DEVELOPMENT_PREFLIGHT bound to that accepted base and exact parent, then implement only the three semantic source surfaces and necessary original mechanical joins in the isolated owned candidate."
+    },
+    {
+      "owner": "Original same nonauthor review chain",
+      "action": "Review the actual affected implementation and new copied-layout evidence; reuse prior unchanged method/source/gates. No parallel second reviewer is requested."
+    },
+    {
+      "owner": "Original1437 sole production writer",
+      "action": "Once exact closure fits its justified small budget and original maintenance predicates admit it, perform the original protected maintenance adoption and at most one fixed sampling invocation. Retain UNKNOWN/refusal without resend."
+    },
+    {
+      "owner": "Original1437 budgeting lane",
+      "action": "Use the resulting typed observations, exact updated J and selected stop-only plan to build the genuine conservative remaining bound. Missing Q3/config/G/growth/aux conditions remain explicit; only the original capacity contract can admit business afterward."
+    }
+  ],
+  "excluded_authority": {
+    "immediate_production_or_sampling_authorized_by_this_decision": false,
+    "REGISTER": false,
+    "TX": false,
+    "context": false,
+    "prepare_driven": false,
+    "DS_UPDATE": false,
+    "business_execution": false,
+    "E42_attempt_or_replay": false,
+    "UNKNOWN_replay": false,
+    "source_Git_private_access_or_permission_bypass": false,
+    "HR532_or_PR529_acceptance": false,
+    "general_maintenance_platform_or_generic_owner_grant": false,
+    "lower_50GiB_floor": false,
+    "implementation_PASS": false,
+    "install_load_PASS": false,
+    "business_credit": 0
+  },
+  "transport": {
+    "received_via": "Current exclusive coordinator relay in this conversation",
+    "frozen_NOT_SENT_route0": "Preserved as preparation-time record, not interpreted as current delivery failure",
+    "decision_delivery": "New decision file plus final response to current coordinator; no external/thread send command",
+    "recipient": "01a14c3f-4210-76f2-86ce-f7bcf7da1d38",
+    "forbidden_old_coordinator_written": false,
+    "downstream_ACK_claimed": false
+  },
+  "cleanup": {
+    "delete_count": 0,
+    "deleted_paths": [],
+    "retained": "All original evidence, frozen proposals/review, active source materials and this unique decision. No redundant filesystem copy was created by this decision turn.",
+    "production_thread_daemon_touched": false
+  },
+  "recorded_at_utc": "2026-10-19T11:55:32.398709+00:00"
+}

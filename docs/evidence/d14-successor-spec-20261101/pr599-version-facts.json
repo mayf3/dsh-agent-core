@@ -1,0 +1,190 @@
+{
+  "observedAt": "2026-10-31T23:24:37.921830+00:00",
+  "current": {
+    "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current",
+    "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules",
+    "resolved": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules",
+    "linkUid": 0,
+    "linkMtimeUtc": "2026-10-31T12:39:32.765210+00:00"
+  },
+  "targets": [
+    {
+      "agentId": "agt_family-steward-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_family-steward-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:07:52.485010+00:00"
+    },
+    {
+      "agentId": "agt_qa-reviewer",
+      "home": "/Users/authsvc/.agent-core/homes/agt_qa-reviewer",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_qa-reviewer/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:17:59.935990+00:00"
+    },
+    {
+      "agentId": "agt_shopping-list-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_shopping-list-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_shopping-list-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T14:59:40.077865+00:00"
+    },
+    {
+      "agentId": "agt_writing-style-analyst-agent",
+      "home": "/Users/authsvc/.agent-core/homes/agt_writing-style-analyst-agent",
+      "packageJson": "/Users/authsvc/.agent-core/homes/agt_writing-style-analyst-agent/profiles/node_modules/dsh-codex/package.json",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "version": "0.3.2",
+      "rawLink": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex",
+      "resolvedPackageRoot": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/gen-032-20261031-123906/node_modules/dsh-codex",
+      "linkUid": 0,
+      "linkGid": 20,
+      "linkMtimeUtc": "2026-10-28T15:13:57.422457+00:00"
+    }
+  ],
+  "generationBuild": {
+    "file": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex/build-provenance/build-inputs.json",
+    "plugin": {
+      "name": "dsh-codex",
+      "version": "0.3.2",
+      "sourceRepository": "https://github.com/mayf3/dsh-codex.git",
+      "upstreamRepository": "https://github.com/Yan-Zero/dsh-codex",
+      "sourceRef": "refs/heads/main",
+      "sourceTree": "5f144d38a10eb40ce5cf33c597a72a81bd21e537",
+      "sourceCommit": "7cfa139e111956a7193622afc734126b52d7bf07",
+      "selection": "fresh main HEAD; actual package version preserved"
+    },
+    "companionSource": {
+      "sourceRepository": "https://github.com/mayf3/dsh-agent-core",
+      "sourceCommit": "383c14dbe7e39f2c23f80c0c9edd9adb3adab46e",
+      "includedInPlugin": false
+    },
+    "historicalBuildOnlyMetadata": {
+      "buildOnly": true,
+      "productionExecuted": false,
+      "deploymentRootSelected": false
+    },
+    "closure": {
+      "sourceCommit": "7cfa139e111956a7193622afc734126b52d7bf07",
+      "treeDigest": "119f74e67b61a1ecace6219ebcf7f2df8874ce71d27cc2170d8e91667d1990b0",
+      "fileCount": 14224,
+      "totalBytes": 88994574
+    }
+  },
+  "r3BuildReceipt": {
+    "path": "/tmp/025-r3-staging/BUILD-RECEIPT.json",
+    "recordedAt": "2026-10-31T12:35:13.217379+00:00",
+    "source": {
+      "recordedAt": "2026-10-31T12:29:38.288161+00:00",
+      "status": "FROZEN_BUILD_BASELINE",
+      "sourceRepository": "https://github.com/mayf3/dsh-codex.git",
+      "sourceRef": "refs/heads/main",
+      "sourceCommit": "7cfa139e111956a7193622afc734126b52d7bf07",
+      "sourceTree": "5f144d38a10eb40ce5cf33c597a72a81bd21e537",
+      "pluginVersion": "0.3.2",
+      "packageJsonSha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc",
+      "frozenLockSha256": "6dd2d6f923b3ceb2714223c62f7c76ebf50861c4ad06dfeb5d616090db5034b6",
+      "governingSpec": {
+        "path": "docs/specs/DSH_CODEX_SHARED_AUTH_PROTECTION_RESTORE_V1.md",
+        "status": "accepted",
+        "sha256": "26e9d3c645f24eec02d6035f744a5083a2cdb94f2a1db1f917d7b5796afe1df5"
+      },
+      "sourceCodeEdits": 0,
+      "productionWrites": 0,
+      "sourceClean": true
+    },
+    "artifacts": [
+      {
+        "name": "release.tgz",
+        "bytes": 17657882,
+        "sha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2",
+        "sidecar": "release.tgz.sha256",
+        "sidecarSha256": "a64544bd04fde501c489e320d2355b3c5fea5b384985e529cc09580692a5983f"
+      },
+      {
+        "name": "codex-deps-scopes.tgz",
+        "bytes": 16660331,
+        "sha256": "c994dff1b4ec771cb955ccb109a1100a9be4c71835308eac9c5b70d25c2e1abc",
+        "sidecar": "codex-deps-scopes.tgz.sha256",
+        "sidecarSha256": "26bedbde270d05e6d330529a7245172c03f700276fce5b57249cd570778fbbe5"
+      },
+      {
+        "name": "source-stamp.json",
+        "bytes": 169,
+        "sha256": "76416450dc0ffd87f8c409b3e496a513d6da43c176beacea64f248ebd1888965",
+        "sidecar": "source-stamp.json.sha256",
+        "sidecarSha256": "63d669a1554dbaf55a1d6691d6b8a8178480b4eb68be37f627c4e9dcee753d7b"
+      }
+    ],
+    "productionWrites": 0,
+    "installed": false
+  },
+  "sourceFiles": [
+    {
+      "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex/build-provenance/build-inputs.json",
+      "bytes": 8135,
+      "sha256": "7e2bb7d29b170859d7ee8a36ea2622b9cbd0aca8cba1a1dde7a174efee863549"
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex/build-provenance/runtime-closure-manifest.json",
+      "bytes": 3326059,
+      "sha256": "223fd2031c34267b4d167e3c725128472207a1c555f77c84ce7cf8d8f6822d15"
+    },
+    {
+      "path": "/Users/authsvc/.agent-core/control/codex-plugin-runtime/current/dsh-codex/package.json",
+      "bytes": 5876,
+      "sha256": "f9a6ea3e647901ea1f6b218bc27aa2e3cd9ff9a9579b9036489a12354363f5bc"
+    },
+    {
+      "path": "/usr/local/share/agent-core/artifacts/source-stamp.json",
+      "bytes": 169,
+      "sha256": "76416450dc0ffd87f8c409b3e496a513d6da43c176beacea64f248ebd1888965"
+    },
+    {
+      "path": "/usr/local/share/agent-core/artifacts/dsh-codex-0.3.2-release.tgz",
+      "bytes": 17657882,
+      "sha256": "8755ae67673ddc08ba7511a8b11582151763972cb5c00e733f4e94f87717daf2"
+    },
+    {
+      "path": "/tmp/025-r3-staging/BUILD-RECEIPT.json",
+      "bytes": 23984,
+      "sha256": "15d71c79ec84c0cffdd11676d266cc1e5d060bac43b23a4ea81a15dcd6c606b3"
+    },
+    {
+      "path": "/tmp/025-r3-staging/BUILD-BASIS-CLARIFICATION.md",
+      "bytes": 569,
+      "sha256": "a5cdfa1234648a06000f9dec34b0599972686305a35bb0de403b250f45eaf71d"
+    },
+    {
+      "path": "/usr/local/libexec/agent-core/scripts/artifacts-watchdog.sh",
+      "bytes": 1595,
+      "sha256": "39c9a2609df34d545efd9ad01dcf9828ca826c75a68a0cc8c7700f56e590bfe6"
+    },
+    {
+      "path": "/Library/LaunchDaemons/ai.agent-core-artifacts-watchdog.plist",
+      "bytes": 565,
+      "sha256": "fa934595b909491944d571a3f7f4451258179271e6519b5b56badcb00894c5d5"
+    }
+  ],
+  "installedVsReleaseArchive": {
+    "archive": "/usr/local/share/agent-core/artifacts/dsh-codex-0.3.2-release.tgz",
+    "regularFilesCompared": 14299,
+    "mismatches": [],
+    "comparison": "archive regular-file bytes to generation; extra installed files/modes not checked"
+  }
+}

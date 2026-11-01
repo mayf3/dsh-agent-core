@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_STALE_REENTRY_V1
-status: accepted
+status: superseded
 accepted_date: 2026-09-17
 accepted_by: mayf3
 accepted_reviewed_head: 6592dd50dda2fa46ba931c138d3718f8528da02f
@@ -78,7 +78,7 @@ supersedes:
     execution"). When this document is accepted, V2 remains the authority for
     all surfaces this spec does not explicitly move (V2 gains a reciprocal
     amended/superseded-in-scope-by backlink at acceptance).
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_STALE_REENTRY_V2
 owners:
   - mayf3
 related_authorities:

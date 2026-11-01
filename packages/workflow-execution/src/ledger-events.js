@@ -1,3 +1,5 @@
+import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
+
 /**
  * @agent-core/workflow-execution/src/ledger-events.js — the event vocabulary
  * and replay projection (WORKFLOW_AGENT_EXECUTION_V2; whole-authority
@@ -111,20 +113,28 @@ export function applyLedgerEvent(attempts, event) {
         const sameIdentity = current.dispatchIntentId === event.dispatchIntentId.toLowerCase()
           && current.workflowInstanceId === event.workflowInstanceId.toLowerCase()
           && current.ownerPrincipalId === event.ownerPrincipalId.toLowerCase()
-        const legalReplan = previousGeneration + 1 === generation
+        const legalStaleReplan = previousGeneration + 1 === generation
           && current.state !== 'ACTIVE'
           && current.judgment === 'stale_no_progress'
           && sameIdentity
-        if (!legalReplan) {
+        const legalOwnerResume = ownerResumePlanIsValid(current, event, generation, sameIdentity)
+        if (!legalStaleReplan && !legalOwnerResume) {
+          if (event.retryReason === 'owner_assistance_resolved') {
+            throw new Error(`workflow-execution: corrupt ledger — Owner-resume proof is invalid, mismatched, or already consumed for nodeVisit ${nodeVisitId}`)
+          }
           throw new Error(`workflow-execution: corrupt ledger — attempt_planned twice for nodeVisit ${nodeVisitId} (generation ${previousGeneration} → ${generation}, state=${current.state}, judgment=${current.judgment ?? 'none'})`)
         }
       }
+      const isOwnerResume = event.retryReason === 'owner_assistance_resolved'
       attempts.set(nodeVisitId, {
         attemptId: event.attemptId,
         generation,
         dispatchCount: generation,
         ...(current !== undefined
-          ? { previousAttemptId: current.attemptId, retryReason: 'stale_no_progress' }
+          ? {
+              previousAttemptId: current.attemptId,
+              retryReason: isOwnerResume ? 'owner_assistance_resolved' : 'stale_no_progress',
+            }
           : {}),
         nodeVisitId,
         dispatchIntentId: event.dispatchIntentId.toLowerCase(),
@@ -132,6 +142,17 @@ export function applyLedgerEvent(attempts, event) {
         ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
         state: 'ACTIVE',
         phase: 'planned',
+        ...(Number.isInteger(event.preDeliveryWorkflowStateVersion)
+          ? { preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion }
+          : {}),
+        ...(isOwnerResume
+          ? {
+              assistanceResume: event.assistanceResume,
+              consumedAssistanceCaseIds: [event.assistanceResume.assistanceCaseId.toLowerCase()],
+            }
+          : current?.consumedAssistanceCaseIds === undefined
+            ? {}
+            : { consumedAssistanceCaseIds: [...current.consumedAssistanceCaseIds] }),
         reason: undefined,
         createdAtMs: event.atMs,
         delivered: undefined,
@@ -319,6 +340,35 @@ export function applyLedgerEvent(attempts, event) {
     default:
       throw new Error(`workflow-execution: unknown ledger event kind ${JSON.stringify(event?.kind)}`)
   }
+}
+
+export function ownerResumePlanIsValid(current, event, generation, sameIdentity) {
+  if (event.retryReason !== 'owner_assistance_resolved') return false
+  if (current.state !== 'NEEDS_REVIEW'
+    || current.phase !== 'reconciled'
+    || current.judgment !== 'run_ended_no_submission'
+    || current.delivered === undefined
+    || current.preDeliveryWorkflowStateVersion === undefined
+    || !sameIdentity
+    || generation !== (current.generation ?? 1) + 1
+    || event.previousAttemptId !== current.attemptId
+    || !Number.isInteger(event.preDeliveryWorkflowStateVersion)
+    || event.preDeliveryWorkflowStateVersion < 1
+    || event.assistanceResume === null
+    || typeof event.assistanceResume !== 'object'
+    || Array.isArray(event.assistanceResume)) return false
+  const usedCases = current.consumedAssistanceCaseIds ?? []
+  if (usedCases.includes(String(event.assistanceResume.assistanceCaseId).toLowerCase())) return false
+  const checked = validateOwnerAssistanceResumeEvidence(event.assistanceResume, {
+    dispatchIntentId: event.dispatchIntentId,
+    workflowInstanceId: event.workflowInstanceId,
+    nodeVisitId: event.nodeVisitId,
+    ownerPrincipalId: event.ownerPrincipalId,
+    previousAttemptId: current.attemptId,
+    previousPreDeliveryWorkflowStateVersion: current.preDeliveryWorkflowStateVersion,
+    preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion,
+  })
+  return checked.ok
 }
 
 /**

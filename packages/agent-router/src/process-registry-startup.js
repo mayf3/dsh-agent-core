@@ -6,16 +6,25 @@ export async function disposeProcessSlots(lifecycleSlots, failNoChild) {
   for (const [agentId, slot] of lifecycleSlots) {
     const proc = slot.processRef
     if (slot.state === 'STARTUP' && proc === null) {
-      failNoChild(agentId, slot)
+      shutdowns.push(Promise.resolve().then(() => failNoChild(agentId, slot)))
       continue
     }
     if (proc !== null && proc !== undefined && !seen.has(proc) && typeof proc.shutdown === 'function') {
       seen.add(proc)
-      shutdowns.push(Promise.resolve().then(() => proc.shutdown()).catch(() => proc.exitPromise)
-        .then(() => proc.exitPromise ?? proc.exit))
+      shutdowns.push((async () => {
+        const errors = []
+        try { await proc.shutdown() } catch (error) { errors.push(error) }
+        // A shutdown rejection must not skip another worker or substitute for
+        // an observed exit. Keep awaiting the existing exact-child authority.
+        try { await (proc.exitPromise ?? proc.exit) } catch (error) { errors.push(error) }
+        if (errors.length === 1) throw errors[0]
+        if (errors.length > 1) throw new AggregateError(errors, `agent-router: shutdown failed for ${agentId}`)
+      })())
     }
   }
-  await Promise.allSettled(shutdowns)
+  const results = await Promise.allSettled(shutdowns)
+  const errors = results.filter(result => result.status === 'rejected').map(result => result.reason)
+  if (errors.length > 0) throw new AggregateError(errors, 'agent-router: owned process shutdown failed')
 }
 
 export function convergeStartedStartup({ agentId, entry, cause, empty, reap, settle, teardownFailure }) {
