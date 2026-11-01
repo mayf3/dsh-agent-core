@@ -161,6 +161,9 @@ export function retryCandidate({ job, occurrences, nowMs }) {
   if (!job.enabled || job.retry?.auto !== true) return null
   const terminal = latestTerminalOccurrence(occurrences, job.id)
   if (!terminal || terminal.state !== 'failed') return null
+  // D-009 scoped CTR-S2 policy failure is not proven business failure.
+  if (terminal.lateSettlement?.basis === 'policy-auto-reconcile'
+    && terminal.lateSettlement.businessStateAtCommit === 'outcome_unknown') return null
   const chain = retryChainLength(occurrences, terminal)
   // C-SH-001 (STALE_RETRY_AFTER_SCHEDULE_REVISION, precedence over exhaustion):
   // a retry record must share its predecessor's scheduleRevision (store

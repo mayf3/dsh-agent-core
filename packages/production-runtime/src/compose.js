@@ -49,6 +49,7 @@ import { createFeishuDeliver } from '../../scheduler-router/src/index.js'
 import { mountSchedulerHistoryRuntime } from './scheduler/history-runtime.js'
 import { createObservedSchedulerInvoker } from './scheduler-invoker.js'
 import { mountSchedulerSelfServiceRuntime } from './scheduler/self-service-runtime.js'
+import { mountSchedulerAutoReconcileRuntime } from './scheduler/auto-reconcile-runtime.js'
 import { createSchedulerRuntimeStarter, mountConfiguredSchedulerHealthRuntime } from './scheduler/health-runtime.js'
 import { loadCredentialFor } from '../../broker/src/credential-store.js'
 import { requestAccessToken } from '../../broker/src/transport.js'
@@ -580,7 +581,6 @@ export async function composeProductionRuntime(options = {}) {
     },
     ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
   })
-
   const scheduler = new Scheduler({
     store,
     invoker,
@@ -599,7 +599,7 @@ export async function composeProductionRuntime(options = {}) {
       error: (...a) => log.error(...a),
     },
   })
-
+  const schedulerAutoReconcile = mountSchedulerAutoReconcileRuntime({ router, store, log })
   writeEvidence({
     kind: 'composed',
     pid: process.pid,
@@ -610,7 +610,6 @@ export async function composeProductionRuntime(options = {}) {
     defaultAgentId: defaultAgent.id,
     feishu: feishu !== undefined,
   })
-
   return {
     ctx,
     layout,
@@ -658,6 +657,7 @@ export async function composeProductionRuntime(options = {}) {
       }
       writeBoundary('quiesce_begin')
       try {
+        await schedulerAutoReconcile.stop()
         // DSH_SHUTDOWN_CONTRACT: await the workflow engine's bounded drain
         // (in-flight poll finishes, no further page) BEFORE the scheduler and
         // the owned contexts (Router processes) are torn down — a late poll can

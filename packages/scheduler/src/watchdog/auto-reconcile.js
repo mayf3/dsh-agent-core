@@ -8,7 +8,7 @@
  * every other evidence shape is left for human disposition. The unknown-never-
  * terminal invariant is never weakened: settlements produced here carry exact
  * trusted evidence and go through the same store mutation path as the
- * operator CLI (the pending autoReconcileOccurrences adapter, single mutation
+ * operator CLI (the autoReconcileOccurrences adapter, single mutation
  * authority per SCHEDULER_CONTROL_PLANE_RELIABILITY_V1).
  *
  * CTR-S4 default OFF: a pass runs only when wired with an `evidenceLookup`
@@ -18,13 +18,40 @@
  * that would settle live occurrences from ignorance.
  */
 
-import { isUnresolvedUnknown } from '../occurrence-model.js'
+import { canonicalJSON, computePayloadHash, isUnresolvedUnknown } from '../occurrence-model.js'
 
 /** CTR-S3 machine receipt actor — always distinguishable from human operators. */
 export const AUTO_RECONCILE_DEFAULT_ACTOR_ID = 'system:fence-auto-reconcile'
 
 /** Upper bound per pass so one crowded store cannot make unbounded progress. */
 export const AUTO_RECONCILE_MAX_SETTLEMENTS = 50
+
+/** Only the runtime Router adapter may supply this exact, bounded envelope. */
+function exactEvidence(record, evidence) {
+  if (!evidence || record.recordSchemaVersion !== 3) return false
+  const expected = { occurrenceId: record.occurrenceId, runId: record.runId,
+    requestId: record.requestId, agentId: record.ownerAgentId }
+  if (Object.entries(expected).some(([key, value]) => typeof value !== 'string' || !value || evidence[key] !== value)) return false
+  if (typeof evidence.runtimeEpoch !== 'string' || !evidence.runtimeEpoch
+    || typeof evidence.reconciliationHandle !== 'string'
+    || !evidence.reconciliationHandle.startsWith(`turn:${evidence.runtimeEpoch}:`)) return false
+  const success = evidence.outcomeEvidence === 'exact_turn_end_success'
+  const failure = evidence.outcomeEvidence === 'exact_turn_end_failure'
+  if (success || failure) {
+    const direct = evidence.outcome ?? null
+    const late = evidence.lateOutcome ?? null
+    return (direct === null && late === (success ? 'late_completed' : 'late_failed')
+      || late === null && direct === (success ? 'completed' : 'failed'))
+      && ['exact_terminal_then_idle', 'child_real_exit'].includes(evidence.terminationEvidence)
+  }
+  return !evidence.outcomeEvidence && !evidence.outcome && evidence.lateOutcome === 'terminated_without_outcome'
+    && ['child_real_exit', 'exact_terminal_then_idle', 'exact_started_then_idle', 'exact_queued_removal', 'cancellation_ack'].includes(evidence.terminationEvidence)
+}
+
+function definitionSnapshot(job) {
+  const { id, agentId, enabled, scheduleRevision, updatedAtMs, schedule, payload, retry, deleteAfterRun } = job
+  return canonicalJSON({ id, agentId, enabled, scheduleRevision, updatedAtMs, schedule, payload, retry, deleteAfterRun })
+}
 
 /**
  * CTR-S2 frozen evidence→decision mapping. Mutually exclusive, exhaustive,
@@ -67,7 +94,7 @@ export function evaluateAutoReconcileDecision({ job, record, evidence }) {
 /**
  * CTR-S1 pass planner. Pure: reads a store document snapshot + an injected
  * `evidenceLookup(record) -> evidence|null` and produces the settlement
- * targets for the pending `autoReconcileOccurrences` adapter. Performs NO mutation.
+ * targets for the `autoReconcileOccurrences` adapter. Performs NO mutation.
  *
  * Fail-closed (CTR-S4): without a function `evidenceLookup` the plan is empty.
  *
@@ -89,19 +116,38 @@ export function planAutoReconcilePass(doc, evidenceLookup, { maxSettlements = AU
     }
     if (!isUnresolvedUnknown(record)) continue
     const job = jobsById.get(record.jobId)
+    if (job?.schedule?.kind === 'at') {
+      skipped.push({ occurrenceId: record.occurrenceId, reason: 'one_shot_at_human_required' })
+      continue
+    }
+    if (!job || !['cron', 'every'].includes(job.schedule?.kind) || !job.enabled
+      || job.agentId !== record.ownerAgentId || job.scheduleRevision !== record.scheduleRevision
+      || computePayloadHash(job) !== record.payloadHash) {
+      skipped.push({ occurrenceId: record.occurrenceId, reason: 'definition_or_identity_not_eligible' })
+      continue
+    }
     const evidence = evidenceLookup(record)
     const { decision, reason } = evaluateAutoReconcileDecision({ job, record, evidence })
     if (decision === null) {
       skipped.push({ occurrenceId: record.occurrenceId, reason })
       continue
     }
-    let evidenceDigest = 'null'
-    try { evidenceDigest = JSON.stringify(evidence)?.slice(0, 200) ?? 'null' } catch { /* unserializable evidence keeps the digest placeholder */ }
+    if (!exactEvidence(record, evidence)) {
+      skipped.push({ occurrenceId: record.occurrenceId, reason: 'evidence_not_exact_or_coherent' })
+      continue
+    }
     targets.push({
       occurrenceId: record.occurrenceId,
       runId: record.runId,
+      requestId: record.requestId,
+      jobId: record.jobId,
+      ownerAgentId: record.ownerAgentId,
+      scheduleRevision: record.scheduleRevision,
+      payloadHash: record.payloadHash,
+      expectedDefinition: definitionSnapshot(job),
+      evidence: structuredClone(evidence),
       resolvedTo: decision,
-      evidenceNote: `auto-reconcile policy (AGENT_DELIVERY_RESILIENCE_V1 CTR-S2): ${reason}; evidence=${evidenceDigest}`,
+      policyReason: reason,
     })
   }
   return { targets, skipped }
