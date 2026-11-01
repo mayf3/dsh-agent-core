@@ -1486,3 +1486,29 @@ NEXT_TASK = 共享域对齐 审计
 (to be written atomically at acceptance: OWNER exact-head acceptance of this V3 head,
 reciprocal `superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` backlink in
 `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V2`, and `docs/specs/README.md` lifecycle mirror update.)
+
+## D14 whole-authority lifecycle — pending Owner acceptance (2026-11-01)
+
+```text
+status = SUPERSEDED_PENDING_ACCEPTANCE
+superseded_by = AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4
+successor_file = docs/specs/AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4.md
+ACCEPTANCE = PENDING_OWNER_EXACT_HEAD_ACCEPTANCE
+OWNER_DIRECTION_DATE = 2026-11-01
+FINAL_PR_HEAD = PENDING_FINAL_HEAD_OF_PR_601
+ATOMIC_TRANSACTION = mayf3/dsh-agent-core#601
+```
+
+Pending reciprocal backlink: [AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4](AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4.md).
+That whole-authority successor names `AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V3` in its `supersedes` metadata.
+This appended lifecycle section is authorized by the Owner's 2026-11-01 docs-only
+completion task and preserves all preceding bytes. It stages the same-PR
+replacement link; it does not perform acceptance or retire the active authority.
+The existing accepted frontmatter and original Contracts remain effective until
+the Owner accepts the exact reviewed and final PR head and the atomic docs-only
+transaction is merged into `main`. At that acceptance transaction, this file's
+formal lifecycle becomes `status: superseded` with
+`superseded_by: AGENT_CORE_FLEET_SHARED_CODEX_AUTH_V4`, its successor becomes
+`status: accepted`, and the governing index/lifecycle mirrors change together.
+Any missing acceptance, unmatched reciprocal link or head drift blocks activation.
+This pending marker grants no implementation or production-operation permission.
