@@ -1,0 +1,19 @@
+{
+  "base": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+  "source": "/tmp/dispatch-523-impl.log",
+  "sha256": "8bb713708ef86f6ce90b0eb1b4fa047480e025c0fd19d2da07969824b4867e32",
+  "lines": "6299-6869",
+  "tests": 62,
+  "pass": 57,
+  "fail": 5,
+  "exit": 1,
+  "failureNames": [
+    "broker RPC: executed as the ACTUAL proc.agentId via the gateway",
+    "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+    "packages/agent-switch/test/switch.test.js"
+  ],
+  "command": "node --test packages/agent-router/test/router.test.js packages/agent-router/test/workspace-binding.test.js packages/agent-router/test/broker-rpc.test.js packages/agent-router/test/primary-workspace.test.js packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js packages/agent-switch/test/switch.test.js packages/product-api/test/api.test.js",
+  "policy": "post-change failure set subset baseline five; existing failures do not block; stop on new semantic failures only"
+}

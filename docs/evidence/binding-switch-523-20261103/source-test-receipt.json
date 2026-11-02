@@ -1,0 +1,35 @@
+{
+  "evaluatedAt": "2026-11-02T23:52:13.202737+00:00",
+  "node": "v26.7.0",
+  "implementationBase": "fa7fea60374b64b6f869c418c4c6a7a9b98b3022",
+  "mainBase": "ce1d13c1e8585759c6a5f194fb5553d990574b5b",
+  "environment": "isolated local clone /tmp/dsh-523-impl; temp workspace roots; fake child; loopback ephemeral HTTP",
+  "regression": {
+    "red": {
+      "tests": 9,
+      "pass": 3,
+      "fail": 6,
+      "reason": "Missing expected rejection"
+    },
+    "green": {
+      "tests": 9,
+      "pass": 9,
+      "fail": 0
+    }
+  },
+  "sourceSha256": {
+    "packages/agent-router/src/binding-resolution.js": "830f6995eda887fcef24ae424a67c0bc1e1ac5891568530ff5dd07b3114dccdd",
+    "packages/agent-router/src/index.js": "662e24874af853ac0f641594ca6e844ead3bf0de36d0beac9b9e477d931d5df6",
+    "packages/agent-router/test/route-chain/switch-workspace-guard.test.js": "e24c45c35cb6aada19e6a6fcfc9f595cb230f3db73d640ba0e8dacc196611174"
+  },
+  "limitations": [
+    "source candidate only; amendment PR not yet merged",
+    "remaining three failures are baseline debt, not full-suite PASS",
+    "two EEXIST baseline failures did not recur; no provisioning code/dependency repair performed",
+    "no production writes, merges, deployments, real model calls, or business validation"
+  ],
+  "redEnvironment": "git archive exact amendment head fa7fea60374b64b6f869c418c4c6a7a9b98b3022 + final test bytes; node_modules symlink to isolated clone; temporary test workspaces only",
+  "redWorktree": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/dsh-523-red-g0ecu7_k",
+  "regressionCommand": "node --test --test-reporter=tap packages/agent-router/test/route-chain/switch-workspace-guard.test.js",
+  "candidateCommand": "node --test --test-reporter=tap packages/agent-router/test/router.test.js packages/agent-router/test/workspace-binding.test.js packages/agent-router/test/broker-rpc.test.js packages/agent-router/test/primary-workspace.test.js packages/agent-router/test/route-chain/parent-rpc-stop-barrier.test.js packages/agent-switch/test/switch.test.js packages/product-api/test/api.test.js packages/agent-router/test/route-chain/switch-workspace-guard.test.js"
+}

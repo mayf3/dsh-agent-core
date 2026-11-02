@@ -1,0 +1,30 @@
+{
+  "tests": 71,
+  "pass": 68,
+  "fail": 3,
+  "cancelled": 0,
+  "skipped": 0,
+  "candidateFailures": [
+    "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "packages/agent-switch/test/switch.test.js"
+  ],
+  "baselineFailures": [
+    "broker RPC: executed as the ACTUAL proc.agentId via the gateway",
+    "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "seam: a structured gateway failure passes through declared codes verbatim at the correct depth",
+    "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+    "packages/agent-switch/test/switch.test.js"
+  ],
+  "newFailures": [],
+  "baselineFailuresAbsent": [
+    "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+    "broker RPC: executed as the ACTUAL proc.agentId via the gateway"
+  ],
+  "failureSubsetBaseline": true,
+  "failureNameSymmetricDiff": [
+    "AC1: same Agent + two Feishu group bindings -> two different, stable, deterministic workspaces",
+    "broker RPC: executed as the ACTUAL proc.agentId via the gateway"
+  ],
+  "rc": 1
+}
