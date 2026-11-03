@@ -334,14 +334,19 @@ export function apply(ctx, config = {}) {
         // WORKFLOW_EXECUTION_CONTROL_V1 (CTR-WEC1-003/006): the same
         // request-time resolution discipline as /scheduler/* — the access
         // service and the token verifier are provided later in the compose
-        // sequence than product-api is mounted.
+        // sequence than product-api is mounted. The verifier is the WORKFLOW
+        // audience verifier (aud=svc-workflow): auth-service namespace-enforces
+        // scheduler-audience tokens to scheduler.* scopes, so the kicks route's
+        // required workflow.execute scope can only ride a svc-workflow token.
+        // Falls back to the legacy scheduler verifier when the workflow
+        // verifier is not provided (older runtimes keep working).
         try {
           const { handleWorkflowExecutionRequest } = await import('./workflow-execution-routes.js')
           const { status, body } = await handleWorkflowExecutionRequest({
             req,
             url,
             access: ctx.get('workflowExecutionAccess') ?? null,
-            verifier: ctx.get('schedulerTokenVerifier') ?? null,
+            verifier: ctx.get('workflowTokenVerifier') ?? ctx.get('schedulerTokenVerifier') ?? null,
           })
           json(res, status, body)
         } catch (error) {
