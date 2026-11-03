@@ -1,5 +1,5 @@
 import { canonicalJSON, rebuildFences, validateOccurrenceRecord } from '../occurrence-model.js'
-import { latestTerminalOccurrence } from '../eligibility.js'
+import { computeNextRunAtMsV2, hasNonTerminalOccurrence, latestTerminalOccurrence, naturalCandidate } from '../eligibility.js'
 import { computeNextRunAtMs, MIN_REFIRE_GAP_MS } from '../schedule.js'
 import { normalizeJob } from '../job-model.js'
 
@@ -29,8 +29,18 @@ function alertForJob(incidents, jobId) {
   return current?.alertState ?? { lifecycle: 'CLOSED_RECOVERED', delivery: 'DELIVERED', incidentKey: null, lastTransitionAt: null }
 }
 
-function scheduleReady(job, nowMs) {
-  try { return computeNextRunAtMs(job.schedule, nowMs, { jobId: job.id, fallbackAnchorMs: job.createdAtMs ?? nowMs }) !== undefined }
+function hasNativeAtCatchup(job, records, nowMs) {
+  // D-009 §13.1: only an unrecorded one-shot may use native catch-up.
+  // Reuse admission's activation/grace policy rather than inventing a window.
+  return job.schedule.kind === 'at' && records.length === 0
+    && naturalCandidate({ job, occurrences: records, nowMs }).due
+}
+
+function scheduleReady(job, records, nowMs) {
+  try {
+    return hasNativeAtCatchup(job, records, nowMs)
+      || computeNextRunAtMs(job.schedule, nowMs, { jobId: job.id, fallbackAnchorMs: job.createdAtMs ?? nowMs }) !== undefined
+  }
   catch { return false }
 }
 
@@ -39,10 +49,24 @@ function fenceProjectionValid(snapshot) {
   try { return canonicalJSON(snapshot.fences) === canonicalJSON(rebuildFences(snapshot.occurrences ?? [])) } catch { return false }
 }
 
+function nextRunProbe(job, records, nowMs) {
+  // A running/admitted one-shot legitimately has no future slot. UNKNOWN
+  // already has its exact occurrence incident; do not page a second root.
+  if (hasNonTerminalOccurrence(records, job.id)) return null
+  const next = computeNextRunAtMsV2({ job, occurrences: records, nowMs })
+  if (!Number.isFinite(next) && !hasNativeAtCatchup(job, records, nowMs)) return 'no_remaining_run'
+  // C-030: this is a missing projection observation, not admission failure.
+  // The definition/ledger above can still supply a valid future opportunity.
+  if (!Number.isFinite(job.state?.nextRunAtMs)) return 'next_run_projection_missing'
+  return null
+}
+
 function canonicalJobFindings(job, records, snapshot) {
   const findings = []
   const base = { jobId: job.id, logicalKey: job.logicalKey, agentId: job.agentId, jobRevision: job.scheduleRevision }
   const unresolved = records.filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
+  const nextRunReason = nextRunProbe(job, records, snapshot.generatedAt)
+  if (nextRunReason) findings.push({ class: 'JOB_CONFIGURATION_INVALID', ...base, reason: nextRunReason })
   for (const record of records) {
     if (record.executionOutcome === 'failed' && Number.isFinite(record.endedAt)) {
       findings.push({
@@ -112,21 +136,24 @@ export function validateCanonicalHealthAuthority(snapshot) {
   return snapshot
 }
 
-function projectRow(job, snapshot, complete) {
+function projectRow(job, snapshot, complete, authorityValid) {
   const records = (snapshot.occurrences ?? []).filter((item) => item.jobId === job.id)
   const unresolved = records.filter((item) => item.state === 'outcome_unknown' && item.terminationSettlement === undefined)
   const current = [...records].sort((a, b) => (b.admittedAt ?? b.startedAt ?? 0) - (a.admittedAt ?? a.startedAt ?? 0))[0] ?? null
   const credentialReady = snapshot.credentials?.[job.agentId] === true
   const routeState = snapshot.routes?.[job.id] ?? snapshot.routes?.[job.logicalKey] ?? { ready: false }
   const routeHealthy = routeState.ready === true && (routeState.status === undefined || routeState.status === 'READY')
-  const findings = canonicalJobFindings(job, records, snapshot)
+  // Invalid authority already projects UNKNOWN. Do not parse an invalid
+  // schedule again while deriving findings; generation drift alone still
+  // retains findings from an otherwise valid authority document.
+  const findings = authorityValid ? canonicalJobFindings(job, records, snapshot) : []
   let classification = 'healthy'
   let state = 'HEALTHY'
   if (!complete) {
     classification = 'unknown'; state = 'UNKNOWN'
   } else if (unresolved.length > 0 || !credentialReady) {
     classification = 'blocked'; state = unresolved.length > 0 ? 'QUARANTINED_UNKNOWN' : 'BLOCKED'
-  } else if (!routeHealthy || !scheduleReady(job, snapshot.generatedAt) || findings.length > 0 || snapshot.runtimeHealth?.healthOk === false) {
+  } else if (!routeHealthy || !scheduleReady(job, records, snapshot.generatedAt) || findings.length > 0 || snapshot.runtimeHealth?.healthOk === false) {
     classification = 'degraded'; state = 'DEGRADED'
   }
   const blockedSinceMs = unresolved.length
@@ -177,7 +204,7 @@ export function projectSchedulerHealth(snapshot = {}) {
   const jobs = snapshot.jobs.filter((job) => job.enabled === true)
   const complete = authorityError === null && generationsComplete(snapshot.generations)
     && snapshot.provenance?.canonicalPair === true && fenceProjectionValid(snapshot)
-  const rows = jobs.map((job) => projectRow(job, snapshot, complete))
+  const rows = jobs.map((job) => projectRow(job, snapshot, complete, authorityError === null))
   const findings = rows.flatMap((row) => row.findings ?? [])
   if (snapshot.runtimeHealth?.healthOk === false) findings.push({
     class: 'SCHEDULER_RUNTIME_UNHEALTHY', subjectKind: 'runtime', stableSubjectId: 'scheduler-runtime', reason: snapshot.runtimeHealth.reason,
