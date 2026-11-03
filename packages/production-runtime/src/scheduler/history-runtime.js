@@ -29,5 +29,23 @@ export async function mountSchedulerHistoryRuntime({ ctx, layout, schedulerAuth,
         log: { warn: (...args) => log.warn('[scheduler-auth]', ...args) },
       })
     : null)
+
+  // GOAL-ZERO-OPS-001 / P0-B: the /workflow-execution/* routes verify tokens
+  // against the WORKFLOW audience (auth_audiences.resource_service =
+  // 'svc-workflow', scope workflow.execute), not the scheduler audience —
+  // auth-service mints scheduler-audience tokens only with scheduler.*
+  // scopes (namespace-enforced in parseV1ScopeRequest), so reusing the
+  // scheduler verifier there made every kick delivery 401 permanently.
+  // Same triple, workflow audience; falls back to the scheduler verifier
+  // semantics when the workflow audience env is absent on older deployments.
+  const workflowAudience = env.SCHEDULER_WORKFLOW_AUTH_AUDIENCE ?? 'svc-workflow'
+  ctx.provide('workflowTokenVerifier', jwksUrl && issuer && workflowAudience
+    ? createJwksTokenVerifier({
+        jwksUrl,
+        issuer,
+        audience: workflowAudience,
+        log: { warn: (...args) => log.warn('[workflow-auth]', ...args) },
+      })
+    : null)
   return history
 }
