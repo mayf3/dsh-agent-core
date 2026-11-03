@@ -322,7 +322,73 @@ only change from the task base is the unrelated D-008 switch-source Decision; th
 affected Scheduler source and governing D-009/watchdog authorities are unchanged.
 The task base stays fixed; no rebase or merge was performed.
 
-Source/isolated mechanism evidence only. Installation, runtime activation, listening
+Source/isolated mechanism evidence only. Installation, runtime activation
 or live business acceptance are NOT_RUN; production mutations, merge and deployment
 remain outside this mandate. Structure and independent final-candidate review are
 recorded below when complete.
+
+### Structure and governance gates
+
+Semantic implementation commit: `22ec9d9313d994cc6b3e9605c182e8f4d371d2a5`.
+`node scripts/verify-code-structure.mjs --base ce1d13c1e8585759c6a5f194fb5553d990574b5b
+--head HEAD --json` (HEAD resolved to the semantic implementation above) exited 0 with
+`CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`: 0 candidate violations, 31 inherited
+baseline-debt findings, 0 resolved debt. This is a clean candidate delta, not
+repository-wide structural conformance. Registry bytes and authority files are unchanged.
+`python3 .agents/tools/verify_governance.py --target . --require-accepted` exited 0.
+Full structured gate output is in
+[gate-receipt.json](../evidence/scheduler-no-next-run-527/gate-receipt.json).
+
+The final base RED at 00:12:32Z used the final candidate probe file SHA-256
+`9987622eba64f876a8d3bd37f486508145cec84bc0226bcd054c0ded2cfd1092`, copied into
+the same relative test path in the exact-base worktree, then executed there. The
+baseline's original frozen untracked test was restored afterward from
+`/tmp/dsh-527-fix-evidence/baseline-copied-probe.test.js` (SHA-256 `df7900bb2a8a4a6d63fc7134ac19fdb2500a0ea9c97fce186b23d1bd8621af58`).
+That restored old copy is not the final RED input. The observation's `test_source`
+metadata binds the executed final test to the semantic commit.
+
+### Independent review and conformance
+
+Independent reviewer `/root/review_527` returned **PASS** for the exact semantic
+commit `22ec9d9313d994cc6b3e9605c182e8f4d371d2a5` against the fixed base and fresh
+current-base coordinates above. Both frozen blockers are CLOSED; open blocking
+findings and Spec gaps are empty. The reviewer independently ran the two new test
+files (15/15, rc=0), checked all four source/test hashes against Git and the receipt,
+reparsed all fourteen archived logs and named-failure sets, and checked the exact
+structure/governance observations. The returned review does not give an execution
+timestamp for its own test command; the persisted recording time is not represented
+as that timestamp. See [independent-review.json](../evidence/scheduler-no-next-run-527/independent-review.json).
+
+```text
+SPEC_GOVERNANCE_MODE = COMPLIANCE
+PRIMARY_AUTHORITY = SCHEDULER_WATCHDOG_ROUTING_AND_STUCK_OCCURRENCE_RECOVERY_V1
+AUTHORITY_REVISION = blob 27cfdb7b8ead2c42a6f3a1b7f5646ac199610b9e (accepted in base)
+IMPLEMENTATION_BASE_COMMIT = ce1d13c1e8585759c6a5f194fb5553d990574b5b
+IMPLEMENTATION_COMMIT = 22ec9d9313d994cc6b3e9605c182e8f4d371d2a5
+ENVIRONMENT = isolated local worktrees; existing croner 10.0.1; no production endpoints
+ASSURANCE_LEVEL = DURABLE
+REVIEW_SCOPE = AFFECTED
+EXECUTION_MANDATE = VALID (/tmp/dispatch-527-fix.md and direct user continuation)
+IMPLEMENTATION_STATE = COMPLETE
+VERIFICATION_STATE = SUFFICIENT (bounded source/mechanism scope)
+CONFORMANCE_RESULT = VERIFIED
+CONTRACTS_TOTAL = 4
+CONTRACTS_VERIFIED = 4
+CONTRACTS_DRIFTED = 0
+CONTRACTS_UNKNOWN = 0
+CTR-HEALTH-001 = VERIFIED (invalid authority, catch-up and negative boundaries)
+CTR-INCIDENT-001 = VERIFIED (existing root compilation and job/revision identity)
+CTR-ALERT-001 = VERIFIED (OPEN/unchanged/delivery/restart/RECOVERED fixtures)
+CTR-ROUTE-001 = VERIFIED (existing canonical ops and missing-target fixture)
+D009_NATIVE_AT_CATCHUP = VERIFIED (no occurrence, activation/grace unchanged)
+OPEN_BLOCKER_UNION = []
+EXPANSION_TRIGGERED = NO (no new semantic failure after the authorized repairs)
+IMPLEMENTATION_READY_FOR_PR = YES
+OPERATION_COMPLETE = NOT_APPLICABLE
+DELIVERY = PENDING push/PR/issue receipt; final delivery coordinates belong in the PR and #527 comment
+NEXT_ACTION = CONTINUE (authorized source delivery only)
+```
+
+These results are source and isolated-mechanism acceptance, not installation or
+live business acceptance. A final metadata-only Head delta is checked independently
+after this record is committed; no source re-review is implied by a receipt-only SHA.
