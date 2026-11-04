@@ -1,0 +1,3 @@
+import {readProtectedRoutingManifest} from "file:///usr/local/v5-boot-isolation/assembled-root/app/packages/scheduler/src/watchdog/routing.js";
+const result=readProtectedRoutingManifest(process.argv[2],{expectedUid:502,allowedGids:[20],maxMode:0o640,parentBoundary:'/'});
+console.log(JSON.stringify({ok:true,result}));

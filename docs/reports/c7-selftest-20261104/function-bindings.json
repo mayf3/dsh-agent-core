@@ -1,0 +1,41 @@
+{
+  "path": "/private/tmp/dsh-c7-selftest/scripts/fleet-window/window_executor_state.py",
+  "sha256": "5801330a3e0ab30a6e31e4b590e1b7dadcc8d6658fd2f0e722879de888780713",
+  "functions": [
+    {
+      "name": "require",
+      "line": 12,
+      "end_line": 13
+    },
+    {
+      "name": "digest",
+      "line": 14,
+      "end_line": 18
+    },
+    {
+      "name": "stamp",
+      "line": 20,
+      "end_line": 23
+    },
+    {
+      "name": "validate_authority",
+      "line": 24,
+      "end_line": 37
+    },
+    {
+      "name": "quiet_ready",
+      "line": 38,
+      "end_line": 39
+    },
+    {
+      "name": "regular",
+      "line": 73,
+      "end_line": 73
+    },
+    {
+      "name": "manifest",
+      "line": 106,
+      "end_line": 116
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "scope": "real manifest validator on isolated fixture",
+  "result": {
+    "path": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/integrity-fixture/MANIFEST.sha256",
+    "sha256": "a83413e08560cb65e377cb977f8be80cbdcbb687a500e705138add1bbaea46ae",
+    "verified": 1,
+    "records": {
+      "pnpm-lock.yaml": "d8e222e3729b161664f0f8c121a29e039e3f8d0cacf0536df26c7644b0505f7f"
+    }
+  },
+  "negative_case": "duplicate-path",
+  "lockfilePlan": [
+    "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/integrity-fixture/pnpm-lock.yaml"
+  ],
+  "deletion": "NOT_EXECUTED",
+  "extractedHelperDispatch": "ISOLATED_PHASE_RECEIPT_ONLY",
+  "productionIntegrityClean": "NOT_EXECUTED"
+}

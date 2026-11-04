@@ -1,0 +1,193 @@
+{
+  "result": {
+    "canary": "FRESH_CHILD_BOOT_CANARY_V1",
+    "trustedRoot": "/usr/local/v5-boot-isolation/assembled-root",
+    "profile": "agent-core-production",
+    "home": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home",
+    "ok": true,
+    "ready": true,
+    "pluginTreeFailed": false,
+    "missingPackages": [],
+    "disallowedMissing": [],
+    "tail": [
+      "[demo-server] ready pid=69625",
+      "[agent-memory] mounted for agent app (workspace /usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home/.dsh/workspaces/app, memory /usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home/.dsh/workspaces/app/MEMORY.md)",
+      "[broker] forum moderator pack: 0 tools (DSH_AGENT_ID is absent)",
+      "[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)"
+    ]
+  },
+  "exit": {
+    "code": null,
+    "signal": "SIGKILL",
+    "utc": "2026-11-04T10:47:01.508Z"
+  },
+  "close": {
+    "code": null,
+    "signal": "SIGKILL",
+    "utc": "2026-11-04T10:47:01.508Z"
+  },
+  "teardown": {
+    "directChildExitObserved": true,
+    "directChildCloseObserved": true,
+    "remainingObservedOrGroup": [],
+    "exitVerification": "OBSERVED",
+    "observedIdentities": [
+      {
+        "pid": 69625,
+        "ppid": 69622,
+        "pgid": 69625,
+        "start": "Wed Nov 4 18:46:59 2026",
+        "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+      }
+    ],
+    "limitation": "Unsampled descendants that escaped the group remain UNKNOWN."
+  },
+  "events": [
+    {
+      "signal": "SIGKILL",
+      "returned": true,
+      "pid": 69625
+    }
+  ],
+  "samples": [
+    {
+      "utc": "2026-11-04T10:46:59.931Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.091Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.241Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.400Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.562Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.720Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:00.875Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:01.029Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:01.185Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:01.340Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:01.494Z",
+      "processes": [
+        {
+          "pid": 69625,
+          "ppid": 69622,
+          "pgid": 69625,
+          "start": "Wed Nov 4 18:46:59 2026",
+          "comm": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node"
+        }
+      ]
+    },
+    {
+      "utc": "2026-11-04T10:47:01.654Z",
+      "processes": []
+    }
+  ],
+  "requestedPorts": [],
+  "fullRuntime": "NOT_RUN",
+  "modelAuthBusiness": "NOT_RUN"
+}

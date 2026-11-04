@@ -1,0 +1,37 @@
+{
+  "scope": "pure authority validator only",
+  "synthetic": {
+    "window_id": "C7_SYNTHETIC_NOT_AUTHORIZATION",
+    "writer": "isolated-selftest",
+    "writer_uid": 502,
+    "valid_from": "2026-11-04T00:00:00Z",
+    "valid_until": "2026-11-05T00:00:00Z",
+    "expected_old_pid": 1,
+    "expected_old_identity": "SYNTHETIC_NOT_PROCESS",
+    "expected_old_sha": "fa4510beb6b01e5c40000a2ae36a62c526759e76",
+    "expected_plist_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "expected_harness_stamp": "SYNTHETIC",
+    "expected_bindings_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "expected_runtime_uid": 502,
+    "expected_runtime_gid": 20,
+    "scopes": [
+      "source_lockfile_cleanup",
+      "production_mutex",
+      "bootout",
+      "full_preimage",
+      "install",
+      "plist_deployed_sha_only",
+      "bootstrap",
+      "verify",
+      "hr_observe"
+    ]
+  },
+  "negative_cases": [
+    "missing-field",
+    "root-writer",
+    "expired",
+    "missing-scope"
+  ],
+  "productionMutex": "NOT_EXECUTED",
+  "productionAuthority": "UNKNOWN_NOT_SUPPLIED"
+}

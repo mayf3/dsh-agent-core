@@ -1,0 +1,44 @@
+{
+  "scope": "real pure 180s predicate only",
+  "cases": [
+    [
+      179.999,
+      true,
+      true,
+      false
+    ],
+    [
+      180,
+      true,
+      true,
+      true
+    ],
+    [
+      180.001,
+      true,
+      true,
+      true
+    ],
+    [
+      180,
+      false,
+      true,
+      false
+    ],
+    [
+      180,
+      null,
+      true,
+      false
+    ],
+    [
+      180,
+      true,
+      false,
+      false
+    ]
+  ],
+  "productionQuiet": "NOT_EXECUTED",
+  "settlement": "NOT_EXECUTED",
+  "liveCensus": "UNKNOWN"
+}
