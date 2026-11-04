@@ -22,3 +22,7 @@ The tarball contains `artifact-manifest.json` with the full 40-character commit 
 - **itops:** stages exactly that tarball, verifies the same SHA256 and embedded commit, records previous/candidate hashes in the release receipt, and rolls back to the previous tarball—not a newly resolved HEAD.
 
 The R37 cross-process restart test remains in the same candidate test set. Production deployment is not performed by this change.
+
+## R39 rehearsal API contract
+
+The real Workflow rehearsal first reads the authoritative due feed (`/internal/v1/dispatch-intents`) and selects the exact matching `dispatchIntentId`. It then POSTs only `{workflowInstanceId,nodeVisitId,dispatchIntentId}` to `/workflow-execution/kicks`. Both `{ok:true,kicked:true}` and `{ok:true,coalesced:true}` are transport successes only; the test never treats them as business completion. Independent event and turn readback paths must confirm the resumed turn and Workflow event.
