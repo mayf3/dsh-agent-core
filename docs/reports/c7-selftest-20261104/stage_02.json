@@ -1,0 +1,98 @@
+{
+  "scope": "fresh isolated metadata and critical static hashes",
+  "keys": [
+    {
+      "equal": true,
+      "execution_observed_by": "spawn receipt + dyld loaded launcher",
+      "full_cli_js_coverage_observed": false,
+      "label": "Node",
+      "relative_path": "node-runtime/bin/node",
+      "sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b",
+      "source_path": "/tmp/v5-rebuild/assembled-root/node-runtime/bin/node",
+      "source_sha256": "c6c9bfa8eb5d0c6799e1fd7e246f5c6036d4863b5d3173625f37d952576ca93b"
+    },
+    {
+      "equal": true,
+      "execution_observed_by": "V8 coverage if true; otherwise static file binding only",
+      "full_cli_js_coverage_observed": true,
+      "label": "runtime CLI",
+      "relative_path": "app/scripts/production-runtime.mjs",
+      "sha256": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588",
+      "source_path": "/tmp/v5-rebuild/assembled-root/app/scripts/production-runtime.mjs",
+      "source_sha256": "6a35dab738acdbdfd9bb9abe5632a9b949426bca15f09a73383428e4762c8588"
+    },
+    {
+      "equal": true,
+      "execution_observed_by": "V8 coverage if true; otherwise static file binding only",
+      "full_cli_js_coverage_observed": false,
+      "label": "harness #9 source",
+      "markers": {
+        "OUT_OF_REPO_IGNORABLE_SESSION_EVENT_TYPES": [
+          38,
+          1082
+        ],
+        "web/openai-codex-search-llm-request": [
+          31,
+          39
+        ]
+      },
+      "relative_path": "harness/packages/session/session-persistence/src/coordinator.ts",
+      "sha256": "5e9a3d932bc4109f7db9ebd220641eecf5c4991929973a6e9d6bfdf505d41633",
+      "source_path": "/tmp/v5-rebuild/assembled-root/harness/packages/session/session-persistence/src/coordinator.ts",
+      "source_sha256": "5e9a3d932bc4109f7db9ebd220641eecf5c4991929973a6e9d6bfdf505d41633"
+    },
+    {
+      "equal": true,
+      "execution_observed_by": "V8 coverage if true; otherwise static file binding only",
+      "full_cli_js_coverage_observed": false,
+      "label": "harness #9 built",
+      "markers": {
+        "OUT_OF_REPO_IGNORABLE_SESSION_EVENT_TYPES": [
+          447,
+          1135
+        ],
+        "web/openai-codex-search-llm-request": [
+          440,
+          447
+        ]
+      },
+      "relative_path": "harness/packages/session/session-persistence/lib/index.js",
+      "sha256": "f991cb38520ed17c0a260751c9e478ab89bb6ab57571861503c3dfb7ebd9364d",
+      "source_path": "/tmp/v5-rebuild/assembled-root/harness/packages/session/session-persistence/lib/index.js",
+      "source_sha256": "f991cb38520ed17c0a260751c9e478ab89bb6ab57571861503c3dfb7ebd9364d"
+    }
+  ],
+  "freshAncestors": [
+    {
+      "path": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75",
+      "mode": "0o700",
+      "uid": 502,
+      "gid": 20
+    },
+    {
+      "path": "/usr/local/v5-boot-isolation",
+      "mode": "0o755",
+      "uid": 502,
+      "gid": 20
+    },
+    {
+      "path": "/usr/local",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/usr",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0
+    },
+    {
+      "path": "/",
+      "mode": "0o755",
+      "uid": 0,
+      "gid": 0
+    }
+  ],
+  "productionFreshRead": "NOT_EXECUTED"
+}
