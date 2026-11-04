@@ -54,7 +54,7 @@ def rejected(fn, label):
 
 
 def pure_functions(executor):
-    path = executor.with_name('window_executor_state.py')
+    path = executor.with_name('window_helper_core.py')
     names = {'require', 'digest', 'regular', 'manifest', 'stamp', 'validate_authority', 'quiet_ready'}
     tree = ast.parse(path.read_text(), filename=str(path))
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
@@ -186,7 +186,7 @@ def main(executor):
         save(out / 'invocation.json', {'executor': str(executor), 'executor_sha256': sha(executor),
              'selftest_sha256': sha(__file__), 'env': env, 'ancestry': ancestor_rows,
              'code_bindings': {name: sha(executor.with_name(name)) for name in (
-                 'window_executor_state.py', 'window_executor_helper.py', 'window_close.py')}})
+                 'window_helper_core.py', 'window_helper.py', 'window_preimage_xattr.py', 'window_close.py')}})
         stages = []
         def stage00():
             a = dict(window_id='C7_SYNTHETIC_NOT_AUTHORIZATION', writer='isolated-selftest', writer_uid=os.getuid(),
@@ -217,7 +217,7 @@ def main(executor):
             duplicate = fixture / 'duplicate.sha256'; duplicate.write_text(seal.read_text() * 2)
             negative = rejected(lambda: f['manifest'](duplicate, fixture), 'duplicate-path')
             require(file.exists() and sha(file) == before, 'clean-plan check deleted lockfile')
-            run('extracted-helper-phase', ['/usr/bin/python3', '-B', executor.with_name('window_executor_helper.py'),
+            run('extracted-helper-phase', ['/usr/bin/python3', '-B', executor.with_name('window_helper.py'),
                                          out, 'phase', 'c7_extraction_smoke', 'PASS', 'ISOLATED_ONLY'])
             require(read(out / 'c7_extraction_smoke.json')['status'] == 'PASS', 'extracted helper dispatch failed')
             save(out / 'stage_01.json', {'scope': 'real manifest validator on isolated fixture', 'result': result,
@@ -346,7 +346,7 @@ def main(executor):
         require(sha(ROOT / 'SELFTEST-MATERIALS-C5R11.json') == MATERIALS_SEAL, 'C5 material index changed during selftest')
         for row in read(ROOT / 'SELFTEST-MATERIALS-C5R11.json')['materials']:
             require(sha(row['path']) == row['sha256'], 'C5 material changed during selftest: ' + row['path'])
-        require(sha(executor.with_name('window_executor_state.py')) == extracted['sha256'], 'validator changed during selftest')
+        require(sha(executor.with_name('window_helper_core.py')) == extracted['sha256'], 'validator changed during selftest')
         invocation = read(out / 'invocation.json')
         require(sha(executor) == invocation['executor_sha256'] and sha(__file__) == invocation['selftest_sha256'],
                 'executor/selftest changed during selftest')

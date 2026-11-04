@@ -1,0 +1,112 @@
+{
+  "executed": {
+    "c7-focused.command.json": {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "scripts/fleet-window/test_xattrfix_r3.py",
+        "C7Close"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:15.095315+00:00",
+      "finished_at": "2026-11-04T12:45:15.216090+00:00",
+      "rc": 1,
+      "stdout_sha256": "85eb5f1f760635e7d1524a7c87bd53b4c7d59c41e65bf83c3b143f8bf43243a1",
+      "stderr_sha256": "14ba9c4a8dcf0c61174aebf314b9be220072f83601eb199617fa9ba164ebdb24"
+    },
+    "dry-run-candidate.command.json": {
+      "argv": [
+        "/bin/bash",
+        "scripts/fleet-window/window-executor-v5.sh",
+        "--dry-run"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:14.642657+00:00",
+      "finished_at": "2026-11-04T12:45:14.646371+00:00",
+      "rc": 0,
+      "stdout_sha256": "e7e1500a2b9d43cc8017596aeb404c6d04e032a2c0211f517c031a6a99f608b7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "dry-run-original.command.json": {
+      "argv": [
+        "/bin/bash",
+        "/dev/stdin",
+        "--dry-run"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:14.625313+00:00",
+      "finished_at": "2026-11-04T12:45:14.642464+00:00",
+      "rc": 0,
+      "stdout_sha256": "e7e1500a2b9d43cc8017596aeb404c6d04e032a2c0211f517c031a6a99f608b7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdin_sha256": "7af63a75ec376816dfa516c72f0edf29605725777c3564511c87ce57f5d47abe"
+    },
+    "dry-run-stderr-diff.command.json": {
+      "argv": [
+        "/usr/bin/diff",
+        "-u",
+        "/private/tmp/dsh-fleet-window-tools/docs/reports/fleet-window-merge-c7-20261104/dry-run-original.stderr.log",
+        "/private/tmp/dsh-fleet-window-tools/docs/reports/fleet-window-merge-c7-20261104/dry-run-candidate.stderr.log"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:14.649979+00:00",
+      "finished_at": "2026-11-04T12:45:14.651744+00:00",
+      "rc": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "dry-run-stdout-diff.command.json": {
+      "argv": [
+        "/usr/bin/diff",
+        "-u",
+        "/private/tmp/dsh-fleet-window-tools/docs/reports/fleet-window-merge-c7-20261104/dry-run-original.stdout.log",
+        "/private/tmp/dsh-fleet-window-tools/docs/reports/fleet-window-merge-c7-20261104/dry-run-candidate.stdout.log"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:14.646499+00:00",
+      "finished_at": "2026-11-04T12:45:14.649868+00:00",
+      "rc": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "selftest.command.json": {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "scripts/fleet-window/test_xattrfix_r3.py",
+        "Selftest",
+        "Consumers"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:45:14.651862+00:00",
+      "finished_at": "2026-11-04T12:45:15.095151+00:00",
+      "rc": 0,
+      "stdout_sha256": "f9c28e048ab536d38c87b1f198e5a9371a55f37875b0e7b3ca962656e4274e01",
+      "stderr_sha256": "c4a5605f486968e904d2c75b3fa682aaaa70ce781e308d922b5b96eb04a01634"
+    },
+    "synthetic.command.json": {
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "scripts/fleet-window/test_xattrfix_r3.py",
+        "SyntheticTree"
+      ],
+      "cwd": "/private/tmp/dsh-fleet-window-tools",
+      "started_at": "2026-11-04T12:44:53.875955+00:00",
+      "finished_at": "2026-11-04T12:44:54.229373+00:00",
+      "rc": 0,
+      "stdout_sha256": "41187b7be8c165d3187a46ae0308222f0c9b4f136c1bbf4e756efd4f12987b2b",
+      "stderr_sha256": "89c5f0792f4aad6c0ede57945b57eb3b66442149cb027204495b91fe70f9e630"
+    }
+  },
+  "not_run": [
+    "exact-tree structure gate",
+    "cached diff-check",
+    "git add / conflict index resolution",
+    "commit",
+    "push",
+    "PR update",
+    "production executor",
+    "full C7 selftest/canary"
+  ]
+}

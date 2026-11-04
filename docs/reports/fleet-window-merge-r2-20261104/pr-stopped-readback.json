@@ -1,0 +1,50 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "url": "https://github.com/mayf3/dsh-agent-core/pull/617",
+      "number": 617,
+      "state": "open",
+      "merged": false,
+      "mergeable": false,
+      "draft": false,
+      "body": "C6 确诊根因（ditto 丢空值 xattr + 1.47M 逐条子进程扫描）的精准修复，及 974 行执行器的结构合规拆分。\n\n- 全部验证：合成 10/10（含 macOS provenance 一致性断言，Owner R4 裁定）、dry-run 边界 diff=∅、selftest 7/7、cached diff-check rc0、结构 ≤500 合规\n- 服务于预授权舰队窗口（C6 条件闭环）\n\nRefs 窗口线 /tmp/v5-rebuild/WINDOW-READINESS.md、C6-PREIMAGE-ANALYSIS.md",
+      "title": "fix(fleet-window): xattr 采集重构（C6-H2 根因修复）+ 执行器拆分",
+      "base": "main",
+      "base_sha": "7a8aaac00d56c4af2892e7097731ecda86a90f1d",
+      "head": "chore/fleet-window-tools",
+      "head_sha": "d4ecf90aea0a439419d75c97fb15ad1736e3b542",
+      "head_repo_id": 1334326230,
+      "head_repo_full_name": "mayf3/dsh-agent-core",
+      "merge_commit_sha": null,
+      "user": {
+        "login": "mayf3",
+        "name": "mayf3",
+        "email": null,
+        "avatar_url": "https://avatars.githubusercontent.com/u/5518571?v=4",
+        "id": 5518571
+      },
+      "requested_reviewers": null,
+      "requested_team_reviewers": null,
+      "diff": null,
+      "comments": null,
+      "created_at": "2026-11-04T12:33:58Z",
+      "updated_at": "2026-11-04T12:40:55Z",
+      "closed_at": null,
+      "merged_at": null,
+      "commits": 1,
+      "changed_files": 17,
+      "additions": 2101,
+      "deletions": 686,
+      "display_url": "https://github.com/mayf3/dsh-agent-core/pull/617",
+      "display_title": "fix(fleet-window): xattr 采集重构（C6-H2 根因修复）+ 执行器拆分"
+    },
+    "isError": false
+  }
+}
