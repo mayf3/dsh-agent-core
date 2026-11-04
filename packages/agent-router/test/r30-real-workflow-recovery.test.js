@@ -4,7 +4,6 @@ import assert from 'node:assert/strict'
 const required = [
   'R30_REAL_WORKFLOW_BASE_URL', 'R30_REAL_WORKFLOW_TOKEN',
   'R30_REAL_WORKFLOW_INSTANCE_ID', 'R30_REAL_WORKFLOW_NODE_VISIT_ID',
-  'R30_REAL_WORKFLOW_STATE_VERSION',
 ]
 const rehearsalReady = required.every(key => process.env[key])
 
@@ -25,16 +24,19 @@ test('R30 real cross-system Workflow recovery via KICK/due feed', { skip: !rehea
   const token = process.env.R30_REAL_WORKFLOW_TOKEN
   const workflowInstanceId = process.env.R30_REAL_WORKFLOW_INSTANCE_ID
   const nodeVisitId = process.env.R30_REAL_WORKFLOW_NODE_VISIT_ID
-  const workflowStateVersion = Number(process.env.R30_REAL_WORKFLOW_STATE_VERSION)
-  assert.ok(Number.isSafeInteger(workflowStateVersion) && workflowStateVersion > 0)
 
+  // The dispatch intent is authoritative. The kick endpoint does not accept
+  // stateVersion/cause and does not return a business receipt.
+  const due = await jsonRequest(`${base}${process.env.R30_REAL_WORKFLOW_DISPATCH_INTENTS_PATH ?? '/internal/v1/dispatch-intents'}`, token)
+  const intent = (due.items ?? []).find(item =>
+    item.workflowInstanceId === workflowInstanceId && item.nodeVisitId === nodeVisitId)
+  assert.ok(intent?.dispatchIntentId, 'due feed must provide the exact dispatchIntentId')
   const kick = await jsonRequest(`${base}${process.env.R30_REAL_WORKFLOW_KICK_PATH ?? '/workflow-execution/kicks'}`, token, {
     method: 'POST',
-    body: JSON.stringify({ workflowInstanceId, nodeVisitId, workflowStateVersion, cause: 'R30_REAL_RECOVERY_REHEARSAL' }),
+    body: JSON.stringify({ workflowInstanceId, nodeVisitId, dispatchIntentId: intent.dispatchIntentId }),
   })
-  assert.equal(kick.workflowInstanceId, workflowInstanceId)
-  assert.equal(kick.nodeVisitId, nodeVisitId)
-  assert.ok(kick.kickId ?? kick.outboxId ?? kick.dispatchIntentId)
+  assert.equal(kick.ok, true)
+  assert.equal(kick.kicked === true || kick.coalesced === true, true)
 
   const eventPath = process.env.R30_REAL_WORKFLOW_EVENT_PATH
   const turnPath = process.env.R30_REAL_WORKFLOW_TURN_PATH
