@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -138,7 +139,7 @@ test('checkpoint rejects stale attempt, wrong reporter/session and terminal atte
     assert.equal(wrongSession.cause, 'session_mismatch')
 
     await fx.ledger.recordReconciled({
-      nodeVisitId: VISIT,
+      ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT,
       expectedPhase: 'run_delivered',
       verdict: 'SETTLED',
       judgment: 'business_commitment_observed',

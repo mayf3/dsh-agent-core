@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 /**
  * CTR-WEC1-008 engine acceptance: same-visit Assistance resume and crash fences.
  * All svc and Router surfaces are producer-shaped injected read seams.
@@ -65,7 +66,7 @@ async function seedRunEndedPredecessor(ledger) {
     recordDeliveryStarted()
     return { kind: 'run_delivered', agentId: AGENT, requestId: attempt.attemptId, sessionId: 'main', reconciliationHandle: 'turn:prior' }
   }, undefined, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
-  await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+  await ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
     judgment: 'run_ended_no_submission', reason: 'run ended without submission' })
   return first.attempt
 }
@@ -80,11 +81,11 @@ async function seedRunEndedAtGeneration(ledger, generation) {
     }, () => true, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
     assert.equal(result.created, true, `expected generation ${currentGeneration} to be planned (${result.cause ?? 'no cause'})`)
     attempt = result.attempt
-    await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+    await ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
       judgment: 'run_ended_no_submission', reason: 'run ended without submission' })
     if (currentGeneration < generation) {
       const terminal = ledger.snapshot()[0]
-      await ledger.recordStaleSuperseded({ nodeVisitId: VISIT,
+      await ledger.recordStaleSuperseded({ ...expectedIdentity(terminal), nodeVisitId: VISIT,
         expected: { state: terminal.state, phase: terminal.phase, deliveredAtMs: terminal.delivered.atMs },
         observedWorkflowStateVersion: 1 })
     }
@@ -126,7 +127,7 @@ test('settled Owner assistance resumes the exact visit once, with a fresh proof 
     assert.equal(current.assistanceResume.assistanceCaseId, ownerEvidence().assistanceCaseId)
     assert.deepEqual(current.consumedAssistanceCaseIds, [ownerEvidence().assistanceCaseId])
     await fixture.ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+      ...expectedIdentity(fixture.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
       judgment: 'run_ended_no_submission', reason: 'owner resumed run ended without submission',
     })
     assert.deepEqual(await fixture.ledger.listStaleCandidatesFresh(1), [])
@@ -291,7 +292,7 @@ test('a higher-generation predecessor rejects its superseded policy case and UNK
         return { kind: 'run_delivered', agentId: AGENT, requestId: planned.attemptId,
           sessionId: 'main', reconciliationHandle: 'turn:unknown', workflowStateVersionAtDispatch: 1 }
       }, undefined, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
-      await fixture.ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+      await fixture.ledger.recordReconciled({ ...expectedIdentity(fixture.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
         verdict: 'NEEDS_REVIEW', judgment: 'run_outcome_unknown', reason: 'execution outcome unknown' })
       const result = await fixture.engine.pollOnce()
       assert.equal(result.admissions[0].action, 'already_attempted')

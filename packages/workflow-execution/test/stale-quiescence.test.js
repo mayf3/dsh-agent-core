@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -158,7 +159,7 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
     const f = fixture(t)
     await f.engine.admitDueIntent(intent)
     await f.ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+      ...expectedIdentity(f.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
       verdict: 'NEEDS_REVIEW', judgment, reason: 'unknown execution evidence',
     })
     const predecessor = f.ledger.get(VISIT)

@@ -4,6 +4,26 @@ export const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F
 export const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
 export const ATTEMPT_ID_RE = /^wfeat-[0-9a-f]{24}$/
 
+/** Identity comes from the observation snapshot, never a fresh commit-time read. */
+export function validateObservationIdentity({ expectedAttemptId, expectedGeneration }) {
+  if (typeof expectedAttemptId !== 'string' || !ATTEMPT_ID_RE.test(expectedAttemptId)) {
+    throw new TypeError('workflow-execution: expectedAttemptId must be a ledger-minted wfeat-* id')
+  }
+  if (!Number.isInteger(expectedGeneration) || expectedGeneration < 1) {
+    throw new TypeError('workflow-execution: expectedGeneration must be a positive integer attempt generation')
+  }
+}
+
+/** Called only after fresh replay inside the existing atomic mutation. No append. */
+export function staleObservation(current, observation) {
+  if (current.attemptId === observation.expectedAttemptId
+    && (current.generation ?? 1) === observation.expectedGeneration) return undefined
+  return {
+    committed: false, action: 'stale_observation', cause: 'stale_observation',
+    observation, attempt: { ...current },
+  }
+}
+
 export function attemptIdFor(nodeVisitId, generation = 1) {
   if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
     throw new TypeError(`workflow-execution: attemptIdFor requires a UUID nodeVisitId (got ${JSON.stringify(nodeVisitId)})`)
