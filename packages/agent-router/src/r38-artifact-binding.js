@@ -6,8 +6,9 @@ import { execFileSync } from 'node:child_process'
 
 function sha256File(file) { return createHash('sha256').update(readFileSync(file)).digest('hex') }
 
-export function verifyArtifactBinding({ tarball, manifestFile, workspaceRoot }) {
+export function verifyArtifactBinding({ tarball, manifestFile, workspaceRoot, requireCompleteArtifact = false }) {
   const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'))
+  if (requireCompleteArtifact && manifest.completeArtifact !== true) throw new Error('complete production artifact required')
   if (!/^[0-9a-f]{40}$/.test(manifest.commit)) throw new Error('artifact manifest commit is not a full commit SHA')
   if (!/^[0-9a-f]{64}$/.test(manifest.tarballSha256)) throw new Error('artifact manifest tarball digest is invalid')
   const actualTarballSha256 = sha256File(tarball)
