@@ -15,7 +15,7 @@ test('process snapshot exposes exited agent instead of silent absence', () => {
     agentIds: ['agt_cto'],
   })
   assert.deepEqual(result[0], {
-    type: 'agent.process.health', agentId: 'agt_cto', state: 'REAP', generation: 4,
+    type: 'agent.process.health', agentId: 'agt_cto', state: 'AGENT_PROCESS_EXITED', generation: 4,
     pid: null, alive: false, cause: 'AGENT_PROCESS_EXITED',
   })
 })
