@@ -4,7 +4,9 @@ export function snapshotAgentProcessHealth({ registrySnapshot, lifecycleSlotSnap
   return agentIds.map(agentId => {
     const process = registrySnapshot.find(row => row.agentId === agentId)
     const slot = lifecycleSlotSnapshot(agentId)
-    const state = process === undefined ? slot.state : (process.alive ? 'READY_ALIVE' : 'AGENT_PROCESS_EXITED')
+    const state = process === undefined
+      ? (slot.state === 'REAP' && slot.cause ? 'AGENT_PROCESS_EXITED' : slot.state)
+      : (process.alive ? 'READY_ALIVE' : 'AGENT_PROCESS_EXITED')
     return {
       type: 'agent.process.health',
       agentId,
