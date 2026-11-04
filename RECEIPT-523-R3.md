@@ -2,7 +2,7 @@
 
 本轮结果：七个 R2 整合独有失败在独立安装依赖后逐项 **7/7 PASS**，最终并发包检查中也全部 PASS。按当前 [523-r3 合同](BRIEF-523-R3.md) 归类为环境噪声。**没有产品源码修复、没有测试语义修正、没有 guard 弱化。** 最终包 rc=1 / 10 fail，全属固定基线的 13 项；`F_final ⊆ F_baseline`，新增失败 0。guard 单独和包内均 9/9。
 
-PR URL：`PENDING_PUBLICATION`（本记录先随证据提交；创建后补写实际 URL）。不 merge、不关 #523、不访问 ac1159-deploy、不部署/重启或生产写入。旧 R1/R2 STOPPED 和原始输出保留为历史，不改写成当时通过。
+PR URL：[mayf3/dsh-agent-core#612](https://github.com/mayf3/dsh-agent-core/pull/612)，OPEN，非 draft。不 merge、不关 #523、不访问 ac1159-deploy、不部署/重启或生产写入。旧 R1/R2 STOPPED 和原始输出保留为历史，不改写成当时通过。
 
 ## 坐标、安装与环境
 
@@ -112,8 +112,17 @@ standalone guard 原命令：`node --test --test-reporter=tap packages/agent-rou
 
 - [gates.json](docs/evidence/guard-integration-523-r3-20261104/gates.json)：结构检查 `--base f767e8d6 --head 492d579d --json` rc0，`CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`，candidate violations 0 / inherited debt 31；不是仓库全局无债务。[原文](docs/evidence/guard-integration-523-r3-20261104/structure.raw.txt)。
 - governance `--require-accepted` rc0，[原文](docs/evidence/guard-integration-523-r3-20261104/governance.raw.txt)；`git diff --check base HEAD` rc0，[空原文](docs/evidence/guard-integration-523-r3-20261104/diff-check.raw.txt)。证据-only 后续 Head 对代码无增量，不重跑已通过产品 tests。
-- 独立 reviewer `/root/authority_audit` 未写代码/断言、未跑 tests，直接解析原始 TAP 和依赖 manifests；subset、七项、guard、哈希、原文锚点和 remote-main doc delta 复核 PASS。报告：[independent-review.json](docs/evidence/guard-integration-523-r3-20261104/independent-review.json)。最终证据 commit 还须 docs-only delta recheck。
+- 独立 reviewer `/root/authority_audit` 未写代码/断言、未跑 tests，直接解析原始 TAP 和依赖 manifests；subset、七项、guard、哈希、原文锚点和 remote-main doc delta 复核 PASS。报告：[independent-review.json](docs/evidence/guard-integration-523-r3-20261104/independent-review.json)。证据 Head `7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0` 的 docs-only delta recheck 已 PASS；仅本次发布回执补写还需独立小范围回读。
 - [远端预读](docs/evidence/guard-integration-523-r3-20261104/pre-publication-readback.json)：main=`29d1cd86...`，branch 尚无远端 ref、PR 列表空，#523 OPEN；[源码/base/blob 回读](docs/evidence/guard-integration-523-r3-20261104/source-and-base-readback.json)。最终发布后另保留实际 URL/head/base 读回。
 - 生产安装/启用/业务结果=`NOT_RUN`；旧共享 fixture preimage 与具体唯一环境根因=`UNKNOWN`；future merged main=`NOT_CREATED`。本轮只完成 source/offline gate，MERGE_READY=NO / OPERATION_ALLOWED=NO。
 
 附：额外的 `git diff --cached --check` 原始证据格式诊断 rc2，24 处尾空格仅来自 R1/R2/R3 的四份不可改写 TAP／raw extract；完整命令、stdout、路径与 hash 见 [raw-evidence-whitespace.json](docs/evidence/guard-integration-523-r3-20261104/raw-evidence-whitespace.json)。独审依据 `.agents/README.md:247,251,288` 判定为 nonblocking Observation formatting，不是新增产品 required gate；保留所有原始字节、Git 规则不变。源码及人工文档使用显式排除这四份 raw 的检查，结果另记 [source-manual-doc-diff.json](docs/evidence/guard-integration-523-r3-20261104/source-manual-doc-diff.json)；不声称 unscoped staged diff 全绿。
+
+## 实际发布回执
+
+- `git push --set-upstream origin ac-523-guard-integration` rc0；`gh pr create` rc0，实际创建 [PR #612](https://github.com/mayf3/dsh-agent-core/pull/612)。标题为“fix(router): 按 Owner 2026-11-04 裁定整合 #523 guard”；PR 描述包含七项表、固定基线对照、D-008 原文依据和原文格式诊断说明。两步原始 stdout/stderr、时间和 argv：[publication.json](docs/evidence/guard-integration-523-r3-20261104/publication.json)。
+- 初次发布的 exact content Head=`7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0`，parent=`492d579d185a524a9b56dd91ce8c3728fe6818a2`。此前独立 final-Head delta review PASS，PUSH_READY=YES / PR_READY=YES，无新增 blocker/spec gap。
+- `2026-11-04T05:31:14Z` 的 GitHub API + origin refs readback：PR OPEN，head=`7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0`，base branch=`main` / oid=`29d1cd86fd823a8d51bde9d0b3a58ccc56965912`，mergeCommit=null；远端分支 HEAD 相等；三 guard blob 和 D-008 blob 逐项与预期相等。完整 [publication-readback.json](docs/evidence/guard-integration-523-r3-20261104/publication-readback.json)。
+- 本次只把实际 URL 和上述观察补入回执，随后追加一个 receipt-only commit、独立核对该 delta 并更新同一 PR 分支；最终 branch/PR Head 以该 commit 的 fresh readback 为准，不能将初次 content Head 或执行测试的 `492d579d` 写作 resulting-main。
+
+本轮达标并已创建 PR，新增残余失败清单为空；既有十项失败保留于上文和原始包输出。不生成新的 STOPPED-523-R3.md。未 merge、未关 #523、无生产写入；未来 merge SHA / 安装 / 业务结果仍未建立。
