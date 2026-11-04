@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "scripts/fleet-window/test_xattrfix_r3.py",
+    "Selftest",
+    "Consumers"
+  ],
+  "cwd": "/private/tmp/dsh-fleet-window-tools",
+  "started_at": "2026-11-04T12:45:14.651862+00:00",
+  "finished_at": "2026-11-04T12:45:15.095151+00:00",
+  "rc": 0,
+  "stdout_sha256": "f9c28e048ab536d38c87b1f198e5a9371a55f37875b0e7b3ca962656e4274e01",
+  "stderr_sha256": "c4a5605f486968e904d2c75b3fa682aaaa70ce781e308d922b5b96eb04a01634"
+}

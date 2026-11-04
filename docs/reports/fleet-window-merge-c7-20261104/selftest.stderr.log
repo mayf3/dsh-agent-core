@@ -1,0 +1,12 @@
+test_dry_run_and_help_identity (__main__.Selftest.test_dry_run_and_help_identity) ... ok
+test_parser_fail_closed (__main__.Selftest.test_parser_fail_closed) ... ok
+test_split_limits_and_syntax (__main__.Selftest.test_split_limits_and_syntax) ... ok
+test_stage_and_dispatch_identity (__main__.Selftest.test_stage_and_dispatch_identity) ... ok
+test_consumer_final_binding_full_attribute_map (__main__.Consumers.test_consumer_final_binding_full_attribute_map) ... ok
+test_consumer_prerequisites (__main__.Consumers.test_consumer_prerequisites) ... ok
+test_consumer_preserve_config_missing_attributed_file (__main__.Consumers.test_consumer_preserve_config_missing_attributed_file) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.378s
+
+OK

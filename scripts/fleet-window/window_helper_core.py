@@ -22,6 +22,22 @@ def stamp(s):
     value=dt.datetime.fromisoformat(s.replace('Z','+00:00'))
     require(value.tzinfo is not None and value.utcoffset()==dt.timedelta(0),'authority/receipt time must be UTC')
     return value.timestamp()
+def validate_authority(a, writer_uid=None, now_epoch=None):
+    required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
+              'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
+              'expected_runtime_uid','expected_runtime_gid','scopes']
+    require(all(k in a for k in required),'authority fields missing; see --help')
+    require(re.fullmatch('[A-Za-z0-9._-]{1,80}',a['window_id']) and a['writer'],'invalid writer/window id')
+    uid=os.getuid() if writer_uid is None else writer_uid
+    require(a['writer_uid']==uid!=0,'execute as explicitly named non-root writer; privileged actions use sudo')
+    require(a['expected_old_sha']=='fa4510beb6b01e5c40000a2ae36a62c526759e76','r4 legacy stop authorization is fa4510be only')
+    require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
+                 'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
+    current=time.time() if now_epoch is None else now_epoch
+    require(stamp(a['valid_from'])<=current<stamp(a['valid_until']),'window authorization not current')
+    return a
+def quiet_ready(age_seconds, census_clean, log_unchanged):
+    return math.isfinite(age_seconds) and age_seconds>=180 and census_clean is True and log_unchanged is True
 def read(p): return json.loads(P(p).read_text())
 def save(name,obj):
     p=rd/name

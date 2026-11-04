@@ -26,6 +26,7 @@ RD=
 usage() {
   cat <<'HELP'
 Usage: window-executor-v5.sh [--dry-run | --help]
+       window-executor-v5.sh --selftest
        window-executor-v5.sh --execute --authority /absolute/window-authority.json
 
 Dry-run is the default. It prints ALL stage boundaries; no stage is invoked.
@@ -37,6 +38,10 @@ Execution requires the window writer's current JSON authority. Required fields:
   expected_bindings_sha256, expected_runtime_uid, expected_runtime_gid,
   scopes: [source_lockfile_cleanup, production_mutex, bootout, full_preimage,
            install, plist_deployed_sha_only, bootstrap, verify, hr_observe]
+  c7: {naming_scope, before_path, before_sha256, after_path, renames,
+       generations_newest_first, protected_generations, protection_basis}
+See C7-INPUTS.md for the manually inventoried snapshots and explicit generation order.
+Selftest uses /usr/local/v5-boot-isolation only; production stages are NOT_EXECUTED.
 The authority documents an actual authorization; creating JSON grants none.
 No defaults for old PID, loaded identity, authority, expiry, or bindings hashes.
 Static private inputs retain exact bytes/custody gates. Live jobs/incidents
@@ -92,11 +97,9 @@ helper() {
   local privilege=$1
   shift
   local -a runner
-  runner=(/usr/bin/python3)
-  if [ "$privilege" = root ]; then runner=(/usr/bin/sudo -n /usr/bin/python3); fi
-  local helper_dir
-  helper_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-  "${runner[@]}" "$helper_dir/window_helper.py" "$RD" "$@"
+  runner=(/usr/bin/python3 -B)
+  if [ "$privilege" = root ]; then runner=(/usr/bin/sudo -n /usr/bin/python3 -B); fi
+  "${runner[@]}" "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window_helper.py" "$RD" "$@"
 }
 
 rollback_recipe() {
@@ -112,7 +115,7 @@ rollback_recipe() {
     started)
       printf '%s\n' '§6 INSTALL-INTERRUPTED: installer termination and mutation_truth UNKNOWN. First reconcile the exact child process and this-run log/receipt; never assume install success or issue a second install.' ;;
     failed)
-      printf '%s\n' '§6 INSTALL-FAILED: use ONLY failed-install-mutation-receipt.json confirmed from this invocation.' 
+      printf '%s\n' '§6 INSTALL-FAILED: use ONLY failed-install-mutation-receipt.json confirmed from this invocation.'
       printf '%s\n' 'If absent/unconfirmed: mutation_truth=UNKNOWN, STOP; inspect install.log and exact preimage. Never use an older receipt.'
       printf '%s\n' 'NOTHING_WAS_MUTATED: no blind tree restore. TREE_WRITTEN_BY_THIS_RUN: use receipt preimage_bak and R1/R2 flags.' ;;
     *)
@@ -168,7 +171,7 @@ stage_04_quiet_gate() {
     if [ "$rc" -eq 0 ]; then return 0; fi
     # supervisor: live fleet census is transiently dirty between HR rounds — retry rc=1 (census) like rc=10 (mtime); budget-bounded
     [ "$rc" -eq 10 ] || [ "$rc" -eq 1 ] || return "$rc"
-    printf 'Waiting for 150s mtime quiet + clean census; poll=%s/80\n' "$((i+1))"
+    printf 'Waiting for 180s mtime quiet + clean census; poll=%s/80\n' "$((i+1))"
     sleep 30
   done
   return 42
@@ -253,12 +256,17 @@ stage_12_hr_watch() {
   helper root hr-check final
   helper root verify
 }
-stage_13_close() { helper root release; }
+stage_13_close() { helper root close; helper root release; }
 
 main() {
   case "${1:---dry-run}" in
     --dry-run) [ "$#" -le 1 ] || { usage >&2; return 64; }; boundaries; return 0 ;;
     --help|-h) usage; return 0 ;;
+    --selftest)
+      [ "$#" -eq 1 ] || { usage >&2; return 64; }
+      /usr/bin/python3 -B "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window-selftest.py" \
+        "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window-executor-v5.sh"
+      return $? ;;
     --execute) [ "$#" -eq 3 ] && [ "$2" = --authority ] && [[ "$3" = /* ]] || { usage >&2; return 64; }; AUTHORITY=$3 ;;
     *) usage >&2; return 64 ;;
   esac

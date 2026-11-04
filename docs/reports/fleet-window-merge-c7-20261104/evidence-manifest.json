@@ -1,0 +1,110 @@
+{
+  "docs/reports/fleet-window-merge-c7-20261104/c7-focused.command.json": {
+    "sha256": "b0694ad3a77ab69d33cae07014ccb2d332a0f6220f8f989e10be23787cdb540e",
+    "bytes": 482
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/c7-focused.stderr.log": {
+    "sha256": "14ba9c4a8dcf0c61174aebf314b9be220072f83601eb199617fa9ba164ebdb24",
+    "bytes": 732
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/c7-focused.stdout.log": {
+    "sha256": "85eb5f1f760635e7d1524a7c87bd53b4c7d59c41e65bf83c3b143f8bf43243a1",
+    "bytes": 80
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/conflict-resolution.json": {
+    "sha256": "5a19eefd7de5fdf6dc978d5031abbbfacfd31e5908bdba1e18adbb5193a346cf",
+    "bytes": 117051
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-candidate.command.json": {
+    "sha256": "316e0e46778c8c42d1d0be12253a3c8ca7da7e8eeda3b3a2e51e5f07b3516f5a",
+    "bytes": 441
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-candidate.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-candidate.stdout.log": {
+    "sha256": "e7e1500a2b9d43cc8017596aeb404c6d04e032a2c0211f517c031a6a99f608b7",
+    "bytes": 2225
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-original.command.json": {
+    "sha256": "0811aeca7e870459cecb3469e1907f63af6c6fe7f414b9a18ef9938d9891f8f0",
+    "bytes": 495
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-original.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-original.stdout.log": {
+    "sha256": "e7e1500a2b9d43cc8017596aeb404c6d04e032a2c0211f517c031a6a99f608b7",
+    "bytes": 2225
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stderr-diff.command.json": {
+    "sha256": "592165873200cbe95f210b40b45ba35af3295ed31d36813ac5a99188b62abcf4",
+    "bytes": 619
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stderr-diff.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stderr-diff.stdout.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stdout-diff.command.json": {
+    "sha256": "79633dd383036d0a283b9179e28c199fd8f3609d8531bf747d844ac57b389f32",
+    "bytes": 619
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stdout-diff.stderr.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/dry-run-stdout-diff.stdout.log": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/gates.json": {
+    "sha256": "4472f2b59ec2713039adb4891c8581949500f449075ae2e0e1e39196f5122193",
+    "bytes": 4504
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/merge-conflict.json": {
+    "sha256": "9108da23393260d99b1f28146f0f337cc2938170cc39179314e03373c7f6dcbb",
+    "bytes": 1426
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/selftest.command.json": {
+    "sha256": "936c417997851a8658ec473cafbbd861375f799fd900961dc0bb2f0f86a35769",
+    "bytes": 500
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/selftest.stderr.log": {
+    "sha256": "c4a5605f486968e904d2c75b3fa682aaaa70ce781e308d922b5b96eb04a01634",
+    "bytes": 782
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/selftest.stdout.log": {
+    "sha256": "f9c28e048ab536d38c87b1f198e5a9371a55f37875b0e7b3ca962656e4274e01",
+    "bytes": 302
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/source-snapshot.json": {
+    "sha256": "39bff2a46c973b68fc29728f2e052a822871b108f6e731c08d8e797c4e255de3",
+    "bytes": 130825
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/stopped-state.json": {
+    "sha256": "1a0da02a9739627d7e4c251aa29feb2cbdce2ed6bdcff3ac3aa3eb804a081b30",
+    "bytes": 128834
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/synthetic.command.json": {
+    "sha256": "107b7b4e80f9ffc406ed75958f5837afc10905a6e135d69b5e14a4a16a3d3bb8",
+    "bytes": 488
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/synthetic.stderr.log": {
+    "sha256": "89c5f0792f4aad6c0ede57945b57eb3b66442149cb027204495b91fe70f9e630",
+    "bytes": 1085
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/synthetic.stdout.log": {
+    "sha256": "41187b7be8c165d3187a46ae0308222f0c9b4f136c1bbf4e756efd4f12987b2b",
+    "bytes": 1546
+  },
+  "docs/reports/fleet-window-merge-c7-20261104/INDEPENDENT-STOP-REVIEW.md": {
+    "sha256": "cccb8bacd6b68e86745154a7064ec4aefaf9fb7c58dabaeed07f021aaa199db2",
+    "bytes": 1700
+  }
+}
