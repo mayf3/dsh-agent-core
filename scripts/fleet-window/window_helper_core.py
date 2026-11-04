@@ -4,7 +4,7 @@ import subprocess as sp, sys, time, urllib.request
 P=pathlib.Path
 rd=P(sys.argv[1]); op=sys.argv[2]; args=sys.argv[3:]
 prep=P('/private/tmp/fleet-v5-prep'); inp=P('/private/tmp/fleet-binding-diag/r3')
-source=P('/private/tmp/fleet-roll-src'); harness=P('/Users/yanfenma/workspace/github/deepseek-harness')
+source=P('/private/tmp/fleet-roll-src'); harness=P('/tmp/v5-rebuild/harness-src')
 live=P('/usr/local/libexec/agent-core'); prod=P('/Users/authsvc/.agent-core')
 plist=P('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
 lock=P('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
