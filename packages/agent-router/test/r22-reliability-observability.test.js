@@ -57,6 +57,20 @@ test('process watch reconciles an open fault on every cycle', async () => {
   assert.equal(watch.openFaultsSnapshot()[0].attempts, 3)
 })
 
+test('open fault survives monitor restart through reconciliation store', async () => {
+  const persisted = new Map(); const store = {
+    recoveryFaultSnapshot: () => [...persisted].map(([key, value]) => ({ key, ...value })),
+    upsertRecoveryFault: (key, value) => persisted.set(key, value),
+    deleteRecoveryFault: key => persisted.delete(key),
+  }
+  const first = new ProcessHealthWatch({ snapshot: () => [{ agentId: 'agt_a', state: 'AGENT_PROCESS_EXITED', generation: 2 }], alert: async () => {}, faultStore: store })
+  await first.check(); await first.check()
+  const restarted = new ProcessHealthWatch({ snapshot: () => [{ agentId: 'agt_a', state: 'AGENT_PROCESS_EXITED', generation: 2 }], alert: async () => {}, faultStore: store })
+  assert.equal(restarted.openFaultsSnapshot()[0].attempts, 2)
+  await restarted.check(); assert.equal(restarted.openFaultsSnapshot()[0].attempts, 3)
+})
+
+
 test('admission rejection exposes a stable fence classification', () => {
   const event = structureAdmissionRejection({ requestId: 'r', agentId: 'a', fenceId: 'f', code: 'FENCE_ACTIVE', detail: 'fenced' })
   assert.equal(event.type, 'admission.rejected'); assert.equal(event.fenceId, 'f'); assert.ok(ADMISSION_REJECTION_CODES.includes(event.code))

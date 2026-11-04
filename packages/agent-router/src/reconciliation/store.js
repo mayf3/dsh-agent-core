@@ -33,6 +33,8 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { readFileSync, writeFileSync, renameSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 import {
   RECONCILIATION_CAPS, REQUIRED_RECORD_EVIDENCE_HEADROOM_BYTES,
@@ -60,6 +62,8 @@ export class TurnReconciliationStore {
     this.runtimeEpoch = runtimeEpoch ?? randomUUID()
     this.runtimeEpochs = new Set([this.runtimeEpoch])
     this.persistenceFile = persistenceFile
+    this.faultPersistenceFile = persistenceFile === null ? null : `${persistenceFile}.faults.json`
+    this.recoveryFaults = new Map()
     this.startupBlockedReason = null
     /** Durable admin-abandonment operation registry (HR_RESET_AND_RESUME_V1):
      * declarationId -> exact original scope; retries complete only that scope.
@@ -117,7 +121,29 @@ export class TurnReconciliationStore {
           : 'durable_store_unavailable'
       }
     }
+    if (this.faultPersistenceFile !== null) {
+      try {
+        const raw = readFileSync(this.faultPersistenceFile, 'utf8')
+        for (const [key, value] of Object.entries(JSON.parse(raw))) this.recoveryFaults.set(key, value)
+      } catch (error) {
+        if (error.code !== 'ENOENT') this.startupBlockedReason ??= 'fault_store_unavailable'
+      }
+    }
   }
+
+  persistRecoveryFaults() {
+    if (this.faultPersistenceFile === null) return
+    const tmp = `${this.faultPersistenceFile}.tmp-${process.pid}`
+    mkdirSync(dirname(this.faultPersistenceFile), { recursive: true })
+    writeFileSync(tmp, JSON.stringify(Object.fromEntries(this.recoveryFaults)), 'utf8')
+    renameSync(tmp, this.faultPersistenceFile)
+  }
+
+  recoveryFaultSnapshot() { return [...this.recoveryFaults.entries()].map(([key, value]) => ({ key, ...value })) }
+
+  upsertRecoveryFault(key, value) { this.recoveryFaults.set(key, { ...value }); this.persistRecoveryFaults(); return this.recoveryFaults.get(key) }
+
+  deleteRecoveryFault(key) { const deleted = this.recoveryFaults.delete(key); if (deleted) this.persistRecoveryFaults(); return deleted }
 
   recountCapacity() {
     this.validateRestoredAuthority()
