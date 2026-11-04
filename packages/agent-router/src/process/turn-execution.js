@@ -18,6 +18,7 @@ import { redactSensitiveText } from './provider-errors.js'
 import { PROCESS_EVIDENCE_CAPS } from './evidence-buffer.js'
 import { promptWrite } from './prompt-write.js'
 import { DELIVERY_COMPLETION } from './delivery-resilience.js'
+import { scheduledReceiptDeadline } from './scheduler-receipt.js'
 
 export class TurnExecution {
   constructor({ handle, sessionId, mode, watermarkSeq, startMono, hardDeadlineAt, deadlines, bindingContext }) {
@@ -264,7 +265,8 @@ export const turnExecutionMethods = {
       watermarkSeq: this.eventSeq,
       startMono,
       hardDeadlineAt,
-      deadlines: this.deadlines,
+      deadlines: mode === 'turn' ? { ...this.deadlines,
+        promptReceiptTimeoutMs: scheduledReceiptDeadline(this, sessionId, opts) } : this.deadlines,
       bindingContext: opts?.bindingContext,
     })
     // Capture the ingress-validated origin before prompt write: the first RPC
