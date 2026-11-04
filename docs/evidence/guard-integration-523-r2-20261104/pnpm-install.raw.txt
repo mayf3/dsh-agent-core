@@ -1,0 +1,29 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 5, reused 0, downloaded 0, added 0
+Progress: resolved 11, reused 0, downloaded 0, added 0
+Progress: resolved 21, reused 0, downloaded 0, added 0
+Progress: resolved 41, reused 0, downloaded 0, added 0
+Progress: resolved 56, reused 0, downloaded 0, added 0
+Progress: resolved 58, reused 0, downloaded 0, added 0
+Progress: resolved 70, reused 0, downloaded 0, added 0
+Progress: resolved 72, reused 0, downloaded 0, added 0
+Progress: resolved 78, reused 0, downloaded 0, added 0
+Progress: resolved 86, reused 0, downloaded 0, added 0
+Progress: resolved 91, reused 0, downloaded 0, added 0
+Progress: resolved 93, reused 0, downloaded 0, added 0
+Progress: resolved 94, reused 0, downloaded 0, added 0
+Progress: resolved 95, reused 0, downloaded 0, added 0
+
+Packages: +71
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 95, reused 0, downloaded 53, added 53
+[WARN] Tarball download average speed 42 KiB/s (size 54 KiB) is below 50 KiB/s: https://registry.npmjs.org/@deepseek-ai/cordis/-/cordis-4.0.5.tgz (GET)
+Progress: resolved 95, reused 0, downloaded 67, added 67
+[WARN] Tarball download average speed 24 KiB/s (size 26 KiB) is below 50 KiB/s: https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz (GET)
+Progress: resolved 95, reused 0, downloaded 69, added 69
+[WARN] Tarball download average speed 20 KiB/s (size 85 KiB) is below 50 KiB/s: https://registry.npmjs.org/@deepseek-ai/dsh-session/-/dsh-session-0.1.0-rc.8.tgz (GET)
+Progress: resolved 95, reused 0, downloaded 70, added 69
+Progress: resolved 95, reused 0, downloaded 70, added 70
+Progress: resolved 95, reused 0, downloaded 71, added 70
+Progress: resolved 95, reused 0, downloaded 71, added 71, done
+Done in 23s using pnpm v11.7.0

@@ -1,0 +1,58 @@
+{
+  "worktree": "/private/tmp/dsh-523-integration",
+  "branch": "ac-523-guard-integration",
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "base": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "reviewedSource": "ecff3b50195ff6f8649ff7896ac7a3f1a1b3bdd5",
+  "node": "v26.7.0",
+  "environment": {
+    "PATH": "/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg03DR507:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "TMPDIR": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/",
+    "PRODUCTION_RUNTIME_ROOT": "/private/tmp/dsh-523-integration/docs/evidence/guard-integration-523-20261104/runtime-fixtures"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": {
+      "version": "3.18.5",
+      "packageJson": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/schemastery/package.json",
+      "packageJsonSha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+    },
+    "@deepseek-ai/cordis": {
+      "version": "4.0.5",
+      "packageJson": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/cordis/package.json",
+      "packageJsonSha256": "b73831b926b16cbd684aa1b277461e7800a2b35e2dd351ad3c2c8c0db158589d"
+    }
+  },
+  "checks": [
+    {
+      "name": "guard",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "packages/agent-router/test/route-chain/switch-workspace-guard.test.js"
+      ],
+      "startedAt": "2026-11-04T04:52:01.284199+00:00",
+      "finishedAt": "2026-11-04T04:52:01.441067+00:00",
+      "exitCode": 0,
+      "log": "docs/evidence/guard-integration-523-20261104/guard.tap",
+      "sha256": "c74e9ef6f260701997a9568ee8c4941f4551023bf54dd019c9cb3694a444421a",
+      "bytes": 6487
+    },
+    {
+      "name": "agent-router",
+      "command": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "packages/agent-router/test/*.test.js",
+        "packages/agent-router/test/*/*.test.js"
+      ],
+      "startedAt": "2026-11-04T04:52:01.441432+00:00",
+      "finishedAt": "2026-11-04T04:52:12.681081+00:00",
+      "exitCode": 1,
+      "log": "docs/evidence/guard-integration-523-20261104/agent-router.tap",
+      "sha256": "0725db8bc5de77a29d8db961342ac71fb17f55fca67386bfbcec781aa141de59",
+      "bytes": 291384
+    }
+  ]
+}

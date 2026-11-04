@@ -266,7 +266,7 @@ export function apply(ctx, config) {
     resolveProcessConfig,
     resolveNativeToolPolicy: cfg.resolveNativeToolPolicy,
     provisionHome,
-    switchAgent: bindingResolution.switchAgent,
+    switchAgent: bindingResolution.switchAgentFromTurn,
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
   /**

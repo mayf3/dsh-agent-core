@@ -1,0 +1,56 @@
+[
+  {
+    "label": "origin-refs",
+    "command": [
+      "git",
+      "ls-remote",
+      "origin",
+      "refs/heads/main",
+      "refs/heads/ac-523-guard-integration"
+    ],
+    "startedAt": "2026-11-04T05:24:35.885484+00:00",
+    "finishedAt": "2026-11-04T05:24:36.715394+00:00",
+    "exitCode": 0,
+    "stdout": "29d1cd86fd823a8d51bde9d0b3a58ccc56965912\trefs/heads/main\n",
+    "stderr": ""
+  },
+  {
+    "label": "existing-prs",
+    "command": [
+      "gh",
+      "pr",
+      "list",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--head",
+      "ac-523-guard-integration",
+      "--state",
+      "all",
+      "--json",
+      "number,url,state,headRefOid,baseRefName"
+    ],
+    "startedAt": "2026-11-04T05:24:35.887258+00:00",
+    "finishedAt": "2026-11-04T05:24:36.514175+00:00",
+    "exitCode": 0,
+    "stdout": "[]\n",
+    "stderr": ""
+  },
+  {
+    "label": "issue-state",
+    "command": [
+      "gh",
+      "issue",
+      "view",
+      "523",
+      "--repo",
+      "mayf3/dsh-agent-core",
+      "--json",
+      "number,url,state"
+    ],
+    "startedAt": "2026-11-04T05:24:35.887375+00:00",
+    "finishedAt": "2026-11-04T05:24:36.603014+00:00",
+    "exitCode": 0,
+    "stdout": "{\"number\":523,\"state\":\"OPEN\",\"url\":\"https://github.com/mayf3/dsh-agent-core/issues/523\"}\n",
+    "stderr": ""
+  }
+]
