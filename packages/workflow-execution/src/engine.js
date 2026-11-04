@@ -43,8 +43,15 @@ export function createWorkflowExecutionEngine({
   buildInstruction = buildExecutionInstruction,
   log = {},
   clock = () => Date.now(),
+  admissionControl = null,
   config = {},
 }) {
+  const control = admissionControl ?? {
+    isPaused: () => false,
+    pause: () => ({ paused: true }),
+    resume: () => ({ paused: false }),
+    status: () => ({ paused: false }),
+  }
   for (const [name, fn] of Object.entries({ ledger, fetchDuePage, resolvePrincipalToAgent, deliverRun, getTurnReconciliation, readInstanceDetail })) {
     if (fn === undefined) throw new TypeError(`workflow-execution: engine dep ${name} is required`)
   }
@@ -110,6 +117,7 @@ export function createWorkflowExecutionEngine({
    * CTR-SRE-004: unproven quiescence defers before mint, preserving eligibility.
    */
   async function admitDueIntent(rawIntent) {
+    if (control.isPaused()) return { action: 'paused', nodeVisitId: rawIntent.nodeVisitId, reason: control.status().reason }
     const attemptResult = await ledger.beginAttemptIfAbsent({
       dispatchIntentId: rawIntent.dispatchIntentId,
       nodeVisitId: rawIntent.nodeVisitId,
@@ -364,6 +372,7 @@ export function createWorkflowExecutionEngine({
   async function _pollOnceImpl() {
     const reconciled = await reconcileOnce()
     const admissions = []
+    if (control.isPaused()) return { ok: true, paused: true, reconciled, admissions, skipped: [], pages: 0 }
     const skipped = []
     let pages = 0
     let newAttempts = 0
@@ -402,7 +411,7 @@ export function createWorkflowExecutionEngine({
         try {
           const result = await admitDueIntent(normalized.intent)
           admissions.push(result)
-          if (result.action !== 'already_attempted' && result.action !== 'deferred_quiescence') newAttempts += 1
+          if (!['already_attempted', 'deferred_quiescence', 'paused'].includes(result.action)) newAttempts += 1
         } catch (error) {
           log.error?.(`workflow-execution: admission error: ${error?.message ?? error}`)
           admissions.push({ action: 'engine_error', error: String(error?.message ?? error) })
@@ -484,6 +493,11 @@ export function createWorkflowExecutionEngine({
     reconcileOnce,
     admitDueIntent,
     recoverAttempt,
+    /** Supported control-plane operation: pause admissions without killing in-flight work. */
+    pauseAdmission(reason) { return control.pause(reason) },
+    /** Supported control-plane operation: persistently resume new admissions. */
+    resumeAdmission() { return control.resume() },
+    admissionStatus() { return control.status() },
     /** CTR-WEC1-006: coalesce kicks with the single-flight poll; a lost kick is harmless. */
     kick() {
       if (ticking || inflight !== null) return { ok: true, coalesced: true }

@@ -39,7 +39,7 @@
  * and start() logs the honest disabled line — it never fakes liveness.
  */
 
-import { ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
+import { AdmissionPauseControl, ExecutionLedger, createWorkflowExecutionEngine, createForumProjection, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from '../../workflow-execution/src/index.js'
 
 export const WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV = 'WORKFLOW_EXECUTION_POLLER_AGENT_ID'
 export const WORKFLOW_STALE_NO_PROGRESS_MS_ENV = 'DSH_WORKFLOW_STALE_NO_PROGRESS_MS'
@@ -180,6 +180,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       name: 'maxAttemptsPerVisit',
     }),
   })
+  const admissionControl = new AdmissionPauseControl({ file: `${layout.workflowExecutionDir}/admission-control.json` })
   const pollerAgentId = config.pollerAgentId ?? process.env[WORKFLOW_EXECUTION_POLLER_AGENT_ID_ENV]
   const enabled = typeof pollerAgentId === 'string' && pollerAgentId !== ''
   const staleNoProgressThresholdMs = resolveStaleNoProgressThresholdMs({
@@ -209,6 +210,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
 
   const engine = createWorkflowExecutionEngine({
     ledger,
+    admissionControl,
     log,
     config: {
       ...(config.maxAdmissionsPerPoll === undefined ? {} : { maxAdmissionsPerPoll: config.maxAdmissionsPerPoll }),
@@ -242,9 +244,9 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       if (!res.ok) return { ok: false, code: res.error?.code ?? 'resolve_failed', detail: res.error?.detail }
       return { ok: true, agentId: res.result.agentId }
     },
-    deliverRun: async ({ requestId, agentId, message, messageOrigin }) => {
+    deliverRun: async ({ requestId, idempotencyKey, agentId, message, messageOrigin }) => {
       try {
-        const receipt = await router.deliver({ requestId, agentId, sessionMode: 'main', message }, { messageOrigin })
+        const receipt = await router.deliver({ requestId, idempotencyKey, agentId, sessionMode: 'main', message }, { messageOrigin })
         if (
           messageOrigin?.kind === 'workflow_execution'
           && typeof receipt?.turnExecutionId === 'string' && receipt.turnExecutionId !== ''
@@ -415,6 +417,10 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
      * there is no scheduling semantics around it at all.
      */
     recoverAttempt: (args) => engine.recoverAttempt(args),
+     /** Supported itops control-plane operations; pause blocks new admission only. */
+     pauseAdmission: (reason) => engine.pauseAdmission(reason),
+     resumeAdmission: () => engine.resumeAdmission(),
+     admissionStatus: () => engine.admissionStatus(),
     /** Start the poll loop (+ forum projection); no-op, honestly logged, when unconfigured. */
     start({ intervalMs } = {}) {
       if (!enabled) {

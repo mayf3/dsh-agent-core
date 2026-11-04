@@ -21,3 +21,5 @@ export { executionStateFor, projectExecutionTraces, projectExecutionTrace } from
 export { ATTENTION_STATES, ATTENTION_REASONS, projectExecutionAttention } from './attention.js'
 export { createForumProjection } from './forum-projection.js'
 export { normalizeProgressCheckpoint, PROGRESS_CHECKPOINT_LIMITS } from './progress.js'
+export { workflowEffectId } from './effect-identity.js'
+export { AdmissionPauseControl } from './admission-control.js'
