@@ -16,7 +16,21 @@ Evidence required in deployment readback: original turn receipt, workflow instan
 
 `RecoveryRecurrenceMonitor` counts exact `(agentId,generation)` recovery failures and emits one deduplicated escalation at the threshold (default 2) to `itops/HUMAN_GATE`. The escalation event is redacted and includes reason/count, not secrets or prompt content.
 
-## Gate 4 — rollback runbook and window
+## Gate 4 — executable recovery state machine
+
+`packages/agent-router/src/r28-recovery-state-machine.js` implements:
+
+```text
+DETECT → EVIDENCE → RECOVER_OR_ESCALATE → REWAKE_WORKFLOW → VERIFY → CONTINUE
+```
+
+Each transition is recorded in bounded history. `EVIDENCE` requires exact agentId/generation, child real-exit proof, `liveOwnership=false`, and a registry CAS token. Recovery must return the same generation and a receipt. Workflow re-wake must return instanceId, nodeVisitId and stateVersion; verification requires a new turn ID and Workflow event ID with non-decreasing CAS version. Any missing proof or failed side effect escalates to `itops/HUMAN_GATE` and never continues.
+
+The router publishes `runR28Recovery` as a trusted composition seam. Workflow side effects are injected by the deployment integration; absent integration fails closed with `R28_WORKFLOW_RECOVERY_UNAVAILABLE`.
+
+The isolated E2E harness starts a real Node child, injects SIGTERM, observes the real exit, runs all six states, returns a recovery receipt, emits a workflow kick, verifies a new turn/event and reaches terminal continuation. A negative path proves incomplete termination evidence escalates.
+
+## Gate 5 — rollback runbook and window
 
 **Window entry:** itops confirms candidate SHA, package hash, service stop/start authority, health endpoint, and an abort owner. No deployment starts without a recovery backout window.
 
@@ -33,6 +47,6 @@ Evidence required in deployment readback: original turn receipt, workflow instan
 
 **Responsibility:** itops owns production stop/start, window and rollback execution; backend owns candidate integrity, technical verification commands and interpretation; arch-reviewer owns independent acceptance.
 
-## Gate 5 — HR_R4_SALVAGE_ROOT skip
+## Gate 6 — HR_R4_SALVAGE_ROOT skip
 
 The one skipped test consumes an external immutable salvage corpus selected by `HR_R4_SALVAGE_ROOT`. Without that path, it performs no production I/O and cannot validate corpus compatibility; it does not cover process recovery, admission, lifecycle fences, or Feishu ingress. All other lifecycle tests remain executable. The skip is therefore an explicit evidence boundary, not a pass claim. Deployment must record whether the immutable corpus is available and keep the skip visible.

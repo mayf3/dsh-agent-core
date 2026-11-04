@@ -84,6 +84,7 @@ import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 import { ProcessHealthWatch, snapshotAgentProcessHealth } from './r22-reliability-observability.js'
 import { operatorExactGenerationRecovery } from './operator-exact-generation-recovery.js'
 import { RecoveryRecurrenceMonitor, createSafeRecoveryCallback } from './r28-recovery-control.js'
+import { executeR28Recovery, R28_STATES } from './r28-recovery-state-machine.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -148,6 +149,7 @@ export function defaultBindingsStoreFile() {
 }
 
 export { SWITCH_RPC_METHOD, BROKER_RPC_METHOD }
+export { executeR28Recovery, R28_STATES } from './r28-recovery-state-machine.js'
 export {
   channelConversationId,
   ingressBindingNamespace,
@@ -417,6 +419,11 @@ export function apply(ctx, config) {
        lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
        agentIds: agentDefinition.listAgents().map(agent => agent.id),
      }),
+      /** R28 executable recovery state machine; Workflow side effects are injected by the trusted deployment seam. */
+      runR28Recovery: (request, deps = cfg.workflowRecoveryDeps) => {
+        if (deps === undefined) throw Object.assign(new Error('workflow recovery dependencies are not configured'), { code: 'R28_WORKFLOW_RECOVERY_UNAVAILABLE' })
+        return executeR28Recovery({ ...request, deps })
+      },
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */
     ensureRunningForRoute: registry.ensureRunningForRoute,
