@@ -263,11 +263,16 @@ harness_commit_of() {
   local backup="$1" stamp
   stamp="$backup/harness/.source-stamp"
   if [ -f "$stamp" ]; then
-    # source-stamp is "<commit><dirtycount>" without a separator; keep the
-    # first 40 hex chars as the commit, rest as dirty count
-    local s
+    # Current source-stamp is strict JSON {commit,dirtyCount}. Accept the
+    # historical <commit><dirtycount> wire shape for rollback compatibility.
+    local s commit
     s="$(tr -d '\n' < "$stamp")"
-    printf '%s' "${s:0:40}"
+    if [[ "$s" == \{* ]]; then
+      commit="$(printf '%s' "$s" | sed -n 's/.*"commit":"\([0-9a-f]\{40\}\)".*/\1/p')"
+      [ -n "$commit" ] && printf '%s' "$commit" || printf '%s' 'unknown'
+    else
+      printf '%s' "${s:0:40}"
+    fi
   else
     printf '%s' 'unknown'
   fi
