@@ -1,0 +1,428 @@
+diff --git a/BRIEF-EKR-B3.md b/BRIEF-EKR-B3.md
+new file mode 100644
+index 00000000..c7b09169
+--- /dev/null
++++ b/BRIEF-EKR-B3.md
+@@ -0,0 +1,70 @@
++# 合同式交办：EKR P0-B B3 — planned 写入后中断的对账安全（任务书 #1374 §3 B3，不涉 spec 冲突）
++
++## 权威输入
++1. gh issue view 1374 --repo mayf3/agent-control ——§3 B3 全文（验收=投递前/投递时/已接纳回执丢失三位置故障注入分别得安全结果）
++2. DEFECT-MATRIX.md G4——已核实：fsync 的 attempt_planned 与投递前 delivery_started fence 已存在（"完全没有持久写前记录"反例不成立）；普通 planned/delivery_started 无 linkage 均成 delivery_unverified 非自动安全续投；M 另有 continuePlannedOwnerResume 仅处理 owner_assistance_resolved
++3. 已接受权威：WAE V3 相关条款（本单不改其语义）；D-009 三态（UNKNOWN 零写）
++
++## 任务（base 9f04db29，branch ac-ekr-b3）
++1. **对账安全实现**：planned/delivery_started 状态的重启后处理——
++   通过持久写前记录 + 原发送回执对账，区分三态：确定未发送（可安全续投）/已接纳（结果未知，保留责任等待回执或对账）/结果未知（保留 UNKNOWN 责任）
++   ——**不得因重启自动创建新 request 重放原业务操作**
++2. 遵守既有 WAE V3 语义边界（如与 CTR 条款相邻，保持现有显式受控操作模式，不新增自动 retry——B3 的范围只是"重启后的对账分类"，不是自动重投）
++3. 聚焦测试（任务书 §7.4）：投递前/投递时/已接纳回执丢失三位置故障注入（内存桩+隔离 fixture），分别得安全结果
++4. 结构门 + 既有调度回归 + diff check（working+cached）
++5. push + PR 引用 #1374 标注 P0-B3；**不 merge**
++
++## 红线
++零生产写入；不改 UNKNOWN 语义；不改窗口工具；失败即停写 STOPPED-EKR-B3.md
++## 回执（RECEIPT-EKR-B3.md）
++base/head SHA、diff、三位置故障注入输出原文、结构门输出、PR URL、UNKNOWN
++
++## Execution preflight (2026-11-05)
++
++```text
++SPEC_GOVERNANCE_MODE = PREFLIGHT
++TARGET_REPOSITORY = mayf3/dsh-agent-core
++BASE_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52
++REVIEW_TARGET_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52 (pre-implementation)
++CURRENT_BASE_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52 (task integration snapshot)
++ROUTE_STAGE = IMPLEMENTATION
++AUTHORITY_ACCEPTED_IN_BASE = YES
++GOAL_OR_TARGET = Classify interrupted original delivery from durable WAL and exact original Router receipt, without replay.
++CURRENT_GAP = Ordinary planned/started without delivered linkage never query original request correlation.
++AUTHORITY_ACTION = REUSE
++PRIMARY_AUTHORITY = AGENT_CORE_WORKFLOW_AGENT_EXECUTION_V3 CTR-WAE-002/004/005/006/011/012/013
++RELATED_AUTHORITIES = D-009; AGENT_CORE_WORKFLOW_EXECUTION_CONTROL_V3; Product Architecture V1
++IMPLEMENTATION_AUTHORITY = contracts
++PLAN_LEVEL = BRIEF
++ASSURANCE_LEVEL = DURABLE
++EXECUTION_MANDATE = VALID (Owner task above; #1374 section 3 B3)
++MUTATION_AUTHORIZATION = VALID
++ISOLATED_WRITE_SURFACE = YES (/private/tmp/dsh-ekr-b3, ac-ekr-b3, single source writer)
++CONTROLLED_RUNBOOK_REQUIRED = NO (source + isolated fixtures only)
++SPEC_GAP_DEPENDENCY = NONE
++LIVE_AUTHORITY_GAP = NONE
++EVIDENCE_REVIEWABILITY = PASS (local reproducible fixtures and raw receipts)
++IMPLEMENTATION_ALLOWED = YES
++MERGE_READY = NO (not authorized by this task)
++OPERATION_ALLOWED = NO (production effects forbidden)
++EVIDENCE_NEEDED = Three interruption positions; workflow/scheduler regressions; exact-commit structure gate; independent review; working/cached diff checks.
++DONE_WHEN = Safe classification verified, receipt recorded, branch pushed and P0-B3 PR opened referencing #1374, no merge.
++EXPANSION_TRIGGER = Authority conflict, required gate failure, production/window-tool write, or automatic replay dependency -> stop and STOPPED-EKR-B3.md.
++NEXT_ACTION = CONTINUE
++```
++
++WAE V3 CTR-006/012/013 remain controlling: missing linkage still lands terminal
++`NEEDS_REVIEW/delivery_unverified`; classification is read-only evidence, never
++recovery eligibility. A definite non-send observation is not a recovery permit.
++Retain the existing Owner-resume path and explicit controlled recovery unchanged.
++Retain historical planned records as UNKNOWN when WAL provenance is absent.
++Add an implementation marker to newly planned WAL facts to distinguish these
++from historical planned records; no migration, historical rewrite, new state,
++new ledger, consumer, timer, or retry operation. Repeated existing reconciliation
++passes re-read responsibility and original correlation, including terminal
++`delivery_unverified` records, without appending to terminal attempts.
++The read-only classification path must not repair torn tails or change ledger
++bytes; the pre-existing terminal verdict write remains a separate WAE action.
++Router prompt acceptance is not business completion; all business outcomes stay
++UNKNOWN in this classification. Original requestId, attemptId and generation
++are returned with the observation. No response grants resending.
+diff --git a/packages/workflow-execution/src/engine.js b/packages/workflow-execution/src/engine.js
+index c88f02de..892573db 100644
+--- a/packages/workflow-execution/src/engine.js
++++ b/packages/workflow-execution/src/engine.js
+@@ -11,6 +11,7 @@ import { createRecoveryOperation } from './recovery.js'
+ import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
+ import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+ import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
++import { reconcileDeliveryEvidence } from './projection.js'
+ export const DEFAULT_POLL_INTERVAL_MS = 30_000
+ export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
+ 
+@@ -207,6 +208,13 @@ export function createWorkflowExecutionEngine({
+     return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+   }
+ 
++  function reconcileDeliveries() {
++    return ledger.inspectFresh(attempts => attempts.filter(attempt => attempt.delivered === undefined
++      && (['planned', 'delivery_started'].includes(attempt.phase)
++        || attempt.judgment === 'delivery_unverified'))
++      .map(attempt => ({ ...reconcileDeliveryEvidence(attempt, resolveCallerCorrelation), observedAtMs: clock() })))
++  }
++
+   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
+   async function reconcileOnce() {
+     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
+@@ -295,6 +303,9 @@ export function createWorkflowExecutionEngine({
+         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+       }
+     }
++    // Re-read terminal delivery_unverified too: late original receipts remain
++    // discoverable on every existing startup/poll, with no terminal writes.
++    summary.deliveryReconciliation = await reconcileDeliveries()
+     return summary
+   }
+ 
+@@ -426,6 +437,7 @@ export function createWorkflowExecutionEngine({
+   return {
+     pollOnce,
+     reconcileOnce,
++    reconcileDeliveries,
+     admitDueIntent,
+     recoverAttempt,
+     /** CTR-WEC1-006: coalesce kicks with the single-flight poll; a lost kick is harmless. */
+diff --git a/packages/workflow-execution/src/ledger-events.js b/packages/workflow-execution/src/ledger-events.js
+index 74416a87..2b6ab058 100644
+--- a/packages/workflow-execution/src/ledger-events.js
++++ b/packages/workflow-execution/src/ledger-events.js
+@@ -142,6 +142,7 @@ export function applyLedgerEvent(attempts, event) {
+         ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
+         state: 'ACTIVE',
+         phase: 'planned',
++        ...(event.deliveryProtocol === undefined ? {} : { deliveryProtocol: event.deliveryProtocol }),
+         ...(Number.isInteger(event.preDeliveryWorkflowStateVersion)
+           ? { preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion }
+           : {}),
+diff --git a/packages/workflow-execution/src/ledger-plan.js b/packages/workflow-execution/src/ledger-plan.js
+index 5267bfc0..ffdac9d3 100644
+--- a/packages/workflow-execution/src/ledger-plan.js
++++ b/packages/workflow-execution/src/ledger-plan.js
+@@ -1,3 +1,5 @@
++export const DELIVERY_WAL_PROTOCOL = 'write_ahead_v1'
++
+ export async function prepareLedgerAttemptPlan(preparePlan, context) {
+   if (typeof preparePlan !== 'function') return { ok: true, plan: {} }
+   try {
+@@ -20,7 +22,7 @@ export function buildAttemptPlannedEvent({
+   generation, existing, ownerResume, plan, atMs,
+ }) {
+   return {
+-    kind: 'attempt_planned', attemptId,
++    kind: 'attempt_planned', attemptId, deliveryProtocol: DELIVERY_WAL_PROTOCOL,
+     nodeVisitId: nodeVisitId.toLowerCase(), dispatchIntentId: dispatchIntentId.toLowerCase(),
+     workflowInstanceId: workflowInstanceId.toLowerCase(), ownerPrincipalId: ownerPrincipalId.toLowerCase(),
+     atMs,
+diff --git a/packages/workflow-execution/src/ledger.js b/packages/workflow-execution/src/ledger.js
+index ad96c891..26fe743c 100644
+--- a/packages/workflow-execution/src/ledger.js
++++ b/packages/workflow-execution/src/ledger.js
+@@ -465,6 +465,18 @@ export class ExecutionLedger {
+     return [...this.attempts.values()].map((a) => ({ ...a }))
+   }
+ 
++  /** Read-only reconciliation under the admission lock; never repair a torn tail.
++   * The synchronous inspector observes WAL and original Router correlation in
++   * the same exclusion interval, so a live sender cannot cross the fence. */
++  async inspectFresh(inspect) {
++    const run = this._queue.then(() => this.lock.runExclusive(() => {
++      this.load()
++      return inspect(this.snapshot())
++    }))
++    this._queue = run.then(() => {}, () => {})
++    return run
++  }
++
+   /**
+    * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-003: cross-process-fresh read
+    * view for the trace projection — replays the file under the existing
+diff --git a/packages/workflow-execution/src/projection.js b/packages/workflow-execution/src/projection.js
+index 3092818b..74ef4bf4 100644
+--- a/packages/workflow-execution/src/projection.js
++++ b/packages/workflow-execution/src/projection.js
+@@ -13,6 +13,52 @@
+  */
+ 
+ import { STALE_NO_PROGRESS_JUDGMENT } from './ledger.js'
++import { DELIVERY_WAL_PROTOCOL } from './ledger-plan.js'
++
++/** B3: an observation about the ORIGINAL request, never admission permission.
++ * Missing historical WAL provenance and a started fence both defeat non-send
++ * proof. Router reservation alone is not a prompt acceptance receipt. */
++export function reconcileDeliveryEvidence(attempt, resolveCallerCorrelation) {
++  const result = {
++    nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId,
++    generation: attempt.generation ?? 1, requestId: attempt.attemptId,
++    classification: 'UNKNOWN', businessOutcome: 'UNKNOWN', resumeAuthorized: false,
++    responsibility: 'original_request_readback_or_escalation',
++  }
++  let correlation
++  try {
++    if (typeof resolveCallerCorrelation !== 'function') return { ...result, reason: 'correlation_unavailable' }
++    correlation = resolveCallerCorrelation({ requestId: attempt.attemptId })
++  } catch { return { ...result, reason: 'correlation_unavailable' } }
++  if (correlation === null || typeof correlation !== 'object' || Array.isArray(correlation)) {
++    return { ...result, reason: 'correlation_invalid' }
++  }
++  const snapshot = correlation.snapshot
++  const caller = snapshot?.callerCorrelation
++  if (['pending', 'recovering', 'settled'].includes(correlation.state)
++    && typeof correlation.handle === 'string' && correlation.handle !== ''
++    && snapshot?.handle === correlation.handle && snapshot.turnExecutionId === correlation.handle
++    && snapshot.state === correlation.state && caller?.requestId === attempt.attemptId
++    && caller.occurrenceId === undefined && caller.runId === undefined
++    && typeof snapshot.agentId === 'string' && snapshot.agentId !== ''
++    && typeof snapshot.sessionId === 'string' && snapshot.sessionId !== ''
++    && typeof snapshot.messageId === 'string' && snapshot.messageId !== '') {
++    return { ...result, classification: 'ACCEPTED', reason: 'original_prompt_receipt',
++      responsibility: 'wait_original_receipt_or_reconcile',
++      receipt: { reconciliationHandle: correlation.handle, agentId: snapshot.agentId,
++        sessionId: snapshot.sessionId, messageId: snapshot.messageId, turnState: correlation.state } }
++  }
++  // An empty exact never_existed is only a secondary gate. It can NEVER
++  // override delivery_started, nor turn an old unmarked plan into PROVEN_ZERO.
++  if (correlation.state === 'never_existed' && Object.keys(correlation).length === 1
++    && attempt.deliveryProtocol === DELIVERY_WAL_PROTOCOL
++    && attempt.deliveryStartedAtMs === undefined && attempt.delivered === undefined) {
++    return { ...result, classification: 'NOT_SENT', reason: 'wal_before_delivery_fence',
++      responsibility: 'explicit_controlled_resolution' }
++  }
++  return { ...result, reason: attempt.deliveryStartedAtMs === undefined
++    ? 'non_send_unproven' : 'delivery_started_without_exact_receipt' }
++}
+ 
+ /**
+  * CTR-WEC1-002 — the deterministic executionState mapping. Pure table over
+diff --git a/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js b/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
+new file mode 100644
+index 00000000..a3226d75
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
+@@ -0,0 +1,191 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
++import { join } from 'node:path'
++
++import { ExecutionLedger, attemptIdFor } from '../../src/ledger.js'
++import { reconcileDeliveryEvidence } from '../../src/projection.js'
++import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/store.js'
++import { fixture, intent, engine, VISIT, AGENT, T0, barrier } from './fixture.js'
++
++const INTERRUPTION = new Error('B3 injected process interruption')
++const bytes = file => existsSync(file) ? readFileSync(file, 'utf8') : ''
++const sourceSha = process.env.EKR_SOURCE_SHA ?? 'UNBOUND (set EKR_SOURCE_SHA for receipt)'
++
++function receipt(requestId, changes = {}) {
++  const handle = 'turn:original-epoch:a1:g1:s1'
++  return { state: 'pending', handle, snapshot: {
++    handle, turnExecutionId: handle, state: 'pending', agentId: AGENT,
++    sessionId: 'main', messageId: 'original-message', callerCorrelation: { requestId },
++    ...changes,
++  } }
++}
++
++for (const [position, expected] of [
++  ['before_delivery', 'NOT_SENT'],
++  ['during_delivery', 'UNKNOWN'],
++  ['accepted_receipt_lost', 'ACCEPTED'],
++]) {
++  test(`B3 fault injection: ${position} -> ${expected}, same responsibility and zero restart delivery`, async () => {
++    const fx = fixture()
++    const routerFile = join(fx.dir, 'router-reconciliation.json')
++    const router = new TurnReconciliationStore({ runtimeEpoch: 'original-epoch', persistenceFile: routerFile })
++    let originalSends = 0
++    try {
++      // Memory sender, real fsynced ledger and isolated durable Router receipt.
++      // Throw outside the engine's normal error handling, like an interrupted
++      // admission closure; no completion event can be written by this sender.
++      await assert.rejects(fx.writer.beginAttemptIfAbsent(intent(), async (attempt, { recordDeliveryStarted }) => {
++        assert.match(bytes(fx.writer.eventsFile), /"kind":"attempt_planned"/)
++        if (position === 'before_delivery') throw INTERRUPTION
++        recordDeliveryStarted()
++        assert.match(bytes(fx.writer.eventsFile), /"kind":"delivery_started"/)
++        originalSends += 1
++        const handle = router.mintTurnExecution({ agentId: AGENT, processGeneration: 1,
++          sessionId: 'main', callerCorrelation: { requestId: attempt.attemptId } })
++        if (position === 'accepted_receipt_lost') router.markPromptReceipt(handle, { messageId: 'original-message' })
++        throw INTERRUPTION
++      }), error => error === INTERRUPTION)
++      const initialWal = bytes(fx.writer.eventsFile)
++      const initialState = fx.writer.get(VISIT)
++      assert.equal(initialState.phase, position === 'before_delivery' ? 'planned' : 'delivery_started')
++      // Reload BOTH authorities, so caller receipt loss is not repaired using
++      // a handle or acceptance result cached in the stopped sender.
++      fx.reader = new ExecutionLedger({ dir: fx.dir, clock: () => T0 + 100 })
++      const restartedRouter = new TurnReconciliationStore({ runtimeEpoch: 'restart-epoch', persistenceFile: routerFile })
++      const initialRouter = bytes(routerFile)
++      const correlationReads = []
++      const restarted = engine(fx, {
++        resolveCallerCorrelation: query => {
++          correlationReads.push(query)
++          return restartedRouter.resolveCallerCorrelation(query)
++        },
++        fetchDuePage: async () => ({ ok: true, items: [intent()] }),
++      })
++      const [observed] = await restarted.engine.reconcileDeliveries()
++      assert.equal(observed.classification, expected)
++      assert.equal(observed.requestId, attemptIdFor(VISIT))
++      assert.equal(observed.generation, 1)
++      assert.equal(observed.businessOutcome, 'UNKNOWN')
++      assert.equal(observed.resumeAuthorized, false)
++      assert.equal(bytes(fx.reader.eventsFile), initialWal, 'classification appends no verdict/fence/attempt')
++      assert.equal(bytes(routerFile), initialRouter, 'original receipt query is non-consuming')
++      const refused = await restarted.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: 'B3_TEST' })
++      assert.equal(refused.outcome, 'RECOVERY_INAPPLICABLE', 'observation does not extend ordinary recovery eligibility')
++      assert.equal(bytes(fx.reader.eventsFile), initialWal)
++      const first = await restarted.engine.pollOnce()
++      assert.equal(first.reconciled.deliveryReconciliation[0].classification, expected)
++      assert.equal(fx.reader.get(VISIT).state, 'NEEDS_REVIEW')
++      assert.equal(fx.reader.get(VISIT).judgment, 'delivery_unverified', 'CTR-WAE-006 remains unchanged')
++      const terminalWal = bytes(fx.reader.eventsFile)
++      // Every subsequent existing poll must rediscover the retained terminal
++      // responsibility; it cannot silently vanish from readback after one pass.
++      const second = await restarted.engine.pollOnce()
++      assert.equal(second.reconciled.deliveryReconciliation[0].classification, expected)
++      assert.equal(bytes(fx.reader.eventsFile), terminalWal, 'no terminal append')
++      assert.equal(bytes(routerFile), initialRouter)
++      assert.equal(restarted.calls.delivers.length, 0)
++      assert.deepEqual(restarted.calls.errors, [])
++      assert.deepEqual(correlationReads, Array(3).fill({ requestId: attemptIdFor(VISIT) }))
++      assert.equal(terminalWal.split('"kind":"attempt_planned"').length - 1, 1)
++      console.log(JSON.stringify({ sourceSha, testName: `B3-${position}`,
++        faultInjection: position, initialState: { phase: initialState.phase, wal: initialWal.trim().split('\n').map(JSON.parse) },
++        expectedResult: expected, actualResult: observed, originalSends,
++        restartSends: restarted.calls.delivers.length, originalCorrelationReads: correlationReads.length,
++        rawReceipt: restartedRouter.resolveCallerCorrelation({ requestId: attemptIdFor(VISIT) }),
++        finalResponsibility: { state: fx.reader.get(VISIT).state, judgment: fx.reader.get(VISIT).judgment },
++        readOnlyLedgerUnchanged: true, readOnlyRouterUnchanged: true }))
++    } finally { fx.cleanup() }
++  })
++}
++
++test('B3 late original receipt is read after terminal judgment and another engine restart, with zero writes', async () => {
++  const fx = fixture()
++  try {
++    await assert.rejects(fx.writer.beginAttemptIfAbsent(intent(), async (_, { recordDeliveryStarted }) => {
++      recordDeliveryStarted()
++      throw INTERRUPTION
++    }), error => error === INTERRUPTION)
++    const before = engine(fx)
++    const first = await before.engine.reconcileOnce()
++    assert.equal(first.deliveryReconciliation[0].classification, 'UNKNOWN', 'started + never_existed remains unknown')
++    const terminalWal = bytes(fx.reader.eventsFile)
++    fx.reader = new ExecutionLedger({ dir: fx.dir })
++    const after = engine(fx, { resolveCallerCorrelation: () => receipt(attemptIdFor(VISIT)) })
++    const second = await after.engine.reconcileOnce()
++    assert.equal(second.deliveryReconciliation[0].classification, 'ACCEPTED')
++    assert.equal(second.deliveryReconciliation[0].businessOutcome, 'UNKNOWN')
++    assert.equal(bytes(fx.reader.eventsFile), terminalWal)
++    assert.equal(after.calls.delivers.length, 0)
++  } finally { fx.cleanup() }
++})
++
++test('B3 historical unmarked planned and malformed/lost/foreign correlations cannot prove non-send', async () => {
++  const fx = fixture()
++  try {
++    await fx.writer.beginAttemptIfAbsent(intent())
++    const current = fx.writer.get(VISIT)
++    const cases = [
++      undefined, null, [], {}, { state: 'restart_lost' }, { state: 'evicted' },
++      { state: 'never_existed', handle: 'contradictory-handle' },
++      receipt('other-attempt'), receipt(current.attemptId, { messageId: null }),
++      receipt(current.attemptId, { handle: 'other-handle' }),
++      receipt(current.attemptId, { turnExecutionId: 'other-turn' }),
++      receipt(current.attemptId, { state: 'settled' }),
++      receipt(current.attemptId, { callerCorrelation: { requestId: current.attemptId, occurrenceId: 'foreign-occurrence' } }),
++      receipt(current.attemptId, { callerCorrelation: { requestId: current.attemptId, runId: 'foreign-run' } }),
++    ]
++    for (const correlation of cases) {
++      const observed = reconcileDeliveryEvidence(current, () => correlation)
++      assert.equal(observed.classification, 'UNKNOWN', JSON.stringify(correlation))
++      assert.equal(observed.resumeAuthorized, false)
++    }
++    assert.equal(reconcileDeliveryEvidence(current).classification, 'UNKNOWN')
++    assert.equal(reconcileDeliveryEvidence(current, () => { throw new Error('unavailable') }).classification, 'UNKNOWN')
++    const event = JSON.parse(bytes(fx.writer.eventsFile).trim())
++    delete event.deliveryProtocol
++    writeFileSync(fx.writer.eventsFile, `${JSON.stringify(event)}\n`)
++    const historicalWal = bytes(fx.writer.eventsFile)
++    const historical = engine(fx)
++    const [observed] = await historical.engine.reconcileDeliveries()
++    assert.equal(observed.classification, 'UNKNOWN', 'absence of an old fence is not modern WAL proof')
++    assert.equal(bytes(fx.reader.eventsFile), historicalWal)
++    event.deliveryProtocol = 'unrecognized-protocol'
++    writeFileSync(fx.writer.eventsFile, `${JSON.stringify(event)}\n`)
++    assert.equal((await historical.engine.reconcileDeliveries())[0].classification, 'UNKNOWN')
++  } finally { fx.cleanup() }
++})
++
++test('B3 unknown classification leaves a torn ledger tail byte-for-byte intact', async () => {
++  const fx = fixture()
++  try {
++    await fx.writer.beginAttemptIfAbsent(intent())
++    appendFileSync(fx.writer.eventsFile, '{"kind":"delivery_started"')
++    const tornWal = bytes(fx.writer.eventsFile)
++    const restarted = engine(fx, { resolveCallerCorrelation: () => ({ state: 'restart_lost' }) })
++    assert.equal((await restarted.engine.reconcileDeliveries())[0].classification, 'UNKNOWN')
++    assert.equal(bytes(fx.reader.eventsFile), tornWal)
++    assert.equal(restarted.calls.delivers.length, 0)
++  } finally { fx.cleanup() }
++})
++
++test('B3 observation waits for in-flight admission lock instead of racing an unsent snapshot', async () => {
++  const fx = fixture()
++  const paused = barrier()
++  try {
++    const admitting = fx.writer.beginAttemptIfAbsent(intent(), async (_, { recordDeliveryStarted }) => {
++      await paused.call()
++      recordDeliveryStarted()
++      throw INTERRUPTION
++    })
++    const interrupted = assert.rejects(admitting, error => error === INTERRUPTION)
++    await paused.arrived
++    const restarted = engine(fx)
++    const observation = restarted.engine.reconcileDeliveries()
++    paused.release()
++    await interrupted
++    const [observed] = await observation
++    assert.equal(observed.classification, 'UNKNOWN')
++    assert.equal(observed.reason, 'delivery_started_without_exact_receipt')
++  } finally { paused.release(); fx.cleanup() }
++})

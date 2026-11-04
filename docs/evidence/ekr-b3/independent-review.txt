@@ -1,0 +1,41 @@
+SPEC_GOVERNANCE_MODE = REVIEW
+REVIEW_KIND = AFFECTED_CONTRACT
+REVIEWER_ID = /root/b3_semantic_review
+AUTHOR_INDEPENDENCE = PASS
+BASE_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52
+REVIEW_TARGET_HEAD = f31ba0ea8033ffe97363ba001cc8772154b6f320
+CURRENT_BASE_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52
+REVIEW_SCOPE = DELTA
+SCOPE_REASON = Exact candidate and newly executed fault-injection evidence
+AUTHORITY_REVIEW = PASS
+CONTRACT_REVIEW = PASS (source safety only)
+MANDATE_SCOPE_REVIEW = PASS
+ACCEPTANCE_COVERAGE_REVIEW = FAIL
+EVIDENCE_REVIEWABILITY = PASS
+BLOCKERS = 1
+SPEC_GAPS = 0
+FROZEN_BLOCKER_UNION = [B3-REVIEW-001]
+IMPLEMENTATION_ALLOWED = NO (task stop condition)
+MERGE_READY = NO
+OPERATION_ALLOWED = NO
+NEXT_ACTION = STOP
+
+B3-REVIEW-001 — REQUIRED_GATE_FAILURE
+SOURCE: Owner task and #1374 sections 3 B3 / 7.4 require an accepted-but-original-caller-receipt-lost fault injection with raw evidence supporting that precondition.
+COUNTEREXAMPLE: accepted_receipt_lost fixture omits markAdmitted and markPromptWriteAttempted before markPromptReceipt. Reopened Router receipt actually says outcome=not_admitted, outcomeEvidence=prompt_write_not_attempted, settlementResult=not_admitted, nextSafeAction=send_new_request_after_reopened, while nonempty messageId produces ACCEPTED.
+IMPACT: 7 passing assertions do not prove required third-position acceptance.
+MINIMAL_CLOSURE: after authorized continuation, correct only fixture protocol ordering to mintTurnExecution -> markAdmitted -> markPromptWriteAttempted -> markPromptReceipt -> interruption; reopen both durable stores, bind new output to exact new candidate SHA, independently review same identity/UNKNOWN/fence/zero-replay assertions. Current task stops without shared-file repair or push/PR.
+AFFECTED_READINESS: acceptance=NO, delivery=NO, merge=NO.
+
+SOURCE_DIFF_SHA256 = 34ba9b97d8c270401d32b57867dc19b91737b42a1511995c39904dd37306cb26
+No additional concrete reachable source-safety blocker found. WAL marker, exact original request matching, started fence, UNKNOWN, terminal no-append and no automatic replay remain preserved. This evidence failure does not prove a production fault or source-safety failure.
+
+Independent focused rerun: 7 passed / 0 failed / rc=0.
+Original log: /tmp/ekr-b3-independent-review-f31ba0ea.raw.txt
+SHA256=4a18abd5552abf62ec523507061670cbf511c54ad8653ca08d43f5d801a36ae8
+
+Independent corrected-protocol experiment: reopening yields recovering / initialOutcome=outcome_unknown / fenceState=active; classification ACCEPTED, businessOutcome UNKNOWN. Supports minimal closure only, not candidate acceptance.
+Original log: /tmp/ekr-b3-review-protocol-f31ba0ea.raw.txt
+SHA256=c7543372e5988131905deb1609989181cd528f9236eb1c31c55f606f31562279
+
+No repository files modified by reviewer; no production operations.

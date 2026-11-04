@@ -1,0 +1,40 @@
+diff --git a/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js b/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
+index a3226d75..5623028e 100644
+--- a/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
++++ b/packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
+@@ -43,7 +43,12 @@ for (const [position, expected] of [
+         originalSends += 1
+         const handle = router.mintTurnExecution({ agentId: AGENT, processGeneration: 1,
+           sessionId: 'main', callerCorrelation: { requestId: attempt.attemptId } })
+-        if (position === 'accepted_receipt_lost') router.markPromptReceipt(handle, { messageId: 'original-message' })
++        if (position === 'accepted_receipt_lost') {
++          router.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'original-prompt',
++            deadlineAtWallMs: Date.now() + 60_000 })
++          router.markPromptWriteAttempted(handle)
++          router.markPromptReceipt(handle, { messageId: 'original-message' })
++        }
+         throw INTERRUPTION
+       }), error => error === INTERRUPTION)
+       const initialWal = bytes(fx.writer.eventsFile)
+@@ -54,6 +59,21 @@ for (const [position, expected] of [
+       fx.reader = new ExecutionLedger({ dir: fx.dir, clock: () => T0 + 100 })
+       const restartedRouter = new TurnReconciliationStore({ runtimeEpoch: 'restart-epoch', persistenceFile: routerFile })
+       const initialRouter = bytes(routerFile)
++      if (position === 'accepted_receipt_lost') {
++        const durableReceipt = restartedRouter.resolveCallerCorrelation({ requestId: attemptIdFor(VISIT) })
++        assert.equal(durableReceipt.state, 'recovering')
++        assert.equal(durableReceipt.snapshot.eventWatermarkSeq, 0)
++        assert.equal(durableReceipt.snapshot.promptRequestId, 'original-prompt')
++        assert.equal(durableReceipt.snapshot.messageId, 'original-message')
++        assert.deepEqual(durableReceipt.snapshot.callerCorrelation, { requestId: attemptIdFor(VISIT) })
++        assert.equal(durableReceipt.snapshot.initialOutcome, 'outcome_unknown')
++        assert.equal(durableReceipt.snapshot.initialSource, 'runtime_restart_after_prompt_write')
++        assert.equal(durableReceipt.snapshot.fenceState, 'active')
++        assert.equal(durableReceipt.snapshot.outcome, null)
++        assert.notEqual(durableReceipt.snapshot.outcomeEvidence, 'prompt_write_not_attempted')
++        assert.notEqual(durableReceipt.snapshot.settlementResult, 'not_admitted')
++        assert.equal(durableReceipt.snapshot.terminationEvidence, null)
++      }
+       const correlationReads = []
+       const restarted = engine(fx, {
+         resolveCallerCorrelation: query => {

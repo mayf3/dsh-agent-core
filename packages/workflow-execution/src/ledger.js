@@ -465,6 +465,18 @@ export class ExecutionLedger {
     return [...this.attempts.values()].map((a) => ({ ...a }))
   }
 
+  /** Read-only reconciliation under the admission lock; never repair a torn tail.
+   * The synchronous inspector observes WAL and original Router correlation in
+   * the same exclusion interval, so a live sender cannot cross the fence. */
+  async inspectFresh(inspect) {
+    const run = this._queue.then(() => this.lock.runExclusive(() => {
+      this.load()
+      return inspect(this.snapshot())
+    }))
+    this._queue = run.then(() => {}, () => {})
+    return run
+  }
+
   /**
    * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-003: cross-process-fresh read
    * view for the trace projection — replays the file under the existing
