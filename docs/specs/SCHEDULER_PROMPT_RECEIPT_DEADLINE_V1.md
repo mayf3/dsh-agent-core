@@ -1,9 +1,9 @@
 ---
 spec_id: SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 intended_implementation_authority_on_acceptance: contracts
 authority_action: SUPERSEDE
 date: 2026-11-04
@@ -31,6 +31,15 @@ references:
   - docs/specs/SCHEDULER_TIMEOUT_OUTCOME_V3.md
   - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md
 ---
+ACCEPTANCE-RECORD (2026-11-04, Asia/Shanghai):
+  accepted_by: Owner mayf3 (session ruling "全按建议" 2026-11-04 + implementation authorization comment
+    https://github.com/mayf3/dsh-agent-core/issues/527#issuecomment-6622874788), recorded by supervising ZCode
+  reviewed_semantic_head: 159938d7c84c9d429ee197cc784a8e132948f337
+  docs_delivery_head: 79bc8e2e02df8b06cbef95212eb2d72687b31c47
+  merged_as: PR #610 merge fa47da7dbe7e7264e3189ed92ac3afc9bd3583ee
+  acceptance_basis: semantics pre-approved by Owner (issue #527 rulings); merge verified faithful to rulings
+    by supervising review (clause-level diff spot-check, 2026-11-04)
+
 
 # SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1
 
