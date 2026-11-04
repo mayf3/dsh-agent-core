@@ -142,6 +142,37 @@ export function censusSurface(root, surfaceDir, scope = '@deepseek-ai') {
   return out
 }
 
+function regularFileBytes(path) {
+  let total = 0
+  const info = statSync(path)
+  if (info.isFile()) return info.size
+  if (!info.isDirectory()) return 0
+  for (const entry of readdirSync(path)) total += regularFileBytes(join(path, entry))
+  return total
+}
+
+/**
+ * Scan every pnpm package whose identity names the runtime darwin-x64 target.
+ * A package directory with zero materialized regular-file bytes is an invalid
+ * offline optional-dependency stub, even if its directory/package metadata exists.
+ */
+export function censusZeroByteOptionalPackages(root, platform = process.platform, arch = process.arch) {
+  const suffix = platformPackageSuffix(platform, arch)
+  const pnpmRoot = join(root, 'harness/node_modules/.pnpm')
+  const packages = []
+  if (!existsSync(pnpmRoot)) return packages
+  for (const entry of readdirSync(pnpmRoot).sort()) {
+    if (!entry.includes(suffix)) continue
+    const path = join(pnpmRoot, entry)
+    try {
+      if (statSync(path).isDirectory() && regularFileBytes(path) === 0) packages.push({ name: entry, path })
+    } catch (error) {
+      packages.push({ name: entry, path, error: error.message })
+    }
+  }
+  return packages
+}
+
 function fail(checks, code, message) {
   checks.push({ check: code, ok: false, detail: message })
   return false
@@ -159,6 +190,14 @@ export function runGate({ trustedRoot, platform = process.platform, arch = proce
     return { ok: false, checks, suffix }
   }
   checks.push({ check: 'CLOSURE_SHAPE', ok: true, detail: loaderLib })
+
+  // -- check 0b: no empty runtime-arch optional packages ----------------------
+  const emptyOptional = censusZeroByteOptionalPackages(root, platform, arch)
+  if (emptyOptional.length > 0) {
+    fail(checks, 'ZERO_BYTE_OPTIONAL', emptyOptional.map(entry => `${entry.name}: ${entry.path}`).join('; ') + ' — offline optional dependency materialization produced an empty stub')
+  } else {
+    checks.push({ check: 'ZERO_BYTE_OPTIONAL', ok: true, detail: `no zero-byte ${suffix} optional package directories` })
+  }
 
   // -- check 1: native internal-module binding -------------------------------
   // Resolution origin must be the loader package itself (its optional peer is
