@@ -11,6 +11,7 @@ import { createRecoveryOperation } from './recovery.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
 import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+import { reconcileDeliveryEvidence } from './projection.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -207,6 +208,13 @@ export function createWorkflowExecutionEngine({
     return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
   }
 
+  function reconcileDeliveries() {
+    return ledger.inspectFresh(attempts => attempts.filter(attempt => attempt.delivered === undefined
+      && (['planned', 'delivery_started'].includes(attempt.phase)
+        || attempt.judgment === 'delivery_unverified'))
+      .map(attempt => ({ ...reconcileDeliveryEvidence(attempt, resolveCallerCorrelation), observedAtMs: clock() })))
+  }
+
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
     const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
@@ -295,6 +303,9 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
+    // Re-read terminal delivery_unverified too: late original receipts remain
+    // discoverable on every existing startup/poll, with no terminal writes.
+    summary.deliveryReconciliation = await reconcileDeliveries()
     return summary
   }
 
@@ -426,6 +437,7 @@ export function createWorkflowExecutionEngine({
   return {
     pollOnce,
     reconcileOnce,
+    reconcileDeliveries,
     admitDueIntent,
     recoverAttempt,
     /** CTR-WEC1-006: coalesce kicks with the single-flight poll; a lost kick is harmless. */
