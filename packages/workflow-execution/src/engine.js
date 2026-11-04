@@ -7,6 +7,7 @@
  */
 
 import { buildExecutionInstruction } from './instruction.js'
+import { workflowEffectId } from './effect-identity.js'
 import { createRecoveryOperation } from './recovery.js'
 import { STALE_NO_PROGRESS_JUDGMENT, DEFAULT_MAX_ATTEMPTS_PER_VISIT } from './ledger.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
@@ -55,6 +56,10 @@ export function createWorkflowExecutionEngine({
   const retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS
   if (!Number.isInteger(retryDelayMs) || retryDelayMs < 1) {
     throw new TypeError(`workflow-execution: config.retryDelayMs must be a positive integer (got ${JSON.stringify(config.retryDelayMs)})`)
+  }
+
+  function effectIdFor(attempt) {
+    return workflowEffectId(attempt)
   }
 
   function provenanceFor(attempt) {
@@ -126,6 +131,7 @@ export function createWorkflowExecutionEngine({
         recordDeliveryStarted()
         const delivery = await deliverRun({
           requestId,
+          idempotencyKey: effectIdFor(attempt),
           agentId: resolved.agentId,
           message,
           messageOrigin: provenanceFor(attempt),
@@ -295,6 +301,13 @@ export function createWorkflowExecutionEngine({
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
+          ...(Number.isInteger(attempt.workflowStateVersionAtDispatch) ? { expectedIdentity: {
+            workflowInstanceId: attempt.workflowInstanceId,
+            nodeVisitId: attempt.nodeVisitId,
+            dispatchIntentId: attempt.dispatchIntentId,
+            generation: attempt.generation,
+            workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch,
+          } } : {}),
         })
         if (!recorded.committed) {
           if (recorded.attempt.state === 'ACTIVE') summary.running += 1

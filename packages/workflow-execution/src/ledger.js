@@ -469,13 +469,21 @@ export class ExecutionLedger {
   }
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
-  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason }) {
+  async recordReconciled({ nodeVisitId, expectedPhase, verdict, judgment, reason, expectedIdentity = undefined }) {
     if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
       throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
     }
     if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
     if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
+    if (expectedIdentity !== undefined && (typeof expectedIdentity !== 'object' || expectedIdentity === null
+      || typeof expectedIdentity.workflowInstanceId !== 'string'
+      || typeof expectedIdentity.nodeVisitId !== 'string'
+      || typeof expectedIdentity.dispatchIntentId !== 'string'
+      || !Number.isInteger(expectedIdentity.generation)
+      || !Number.isInteger(expectedIdentity.workflowStateVersionAtDispatch))) {
+      throw new TypeError('workflow-execution: reconciled expectedIdentity must be complete')
+    }
     return this.mutate(() => {
       const current = this.#attempt(nodeVisitId)
       if (current === undefined) {
@@ -484,6 +492,14 @@ export class ExecutionLedger {
       if (current.state !== 'ACTIVE') this.#terminalGuard(current, { kind: 'reconciled', nodeVisitId })
       if (current.phase !== expectedPhase) {
         return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
+      }
+      if (expectedIdentity !== undefined) {
+        const sameIdentity = expectedIdentity.workflowInstanceId === current.workflowInstanceId
+          && expectedIdentity.nodeVisitId === current.nodeVisitId
+          && expectedIdentity.dispatchIntentId === current.dispatchIntentId
+          && expectedIdentity.generation === current.generation
+          && expectedIdentity.workflowStateVersionAtDispatch === current.workflowStateVersionAtDispatch
+        if (!sameIdentity) return { committed: false, attempt: { ...current }, cause: 'identity_conflict' }
       }
       const record = this.#recordForActive(nodeVisitId, (event) => {
         event.kind = 'reconciled'
@@ -508,6 +524,9 @@ export class ExecutionLedger {
     if (expected === null || typeof expected !== 'object') throw new TypeError('workflow-execution: stale supersession expected snapshot is required')
     if (typeof expected.state !== 'string' || typeof expected.phase !== 'string') throw new TypeError('workflow-execution: stale supersession expected.state/phase are required')
     if (!Number.isInteger(expected.deliveredAtMs)) throw new TypeError('workflow-execution: stale supersession expected.deliveredAtMs must be an integer')
+    if (!Number.isInteger(observedWorkflowStateVersion) || observedWorkflowStateVersion < 1) {
+      throw new TypeError('workflow-execution: stale supersession requires observedWorkflowStateVersion baseline')
+    }
     return this.mutate(() => {
       const current = this.#attempt(nodeVisitId)
       if (current === undefined) {

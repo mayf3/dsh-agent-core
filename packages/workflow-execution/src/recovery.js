@@ -16,6 +16,7 @@
  */
 
 import { judgeSettleFromDetail } from './judgment.js'
+import { workflowEffectId } from './effect-identity.js'
 
 /** E5 assignee probe: when the svc wire carries the visit's/instance's
  *  assignee principal, return it (lowercased) for the exact comparison;
@@ -201,6 +202,7 @@ export function createRecoveryOperation({
         await record.deliveryStarted()
         const delivery = await deliverRun({
           requestId,
+          idempotencyKey: workflowEffectId(attempt),
           agentId: resolved.agentId,
           message,
           messageOrigin: provenanceFor(attempt),
