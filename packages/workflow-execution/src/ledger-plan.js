@@ -1,3 +1,5 @@
+export const DELIVERY_WAL_PROTOCOL = 'write_ahead_v1'
+
 export async function prepareLedgerAttemptPlan(preparePlan, context) {
   if (typeof preparePlan !== 'function') return { ok: true, plan: {} }
   try {
@@ -20,7 +22,7 @@ export function buildAttemptPlannedEvent({
   generation, existing, ownerResume, plan, atMs,
 }) {
   return {
-    kind: 'attempt_planned', attemptId,
+    kind: 'attempt_planned', attemptId, deliveryProtocol: DELIVERY_WAL_PROTOCOL,
     nodeVisitId: nodeVisitId.toLowerCase(), dispatchIntentId: dispatchIntentId.toLowerCase(),
     workflowInstanceId: workflowInstanceId.toLowerCase(), ownerPrincipalId: ownerPrincipalId.toLowerCase(),
     atMs,

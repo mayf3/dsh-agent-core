@@ -142,6 +142,7 @@ export function applyLedgerEvent(attempts, event) {
         ownerPrincipalId: event.ownerPrincipalId.toLowerCase(),
         state: 'ACTIVE',
         phase: 'planned',
+        ...(event.deliveryProtocol === undefined ? {} : { deliveryProtocol: event.deliveryProtocol }),
         ...(Number.isInteger(event.preDeliveryWorkflowStateVersion)
           ? { preDeliveryWorkflowStateVersion: event.preDeliveryWorkflowStateVersion }
           : {}),
