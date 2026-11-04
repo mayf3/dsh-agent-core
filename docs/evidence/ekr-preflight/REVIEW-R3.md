@@ -62,3 +62,32 @@ The integration/receipt correctly records each of the material qualifications:
 - Prior harness/path failures and affected-only valid reruns are retained. G6/G7 does not claim a whole-history zero-error run; raw effective completion coordinates (M 50/67 and D transport-only 101) are not substituted for missing real storage/DB/production results.
 
 No integration blocker was found. PR URL and final commit metadata remain pending at this review coordinate. A later delivery-only update requires one fresh-head delta readback; it does not require rerunning unchanged dynamic observations.
+
+## PR and check metadata delta review
+
+DELTA_AUTHOR = root primary agent
+
+DELTA_REVIEWER = schedule_inventory
+
+LOCAL_HEAD_AT_REVIEW = 99d5986ffcf5969a9cb6c33726b0286704df5140
+
+BASE_HEAD = eb8fd18934d827cec98faacaef987869c5cb92e7
+
+DELTA_RESULT = PASS_FOR_DELIVERY_METADATA_ONLY
+
+FROZEN_BLOCKER_UNION = []
+
+| Delivery metadata target | SHA-256 at readback |
+|---|---|
+| `RECEIPT-EKR-PRE-R3.md` | `2d946521370bd96eac0df8e64d313ace5b19f6897ad3884459e9da3ab8917d6f` |
+| `r3-pr-created.json` | `069c322482a27a88157ebf89be5641c3a42f72edc20fa6ccb41d9b6125da3b3b` |
+| `r3-structure.raw.json` | `c4619ad178b122ec65cc2ceeb9e735fdafa27e576834448e135236c865409ba7` |
+| `r3-checks.json` | `f5a725b887e9f157f6d0014e43298a08b748f6ba07ba45f3abc75ba46bc3b6be` |
+
+The receipt's pending PR delivery status is replaced by COMPLETE and a concrete [draft PR #621](https://github.com/mayf3/dsh-agent-core/pull/621), retaining its existing source/memory scope and explicit NOT_STARTED product implementation, partial verification, UNKNOWN product conformance and forbidden merge. The creation record attributes its source to the GitHub connector response, records draft/open/merged=false, binds creation head `99d5986ffcf5969a9cb6c33726b0286704df5140` against base M, and references `mayf3/agent-control#1374`. These are creation-time observations; final remote head/state still requires the fresh readback after the last push.
+
+The code-structure JSON binds the same exact base/head and records `summary.exit_code=0`, candidate violations 0 and baseline debt 29 under `CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`. The receipt correctly reports baseline debt rather than claiming a globally debt-free repository. The check record's final additions bind that same structure result and PR creation metadata; they do not add product-execution evidence. All current local receipt links resolve.
+
+Relative to the initial committed evidence head, a read-only `git diff --name-only` for the matrix, group reports, harnesses and raw observation logs returns empty. The first evidence commit contains 26 added authorized Brief/STOP/evidence files and no product implementation paths. The present delta is limited to receipt/check/PR/structure metadata and this review; no group semantics changed, no dynamic observation was rerun, and no production/merge permission was introduced.
+
+The primary agent will regenerate the artifact hash manifest after this review, then commit and push these metadata bytes. One read-only exact-final-head/remote/hash-manifest delta recheck remains; it must not modify a file merely to embed its own new HEAD or start another review loop.

@@ -1,6 +1,6 @@
 # EKR-preflight-r3 执行回执
 
-STATUS = COMPLETE_FOR_SOURCE_MEMORY_PREFLIGHT / PR_DELIVERY_PENDING
+STATUS = COMPLETE
 
 本回执对应 [R3 mandate](../../../BRIEF-EKR-PRE-R3.md) 与 [agent-control #1374 §1](https://github.com/mayf3/agent-control/issues/1374)。原 [STOP R1](../../../STOPPED-EKR-PRE.md)、[STOP R2](../../../STOPPED-EKR-PRE-R2.md)、[原回执](RECEIPT-EKR-PRE.md) 均保留，不改写历史失败。本次只读预检的完成与 #1374 产品修复、持久存储故障回归、独立发布和业务验收分别记录。
 
@@ -71,9 +71,9 @@ python3 docs/evidence/ekr-preflight/g8-harness.py
 
 ## 交付与检查
 
-PR URL：PENDING。仅创建 PR；禁止 merge。
+PR URL：[mayf3/dsh-agent-core#621](https://github.com/mayf3/dsh-agent-core/pull/621)，draft/open，创建回读 merged=false。引用 mayf3/agent-control#1374。仅创建 PR；禁止 merge。
 
-已执行治理完整性校验：`python3 .agents/tools/verify_governance.py --target .`，rc=0，原文 `vendored governance bytes match governance.lock.json`。其余最终 readback 与检查待追加。
+已执行治理完整性校验：`python3 .agents/tools/verify_governance.py --target .`，rc=0，原文 `vendored governance bytes match governance.lock.json`。结构 gate、PR 和最终 readback 见下文。
 
 
 预检定稿：矩阵 §9.5 `R3_FINAL_STATUS=COMPLETE`。G1 沿用原证据；G2–G8 在本次只读源码/内存范围已完成处置。Svc intent7/effect5/Assistance4 与派生责任的清点在 G6/G7 末表；Core WAE 与 Scheduler 五态在 G8。已解释的无消费者/无可靠触发格子明确标注 UNKNOWN，不以“完整表”声称自动恢复实现完整。
@@ -85,3 +85,13 @@ PR URL：PENDING。仅创建 PR；禁止 merge。
 - [REVIEW-G6-G8-R3.md](REVIEW-G6-G8-R3.md)：非作者审查 G6–G8，三项证据归因/边界/分类更正均已闭合，开放 blocker=0；没有重跑未变测试。
 
 机械检查见 [r3-checks.json](r3-checks.json)：仅授权路径新增、tracked 产品 diff 为空、原矩阵前缀哈希一致、43 个本地链接全部可达、4 个 harness 在内存 compile 语法检查通过且无 pycache。产品 suite 未运行；本次报告/harness 不修改产品行为。最终 artifact manifest 与 Git/PR fresh readback 在交付阶段补入。
+
+
+交付回读：
+
+- 初次证据提交/push：`99d5986ffcf5969a9cb6c33726b0286704df5140`；26 个任务 Brief/历史 STOP/证据工件，0 产品源码/配置变更。远端 main fresh readback 仍为 M；无 force push、merge、rebase、reset 或产品 refs 操作。
+- [r3-pr-created.json](r3-pr-created.json) 保存 PR 创建时 base/head/open/draft/未 merge 回读。此后本分支只补 PR URL、结构检查 raw、机械回执/独立 recheck 和哈希清单；分组报告/harness/raw/矩阵语义均不改。
+- 结构检查命令：`node scripts/verify-code-structure.mjs --base eb8fd18934d827cec98faacaef987869c5cb92e7 --head 99d5986ffcf5969a9cb6c33726b0286704df5140 --json`；rc=0，`CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT`，既有 baseline debt=29，不是全库零债务。原文 [r3-structure.raw.json](r3-structure.raw.json)。后续仅报告 metadata 变更，通过独立 delta review 绑定，不因 SHA 变化重跑不受影响的产品测试。
+- [r3-artifact-hashes.json](r3-artifact-hashes.json) 逐文件记录实测 bytes/SHA-256（清单排除自身）。最终 Git/PR head 以完成后的 fresh readback 绑定；回执不自嵌自身提交 SHA。
+
+DONE_WHEN_MET=YES（R3 §1 预检和 PR 交付）；PRODUCT_IMPLEMENTATION_STATE=NOT_STARTED；VERIFICATION_STATE=PARTIAL（真实持久/进程/DB/E2E 未执行）；PRODUCT_CONFORMANCE=UNKNOWN；OPERATION_COMPLETE=NOT_APPLICABLE。除本任务已授权的 GitHub 证据分支/PR 外，生产状态零写入；此 COMPLETE 不授权产品修复、merge、部署或业务恢复。

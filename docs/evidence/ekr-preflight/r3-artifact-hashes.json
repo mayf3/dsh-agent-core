@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T16:17:20.110398+00:00",
+  "generatedAt": "2026-11-04T16:20:38.729131+00:00",
   "scope": "task reports/harness/raw/brief/history only; manifest excludes itself",
   "files": [
     {
@@ -49,8 +49,8 @@
     },
     {
       "path": "docs/evidence/ekr-preflight/RECEIPT-EKR-PRE-R3.md",
-      "bytes": 9108,
-      "sha256": "4fb2416f82e2dc36bb6586d179255d49423dd57b800734d249e0ae769dfba4ce"
+      "bytes": 10766,
+      "sha256": "2d946521370bd96eac0df8e64d313ace5b19f6897ad3884459e9da3ab8917d6f"
     },
     {
       "path": "docs/evidence/ekr-preflight/RECEIPT-EKR-PRE.md",
@@ -64,8 +64,8 @@
     },
     {
       "path": "docs/evidence/ekr-preflight/REVIEW-R3.md",
-      "bytes": 9019,
-      "sha256": "087f33b6f1a53e9e4f8468f0df129ef8b16b1a850ebf7988b112303841953c38"
+      "bytes": 11653,
+      "sha256": "ce4e09b8e73a64622d13fcdebed770eb0639987be392d7289a69116169667f83"
     },
     {
       "path": "docs/evidence/ekr-preflight/b4-harness.before.py.txt",
@@ -119,13 +119,23 @@
     },
     {
       "path": "docs/evidence/ekr-preflight/r3-checks.json",
-      "bytes": 503,
-      "sha256": "c421e3d5a624993ba91e50dbf0582f03217db5df6a776c814ce3501dc899ab54"
+      "bytes": 934,
+      "sha256": "f5a725b887e9f157f6d0014e43298a08b748f6ba07ba45f3abc75ba46bc3b6be"
     },
     {
       "path": "docs/evidence/ekr-preflight/r3-coordinates.json",
       "bytes": 6874,
       "sha256": "4be3ad346f05b02f0e8662dbc5c0e2b7d4d1fbfee3263fbd92cd501e62995e7f"
+    },
+    {
+      "path": "docs/evidence/ekr-preflight/r3-pr-created.json",
+      "bytes": 543,
+      "sha256": "069c322482a27a88157ebf89be5641c3a42f72edc20fa6ccb41d9b6125da3b3b"
+    },
+    {
+      "path": "docs/evidence/ekr-preflight/r3-structure.raw.json",
+      "bytes": 65209,
+      "sha256": "c4619ad178b122ec65cc2ceeb9e735fdafa27e576834448e135236c865409ba7"
     }
   ]
 }

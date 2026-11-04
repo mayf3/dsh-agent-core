@@ -10,5 +10,15 @@
   "newFilesCountBeforeCheckRecord": 24,
   "governanceIntegrityExitCode": 0,
   "productServicesStarted": false,
-  "productionWrites": 0
+  "productionWrites": 0,
+  "finalMetadataCheckedAt": "2026-11-04T16:19:30.242532+00:00",
+  "sourceAndConfigDeltaFromBaseEmpty": true,
+  "finalLocalLinksChecked": 49,
+  "finalMissingLocalLinks": 0,
+  "structureCheckHead": "99d5986ffcf5969a9cb6c33726b0286704df5140",
+  "structureCandidateViolations": 0,
+  "structureBaselineDebt": 29,
+  "prUrl": "https://github.com/mayf3/dsh-agent-core/pull/621",
+  "prDraftAtCreation": true,
+  "prMergedAtCreation": false
 }
