@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -10,7 +11,7 @@ const seed = { dispatchIntentId: id(1), nodeVisitId: id(2), workflowInstanceId: 
 async function terminal(ledger) {
   const a = ledger.get(seed.nodeVisitId)
   await ledger.recordRunDelivered({ nodeVisitId: seed.nodeVisitId, agentId: 'agt_test', requestId: a.attemptId, sessionId: 'main' })
-  await ledger.recordStaleSuperseded({ nodeVisitId: seed.nodeVisitId,
+  await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(seed.nodeVisitId)), nodeVisitId: seed.nodeVisitId,
     expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(seed.nodeVisitId).delivered.atMs }, observedWorkflowStateVersion: 1 })
 }
 test('managed cap is three under the actual lock despite global 99, concurrent triggers, and restart', async t => {

@@ -10,7 +10,7 @@ import { buildExecutionInstruction } from './instruction.js'
 import { createRecoveryOperation } from './recovery.js'
 import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
-import { createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
 export const DEFAULT_POLL_INTERVAL_MS = 30_000
 export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
 
@@ -68,37 +68,7 @@ export function createWorkflowExecutionEngine({
     })
   }
 
-  /** CTR-WEC1-005: call svc, then persist the idempotency fact; failed calls retry on a later pass. */
-  async function escalateAttemptLimit({ attempt, reason }) {
-    if (typeof escalateAttemptLimitDep !== 'function') return
-    const payload = {
-      workflowInstanceId: attempt.workflowInstanceId,
-      nodeVisitId: attempt.nodeVisitId,
-      attemptCount: attempt.dispatchCount ?? attempt.generation ?? 1,
-      lastAttemptId: attempt.attemptId,
-      dispatchIntentId: attempt.dispatchIntentId,
-      reason,
-    }
-    try {
-      const result = await escalateAttemptLimitDep(payload)
-      if (!result?.ok) {
-        log.warn?.(`workflow-execution: escalation call failed for ${attempt.nodeVisitId} (${result?.code ?? 'unknown'}) — retried on a later pass`)
-        return
-      }
-      const recorded = await ledger.recordEscalationRequested({
-        nodeVisitId: attempt.nodeVisitId,
-        reason,
-        attemptCount: payload.attemptCount,
-        lastAttemptId: payload.lastAttemptId,
-        dispatchIntentId: payload.dispatchIntentId,
-      })
-      if (recorded.committed) {
-        log.log?.(`workflow-execution: owner assistance opened for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
-      }
-    } catch (error) {
-      log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
-    }
-  }
+  const escalateAttemptLimit = createAttemptLimitEscalation({ ledger, escalateAttemptLimit: escalateAttemptLimitDep, log })
 
   const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
     createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
@@ -177,7 +147,8 @@ export function createWorkflowExecutionEngine({
         // CTR-WEC1-004: the fresh locked fence refused a past-limit mint.
         // Escalate once from that exact predecessor and leave.
         if (attemptResult.attempt.escalation === undefined) {
-          await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+          const recorded = await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+          if (recorded?.action === 'stale_observation') return { nodeVisitId: rawIntent.nodeVisitId, ...recorded }
         }
         return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
       }
@@ -238,7 +209,7 @@ export function createWorkflowExecutionEngine({
 
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
+    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
     for (const attempt of await ledger.listActiveFresh()) {
       if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
       try {
@@ -265,10 +236,14 @@ export function createWorkflowExecutionEngine({
           if (attempt.retryReason !== 'owner_assistance_resolved' && attempt.phase === 'run_delivered'
             && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
             const stale = await judgeStale(attempt)
-            if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
-              summary.staleReentry.push(attempt.nodeVisitId)
-              await maybeEscalateAtLimit(attempt)
-              continue
+            if (stale.kind === 'stale_confirmed') {
+              const recorded = await settleStale(attempt)
+              retainStaleObservation(summary, recorded)
+              if (recorded.committed) {
+                summary.staleReentry.push(attempt.nodeVisitId)
+                retainStaleObservation(summary, await maybeEscalateAtLimit(attempt))
+                continue
+              }
             }
           }
           summary.running += 1
@@ -284,11 +259,13 @@ export function createWorkflowExecutionEngine({
         }
         const recorded = await ledger.recordReconciled({
           nodeVisitId: attempt.nodeVisitId,
+          expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
           expectedPhase: attempt.phase,
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
         })
+        retainStaleObservation(summary, recorded)
         if (!recorded.committed) {
           if (recorded.attempt.state === 'ACTIVE') summary.running += 1
           continue
@@ -304,7 +281,7 @@ export function createWorkflowExecutionEngine({
       if (attempt.state !== 'NEEDS_REVIEW') continue
       try {
         const stale = await judgeStale(attempt)
-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
+        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
       } catch (error) {
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
@@ -313,7 +290,7 @@ export function createWorkflowExecutionEngine({
     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
       try {
         const stale = await judgeStale(attempt)
-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
+        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
       } catch (error) {
         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
@@ -488,4 +465,9 @@ export function createWorkflowExecutionEngine({
     },
     snapshot: () => ledger.snapshot(),
   }
+}
+
+/** Keep rejected old facts reviewable without appending them to the new attempt. */
+function retainStaleObservation(summary, result) {
+  if (result?.action === 'stale_observation') summary.staleObservations.push(result)
 }
