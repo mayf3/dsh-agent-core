@@ -108,7 +108,7 @@ export class ExecutionLedger {
    *   CTR-WEC1-004 admission policy: the fence refuses generation N+1 when
    *   N >= maxAttemptsPerVisit (default 3, min 1).
    */
-  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, requireReconciledIdentity = false }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
     if (!Number.isInteger(maxAttemptsPerVisit) || maxAttemptsPerVisit < 1) {
       throw new TypeError(`workflow-execution: ledger maxAttemptsPerVisit must be a positive integer (got ${JSON.stringify(maxAttemptsPerVisit)})`)
@@ -124,6 +124,7 @@ export class ExecutionLedger {
     this.clock = clock
     this.log = log
     this.maxAttemptsPerVisit = maxAttemptsPerVisit
+    this.requireReconciledIdentity = requireReconciledIdentity === true
     this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
       const fd = openSync(path, 'r')
@@ -476,13 +477,14 @@ export class ExecutionLedger {
     if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
     if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
     if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
-    if (expectedIdentity !== undefined && (typeof expectedIdentity !== 'object' || expectedIdentity === null
+    if (this.requireReconciledIdentity && (expectedIdentity === undefined || typeof expectedIdentity !== 'object' || expectedIdentity === null
+      || expectedIdentity.status !== 'VALID'
       || typeof expectedIdentity.workflowInstanceId !== 'string'
       || typeof expectedIdentity.nodeVisitId !== 'string'
       || typeof expectedIdentity.dispatchIntentId !== 'string'
       || !Number.isInteger(expectedIdentity.generation)
       || !Number.isInteger(expectedIdentity.workflowStateVersionAtDispatch))) {
-      throw new TypeError('workflow-execution: reconciled expectedIdentity must be complete')
+      throw new TypeError('workflow-execution: reconciled expectedIdentity must be complete and VALID')
     }
     return this.mutate(() => {
       const current = this.#attempt(nodeVisitId)
