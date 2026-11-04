@@ -1,0 +1,1451 @@
+diff --git a/BRIEF-EKR-P0A.md b/BRIEF-EKR-P0A.md
+new file mode 100644
+index 00000000..2f62596c
+--- /dev/null
++++ b/BRIEF-EKR-P0A.md
+@@ -0,0 +1,43 @@
++# 合同式交办：EKR P0-A — 跨 attempt 旧观察提交的 CAS 防护（任务书 #1374 §2）
++
++## 权威输入（先全部读完）
++1. gh issue view 1374 --repo mayf3/agent-control ——任务书 §2 全文（反例+要求+回归验收）
++2. DEFECT-MATRIX.md G1 双版本对照（docs/evidence/ekr-preflight/ @ main 8011b5a5）——已给完整受影响路径图：
++   - 正常 turn 观察: engine.js:254-291 → ledger-records.js:64-88（recordReconciled）
++   - stale/run-ended retry: terminal-attempt-operations.js:15-32 → ledger-records.js:100-120
++   - escalation: engine.js:88 → ledger-records.js:132-160（lastAttemptId 存档字段未作 CAS）
++   - 已有防护参考: recordProgressCheckpoint 已检查 attemptId/reporter；recordStaleSuperseded 已比 state+phase+delivered.atMs
++3. 隔离验证经验：两版本 fixture 均实测 committed:true（旧观察被接受）
++
++## 任务（base 8011b5a5，branch ac-ekr-p0a）
++1. **现有原子提交边界增加身份 CAS**：recordReconciled 及全部结算类原子提交增加
++   `expectedAttemptId` + `expectedGeneration`（从观察者实际读取来源传入，沿真实观察者调用链逐一传参）；
++   与当前 record 的 attempt 身份原子比较——不一致返回**可识别 stale observation 结果**（新 action 类型），
++   保留旧观察证据、绝不修改新 attempt
++2. **观察者侧配套**：正常 turn 观察 / stale retry / escalation 三路径带上各自的 attempt 身份
++3. **禁止**：扩大全局锁范围；改 UNKNOWN 语义；动 WAE V3 已接受条款（B1/B2/B4 的 spec 路由另行处理，不在本单）
++4. **回归测试（任务书 §2 验收）**：人为控制两个并发观察/推进交错——旧观察提交被拒（stale observation 返回）+
++   新 attempt 保持原状 + 同代合法提交通过；覆盖同 phase 不同 generation 与并发调度场景
++5. 结构门（全文件 ≤500）+ 既有调度回归 + git diff --check（working+cached）
++6. push + PR 引用 #1374 标注 P0-A；**不 merge**（监管验收后代行）
++
++## 红线
++不改 15 节点窗口工具；零生产写入；失败或语义不明即停写 STOPPED-EKR-P0A.md（引矩阵行号）
++## 回执（RECEIPT-EKR-P0A.md）
++base/head SHA、diff 清单、CAS 字段设计说明、回归测试输出原文（含交错场景）、全门输出、PR URL、UNKNOWN
++
++## 当前 PREFLIGHT（2026-11-05）
++
++- schema_version: 2; SPEC_GOVERNANCE_MODE=PREFLIGHT
++- TARGET_REPOSITORY=mayf3/dsh-agent-core; BASE_HEAD=8011b5a5e776fa92eba79c1ede067b9e762311f9; isolated worktree=/private/tmp/dsh-ekr-p0a; branch=ac-ekr-p0a.
++- GOAL_OR_TARGET=#1374 §2 / matrix G1: old observations cannot settle another attempt; current-gap=phase/state/timestamp CAS omits exact execution identity.
++- AUTHORITY_ACTION=REUSE; PRIMARY_AUTHORITY=WAE V3 CTR-WAE-002/004/005 plus SRE V2 CTR-SRE-001/002/003/005 and WEC V3 CTR-WEC1-004/005/008, all accepted in base.
++- ROUTE_STAGE=IMPLEMENTATION; AUTHORITY_ACCEPTED_IN_BASE=YES; IMPLEMENTATION_AUTHORITY=contracts; PLAN_LEVEL=BRIEF; ASSURANCE_LEVEL=DURABLE.
++- MUTATION_AUTHORIZATION=VALID: user task above and mayf3/agent-control#1374; ISOLATED_WRITE_SURFACE=YES; SPEC_GAP_DEPENDENCY=NONE; IMPLEMENTATION_ALLOWED=YES; OPERATION_ALLOWED=NO; MERGE_READY=NO (user prohibits merge).
++- Evidence reviewability=PASS for repository code, isolated real filesystem ledger, raw test receipts; production/runtime/business acceptance remains UNKNOWN.
++- Scope: exact attempt ID + attempt generation CAS at external observation settlement boundaries; normal turn, active/terminal stale, run-ended continuation, escalation. Public terminal wrappers also require explicit identity; production private delivery/recovery appenders remain within their existing fresh-read lock.
++- RETAIN existing ledger/FIFO/OwnerLock, admission/Owner-resume/quiescence gates, historical generation-1 replay, UNKNOWN and accepted Specs. No parallel store/model or production writes.
++- Plan: implement CAS and caller propagation; deterministic concurrent/barrier tests over actual isolated ledger; affected and scheduler regressions; structure + working/cached diff gates; independent affected-Contract review; commit/push/PR only.
++- DONE_WHEN=all requested source gates and independent review recorded, pushed PR references #1374 P0-A, receipt binds exact source head and UNKNOWN; no merge.
++- EXPANSION_TRIGGER=authority conflict, semantic ambiguity, required gate/test failure, scope beyond G1 or production effect. Stop dependent writes and record STOPPED-EKR-P0A.md with matrix lines 33–41.
++- Independent preflight: /root/authority_review supports REUSE/DURABLE; stale identity checked before terminal guard; returned observation evidence plus raw receipt requires no new persistent event type.
+diff --git a/packages/production-runtime/test/workflow-progress-runtime.test.js b/packages/production-runtime/test/workflow-progress-runtime.test.js
+index 248c593e..ea2ef808 100644
+--- a/packages/production-runtime/test/workflow-progress-runtime.test.js
++++ b/packages/production-runtime/test/workflow-progress-runtime.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../../workflow-execution/test-support/observation-identity.js'
+ import test from 'node:test'
+ import assert from 'node:assert/strict'
+ import { mkdtempSync, rmSync } from 'node:fs'
+@@ -172,7 +173,7 @@ test('terminal attempts cannot accept another checkpoint', async () => {
+       sessionId: 'main',
+     })
+     await fx.ledger.recordReconciled({
+-      nodeVisitId: VISIT,
++      ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT,
+       expectedPhase: 'run_delivered',
+       verdict: 'SETTLED',
+       judgment: 'business_commitment_observed',
+diff --git a/packages/workflow-execution/src/attempt-identity.js b/packages/workflow-execution/src/attempt-identity.js
+index c2a225ae..168b5308 100644
+--- a/packages/workflow-execution/src/attempt-identity.js
++++ b/packages/workflow-execution/src/attempt-identity.js
+@@ -4,6 +4,26 @@ export const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F
+ export const AGENT_ID_RE = /^agt_[A-Za-z0-9_-]+$/
+ export const ATTEMPT_ID_RE = /^wfeat-[0-9a-f]{24}$/
+ 
++/** Identity comes from the observation snapshot, never a fresh commit-time read. */
++export function validateObservationIdentity({ expectedAttemptId, expectedGeneration }) {
++  if (typeof expectedAttemptId !== 'string' || !ATTEMPT_ID_RE.test(expectedAttemptId)) {
++    throw new TypeError('workflow-execution: expectedAttemptId must be a ledger-minted wfeat-* id')
++  }
++  if (!Number.isInteger(expectedGeneration) || expectedGeneration < 1) {
++    throw new TypeError('workflow-execution: expectedGeneration must be a positive integer attempt generation')
++  }
++}
++
++/** Called only after fresh replay inside the existing atomic mutation. No append. */
++export function staleObservation(current, observation) {
++  if (current.attemptId === observation.expectedAttemptId
++    && (current.generation ?? 1) === observation.expectedGeneration) return undefined
++  return {
++    committed: false, action: 'stale_observation', cause: 'stale_observation',
++    observation, attempt: { ...current },
++  }
++}
++
+ export function attemptIdFor(nodeVisitId, generation = 1) {
+   if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
+     throw new TypeError(`workflow-execution: attemptIdFor requires a UUID nodeVisitId (got ${JSON.stringify(nodeVisitId)})`)
+diff --git a/packages/workflow-execution/src/engine.js b/packages/workflow-execution/src/engine.js
+index b8938568..c88f02de 100644
+--- a/packages/workflow-execution/src/engine.js
++++ b/packages/workflow-execution/src/engine.js
+@@ -10,7 +10,7 @@ import { buildExecutionInstruction } from './instruction.js'
+ import { createRecoveryOperation } from './recovery.js'
+ import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
+ import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+-import { createTerminalAttemptOperations } from './terminal-attempt-operations.js'
++import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+ export const DEFAULT_POLL_INTERVAL_MS = 30_000
+ export const DEFAULT_MAX_ADMISSIONS_PER_POLL = 25
+ 
+@@ -68,37 +68,7 @@ export function createWorkflowExecutionEngine({
+     })
+   }
+ 
+-  /** CTR-WEC1-005: call svc, then persist the idempotency fact; failed calls retry on a later pass. */
+-  async function escalateAttemptLimit({ attempt, reason }) {
+-    if (typeof escalateAttemptLimitDep !== 'function') return
+-    const payload = {
+-      workflowInstanceId: attempt.workflowInstanceId,
+-      nodeVisitId: attempt.nodeVisitId,
+-      attemptCount: attempt.dispatchCount ?? attempt.generation ?? 1,
+-      lastAttemptId: attempt.attemptId,
+-      dispatchIntentId: attempt.dispatchIntentId,
+-      reason,
+-    }
+-    try {
+-      const result = await escalateAttemptLimitDep(payload)
+-      if (!result?.ok) {
+-        log.warn?.(`workflow-execution: escalation call failed for ${attempt.nodeVisitId} (${result?.code ?? 'unknown'}) — retried on a later pass`)
+-        return
+-      }
+-      const recorded = await ledger.recordEscalationRequested({
+-        nodeVisitId: attempt.nodeVisitId,
+-        reason,
+-        attemptCount: payload.attemptCount,
+-        lastAttemptId: payload.lastAttemptId,
+-        dispatchIntentId: payload.dispatchIntentId,
+-      })
+-      if (recorded.committed) {
+-        log.log?.(`workflow-execution: owner assistance opened for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
+-      }
+-    } catch (error) {
+-      log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+-    }
+-  }
++  const escalateAttemptLimit = createAttemptLimitEscalation({ ledger, escalateAttemptLimit: escalateAttemptLimitDep, log })
+ 
+   const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
+     createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
+@@ -177,7 +147,8 @@ export function createWorkflowExecutionEngine({
+         // CTR-WEC1-004: the fresh locked fence refused a past-limit mint.
+         // Escalate once from that exact predecessor and leave.
+         if (attemptResult.attempt.escalation === undefined) {
+-          await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
++          const recorded = await escalateAttemptLimit({ attempt: attemptResult.attempt, reason: 'ATTEMPTS_EXHAUSTED' })
++          if (recorded?.action === 'stale_observation') return { nodeVisitId: rawIntent.nodeVisitId, ...recorded }
+         }
+         return { action: 'attempt_limit_reached', nodeVisitId: rawIntent.nodeVisitId, attemptId: attemptResult.attempt.attemptId }
+       }
+@@ -238,7 +209,7 @@ export function createWorkflowExecutionEngine({
+ 
+   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
+   async function reconcileOnce() {
+-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
++    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], staleObservations: [] }
+     for (const attempt of await ledger.listActiveFresh()) {
+       if (attempt.phase !== 'planned' || attempt.retryReason !== 'owner_assistance_resolved') continue
+       try {
+@@ -265,10 +236,14 @@ export function createWorkflowExecutionEngine({
+           if (attempt.retryReason !== 'owner_assistance_resolved' && attempt.phase === 'run_delivered'
+             && clock() - attempt.delivered.atMs >= staleNoProgressThresholdMs) {
+             const stale = await judgeStale(attempt)
+-            if (stale.kind === 'stale_confirmed' && await settleStale(attempt)) {
+-              summary.staleReentry.push(attempt.nodeVisitId)
+-              await maybeEscalateAtLimit(attempt)
+-              continue
++            if (stale.kind === 'stale_confirmed') {
++              const recorded = await settleStale(attempt)
++              retainStaleObservation(summary, recorded)
++              if (recorded.committed) {
++                summary.staleReentry.push(attempt.nodeVisitId)
++                retainStaleObservation(summary, await maybeEscalateAtLimit(attempt))
++                continue
++              }
+             }
+           }
+           summary.running += 1
+@@ -284,11 +259,13 @@ export function createWorkflowExecutionEngine({
+         }
+         const recorded = await ledger.recordReconciled({
+           nodeVisitId: attempt.nodeVisitId,
++          expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
+           expectedPhase: attempt.phase,
+           verdict: finalVerdict.state,
+           judgment: finalVerdict.judgment,
+           reason: finalVerdict.reason,
+         })
++        retainStaleObservation(summary, recorded)
+         if (!recorded.committed) {
+           if (recorded.attempt.state === 'ACTIVE') summary.running += 1
+           continue
+@@ -304,7 +281,7 @@ export function createWorkflowExecutionEngine({
+       if (attempt.state !== 'NEEDS_REVIEW') continue
+       try {
+         const stale = await judgeStale(attempt)
+-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
++        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
+       } catch (error) {
+         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+       }
+@@ -313,7 +290,7 @@ export function createWorkflowExecutionEngine({
+     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
+       try {
+         const stale = await judgeStale(attempt)
+-        await reconcileTerminalCandidate(attempt, stale, summary.staleReentry)
++        retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
+       } catch (error) {
+         log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+       }
+@@ -489,3 +466,8 @@ export function createWorkflowExecutionEngine({
+     snapshot: () => ledger.snapshot(),
+   }
+ }
++
++/** Keep rejected old facts reviewable without appending them to the new attempt. */
++function retainStaleObservation(summary, result) {
++  if (result?.action === 'stale_observation') summary.staleObservations.push(result)
++}
+diff --git a/packages/workflow-execution/src/ledger-records.js b/packages/workflow-execution/src/ledger-records.js
+index 0205288a..37205e2c 100644
+--- a/packages/workflow-execution/src/ledger-records.js
++++ b/packages/workflow-execution/src/ledger-records.js
+@@ -1,4 +1,4 @@
+-import { UUID_RE, AGENT_ID_RE, ATTEMPT_ID_RE } from './attempt-identity.js'
++import { UUID_RE, AGENT_ID_RE, ATTEMPT_ID_RE, validateObservationIdentity, staleObservation } from './attempt-identity.js'
+ import { continuePlannedOwnerResume as continuePlannedOwnerResumeMutation } from './owner-assistance-resume-ledger.js'
+ import { buildStaleSupersededEvent } from './ledger-events.js'
+ import { normalizeProgressCheckpoint } from './progress.js'
+@@ -61,18 +61,22 @@ export async function recordProgressCheckpoint(ledger, io, { nodeVisitId, attemp
+   })
+ }
+ 
+-export async function recordReconciled(ledger, io, { nodeVisitId, expectedPhase, verdict, judgment, reason }) {
++export async function recordReconciled(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, expectedPhase, verdict, judgment, reason }) {
+   if (verdict !== 'SETTLED' && verdict !== 'NEEDS_REVIEW') {
+     throw new TypeError(`workflow-execution: reconciled verdict must be SETTLED | NEEDS_REVIEW (got ${JSON.stringify(verdict)})`)
+   }
+   if (typeof expectedPhase !== 'string' || expectedPhase === '') throw new TypeError('workflow-execution: reconciled expectedPhase is required')
+   if (typeof judgment !== 'string' || judgment === '') throw new TypeError('workflow-execution: reconciled judgment is required')
+   if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: reconciled reason is required')
++  const observation = { kind: 'reconciled', nodeVisitId, expectedAttemptId, expectedGeneration, expectedPhase, verdict, judgment, reason }
++  validateObservationIdentity(observation)
+   return ledger.mutate(() => {
+     const current = io.attempt(nodeVisitId)
+     if (current === undefined) {
+       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
+     }
++    const stale = staleObservation(current, observation)
++    if (stale) return stale
+     if (current.state !== 'ACTIVE') io.terminalGuard(current, { kind: 'reconciled', nodeVisitId })
+     if (current.phase !== expectedPhase) {
+       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
+@@ -92,24 +96,28 @@ export async function recordReconciled(ledger, io, { nodeVisitId, expectedPhase,
+ /**
+  * WORKFLOW_STALE_REENTRY_V1 CTR-SRE-002: settle ONE stale attempt as the
+  * re-entry marker (terminal SETTLED / judgment 'stale_no_progress'). The
+- * `expected` snapshot (state + phase + delivered.atMs) is the CAS guard:
++ * Attempt identity plus `expected` state/phase/delivered.atMs are the CAS guard:
+  * two pollers may both probe stale, only the one whose snapshot still
+  * matches the fresh replay wins; the loser gets { committed: false } —
+  * never a double settlement, never a corrupt append.
+  */
+-export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expected, observedWorkflowStateVersion }) {
++export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, expected, observedWorkflowStateVersion }) {
+   if (expected === null || typeof expected !== 'object') throw new TypeError('workflow-execution: stale supersession expected snapshot is required')
+   if (typeof expected.state !== 'string' || typeof expected.phase !== 'string') throw new TypeError('workflow-execution: stale supersession expected.state/phase are required')
+   if (!Number.isInteger(expected.deliveredAtMs)) throw new TypeError('workflow-execution: stale supersession expected.deliveredAtMs must be an integer')
++  const observation = { kind: 'stale_superseded', nodeVisitId, expectedAttemptId, expectedGeneration, expected: { ...expected }, observedWorkflowStateVersion }
++  validateObservationIdentity(observation)
+   return ledger.mutate(() => {
+     const current = io.attempt(nodeVisitId)
+     if (current === undefined) {
+       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — beginAttemptIfAbsent first`)
+     }
+-    const matches = current.state === expected.state
+-      && current.phase === expected.phase
++    const stale = staleObservation(current, observation)
++    if (stale) return stale
++    const matches = current.state === observation.expected.state
++      && current.phase === observation.expected.phase
+       && current.delivered !== undefined
+-      && current.delivered.atMs === expected.deliveredAtMs
++      && current.delivered.atMs === observation.expected.deliveredAtMs
+     if (!matches) {
+       return { committed: false, attempt: { ...current }, cause: 'attempt_changed' }
+     }
+@@ -129,13 +137,17 @@ export async function recordStaleSuperseded(ledger, io, { nodeVisitId, expected,
+  * anything. Requires an existing terminal attempt — escalation rides the
+  * attempt's own terminal evidence, never an ACTIVE attempt.
+  */
+-export async function recordEscalationRequested(ledger, io, { nodeVisitId, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
++export async function recordEscalationRequested(ledger, io, { nodeVisitId, expectedAttemptId, expectedGeneration, reason, attemptCount, lastAttemptId, dispatchIntentId }) {
+   if (typeof reason !== 'string' || reason === '') throw new TypeError('workflow-execution: escalation reason is required')
++  const observation = { kind: ESCALATION_REQUESTED_KIND, nodeVisitId, expectedAttemptId, expectedGeneration, reason, attemptCount, lastAttemptId, dispatchIntentId }
++  validateObservationIdentity(observation)
+   return ledger.mutate(() => {
+     const current = io.attempt(nodeVisitId)
+     if (current === undefined) {
+       throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId.toLowerCase()} — escalation rides an existing attempt`)
+     }
++    const stale = staleObservation(current, observation)
++    if (stale) return stale
+     if (current.state === 'ACTIVE') {
+       throw new Error(`workflow-execution: refusing escalation_requested for nodeVisit ${nodeVisitId.toLowerCase()} — attempt is ACTIVE`)
+     }
+@@ -160,6 +172,34 @@ export async function recordEscalationRequested(ledger, io, { nodeVisitId, reaso
+   })
+ }
+ 
++/** Public terminal wrappers also bind unlocked callers to their original snapshot.
++ * Private admission/recovery appenders already read and write under one lock. */
++export async function recordDeliveryFailed(ledger, io, observation) {
++  const { nodeVisitId, reason } = observation
++  if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
++    throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
++  }
++  return recordTerminalObservation(ledger, io, { ...observation, kind: 'delivery_failed' },
++    () => io.recordDeliveryFailed(nodeVisitId, reason))
++}
++
++export async function recordRecoveryRefused(ledger, io, observation) {
++  const { nodeVisitId, authorityRef, refused } = observation
++  if (typeof authorityRef !== 'string' || authorityRef === '') throw new TypeError('workflow-execution: authorityRef is required')
++  if (typeof refused !== 'string' || refused === '') throw new TypeError('workflow-execution: refused is required')
++  return recordTerminalObservation(ledger, io, { ...observation, kind: 'recovery_refused' },
++    () => io.recordRecoveryRefused(nodeVisitId, authorityRef, refused))
++}
++
++async function recordTerminalObservation(ledger, io, observation, record) {
++  validateObservationIdentity(observation)
++  return ledger.mutate(() => {
++    const current = io.attempt(observation.nodeVisitId)
++    if (current === undefined) throw new Error(`workflow-execution: no attempt exists for nodeVisit ${observation.nodeVisitId}`)
++    return staleObservation(current, observation) ?? { committed: true, ...record() }
++  })
++}
++
+ 
+ export async function continuePlannedOwnerResume(ledger, io, nodeVisitId, verify, complete) {
+   if (typeof nodeVisitId !== 'string' || !UUID_RE.test(nodeVisitId)) {
+diff --git a/packages/workflow-execution/src/ledger.js b/packages/workflow-execution/src/ledger.js
+index 7ca156b2..ad96c891 100644
+--- a/packages/workflow-execution/src/ledger.js
++++ b/packages/workflow-execution/src/ledger.js
+@@ -1,4 +1,4 @@
+-import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested } from './ledger-records.js'
++import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
+ import { beginAttemptIfAbsent } from './ledger-admission.js'
+ /**
+  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
+@@ -287,12 +287,7 @@ export class ExecutionLedger {
+    *  V2: NEW-path resolution failures must use recordResolutionBlocked — a
+    *  fresh `resolve_failed:` reason here would silently re-create the V1
+    *  conflation this successor removed, so it fails loud. */
+-  async recordDeliveryFailed({ nodeVisitId, reason }) {
+-    if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
+-      throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
+-    }
+-    return this.mutate(() => this.#recordDeliveryFailed(nodeVisitId, reason))
+-  }
++  async recordDeliveryFailed(...args) { return recordDeliveryFailed(this, this.#operationPort(), ...args) }
+ 
+   /** V2 CTR-WAE-012: durable WRITE-AHEAD INTENT before any router.deliver
+    *  invocation. Allowed from the pre-delivery phases only; at-most-one is
+@@ -318,15 +313,7 @@ export class ExecutionLedger {
+ 
+   /** V2 CTR-WAE-013 E5: world drift discovered on an eligible-shaped attempt
+    *  — refusal is terminal NEEDS_REVIEW (the human path), zero admission. */
+-  async recordRecoveryRefused({ nodeVisitId, authorityRef, refused }) {
+-    if (typeof authorityRef !== 'string' || authorityRef === '') {
+-      throw new TypeError('workflow-execution: authorityRef is required')
+-    }
+-    if (typeof refused !== 'string' || refused === '') {
+-      throw new TypeError('workflow-execution: refused is required')
+-    }
+-    return this.mutate(() => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused))
+-  }
++  async recordRecoveryRefused(...args) { return recordRecoveryRefused(this, this.#operationPort(), ...args) }
+ 
+   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
+   async recordReconciled(...args) { return recordReconciled(this, this.#operationPort(), ...args) }
+diff --git a/packages/workflow-execution/src/terminal-attempt-operations.js b/packages/workflow-execution/src/terminal-attempt-operations.js
+index 06d408d3..b967d8d2 100644
+--- a/packages/workflow-execution/src/terminal-attempt-operations.js
++++ b/packages/workflow-execution/src/terminal-attempt-operations.js
+@@ -9,16 +9,17 @@ export function createTerminalAttemptOperations({ ledger, escalateAttemptLimit }
+ 
+   async function maybeEscalateAtLimit(attempt) {
+     if (!await isAtAttemptLimit(attempt) || attempt.escalation !== undefined) return
+-    await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
++    return escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+   }
+ 
+   async function settleStale(attempt) {
+     const recorded = await ledger.recordStaleSuperseded({
+       nodeVisitId: attempt.nodeVisitId,
++      expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
+       expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
+       observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch,
+     })
+-    return recorded.committed
++    return recorded
+   }
+ 
+   async function reconcileTerminalCandidate(attempt, stale, staleReentry) {
+@@ -26,11 +27,43 @@ export function createTerminalAttemptOperations({ ledger, escalateAttemptLimit }
+     const atLimit = await isAtAttemptLimit(attempt)
+     if (atLimit === undefined) return
+     if (atLimit) {
+-      await maybeEscalateAtLimit(attempt)
+-      return
++      return maybeEscalateAtLimit(attempt)
+     }
+-    if (await settleStale(attempt)) staleReentry.push(attempt.nodeVisitId)
++    const recorded = await settleStale(attempt)
++    if (recorded.committed) staleReentry.push(attempt.nodeVisitId)
++    return recorded
+   }
+ 
+   return { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate }
+ }
++
++/** CTR-WEC1-005: external wake first, then bind its fact to the observed attempt. */
++export function createAttemptLimitEscalation({ ledger, escalateAttemptLimit, log }) {
++  return async ({ attempt, reason }) => {
++    if (typeof escalateAttemptLimit !== 'function') return
++    const payload = {
++      workflowInstanceId: attempt.workflowInstanceId,
++      nodeVisitId: attempt.nodeVisitId,
++      attemptCount: attempt.dispatchCount ?? attempt.generation ?? 1,
++      lastAttemptId: attempt.attemptId,
++      dispatchIntentId: attempt.dispatchIntentId,
++      reason,
++    }
++    try {
++      const result = await escalateAttemptLimit(payload)
++      if (!result?.ok) {
++        log.warn?.(`workflow-execution: escalation call failed for ${attempt.nodeVisitId} (${result?.code ?? 'unknown'}) — retried on a later pass`)
++        return
++      }
++      const recorded = await ledger.recordEscalationRequested({
++        ...payload, expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
++      })
++      if (recorded.committed) {
++        log.log?.(`workflow-execution: owner assistance opened for ${attempt.nodeVisitId} (${reason}; svc case ${result.assistanceCaseId ?? 'n/a'})`)
++      }
++      return recorded
++    } catch (error) {
++      log.error?.(`workflow-execution: escalation error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
++    }
++  }
++}
+diff --git a/packages/workflow-execution/test-support/observation-identity.js b/packages/workflow-execution/test-support/observation-identity.js
+new file mode 100644
+index 00000000..f8e7e7d0
+--- /dev/null
++++ b/packages/workflow-execution/test-support/observation-identity.js
+@@ -0,0 +1,4 @@
++/** Identity copied from the test observer's actual pre-submit snapshot. */
++export function expectedIdentity(attempt) {
++  return { expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1 }
++}
+diff --git a/packages/workflow-execution/test/execution-control.test.js b/packages/workflow-execution/test/execution-control.test.js
+index 82f56484..07bedaf4 100644
+--- a/packages/workflow-execution/test/execution-control.test.js
++++ b/packages/workflow-execution/test/execution-control.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ /**
+  * WORKFLOW_EXECUTION_CONTROL_V1 — agent-core slice tests (CTR-WEC1-001..006).
+  *
+@@ -103,13 +104,13 @@ test('CTR-WEC1-004: the fence refuses a mint past maxAttemptsPerVisit (default 3
+     let r = await ledger.beginAttemptIfAbsent(seed)
+     assert.equal(r.created, true)
+     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main' })
+-    await ledger.recordStaleSuperseded({ nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
++    await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
+     // generation 2 → deliver → stale-supersede
+     r = await ledger.beginAttemptIfAbsent(seed, undefined, () => true)
+     assert.equal(r.created, true)
+     assert.equal(r.attempt.generation, 2)
+     await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT, 2), sessionId: 'main' })
+-    await ledger.recordStaleSuperseded({ nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
++    await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(VISIT).delivered.atMs }, observedWorkflowStateVersion: 1 })
+     // generation 3 would exceed maxAttemptsPerVisit=2 → clean refusal
+     r = await ledger.beginAttemptIfAbsent(seed)
+     assert.equal(r.created, false)
+@@ -251,7 +252,7 @@ test('Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: o
+     // the conservative 1h stale clock still applies to it (well within this
+     // assertion's time window).
+     await ledger.recordReconciled({
+-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
++      ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+       verdict: 'NEEDS_REVIEW', judgment: 'run_outcome_unknown', reason: 'timeout',
+     })
+     t = ledger.get(VISIT).reconciledAtMs + 5_000 // past the 1s retry delay, far below the 1h stale clock
+@@ -314,7 +315,7 @@ test('Case 9: restart — the trace projection recovers from the replayed ledger
+     })
+     await first.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main', reconciliationHandle: 'turn:h9' })
+     await first.recordReconciled({
+-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
++      ...expectedIdentity(first.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+       verdict: 'NEEDS_REVIEW', judgment: 'run_ended_no_submission', reason: 'run ended',
+     })
+ 
+diff --git a/packages/workflow-execution/test/ledger.test.js b/packages/workflow-execution/test/ledger.test.js
+index 090d7658..93856438 100644
+--- a/packages/workflow-execution/test/ledger.test.js
++++ b/packages/workflow-execution/test/ledger.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ /**
+  * WORKFLOW_AGENT_EXECUTION_V1 — ledger tests: the atomic one-attempt fence,
+  * deterministic attempt ids, restart replay, and terminal-append refusal.
+@@ -57,7 +58,7 @@ test('beginAttemptIfAbsent: first call creates, ANY existing attempt blocks a se
+ 
+     // A failed attempt (NEEDS_REVIEW) still blocks — outcome unknown is never
+     // automatically rerun.
+-    await ledger.recordDeliveryFailed({ nodeVisitId: VISIT, reason: 'delivery_rejected:AGENT_DISABLED' })
++    await ledger.recordDeliveryFailed({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, reason: 'delivery_rejected:AGENT_DISABLED' })
+     const afterFailure = await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+     assert.equal(afterFailure.created, false)
+   } finally {
+@@ -98,12 +99,12 @@ test('full lifecycle: planned -> delivered -> reconciled SETTLED; terminal attem
+     assert.equal(delivered.delivered.agentId, 'agt_target-agent')
+     assert.equal(delivered.delivered.requestId, attemptIdFor(VISIT))
+ 
+-    await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
++    await ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
+     assert.equal(ledger.get(VISIT).state, 'SETTLED')
+     assert.deepEqual(ledger.listActive(), [])
+ 
+     await assert.rejects(
+-      () => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'reconciled', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'late writer' }),
++      () => ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'reconciled', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'late writer' }),
+       /terminal/,
+       'late writers on settled visits must fail loud, never be absorbed',
+     )
+@@ -122,7 +123,7 @@ test('reconciled verdict ACTIVE is not a ledger event (only terminal verdicts la
+     const { ledger } = fixture
+     await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+     await assert.rejects(
+-      () => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'ACTIVE', judgment: 'run_running', reason: 'x' }),
++      () => ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'ACTIVE', judgment: 'run_running', reason: 'x' }),
+       TypeError,
+     )
+   } finally {
+diff --git a/packages/workflow-execution/test/managed-obligation.test.js b/packages/workflow-execution/test/managed-obligation.test.js
+index 70af7440..ba7caa97 100644
+--- a/packages/workflow-execution/test/managed-obligation.test.js
++++ b/packages/workflow-execution/test/managed-obligation.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ import test from 'node:test'
+ import assert from 'node:assert/strict'
+ import { mkdtempSync, rmSync } from 'node:fs'
+@@ -10,7 +11,7 @@ const seed = { dispatchIntentId: id(1), nodeVisitId: id(2), workflowInstanceId:
+ async function terminal(ledger) {
+   const a = ledger.get(seed.nodeVisitId)
+   await ledger.recordRunDelivered({ nodeVisitId: seed.nodeVisitId, agentId: 'agt_test', requestId: a.attemptId, sessionId: 'main' })
+-  await ledger.recordStaleSuperseded({ nodeVisitId: seed.nodeVisitId,
++  await ledger.recordStaleSuperseded({ ...expectedIdentity(ledger.get(seed.nodeVisitId)), nodeVisitId: seed.nodeVisitId,
+     expected: { state: 'ACTIVE', phase: 'run_delivered', deliveredAtMs: ledger.get(seed.nodeVisitId).delivered.atMs }, observedWorkflowStateVersion: 1 })
+ }
+ test('managed cap is three under the actual lock despite global 99, concurrent triggers, and restart', async t => {
+diff --git a/packages/workflow-execution/test/observation-cas/engine-races.test.js b/packages/workflow-execution/test/observation-cas/engine-races.test.js
+new file mode 100644
+index 00000000..cec0c4ed
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/engine-races.test.js
+@@ -0,0 +1,150 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++
++import { fixture, delivered, runEnded, advance, barrier, detail, engine, identity,
++  snapshot, assertUnchanged, assertStale, receipt, intent, VISIT } from './fixture.js'
++
++test('P0-A normal turn: old probe cannot settle a new delivered attempt in the same phase', { timeout: 10_000 }, async (t) => {
++  const fx = fixture()
++  const gate = barrier({ ok: true, body: { visibility: 'historical_participant' } })
++  let running
++  try {
++    const old = await delivered(fx.writer)
++    const observer = engine(fx, { readInstanceDetail: gate.call })
++    running = observer.engine.reconcileOnce()
++    await gate.arrived
++    const current = await advance(fx.writer, old)
++    assert.equal(current.phase, old.phase)
++    const before = await snapshot(fx.writer)
++    gate.release()
++    const result = await running
++    assert.equal(result.settled.length, 0)
++    assert.equal(result.needsReview.length, 0)
++    assertStale(result.staleObservations[0], old, 'reconciled')
++    assert.equal(result.staleObservations[0].observation.judgment, 'business_commitment_observed')
++    await assertUnchanged(fx.writer, before)
++    assert.deepEqual(observer.calls.errors, [])
++    const legal = await fx.writer.recordReconciled({ nodeVisitId: VISIT, ...identity(current),
++      expectedPhase: current.phase, verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'fresh exact probe' })
++    assert.equal(legal.committed, true)
++    receipt(t, 'normal-turn/same-phase/legal-same-generation', old, current, result.staleObservations[0])
++  } finally { gate.release(); await running?.catch(() => {}); fx.cleanup() }
++})
++
++test('P0-A pending stale: same phase AND delivered timestamp across generations cannot pass CAS', { timeout: 10_000 }, async (t) => {
++  const fx = fixture({ age: 2_000 })
++  const gate = barrier(detail())
++  let running
++  try {
++    const old = await delivered(fx.writer)
++    const observer = engine(fx, { getTurnReconciliation: () => ({ state: 'pending' }), readInstanceDetail: gate.call })
++    running = observer.engine.reconcileOnce()
++    await gate.arrived
++    const current = await advance(fx.writer, old)
++    assert.equal(current.state, old.state)
++    assert.equal(current.phase, old.phase)
++    assert.equal(current.delivered.atMs, old.delivered.atMs)
++    const before = await snapshot(fx.writer)
++    gate.release()
++    const result = await running
++    assert.deepEqual(result.staleReentry, [])
++    assertStale(result.staleObservations[0], old, 'stale_superseded')
++    assert.equal(result.staleObservations[0].observation.observedWorkflowStateVersion, 7)
++    await assertUnchanged(fx.writer, before)
++    assert.deepEqual(observer.calls.errors, [])
++    receipt(t, 'pending-stale/timestamp-collision', old, current, result.staleObservations[0])
++  } finally { gate.release(); await running?.catch(() => {}); fx.cleanup() }
++})
++
++for (const scenario of [
++  { name: 'terminal stale', age: 2_000, config: { staleNoProgressThresholdMs: 1_000, retryDelayMs: 5_000 } },
++  { name: 'run-ended retry', age: 100, config: { staleNoProgressThresholdMs: 1_000, retryDelayMs: 50 } },
++]) {
++  test(`P0-A ${scenario.name}: old terminal candidate cannot supersede same-phase generation 2`, { timeout: 10_000 }, async (t) => {
++    const fx = fixture({ age: scenario.age })
++    const gate = barrier(detail())
++    let running
++    try {
++      const old = await runEnded(fx.writer, await delivered(fx.writer))
++      const observer = engine(fx, { config: scenario.config, readInstanceDetail: gate.call })
++      running = observer.engine.reconcileOnce()
++      await gate.arrived
++      const current = await advance(fx.writer, old, { terminal: true })
++      assert.equal(current.state, old.state)
++      assert.equal(current.phase, old.phase)
++      const before = await snapshot(fx.writer)
++      gate.release()
++      const result = await running
++      assert.deepEqual(result.staleReentry, [])
++      assertStale(result.staleObservations[0], old, 'stale_superseded')
++      await assertUnchanged(fx.writer, before)
++      assert.deepEqual(observer.calls.errors, [])
++      receipt(t, scenario.name, old, current, result.staleObservations[0])
++    } finally { gate.release(); await running?.catch(() => {}); fx.cleanup() }
++  })
++}
++
++test('P0-A escalation receipt: old success cannot annotate a legal Owner-resumed successor', { timeout: 10_000 }, async (t) => {
++  const fx = fixture({ maxAttemptsPerVisit: 1 })
++  const gate = barrier({ ok: true, assistanceCaseId: '6d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77' })
++  let running
++  try {
++    const old = await runEnded(fx.writer, await delivered(fx.writer))
++    const observer = engine(fx, { escalateAttemptLimit: gate.call })
++    running = observer.engine.reconcileOnce()
++    await gate.arrived
++    // Same accepted Owner-resume proof used by the existing acceptance suite;
++    // this bypasses the automatic cap without weakening it or editing the log.
++    const current = await advance(fx.writer, old, { ownerResume: true, terminal: true })
++    assert.equal(current.retryReason, 'owner_assistance_resolved')
++    const before = await snapshot(fx.writer)
++    gate.release()
++    const result = await running
++    assertStale(result.staleObservations[0], old, 'escalation_requested')
++    assert.equal(result.staleObservations[0].observation.lastAttemptId, old.attemptId)
++    await assertUnchanged(fx.writer, before)
++    assert.deepEqual(observer.calls.errors, [])
++    const fresh = await fx.writer.recordEscalationRequested({ nodeVisitId: VISIT, ...identity(current),
++      reason: 'ATTEMPTS_EXHAUSTED', attemptCount: 2, lastAttemptId: current.attemptId,
++      dispatchIntentId: current.dispatchIntentId })
++    assert.equal(fresh.committed, true)
++    receipt(t, 'escalation/Owner-resume', old, current, result.staleObservations[0])
++  } finally { gate.release(); await running?.catch(() => {}); fx.cleanup() }
++})
++
++test('P0-A concurrent scheduling: a held old poll cannot settle the other poller admission', { timeout: 10_000 }, async (t) => {
++  const fx = fixture()
++  const gate = barrier({ ok: true, body: { visibility: 'historical_participant' } })
++  let running
++  try {
++    const old = await delivered(fx.writer)
++    const observer = engine(fx, { readInstanceDetail: gate.call,
++      fetchDuePage: async () => ({ ok: true, items: [intent()] }) })
++    running = observer.engine.pollOnce()
++    await gate.arrived
++    // A second actual engine owns its own ledger handle and the normal due
++    // admission path. Its stale probe confirms gen1 before the due sweep.
++    let queries = 0
++    const peer = engine({ ...fx, reader: fx.writer, age: 2_000 }, {
++      getTurnReconciliation: () => ({ state: queries++ === 0 ? 'pending' : 'settled' }),
++      fetchDuePage: async () => ({ ok: true, items: [intent()] }),
++    })
++    // The old Router turn converges after the stale probe and before the
++    // admission quiescence check. Both are ordinary read-only observations.
++    const peerResult = await peer.engine.pollOnce()
++    assert.equal(peerResult.admissions[0].action, 'admitted')
++    const current = fx.writer.get(VISIT)
++    assert.equal(current.generation, 2)
++    assert.equal(peer.calls.delivers.length, 1)
++    const before = await snapshot(fx.writer)
++    gate.release()
++    const result = await running
++    assertStale(result.reconciled.staleObservations[0], old, 'reconciled')
++    assert.equal(result.admissions[0].action, 'already_attempted')
++    assert.equal(observer.calls.delivers.length, 0)
++    await assertUnchanged(fx.writer, before)
++    assert.deepEqual(observer.calls.errors, [])
++    assert.deepEqual(peer.calls.errors, [])
++    receipt(t, 'concurrent-pollOnce/two-ledger-handles', old, current, result.reconciled.staleObservations[0])
++  } finally { gate.release(); await running?.catch(() => {}); fx.cleanup() }
++})
+diff --git a/packages/workflow-execution/test/observation-cas/fixture.js b/packages/workflow-execution/test/observation-cas/fixture.js
+new file mode 100644
+index 00000000..61a02a8f
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/fixture.js
+@@ -0,0 +1,139 @@
++import assert from 'node:assert/strict'
++import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++
++import { ExecutionLedger } from '../../src/ledger.js'
++import { createWorkflowExecutionEngine } from '../../src/engine.js'
++import { completeCurrentActivationDetail } from '../../test-support/current-activation-detail.js'
++
++export const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
++export const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
++export const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
++export const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
++export const AGENT = 'agt_target-agent'
++export const T0 = 1_700_000_000_000
++
++export function intent() {
++  return { dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE,
++    ownerPrincipalId: OWNER, nextEligibleAt: '2026-09-09T01:00:00Z',
++    createdAt: '2026-09-09T00:00:00Z', updatedAt: '2026-09-09T00:30:00Z' }
++}
++
++export function identity(attempt) {
++  return { expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1 }
++}
++
++export function detail(version = 7) {
++  return { ok: true, body: completeCurrentActivationDetail({ visibility: 'full', detail: {
++    instance: { workflow_state_version: version }, current_node_visit_id: VISIT,
++  } }, { workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER }) }
++}
++
++export function fixture({ age = 100, maxAttemptsPerVisit = 3 } = {}) {
++  const dir = mkdtempSync(join(tmpdir(), 'wfe-observation-cas-'))
++  // Both attempts deliberately receive the SAME delivered.atMs. The reader's
++  // wall clock makes candidates due without making timestamps an identity key.
++  const writer = new ExecutionLedger({ dir, clock: () => T0, maxAttemptsPerVisit })
++  const reader = new ExecutionLedger({ dir, clock: () => T0 + age, maxAttemptsPerVisit })
++  return { dir, writer, reader, age, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
++}
++
++export async function delivered(ledger, { ownerResume = false } = {}) {
++  const result = await ledger.beginAttemptIfAbsent(intent(), async (attempt, { recordDeliveryStarted }) => {
++    recordDeliveryStarted()
++    return { kind: 'run_delivered', agentId: AGENT, requestId: attempt.attemptId,
++      sessionId: 'main', reconciliationHandle: `turn:g${attempt.generation}`,
++      workflowStateVersionAtDispatch: ownerResume ? 12 : 7 }
++  }, () => true, async () => ({ preDeliveryWorkflowStateVersion: ownerResume ? 12 : 7,
++    ...(ownerResume ? { assistanceResume: ownerEvidence() } : {}) }), ownerResume ? async () => true : undefined)
++  assert.equal(result.created, true, result.cause)
++  return result.attempt
++}
++
++export async function runEnded(ledger, attempt) {
++  const result = await ledger.recordReconciled({ nodeVisitId: VISIT, ...identity(attempt),
++    expectedPhase: attempt.phase, verdict: 'NEEDS_REVIEW',
++    judgment: 'run_ended_no_submission', reason: 'injected ended turn without submission' })
++  assert.equal(result.committed, true)
++  return ledger.get(VISIT)
++}
++
++export function staleInput(attempt) {
++  return { nodeVisitId: VISIT, ...identity(attempt),
++    expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
++    observedWorkflowStateVersion: attempt.workflowStateVersionAtDispatch }
++}
++
++export async function advance(ledger, attempt, { terminal = false, ownerResume = false } = {}) {
++  if (!ownerResume) assert.equal((await ledger.recordStaleSuperseded(staleInput(attempt))).committed, true)
++  const next = await delivered(ledger, { ownerResume })
++  assert.equal(next.generation, (attempt.generation ?? 1) + 1)
++  assert.notEqual(next.attemptId, attempt.attemptId)
++  assert.equal(next.delivered.atMs, attempt.delivered.atMs)
++  return terminal ? runEnded(ledger, next) : next
++}
++
++export function ownerEvidence() {
++  return { dispatchIntentId: INTENT, workflowInstanceId: INSTANCE, nodeVisitId: VISIT,
++    ownerPrincipalId: OWNER, activationState: 'ACTIVE', workflowStateVersion: 12,
++    assistanceCaseId: '6d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77',
++    requestEventSequence: 10, resolutionEventSequence: 11,
++    requesterPrincipalId: OWNER, resolverPrincipalId: '7d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e88',
++    ingress: 'assignee', reason: null, lastAttemptId: null }
++}
++
++export function barrier(result) {
++  let entered, release
++  const arrived = new Promise((resolve) => { entered = resolve })
++  const held = new Promise((resolve) => { release = resolve })
++  return { arrived, release, call: async () => { entered(); await held; return result } }
++}
++
++export function engine(fx, overrides = {}) {
++  const calls = { delivers: [], errors: [] }
++  const result = createWorkflowExecutionEngine({
++    ledger: fx.reader, clock: () => T0 + fx.age,
++    config: { staleNoProgressThresholdMs: 1_000, retryDelayMs: 50 },
++    log: { log() {}, warn() {}, error(message) { calls.errors.push(message) } },
++    fetchDuePage: async () => ({ ok: true, items: [] }),
++    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
++    deliverRun: async (request) => {
++      calls.delivers.push(request)
++      return { ok: true, sessionId: 'main', reconciliationHandle: `turn:${request.requestId}` }
++    },
++    getTurnReconciliation: () => ({ state: 'settled' }),
++    resolveCallerCorrelation: () => ({ state: 'never_existed' }),
++    readInstanceDetail: async () => detail(),
++    ...overrides,
++  })
++  return { engine: result, calls }
++}
++
++export async function snapshot(ledger) {
++  return { attempts: structuredClone(await ledger.snapshotFresh()), bytes: readFileSync(ledger.eventsFile, 'utf8') }
++}
++
++export async function assertUnchanged(ledger, before) {
++  assert.deepEqual(await snapshot(ledger), before, 'stale submission must preserve the entire current projection and event bytes')
++}
++
++export function assertStale(result, observed, kind) {
++  assert.equal(result.committed, false)
++  assert.equal(result.action, 'stale_observation')
++  assert.equal(result.cause, 'stale_observation')
++  assert.equal(result.observation.kind, kind)
++  assert.equal(result.observation.expectedAttemptId, observed.attemptId)
++  assert.equal(result.observation.expectedGeneration, observed.generation ?? 1)
++  assert.equal(result.attempt.generation, 2)
++}
++
++export function receipt(t, name, observed, current, result) {
++  t.diagnostic(JSON.stringify({ sourceSha: process.env.EKR_TEST_SOURCE_SHA ?? 'UNKNOWN', testName: name, scenario: name,
++    faultInjection: 'old observation held; legal next generation committed; old observation released',
++    observed: { attemptId: observed.attemptId, generation: observed.generation, phase: observed.phase },
++    current: { attemptId: current.attemptId, generation: current.generation, phase: current.phase },
++    expectedResult: 'stale_observation; current projection/log unchanged; legal same-generation commit accepted where exercised',
++    actualResult: result.action, rawReceipt: result, currentProjectionAndBytesUnchanged: true,
++    realFilesystemLedger: true, productionWrites: 0 }))
++}
+diff --git a/packages/workflow-execution/test/observation-cas/ledger-identity.test.js b/packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+new file mode 100644
+index 00000000..d19f8e71
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+@@ -0,0 +1,143 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++
++import { fixture, delivered, advance, identity, staleInput, snapshot,
++  assertUnchanged, assertStale, runEnded, intent, VISIT } from './fixture.js'
++
++function reconcileInput(attempt) {
++  return { nodeVisitId: VISIT, ...identity(attempt), expectedPhase: attempt.phase,
++    verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'exact observed business fact' }
++}
++
++test('P0-A ledger identity: attempt ID and generation are independently required CAS fields', async (t) => {
++  const fx = fixture()
++  try {
++    const old = await delivered(fx.writer)
++    const current = await advance(fx.writer, old)
++    for (const change of [
++      { expectedAttemptId: old.attemptId },
++      { expectedGeneration: 1 },
++      identity(old),
++    ]) {
++      const before = await snapshot(fx.writer)
++      const input = { ...reconcileInput(current), ...change }
++      const result = await fx.reader.recordReconciled(input)
++      assert.equal(result.action, 'stale_observation')
++      assert.equal(result.committed, false)
++      assert.equal(result.observation.expectedAttemptId, input.expectedAttemptId)
++      assert.equal(result.observation.expectedGeneration, input.expectedGeneration)
++      assert.equal(result.observation.reason, input.reason)
++      await assertUnchanged(fx.writer, before)
++    }
++    assert.equal((await fx.reader.recordReconciled(reconcileInput(current))).committed, true)
++    t.diagnostic('same phase generation1 -> generation2: ID-only mismatch rejected; generation-only mismatch rejected; both rejected; exact generation committed; new attempt/event bytes unchanged on rejection')
++  } finally { fx.cleanup() }
++})
++
++test('P0-A stale settlement and escalation independently compare generation, retaining proposed facts', async () => {
++  const fx = fixture()
++  try {
++    const old = await delivered(fx.writer)
++    const current = await advance(fx.writer, old)
++    const before = await snapshot(fx.writer)
++    const result = await fx.reader.recordStaleSuperseded({ ...staleInput(current), expectedGeneration: 1 })
++    assert.equal(result.action, 'stale_observation')
++    assert.equal(result.observation.observedWorkflowStateVersion, 7)
++    await assertUnchanged(fx.writer, before)
++    assert.equal((await fx.writer.recordStaleSuperseded(staleInput(current))).committed, true)
++    const terminal = fx.writer.get(VISIT)
++    const escalatedBefore = await snapshot(fx.writer)
++    const rejected = await fx.reader.recordEscalationRequested({ nodeVisitId: VISIT, ...identity(terminal),
++      expectedGeneration: 1, reason: 'ATTEMPTS_EXHAUSTED', attemptCount: 2,
++      lastAttemptId: terminal.attemptId, dispatchIntentId: terminal.dispatchIntentId })
++    assert.equal(rejected.action, 'stale_observation')
++    assert.equal(rejected.observation.reason, 'ATTEMPTS_EXHAUSTED')
++    await assertUnchanged(fx.writer, escalatedBefore)
++    assert.equal((await fx.reader.recordEscalationRequested({ nodeVisitId: VISIT, ...identity(terminal),
++      reason: 'ATTEMPTS_EXHAUSTED', attemptCount: 2, lastAttemptId: terminal.attemptId,
++      dispatchIntentId: terminal.dispatchIntentId })).committed, true)
++  } finally { fx.cleanup() }
++})
++
++test('P0-A required identities: omitted/malformed CAS fields fail before any append', async () => {
++  const fx = fixture()
++  try {
++    const attempt = await delivered(fx.writer)
++    for (const fields of [
++      { expectedAttemptId: undefined }, { expectedGeneration: undefined },
++      { expectedAttemptId: '' }, { expectedGeneration: 0 }, { expectedGeneration: 1.5 },
++    ]) {
++      for (const [method, input] of [
++        ['recordReconciled', reconcileInput(attempt)],
++        ['recordStaleSuperseded', staleInput(attempt)],
++        ['recordEscalationRequested', { nodeVisitId: VISIT, ...identity(attempt), reason: 'ATTEMPTS_EXHAUSTED' }],
++        ['recordDeliveryFailed', { nodeVisitId: VISIT, ...identity(attempt), reason: 'delivery_rejected:TEST' }],
++        ['recordRecoveryRefused', { nodeVisitId: VISIT, ...identity(attempt), authorityRef: 'test:ekr', refused: 'visit_changed' }],
++      ]) {
++        const before = await snapshot(fx.writer)
++        await assert.rejects(fx.reader[method]({ ...input, ...fields }), TypeError)
++        await assertUnchanged(fx.writer, before)
++      }
++    }
++  } finally { fx.cleanup() }
++})
++
++test('P0-A same-generation phase CAS and terminal refusal retain their existing semantics', async () => {
++  const fx = fixture()
++  try {
++    const attempt = await delivered(fx.writer)
++    const before = await snapshot(fx.writer)
++    const changed = await fx.writer.recordReconciled({ ...reconcileInput(attempt), expectedPhase: 'planned' })
++    assert.equal(changed.committed, false)
++    assert.equal(changed.cause, 'attempt_changed')
++    await assertUnchanged(fx.writer, before)
++    const terminal = await runEnded(fx.writer, attempt)
++    const terminalBefore = await snapshot(fx.writer)
++    await assert.rejects(fx.writer.recordReconciled(reconcileInput(terminal)), /terminal/)
++    await assertUnchanged(fx.writer, terminalBefore)
++  } finally { fx.cleanup() }
++})
++
++test('P0-A stale identity is recognized before a successor terminal guard', async () => {
++  const fx = fixture()
++  try {
++    const old = await delivered(fx.writer)
++    await advance(fx.writer, old, { terminal: true })
++    const before = await snapshot(fx.writer)
++    const rejected = await fx.reader.recordReconciled(reconcileInput(old))
++    assertStale(rejected, old, 'reconciled')
++    await assertUnchanged(fx.writer, before)
++  } finally { fx.cleanup() }
++})
++
++test('P0-A public terminal wrappers reject old identities before invoking private append guards', async () => {
++  const fx = fixture()
++  try {
++    const old = await delivered(fx.writer)
++    const current = await advance(fx.writer, old)
++    for (const [method, facts] of [
++      ['recordDeliveryFailed', { reason: 'delivery_rejected:TEST' }],
++      ['recordRecoveryRefused', { authorityRef: 'test:ekr', refused: 'visit_changed' }],
++    ]) {
++      const before = await snapshot(fx.writer)
++      const rejected = await fx.reader[method]({ nodeVisitId: VISIT, ...identity(old), ...facts })
++      assert.equal(rejected.action, 'stale_observation')
++      assert.equal(rejected.observation.expectedAttemptId, old.attemptId)
++      for (const [key, value] of Object.entries(facts)) assert.equal(rejected.observation[key], value)
++      await assertUnchanged(fx.writer, before)
++    }
++    await fx.writer.recordDeliveryFailed({ nodeVisitId: VISIT, ...identity(current), reason: 'delivery_rejected:TEST' })
++    assert.equal(fx.writer.get(VISIT).state, 'NEEDS_REVIEW')
++  } finally { fx.cleanup() }
++
++  const blocked = fixture()
++  try {
++    await blocked.writer.beginAttemptIfAbsent(intent())
++    await blocked.writer.recordResolutionBlocked({ nodeVisitId: VISIT, code: 'agent_mapping_missing' })
++    const fresh = blocked.writer.get(VISIT)
++    await blocked.writer.recordRecoveryRefused({ nodeVisitId: VISIT, ...identity(fresh),
++      authorityRef: 'test:ekr', refused: 'visit_changed' })
++    assert.equal(blocked.writer.get(VISIT).state, 'NEEDS_REVIEW')
++    assert.equal(blocked.writer.get(VISIT).phase, 'recovery_refused')
++  } finally { blocked.cleanup() }
++})
+diff --git a/packages/workflow-execution/test/observation-cas/observer-process.js b/packages/workflow-execution/test/observation-cas/observer-process.js
+new file mode 100644
+index 00000000..32a2fc78
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/observer-process.js
+@@ -0,0 +1,22 @@
++// Child-process seam for process-race.test.js. It loads the real on-disk ledger,
++// reads an attempt, waits for the parent to advance it, then submits that read.
++import { ExecutionLedger } from '../../src/ledger.js'
++import { identity, VISIT, T0 } from './fixture.js'
++
++if (process.env.EKR_P0A_OBSERVER_CHILD === '1') {
++ const ledger = new ExecutionLedger({ dir: process.argv[2], clock: () => T0 + 100 })
++ try {
++  const [attempt] = await ledger.listActiveFresh()
++  process.send({ stage: 'observed', attempt })
++  await new Promise((resolve) => process.once('message', resolve))
++  const result = await ledger.recordReconciled({ nodeVisitId: VISIT, ...identity(attempt),
++    expectedPhase: attempt.phase, verdict: 'SETTLED', judgment: 'business_commitment_observed',
++    reason: 'old child-process probe returned after new generation' })
++  process.send({ stage: 'submitted', result }, () => process.disconnect())
++ } catch (error) {
++  process.send({ stage: 'error', error: String(error?.stack ?? error) }, () => {
++    process.exitCode = 1
++    process.disconnect()
++  })
++ }
++}
+diff --git a/packages/workflow-execution/test/observation-cas/process-race.test.js b/packages/workflow-execution/test/observation-cas/process-race.test.js
+new file mode 100644
+index 00000000..d069b99e
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/process-race.test.js
+@@ -0,0 +1,43 @@
++import assert from 'node:assert/strict'
++import { fork } from 'node:child_process'
++import { once } from 'node:events'
++import { test } from 'node:test'
++
++import { fixture, delivered, advance, identity, snapshot, assertUnchanged,
++  assertStale, receipt, VISIT } from './fixture.js'
++
++test('P0-A real process: old disk observation cannot settle the parent next generation', { timeout: 15_000 }, async (t) => {
++  const fx = fixture()
++  let child
++  let exit
++  try {
++    const old = await delivered(fx.writer)
++    child = fork(new URL('./observer-process.js', import.meta.url), [fx.dir], {
++      stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env: { ...process.env, EKR_P0A_OBSERVER_CHILD: '1' },
++    })
++    let stderr = ''
++    child.stderr.on('data', (chunk) => { stderr += chunk })
++    exit = once(child, 'exit')
++    const [message] = await once(child, 'message')
++    assert.equal(message.stage, 'observed', JSON.stringify(message))
++    assert.equal(message.attempt.attemptId, old.attemptId)
++    const current = await advance(fx.writer, old)
++    const before = await snapshot(fx.writer)
++    const submitted = once(child, 'message')
++    child.send({ stage: 'release' })
++    const [reply] = await submitted
++    assert.equal(reply.stage, 'submitted', JSON.stringify(reply))
++    assertStale(reply.result, old, 'reconciled')
++    assert.deepEqual(await exit, [0, null], stderr)
++    await assertUnchanged(fx.writer, before)
++    assert.equal((await fx.writer.recordReconciled({ nodeVisitId: VISIT, ...identity(current),
++      expectedPhase: current.phase, verdict: 'SETTLED', judgment: 'business_commitment_observed',
++      reason: 'fresh parent observation for generation2' })).committed, true)
++    receipt(t, 'real-process/OwnerLock/fresh-disk-replay', old, current, reply.result)
++    t.diagnostic('realProcessConcurrency=true; child observed generation1 before parent settled/planned/delivered generation2; child rejection did not append; same-generation parent commit succeeded')
++  } finally {
++    if (child?.exitCode === null) child.kill('SIGKILL')
++    await exit?.catch(() => {})
++    fx.cleanup()
++  }
++})
+diff --git a/packages/workflow-execution/test/observation-cas/stale-guards.test.js b/packages/workflow-execution/test/observation-cas/stale-guards.test.js
+new file mode 100644
+index 00000000..52c8e7ff
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/stale-guards.test.js
+@@ -0,0 +1,95 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { mkdtempSync, rmSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++
++import { ExecutionLedger, attemptIdFor, STALE_NO_PROGRESS_JUDGMENT } from '../../src/ledger.js'
++import { judgeStaleFromDetail, judgeDispatchVersionFromDetail } from '../../src/judgment.js'
++import { createWorkflowExecutionEngine, DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS } from '../../src/engine.js'
++import { completeCurrentActivationDetail } from '../../test-support/current-activation-detail.js'
++import { expectedIdentity } from '../../test-support/observation-identity.js'
++
++const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
++const VISIT_NEXT = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
++const INTENT = '2d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e33'
++const INSTANCE = '4d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e55'
++const OWNER = '5d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e66'
++const AGENT = 'agt_target-agent'
++const T0 = 1_700_000_000_000
++
++function fullDetail({ version, visit, isTerminal = false, visibility = 'full' } = {}) {
++  if (visibility !== 'full') return { visibility, detail: { instance: {} } }
++  return completeCurrentActivationDetail({ visibility: 'full', detail: {
++    instance: { workflow_state_version: version, is_terminal: isTerminal },
++    current_node_visit_id: visit,
++  } }, { workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
++}
++
++test('ledger CAS — recordStaleSuperseded refuses a changed attempt (double-settle loser)', async () => {
++  const dir = mkdtempSync(join(tmpdir(), 'wfe-stale-cas-'))
++  try {
++    let now = T0
++    const ledger = new ExecutionLedger({ dir, clock: () => now })
++    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
++    now += 1
++    await ledger.recordDeliveryStarted({ nodeVisitId: VISIT })
++    now += 2
++    await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main', workflowStateVersionAtDispatch: 7 })
++    const attempt = ledger.get(VISIT)
++    const lost = await ledger.recordStaleSuperseded({
++      ...expectedIdentity(attempt), nodeVisitId: VISIT,
++      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs + 999 },
++      observedWorkflowStateVersion: 7,
++    })
++    assert.equal(lost.committed, false)
++    assert.equal(lost.cause, 'attempt_changed')
++    const won = await ledger.recordStaleSuperseded({
++      ...expectedIdentity(attempt), nodeVisitId: VISIT,
++      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
++      observedWorkflowStateVersion: 7,
++    })
++    assert.equal(won.committed, true)
++    assert.equal(won.attempt.judgment, STALE_NO_PROGRESS_JUDGMENT)
++  } finally {
++    rmSync(dir, { recursive: true, force: true })
++  }
++})
++
++test('judgment table — judgeStaleFromDetail / judgeDispatchVersionFromDetail', () => {
++  assert.deepEqual(judgeDispatchVersionFromDetail({ body: fullDetail({ version: 7 }) }), { ok: true, version: 7 })
++  assert.equal(judgeDispatchVersionFromDetail({ body: { visibility: 'historical_participant', detail: {} } }).ok, false)
++
++  const stale = (body, baseline = 7) => judgeStaleFromDetail({ body, nodeVisitId: VISIT, workflowStateVersionAtDispatch: baseline })
++  assert.equal(stale(fullDetail({ version: 7, visit: VISIT })).kind, 'stale_confirmed')
++  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'progressed', 'assistance/wake bumps defeat staleness')
++  assert.equal(stale(fullDetail({ version: 8, visit: VISIT_NEXT })).kind, 'progressed', 'RETURN/move defeats staleness')
++  assert.equal(stale(fullDetail({ version: 7, visit: VISIT, isTerminal: true })).kind, 'progressed', 'terminal defeats staleness')
++  assert.equal(stale({ visibility: 'historical_participant', detail: {} }).kind, 'progressed', 'visibility invariant = business moved on')
++  assert.equal(stale({ ok: false }).kind, 'unavailable')
++  assert.equal(judgeStaleFromDetail({ body: fullDetail({ version: 7, visit: VISIT }), nodeVisitId: VISIT, workflowStateVersionAtDispatch: undefined }).kind,
++    'unavailable', 'no baseline ⇒ unavailable ⇒ never stale')
++})
++
++test('config — threshold validation and default', () => {
++  assert.equal(DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS, 3_600_000)
++  const dir = mkdtempSync(join(tmpdir(), 'wfe-stale-cfg-'))
++  try {
++    const base = {
++      ledger: new ExecutionLedger({ dir }),
++      log: {},
++      fetchDuePage: async () => ({ ok: true, items: [] }),
++      resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
++      deliverRun: async () => ({ ok: true, sessionId: 'main' }),
++      getTurnReconciliation: () => ({ state: 'never_existed' }),
++      readInstanceDetail: async () => ({ ok: true, body: fullDetail({ version: 7 }) }),
++    }
++    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 0 } }), /positive integer/)
++    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 1.5 } }), /positive integer/)
++    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: '1h' } }), /positive integer/)
++    const engine = createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 60_000 } })
++    assert.equal(typeof engine.reconcileOnce, 'function')
++  } finally {
++    rmSync(dir, { recursive: true, force: true })
++  }
++})
+diff --git a/packages/workflow-execution/test/stale-reentry.test.js b/packages/workflow-execution/test/observation-cas/stale-reentry.test.js
+similarity index 83%
+rename from packages/workflow-execution/test/stale-reentry.test.js
+rename to packages/workflow-execution/test/observation-cas/stale-reentry.test.js
+index 22fdae8e..4a5ef217 100644
+--- a/packages/workflow-execution/test/stale-reentry.test.js
++++ b/packages/workflow-execution/test/observation-cas/stale-reentry.test.js
+@@ -29,11 +29,10 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+ import { tmpdir } from 'node:os'
+ import { join } from 'node:path'
+ 
+-import { applyLedgerEvent } from '../src/ledger-events.js'
+-import { ExecutionLedger, attemptIdFor, STALE_NO_PROGRESS_JUDGMENT } from '../src/ledger.js'
+-import { judgeStaleFromDetail, judgeDispatchVersionFromDetail } from '../src/judgment.js'
+-import { createWorkflowExecutionEngine, DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS } from '../src/engine.js'
+-import { completeCurrentActivationDetail } from '../test-support/current-activation-detail.js'
++import { applyLedgerEvent } from '../../src/ledger-events.js'
++import { ExecutionLedger, attemptIdFor, STALE_NO_PROGRESS_JUDGMENT } from '../../src/ledger.js'
++import { createWorkflowExecutionEngine } from '../../src/engine.js'
++import { completeCurrentActivationDetail } from '../../test-support/current-activation-detail.js'
+ 
+ const VISIT = '0d5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e11'
+ const VISIT_NEXT = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
+@@ -471,70 +470,3 @@ test('corrupt guards — illegal replans and illegal stale sources fail loud', (
+   assert.throws(() => applyLedgerEvent(plannedAttempts, { kind: 'stale_superseded', nodeVisitId: VISIT, observedWorkflowStateVersion: 7, atMs: T0 + 1 }), /attempt is terminal|no stale-supersession evidence/)
+ })
+ 
+-test('ledger CAS — recordStaleSuperseded refuses a changed attempt (double-settle loser)', async () => {
+-  const dir = mkdtempSync(join(tmpdir(), 'wfe-stale-cas-'))
+-  try {
+-    let now = T0
+-    const ledger = new ExecutionLedger({ dir, clock: () => now })
+-    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+-    now += 1
+-    await ledger.recordDeliveryStarted({ nodeVisitId: VISIT })
+-    now += 2
+-    await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: AGENT, requestId: attemptIdFor(VISIT), sessionId: 'main', workflowStateVersionAtDispatch: 7 })
+-    const attempt = ledger.get(VISIT)
+-    const lost = await ledger.recordStaleSuperseded({
+-      nodeVisitId: VISIT,
+-      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs + 999 },
+-      observedWorkflowStateVersion: 7,
+-    })
+-    assert.equal(lost.committed, false)
+-    assert.equal(lost.cause, 'attempt_changed')
+-    const won = await ledger.recordStaleSuperseded({
+-      nodeVisitId: VISIT,
+-      expected: { state: attempt.state, phase: attempt.phase, deliveredAtMs: attempt.delivered.atMs },
+-      observedWorkflowStateVersion: 7,
+-    })
+-    assert.equal(won.committed, true)
+-    assert.equal(won.attempt.judgment, STALE_NO_PROGRESS_JUDGMENT)
+-  } finally {
+-    rmSync(dir, { recursive: true, force: true })
+-  }
+-})
+-
+-test('judgment table — judgeStaleFromDetail / judgeDispatchVersionFromDetail', () => {
+-  assert.deepEqual(judgeDispatchVersionFromDetail({ body: fullDetail({ version: 7 }) }), { ok: true, version: 7 })
+-  assert.equal(judgeDispatchVersionFromDetail({ body: { visibility: 'historical_participant', detail: {} } }).ok, false)
+-
+-  const stale = (body, baseline = 7) => judgeStaleFromDetail({ body, nodeVisitId: VISIT, workflowStateVersionAtDispatch: baseline })
+-  assert.equal(stale(fullDetail({ version: 7, visit: VISIT })).kind, 'stale_confirmed')
+-  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'progressed', 'assistance/wake bumps defeat staleness')
+-  assert.equal(stale(fullDetail({ version: 8, visit: VISIT_NEXT })).kind, 'progressed', 'RETURN/move defeats staleness')
+-  assert.equal(stale(fullDetail({ version: 7, visit: VISIT, isTerminal: true })).kind, 'progressed', 'terminal defeats staleness')
+-  assert.equal(stale({ visibility: 'historical_participant', detail: {} }).kind, 'progressed', 'visibility invariant = business moved on')
+-  assert.equal(stale({ ok: false }).kind, 'unavailable')
+-  assert.equal(judgeStaleFromDetail({ body: fullDetail({ version: 7, visit: VISIT }), nodeVisitId: VISIT, workflowStateVersionAtDispatch: undefined }).kind,
+-    'unavailable', 'no baseline ⇒ unavailable ⇒ never stale')
+-})
+-
+-test('config — threshold validation and default', () => {
+-  assert.equal(DEFAULT_STALE_NO_PROGRESS_THRESHOLD_MS, 3_600_000)
+-  const dir = mkdtempSync(join(tmpdir(), 'wfe-stale-cfg-'))
+-  try {
+-    const base = {
+-      ledger: new ExecutionLedger({ dir }),
+-      log: {},
+-      fetchDuePage: async () => ({ ok: true, items: [] }),
+-      resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
+-      deliverRun: async () => ({ ok: true, sessionId: 'main' }),
+-      getTurnReconciliation: () => ({ state: 'never_existed' }),
+-      readInstanceDetail: async () => ({ ok: true, body: fullDetail({ version: 7 }) }),
+-    }
+-    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 0 } }), /positive integer/)
+-    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 1.5 } }), /positive integer/)
+-    assert.throws(() => createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: '1h' } }), /positive integer/)
+-    const engine = createWorkflowExecutionEngine({ ...base, config: { staleNoProgressThresholdMs: 60_000 } })
+-    assert.equal(typeof engine.reconcileOnce, 'function')
+-  } finally {
+-    rmSync(dir, { recursive: true, force: true })
+-  }
+-})
+diff --git a/packages/workflow-execution/test/owner-assistance-resume-engine.test.js b/packages/workflow-execution/test/owner-assistance-resume-engine.test.js
+index b20b7f28..879f18e7 100644
+--- a/packages/workflow-execution/test/owner-assistance-resume-engine.test.js
++++ b/packages/workflow-execution/test/owner-assistance-resume-engine.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ /**
+  * CTR-WEC1-008 engine acceptance: same-visit Assistance resume and crash fences.
+  * All svc and Router surfaces are producer-shaped injected read seams.
+@@ -65,7 +66,7 @@ async function seedRunEndedPredecessor(ledger) {
+     recordDeliveryStarted()
+     return { kind: 'run_delivered', agentId: AGENT, requestId: attempt.attemptId, sessionId: 'main', reconciliationHandle: 'turn:prior' }
+   }, undefined, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
+-  await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
++  await ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+     judgment: 'run_ended_no_submission', reason: 'run ended without submission' })
+   return first.attempt
+ }
+@@ -80,11 +81,11 @@ async function seedRunEndedAtGeneration(ledger, generation) {
+     }, () => true, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
+     assert.equal(result.created, true, `expected generation ${currentGeneration} to be planned (${result.cause ?? 'no cause'})`)
+     attempt = result.attempt
+-    await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
++    await ledger.recordReconciled({ ...expectedIdentity(ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+       judgment: 'run_ended_no_submission', reason: 'run ended without submission' })
+     if (currentGeneration < generation) {
+       const terminal = ledger.snapshot()[0]
+-      await ledger.recordStaleSuperseded({ nodeVisitId: VISIT,
++      await ledger.recordStaleSuperseded({ ...expectedIdentity(terminal), nodeVisitId: VISIT,
+         expected: { state: terminal.state, phase: terminal.phase, deliveredAtMs: terminal.delivered.atMs },
+         observedWorkflowStateVersion: 1 })
+     }
+@@ -126,7 +127,7 @@ test('settled Owner assistance resumes the exact visit once, with a fresh proof
+     assert.equal(current.assistanceResume.assistanceCaseId, ownerEvidence().assistanceCaseId)
+     assert.deepEqual(current.consumedAssistanceCaseIds, [ownerEvidence().assistanceCaseId])
+     await fixture.ledger.recordReconciled({
+-      nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
++      ...expectedIdentity(fixture.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW',
+       judgment: 'run_ended_no_submission', reason: 'owner resumed run ended without submission',
+     })
+     assert.deepEqual(await fixture.ledger.listStaleCandidatesFresh(1), [])
+@@ -291,7 +292,7 @@ test('a higher-generation predecessor rejects its superseded policy case and UNK
+         return { kind: 'run_delivered', agentId: AGENT, requestId: planned.attemptId,
+           sessionId: 'main', reconciliationHandle: 'turn:unknown', workflowStateVersionAtDispatch: 1 }
+       }, undefined, async () => ({ preDeliveryWorkflowStateVersion: 1 }))
+-      await fixture.ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered',
++      await fixture.ledger.recordReconciled({ ...expectedIdentity(fixture.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+         verdict: 'NEEDS_REVIEW', judgment: 'run_outcome_unknown', reason: 'execution outcome unknown' })
+       const result = await fixture.engine.pollOnce()
+       assert.equal(result.admissions[0].action, 'already_attempted')
+diff --git a/packages/workflow-execution/test/progress-checkpoint.test.js b/packages/workflow-execution/test/progress-checkpoint.test.js
+index 0ec43030..fb2a1fdc 100644
+--- a/packages/workflow-execution/test/progress-checkpoint.test.js
++++ b/packages/workflow-execution/test/progress-checkpoint.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ import test from 'node:test'
+ import assert from 'node:assert/strict'
+ import { mkdtempSync, rmSync } from 'node:fs'
+@@ -138,7 +139,7 @@ test('checkpoint rejects stale attempt, wrong reporter/session and terminal atte
+     assert.equal(wrongSession.cause, 'session_mismatch')
+ 
+     await fx.ledger.recordReconciled({
+-      nodeVisitId: VISIT,
++      ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT,
+       expectedPhase: 'run_delivered',
+       verdict: 'SETTLED',
+       judgment: 'business_commitment_observed',
+diff --git a/packages/workflow-execution/test/recovery.test.js b/packages/workflow-execution/test/recovery.test.js
+index 05edb2d3..63976e38 100644
+--- a/packages/workflow-execution/test/recovery.test.js
++++ b/packages/workflow-execution/test/recovery.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ /**
+  * WORKFLOW_AGENT_EXECUTION_V2 — the controlled-recovery acceptance matrix
+  * (CTR-WAE-011/012/013; Owner-ruled cases A–F plus the entry-state dispatch
+@@ -245,7 +246,7 @@ test('E2/E3: no attempt → NO_OP_NO_ATTEMPT; terminal attempt → NO_OP_TERMINA
+     await seedBlocked(fx.engine)
+     fx.state.resolveOk = true // the identity repair, through its own authority
+     await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY }) // completes → run_delivered
+-    await fx.ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
++    await fx.ledger.recordReconciled({ ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'SETTLED', judgment: 'business_commitment_observed', reason: 'node_visit_no_longer_current' })
+     const sizeBefore = fx.eventsBytes()
+     const replay = await fx.engine.recoverAttempt({ nodeVisitId: VISIT, authorityRef: AUTHORITY })
+     assert.equal(replay.outcome, 'NO_OP_TERMINAL')
+@@ -378,7 +379,7 @@ test('Ledger discipline: at-most-one delivery_started (second = corrupt fail-lou
+     await fx.ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+     await fx.ledger.recordDeliveryStarted({ nodeVisitId: VISIT })
+     await assert.rejects(() => fx.ledger.recordDeliveryStarted({ nodeVisitId: VISIT }), /corrupt ledger — delivery_started twice/)
+-    await assert.rejects(() => fx.ledger.recordDeliveryFailed({ nodeVisitId: VISIT, reason: 'resolve_failed:agent_mapping_missing' }), /recordResolutionBlocked/)
++    await assert.rejects(() => fx.ledger.recordDeliveryFailed({ ...expectedIdentity(fx.ledger.get(VISIT)), nodeVisitId: VISIT, reason: 'resolve_failed:agent_mapping_missing' }), /recordResolutionBlocked/)
+   } finally {
+     fx.cleanup()
+   }
+diff --git a/packages/workflow-execution/test/runtime-wiring.test.js b/packages/workflow-execution/test/runtime-wiring.test.js
+index 9d160595..81326b28 100644
+--- a/packages/workflow-execution/test/runtime-wiring.test.js
++++ b/packages/workflow-execution/test/runtime-wiring.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ import assert from 'node:assert/strict'
+ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+ import { tmpdir } from 'node:os'
+@@ -146,7 +147,7 @@ async function seedStale(dir, store, correlationOnly = false) {
+       ...(correlationOnly ? {} : { reconciliationHandle: handle }), workflowStateVersionAtDispatch: 7 }
+   })
+   const predecessor = seeded.attempt
+-  const stale = await ledger.recordStaleSuperseded({ nodeVisitId: VISIT,
++  const stale = await ledger.recordStaleSuperseded({ ...expectedIdentity(predecessor), nodeVisitId: VISIT,
+     expected: { state: predecessor.state, phase: predecessor.phase, deliveredAtMs: predecessor.delivered.atMs },
+     observedWorkflowStateVersion: 7 })
+   assert.equal(stale.committed, true)
+diff --git a/packages/workflow-execution/test/stale-quiescence.test.js b/packages/workflow-execution/test/stale-quiescence.test.js
+index d3b2f5ea..144e3898 100644
+--- a/packages/workflow-execution/test/stale-quiescence.test.js
++++ b/packages/workflow-execution/test/stale-quiescence.test.js
+@@ -1,3 +1,4 @@
++import { expectedIdentity } from '../test-support/observation-identity.js'
+ import assert from 'node:assert/strict'
+ import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+ import { tmpdir } from 'node:os'
+@@ -158,7 +159,7 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
+     const f = fixture(t)
+     await f.engine.admitDueIntent(intent)
+     await f.ledger.recordReconciled({
+-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
++      ...expectedIdentity(f.ledger.get(VISIT)), nodeVisitId: VISIT, expectedPhase: 'run_delivered',
+       verdict: 'NEEDS_REVIEW', judgment, reason: 'unknown execution evidence',
+     })
+     const predecessor = f.ledger.get(VISIT)
+diff --git a/packages/workflow-execution/test/terminal-attempt-operations.test.js b/packages/workflow-execution/test/terminal-attempt-operations.test.js
+index d8838383..935ac347 100644
+--- a/packages/workflow-execution/test/terminal-attempt-operations.test.js
++++ b/packages/workflow-execution/test/terminal-attempt-operations.test.js
+@@ -42,7 +42,7 @@ test('under-cap stale terminal candidate settles; non-confirmed candidates do no
+     escalateAttemptLimit: async (input) => escalations.push(input),
+   })
+   const attempt = {
+-    nodeVisitId: NODE_VISIT, generation: 2, state: 'NEEDS_REVIEW', phase: 'reconciled',
++    nodeVisitId: NODE_VISIT, attemptId: 'wfeat-000000000000000000000002', generation: 2, state: 'NEEDS_REVIEW', phase: 'reconciled',
+     delivered: { atMs: 10 }, workflowStateVersionAtDispatch: 7,
+   }
+   const staleReentry = []
+@@ -53,7 +53,7 @@ test('under-cap stale terminal candidate settles; non-confirmed candidates do no
+ 
+   await operations.reconcileTerminalCandidate(attempt, { kind: 'stale_confirmed' }, staleReentry)
+   assert.deepEqual(staleWrites, [{
+-    nodeVisitId: NODE_VISIT,
++    nodeVisitId: NODE_VISIT, expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation,
+     expected: { state: 'NEEDS_REVIEW', phase: 'reconciled', deliveredAtMs: 10 },
+     observedWorkflowStateVersion: 7,
+   }])

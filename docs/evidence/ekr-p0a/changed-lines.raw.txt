@@ -1,0 +1,25 @@
+Read-only physical line inventory of staged existing/new code files; not the structural verifier.
+ 193 packages/production-runtime/test/workflow-progress-runtime.test.js
+  56 packages/workflow-execution/src/attempt-identity.js
+ 473 packages/workflow-execution/src/engine.js
+ 257 packages/workflow-execution/src/ledger-records.js
+ 477 packages/workflow-execution/src/ledger.js
+  69 packages/workflow-execution/src/terminal-attempt-operations.js
+   4 packages/workflow-execution/test-support/observation-identity.js
+ 362 packages/workflow-execution/test/execution-control.test.js
+ 319 packages/workflow-execution/test/ledger.test.js
+  48 packages/workflow-execution/test/managed-obligation.test.js
+ 150 packages/workflow-execution/test/observation-cas/engine-races.test.js
+ 139 packages/workflow-execution/test/observation-cas/fixture.js
+ 143 packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+  22 packages/workflow-execution/test/observation-cas/observer-process.js
+  43 packages/workflow-execution/test/observation-cas/process-race.test.js
+  95 packages/workflow-execution/test/observation-cas/stale-guards.test.js
+ 472 packages/workflow-execution/test/observation-cas/stale-reentry.test.js
+ 416 packages/workflow-execution/test/owner-assistance-resume-engine.test.js
+ 179 packages/workflow-execution/test/progress-checkpoint.test.js
+ 449 packages/workflow-execution/test/recovery.test.js
+ 487 packages/workflow-execution/test/runtime-wiring.test.js
+ 280 packages/workflow-execution/test/stale-quiescence.test.js
+  75 packages/workflow-execution/test/terminal-attempt-operations.test.js
+MAX_LINES=487

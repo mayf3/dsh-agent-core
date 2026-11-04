@@ -1,3 +1,4 @@
+import { expectedIdentity } from '../test-support/observation-identity.js'
 import assert from 'node:assert/strict'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -146,7 +147,7 @@ async function seedStale(dir, store, correlationOnly = false) {
       ...(correlationOnly ? {} : { reconciliationHandle: handle }), workflowStateVersionAtDispatch: 7 }
   })
   const predecessor = seeded.attempt
-  const stale = await ledger.recordStaleSuperseded({ nodeVisitId: VISIT,
+  const stale = await ledger.recordStaleSuperseded({ ...expectedIdentity(predecessor), nodeVisitId: VISIT,
     expected: { state: predecessor.state, phase: predecessor.phase, deliveredAtMs: predecessor.delivered.atMs },
     observedWorkflowStateVersion: 7 })
   assert.equal(stale.committed, true)

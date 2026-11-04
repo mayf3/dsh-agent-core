@@ -1,4 +1,4 @@
-import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested } from './ledger-records.js'
+import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
 import { beginAttemptIfAbsent } from './ledger-admission.js'
 /**
  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
@@ -287,12 +287,7 @@ export class ExecutionLedger {
    *  V2: NEW-path resolution failures must use recordResolutionBlocked — a
    *  fresh `resolve_failed:` reason here would silently re-create the V1
    *  conflation this successor removed, so it fails loud. */
-  async recordDeliveryFailed({ nodeVisitId, reason }) {
-    if (typeof reason === 'string' && reason.startsWith('resolve_failed:')) {
-      throw new TypeError('workflow-execution: delivery_failed cannot carry a resolve_failed: reason (V2) — use recordResolutionBlocked')
-    }
-    return this.mutate(() => this.#recordDeliveryFailed(nodeVisitId, reason))
-  }
+  async recordDeliveryFailed(...args) { return recordDeliveryFailed(this, this.#operationPort(), ...args) }
 
   /** V2 CTR-WAE-012: durable WRITE-AHEAD INTENT before any router.deliver
    *  invocation. Allowed from the pre-delivery phases only; at-most-one is
@@ -318,15 +313,7 @@ export class ExecutionLedger {
 
   /** V2 CTR-WAE-013 E5: world drift discovered on an eligible-shaped attempt
    *  — refusal is terminal NEEDS_REVIEW (the human path), zero admission. */
-  async recordRecoveryRefused({ nodeVisitId, authorityRef, refused }) {
-    if (typeof authorityRef !== 'string' || authorityRef === '') {
-      throw new TypeError('workflow-execution: authorityRef is required')
-    }
-    if (typeof refused !== 'string' || refused === '') {
-      throw new TypeError('workflow-execution: refused is required')
-    }
-    return this.mutate(() => this.#recordRecoveryRefused(nodeVisitId, authorityRef, refused))
-  }
+  async recordRecoveryRefused(...args) { return recordRecoveryRefused(this, this.#operationPort(), ...args) }
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
   async recordReconciled(...args) { return recordReconciled(this, this.#operationPort(), ...args) }

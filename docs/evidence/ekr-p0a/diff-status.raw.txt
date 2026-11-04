@@ -1,0 +1,54 @@
+COMMAND: git diff --cached --stat
+ BRIEF-EKR-P0A.md                                   |  43 ++++++
+ .../test/workflow-progress-runtime.test.js         |   3 +-
+ .../workflow-execution/src/attempt-identity.js     |  20 +++
+ packages/workflow-execution/src/engine.js          |  62 +++------
+ packages/workflow-execution/src/ledger-records.js  |  56 ++++++--
+ packages/workflow-execution/src/ledger.js          |  19 +--
+ .../src/terminal-attempt-operations.js             |  43 +++++-
+ .../test-support/observation-identity.js           |   4 +
+ .../test/execution-control.test.js                 |   9 +-
+ packages/workflow-execution/test/ledger.test.js    |   9 +-
+ .../test/managed-obligation.test.js                |   3 +-
+ .../test/observation-cas/engine-races.test.js      | 150 +++++++++++++++++++++
+ .../test/observation-cas/fixture.js                | 139 +++++++++++++++++++
+ .../test/observation-cas/ledger-identity.test.js   | 143 ++++++++++++++++++++
+ .../test/observation-cas/observer-process.js       |  22 +++
+ .../test/observation-cas/process-race.test.js      |  43 ++++++
+ .../test/observation-cas/stale-guards.test.js      |  95 +++++++++++++
+ .../{ => observation-cas}/stale-reentry.test.js    |  76 +----------
+ .../test/owner-assistance-resume-engine.test.js    |  11 +-
+ .../test/progress-checkpoint.test.js               |   3 +-
+ packages/workflow-execution/test/recovery.test.js  |   5 +-
+ .../workflow-execution/test/runtime-wiring.test.js |   3 +-
+ .../test/stale-quiescence.test.js                  |   3 +-
+ .../test/terminal-attempt-operations.test.js       |   4 +-
+ 24 files changed, 805 insertions(+), 163 deletions(-)
+
+COMMAND: git status --short
+A  BRIEF-EKR-P0A.md
+M  packages/production-runtime/test/workflow-progress-runtime.test.js
+M  packages/workflow-execution/src/attempt-identity.js
+M  packages/workflow-execution/src/engine.js
+M  packages/workflow-execution/src/ledger-records.js
+M  packages/workflow-execution/src/ledger.js
+M  packages/workflow-execution/src/terminal-attempt-operations.js
+A  packages/workflow-execution/test-support/observation-identity.js
+M  packages/workflow-execution/test/execution-control.test.js
+M  packages/workflow-execution/test/ledger.test.js
+M  packages/workflow-execution/test/managed-obligation.test.js
+A  packages/workflow-execution/test/observation-cas/engine-races.test.js
+A  packages/workflow-execution/test/observation-cas/fixture.js
+A  packages/workflow-execution/test/observation-cas/ledger-identity.test.js
+A  packages/workflow-execution/test/observation-cas/observer-process.js
+A  packages/workflow-execution/test/observation-cas/process-race.test.js
+A  packages/workflow-execution/test/observation-cas/stale-guards.test.js
+R  packages/workflow-execution/test/stale-reentry.test.js -> packages/workflow-execution/test/observation-cas/stale-reentry.test.js
+M  packages/workflow-execution/test/owner-assistance-resume-engine.test.js
+M  packages/workflow-execution/test/progress-checkpoint.test.js
+M  packages/workflow-execution/test/recovery.test.js
+M  packages/workflow-execution/test/runtime-wiring.test.js
+M  packages/workflow-execution/test/stale-quiescence.test.js
+M  packages/workflow-execution/test/terminal-attempt-operations.test.js
+?? STOPPED-EKR-P0A.md
+?? docs/evidence/ekr-p0a/
