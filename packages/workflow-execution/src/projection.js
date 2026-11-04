@@ -13,6 +13,52 @@
  */
 
 import { STALE_NO_PROGRESS_JUDGMENT } from './ledger.js'
+import { DELIVERY_WAL_PROTOCOL } from './ledger-plan.js'
+
+/** B3: an observation about the ORIGINAL request, never admission permission.
+ * Missing historical WAL provenance and a started fence both defeat non-send
+ * proof. Router reservation alone is not a prompt acceptance receipt. */
+export function reconcileDeliveryEvidence(attempt, resolveCallerCorrelation) {
+  const result = {
+    nodeVisitId: attempt.nodeVisitId, attemptId: attempt.attemptId,
+    generation: attempt.generation ?? 1, requestId: attempt.attemptId,
+    classification: 'UNKNOWN', businessOutcome: 'UNKNOWN', resumeAuthorized: false,
+    responsibility: 'original_request_readback_or_escalation',
+  }
+  let correlation
+  try {
+    if (typeof resolveCallerCorrelation !== 'function') return { ...result, reason: 'correlation_unavailable' }
+    correlation = resolveCallerCorrelation({ requestId: attempt.attemptId })
+  } catch { return { ...result, reason: 'correlation_unavailable' } }
+  if (correlation === null || typeof correlation !== 'object' || Array.isArray(correlation)) {
+    return { ...result, reason: 'correlation_invalid' }
+  }
+  const snapshot = correlation.snapshot
+  const caller = snapshot?.callerCorrelation
+  if (['pending', 'recovering', 'settled'].includes(correlation.state)
+    && typeof correlation.handle === 'string' && correlation.handle !== ''
+    && snapshot?.handle === correlation.handle && snapshot.turnExecutionId === correlation.handle
+    && snapshot.state === correlation.state && caller?.requestId === attempt.attemptId
+    && caller.occurrenceId === undefined && caller.runId === undefined
+    && typeof snapshot.agentId === 'string' && snapshot.agentId !== ''
+    && typeof snapshot.sessionId === 'string' && snapshot.sessionId !== ''
+    && typeof snapshot.messageId === 'string' && snapshot.messageId !== '') {
+    return { ...result, classification: 'ACCEPTED', reason: 'original_prompt_receipt',
+      responsibility: 'wait_original_receipt_or_reconcile',
+      receipt: { reconciliationHandle: correlation.handle, agentId: snapshot.agentId,
+        sessionId: snapshot.sessionId, messageId: snapshot.messageId, turnState: correlation.state } }
+  }
+  // An empty exact never_existed is only a secondary gate. It can NEVER
+  // override delivery_started, nor turn an old unmarked plan into PROVEN_ZERO.
+  if (correlation.state === 'never_existed' && Object.keys(correlation).length === 1
+    && attempt.deliveryProtocol === DELIVERY_WAL_PROTOCOL
+    && attempt.deliveryStartedAtMs === undefined && attempt.delivered === undefined) {
+    return { ...result, classification: 'NOT_SENT', reason: 'wal_before_delivery_fence',
+      responsibility: 'explicit_controlled_resolution' }
+  }
+  return { ...result, reason: attempt.deliveryStartedAtMs === undefined
+    ? 'non_send_unproven' : 'delivery_started_without_exact_receipt' }
+}
 
 /**
  * CTR-WEC1-002 — the deterministic executionState mapping. Pure table over
