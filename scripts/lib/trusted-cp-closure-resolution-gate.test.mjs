@@ -22,7 +22,7 @@ import { mkdtempSync, mkdirSync, symlinkSync, writeFileSync, readFileSync, realp
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { platformPackageSuffix, suffixServesRuntime, resolvePackageFromDir, censusSurface, runGate } from './trusted-cp-closure-resolution-gate.mjs'
+import { platformPackageSuffix, suffixServesRuntime, resolvePackageFromDir, censusSurface, censusZeroByteOptionalPackages, runGate } from './trusted-cp-closure-resolution-gate.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const GATE = join(HERE, 'trusted-cp-closure-resolution-gate.mjs')
@@ -116,6 +116,21 @@ describe('censusSurface', () => {
     } finally { rmSync(root, { recursive: true, force: true }) }
   })
 })
+
+describe('zero-byte optional package census', () => {
+  test('detects a darwin-x64 optional package directory with no materialized bytes', () => {
+    const root = scratch()
+    try {
+      const empty = join(root, 'harness/node_modules/.pnpm/@koromix+koffi-darwin-x64@3.1.1/node_modules/@koromix/koffi-darwin-x64')
+      mkdirSync(empty, { recursive: true })
+      assert.equal(censusZeroByteOptionalPackages(root, 'darwin', 'x64').length, 1)
+      const materialized = join(empty, 'darwin_x64/koffi.node')
+      mkdirSync(dirname(materialized), { recursive: true }); writeFileSync(materialized, 'native')
+      assert.deepEqual(censusZeroByteOptionalPackages(root, 'darwin', 'x64'), [])
+    } finally { rmSync(root, { recursive: true, force: true }) }
+  })
+})
+
 
 describe('runGate fixtures', () => {
   test('GREEN: matching-arch stub binding + fully linked surfaces pass', () => {
