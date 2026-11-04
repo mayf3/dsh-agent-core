@@ -21,7 +21,7 @@
  * No DSH agent/session/workspace concept lives here (`inject` is empty).
  */
 
-import { createLarkChannel } from '@larksuite/channel'
+import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
 import z from '@deepseek-ai/schemastery'
 import {
@@ -365,6 +365,17 @@ function mapConnectionState(sdkState) {
   return undefined
 }
 
+const require = createRequire(import.meta.url)
+function loadLarkChannel() {
+  try {
+    return require('@larksuite/channel').createLarkChannel
+  } catch (error) {
+    throw Object.assign(new Error('@larksuite/channel is required only when mounting the live Feishu connector'), {
+      code: 'FEISHU_CHANNEL_DEPENDENCY_MISSING', cause: error,
+    })
+  }
+}
+
 /**
  * Mount the plugin.
  * @param {object} ctx - Cordis context (createPluginContext shape).
@@ -372,7 +383,7 @@ function mapConnectionState(sdkState) {
  * @returns {object} handle exposing reply() / ready() / status() /
  *   setCallback() / setIngressGate().
  */
-export function apply(ctx, config, { createChannel = createLarkChannel } = {}) {
+export function apply(ctx, config, { createChannel = loadLarkChannel() } = {}) {
   const cfg = { ...DEFAULTS, ...(config ?? {}) }
 
   // REPLY_RENDER_MODE strict validation (STATIC_FINAL_CARD_V1): anything but
