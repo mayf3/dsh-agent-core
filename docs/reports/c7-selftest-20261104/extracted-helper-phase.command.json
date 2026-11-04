@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "/private/tmp/dsh-c7-selftest/scripts/fleet-window/window_executor_helper.py",
+    "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75",
+    "phase",
+    "c7_extraction_smoke",
+    "PASS",
+    "ISOLATED_ONLY"
+  ],
+  "env": {
+    "PATH": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "HOME": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/home",
+    "TMPDIR": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/tmp",
+    "NODE_DISABLE_COMPILE_CACHE": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "cwd": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75",
+  "pid": 69604,
+  "exit_code": 0,
+  "direct_child_reaped": true,
+  "started": "2026-11-04T10:46:59.151656+00:00",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
