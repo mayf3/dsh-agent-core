@@ -196,7 +196,6 @@ export function apply(ctx, config) {
   const recoveryHistoryStore = recoveryFile
     ? createFileRecoveryHistoryStore(`${recoveryFile}.r28-history.jsonl`)
     : null
-  const escalationDispatcher = new GovernanceEscalationDispatcher({ deps: cfg.r30EscalationDeps, stateStore: reconciliationStore })
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
@@ -245,6 +244,7 @@ export function apply(ctx, config) {
    */
   const reconciliationStore = new TurnReconciliationStore({ persistenceFile: recoveryFile })
   // RQ-005/007: privileged launcher authority has not been bootstrapped in a
+  const escalationDispatcher = new GovernanceEscalationDispatcher({ deps: cfg.r30EscalationDeps, stateStore: reconciliationStore })
   // plain-process startup. Environment values cannot establish its nonce,
   // binary, or live FDs; this production composition is deliberately
   // incapable of settlement while the configured evidence directory exists.
