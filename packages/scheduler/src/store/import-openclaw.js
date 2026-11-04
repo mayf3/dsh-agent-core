@@ -24,9 +24,9 @@
  * target state INSIDE the mutation lock (no TOCTOU).
  */
 
-import { normalizeJob } from './job-model.js'
-import { computePayloadHash } from './occurrence-model.js'
-import { DEFAULT_TOP_OF_HOUR_STAGGER_MS, isRecurringTopOfHourCronExpr, parseAbsoluteTimeMs } from './schedule.js'
+import { normalizeJob } from '../job-model.js'
+import { computePayloadHash } from '../occurrence-model.js'
+import { DEFAULT_TOP_OF_HOUR_STAGGER_MS, isRecurringTopOfHourCronExpr, parseAbsoluteTimeMs } from '../schedule.js'
 
 /** Fields with zero real usage in the live inventory — dropped without warning noise. */
 const DORMANT_SILENT_FIELDS = new Set(['wakeMode', 'state.status'])

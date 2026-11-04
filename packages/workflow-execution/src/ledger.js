@@ -36,7 +36,7 @@ import { beginAttemptIfAbsent } from './ledger-admission.js'
 import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { OwnerLock } from '../../scheduler/src/lock.js'
+import { OwnerLock } from '../../scheduler/src/store/lock.js'
 
 import { applyLedgerEvent, buildDeliveryStartedEvent, buildRecoveryAuthorizedEvent, buildRecoveryRefusedEvent, buildResolutionBlockedEvent, terminalRefusal } from './ledger-events.js'
 import { UUID_RE } from './attempt-identity.js'
