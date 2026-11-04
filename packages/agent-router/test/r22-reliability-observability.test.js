@@ -1,5 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import {
   ADMISSION_REJECTION_CODES,
   ProcessHealthWatch,
@@ -36,6 +38,13 @@ test('restart-lost EMPTY slot with one unresolved fence is observable and recove
   assert.equal(recoveries[0].generation, 57)
 })
 
+
+
+test('production ProcessHealthWatch construction passes reconciliationStore into its snapshot', () => {
+  const source = readFileSync(fileURLToPath(new URL('../src/index.js', import.meta.url)), 'utf8')
+  const watchBlock = source.slice(source.indexOf('const processHealthWatch = new ProcessHealthWatch({'), source.indexOf('const processHealthIntervalMs'))
+  assert.match(watchBlock, /agentIds: agentDefinition\.listAgents\(\)\.map\(agent => agent\.id\),\s*reconciliationStore,/) 
+})
 
 test('process snapshot marks a live registry process ready and alive', () => {
   const result = snapshotAgentProcessHealth({
