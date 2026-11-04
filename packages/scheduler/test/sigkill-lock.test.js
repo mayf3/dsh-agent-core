@@ -30,7 +30,7 @@ import { join } from 'node:path'
 import { spawn } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { JobStore } from '../src/store.js'
-import { OwnerLock } from '../src/lock.js'
+import { OwnerLock } from '../src/store/lock.js'
 import { normalizeJob } from '../src/job-model.js'
 
 const root = join(import.meta.dirname, '..', '..', '..')
@@ -124,7 +124,7 @@ test('SIGKILL_LOCK_WINDOW_CLOSED: concurrent acquirers killed at random instants
   const lockPath = join(dir, 'jobs.json.lock')
 
   const childSource = `
-    import { OwnerLock } from ${JSON.stringify(pathToFileURL(join(root, 'packages/scheduler/src/lock.js')).href)};
+    import { OwnerLock } from ${JSON.stringify(pathToFileURL(join(root, 'packages/scheduler/src/store/lock.js')).href)};
     const lock = new OwnerLock(process.argv[1]);
     for (;;) {
       const token = await lock.acquire();

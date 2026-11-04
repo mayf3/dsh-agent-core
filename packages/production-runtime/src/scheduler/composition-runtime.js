@@ -34,14 +34,14 @@ export async function prepareSchedulerRuntime({ ctx, opts, layout, router, defin
   })
   const schedulerHealth = mountConfiguredSchedulerHealthRuntime({ ctx, layout, opts })
 
-  // AGENT_DELIVERY_RESILIENCE_V1 CTR-S1/S4 (accepted @8cf2c23a): evidence-
+  // AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1 CTR-527D2-001..004: evidence-
   // gated scheduler fence auto-reconcile. DEFAULT OFF — runs only when
   // AGENT_CORE_FENCE_AUTO_RECONCILE === 'on' (explicit owner/operator
   // configuration action); settles unresolved outcome_unknown occurrences
   // through the same store mutation path as the operator CLI with a machine
   // receipt actor. The transport-watchdog / fence-janitor external stopgaps
   // retire per CTR-X1/X2 once this is enabled and production-verified.
-  mountSchedulerAutoReconcileRuntime({ layout, store, log })
+  mountSchedulerAutoReconcileRuntime({ layout, store, router, log })
 
   return { invoker, deliver, store, history, schedulerHealth }
 }

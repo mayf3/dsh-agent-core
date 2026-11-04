@@ -38,6 +38,7 @@ import { turnExecutionMethods } from './turn-execution.js'
 import { spawnMethods } from './spawn.js'
 import { shutdownMethods } from './shutdown.js'
 import { deliveryReadinessMethods } from './delivery-readiness.js'
+import { deploymentReceiptFor } from './scheduler-receipt.js'
 
 const sleep = (ms) => new Promise((resolve) => {
   const timer = setTimeout(resolve, ms)
@@ -88,6 +89,7 @@ export class AgentProcess {
       shutdownGraceMs: 30000,
       ...(deadlines ?? {}),
     })
+    Object.defineProperty(this, 'schedulerDeploymentReceiptMs', { value: deploymentReceiptFor(deadlines) })
     for (const field of Object.keys(this.deadlines)) {
       assertPositiveSafeDeadline(field, this.deadlines[field])
     }
