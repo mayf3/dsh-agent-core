@@ -579,6 +579,10 @@ export async function composeProductionRuntime(options = {}) {
       return workflowExecution.engine.kick()
     },
     ownerAssistanceWake: (payload) => workflowExecution.wakeOwnerAssistance(payload),
+    // Supported itops Scheduler-occurrence control; no Agent/Broker tool exposure.
+    pauseAdmission: (reason) => workflowExecution.pauseAdmission(reason),
+    resumeAdmission: () => workflowExecution.resumeAdmission(),
+    admissionStatus: () => workflowExecution.admissionStatus(),
   })
 
   const scheduler = new Scheduler({
