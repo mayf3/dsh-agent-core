@@ -22,8 +22,8 @@ export const OCCURRENCE_STATES = new Set(['admitted', 'running', 'succeeded', 'f
 export const TERMINAL_STATES = new Set(['succeeded', 'failed'])
 export const EXECUTION_OUTCOMES = new Set(['succeeded', 'failed'])
 export const DELIVERY_STATUSES = new Set(['delivered', 'not-delivered', 'not-requested', 'unknown'])
-// 'policy-auto-reconcile' — AGENT_DELIVERY_RESILIENCE_V1 CTR-S1 (accepted
-// @8cf2c23a): the evidence-gated fence auto-reconcile policy settles
+// 'policy-auto-reconcile' — D-009 and accepted
+// AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1: the exact-evidence policy settles
 // unresolved unknowns through the same late-settlement authority with a
 // machine receipt actor (control.js autoReconcileOccurrences). The policy is
 // frozen to exact evidence forms (CTR-S2) and may never settle an
@@ -37,7 +37,7 @@ export const TERMINATION_EVIDENCE_KINDS = new Set([
   'operator-trusted-evidence',
   'restart_quiescence_proven',
 ])
-export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator'])
+export const TERMINATION_ACTOR_KINDS = new Set(['self-agent', 'operator', 'scheduler-policy'])
 export const SCHEDULE_DISPOSITIONS = new Set(['recurring_future_natural_only', 'one_shot_disabled'])
 
 /**
@@ -125,6 +125,7 @@ export function computePayloadHash({ agentId, payload }) {
       kind: payload?.kind ?? 'agentTurn',
       message: payload?.message,
       timeoutSeconds: payload?.timeoutSeconds,
+      receiptTimeoutSeconds: payload?.receiptTimeoutSeconds,
       lightContext: payload?.lightContext,
       model: payload?.model,
     },

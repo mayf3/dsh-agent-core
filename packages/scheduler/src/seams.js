@@ -35,6 +35,7 @@ export const INVOKE_CONTRACT = {
       + 'NOT a termination proof (C-010) — the original turn may still be running',
     onStart: 'Function|undefined — call EXACTLY when the exact turn is dispatched; '
       + 'drives the admitted->running transition (C-027)',
+    receiptBudget: 'Job-derived {defaultMs, overrideMs?}; trusted Scheduler receipt selection only',
   },
   output: {
     status: "'ok' | 'error' | 'outcome_unknown'",

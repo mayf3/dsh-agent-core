@@ -27,7 +27,7 @@ export { computeNextRunAtMs, computePreviousRunAtMs, parseAtToMs, parseAbsoluteT
 export { createFakeInvoker, createNoopInvoker, createRecordingDelivery, INVOKE_CONTRACT, DELIVER_CONTRACT } from './seams.js'
 export {
   importOpenClawJobs, mapOpenClawJob, writeImportToStore,
-} from './import-openclaw.js'
+} from './store/import-openclaw.js'
 export {
   deriveOccurrenceId, deriveRunId, deriveNativeSessionId, computePayloadHash,
   canonicalJSON, canTransition, isTerminalState, isUnresolvedUnknown,

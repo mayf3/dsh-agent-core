@@ -13,7 +13,7 @@
  *   shutdownGraceMs         ->DRAINING for graceful .. voluntary exit (default 30000)
  *
  * Precedence (static ownership — never per-message, never overridden by
- * Feishu/Binding/Session/Scheduler):
+ * Feishu/Binding/Session; the accepted Scheduler receipt exception is separate):
  *
  *   per-Agent static override (agent-process-overrides.json)
  *   > global deployment env value
@@ -39,6 +39,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { bindDeploymentReceipt } from './process/scheduler-receipt.js'
 
 /** The four fields, in canonical order. */
 export const DEADLINE_FIELDS = Object.freeze([
@@ -230,6 +231,7 @@ export function resolveDeadlineConfig(env = process.env, opts = {}) {
     : { overrides: opts.overrides }
 
   const resolved = {}
+  let explicitReceiptMs
   for (const field of DEADLINE_FIELDS) {
     const globalName = DEADLINE_ENV_NAMES[field]
     const legacyName = DEADLINE_LEGACY_ENV_NAMES[field]
@@ -238,9 +240,10 @@ export function resolveDeadlineConfig(env = process.env, opts = {}) {
     const value = globalValue ?? legacyValue ?? DEADLINE_DEFAULTS[field]
     assertPositiveSafeInteger(field, value, `${globalName}${globalValue === undefined && legacyValue !== undefined ? ` (legacy ${legacyName})` : ''} default chain`)
     resolved[field] = value
+    if (field === 'promptReceiptTimeoutMs') explicitReceiptMs = globalValue ?? legacyValue
   }
 
-  const globalDeadlines = Object.freeze({ ...resolved })
+  const globalDeadlines = bindDeploymentReceipt(Object.freeze({ ...resolved }), explicitReceiptMs)
 
   /** Per-Agent static override > global > default — resolved once per spawn. */
   const perAgent = (agentId) => {
@@ -252,7 +255,7 @@ export function resolveDeadlineConfig(env = process.env, opts = {}) {
       assertPositiveSafeInteger(field, entry[field], `per-Agent override ${agentId}`)
       merged[field] = entry[field]
     }
-    return Object.freeze(merged)
+    return bindDeploymentReceipt(Object.freeze(merged), entry.promptReceiptTimeoutMs ?? explicitReceiptMs)
   }
 
   return {
