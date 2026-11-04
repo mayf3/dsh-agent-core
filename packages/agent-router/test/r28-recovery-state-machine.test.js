@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { executeR28Recovery, R28_STATES } from '../src/r28-recovery-state-machine.js'
 
-test('R28 isolated E2E: real child exit through workflow terminal continuation', async () => {
+test('R28 state-machine composition: controlled child exit through injected workflow seams', async () => {
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' })
   const exited = new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })))
   child.kill('SIGTERM')
@@ -34,7 +34,7 @@ test('R28 isolated E2E: real child exit through workflow terminal continuation',
   assert.equal(result.verified.workflowEventId, 'event-2')
 })
 
-test('R28 E2E negative path escalates when exact termination proof is absent', async () => {
+test('R28 state-machine composition negative path escalates', async () => {
   const escalations = []
   const result = await executeR28Recovery({
     agentId: 'agt_fixture', generation: 23, workflow: {},
