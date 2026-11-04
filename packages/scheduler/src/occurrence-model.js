@@ -125,6 +125,7 @@ export function computePayloadHash({ agentId, payload }) {
       kind: payload?.kind ?? 'agentTurn',
       message: payload?.message,
       timeoutSeconds: payload?.timeoutSeconds,
+      receiptTimeoutSeconds: payload?.receiptTimeoutSeconds,
       lightContext: payload?.lightContext,
       model: payload?.model,
     },

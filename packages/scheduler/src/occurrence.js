@@ -26,6 +26,7 @@ import {
 } from './self-ops/invoker-outcome.js'
 import { classifyRouter, requestIdFor } from './self-ops/diagnosis.js'
 import { dispatchReconciliation, RECONCILIATION_RESULTS } from './watchdog/reconciliation.js'
+import { schedulerReceiptBudget } from './job-model.js'
 
 export { TIMEOUT_ERROR_TEXT }
 export const AGENT_TURN_SAFETY_TIMEOUT_MS = 3600 * 1000
@@ -215,8 +216,8 @@ export async function runOccurrence(job, record) {
   }
 }
 
-/** C-001/C-010/C-025: local deadline expiry requests abort but proves no termination. */
 export async function invokeWithDeadline(record, job) {
+  const receiptBudget = schedulerReceiptBudget(job.payload)
   const controller = new AbortController()
   const request = {
     agentId: job.agentId,
@@ -225,13 +226,12 @@ export async function invokeWithDeadline(record, job) {
     runId: record.runId,
     requestId: record.idempotencyKey,
     // SESSION_CENTRIC_EXECUTION_TRACEABILITY_V1 CTR-SCT-005: one-field
-    // additive plumb so the invocation evidence writer can record the job
-    // coordinate (occurrenceId/runId/requestId are already on the request).
+    // Job coordinate for the invocation evidence writer; receipt is Job-derived.
     jobId: job.id ?? job.jobId,
     payloadHash: record.payloadHash,
     message: job.payload.message,
     model: job.payload.model,
-    lightContext: job.payload.lightContext,
+    lightContext: job.payload.lightContext, receiptBudget,
     timeoutMs: Math.max(1, record.executionDeadlineAtMs - this.nowMs()),
     deliveryTarget: job.delivery,
     signal: controller.signal,

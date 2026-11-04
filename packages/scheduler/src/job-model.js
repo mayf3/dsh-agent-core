@@ -39,6 +39,7 @@
  *       kind: 'agentTurn',             // only kind V2 executes
  *       message: string,
  *       timeoutSeconds?: number,       // canonical run timeout
+ *       receiptTimeoutSeconds?: number, // positive safe integer; receipt only
  *       lightContext?: boolean,        // opaque pass-through to the invocation
  *       model?: string,                // opaque pass-through (not proven by D-007)
  *     },
@@ -60,6 +61,25 @@ import { normalizeSchedule } from './schedule.js'
 
 export const DELIVERY_MODES = new Set(['announce', 'none', 'silent'])
 export const RUN_STATUSES = new Set(['ok', 'error', 'skipped'])
+
+/** SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1 CTR-002/004; no deployment/env reads. */
+export function schedulerReceiptBudget(payload = {}) {
+  const seconds = payload.timeoutSeconds === undefined ? 3600 : Math.floor(payload.timeoutSeconds)
+  if (typeof payload.timeoutSeconds !== 'undefined'
+      && (typeof payload.timeoutSeconds !== 'number' || !Number.isFinite(seconds) || seconds < 1)) {
+    throw new TypeError('job.payload.timeoutSeconds must be a positive number')
+  }
+  const defaultMs = Math.max(120000, 50 * seconds)
+  const receipt = payload.receiptTimeoutSeconds
+  if (receipt !== undefined && (!Number.isSafeInteger(receipt) || receipt <= 0)) {
+    throw new TypeError('job.payload.receiptTimeoutSeconds must be a positive safe integer')
+  }
+  const overrideMs = receipt === undefined ? undefined : receipt * 1000
+  if (!Number.isSafeInteger(defaultMs) || (overrideMs !== undefined && !Number.isSafeInteger(overrideMs))) {
+    throw new TypeError('job payload receipt milliseconds exceed safe integer range')
+  }
+  return { defaultMs, overrideMs }
+}
 
 export function normalizeOptionalText(value, label) {
   if (value === undefined || value === null) return undefined
@@ -158,6 +178,8 @@ export function normalizeJob(input, { nowMs = Date.now(), id, createdAtMs = nowM
     }
     job.payload.timeoutSeconds = Math.floor(payload.timeoutSeconds)
   }
+  schedulerReceiptBudget(payload)
+  if (payload.receiptTimeoutSeconds !== undefined) job.payload.receiptTimeoutSeconds = payload.receiptTimeoutSeconds
   if (typeof payload.lightContext === 'boolean') job.payload.lightContext = payload.lightContext
   if (typeof payload.model === 'string' && payload.model.trim()) job.payload.model = payload.model.trim()
   if (typeof delivery.channel === 'string' && delivery.channel.trim()) job.delivery.channel = delivery.channel.trim()
