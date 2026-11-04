@@ -1,3 +1,4 @@
+# Moved unchanged from window-executor-v5.sh at c4152e9a (see R3 receipt).
 import datetime as dt, hashlib, json, math, os, pathlib, plistlib, re, shutil, stat
 import subprocess as sp, sys, time, urllib.request
 P=pathlib.Path
@@ -55,37 +56,7 @@ def meta(p):
     s=P(p).lstat()
     return dict(uid=s.st_uid,gid=s.st_gid,mode=oct(stat.S_IMODE(s.st_mode)),size=s.st_size,
                 mtime_ns=s.st_mtime_ns,dev=s.st_dev,ino=s.st_ino)
-def extended(p):
-    s=P(p).lstat()
-    try:
-        names=sorted(os.listxattr(p,follow_symlinks=False))
-        values={name:hashlib.sha256(os.getxattr(p,name,follow_symlinks=False)).hexdigest() for name in names}
-    except (AttributeError, OSError):
-        try:
-            # supervisor: os.listxattr is Linux-only CPython API; on macOS fall back to
-            # the xattr CLI so the ACL/xattr surface is still recorded (r5 run6 stage_03)
-            r=run(['/usr/bin/xattr','-l',str(p)])
-            out=r.stdout.decode(errors='strict')
-            values={'cli':hashlib.sha256(out.encode()).hexdigest()} if out.strip() else {}
-        except Exception:
-            values={'cli':'<unreadable>'}  # dangling symlink or vanished entry: record, don't crash (r5 run7)
-    return {'flags':getattr(s,'st_flags',0),'xattrs':values}
 def regular(p): require(P(p).is_file() and not P(p).is_symlink(),'missing/nonregular file: '+str(p))
-def inventory(root,metadata=True):
-    result={}
-    if metadata:
-        m=meta(root); result['.']={'kind':'dir',**{k:m[k] for k in ('uid','gid','mode')},**extended(root)}
-    for base,dirs,files in os.walk(root,followlinks=False):
-        for n in sorted(dirs+files):
-            p=P(base)/n; k=str(p.relative_to(root)); m=meta(p)
-            if p.is_symlink(): row={'kind':'link','target':os.readlink(p)}
-            elif p.is_dir(): row={'kind':'dir'}
-            elif p.is_file(): row={'kind':'file','sha256':digest(p)}
-            else: raise RuntimeError('unsupported special file '+str(p))
-            if metadata:
-                row.update({k:m[k] for k in ('uid','gid','mode')}); row.update(extended(p))
-            result[k]=row
-    return result
 def acl_listing(root):
     # One recursive read, not a process per file. Keep only ACL entries keyed
     # by relative filename; ls's '..', mtime and link-count columns are not ACL.
@@ -356,4 +327,3 @@ def listeners(pid,ports):
         owners={int(x[1:]) for x in p.stdout.decode().splitlines() if x.startswith('p')}
         require(owners=={pid},'listener owner mismatch '+str(port)); result.append({'port':port,'pid':pid})
     return result
-

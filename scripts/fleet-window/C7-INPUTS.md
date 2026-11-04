@@ -46,4 +46,6 @@ stage13 在释放自有互斥前输出：
 
 `bash scripts/fleet-window/window-executor-v5.sh --selftest` 仅在 `/usr/local/v5-boot-isolation` 创建新独占运行目录。00–04 标为隔离机制校验，复用实际纯校验函数、绑定 C5-r11 原始证据；生产互斥、清理、fresh-read、结算与静默轮询不执行。随后单独启动官方 stdio fresh-child canary，保存实际 argv/env/stdout/stderr/退出。历史完整 runtime 双启动只重新核对证据，不重跑、不冒充本次启动。
 
-执行器已因 CODE_STRUCTURE_GUARDRAILS_V2 的500行要求，将原内嵌 Python 拆为 `window_executor_state.py` 与 `window_executor_helper.py`；必须连同 `window_close.py` 从同一 Git SHA 取用，不能单独复制旧 shell。原件到新模块的逐行相等坐标在 `C7-EXTRACTION-MAP.json`，完整差异与实测输出随 RECEIPT-C7 保留。
+执行器已因 CODE_STRUCTURE_GUARDRAILS_V2 的500行要求，将原内嵌 Python 拆为 `window_helper_core.py`、`window_helper.py` 与 `window_preimage_xattr.py`；必须连同 `window_close.py` 从同一 Git SHA 取用，不能单独复制旧 shell。`C7-EXTRACTION-MAP.json` 是 #615 当时的历史提取映射，原样保留；其中旧模块已在 #617 移植后退役。当前双基线对照、迁移 diff 和实测输出见仓库根 RECEIPT-MERGE.md。
+
+#617 按交办保留原 974 行版本的 dry-run 字节输出作为兼容性门；其 150s 文字和未列 05b 是历史展示，实际静默门仍为 180s，实际执行仍含 05b，stage13 仍先完成 R6/R7 再释放自有互斥。不要把旧边界文本作为完整运行证明。

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "add",
+    "-A"
+  ],
+  "cwd": "/private/tmp/dsh-fleet-window-tools",
+  "started_at": "2026-11-04T12:52:58.747857+00:00",
+  "finished_at": "2026-11-04T12:52:58.787452+00:00",
+  "rc": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

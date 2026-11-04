@@ -1,4 +1,5 @@
-from window_executor_state import *
+from window_helper_core import *
+from window_preimage_xattr import XATTRS_KEY, inventory, reconcile_xattrs
 from window_close import capture_before, close_window
 
 if op=='authority':
@@ -74,8 +75,7 @@ elif op=='fresh':
     require(env.get('AGENT_DIRECTORY_AUTH_JWKS_URL'),'JWKS env missing')
     require('DSH_RUNTIME_ARCH' not in env,'different architecture candidate')
     require('--root' in argv and argv[argv.index('--root')+1]==str(prod),'runtime root mismatch')
-    text=launch(); launch_binding(text,doc)
-    raw('old-launchctl.txt',text.encode()); pid=pid_from(text)
+    text=launch(); launch_binding(text,doc); raw('old-launchctl.txt',text.encode()); pid=pid_from(text)
     require(pid==a['expected_old_pid'] and identity(pid)==a['expected_old_identity'],'old process identity differs')
     require(int(identity(pid).split()[1])==a['expected_runtime_uid'],'old UID mismatch')
     raw('plist.preimage',plist.read_bytes()); save('plist-preimage.json',{'sha256':digest(plist),'metadata':meta(plist),'document':doc})
@@ -97,10 +97,10 @@ elif op=='bundle':
 elif op=='prerequisites':
     a=manifest(prep/'r3/accepted-r2-inputs.sha256',prep)['records']
     current=inventory(prep/'scratch',False); r2=inventory(prep/'r2',False)
-    files={'scratch/'+k for k,v in current.items() if v['kind']=='file'}|{'r2/'+k for k,v in r2.items() if v['kind']=='file'}
+    files={'scratch/'+k for k,v in current.items() if k!=XATTRS_KEY and v['kind']=='file'}|{'r2/'+k for k,v in r2.items() if k!=XATTRS_KEY and v['kind']=='file'}
     require(files==set(a),'accepted candidate/r2 file membership changed')
-    links=sorted([{'path':'scratch/'+k,'target':v['target']} for k,v in current.items() if v['kind']=='link']+
-                 [{'path':'r2/'+k,'target':v['target']} for k,v in r2.items() if v['kind']=='link'],key=lambda r:r['path'])
+    links=sorted([{'path':'scratch/'+k,'target':v['target']} for k,v in current.items() if k!=XATTRS_KEY and v['kind']=='link']+
+                 [{'path':'r2/'+k,'target':v['target']} for k,v in r2.items() if k!=XATTRS_KEY and v['kind']=='link'],key=lambda r:r['path'])
     old=[r for r in read(prep/'r2/symlink-inventory.json') if r['path'].startswith(('scratch/','r2/'))]
     require(links==old,'accepted symlink bindings changed')
     c=read(prep/'r2/canary-receipt.json'); b=read(prep/'r3/attempt-02/runtime-boot-receipt.json')
@@ -162,6 +162,7 @@ elif op=='preimage':
     acl=acl_listing(live); raw('preimage-acl-listing.private.txt',acl)
     target=rd/'preimage-full'; require(not target.exists(),'preimage destination exists')
     run(['/usr/bin/ditto','--rsrc','--extattr','--acl',live,target],timeout=3600)
+    reconcile_xattrs(live,target,before[XATTRS_KEY])
     require(inventory(target)==before and inventory(live)==before,'full preimage copy differs')
     require(acl_listing(live)==acl and acl_listing(target)==acl,'preimage ACL/listing differs')
     # Full copy retains node-runtime/harness/.cache even if §1b moves BAK subtrees.
@@ -182,8 +183,7 @@ elif op=='install-start':
     r=live.parent/'agent-core-install-mutation-receipt.json'
     save('install-start.json',{'at':now(),'epoch':time.time(),'previousMutationReceiptSha256':digest(r) if r.is_file() else None})
 elif op=='install-failed':
-    r=live.parent/'agent-core-install-mutation-receipt.json'; regular(r)
-    doc=read(r); start=read(rd/'install-start.json')
+    r=live.parent/'agent-core-install-mutation-receipt.json'; regular(r); doc=read(r); start=read(rd/'install-start.json')
     require(digest(r)!=start['previousMutationReceiptSha256'],'stale mutation receipt')
     require(start['epoch']-1<=stamp(doc['recorded_at'])<=time.time()+1,'mutation receipt not this run')
     require(doc['receipt']=='AGENT_CORE_INSTALL_MUTATION_RECEIPT_V1' and doc['exit_code']==int(args[0]),'mutation receipt rc/kind mismatch')
@@ -213,16 +213,18 @@ elif op=='preserve-config':
     # pinned installer only partly copies. This is a declared install step, not
     # recovery after a failed gate. Never overwrite a changed/current file and
     # never write historical jobs/bindings/incidents/runs/fences/credentials.
-    authority(); service_absent()
-    pre=rd/'preimage-full/config'; dest=live/'config'
+    authority(); service_absent(); pre=rd/'preimage-full/config'; dest=live/'config'
     expected=inventory(pre); current=inventory(dest)
-    require(all(k in expected and v==expected[k] for k,v in current.items()),
+    require(all(k in expected and v==expected[k] for k,v in current.items() if k!=XATTRS_KEY),
             'installer config has changed/unexpected existing entries; no overwrite allowed')
+    require(all(current[XATTRS_KEY].get(k)==expected[XATTRS_KEY].get(k)
+                for k in current if k!=XATTRS_KEY),
+            'installer config has changed existing xattrs; no overwrite allowed')
     for required in ('agents.json','agent-credentials.json'):
         require(required in current and current[required]==expected[required],'current authority/credentials not preserved by installer')
     carried=[]
     for k in sorted(expected,key=lambda k:(len(P(k).parts),k)):
-        if k=='.' or k in current: continue
+        if k in ('.',XATTRS_KEY) or k in current: continue
         src=pre/k; dst=dest/k
         if dst.exists() or dst.is_symlink(): continue # copied with its ancestor
         require(not src.is_symlink(),'omitted config symlink needs explicit review: '+k)
@@ -246,9 +248,13 @@ elif op=='final-binding':
             x=accepted[part].get(k); y=actual[part].get(k)
             # UID/GID differ for isolated execution; production custody is checked below.
             strip=lambda v: {a:b for a,b in v.items() if a not in ('uid','gid')} if v else None
+            if k==XATTRS_KEY:
+                if x!=y: changes.append(part+'/'+k)
+                continue
             if strip(x)!=strip(y): changes.append(part+'/'+k)
         a=authority()
         for k,v in actual[part].items():
+            if k==XATTRS_KEY: continue
             if v['kind']!='link': require(v['uid']==a['expected_runtime_uid'] and v['gid']==a['expected_runtime_gid']
                                         and int(v['mode'],8)&0o022==0,'unsafe final closure custody '+part+'/'+k)
     save('final-closure.json',actual); save('final-closure-comparison.json',{'changed':changes,'sameContentLinksModes':not changes})

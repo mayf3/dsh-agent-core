@@ -67,12 +67,10 @@ BEGIN stage_02_fresh_read [§1–2,4 + r5] source/Harness; plist/env/old PID; st
 END   stage_02_fresh_read
 BEGIN stage_03_dual_prerequisites [§3] accepted canary + full runtime; complete file/link membership; candidate binding
 END   stage_03_dual_prerequisites
-BEGIN stage_04_quiet_gate [§4 + r4] mtime >=180s AND recovery census; selftest never runs settlement
+BEGIN stage_04_quiet_gate [§4 + r4] mtime >=150s AND read-only recovery census; unresolved/inflight/unknown refuses
 END   stage_04_quiet_gate
 BEGIN stage_05_old_exit [§4–5] final census; bootout; old PID + worker exit; supervisor absent
 END   stage_05_old_exit
-BEGIN stage_05b_settle_unresolved [§4–5] window-only settlement after proved old exit; never called by selftest
-END   stage_05b_settle_unresolved
 BEGIN stage_06_full_preimage [§5–6 + r5] live schema/identity/bindings + diff receipt; full current tree/config/plist/env/metadata + reused copies
 END   stage_06_full_preimage
 BEGIN stage_07_pinned_install [§5] root-owned physical WINDOW_BUNDLE; pinned THREE arguments + R3_BINDING_PAYLOAD; real rc
@@ -87,13 +85,13 @@ BEGIN stage_11_production_verify [§5] exact new PID/env/listener owner/log feat
 END   stage_11_production_verify
 BEGIN stage_12_hr_watch [r4] full 600s window; NEW broker execute as agent agt_hr-agent lines
 END   stage_12_hr_watch
-BEGIN stage_13_close [§7 + R6/R7] mapped naming diff empty; latest two/protected generations; exact LIST-ONLY candidates; release own mutex
+BEGIN stage_13_close [§7] bounded results; authentication/business NOT_TESTED; release own mutex
 END   stage_13_close
 FAILURE_BOUNDARY any failure -> STOP + phase receipt + §6 recipe; NO automatic recovery
 BOUNDARIES
 }
 
-# Extracted stdlib helper. Never called by --dry-run/--help. Root reads and
+# Split stdlib helper. Never called by --dry-run/--help. Root reads and
 # writes occur only behind --execute, explicit authority and stage boundaries.
 helper() {
   local privilege=$1
@@ -101,7 +99,7 @@ helper() {
   local -a runner
   runner=(/usr/bin/python3 -B)
   if [ "$privilege" = root ]; then runner=(/usr/bin/sudo -n /usr/bin/python3 -B); fi
-  "${runner[@]}" "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window_executor_helper.py" "$RD" "$@"
+  "${runner[@]}" "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/window_helper.py" "$RD" "$@"
 }
 
 rollback_recipe() {
@@ -117,7 +115,7 @@ rollback_recipe() {
     started)
       printf '%s\n' '§6 INSTALL-INTERRUPTED: installer termination and mutation_truth UNKNOWN. First reconcile the exact child process and this-run log/receipt; never assume install success or issue a second install.' ;;
     failed)
-      printf '%s\n' '§6 INSTALL-FAILED: use ONLY failed-install-mutation-receipt.json confirmed from this invocation.' 
+      printf '%s\n' '§6 INSTALL-FAILED: use ONLY failed-install-mutation-receipt.json confirmed from this invocation.'
       printf '%s\n' 'If absent/unconfirmed: mutation_truth=UNKNOWN, STOP; inspect install.log and exact preimage. Never use an older receipt.'
       printf '%s\n' 'NOTHING_WAS_MUTATED: no blind tree restore. TREE_WRITTEN_BY_THIS_RUN: use receipt preimage_bak and R1/R2 flags.' ;;
     *)

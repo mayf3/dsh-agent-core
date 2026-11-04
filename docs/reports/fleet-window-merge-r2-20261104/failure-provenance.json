@@ -1,0 +1,15 @@
+{
+  "path": "docs/reports/c7-selftest-20261104/SOURCE.diff",
+  "sha256": "fe03b79b898a0622ddd1f19196aff4b0bc7a7b0ed46b2845e91b2d62fd3bc5c1",
+  "byte_identical_to_merge_head": true,
+  "byte_identical_to_staged": true,
+  "merge_head_blob": "89e7151d024130de40432c0339d94d260b90a37e",
+  "staged_blob": "89e7151d024130de40432c0339d94d260b90a37e",
+  "trailing_space_lines": {
+    "235": "b' '",
+    "254": "b' '",
+    "291": "b' '",
+    "990": "b' '",
+    "1007": "b' '"
+  }
+}

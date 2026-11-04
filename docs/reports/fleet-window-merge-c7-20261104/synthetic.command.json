@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "-B",
+    "scripts/fleet-window/test_xattrfix_r3.py",
+    "SyntheticTree"
+  ],
+  "cwd": "/private/tmp/dsh-fleet-window-tools",
+  "started_at": "2026-11-04T12:44:53.875955+00:00",
+  "finished_at": "2026-11-04T12:44:54.229373+00:00",
+  "rc": 0,
+  "stdout_sha256": "41187b7be8c165d3187a46ae0308222f0c9b4f136c1bbf4e756efd4f12987b2b",
+  "stderr_sha256": "89c5f0792f4aad6c0ede57945b57eb3b66442149cb027204495b91fe70f9e630"
+}
