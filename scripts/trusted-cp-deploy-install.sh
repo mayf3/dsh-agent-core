@@ -834,6 +834,17 @@ npm_config_platform="$RUNTIME_PLATFORM" npm_config_arch="$RUNTIME_ARCH" \
   }
 cd "$TRUSTED_ROOT"
 printf '%s' "$HARNESS_STAMP_JSON" > harness/.source-stamp
+# R67: pnpm may leave platform-optional package stubs when the offline store
+# carries metadata but not the runtime payload. Materialize all 20 audited
+# darwin-x64 seeds, with SHA verification and fail-closed missing-seed behavior.
+SEED_DIR="${TRUSTED_CP_PNPM_SEED_DIR:-$REPO_SRC/scripts/lib/pnpm-seed/darwin-x64}"
+SEED_MATERIALIZER="$REPO_SRC/scripts/lib/pnpm-seed/materialize-darwin-x64.mjs"
+[ -f "$SEED_DIR/SEEDS.json" ] || { echo "ERROR: R67 seed manifest missing: $SEED_DIR/SEEDS.json" >&2; exit 2; }
+[ -f "$SEED_MATERIALIZER" ] || { echo "ERROR: R67 seed materializer missing: $SEED_MATERIALIZER" >&2; exit 2; }
+"$NODE_CELLAR_BIN" "$SEED_MATERIALIZER" "$SEED_DIR" "$TRUSTED_ROOT/harness/node_modules/.pnpm" || {
+  echo "ERROR: R67 darwin-x64 seed materialization failed; closure remains NOT cutover-ready" >&2
+  exit 2
+}
 note_stage harness_closure_built
 fi
 

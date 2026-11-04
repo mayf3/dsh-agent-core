@@ -1,0 +1,87 @@
+{
+  "schema": "R67_PNPM_DARWIN_X64_SEED_V1",
+  "platform": "darwin",
+  "arch": "x64",
+  "seeds": [
+    {
+      "file": "@anthropic-ai_claude-agent-sdk-darwin-x64-0.3.220.tgz",
+      "sha256": "8e12faa5cc2ecfd0b679d7af9a1a1b3e9d96e9f172635b0fb306bc33f611b402"
+    },
+    {
+      "file": "@esbuild_darwin-x64-0.21.5.tgz",
+      "sha256": "adaf34486bdca8560c42aa172ee2a4307b6988689938d696a8f24fe4d93703e4"
+    },
+    {
+      "file": "@esbuild_darwin-x64-0.25.12.tgz",
+      "sha256": "bf56cdf7b330a8605395ee13de805c784c7346d0802c7cced8490b4bfac2291a"
+    },
+    {
+      "file": "@esbuild_darwin-x64-0.28.1.tgz",
+      "sha256": "4cc582287781c171f5ac2d216dc15ab1c40bc83bff59803211a68b66e0c762cb"
+    },
+    {
+      "file": "@img_sharp-darwin-x64-0.35.3.tgz",
+      "sha256": "872c83b7121643687e3ef0b3ff207dbb3ecc7ff97d367fa0a3b1107f56c25f39"
+    },
+    {
+      "file": "@img_sharp-libvips-darwin-x64-1.3.2.tgz",
+      "sha256": "5756aba421c88cdd45af13bf1cbf7ff39a074d4d014cac29bbd11387dc566692"
+    },
+    {
+      "file": "@koromix_koffi-darwin-x64-3.1.1.tgz",
+      "sha256": "5bc81e18c68584e2e487df36d0b748eaa9060032e2dccdc6e2a5d2a569db6f46"
+    },
+    {
+      "file": "@openai_codex-0.147.0-darwin-x64.tgz",
+      "sha256": "43cd79decdd0c110daa90a0fd34e73523c7a10fb0e4d5d9bf1437d9298be08b6"
+    },
+    {
+      "file": "@oxc-parser_binding-darwin-x64-0.133.0.tgz",
+      "sha256": "28fe8552f2f0c4441e0d2ba06a0ba5cf550c69b38a1cb5b3c7e74a204b9136db"
+    },
+    {
+      "file": "@oxc-resolver_binding-darwin-x64-11.20.0.tgz",
+      "sha256": "01e33bff666933f84fd58477d84229b356dc639f7d2841f15e7197b9620d63d7"
+    },
+    {
+      "file": "@oxlint-tsgolint_darwin-x64-7.0.2001.tgz",
+      "sha256": "6ca9d95490397dd973c158eedaf7983ee80391585ccb4cb35dc1decceb54ee58"
+    },
+    {
+      "file": "@oxlint_binding-darwin-x64-1.76.0.tgz",
+      "sha256": "eea7913adb179697b975e74bfbc8bd0d430f04daa2255edf9366a46fcf6b5231"
+    },
+    {
+      "file": "@rolldown_binding-darwin-x64-1.0.3.tgz",
+      "sha256": "1d28392e7515ac16446664d03826a7ac3f5648659b6553e3d138ba3668973970"
+    },
+    {
+      "file": "@rolldown_binding-darwin-x64-1.1.1.tgz",
+      "sha256": "31bd12457aa41646dcee674d7fa73ec2c4625ef5d34d0ef6c6823cad811de3e2"
+    },
+    {
+      "file": "@rollup_rollup-darwin-x64-4.62.2.tgz",
+      "sha256": "9c5a5a78642d0245d8cfb901f3798fafb505e01f16e15987c49533135997b77a"
+    },
+    {
+      "file": "@vscode_ripgrep-darwin-x64-1.18.0.tgz",
+      "sha256": "aa947ecde1761b0dd82de23ac3d99cfe31fc6f5595e451cf1016cd81f5e9cfab"
+    },
+    {
+      "file": "jscpd-darwin-x64-5.0.12.tgz",
+      "sha256": "1cf0c83942caa3b133e8f219abcfbea9a5529ea7718329da3bf5ab7bd722f422"
+    },
+    {
+      "file": "lefthook-darwin-x64-2.1.9.tgz",
+      "sha256": "d7f3ed240ba58d8898ad41e56f1e7c132e394e0640486d82d9ad9f369e8a05e9"
+    },
+    {
+      "file": "lightningcss-darwin-x64-1.32.0.tgz",
+      "sha256": "5f1782a48958e03a0962b1712958df45b1a3e8129639db7231b79628163da11d"
+    },
+    {
+      "file": "node-addon-require-builtin-darwin-x64-0.1.4.tgz",
+      "sha256": "c606b0e9b745b194269c4a3305448efa0628b4fec10f7bd53d187a9bf1000356"
+    }
+  ]
+}
