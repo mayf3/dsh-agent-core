@@ -81,6 +81,8 @@ import { createIngressDelivery } from './ingress-delivery.js'
 import { channelConversationId } from './channel-conversation.js'
 import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
+import { ProcessHealthWatch, snapshotAgentProcessHealth } from './r22-reliability-observability.js'
+import { operatorExactGenerationRecovery } from './operator-exact-generation-recovery.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -267,6 +269,24 @@ export function apply(ctx, config) {
     switchAgent: bindingResolution.switchAgent,
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
+
+  // R22: mount read-only process liveness observation in the real router
+  // composition. Recovery remains exact-generation/operator initiated; this
+  // loop never clears fences or spawns a replacement on an ambiguous exit.
+  const processHealthWatch = new ProcessHealthWatch({
+    snapshot: () => snapshotAgentProcessHealth({
+      registrySnapshot: registry.registrySnapshot(),
+      lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
+      agentIds: agentDefinition.listAgents().map(agent => agent.id),
+    }),
+    alert: async event => log.error(`agent process health alert ${JSON.stringify(event)}`),
+  })
+  const processHealthIntervalMs = Number.isSafeInteger(cfg.processHealthIntervalMs)
+    && cfg.processHealthIntervalMs >= 1000 ? cfg.processHealthIntervalMs : 15_000
+  const processHealthTimer = setInterval(() => {
+    processHealthWatch.check().catch(error => log.error(`agent process health check failed ${error?.message ?? error}`))
+  }, processHealthIntervalMs)
+  processHealthTimer.unref?.()
   /**
    * The unified ordered route-attempt chain executor
    * (AGT_CTO_AGENT_ORDERED_ROUTE_CHAIN_IMPL_V2 CTR-I2-005): the ONE seam
@@ -313,7 +333,10 @@ export function apply(ctx, config) {
   }
 
   // Tear down every owned process when the router plugin stops.
-  ctx.effect(() => () => registry.dispose())
+  ctx.effect(() => () => {
+    clearInterval(processHealthTimer)
+    return registry.dispose()
+  })
 
   const service = {
     ...createProductSurfaceConversation({sourceDirectory:cfg.conversationSourceDir,bindingResolution,definition:agentDefinition,reconciliationStore,routeChain,workspaceBootstrap}),
@@ -361,6 +384,20 @@ export function apply(ctx, config) {
      *  EMPTY lifecycle slot after a restart is not termination evidence. */
     stuckFenceWithoutDurableExitEvidenceForAgent: (agentId) => reconciliationStore.stuckFenceWithoutDurableExitEvidenceForAgent?.(agentId) ?? null,
     ensureRunning: registry.ensureRunning,
+     /** R22 operator/admin seam: exact agentId + generation only. */
+     operatorExactGenerationRecovery: (request, options = {}) => operatorExactGenerationRecovery(request, {
+       reconciliationStore,
+       registrySnapshot: () => registry.registrySnapshot(),
+       lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
+       ensureRunning: registry.ensureRunning,
+       audit: options.audit,
+     }),
+     /** R22 read-only process state projection for admin/ops diagnostics. */
+     processHealthSnapshot: () => snapshotAgentProcessHealth({
+       registrySnapshot: registry.registrySnapshot(),
+       lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
+       agentIds: agentDefinition.listAgents().map(agent => agent.id),
+     }),
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */
     ensureRunningForRoute: registry.ensureRunningForRoute,
