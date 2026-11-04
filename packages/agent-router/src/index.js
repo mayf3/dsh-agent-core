@@ -307,6 +307,7 @@ export function apply(ctx, config) {
       registrySnapshot: registry.registrySnapshot(),
       lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
       agentIds: agentDefinition.listAgents().map(agent => agent.id),
+      reconciliationStore,
     }),
     alert: async event => log.error(`agent process health alert ${JSON.stringify(event)}`),
     recover: safeRecovery,
