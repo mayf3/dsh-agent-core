@@ -83,6 +83,7 @@ import { SWITCH_RPC_METHOD, BROKER_RPC_METHOD } from './parent-rpc-relay.js'
 import { provisionAgentHome } from '../../agent-provisioning/src/index.js'
 import { ProcessHealthWatch, snapshotAgentProcessHealth } from './r22-reliability-observability.js'
 import { operatorExactGenerationRecovery } from './operator-exact-generation-recovery.js'
+import { RecoveryRecurrenceMonitor, createSafeRecoveryCallback } from './r28-recovery-control.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -270,9 +271,26 @@ export function apply(ctx, config) {
     getBrokerGateway: () => ctx.get('brokerGateway'),
   })
 
-  // R22: mount read-only process liveness observation in the real router
-  // composition. Recovery remains exact-generation/operator initiated; this
-  // loop never clears fences or spawns a replacement on an ambiguous exit.
+  // R22/R28: observe real child-process lifecycle and auto-recover only when
+  // the registry proves an EMPTY, non-owned slot. Every unsafe or failed
+  // recovery is escalated instead of clearing a fence heuristically.
+  const recurrenceMonitor = new RecoveryRecurrenceMonitor({
+    threshold: 2,
+    escalate: async event => log.error(`agent recovery escalation ${JSON.stringify(event)}`),
+  })
+  const safeRecovery = createSafeRecoveryCallback({
+    registrySnapshot: () => registry.registrySnapshot(),
+    lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
+    recover: ({ agentId, generation }) => operatorExactGenerationRecovery(
+      { agentId, generation }, {
+        reconciliationStore,
+        registrySnapshot: () => registry.registrySnapshot(),
+        lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
+        ensureRunning: registry.ensureRunning,
+        audit: async event => log.error(`agent recovery audit ${JSON.stringify(event)}`),
+      }),
+    escalate: async event => recurrenceMonitor.observe(event),
+  })
   const processHealthWatch = new ProcessHealthWatch({
     snapshot: () => snapshotAgentProcessHealth({
       registrySnapshot: registry.registrySnapshot(),
@@ -280,6 +298,7 @@ export function apply(ctx, config) {
       agentIds: agentDefinition.listAgents().map(agent => agent.id),
     }),
     alert: async event => log.error(`agent process health alert ${JSON.stringify(event)}`),
+    recover: safeRecovery,
   })
   const processHealthIntervalMs = Number.isSafeInteger(cfg.processHealthIntervalMs)
     && cfg.processHealthIntervalMs >= 1000 ? cfg.processHealthIntervalMs : 15_000
