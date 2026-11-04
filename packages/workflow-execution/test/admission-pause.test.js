@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { AdmissionPauseControl, ExecutionLedger, createWorkflowExecutionEngine } from '../src/index.js'
 
@@ -41,4 +42,27 @@ test('supported admission pause persists, drains in-flight delivery, and resumes
   assert.deepEqual(engine.resumeAdmission(), { paused: false, reason: null, updatedAtMs: 10 })
   const resumed = await engine.pollOnce()
   assert.equal(resumed.ok, true); assert.equal(delivered, 2)
+})
+
+test('R53 process restart while paused resumes the persisted in-flight delivery without redelivery', async t => {
+  const dir = mkdtempSync(join(tmpdir(), 'admission-pause-restart-')); t.after(() => rmSync(dir, { recursive: true }))
+  const fixture = join(process.cwd(), 'packages/workflow-execution/test/r53-pause-restart-fixture.mjs')
+  const start = spawn(process.execPath, [fixture, 'start', dir], { stdio: ['ignore', 'pipe', 'pipe'] })
+  let output = ''
+  await new Promise((resolve, reject) => {
+    start.stdout.on('data', chunk => { output += chunk; if (output.includes('READY')) resolve() })
+    start.once('error', reject); start.once('exit', code => { if (!output.includes('READY')) reject(new Error(`start exited ${code}`)) })
+  })
+  start.kill('SIGKILL'); await new Promise(resolve => start.once('exit', resolve))
+  const resume = spawn(process.execPath, [fixture, 'resume', dir], { stdio: ['ignore', 'pipe', 'pipe'] })
+  let resumedOutput = ''
+  await new Promise((resolve, reject) => {
+    resume.stdout.on('data', chunk => { resumedOutput += chunk })
+    resume.once('error', reject)
+    resume.once('exit', code => code === 0 ? resolve() : reject(new Error(`resume exited ${code}: ${resumedOutput}`)))
+  })
+  const result = JSON.parse(resumedOutput.trim())
+  assert.equal(result.paused, true)
+  assert.equal(result.delivered, 0)
+  assert.equal(result.state, 'SETTLED')
 })

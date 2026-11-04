@@ -309,13 +309,14 @@ export function createWorkflowExecutionEngine({
           verdict: finalVerdict.state,
           judgment: finalVerdict.judgment,
           reason: finalVerdict.reason,
-          ...(Number.isInteger(attempt.workflowStateVersionAtDispatch) ? { expectedIdentity: {
+          expectedIdentity: {
+            status: Number.isInteger(attempt.workflowStateVersionAtDispatch) ? 'VALID' : 'UNKNOWN',
             workflowInstanceId: attempt.workflowInstanceId,
             nodeVisitId: attempt.nodeVisitId,
             dispatchIntentId: attempt.dispatchIntentId,
             generation: attempt.generation,
             workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch,
-          } } : {}),
+          },
         })
         if (!recorded.committed) {
           if (recorded.attempt.state === 'ACTIVE') summary.running += 1

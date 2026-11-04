@@ -170,6 +170,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
 
   const ledger = new ExecutionLedger({
     dir: layout.workflowExecutionDir,
+    requireReconciledIdentity: true,
     log,
     // WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: the attempt limit lives on
     // the fence itself (admission policy; replay of old files unchanged).

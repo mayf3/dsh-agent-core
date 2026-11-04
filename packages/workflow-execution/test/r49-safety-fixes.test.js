@@ -15,19 +15,38 @@ const INTENT_2 = '55555555-5555-4555-8555-555555555555'
 function ledgerFixture(t) {
   const dir = mkdtempSync(join(tmpdir(), 'r49-safety-'))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
-  return new ExecutionLedger({ dir })
+  return new ExecutionLedger({ dir, requireReconciledIdentity: true })
 }
 
 test('R49 counterexample: late old identity cannot reconcile the active successor', async t => {
   const ledger = ledgerFixture(t)
   const first = await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
   const result = await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'NEEDS_REVIEW', judgment: 'delivery_unverified', reason: 'old', expectedIdentity: {
-    workflowInstanceId: INSTANCE, nodeVisitId: VISIT, dispatchIntentId: INTENT_2, generation: first.attempt.generation, workflowStateVersionAtDispatch: 1,
+    status: 'VALID', workflowInstanceId: INSTANCE, nodeVisitId: VISIT, dispatchIntentId: INTENT_2, generation: first.attempt.generation, workflowStateVersionAtDispatch: 1,
   } })
   assert.equal(result.committed, false)
   assert.equal(result.cause, 'identity_conflict')
   assert.equal(ledger.get(VISIT).state, 'ACTIVE')
 })
+
+test('R53 recordReconciled rejects missing identity', async t => {
+  const ledger = ledgerFixture(t)
+  await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+  await assert.rejects(() => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'missing' }), /expectedIdentity must be complete and VALID/)
+})
+
+test('R53 recordReconciled rejects UNKNOWN identity', async t => {
+  const ledger = ledgerFixture(t)
+  await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+  await assert.rejects(() => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'unknown', expectedIdentity: { status: 'UNKNOWN' } }), /expectedIdentity must be complete and VALID/)
+})
+
+test('R53 recordReconciled rejects EXPIRED identity', async t => {
+  const ledger = ledgerFixture(t)
+  await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+  await assert.rejects(() => ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'planned', verdict: 'NEEDS_REVIEW', judgment: 'x', reason: 'expired', expectedIdentity: { status: 'EXPIRED' } }), /expectedIdentity must be complete and VALID/)
+})
+
 
 test('R49 counterexample: stale settlement without version baseline is rejected', async t => {
   const ledger = ledgerFixture(t)
