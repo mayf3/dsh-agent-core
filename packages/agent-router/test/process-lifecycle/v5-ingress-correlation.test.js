@@ -63,7 +63,7 @@ test('V5 Router mounts a distinct private Feishu callback; public route cannot g
       replyTargetFor: () => ({ replyTo: () => ({}) }), reply: async () => {},
     }
     const definition = {
-      listAgents: () => [{ id: 'agt_efficiency-agent' }],
+      listAgents: () => [{ id: 'agt_efficiency-agent' }, { id: 'agt_hr-agent' }],
       getDefaultAgent: () => ({ id: 'agt_efficiency-agent' }),
       getAgent: () => ({ id: 'agt_efficiency-agent' }),
       resolveAgentRef: () => ({ id: 'agt_efficiency-agent' }),
@@ -201,7 +201,7 @@ function integratedRouter(t, { failBeforePrompt = false } = {}) {
     replyTargetFor: () => ({ replyTo: () => ({}) }), reply: async () => {},
   }
   const definition = {
-    listAgents: () => [{ id: 'agt_efficiency-agent' }, { id: 'agt_other' }],
+    listAgents: () => [{ id: 'agt_efficiency-agent' }, { id: 'agt_other' }, { id: 'agt_hr-agent' }],
     getDefaultAgent: () => ({ id: 'agt_efficiency-agent' }),
     getAgent: (id) => ({ id }),
     resolveAgentRef: (id) => ({ id }),
