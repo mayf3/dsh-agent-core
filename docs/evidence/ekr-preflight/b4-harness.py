@@ -1,0 +1,16 @@
+import subprocess,tarfile,io,json
+for rev in ['eb8fd189','fa4510be']:
+ t=tarfile.open(fileobj=io.BytesIO(subprocess.check_output(['git','archive',rev])))
+ src=t.extractfile('packages/workflow-execution/src/judgment.js').read().decode()
+ test="""
+const mod=await import('data:text/javascript;base64,'+Buffer.from(SOURCE).toString('base64'));
+const nodeVisitId='11111111-1111-1111-1111-111111111111';
+const body={visibility:'full',detail:{current_node_visit_id:nodeVisitId,instance:{is_terminal:false,workflow_state_version:8}}};
+const missing=mod.judgeStaleFromDetail({body,nodeVisitId});
+const increased=mod.judgeStaleFromDetail({body,nodeVisitId,workflowStateVersionAtDispatch:7});
+const decreased=mod.judgeStaleFromDetail({body,nodeVisitId,workflowStateVersionAtDispatch:9});
+if(missing.kind!=='unavailable'||increased.kind!=='progressed'||decreased.kind!=='progressed')throw Error('unexpected source behavior');
+console.log(JSON.stringify({sourceSha:REV,testName:'EKR-PRE-B4-pure-source',faultInjection:['missing dispatch baseline','same current visit version 7→8','same current visit version 9→8'],initialState:{visit:nodeVisitId,terminal:false,version:8},actualResult:{missing,increased,decreased},expectedResult:'observed current source matches conservative baseline exclusion and version-inequality suppression; demonstrates EKR liveness gap, no repair claimed',rawReceipt:'stdout only; data URL import of archive judgment.js; no filesystem writes'}));
+""".replace('REV',json.dumps(rev)).replace('SOURCE',json.dumps(src))
+ p=subprocess.run(['node','--input-type=module'],input=test,text=True,capture_output=True); print('REV',rev,'RC',p.returncode,p.stdout,p.stderr)
+ if p.returncode != 0: raise SystemExit(p.returncode)

@@ -1,0 +1,10 @@
+--- b4-harness.before.py
++++ b4-harness.py
+@@ -11,5 +11,6 @@
+ const decreased=mod.judgeStaleFromDetail({body,nodeVisitId,workflowStateVersionAtDispatch:9});
+ if(missing.kind!=='unavailable'||increased.kind!=='progressed'||decreased.kind!=='progressed')throw Error('unexpected source behavior');
+ console.log(JSON.stringify({sourceSha:REV,testName:'EKR-PRE-B4-pure-source',faultInjection:['missing dispatch baseline','same current visit version 7→8','same current visit version 9→8'],initialState:{visit:nodeVisitId,terminal:false,version:8},actualResult:{missing,increased,decreased},expectedResult:'observed current source matches conservative baseline exclusion and version-inequality suppression; demonstrates EKR liveness gap, no repair claimed',rawReceipt:'stdout only; data URL import of archive judgment.js; no filesystem writes'}));
+-""".replace('SOURCE',json.dumps(src)).replace('REV',json.dumps(rev))
++""".replace('REV',json.dumps(rev)).replace('SOURCE',json.dumps(src))
+  p=subprocess.run(['node','--input-type=module'],input=test,text=True,capture_output=True); print('REV',rev,'RC',p.returncode,p.stdout,p.stderr)
++ if p.returncode != 0: raise SystemExit(p.returncode)

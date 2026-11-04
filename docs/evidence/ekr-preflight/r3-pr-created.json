@@ -1,0 +1,16 @@
+{
+  "source": "GitHub connector create_pull_request result",
+  "observedStage": "PR_CREATION",
+  "url": "https://github.com/mayf3/dsh-agent-core/pull/621",
+  "number": 621,
+  "state": "open",
+  "draft": true,
+  "merged": false,
+  "base": "main",
+  "baseSha": "eb8fd18934d827cec98faacaef987869c5cb92e7",
+  "head": "ac-ekr-preflight",
+  "headShaAtCreation": "99d5986ffcf5969a9cb6c33726b0286704df5140",
+  "createdAt": "2026-11-04T16:18:09Z",
+  "referencedIssue": "https://github.com/mayf3/agent-control/issues/1374",
+  "mergeAuthorized": false
+}
