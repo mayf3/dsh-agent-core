@@ -23,3 +23,24 @@ test('recovery history store is used on every state receipt', async () => {
   } })
   assert.equal(entries[0].state, 'DETECT'); assert.equal(entries.length, 1)
 })
+
+test('three notification failures remain pending and retry idempotently', async () => {
+  const stored = new Map(); let notifications = 0; let items = 0
+  const stateStore = {
+    recoveryFaultSnapshot: () => [...stored].map(([key, value]) => ({ key, ...value })),
+    upsertRecoveryFault: (key, value) => stored.set(key, value),
+  }
+  const dispatcher = new GovernanceEscalationDispatcher({ stateStore, retries: 3, deps: {
+    createGovernanceItem: async () => ({ itemId: `i${++items}` }),
+    resolveOwner: async () => 'itops-owner',
+    notify: async () => ({ notificationId: `n${++notifications}` }),
+    deliveryReceipt: async () => ({ delivered: false }),
+  } })
+  const first = await dispatcher.dispatch({ target: 'itops/HUMAN_GATE', agentId: 'agt_a', generation: 1 })
+  assert.equal(first.status, 'NOTIF_PENDING_RETRY'); assert.equal(items, 1); assert.equal(stored.get('escalation:agt_a:1').status, 'NOTIF_PENDING_RETRY')
+  dispatcher.deps.deliveryReceipt = async () => ({ delivered: true, receiptId: 'r1' })
+  const second = await dispatcher.dispatch({ target: 'itops/HUMAN_GATE', agentId: 'agt_a', generation: 1 })
+  assert.equal(second.status, 'NOTIFIED'); assert.equal(items, 1); assert.equal(stored.get('escalation:agt_a:1').status, 'NOTIFIED')
+  const third = await dispatcher.dispatch({ target: 'itops/HUMAN_GATE', agentId: 'agt_a', generation: 1 })
+  assert.equal(third.status, 'NOTIFIED'); assert.equal(items, 1)
+})

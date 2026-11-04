@@ -196,7 +196,7 @@ export function apply(ctx, config) {
   const recoveryHistoryStore = recoveryFile
     ? createFileRecoveryHistoryStore(`${recoveryFile}.r28-history.jsonl`)
     : null
-  const escalationDispatcher = new GovernanceEscalationDispatcher({ deps: cfg.r30EscalationDeps })
+  const escalationDispatcher = new GovernanceEscalationDispatcher({ deps: cfg.r30EscalationDeps, stateStore: reconciliationStore })
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
@@ -310,6 +310,7 @@ export function apply(ctx, config) {
     }),
     alert: async event => log.error(`agent process health alert ${JSON.stringify(event)}`),
     recover: safeRecovery,
+    faultStore: reconciliationStore,
   })
   const processHealthIntervalMs = Number.isSafeInteger(cfg.processHealthIntervalMs)
     && cfg.processHealthIntervalMs >= 1000 ? cfg.processHealthIntervalMs : 15_000

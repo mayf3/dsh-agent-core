@@ -20,13 +20,14 @@ export function snapshotAgentProcessHealth({ registrySnapshot, lifecycleSlotSnap
 }
 
 export class ProcessHealthWatch {
-  constructor({ snapshot, alert, recover = null, now = () => new Date().toISOString() }) {
+  constructor({ snapshot, alert, recover = null, now = () => new Date().toISOString(), faultStore = null }) {
     this.snapshot = snapshot
+    this.faultStore = faultStore
     this.alert = alert
     this.recover = recover
     this.now = now
     this.previous = new Map()
-    this.openFaults = new Map()
+    this.openFaults = new Map((faultStore?.recoveryFaultSnapshot?.() ?? []).map(entry => [entry.key, { ...entry }]))
   }
 
   async check() {
@@ -39,11 +40,15 @@ export class ProcessHealthWatch {
         fault.lastSeenAt = observation.at
         fault.attempts += 1
         this.openFaults.set(key, fault)
+        this.faultStore?.upsertRecoveryFault(key, fault)
         if (previous !== observation.state) await this.alert({ type: 'agent.process.exited', ...observation, fault })
         if (this.recover) await this.recover({ agentId: observation.agentId, reason: 'AGENT_PROCESS_EXITED', generation: observation.generation, fault })
       } else {
         for (const openKey of this.openFaults.keys()) {
-          if (openKey.startsWith(`${observation.agentId}:`)) this.openFaults.delete(openKey)
+          if (openKey.startsWith(`${observation.agentId}:`)) {
+            this.openFaults.delete(openKey)
+            this.faultStore?.deleteRecoveryFault(openKey)
+          }
         }
       }
       this.previous.set(observation.agentId, observation.state)
