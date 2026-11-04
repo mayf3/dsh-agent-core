@@ -9,7 +9,7 @@ umask 077
 PREP=/private/tmp/fleet-v5-prep
 INPUT=/private/tmp/fleet-binding-diag/r3
 SOURCE=/private/tmp/fleet-roll-src
-HARNESS=/Users/yanfenma/workspace/github/deepseek-harness
+HARNESS=/tmp/v5-rebuild/harness-src
 SHA=ce1d13c1e8585759c6a5f194fb5553d990574b5b
 TREE=4b4a6a52cfe53a3569c5d14d909b90cdeb842704
 LIVE=/usr/local/libexec/agent-core
