@@ -601,6 +601,9 @@ id authsvc >/dev/null 2>&1 || { echo "ERROR: user authsvc (uid 505) missing" >&2
 
 [ -x "$SOURCE_GIT_STAMP" ] || { echo "ERROR: source Git stamp helper missing/not executable: $SOURCE_GIT_STAMP" >&2; exit 2; }
 HARNESS_STAMP="$($SOURCE_GIT_STAMP "$HARNESS_SRC")" || { rc=$?; echo "ERROR: Harness Git source probe failed before backup (exit $rc): $HARNESS_SRC" >&2; exit "$rc"; }
+HARNESS_COMMIT="${HARNESS_STAMP:0:40}"
+HARNESS_DIRTY_COUNT="${HARNESS_STAMP:40}"
+HARNESS_STAMP_JSON="{\"commit\":\"$HARNESS_COMMIT\",\"dirtyCount\":$HARNESS_DIRTY_COUNT}"
 PRESERVED_SOURCE_GIT_STAMP="$(/usr/bin/mktemp /tmp/agent-core-source-git-stamp.XXXXXX)" && /usr/bin/install -o root -g wheel -m 700 "$SOURCE_GIT_STAMP" "$PRESERVED_SOURCE_GIT_STAMP"
 # stamp removal is owned by composed_exit_cleanup (B6: single composed EXIT trap)
 
@@ -764,6 +767,7 @@ NODE_CELLAR_BIN="$(cd "$(dirname "$NODE_CELLAR_BIN")" && pwd -P)/$(basename "$NO
 NODE_VERSION_DIR="$(dirname "$(dirname "$NODE_CELLAR_BIN")")"
 [ -x "$NODE_CELLAR_BIN" ] || { echo "ERROR: /usr/local/bin/node does not resolve to an executable Cellar node: $NODE_CELLAR_BIN" >&2; exit 2; }
 RUNTIME_ARCH="$("$NODE_CELLAR_BIN" -p process.arch)"
+RUNTIME_PLATFORM="$("$NODE_CELLAR_BIN" -p process.platform)"
 RUNTIME_NODE_VERSION="$("$NODE_CELLAR_BIN" --version)"
 echo "== runtime node anchor: $NODE_CELLAR_BIN ($RUNTIME_NODE_VERSION, arch $RUNTIME_ARCH)"
 
@@ -778,7 +782,7 @@ REUSE_HARNESS=0
 REUSE_NODE=0
 if [ -n "${BAK:-}" ]; then
   if [ -n "$HARNESS_STAMP" ] && [ -f "$BAK/harness/.source-stamp" ] \
-     && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP" ]; then
+     && [ "$(cat "$BAK/harness/.source-stamp" 2>/dev/null)" = "$HARNESS_STAMP_JSON" ]; then
     rmdir "$TRUSTED_ROOT/harness"
     mv "$BAK/harness" "$TRUSTED_ROOT/harness"
     if [ -d "$BAK/.cache" ]; then
@@ -820,15 +824,16 @@ cd harness
 # Executed under the runtime node anchor (§1a): platform-optional native
 # packages must be selected for the arch that will EXECUTE this closure,
 # never the invoking shell's arch (2026-10-02 rollback root cause).
+npm_config_platform="$RUNTIME_PLATFORM" npm_config_arch="$RUNTIME_ARCH" \
 "$NODE_CELLAR_BIN" /usr/local/bin/pnpm install --offline --frozen-lockfile --ignore-scripts \
-  --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
+  --force --config.package-import-method=copy --cache-dir "$TRUSTED_ROOT/.cache" \
   >/tmp/trusted-cp-pnpm-install.log 2>&1 || {
     echo "ERROR: pnpm install failed; log tail:" >&2
     tail -20 /tmp/trusted-cp-pnpm-install.log >&2
     exit 2
   }
 cd "$TRUSTED_ROOT"
-printf '%s' "$HARNESS_STAMP" > harness/.source-stamp
+printf '%s' "$HARNESS_STAMP_JSON" > harness/.source-stamp
 note_stage harness_closure_built
 fi
 

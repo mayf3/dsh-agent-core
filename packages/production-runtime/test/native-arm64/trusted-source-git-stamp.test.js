@@ -59,11 +59,12 @@ test('installer probes before backup and never grants root Git trust', () => {
     'Git probe and stable helper copy must finish before predeploy backup')
   assert.doesNotMatch(source, /git\s+config[^\n]*safe\.directory/)
   assert.doesNotMatch(source, /git -C "\$HARNESS_SRC"/)
-  assert.match(source, /printf '%s' "\$HARNESS_STAMP" > harness\/\.source-stamp/)
+  assert.match(source, /HARNESS_STAMP_JSON=.*dirtyCount/)
+  assert.match(source, /printf '%s' "\$HARNESS_STAMP_JSON" > harness\/\.source-stamp/)
   const afterBackup = source.slice(backup)
   assert.doesNotMatch(afterBackup, /cp "\$SOURCE_GIT_STAMP"/)
   assert.match(afterBackup, /cp "\$PRESERVED_SOURCE_GIT_STAMP" app\/scripts\/lib\/trusted-source-git-stamp\.sh/)
-  assert.match(source, /trap '\/bin\/rm -f "\$PRESERVED_SOURCE_GIT_STAMP"' EXIT/)
+  assert.match(source, /\/bin\/rm -f "\$PRESERVED_SOURCE_GIT_STAMP"/)
 })
 
 test('root path delegates Git to the source owner with a clean environment', () => {
