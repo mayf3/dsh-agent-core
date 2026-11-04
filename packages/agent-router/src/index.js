@@ -428,6 +428,7 @@ export function apply(ctx, config) {
        registrySnapshot: registry.registrySnapshot(),
        lifecycleSlotSnapshot: registry.lifecycleSlotSnapshot,
        agentIds: agentDefinition.listAgents().map(agent => agent.id),
+       reconciliationStore,
      }),
       /** R28 executable recovery state machine; Workflow side effects are injected by the trusted deployment seam. */
       runR28Recovery: (request, deps = cfg.workflowRecoveryDeps) => {

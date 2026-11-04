@@ -20,6 +20,23 @@ test('process snapshot exposes exited agent instead of silent absence', () => {
   })
 })
 
+test('restart-lost EMPTY slot with one unresolved fence is observable and recoverable', async () => {
+  const result = snapshotAgentProcessHealth({
+    registrySnapshot: [],
+    lifecycleSlotSnapshot: () => ({ state: 'EMPTY' }),
+    reconciliationStore: { unresolvedRecoveryRecords: () => [{ agentId: 'agt_hr', processGeneration: 57 }] },
+    agentIds: ['agt_hr'],
+  })
+  assert.equal(result[0].state, 'AGENT_PROCESS_RESTART_LOST')
+  assert.equal(result[0].generation, 57)
+  const recoveries = []
+  const watch = new ProcessHealthWatch({ snapshot: () => result, alert: async () => {}, recover: async event => recoveries.push(event) })
+  await watch.check()
+  assert.equal(recoveries[0].reason, 'AGENT_PROCESS_RESTART_LOST')
+  assert.equal(recoveries[0].generation, 57)
+})
+
+
 test('process snapshot marks a live registry process ready and alive', () => {
   const result = snapshotAgentProcessHealth({
     registrySnapshot: [{ agentId: 'agt_a', pid: 10, alive: true }],
