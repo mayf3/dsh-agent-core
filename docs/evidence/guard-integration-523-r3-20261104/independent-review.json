@@ -10,6 +10,10 @@
   "baseImpactReport": "BASE_IMPACT 有界复核 PASS（只读git show/diff，未测试或写入）。CURRENT_BASE_HEAD=29d1cd86fd823a8d51bde9d0b3a58ccc56965912；f767..current 精确仅3新增doc：RECEIPT-527DOCS / SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1 / AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1。D1 accepted contracts 限于可信 Scheduler agentTurn receipt budget：四字段模型、per-job field/default/priority/validation，§2明确其余 identity/RPC/lifecycle/fence 保留，CTR001明确 Feishu/Binding/Session 不得覆盖；不触及 SWITCH admission。D2 accepted contracts 限 recurring Scheduler fenced occurrence 的 exact business success/failure vs termination-only vs no-evidence 映射，沿用唯一settlement、不retry/replay；不改变 Binding/workspace/switch/parent-RPC guard。RECEIPT 明示非Product Authority，只记历史交付。所有既有 .agents/packages/package.json/D008 字节未变，D008 current-main blob仍0c3f6f6005794edec2faf666e4fb035a9c87b009。故新authority不失效本轮七项或9guard证据，不要求#523承担#527实现；无相关语义冲突、无扩scope、新blocker0。合同 exact baseline 仍f767e8d6；本轮没有在29d1上运行测试，不应声称current-main构建验证。保持未重基492d579d+证据commit的发布路线合法；后续merge/production仍无授权。",
   "newBlockers": [],
   "newSpecGaps": [],
-  "finalHeadDeltaReview": "PENDING_EVIDENCE_COMMIT",
+  "finalHeadDeltaReview": {
+    "reviewTargetHead": "7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+    "result": "PASS",
+    "report": "FINAL_HEAD_DELTA_RECHECK=PASS；parent492d579d；tracked/untracked clean。492..HEAD仅72新增Brief/Receipt/STOPPED及docs/evidence，packages/.agents/D008/Specs/package manifests零差异。R1/R2/R3三份MANIFEST分别9/18/42项全hash匹配；原包TAP sha保持。RECEIPT七项环境归类、逐项EMPTY diff、10fail⊆13、standalone/包内9guard及唯一根因UNKNOWN与原TAP一致。raw whitespace rc2/24处/4文件如实记录，显式源码/人工docs diff独立rc0。结合fresh main29d1/ref absent，PUSH_READY=YES/PR_READY=YES，MERGE_READY=NO/OPERATION_ALLOWED=NO；新blocker0/spec_gap0。发布后仅补真实URL/head/readback可做bounded receipt-only recheck。"
+  },
   "rawWhitespaceScopeDisposition": "可继续；这是 raw evidence 的格式诊断，不构成新的 required gate failure。独立核验：git diff --cached --check rc=2，共24处尾空格，全部位于四份原始TAP／原文extract；人工Markdown、JSON、Python、manifest检查rc=0。依据 .agents/README.md:247、251、288：阻断须有既定authority/gate/mandate来源；普通工具格式问题不得新增产品交付义务。用户明确要求输出原文，应保留runner原始字节。记录诊断，显式检查源码与人工文档，不修改Git whitespace规则，不把unscoped diff宣称为PASS。最终docs-only recheck确认raw hashes。"
 }

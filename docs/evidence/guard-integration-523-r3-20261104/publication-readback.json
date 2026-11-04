@@ -1,0 +1,93 @@
+{
+  "publishedContentHead": "7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+  "prUrl": "https://github.com/mayf3/dsh-agent-core/pull/612",
+  "observations": [
+    {
+      "label": "pr",
+      "command": [
+        "gh",
+        "pr",
+        "view",
+        "612",
+        "--repo",
+        "mayf3/dsh-agent-core",
+        "--json",
+        "number,url,state,headRefName,headRefOid,baseRefName,baseRefOid,mergeCommit,isDraft,title"
+      ],
+      "at": "2026-11-04T05:31:14.279662+00:00",
+      "exitCode": 0,
+      "stdout": "{\"baseRefName\":\"main\",\"baseRefOid\":\"29d1cd86fd823a8d51bde9d0b3a58ccc56965912\",\"headRefName\":\"ac-523-guard-integration\",\"headRefOid\":\"7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0\",\"isDraft\":false,\"mergeCommit\":null,\"number\":612,\"state\":\"OPEN\",\"title\":\"fix(router): 按 Owner 2026-11-04 裁定整合 #523 guard\",\"url\":\"https://github.com/mayf3/dsh-agent-core/pull/612\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "refs",
+      "command": [
+        "git",
+        "ls-remote",
+        "origin",
+        "refs/heads/main",
+        "refs/heads/ac-523-guard-integration"
+      ],
+      "at": "2026-11-04T05:31:14.411160+00:00",
+      "exitCode": 0,
+      "stdout": "7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0\trefs/heads/ac-523-guard-integration\n29d1cd86fd823a8d51bde9d0b3a58ccc56965912\trefs/heads/main\n",
+      "stderr": ""
+    },
+    {
+      "label": "packages/agent-router/src/binding-resolution.js",
+      "command": [
+        "gh",
+        "api",
+        "repos/mayf3/dsh-agent-core/contents/packages/agent-router/src/binding-resolution.js?ref=7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+        "--jq",
+        ".sha"
+      ],
+      "at": "2026-11-04T05:31:14.143916+00:00",
+      "exitCode": 0,
+      "stdout": "172859f387a44828c892cd090dcc15e8b081bc66\n",
+      "stderr": ""
+    },
+    {
+      "label": "packages/agent-router/src/index.js",
+      "command": [
+        "gh",
+        "api",
+        "repos/mayf3/dsh-agent-core/contents/packages/agent-router/src/index.js?ref=7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+        "--jq",
+        ".sha"
+      ],
+      "at": "2026-11-04T05:31:14.162080+00:00",
+      "exitCode": 0,
+      "stdout": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3\n",
+      "stderr": ""
+    },
+    {
+      "label": "packages/agent-router/test/route-chain/switch-workspace-guard.test.js",
+      "command": [
+        "gh",
+        "api",
+        "repos/mayf3/dsh-agent-core/contents/packages/agent-router/test/route-chain/switch-workspace-guard.test.js?ref=7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+        "--jq",
+        ".sha"
+      ],
+      "at": "2026-11-04T05:31:14.300958+00:00",
+      "exitCode": 0,
+      "stdout": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e\n",
+      "stderr": ""
+    },
+    {
+      "label": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "command": [
+        "gh",
+        "api",
+        "repos/mayf3/dsh-agent-core/contents/docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md?ref=7f5b3df04cff1ccc729eb1529c9f15af1c7dbfc0",
+        "--jq",
+        ".sha"
+      ],
+      "at": "2026-11-04T05:31:14.501678+00:00",
+      "exitCode": 0,
+      "stdout": "0c3f6f6005794edec2faf666e4fb035a9c87b009\n",
+      "stderr": ""
+    }
+  ]
+}

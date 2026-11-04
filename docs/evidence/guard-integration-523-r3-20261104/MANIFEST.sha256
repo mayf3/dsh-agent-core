@@ -1,5 +1,5 @@
 621a9dfc2cb8d50b11370a54c0e9aa5cbea514522f04d04ce9824e1beae516ec  BRIEF-523-R3.md
-d8d0623368ec4c5ed6500b850b63166cd5610e7f9892992076252e7c17e6bfed  RECEIPT-523-R3.md
+c348f6f097d9bf3b5f7ef6da3d9ef780de68c2429de2b4e782f7181fe0b66a1e  RECEIPT-523-R3.md
 564b05a45d94a39821fedd2a792e7523b723d9fe12a12ede5ba310aafdf9eab3  docs/evidence/guard-integration-523-r3-20261104/agent-router.json
 336d5af67d235631d3545b34b962b6ecd14c7b9facbcb81a78482f4253b9c760  docs/evidence/guard-integration-523-r3-20261104/agent-router.tap
 d39fcfce7d71964f70ad382fe1ec8624aadbe8d270630839a7ecc4ba943bb292  docs/evidence/guard-integration-523-r3-20261104/comparison.json
@@ -30,10 +30,12 @@ c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332  docs/evidence/
 14ec48e0d50d42c8a7a35802f7561518df693fa87fec2092af5c8923e14f427a  docs/evidence/guard-integration-523-r3-20261104/guard-results.json
 b9e34337e81a6b9ce2d234e0e6f80b891804aa1254cd3a2828f2fa998740fb6e  docs/evidence/guard-integration-523-r3-20261104/guard.json
 6e6dd340b8aa8b0a009746adfbfeeb1e746c6d15187a7b3d777ff0c75c9beab1  docs/evidence/guard-integration-523-r3-20261104/guard.tap
-1470dbb160187bcb13ea332b58694cead3faa3219ae13cec8a527aa0e4025b07  docs/evidence/guard-integration-523-r3-20261104/independent-review.json
+8dc0a54d521410f0c66fc3e9db11e78df5a3c0ba9f3deafcb718b4cfb47585dd  docs/evidence/guard-integration-523-r3-20261104/independent-review.json
 fa48f2ad88c388625d79f3a4970967f0891ef05932a87fe99dcc639c72e5da16  docs/evidence/guard-integration-523-r3-20261104/install.json
 5ea4261b99e72cf178629607dab5a5a2947ecb6d83624b5b886ecba330f3ffa9  docs/evidence/guard-integration-523-r3-20261104/pnpm-install.raw.txt
 c49885f3ca6759de99be4ed6ca029693a5413589e9e86e24a3ab97871018799a  docs/evidence/guard-integration-523-r3-20261104/pre-publication-readback.json
+df6012a50d6d907bf54939bac30c0ea0ee8ae8e591f2d621123c452fd123f7c9  docs/evidence/guard-integration-523-r3-20261104/publication-readback.json
+89961dbdd7c8e6ee2831b29b40bbb245aee27908bebda9ab46eb8eaac549b91c  docs/evidence/guard-integration-523-r3-20261104/publication.json
 54d87ae0d5aeb395c6da09265a8e3a3d38c311b91b6f6b5b8a9ec63a8d538708  docs/evidence/guard-integration-523-r3-20261104/raw-evidence-whitespace.json
 c98785702b99265ee1c62550cc8f8641f9ac575284b05543e1625ade75b41e16  docs/evidence/guard-integration-523-r3-20261104/rerun-harness.source.txt
 9d8fc15b5c585afb8f50d111fd25c8e35bbf782c70c43060a8925b3ddb744543  docs/evidence/guard-integration-523-r3-20261104/source-and-base-readback.json
