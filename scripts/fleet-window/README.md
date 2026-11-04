@@ -5,6 +5,9 @@
 
 ## 内容
 - `window-executor-v5.sh`：v5 执行器（历史原件在 `55d306a`；15 节点：00-13 整数 + 05b）；内嵌 Python 按现行500行规则拆至同目录 `window_helper_core.py` / `window_helper.py` / `window_preimage_xattr.py`
+- `settle_unresolved_runtime_down.mjs`：stage_05b 的 D-009 termination-only 工具；要求 `--source-root`、`--stage-05-receipt-dir`，可用 `--store` 指定隔离 fixture。仅 exact durable child exit 的 unknown 可结算；非 unknown / 无证据原样保留，未解决返回 5。运行生产仍需独立窗口授权。
+- `precheck_zero_inflight.mjs`：只读三列表核验；`--source-root` 必需，默认 authsvc control recovery 与 scheduler jobs 路径，可用 `--turn-recovery-store` / `--jobs-store` 指向 fixture。三空返回 0，非空或读取不可验证返回 1 / UNKNOWN。
+- `settle_unresolved_runtime_down.test.mjs`：合成 store 验证，所有文件只创建在 `/usr/local/v5-boot-isolation/settle-test/` 下的独立 run 目录。
 - `window_close.py` / `C7-INPUTS.md`：stage13 R6 命名收账、R7 最新两代及保护代的精确待删清单；仅列出，未实现删除
 - `window-selftest.py`：`--selftest` 入口；固定隔离根下的00–04机制校验与官方真实 stdio canary；生产阶段未执行，不能作窗口 GO
 - `stage_06_v2.py`：预镜像节点 v2（预算制/分块清单/三清单分离/哨兵禁入相等判断；38 隔离用例验证；修复历史 3h57m 失败根因——ditto 丢空值 xattr + 逐条子进程扫描）
