@@ -192,9 +192,12 @@ stage_05_old_exit() {
 stage_05b_settle_unresolved() {
   # supervisor: settle externally WHILE THE OLD RUNTIME IS DOWN (no overwrite race).
   # Evidence: all worker child processes verifiably exited (stage_05 proved old exit);
-  # semantics: D-009 amended (termination-only -> failed) via official state machine.
+  # semantics: per AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1;
+  # exact termination-only -> terminated_without_outcome; business outcome stays UNKNOWN.
   printf '%s\n' 'stage_05b: settling unresolved turns while runtime is down'
-  sudo -n /usr/local/libexec/agent-core/node-runtime/bin/node /tmp/settle-all-pending.mjs || return 45
+  sudo -n /usr/local/libexec/agent-core/node-runtime/bin/node \
+    "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/settle_unresolved_runtime_down.mjs" \
+    --source-root "$SOURCE" --stage-05-receipt-dir "$RD" || return 45
 }
 stage_06_full_preimage() { helper root preimage; }
 stage_07_pinned_install() {
