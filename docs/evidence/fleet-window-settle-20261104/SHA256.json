@@ -1,0 +1,16 @@
+{
+  "scripts/fleet-window/settle_unresolved_runtime_down.mjs": "494eb131f8019900a08620b63a145cccd3562e3c12b265e4c43f61d4f14ae4c0",
+  "scripts/fleet-window/precheck_zero_inflight.mjs": "88867980f60b40bd20acf0e332c096aff5b4d4149f661bd29803fa3134400545",
+  "scripts/fleet-window/settle_unresolved_runtime_down.test.mjs": "fb7be8bc3bea4af5aa182945f989a3112bcbaf4e6b807e7a5e2cb7ebd82aba23",
+  "scripts/fleet-window/window-executor-v5.sh": "83e12b865825e5c306563c7885837f648236ea379b510d093da7df9658391500",
+  "scripts/fleet-window/window_helper.py": "69de6831818b51828489d1d927155cfb45d4e27d3363f2421655072075e977da",
+  "docs/evidence/fleet-window-settle-20261104/executor-selftest.stdout.log": "c4b2aa10e931c1de4308b0b76e7f8db25b9fa4beb318fab50145116a924b33a7",
+  "docs/evidence/fleet-window-settle-20261104/fixture-report.json": "699a34e82f86c58ec20b4296c1a2afa73a4a0b782368445a6f6ec9aed8e1937f",
+  "docs/evidence/fleet-window-settle-20261104/synthetic-fixtures.tar.gz": "1274f9ef49fea1779c167c6c6707b259fc5821174470e63594080a9a70afaea6",
+  "docs/evidence/fleet-window-settle-20261104/synthetic-test.stdout.log": "dbc7f2f8cc84a85435fc4a0f8bcc2a1c4268fb8bf55d25ed0e8367a092778776",
+  "docs/evidence/fleet-window-settle-20261104/verification-commands.json": "1e3c85c67f71e29ce4e0338bbe03f2428efd1cb25e185f380055fd6b20fc5fe5",
+  "docs/evidence/fleet-window-settle-20261104/implementation.patch": "84f338c62d5b6769520fce09b6cb2e9a51f0b14622c32947051dee7e9acb6dd9",
+  "docs/evidence/fleet-window-settle-20261104/independent-review.md": "3f119ecf2851bd31673c831150c805491cafbfec16e99f4bedd4c26e754459b5",
+  "docs/evidence/fleet-window-settle-20261104/structure-command.json": "5feb96a2ba6e1d0fb73d0cc2d0d4369c57d5ac5decf3f8958953808d6f0135ae",
+  "docs/evidence/fleet-window-settle-20261104/structure.stdout.json": "c17146f7007651d8b17d2bacadaaf12f62c8417a16797bc9ba14d6008f514a45"
+}
