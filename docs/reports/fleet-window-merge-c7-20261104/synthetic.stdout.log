@@ -1,0 +1,13 @@
+ISOLATION_ROOT=/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.empty", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_five_fixture_classes-wg_mv0g9/target/empty"}
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.second", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_five_fixture_classes-wg_mv0g9/target/multiple"}
+FIXTURE valued: PASS (inventory + ditto + reconcile + full equality)
+FIXTURE empty: PASS (inventory + ditto + reconcile + full equality)
+FIXTURE multiple: PASS (inventory + ditto + reconcile + full equality)
+FIXTURE none: PASS (inventory + ditto + reconcile + full equality)
+FIXTURE dangling: PASS (inventory + ditto + reconcile + full equality)
+DITTO_EMPTY_OMISSIONS=[["empty", "com.r3.empty"], ["multiple", "com.r3.second"]] REAPPLIED=2
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.empty", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_forced_empty_omission-ajz4_xj7/target/empty"}
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.second", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_forced_empty_omission-ajz4_xj7/target/multiple"}
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.empty", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_nofollow_absolute_and_dangling-d_t5q2o3/target/empty"}
+EMPTY_XATTR_REAPPLIED {"attribute": "com.r3.second", "path": "/usr/local/v5-boot-isolation/xattr-fix-test/r3-uwhdpbsl/test_nofollow_absolute_and_dangling-d_t5q2o3/target/multiple"}

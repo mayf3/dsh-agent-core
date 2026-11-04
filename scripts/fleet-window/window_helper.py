@@ -1,18 +1,12 @@
 from window_helper_core import *
 from window_preimage_xattr import XATTRS_KEY, inventory, reconcile_xattrs
+from window_close import capture_before, close_window
 
 if op=='authority':
     path=P(args[0]); regular(path); a=read(path)
-    required=['window_id','writer','writer_uid','valid_from','valid_until','expected_old_pid','expected_old_identity',
-              'expected_old_sha','expected_plist_sha256','expected_harness_stamp','expected_bindings_sha256',
-              'expected_runtime_uid','expected_runtime_gid','scopes']
-    require(all(k in a for k in required),'authority fields missing; see --help')
-    require(re.fullmatch('[A-Za-z0-9._-]{1,80}',a['window_id']) and a['writer'],'invalid writer/window id')
-    require(a['writer_uid']==os.getuid()!=0,'execute as explicitly named non-root writer; privileged actions use sudo')
-    require(a['expected_old_sha']=='fa4510beb6b01e5c40000a2ae36a62c526759e76','r4 legacy stop authorization is fa4510be only')
-    require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
-                 'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
+    validate_authority(a)
     save('authority.json',a); authority()
+    save('c7-names-before.json',capture_before(a))
     save('invocation.json',{'at':now(),'argv':args[1:],'authorityPath':str(path),'authoritySha256':digest(path),
                             'writerPid':int(args[1]),'productionAcceptance':'NOT_YET_EXECUTED'})
 elif op=='mutex':
@@ -137,7 +131,7 @@ elif op=='quiet':
     r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node','/tmp/settle-all-pending.mjs'],capture_output=True,text=True)
     open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
     if r.returncode!=0: sys.exit(45)
-    c=census('quiet-census'); require(meta(log)==m,'log changed during census')
+    c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
     save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
 elif op=='before-stop':
     authority(); old=read(rd/'old-process.json')
@@ -345,9 +339,18 @@ elif op=='phase':
     event={'at':now(),'stage':args[0],'status':args[1],'detail':args[2:]}
     save(args[0]+'.json',event)
     with open(rd/'phase-events.jsonl','a') as f: f.write(json.dumps(event)+'\n')
+elif op=='close':
+    a=authority()
+    verified=read(rd/'stage_11_production_verify.json')
+    require(verified['status']=='PASS','production verification did not PASS; no close plan')
+    result=close_window(a,read(rd/'c7-names-before.json'),live,verified['at'])
+    save('c7-close.json',result)
+    raw('c7-delete-candidates.nul',b''.join(os.fsencode(r['path'])+b'\0' for r in result['retention']['delete_candidates']))
+    save('c7-delete-candidates.json',result['retention']['delete_candidates'])
 elif op=='release':
     require(digest(lock/'holder')==read(rd/'mutex.json')['sha256'],'cannot release changed mutex')
     (lock/'holder').unlink(); lock.rmdir()
     save('completion.json',{'at':now(),'window':'PASS_CONFIGURED_CHECKS','productionExecution':'EXECUTED',
-                           'authentication':'NOT_TESTED','businessSuccess':'UNKNOWN','hrCriterion':'broker execute observed'})
+                           'authentication':'NOT_TESTED','businessSuccess':'UNKNOWN','hrCriterion':'broker execute observed',
+                           'c7ReceiptSha256':digest(rd/'c7-close.json'),'retentionDeletion':'NOT_EXECUTED_LIST_ONLY'})
 else: raise RuntimeError('unknown helper operation '+op)

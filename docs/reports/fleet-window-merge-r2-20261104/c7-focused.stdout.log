@@ -1,0 +1,2 @@
+C7_ISOLATION_ROOT=/usr/local/v5-boot-isolation/xattr-fix-test/merge-c7-hllhhls0
+C7_FOCUSED_AND_DISPATCH: R6/R7 original cases + stage11 refusal + JSON/NUL + owned release receipt PASS; deletion NOT_EXECUTED

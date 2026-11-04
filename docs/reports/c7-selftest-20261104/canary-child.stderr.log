@@ -1,0 +1,4 @@
+[demo-server] ready pid=69625
+[agent-memory] mounted for agent app (workspace /usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home/.dsh/workspaces/app, memory /usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home/.dsh/workspaces/app/MEMORY.md)
+[broker] forum moderator pack: 0 tools (DSH_AGENT_ID is absent)
+[broker] scheduler mutation operations withheld: no credential provider configured in this runtime (fail-before-exposure)

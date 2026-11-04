@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-04T12:50:55.570724+00:00",
+  "stage": "migrated_selftest_phase",
+  "status": "PASS",
+  "detail": [
+    "ISOLATED_ONLY"
+  ]
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "path": "scripts/fleet-window/window-executor-v5.sh",
+    "sha256": "54e13bd198c970bef60433900bb70bd32c7f2d45d76d169da0507bedf79b9ddd",
+    "lines": 300,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/window_helper_core.py",
+    "sha256": "8d09be1a716ed95893653678cf2b6afa040359ac1e5269d00714b65a81ff2632",
+    "lines": 329,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/window_helper.py",
+    "sha256": "69de6831818b51828489d1d927155cfb45d4e27d3363f2421655072075e977da",
+    "lines": 356,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/window_preimage_xattr.py",
+    "sha256": "b093eac8edf24fadee4309d755d04da06ae5fa1ab3d0df27c38bf9dc1ada2e0f",
+    "lines": 111,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/window_close.py",
+    "sha256": "6488b91e382dfadf9bf0022d11747beb85071a5e70142e92e6c7348c9bef6465",
+    "lines": 146,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/window-selftest.py",
+    "sha256": "b45a672a6dfde88046676ff0f73e55902a2dc6fc03200968b691d747d5b3d8ab",
+    "lines": 383,
+    "unchanged_from_merge_resolution": true
+  },
+  {
+    "path": "scripts/fleet-window/test_xattrfix_r3.py",
+    "sha256": "4c69c4a5c6430b2783a56783b34f17b7cb403b5cf7dfb632eb67be3083edc83c",
+    "lines": 432,
+    "unchanged_from_merge_resolution": false
+  }
+]

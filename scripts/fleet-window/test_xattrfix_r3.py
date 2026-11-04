@@ -1,7 +1,9 @@
 """Offline R3 gates; writes only a unique child of the authorized fixture root."""
 import ast
 import contextlib
+import datetime as dt
 import hashlib
+import importlib.util
 import io
 import json
 import os
@@ -13,6 +15,7 @@ import unittest
 from unittest import mock
 
 BASE = 'c4152e9a45e2f1798807492c73516d924dcaf855'
+C7_BASE = '97fa15a138e4aafe7d566fc3c3d387c3594e87ba'
 HERE = Path(__file__).resolve().parent
 ROOT = Path('/usr/local/v5-boot-isolation/xattr-fix-test')
 # The core retains the original invocation context initialization; import only
@@ -31,6 +34,11 @@ def cli(*args):
 
 def old_source():
     return subprocess.check_output(['git', 'show', BASE + ':scripts/fleet-window/window-executor-v5.sh'],
+                                   cwd=HERE).decode()
+
+
+def c7_source(name):
+    return subprocess.check_output(['git', 'show', C7_BASE + ':scripts/fleet-window/' + name],
                                    cwd=HERE).decode()
 
 
@@ -282,19 +290,35 @@ class Selftest(unittest.TestCase):
 
     def test_stage_and_dispatch_identity(self):
         original = old_source()
+        c7_shell = c7_source('window-executor-v5.sh')
         current = (HERE / 'window-executor-v5.sh').read_text()
-        # Entire suffix includes all 15 stage definitions, main and trap/rollback.
+        # Exact original stages, with only #615's declared shell delta.
         suffix = original[original.index('rollback_recipe() {'):]
+        suffix = suffix.replace('Waiting for 150s', 'Waiting for 180s')
+        suffix = suffix.replace('stage_13_close() { helper root release; }',
+                                'stage_13_close() { helper root close; helper root release; }')
+        start = c7_shell.index('    --selftest)')
+        end = c7_shell.index('    --execute)', start)
+        suffix = suffix.replace('    --execute)', c7_shell[start:end] + '    --execute)', 1)
+        self.assertEqual(c7_shell[c7_shell.index('rollback_recipe() {'):], suffix)
         self.assertEqual(current[current.index('rollback_recipe() {'):], suffix)
-        self.assertEqual(current[:current.index('# Split stdlib helper.')],
-                         original[:original.index('# One embedded stdlib helper.')])
+        # C7 usage is retained; boundaries intentionally retain the original bytes.
+        expected_prefix = c7_shell[:c7_shell.index('# Extracted stdlib helper.')]
+        a = expected_prefix.index('boundaries() {')
+        expected_prefix = expected_prefix[:a] + original[original.index('boundaries() {'):original.index('# One embedded stdlib helper.')]
+        self.assertEqual(current[:current.index('# Split stdlib helper.')], expected_prefix)
         old_python = original.split("<<'PY'\n", 1)[1].split('\nPY\n', 1)[0]
         old_ast = ast.parse(old_python)
         core_ast = ast.parse((HERE / 'window_helper_core.py').read_text())
         old_defs = {n.name: ast.dump(n) for n in old_ast.body if isinstance(n, ast.FunctionDef)}
+        c7_defs = {n.name: ast.dump(n) for n in ast.parse(c7_source('window_executor_state.py')).body
+                   if isinstance(n, ast.FunctionDef)}
+        self.assertEqual({n.name for n in core_ast.body if isinstance(n, ast.FunctionDef)},
+                         (set(old_defs) - {'extended', 'inventory'}) | {'validate_authority', 'quiet_ready'})
         for node in core_ast.body:
             if isinstance(node, ast.FunctionDef):
-                self.assertEqual(ast.dump(node), old_defs[node.name], node.name)
+                expected = old_defs if node.name in old_defs else c7_defs
+                self.assertEqual(ast.dump(node), expected[node.name], node.name)
         def branches(tree):
             node = next(n for n in tree.body if isinstance(n, ast.If))
             result = {}
@@ -304,28 +328,104 @@ class Selftest(unittest.TestCase):
             return result
         before = branches(old_ast)
         after = branches(ast.parse((HERE / 'window_helper.py').read_text()))
-        self.assertEqual(set(before), set(after))
-        for name in before.keys() - {'prerequisites', 'preimage', 'preserve-config', 'final-binding'}:
+        c7_ops = branches(ast.parse(c7_source('window_executor_helper.py')))
+        self.assertEqual(set(before) | {'close'}, set(after))
+        for name in {'authority', 'quiet', 'close', 'release'}:
+            self.assertEqual(c7_ops[name], after[name], name)
+        for name in before.keys() - {'authority', 'quiet', 'release', 'prerequisites', 'preimage', 'preserve-config', 'final-binding'}:
             self.assertEqual(before[name], after[name], name)
-        print('IDENTITY 15 stage functions + main/rollback/traps: BYTE_IDENTICAL; other Python operations: AST_IDENTICAL', flush=True)
+        self.assertEqual((HERE / 'window_close.py').read_text(), c7_source('window_close.py'))
+        for retired in ('window_executor_state.py', 'window_executor_helper.py'):
+            self.assertFalse((HERE / retired).exists(), retired)
+        print('DUAL_IDENTITY: original 15 stages/main/rollback/traps + exact declared C7 delta; core/op AST matches both baselines; window_close BYTE_IDENTICAL to #615', flush=True)
 
     def test_dry_run_and_help_identity(self):
         original = old_source().encode()
         for argv in ([], ['--dry-run'], ['--help'], ['invalid'], ['--dry-run', 'extra']):
-            before = subprocess.run(['/bin/bash', '/dev/stdin', *argv], input=original, capture_output=True)
+            expected = original if argv in ([], ['--dry-run']) else c7_source('window-executor-v5.sh').encode()
+            before = subprocess.run(['/bin/bash', '/dev/stdin', *argv], input=expected, capture_output=True)
             after = subprocess.run(['/bin/bash', str(HERE / 'window-executor-v5.sh'), *argv], capture_output=True)
             self.assertEqual((after.returncode, after.stdout, after.stderr),
                              (before.returncode, before.stdout, before.stderr), argv)
-        print('DRY_RUN_DIFF=EMPTY; default/help/invalid-argument output+rc: IDENTICAL', flush=True)
+        print('DRY_RUN_DIFF=EMPTY vs original; C7 help/invalid-argument output+rc: IDENTICAL', flush=True)
 
     def test_split_limits_and_syntax(self):
         for name in ('window-executor-v5.sh', 'window_helper.py', 'window_helper_core.py',
-                     'window_preimage_xattr.py', 'test_xattrfix_r3.py'):
+                     'window_preimage_xattr.py', 'window_close.py', 'window-selftest.py', 'test_xattrfix_r3.py'):
             data = (HERE / name).read_text()
             self.assertLessEqual(len(data.splitlines()), 500, name)
             if name.endswith('.py'):
                 compile(data, str(HERE / name), 'exec')
         subprocess.run(['/bin/bash', '-n', HERE / 'window-executor-v5.sh'], check=True)
+
+
+class C7Close(unittest.TestCase):
+    def test_focused_and_migrated_close_release(self):
+        if ROOT.is_symlink() or ROOT.resolve() != ROOT or not ROOT.is_dir():
+            raise RuntimeError('fixture root is not the authorized physical isolation directory')
+        out = Path(tempfile.mkdtemp(prefix='merge-c7-', dir=ROOT))
+        print('C7_ISOLATION_ROOT=' + str(out), flush=True)
+        source = (HERE / 'window-selftest.py').read_text()
+        tree = ast.parse(source)
+        names = {'require', 'sha', 'save', 'rejected', 'pure_functions', 'close_checks'}
+        selected = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name in names]
+        self.assertEqual({n.name for n in selected}, names)
+        namespace = dict(Path=Path, dt=dt, hashlib=hashlib, json=json, importlib=importlib, ast=ast,
+                         math=core.math, os=os, re=core.re, stat=core.stat, sys=sys, time=core.time,
+                         executor=HERE / 'window-executor-v5.sh', out=out)
+        exec(compile(ast.Module(body=selected, type_ignores=[]), '<isolated C7 focused>', 'exec'), namespace)
+        validators, binding = namespace['pure_functions'](HERE / 'window-executor-v5.sh')
+        self.assertEqual(binding['path'], str(HERE / 'window_helper_core.py'))
+        self.assertFalse(validators['quiet_ready'](179.999, True, True))
+        self.assertTrue(validators['quiet_ready'](180, True, True))
+        self.assertFalse(validators['quiet_ready'](float('inf'), True, True))
+        subprocess.run([sys.executable, '-B', HERE / 'window_helper.py', out,
+                        'phase', 'migrated_selftest_phase', 'PASS', 'ISOLATED_ONLY'], check=True)
+        self.assertEqual(json.loads((out / 'migrated_selftest_phase.json').read_text())['status'], 'PASS')
+        namespace['close_checks']()
+        import window_close as close
+        focused = json.loads((out / 'c7-focused.json').read_text())
+        plan = focused['retention_plan']
+        moment = dt.datetime.now(dt.timezone.utc)
+        authority = dict(window_id='C7_FIXTURE', valid_from=(moment-dt.timedelta(days=1)).isoformat(),
+                         valid_until=(moment+dt.timedelta(days=1)).isoformat(), c7=dict(
+            before_path=str(out / 'names-before.json'), before_sha256=core.digest(out / 'names-before.json'),
+            after_path=str(out / 'names-after.json'), naming_scope='synthetic-names', renames={'old': 'new'},
+            generations_newest_first=plan['newest_first'], protected_generations=plan['protected'],
+            protection_basis='Synthetic migrated dispatcher fixture'))
+        rd = out / 'dispatcher-receipts'
+        rd.mkdir()
+        def save(name, value):
+            (rd / name).write_text(json.dumps(value))
+        save('c7-names-before.json', close.capture_before(authority))
+        after = json.loads((out / 'names-after.json').read_text())
+        after['captured_at'] = dt.datetime.now(dt.timezone.utc).isoformat()
+        (out / 'names-after.json').write_text(json.dumps(after))
+        self.ns = dict(vars(core), authority=lambda: authority, rd=rd,
+                       live=out / 'retention-fixture', close_window=close.close_window,
+                       save=save, raw=lambda name, data: (rd / name).write_bytes(data))
+        save('stage_11_production_verify.json', dict(status='FAIL', at=moment.isoformat()))
+        with self.assertRaisesRegex(RuntimeError, 'production verification did not PASS'):
+            Consumers.operate(self, 'close')
+        self.assertFalse((rd / 'c7-close.json').exists())
+        save('stage_11_production_verify.json', dict(status='PASS', at=moment.isoformat()))
+        Consumers.operate(self, 'close')
+        candidates = json.loads((rd / 'c7-delete-candidates.json').read_text())
+        self.assertEqual([row['name'] for row in candidates], ['.ds-old-oldest'])
+        self.assertEqual((rd / 'c7-delete-candidates.nul').read_bytes(),
+                         b''.join(os.fsencode(row['path']) + b'\0' for row in candidates))
+        self.assertTrue(all(Path(row['path']).is_dir() for row in candidates))
+        lock = out / 'owned-mutex'
+        lock.mkdir()
+        (lock / 'holder').write_text('synthetic owned holder')
+        self.ns['lock'] = lock
+        save('mutex.json', dict(sha256=core.digest(lock / 'holder')))
+        Consumers.operate(self, 'release')
+        completion = json.loads((rd / 'completion.json').read_text())
+        self.assertEqual(completion['c7ReceiptSha256'], core.digest(rd / 'c7-close.json'))
+        self.assertEqual(completion['retentionDeletion'], 'NOT_EXECUTED_LIST_ONLY')
+        self.assertFalse(lock.exists())
+        print('C7_FOCUSED_AND_DISPATCH: R6/R7 original cases + stage11 refusal + JSON/NUL + owned release receipt PASS; deletion NOT_EXECUTED', flush=True)
 
 
 if __name__ == '__main__':

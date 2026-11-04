@@ -1,0 +1,7 @@
+{
+  "scope": "C5-r11 evidence adapter; old r2/r3 schemas remain unchanged",
+  "material_count_verified": 192,
+  "historicalRuntimeBootsVerified": 2,
+  "newFullRuntime": "NOT_EXECUTED",
+  "closureCoverage": "192 evidence hashes plus stage02 critical current files; full current tree NOT_REHASHED"
+}

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/bin/bash",
+    "scripts/fleet-window/window-executor-v5.sh",
+    "--dry-run"
+  ],
+  "cwd": "/private/tmp/dsh-fleet-window-tools",
+  "started_at": "2026-11-04T12:45:14.642657+00:00",
+  "finished_at": "2026-11-04T12:45:14.646371+00:00",
+  "rc": 0,
+  "stdout_sha256": "e7e1500a2b9d43cc8017596aeb404c6d04e032a2c0211f517c031a6a99f608b7",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
