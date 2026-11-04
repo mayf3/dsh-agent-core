@@ -38,8 +38,10 @@ const SEAM_REQUEST_KEYS = [
   // coordinate; it is scheduler-side routing metadata, never source
   // identity/credential material — the CROSS-AGENT-9 walk below still proves
   // zero principal/credential/grant propagation).
+  // 'receiptBudget': SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1.md:166-169,179-182
+  // (CTR-527D1-003/004): trusted Job-derived budget for the exact invocation.
   'agentId', 'deliveryTarget', 'jobId', 'lightContext', 'message', 'model', 'occurrenceId',
-  'onStart', 'payloadHash', 'requestId', 'runId', 'sessionId', 'signal', 'timeoutMs',
+  'onStart', 'payloadHash', 'receiptBudget', 'requestId', 'runId', 'sessionId', 'signal', 'timeoutMs',
 ].sort()
 
 test('CROSS-AGENT-1 admin-authorized source -> enabled target: exactly one Run executes as the target Agent', async (t) => {
