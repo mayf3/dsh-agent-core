@@ -1,0 +1,42 @@
+{
+  "at": "2026-11-04T05:25:34.625222+00:00",
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "integrationBase": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "currentMain": "29d1cd86fd823a8d51bde9d0b3a58ccc56965912",
+  "mainChanges": "A\tdocs/decisions/RECEIPT-527DOCS.md\nA\tdocs/specs/AGENT_DELIVERY_RESILIENCE_D009_ALIGNMENT_V1.md\nA\tdocs/specs/SCHEDULER_PROMPT_RECEIPT_DEADLINE_V1.md\n",
+  "blobs": [
+    {
+      "path": "packages/agent-router/src/binding-resolution.js",
+      "baseBlob": "0f687f5d0b0f59f9566b2cf9b9368108f5d69c01",
+      "candidateBlob": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "workingTreeBlob": "172859f387a44828c892cd090dcc15e8b081bc66",
+      "currentMainBlob": "0f687f5d0b0f59f9566b2cf9b9368108f5d69c01"
+    },
+    {
+      "path": "packages/agent-router/src/index.js",
+      "baseBlob": "f8682f3b5ac5ab57cf98c5a86cd622cb3fa94921",
+      "candidateBlob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "workingTreeBlob": "d0a8ca89965ab01718c34f3db93660d5bb2e1fd3",
+      "currentMainBlob": "f8682f3b5ac5ab57cf98c5a86cd622cb3fa94921"
+    },
+    {
+      "path": "packages/agent-router/test/route-chain/switch-workspace-guard.test.js",
+      "baseBlob": "ABSENT",
+      "candidateBlob": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "workingTreeBlob": "edc2fe101b63c14c27a7efaf60d83b22e5b9904e",
+      "currentMainBlob": "ABSENT"
+    },
+    {
+      "path": "docs/decisions/AGENT_WORKSPACE_SESSION_MODEL_V3.md",
+      "baseBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "candidateBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "workingTreeBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009",
+      "currentMainBlob": "0c3f6f6005794edec2faf666e4fb035a9c87b009"
+    }
+  ],
+  "trackedDiff": "",
+  "stagedDiff": "",
+  "mergeAuthorized": false,
+  "productionAuthorized": false,
+  "resultingMergedMain": "NOT_CREATED"
+}

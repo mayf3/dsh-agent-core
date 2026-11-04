@@ -1,0 +1,98 @@
+{
+  "source": "docs/evidence/guard-integration-523-r3-20261104/guard.tap",
+  "sha256": "6e6dd340b8aa8b0a009746adfbfeeb1e746c6d15187a7b3d777ff0c75c9beab1",
+  "bytes": 6485,
+  "summary": {
+    "tests": 9,
+    "suites": 0,
+    "pass": 9,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "duplicateTitles": {},
+  "results": [
+    {
+      "title": "\\#523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 1,
+      "line": 7,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 2,
+      "line": 17,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+      "outcome": "pass",
+      "tapId": 3,
+      "line": 27,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: same imported primary path allows different agent IDs and display-name resolution",
+      "outcome": "pass",
+      "tapId": 4,
+      "line": 41,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: explicit current workspace is compared instead of current agent primary",
+      "outcome": "pass",
+      "tapId": 5,
+      "line": 51,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: explicit workspace equal to target primary allows the switch",
+      "outcome": "pass",
+      "tapId": 6,
+      "line": 63,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: targetSessionId and requested workspace cannot bypass cross-workspace admission",
+      "outcome": "pass",
+      "tapId": 7,
+      "line": 73,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: self-switch cannot bypass the guard when current effective workspace differs",
+      "outcome": "pass",
+      "tapId": 8,
+      "line": 83,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    },
+    {
+      "title": "\\#523: operator POST /v1/switch-agent still crosses workspaces on the real Router",
+      "outcome": "pass",
+      "tapId": 9,
+      "line": 96,
+      "location": null,
+      "skipReason": null,
+      "rawFailure": null
+    }
+  ]
+}

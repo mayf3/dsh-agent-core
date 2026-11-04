@@ -1,0 +1,35 @@
+{
+  "evaluatedAt": "2026-11-04T04:55:16.016576+00:00",
+  "dependencyLink": "/tmp/dsh-523-impl/node_modules",
+  "observedWorkspaceLinks": [
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-router",
+      "isSymlink": true,
+      "target": "/private/tmp/dsh-523-integration/packages/agent-router"
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server",
+      "isSymlink": true,
+      "target": "/private/tmp/dsh-523-integration/packages/demo-server"
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-identity-capabilities",
+      "isSymlink": true,
+      "target": "/private/tmp/dsh-523-integration/packages/agent-identity-capabilities"
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/fixed-operation",
+      "isSymlink": true,
+      "target": "/private/tmp/dsh-523-integration/packages/fixed-operation"
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch",
+      "isSymlink": true,
+      "target": "/private/tmp/dsh-523-integration/bundle-agent-switch"
+    }
+  ],
+  "preimage": "UNKNOWN: no pre-test snapshot of the reused dependency symlinks was retained",
+  "observation": "package provisioning tests can mutate workspace links through the reused node_modules symlink; EEXIST errors name these paths and /tmp/home/agt_a fixture profile links",
+  "disposition": "STOP; no cleanup, guessed restore, reinstall or rerun attempted; originals of shared dependency link preimages unavailable",
+  "productionScope": "no ac1159-deploy path was accessed; provisioning evidence names local test dependencies and fixture homes, not an authorized production action"
+}

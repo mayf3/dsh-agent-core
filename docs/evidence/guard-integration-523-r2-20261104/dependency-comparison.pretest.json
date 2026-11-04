@@ -1,0 +1,100 @@
+[
+  {
+    "name": "@deepseek-ai/schemastery",
+    "originalCurrent": {
+      "version": "3.18.5",
+      "path": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/schemastery/package.json",
+      "sha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+    },
+    "baseline": {
+      "version": "3.18.5",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/@deepseek-ai/schemastery/package.json",
+      "sha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+    },
+    "equal": true
+  },
+  {
+    "name": "@deepseek-ai/cordis",
+    "originalCurrent": {
+      "version": "4.0.5",
+      "path": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/cordis/package.json",
+      "sha256": "b73831b926b16cbd684aa1b277461e7800a2b35e2dd351ad3c2c8c0db158589d"
+    },
+    "baseline": {
+      "version": "4.0.5",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/@deepseek-ai/cordis/package.json",
+      "sha256": "b73831b926b16cbd684aa1b277461e7800a2b35e2dd351ad3c2c8c0db158589d"
+    },
+    "equal": true
+  },
+  {
+    "name": "@deepseek-ai/dsh-session",
+    "originalCurrent": {
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/dsh-session/package.json",
+      "sha256": "08cded232b9232017c8446bddfd4ce11590a1a1126f08b3b904c7340f69d2878"
+    },
+    "baseline": {
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/@deepseek-ai/dsh-session/package.json",
+      "sha256": "08cded232b9232017c8446bddfd4ce11590a1a1126f08b3b904c7340f69d2878"
+    },
+    "equal": true
+  },
+  {
+    "name": "@deepseek-ai/dsh-session-persistence-jsonl",
+    "originalCurrent": {
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-impl/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/package.json",
+      "sha256": "9627c3643a1e3f9877369946e23a2b65554501f05647ed9ecf2af534efb3d18f"
+    },
+    "baseline": {
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/package.json",
+      "sha256": "9627c3643a1e3f9877369946e23a2b65554501f05647ed9ecf2af534efb3d18f"
+    },
+    "equal": true
+  },
+  {
+    "name": "@larksuiteoapi/node-sdk",
+    "originalCurrent": {
+      "version": "1.76.0",
+      "path": "/private/tmp/dsh-523-impl/node_modules/@larksuiteoapi/node-sdk/package.json",
+      "sha256": "2a5da04a9f35c9d2a6f3550f5ad5bb221dc1cdbea83ccef2c1247336bade5373"
+    },
+    "baseline": {
+      "version": "1.76.0",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/@larksuiteoapi/node-sdk/package.json",
+      "sha256": "2a5da04a9f35c9d2a6f3550f5ad5bb221dc1cdbea83ccef2c1247336bade5373"
+    },
+    "equal": true
+  },
+  {
+    "name": "croner",
+    "originalCurrent": {
+      "version": "10.0.1",
+      "path": "/private/tmp/dsh-523-impl/node_modules/croner/package.json",
+      "sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250"
+    },
+    "baseline": {
+      "version": "10.0.1",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/croner/package.json",
+      "sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250"
+    },
+    "equal": true
+  },
+  {
+    "name": "sherpa-onnx-node",
+    "originalCurrent": {
+      "version": "1.13.7",
+      "path": "/private/tmp/dsh-523-impl/node_modules/sherpa-onnx-node/package.json",
+      "sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d"
+    },
+    "baseline": {
+      "version": "1.13.7",
+      "path": "/private/tmp/dsh-523-baseline/node_modules/sherpa-onnx-node/package.json",
+      "sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d"
+    },
+    "equal": true
+  }
+]

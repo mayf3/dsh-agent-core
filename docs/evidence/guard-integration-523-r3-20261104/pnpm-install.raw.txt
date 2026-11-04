@@ -1,0 +1,40 @@
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 3, reused 0, downloaded 0, added 0
+[WARN] GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-session error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+[WARN] GET https://registry.npmjs.org/@larksuiteoapi%2Fnode-sdk error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+[WARN] GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-session-persistence-jsonl error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+[WARN] Request took 25669ms: https://registry.npmjs.org/@larksuiteoapi%2Fnode-sdk
+Progress: resolved 4, reused 0, downloaded 0, added 0
+[WARN] Request took 25686ms: https://registry.npmjs.org/@deepseek-ai%2Fdsh-session
+[WARN] Request took 26174ms: https://registry.npmjs.org/@deepseek-ai%2Fdsh-session-persistence-jsonl
+Progress: resolved 5, reused 0, downloaded 0, added 0
+Progress: resolved 12, reused 0, downloaded 0, added 0
+Progress: resolved 19, reused 0, downloaded 0, added 0
+Progress: resolved 22, reused 0, downloaded 0, added 0
+Progress: resolved 40, reused 0, downloaded 0, added 0
+Progress: resolved 54, reused 0, downloaded 0, added 0
+Progress: resolved 58, reused 0, downloaded 0, added 0
+Progress: resolved 59, reused 0, downloaded 0, added 0
+Progress: resolved 70, reused 0, downloaded 0, added 0
+Progress: resolved 72, reused 0, downloaded 0, added 0
+Progress: resolved 83, reused 0, downloaded 0, added 0
+Progress: resolved 88, reused 0, downloaded 0, added 0
+Progress: resolved 93, reused 0, downloaded 0, added 0
+Progress: resolved 94, reused 0, downloaded 0, added 0
+
+Packages: +71
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 95, reused 0, downloaded 41, added 40
+[WARN] Tarball download average speed 37 KiB/s (size 38 KiB) is below 50 KiB/s: https://registry.npmjs.org/@deepseek-ai/dsh-session-persistence/-/dsh-session-persistence-0.1.0-rc.8.tgz (GET)
+Progress: resolved 95, reused 0, downloaded 60, added 60
+Progress: resolved 95, reused 0, downloaded 65, added 65
+[WARN] Tarball download average speed 45 KiB/s (size 85 KiB) is below 50 KiB/s: https://registry.npmjs.org/@deepseek-ai/dsh-session/-/dsh-session-0.1.0-rc.8.tgz (GET)
+Progress: resolved 95, reused 0, downloaded 67, added 67
+Progress: resolved 95, reused 0, downloaded 68, added 67
+Progress: resolved 95, reused 0, downloaded 69, added 69
+Progress: resolved 95, reused 0, downloaded 70, added 69
+Progress: resolved 95, reused 0, downloaded 70, added 70
+[WARN] GET https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz error (23). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 95, reused 0, downloaded 71, added 70
+Progress: resolved 95, reused 0, downloaded 71, added 71, done
+Done in 1m 51s using pnpm v11.7.0

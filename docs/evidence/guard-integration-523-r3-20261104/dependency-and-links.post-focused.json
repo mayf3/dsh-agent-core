@@ -1,0 +1,894 @@
+{
+  "at": "2026-11-04T05:23:12.722039+00:00",
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "nodeModulesIsSymlink": false,
+  "nodeModulesRealpath": "/private/tmp/dsh-523-integration/node_modules",
+  "packages": [
+    {
+      "name": "agent-base",
+      "version": "6.0.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/agent-base/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/agent-base/package.json",
+      "sha256": "05daa619e51686fd21d15f987f943f6692c56b9f489f555cbaf42a4263d5c5e8"
+    },
+    {
+      "name": "asynckit",
+      "version": "0.4.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/asynckit/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/asynckit/package.json",
+      "sha256": "63eb9ff63be2e241ee6e80434d4641d6e9b5157d88bd3bbb692fcb2dfc8da4a9"
+    },
+    {
+      "name": "axios",
+      "version": "1.21.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/axios/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/axios/package.json",
+      "sha256": "b4ffd2888e63ccfcabc0e1f0deb316ac156138872f801145934d4a85897d0b80"
+    },
+    {
+      "name": "call-bind-apply-helpers",
+      "version": "1.0.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/call-bind-apply-helpers/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/call-bind-apply-helpers/package.json",
+      "sha256": "59639b628c6846f674857c6a613fd47e2e4d2a24036cdf0f7a62ac634f4c8a5f"
+    },
+    {
+      "name": "call-bound",
+      "version": "1.0.4",
+      "path": "/private/tmp/dsh-523-integration/node_modules/call-bound/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/call-bound/package.json",
+      "sha256": "dcc8abb3c4ad3774234272149020cb36d7b1a3d377a419454d1e7adb368dd9c3"
+    },
+    {
+      "name": "combined-stream",
+      "version": "1.0.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/combined-stream/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/combined-stream/package.json",
+      "sha256": "761adece21443081ae818fe0e18864d7fa03f387075b89afa6cc5dd98356fafa"
+    },
+    {
+      "name": "croner",
+      "version": "10.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/croner/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/croner/package.json",
+      "sha256": "8dacc66c293f46a9e9d36987b7d22f7c851b0654e6a1b7a0113fcbdac5403250"
+    },
+    {
+      "name": "debug",
+      "version": "4.4.3",
+      "path": "/private/tmp/dsh-523-integration/node_modules/debug/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/debug/package.json",
+      "sha256": "ea8e33d63fe5f3a4c36609b6c3df8e2ef1f8b8ba2fc3a2e1e53cb27291f384af"
+    },
+    {
+      "name": "delayed-stream",
+      "version": "1.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/delayed-stream/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/delayed-stream/package.json",
+      "sha256": "4f5bd886efbd8feda6ac04db6ac1aa8b2e8dfc159503b0652667e1bc88efd4cb"
+    },
+    {
+      "name": "dunder-proto",
+      "version": "1.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/dunder-proto/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/dunder-proto/package.json",
+      "sha256": "24df71008e4225c858f389dd2728b76cf66b752256d42a38ed7930aacae7fe2b"
+    },
+    {
+      "name": "es-define-property",
+      "version": "1.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/es-define-property/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/es-define-property/package.json",
+      "sha256": "3a2cb30dae30a96705dcd9aa2d5fb190cf8200f27badccfa5a81a4374e5708b4"
+    },
+    {
+      "name": "es-errors",
+      "version": "1.3.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/es-errors/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/es-errors/package.json",
+      "sha256": "1a0a0bcccc76b915cb64073317312840cf6363e9144b96f406d0059774dd5278"
+    },
+    {
+      "name": "es-object-atoms",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/es-object-atoms/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/es-object-atoms/package.json",
+      "sha256": "e4b7882975d10c68457945c883e1060d0b058af5b1216215c872263f42e12fc9"
+    },
+    {
+      "name": "es-set-tostringtag",
+      "version": "2.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/es-set-tostringtag/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/es-set-tostringtag/package.json",
+      "sha256": "c9506942c9ef472286aff079bb65b7f3edcaccbc7f59fac9f419787b570086e5"
+    },
+    {
+      "name": "follow-redirects",
+      "version": "1.16.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/follow-redirects/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/follow-redirects/package.json",
+      "sha256": "04ad04efe80b8a05d7dc20a2b30831a93f22dfe358948eca019f003b71f90026"
+    },
+    {
+      "name": "form-data",
+      "version": "4.0.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/form-data/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/form-data/package.json",
+      "sha256": "d5222c863d975ddefb3ec2c012d3c3ab92f51ef8f3f5c3080dee02c79d217665"
+    },
+    {
+      "name": "function-bind",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/function-bind/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/function-bind/package.json",
+      "sha256": "edb1c4faf4148e6e3d74ed8dbac1a1dc359a647ff4207aad4851396dc7a3559a"
+    },
+    {
+      "name": "get-intrinsic",
+      "version": "1.3.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/get-intrinsic/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/get-intrinsic/package.json",
+      "sha256": "45b14763baacc59b0fd7b39e3ad983d5d2aaf7f5ed682f2fce9edb469826c999"
+    },
+    {
+      "name": "get-proto",
+      "version": "1.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/get-proto/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/get-proto/package.json",
+      "sha256": "73839e012ac7134a632c9d9fc6bdb700ac9ab5553cce39eb789ba2b65663e734"
+    },
+    {
+      "name": "gopd",
+      "version": "1.2.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/gopd/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/gopd/package.json",
+      "sha256": "33ace32dc861f6da9d1fd9d0a44c66e8c6ff3b13358d070683c1c2978ff5f19f"
+    },
+    {
+      "name": "has-symbols",
+      "version": "1.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/has-symbols/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/has-symbols/package.json",
+      "sha256": "5190268c0e3308d7446d1f7c036238f329f786938453e6017cb90980b3612e7a"
+    },
+    {
+      "name": "has-tostringtag",
+      "version": "1.0.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/has-tostringtag/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/has-tostringtag/package.json",
+      "sha256": "30ab773c52021a6b800ea48f251abeeb1f6e378300f819204dfbb38d6e43f3ad"
+    },
+    {
+      "name": "hasown",
+      "version": "2.0.4",
+      "path": "/private/tmp/dsh-523-integration/node_modules/hasown/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/hasown/package.json",
+      "sha256": "40b750c55a8bacf2c5ac316f5299dd44d48acc101c189a00cd59d39376b5eb89"
+    },
+    {
+      "name": "https-proxy-agent",
+      "version": "5.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/https-proxy-agent/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/https-proxy-agent/package.json",
+      "sha256": "d41d9127cbed43df8e2d404bfaf41361942a8afeb82eb57ccf8515e04eb33d1d"
+    },
+    {
+      "name": "koffi",
+      "version": "3.3.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/koffi/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/koffi/package.json",
+      "sha256": "4100420583d59092a0c459c02d927a7d5f772fdf161c59a7cf6d14a0e72e4d75"
+    },
+    {
+      "name": "lodash.identity",
+      "version": "3.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/lodash.identity/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/lodash.identity/package.json",
+      "sha256": "6d7189a9e9f1e1c20761e1b0f04fa040492c6770fb024a488ec682b11e9023dc"
+    },
+    {
+      "name": "lodash.merge",
+      "version": "4.6.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/lodash.merge/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/lodash.merge/package.json",
+      "sha256": "5aaf4c24df9052e680d0728754c249fb94c11aef2e76ec3f76320431915c92f1"
+    },
+    {
+      "name": "lodash.pickby",
+      "version": "4.6.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/lodash.pickby/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/lodash.pickby/package.json",
+      "sha256": "431bc836cee100ca38621404a27ebf1ee1d2a30a00f96a6b87d219e678751a7b"
+    },
+    {
+      "name": "long",
+      "version": "5.3.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/long/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/long/package.json",
+      "sha256": "982e554a35d140981c7962fbba77855563e5890de200f8dc0a249135e4d9acb8"
+    },
+    {
+      "name": "math-intrinsics",
+      "version": "1.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/math-intrinsics/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/math-intrinsics/package.json",
+      "sha256": "39d74aa5a354153130706286dd60a2d8409ce0c8f66546eff2edcac0afff17e1"
+    },
+    {
+      "name": "mime-db",
+      "version": "1.52.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/mime-db/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/mime-db/package.json",
+      "sha256": "d03e37b915a050af548d543f4e45ff5de06ec767c19e745f18c431d9dc26b5bf"
+    },
+    {
+      "name": "mime-types",
+      "version": "2.1.35",
+      "path": "/private/tmp/dsh-523-integration/node_modules/mime-types/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/mime-types/package.json",
+      "sha256": "5053cc10259c3913ab6b6c8f13170a619c0d1836c1d9081238329a559fafeb3a"
+    },
+    {
+      "name": "ms",
+      "version": "2.1.3",
+      "path": "/private/tmp/dsh-523-integration/node_modules/ms/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/ms/package.json",
+      "sha256": "1a6b4d9739790c0b94ab96c8cc0507e281c164c311ff4fbf5e57fb8d26290b40"
+    },
+    {
+      "name": "object-inspect",
+      "version": "1.13.4",
+      "path": "/private/tmp/dsh-523-integration/node_modules/object-inspect/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/object-inspect/package.json",
+      "sha256": "21c5c63f653705f44a60f5fe93752b231caf6ff07b01805740bd89b71b2d6d8a"
+    },
+    {
+      "name": "protobufjs",
+      "version": "7.6.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/protobufjs/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/protobufjs/package.json",
+      "sha256": "0e56b70de03bffc143e74311b42ae22b557370a4a1f4b5066568fbc77857639a"
+    },
+    {
+      "name": "proxy-from-env",
+      "version": "2.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/proxy-from-env/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/proxy-from-env/package.json",
+      "sha256": "d01e73f0bf86e192e7eab7ff3f6f9e1284695ecc713ace22d982f9a35c9be451"
+    },
+    {
+      "name": "qs",
+      "version": "6.17.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/qs/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/qs/package.json",
+      "sha256": "863f2d7bdf692921c2d743280760cb486db0fad3984f41ea195486f152ffaa84"
+    },
+    {
+      "name": "sherpa-onnx-darwin-arm64",
+      "version": "1.13.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/sherpa-onnx-darwin-arm64/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/sherpa-onnx-darwin-arm64/package.json",
+      "sha256": "70ac867468808896163ec3739879efd7a393157cf0bfebf2801e531642c14d95"
+    },
+    {
+      "name": "sherpa-onnx-node",
+      "version": "1.13.7",
+      "path": "/private/tmp/dsh-523-integration/node_modules/sherpa-onnx-node/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/sherpa-onnx-node/package.json",
+      "sha256": "d9bb092c0a1a0d103988817b1c21609d5628e8399788f9e4865520b8e3d1878d"
+    },
+    {
+      "name": "side-channel",
+      "version": "1.1.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/side-channel/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/side-channel/package.json",
+      "sha256": "14da3b013c3762da85cfd8b173290285394dfa41870bc4a1e8243aaa38316f2a"
+    },
+    {
+      "name": "side-channel-list",
+      "version": "1.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/side-channel-list/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/side-channel-list/package.json",
+      "sha256": "90f0c08c6c17f4a3fa3dd61873223957b89da4201f01dc0c8b95b0b9e6a2a59a"
+    },
+    {
+      "name": "side-channel-map",
+      "version": "1.0.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/side-channel-map/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/side-channel-map/package.json",
+      "sha256": "914a8bd732b82523d95bb697eec3e6d95badc5eb13b196fb0772e59354a3ab25"
+    },
+    {
+      "name": "side-channel-weakmap",
+      "version": "1.0.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/side-channel-weakmap/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/side-channel-weakmap/package.json",
+      "sha256": "8c11f0a1c6cfa549588d991a5cb1b04d62953277ed29f47463d415d5946388a8"
+    },
+    {
+      "name": "undici-types",
+      "version": "8.9.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/undici-types/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/undici-types/package.json",
+      "sha256": "7f3c1a0498b1b7f74402f76d2958bf5a35fc89403036188dc5f8ede1b4e0638b"
+    },
+    {
+      "name": "ws",
+      "version": "8.22.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/ws/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/ws/package.json",
+      "sha256": "ac6b2fe23179ebdef3368ecf828f1df1fa361b84f5fb54cca982d716a16df34b"
+    },
+    {
+      "name": "@agent-core/agent-credential-provisioning",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-credential-provisioning/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-credential-provisioning/package.json",
+      "sha256": "088b63035aac89a6ca2ed5983f6b898bcd970dff8f58c1834beb0474818fb3b6"
+    },
+    {
+      "name": "@agent-core/agent-definition",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-definition/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-definition/package.json",
+      "sha256": "a5be1dec68b0adbfa5125fec070530eff6cf504eb6a0a0e33005757f916f2a1b"
+    },
+    {
+      "name": "@agent-core/agent-identity-capabilities",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-identity-capabilities/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-identity-capabilities/package.json",
+      "sha256": "e42c31e52ee6194f90b81ce7e039a0b938eae3dfb82d92f012e59d78ca958c02"
+    },
+    {
+      "name": "@agent-core/agent-memory",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-memory/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-memory/package.json",
+      "sha256": "150af14dc4460e6914e2a926808d72cb5d2a06ef71843b06b30eee8204d225d7"
+    },
+    {
+      "name": "@agent-core/agent-provisioning",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-provisioning/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-provisioning/package.json",
+      "sha256": "6b4d085939c1a182a0e2661cf3f8001eea37f4aed290a573cf812eb460a5bef2"
+    },
+    {
+      "name": "@agent-core/agent-router",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-router/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-router/package.json",
+      "sha256": "9622010ec44bed87f0e71fd7e6a5cac3427cd68b20e06c4bbaa93e1f99e79e15"
+    },
+    {
+      "name": "@agent-core/agent-switch",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-switch/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-switch/package.json",
+      "sha256": "ad59fa74ad6875dd4b1f618191a2548a313691c1abdf2f8c14840ffb99a2602e"
+    },
+    {
+      "name": "@agent-core/broker",
+      "version": "0.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/broker/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/broker/package.json",
+      "sha256": "a6940e5bd9ede7dbf356ffe5f13ad05c05290b2c4bb2f916367281b7c8f61fc3"
+    },
+    {
+      "name": "@agent-core/bundle-agent-switch",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-agent-switch/package.json",
+      "sha256": "eec14fddbe619bb4864c9a81f9920d234a18044b3b351204e1ee5c05b16505d3"
+    },
+    {
+      "name": "@agent-core/bundle-broker",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-broker/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-broker/package.json",
+      "sha256": "bed99c24a0fc49a624e12a1836586f5e858f121844e78e16fe49bf8f1df620ed"
+    },
+    {
+      "name": "@agent-core/bundle-demo",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-demo/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-demo/package.json",
+      "sha256": "b300c086eab68ced09e3d34410c67d655a1b93670f223e4cfec74d7107ec4043"
+    },
+    {
+      "name": "@agent-core/bundle-integration",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-integration/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-integration/package.json",
+      "sha256": "06e5a43f15b609dd46731ac97d06d6ef6886b1dd17becb259c22e9ed1c3f36eb"
+    },
+    {
+      "name": "@agent-core/bundle-memory",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-memory/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-memory/package.json",
+      "sha256": "65c41a351f62240d4474258bfe7179d73f8761dab7eced460871eb5301e97306"
+    },
+    {
+      "name": "@agent-core/demo-server",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/demo-server/package.json",
+      "sha256": "e3bc869fab1c55dbba48d421658442461516bce31c7337e3a1abf51784f5e2ba"
+    },
+    {
+      "name": "@agent-core/development-execution",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/development-execution/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/development-execution/package.json",
+      "sha256": "1b59eddcc89d4d8314983132f1489dd585613d6879be7dcd53a2ebea07e12e32"
+    },
+    {
+      "name": "@agent-core/execution-history",
+      "version": "0.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/execution-history/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/execution-history/package.json",
+      "sha256": "5b01ecbee487d023449bc45f54b128c22724df915281d6f54dfdafda68342fe1"
+    },
+    {
+      "name": "@agent-core/feishu-connector",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/feishu-connector/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/feishu-connector/package.json",
+      "sha256": "ed871fbef0ae7919ae14a51c5e2b2e5acc875028c5d40f9e632c7f4c865d649e"
+    },
+    {
+      "name": "@agent-core/fixed-operation",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/fixed-operation/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/fixed-operation/package.json",
+      "sha256": "02e71f5677936ef0eb2e65777f62e7acc746d532511dff78f065d43bd836fb6d"
+    },
+    {
+      "name": "@agent-core/notification-ingress",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/notification-ingress/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/notification-ingress/package.json",
+      "sha256": "84e72dd5b9d129a05edb0b97ff80010306c1db1b8a45b1732b02f9635ae8e6df"
+    },
+    {
+      "name": "@agent-core/owner-guard",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/owner-guard/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/owner-guard/package.json",
+      "sha256": "78f226ba67e06671924cd6ccd4028585c98b8aa40c1cab72a21ff46ff270c1ef"
+    },
+    {
+      "name": "@agent-core/product-api",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/product-api/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/product-api/package.json",
+      "sha256": "a462648270153f4d26c07d5e06a483ec665e6c00142a8b548afe76fd6b89aaf2"
+    },
+    {
+      "name": "@agent-core/production-runtime",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/production-runtime/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/production-runtime/package.json",
+      "sha256": "e83317fe9f9c276627fc80c6d9bd4df970048b13bfeb3f35516783fd9890a59b"
+    },
+    {
+      "name": "@agent-core/scheduler",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/scheduler/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/scheduler/package.json",
+      "sha256": "8160b865e70bcfa11ed76faf7d4113d43ad8c9ab5c816ce2f7c1ac55ad9fb507"
+    },
+    {
+      "name": "@agent-core/scheduler-router",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/scheduler-router/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/scheduler-router/package.json",
+      "sha256": "ae3f42b21de78d61193d9968c8f239fc5648ed816d4045235982c8d86976d80d"
+    },
+    {
+      "name": "@agent-core/session-history",
+      "version": "0.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/session-history/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/session-history/package.json",
+      "sha256": "d806d97f09d7537e50609f8463ed5822c698352129b54f0ad74574b49b672097"
+    },
+    {
+      "name": "@agent-core/workflow-execution",
+      "version": "0.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/workflow-execution/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/workflow-execution/package.json",
+      "sha256": "c2bf3ace708369365704d73c61e8fed2f166e6acf00a5bc038a8c10031b3ea10"
+    },
+    {
+      "name": "@agent-core/workspace-bootstrap",
+      "version": "0.0.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/workspace-bootstrap/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/packages/workspace-bootstrap/package.json",
+      "sha256": "7766eb5e49aebfa91cab499562951d0e3f0a3f68e5b1877e923b0edece56c634"
+    },
+    {
+      "name": "@deepseek-ai/cordis",
+      "version": "4.0.5",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/cordis/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/cordis/package.json",
+      "sha256": "b73831b926b16cbd684aa1b277461e7800a2b35e2dd351ad3c2c8c0db158589d"
+    },
+    {
+      "name": "@deepseek-ai/cosmokit",
+      "version": "1.8.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/cosmokit/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/cosmokit/package.json",
+      "sha256": "70ef4acbb6f4186b9fd24d1e7f32457112179767cf42de849bf00ef7f63b0467"
+    },
+    {
+      "name": "@deepseek-ai/dsh-attachment",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-attachment/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-attachment/package.json",
+      "sha256": "3c32081ab63650988ab53b25c634b83747ab3911cbc07b782820df12af631a46"
+    },
+    {
+      "name": "@deepseek-ai/dsh-brand",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-brand/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-brand/package.json",
+      "sha256": "347e13bb348aef4c2ecb7ddd4cf34086476e864b2cfe3354469f2e4d7633513f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-invariants",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-invariants/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-invariants/package.json",
+      "sha256": "5d2a09283740eadb34f2e030602f29c25dde8b975e8c2e6f9b4b6613e274fb0d"
+    },
+    {
+      "name": "@deepseek-ai/dsh-llm",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-llm/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-llm/package.json",
+      "sha256": "020d44d6029ebca356e66a1a8ca7d4539e407e1fb831234a5bfb76d602124ad5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-scope",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-scope/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-scope/package.json",
+      "sha256": "89e0f237dabaab86bb1948c07c78c2bba68c83e05c1e2eae656912eb61cf7e58"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session/package.json",
+      "sha256": "08cded232b9232017c8446bddfd4ce11590a1a1126f08b3b904c7340f69d2878"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session-persistence/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session-persistence/package.json",
+      "sha256": "841f947422f0f2962050d673717502077f07e5a74a15605638d28054932a4176"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-persistence-jsonl",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-session-persistence-jsonl/package.json",
+      "sha256": "9627c3643a1e3f9877369946e23a2b65554501f05647ed9ecf2af534efb3d18f"
+    },
+    {
+      "name": "@deepseek-ai/dsh-timeout",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-timeout/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-timeout/package.json",
+      "sha256": "640f163b0916aeaf400f7e2ba4dac1f0ee7b30243976019fcb905476a5de1107"
+    },
+    {
+      "name": "@deepseek-ai/dsh-typert-protocol",
+      "version": "0.1.0-rc.8",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-typert-protocol/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/dsh-typert-protocol/package.json",
+      "sha256": "b46e873504d8487281470cc0878a87842c255a7b821bece559352d0dc1073d94"
+    },
+    {
+      "name": "@deepseek-ai/schemastery",
+      "version": "3.18.5",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/schemastery/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@deepseek-ai/schemastery/package.json",
+      "sha256": "3e7deee09015c7f7aa17ae6cecfb928985520baec66aa676dc3f4ed67d4231f0"
+    },
+    {
+      "name": "@koromix/koffi-darwin-arm64",
+      "version": "3.3.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@koromix/koffi-darwin-arm64/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@koromix/koffi-darwin-arm64/package.json",
+      "sha256": "3649612f534265edf0caf3475657ac310f8b05460d4a3d8b12480989528479dc"
+    },
+    {
+      "name": "@larksuiteoapi/node-sdk",
+      "version": "1.76.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@larksuiteoapi/node-sdk/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@larksuiteoapi/node-sdk/package.json",
+      "sha256": "2a5da04a9f35c9d2a6f3550f5ad5bb221dc1cdbea83ccef2c1247336bade5373"
+    },
+    {
+      "name": "@protobufjs/aspromise",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/aspromise/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/aspromise/package.json",
+      "sha256": "4a39ee1c94f6ee038d2944196aa6167785d3429a91727f828a1274262919e2d8"
+    },
+    {
+      "name": "@protobufjs/base64",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/base64/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/base64/package.json",
+      "sha256": "7ff6a89f566b95c0f21a5a9cb12df5718f0b06ef96d4186a92d650c0849fa2c5"
+    },
+    {
+      "name": "@protobufjs/codegen",
+      "version": "2.0.5",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/codegen/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/codegen/package.json",
+      "sha256": "818bf10387c19ab09b3814004ec672ab8d975302cdaf2dd65466bdb604764d65"
+    },
+    {
+      "name": "@protobufjs/eventemitter",
+      "version": "1.1.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/eventemitter/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/eventemitter/package.json",
+      "sha256": "d157d364fe4aee21cfd517abff35bca312ff51e6e6e90abdbec16225057e5914"
+    },
+    {
+      "name": "@protobufjs/fetch",
+      "version": "1.1.1",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/fetch/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/fetch/package.json",
+      "sha256": "52f997898a745acce5d68751883aad6296bcc2f152468ced0ed30e3c3c5a1c72"
+    },
+    {
+      "name": "@protobufjs/float",
+      "version": "1.0.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/float/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/float/package.json",
+      "sha256": "1cae4ded1bc97375a67fe4608f87ee59990734ea738fabb98e9061ab23669cdf"
+    },
+    {
+      "name": "@protobufjs/path",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/path/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/path/package.json",
+      "sha256": "b19802dd696ceb8a4aa4839f35ab1c8312e97693d93485ff3c3e4f19cca183c4"
+    },
+    {
+      "name": "@protobufjs/pool",
+      "version": "1.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/pool/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/pool/package.json",
+      "sha256": "7a33b609e770020fe1e09690cfebc23bbdd6e1306e3f0dd98ba5048966cb7fec"
+    },
+    {
+      "name": "@protobufjs/utf8",
+      "version": "1.1.2",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/utf8/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@protobufjs/utf8/package.json",
+      "sha256": "80fdb6b9f633023846b6cdf352ea795523abcf27affd4d54afd4b50a90a87411"
+    },
+    {
+      "name": "@standard-schema/spec",
+      "version": "1.1.0",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@standard-schema/spec/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@standard-schema/spec/package.json",
+      "sha256": "58e5bd75ddd0684c88b07cd799585cc72a37fd6efb8ab0c936d49e230d5164fb"
+    },
+    {
+      "name": "@types/node",
+      "version": "26.6.6",
+      "path": "/private/tmp/dsh-523-integration/node_modules/@types/node/package.json",
+      "realpath": "/private/tmp/dsh-523-integration/node_modules/@types/node/package.json",
+      "sha256": "2520fc33dc754e75d61e6e49c174b439244537c3f2cff1897432806156a054fd"
+    }
+  ],
+  "links": [
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-credential-provisioning",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-credential-provisioning",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-credential-provisioning",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-definition",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-definition",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-definition",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-identity-capabilities",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-identity-capabilities",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-identity-capabilities",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-memory",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-memory",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-memory",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-provisioning",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-provisioning",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-provisioning",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-router",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-router",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-router",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/agent-switch",
+      "target": "/private/tmp/dsh-523-integration/packages/agent-switch",
+      "realpath": "/private/tmp/dsh-523-integration/packages/agent-switch",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/broker",
+      "target": "/private/tmp/dsh-523-integration/packages/broker",
+      "realpath": "/private/tmp/dsh-523-integration/packages/broker",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-agent-switch",
+      "target": "/private/tmp/dsh-523-integration/bundle-agent-switch",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-agent-switch",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-broker",
+      "target": "/private/tmp/dsh-523-integration/bundle-broker",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-broker",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-demo",
+      "target": "/private/tmp/dsh-523-integration/bundle-demo",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-demo",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-integration",
+      "target": "/private/tmp/dsh-523-integration/bundle-integration",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-integration",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/bundle-memory",
+      "target": "/private/tmp/dsh-523-integration/bundle-memory",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-memory",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/demo-server",
+      "target": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "realpath": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/development-execution",
+      "target": "/private/tmp/dsh-523-integration/packages/development-execution",
+      "realpath": "/private/tmp/dsh-523-integration/packages/development-execution",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/execution-history",
+      "target": "/private/tmp/dsh-523-integration/packages/execution-history",
+      "realpath": "/private/tmp/dsh-523-integration/packages/execution-history",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/feishu-connector",
+      "target": "/private/tmp/dsh-523-integration/packages/feishu-connector",
+      "realpath": "/private/tmp/dsh-523-integration/packages/feishu-connector",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/fixed-operation",
+      "target": "/private/tmp/dsh-523-integration/packages/fixed-operation",
+      "realpath": "/private/tmp/dsh-523-integration/packages/fixed-operation",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/notification-ingress",
+      "target": "/private/tmp/dsh-523-integration/packages/notification-ingress",
+      "realpath": "/private/tmp/dsh-523-integration/packages/notification-ingress",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/owner-guard",
+      "target": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "realpath": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/product-api",
+      "target": "/private/tmp/dsh-523-integration/packages/product-api",
+      "realpath": "/private/tmp/dsh-523-integration/packages/product-api",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/production-runtime",
+      "target": "/private/tmp/dsh-523-integration/packages/production-runtime",
+      "realpath": "/private/tmp/dsh-523-integration/packages/production-runtime",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/scheduler",
+      "target": "/private/tmp/dsh-523-integration/packages/scheduler",
+      "realpath": "/private/tmp/dsh-523-integration/packages/scheduler",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/scheduler-router",
+      "target": "/private/tmp/dsh-523-integration/packages/scheduler-router",
+      "realpath": "/private/tmp/dsh-523-integration/packages/scheduler-router",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/session-history",
+      "target": "/private/tmp/dsh-523-integration/packages/session-history",
+      "realpath": "/private/tmp/dsh-523-integration/packages/session-history",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/workflow-execution",
+      "target": "/private/tmp/dsh-523-integration/packages/workflow-execution",
+      "realpath": "/private/tmp/dsh-523-integration/packages/workflow-execution",
+      "exists": true
+    },
+    {
+      "path": "/private/tmp/dsh-523-integration/node_modules/@agent-core/workspace-bootstrap",
+      "target": "/private/tmp/dsh-523-integration/packages/workspace-bootstrap",
+      "realpath": "/private/tmp/dsh-523-integration/packages/workspace-bootstrap",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_a/profiles/node_modules/@agent-core/bundle-demo",
+      "target": "/private/tmp/dsh-523-integration/bundle-demo",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-demo",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_a/profiles/node_modules/@agent-core/demo-server",
+      "target": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "realpath": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_a/profiles/node_modules/@agent-core/owner-guard",
+      "target": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "realpath": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_delivery-v0-1/profiles/node_modules/@agent-core/bundle-demo",
+      "target": "/private/tmp/dsh-523-integration/bundle-demo",
+      "realpath": "/private/tmp/dsh-523-integration/bundle-demo",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_delivery-v0-1/profiles/node_modules/@agent-core/demo-server",
+      "target": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "realpath": "/private/tmp/dsh-523-integration/packages/demo-server",
+      "exists": true
+    },
+    {
+      "path": "/tmp/home/agt_delivery-v0-1/profiles/node_modules/@agent-core/owner-guard",
+      "target": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "realpath": "/private/tmp/dsh-523-integration/packages/owner-guard",
+      "exists": true
+    }
+  ]
+}

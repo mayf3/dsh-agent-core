@@ -1,0 +1,109 @@
+{
+  "identity": "Exact unique full TAP title; locations preserved; original TAP IDs are coordinates, not identities",
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "baseHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "finalSummary": {
+    "tests": 608,
+    "suites": 0,
+    "pass": 596,
+    "fail": 10,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  },
+  "baselineSummary": {
+    "tests": 599,
+    "suites": 0,
+    "pass": 584,
+    "fail": 13,
+    "cancelled": 0,
+    "skipped": 2,
+    "todo": 0
+  },
+  "guardSummary": {
+    "tests": 9,
+    "suites": 0,
+    "pass": 9,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "finalSha256": "336d5af67d235631d3545b34b962b6ecd14c7b9facbcb81a78482f4253b9c760",
+  "baselineSha256": "678673687b8e6f2e0e2c9b86b5cb5bfc342b6e4ba9c5556671e3661179cc0b06",
+  "failureSubset": true,
+  "newFailures": [],
+  "sharedFailures": [
+    "E: valid canonical credential — child initializes on the openai-codex route",
+    "F: missing credential fails loud on the real chain — never a silent fallback",
+    "G: unsafe credential (group/world readable) fails loud on the real chain",
+    "R3: a settled or unknown turnExecutionId proves nothing (absent leaf)",
+    "packages/agent-router/test/process-lifecycle/feishu-reply-delivery-result.test.js",
+    "real child cancel removes native queued admission before old owner release",
+    "real child timeout removes native queued admission before old owner release",
+    "scripted native rounds obtain fresh parent proof after prior settlement through real child transport",
+    "seam: a gateway THROW resolves as mutation_outcome_unknown with zero automatic retry (true transport loss semantics kept)",
+    "seam: a structured gateway failure passes through declared codes verbatim at the correct depth"
+  ],
+  "baselineFailuresNowPassing": [
+    "TRUSTED_INGRESS: exact Feishu chat/conversation/message fields reach the routed turn without parsing",
+    "V2 normal: first contact binds workspace=null + session main, turns in the Agent primary workspace",
+    "broker RPC: executed as the ACTUAL proc.agentId via the gateway"
+  ],
+  "integrationOnlyTests": [
+    "\\#523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+    "\\#523: explicit current workspace is compared instead of current agent primary",
+    "\\#523: explicit workspace equal to target primary allows the switch",
+    "\\#523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+    "\\#523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write",
+    "\\#523: operator POST /v1/switch-agent still crosses workspaces on the real Router",
+    "\\#523: same imported primary path allows different agent IDs and display-name resolution",
+    "\\#523: self-switch cannot bypass the guard when current effective workspace differs",
+    "\\#523: targetSessionId and requested workspace cannot bypass cross-workspace admission"
+  ],
+  "baselineOnlyTests": [],
+  "seven": [
+    {
+      "title": "broker RPC: passes the exact immutable active-turn context beside actual agentId",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/broker-rpc.test.js:112:1"
+    },
+    {
+      "title": "broker RPC: stale generation, settled execution, and cleared turn never forward ingress context",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/broker-rpc.test.js:146:1"
+    },
+    {
+      "title": "broker RPC: delayed turn-A carrier cannot inherit live turn-B ingress context",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/broker-rpc.test.js:170:1"
+    },
+    {
+      "title": "D1 main first deliver: accepted, sessionId fixed main, one process, one prompt",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/delivery.test.js:147:1"
+    },
+    {
+      "title": "D2 main again: same fixed session, process reused, no second mapping",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/delivery.test.js:163:1"
+    },
+    {
+      "title": "V2 normal: the conversation-derived workspace is NEVER chosen",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/feishu-v2-normal.test.js:147:1"
+    },
+    {
+      "title": "D: imported agent — spawn hands the process the imported workspace + env mechanically",
+      "focused": "pass",
+      "finalPackage": "pass",
+      "location": "packages/agent-router/test/primary-workspace.test.js:159:1"
+    }
+  ]
+}

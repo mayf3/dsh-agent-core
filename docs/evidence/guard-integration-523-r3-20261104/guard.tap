@@ -1,0 +1,109 @@
+TAP version 13
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-k4znOy/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: feishu:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+# Subtest: \#523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write
+ok 1 - \#523: feishu agent-turn cross-workspace switch rejects before any Binding/bookmark write
+  ---
+  duration_ms: 7.787083
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-H7cOKk/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: mobile:surface-523... -> agent agt_a + session session-before + workspace (agent default)
+# Subtest: \#523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write
+ok 2 - \#523: mobile agent-turn cross-workspace switch rejects before any Binding/bookmark write
+  ---
+  duration_ms: 2.74025
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-L8YTvz/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: custom-channel:surface-5... -> agent agt_a + session session-before + workspace (agent default)
+# Subtest: \#523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write
+ok 3 - \#523: custom-channel agent-turn cross-workspace switch rejects before any Binding/bookmark write
+  ---
+  duration_ms: 2.499625
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-EM0G18/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+# [router] bookmark: mobile:shared... x agt_a -> session remember-me
+# [router] switch: mobile:shared... -> agent agt_b + session main + workspace (agent default)
+# [router] bookmark: mobile:shared... x agt_b -> session main
+# [router] switch: mobile:shared... -> agent agt_a + session remember-me + workspace (agent default)
+# Subtest: \#523: same imported primary path allows different agent IDs and display-name resolution
+ok 4 - \#523: same imported primary path allows different agent IDs and display-name resolution
+  ---
+  duration_ms: 2.641416
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-2NphhV/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: feishu:explicit... -> agent agt_a + session main + workspace group-workspace
+# Subtest: \#523: explicit current workspace is compared instead of current agent primary
+ok 5 - \#523: explicit current workspace is compared instead of current agent primary
+  ---
+  duration_ms: 2.204
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-MsUpya/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: custom-channel:explicit-... -> agent agt_a + session main + workspace agt_b
+# [router] bookmark: custom-channel:explicit-... x agt_a -> session main
+# [router] switch: custom-channel:explicit-... -> agent agt_b + session main + workspace agt_b
+# Subtest: \#523: explicit workspace equal to target primary allows the switch
+ok 6 - \#523: explicit workspace equal to target primary allows the switch
+  ---
+  duration_ms: 2.822209
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-PHTIkv/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: mobile:no-bypass... -> agent agt_a + session main + workspace (agent default)
+# Subtest: \#523: targetSessionId and requested workspace cannot bypass cross-workspace admission
+ok 7 - \#523: targetSessionId and requested workspace cannot bypass cross-workspace admission
+  ---
+  duration_ms: 1.806333
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-VSXyj8/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: feishu:self... -> agent agt_a + session main + workspace another-workspace
+# Subtest: \#523: self-switch cannot bypass the guard when current effective workspace differs
+ok 8 - \#523: self-switch cannot bypass the guard when current effective workspace differs
+  ---
+  duration_ms: 1.736166
+  type: 'test'
+  ...
+# [router] binding store loaded: 0 binding(s) from /var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/switch-523-nEjNY8/bindings.json
+# [router] delivery v0 fresh mapping table loaded: 0 mapping(s)
+# [router] feishu channel not present; router idle (entry-agnostic domain surface ready)
+# [router] switch: mobile:operator... -> agent agt_a + session saved-session + workspace (agent default)
+# [product-api] listening on http://127.0.0.1:0 (channel=mobile)
+# [router] bookmark: mobile:operator... x agt_a -> session saved-session
+# [router] switch: mobile:operator... -> agent agt_b + session main + workspace (agent default)
+# Subtest: \#523: operator POST /v1/switch-agent still crosses workspaces on the real Router
+ok 9 - \#523: operator POST /v1/switch-agent still crosses workspaces on the real Router
+  ---
+  duration_ms: 25.053083
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 112.111875

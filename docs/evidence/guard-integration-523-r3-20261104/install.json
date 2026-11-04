@@ -1,0 +1,32 @@
+{
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "worktree": "/private/tmp/dsh-523-integration",
+  "oldLinkTarget": "/tmp/dsh-523-impl/node_modules",
+  "oldLinkPreservedAt": "/private/tmp/dsh-523-r3-dependencies/original-node_modules-link",
+  "command": [
+    "/opt/homebrew/bin/pnpm",
+    "install",
+    "--ignore-scripts",
+    "--no-lockfile",
+    "--node-linker=hoisted",
+    "--package-import-method=copy",
+    "--store-dir",
+    "/private/tmp/dsh-523-r3-dependencies/store",
+    "--registry=https://registry.npmjs.org",
+    "--reporter=append-only"
+  ],
+  "env": {
+    "PATH": "/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg03DR507:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "TMPDIR": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/",
+    "HOME": "/private/tmp/dsh-523-r3-dependencies/home",
+    "CI": "true"
+  },
+  "startedAt": "2026-11-04T05:20:52.542616+00:00",
+  "exitCode": 0,
+  "finishedAt": "2026-11-04T05:22:43.696007+00:00",
+  "bytes": 2782,
+  "sha256": "5ea4261b99e72cf178629607dab5a5a2947ecb6d83624b5b886ecba330f3ffa9",
+  "log": "pnpm-install.raw.txt",
+  "nodeModulesIsSymlink": false,
+  "nodeModulesRealpath": "/private/tmp/dsh-523-integration/node_modules"
+}

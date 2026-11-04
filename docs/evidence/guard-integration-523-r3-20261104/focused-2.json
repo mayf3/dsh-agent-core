@@ -1,0 +1,23 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "--test-name-pattern=^broker\\ RPC:\\ stale\\ generation,\\ settled\\ execution,\\ and\\ cleared\\ turn\\ never\\ forward\\ ingress\\ context$",
+    "packages/agent-router/test/broker-rpc.test.js"
+  ],
+  "env": {
+    "PATH": "/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg03DR507:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "TMPDIR": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/",
+    "PRODUCTION_RUNTIME_ROOT": "/private/tmp/dsh-523-integration/docs/evidence/guard-integration-523-r3-20261104/runtime-focused-2"
+  },
+  "cwd": "/private/tmp/dsh-523-integration",
+  "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+  "startedAt": "2026-11-04T05:23:12.013492+00:00",
+  "log": "focused-2.tap",
+  "node": "v26.7.0",
+  "exitCode": 0,
+  "finishedAt": "2026-11-04T05:23:12.119719+00:00",
+  "bytes": 861,
+  "sha256": "f3fb6a37b18fab081939f4aadde28084078af25dbd55d6ff2102fe75a6ec5a3c"
+}

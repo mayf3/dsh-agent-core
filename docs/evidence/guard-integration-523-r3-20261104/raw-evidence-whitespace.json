@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-04T05:28:13.682221+00:00",
+  "command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "exitCode": 2,
+  "bytes": 2404,
+  "sha256": "e25b7ebe07e806938752adb799d6ad28fd25976d63932b2ac817bd422a1d5550",
+  "log": "/private/tmp/dsh-523-r3-dependencies/raw-evidence-whitespace.raw.txt",
+  "meaning": "Nonblocking additional raw-Observation formatting diagnostic, per independent scope review. Not a source gate PASS. Original raw bytes retained unchanged; no Git attribute or whitespace-rule changes.",
+  "stdout": "docs/evidence/guard-integration-523-20261104/agent-router.tap:285: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:287: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:307: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:309: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:661: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:680: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:862: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:881: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:1217: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-20261104/agent-router.tap:1236: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:260: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:262: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:282: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:284: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:619: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:638: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:820: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap:839: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/integration-only-failures.raw.txt:44: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r2-20261104/integration-only-failures.raw.txt:63: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r3-20261104/agent-router.tap:251: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r3-20261104/agent-router.tap:253: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r3-20261104/agent-router.tap:273: trailing whitespace.\n+    \ndocs/evidence/guard-integration-523-r3-20261104/agent-router.tap:275: trailing whitespace.\n+    \n",
+  "findingCount": 24,
+  "affectedFiles": [
+    "docs/evidence/guard-integration-523-20261104/agent-router.tap",
+    "docs/evidence/guard-integration-523-r2-20261104/baseline-agent-router.tap",
+    "docs/evidence/guard-integration-523-r2-20261104/integration-only-failures.raw.txt",
+    "docs/evidence/guard-integration-523-r3-20261104/agent-router.tap"
+  ]
+}

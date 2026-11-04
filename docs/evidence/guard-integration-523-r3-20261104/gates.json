@@ -1,0 +1,58 @@
+[
+  {
+    "label": "structure",
+    "command": [
+      "node",
+      "scripts/verify-code-structure.mjs",
+      "--base",
+      "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+      "--head",
+      "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+      "--json"
+    ],
+    "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+    "baseHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+    "startedAt": "2026-11-04T05:24:10.790149+00:00",
+    "finishedAt": "2026-11-04T05:24:11.429779+00:00",
+    "exitCode": 0,
+    "log": "structure.raw.txt",
+    "bytes": 63172,
+    "sha256": "1ce4e0afa774bde9461a8f4920e5bcc351653b89c73fa9c63972cd454918934e"
+  },
+  {
+    "label": "governance",
+    "command": [
+      "python3",
+      ".agents/tools/verify_governance.py",
+      "--target",
+      ".",
+      "--require-accepted"
+    ],
+    "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+    "baseHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+    "startedAt": "2026-11-04T05:24:10.790360+00:00",
+    "finishedAt": "2026-11-04T05:24:10.838646+00:00",
+    "exitCode": 0,
+    "log": "governance.raw.txt",
+    "bytes": 78,
+    "sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332"
+  },
+  {
+    "label": "diff-check",
+    "command": [
+      "git",
+      "diff",
+      "--check",
+      "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+      "HEAD"
+    ],
+    "sourceHead": "492d579d185a524a9b56dd91ce8c3728fe6818a2",
+    "baseHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+    "startedAt": "2026-11-04T05:24:10.790435+00:00",
+    "finishedAt": "2026-11-04T05:24:10.807890+00:00",
+    "exitCode": 0,
+    "log": "diff-check.raw.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

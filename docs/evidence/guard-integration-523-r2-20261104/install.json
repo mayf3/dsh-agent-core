@@ -1,0 +1,35 @@
+{
+  "sourceHead": "f767e8d6608cdb0917aad2d471ba0454d0966a0f",
+  "worktree": "/private/tmp/dsh-523-baseline",
+  "preInstallStatus": "",
+  "command": [
+    "/opt/homebrew/bin/pnpm",
+    "install",
+    "--ignore-scripts",
+    "--no-lockfile",
+    "--node-linker=hoisted",
+    "--package-import-method=copy",
+    "--store-dir",
+    "/private/tmp/dsh-523-r2-dependencies/store",
+    "--registry=https://registry.npmjs.org",
+    "--reporter=append-only"
+  ],
+  "env": {
+    "PATH": "/Users/yanfenma/.qoder/entry:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/opt/homebrew/bin:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/opt/openjdk/bin:/opt/homebrew/bin:/Users/yanfenma/.local/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/opt/homebrew/bin:/Users/yanfenma/.codex/tmp/arg0-macos/codex-arg03DR507:/opt/homebrew/Caskroom/codex/0.164.0/codex-path:/Users/yanfenma/bin:/Users/yanfenma/.local/bin:/Users/yanfenma/Library/pnpm:/Users/yanfenma/.bun/bin:/Users/yanfenma/.opencode/bin:/opt/homebrew/opt/openjdk/bin:/Users/yanfenma/.cargo/bin:/Applications/ZCode.app/Contents/Resources/tools/bfs:/Applications/ZCode.app/Contents/Resources/tools/ripgrep:/Applications/ZCode.app/Contents/Resources/tools/ugrep",
+    "TMPDIR": "/var/folders/jh/5k4x44w12ps1kbrch8__f6b80000gp/T/",
+    "HOME": "/private/tmp/dsh-523-r2-dependencies/home",
+    "CI": "true"
+  },
+  "pnpm": "11.7.0",
+  "node": "v26.7.0",
+  "rootManifestSha256": "d57644033f2ed7458272262dedad91c1cabc86aa51bc75bcc1f35184029299cd",
+  "lockfile": "NONE_COMMITTED; --no-lockfile",
+  "dependencySource": "fresh registry install; independent node_modules + private store; package-import-method=copy; no R1 node_modules reuse; scripts disabled",
+  "startedAt": "2026-11-04T05:05:45.817794+00:00",
+  "exitCode": 0,
+  "finishedAt": "2026-11-04T05:06:08.949049+00:00",
+  "postInstallStatus": "",
+  "log": "pnpm-install.raw.txt",
+  "bytes": 1807,
+  "sha256": "f98dcd673cada2ac916e2ecc36a7dfd9c1bf7fcf69650404cb6e59bf30e894da"
+}
