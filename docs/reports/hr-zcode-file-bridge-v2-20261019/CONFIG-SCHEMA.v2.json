@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-core:fixed-hr-zcode-file-bridge:config:v2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "agentId": {
+      "const": "agt_hr-agent"
+    },
+    "home": {
+      "const": "/Users/yanfenma/.agent-core/homes/agt_hr-agent"
+    },
+    "profileId": {
+      "const": "agent-core-production"
+    },
+    "runtimeRoot": {
+      "type": "string",
+      "pattern": "^/[^\\u0000]*$"
+    },
+    "definitionSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "runtimeCodeSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "enrollmentId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "notBefore": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "specId": {
+          "const": "AGENT_CORE_FIXED_HR_ZCODE_FILE_BRIDGE_V2"
+        },
+        "acceptedCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "userEffectRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "required": [
+        "specId",
+        "acceptedCommit",
+        "userEffectRef"
+      ]
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parentSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "childSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "helperSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generatorSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "parentSha256",
+        "childSha256",
+        "helperSha256",
+        "generatorSha256"
+      ]
+    },
+    "io": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "const": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist"
+        },
+        "snapshot": {
+          "const": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/STATUS-SNAPSHOT.json"
+        },
+        "outbox": {
+          "const": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/hr-outbox"
+        },
+        "inbox": {
+          "const": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/hr-inbox"
+        },
+        "readmeSha256": {
+          "const": "181772d2b5ce142bd3e1debe32fd467020c2c9d02334ca499b1a9a8e6d1dd508"
+        },
+        "maxFileBytes": {
+          "const": 65536
+        },
+        "operations": {
+          "const": [
+            "snapshot",
+            "reply",
+            "submit"
+          ]
+        }
+      },
+      "required": [
+        "root",
+        "snapshot",
+        "outbox",
+        "inbox",
+        "readmeSha256",
+        "maxFileBytes",
+        "operations"
+      ]
+    },
+    "expectedPriorConfig": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "absent"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "sha256"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "kind",
+            "sha256"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "agentId",
+    "home",
+    "profileId",
+    "runtimeRoot",
+    "definitionSha256",
+    "runtimeCodeSha256",
+    "enrollmentId",
+    "notBefore",
+    "expiresAt",
+    "authority",
+    "artifacts",
+    "io",
+    "expectedPriorConfig"
+  ]
+}

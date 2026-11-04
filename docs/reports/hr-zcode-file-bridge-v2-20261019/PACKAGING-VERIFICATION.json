@@ -1,0 +1,143 @@
+{
+  "kind": "HR_V2_DOCS_ONLY_MECHANICAL_PACKAGING",
+  "status": "PROPOSED_NOT_ACCEPTED",
+  "base_commit": "88fe4a16a4a38c066d507d82c7020d52301c7aaa",
+  "exact_contract": {
+    "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v2.1.md",
+    "bytes": 23342,
+    "sha256": "4d32dfa4973aff4a3d2c0ff7403f0bd3141be1d036dba66d9def71b96a00665e",
+    "repository_path": "docs/specs/AGENT_CORE_FIXED_HR_ZCODE_FILE_BRIDGE_V2.md",
+    "embedded_inverse": "EXACT"
+  },
+  "copies": [
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/CONFIG-SCHEMA.v2.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/CONFIG-SCHEMA.v2.json",
+      "bytes": 4198,
+      "sha256": "0ebfa5cb96749d0016c2668174a4f8d2d7027fb0f1c5e0b2ce2c1ebe1412b005",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2.1/SOURCE-CLOSURE-INDEX.v2.1.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/SOURCE-CLOSURE-INDEX.v2.json",
+      "bytes": 9389,
+      "sha256": "499084405f100a2a96f2d7a71c4d5ec167bbb157a1a01cac0c094b97e2896422",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/V1-V2-DELTA.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/V1-V2-DELTA.json",
+      "bytes": 1888,
+      "sha256": "f0406d7389131db0769b382beed1b6ed0c3eb6067481a3a798b529b9fc56545b",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v1.md",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/baseline/PROPOSED-FIXED-HR-ZCODE-FILE-BRIDGE-CONTRACT.v1.md",
+      "bytes": 14261,
+      "sha256": "8bd57a6795bba395232f97f77c7fbbfa194c3604aa170edd897ce97af1169370",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/SOURCE-CLOSURE-INDEX.v1.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/baseline/SOURCE-CLOSURE-INDEX.v1.json",
+      "bytes": 7528,
+      "sha256": "6f84e239c646a8d3b3b9e0d07c35e42fdc0274f226f9ce0c13f9079d6c8aec49",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/independent-sol-readback/HR-ZCODE-FIXED-FILE-BRIDGE-DOCS-RECEIPT.v1.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/baseline/HR-ZCODE-FIXED-FILE-BRIDGE-DOCS-RECEIPT.v1.json",
+      "bytes": 8929,
+      "sha256": "16afc5e4de7075799a2647d18a9a6ec2d41349ee16dee0a9d199a9a5be3b5767",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__core__agent__src__index.ts.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__core__agent__src__index.ts.txt.json",
+      "bytes": 4990,
+      "sha256": "28c75e5fc28bda7e75012aa1cdde71ebec10f96485b18f3a6c7ceeb100778442",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 5155,
+      "repository_sha256": "e52cbe892bf698dc5a9a6f7318e6e7f55dbb69fe51405dfb8ab7400301567797"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__core__tools__src__index.ts.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__core__tools__src__index.ts.txt.json",
+      "bytes": 5900,
+      "sha256": "fe4538aba13bf4d06e2cb99ba0a6ef555446bf58dd194e93010343549ff736a7",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 6084,
+      "repository_sha256": "be2dd5a8669451fb0913babacba921b751b30f21b1ad1cad8e53ef97fa238307"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__agent-router__src__process-registry.js.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__agent-router__src__process-registry.js.txt.json",
+      "bytes": 5891,
+      "sha256": "d265c35f170a73b5a3ffa180a545ae19cbac1c0915facbe60b4946cf819e3086",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 6065,
+      "repository_sha256": "1d9c79ab850c8d5e580a89320e8ad319046ae084605976484bc57e80f6d196f3"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__demo-server__src__index.js.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__demo-server__src__index.js.txt.json",
+      "bytes": 3828,
+      "sha256": "fec86bd19c172a047307e59b0c6dce031c3d969c61a801247552736ebbcfb4a5",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 3980,
+      "repository_sha256": "ef2e6e5aa67b898d939e3cc0265a1ff466f888910c130f40ca607119abbaa491"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2-preparation/packages__demo-server__src__session-seam.js.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__demo-server__src__session-seam.js.txt.json",
+      "bytes": 3439,
+      "sha256": "579cecb5daa4f4379de86bbf5ae6a5077ad84a3e101bd7dbdbcae20ab187aab8",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 3576,
+      "repository_sha256": "8aced7c26f7bcec01a38c9346ac739586a8ff5e5627f5299ecc059e71ec27d72"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/ac810-original-goal-continuation/fixed-hr-zcode-file-bridge-contract/v2/packages__agent-router__src__process__agent-process.js.txt",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/finite-source-excerpts/packages__agent-router__src__process__agent-process.js.txt.json",
+      "bytes": 2567,
+      "sha256": "df6b0d677c3c4ee19f307d391b491698f318dd61aa880442c176bce7b7694746",
+      "copy_inverse": "EXACT",
+      "representation": "JSON rawExcerptText; UTF8 decode inverse exactly equals canonical original excerpt",
+      "repository_bytes": 2687,
+      "repository_sha256": "0918131175379c05470d50473c9f1a0c9fe275acaa4505de7c30914aa305428f"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/answers/coord-hr-existing-0600-generator-pointer-20261019T105053Z.md",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/new-provenance/coord-hr-existing-0600-generator-pointer-20261019T105053Z.md",
+      "bytes": 2068,
+      "sha256": "71a5f134218302086e9fe68bd7628a53225d716dcc20d23a6c296e1134dfb36e",
+      "copy_inverse": "EXACT"
+    },
+    {
+      "original_path": "/Users/yanfenma/Documents/Codex/2026-10-18/three-session-followup-0743/HR-ROOT-SETTINGS-SAFE-PROVENANCE-ADDENDUM-20261019.json",
+      "repository_path": "docs/reports/hr-zcode-file-bridge-v2-20261019/new-provenance/HR-ROOT-SETTINGS-SAFE-PROVENANCE-ADDENDUM-20261019.json",
+      "bytes": 2732,
+      "sha256": "b85e598a499f0b1f68eaf1fef72a264d84473b113be8851a044f7e630ef96f2f",
+      "copy_inverse": "EXACT"
+    }
+  ],
+  "product_implementation_config_wake_send": 0,
+  "original_v1_files_modified": false,
+  "author": "/root/sol_execution_continuation",
+  "requested_model": "gpt-6.1-sol",
+  "requested_reasoning": "ultra",
+  "native_effective_model": "UNKNOWN",
+  "affected_material_fix": {
+    "kind": "F1_CANCELLATION_WIRE_ABI_PRECISION",
+    "original_head": "f81876d0",
+    "original_unit_sha256": "075f981cc935962d3aa179202ded956093b7c8f10534afcc2f81a429d65da68d",
+    "delta": "child observes AbortSignal before RPC; after dispatch await original request terminal; original two-argument wire unchanged; parent owns helper settle and transportUNKNOWN does not prove quiescence",
+    "new_source_protocol_or_product_change": 0
+  }
+}
