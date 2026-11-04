@@ -36,13 +36,25 @@ test('process watch alerts once and invokes controlled recovery on exit', async 
     alert: async event => alerts.push(event), recover: async event => recoveries.push(event),
   })
   await watch.check(); await watch.check()
-  assert.equal(alerts.length, 1); assert.deepEqual(recoveries[0], { agentId: 'agt_a', reason: 'AGENT_PROCESS_EXITED', generation: 3 })
+  assert.equal(alerts.length, 1); assert.equal(recoveries.length, 2); assert.equal(recoveries[0].agentId, 'agt_a'); assert.equal(recoveries[0].generation, 3); assert.equal(recoveries[1].fault.attempts, 2)
 })
 
 test('process watch alerts again after a healthy interval', async () => {
   const states = ['AGENT_PROCESS_EXITED', 'READY_ALIVE', 'AGENT_PROCESS_EXITED']; const alerts = []
   const watch = new ProcessHealthWatch({ snapshot: () => [{ agentId: 'agt_a', state: states.shift() }], alert: async event => alerts.push(event) })
   await watch.check(); await watch.check(); await watch.check(); assert.equal(alerts.length, 2)
+})
+
+
+test('process watch reconciles an open fault on every cycle', async () => {
+  const recoveries = []
+  const watch = new ProcessHealthWatch({
+    snapshot: () => [{ agentId: 'agt_a', state: 'AGENT_PROCESS_EXITED', generation: 9 }],
+    alert: async () => {}, recover: async event => recoveries.push(event),
+  })
+  await watch.check(); await watch.check(); await watch.check()
+  assert.equal(recoveries.length, 3)
+  assert.equal(watch.openFaultsSnapshot()[0].attempts, 3)
 })
 
 test('admission rejection exposes a stable fence classification', () => {

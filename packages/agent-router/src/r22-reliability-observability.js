@@ -26,20 +26,32 @@ export class ProcessHealthWatch {
     this.recover = recover
     this.now = now
     this.previous = new Map()
+    this.openFaults = new Map()
   }
 
   async check() {
     const observations = this.snapshot().map(observation => ({ ...observation, at: this.now() }))
     for (const observation of observations) {
       const previous = this.previous.get(observation.agentId)
-      if (observation.state === 'AGENT_PROCESS_EXITED' && previous !== observation.state) {
-        await this.alert({ type: 'agent.process.exited', ...observation })
-        if (this.recover) await this.recover({ agentId: observation.agentId, reason: 'AGENT_PROCESS_EXITED', generation: observation.generation })
+      const key = `${observation.agentId}:${observation.generation ?? 'unknown'}`
+      if (observation.state === 'AGENT_PROCESS_EXITED') {
+        const fault = this.openFaults.get(key) ?? { firstSeenAt: observation.at, attempts: 0 }
+        fault.lastSeenAt = observation.at
+        fault.attempts += 1
+        this.openFaults.set(key, fault)
+        if (previous !== observation.state) await this.alert({ type: 'agent.process.exited', ...observation, fault })
+        if (this.recover) await this.recover({ agentId: observation.agentId, reason: 'AGENT_PROCESS_EXITED', generation: observation.generation, fault })
+      } else {
+        for (const openKey of this.openFaults.keys()) {
+          if (openKey.startsWith(`${observation.agentId}:`)) this.openFaults.delete(openKey)
+        }
       }
       this.previous.set(observation.agentId, observation.state)
     }
     return observations
   }
+
+  openFaultsSnapshot() { return [...this.openFaults.entries()].map(([key, value]) => ({ key, ...value })) }
 }
 
 export const ADMISSION_REJECTION_CODES = Object.freeze([
