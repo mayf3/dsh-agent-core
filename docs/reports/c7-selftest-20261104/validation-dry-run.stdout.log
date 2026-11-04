@@ -1,0 +1,32 @@
+DRY_RUN_ONLY productionExecution=NOT_EXECUTED stageFunctionsCalled=0
+BEGIN stage_00_authority_mutex [§4] authorization/expiry/unique writer; own mutex
+END   stage_00_authority_mutex
+BEGIN stage_01_integrity_clean [§1] pinned manifests; enumerate/hash/backup/delete ONLY untracked pnpm-lock.yaml; clean status
+END   stage_01_integrity_clean
+BEGIN stage_02_fresh_read [§1–2,4 + r5] source/Harness; plist/env/old PID; static hashes; live schema/identity/bindings + diff receipt
+END   stage_02_fresh_read
+BEGIN stage_03_dual_prerequisites [§3] accepted canary + full runtime; complete file/link membership; candidate binding
+END   stage_03_dual_prerequisites
+BEGIN stage_04_quiet_gate [§4 + r4] mtime >=180s AND recovery census; selftest never runs settlement
+END   stage_04_quiet_gate
+BEGIN stage_05_old_exit [§4–5] final census; bootout; old PID + worker exit; supervisor absent
+END   stage_05_old_exit
+BEGIN stage_05b_settle_unresolved [§4–5] window-only settlement after proved old exit; never called by selftest
+END   stage_05b_settle_unresolved
+BEGIN stage_06_full_preimage [§5–6 + r5] live schema/identity/bindings + diff receipt; full current tree/config/plist/env/metadata + reused copies
+END   stage_06_full_preimage
+BEGIN stage_07_pinned_install [§5] root-owned physical WINDOW_BUNDLE; pinned THREE arguments + R3_BINDING_PAYLOAD; real rc
+END   stage_07_pinned_install
+BEGIN stage_08_install_receipt [§2,5–6] THIS install.log backup + reuse marker + completed §5b; closure PASS AND rc=0; carry forward omitted current config
+END   stage_08_install_receipt
+BEGIN stage_09_final_binding [§3,5 + r5] final closure/config bound to both receipts; live schema/identity/bindings + diff receipt
+END   stage_09_final_binding
+BEGIN stage_10_plist_bootstrap [§2,5] preserve all plist/env; deployed SHA only; bootstrap
+END   stage_10_plist_bootstrap
+BEGIN stage_11_production_verify [§5] exact new PID/env/listener owner/log features/public health; authenticated canonical UNKNOWN
+END   stage_11_production_verify
+BEGIN stage_12_hr_watch [r4] full 600s window; NEW broker execute as agent agt_hr-agent lines
+END   stage_12_hr_watch
+BEGIN stage_13_close [§7 + R6/R7] mapped naming diff empty; latest two/protected generations; exact LIST-ONLY candidates; release own mutex
+END   stage_13_close
+FAILURE_BOUNDARY any failure -> STOP + phase receipt + §6 recipe; NO automatic recovery
