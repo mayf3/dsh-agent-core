@@ -43,7 +43,7 @@
 // machine-readable receipt on stdout in both cases.
 
 import { createRequire } from 'node:module'
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -144,7 +144,8 @@ export function censusSurface(root, surfaceDir, scope = '@deepseek-ai') {
 
 function regularFileBytes(path) {
   let total = 0
-  const info = statSync(path)
+  const info = lstatSync(path)
+  if (info.isSymbolicLink()) return 0
   if (info.isFile()) return info.size
   if (!info.isDirectory()) return 0
   for (const entry of readdirSync(path)) total += regularFileBytes(join(path, entry))
