@@ -1,0 +1,25 @@
+{
+  "executable": "/usr/local/v5-boot-isolation/assembled-root/node-runtime/bin/node",
+  "argv": [
+    "/usr/local/v5-boot-isolation/assembled-root/harness/apps/cli/lib/bin.js",
+    "--profile",
+    "agent-core-production"
+  ],
+  "options": {
+    "cwd": "/usr/local/v5-boot-isolation/assembled-root/app",
+    "env": {
+      "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+      "HOME": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home",
+      "DSH_HOME": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home/.dsh",
+      "TMPDIR": "/usr/local/v5-boot-isolation/c7-selftest-bkng3h75/canary-home",
+      "DSH_HARNESS_ROOT": "/usr/local/v5-boot-isolation/assembled-root/harness"
+    },
+    "stdio": [
+      "ignore",
+      "pipe",
+      "pipe"
+    ],
+    "detached": true
+  },
+  "instrumentationDelta": "detached:true creates recorder-owned process group; official argv/env/stdio unchanged"
+}

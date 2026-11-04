@@ -1,0 +1,11 @@
+{
+  "window_id": "C7_FIXTURE",
+  "scope": "synthetic-names",
+  "method": "manual-inventory",
+  "collector": "C7 selftest synthetic fixture",
+  "captured_at": "2026-11-04T10:46:59.726769+00:00",
+  "names": [
+    "new",
+    "kept"
+  ]
+}
