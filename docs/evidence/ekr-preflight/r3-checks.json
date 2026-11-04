@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-11-04T16:16:33.639476+00:00",
+  "sourceTrackedDiffEmpty": true,
+  "originalMatrixPrefixPreserved": true,
+  "matrixOriginalPrefixSha256": "94826f2b25bb60905cd04289c73f12abad2d1d097c62a109b2b449141563973d",
+  "localLinksChecked": 43,
+  "missingLocalLinks": 0,
+  "pythonHarnessesSyntaxCheckedWithoutPycache": 4,
+  "onlyAuthorizedNewPaths": true,
+  "newFilesCountBeforeCheckRecord": 24,
+  "governanceIntegrityExitCode": 0,
+  "productServicesStarted": false,
+  "productionWrites": 0
+}
