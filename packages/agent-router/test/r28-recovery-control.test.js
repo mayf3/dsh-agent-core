@@ -24,9 +24,9 @@ test('unsafe recovery escalates and never calls recover', async () => {
 
 test('recurrence escalates once at threshold', async () => {
   const escalations = []
-  const monitor = new RecoveryRecurrenceMonitor({ threshold: 2, escalate: async event => escalations.push(event) })
-  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed' })
-  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed' })
-  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed' })
-  assert.equal(escalations.length, 1); assert.equal(escalations[0].target, 'itops/HUMAN_GATE'); assert.equal(escalations[0].count, 2)
+  const monitor = new RecoveryRecurrenceMonitor({ thresholdMs: 10, escalate: async event => escalations.push(event) })
+  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed', occurredAt: 0 })
+  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed', occurredAt: 5 })
+  await monitor.observe({ agentId: 'agt_a', generation: 23, reason: 'recovery_failed', occurredAt: 10 })
+  assert.equal(escalations.length, 1); assert.equal(escalations[0].target, 'itops/HUMAN_GATE'); assert.equal(escalations[0].count, 3); assert.equal(escalations[0].ageMs, 10)
 })

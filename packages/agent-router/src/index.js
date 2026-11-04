@@ -85,6 +85,7 @@ import { ProcessHealthWatch, snapshotAgentProcessHealth } from './r22-reliabilit
 import { operatorExactGenerationRecovery } from './operator-exact-generation-recovery.js'
 import { RecoveryRecurrenceMonitor, createSafeRecoveryCallback } from './r28-recovery-control.js'
 import { executeR28Recovery, R28_STATES } from './r28-recovery-state-machine.js'
+import { createFileRecoveryHistoryStore, GovernanceEscalationDispatcher } from './r30-escalation.js'
 
 /** Stable plugin name referenced by bundle patches. */
 export const name = 'agent-router'
@@ -192,6 +193,10 @@ export function apply(ctx, config) {
   const store = new BindingStore({ storeFile })
   const recoveryFile = typeof cfg.reconciliationStoreFile === 'string'
     && cfg.reconciliationStoreFile !== '' ? cfg.reconciliationStoreFile : null
+  const recoveryHistoryStore = recoveryFile
+    ? createFileRecoveryHistoryStore(`${recoveryFile}.r28-history.jsonl`)
+    : null
+  const escalationDispatcher = new GovernanceEscalationDispatcher({ deps: cfg.r30EscalationDeps })
   /** Per-agent process factory: default AgentProcess, injectable in tests. */
   const authenticatedIngressOpts = new WeakMap()
   const ingressCorrelationLookup = (opts) => authenticatedIngressOpts.get(opts) ?? null
@@ -277,8 +282,12 @@ export function apply(ctx, config) {
   // the registry proves an EMPTY, non-owned slot. Every unsafe or failed
   // recovery is escalated instead of clearing a fence heuristically.
   const recurrenceMonitor = new RecoveryRecurrenceMonitor({
-    threshold: 2,
-    escalate: async event => log.error(`agent recovery escalation ${JSON.stringify(event)}`),
+    thresholdMs: Number.isSafeInteger(cfg.recoveryEscalationThresholdMs)
+      ? cfg.recoveryEscalationThresholdMs : 5 * 60 * 1000,
+    escalate: async event => {
+      const result = await escalationDispatcher.dispatch(event)
+      if (!result.delivered) log.error(`agent recovery escalation delivery failed ${JSON.stringify({ ...event, result })}`)
+    },
   })
   const safeRecovery = createSafeRecoveryCallback({
     registrySnapshot: () => registry.registrySnapshot(),
@@ -422,7 +431,7 @@ export function apply(ctx, config) {
       /** R28 executable recovery state machine; Workflow side effects are injected by the trusted deployment seam. */
       runR28Recovery: (request, deps = cfg.workflowRecoveryDeps) => {
         if (deps === undefined) throw Object.assign(new Error('workflow recovery dependencies are not configured'), { code: 'R28_WORKFLOW_RECOVERY_UNAVAILABLE' })
-        return executeR28Recovery({ ...request, deps })
+        return executeR28Recovery({ ...request, deps: { ...deps, historyStore: deps.historyStore ?? recoveryHistoryStore } })
       },
     /** Route-aware registry gate (DEC-IMPL-004) behind the chain executor —
      *  published for test/ops surface parity with ensureRunning. */

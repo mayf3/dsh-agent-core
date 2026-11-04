@@ -1,22 +1,27 @@
 /** R28 safe auto-recovery and recurrence escalation contracts. */
 
 export class RecoveryRecurrenceMonitor {
-  constructor({ threshold = 2, escalate }) {
-    this.threshold = threshold
+  constructor({ thresholdMs = 5 * 60 * 1000, escalate, now = () => Date.now() }) {
+    this.thresholdMs = thresholdMs
     this.escalate = escalate
+    this.now = now
     this.failures = new Map()
     this.escalated = new Set()
   }
 
-  async observe({ agentId, generation, reason }) {
+  async observe({ agentId, generation, reason, occurredAt = this.now() }) {
     const key = `${agentId}:${generation}`
-    const count = (this.failures.get(key) ?? 0) + 1
-    this.failures.set(key, count)
-    if (count >= this.threshold && !this.escalated.has(key)) {
+    const prior = this.failures.get(key)
+    const fault = prior ?? { firstSeenAt: occurredAt, count: 0 }
+    fault.count += 1
+    fault.lastSeenAt = occurredAt
+    this.failures.set(key, fault)
+    const ageMs = occurredAt - fault.firstSeenAt
+    if (ageMs >= this.thresholdMs && !this.escalated.has(key)) {
       this.escalated.add(key)
-      await this.escalate({ target: 'itops/HUMAN_GATE', agentId, generation, reason, count })
+      await this.escalate({ target: 'itops/HUMAN_GATE', agentId, generation, reason, count: fault.count, firstSeenAt: fault.firstSeenAt, ageMs })
     }
-    return { agentId, generation, count, escalated: this.escalated.has(key) }
+    return { agentId, generation, count: fault.count, ageMs, escalated: this.escalated.has(key) }
   }
 }
 
