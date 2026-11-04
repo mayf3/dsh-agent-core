@@ -1,0 +1,14 @@
+{
+  "sourceSha": "060417c900ec8a65fd991872ae18d59be04334f0",
+  "command": [
+    "node",
+    "--test",
+    "packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js"
+  ],
+  "EKR_SOURCE_SHA": "060417c900ec8a65fd991872ae18d59be04334f0",
+  "startedUtc": "2026-11-04T17:45:53.957977+00:00",
+  "finishedUtc": "2026-11-04T17:45:54.732841+00:00",
+  "rc": 0,
+  "cwd": "/private/tmp/dsh-ekr-b3",
+  "node": "v26.7.0"
+}

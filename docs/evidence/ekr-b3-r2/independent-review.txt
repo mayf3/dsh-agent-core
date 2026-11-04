@@ -1,0 +1,100 @@
+schema_version = 2
+SPEC_GOVERNANCE_MODE = REVIEW
+REVIEW_KIND = AFFECTED_CONTRACT
+REVIEWER_ID = /root/r2_review
+AUTHOR_ID = /root
+AUTHOR_INDEPENDENCE = PASS
+REPOSITORY = mayf3/dsh-agent-core
+REVIEW_TARGET_HEAD = 060417c900ec8a65fd991872ae18d59be04334f0
+REVIEW_TARGET_TREE = 260ef5a091b3cf70ecb13438cb9bb3e8fba57346
+PRIOR_REVIEW_TARGET_HEAD = f31ba0ea8033ffe97363ba001cc8772154b6f320
+BASE_HEAD = 9f04db29cce44a684b4409fa63b436aaf10dfa52
+CURRENT_BASE_HEAD = 2d550bc8147c877db33886fccb85e00a64353e66
+REVIEWED_AT_UTC = 2026-11-04T17:46:04Z
+ASSURANCE_LEVEL = DURABLE
+AUTHORITY_ACTION = REUSE
+ROUTE_STAGE = IMPLEMENTATION
+AUTHORITY_ACCEPTED_IN_BASE = YES
+SPEC_REVIEW = NOT_APPLICABLE
+REVIEW_SCOPE = DELTA
+SCOPE_REASON = Bounded fixture-only repair of frozen acceptance blocker B3-REVIEW-001, plus invalidated evidence.
+IMPACT_EVIDENCE = Exact Git diff from prior reviewed candidate; all packages bytes except planned-reconciliation.test.js are identical; working package bytes match immutable candidate; relevant authority blobs unchanged between integration base and current origin/main.
+AUTHORITY_REVIEW = PASS
+PRIMITIVE_BOUNDARY_REVIEW = PASS
+CONTRACT_REVIEW = PASS (affected delta; prior source-safety result reused through byte identity)
+ACCEPTANCE_COVERAGE_REVIEW = PASS
+MANDATE_SCOPE_REVIEW = PASS
+EVIDENCE_REVIEWABILITY = PASS
+BASE_IMPACT = NONE (affected authorities)
+FROZEN_BLOCKER_UNION = [B3-REVIEW-001]
+FROZEN_BLOCKER_CLOSURE = B3-REVIEW-001 CLOSED
+BLOCKERS = 0
+SPEC_GAPS = 0
+FOLLOW_UPS = 0
+TOOLING_DEBT = 0 (new delta)
+IMPLEMENTATION_ALLOWED = YES (authorized fixture repair complete)
+MERGE_READY = NO (explicit Owner mandate forbids merge)
+OPERATION_ALLOWED = NO (no production authorization)
+NEXT_ACTION = CONTINUE (required root gates and final evidence-only Head recheck, then authorized push/PR)
+
+Scope and authority:
+Read AGENTS.md, shared/local governance, Product Architecture V1, current D-009
+UNKNOWN/termination/zero-write clauses, accepted WAE V3 relevant CTR-WAE-
+002/004/005/006/011/012/013, WEC V3 frozen boundaries, spec-governance SKILL
+and REVIEW mode. Reviewed fixture-only protocol repair under the persisted R2
+Owner mandate. No Product Contract or authority change is proposed.
+
+Frozen blocker closure:
+The third-position sender now executes mintTurnExecution -> markAdmitted ->
+markPromptWriteAttempted -> markPromptReceipt -> injected interruption. Both
+the execution ledger and durable Router are reopened. New assertions verify
+the reopened receipt's actual recovering state, admission watermark and prompt
+ID, original request correlation/message, initialOutcome=outcome_unknown,
+initialSource=runtime_restart_after_prompt_write, active fence, null business
+outcome, null termination evidence, and absence of the former not-admitted
+settlement/prompt-write-not-attempted evidence. The old faulty fixture would
+fail these assertions. This is candidate acceptance evidence, unlike the old
+independent corrected-protocol experiment.
+
+Independent execution:
+Command: EKR_SOURCE_SHA=060417c900ec8a65fd991872ae18d59be04334f0 node --test packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js
+Environment: macOS local isolated worktree /private/tmp/dsh-ekr-b3; Node
+v26.7.0, npm 11.19.0; exception faults, memory sender, fsynced temporary
+ledger, isolated durable Router file. No deployed process, external business
+service, OS process kill, or production operation is exercised.
+Result: rc=0; tests=7, pass=7, fail=0, cancelled=0, skipped=0.
+Raw: docs/evidence/ekr-b3-r2/independent-review.raw.txt
+Raw SHA256: da475d57f149338a69a3d67eea39a1d5ce1075b24b7ecc312575c2d5c938f421
+
+All required interruption positions PASS:
+- before_delivery: NOT_SENT, never_existed, original sends=0, restart sends=0.
+- during_delivery: UNKNOWN, original sends=1, restart sends=0; the interruption
+  is before prompt admission, so not_admitted/prompt_write_not_attempted here
+  remains expected and is not substituted for the third accepted scenario.
+- accepted_receipt_lost: ACCEPTED, recovering, original sends=1, restart sends=0;
+  original request and message retained, initialOutcome=outcome_unknown,
+  fenceState=active, outcome/settlementResult/terminationEvidence=null.
+
+Across positions the exact original attemptId/requestId and generation=1 are
+retained; businessOutcome=UNKNOWN, resumeAuthorized=false. Controlled recovery
+is inapplicable; existing WAE reconciliation keeps NEEDS_REVIEW with judgment
+delivery_unverified. Three original-correlation reads, zero restart delivery,
+one original attempt, non-consuming Router query, unchanged ledger on read,
+and no terminal append are asserted. The four other tests preserve late
+receipt readback, conservative historical/malformed correlation handling,
+torn-tail byte identity and admission-lock serialization.
+
+Unaffected evidence reuse:
+git diff --exit-code f31ba0ea8033ffe97363ba001cc8772154b6f320 060417c900ec8a65fd991872ae18d59be04334f0 -- packages ':(exclude)packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js'
+returned rc=0. Product source, dependencies, other test definitions, scheduler
+and Router packages are unchanged. Historical SHA256SUMS verification returned
+rc=0 for all 10 retained artifacts; raw summaries read back workflow 285/285,
+scheduler 454/454, scheduler-router 40/40, all zero failures. These are reused
+unchanged-mechanism regression observations from f31ba0ea, not newly executed
+full-suite claims at the new SHA. The invalid third-position acceptance is
+superseded only by the fresh bound focused run above. Root separately runs
+the new exact-candidate structure gate and delivery diff checks.
+
+Production writes by reviewer=0. No product/test edits, commit, push or merge
+by reviewer. Installation, loaded runtime, live business outcome and original
+external side effects remain UNKNOWN/not attempted. Review is not acceptance.

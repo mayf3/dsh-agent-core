@@ -1,0 +1,4 @@
+command: git diff --check
+rc: 0
+stdout:
+stderr:

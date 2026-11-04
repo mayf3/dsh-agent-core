@@ -1,0 +1,63 @@
+{
+  "priorCandidate": "f31ba0ea8033ffe97363ba001cc8772154b6f320",
+  "candidate": "060417c900ec8a65fd991872ae18d59be04334f0",
+  "integrationBase": "9f04db29cce44a684b4409fa63b436aaf10dfa52",
+  "verifiedUtc": "2026-11-04T17:46:14.204000+00:00",
+  "changedPackageOrScriptPaths": [
+    "packages/workflow-execution/test/observation-cas/planned-reconciliation.test.js"
+  ],
+  "productFiles": [
+    {
+      "path": "packages/workflow-execution/src/engine.js",
+      "sha256": "1ebe8aafb72833a975e728533d11e87a84ff2e194f1b8ea03dbf97711dff506e",
+      "priorBlob": "892573dbb9b079b0f7f0b616b56da7a5278a67f5",
+      "candidateBlob": "892573dbb9b079b0f7f0b616b56da7a5278a67f5"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-events.js",
+      "sha256": "dbbb275d83dae229f118faddc1169ecdf4fda70872441d83f30df97c5539849d",
+      "priorBlob": "2b6ab0587cd58e72cc35aaea74bc13c050df10e7",
+      "candidateBlob": "2b6ab0587cd58e72cc35aaea74bc13c050df10e7"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger-plan.js",
+      "sha256": "6b0562349f67f74518337c78600581da5f5dd75e8196b090d83ce2c20e92d288",
+      "priorBlob": "ffdac9d32cfd17169df415108044aa3e7af7a653",
+      "candidateBlob": "ffdac9d32cfd17169df415108044aa3e7af7a653"
+    },
+    {
+      "path": "packages/workflow-execution/src/ledger.js",
+      "sha256": "45336df9140267ea85e61985191f6b8c9eca1b53485261cf3f2b79ffe1c644f7",
+      "priorBlob": "26fe743c8b02cb7259544066ae6a6193a21b990b",
+      "candidateBlob": "26fe743c8b02cb7259544066ae6a6193a21b990b"
+    },
+    {
+      "path": "packages/workflow-execution/src/projection.js",
+      "sha256": "c1a2507cc209a6271645f4c69a4dbea91716f796034db612e5180612ea9131e8",
+      "priorBlob": "74ef4bf47093fb2afbe557560e85e96f77c1edd7",
+      "candidateBlob": "74ef4bf47093fb2afbe557560e85e96f77c1edd7"
+    }
+  ],
+  "productSourceByteIdentical": true,
+  "unchangedOtherTestsAndDependencies": true,
+  "fixtureSha256": "1900ceb464a67e865841944d8aba50e5ef27acf219c2a7b7c8f16d5c72cb479a",
+  "fixtureDiffSha256": "3c502d164e10b0cc27e5ee0be40afa038ace3e1cf524a4fbfa9b6a7483ff50f0",
+  "regressionReuse": {
+    "workflow": {
+      "passed": 285,
+      "rc": 0,
+      "scope": "Unaffected mechanisms only; replaced focused seven-test observation rerun at candidate",
+      "raw": "../ekr-b3/workflow.raw.txt"
+    },
+    "scheduler": {
+      "passed": 454,
+      "rc": 0,
+      "raw": "../ekr-b3/scheduler.raw.txt"
+    },
+    "schedulerRouter": {
+      "passed": 40,
+      "rc": 0,
+      "raw": "../ekr-b3/scheduler-router.raw.txt"
+    }
+  }
+}

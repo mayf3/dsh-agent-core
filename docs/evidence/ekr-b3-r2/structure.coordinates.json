@@ -1,0 +1,16 @@
+{
+  "sourceSha": "060417c900ec8a65fd991872ae18d59be04334f0",
+  "baseSha": "9f04db29cce44a684b4409fa63b436aaf10dfa52",
+  "command": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "9f04db29cce44a684b4409fa63b436aaf10dfa52",
+    "--head",
+    "060417c900ec8a65fd991872ae18d59be04334f0",
+    "--json"
+  ],
+  "startedUtc": "2026-11-04T17:45:53.943610+00:00",
+  "finishedUtc": "2026-11-04T17:45:54.604560+00:00",
+  "rc": 0
+}
