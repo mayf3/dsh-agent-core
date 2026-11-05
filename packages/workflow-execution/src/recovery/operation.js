@@ -15,7 +15,7 @@
  * identity-flap execution failure, which follows its own authorization.
  */
 
-import { judgeSettleFromDetail } from './judgment.js'
+import { judgeSettleFromDetail } from '../judgment.js'
 
 /** E5 assignee probe: when the svc wire carries the visit's/instance's
  *  assignee principal, return it (lowercased) for the exact comparison;

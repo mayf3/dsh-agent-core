@@ -1,4 +1,5 @@
 import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
+import { applyReadbackEvent } from './recovery/readback-ledger.js'
 
 /**
  * @agent-core/workflow-execution/src/ledger-events.js — the event vocabulary
@@ -160,6 +161,9 @@ export function applyLedgerEvent(attempts, event) {
       })
       return
     }
+    case 'readback_checked':
+      applyReadbackEvent(current, event)
+      return
     case 'delivery_started':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       // V2 CTR-WAE-012: at most ONE delivery_started per attempt — a second

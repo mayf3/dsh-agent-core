@@ -62,7 +62,7 @@ test('judgment table — judgeStaleFromDetail / judgeDispatchVersionFromDetail',
 
   const stale = (body, baseline = 7) => judgeStaleFromDetail({ body, nodeVisitId: VISIT, workflowStateVersionAtDispatch: baseline })
   assert.equal(stale(fullDetail({ version: 7, visit: VISIT })).kind, 'stale_confirmed')
-  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'progressed', 'assistance/wake bumps defeat staleness')
+  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'recheck_required', 'assistance/wake bumps retain recheck responsibility')
   assert.equal(stale(fullDetail({ version: 8, visit: VISIT_NEXT })).kind, 'progressed', 'RETURN/move defeats staleness')
   assert.equal(stale(fullDetail({ version: 7, visit: VISIT, isTerminal: true })).kind, 'progressed', 'terminal defeats staleness')
   assert.equal(stale({ visibility: 'historical_participant', detail: {} }).kind, 'progressed', 'visibility invariant = business moved on')

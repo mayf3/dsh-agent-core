@@ -254,6 +254,7 @@ test('cross-process failover refreshes a stale empty projection before reconcili
       requestId: attemptIdFor(VISIT),
       sessionId: 'main',
       reconciliationHandle: 'turn:failover',
+      workflowStateVersionAtDispatch: 1,
     })
 
     const reconciled = await engine.reconcileOnce()

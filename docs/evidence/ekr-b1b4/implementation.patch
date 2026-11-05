@@ -1,0 +1,845 @@
+diff --git a/RECEIPT-EKR-B1B4.md b/RECEIPT-EKR-B1B4.md
+new file mode 100644
+index 00000000..ada7175a
+--- /dev/null
++++ b/RECEIPT-EKR-B1B4.md
+@@ -0,0 +1,34 @@
++# EKR B1/B4 receipt — #1374 §3
++
++STATUS = IMPLEMENTING
++
++Repository/worktree: mayf3/dsh-agent-core / `/private/tmp/dsh-ekr-b1b4`.
++Branch: `ac-ekr-b1b4`; base/main observed `1e7233c7b3b081fd30c94de75cf5ba348e2cb323`.
++Authorization: user contract and original `BRIEF-EKR-B1B4.md` (preserved).
++
++PREFLIGHT: REUSE / BRIEF / DURABLE / IMPLEMENTATION. Implementation allowed;
++production operation and merge forbidden. Accepted authority:
++`AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1`, CTR-EKRWAE-001/002/003/006/007,
++Spec SHA256 `c65d901a0e8fb4b5b633ae97e48c93f93fdac1ddb02e38a44e9baeac93c5f51f`.
++Owner acceptance: https://github.com/mayf3/dsh-agent-core/pull/623#issuecomment-6646591408
++binds merged PR #623 (`2d550bc8147c877db33886fccb85e00a64353e66`), reviewed semantic
++head `aeb645868ce3f98ff54f2b631f34c069d38fb04a`, delivery head
++`596360a4b56bebd2b2a45969d14b1e389f9f72a5`. The source file retains its historical
++proposed/none metadata; this receipt does not rewrite authority.
++
++Goal: existing poller rediscovers persistent read-only B1/B4 responsibilities.
++Gap: terminal unavailable drops out; missing baseline/version-only changes lose
++readback responsibility. Preserve #622 CAS, #624 B3, UNKNOWN and admission gates.
++Plan: same-ledger responsibility/check projection; existing reconciler consumer;
++isolated persistent fault/restart tests; independent review; gates; push/open PR.
++RETAIN the existing Scheduler, ledger, formal recovery and all business writers.
++MIGRATE only the B1/B4 permanent-skip interpretation, with no parallel ledger.
++Late samples remain observation baselines and never authorize stale/Owner-resume.
++
++Done when focused tests, existing scheduling regressions, structure V2 and both
++diff checks pass, independently reviewed changes are pushed and a PR references
++mayf3/agent-control#1374 B1/B4. No merge. Expansion/abort: authority conflict,
++unsafe replay, scope escape or required verification failure => stop and record
++`STOPPED-EKR-B1B4.md`.
++
++Tests, final head, PR and runtime/business acceptance are pending/UNKNOWN.
+diff --git a/packages/workflow-execution/src/engine.js b/packages/workflow-execution/src/engine.js
+index 892573db..dd6a17f3 100644
+--- a/packages/workflow-execution/src/engine.js
++++ b/packages/workflow-execution/src/engine.js
+@@ -7,8 +7,9 @@
+  */
+ 
+ import { buildExecutionInstruction } from './instruction.js'
+-import { createRecoveryOperation } from './recovery.js'
+-import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
++import { createRecoveryOperation } from './recovery/operation.js'
++import { createReadbackOperations } from './recovery/readback.js'
++import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFromDetail } from './judgment.js'
+ import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
+ import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
+ import { reconcileDeliveryEvidence } from './projection.js'
+@@ -70,6 +71,7 @@ export function createWorkflowExecutionEngine({
+   }
+ 
+   const escalateAttemptLimit = createAttemptLimitEscalation({ ledger, escalateAttemptLimit: escalateAttemptLimitDep, log })
++  const readbacks = createReadbackOperations({ ledger, readInstanceDetail, resolvePrincipalToAgent, clock, config, log })
+ 
+   const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
+     createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
+@@ -107,19 +109,7 @@ export function createWorkflowExecutionEngine({
+         })
+         if (!delivery.ok) return { kind: 'delivery_failed', reason: `delivery_rejected:${delivery.code}` }
+         // CTR-SRE-002: best-effort target-Agent dispatch baseline inside the admission lock.
+-        let workflowStateVersionAtDispatch
+-        try {
+-          const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
+-          if (read.ok) {
+-            const judged = judgeDispatchVersionFromDetail({ body: read.body })
+-            if (judged.ok) workflowStateVersionAtDispatch = judged.version
+-            else log.warn?.(`workflow-execution: dispatch version probe unusable for ${attempt.nodeVisitId}: ${judged.reason}`)
+-          } else {
+-            log.warn?.(`workflow-execution: dispatch version probe failed for ${attempt.nodeVisitId}: ${read.code}`)
+-          }
+-        } catch (error) {
+-          log.warn?.(`workflow-execution: dispatch version probe errored for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+-        }
++        const workflowStateVersionAtDispatch = await readbacks.sampleDispatch(attempt, resolved.agentId)
+         return {
+           kind: 'run_delivered',
+           agentId: resolved.agentId,
+@@ -192,7 +182,9 @@ export function createWorkflowExecutionEngine({
+   /** ONE authoritative settle probe: the instance detail read AS THE TARGET
+    *  AGENT (its own canonical Principal; see judgment.js invariant). */
+   async function probeSettle(attempt) {
+-    const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
++    let read
++    try { read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId }) }
++    catch { return { kind: 'unavailable', reason: 'settle_check_unavailable: instance detail dependency errored' } }
+     if (!read.ok) {
+       return { kind: 'unavailable', reason: `settle_check_unavailable: instance detail read failed (${read.code})` }
+     }
+@@ -205,7 +197,9 @@ export function createWorkflowExecutionEngine({
+     if (!read.ok) {
+       return { kind: 'unavailable', reason: `stale_check_unavailable: instance detail read failed (${read.code})` }
+     }
+-    return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
++    const judged = judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
++    if (judged.kind === 'recheck_required') await readbacks.schedule(attempt, 'version', 'version_changed_recheck_required')
++    return judged
+   }
+ 
+   function reconcileDeliveries() {
+@@ -235,6 +229,7 @@ export function createWorkflowExecutionEngine({
+         summary.blocked += 1
+         continue
+       }
++      if (readbacks.owns(attempt)) continue
+       summary.examined += 1
+       try {
+         const turnState = queryTurnState(attempt)
+@@ -287,6 +282,7 @@ export function createWorkflowExecutionEngine({
+     // CTR-SRE-002: the terminal run_ended_no_submission class uses the same business probe.
+     for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
+       if (attempt.state !== 'NEEDS_REVIEW') continue
++      if (readbacks.owns(attempt)) continue
+       try {
+         const stale = await judgeStale(attempt)
+         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
+@@ -296,6 +292,7 @@ export function createWorkflowExecutionEngine({
+     }
+     // CTR-WEC1-004: fast continuation uses the retry delay; durable UNKNOWN is excluded.
+     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
++      if (readbacks.owns(attempt)) continue
+       try {
+         const stale = await judgeStale(attempt)
+         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
+@@ -305,6 +302,7 @@ export function createWorkflowExecutionEngine({
+     }
+     // Re-read terminal delivery_unverified too: late original receipts remain
+     // discoverable on every existing startup/poll, with no terminal writes.
++    summary.readbacks = await readbacks.reconcile()
+     summary.deliveryReconciliation = await reconcileDeliveries()
+     return summary
+   }
+diff --git a/packages/workflow-execution/src/judgment.js b/packages/workflow-execution/src/judgment.js
+index e89dee93..7790edae 100644
+--- a/packages/workflow-execution/src/judgment.js
++++ b/packages/workflow-execution/src/judgment.js
+@@ -92,7 +92,7 @@ export function judgeSettleFromDetail({ body, nodeVisitId }) {
+  * baseline (instance workflow_state_version) from ONE instance-detail read
+  * performed AS THE TARGET AGENT immediately after a successful delivery.
+  * Best-effort by contract: a failure yields ok:false and the attempt is
+- * simply never stale-eligible (conservative V2 behaviour for it).
++ * cannot become stale-eligible from a later sample. EKR retains readback responsibility.
+  *
+  * @returns {{ok:true, version:number} | {ok:false, reason:string}}
+  */
+@@ -117,13 +117,12 @@ export function judgeDispatchVersionFromDetail({ body }) {
+  * ONLY svc business facts decide:
+  *   - visit moved / instance terminal            → 'progressed' (business
+  *     moved on: transition, RETURN, admin move, cancel, archive)
+- *   - version != workflowStateVersionAtDispatch  → 'progressed' (assistance
+- *     open / HUMAN_REQUIRED, wake, admin ops — all bump the version; Goal
+- *     CASE 4: never stale-redispatch past a new ownership state)
++ *   - version != workflowStateVersionAtDispatch  → 'recheck_required':
++ *     preserve unfinished responsibility without authorizing redispatch.
+  *   - visit still current + version unchanged    → 'stale_confirmed'
+  *   - any unreadable state                       → 'unavailable' (never stale)
+  *
+- * @returns {{kind:'stale_confirmed'|'progressed'|'unavailable', reason:string}}
++ * @returns {{kind:'stale_confirmed'|'progressed'|'recheck_required'|'unavailable', reason:string}}
+  */
+ export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAtDispatch }) {
+   const { visibility, detail } = body ?? {}
+@@ -151,7 +150,7 @@ export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAt
+     return { kind: 'unavailable', reason: 'stale_check_unavailable: no workflowStateVersionAtDispatch recorded at delivery' }
+   }
+   if (version !== workflowStateVersionAtDispatch) {
+-    return { kind: 'progressed', reason: `workflow_state_version advanced (${workflowStateVersionAtDispatch} -> ${version}) since dispatch` }
++    return { kind: 'recheck_required', reason: `workflow_state_version changed (${workflowStateVersionAtDispatch} -> ${version}); business progress requires recheck` }
+   }
+   return { kind: 'stale_confirmed', reason: `visit still current with workflow_state_version ${version} unchanged since dispatch` }
+ }
+diff --git a/packages/workflow-execution/src/ledger-events.js b/packages/workflow-execution/src/ledger-events.js
+index 2b6ab058..5f4af918 100644
+--- a/packages/workflow-execution/src/ledger-events.js
++++ b/packages/workflow-execution/src/ledger-events.js
+@@ -1,4 +1,5 @@
+ import { validateOwnerAssistanceResumeEvidence } from './owner-assistance-resume.js'
++import { applyReadbackEvent } from './recovery/readback-ledger.js'
+ 
+ /**
+  * @agent-core/workflow-execution/src/ledger-events.js — the event vocabulary
+@@ -160,6 +161,9 @@ export function applyLedgerEvent(attempts, event) {
+       })
+       return
+     }
++    case 'readback_checked':
++      applyReadbackEvent(current, event)
++      return
+     case 'delivery_started':
+       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
+       // V2 CTR-WAE-012: at most ONE delivery_started per attempt — a second
+diff --git a/packages/workflow-execution/src/ledger.js b/packages/workflow-execution/src/ledger.js
+index 26fe743c..f4e82f24 100644
+--- a/packages/workflow-execution/src/ledger.js
++++ b/packages/workflow-execution/src/ledger.js
+@@ -1,5 +1,6 @@
+ import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
+ import { beginAttemptIfAbsent } from './ledger-admission.js'
++import { recordReadback, listReadbackCandidates } from './recovery/readback-ledger.js'
+ /**
+  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
+  * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
+@@ -318,6 +319,9 @@ export class ExecutionLedger {
+   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
+   async recordReconciled(...args) { return recordReconciled(this, this.#operationPort(), ...args) }
+ 
++  async recordReadback(observation) { return recordReadback(this, this.#operationPort(), observation) }
++  async listReadbackCandidatesFresh(limit, nowMs = this.clock()) { return listReadbackCandidates(this, limit, nowMs) }
++
+ 
+   async recordStaleSuperseded(...args) { return recordStaleSuperseded(this, this.#operationPort(), ...args) }
+ 
+diff --git a/packages/workflow-execution/src/recovery.js b/packages/workflow-execution/src/recovery/operation.js
+similarity index 99%
+rename from packages/workflow-execution/src/recovery.js
+rename to packages/workflow-execution/src/recovery/operation.js
+index 9eb139a1..510662c6 100644
+--- a/packages/workflow-execution/src/recovery.js
++++ b/packages/workflow-execution/src/recovery/operation.js
+@@ -15,7 +15,7 @@
+  * identity-flap execution failure, which follows its own authorization.
+  */
+ 
+-import { judgeSettleFromDetail } from './judgment.js'
++import { judgeSettleFromDetail } from '../judgment.js'
+ 
+ /** E5 assignee probe: when the svc wire carries the visit's/instance's
+  *  assignee principal, return it (lowercased) for the exact comparison;
+diff --git a/packages/workflow-execution/src/recovery/readback-ledger.js b/packages/workflow-execution/src/recovery/readback-ledger.js
+new file mode 100644
+index 00000000..db7c9930
+--- /dev/null
++++ b/packages/workflow-execution/src/recovery/readback-ledger.js
+@@ -0,0 +1,105 @@
++import { staleObservation, validateObservationIdentity } from '../attempt-identity.js'
++
++const ID_FIELDS = ['workflowInstanceId', 'nodeVisitId', 'dispatchIntentId', 'ownerPrincipalId']
++const CATEGORIES = ['settlement', 'baseline', 'version']
++const RESULTS = ['scheduled', 'unavailable', 'still_current', 'revalidated', 'closed']
++const CLOSURES = ['node_visit_no_longer_current', 'historical_participant', 'instance_terminal']
++
++export function readbackCategory(attempt) {
++  if (!attempt.delivered || attempt.state === 'SETTLED') return undefined
++  if (attempt.readback?.status === 'pending') return attempt.readback.category
++  if (attempt.judgment === 'settle_check_unavailable') return 'settlement'
++  if ((attempt.state === 'ACTIVE' && attempt.phase === 'run_delivered'
++    || attempt.judgment === 'run_ended_no_submission')
++    && attempt.workflowStateVersionAtDispatch === undefined) return 'baseline'
++  return undefined
++}
++
++export function readbackIdentity(attempt) {
++  return { ...Object.fromEntries(ID_FIELDS.map(key => [key, attempt[key]])),
++    expectedAttemptId: attempt.attemptId, expectedGeneration: attempt.generation ?? 1,
++    requestId: attempt.delivered.requestId, agentId: attempt.delivered.agentId,
++    expectedState: attempt.state, expectedPhase: attempt.phase,
++    expectedReadbackRevision: attempt.readback?.revision ?? 0 }
++}
++
++function validateEvent(current, event) {
++  validateObservationIdentity(event)
++  if (!current?.delivered || current.state === 'SETTLED'
++    || staleObservation(current, event)
++    || ID_FIELDS.some(key => event[key] !== current[key])
++    || event.requestId !== current.delivered.requestId || event.agentId !== current.delivered.agentId
++    || event.expectedState !== current.state || event.expectedPhase !== current.phase
++    || event.expectedReadbackRevision !== (current.readback?.revision ?? 0)
++    || !CATEGORIES.includes(event.category) || !RESULTS.includes(event.result)
++    || !Number.isSafeInteger(event.atMs) || !Number.isSafeInteger(event.observedAtMs)
++    || event.observedAtMs > event.atMs || !Number.isSafeInteger(event.nextCheckAtMs)
++    || event.nextCheckAtMs <= event.atMs || !Number.isSafeInteger(event.failures) || event.failures < 0
++    || (event.result === 'closed' && !CLOSURES.includes(event.reason))
++    || typeof event.reason !== 'string' || event.reason === '') {
++    throw new Error('workflow-execution: invalid readback responsibility event')
++  }
++  if (event.observationBaseline !== undefined) {
++    const sample = event.observationBaseline
++    if (sample.kind !== 'late_current_read' || sample.source !== 'target_agent_instance_detail'
++      || !Number.isSafeInteger(sample.version) || sample.version < 1 || sample.observedAtMs !== event.observedAtMs) {
++      throw new Error('workflow-execution: invalid late readback sample')
++    }
++  }
++}
++
++/** Narrow terminal append exception: metadata and trusted visit closure only.
++ * Never changes delivery/WAL, the original baseline, or any Router outcome. */
++export function applyReadbackEvent(current, event) {
++  validateEvent(current, event)
++  current.readback = {
++    category: event.category, consumer: 'workflow_execution_due_poller',
++    status: event.result === 'closed' ? 'closed' : event.result === 'revalidated' ? 'revalidated' : 'pending',
++    revision: event.expectedReadbackRevision + 1, nextCheckAtMs: event.nextCheckAtMs,
++    failures: event.failures, lastResult: event.result, reason: event.reason,
++    observedAtMs: event.observedAtMs, businessOutcome: 'UNKNOWN',
++    ...(current.readback?.observationBaseline === undefined ? {} : { observationBaseline: current.readback.observationBaseline }),
++    ...(event.observationBaseline === undefined ? {} : { observationBaseline: event.observationBaseline }),
++    ...(event.result === 'revalidated' ? { consumer: 'existing_stale_reconciler' } : {}),
++  }
++  if (event.result === 'closed') {
++    current.readback.priorVerdict = { state: current.state, judgment: current.judgment, reason: current.reason }
++    current.state = 'SETTLED'
++    current.judgment = 'business_commitment_observed'
++    current.reason = event.reason
++    // Visit closure is not a business outcome or authorship claim for the Run.
++    current.readback.completedByThisRun = false
++  }
++}
++
++export async function recordReadback(ledger, io, observation) {
++  validateObservationIdentity(observation)
++  return ledger.mutate(() => {
++    const current = io.attempt(observation.nodeVisitId)
++    if (!current) throw new Error('workflow-execution: readback without original attempt')
++    const stale = staleObservation(current, observation)
++    if (stale) return stale
++    if (ID_FIELDS.some(key => current[key] !== observation[key])
++      || current.state !== observation.expectedState || current.phase !== observation.expectedPhase
++      || (current.readback?.revision ?? 0) !== observation.expectedReadbackRevision) {
++      return { committed: false, cause: 'attempt_changed', attempt: { ...current } }
++    }
++    const event = { ...observation, kind: 'readback_checked', atMs: ledger.clock() }
++    validateEvent(current, event)
++    io.appendEvent(event)
++    io.applyEvent(event)
++    return { committed: true, attempt: { ...io.attempt(observation.nodeVisitId) } }
++  })
++}
++
++/** Old terminal unavailable/missing-baseline events bootstrap without rewriting
++ * their bytes. Oldest due first; postponement prevents one failed item starving
++ * later ones. The per-pass candidate/read budget is finite and shared. */
++export function listReadbackCandidates(ledger, limit, nowMs) {
++  if (!Number.isSafeInteger(limit) || limit < 1) throw new TypeError('workflow-execution: readback candidate limit must be positive and finite')
++  return ledger.inspectFresh(attempts => attempts.filter(attempt => readbackCategory(attempt)
++    && (attempt.readback?.nextCheckAtMs ?? 0) <= nowMs)
++    .sort((a, b) => (a.readback?.nextCheckAtMs ?? 0) - (b.readback?.nextCheckAtMs ?? 0)
++      || a.createdAtMs - b.createdAtMs || a.attemptId.localeCompare(b.attemptId))
++    .slice(0, limit))
++}
+diff --git a/packages/workflow-execution/src/recovery/readback.js b/packages/workflow-execution/src/recovery/readback.js
+new file mode 100644
+index 00000000..2beff217
+--- /dev/null
++++ b/packages/workflow-execution/src/recovery/readback.js
+@@ -0,0 +1,89 @@
++import { judgeDispatchVersionFromDetail, judgeSettleFromDetail } from '../judgment.js'
++import { readbackCategory, readbackIdentity } from './readback-ledger.js'
++
++export function createReadbackOperations({ ledger, readInstanceDetail, resolvePrincipalToAgent, clock, config, log }) {
++  const budget = config.maxReadbackChecksPerPoll ?? 25
++  const delayMs = config.readbackRetryDelayMs ?? 30_000
++  const maxDelayMs = config.readbackMaxDelayMs ?? 300_000
++  for (const [name, value] of Object.entries({ maxReadbackChecksPerPoll: budget,
++    readbackRetryDelayMs: delayMs, readbackMaxDelayMs: maxDelayMs })) {
++    if (!Number.isSafeInteger(value) || value < 1) throw new TypeError(`workflow-execution: config.${name} must be a finite positive integer`)
++  }
++  if (maxDelayMs < delayMs) throw new TypeError('workflow-execution: readback max delay must cover initial delay')
++  if (!Number.isSafeInteger(clock() + maxDelayMs)) throw new TypeError('workflow-execution: readback next-check exceeds safe timestamp')
++
++  async function sampleDispatch(attempt, agentId) {
++    try {
++      const read = await readInstanceDetail({ agentId, workflowInstanceId: attempt.workflowInstanceId })
++      const judged = read.ok ? judgeDispatchVersionFromDetail({ body: read.body }) : { ok: false }
++      if (judged.ok) return judged.version
++      log.warn?.(`workflow-execution: dispatch version probe unavailable for ${attempt.nodeVisitId}`)
++    } catch { log.warn?.(`workflow-execution: dispatch version probe unavailable for ${attempt.nodeVisitId}`) }
++  }
++
++  function owns(attempt) { return readbackCategory(attempt) !== undefined }
++
++  async function schedule(attempt, category, reason) {
++    if (attempt.readback?.status === 'pending') return { committed: false, cause: 'already_scheduled' }
++    return ledger.recordReadback({ ...readbackIdentity(attempt), category, result: 'scheduled', reason,
++      failures: 0, observedAtMs: clock(), nextCheckAtMs: clock() + delayMs })
++  }
++
++  async function check(attempt) {
++    const category = readbackCategory(attempt)
++    let result = 'unavailable', reason = 'read_unavailable', observationBaseline
++    try {
++      // Revalidate the original Principal mapping, never fall back to a poller
++      // identity. Failure retains responsibility without business settlement.
++      const resolved = await resolvePrincipalToAgent(attempt.ownerPrincipalId)
++      if (!resolved.ok || resolved.agentId !== attempt.delivered.agentId) {
++        reason = 'target_identity_unavailable'
++      } else {
++        const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
++        if (!read.ok) reason = 'instance_detail_unavailable'
++        else if (read.body?.detail?.instance?.workflow_instance_id !== attempt.workflowInstanceId) reason = 'instance_identity_unverified'
++        else {
++          const settled = judgeSettleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId })
++          if (settled.kind === 'settled') {
++            result = 'closed'
++            reason = read.body.visibility === 'historical_participant' ? 'historical_participant' : 'node_visit_no_longer_current'
++          } else if (settled.kind === 'still_current'
++            && read.body.detail.current_visit?.assignee_principal_id === attempt.ownerPrincipalId) {
++            if (read.body.detail.instance.is_terminal === true) {
++              result = 'closed'
++              reason = 'instance_terminal'
++            } else {
++              const sample = judgeDispatchVersionFromDetail({ body: read.body })
++              if (sample.ok) {
++                observationBaseline = { kind: 'late_current_read', source: 'target_agent_instance_detail',
++                  version: sample.version, observedAtMs: clock() }
++                result = category === 'version' && sample.version === attempt.workflowStateVersionAtDispatch
++                  ? 'revalidated' : 'still_current'
++                reason = result === 'revalidated' ? 'original_version_revalidated' : 'unfinished_visit_recheck'
++              } else reason = 'current_version_unavailable'
++            }
++          } else reason = 'visit_or_visibility_unverified'
++        }
++      }
++    } catch { reason = 'read_dependency_unavailable' }
++    const failures = result === 'unavailable' ? Math.min((attempt.readback?.failures ?? 0) + 1, 53) : 0
++    const observedAtMs = observationBaseline?.observedAtMs ?? clock()
++    const nextCheckAtMs = clock() + Math.min(maxDelayMs, delayMs * 2 ** Math.min(failures, 30))
++    return ledger.recordReadback({ ...readbackIdentity(attempt), category, result, reason,
++      failures, observedAtMs, nextCheckAtMs,
++      ...(observationBaseline === undefined ? {} : { observationBaseline }) })
++  }
++
++  async function reconcile() {
++    const results = []
++    // Only the existing startup/poll calls this. A registration consumes the
++    // same budget as a read; no local retry timer, no business delivery seam.
++    for (const attempt of await ledger.listReadbackCandidatesFresh(budget, clock())) {
++      const category = readbackCategory(attempt)
++      results.push(attempt.readback?.status === 'pending'
++        ? await check(attempt) : await schedule(attempt, category, `${category}_readback_required`))
++    }
++    return results
++  }
++  return { sampleDispatch, owns, schedule, reconcile }
++}
+diff --git a/packages/workflow-execution/test/engine.test.js b/packages/workflow-execution/test/engine.test.js
+index 40edd208..e73052a7 100644
+--- a/packages/workflow-execution/test/engine.test.js
++++ b/packages/workflow-execution/test/engine.test.js
+@@ -254,6 +254,7 @@ test('cross-process failover refreshes a stale empty projection before reconcili
+       requestId: attemptIdFor(VISIT),
+       sessionId: 'main',
+       reconciliationHandle: 'turn:failover',
++      workflowStateVersionAtDispatch: 1,
+     })
+ 
+     const reconciled = await engine.reconcileOnce()
+diff --git a/packages/workflow-execution/test/observation-cas/readback-process.js b/packages/workflow-execution/test/observation-cas/readback-process.js
+new file mode 100644
+index 00000000..cf636d6a
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/readback-process.js
+@@ -0,0 +1,56 @@
++// Isolated service process used by readback-restart.test.js. No production I/O.
++import { appendFileSync } from 'node:fs'
++import { join } from 'node:path'
++import { ExecutionLedger } from '../../src/ledger.js'
++import { createWorkflowExecutionEngine } from '../../src/engine.js'
++import { intent, VISIT, AGENT } from './fixture.js'
++
++if (process.env.EKR_READBACK_CHILD === '1') {
++  const [dir, endpoint, mode] = process.argv.slice(2)
++  const ledger = new ExecutionLedger({ dir })
++  const errors = []
++  const engine = createWorkflowExecutionEngine({
++    ledger, config: { readbackRetryDelayMs: 120, readbackMaxDelayMs: 480 },
++    fetchDuePage: async () => ({ ok: true, items: [intent()] }),
++    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
++    deliverRun: async request => {
++      appendFileSync(join(dir, 'deliveries.jsonl'), `${JSON.stringify(request)}\n`)
++      return { ok: true, sessionId: 'main', reconciliationHandle: 'turn:isolated' }
++    },
++    // Deterministic Router seam, deliberately independent of Workflow facts.
++    getTurnReconciliation: () => ({ state: 'settled' }),
++    resolveCallerCorrelation: () => ({ state: 'never_existed' }),
++    readInstanceDetail: async ({ agentId, workflowInstanceId }) => {
++      const response = await fetch(endpoint, { headers: { 'x-agent-id': agentId, 'x-workflow-id': workflowInstanceId } })
++      return response.ok ? { ok: true, body: await response.json() } : { ok: false, code: `http_${response.status}` }
++    },
++    log: { error: message => errors.push(message) },
++  })
++  try {
++    if (mode === 'seed') {
++      const admission = await engine.admitDueIntent(intent())
++      await engine.reconcileOnce()
++      await engine.stop()
++      process.send({ stage: 'seeded', admission, attempt: ledger.get(VISIT), errors }, () => process.disconnect())
++    } else {
++      engine.start({ intervalMs: 20 })
++      let observed = false
++      const watcher = setInterval(async () => {
++        const attempt = ledger.get(VISIT)
++        if (!observed && attempt?.readback?.observationBaseline) {
++          observed = true
++          process.send({ stage: 'observed', attempt })
++        }
++        if (attempt?.readback?.status === 'closed') {
++          clearInterval(watcher)
++          await engine.stop()
++          process.send({ stage: 'closed', attempt, errors }, () => process.disconnect())
++        }
++      }, 10)
++    }
++  } catch (error) {
++    await engine.stop()
++    process.exitCode = 1
++    process.send({ stage: 'error', error: String(error.stack) }, () => process.disconnect())
++  }
++}
+diff --git a/packages/workflow-execution/test/observation-cas/readback-restart.test.js b/packages/workflow-execution/test/observation-cas/readback-restart.test.js
+new file mode 100644
+index 00000000..800ac300
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/readback-restart.test.js
+@@ -0,0 +1,84 @@
++import assert from 'node:assert/strict'
++import { fork } from 'node:child_process'
++import { once } from 'node:events'
++import { createServer } from 'node:http'
++import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++import { test } from 'node:test'
++import { detail, VISIT, AGENT, INSTANCE } from './fixture.js'
++
++const bytes = file => readFileSync(file, 'utf8')
++
++for (const scenario of ['B1-503', 'B4-missing-baseline']) {
++  test(`${scenario}: persisted responsibility survives real process exit; existing poller converges after HTTP recovery`, { timeout: 15_000 }, async t => {
++    const dir = mkdtempSync(join(tmpdir(), 'ekr-readback-process-'))
++    const requests = []
++    let recovered = false, moved = false, child, exit
++    const server = createServer((req, res) => {
++      const status = scenario === 'B1-503' && requests.length >= 2 && !recovered
++        || scenario === 'B4-missing-baseline' && requests.length === 1 ? 503 : 200
++      requests.push({ status, agentId: req.headers['x-agent-id'], instanceId: req.headers['x-workflow-id'] })
++      res.writeHead(status, { 'content-type': 'application/json' })
++      const body = detail(8).body
++      if (moved) body.detail.current_node_visit_id = 'ad5c2f0a-3f19-4a7e-9a3f-5d1c2b0a9e77'
++      res.end(JSON.stringify(status === 200 ? body : { error: 'injected_dependency_unavailable' }))
++    })
++    function start(mode) {
++      child = fork(new URL('./readback-process.js', import.meta.url), [dir, `http://127.0.0.1:${server.address().port}`, mode], {
++        stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env: { ...process.env, EKR_READBACK_CHILD: '1' },
++      })
++      exit = once(child, 'exit')
++      return once(child, 'message')
++    }
++    try {
++      server.listen(0, '127.0.0.1')
++      await once(server, 'listening')
++      const [seed] = await start('seed')
++      assert.equal(seed.stage, 'seeded', JSON.stringify(seed))
++      assert.deepEqual(seed.errors, [])
++      assert.equal(seed.admission.action, 'admitted')
++      assert.equal(seed.attempt.readback.status, 'pending')
++      assert.ok(Number.isSafeInteger(seed.attempt.readback.nextCheckAtMs))
++      assert.deepEqual(await exit, [0, null])
++      const originalWal = bytes(join(dir, 'attempts.jsonl'))
++      recovered = true
++      moved = scenario === 'B1-503'
++      let [reply] = await start('poll')
++      if (scenario === 'B4-missing-baseline') {
++        assert.equal(reply.stage, 'observed', JSON.stringify(reply))
++        assert.equal(reply.attempt.readback.observationBaseline.kind, 'late_current_read')
++        assert.equal(reply.attempt.workflowStateVersionAtDispatch, undefined)
++        assert.equal(reply.attempt.preDeliveryWorkflowStateVersion, 8)
++        assert.equal(reply.attempt.state, 'ACTIVE')
++        const closed = once(child, 'message')
++        moved = true
++        ;[reply] = await closed
++      }
++      assert.equal(reply.stage, 'closed', JSON.stringify(reply))
++      assert.deepEqual(reply.errors, [])
++      assert.deepEqual(await exit, [0, null])
++      assert.equal(reply.attempt.attemptId, seed.attempt.attemptId)
++      assert.equal(reply.attempt.generation, 1)
++      assert.equal(reply.attempt.readback.completedByThisRun, false)
++      assert.equal(reply.attempt.readback.businessOutcome, 'UNKNOWN')
++      assert.equal(bytes(join(dir, 'deliveries.jsonl')).trim().split('\n').length, 1)
++      assert.ok(bytes(join(dir, 'attempts.jsonl')).startsWith(originalWal))
++      assert.ok(requests.some(request => request.status === 503))
++      assert.ok(requests.every(request => request.agentId === AGENT && request.instanceId === INSTANCE))
++      const added = bytes(join(dir, 'attempts.jsonl')).slice(originalWal.length).trim().split('\n').map(JSON.parse)
++      assert.ok(added.every(event => event.kind === 'readback_checked'))
++      t.diagnostic(JSON.stringify({ sourceSha: process.env.EKR_SOURCE_SHA ?? 'UNKNOWN', testName: scenario,
++        faultInjection: 'actual loopback HTTP503 and exit/restart of engine process', initialState: seed.attempt,
++        expectedResult: 'durable next check; automatic readback; zero replay; late sample is observation only',
++        actualResult: reply.attempt, rawReceipt: { requests, childExit: [0, null], events: added },
++        originalRequest: seed.attempt.attemptId, deliveryCount: 1, productionWrites: 0,
++        limitations: 'isolated real ledger/process/HTTP; Router and due-feed injected; no Svc DB or live cross-service claim' }))
++    } finally {
++      if (child?.exitCode === null) child.kill('SIGKILL')
++      await exit?.catch(() => {})
++      await new Promise(resolve => server.close(resolve))
++      rmSync(dir, { recursive: true, force: true })
++    }
++  })
++}
+diff --git a/packages/workflow-execution/test/observation-cas/readback.test.js b/packages/workflow-execution/test/observation-cas/readback.test.js
+new file mode 100644
+index 00000000..1a7e128a
+--- /dev/null
++++ b/packages/workflow-execution/test/observation-cas/readback.test.js
+@@ -0,0 +1,202 @@
++import assert from 'node:assert/strict'
++import { test } from 'node:test'
++import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
++import { tmpdir } from 'node:os'
++import { join } from 'node:path'
++import { createHash } from 'node:crypto'
++import { ExecutionLedger } from '../../src/ledger.js'
++import { createWorkflowExecutionEngine } from '../../src/engine.js'
++import { readbackIdentity } from '../../src/recovery/readback-ledger.js'
++import { TurnReconciliationStore } from '../../../agent-router/src/reconciliation/store.js'
++import { delivered, advance, detail, intent, VISIT, AGENT, T0 } from './fixture.js'
++
++const bytes = file => readFileSync(file, 'utf8')
++const hash = file => createHash('sha256').update(readFileSync(file)).digest('hex')
++function setup(t) {
++  const dir = mkdtempSync(join(tmpdir(), 'ekr-readback-'))
++  t.after(() => rmSync(dir, { recursive: true, force: true }))
++  const state = { now: T0, reads: 0, sends: 0, response: detail(8), turn: 'pending' }
++  const ledger = new ExecutionLedger({ dir, clock: () => state.now })
++  const deps = { ledger, clock: () => state.now,
++    config: { staleNoProgressThresholdMs: 100, retryDelayMs: 50,
++      readbackRetryDelayMs: 10, readbackMaxDelayMs: 40, maxReadbackChecksPerPoll: 2 },
++    fetchDuePage: async () => ({ ok: true, items: [] }),
++    resolvePrincipalToAgent: async () => ({ ok: true, agentId: AGENT }),
++    getTurnReconciliation: () => ({ state: state.turn }),
++    resolveCallerCorrelation: () => ({ state: 'never_existed' }),
++    deliverRun: async () => { state.sends += 1; return { ok: true, sessionId: 'main' } },
++    readInstanceDetail: async () => { state.reads += 1; return state.response },
++  }
++  return { dir, ledger, state, deps, engine: createWorkflowExecutionEngine(deps) }
++}
++function observation(attempt, now, patch = {}) {
++  return { ...readbackIdentity(attempt), category: 'version', result: 'scheduled', reason: 'version_changed',
++    failures: 0, observedAtMs: now, nextCheckAtMs: now + 10, ...patch }
++}
++function receipt(t, name, initial, actual) {
++  t.diagnostic(JSON.stringify({ sourceSha: process.env.EKR_SOURCE_SHA ?? 'UNKNOWN', testName: name,
++    faultInjection: name, initialState: initial, expectedResult: 'persistent readback with original UNKNOWN and no business replay',
++    actualResult: actual, rawReceipt: actual, productionWrites: 0 }))
++}
++
++test('B1 legacy terminal unavailable is rebuilt once, honors due time, caps backoff and never disappears', async t => {
++  const f = setup(t)
++  const attempt = await delivered(f.ledger)
++  await f.ledger.recordReconciled({ ...readbackIdentity(attempt), expectedPhase: attempt.phase,
++    verdict: 'NEEDS_REVIEW', judgment: 'settle_check_unavailable', reason: 'legacy HTTP503' })
++  const original = bytes(f.ledger.eventsFile)
++  f.state.response = { ok: false, code: 'http_503' }
++  await Promise.all([f.engine.pollOnce(), createWorkflowExecutionEngine(f.deps).pollOnce()])
++  const registered = bytes(f.ledger.eventsFile)
++  assert.equal(registered.slice(original.length).trim().split('\n').length, 1)
++  await f.engine.pollOnce()
++  assert.equal(bytes(f.ledger.eventsFile), registered)
++  assert.equal(f.state.reads, 0)
++  const delays = []
++  for (let i = 0; i < 5; i++) {
++    f.state.now = f.ledger.get(VISIT).readback.nextCheckAtMs
++    await f.engine.pollOnce()
++    const current = f.ledger.get(VISIT)
++    delays.push(current.readback.nextCheckAtMs - f.state.now)
++    assert.equal(current.judgment, 'settle_check_unavailable')
++    assert.equal(current.readback.status, 'pending')
++  }
++  assert.deepEqual(delays, [20, 40, 40, 40, 40])
++  assert.equal(f.state.sends, 0)
++  assert.ok(bytes(f.ledger.eventsFile).startsWith(original))
++  receipt(t, 'B1-legacy-backoff-budget', attempt, { delays, reads: f.state.reads, sends: f.state.sends, attempt: f.ledger.get(VISIT) })
++})
++
++for (const version of [8, 6, 9]) {
++  test(`B4 same visit version 7->${version} triggers durable recheck, never completion or admission`, async t => {
++    const f = setup(t)
++    const initial = await delivered(f.ledger)
++    f.state.response = detail(version)
++    f.state.now += 101
++    await f.engine.pollOnce()
++    assert.equal(f.ledger.get(VISIT).readback.category, 'version')
++    f.state.now += 10
++    await f.engine.pollOnce()
++    const current = f.ledger.get(VISIT)
++    assert.equal(current.state, 'ACTIVE')
++    assert.equal(current.readback.status, 'pending')
++    assert.equal(current.readback.observationBaseline.version, version)
++    assert.equal(current.workflowStateVersionAtDispatch, 7)
++    assert.equal(current.generation, 1)
++    assert.equal(f.state.sends, 0)
++    assert.ok(!bytes(f.ledger.eventsFile).includes('stale_superseded'))
++    receipt(t, `B4-version-${version}`, initial, current)
++  })
++}
++
++test('B4 restored original version returns responsibility to existing conservative stale gate', async t => {
++  const f = setup(t)
++  await delivered(f.ledger)
++  f.state.now += 101
++  await f.engine.pollOnce()
++  f.state.response = detail(7)
++  f.state.now += 10
++  await f.engine.pollOnce()
++  assert.equal(f.ledger.get(VISIT).readback.status, 'revalidated')
++  assert.equal(f.ledger.get(VISIT).state, 'ACTIVE')
++  await f.engine.pollOnce()
++  assert.equal(f.ledger.get(VISIT).judgment, 'stale_no_progress')
++  assert.equal(f.state.sends, 0)
++})
++
++test('B1/B4 UNKNOWN keeps actual Router persistence and isolated Scheduler fence bytes unchanged', async t => {
++  const f = setup(t)
++  const attempt = await delivered(f.ledger)
++  const routerFile = join(f.dir, 'router.json')
++  const router = new TurnReconciliationStore({ runtimeEpoch: 'readback-test', persistenceFile: routerFile })
++  const handle = router.mintTurnExecution({ agentId: AGENT, processGeneration: 1, sessionId: 'main', callerCorrelation: { requestId: attempt.attemptId } })
++  router.markAdmitted(handle, { eventWatermarkSeq: 0, promptRequestId: 'unknown-prompt', deadlineAtWallMs: T0 })
++  router.markPromptWriteAttempted(handle)
++  router.markOutcomeUnknown(handle, { source: 'test_untrusted_result', deadlineAtWallMs: T0 })
++  const schedulerFile = join(f.dir, 'isolated-scheduler-state.json')
++  writeFileSync(schedulerFile, JSON.stringify({ occurrence: 'outcome_unknown', fence: 'active', nextRun: T0 }))
++  const before = [hash(routerFile), hash(schedulerFile)]
++  await f.ledger.recordReconciled({ ...readbackIdentity(attempt), expectedPhase: attempt.phase,
++    verdict: 'NEEDS_REVIEW', judgment: 'settle_check_unavailable', reason: 'unknown' })
++  const original = bytes(f.ledger.eventsFile)
++  const engine = createWorkflowExecutionEngine({ ...f.deps,
++    getTurnReconciliation: query => router.getTurnReconciliation(query),
++    resolveCallerCorrelation: query => router.resolveCallerCorrelation(query) })
++  await engine.pollOnce()
++  const responses = [undefined, { ok: false, code: '503' }, { ok: true, body: {} },
++    { ok: true, body: { visibility: 'full', detail: { instance: { workflow_instance_id: 'wrong' } } } }, detail(8)]
++  for (const response of responses) {
++    f.state.response = response
++    f.state.now = f.ledger.get(VISIT).readback.nextCheckAtMs
++    await engine.pollOnce()
++  }
++  assert.deepEqual([hash(routerFile), hash(schedulerFile)], before)
++  assert.equal(f.ledger.get(VISIT).judgment, 'settle_check_unavailable')
++  assert.equal(f.ledger.get(VISIT).readback.businessOutcome, 'UNKNOWN')
++  assert.equal(router.getTurnReconciliation(handle).snapshot.initialOutcome, 'outcome_unknown')
++  assert.ok(bytes(f.ledger.eventsFile).startsWith(original))
++  assert.ok(bytes(f.ledger.eventsFile).slice(original.length).trim().split('\n').map(JSON.parse)
++    .every(event => event.kind === 'readback_checked' && event.result !== 'closed'))
++  receipt(t, 'UNKNOWN-protected-files', attempt, { protectedHashesBefore: before,
++    protectedHashesAfter: [hash(routerFile), hash(schedulerFile)], sends: f.state.sends,
++    router: router.getTurnReconciliation(handle), attempt: f.ledger.get(VISIT) })
++})
++
++test('readback late observation cannot write a new generation or win a concurrent responsibility revision', async t => {
++  const f = setup(t)
++  const initial = await delivered(f.ledger)
++  const held = observation(initial, f.state.now)
++  await advance(f.ledger, initial)
++  const before = bytes(f.ledger.eventsFile)
++  assert.equal((await f.ledger.recordReadback(held)).action, 'stale_observation')
++  assert.equal(bytes(f.ledger.eventsFile), before)
++  const current = f.ledger.get(VISIT)
++  const input = observation(current, f.state.now)
++  const results = await Promise.all([f.ledger.recordReadback(input), f.ledger.recordReadback(input)])
++  assert.equal(results.filter(result => result.committed).length, 1)
++  assert.equal(results.find(result => !result.committed).cause, 'attempt_changed')
++})
++
++test('readback bounded oldest-due scan postpones failed items so healthy later work is checked', async t => {
++  const f = setup(t)
++  for (let i = 1; i <= 5; i++) {
++    const nodeVisitId = VISIT.slice(0, -1) + i
++    const workflowInstanceId = intent().workflowInstanceId.slice(0, -1) + i
++    await f.ledger.beginAttemptIfAbsent({ ...intent(), nodeVisitId, workflowInstanceId }, async attempt => ({
++      kind: 'run_delivered', agentId: AGENT, requestId: attempt.attemptId, sessionId: 'main' }))
++  }
++  const engine = createWorkflowExecutionEngine({ ...f.deps,
++    readInstanceDetail: async ({ workflowInstanceId }) => {
++      f.state.reads += 1
++      if (Number(workflowInstanceId.slice(-1)) <= 3) return { ok: false, code: 'http_503' }
++      const response = detail(8)
++      response.body.detail.instance.workflow_instance_id = workflowInstanceId
++      return response
++    } })
++  for (let pass = 0; pass < 3; pass++) {
++    assert.ok((await engine.pollOnce()).reconciled.readbacks.length <= 2)
++  }
++  assert.equal(f.ledger.snapshot().filter(attempt => attempt.readback).length, 5)
++  f.state.now += 10
++  for (let pass = 0; pass < 3; pass++) {
++    const before = f.state.reads
++    await engine.pollOnce()
++    assert.ok(f.state.reads - before <= 2)
++  }
++  assert.equal(f.state.reads, 5)
++  assert.equal(f.ledger.snapshot().filter(attempt => attempt.readback.revision === 2).length, 5)
++  assert.equal(f.ledger.snapshot().filter(attempt => attempt.readback.status === 'closed').length, 2)
++  assert.equal(f.state.sends, 0)
++})
++
++test('readback configuration is finite and positive; corrupt ledger fails closed', async t => {
++  const f = setup(t)
++  for (const key of ['maxReadbackChecksPerPoll', 'readbackRetryDelayMs', 'readbackMaxDelayMs']) {
++    for (const bad of [0, -1, NaN, Infinity, 1.5]) {
++      assert.throws(() => createWorkflowExecutionEngine({ ...f.deps, config: { ...f.deps.config, [key]: bad } }), TypeError)
++    }
++  }
++  await delivered(f.ledger)
++  appendFileSync(f.ledger.eventsFile, '{broken}\n')
++  await assert.rejects(f.engine.pollOnce(), /corrupt ledger/)
++})
+diff --git a/packages/workflow-execution/test/observation-cas/stale-guards.test.js b/packages/workflow-execution/test/observation-cas/stale-guards.test.js
+index 52c8e7ff..6e7091dc 100644
+--- a/packages/workflow-execution/test/observation-cas/stale-guards.test.js
++++ b/packages/workflow-execution/test/observation-cas/stale-guards.test.js
+@@ -62,7 +62,7 @@ test('judgment table — judgeStaleFromDetail / judgeDispatchVersionFromDetail',
+ 
+   const stale = (body, baseline = 7) => judgeStaleFromDetail({ body, nodeVisitId: VISIT, workflowStateVersionAtDispatch: baseline })
+   assert.equal(stale(fullDetail({ version: 7, visit: VISIT })).kind, 'stale_confirmed')
+-  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'progressed', 'assistance/wake bumps defeat staleness')
++  assert.equal(stale(fullDetail({ version: 8, visit: VISIT })).kind, 'recheck_required', 'assistance/wake bumps retain recheck responsibility')
+   assert.equal(stale(fullDetail({ version: 8, visit: VISIT_NEXT })).kind, 'progressed', 'RETURN/move defeats staleness')
+   assert.equal(stale(fullDetail({ version: 7, visit: VISIT, isTerminal: true })).kind, 'progressed', 'terminal defeats staleness')
+   assert.equal(stale({ visibility: 'historical_participant', detail: {} }).kind, 'progressed', 'visibility invariant = business moved on')
+diff --git a/packages/workflow-execution/test/stale-quiescence.test.js b/packages/workflow-execution/test/stale-quiescence.test.js
+index 144e3898..48e393fd 100644
+--- a/packages/workflow-execution/test/stale-quiescence.test.js
++++ b/packages/workflow-execution/test/stale-quiescence.test.js
+@@ -172,7 +172,13 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
+     assert.equal(f.ledger.get(VISIT).attemptId, predecessor.attemptId)
+     assert.equal(f.ledger.get(VISIT).judgment, judgment)
+     assert.equal(f.delivered.length, 1)
+-    assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
++    if (judgment === 'settle_check_unavailable') {
++      assert.ok(f.bytes().startsWith(before), 'original UNKNOWN bytes remain')
++      const appended = f.bytes().slice(before.length).trim().split('\n').map(JSON.parse)
++      assert.ok(appended.length > 0)
++      assert.ok(appended.every(event => event.kind === 'readback_checked' && event.result === 'scheduled'))
++      assert.equal(f.ledger.get(VISIT).readback.status, 'pending')
++    } else assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
+   })
+ }
+ 
