@@ -36,8 +36,8 @@ def validate_authority(a, writer_uid=None, now_epoch=None):
     current=time.time() if now_epoch is None else now_epoch
     require(stamp(a['valid_from'])<=current<stamp(a['valid_until']),'window authorization not current')
     return a
-def quiet_ready(age_seconds, census_clean, log_unchanged):
-    return math.isfinite(age_seconds) and age_seconds>=180 and census_clean is True and log_unchanged is True
+def quiet_ready(age_seconds, census_available, log_unchanged):
+    return math.isfinite(age_seconds) and age_seconds>=180 and census_available is True and log_unchanged is True
 def read(p): return json.loads(P(p).read_text())
 def save(name,obj):
     p=rd/name
@@ -286,7 +286,43 @@ def private_inputs(tag):
         raise
     finally:
         save(tag+'-private-input-validation.json',report)
-def census(tag):
+def classify_census(c, turns, jobs):
+    """Classify existing records only after physical runtime/worker isolation."""
+    lists=('inflightTurns','unresolvedLostTurns','inflightOccurrences')
+    require(all(isinstance(c.get(k),list) for k in lists),'census lists unavailable')
+    require(isinstance(turns.get('records'),list) and isinstance(jobs.get('occurrences'),list),
+            'census source records unavailable')
+    require(c.get('epoch')==turns.get('runtimeEpoch') and bool(c.get('epoch')),'census epoch mismatch')
+    records={r['handle']:r for r in turns['records']}
+    require(len(records)==len(turns['records']),'duplicate recovery handle')
+    entries=c['inflightTurns']+c['unresolvedLostTurns']
+    handles=[r.get('handle') for r in entries]
+    expected={r['handle'] for r in turns['records'] if r.get('queryState')!='settled'}
+    require(len(handles)==len(set(handles)) and set(handles)==expected,'census turn coverage mismatch')
+    result={'historical':[],'unsafe':[]}
+    for entry in entries:
+        row=records[entry['handle']]
+        matched=all(entry.get(k)==row.get(k) for k in ('handle','agentId','runtimeEpoch','exitObservedAt'))
+        reasons=[]
+        if row.get('state')=='blocked': reasons.append('blocked')
+        if row.get('fenceState')=='active': reasons.append('fenced')
+        if row.get('runtimeEpoch')!=c['epoch']: reasons.append('old_epoch')
+        if row.get('exitObservedAt') is None: reasons.append('exit_unproven_preserve_unknown')
+        historical=(matched and row.get('state')!='reserved' and row.get('queryState')=='pending'
+                    and row.get('initialOutcome')=='outcome_unknown' and bool(reasons))
+        item={'kind':'turn','handle':entry['handle'],'agentId':entry.get('agentId'),
+              'runtimeEpoch':entry.get('runtimeEpoch'),'reasons':reasons if historical else ['executable_or_unproven_identity']}
+        result['historical' if historical else 'unsafe'].append(item)
+    occurrences={r['occurrenceId']:r for r in jobs['occurrences']}
+    require(len(occurrences)==len(jobs['occurrences']),'duplicate occurrence identity')
+    ids=[r.get('occurrenceId') for r in c['inflightOccurrences']]
+    expected={r['occurrenceId'] for r in jobs['occurrences'] if r.get('state') in ('admitted','running')}
+    require(len(ids)==len(set(ids)) and set(ids)==expected,'census occurrence coverage mismatch')
+    for entry in c['inflightOccurrences']:
+        result['unsafe'].append({'kind':'occurrence','occurrenceId':entry['occurrenceId'],
+                                 'reason':'admitted_or_running_execution'})
+    return result
+def census(tag, require_isolation=False):
     # Original source reader ONLY. No constructor, scheduler, recovery or replay.
     paths=[prod/'control/turn-recovery-v3.json',prod/'scheduler/jobs.json']
     for p in paths: regular(p)
@@ -297,13 +333,19 @@ console.log(JSON.stringify(c));'''
     p=run([prep/'scratch/node-runtime/bin/node','--input-type=module','-e',js,*paths],
           env={'PATH':'/usr/bin:/bin','HOME':'/var/empty'})
     raw(tag+'.stdout',p.stdout); raw(tag+'.stderr',p.stderr)
-    c=json.loads(p.stdout); after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
+    c=json.loads(p.stdout); turns=read(paths[0]); jobs=read(paths[1])
+    after=[{'sha256':digest(p),'metadata':meta(p)} for p in paths]
     require(before==after,'census store changed during read')
     require(isinstance(c.get('epoch'),str) and c['epoch'],'recovery epoch unavailable')
-    require(all(c.get(k)==[] for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
-            'unresolved/inflight execution: STOP, no replay or fence clearing')
-    j=read(paths[1]); require(isinstance(j.get('occurrences'),list),'scheduler occurrences schema absent')
-    save(tag+'.json',{'at':now(),'storeHashes':before,'census':c,'readOnly':True})
+    require(all(isinstance(c.get(k),list) for k in ('inflightTurns','unresolvedLostTurns','inflightOccurrences')),
+            'census lists unavailable')
+    require(isinstance(jobs.get('occurrences'),list),'scheduler occurrences schema absent')
+    result={'at':now(),'storeHashes':before,'census':c,'readOnly':True,'nonemptyBlocksQuiet':False}
+    if require_isolation:
+        result['classification']=classify_census(c,turns,jobs)
+    save(tag+'.json',result)
+    if require_isolation:
+        require(not result['classification']['unsafe'],'executable/unproven records remain after isolation: STOP')
     return before
 def log_delta():
     s=read(rd/'restart-log-offsets.json'); chunks=[]
