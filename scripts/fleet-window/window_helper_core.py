@@ -9,7 +9,7 @@ live=P('/usr/local/libexec/agent-core'); prod=P('/Users/authsvc/.agent-core')
 plist=P('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
 lock=P('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
 service='system/ai.agent-core.runtime'
-sha='f6a1f77a8b7b878bcb9821a68836925755ca7076'; tree='08d7ea7108e8d92417b33db52523e5bd545ddce3'
+sha='75ece578301b014a23b987568d1eb8af96795300'; tree='7a68ac22c8eef6340131dacafe1c0f2aa5dfa0d6'
 def require(ok, message):
     if not ok: raise RuntimeError(message)
 def digest(p):
