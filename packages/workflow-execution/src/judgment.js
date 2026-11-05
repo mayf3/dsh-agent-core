@@ -92,7 +92,7 @@ export function judgeSettleFromDetail({ body, nodeVisitId }) {
  * baseline (instance workflow_state_version) from ONE instance-detail read
  * performed AS THE TARGET AGENT immediately after a successful delivery.
  * Best-effort by contract: a failure yields ok:false and the attempt is
- * simply never stale-eligible (conservative V2 behaviour for it).
+ * cannot become stale-eligible from a later sample. EKR retains readback responsibility.
  *
  * @returns {{ok:true, version:number} | {ok:false, reason:string}}
  */
@@ -117,13 +117,12 @@ export function judgeDispatchVersionFromDetail({ body }) {
  * ONLY svc business facts decide:
  *   - visit moved / instance terminal            → 'progressed' (business
  *     moved on: transition, RETURN, admin move, cancel, archive)
- *   - version != workflowStateVersionAtDispatch  → 'progressed' (assistance
- *     open / HUMAN_REQUIRED, wake, admin ops — all bump the version; Goal
- *     CASE 4: never stale-redispatch past a new ownership state)
+ *   - version != workflowStateVersionAtDispatch  → 'recheck_required':
+ *     preserve unfinished responsibility without authorizing redispatch.
  *   - visit still current + version unchanged    → 'stale_confirmed'
  *   - any unreadable state                       → 'unavailable' (never stale)
  *
- * @returns {{kind:'stale_confirmed'|'progressed'|'unavailable', reason:string}}
+ * @returns {{kind:'stale_confirmed'|'progressed'|'recheck_required'|'unavailable', reason:string}}
  */
 export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAtDispatch }) {
   const { visibility, detail } = body ?? {}
@@ -151,7 +150,7 @@ export function judgeStaleFromDetail({ body, nodeVisitId, workflowStateVersionAt
     return { kind: 'unavailable', reason: 'stale_check_unavailable: no workflowStateVersionAtDispatch recorded at delivery' }
   }
   if (version !== workflowStateVersionAtDispatch) {
-    return { kind: 'progressed', reason: `workflow_state_version advanced (${workflowStateVersionAtDispatch} -> ${version}) since dispatch` }
+    return { kind: 'recheck_required', reason: `workflow_state_version changed (${workflowStateVersionAtDispatch} -> ${version}); business progress requires recheck` }
   }
   return { kind: 'stale_confirmed', reason: `visit still current with workflow_state_version ${version} unchanged since dispatch` }
 }

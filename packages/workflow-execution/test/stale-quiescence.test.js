@@ -172,7 +172,13 @@ for (const judgment of ['run_outcome_unknown', 'settle_check_unavailable', 'deli
     assert.equal(f.ledger.get(VISIT).attemptId, predecessor.attemptId)
     assert.equal(f.ledger.get(VISIT).judgment, judgment)
     assert.equal(f.delivered.length, 1)
-    assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
+    if (judgment === 'settle_check_unavailable') {
+      assert.ok(f.bytes().startsWith(before), 'original UNKNOWN bytes remain')
+      const appended = f.bytes().slice(before.length).trim().split('\n').map(JSON.parse)
+      assert.ok(appended.length > 0)
+      assert.ok(appended.every(event => event.kind === 'readback_checked' && event.result === 'scheduled'))
+      assert.equal(f.ledger.get(VISIT).readback.status, 'pending')
+    } else assert.deepEqual(f.bytes(), before, 'timeout never rewrites durable UNKNOWN as stale')
   })
 }
 
