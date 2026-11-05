@@ -7,8 +7,9 @@
  */
 
 import { buildExecutionInstruction } from './instruction.js'
-import { createRecoveryOperation } from './recovery.js'
-import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeDispatchVersionFromDetail, judgeStaleFromDetail } from './judgment.js'
+import { createRecoveryOperation } from './recovery/operation.js'
+import { createReadbackOperations } from './recovery/readback.js'
+import { normalizeDueIntent, judgeSettleFromDetail, judgeAttempt, judgeStaleFromDetail } from './judgment.js'
 import { createOwnerAssistanceResumeOperations } from './owner-assistance-resume-engine.js'
 import { createAttemptLimitEscalation, createTerminalAttemptOperations } from './terminal-attempt-operations.js'
 import { reconcileDeliveryEvidence } from './projection.js'
@@ -70,6 +71,7 @@ export function createWorkflowExecutionEngine({
   }
 
   const escalateAttemptLimit = createAttemptLimitEscalation({ ledger, escalateAttemptLimit: escalateAttemptLimitDep, log })
+  const readbacks = createReadbackOperations({ ledger, readInstanceDetail, resolvePrincipalToAgent, clock, config, log })
 
   const { isAtAttemptLimit, maybeEscalateAtLimit, settleStale, reconcileTerminalCandidate } =
     createTerminalAttemptOperations({ ledger, escalateAttemptLimit })
@@ -107,19 +109,7 @@ export function createWorkflowExecutionEngine({
         })
         if (!delivery.ok) return { kind: 'delivery_failed', reason: `delivery_rejected:${delivery.code}` }
         // CTR-SRE-002: best-effort target-Agent dispatch baseline inside the admission lock.
-        let workflowStateVersionAtDispatch
-        try {
-          const read = await readInstanceDetail({ agentId: resolved.agentId, workflowInstanceId: attempt.workflowInstanceId })
-          if (read.ok) {
-            const judged = judgeDispatchVersionFromDetail({ body: read.body })
-            if (judged.ok) workflowStateVersionAtDispatch = judged.version
-            else log.warn?.(`workflow-execution: dispatch version probe unusable for ${attempt.nodeVisitId}: ${judged.reason}`)
-          } else {
-            log.warn?.(`workflow-execution: dispatch version probe failed for ${attempt.nodeVisitId}: ${read.code}`)
-          }
-        } catch (error) {
-          log.warn?.(`workflow-execution: dispatch version probe errored for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
-        }
+        const workflowStateVersionAtDispatch = await readbacks.sampleDispatch(attempt, resolved.agentId)
         return {
           kind: 'run_delivered',
           agentId: resolved.agentId,
@@ -192,7 +182,9 @@ export function createWorkflowExecutionEngine({
   /** ONE authoritative settle probe: the instance detail read AS THE TARGET
    *  AGENT (its own canonical Principal; see judgment.js invariant). */
   async function probeSettle(attempt) {
-    const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
+    let read
+    try { read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId }) }
+    catch { return { kind: 'unavailable', reason: 'settle_check_unavailable: instance detail dependency errored' } }
     if (!read.ok) {
       return { kind: 'unavailable', reason: `settle_check_unavailable: instance detail read failed (${read.code})` }
     }
@@ -205,7 +197,9 @@ export function createWorkflowExecutionEngine({
     if (!read.ok) {
       return { kind: 'unavailable', reason: `stale_check_unavailable: instance detail read failed (${read.code})` }
     }
-    return judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+    const judged = judgeStaleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId, workflowStateVersionAtDispatch: attempt.workflowStateVersionAtDispatch })
+    if (judged.kind === 'recheck_required') await readbacks.schedule(attempt, 'version', 'version_changed_recheck_required')
+    return judged
   }
 
   function reconcileDeliveries() {
@@ -235,6 +229,7 @@ export function createWorkflowExecutionEngine({
         summary.blocked += 1
         continue
       }
+      if (readbacks.owns(attempt)) continue
       summary.examined += 1
       try {
         const turnState = queryTurnState(attempt)
@@ -287,6 +282,7 @@ export function createWorkflowExecutionEngine({
     // CTR-SRE-002: the terminal run_ended_no_submission class uses the same business probe.
     for (const attempt of await ledger.listStaleCandidatesFresh(staleNoProgressThresholdMs)) {
       if (attempt.state !== 'NEEDS_REVIEW') continue
+      if (readbacks.owns(attempt)) continue
       try {
         const stale = await judgeStale(attempt)
         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
@@ -296,6 +292,7 @@ export function createWorkflowExecutionEngine({
     }
     // CTR-WEC1-004: fast continuation uses the retry delay; durable UNKNOWN is excluded.
     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
+      if (readbacks.owns(attempt)) continue
       try {
         const stale = await judgeStale(attempt)
         retainStaleObservation(summary, await reconcileTerminalCandidate(attempt, stale, summary.staleReentry))
@@ -305,6 +302,7 @@ export function createWorkflowExecutionEngine({
     }
     // Re-read terminal delivery_unverified too: late original receipts remain
     // discoverable on every existing startup/poll, with no terminal writes.
+    summary.readbacks = await readbacks.reconcile()
     summary.deliveryReconciliation = await reconcileDeliveries()
     return summary
   }
