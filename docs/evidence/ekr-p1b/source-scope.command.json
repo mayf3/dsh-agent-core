@@ -1,0 +1,14 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--name-status",
+    "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "171ecf8482ddf9df61233880f3cf24cbaa0f3816"
+  ],
+  "startedAt": "2026-11-05T19:34:24.187807+00:00",
+  "finishedAt": "2026-11-05T19:34:24.199979+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/source-scope.raw.txt",
+  "sha256": "4cc1ad660f32f40be5f73e393b571401491dcb7af4c8c110a25bcb9ba9e8ec54"
+}
