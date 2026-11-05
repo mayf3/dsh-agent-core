@@ -64,7 +64,7 @@ const unchangedWorld = {
   },
 }
 
-test('AC2: a no-progress visit is dispatched at most maxAttempts times, then escalates exactly once and is never dispatched again', async () => {
+test('AC2: a completed no-transition visit gets one bounded recheck, then escalates exactly once', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'wf449-loop-'))
   const deliveries = []
   const escalations = []
@@ -86,14 +86,17 @@ test('AC2: a no-progress visit is dispatched at most maxAttempts times, then esc
       readInstanceDetail: async () => ({ ok: true, body: unchangedWorld }),
       escalateAttemptLimit: async (payload) => {
         escalations.push(payload)
+        await ledger.recordEscalationRequested({
+          nodeVisitId: VISIT, reason: payload.reason, attemptCount: payload.attemptCount,
+          lastAttemptId: payload.lastAttemptId, dispatchIntentId: payload.dispatchIntentId,
+        })
         return { ok: true, escalated: true, assistanceCaseId: 'case-449' }
       },
     })
 
-    // Ten sweeps of the identical unchanged blocker. Each sweep advances the
-    // shared clock 120s: past the 60s run-ended retry delay (the fast
-    // continuation that re-enters generation N+1) yet far below the 1h stale
-    // clock — the re-entry here is fence-driven policy, never a timeout.
+    // Ten sweeps of the identical unchanged blocker. The first eligible
+    // sweep performs one bounded recheck; it never re-enters the business
+    // attempt fence after a completed turn without a transition.
     const actions = []
     for (let sweep = 0; sweep < 10; sweep++) {
       const result = await engine.pollOnce()
@@ -102,12 +105,13 @@ test('AC2: a no-progress visit is dispatched at most maxAttempts times, then esc
     }
 
     const dispatched = deliveries.length
-    assert.equal(dispatched, DEFAULT_MAX_ATTEMPTS_PER_VISIT,
-      `the no-progress visit is dispatched exactly maxAttempts times, got ${dispatched}`)
+    assert.equal(dispatched, 1,
+      `the no-transition visit is delivered once, got ${dispatched}`)
     assert.equal(escalations.length, 1, 'exactly ONE durable escalation')
     assert.equal(escalations[0].reason, 'ATTEMPTS_EXHAUSTED')
     assert.equal(ledger.get(VISIT).escalation?.reason, 'ATTEMPTS_EXHAUSTED')
-    assert.ok(actions.includes('attempt_limit_reached'), 'the fence refusal is observable')
+    assert.ok(actions.some((action) => action === 'already_attempted' || action === 'needs_review'), 'the original fence remains observable')
+    assert.equal(ledger.get(VISIT).reconciliation.outcome, 'no_transition')
     // After the cap: no further dispatch happens on later sweeps.
     const deliveriesAtCap = deliveries.length
     for (let sweep = 0; sweep < 3; sweep++) {

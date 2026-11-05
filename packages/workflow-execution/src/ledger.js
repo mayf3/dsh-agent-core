@@ -31,7 +31,7 @@
  * trying to re-run a settled/reviewed NodeVisit — visible, never absorbed.
  */
 
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { mkdirSync, appendFileSync, existsSync, statSync, openSync, readSync, closeSync, fsyncSync, truncateSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
@@ -108,10 +108,13 @@ export class ExecutionLedger {
    *   CTR-WEC1-004 admission policy: the fence refuses generation N+1 when
    *   N >= maxAttemptsPerVisit (default 3, min 1).
    */
-  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, requireReconciledIdentity = false }) {
+  constructor({ dir, clock = () => Date.now(), log = {}, io = {}, maxAttemptsPerVisit = DEFAULT_MAX_ATTEMPTS_PER_VISIT, maxNeedsReviewRechecks = 1, requireReconciledIdentity = false }) {
     if (typeof dir !== 'string' || dir === '') throw new TypeError('workflow-execution: ledger dir is required')
     if (!Number.isInteger(maxAttemptsPerVisit) || maxAttemptsPerVisit < 1) {
       throw new TypeError(`workflow-execution: ledger maxAttemptsPerVisit must be a positive integer (got ${JSON.stringify(maxAttemptsPerVisit)})`)
+    }
+    if (!Number.isInteger(maxNeedsReviewRechecks) || maxNeedsReviewRechecks < 0) {
+      throw new TypeError(`workflow-execution: ledger maxNeedsReviewRechecks must be a non-negative integer (got ${JSON.stringify(maxNeedsReviewRechecks)})`)
     }
     if (io.appendFileSync !== undefined && typeof io.appendFileSync !== 'function') {
       throw new TypeError('workflow-execution: io.appendFileSync must be a function when provided')
@@ -124,6 +127,7 @@ export class ExecutionLedger {
     this.clock = clock
     this.log = log
     this.maxAttemptsPerVisit = maxAttemptsPerVisit
+    this.maxNeedsReviewRechecks = maxNeedsReviewRechecks
     this.requireReconciledIdentity = requireReconciledIdentity === true
     this.appendFileSync = io.appendFileSync ?? appendFileSync
     this.syncDirectorySync = io.syncDirectorySync ?? ((path) => {
@@ -733,6 +737,50 @@ export class ExecutionLedger {
     })
   }
 
+  /** Mint and persist a server-issued bounded reconciliation identity. */
+  async beginNeedsReviewRecheck({ nodeVisitId, workflowStateVersion, nextEligibleAtMs }) {
+    if (!UUID_RE.test(nodeVisitId)) throw new TypeError('workflow-execution: recheck nodeVisitId must be a UUID')
+    return this.mutate(() => {
+      const current = this.#attempt(nodeVisitId)
+      if (current === undefined) throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId}`)
+      if (current.state !== 'NEEDS_REVIEW' || current.judgment !== 'run_ended_no_submission') {
+        return { created: false, cause: 'not_needs_review', attempt: { ...current } }
+      }
+      const count = current.reconciliation?.count ?? 0
+      if (count >= this.maxNeedsReviewRechecks) {
+        return { created: false, cause: 'recheck_limit_reached', attempt: { ...current } }
+      }
+      const reconciliationAttemptId = `wfreconcile-${randomUUID()}`
+      const event = {
+        kind: 'needs_review_recheck_started',
+        nodeVisitId: nodeVisitId.toLowerCase(),
+        reconciliationAttemptId,
+        count: count + 1,
+        workflowStateVersion,
+        nextEligibleAtMs,
+        atMs: this.clock(),
+      }
+      this.#appendEvent(event)
+      this.#applyEvent(event)
+      return { created: true, reconciliationAttemptId, count: count + 1, attempt: { ...this.#attempt(nodeVisitId) } }
+    })
+  }
+
+  /** Persist the typed result of one bounded NEEDS_REVIEW recheck. */
+  async recordNeedsReviewRecheck({ nodeVisitId, reconciliationAttemptId, outcome, reason, observedWorkflowStateVersion }) {
+    if (typeof reconciliationAttemptId !== 'string' || !reconciliationAttemptId.startsWith('wfreconcile-')) throw new TypeError('workflow-execution: reconciliationAttemptId is invalid')
+    if (!['transition_observed', 'no_transition', 'unknown', 'invalid_owner', 'delivery_failed'].includes(outcome)) throw new TypeError('workflow-execution: invalid recheck outcome')
+    return this.mutate(() => {
+      const current = this.#attempt(nodeVisitId)
+      if (current === undefined) throw new Error(`workflow-execution: no attempt exists for nodeVisit ${nodeVisitId}`)
+      if (current.reconciliation?.reconciliationAttemptId !== reconciliationAttemptId) return { committed: false, cause: 'stale_reconciliation_attempt', attempt: { ...current } }
+      const event = { kind: 'needs_review_recheck_result', nodeVisitId: nodeVisitId.toLowerCase(), reconciliationAttemptId, outcome, reason, ...(Number.isInteger(observedWorkflowStateVersion) ? { observedWorkflowStateVersion } : {}), atMs: this.clock() }
+      this.#appendEvent(event)
+      this.#applyEvent(event)
+      return { committed: true, attempt: { ...this.#attempt(nodeVisitId) } }
+    })
+  }
+
   /**
    * WORKFLOW_EXECUTION_CONTROL_V1 CTR-WEC1-004: cross-process-fresh
    * enumeration of terminal NEEDS_REVIEW run_ended_no_submission attempts
@@ -748,7 +796,8 @@ export class ExecutionLedger {
       .filter((attempt) => attempt.state === 'NEEDS_REVIEW'
         && attempt.judgment === 'run_ended_no_submission'
         && Number.isInteger(attempt.reconciledAtMs)
-        && nowMs - attempt.reconciledAtMs >= retryDelayMs)
+        && nowMs - attempt.reconciledAtMs >= retryDelayMs
+        && (!Number.isInteger(attempt.reconciliation?.nextEligibleAtMs) || nowMs >= attempt.reconciliation.nextEligibleAtMs))
       .map((attempt) => ({ ...attempt })))
   }
 
