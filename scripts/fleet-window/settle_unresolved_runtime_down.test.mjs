@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { once } from 'node:events'
 import test from 'node:test'
 import { TurnReconciliationStore } from '../../packages/agent-router/src/reconciliation/store.js'
 import { readDurableRecoveryStore, writeDurableRecoveryStore } from '../../packages/agent-router/src/reconciliation/durable-file.js'
@@ -60,10 +61,11 @@ function writeStageProof(fixture, { ageMs = 0, wrongEpoch = false } = {}) {
   const at = new Date(Date.now() - ageMs).toISOString()
   writeJson(join(fixture.directory, 'old-exit.json'), { at,
     supervisor: { rc: 113, output: 'Could not find service "ai.agent-core.runtime" in domain for system' },
-    oldProcesses: [{ pid: 2147483000 }], remaining: [] })
+    oldProcesses: [{ pid: 2147483000 }], remaining: [], portsAbsent: [8788, 8790] })
   writeJson(join(fixture.directory, 'post-bootout-census.json'), { at, readOnly: true,
     storeHashes: [{ sha256: snapshot(fixture.storeFile).sha256 }],
-    census: { epoch: wrongEpoch ? 'wrong-epoch' : document.runtimeEpoch } })
+    census: { epoch: wrongEpoch ? 'wrong-epoch' : document.runtimeEpoch },
+    classification: { historical: [], unsafe: [] } })
 }
 
 const settle = (fixture, options = {}) => settleRuntimeDown({ sourceRoot, storeFile: fixture.storeFile,
@@ -122,13 +124,13 @@ test('isolated settlement and read-only zero-inflight fixtures, stop on first as
     await scenario('non-unknown -> unchanged bytes and metadata', async () => {
       const fixture = makeFixture(runDir, 'non-unknown', ['reserved'])
       writeStageProof(fixture)
-      return expectZeroWrite(fixture, () => settle(fixture))
+      return expectZeroWrite(fixture, () => settle(fixture), 0)
     })
 
     await scenario('unknown without exact termination -> zero writes UNKNOWN', async () => {
       const fixture = makeFixture(runDir, 'no-evidence', ['unknown'])
       writeStageProof(fixture)
-      const result = await expectZeroWrite(fixture, () => settle(fixture))
+      const result = await expectZeroWrite(fixture, () => settle(fixture), 0)
       assert.equal(result.report.unproven, 1)
       assert.equal(readJson(fixture.storeFile).records[0].initialOutcome, 'outcome_unknown')
       return result
@@ -140,7 +142,7 @@ test('isolated settlement and read-only zero-inflight fixtures, stop on first as
       const before = readJson(fixture.storeFile)
       writeJson(join(fixture.directory, 'before.json'), before)
       const result = await settle(fixture)
-      assert.equal(result.exitCode, 5)
+      assert.equal(result.exitCode, 0)
       assert.equal(result.report.writes, 1)
       assert.equal(result.report.settled, 1)
       assert.equal(result.report.remaining, 2)
@@ -172,9 +174,93 @@ test('isolated settlement and read-only zero-inflight fixtures, stop on first as
         writeStageProof(fixture, { ageMs: variant === 'stale-proof' ? 600_000 : 0,
           wrongEpoch: variant === 'wrong-epoch' })
         return expectZeroWrite(fixture, () => settle(fixture, variant === 'worker-alive'
-          ? { readPs: () => `${readPs()}2147482999 ${uid} /usr/local/libexec/agent-core/harness/bin/dsh-agent\n` } : {}))
+          ? { readPs: () => `${readPs()}2147482999 ${uid} /usr/local/libexec/agent-core/harness/bin/dsh-agent\n` } : {}),
+        ['bare-child-label', 'old-record-epoch'].includes(variant) ? 0 : 5)
       })
     }
+
+    await scenario('exitObservedAt=null retains UNKNOWN with no publication', async () => {
+      const fixture = makeFixture(runDir, 'null-exit', ['unknown'])
+      writeStageProof(fixture)
+      const result = await expectZeroWrite(fixture, () => settle(fixture), 0)
+      assert.equal(readJson(fixture.storeFile).records[0].exitObservedAt, null)
+      assert.equal(result.report.unproven, 1)
+      return result
+    })
+
+    await scenario('conflicting exact evidence retains original UNKNOWN', async () => {
+      const fixture = makeFixture(runDir, 'conflicting-evidence', ['trusted'])
+      const document = readJson(fixture.storeFile)
+      document.records[0].audit.push({ kind: 'conflict_ignored', at: Date.now(), reason: 'fixture_conflict' })
+      writeJson(fixture.storeFile, document)
+      writeStageProof(fixture)
+      const result = await expectZeroWrite(fixture, () => settle(fixture), 0)
+      assert.equal(result.report.unproven, 1)
+      return result
+    })
+
+    await scenario('memory/disk second writer race refuses stale publication', async () => {
+      const fixture = makeFixture(runDir, 'double-writer', ['trusted'])
+      writeStageProof(fixture)
+      const competing = readJson(fixture.storeFile)
+      competing.records[0].failureReason = 'fixture_concurrent_writer_preserved'
+      let reads = 0
+      let competingSnapshot
+      const result = await settle(fixture, { readPs: () => {
+        reads++
+        if (reads === 2) {
+          writeJson(fixture.storeFile, competing)
+          competingSnapshot = snapshot(fixture.storeFile)
+        }
+        return readPs()
+      } })
+      assert.equal(reads, 2)
+      assert.equal(result.exitCode, 5)
+      assert.equal(result.report.writes, 0)
+      assert.match(result.report.error, /store changed before write/)
+      assert.deepEqual(snapshot(fixture.storeFile), competingSnapshot)
+      return { ...result, competingWriterStatePreserved: true, staleMemoryPublished: false }
+    })
+
+    await scenario('partial in-memory settlement failure publishes neither record', async () => {
+      const fixture = makeFixture(runDir, 'partial-failure', ['trusted', 'trusted'])
+      writeStageProof(fixture)
+      const original = TurnReconciliationStore.prototype.settleLate
+      let attempts = 0
+      TurnReconciliationStore.prototype.settleLate = function (...args) {
+        attempts++
+        return attempts === 2 ? { won: false } : original.apply(this, args)
+      }
+      try {
+        const result = await expectZeroWrite(fixture, () => settle(fixture))
+        assert.equal(attempts, 2)
+        assert.match(result.report.error, /official settlement refused/)
+        assert.equal(result.report.settled, 0)
+        return { ...result, attempted: attempts, atomicBatchPreserved: true }
+      } finally {
+        TurnReconciliationStore.prototype.settleLate = original
+      }
+    })
+
+    await scenario('real live isolated worker refuses settlement until separately stopped', async () => {
+      const fixture = makeFixture(runDir, 'real-live-worker', ['trusted'])
+      writeStageProof(fixture)
+      const worker = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)', 'dsh-agent'],
+        { stdio: 'ignore', env: { PATH: '/usr/bin:/bin', HOME: fixture.directory } })
+      const closed = once(worker, 'close')
+      try {
+        assert.ok(Number.isSafeInteger(worker.pid))
+        process.kill(worker.pid, 0)
+        const result = await expectZeroWrite(fixture, () => settle(fixture, {
+          readPs: () => `${readPs()}${worker.pid} ${uid} isolated dsh-agent\n`,
+        }))
+        assert.match(result.report.error, /worker ps gate refused/)
+        return { ...result, actualLiveWorkerPid: worker.pid, productionWorkerUsed: false }
+      } finally {
+        worker.kill('SIGTERM')
+        await closed
+      }
+    })
 
     await scenario('settlement CLI missing stage_05 proof -> rc5 and zero writes', async () => {
       const fixture = makeFixture(runDir, 'settle-cli-no-proof', ['trusted'])

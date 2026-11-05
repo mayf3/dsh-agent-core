@@ -4,12 +4,13 @@
 本目录收编全部窗口作业工具，此后窗口一律从 Git 取用，禁止 /tmp 现场造物。
 
 ## 内容
-- `window-executor-v5.sh`：v5 执行器（历史原件在 `55d306a`；15 节点：00-13 整数 + 05b）；内嵌 Python 按现行500行规则拆至同目录 `window_helper_core.py` / `window_helper.py` / `window_preimage_xattr.py`
-- `settle_unresolved_runtime_down.mjs`：stage_05b 的 D-009 termination-only 工具；要求 `--source-root`、`--stage-05-receipt-dir`，可用 `--store` 指定隔离 fixture。仅 exact durable child exit 的 unknown 可结算；非 unknown / 无证据原样保留，未解决返回 5。运行生产仍需独立窗口授权。
+- `window-executor-v5.sh`：v5 执行器（历史原件在 `55d306a`；A 修订为17节点：00-13整数 + 03b/05b/06a）；03b候选状态加载、06a存活期全树预镜像、04纯观察、05物理退出与分类、05b精确结算、06停后仅复核。Python 拆至同目录 helper 模块。
+- `settle_unresolved_runtime_down.mjs`：stage_05b 的 D-009 termination-only 工具；要求 `--source-root`、`--stage-05-receipt-dir`，可用 `--store` 指定隔离 fixture。仅同 epoch、exitObservedAt 与成功 exit_wait/child_real_exit 完整且无冲突的 UNKNOWN 可结算；无证据原样保留并返回0，生成 carry-forward 回执；隔离/读写/结算失败返回5。运行生产仍需独立窗口授权。
+- `anarrowed/candidate-state.mjs`：03b真实候选运行时加载脱敏 recovery 副本，验证 UNKNOWN 与 Agent-scoped fence、无重放/覆盖；`--rollback-check` 用旧候选实际 Router/Scheduler reader 检查当前状态副本，不兼容则保持停止、仅 V3-aware forward fix，不恢复旧业务快照。
 - `precheck_zero_inflight.mjs`：只读三列表核验；`--source-root` 必需，默认 authsvc control recovery 与 scheduler jobs 路径，可用 `--turn-recovery-store` / `--jobs-store` 指向 fixture。三空返回 0，非空或读取不可验证返回 1 / UNKNOWN。
 - `settle_unresolved_runtime_down.test.mjs`：合成 store 验证，所有文件只创建在 `/usr/local/v5-boot-isolation/settle-test/` 下的独立 run 目录。
 - `window_close.py` / `C7-INPUTS.md`：stage13 R6 命名收账、R7 最新两代及保护代的精确待删清单；仅列出，未实现删除
-- `window-selftest.py`：`--selftest` 入口；固定隔离根下的00–04机制校验与官方真实 stdio canary；生产阶段未执行，不能作窗口 GO
+- `window-selftest.py`：`--selftest` 入口；固定隔离根下的00–04机制校验、A修订负向隔离/竞态/部分失败/候选启动/回退schema测试与官方真实 stdio canary；生产阶段未执行，不能作窗口 GO
 - `stage_06_v2.py`：预镜像节点 v2（预算制/分块清单/三清单分离/哨兵禁入相等判断；38 隔离用例验证；修复历史 3h57m 失败根因——ditto 丢空值 xattr + 逐条子进程扫描）
 - `assemble-runner.sh`：隔离装配 runner（官方安装器配方对齐版，行号映射见 ASSEMBLY-RECIPE-C5R3.md）
 - `ASSEMBLY-RECIPE-C5R3.md`：官方安装器装配配方逐行映射

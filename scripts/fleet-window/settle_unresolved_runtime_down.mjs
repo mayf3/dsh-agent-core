@@ -59,6 +59,9 @@ function stage05Proof(directory, source, epoch) {
   requireProof(Number.isInteger(proof.supervisor?.rc) && proof.supervisor.rc !== 0
     && /could not find (?:specified )?service|service not found/i.test(proof.supervisor.output ?? ''),
   'stage_05 supervisor absence unproven')
+  requireProof(JSON.stringify(proof.portsAbsent) === '[8788,8790]'
+    && Array.isArray(census.classification?.unsafe) && census.classification.unsafe.length === 0,
+  'stage_05 ports/classified isolation unproven')
   requireProof(census.readOnly === true && census.census?.epoch === epoch
     && census.storeHashes?.[0]?.sha256 === source.sha256, 'stage_05 store hash/epoch mismatch')
   return { proof, at, files, snapshots }
@@ -69,6 +72,8 @@ function hasExactExit(record, stage, epoch) {
     && Number.isSafeInteger(record.exitObservedAt)
     && record.exitObservedAt >= record.createdAt && record.exitObservedAt <= stage.at
     && record.outcome === null && record.outcomeEvidence === null && record.lateOutcome === null
+    && record.settlementResult === null
+    && !(record.audit ?? []).some(entry => entry.kind === 'conflict_ignored')
     && [null, 'child_real_exit'].includes(record.terminationEvidence)
     && record.attemptedActions.some(action => action.action === 'exit_wait'
       && action.result === 'succeeded' && action.reasonCode === 'child_real_exit'
@@ -107,7 +112,7 @@ export async function settleRuntimeDown({ sourceRoot, storeFile = DEFAULT_STORE,
   stage05ReceiptDir, readPs = () => execFileSync('/bin/ps', ['-axo', 'pid=,uid=,command='],
     { encoding: 'utf8', timeout: 10_000 }) } = {}) {
   const report = { settled: 0, skipped: 0, unproven: 0, remaining: null,
-    writes: 0, businessOutcome: 'UNKNOWN' }
+    writes: 0, businessOutcome: 'UNKNOWN', unprovenHandles: [], carryForward: null }
   try {
     requireProof([sourceRoot, storeFile, stage05ReceiptDir].every(value => typeof value === 'string'
       && isAbsolute(value)), 'absolute --source-root, --store and --stage-05-receipt-dir required')
@@ -134,7 +139,11 @@ export async function settleRuntimeDown({ sourceRoot, storeFile = DEFAULT_STORE,
         continue
       }
       // Global ps absence alone never proves the identity of an old turn.
-      if (!hasExactExit(record, stage, document.runtimeEpoch)) { report.unproven++; continue }
+      if (!hasExactExit(record, stage, document.runtimeEpoch)) {
+        report.unproven++
+        report.unprovenHandles.push(handle)
+        continue
+      }
       const result = store.settleLate(handle, { lateOutcome: 'terminated_without_outcome',
         terminationEvidence: 'child_real_exit' })
       requireProof(result.won === true, 'official settlement refused; no publication')
@@ -162,7 +171,11 @@ export async function settleRuntimeDown({ sourceRoot, storeFile = DEFAULT_STORE,
       }
       report.settled = selected.size
     }
-    return { report, exitCode: report.remaining > 0 ? 5 : 0 }
+    report.carryForward = { status: 'RETAINED_WITHOUT_REPLAY', installationBlocking: false,
+      handles: [...store.records.values()].filter(row => row.state !== 'settled').map(row => row.handle),
+      beforeSha256: source.sha256, afterSha256: snapshot(storeFile).sha256,
+      businessOutcome: 'UNKNOWN' }
+    return { report, exitCode: 0 }
   } catch (error) {
     return { report: { ...report, status: 'UNKNOWN', error: error.message }, exitCode: 5 }
   }
@@ -174,7 +187,7 @@ async function main() {
       store: { type: 'string' }, 'stage-05-receipt-dir': { type: 'string' }, help: { type: 'boolean', short: 'h' } } })
     if (values.help) {
       console.log('Usage: settle_unresolved_runtime_down.mjs --source-root /source --stage-05-receipt-dir /receipts [--store /fixture.json]')
-      console.log('No exact proof: zero writes, UNKNOWN. Any unresolved/unavailable state: exit 5. Production execution requires a separate window mandate.')
+      console.log('No per-record exact proof: retain UNKNOWN without blocking installation. Invalid isolation, unreadable state or failed settlement: exit 5. Production execution requires a separate window mandate.')
       return
     }
     const { report, exitCode } = await settleRuntimeDown({ sourceRoot: values['source-root'],
