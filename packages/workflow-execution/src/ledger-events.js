@@ -262,6 +262,26 @@ export function applyLedgerEvent(attempts, event) {
       current.phase = 'delivery_failed'
       current.reason = event.reason
       return
+    case 'needs_review_recheck_started':
+      if (current?.state !== 'NEEDS_REVIEW' || current.judgment !== 'run_ended_no_submission') {
+        throw new Error(`workflow-execution: refusing needs_review_recheck_started for nodeVisit ${nodeVisitId} — not a run-ended NEEDS_REVIEW attempt`)
+      }
+      if (typeof event.reconciliationAttemptId !== 'string' || !event.reconciliationAttemptId.startsWith('wfreconcile-')) throw new Error('workflow-execution: invalid reconciliation attempt identity')
+      if (!Number.isInteger(event.count) || event.count < 1) throw new Error('workflow-execution: invalid reconciliation attempt count')
+      current.reconciliation = {
+        reconciliationAttemptId: event.reconciliationAttemptId,
+        count: event.count,
+        workflowStateVersion: event.workflowStateVersion,
+        nextEligibleAtMs: event.nextEligibleAtMs,
+        startedAtMs: event.atMs,
+      }
+      return
+    case 'needs_review_recheck_result':
+      if (current?.state !== 'NEEDS_REVIEW' || current.reconciliation?.reconciliationAttemptId !== event.reconciliationAttemptId) {
+        throw new Error(`workflow-execution: refusing needs_review_recheck_result for nodeVisit ${nodeVisitId} — stale reconciliation identity`)
+      }
+      current.reconciliation = { ...current.reconciliation, outcome: event.outcome, reason: event.reason, ...(event.observedWorkflowStateVersion === undefined ? {} : { observedWorkflowStateVersion: event.observedWorkflowStateVersion }), completedAtMs: event.atMs }
+      return
     case 'reconciled':
       if (current?.state !== 'ACTIVE') terminalRefusal(current, event)
       if (event.verdict === 'ACTIVE') {

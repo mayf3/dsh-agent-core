@@ -65,6 +65,27 @@ test('beginAttemptIfAbsent: first call creates, ANY existing attempt blocks a se
   }
 })
 
+test('bounded NEEDS_REVIEW recheck mints a durable server identity and survives restart', async () => {
+  const fixture = tempLedger()
+  try {
+    const { ledger, dir } = fixture
+    await ledger.beginAttemptIfAbsent({ dispatchIntentId: INTENT, nodeVisitId: VISIT, workflowInstanceId: INSTANCE, ownerPrincipalId: OWNER })
+    await ledger.recordRunDelivered({ nodeVisitId: VISIT, agentId: 'agt_owner', requestId: attemptIdFor(VISIT), sessionId: 'main' })
+    await ledger.recordReconciled({ nodeVisitId: VISIT, expectedPhase: 'run_delivered', verdict: 'NEEDS_REVIEW', judgment: 'run_ended_no_submission', reason: 'no transition' })
+    const started = await ledger.beginNeedsReviewRecheck({ nodeVisitId: VISIT, workflowStateVersion: 3, nextEligibleAtMs: 5000 })
+    assert.equal(started.created, true)
+    assert.match(started.reconciliationAttemptId, /^wfreconcile-/)
+    await ledger.recordNeedsReviewRecheck({ nodeVisitId: VISIT, reconciliationAttemptId: started.reconciliationAttemptId, outcome: 'no_transition', reason: 'still current', observedWorkflowStateVersion: 3 })
+    const restarted = new ExecutionLedger({ dir })
+    const recovered = restarted.snapshot().find((attempt) => attempt.nodeVisitId === VISIT)
+    assert.equal(recovered.reconciliation.reconciliationAttemptId, started.reconciliationAttemptId)
+    assert.equal(recovered.reconciliation.outcome, 'no_transition')
+  } finally {
+    cleanup(fixture)
+  }
+})
+
+
 test('concurrent beginAttemptIfAbsent for one NodeVisit mints exactly one attempt', async () => {
   const fixture = tempLedger()
   try {

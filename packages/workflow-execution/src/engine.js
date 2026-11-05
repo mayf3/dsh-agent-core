@@ -267,9 +267,62 @@ export function createWorkflowExecutionEngine({
     return recorded.committed
   }
 
+  /** Bounded, non-business recheck for a completed turn with no transition. */
+  async function recheckNeedsReview(attempt) {
+    const started = await ledger.beginNeedsReviewRecheck({
+      nodeVisitId: attempt.nodeVisitId,
+      workflowStateVersion: attempt.workflowStateVersionAtDispatch,
+      nextEligibleAtMs: clock() + retryDelayMs,
+    })
+    if (!started.created) {
+      if (started.cause === 'recheck_limit_reached') {
+        if (attempt.escalation === undefined) await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+        return { outcome: 'recheck_limit_reached', reconciliationAttemptId: attempt.reconciliation?.reconciliationAttemptId }
+      }
+      return { outcome: started.cause }
+    }
+    let outcome = 'unknown'
+    let reason = 'bounded recheck could not obtain authoritative detail'
+    let observedWorkflowStateVersion
+    try {
+      const turnState = queryTurnState(attempt)
+      const read = await readInstanceDetail({ agentId: attempt.delivered.agentId, workflowInstanceId: attempt.workflowInstanceId })
+      if (!read.ok) {
+        outcome = 'delivery_failed'
+        reason = `detail read failed during NEEDS_REVIEW recheck (${read.code})`
+      } else {
+        const settle = judgeSettleFromDetail({ body: read.body, nodeVisitId: attempt.nodeVisitId })
+        observedWorkflowStateVersion = read.body?.detail?.instance?.workflow_state_version
+        if (settle.kind === 'settled') {
+          outcome = 'transition_observed'
+          reason = settle.reason
+        } else if (settle.kind === 'still_current') {
+          outcome = 'no_transition'
+          reason = `completed turn ${turnState ?? 'unknown'} still has current visit and no committed transition`
+        } else {
+          reason = settle.reason
+        }
+      }
+    } catch (error) {
+      outcome = 'unknown'
+      reason = `recheck error: ${String(error?.message ?? error).slice(0, 200)}`
+    }
+    await ledger.recordNeedsReviewRecheck({
+      nodeVisitId: attempt.nodeVisitId,
+      reconciliationAttemptId: started.reconciliationAttemptId,
+      outcome,
+      reason,
+      observedWorkflowStateVersion,
+    })
+    if (outcome === 'no_transition' && started.count >= (ledger.maxNeedsReviewRechecks ?? 1)) {
+      await escalateAttemptLimit({ attempt, reason: 'ATTEMPTS_EXHAUSTED' })
+    }
+    return { outcome, reconciliationAttemptId: started.reconciliationAttemptId, reason }
+  }
+
   /** Reconcile ACTIVE attempts; skip resolution_blocked. Only positive business evidence permits stale re-entry. */
   async function reconcileOnce() {
-    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [] }
+    const summary = { examined: 0, settled: [], needsReview: [], running: 0, blocked: 0, staleReentry: [], needsReviewRechecks: [], escalated: [] }
     // Cross-process failover must not reconcile a cached projection. Refresh
     // under the ledger's existing OwnerLock before enumerating this pass.
     for (const attempt of await ledger.listActiveFresh()) {
@@ -342,17 +395,18 @@ export function createWorkflowExecutionEngine({
         log.error?.(`workflow-execution: stale re-entry check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
-    // CTR-WEC1-004: fast continuation uses the retry delay; durable UNKNOWN is excluded.
+    // CTR-WEC1-004: completed turns without a transition get one bounded,
+    // server-issued reconciliation identity. They never silently re-enter the
+    // business attempt fence; persistent no-transition escalates instead.
     for (const attempt of await ledger.listRunEndedCandidatesFresh(retryDelayMs)) {
       try {
-        const stale = await judgeStale(attempt)
-        if (stale.kind !== 'stale_confirmed') continue
-        if (await settleStale(attempt)) {
-          summary.staleReentry.push(attempt.nodeVisitId)
-          await maybeEscalateAtLimit(attempt)
+        const recheck = await recheckNeedsReview(attempt)
+        summary.needsReviewRechecks.push({ nodeVisitId: attempt.nodeVisitId, ...recheck })
+        if (recheck.outcome === 'recheck_limit_reached' || recheck.outcome === 'no_transition') {
+          summary.escalated.push(attempt.nodeVisitId)
         }
       } catch (error) {
-        log.error?.(`workflow-execution: run-ended continuation check error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
+        log.error?.(`workflow-execution: run-ended NEEDS_REVIEW recheck error for ${attempt.nodeVisitId}: ${error?.message ?? error}`)
       }
     }
     return summary

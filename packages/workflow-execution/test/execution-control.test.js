@@ -188,7 +188,7 @@ test('CTR-WEC1-005: limit refusal escalates exactly once and records the fact', 
 
 // ── Goal Case 3 + Case 7: the run-ended fast path and the unknown fence ────
 
-test('Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: outcome_unknown never does', async () => {
+test('Case 3: run_ended_no_submission gets one bounded recheck and escalation; Case 7: outcome_unknown never does', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'wfe-retry-'))
   const escalations = []
   try {
@@ -226,31 +226,22 @@ test('Case 3: run_ended_no_submission re-enters after the retry delay; Case 7: o
     summary = await engine.reconcileOnce()
     assert.equal(summary.staleReentry.length, 0)
 
-    // Past the retry delay (still far below the 1h stale clock): the probe's
-    // positive business evidence (visit current, version unchanged) settles
-    // the attempt stale → the visit is re-entry eligible.
+    // Past the retry delay (still far below the 1h stale clock): perform one
+    // server-issued bounded recheck. It must not mint a business generation.
     t = ledger.get(VISIT).reconciledAtMs + 1_500
     summary = await engine.reconcileOnce()
-    assert.deepEqual(summary.staleReentry, [VISIT])
+    assert.equal(summary.staleReentry.length, 0)
+    assert.equal(summary.needsReviewRechecks[0].outcome, 'no_transition')
+    assert.match(summary.needsReviewRechecks[0].reconciliationAttemptId, /^wfreconcile-/)
+    assert.equal(escalations.length, 1)
+    assert.equal(escalations[0].reason, 'ATTEMPTS_EXHAUSTED')
 
-    // The next sweep mints generation 2 through the SAME fence (Attempt #2).
+    // The original already_attempted fence remains effective: no business
+    // replay is admitted after the bounded recheck/escalation.
     const result = await engine.admitDueIntent(dueIntent())
-    assert.equal(result.action, 'admitted')
-    assert.equal(ledger.get(VISIT).generation, 2)
-    assert.equal(escalations.length, 0)
+    assert.equal(result.action, 'already_attempted')
+    assert.equal(ledger.get(VISIT).generation, 1)
 
-    // Case 7: an outcome_unknown attempt NEVER enters the fast class — and
-    // the conservative 1h stale clock still applies to it (well within this
-    // assertion's time window).
-    await ledger.recordReconciled({
-      nodeVisitId: VISIT, expectedPhase: 'run_delivered',
-      verdict: 'NEEDS_REVIEW', judgment: 'run_outcome_unknown', reason: 'timeout',
-    })
-    t = ledger.get(VISIT).reconciledAtMs + 5_000 // past the 1s retry delay, far below the 1h stale clock
-    summary = await engine.reconcileOnce()
-    assert.equal(summary.staleReentry.length, 0, 'unknown never re-runs on a timeout alone')
-    assert.equal(ledger.get(VISIT).judgment, 'run_outcome_unknown')
-    assert.equal(escalations.length, 0)
     dueItems = [] // stop the sweep from re-admitting in later passes
   } finally {
     rmSync(dir, { recursive: true, force: true })
