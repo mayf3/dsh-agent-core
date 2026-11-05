@@ -96,19 +96,26 @@ export async function wakeDomainOwnerAssistance({
   assistanceCaseId,
   ownerPrincipalId,
   reason,
+  log = null,
 }) {
+  const fail = (code, detail) => {
+    const message = `owner assistance wake failed code=${code}${detail ? ` detail=${String(detail).slice(0, 200)}` : ''}`
+    if (typeof log?.warn === 'function') log.warn(message)
+    else if (typeof log?.error === 'function') log.error(message)
+    return { ok: false, code, ...(detail === undefined ? {} : { detail }) }
+  }
   if (typeof assistanceCaseId !== 'string' || assistanceCaseId === '') {
-    return { ok: false, code: 'assistance_case_missing' }
+    return fail('assistance_case_missing')
   }
   if (typeof ownerPrincipalId !== 'string' || ownerPrincipalId === '') {
-    return { ok: false, code: 'owner_principal_missing' }
+    return fail('owner_principal_missing')
   }
   const resolved = await principalAccess.handlers.agent_resolve_principal.resolve(
     { principalId: ownerPrincipalId },
     { callerAgentId: pollerAgentId },
   )
   if (!resolved?.ok || typeof resolved.result?.agentId !== 'string') {
-    return { ok: false, code: resolved?.error?.code ?? 'owner_resolution_failed', detail: resolved?.error?.detail }
+    return fail(resolved?.error?.code ?? 'owner_resolution_failed', resolved?.error?.detail)
   }
 
   const ownerAgentId = resolved.result.agentId
@@ -144,11 +151,10 @@ export async function wakeDomainOwnerAssistance({
     if (after?.state === 'pending' || after?.state === 'settled') {
       return { ok: true, ownerAgentId, requestId, reused: true }
     }
-    return {
-      ok: false,
-      code: error?.code ?? error?.status ?? 'owner_wake_failed',
-      detail: String(error?.message ?? error).slice(0, 200),
-    }
+    return fail(
+      error?.code ?? error?.status ?? 'owner_wake_failed',
+      String(error?.message ?? error).slice(0, 200),
+    )
   }
 }
 
@@ -206,6 +212,7 @@ export function mountWorkflowExecutionRuntime({ ctx, layout, router, log, config
       assistanceCaseId: payload.assistanceCaseId,
       ownerPrincipalId: payload.ownerPrincipalId,
       reason: payload.reason,
+      log,
     })
   }
 

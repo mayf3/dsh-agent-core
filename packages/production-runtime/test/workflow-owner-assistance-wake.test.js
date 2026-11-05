@@ -93,6 +93,23 @@ test('owner principal resolution failure prevents delivery and stays retryable',
     workflowInstanceId: WORKFLOW_ID, nodeVisitId: VISIT_ID,
     assistanceCaseId: CASE_ID, ownerPrincipalId: OWNER_PRINCIPAL,
   })
-  assert.deepEqual(result, { ok: false, code: 'principal_disabled', detail: undefined })
+  assert.deepEqual(result, { ok: false, code: 'principal_disabled' })
   assert.equal(deliveries, 0)
 })
+
+test('owner principal resolution failure is explicitly logged for durable outbox retry', async () => {
+  const warnings = []
+  const result = await wakeDomainOwnerAssistance({
+    router: { resolveCallerCorrelation: () => ({ state: 'never_existed' }) },
+    principalAccess: principalAccess({ ok: false, error: { code: 'owner_resolution_failed', detail: 'metadata missing' } }),
+    pollerAgentId: POLLER,
+    workflowInstanceId: WORKFLOW_ID, nodeVisitId: VISIT_ID,
+    assistanceCaseId: CASE_ID, ownerPrincipalId: OWNER_PRINCIPAL,
+    log: { warn: message => warnings.push(message) },
+  })
+  assert.equal(result.ok, false)
+  assert.equal(result.code, 'owner_resolution_failed')
+  assert.match(warnings[0], /owner assistance wake failed code=owner_resolution_failed/)
+  assert.match(warnings[0], /metadata missing/)
+})
+
