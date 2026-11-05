@@ -1,5 +1,6 @@
 import { continuePlannedOwnerResume, mutateWithRecord, recordProgressCheckpoint, recordReconciled, recordStaleSuperseded, recordEscalationRequested, recordDeliveryFailed, recordRecoveryRefused } from './ledger-records.js'
 import { beginAttemptIfAbsent } from './ledger-admission.js'
+import { recordReadback, listReadbackCandidates } from './recovery/readback-ledger.js'
 /**
  * @agent-core/workflow-execution/src/ledger.js — the execution ledger store
  * (WORKFLOW_AGENT_EXECUTION_V2; whole-authority successor of V1).
@@ -317,6 +318,9 @@ export class ExecutionLedger {
 
   /** Record the terminal reconcile verdict for an ACTIVE attempt. */
   async recordReconciled(...args) { return recordReconciled(this, this.#operationPort(), ...args) }
+
+  async recordReadback(observation) { return recordReadback(this, this.#operationPort(), observation) }
+  async listReadbackCandidatesFresh(limit, nowMs = this.clock()) { return listReadbackCandidates(this, limit, nowMs) }
 
 
   async recordStaleSuperseded(...args) { return recordStaleSuperseded(this, this.#operationPort(), ...args) }
