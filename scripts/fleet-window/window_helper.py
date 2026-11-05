@@ -127,8 +127,12 @@ elif op=='quiet':
     if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
     # supervisor: settle unresolved turns NOW (runtime up but mtime-quiet = no turn
     # events in flight, so no re-persistence race); census must then read clean.
+    # H1 fix (2026-11-06): execute ONLY the root-sealed copy (0444) with hash pin;
+    # the /tmp working copy is never executed by this pipeline. H01 #1355.
     import subprocess as sp
-    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node','/tmp/settle-all-pending.mjs'],capture_output=True,text=True)
+    sealed=P('/usr/local/v5-boot-isolation/settle-all-pending.sealed.mjs'); regular(sealed)
+    require(digest(sealed)=='f0bbe6218d6b9d83ba64aedfb2e4219b1a2345e8f12767c93d388dbf3761ef49','settle script seal drift: H01 #1355')
+    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node',str(sealed)],capture_output=True,text=True)
     open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
     if r.returncode!=0: sys.exit(45)
     c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
