@@ -9,7 +9,7 @@ live=P('/usr/local/libexec/agent-core'); prod=P('/Users/authsvc/.agent-core')
 plist=P('/Library/LaunchDaemons/ai.agent-core.runtime.plist')
 lock=P('/usr/local/var/agent-core/production-mutation-locks/production-deploy.lock')
 service='system/ai.agent-core.runtime'
-sha='ce1d13c1e8585759c6a5f194fb5553d990574b5b'; tree='4b4a6a52cfe53a3569c5d14d909b90cdeb842704'
+sha='f6a1f77a8b7b878bcb9821a68836925755ca7076'; tree='08d7ea7108e8d92417b33db52523e5bd545ddce3'
 def require(ok, message):
     if not ok: raise RuntimeError(message)
 def digest(p):
@@ -30,7 +30,7 @@ def validate_authority(a, writer_uid=None, now_epoch=None):
     require(re.fullmatch('[A-Za-z0-9._-]{1,80}',a['window_id']) and a['writer'],'invalid writer/window id')
     uid=os.getuid() if writer_uid is None else writer_uid
     require(a['writer_uid']==uid!=0,'execute as explicitly named non-root writer; privileged actions use sudo')
-    require(a['expected_old_sha']=='fa4510beb6b01e5c40000a2ae36a62c526759e76','r4 legacy stop authorization is fa4510be only')
+    require(a['expected_old_sha']=='23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9','window stop authorization is pinned to the deployed 23fb91a6 only')
     require(set(['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
                  'plist_deployed_sha_only','bootstrap','verify','hr_observe'])<=set(a['scopes']),'missing authorized scope')
     current=time.time() if now_epoch is None else now_epoch

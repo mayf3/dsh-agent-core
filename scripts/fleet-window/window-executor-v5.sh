@@ -10,8 +10,8 @@ PREP=/private/tmp/fleet-v5-prep
 INPUT=/private/tmp/fleet-binding-diag/r3
 SOURCE=/private/tmp/fleet-roll-src
 HARNESS=/tmp/v5-rebuild/harness-src
-SHA=ce1d13c1e8585759c6a5f194fb5553d990574b5b
-TREE=4b4a6a52cfe53a3569c5d14d909b90cdeb842704
+SHA=f6a1f77a8b7b878bcb9821a68836925755ca7076
+TREE=08d7ea7108e8d92417b33db52523e5bd545ddce3
 LIVE=/usr/local/libexec/agent-core
 PLIST=/Library/LaunchDaemons/ai.agent-core.runtime.plist
 SERVICE=system/ai.agent-core.runtime
@@ -33,7 +33,7 @@ Dry-run is the default. It prints ALL stage boundaries; no stage is invoked.
 Execution requires the window writer's current JSON authority. Required fields:
   window_id, writer, writer_uid, valid_from, valid_until (UTC ISO8601),
   expected_old_pid, expected_old_identity (exact ps pid/uid/gid/lstart/comm row),
-  expected_old_sha (fa4510beb6b01e5c40000a2ae36a62c526759e76),
+  expected_old_sha (23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9),
   expected_plist_sha256, expected_harness_stamp (HEAD + decimal dirty count),
   expected_bindings_sha256, expected_runtime_uid, expected_runtime_gid,
   scopes: [source_lockfile_cleanup, production_mutex, bootout, full_preimage,

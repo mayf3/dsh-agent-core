@@ -192,7 +192,7 @@ def main(executor):
             a = dict(window_id='C7_SYNTHETIC_NOT_AUTHORIZATION', writer='isolated-selftest', writer_uid=os.getuid(),
                      valid_from='2026-11-04T00:00:00Z', valid_until='2026-11-05T00:00:00Z',
                      expected_old_pid=1, expected_old_identity='SYNTHETIC_NOT_PROCESS',
-                     expected_old_sha='fa4510beb6b01e5c40000a2ae36a62c526759e76',
+                     expected_old_sha='23fb91a690b0a7182ae3ae4bc388c4e3679d4cc9',
                      expected_plist_sha256='0'*64, expected_harness_stamp='SYNTHETIC',
                      expected_bindings_sha256='0'*64, expected_runtime_uid=os.getuid(), expected_runtime_gid=os.getgid(),
                      scopes=['source_lockfile_cleanup','production_mutex','bootout','full_preimage','install',
