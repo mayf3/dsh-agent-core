@@ -1,0 +1,18 @@
+{
+  "command": [
+    "node",
+    "scripts/verify-code-structure.mjs",
+    "--base",
+    "f6a1f77a8b7b878bcb9821a68836925755ca7076",
+    "--head",
+    "171ecf8482ddf9df61233880f3cf24cbaa0f3816",
+    "--json"
+  ],
+  "cwd": "/private/tmp/dsh-ekr-p1-new",
+  "sourceSha": "171ecf8482ddf9df61233880f3cf24cbaa0f3816",
+  "startedAt": "2026-11-05T19:33:31.401449+00:00",
+  "finishedAt": "2026-11-05T19:33:32.068296+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/structure.raw.txt",
+  "sha256": "58592cf8486e770cf96edc84f1b75012a75bce8a503605965eb2db9d9b9ce29a"
+}

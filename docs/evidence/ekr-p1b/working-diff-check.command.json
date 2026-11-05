@@ -1,0 +1,12 @@
+{
+  "command": [
+    "git",
+    "diff",
+    "--check"
+  ],
+  "startedAt": "2026-11-05T19:34:24.222409+00:00",
+  "finishedAt": "2026-11-05T19:34:24.233314+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/working-diff-check.raw.txt",
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

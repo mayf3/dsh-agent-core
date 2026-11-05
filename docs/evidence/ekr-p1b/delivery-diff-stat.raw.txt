@@ -1,0 +1,35 @@
+ BRIEF-EKR-P1B-ONLY.md                              |   27 +
+ RECEIPT-EKR-P1B.md                                 |  185 ++
+ docs/evidence/ekr-p1b/baseline-five.raw.txt        |   79 +
+ .../ekr-p1b/cached-diff-check.command.json         |   13 +
+ docs/evidence/ekr-p1b/cached-diff-check.raw.txt    |    0
+ .../ekr-p1b/candidate-diff-check.command.json      |   14 +
+ docs/evidence/ekr-p1b/candidate-diff-check.raw.txt |    0
+ .../ekr-p1b/candidate-diff-stat.command.json       |   14 +
+ docs/evidence/ekr-p1b/candidate-diff-stat.raw.txt  |    3 +
+ docs/evidence/ekr-p1b/commands.json                |   44 +
+ docs/evidence/ekr-p1b/delivery-diff-stat.raw.txt   |   35 +
+ docs/evidence/ekr-p1b/environment.json             |   10 +
+ docs/evidence/ekr-p1b/evidence-hashes.json         |   31 +
+ .../ekr-p1b/final-cached-diff-check.command.json   |   13 +
+ .../ekr-p1b/final-cached-diff-check.raw.txt        |    0
+ .../ekr-p1b/final-working-diff-check.command.json  |   12 +
+ .../ekr-p1b/final-working-diff-check.raw.txt       |    0
+ docs/evidence/ekr-p1b/focused.raw.txt              |   20 +
+ docs/evidence/ekr-p1b/gh-final.command.json        |   14 +
+ docs/evidence/ekr-p1b/gh-final.raw.txt             |    1 +
+ docs/evidence/ekr-p1b/governance.command.json      |   16 +
+ docs/evidence/ekr-p1b/governance.raw.txt           |    1 +
+ docs/evidence/ekr-p1b/independent-review.md        |   25 +
+ docs/evidence/ekr-p1b/pr-body.md                   |   11 +
+ docs/evidence/ekr-p1b/pr-title.txt                 |    1 +
+ docs/evidence/ekr-p1b/preflight.json               |   63 +
+ docs/evidence/ekr-p1b/remote-main-final.json       |    8 +
+ docs/evidence/ekr-p1b/source-scope.command.json    |   14 +
+ docs/evidence/ekr-p1b/source-scope.raw.txt         |    2 +
+ docs/evidence/ekr-p1b/structure.command.json       |   18 +
+ docs/evidence/ekr-p1b/structure.raw.txt            | 2231 ++++++++++++++++++++
+ .../ekr-p1b/working-diff-check.command.json        |   12 +
+ docs/evidence/ekr-p1b/working-diff-check.raw.txt   |    0
+ .../owner-obligation-attempt.test.js               |  227 ++
+ 34 files changed, 3144 insertions(+)

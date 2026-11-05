@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python3",
+    ".agents/tools/verify_governance.py",
+    "--target",
+    ".",
+    "--require-accepted"
+  ],
+  "cwd": "/private/tmp/dsh-ekr-p1-new",
+  "sourceSha": "171ecf8482ddf9df61233880f3cf24cbaa0f3816",
+  "startedAt": "2026-11-05T19:33:31.401450+00:00",
+  "finishedAt": "2026-11-05T19:33:31.454849+00:00",
+  "rc": 0,
+  "raw": "docs/evidence/ekr-p1b/governance.raw.txt",
+  "sha256": "c8671db6c5d33b2e2c051a17143acc9bb5736cf8788e72feed4728b5cb32f332"
+}
