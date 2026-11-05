@@ -125,14 +125,11 @@ elif op=='quiet':
     m=meta(log); age=time.time()-m['mtime_ns']/1e9
     save('quiet-last.json',{'at':now(),'path':str(log),'ageSeconds':age,'metadata':m})
     if age<180: sys.exit(10) # only bounded polling condition, never a failed gate retry
-    # supervisor: settle unresolved turns NOW (runtime up but mtime-quiet = no turn
-    # events in flight, so no re-persistence race); census must then read clean.
-    import subprocess as sp
-    r=sp.run(['sudo','-n','/usr/local/libexec/agent-core/node-runtime/bin/node','/tmp/settle-all-pending.mjs'],capture_output=True,text=True)
-    open('/tmp/fleet-v5-prep/settle-at-quiet.log','a').write(r.stdout+r.stderr)
-    if r.returncode!=0: sys.exit(45)
+    # Observation only. H01's sealed historical artifact is retained outside
+    # this pipeline; quiet never authorizes settlement or proves turn exit.
     c=census('quiet-census'); require(quiet_ready(age,True,meta(log)==m),'log changed during census')
-    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c})
+    save('quiet-pass.json',{'at':now(),'ageSeconds':age,'logMetadata':m,'censusHashes':c,
+                           'readOnly':True,'nonemptyCensusAllowed':True,'settlementExecuted':False})
 elif op=='before-stop':
     authority(); old=read(rd/'old-process.json')
     require(identity(old['pid'])==old['identity'],'old identity changed before bootout')
@@ -154,10 +151,15 @@ elif op=='exit-check':
     for port in (8788,8790):
         p=sp.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],stdout=sp.PIPE,stderr=sp.PIPE,timeout=10)
         require(p.returncode==1 and not p.stdout and not p.stderr,'old port not released or readback unavailable')
-    census('post-bootout-census')
-    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[]})
+    save('old-exit-physical.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[],
+                                  'portsAbsent':[8788,8790]})
+    census('post-bootout-census',require_isolation=True)
+    save('old-exit.json',{'at':now(),'supervisor':absent,'oldProcesses':old,'remaining':[],
+                         'portsAbsent':[8788,8790],'classificationReceipt':'post-bootout-census.json'})
 elif op=='preimage':
-    authority(); service_absent(); save('private-inputs-at-install.json',private_inputs('stage-06'))
+    authority(); old=read(rd/'old-process.json')
+    require(pid_from(launch())==old['pid'] and identity(old['pid'])==old['identity'],
+            'old runtime must remain alive while preparing full preimage')
     before=inventory(live); save('preimage-live-inventory.json',before)
     acl=acl_listing(live); raw('preimage-acl-listing.private.txt',acl)
     target=rd/'preimage-full'; require(not target.exists(),'preimage destination exists')
@@ -174,12 +176,24 @@ elif op=='preimage':
     save('external-preimage-metadata.json',external)
     save('rollback-preimage.json',{'at':now(),'fullTree':str(target),'fullTreeRootMetadata':meta(live),
          'plist':str(rd/'plist.preimage'),'loadedEnv':str(rd/'old-loaded-env.private.txt'),
-         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False})
+         'externalMetadata':str(rd/'external-preimage-metadata.json'),'businessSnapshotRestoreAllowed':False,
+         'preparedBeforeBootout':True})
+    require(pid_from(launch())==old['pid'] and identity(old['pid'])==old['identity'],
+            'old runtime changed during preimage preparation')
+elif op=='preimage-recheck':
+    authority(); service_absent()
+    require(read(rd/'rollback-preimage.json').get('preparedBeforeBootout') is True,'pre-bootout preimage missing')
+    require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift after bootout')
+    require(acl_listing(live)==(rd/'preimage-acl-listing.private.txt').read_bytes(),'preimage ACL drift after bootout')
+    save('private-inputs-at-install.json',private_inputs('stage-06'))
+    save('preimage-recheck.json',{'at':now(),'oldRuntimeStopped':True,'inventoryUnchanged':True,
+                                 'aclUnchanged':True,'fullCopyExecuted':False})
 elif op=='install-start':
     authority(); service_absent()
+    require(read(rd/'preimage-recheck.json').get('oldRuntimeStopped') is True,'stopped preimage recheck missing')
     require(digest(plist)==read(rd/'plist-preimage.json')['sha256'],'plist drift before install')
     require(inventory(live)==read(rd/'preimage-live-inventory.json'),'live preimage drift before install')
-    census('immediate-pre-install-census')
+    census('immediate-pre-install-census',require_isolation=True)
     r=live.parent/'agent-core-install-mutation-receipt.json'
     save('install-start.json',{'at':now(),'epoch':time.time(),'previousMutationReceiptSha256':digest(r) if r.is_file() else None})
 elif op=='install-failed':
