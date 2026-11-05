@@ -1,9 +1,9 @@
 ---
 spec_id: PRODUCTION_442_OPTIONAL_ADAPTER_EFFECT_BOUNDARY_V2
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 intended_implementation_authority_on_acceptance: contracts
 authority_action: AMEND
 date: 2026-11-04
