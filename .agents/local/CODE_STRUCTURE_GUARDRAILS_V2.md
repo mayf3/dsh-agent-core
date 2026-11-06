@@ -132,3 +132,7 @@ Acceptance requires an independent exact-revision review of the complete V2, its
 - current PR573 growth in `packages/broker/test/transport.test.js` (912 -> 946) and `packages/workflow-execution/src/engine.js` (511 -> 525) remains a hard failure until decomposed or reduced.
 
 V2 changes no source, registry, PR, runtime, service, or production state by itself. Acceptance authorizes only the Contracts in the companion implementation Spec.
+
+## Succession coordination note (2026-11-07, recorded)
+
+Owner rulings of 2026-11-06 (① adopt the formal V3 precise-exception revision route; ② formally accept the V3 transitional exception design and semantics, bound to the reviewed semantic version) establish that, for the EXACT registered blob-pair transition in `CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1` (path `scripts/trusted-cp-deploy-install.sh`, base blob `ef5053201e6af88b1edbcdfc33e845f872183b2b`, head blob `356899a8ec0726f245790379429f97dfc6ea3bfb`, delta limited to the scheduler-watchdog.mjs whitelist line), the V3 disposition (transitional exception; the touched installer remains recorded BASELINE_DEBT with a separate follow-up split responsibility) supersedes the V2 hard-fail disposition (`INVALID_FILE_EXCEPTION_AUTHORITY`) for that exact case. All other V2 terms — the 500-line general cap, the fixed baseline, anti-evasion checks, fail-closed on invalid registry data, and every other file/directory rule — remain in force unchanged. This note records already-given rulings; it grants no new exceptions and does not re-baseline anything.
