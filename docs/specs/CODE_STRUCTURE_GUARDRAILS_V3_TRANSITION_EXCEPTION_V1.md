@@ -23,12 +23,19 @@ date: 2026-11-06
 
 ## 1. Status and authorization boundary
 
-This is a proposed, bounded transition supplement to the accepted repository-local
-`CODE_STRUCTURE_GUARDRAILS_V2`, not a replacement of that rule. The Owner's third
-ruling of 2026-11-06 authorizes preparation of this document, its verifier
-mechanism, tests, receipt, commit, push, and an unmerged PR. It expressly reserves
-formal acceptance to the Owner after independent review. Preparation does not
-activate this exception or grant product-source or production-write authority.
+This is a bounded transition supplement to the accepted repository-local
+`CODE_STRUCTURE_GUARDRAILS_V2`, not a replacement of that rule. **Status: ACCEPTED
+(2026-11-06).** The Owner's third ruling of 2026-11-06 authorized preparation of
+this document, its verifier mechanism, tests, receipt, commit, push, and an
+unmerged PR, reserving formal acceptance to the Owner after independent review.
+Formal acceptance was subsequently granted by the Owner's second same-day ruling
+("#632：正式接受 V3 精确过渡例外的设计与语义，接受范围绑定当前已审语义版本"),
+conditioned on the P2 test-construction fix (279adffe) passing independent delta
+review with clean-checkout regression — both completed (REVIEW-V3-P2-HEAD.md,
+ACCEPT). Preparation-only language in earlier revisions of this document is
+superseded by this acceptance record; activation remains bound to the exact
+registered blob pair and grants no product-source or production-write authority
+beyond this document's scope.
 
 The normal governance rule makes every `SUPERSEDE` route docs-first and requires
 a whole-authority successor with reciprocal lifecycle links. This task does not
@@ -218,4 +225,8 @@ If the precise exception cannot be expressed or a required gate fails, stop this
 route and record the actual failure in `STOPPED-V3-EXCEPTION.md`. Do not repair it
 by refreshing registry caps, rebaselining, or widening this exception. The fallback
 is separately authorized compliant decomposition under the existing 500-line
-limit. Owner formal acceptance remains pending.
+limit. **Owner formal acceptance: GRANTED 2026-11-06** (second same-day ruling,
+bound to reviewed semantic version 296b0c9f; P2 construction fix 279adffe passed
+independent review). The one-time exception is active solely for the registered
+blob pair; the installer's 1,315-line state remains recorded historical technical
+debt with a separate follow-up split responsibility and acceptance.
