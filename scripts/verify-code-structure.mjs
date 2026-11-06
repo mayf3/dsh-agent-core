@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// V2 structural candidate gate. Registry format intentionally remains V1.
+// V2 gate with an acceptance-gated exact transition. Registry remains V1.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
@@ -8,6 +8,13 @@ const BASELINE = 'd506f81105e8aa05177a01b817ebe11dcc076ba5';
 const REGISTRY = '.agents/structure-registry.json';
 const RULE = '.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md';
 const CONTRACT = 'docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md';
+const TRANSITION_RULE = 'docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md';
+const TRANSITION_ID = 'STRUCTURE_TRANSITION_EXCEPTION_V1';
+const TRANSITION = {
+  path: 'scripts/trusted-cp-deploy-install.sh',
+  baseBlob: 'ef5053201e6af88b1edbcdfc33e845f872183b2b',
+  headBlob: '356899a8ec0726f245790379429f97dfc6ea3bfb',
+};
 const LOCK = '.agents/governance.lock.json';
 const LIMIT = { file: 500, warning: 400, dir: 20, dirWarning: 16, depth: 4, statements: 3, barrelLines: 60, barrelExports: 20 };
 const ACTORS = ['mayf3'];
@@ -68,6 +75,35 @@ function snapshot(ref) {
 function filesAt(ref) { return [...snapshot(ref).keys()]; }
 function readAt(ref, file) { return snapshot(ref).get(file) ?? null; }
 function lines(text) { return text === '' ? 0 : text.endsWith('\n') ? text.split('\n').length - 1 : text.split('\n').length; }
+function transitionAt(base, head, changed) {
+  const raw = readAt(base, TRANSITION_RULE);
+  const header = raw?.match(/^---\n([\s\S]*?)\n---(?:\n|$)/)?.[1];
+  if (!header || !/^status: accepted$/m.test(header)) return null;
+  const blocks = [...raw.matchAll(/```STRUCTURE_TRANSITION_EXCEPTION_V1\n([\s\S]*?)\n```/g)];
+  if (!blocks.length) return null;
+  if (raw !== readAt(head, TRANSITION_RULE)) stop('active transition rule changed between base and head');
+  if (!/^spec_id: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1$/m.test(header) || blocks.length !== 1)
+    stop('transition authority identity or registry count invalid');
+  let entry;
+  try { entry = JSON.parse(blocks[0][1]); } catch { stop('transition registry is not valid JSON'); }
+  if (!entry || Object.keys(entry).sort().join(',') !== 'baseBlob,headBlob,path'
+      || Object.entries(TRANSITION).some(([key, value]) => entry[key] !== value))
+    stop('transition registry must contain only the Owner-authorized exact tuple');
+  if (!changed.has(entry.path)) return { entry, matched: false, affected: false };
+  const blobAt = (ref) => git(['ls-tree', ref, '--', entry.path]).trim().split(/\s+/);
+  const beforeBlob = blobAt(base), afterBlob = blobAt(head);
+  const before = readAt(base, entry.path), after = readAt(head, entry.path);
+  const oldLine = before?.split('\n').find((line) => line.startsWith('APP_SCRIPTS_WHITELIST='));
+  const newLine = oldLine?.replace('agentcore-cron.mjs dsh-agent-spawn-helper.c',
+    'agentcore-cron.mjs scheduler-watchdog.mjs dsh-agent-spawn-helper.c');
+  const change = changed.get(entry.path);
+  const matched = beforeBlob[0] === '100644' && afterBlob[0] === '100644'
+    && beforeBlob[2] === entry.baseBlob && afterBlob[2] === entry.headBlob
+    && change.status === 'M' && change.added === 1 && change.deleted === 1
+    && oldLine !== newLine && before.replace(oldLine, newLine) === after
+    && lines(before) === 1315 && lines(after) === 1315;
+  return { entry, matched, affected: true };
+}
 function inScope(file, vendored, generatedAllowlist = []) {
   return CODE.test(file) && !SKIP_PATH.test(file) && !SKIP_FILE.test(file)
     && !vendored.has(file) && !generatedAllowlist.includes(file)
@@ -321,6 +357,10 @@ function main() {
   const invalid = validateRegistryAgainstAnchor(headRegistry, baselineTree);
   const baseResult = collect(base, base, new Map(), invalid, baseTree);
   const headResult = collect(head, base, changes, invalid, baseTree);
+  const transition = transitionAt(base, head, changes);
+  if (transition?.affected && !transition.matched)
+    headResult.findings.push(finding('TRANSITION_EXCEPTION', 'VIOLATION', 'TRANSITION_EXCEPTION_MISMATCH', transition.entry.path,
+      { detail: 'exact path, blob pair, mode, whitelist replacement and 1315-line debt binding required' }));
   const dirs = new Set([...baseTree.children.keys(), ...headTree.children.keys()]);
   const affectedDirs = new Set([...dirs].filter((dir) => {
     const a = baseTree.children.get(dir) ?? new Set(), b = headTree.children.get(dir) ?? new Set();
@@ -351,14 +391,21 @@ function main() {
   for (const [key, item] of headMap) {
     if (item.severity !== 'VIOLATION') continue;
     const same = baseMap.get(key), isAffected = affectedFinding(item, changes, affectedDirs, baseTree, headTree);
-    if (same && same.severity === 'VIOLATION' && !isAffected && sameFindingEvidence(same, item))
-      debt.push({ ...item, finding_key: stableId(item, headRegistry), debt_classification: 'BASELINE_DEBT' });
+    const permitted = transition?.matched && item.path === transition.entry.path
+      && item.rule === 'INVALID_FILE_EXCEPTION_AUTHORITY';
+    if (same && same.severity === 'VIOLATION' && (!isAffected || permitted) && sameFindingEvidence(same, item))
+      debt.push({ ...item, finding_key: stableId(item, headRegistry), debt_classification: 'BASELINE_DEBT',
+        ...(permitted ? { transition_exception: TRANSITION_ID } : {}) });
     else candidate.push({ ...item, finding_key: stableId(item, headRegistry), classification: 'CANDIDATE_VIOLATION' });
   }
   const outputFindings = [...candidate, ...headResult.findings.filter((f) => f.severity !== 'VIOLATION')];
   const exitCode = candidate.length ? 1 : 0;
   const candidateResult = exitCode ? 'CANDIDATE_DELTA_FAIL' : debt.length ? 'CANDIDATE_DELTA_PASS_WITH_BASELINE_DEBT' : 'CANDIDATE_DELTA_PASS';
-  const report = { schema_version: 1, rules_version: RULES_VERSION, base_oid: base, head_oid: head, candidate_result: candidateResult,
+  const transitionEvidence = transition?.matched ? [{ id: TRANSITION_ID, ...transition.entry,
+    physical_lines: 1315, debt_status: 'HISTORICAL_TECHNICAL_DEBT', split_owner: 'mayf3' }] : [];
+  const report = { schema_version: 1, rules_version: transition ? 'CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1' : RULES_VERSION,
+    base_oid: base, head_oid: head, candidate_result: candidateResult,
+    ...(transition ? { transition_exceptions: transitionEvidence } : {}),
     baseline_debt: debt, resolved_debt: resolved, findings: outputFindings,
     summary: { exit_code: exitCode, in_scope_files: headResult.scoped.length, candidate_violations: candidate.length, baseline_debt: debt.length, resolved_debt: resolved.length } };
   if (args.json) console.log(JSON.stringify(report, null, 2));
@@ -368,6 +415,8 @@ function main() {
     for (const item of candidate) console.log(`  VIOLATION [${item.rule}] ${JSON.stringify(item.path)} ${item.detail ?? ''}`.trimEnd());
     for (const item of debt.sort(comparePaths))
       console.log(`  BASELINE_DEBT [${item.rule}] ${JSON.stringify(item.path)}`);
+    for (const item of transitionEvidence)
+      console.log(`  TRANSITION_EXCEPTION [${item.id}] ${JSON.stringify(item.path)} HISTORICAL_TECHNICAL_DEBT=1315 split_owner=mayf3`);
     for (const item of resolved.sort(comparePaths))
       console.log(`  RESOLVED_DEBT [${item.rule}] ${JSON.stringify(item.path)}`);
   }
