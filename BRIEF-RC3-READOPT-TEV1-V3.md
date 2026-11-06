@@ -74,3 +74,22 @@ paused pending an actual authorized faithful representation or a clarified gate.
 A/B do not depend on this limitation and continue under their explicit mandate.
 The standing-preauthorization original was not located; this record relies on
 the current attributable task, not a claim to have verified that original.
+
+
+## A/B executed observations
+
+- A: `b8333ef4` from the exact requested parent; vendor apply rc0, then
+  `python3 .agents/tools/verify_governance.py --target .` rc0.
+  Source head, manifest, lock hash and adoption status are persisted in
+  `docs/reports/rc3-chain-20261107/A-receipt.json` and its raw verifier output.
+- B: faithful full-field TE frontmatter exported from `git show` at main base
+  `230de798e340cc6c157e6b21822f0b1fda77e51e` and staged candidate tree
+  `0570bc32de2e5b6d22fdf48d0e727369eec3933f`. No field was pruned or shape-normalized.
+  Only the TE record is affected and present in those arrays; this is not a C
+  predecessor-graph check. The exact required rc.3 transition command returned
+  rc0 and emitted `FORMAT_CORRECTION`. Both arrays, document/blob/JSON hashes,
+  preservation assertions and command/result are in `B-*` evidence files.
+- B preserves every other metadata field and every byte of the pre-existing
+  document body. It replaces the supersedes span and appends the correction note.
+  No standalone V3 acceptance, retirement, product-source change or production
+  effect is claimed. C's independently confirmed raw-input limitation remains.
