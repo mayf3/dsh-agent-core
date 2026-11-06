@@ -55,6 +55,18 @@ def is_reference_id(value: object) -> bool:
     return is_strict_spec_id(value) or is_legacy_spec_id(value)
 
 
+def is_format_correction_candidate(value: object) -> bool:
+    """Recognize only object form or a list containing illegal references.
+
+    Whole legacy retirement IDs remain legal under SPEC_FORMAT section 2.7.
+    Duplicate legal IDs and non-list scalars do not receive this exemption.
+    """
+    return isinstance(value, dict) or (
+        isinstance(value, list)
+        and any(not is_reference_id(authority_id) for authority_id in value)
+    )
+
+
 def index_records(records: object, label: str, errors: list[str]) -> dict[str, dict[str, Any]]:
     if not isinstance(records, list):
         errors.append(f"{label} is not an array")
@@ -80,7 +92,13 @@ def is_absent_optional_array(value: object, status: object) -> bool:
     return value is None and status == "superseded"
 
 
-def validate_metadata(record: dict[str, Any], label: str = "record") -> list[str]:
+def validate_metadata(
+    record: dict[str, Any],
+    label: str = "record",
+    *,
+    format_correction_candidates: list[str] | None = None,
+) -> list[str]:
+    """Collect format debt separately when requested; default callers fail closed."""
     errors: list[str] = []
     spec_id = record.get("spec_id")
     status = record.get("status")
@@ -103,24 +121,23 @@ def validate_metadata(record: dict[str, Any], label: str = "record") -> list[str
                 errors.append(f"{label}.governed_by contains a non-strict ID: {authority_id}")
 
     supersedes = record.get("supersedes")
+    if is_format_correction_candidate(supersedes):
+        markers = errors if format_correction_candidates is None else format_correction_candidates
+        detail = (
+            "is not an array (object form)"
+            if isinstance(supersedes, dict)
+            else "contains an invalid whole-authority ID"
+        )
+        markers.append(
+            f"FORMAT_CORRECTION_CANDIDATE: {label}.supersedes {detail}; "
+            "requires registered historical format correction to []"
+        )
     if not isinstance(supersedes, list):
-        if isinstance(supersedes, dict):
-            # Historical format defect (OWNER FORMAT-CORRECTION AUTHORIZATION
-            # 2026-11-07): object-form supersedes violates the array requirement.
-            # Reported as a dedicated marker so a registered format correction can
-            # legalize it; any other non-list form remains a hard error.
-            errors.append(
-                f"{label}.supersedes is not an array (object form; eligible for "
-                "registered historical format correction)"
-            )
-        elif not is_absent_optional_array(supersedes, status):
+        if not isinstance(supersedes, dict) and not is_absent_optional_array(supersedes, status):
             errors.append(f"{label}.supersedes is not an array")
     else:
         if len(supersedes) != len(set(map(str, supersedes))):
             errors.append(f"{label}.supersedes contains duplicates")
-        for authority_id in supersedes:
-            if not is_reference_id(authority_id):
-                errors.append(f"{label}.supersedes contains an invalid whole-authority ID: {authority_id}")
 
     superseded_by = record.get("superseded_by")
     if status == "superseded":
@@ -136,13 +153,22 @@ def validate_transition(
     base_records: object,
     candidate_records: object,
     format_correction_specs: frozenset[str] = frozenset(),
+    *,
+    corrections: list[str] | None = None,
 ) -> list[str]:
     errors: list[str] = []
+    classified_corrections: list[str] = []
     base = index_records(base_records, "base", errors)
     candidate = index_records(candidate_records, "candidate", errors)
 
     for spec_id, record in candidate.items():
-        errors.extend(validate_metadata(record, f"candidate[{spec_id}]"))
+        markers: list[str] = []
+        errors.extend(validate_metadata(
+            record, f"candidate[{spec_id}]", format_correction_candidates=markers,
+        ))
+        # A marker is baseline debt, never permission to retain or introduce
+        # malformed candidate metadata, even when its ID is registered.
+        errors.extend(f"unresolved {marker}" for marker in markers)
 
     for spec_id in sorted(set(base) - set(candidate)):
         errors.append(f"candidate omits base authority: {spec_id}")
@@ -170,19 +196,22 @@ def validate_transition(
             new_supersedes = candidate_record.get("supersedes")
             if new_supersedes != old_supersedes:
                 # Narrow historical format correction (OWNER FORMAT-CORRECTION
-                # AUTHORIZATION 2026-11-07): an illegal object-form supersedes on
+                # AUTHORIZATION 2026-11-07, R2 extension): illegal supersedes on
                 # an accepted/superseded record may be corrected to the legal
-                # empty array. The correction must be exact (old was a dict, new
-                # is precisely []), must not add or drop any successor binding,
+                # empty array. The old value must be a dict or list containing
+                # illegal references; new is precisely []. No successor binding
+                # may be added or dropped (the backlink checks below still apply),
                 # and remains visible as baseline debt. Every other change to
                 # accepted supersedes metadata still fails closed.
                 is_registered_format_correction = (
-                    isinstance(old_supersedes, dict)
+                    is_format_correction_candidate(old_supersedes)
                     and new_supersedes == []
                     and spec_id in format_correction_specs
                 )
                 if not is_registered_format_correction:
                     errors.append(f"{spec_id} mutates accepted supersedes metadata")
+                else:
+                    classified_corrections.append(f"FORMAT_CORRECTION: {spec_id}.supersedes -> []")
         if old_status == "accepted" and new_status == "accepted":
             if candidate_record.get("superseded_by") != base_record.get("superseded_by"):
                 errors.append(f"{spec_id} mutates active superseded_by metadata")
@@ -344,6 +373,8 @@ def validate_transition(
     if not candidate_active_legacy.issubset(base_active_legacy):
         errors.append("active legacy authority set increased")
 
+    if not errors and corrections is not None:
+        corrections.extend(classified_corrections)
     return errors
 
 
@@ -369,10 +400,12 @@ def main(argv: list[str] | None = None) -> int:
         correction_specs: set[str] = set()
         for entry in args.format_correction_spec:
             correction_specs.update(part.strip() for part in entry.split(",") if part.strip())
+        corrections: list[str] = []
         errors = validate_transition(
             load_records(args.base),
             load_records(args.candidate),
             format_correction_specs=frozenset(correction_specs),
+            corrections=corrections,
         )
     except (OSError, json.JSONDecodeError) as exc:
         print(f"cannot read transition input: {exc}", file=sys.stderr)
@@ -384,6 +417,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {error}", file=sys.stderr)
         return 1
 
+    for correction in corrections:
+        print(correction)
     print("Spec transition is a valid whole-authority lifecycle state")
     return 0
 
