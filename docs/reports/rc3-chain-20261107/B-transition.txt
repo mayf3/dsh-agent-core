@@ -1,0 +1,2 @@
+FORMAT_CORRECTION: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.supersedes -> []
+Spec transition is a valid whole-authority lifecycle state
