@@ -4,7 +4,7 @@ import { reconcileCandidate, validateRecoveryFile } from '../../packages/agent-r
 
 const [command, ...argv] = process.argv.slice(2)
 try {
-  const allowed = command === 'reconcile'
+  const allowed = ['reconcile', 'reconcile-batch'].includes(command)
     ? ['--store', '--loader', '--loader-sha256', '--authorization', '--out']
     : command === 'validate' ? ['--store', '--loader', '--loader-sha256'] : []
   const args = new Map()
@@ -16,8 +16,8 @@ try {
   }
   if (allowed.length === 0 || allowed.some(key => !args.has(key))) throw new Error('ARGUMENTS_INVALID')
   const options = { sourceFile: args.get('--store'), loader: args.get('--loader'), loaderSha256: args.get('--loader-sha256'),
-    authorization: args.get('--authorization'), output: args.get('--out') }
-  const receipt = command === 'reconcile' ? await reconcileCandidate(options) : await validateRecoveryFile(options)
+    authorization: args.get('--authorization'), output: args.get('--out'), batch: command === 'reconcile-batch' }
+  const receipt = command === 'validate' ? await validateRecoveryFile(options) : await reconcileCandidate(options)
   process.stdout.write(`${JSON.stringify(receipt)}\n`)
 } catch (error) {
   // No arbitrary loader errors or input bytes enter the operator log.
