@@ -104,7 +104,16 @@ def validate_metadata(record: dict[str, Any], label: str = "record") -> list[str
 
     supersedes = record.get("supersedes")
     if not isinstance(supersedes, list):
-        if not is_absent_optional_array(supersedes, status):
+        if isinstance(supersedes, dict):
+            # Historical format defect (OWNER FORMAT-CORRECTION AUTHORIZATION
+            # 2026-11-07): object-form supersedes violates the array requirement.
+            # Reported as a dedicated marker so a registered format correction can
+            # legalize it; any other non-list form remains a hard error.
+            errors.append(
+                f"{label}.supersedes is not an array (object form; eligible for "
+                "registered historical format correction)"
+            )
+        elif not is_absent_optional_array(supersedes, status):
             errors.append(f"{label}.supersedes is not an array")
     else:
         if len(supersedes) != len(set(map(str, supersedes))):
@@ -123,7 +132,11 @@ def validate_metadata(record: dict[str, Any], label: str = "record") -> list[str
     return errors
 
 
-def validate_transition(base_records: object, candidate_records: object) -> list[str]:
+def validate_transition(
+    base_records: object,
+    candidate_records: object,
+    format_correction_specs: frozenset[str] = frozenset(),
+) -> list[str]:
     errors: list[str] = []
     base = index_records(base_records, "base", errors)
     candidate = index_records(candidate_records, "candidate", errors)
@@ -153,8 +166,23 @@ def validate_transition(base_records: object, candidate_records: object) -> list
             errors.append(f"{spec_id} has forbidden lifecycle transition: {old_status} -> {new_status}")
 
         if old_status in {"accepted", "superseded"}:
-            if candidate_record.get("supersedes") != base_record.get("supersedes"):
-                errors.append(f"{spec_id} mutates accepted supersedes metadata")
+            old_supersedes = base_record.get("supersedes")
+            new_supersedes = candidate_record.get("supersedes")
+            if new_supersedes != old_supersedes:
+                # Narrow historical format correction (OWNER FORMAT-CORRECTION
+                # AUTHORIZATION 2026-11-07): an illegal object-form supersedes on
+                # an accepted/superseded record may be corrected to the legal
+                # empty array. The correction must be exact (old was a dict, new
+                # is precisely []), must not add or drop any successor binding,
+                # and remains visible as baseline debt. Every other change to
+                # accepted supersedes metadata still fails closed.
+                is_registered_format_correction = (
+                    isinstance(old_supersedes, dict)
+                    and new_supersedes == []
+                    and spec_id in format_correction_specs
+                )
+                if not is_registered_format_correction:
+                    errors.append(f"{spec_id} mutates accepted supersedes metadata")
         if old_status == "accepted" and new_status == "accepted":
             if candidate_record.get("superseded_by") != base_record.get("superseded_by"):
                 errors.append(f"{spec_id} mutates active superseded_by metadata")
@@ -327,10 +355,25 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--base", required=True, type=Path)
     parser.add_argument("--candidate", required=True, type=Path)
+    parser.add_argument(
+        "--format-correction-spec",
+        action="append",
+        default=[],
+        help="Spec ID registered for a one-time historical supersedes format "
+        "correction (OWNER FORMAT-CORRECTION AUTHORIZATION 2026-11-07). "
+        "Repeatable; comma-separated values are accepted.",
+    )
     args = parser.parse_args(argv)
 
     try:
-        errors = validate_transition(load_records(args.base), load_records(args.candidate))
+        correction_specs: set[str] = set()
+        for entry in args.format_correction_spec:
+            correction_specs.update(part.strip() for part in entry.split(",") if part.strip())
+        errors = validate_transition(
+            load_records(args.base),
+            load_records(args.candidate),
+            format_correction_specs=frozenset(correction_specs),
+        )
     except (OSError, json.JSONDecodeError) as exc:
         print(f"cannot read transition input: {exc}", file=sys.stderr)
         return 2
