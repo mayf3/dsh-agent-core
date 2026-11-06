@@ -13,7 +13,19 @@ governed_by:
   - CODE_STRUCTURE_GUARDRAILS_V2
   - CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1
 external_authorities: []
-supersedes: []
+supersedes:
+  - scope: CODE_STRUCTURE_GUARDRAILS_V2
+    extent: disposition-only, exact-transition-scoped
+    authority: Owner rulings 2026-11-06 ①② (route adoption and formal acceptance)
+    binding: |
+      For the exact registered blob-pair transition (path
+      scripts/trusted-cp-deploy-install.sh, base blob ef505320..., head blob
+      356899a8..., delta limited to the scheduler-watchdog.mjs whitelist line),
+      this rule's disposition (transitional exception; the touched installer
+      remains recorded BASELINE_DEBT) supersedes the V2 hard-fail disposition
+      (INVALID_FILE_EXCEPTION_AUTHORITY). All other V2 terms remain in force
+      unchanged. Recorded via Owner rulings and coordination note
+      (docs/v2-v3-succession-coordination, merged 2026-11-06T10:29Z).
 superseded_by: null
 owners: [mayf3]
 date: 2026-11-06
@@ -22,6 +34,17 @@ date: 2026-11-06
 # V3 transitional exception — one exact installer whitelist transition
 
 ## 1. Status and authorization boundary
+
+### 1.1 Succession scope (Owner rulings 2026-11-06 ①②)
+
+The Owner's rulings establish a disposition-only, exact-transition-scoped
+succession: for the registered blob pair only, this rule's exception governs in
+place of the V2 `INVALID_FILE_EXCEPTION_AUTHORITY` hard-fail; V2 remains the
+governing authority for every other file, directory, and case. This is a whole-
+decision succession of the single finding, not a whole-authority replacement of
+V2 — recorded in V2's succession coordination note and the frontmatter
+`supersedes` binding above.
+
 
 This is a bounded transition supplement to the accepted repository-local
 `CODE_STRUCTURE_GUARDRAILS_V2`, not a replacement of that rule. **Status: ACCEPTED
