@@ -1,10 +1,9 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
-intended_implementation_authority_on_acceptance: contracts
+implementation_authority: contracts
 production_apply_authority: none
 authority_action: SUPERSEDE
 date: 2026-11-05
@@ -353,3 +352,7 @@ DONE_WHEN = docs-only candidate + independent review + receipt + pushed open PR 
 EXPANSION_TRIGGER = new semantic conflict, unsafe replay, scope escape, required verification failure
 NEXT_REAL_ACTION = independent exact-head REVIEW; then delivery only, never merge
 ```
+
+## Acceptance alignment note (2026-11-06, traceable correction)
+
+Owner acceptance was recorded on PR #623 (comment 6646591408): "Status proposed→accepted, implementation_authority→contracts, effective retroactively to the task-mandate issuance" — the comment's `$(gh pr view 623 ...)` binding literal failed to expand at posting time; the intended binding is PR #623 merge commit `2d550bc8147c877db33886fccb85e00a64353e66`. This frontmatter edit only aligns the document with that recorded acceptance; no new acceptance is created here.
