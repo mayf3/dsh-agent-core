@@ -12,7 +12,7 @@ scope:
   - verified-human-answer-to-authorized-owner-resolution
   - existing-owner-assistance-single-resume
 date: 2026-11-06
-revision: proposal-1
+revision: proposal-2
 candidate_base: f6a1f77a8b7b878bcb9821a68836925755ca7076
 governed_by:
   - AGENT_CORE_PRODUCT_ARCHITECTURE_V1
@@ -68,13 +68,17 @@ owners:
 [Owner 议题 #1352](https://github.com/mayf3/agent-control/issues/1352) 和
 [Svc 后继任务 #1378](https://github.com/mayf3/agent-control/issues/1378)。这些是任务/协作记录，
 不替代 accepted Product Authority。交办已给定 HUMAN_GATE、指定域 Owner、24h 三项意向，
-无需请求 Owner 重复决定；#1352 对应 Owner 评论**引文待 gh 恢复核验**，此处不引用或
-虚构 Owner 原话。正文核验与评论核验的区别见交付回执。
+无需请求 Owner 重复决定。已核验来源为 [#1352 comment-6622750077](https://github.com/mayf3/agent-control/issues/1352#issuecomment-6622750077)：
+作者 `mayf3`，创建/更新时间 `2026-11-04T04:42:18Z`（2026-11-04 12:42:18 +08），
+正文标注“监管代记”。三点持久裁定是：通知 HUMAN_GATE 群（附实例上下文与已尝试清单）；
+仅 Owner 指定的域 owner 可代答/resolve，普通 Agent 不得代 Owner 意志；24h 无 resolve
+则升级再提醒，不自动降级或关闭实例。2026-11-06 Owner 裁定④的本次交办进一步明确
+未 resolve 处置期限及普通/managed 路径分拆；修订映射与核验方法见 `RECEIPT-627-REVISION.md`。
 
 `external_authorities: []` 表示本轮没有核得可绑定的 Svc HUMAN_GATE accepted authority
 及其 exact revision，不表示不存在跨仓依赖。Svc 持久 obligation producer/后继由 #1378
 实施线承担；接收协议、授权验证、原子 receipt 和持久重发现须由所属仓库接受并进入
-其实施 base。本 Core proposal 不赋予 Svc 写权限或跨仓 acceptance。
+其实施 base。本 Core proposal 不赋予 Svc 写权限或跨仓 acceptance，依赖边界见 §13A。
 
 ## 4. Current State
 
@@ -93,6 +97,10 @@ owners:
   SHA-256 `7dcaf3792a8561caf2779d4e336cc48a935144e5646931f94113e430624a1466`。
   其反例和 minimum_closure 为本提案的问题输入，不是生产事故或已运行 HUMAN_GATE 的证明。
   关键反例与 minimum_closure 在 §10 完整重述，审阅不依赖该外部临时路径可用。
+- `OBS-HG-003`：2026-11-06 修订时，通过 GitHub 只读 API 核验上述 #1352 精确评论的
+  author、created/updated time、issue URL 与正文，三项裁定均有持久记录。API 来源、
+  正文 SHA-256 与核验时间见 `RECEIPT-627-REVISION.md`；这仅证明裁定记录存在，
+  不证明 HUMAN_GATE 收件、Svc 计时/提醒或 resolve 接线已经实现。
 
 ## 6. Claims and assumptions
 
@@ -100,8 +108,9 @@ owners:
   答复合法、case resolve 或义务满足；依据 `OBS-HG-001`。
 - `CLM-HG-002` — `INFERRED`：§9 的完整验证链可在合同层闭合 `OBS-HG-002` 反例。
   这不是已有消费者或运行效果的结论，未来须按 §11 验证。
-- Svc 收件面、真实身份映射、HUMAN_REQUIRED 的合法 resolve 细节及 DB 原子性为
-  `UNKNOWN`，不得作为“已经实现”的假设。缺失时拒绝依赖动作，见 §13。
+- Svc 收件面、真实身份映射、managed HUMAN_REQUIRED 的合法后继、resolve link 及
+  DB 原子性为 `UNKNOWN`，不得作为“已经实现”的假设。普通/managed 的已给定路径
+  约束见 CTR-HG-004，不将它们扩大为全链路实现证明。缺失时拒绝依赖动作，见 §13A。
 
 ## 7. Evidence relations
 
@@ -112,16 +121,23 @@ owners:
 `EVD-HG-002`：`OBS-HG-001/002` SUPPORTS `CLM-HG-002` 的合同设计依据；
 relation 仅为设计推断，充分性限于 §10 逐步拒绝反例。§11 所有执行证据仍 `NOT_RUN`。
 
+`EVD-HG-003`：`OBS-HG-003` SUPPORTS §3 三项 Owner 裁定的持久来源；目标为
+DEC-HG-002/003、CTR-HG-002/003/008 的 authoring 输入，坐标为精确 comment ID、
+作者、时间和回执正文哈希。足以撤销旧“待核验”缺口，不足以证明跨仓 acceptance 或运行效果。
+
 ## 8. Decisions (proposed)
 
 - `DEC-HG-001`：HUMAN_GATE 以 Svc 原 case 为唯一业务责任主体；通知和真人答复是
   可审计输入，持久 obligation/到期后继留在 Svc；Core 消费可重读事实和已有 resume 证明。
-- `DEC-HG-002`：指定 Domain 当前 Owner 的合法 resolve 是唯一可进入 WEC008 的桥。
-  真人答复必须被验证，但验证本身不授予任何 resolve 权限。若答复人本身是该 Domain 的
-  有权 Owner，仍须显式认证并经过同一合法命令；否则仅提交已验证答复供 Owner 决定。
-- `DEC-HG-003`：24h 是人工响应期限；从 Svc 原 HUMAN_REQUIRED escalation 的权威时间
-  起算，不从 ACK/通知重试/进程重启起算。到期只产生可见的待处置事实，不能自动 resolve、
-  视为默认同意、清除 fence、换责任主体或执行任务。具体持久催办交付归 Svc 线。
+- `DEC-HG-002`：仅 Owner 指定的域 owner 可代答/resolve；消息验真与答复验证本身
+  不授予该权限。普通 case 仅凭合法显式 resolve receipt 才可能进入 WEC008；opted-in
+  managed case 必须保留 require_effect/真实 STARTED REVIEW effect 路径及原 guard。
+  两条路径见 CTR-HG-004；本合同不承诺直接 Owner resolve 能解开 managed HUMAN gate。
+- `DEC-HG-003`：24h 是“未 resolve 的处置期限”，不是“有人回复就结束”。从 Svc 原
+  HUMAN_REQUIRED 的 `escalationAt` 起算；通知 ACK、答复已验证、通知重试或进程重启
+  均不取消未 resolve 责任或重置期限。未 resolve 到期，须由 Svc 现有责任/通知机制
+  持久升级再提醒并可重发现；仅显示 `OVERDUE` 不足。到期不能自动 resolve、默认同意、
+  清除 fence、换责任主体或执行任务。实际持久接线仍属 Svc 依赖，见 §13A。
 
 ## 9. Contracts (proposed)
 
@@ -138,8 +154,9 @@ Core 进程退出或 ledger/通知投影丢失不能被解释为责任消失。�
 
 ### CTR-HG-002 — Notification and ACK separation
 
-通知必须绑定原 escalation Event 和原 case、Domain、source 坐标、指定域 Owner、答复入口
-及原 24h deadline；无已验证收件路由时不得报告已送达。通知内容不得包含凭据。
+通知目标为 HUMAN_GATE 群，附实例上下文与已尝试清单，必须绑定原 escalation Event 和
+原 case、Domain、source 坐标、Owner 指定的域 owner、答复入口及原 24h 未 resolve
+处置期限；无已验证收件路由时不得报告已送达。通知内容不得包含凭据。
 对 Agent 的提醒服从 D-008 notification/main 边界；对真人的实际渠道送达须有该渠道证明。
 canonical Forum thread 仅为展示关联，回复所属 thread 不是身份或权限证明。
 
@@ -153,6 +170,9 @@ pending/settled 的同 request ACK 仍只证明 admission。不得换 key/Sessio
 
 可信收件边界须验证渠道消息真实性与防重放身份，将不可由模型自报的外部身份映射到
 启用的 canonical HUMAN Principal，再验证其是该原 case 所指定的真人收件者/受权答复者。
+消息真实性或 HUMAN 身份不授予代答权：仅 Owner 指定的域 owner 可代答/resolve，
+须验证该指定和当前 Domain/case 关系；普通群成员或未获指定 Agent 不得代 Owner 意志，
+不得将其消息验真记成受权代答验证成功。
 显示名、@ 提及、HUMAN 类型、已投影 Principal UUID、转发消息或任意 Agent 代答均不足。
 
 验证必须精确关联 `assistanceCaseId/domainId/workflowInstanceId/nodeVisitId`、原
@@ -169,10 +189,18 @@ pending/settled 的同 request ACK 仍只证明 admission。不得换 key/Sessio
 关系及既有 CAS/receipt 条件；通知 recipient、答复人和 `resolverPrincipalId` 各自记录，
 不得混同。无权限的答复人不能借 Core、Agent credential、Owner 字段或“回复”获得授权。
 
-Core 不代行 resolve，不从通知/答复构造 resolved Event，也不新增 HUMAN_REQUIRED
-旁路。实际 Svc 路径若不允许该状态或所需输入，则维持待处置并报告 UNKNOWN/缺权威，
-必须由 Svc 所属 accepted authority 先补齐；本提案不放宽原 guard。只有已提交、可读回
-的合法 resolve receipt/Event 才可进入下一步；它仍不等于任务业务完成。
+按本次 Owner 裁定④给定的路径事实，消费前必须分拆两类，不能把普通路径外推到 managed：
+
+| case 路径 | 合法推进约束 / Core 消费边界 |
+|---|---|
+| 普通 Assistance case（非 opted-in managed） | 既有 `owner_action` 支持 `HUMAN_REQUIRED→RESOLVED`；仍需指定域 owner 的真实 caller、显式授权、当前状态/CAS 与实际 receipt/readback。只有该合法 resolve 凭证及 WEC008 全部证明成立时，Core 才可消费一次 resume |
+| opted-in managed case | 必须走 `require_effect`，关联真实 `STARTED` 的 `REVIEW` effect，遵守既有 managed admission/receipt/STOP guard。在现有可达路径下，直接 Owner resolve 被 managed guard 拦截，不能因“有权 Owner”而绕过。HUMAN_REQUIRED 后的 managed 合法后继由 Svc 的 #1378/#1352 责任线闭合；本 Core 合同只描述消费面，不创建或承诺该后继已可达 |
+
+以上路径约束是本次交办输入，不构成 Svc 实现/运行验收。Core 不代行 resolve，不从
+通知/答复构造 resolved Event，也不新增 HUMAN_REQUIRED 旁路。实际路径若不允许该
+状态或所需输入，则维持待处置并报告 UNKNOWN/缺权威，交 Svc 所属 accepted authority
+闭合；不得通过放宽现有 managed guard 解决。只有已提交、可读回的合法 resolve
+receipt/Event 才可进入下一步；它仍不等于任务业务完成。
 
 ### CTR-HG-005 — Minimum read/event consumption contract
 
@@ -182,7 +210,7 @@ Core 所需的是**经认证 Svc 只读投影或等价事件加权威重读**。
 
 | 投影 | 最小字段及约束 |
 |---|---|
-| `humanGateEscalation` | `version:1`；UUID `escalationEventId/assistanceCaseId/domainId/workflowInstanceId/nodeVisitId/domainOwnerPrincipalId/recipientHumanPrincipalId`；`caseStatus:HUMAN_REQUIRED`；整数 `escalationEventSequence/workflowStateVersion`；RFC3339 `escalatedAt/responseDueAt`，后者等于前者加 24h；`escalationEventSequence <= workflowStateVersion`。Svc 证明 Domain 当前 Owner、指定收件人、原 source 和该显式 Event 的关联 |
+| `humanGateEscalation` | `version:1`；UUID `escalationEventId/assistanceCaseId/domainId/workflowInstanceId/nodeVisitId/domainOwnerPrincipalId/recipientHumanPrincipalId`；`caseStatus:HUMAN_REQUIRED`；整数 `escalationEventSequence/workflowStateVersion`；RFC3339 `escalationAt/resolutionDueAt`，后者等于原 escalationAt 加 24h，表示未 resolve 处置期限；`escalationEventSequence <= workflowStateVersion`。Svc 证明 Domain 当前 Owner、Owner 指定关系、指定收件人、原 source 和该显式 Event 的关联 |
 | `verifiedHumanAnswer` | `version:1`；UUID `verificationReceiptId/escalationEventId/assistanceCaseId/domainId/workflowInstanceId/nodeVisitId/humanPrincipalId`；非空 opaque `sourceMessageId`；非空 `channel`；RFC3339 `receivedAt/verifiedAt`；非空 `verifierAuthorityRef`；`verificationResult:VERIFIED`。Svc 可验证其指向 CTR-HG-003 的实际可信验证记录；human ID 匹配该 escalation 的受权答复者 |
 | `humanGateResolutionLink` | `version:1`；UUID `verificationReceiptId/escalationEventId/assistanceCaseId/domainId/workflowInstanceId/nodeVisitId/resolutionEventId/resolutionCommandId/resolverPrincipalId`；整数 `resolutionEventSequence/workflowStateVersion`；`resolutionEventSequence <= workflowStateVersion`。Svc 将真实验证记录、原 HUMAN gate 和合法 resolve receipt/Event 关联；不得由 Core 自签 |
 
@@ -193,7 +221,9 @@ Core 所需的是**经认证 Svc 只读投影或等价事件加权威重读**。
 未接受/不可用时拒绝消费；不新增 Core product-api、scope 或模型写入口。
 
 通知事件可作提示，丢失、重复、乱序不能成为唯一 correctness 路径；Svc 须提供授权范围
-内可重新发现的未闭合责任及上述事实。Core 不用另一份持久 case store 填补该缺口。
+内可重新发现的未闭合责任、到期升级提醒及上述事实。提醒发送失败须保留原责任和失败
+结果，恢复后仍可从 Svc 现有机制重发现并按原合同处置，不能仅靠一次事件或 `OVERDUE`
+展示。Core 不用另一份持久 case store 填补该缺口。
 原可执行任务发现仍使用 WAE001b：原七字段 due DTO 不增字段、cursor 用最后一行原值、
 持续到 short page、失败等待下个正常 sweep；无有限页上限或持久 cursor。
 
@@ -246,9 +276,18 @@ Owner V2 的 managed STOP、Owner-change 和更严格的有限预算仍控制对
 
 ### CTR-HG-008 — Failure, deadline, restart and audit boundaries
 
-24h 期限不因通知重复或 restart 延后；超时/晚到答复均不得自动 resolve。晚到答复仍须
-重验当前 case/Owner/source 与所有授权；已 resolve/VOID/retired 或 source 移动的旧答复
-不能产生新 permit。到期事实和未闭合责任的持久后继由 Svc 提供，Core 不自建 timer-case 引擎。
+24h 是未 resolve 的处置期限，`resolutionDueAt = 原 escalationAt + 24h`。即使第 1 小时
+已回复且答复验证成功，未 resolve 的原责任仍在，到期仍须升级再提醒；通知 ACK、答复
+已验证、通知重复或 Core/Svc restart 均不取消责任或延后期限。
+
+到期仍未 resolve 时，Svc 必须通过现有责任/通知机制持久记录升级提醒及发送结果，并
+在重启、丢事件或通知失败后保持可重发现、可继续处置；通知失败不能抹去责任或假报送达。
+仅显示 `OVERDUE`、只写本地日志或一次易失提醒不满足原裁定。Core 消费该权威事实，
+不自建 timer-case 引擎、不替 Svc 承担持久后继；实际接线与交付证据仍 UNKNOWN。
+
+超时/晚到答复均不得自动 resolve。晚到答复仍须重验当前 case/Owner/source 与所有授权；
+已 resolve/VOID/retired 或 source 移动的旧答复不能产生新 permit。合法闭合须有权威
+receipt/readback，答复验证状态不能冒充闭合事实。
 
 答复验证、resolve 或 delivery 结果不明时只读原 receipt/权威事实；不能换 key/body/CAS
 重试来“证明”成功。既有合法失败重试只在原合同明确允许的范围内进行。Owner replacement
@@ -276,6 +315,9 @@ WEC008 的一次 resume 授权。minimum_closure 是接受通知/答复实施合
 | thread 中普通“同意”、同名人、Agent 转述被当作 resolve | CTR-HG-003 验真实性、HUMAN 身份及受权答复者、精确 Domain/case/Event/current relation；CTR-HG-004 仍要求合法 Owner 命令 |
 | 真实人回复了别的 Domain/case，或权限在答复后变化 | CTR-HG-003/004 的精确 join 与提交时重验拒绝；不通过模型自报身份/Owner credential 补权 |
 | 已验证回复直接写 Core permit、24h 到期默认同意、Owner turn failed 后无人负责 | CTR-HG-001/004/005/008 将责任后继留在 Svc；期限不是权限；无真实合法 resolve receipt 则不消费 |
+| 第 1 小时回复并验证成功但未 resolve，系统取消期限；或 24h 只展示 OVERDUE | CTR-HG-005/008 从原 escalationAt 保留未 resolve 责任，到期由 Svc 现有机制持久升级再提醒；回复/验证不取消责任 |
+| 到期前后 Core/Svc 重启或通知失败，提醒和责任丢失或期限从重启重算 | CTR-HG-005/008 要求持久责任、原期限、提醒及失败结果可重发现；无该证据不能声称满足裁定 |
+| 把普通 owner_action 的 HUMAN_REQUIRED→RESOLVED 用于 opted-in managed case，因 Owner 身份而绕过 effect | CTR-HG-004 分拆路径；managed 保留 require_effect/真实 STARTED REVIEW effect 与现有 guard，合法后继归 Svc #1378/#1352，Core 不补旁路 |
 | 有 resolve 但前驱 UNKNOWN、已换 assignee/visit、缺 baseline 或仍有 managed STOP | CTR-HG-006/007/008 保留 WEC008 全部 proof 与 Owner V2 guard，零 resume |
 | 同 resolve 重复消息、重放 due row/restart、旧 case 连续推动多个 generation | CTR-HG-007 的原 ledger 单次原子消费及新 baseline 拒绝重复；CTR-HG-008 仅允许原 WEC008 的同 attempt 恢复 |
 
@@ -290,12 +332,12 @@ receipt/readback 证据前，完整 P1-A 仍不得宣称 `SOURCE_VERIFIED` 或�
 |---|---|---|---|---|---|
 | ACC-HG-001 / CTR-HG-001 | 对比真实 escalation 与 local failed/cap/model text；杀 Core 后重读责任 | 隔离 paired Core/Svc fixture | 原 Event/case/Owner 坐标、Svc 后继、重启前后 readback | 仅显式 Svc HUMAN_REQUIRED 触发，责任不因 Core 消失 | 假 HUMAN_REQUIRED、无后继却称闭环、Core case engine |
 | ACC-HG-002 / CTR-HG-002 | admission/settled ACK、渠道缺 receipt、投影失败、重复通知 | 隔离渠道与 Core fixture | 原 requestId、各阶段 receipt、投递次数、状态读回 | ACK 不推出送达/resolve/满足；同 Owner wake identity 保持 | 换 key 盲发、复制任务、伪送达、投影改执行 |
-| ACC-HG-003 / CTR-HG-003 | 注入伪签名、Agent 转述、同名、wrong human/Domain/case/Event/Owner drift | 隔离可信 ingress + Svc | 消息身份 provenance、canonical mapping、验证记录、零 resolve/attempt 计数 | 拒绝所有错配；仅真正授权答复被记录 VERIFIED | 正文自授权、HUMAN 类型即有权、thread 即 case proof |
-| ACC-HG-004 / CTR-HG-004 | 验证后撤权/换 Owner、非法状态、CAS drift，对比合法 Owner 显式 resolve | 隔离真实 Svc 命令/DB | 真实 caller/Domain 检查、命令 receipt/Event、前后 readback | 无权零业务推进；合法路径产生实际关联 receipt | Core 自 resolve、借 credential、放宽 HUMAN_REQUIRED guard、无 receipt 成功 |
+| ACC-HG-003 / CTR-HG-003 | 注入伪签名、Agent 转述、同名、wrong human/Domain/case/Event/Owner drift；消息验真但未获 Owner 指定的群成员/Agent 代答 | 隔离可信 ingress + Svc | 消息身份 provenance、canonical mapping、Owner 指定关系、验证记录、零 resolve/attempt 计数 | 拒绝所有错配；仅真正授权答复被记录 VERIFIED，验真不授予代答/resolve 权 | 正文自授权、HUMAN 类型即有权、未指定主体代答、thread 即 case proof |
+| ACC-HG-004 / CTR-HG-004 | 普通 case 走 owner_action HUMAN_REQUIRED→RESOLVED；对比 opted-in managed 直接 Owner resolve、缺/伪 STARTED REVIEW effect；另测撤权/换 Owner/非法状态/CAS drift | 隔离真实 Svc 命令/DB 与 managed effect fixture | 路径分类、真实 caller/Domain 检查、guard 拒绝、require_effect 与真实 STARTED REVIEW effect、命令 receipt/Event、前后 readback | 普通合法 resolve 产生实际关联 receipt；managed 直接 resolve 被现有 guard 拦，合法后继只能按 Svc accepted 合同验证，缺失则 UNKNOWN/零推进 | 外推普通路径、Core 自 resolve、借 credential、放宽 managed guard、伪 effect、无 receipt 成功 |
 | ACC-HG-005 / CTR-HG-005 | 校验封闭投影，缺字段/乱序/重复/丢事件后重读；>100 due rows 首100已 attempted | 隔离 Svc 只读/事件面 + Core sweep | exact DTO/schema、授权范围、恢复后责任、cursor 原值及101+发现记录 | 缺证据拒绝；事件非唯一正确性路径；原 WAE sweep 保持 | 自签投影、跨域枚举、漏责任、页上限/持久 case cursor、修改 due DTO |
 | ACC-HG-006 / CTR-HG-006 | 对比 resolution link 与原 WEC008 DTO；普通/policy ingress、错 resolver/version/case | 隔离真实 Svc evidence seam | 原 receipt/Event join、exact request/response、身份/版本值 | 仅既有两种 ingress、原 DTO、精确关联被接受 | 第三种 human ingress、混淆 assignee/Owner、缺/假证明授权 |
 | ACC-HG-007 / CTR-HG-007 | settled 正例与 UNKNOWN/pending/legacy baseline/换 tuple/STOP 反例；并发/重复/replay/旧cases | 隔离实际 Core engine/ledger + Svc | fresh Router settled、lock 内 reads、sequence、原 planned append、delivery count | 一个 resolve 最多一个 N+1；原 budget/STOP 保持 | 双消费、新 permit store、补 baseline、UNKNOWN resume、自动续跑 |
-| ACC-HG-008 / CTR-HG-008 | 24h 边界/晚到；response loss；crash before/after plan、before/after delivery_started | 隔离 paired fixture；可控时钟/故障 | 原 deadline、持久后继、原 receipt、exact correlation、ledger replay/投递计数 | 到期不授权；UNKNOWN readback-only；仅 WEC008 正面 never_existed 可同 attempt 恢复 | deadline 重置、自动 resolve、未知换 key/重放、STOP 被消息清除 |
+| ACC-HG-008 / CTR-HG-008 | 第 1 小时回复且验证成功但未 resolve，推进至原 24h；到期前后 Core/Svc 重启、丢事件/通知失败后恢复重发现；晚到/response loss；crash before/after plan、before/after delivery_started | 隔离 paired fixture；可控时钟/故障与 Svc 现有责任/通知机制 | 原 escalationAt/resolutionDueAt、1h 验证记录、24h 未 resolve readback、持久升级提醒及发送/失败结果、恢复重发现、原 receipt、exact correlation、ledger replay/投递计数 | 回复/ACK/验证不取消责任；未 resolve 到期持久升级再提醒，重启/通知失败不丢责任不改期限；到期不授权；UNKNOWN readback-only；仅 WEC008 正面 never_existed 可同 attempt 恢复 | 仅 OVERDUE/日志/易失提醒、回复即取消责任、deadline 重置、失败假送达或丢责任、自动 resolve、未知换 key/重放、STOP 被消息清除 |
 
 ## 12. Alternatives and disposition
 
@@ -318,10 +360,24 @@ Contract ID，不 supersede 现有含义。缺投影的历史记录保持未证�
 | UNKNOWN | 关闭所需证据 / 责任方 | 当前限制 |
 |---|---|---|
 | 跨仓 Svc 真实收件面、渠道验真、canonical Human 映射和当前指定受权答复关系 | Svc/渠道所属 accepted 合同、exact revision、隔离真实接线与鉴权证明 | 不声称任一现有 Forum/消息/API 已满足协议 |
-| HUMAN_REQUIRED 在实际 Svc 的合法 resolve 路径、receipt/verification link 投影与读取授权 | Svc 权威、实际命令/DTO/receipt 与权限反例 | 不放宽 guard；依赖实施与跨仓 acceptance 未完成 |
+| managed HUMAN_REQUIRED 的实际合法后继、receipt/verification resolve link 投影与读取授权 | Svc 权威、actual require_effect/STARTED REVIEW effect、命令/DTO/receipt 与 guard 反例 | 普通 owner_action 不推出 managed 可达；不放宽 guard；依赖实施与跨仓 acceptance 未完成 |
 | #1378 持久 obligation 后继、到期后继、实际事件重发现与 DB 唯一性/原子 join | Svc writer 的 accepted authority/base、真实 DB 并发/崩溃/事务证据 | 不把任务书、stub 或逻辑 identity 当 DB 唯一性 PASS |
-| #1352 Owner 评论原文 | gh 恢复后核对 author/time/comment URL | **引文待 gh 恢复核验**；不虚构引语；三项交办意向无需重决 |
 | 通知真人送达、真实人答复、resolve、原任务执行与业务满足 | 后续授权运行的各阶段 receipt/readback 与独立验收 | 全部 UNKNOWN / NOT_RUN，不宣称无人值守闭环 |
+
+## 13A. 依赖边界
+
+Core 消费合同接受 ≠ 全链路解阻。即使本 proposal 后续获 Owner 接受，Svc 侧所属合同、
+实施 base 与真实接线未闭合前，仍不得声称 HUMAN_GATE 已可用或解除 managed 阻塞。
+当前各项均如实保留 `UNKNOWN`：
+
+| 外部依赖 | 当前状态 / 责任线 | 对 Core 消费的限制 |
+|---|---|---|
+| Svc 真实收件面、HUMAN_GATE 群路由及渠道验真 | UNKNOWN；Svc/渠道所属方，#1352 协议线 | 裁定已核验不等于渠道送达或存在受权消费者 |
+| 外部身份→canonical HUMAN、Owner 指定域 owner/当前 case 授权关系映射 | UNKNOWN；Svc/身份所属方 | 不凭群成员、显示名、消息验真或正文自报授予代答/resolve 权限 |
+| verification receipt→原 escalation→合法 resolve receipt/Event 的 resolve link 与读授权 | UNKNOWN；Svc 协议线 | Core 不自签关联、不造 resolved Event、无足够证明不消费 WEC008 |
+| opted-in managed HUMAN_REQUIRED 的合法后继 | UNKNOWN；Svc #1378/#1352 责任线 | 保留 require_effect/真实 STARTED REVIEW effect 和直接 resolve guard；普通路径支持不等于 managed 已解阻 |
+| 原 escalationAt、未 resolve 责任、24h 持久升级再提醒、失败结果与重启后重发现接线 | UNKNOWN；Svc 现有责任/通知机制，#1378/#1352 | 仅 OVERDUE 不合格；Core 不增加持久 case/timer/后继引擎补缺 |
+| paired accepted authority exact revision、真实 DB 唯一性/原子 join 与全链路 receipt | UNKNOWN；Svc writer/后续独立验收 | 不把此 Core proposal、文档检查或测试定义标为跨仓实现/运行 PASS |
 
 ## 14. Open questions and authoring boundary
 
@@ -333,7 +389,7 @@ PREFLIGHT，不得将其称为本提案细节而修改原 accepted 意义。
 ```text
 schema_version = 2
 SPEC_GOVERNANCE_MODE = AUTHOR
-AUTHORITY_ACTION = NEW
+AUTHORITY_ACTION = AMEND (bounded revision of the existing proposed authority)
 AUTHORITY_OWNERSHIP = resolved (Core consumer; Svc-owned producer remains external dependency)
 ROUTE_STAGE = AUTHORITY_AUTHORING
 AUTHORITY_ACCEPTED_IN_BASE = NO (this new protocol)
