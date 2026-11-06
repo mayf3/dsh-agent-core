@@ -18,7 +18,7 @@ import {
 } from './lib/admission-overlay.mjs'
 import { createDeploymentPhases } from './lib/admission-deploy-phases.mjs'
 import { assertEvidenceAndHeartbeatProofs } from './lib/admission-watchdog-issue3.mjs'
-import { restartSchedulerProductionRuntime } from '../packages/production-runtime/src/scheduler/deployment-runtime-restart.js'
+import { drainThenRestart } from './availability-recovery/drain-then-restart.mjs'
 import { createLaunchdAdapter } from '../packages/production-runtime/src/scheduler/deployment-launchd.js'
 import { reconcileLegacyRoutingControlOwnership } from '../packages/production-runtime/src/scheduler/deployment-routing.js'
 import { installSchedulerDesiredState } from '../packages/production-runtime/src/scheduler/deployment-desired-state.js'
@@ -301,7 +301,7 @@ function runtimeRestart() {
     // single-slot install receipt must keep carrying only INSTALLING/INSTALLED
     // generations (the rollback lane and the retry preimage check read it).
     runtimeDrainReceipt: (receipt) => writeControlReceipt('runtime-drain-receipt.json', receipt) }
-  return restartSchedulerProductionRuntime({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
+  return drainThenRestart({ ctx: runtimeCtx, phase, sourceSha: SOURCE_SHA })
 }
 // B3: deployment phases (operator generation, watchdog install, routing,
 // incident migration, quiesce) live in admission-deploy-phases.mjs — identical
