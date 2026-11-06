@@ -1,0 +1,89 @@
+✖ #637 completed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (351.666666ms)
+✖ #637 failed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (353.115042ms)
+✖ #637 not_admitted: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (346.41725ms)
+▶ #637 UNKNOWN, identity mismatch, explicit conflict and incomplete termination remain fenced with zero writes
+  ✔ true UNKNOWN (7.262167ms)
+  ✔ settled unsupported UNKNOWN (1.416291ms)
+  ✔ foreign owner (1.152625ms)
+  ✔ explicit evidence conflict (1.290542ms)
+  ✔ restart lost (1.206583ms)
+  ✔ evicted (0.932542ms)
+  ✔ never existed (0.947416ms)
+  ✔ absent proof (0.749541ms)
+  ✔ termination without evidence (0.64175ms)
+  ✔ termination without handle (0.570583ms)
+  ✔ wrong occurrenceId (0.591125ms)
+  ✔ wrong runId (0.522625ms)
+  ✔ wrong requestId (0.537875ms)
+✔ #637 UNKNOWN, identity mismatch, explicit conflict and incomplete termination remain fenced with zero writes (236.200167ms)
+✔ #637 existing lateOutcome takes precedence over the retained original UNKNOWN (0.087708ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 15
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1333.487625
+
+✖ failing tests:
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 completed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (351.666666ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 1800000120000
+  - 1800000121000
+             ^
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:161:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1800000120000,
+    expected: 1800000121000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 failed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (353.115042ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 1800000120000
+  - 1800000121000
+             ^
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:161:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1800000120000,
+    expected: 1800000121000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 not_admitted: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (346.41725ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 1800000120000
+  - 1800000121000
+             ^
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:161:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1800000120000,
+    expected: 1800000121000,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

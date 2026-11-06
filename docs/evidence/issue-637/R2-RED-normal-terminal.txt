@@ -1,0 +1,86 @@
+✖ #637 completed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (215.116333ms)
+✖ #637 failed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (217.958083ms)
+✖ #637 not_admitted: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (211.256417ms)
+▶ #637 UNKNOWN, identity mismatch, explicit conflict and incomplete termination remain fenced with zero writes
+  ✔ true UNKNOWN (4.410625ms)
+  ✔ settled unsupported UNKNOWN (1.191ms)
+  ✔ foreign owner (0.626084ms)
+  ✔ explicit evidence conflict (0.546541ms)
+  ✔ restart lost (0.509458ms)
+  ✔ evicted (0.490333ms)
+  ✔ never existed (0.5265ms)
+  ✔ absent proof (0.5685ms)
+  ✔ termination without evidence (0.454125ms)
+  ✔ termination without handle (1.133875ms)
+  ✔ wrong occurrenceId (0.456958ms)
+  ✔ wrong runId (0.396167ms)
+  ✔ wrong requestId (0.420333ms)
+✔ #637 UNKNOWN, identity mismatch, explicit conflict and incomplete termination remain fenced with zero writes (204.633125ms)
+✔ #637 existing lateOutcome takes precedence over the retained original UNKNOWN (0.071584ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 15
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 901.916875
+
+✖ failing tests:
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 completed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (215.116333ms)
+  AssertionError [ERR_ASSERTION]: ordinary Router terminal must settle the restart orphan
+  + actual - expected
+  
+  + 'outcome_unknown'
+  - 'succeeded'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:130:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'outcome_unknown',
+    expected: 'succeeded',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 failed: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (217.958083ms)
+  AssertionError [ERR_ASSERTION]: ordinary Router terminal must settle the restart orphan
+  + actual - expected
+  
+  + 'outcome_unknown'
+  - 'failed'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:130:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'outcome_unknown',
+    expected: 'failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at packages/scheduler/test/watchdog/normal-terminal-restart.test.js:109:3
+✖ #637 not_admitted: persisted Router terminal + crash before Scheduler writeback settles once and resumes future slots (211.256417ms)
+  AssertionError [ERR_ASSERTION]: ordinary Router terminal must settle the restart orphan
+  + actual - expected
+  
+  + 'outcome_unknown'
+  - 'failed'
+  
+      at TestContext.<anonymous> (file:///private/tmp/h637-fix/packages/scheduler/test/watchdog/normal-terminal-restart.test.js:130:12)
+      at async Test.run (node:internal/test_runner/test:1404:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:969:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'outcome_unknown',
+    expected: 'failed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

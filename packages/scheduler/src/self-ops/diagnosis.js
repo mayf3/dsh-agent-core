@@ -50,7 +50,12 @@ export function classifyRouter(result, record, callerAgentId) {
     || Object.keys(expected).some((key) => snapshot.callerCorrelation[key] !== expected[key])) {
     return { disposition: 'mismatch' }
   }
-  const disposition = snapshot.lateOutcome ?? snapshot.outcome ?? 'unsupported'
+  const outcome = snapshot.lateOutcome ?? snapshot.outcome ?? 'unsupported'
+  // A crash before Scheduler writeback can leave a normal Router terminal
+  // behind an unknown occurrence. Reuse the trusted business-settlement
+  // classes after the same exact owner/correlation checks above.
+  const disposition = outcome === 'completed' ? 'late_completed'
+    : ['failed', 'not_admitted'].includes(outcome) ? 'late_failed' : outcome
   if (disposition === 'terminated_without_outcome'
     && (typeof result.handle !== 'string' || result.handle === ''
       || !ROUTER_TERMINATION_EVIDENCE.has(snapshot.terminationEvidence))) {
