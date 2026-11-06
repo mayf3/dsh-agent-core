@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "distribution": "development-governance-v0",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.2",
   "source_repository": "mayf3/agent-development-governance",
-  "source_commit": "6301662e18adaed88e4412394ad9bdb959d92355",
-  "distribution_manifest_sha256": "645a8c2d14cb03838dc7ecb6e3ac2f5f809bd536cf764384d0da974732e3cf23",
+  "source_commit": "9d4d0e3a4cf57f95f8078982b1b41fa5aaecff02",
+  "distribution_manifest_sha256": "15d09f328dec3b53943c6930da2af7227fca1d9a9f933538612b02c105a06164",
   "adoption": {
     "mode": "vendored",
-    "status": "accepted",
-    "prepared_by": "mayf3-authorized-chatgpt",
-    "prepared_at": "2026-09-29T03:16:20.214729Z",
-    "accepted_by": "mayf3",
-    "accepted_at": "2026-10-15T12:03:07.950464Z"
+    "status": "proposed",
+    "prepared_by": "yanfenma-uid502",
+    "prepared_at": "2026-11-06T12:23:03Z",
+    "accepted_by": null,
+    "accepted_at": null
   },
   "files": [
     {
@@ -66,8 +66,8 @@
     },
     {
       "path": ".agents/tools/validate_spec_transition.py",
-      "sha256": "1f34e8fe1a52464a60893b4ef7ca1493aa14cac836fb1e940ec7a3c80859ce6a",
-      "size": 15168
+      "sha256": "59fe69cac0f88ed2ffb401c43720fa280b02ef95c5ad02c5ca3907907311534a",
+      "size": 17312
     },
     {
       "path": ".agents/tools/validate_governance_route.py",
