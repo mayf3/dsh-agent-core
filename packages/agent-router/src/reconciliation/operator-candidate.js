@@ -4,9 +4,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { assertAbsent, digest, privateFile, refuse, writeNewDurable } from './operator-files.js'
+import { authorizeCandidate, DURABLE_IDLE_PROOFS, restoreAuthorizedFences } from './operator-authorization.js'
 
-const AUTH_KEYS = ['version', 'operationId', 'ownerUid', 'sourceSha256', 'loaderSha256', 'handle',
-  'runtimeEpoch', 'agentId', 'processGeneration', 'evidence', 'exitObservedAt'].sort().join(',')
 const SHA = /^[a-f0-9]{64}$/u
 
 async function deployedAuthority(loader, expectedSha256) {
@@ -35,38 +34,22 @@ function decode(authority, file, document) {
   } catch { refuse('STORE_INVALID') }
 }
 
-function authorize(path, source, loaderSha256) {
-  const { bytes, stat } = privateFile(path, 'AUTHORIZATION_UNAVAILABLE')
-  const uid = process.getuid()
-  if ((uid !== 0 && source.stat.uid !== uid) || stat.uid !== uid || (stat.mode & 0o077) !== 0) {
-    refuse('UNSAFE_FILE')
-  }
-  let auth
-  try { auth = JSON.parse(bytes) } catch { refuse('AUTHORIZATION_INVALID') }
-  if (!auth || Object.keys(auth).sort().join(',') !== AUTH_KEYS || auth.version !== 1
-      || typeof auth.operationId !== 'string' || !/^[a-zA-Z0-9._:-]{1,128}$/u.test(auth.operationId)
-      || auth.ownerUid !== uid || !SHA.test(auth.sourceSha256 ?? '')
-      || auth.loaderSha256 !== loaderSha256
-      || typeof auth.handle !== 'string' || auth.handle.length > 512
-      || typeof auth.agentId !== 'string' || typeof auth.runtimeEpoch !== 'string'
-      || !Number.isSafeInteger(auth.processGeneration) || auth.processGeneration < 1
-      || !['child_real_exit', 'durable_settlement_cleanup'].includes(auth.evidence)
-      || !(auth.exitObservedAt === null || (Number.isSafeInteger(auth.exitObservedAt) && auth.exitObservedAt >= 0))) {
-    refuse('AUTHORIZATION_INVALID')
-  }
-  if (auth.sourceSha256 !== digest(source.bytes)) refuse('PREIMAGE_MISMATCH')
-  return { auth, authorizationSha256: digest(bytes) }
-}
-
 function resumeOne(store, auth) {
   const record = store.records.get(auth.handle)
   if (!record || ['runtimeEpoch', 'agentId', 'processGeneration'].some(key => record[key] !== auth[key])) {
     refuse('AUTHORIZATION_MISMATCH')
   }
   if (record.initialOutcome !== 'outcome_unknown') refuse('NOT_OUTCOME_UNKNOWN')
+  const durableIdleProof = DURABLE_IDLE_PROOFS.includes(auth.evidence)
   if (record.state !== 'settled') {
-    if (auth.evidence !== 'child_real_exit' || record.exitObservedAt === null
-        || record.exitObservedAt !== auth.exitObservedAt) refuse('DURABLE_PROOF_REQUIRED')
+    if (durableIdleProof) {
+      if (record.terminationEvidence !== auth.evidence || record.exitObservedAt !== null
+          || auth.exitObservedAt !== null) refuse('DURABLE_PROOF_REQUIRED')
+    } else if (auth.evidence !== 'child_real_exit' || record.exitObservedAt === null
+        || record.exitObservedAt !== auth.exitObservedAt
+        || (record.terminationEvidence !== null && record.terminationEvidence !== 'child_real_exit')) {
+      refuse('DURABLE_PROOF_REQUIRED')
+    }
     // Offline recovery cannot recreate the old parser's evidence precedence.
     if (record.outcomeEvidence !== null || record.outcome !== null || record.lateOutcome !== null) {
       refuse('OUTCOME_PRECEDENCE_REQUIRES_RUNTIME')
@@ -77,6 +60,10 @@ function resumeOne(store, auth) {
   }
   const cleanupProven = record.attemptedActions.some(row => row.action === 'registry_cleanup' && row.result === 'succeeded')
   if (record.reapClaim !== null && !cleanupProven) refuse('REGISTRY_CLEANUP_UNPROVEN')
+  if (record.state !== 'settled' && durableIdleProof) {
+    // C019 resumes existing durable proof; authorization never creates evidence.
+    store.settleLate(record.handle, { lateOutcome: 'terminated_without_outcome', terminationEvidence: auth.evidence })
+  }
   const allRecords = store.records
   const allCorrelations = store.correlationIndex
   try {
@@ -90,7 +77,7 @@ function resumeOne(store, auth) {
   return store.records.get(auth.handle)
 }
 
-export async function reconcileCandidate({ sourceFile, loader, loaderSha256, authorization, output }) {
+export async function reconcileCandidate({ sourceFile, loader, loaderSha256, authorization, output, batch = false }) {
   sourceFile = resolve(sourceFile); loader = resolve(loader); output = resolve(output)
   assertAbsent(output); assertAbsent(`${output}.receipt.json`)
   const source = privateFile(sourceFile, 'STORE_UNAVAILABLE')
@@ -101,16 +88,24 @@ export async function reconcileCandidate({ sourceFile, loader, loaderSha256, aut
   const temporary = mkdtempSync(join(tmpdir(), 'turn-recovery-validate-'))
   try {
     const input = join(temporary, 'input.json')
-    writeFileSync(input, source.bytes, { mode: 0o600 })
+    const { auth, targets, authorizationSha256 } = authorizeCandidate(authorization, source, loaderSha256, batch)
+    const originals = structuredClone(document)
+    const repairs = batch ? restoreAuthorizedFences(document, targets) : []
+    writeFileSync(input, JSON.stringify(document), { mode: 0o600 })
     const store = decode(authority, input, document)
-    const { auth, authorizationSha256 } = authorize(authorization, source, loaderSha256)
-    const original = document.records.find(row => row.handle === auth.handle)
-    const selected = resumeOne(store, auth)
-    const encoded = authority.serializeDurableRecoveryStore(store).records.find(row => row.handle === auth.handle)
-    // Already-settled values and retained answer digests are immutable.
-    const replacement = original.queryState === 'settled' && original.fenceState === 'cleared'
-      ? original : { ...encoded, finalAssistantOutputEvidence: original.finalAssistantOutputEvidence }
-    document.records = document.records.map(row => row.handle === auth.handle ? replacement : row)
+    const settlements = []
+    for (const target of targets) {
+      const original = originals.records.find(row => row.handle === target.handle)
+      const selected = resumeOne(store, target)
+      const encoded = authority.serializeDurableRecoveryStore(store).records.find(row => row.handle === target.handle)
+      // Already-settled values and retained answer digests are immutable.
+      const replacement = original.queryState === 'settled' && original.fenceState === 'cleared'
+        ? original : { ...encoded, finalAssistantOutputEvidence: original.finalAssistantOutputEvidence }
+      document.records = document.records.map(row => row.handle === target.handle ? replacement : row)
+      settlements.push({ handle: target.handle, settlementResult: selected.settlementResult,
+        terminationEvidence: selected.terminationEvidence, exitObservedAt: selected.exitObservedAt,
+        fenceState: selected.fenceState })
+    }
     const bytes = Buffer.from(`${JSON.stringify(document)}\n`)
     const candidate = join(temporary, 'candidate.json')
     writeFileSync(candidate, bytes, { mode: 0o600 })
@@ -120,8 +115,7 @@ export async function reconcileCandidate({ sourceFile, loader, loaderSha256, aut
     const receipt = { version: 1, disposition: 'validated_candidate_only', sourceModified: false,
       operationId: auth.operationId, ownerUid: auth.ownerUid, handle: auth.handle,
       sourceSha256: auth.sourceSha256, candidateSha256: digest(bytes), loaderSha256, authorizationSha256,
-      settlementResult: selected.settlementResult, terminationEvidence: selected.terminationEvidence,
-      fenceState: selected.fenceState, createdAtWallMs: Date.now() }
+      ...(batch ? { repairs, settlements } : settlements[0]), createdAtWallMs: Date.now() }
     // Exclusive creation prevents replacing any source, existing output or symlink.
     writeNewDurable(output, bytes)
     try { writeNewDurable(`${output}.receipt.json`, `${JSON.stringify(receipt)}\n`) }
