@@ -1,6 +1,6 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
-status: accepted
+status: superseded
 spec_kind: implementation
 authority_level: governing_spec
 implementation_authority: contracts
@@ -25,7 +25,7 @@ supersedes_clauses:
     clauses: CTR-WAE-006/011/013 and the bounded dependent statements enumerated in section 8
   - authority: AGENT_CORE_WORKFLOW_STALE_REENTRY_V2
     clauses: CTR-SRE-002 version-baseline responsibility and dependent CTR-SRE-005 and acceptance statements enumerated in section 8
-superseded_by: null
+superseded_by: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
 owners: [mayf3]
 owner_rulings:
   - https://github.com/mayf3/agent-control/issues/1374
@@ -37,6 +37,12 @@ references:
   - docs/decisions/SCHEDULER_OCCURRENCE_OUTCOME_V3.md
   - docs/evidence/ekr-preflight/DEFECT-MATRIX.md
 ---
+
+<!-- R4_PPR_RETIREMENT -->
+> Whole-authority retirement recorded to [PPR V1](AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1.md)
+> under Owner ruling ② / standing §3B; activates with the ordered #655/#657 main transactions.
+> Original body, Contracts, historical acceptance and predecessor links remain readable unchanged.
+<!-- END R4_PPR_RETIREMENT -->
 
 # AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
 

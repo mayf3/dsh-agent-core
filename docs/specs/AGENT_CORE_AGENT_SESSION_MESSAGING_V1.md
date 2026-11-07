@@ -137,7 +137,15 @@ change_log:
       - "F22 (minor): §4 R12 and §8 mark the L0/L1 audit surface as NEW code, citing the scheduler self-service precedent (self-service.js:235 appendAudit; production-runtime compose.js:440-450 sanitized onAuditFailure wiring pattern)"
       - "F23 (minor): §5 adds transport_failure and unsupported_operation to the required error taxonomy with emission sites (gateway.js:171-174, 246-248) and the rationale for taxonomy membership over remapping; §4 R12 coarse audit-result mapping clarified"
       - "F8/G8 (note): §8 adds local-manifest relay-path test coverage to the predicted scope (BASE relay tests are http-only)"
+current_workflow_origin_carrier: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1#CTR-WAE-004
+current_workflow_origin_carrier_activation: ordered main merge of PR 655 then PR 657; historical amendment provenance retained
 ---
+
+<!-- R4_ASM_CURRENT_CARRIER -->
+> Current workflow-origin carrier on ordered main activation is PPR V1 Appendix A `CTR-WAE-004`.
+> Historical `amended_by` and both `inter_agent | workflow_execution` definitions remain unchanged.
+> This pointer migration grants no new origin or delivery authority; branch status is not main activation.
+<!-- END R4_ASM_CURRENT_CARRIER -->
 
 # AGENT_CORE_AGENT_SESSION_MESSAGING_V1
 

@@ -1,9 +1,9 @@
 ---
 spec_id: AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
-status: proposed
+status: accepted
 spec_kind: implementation
 authority_level: governing_spec
-implementation_authority: none
+implementation_authority: contracts
 production_apply_authority: none
 authority_action: SUPERSEDE
 date: 2026-11-07
@@ -25,7 +25,31 @@ supersedes:
   - AGENT_CORE_WORKFLOW_RECOVERY_LIVENESS_V1
 superseded_by: null
 owners: [mayf3]
+accepted_by: mayf3
+accepted_date: 2026-11-08
+accepted_at: 2026-11-07T16:25:01.091512+00:00
+accepted_reviewed_head: a3f5f601ab7741ebc314cfefbf1e3ec9591ab8db
+accepted_reviewed_spec_sha256: 206886c90d0fa1fc5cc6cd3707d5dae0e3643424e153d1ba85a9a1bbf9c0eb55
+independent_review_result: PASS
+independent_review_receipt: docs/reports/succession-r4-step3/acceptance-transaction.md
+acceptance_authority: Owner mayf3 four-PR ruling ② and standing delegation original §3B
+acceptance_authority_source: /Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json
+acceptance_authority_selector: $.rulings[id=owner-20261107-four-pr-rulings]
+acceptance_authority_canonical_sha256: 677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7
+acceptance_transaction_executor: /root under user-delegated standing section 3B; records Owner decision only
+activation_boundary: main merge after PR 655 and independent final-HEAD review; branch status is not active main authority
+accepted_wec_dependency_transaction: 1e064916fc0cf423a3b917cfbcc11a97d56921e9
 ---
+
+<!-- R4_PPR_ACCEPTANCE_LIFECYCLE -->
+> **当前：Owner mayf3 正式接受事务已记录，implementation contracts / production none。**
+> 非作者语义独审 HEAD `a3f5f601ab7741ebc314cfefbf1e3ec9591ab8db` PASS，0 blockers；
+> 本事务同时整体退休 WAE3/Liveness1，互斥回链及当前依赖载体同步。
+> main 激活须 #655 先合入，再由监管核验并合 #657；目前不宣称 main 已生效。
+> 下文 proposed/本准备/待独审等保留已审语义候选时点，当前生命周期以前述元数据和本说明为准。
+> 后续源码实施须 accepted revision 入其base及新任务REUSE；双writer、持久证明和运行验收仍NOT_RUN。
+> ordinary planned、UNKNOWN、fresh gate、原身份与原WAL约束不变；不激活aging/refusal新协议。
+<!-- END R4_PPR_ACCEPTANCE_LIFECYCLE -->
 
 # AGENT_CORE_WORKFLOW_PRE_ADMISSION_RECOVERY_V1
 
