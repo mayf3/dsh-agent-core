@@ -48,8 +48,11 @@ function prepare(t, state = 'accepted', baseMutation = (text) => text) {
   git(work, ['sparse-checkout', 'add', 'scripts', 'packages/agent-credential-provisioning/test']);
   mkdirSync(path.join(work, 'examples/code-structure'), { recursive: true });
   if (state !== 'absent') {
-    const proposed = readFileSync(path.join(repository, authority), 'utf8');
-    assert.match(proposed, /^status: proposed$/m, 'candidate authority must remain proposed');
+    // Bind the pre-retirement proposal fixture to its immutable source, rather
+    // than mistaking the current superseded document for a proposed authority.
+    const proposed = execFileSync('git', ['show', `2373cec4db09daa2ddf005bae2f8918f3b5c0a24:${authority}`],
+      { cwd: repository, encoding: 'utf8' });
+    assert.match(proposed, /^status: proposed$/m, 'historical source must be proposed');
     writeFileSync(path.join(work, authority), state === 'accepted'
       ? proposed.replace(/^status: proposed$/m, 'status: accepted') : proposed);
   } else writeFileSync(path.join(work, 'docs/structure-transition-fixture.txt'), 'absent transition authority fixture\n');

@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// V2 gate with an acceptance-gated exact transition. Registry remains V1.
+// V2 protocol, with native current/historical authority lifecycle validation.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { compareAuthorities } from './governance/code-structure-authority.mjs';
 
 const RULES_VERSION = 'CODE_STRUCTURE_GUARDRAILS_V2';
 const BASELINE = 'd506f81105e8aa05177a01b817ebe11dcc076ba5';
 const REGISTRY = '.agents/structure-registry.json';
-const RULE = '.agents/local/CODE_STRUCTURE_GUARDRAILS_V2.md';
-const CONTRACT = 'docs/specs/CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1.md';
-const TRANSITION_RULE = 'docs/specs/CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1.md';
 const TRANSITION_ID = 'STRUCTURE_TRANSITION_EXCEPTION_V1';
 const TRANSITION = {
   path: 'scripts/trusted-cp-deploy-install.sh',
@@ -75,14 +73,13 @@ function snapshot(ref) {
 function filesAt(ref) { return [...snapshot(ref).keys()]; }
 function readAt(ref, file) { return snapshot(ref).get(file) ?? null; }
 function lines(text) { return text === '' ? 0 : text.endsWith('\n') ? text.split('\n').length - 1 : text.split('\n').length; }
-function transitionAt(base, head, changed) {
-  const raw = readAt(base, TRANSITION_RULE);
-  const header = raw?.match(/^---\n([\s\S]*?)\n---(?:\n|$)/)?.[1];
-  if (!header || !/^status: accepted$/m.test(header)) return null;
+function transitionAt(base, head, changed, authorityPath) {
+  if (!authorityPath) return null;
+  const raw = readAt(base, authorityPath);
   const blocks = [...raw.matchAll(/```STRUCTURE_TRANSITION_EXCEPTION_V1\n([\s\S]*?)\n```/g)];
   if (!blocks.length) return null;
-  if (raw !== readAt(head, TRANSITION_RULE)) stop('active transition rule changed between base and head');
-  if (!/^spec_id: CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1$/m.test(header) || blocks.length !== 1)
+  if (raw !== readAt(head, authorityPath)) stop('active transition rule changed between base and head');
+  if (blocks.length !== 1)
     stop('transition authority identity or registry count invalid');
   let entry;
   try { entry = JSON.parse(blocks[0][1]); } catch { stop('transition registry is not valid JSON'); }
@@ -338,26 +335,22 @@ function main() {
   const fixed = resolve(BASELINE), changes = diff(base, head), renames = renameTargets(base, head), baseFiles = filesAt(base), headFiles = filesAt(head);
   const baseRegistry = registryAt(base), headRegistry = registryAt(head);
   if (baseRegistry.raw !== headRegistry.raw) stop('registry or generated allowlist changed between base and head');
-  const ruleText = readAt(head, RULE);
-  const contractText = readAt(head, CONTRACT);
-  if (ruleText === null || !ruleText.includes('RULE_ID = CODE_STRUCTURE_GUARDRAILS_V2') || !ruleText.includes('LIFECYCLE = ACCEPTED'))
-    stop('accepted V2 rule missing or not accepted at head');
-  if (contractText === null || !contractText.includes('spec_id: CODE_STRUCTURE_VERIFIER_CONFORMANCE_V1') || !contractText.includes('status: accepted'))
-    stop('accepted verifier conformance Spec missing at head');
+  const authority = compareAuthorities(base, head, readAt, stop);
+  const ruleText = authority.after.policy;
   const authorityTerms = [
     `BASELINE_COMMIT = ${BASELINE}`, 'HANDWRITTEN_FILE_WARNING_LINES = 400',
     'HANDWRITTEN_FILE_MAX_LINES = 500', 'DIRECTORY_WARNING_CHILDREN = 16',
     'DIRECTORY_MAX_CHILDREN = 20', 'MAX_DIRECTORY_DEPTH_FROM_MODULE_ROOT = 4',
     'MAX_STATEMENTS_PER_LINE = 3', 'BARREL_MAX_LINES = 60', 'BARREL_MAX_REEXPORTS = 20',
   ];
-  if (authorityTerms.some((term) => !ruleText.includes(term))) stop('accepted V2 rule thresholds or fixed anchor do not match the verifier');
+  if (authorityTerms.some((term) => !ruleText.includes(term))) stop('accepted rule thresholds or fixed anchor do not match the verifier');
   if (fixed !== BASELINE) stop('fixed baseline did not resolve to its pinned commit');
   const baselineTree = tree(BASELINE, filesAt(BASELINE));
   const baseTree = tree(base, baseFiles), headTree = tree(head, headFiles);
   const invalid = validateRegistryAgainstAnchor(headRegistry, baselineTree);
   const baseResult = collect(base, base, new Map(), invalid, baseTree);
   const headResult = collect(head, base, changes, invalid, baseTree);
-  const transition = transitionAt(base, head, changes);
+  const transition = transitionAt(base, head, changes, authority.before.transitionPath);
   if (transition?.affected && !transition.matched)
     headResult.findings.push(finding('TRANSITION_EXCEPTION', 'VIOLATION', 'TRANSITION_EXCEPTION_MISMATCH', transition.entry.path,
       { detail: 'exact path, blob pair, mode, whitelist replacement and 1315-line debt binding required' }));
@@ -404,6 +397,7 @@ function main() {
   const transitionEvidence = transition?.matched ? [{ id: TRANSITION_ID, ...transition.entry,
     physical_lines: 1315, debt_status: 'HISTORICAL_TECHNICAL_DEBT', split_owner: 'mayf3' }] : [];
   const report = { schema_version: 1, rules_version: transition ? 'CODE_STRUCTURE_GUARDRAILS_V3_TRANSITION_EXCEPTION_V1' : RULES_VERSION,
+    governing_authority: { id: authority.after.id, path: authority.after.path, lifecycle: 'accepted' },
     base_oid: base, head_oid: head, candidate_result: candidateResult,
     ...(transition ? { transition_exceptions: transitionEvidence } : {}),
     baseline_debt: debt, resolved_debt: resolved, findings: outputFindings,
@@ -411,6 +405,7 @@ function main() {
   if (args.json) console.log(JSON.stringify(report, null, 2));
   else {
     console.log(`verify-code-structure: ${candidateResult} (base=${base} head=${head})`);
+    console.log(`  governing authority: ${authority.after.id} (${authority.after.path})`);
     console.log(`  candidate violations: ${candidate.length}; baseline debt: ${debt.length}; resolved debt: ${resolved.length}`);
     for (const item of candidate) console.log(`  VIOLATION [${item.rule}] ${JSON.stringify(item.path)} ${item.detail ?? ''}`.trimEnd());
     for (const item of debt.sort(comparePaths))
