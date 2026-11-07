@@ -430,7 +430,7 @@ Forum deployment, and Grant apply each remain separately authorized actions.
 
 | Spec | Lifecycle | Authority role | Discovery / control binding |
 |---|---|---|---|
-| [AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1](AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md) | proposed conversion of Owner ruling; acceptance transaction pending; unmerged candidate is not active main authority | existing lawful responsibility chains / A-B-C Spec acceptance / conditional Captain and SRA operation framework; implementation none; no operation issued here | [Owner provenance](../reports/standing-delegation-formal-20261107/source-provenance.json), [§8 controls](../reports/standing-delegation-formal-20261107/control-bindings.md), [conversion receipt](../reports/standing-delegation-formal-20261107/conversion-receipt.md) |
+| [AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1](AGENT_CORE_STANDING_OPERATIONAL_DELEGATION_V1.md) | Owner mayf3 authorized acceptance recorded 2026-11-07; reviewed proposed `3f5fb808`; activation requires independent final-HEAD review and main merge | existing lawful responsibility chains / A-B-C Spec acceptance / conditional Captain and SRA operation framework; implementation none; no operation issued here | [Owner provenance](../reports/standing-delegation-formal-20261107/source-provenance.json), [§8 controls](../reports/standing-delegation-formal-20261107/control-bindings.md), [acceptance transaction](../reports/standing-delegation-formal-20261107/acceptance-transaction.md) |
 
 本件是总委托框架，下面 SRA V1 是标准发布子机制；两者互补，`supersedes: []`，不替代任何
 既有权威。main 文档激活、Auth 唯一主体、Captain 任命、控制生效和单窗 Mandate 分开核验；
