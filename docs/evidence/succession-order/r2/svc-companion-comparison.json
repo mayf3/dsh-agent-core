@@ -1,0 +1,20 @@
+{
+  "observed_at": "2026-11-07 15:52:30 UTC",
+  "method": "GitHub plugin full fetch_file V2/V3 at exact ref; exact string equality from section heading to EOF",
+  "revision": "8da8dbcb70e700d9e35970e8b662b1be2c29afdc",
+  "v2_blob": "e528b2f10733f48187ef88a99e696f9df0c5bed3",
+  "v3_blob": "7c6c5d1de1d1f6e1a580521f01fce90f1c2de2b2",
+  "section": "## 13. CTR-SWEC-010",
+  "equal": true,
+  "tail_characters": [
+    7268,
+    7268
+  ],
+  "v1_status_excerpt": {
+    "content": "---\nspec_id: SVC_WORKFLOW_EXECUTION_CONTROL_V1\ntitle: Workflow Execution Control — canonical forum binding, durable outbox with reconciler, RETURN policy projection with owner-attention assistance, system execution-escalation ingress, push-first kick, open-assistance due-set narrowing\nstatus: superseded\naccepted_date: 2026-10-28\naccepted_by: Codex root (delegated under user authorization)\naccepted_reviewed_head: 2c7e59a14d5d84ecc0688c47c30c5f04d0f05900\nacceptance_delta_class: additive_contracts_and_acceptance",
+    "encoding": "utf-8",
+    "sha": "200e784d16f152231d8c3c4df138a5a474672275",
+    "display_url": "https://github.com/mayf3/svc-workflow/blob/8da8dbcb70e700d9e35970e8b662b1be2c29afdc/docs/specs/SVC_WORKFLOW_EXECUTION_CONTROL_V1.md",
+    "display_title": "SVC_WORKFLOW_EXECUTION_CONTROL_V1.md"
+  }
+}

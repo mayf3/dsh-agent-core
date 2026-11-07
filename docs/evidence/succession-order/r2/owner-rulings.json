@@ -1,0 +1,40 @@
+{
+  "observed_at": "2026-11-07T15:46:09.453460+00:00",
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "canonicalization": "UTF-8, ensure_ascii=False, sort_keys=True, separators=(comma,colon), no trailing newline",
+  "selected": [
+    {
+      "selector": "$.rulings[id=owner-20261107-four-pr-rulings]",
+      "canonical_sha256": "677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7",
+      "record": {
+        "ts": "2026-11-07 22:05",
+        "id": "owner-20261107-four-pr-rulings",
+        "items": [
+          "①Captain: 批准创建专用Principal release-captain-agent-core-20261107(Auth现有合法责任链, 按accepted canonical agent类型与命名规则); **只授权创建身份记录, 不同时创建Client/凭据/Grant/生产写权限/新控制器**; 若创建入口无法隔离这些效果→停止并报告最小权限差量; 创建后须完成身份归属/职责分离/能力验证/任命/撤销/实际控制负向测试, 此前保持NOMINATED_NOT_APPOINTED不得签发W7",
+          "②#657: 接受ordinary planned有界首次admission核心语义——可信原始WAL/producer证明+原attempt身份+正面零投递证明+fresh gate全满足后执行同身份第一次admission; 缺证/已进delivery-domain/UNKNOWN/历史无资格继续拒绝自动投递; 正式继任前核对双前驱整体退休+当前WEC权威引用+#643生命周期影响; 正常受控源码实施权由正式accepted Contracts承接(不通过implementation_authority:none整体后继意外冻结已有实施权限); 生产权限none",
+          "③#658: 接受refused-terminal独立提案语义——RECOVERY_REFUSAL_TERMINAL为独立于aging的责任交接原因; 可证明历史关联支持严格限定discrepancy-only处置; 不冒充assignee/不重开旧attempt/不推断业务完成; 正式落地前修正#643已accepted/merged状态表述+协调#655/#657有效前驱引用; 仅限提案语义, Core整权继任/Svc配套正式接受前不实施新协议",
+          "④#655: 同意WEC V4有界解锁——仅两类指定远端pre-plan/Owner-resume采集移出全局admission lock; 提交前重新获取原锁+重放当前ledger+新鲜权威事实重检; 身份/generation/baseline/permit/UNKNOWN/唯一writer全保留; 正式接受前将过期Svc V2引用核准为当前V3+与#657继任顺序协调; 保留现有Contracts范围内源码实施授权+生产none; **必须实际双writer/隔离持久存储测试证明无关B能在A远端等待期间推进**(不能只静态审查宣称性能改善)",
+          "⑤避免重复审批: 覆盖精确范围内规范修订/独立差量复核/合法接受事务/已有授权下源码实施准备; 优先形成三PR权威继任顺序与冲突检查(复用现有PR/Spec生命周期); 生产权限不变; W7不自动签发"
+        ]
+      }
+    },
+    {
+      "selector": "$.rulings[id=owner-20261107-standing-delegation]",
+      "canonical_sha256": "01cc059c2bf0e0493588f00032ca06eb73e3a0a13cb33f4078996fdccb79dad3",
+      "record": {
+        "ts": "2026-11-07 22:56",
+        "id": "owner-20261107-standing-delegation",
+        "items": [
+          "常设授权总裁定(八节): 既有四仓(agent-control/dsh-agent-core/svc-workflow/auth-service)的工程开发/规范接受/跨仓协调/标准生产发布/业务验收长期委托现有合法治理与执行责任链自主推进; 消除重复授权; 不新增Goal/审批平台/调度器/控制器/第二事实账本; 授权长期有效至Owner明示撤销",
+          "§2范围: 允许自主=调查/复现/修复/重构/删无效代码/测试回归+Issue创建更新关联关闭+backlog收敛+起草审查合并合规PR+Owner已决定范围的整权继任/引用更新/正式接受/旧权威退休+跨仓Core/Svc协调/独立验证/合法实施/真实业务验收+SRA下标准可恢复发布完整链+普通缺证/构建失败/installer未资格/检查器误报/版本漂移自行修复重验; 不因SHA/PR号/Session/worker/窗口变化自动生成新Owner审批",
+          "§3规范接受委托: A=既有合同修复与等价继任; B=Owner已决定语义(#643/#655/#657/#658显式列出+必需WEC/WAE/Liveness整权继任+Core/Svc配套合同, implementation_authority:contracts允许, 生产none); C=同类非扩权可靠性改进(执行身份/防重副作用/责任活性/公平调度/故障隔离/只读恢复/可观测性); 每次须非作者独立语义审查+接受者真实身份权限+reviewed HEAD+最终接受事务+互斥权威; 作者不得自我接受新增权限; 超范围产品政策变化才§7升级",
+          "§4 Captain: 批准Auth现有合法路径创建专用Principal release-captain-agent-core-20261107(canonical身份方案; 仅身份绑定, 不附赠Client/Secret/Grant/特权helper/生产写权限); 授权责任链在五条件(唯一Principal+Session绑定/能力资格/独立性/体系承认/实际控制负向)完成后任命; validUntil=2026-12-07T16:00:00Z不追溯; 续任/替换由不同有权维护者办理(新期限+新身份核验+可撤销记录, 不候选自授自续); 若现有控制不支持委托→原责任链在现有合法机制完成适配+负向验证; 生效前不得提示词/角色名/自写JSON假装签发权",
+          "§5常设标准发布: SRA accepted+Captain appointed+control effective+单Mandate issued=四独立事实; 全成立后Captain获单一fleet runtime STANDARD_RECOVERABLE签发权不再逐窗请批; 每次绑定完整清单(真实前态/精确候选harness installer Node制品/接受权威时效范围唯一writer独立verifier/installer资格效果清单真实前态可恢复证明/原进程及已派发外部效果终止隔离/UNKNOWN fence认证状态兼容/一次性install bootstrap/阶段STOP回退读回终收据); stage10仅全部前置满足后结束containment恢复自然准入; W7=机制生效后首单候选(Captain完整核验分类签发; 本裁定不直接签发W7不承认未执行门为PASS); 同窗内已授权STOP/隔离/恢复/回退按原Mandate自主; 未知外部效果先读回不盲重试",
+          "§6缺证自主处置: 普通工程问题原链自行补齐不一律升级WAITING_OWNER; 每阻塞保留六要素(原因/受影响动作/责任主体/现有授权/最小补证/下次合法触发/恢复关闭条件); 缺证只禁依赖该证的危险动作不冻结其他无冲突已授权工作; 已决定语义不因检查失败/修复提交/新reviewer/新session/main前移重复请批",
+          "§7仅四类升级Owner: 1新生产目标/特权身份/Grant/trust root/控制器profile/安全边界扩大 2不可逆迁移/破坏性删除受保护数据/解除保留pin/无可靠恢复路径高风险 3实质改变业务归属/人工决策政策/认证模型/降低UNKNOWN-no-replay-fence安全保证 4全部合法补证与恢复途径用尽后确需Owner承担新风险或业务判断; 升级只交最小差量+事实+备选+后果; 真实HUMAN_GATE走原有可信链不伪造同意不超时默认",
+          "§8执行验收与防授权循环: 复用HR/Root/Architect/QA/ITOps/Auth/Release Captain分工; 职责分离(作者不自验收/Captain不兼writer/verifier不兼被审动作作者writer/受托维护者不自造未有权接受); 责任链须将本裁定经有权维护者正式记录与实际Auth/Spec/发布入口授权控制绑定(不得仅本地台账声明生效); 一次性制度适配后同范围操作只核现行授权与执行资格; 以真实交付衡量(源码合并/实际加载/功能启用/业务见证分列+记录重复Owner审批次数与无下一动作等待责任); 禁新建平行平台/第二生产控制/第二调度/因治理延误无关交付; 本裁定=决策空间常设授权非任意未验证操作的安全证明"
+        ]
+      }
+    }
+  ]
+}

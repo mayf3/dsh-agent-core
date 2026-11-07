@@ -1,0 +1,18 @@
+{
+  "source": "/Users/yanfenma/Documents/Codex/2026-10-18/zcode-assist/tools/b7ctl/DISPATCH-REGISTRY.json",
+  "selector": "$.rulings[id=owner-20261107-four-pr-rulings]",
+  "observed_at": "2026-11-07T14:09:07.696235+00:00",
+  "canonicalization": "UTF-8; ensure_ascii=False; sort_keys=True; separators=(comma,colon); no trailing newline",
+  "canonical_sha256": "677bfe608a67d67f8f9092d817fff0e4f4d040f1bc6e0a0184a69315bc54d7b7",
+  "record": {
+    "ts": "2026-11-07 22:05",
+    "id": "owner-20261107-four-pr-rulings",
+    "items": [
+      "①Captain: 批准创建专用Principal release-captain-agent-core-20261107(Auth现有合法责任链, 按accepted canonical agent类型与命名规则); **只授权创建身份记录, 不同时创建Client/凭据/Grant/生产写权限/新控制器**; 若创建入口无法隔离这些效果→停止并报告最小权限差量; 创建后须完成身份归属/职责分离/能力验证/任命/撤销/实际控制负向测试, 此前保持NOMINATED_NOT_APPOINTED不得签发W7",
+      "②#657: 接受ordinary planned有界首次admission核心语义——可信原始WAL/producer证明+原attempt身份+正面零投递证明+fresh gate全满足后执行同身份第一次admission; 缺证/已进delivery-domain/UNKNOWN/历史无资格继续拒绝自动投递; 正式继任前核对双前驱整体退休+当前WEC权威引用+#643生命周期影响; 正常受控源码实施权由正式accepted Contracts承接(不通过implementation_authority:none整体后继意外冻结已有实施权限); 生产权限none",
+      "③#658: 接受refused-terminal独立提案语义——RECOVERY_REFUSAL_TERMINAL为独立于aging的责任交接原因; 可证明历史关联支持严格限定discrepancy-only处置; 不冒充assignee/不重开旧attempt/不推断业务完成; 正式落地前修正#643已accepted/merged状态表述+协调#655/#657有效前驱引用; 仅限提案语义, Core整权继任/Svc配套正式接受前不实施新协议",
+      "④#655: 同意WEC V4有界解锁——仅两类指定远端pre-plan/Owner-resume采集移出全局admission lock; 提交前重新获取原锁+重放当前ledger+新鲜权威事实重检; 身份/generation/baseline/permit/UNKNOWN/唯一writer全保留; 正式接受前将过期Svc V2引用核准为当前V3+与#657继任顺序协调; 保留现有Contracts范围内源码实施授权+生产none; **必须实际双writer/隔离持久存储测试证明无关B能在A远端等待期间推进**(不能只静态审查宣称性能改善)",
+      "⑤避免重复审批: 覆盖精确范围内规范修订/独立差量复核/合法接受事务/已有授权下源码实施准备; 优先形成三PR权威继任顺序与冲突检查(复用现有PR/Spec生命周期); 生产权限不变; W7不自动签发"
+    ]
+  }
+}
