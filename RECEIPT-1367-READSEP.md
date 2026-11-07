@@ -1,50 +1,56 @@
-# RECEIPT-1367-READSEP — R4 delivery in progress
+# RECEIPT-1367-READSEP — R6 serial PR delivery
 
-STATUS = R4_PACKAGING; source implementation and prior required mechanism gates pass. Commit/push/PR are pending and are not yet claimed. Historical [R3 receipt](docs/evidence/1367-readsep/R3-RECEIPT.md) is preserved byte-for-byte; original R1/R2/R3 failure records remain readable. Updated 2026-11-07T11:24:04.665988+00:00.
+STATUS = SOURCE_PR_DELIVERED_RECEIPT_COMPLETE. PR [#654](https://github.com/mayf3/dsh-agent-core/pull/654) is OPEN against main, with no merge. Commit, ordinary push, PR creation and first PR readback all returned rc0. This completed receipt and preserved R4/R5 history use the already-authorized receipt-only publication protocol; terminal sidecars record its final review/push/readback outcome. Zero production writes.
 
-## Coordinates, scope and authority
+## Exact coordinates and authorization
 
-Repository `mayf3/dsh-agent-core`; task [agent-control #1367](https://github.com/mayf3/agent-control/issues/1367). Worktree `/private/tmp/h1367-readsep`, branch `fix/diagnostic-read-separation`, implementation/integration base `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`. Fresh remote main equals base; feature branch and matching all-state PR are absent at R4 entry.
+- Repository: mayf3/dsh-agent-core. Task: [agent-control #1367](https://github.com/mayf3/agent-control/issues/1367).
+- Isolated worktree: `/private/tmp/h1367-readsep`; branch: `fix/diagnostic-read-separation`.
+- Integration base: `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`; fresh remote main and PR baseRefOid both matched it. The stale local main ref was not the integration baseline.
+- Source commit: `ed31db7cfa068ac8128c127382efd98986abff4b`; parent: the exact integration base. Its 47-file tree is `07ff18450ba8099edf7e655fa8bdc4b500154cac`, identical to the independently reviewed R4 staged candidate.
+- First PR readback: baseRefName=main; headRefName=fix/diagnostic-read-separation; headRefOid=`ed31db7cfa068ac8128c127382efd98986abff4b`; state=OPEN; mergedAt=null; mergeCommit=null.
 
-`schema_version=2`; `REUSE + BRIEF + DURABLE`; affected COMPLIANCE; accepted-in-base WEC V3 CTR-WEC1-001/002/003 and section4, WAE V3 CTR-WAE-002/005/006. No Product Contract, lock architecture #1366, dependency, guard, assertion, governance or UNKNOWN/CAS semantics change in R4. Current user R4 authorizes packaging, ordinary branch push and open base-main PR only. No merge or production effects.
+Current user R6 explicitly resumed the R5 wrapper stop for `commit -> push -> gh pr create(base main) -> headRefOid readback -> receipt`, strictly serially, with failure-stop unchanged. [Brief](BRIEF-1367-READSEP.md) records the exact continuation and existing receipt-only completion protocol. Route remains schema_version=2, REUSE + BRIEF + DURABLE under accepted-in-base WEC V3 CTR-WEC1-001/002/003 and section 4, plus WAE V3 CTR-WAE-002/005/006. No Product Contract, production permission or merge permission is created by this mandate.
 
-## Standing raw-capture class exemption
+## R5 root cause and R6 serial handling
 
-Ruling **603-R7-RAW-CLASS-001**, applicable to all later deliveries in this repository: [exact recorded ruling](https://github.com/mayf3/dsh-agent-core/blob/0aa7aa1e1d23beb13567228a503ff5d9218966c7/BRIEF-603-REVERIFY.md#L53-L59); [#603 public reference](https://github.com/mayf3/dsh-agent-core/pull/603#issuecomment-6702809150). Current user R4 explicitly applies the verbatim class to this delivery. Raw `.diff/.stderr/.stdout/.log` captures preserve significant whitespace; the two original Node `.txt` captures qualify by content/provenance. Authored/compiled files remain fully checked.
+R5 single-key and full remote ref checks both returned rc0; main was unchanged. Its PR-list evidence wrapper failed before invoking gh: wrapper rc1, nested pre-coordinate `git write-tree` rc128, index.lock already exists. Root had launched wrappers concurrently while both wrote index metadata. This was local evidence-packaging contention; it was not a failed network probe or an executed PR query. [Original wrapper transcript](docs/evidence/1367-readsep/R5-precommit-pr-list-wrapper.log) and [metadata](docs/evidence/1367-readsep/R5-precommit-pr-list-wrapper.json) retain the actual failure.
 
-| Historical offending path | Ruling reason / preserved SHA-256 |
+R6 uses direct serial commands and waits for every process to finish before invoking the next Git/gh command. No parallel wrapper, concurrent task Git process, lock removal, host/proxy change or product repair occurred. Entry read-only checks observed index.lock absent and the exact 47-file reviewed staged tree. Existing source/test assertions, dependency/governance/lock architecture and UNKNOWN/CAS semantics remain unchanged.
+
+The complete R5 receipt is preserved byte-for-byte as [R5-RECEIPT.md](docs/evidence/1367-readsep/R5-RECEIPT.md), SHA-256 `36468a6ae3cf2b4d17ce714e0125d11b1de6c25252b454569592b514a52b57b8`. [R4 receipt](docs/evidence/1367-readsep/R4-RECEIPT.md) SHA-256 remains `0c84a5f2f76b246f64f63e4c7d4ba551a04868adbec5feae33dbbf4ad074a24f`. R1-R5 stops, original captures and failed rc values remain historical evidence.
+
+## Evidence reused at the unchanged source tree
+
+No R6 product tests or structure rerun occurred. Independent [R4 candidate review](docs/evidence/1367-readsep/R4-CANDIDATE-REVIEW.md) bound the exact tree now committed; [R5 stopped-fact review](docs/evidence/1367-readsep/R5-STOP-REVIEW.md) confirmed six source/test and 26 historical evidence hashes unchanged. Exact original commands, runtime coordinates, raw results and limitations remain in the [R2 receipt](docs/evidence/1367-readsep/R2-RECEIPT.md), [R3 receipt](docs/evidence/1367-readsep/R3-RECEIPT.md), R4/R5 receipts and checkpoints.
+
+| Gate | Original actual result and boundary |
 |---|---|
-| `docs/evidence/1367-readsep/RED.txt` | Original failed Node stdout/stderr; `47cc96534ef8348a8fe0474668664619e79e9ad4d41508b3e7ffc6b28efa2969` |
-| `docs/evidence/1367-readsep/R2-RED.txt` | Corrected RED original stdout/stderr; `981b034021468d252c36f12663b6bdd5663c42a20529e4d6db0306fcb33af0d2` |
-| `docs/evidence/1367-readsep/R2-product.diff` | Verbatim git diff context; `7184d5194c6ed379edb42f2625e6cc0ffbe628bd7bc58e916b204ae3af576248` |
-| `docs/evidence/1367-readsep/R3-diff-check.txt` | Original git diff-check stdout echoes raw whitespace; `9eb1b4f5b50905443001a59903b4a4b72f1257679a2aade7704b8b5d79935f26` |
+| Corrected RED | R2: 9 tests / 3 pass / 6 intended assertion failures, rc1; fixture TypeErrors resolved |
+| Focused GREEN | R2: 11/11 rc0; diagnostic attempts.jsonl hashes unchanged; mutate/repair/append=0; explicit incomplete tail |
+| Shared no-work replay | 6 -> 3; actual mutation retains locked fresh identity/generation/phase validation; busy phases may refresh |
+| Existing workflow | R2: 316/316 rc0, 29 explicit files; inherited stale-quiescence whole-file exclusion retained |
+| Integration | R3: 29/29 rc0, 5 files; Node v25.6.1; nine proxy keys unset only in test children |
+| Broker | R3: 80/80 rc0, 7 files |
+| Structure | R3: rc0, 0 candidate violations, 28 inherited debt findings |
+| Whitespace | Corrected R4 authored/compiled scope rc0 at the unchanged source tree; historical raw rc2 preserved |
 
-[Exact pathspec, coordinates and class reasons](docs/evidence/1367-readsep/R4-whitespace-scope.json). No original bytes are trimmed, deleted or renamed; no .gitattributes added. The historical unscoped R3 result remains **rc2**. R4 is a separate scoped execution. JSON/Markdown/source/tests and `R2-RED-test.js.txt` are included in the full check.
+Standing ruling `603-R7-RAW-CLASS-001` exempts original verbatim captures only; [exact scope, paths, hashes and command](docs/evidence/1367-readsep/R4-whitespace-scope.json). No capture was trimmed, deleted or renamed and no .gitattributes was added. All authored/compiled artifacts remain checked. Receipt/history-only deltas require the bounded final check; no repeated dynamic suite is implied by a new documentation commit.
 
-## Executed evidence and reuse
+## Executed R6 delivery observations
 
-[Independent R4 impact review](docs/evidence/1367-readsep/R4-REVIEW.md) verifies six source/test and26 historical evidence hashes (32/32) and all suite-bound hashes. No dynamic gate was rerun in R4; original environment coordinates remain attached.
+[Actual command results](docs/evidence/1367-readsep/R6-delivery.json) preserve invocation text, rc, output and tool coordinates. [Published PR body](docs/evidence/1367-readsep/R6-PR-BODY.md) describes the final bounded change and original validation.
 
-| Gate / obligation | Actual observation and disposition |
+| Step | Actual result |
 |---|---|
-| Corrected defect RED | R2:9 tests,3 pass,6 intended assertion failures, rc1; no fixture TypeError. R1:9/1/8 remains historical. [R2 raw](docs/evidence/1367-readsep/R2-RED.txt) |
-| Focused GREEN | R2:11/11 rc0; mounted traces/attention file hashes unchanged, mutate/repair/append0; explicit incomplete-tail result. [Raw](docs/evidence/1367-readsep/R2-GREEN.txt) |
-| Replay reduction | No-work6->3, actual mutations still revalidate under existing OwnerLock/fresh identity/generation/phase gates. Busy phases may refresh; no universal replay or production-throughput claim. |
-| Existing workflow | R2:316/316 rc0;29 explicit files; inherited stale-quiescence whole-file exclusion stays excluded, never PASS. [Raw](docs/evidence/1367-readsep/R2-workflow.txt) |
-| Integration/runtime/product-api | R3:29/29 rc0;5 explicit files, all four former environment-blocked assertions execute. [Raw](docs/evidence/1367-readsep/R3-integration.txt) |
-| Broker surfaces | R3:80/80 rc0;7 explicit files. [Raw](docs/evidence/1367-readsep/R3-broker.txt) |
-| Structure | R3:rc0; candidate violations0, inherited debt28. Candidate `7ad8f3c03a02d7499be6c5bbebc87848609a52d7`, tree `e78993cd999117e492a11a438a42160dd55314cf`; source/tests unchanged. R4 docs delta gets independent scope/impact and final-HEAD check. [Raw JSON](docs/evidence/1367-readsep/R3-structure.txt) |
-| R4 scoped whitespace | **Corrected class scope rc0**, empty stdout/stderr; exact argv/time/index-tree in [metadata](docs/evidence/1367-readsep/R4-whitespace-corrected.json). Historical R3 rc2 and first R4 incomplete-scope rc2 remain preserved. |
-| Commit / push / open base-main PR | Pending actual execution. No merge authorized. |
+| Fresh remote refs | rc0; main=integration base; no feature ref before first push |
+| Commit prepared staged tree | rc0; 47 files, 5492 insertions, 44 deletions; source commit and tree above |
+| Ordinary push | rc0; new feature branch published and upstream set |
+| gh pr create | rc0; PR https://github.com/mayf3/dsh-agent-core/pull/654, base main |
+| gh pr view | rc0; headRefOid exactly matches source commit; OPEN; no merge |
 
-R3 child used actual Node v25.6.1 `/usr/local/Cellar/node/25.6.1_1/bin/node`, x64; all nine proxy keys explicitly unset, parent/host unchanged. R2 GREEN/workflow evidence stays at original Node v26.7.0 coordinates. [Environment](docs/evidence/1367-readsep/R3-environment.txt), [R3 checkpoint and all original hashes](docs/evidence/1367-readsep/R3-checkpoint.json), [detailed R2 receipt](docs/evidence/1367-readsep/R2-RECEIPT.md).
+## Issue-defined Done When and completion boundary
 
-## Delivery boundary
+Actual diagnostic write side effects were reproduced through mounted traces/attention, then removed on the fresh-reader path with unchanged event-file hashes and explicit incomplete-tail qualification. Shared candidate selection reduces the measured same-round no-work replay count from 6 to 3. Actual mutations retain locked fresh revalidation. Required affected suites, broker samples and prior independent source review passed at the unchanged product candidate. A pushed, open base-main PR now exists. Lock architecture #1366 remains separate; this task does not claim to eliminate every replay or OwnerLock artifact write.
 
-IMPLEMENTATION_STATE=COMPLETE; VERIFICATION_STATE=SUFFICIENT for unchanged bounded source; PR_DELIVERY_READY awaits independent final candidate review; DONE_WHEN_MET=NO until pushed PR/receipt verified. MERGE_READY=NOT_APPLICABLE (forbidden); PRODUCTION_OPERATION_ALLOWED=NO; production install/runtime admission/business acceptance=NOT_AUTHORIZED/NOT_EXECUTED. Historical stops are superseded only for the R4 actions explicitly authorized in the Brief. Any new unexpected failure stops dependent work.
-
-
-Initial R4 capture wrapper recorded STOPPED at R4-whitespace rc2. This was an incomplete class-scope implementation; the precise disposition and corrected rc0 follow below. No nonexempt artifact was reported.
-
-
-R4 scope qualification: the first scoped attempt returned rc2 only because R3-diff-check.txt (original verbatim stdout) was omitted from exclusions. [Initial actual result](docs/evidence/1367-readsep/R4-whitespace.json) remains rc2. The automatic wrapper stop statement above was made before evaluating this preauthorized class; see STOPPED raw-class qualification. Current user R4 already authorizes this capture class, so the corrected scope continues mechanically without a new exemption or product change. A nonexempt finding or unexpected delivery failure still stops work.
+IMPLEMENTATION_STATE=COMPLETE; SOURCE_PR_DELIVERY=COMPLETE; RECEIPT=COMPLETE; MERGE_READY=NOT_APPLICABLE (forbidden); PRODUCTION_OPERATION_ALLOWED=NO. Installation, runtime admission and business acceptance remain NOT_AUTHORIZED/NOT_EXECUTED. The final receipt/history commit coordinates, independent final-HEAD receipt-delta review and exact remote/PR readbacks are terminal sidecar observations in `docs/evidence/1367-readsep/R6-FINAL-REVIEW.md` and `R6-final-readback.json`, avoiding a self-referential commit hash. The sidecars' actual results must be read directly; this receipt does not preclaim their execution or success.

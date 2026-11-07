@@ -1,0 +1,11 @@
+{
+  "timestamp_utc": "2026-11-07T11:32:52.555100+00:00",
+  "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "index_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac",
+  "staged_paths": 47,
+  "owner_v2_canonical_sha256": "087461a2a7424088b258940393ef4f9ad5939e59d0a1e420dfc57efd2829c006",
+  "source_hashes_match": 6,
+  "historical_hashes_match": 26,
+  "preserved_R4_receipt_sha256": "0c84a5f2f76b246f64f63e4c7d4ba551a04868adbec5feae33dbbf4ad074a24f",
+  "production_effects": false
+}

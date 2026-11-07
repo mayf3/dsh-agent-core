@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "git",
+    "ls-remote",
+    "origin",
+    "refs/heads/main"
+  ],
+  "started_at_utc": "2026-11-07T11:32:52.714478+00:00",
+  "finished_at_utc": "2026-11-07T11:32:53.508522+00:00",
+  "pre": {
+    "head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+    "branch": "fix/diagnostic-read-separation",
+    "index_tree": "07ff18450ba8099edf7e655fa8bdc4b500154cac"
+  },
+  "actual_rc": 0,
+  "wrapper_timeout": false,
+  "post_head": "2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648",
+  "stdout_sha256": "4d809c219da115213846d99de0e249c6abd6cec28a0e32711e43e009e9bc554f",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
