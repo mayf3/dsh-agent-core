@@ -88,7 +88,7 @@ EMERGENCY / INCIDENT_REFERENCE = persistent issue, PR, or report
 
 ## Current Owner-obligation Workflow authority
 
-The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `39587c33c8bcf26ad5689127f5c92a6abc8b562e` and Core `ac83fe5cea3701eb9436f74d1b5f6ed0013256a9`. The accepted Core whole successors are WAE V3, Assignee Transition Capability V3, WEC V3, GCR V2, WPO V4, and Owner Workflows V2. Assignee Transition Capability V2 is superseded by V3, and Owner Workflows V1 by V2, with reciprocal lifecycle links. The paired Svc acceptance-context successor is `SVC_WORKFLOW_ACCEPTANCE_CONTEXT_BINDING_V2`. Governing Contracts authorize source implementation only after their accepted revisions are present in the implementation base; production apply remains none.
+The accepted paired governing authorities are `docs/specs/SVC_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` in svc-workflow and `docs/specs/AGENT_CORE_WORKFLOW_OWNER_OBLIGATION_WORKFLOWS_V2.md` here, accepted by Root under user-delegated authority at reviewed semantic heads Svc `39587c33c8bcf26ad5689127f5c92a6abc8b562e` and Core `ac83fe5cea3701eb9436f74d1b5f6ed0013256a9`. The accepted Core whole successors are PPR V1 (whole successor to WAE V3 and Recovery Liveness V1), Assignee Transition Capability V3, WEC V4, GCR V2, WPO V4, and Owner Workflows V2. Assignee Transition Capability V2 is superseded by V3, and Owner Workflows V1 by V2, with reciprocal lifecycle links. The paired Svc acceptance-context successor is `SVC_WORKFLOW_ACCEPTANCE_CONTEXT_BINDING_V2`. Governing Contracts authorize source implementation only after their accepted revisions are present in the implementation base; production apply remains none. WEC V4 and the reciprocal WEC V3 retirement are recorded in the R4 #655 acceptance transaction; current-main activation requires its merge after independent final-HEAD review. Until then main's WEC V3 remains controlling.
 
 ## Code structure rules
 
@@ -325,3 +325,11 @@ Once `DONE_WHEN` is met and no valid `EXPANSION_TRIGGER` fired, stop. Do not con
 ```
 
 Local extensions may refine the vendored governance but may not silently weaken or contradict the pinned distribution. Updating the distribution requires a separate docs-only adoption/update review.
+
+### R4 PPR dependency activation
+
+PR #657 records accepted/contracts/production-none PPR with WAE3 and Liveness1 simultaneously
+retired and reciprocal links. ASM's two-kind provenance, SRE's existing scoped-effect carrier,
+RBAH and WEC current pointers migrate without changing their historical bodies or product
+Contracts. This branch transaction activates only after #655 then #657 merge into main
+with independent final-HEAD review; main's existing predecessors control until then.
