@@ -16,8 +16,9 @@ for (const scenario of ['B1-503', 'B4-missing-baseline']) {
     const requests = []
     let recovered = false, moved = false, child, exit
     const server = createServer((req, res) => {
-      const status = scenario === 'B1-503' && requests.length >= 2 && !recovered
-        || scenario === 'B4-missing-baseline' && requests.length === 1 ? 503 : 200
+      // Pre-plan and locked final validation precede the dispatch-time sample.
+      const status = scenario === 'B1-503' && requests.length >= 3 && !recovered
+        || scenario === 'B4-missing-baseline' && requests.length === 2 ? 503 : 200
       requests.push({ status, agentId: req.headers['x-agent-id'], instanceId: req.headers['x-workflow-id'] })
       res.writeHead(status, { 'content-type': 'application/json' })
       const body = detail(8).body

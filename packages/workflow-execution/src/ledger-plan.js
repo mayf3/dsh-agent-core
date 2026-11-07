@@ -8,6 +8,13 @@ export async function prepareLedgerAttemptPlan(preparePlan, context) {
   } catch { return { ok: false } }
 }
 
+/** WEC4's engine-only collection stages. Arbitrary legacy callbacks retain
+ * their original held-lock discipline; only these named reads may leave it. */
+export function isBoundedCollection(preparePlan) {
+  return preparePlan !== null && typeof preparePlan === 'object'
+    && ['capture', 'collect', 'validate'].every(key => typeof preparePlan[key] === 'function')
+}
+
 export function ledgerAttemptPlanContext({ dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId, existing, generation, ownerResume }) {
   return {
     intent: { dispatchIntentId, nodeVisitId, workflowInstanceId, ownerPrincipalId },
