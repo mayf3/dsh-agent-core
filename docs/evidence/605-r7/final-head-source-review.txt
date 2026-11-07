@@ -1,0 +1,12 @@
+REVIEWER=/root/failure_attribution_review
+REVIEW_TARGET_HEAD=42487e65b36f049811b0e83f90178510a3da28b7
+BASE_HEAD=4f7df01bcf087075c114901a96a7a54573110f61
+CURRENT_MAIN=1ff1e81cbd74a51761dab46a5fcee532c41fe4ed
+FINAL_HEAD_RECHECK=PASS; AUTHOR_INDEPENDENCE=PASS
+SOURCE_DELIVERY_ACCEPTANCE_COVERAGE=PASS under explicit Owner10 pre-existing exclusions
+AUTHORITY/CONTRACT/ATTRIBUTION/PACKAGING/MANDATE_SCOPE/EVIDENCE=PASS
+BLOCKERS=0; SPEC_GAPS=0; SOURCE delta against tested snapshot is empty
+15/15 R7 raw logs tracked with matching hashes; all32 R7 manifest hashes verified
+Historical receipt/STOPPED archive SHA256 matches pre-stash originals
+OPERATION_ALLOWED=NO; MERGE_READY=NO; separate regulator acceptance not performed
+NEXT_ACTION=CONTINUE authorized push and unmerged main PR
