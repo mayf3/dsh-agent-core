@@ -1,6 +1,9 @@
 # RECEIPT-605-R2 — R7 attribution complete; source delivery gates PASS
 
-STATUS = SOURCE_DELIVERY_READY_PENDING_COMMIT_PUSH_PR_READBACK
+STATUS = SOURCE_DELIVERED_PR_OPEN
+DELIVERY_COMPLETE = YES (authorized source delivery only)
+IMPLEMENTATION_COMMIT = 42487e65b36f049811b0e83f90178510a3da28b7
+PR = https://github.com/mayf3/dsh-agent-core/pull/646 (base main, open, unmerged)
 REPOSITORY = mayf3/dsh-agent-core
 WORKTREE = /private/tmp/h605-r2
 BRANCH = fix/compat-reader-writer-guard
@@ -92,11 +95,38 @@ historical digests; details remain in R6 facts-readback.json and new
 Independent non-author `/root/failure_attribution_review` reviewed source,
 authority, attribution evidence, exact exclusions and packaging delta. Product
 semantic blockers=0, Spec gaps=0; detailed result is in independent-review.txt.
-Final-Head delta review and PR readback are required before reporting delivery.
+Source final-Head delta review PASS and initial pushed-Head PR readback verified;
+the containing receipt-only closure receives its own final delta recheck, whose
+exact final SHA/result is recorded in the PR. No mechanism evidence is rerun
+for this receipt-only delta.
 Regulator-assigned product acceptance, merge, installation, live recovery and
 business outcome remain separate and are not claimed. Production provenance,
 old UNKNOWN business outcomes, and unexecuted live runtime acceptance remain
 UNKNOWN. No production replay, fence clear, settlement, deployment or merge.
+
+## R7 actual delivery readback and DONE_WHEN
+
+- Source commit: `42487e65b36f049811b0e83f90178510a3da28b7`; independent final-Head
+  delta recheck PASS, clean source tree, zero source/test change after tested snapshot.
+- Push: success, new remote `origin/fix/compat-reader-writer-guard` tracks this branch.
+- PR: [#646](https://github.com/mayf3/dsh-agent-core/pull/646), base `main` at
+  `1ff1e81cbd74a51761dab46a5fcee532c41fe4ed`, head source commit above;
+  independent fresh GitHub readback state=open, merged=false, mergeable=true.
+  This records GitHub's mergeability observation, not merge permission.
+- Final source review: `docs/evidence/605-r7/final-head-source-review.txt`.
+  Exact API readback: `docs/evidence/605-r7/delivery-readback.json`.
+- Formatting: scoped source/Markdown/JSON/Python diff check rc0. Raw `.log`
+  quotations intentionally retain exact original whitespace and SHA256.
+- This receipt-only closure changes no product, tests, helper, authority or raw
+  logs. Its containing commit is the final delivery tree; exact final SHA and
+  independent receipt-only final-Head recheck are bound in the PR body/readback.
+
+DONE_WHEN=MET for Owner R7 source scope: ten-case attribution+original text,
+stash restoration, permitted pre-existing classification, affected suites rc0,
+retained seven-row matrix/helper/data evidence, independent source/final review,
+commit+push+open unmerged main PR, and completed receipt. Source delivery is
+complete; regulator-assigned product acceptance and production effects remain
+outside this declaration. No new required gate failed; no production or merge.
 
 # R6 historical receipt (content preserved; Markdown whitespace normalized)
 
