@@ -41,7 +41,7 @@ export function mountWorkflowCapabilityRuntime({ ctx, layout, router, log, opts 
 
   const inspectProjection = project => workflowExecution.ledger.inspectFresh((attempts, ledgerRead) => {
     const result = project(attempts)
-    return ledgerRead.tailIncomplete ? { ...result, ledgerRead } : result
+    return result !== null && ledgerRead.tailIncomplete ? { ...result, ledgerRead } : result
   })
   ctx.provide('workflowExecutionAccess', {
     traces: ({ workflowInstanceId, nodeVisitId } = {}) => inspectProjection(

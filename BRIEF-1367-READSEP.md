@@ -97,3 +97,55 @@ Issuer: current user (regulator/Owner). The exact R6 mandate resumes the R5 loca
 Route remains schema_version=2, REUSE + BRIEF + DURABLE; accepted Product Contracts/base and the isolated surface are unchanged. This explicit mandate closes the prior mandate stop only for its delivery scope. R5 remains preserved history, including both successful remote reads and the local index.lock failure before gh. Entry staged tree was reverified against `07ff18450ba8099edf7e655fa8bdc4b500154cac`, 47 paths; HEAD `2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648`. Fresh remote refs were rc0, main unchanged, feature absent. A stale local main ref was inspected read-only and was not used as the integration baseline.
 
 Executed serially: commit rc0 -> ordinary push rc0 -> PR create rc0 -> PR readback rc0. Source commit `ed31db7cfa068ac8128c127382efd98986abff4b` has the exact reviewed tree and original parent. PR https://github.com/mayf3/dsh-agent-core/pull/654 is OPEN, base main, headRefOid equals source commit, mergedAt=null, mergeCommit=null at first readback. No lock was removed, no Git command overlap was introduced, and no source/test bytes changed. Receipt/history packaging follows under the existing receipt-only protocol; final remote coordinates belong in a terminal sidecar to avoid self-reference.
+
+
+## R7 P2 regression repair continuation — 2026-11-07
+
+Issuer: current user (regulator/Owner), exact R7 request resumes the independent
+review failure B654-001 at R6 HEAD `84b1e612aa31f4caa5a0de0ca39e3abca545bcef`.
+Repair fresh mounted trace reads so unknown instance/nodeVisit keep null/404
+semantics with both torn-tail kinds, retain explicit qualification on known
+records, and add all four reviewer counterexamples plus 404 assertions RED→GREEN.
+Rerun original eight target cases and eleven-case diagnostic file, the complete
+observation-cas baseline104 plus new cases, broker80, and affected workflow and
+integration files with all nine proxy keys unset in test children. Preserve raw
+outputs, actual rc, expanded argv, runtime and hashes. Then independent affected
+delta review, commit on the existing isolated branch, ordinary push to update
+PR #654, and append the regression repair receipt. No merge or production writes.
+
+```text
+schema_version = 2
+SPEC_GOVERNANCE_MODE = PREFLIGHT
+TARGET_REPOSITORY = mayf3/dsh-agent-core
+REVIEW_TARGET_HEAD = 84b1e612aa31f4caa5a0de0ca39e3abca545bcef
+BASE_HEAD = CURRENT_BASE_HEAD = 2d8ce9d0af6a1ffcb3c8d3bdd9364635e9ae8648
+ISOLATED_WRITE_SURFACE = /private/tmp/h1367-readsep @ fix/diagnostic-read-separation
+GOAL_OR_TARGET = preserve missing-trace 404 under read-only torn-tail inspection
+CURRENT_GAP = mounted projection spreads null into malformed successful object
+AUTHORITY_ACTION = REUSE
+PRIMARY_AUTHORITY = WEC V3 CTR-WEC1-001/002/003 and section 4
+RELATED_AUTHORITIES = WAE V3 CTR-WAE-002/005/006; existing UNKNOWN/CAS invariants
+IMPLEMENTATION_AUTHORITY = contracts
+ROUTE_STAGE = IMPLEMENTATION
+AUTHORITY_ACCEPTED_IN_BASE = YES
+PLAN_LEVEL = BRIEF
+ASSURANCE_LEVEL = DURABLE
+EXECUTION_MANDATE = MUTATION_AUTHORIZATION = VALID (current explicit R7 task)
+SPEC_GAP_DEPENDENCY = NONE
+EVIDENCE_REVIEWABILITY = PASS
+LIVE_AUTHORITY_GAP = NONE
+BASE_IMPACT = NONE (fresh remote refs equal R6 coordinates)
+IMPLEMENTATION_ALLOWED = YES
+MERGE_READY = NOT_APPLICABLE (forbidden)
+OPERATION_ALLOWED = NO
+FROZEN_BLOCKER_UNION = [B654-001]
+DONE_WHEN = four unchanged failure assertions RED then GREEN; required full reruns rc0; independent delta review; commit/push; PR head readback; appended receipt
+EXPANSION_TRIGGER = any unexpected required test/check/delivery failure or authority conflict => stop dependent work and preserve STOPPED record
+NEXT_ACTION = CONTINUE
+```
+
+The expected RED assertion failures are the requested reproduction, not a GREEN
+gate failure. Failure-stop remains unchanged. Git/gh operations and test captures
+are serial; delegated review is read-only. Existing R1–R6 evidence and terminal
+sidecars are preserved. No assertion relaxation, #1366 lock change, dependency,
+governance or host/network configuration change is authorized.
